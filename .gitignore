@@ -1,4 +1,5 @@
 Bin/*
+.vs/*
 *.tmp
 *.user
 *.tlb
@@ -6,3 +7,5 @@ Bin/*
 *.pdb
 *.obj
 **/launchSettings.json
+**/bin/*
+**/obj/*
