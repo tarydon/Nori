@@ -3,7 +3,6 @@
 // ║║║║╬║╔╣║ Lib.cs ~ Implements the Lib module class that has a number of global functions
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 using System.IO;
-using System.Reflection;
 namespace Nori;
 
 #region class Lib ----------------------------------------------------------------------------------
@@ -14,6 +13,11 @@ public static class Lib {
    public const double TwoPI = 2 * Math.PI;
    public const double HalfPI = Math.PI / 2;
    public const double QuarterPI = Math.PI / 4;
+
+   public static bool Testing;
+
+   /// <summary>The root of Nori projects on developer machines</summary>
+   public const string DevRoot = "N:";
 
    // Methods ------------------------------------------------------------------
    /// <summary>Returns the cos-inverse of the given value</summary>
