@@ -1,0 +1,8 @@
+Bin/*
+*.tmp
+*.user
+*.tlb
+*.bak
+*.pdb
+*.obj
+**/launchSettings.json
