@@ -1,0 +1,25 @@
+﻿<Window x:Class="Nori.Cover.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Nori.Cover"
+        mc:Ignorable="d" Background="#666" WindowState="Maximized"
+        Title="MainWindow" Height="450" Width="800">
+   <DockPanel>
+      <Border Background="#DDD" Margin="4,4,2,4" CornerRadius="2" MinWidth="300" DockPanel.Dock="Left">
+         <TreeView Name="mTree" BorderThickness="0" Margin="2" Background="Transparent" SelectedItemChanged="OnFileSelected"></TreeView>
+      </Border>
+      <DockPanel DockPanel.Dock="Bottom">
+         <Border Background="SkyBlue" Margin="2,2,2,4" CornerRadius="2" MinHeight="15" MinWidth="20" DockPanel.Dock="Left" >
+            <Button Background="Transparent" BorderThickness="0" Padding="8,2,8,2">Recompute</Button>
+         </Border>
+         <Border Background="#DDD" Margin="2,2,4,4" CornerRadius="2">
+            <TextBlock Name="mStatus" Padding="8,2,8,2">OK</TextBlock>
+         </Border>
+      </DockPanel>
+      <Border Background="#DDD" Margin="2,4,4,2" CornerRadius="2">
+         <FlowDocumentScrollViewer Name="mText"></FlowDocumentScrollViewer>
+      </Border>
+   </DockPanel>
+</Window>

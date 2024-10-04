@@ -21,8 +21,8 @@ class Program {
          }
       }
    }
-   List<int> mTestID = [];       // If non-empty, run only these tests
-   List<int> mFixtureID = [];    // If non-empty, run only these fixtures
+   readonly List<int> mTestID = [];       // If non-empty, run only these tests
+   readonly List<int> mFixtureID = [];    // If non-empty, run only these fixtures
 
    // This runs the tests in this assembly
    void Run () {

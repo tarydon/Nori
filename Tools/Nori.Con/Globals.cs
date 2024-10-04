@@ -1,7 +1,8 @@
-﻿// ────── ╔╗ Nori.Test
+﻿// ────── ╔╗ Nori.Con
 // ╔═╦╦═╦╦╬╣ Copyright © 2024 Arvind
-// ║║║║╬║╔╣║ Globals.cs ~ Global includes for the Nori.Test project
+// ║║║║╬║╔╣║ Globals.cs ~ Global usings for Nori.Console
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 global using System;
+global using System.Linq;
 global using System.Collections.Generic;
-global using Nori;
+global using System.IO;

@@ -1,0 +1,99 @@
+[*.cs]
+#Editor settings -----------------------------------------------------
+indent_size = 3
+indent_style = space
+tab_width = 3
+end_of_line = crlf
+insert_final_newline = false
+
+#C# formatting rules --------------------------------------------------
+# New line preferences
+csharp_new_line_before_catch = false
+csharp_new_line_before_else = false
+csharp_new_line_before_finally = false
+csharp_new_line_before_members_in_anonymous_types = false
+csharp_new_line_before_members_in_object_initializers = false
+csharp_new_line_before_open_brace = none
+csharp_new_line_between_query_expression_clauses = false
+
+# Indentation preferences
+csharp_indent_block_contents = true
+csharp_indent_braces = false
+csharp_indent_case_contents = true
+csharp_indent_case_contents_when_block = true
+csharp_indent_labels = no_change
+csharp_indent_switch_labels = true
+
+# Space preferences
+csharp_space_after_cast = false
+csharp_space_after_colon_in_inheritance_clause = true
+csharp_space_after_comma = true
+csharp_space_after_dot = false
+csharp_space_after_keywords_in_control_flow_statements = true
+csharp_space_after_semicolon_in_for_statement = true
+csharp_space_around_binary_operators = before_and_after
+csharp_space_around_declaration_statements = false
+csharp_space_before_colon_in_inheritance_clause = true
+csharp_space_before_comma = false
+csharp_space_before_dot = false
+csharp_space_before_open_square_brackets = false
+csharp_space_before_semicolon_in_for_statement = false
+csharp_space_between_empty_square_brackets = false
+csharp_space_between_method_call_empty_parameter_list_parentheses = false
+csharp_space_between_method_call_name_and_opening_parenthesis = true
+csharp_space_between_method_call_parameter_list_parentheses = false
+csharp_space_between_method_declaration_empty_parameter_list_parentheses = false
+csharp_space_between_method_declaration_name_and_open_parenthesis = true
+csharp_space_between_method_declaration_parameter_list_parentheses = false
+csharp_space_between_parentheses = false
+csharp_space_between_square_brackets = false
+
+# Wrapping preferences
+csharp_preserve_single_line_blocks = true
+csharp_preserve_single_line_statements = true
+
+# Elements of style
+csharp_prefer_braces = false
+dotnet_style_prefer_auto_properties = false
+csharp_style_var_elsewhere = false
+csharp_style_var_for_built_in_types = false
+csharp_style_var_when_type_is_apparent = false
+
+# Diagnostics --------------------------------------------------------
+# These are low impact diagnostics that can be remain turned off
+dotnet_diagnostic.CA1018.severity = None      # Specify AttributeUsage
+dotnet_diagnostic.CA1041.severity = None      # Provide a message for ObsoleteAttribute
+dotnet_diagnostic.CA1069.severity = None      # Enum member E.X has same constant value as member E.Y
+dotnet_diagnostic.CA1806.severity = None      # Object constructed but never used
+dotnet_diagnostic.CA1824.severity = None      # Mark assemblies with [NeutralResourcesLanguage]
+dotnet_diagnostic.CA1826.severity = None      # Do not use enumerable methods on indexable collections
+dotnet_diagnostic.IDE0044.severity = None     # Make field readonly
+dotnet_diagnostic.IDE0063.severity = None     # 'Using' statement can be simplified
+dotnet_diagnostic.IDE1006.severity = None     # Naming rule violation
+
+# Diagnostics related to XML documentation
+dotnet_diagnostic.CS1591.severity = None      # Missing XML comment for publicly visible type or member
+dotnet_diagnostic.CS1573.severity = None      # Parameter 'X' is not documented, but other parameters are
+dotnet_diagnostic.CS1572.severity = None      # XML comment has param tag 'X' but there is no parameter by that name
+dotnet_diagnostic.CS1587.severity = None      # XML comment is not placed on a valid language element
+dotnet_diagnostic.IDE0065.severity = None     # Using directives must be placed outside of a namespace declaration
+dotnet_diagnostic.IDE0130.severity = None     # Namespace 'N' does not match folder structure
+
+# These diagnostics should probably be turned back on eventually and we should
+# fix the issues that they raise
+dotnet_diagnostic.CA1051.severity = None      # Do not declare visible instance fields
+dotnet_diagnostic.CA1067.severity = None      # Type T should override Equals, because it implements IEquatable<T>
+dotnet_diagnostic.CA1305.severity = None      # string.Format depends on current locale
+dotnet_diagnostic.CA1401.severity = None      # P/Invoke method should not be visible
+dotnet_diagnostic.CA1816.severity = None      # Add GC.SuppressFinalize in a non-sealed class implementing IDisposable
+dotnet_diagnostic.CA1822.severity = None      # Member does not access instance data and can be marked static
+dotnet_diagnostic.CA2101.severity = None      # Specify marshalling for P/Invoke string arguments
+dotnet_diagnostic.CA2211.severity = None      # Non-constant fields should not be visible 
+dotnet_diagnostic.CA2231.severity = None      # Implement the equality operators, and make their behavior same as Equals
+dotnet_diagnostic.CA2245.severity = None      # Property should not be assigned to itself
+
+dotnet_diagnostic.IDE0051.severity = None     # Private member 'C.M' is unused
+dotnet_diagnostic.IDE0058.severity = None     # Expression value is never used
+dotnet_diagnostic.IDE0040.severity = None     # Accessibilty modifier required
+dotnet_diagnostic.IDE0008.severity = None     # Use explicit type instead of var
+dotnet_diagnostic.IDE0022.severity = None     # Use block body for methods

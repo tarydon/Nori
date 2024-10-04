@@ -51,7 +51,7 @@ public class Coverage {
    /// Each block contains a file, start and end position (line + column) and a
    /// 'covered' state bit
    public IReadOnlyList<Block> Blocks => mBlocks;
-   List<Block> mBlocks = [];
+   readonly List<Block> mBlocks = [];
 
    /// <summary>The list of files we've got coverage for</summary>
    public IReadOnlyList<string> Files => mFiles;
@@ -70,7 +70,7 @@ public class Coverage {
       foreach (var f in files) fileids.Add (GetFileID (f));
       for (int i = mBlocks.Count - 1; i >= 0; i--)
          if (!fileids.Contains (mBlocks[i].FileId)) mBlocks.RemoveAt (i);
-      mFiles = files.ToList ();
+      mFiles = [.. files];
    }
 
    // Nested types -------------------------------------------------------------
@@ -101,7 +101,7 @@ public class Coverage {
       }
       return n;
    }
-   Dictionary<string, int> mSrcMap = new (StringComparer.OrdinalIgnoreCase);
+   readonly Dictionary<string, int> mSrcMap = new (StringComparer.OrdinalIgnoreCase);
 
    // Extract a string attribute from an XElement
    static string AttrS (XElement elem, string name) {
@@ -112,7 +112,7 @@ public class Coverage {
 
    // Extract an integer attribute from an XElement
    static int AttrN (XElement elem, string name) {
-      int.TryParse (AttrS (elem, name), out int n);
+      if (!int.TryParse (AttrS (elem, name), out int n)) return 0;
       return n;
    }
 }

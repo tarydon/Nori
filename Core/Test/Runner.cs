@@ -81,7 +81,7 @@ public partial class ConsoleTestCallback : ITestCallback {
    }
 
    // Helpers ------------------------------------------------------------------
-   void WriteRight (ConsoleColor color, string text) {
+   static void WriteRight (ConsoleColor color, string text) {
       Write (new string ('.', WindowWidth - CursorLeft - text.Length - 1));
       ForegroundColor = color; Write (text);
       ResetColor ();

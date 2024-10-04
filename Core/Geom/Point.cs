@@ -23,6 +23,9 @@ public readonly struct Point2 {
    /// <summary>The 'Nil' point</summary>
    public static readonly Point2 Nil = new (double.NaN, double.NaN);
 
+   /// <summary>Returns true if this is a Nil Point2</summary>
+   public bool IsNil => double.IsNaN (X) || double.IsNaN (Y);
+
    // Methods ------------------------------------------------------------------
    /// <summary>Returns the heading between this point and the given point pt</summary>
    /// The heading is like the compass heading so 0 is EAST, 90 is NORTH etc.
@@ -33,6 +36,10 @@ public readonly struct Point2 {
       if (dx == 0 && dy == 0) return 0;
       return Lib.NormalizeAngle (Atan2 (dy, dx));
    }
+
+   /// <summary>Returns a point clamped to a given range</summary>
+   public readonly Point2 Clamped (Bound2 bound)
+      => new (bound.X.Clamp (X), bound.Y.Clamp (Y));
 
    /// <summary>Distance between this point and another</summary>
    public double DistTo (Point2 b) => Sqrt (DistToSq (b));
@@ -85,11 +92,14 @@ public readonly struct Point2 {
       return new (X * cos - Y * sin, X * sin + Y * cos);
    }
    /// <summary>Rotate a point about an arbitrary center point, by the given angle (in radians)</summary>
-   public Point2 RotatedAbout (Point2 c, double theta)
+   public Point2 Rotated (Point2 c, double theta)
       => Moved (-c.X, -c.Y).Rotated (theta).Moved (c.X, c.Y);
 
+   /// <summary>Scales the point about the origin</summary>
+   public readonly Point2 Scaled (double scale) => new (X * scale, Y * scale);
+
    /// <summary>Scales the point about an arbitrary center of scaling</summary>
-   public Point2 ScaledAbout (Point2 cen, double fScale) {
+   public Point2 Scaled (Point2 cen, double fScale) {
       double x = (X - cen.X) * fScale, y = (Y - cen.Y) * fScale;
       return new (x + cen.X, y + cen.Y);
    }

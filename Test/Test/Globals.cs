@@ -1,5 +1,10 @@
-﻿// ────── ╔╗ Nori.Core
+﻿// ────── ╔╗ Nori.Test
 // ╔═╦╦═╦╦╬╣ Copyright © 2024 Arvind
-// ║║║║╬║╔╣║ Suppressions.cs ~ Project level suppressions
+// ║║║║╬║╔╣║ Globals.cs ~ Global includes for the Nori.Test project
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
-[assembly: SuppressMessage ("Style", "IDE0130:Namespace does not match folder structure", Scope = "namespace", Target = "~N:Nori")]
+global using System;
+global using System.Collections.Generic;
+global using System.Diagnostics.CodeAnalysis;
+global using System.Linq;
+global using System.IO;
+global using System.Text;

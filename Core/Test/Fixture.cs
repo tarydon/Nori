@@ -46,7 +46,7 @@ public class Fixture {
    public readonly Type Type;
    /// <summary>The set of tests in this Fixture</summary>
    public IReadOnlyList<Test> Tests => mTests;
-   List<Test> mTests = [];
+   readonly List<Test> mTests = [];
 
    // Implementation -----------------------------------------------------------
    internal ConstructorInfo Constructor;

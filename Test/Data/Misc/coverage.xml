@@ -1,0 +1,165 @@
+﻿<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<results>
+  <modules>
+    <module id="A5E6807073F8724CB3DCF00E894E35F6ADA845DA" name="Nori.Base.dll" path="Nori.Base.dll" block_coverage="50.54" line_coverage="48.02" blocks_covered="472" blocks_not_covered="462" lines_covered="182" lines_partially_covered="7" lines_not_covered="190">
+      <functions>
+        <function id="8272" token="0x6000001" name="Clamp(double, double, double)" type_name="Extensions" block_coverage="71.43" line_coverage="0.00" blocks_covered="5" blocks_not_covered="2" lines_covered="0" lines_partially_covered="1" lines_not_covered="0">
+          <ranges>
+            <range source_id="0" start_line="9" end_line="9" start_column="74" end_column="109" covered="partial" />
+          </ranges>
+        </function>
+        <function id="8289" token="0x6000002" name="EQ(double, double)" type_name="Extensions" block_coverage="100.00" line_coverage="100.00" blocks_covered="2" blocks_not_covered="0" lines_covered="1" lines_partially_covered="0" lines_not_covered="0">
+          <ranges>
+            <range source_id="0" start_line="12" end_line="12" start_column="55" end_column="78" covered="yes" />
+          </ranges>
+        </function>
+        <function id="8310" token="0x6000003" name="EQ(float, float)" type_name="Extensions" block_coverage="0.00" line_coverage="0.00" blocks_covered="0" blocks_not_covered="2" lines_covered="0" lines_partially_covered="0" lines_not_covered="1">
+          <ranges>
+            <range source_id="0" start_line="15" end_line="15" start_column="53" end_column="76" covered="no" />
+          </ranges>
+        </function>
+        <function id="8332" token="0x6000004" name="EQ(System.Half, System.Half)" type_name="Extensions" block_coverage="0.00" line_coverage="0.00" blocks_covered="0" blocks_not_covered="4" lines_covered="0" lines_partially_covered="0" lines_not_covered="1">
+          <ranges>
+            <range source_id="0" start_line="18" end_line="18" start_column="51" end_column="88" covered="no" />
+          </ranges>
+        </function>
+        <function id="8366" token="0x6000005" name="EQ(string, string)" type_name="Extensions" block_coverage="0.00" line_coverage="0.00" blocks_covered="0" blocks_not_covered="2" lines_covered="0" lines_partially_covered="0" lines_not_covered="1">
+          <ranges>
+            <range source_id="0" start_line="21" end_line="21" start_column="55" end_column="103" covered="no" />
+          </ranges>
+        </function>
+        <function id="8376" token="0x6000006" name="HasAttribute&lt;T&gt;(System.Reflection.MemberInfo)" type_name="Extensions" block_coverage="0.00" line_coverage="0.00" blocks_covered="0" blocks_not_covered="2" lines_covered="0" lines_partially_covered="0" lines_not_covered="1">
+          <ranges>
+            <range source_id="0" start_line="25" end_line="25" start_column="10" end_column="45" covered="no" />
+          </ranges>
+        </function>
+        <function id="8392" token="0x6000007" name="IsBlank(string)" type_name="Extensions" block_coverage="0.00" line_coverage="0.00" blocks_covered="0" blocks_not_covered="2" lines_covered="0" lines_partially_covered="0" lines_not_covered="1">
+          <ranges>
+            <range source_id="0" start_line="27" end_line="27" start_column="51" end_column="80" covered="no" />
+          </ranges>
+        </function>
+        <function id="8400" token="0x6000008" name="NextBool(System.Random)" type_name="Extensions" block_coverage="0.00" line_coverage="0.00" blocks_covered="0" blocks_not_covered="2" lines_covered="0" lines_partially_covered="0" lines_not_covered="1">
+          <ranges>
+            <range source_id="0" start_line="29" end_line="29" start_column="51" end_column="72" covered="no" />
+          </ranges>
+        </function>
+        <function id="8420" token="0x6000009" name="R3(System.Half)" type_name="Extensions" block_coverage="100.00" line_coverage="100.00" blocks_covered="3" blocks_not_covered="0" lines_covered="1" lines_partially_covered="0" lines_not_covered="0">
+          <ranges>
+            <range source_id="0" start_line="32" end_line="32" start_column="45" end_column="69" covered="yes" />
+          </ranges>
+        </function>
+        <function id="8436" token="0x600000a" name="R5(float)" type_name="Extensions" block_coverage="100.00" line_coverage="100.00" blocks_covered="2" blocks_not_covered="0" lines_covered="1" lines_partially_covered="0" lines_not_covered="0">
+          <ranges>
+            <range source_id="0" start_line="35" end_line="35" start_column="46" end_column="63" covered="yes" />
+          </ranges>
+        </function>
+        <function id="8446" token="0x600000b" name="R6(double)" type_name="Extensions" block_coverage="100.00" line_coverage="100.00" blocks_covered="2" blocks_not_covered="0" lines_covered="1" lines_partially_covered="0" lines_not_covered="0">
+          <ranges>
+            <range source_id="0" start_line="38" end_line="38" start_column="47" end_column="64" covered="yes" />
+          </ranges>
+        </function>
+        <function id="15108" token="0x60000a3" name="Color4(int, int, int)" namespace="Nori.Base" type_name="Color4" block_coverage="100.00" line_coverage="100.00" blocks_covered="1" blocks_not_covered="0" lines_covered="1" lines_partially_covered="0" lines_not_covered="0">
+          <ranges>
+            <range source_id="2" start_line="11" end_line="11" start_column="43" end_column="90" covered="yes" />
+          </ranges>
+        </function>
+        <function id="15164" token="0x60000a4" name="Color4(int, int, int, int)" namespace="Nori.Base" type_name="Color4" block_coverage="100.00" line_coverage="100.00" blocks_covered="1" blocks_not_covered="0" lines_covered="1" lines_partially_covered="0" lines_not_covered="0">
+          <ranges>
+            <range source_id="2" start_line="12" end_line="12" start_column="50" end_column="101" covered="yes" />
+          </ranges>
+        </function>
+        <function id="15220" token="0x60000a5" name="Deconstruct(out int, out int, out int, out int)" namespace="Nori.Base" type_name="Color4" block_coverage="0.00" line_coverage="0.00" blocks_covered="0" blocks_not_covered="1" lines_covered="0" lines_partially_covered="0" lines_not_covered="1">
+          <ranges>
+            <range source_id="2" start_line="13" end_line="13" start_column="76" end_column="103" covered="no" />
+          </ranges>
+        </function>
+        <function id="15276" token="0x60000a6" name="ToString()" namespace="Nori.Base" type_name="Color4" block_coverage="100.00" line_coverage="100.00" blocks_covered="27" blocks_not_covered="0" lines_covered="7" lines_partially_covered="0" lines_not_covered="0">
+          <ranges>
+            <range source_id="2" start_line="15" end_line="15" start_column="39" end_column="40" covered="yes" />
+            <range source_id="2" start_line="16" end_line="16" start_column="7" end_column="29" covered="yes" />
+            <range source_id="2" start_line="17" end_line="17" start_column="10" end_column="17" covered="yes" />
+            <range source_id="2" start_line="17" end_line="17" start_column="29" end_column="98" covered="yes" />
+            <range source_id="2" start_line="17" end_line="17" start_column="19" end_column="25" covered="yes" />
+            <range source_id="2" start_line="18" end_line="18" start_column="13" end_column="65" covered="yes" />
+            <range source_id="2" start_line="17" end_line="17" start_column="26" end_column="28" covered="yes" />
+            <range source_id="2" start_line="19" end_line="19" start_column="7" end_column="14" covered="yes" />
+            <range source_id="2" start_line="19" end_line="19" start_column="30" end_column="36" covered="yes" />
+            <range source_id="2" start_line="19" end_line="19" start_column="16" end_column="26" covered="yes" />
+            <range source_id="2" start_line="19" end_line="19" start_column="38" end_column="54" covered="yes" />
+            <range source_id="2" start_line="19" end_line="19" start_column="55" end_column="70" covered="yes" />
+            <range source_id="2" start_line="19" end_line="19" start_column="27" end_column="29" covered="yes" />
+            <range source_id="2" start_line="20" end_line="20" start_column="7" end_column="68" covered="yes" />
+            <range source_id="2" start_line="21" end_line="21" start_column="4" end_column="5" covered="yes" />
+          </ranges>
+        </function>
+        <function id="15576" token="0x60000a7" name="ToVector4f()" namespace="Nori.Base" type_name="Color4" block_coverage="0.00" line_coverage="0.00" blocks_covered="0" blocks_not_covered="2" lines_covered="0" lines_partially_covered="0" lines_not_covered="1">
+          <ranges>
+            <range source_id="2" start_line="24" end_line="24" start_column="37" end_column="81" covered="no" />
+          </ranges>
+        </function>
+        <function id="15635" token="0x60000a8" name="Gray(int)" namespace="Nori.Base" type_name="Color4" block_coverage="0.00" line_coverage="0.00" blocks_covered="0" blocks_not_covered="2" lines_covered="0" lines_partially_covered="0" lines_not_covered="1">
+          <ranges>
+            <range source_id="2" start_line="38" end_line="38" start_column="41" end_column="54" covered="no" />
+          </ranges>
+        </function>
+        <function id="15645" token="0x60000a9" name="get_Random()" namespace="Nori.Base" type_name="Color4" block_coverage="0.00" line_coverage="0.00" blocks_covered="0" blocks_not_covered="5" lines_covered="0" lines_partially_covered="0" lines_not_covered="1">
+          <ranges>
+            <range source_id="2" start_line="39" end_line="39" start_column="35" end_column="93" covered="no" />
+          </ranges>
+        </function>
+        <function id="15697" token="0x60000aa" name="get_IsNil()" namespace="Nori.Base" type_name="Color4" block_coverage="100.00" line_coverage="100.00" blocks_covered="6" blocks_not_covered="0" lines_covered="1" lines_partially_covered="0" lines_not_covered="0">
+          <ranges>
+            <range source_id="2" start_line="41" end_line="41" start_column="25" end_column="61" covered="yes" />
+          </ranges>
+        </function>
+        <function id="15735" token="0x60000ab" name="EQ(Nori.Base.Color4)" namespace="Nori.Base" type_name="Color4" block_coverage="100.00" line_coverage="100.00" blocks_covered="6" blocks_not_covered="0" lines_covered="1" lines_partially_covered="0" lines_not_covered="0">
+          <ranges>
+            <range source_id="2" start_line="42" end_line="42" start_column="37" end_column="97" covered="yes" />
+          </ranges>
+        </function>
+        <function id="15796" token="0x60000ac" name="get_Value()" namespace="Nori.Base" type_name="Color4" block_coverage="100.00" line_coverage="100.00" blocks_covered="1" blocks_not_covered="0" lines_covered="1" lines_partially_covered="0" lines_not_covered="0">
+          <ranges>
+            <range source_id="2" start_line="43" end_line="43" start_column="25" end_column="69" covered="yes" />
+          </ranges>
+        </function>
+        <function id="15836" token="0x60000ad" name="Color4()" namespace="Nori.Base" type_name="Color4" block_coverage="100.00" line_coverage="100.00" blocks_covered="13" blocks_not_covered="0" lines_covered="12" lines_partially_covered="0" lines_not_covered="0">
+          <ranges>
+            <range source_id="2" start_line="22" end_line="22" start_column="4" end_column="57" covered="yes" />
+            <range source_id="2" start_line="28" end_line="28" start_column="4" end_column="57" covered="yes" />
+            <range source_id="2" start_line="29" end_line="29" start_column="4" end_column="71" covered="yes" />
+            <range source_id="2" start_line="30" end_line="30" start_column="4" end_column="56" covered="yes" />
+            <range source_id="2" start_line="31" end_line="31" start_column="4" end_column="56" covered="yes" />
+            <range source_id="2" start_line="32" end_line="32" start_column="4" end_column="58" covered="yes" />
+            <range source_id="2" start_line="33" end_line="33" start_column="4" end_column="57" covered="yes" />
+            <range source_id="2" start_line="34" end_line="34" start_column="4" end_column="61" covered="yes" />
+            <range source_id="2" start_line="35" end_line="35" start_column="4" end_column="62" covered="yes" />
+            <range source_id="2" start_line="36" end_line="36" start_column="4" end_column="59" covered="yes" />
+            <range source_id="2" start_line="37" end_line="37" start_column="4" end_column="62" covered="yes" />
+            <range source_id="2" start_line="45" end_line="45" start_column="4" end_column="33" covered="yes" />
+          </ranges>
+        </function>
+      </functions>
+      <source_files>
+        <source_file id="0" path="N:\Src\Base\Extensions.cs" checksum_type="SHA256" checksum="FDEDB0487D9FE90053DDB11AEB5DE1293F75CD1274EE678A8B888BE99185ECB7" />
+        <source_file id="2" path="N:\Src\Base\Structs.cs" checksum_type="SHA256" checksum="C73706D490156EDD8D5DDBEF0A147C110F43B6D1BF8FB9962AB0B3B67C80136D" />
+      </source_files>
+      <skipped_functions />
+    </module>
+    <module id="9C021E3A8215A9458622C2324D2AEAEF20F8CDF6" name="Nori.Test.dll" path="Nori.Test.dll" block_coverage="87.13" line_coverage="90.00" blocks_covered="176" blocks_not_covered="26" lines_covered="90" lines_partially_covered="2" lines_not_covered="8">
+      <functions>
+        <function id="8272" token="0x6000001" name="Main(string[])" namespace="Nori.Test" type_name="Program" block_coverage="100.00" line_coverage="100.00" blocks_covered="8" blocks_not_covered="0" lines_covered="4" lines_partially_covered="0" lines_not_covered="0">
+          <ranges>
+            <range source_id="0" start_line="9" end_line="9" start_column="37" end_column="38" covered="yes" />
+            <range source_id="0" start_line="10" end_line="10" start_column="7" end_column="48" covered="yes" />
+            <range source_id="0" start_line="11" end_line="11" start_column="7" end_column="95" covered="yes" />
+            <range source_id="0" start_line="12" end_line="12" start_column="4" end_column="5" covered="yes" />
+          </ranges>
+        </function>
+      </functions>
+      <source_files>
+        <source_file id="0" path="N:\Test\Nori.Test\Program.cs" checksum_type="SHA256" checksum="802DA95A1AB82C41FC6C2CF817FD9C52B64DE8EAF423BEDE1F7AED9DD0785B95" />
+      </source_files>
+      <skipped_functions />
+    </module>
+  </modules>
+</results>

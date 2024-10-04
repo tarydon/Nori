@@ -5,7 +5,11 @@ VisualStudioVersion = 17.11.35312.102
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Nori.Core", "Core\Nori.Core.csproj", "{A3B4AEE2-5E69-4D29-8081-96714752ABE8}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nori.Test", "Nori.Test\Nori.Test.csproj", "{C36A6508-29A1-4799-B230-98CB013BE041}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Nori.Test", "Test\Test\Nori.Test.csproj", "{C36A6508-29A1-4799-B230-98CB013BE041}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Nori.Cover", "Test\Cover\Nori.Cover.csproj", "{64CD10E5-B437-4836-9D70-797859B8BF1A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nori.Con", "Tools\Nori.Con\Nori.Con.csproj", "{F2E30850-4419-4910-9F22-476DADFEA929}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,6 +25,14 @@ Global
 		{C36A6508-29A1-4799-B230-98CB013BE041}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C36A6508-29A1-4799-B230-98CB013BE041}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C36A6508-29A1-4799-B230-98CB013BE041}.Release|Any CPU.Build.0 = Release|Any CPU
+		{64CD10E5-B437-4836-9D70-797859B8BF1A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{64CD10E5-B437-4836-9D70-797859B8BF1A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{64CD10E5-B437-4836-9D70-797859B8BF1A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{64CD10E5-B437-4836-9D70-797859B8BF1A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F2E30850-4419-4910-9F22-476DADFEA929}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F2E30850-4419-4910-9F22-476DADFEA929}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F2E30850-4419-4910-9F22-476DADFEA929}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F2E30850-4419-4910-9F22-476DADFEA929}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -3,12 +3,12 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>net8.0</TargetFramework>
+    <OutDir>..\..\Bin</OutDir>
     <Nullable>enable</Nullable>
-    <OutDir>..\Bin</OutDir>
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Core\Nori.Core.csproj" />
+    <ProjectReference Include="..\..\Core\Nori.Core.csproj" />
   </ItemGroup>
 
 </Project>
