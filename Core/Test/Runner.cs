@@ -1,6 +1,6 @@
-﻿// ────── ╔╗ Nori.Core
-// ╔═╦╦═╦╦╬╣ Copyright © 2024 Arvind
-// ║║║║╬║╔╣║ Runner.cs ~ Implements the TestRunner class
+﻿// ────── ╔╗                                                                                   CORE
+// ╔═╦╦═╦╦╬╣ Runner.cs
+// ║║║║╬║╔╣║ Implements the TestRunner class
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 namespace Nori;
 using static Console;

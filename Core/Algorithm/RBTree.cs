@@ -1,6 +1,6 @@
-﻿// ────── ╔╗ Nori™
-// ╔═╦╦═╦╦╬╣ Copyright © 2025 Arvind
-// ║║║║╬║╔╣║ RBTree.cs ~ Implements a balanced binary tree that maintains elements in sorted order
+﻿// ────── ╔╗                                                                                   CORE
+// ╔═╦╦═╦╦╬╣ RBTree.cs
+// ║║║║╬║╔╣║ Implements a balanced binary (red-black) tree that maintains elements in sorted order
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 using System.Collections;
 namespace Nori;

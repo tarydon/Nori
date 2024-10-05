@@ -1,6 +1,6 @@
-﻿// ────── ╔╗ Nori™
-// ╔═╦╦═╦╦╬╣ Copyright © 2025 Arvind
-// ║║║║╬║╔╣║ Struct.cs ~ Various basic structs
+﻿// ────── ╔╗                                                                                   CORE
+// ╔═╦╦═╦╦╬╣ Structs.cs
+// ║║║║╬║╔╣║ Various Miscellaneous structs used by the Nori application
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 namespace Nori;
 

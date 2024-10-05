@@ -1,6 +1,6 @@
-﻿// ────── ╔╗ Nori.Con
-// ╔═╦╦═╦╦╬╣ Copyright © 2024 Arvind
-// ║║║║╬║╔╣║ Globals.cs ~ Global usings for Nori.Console
+﻿// ────── ╔╗                                                                                    CON
+// ╔═╦╦═╦╦╬╣ ConGlobals.cs
+// ║║║║╬║╔╣║ Global usings for Nori.Console
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 global using System;
 global using System.Linq;

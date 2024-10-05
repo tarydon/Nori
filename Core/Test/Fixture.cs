@@ -1,6 +1,6 @@
-﻿// ────── ╔╗ Nori.Core
-// ╔═╦╦═╦╦╬╣ Copyright © 2024 Arvind
-// ║║║║╬║╔╣║ Fixture.cs ~ [Fixture] and [Test] attributes, and support classes
+﻿// ────── ╔╗                                                                                   CORE
+// ╔═╦╦═╦╦╬╣ Fixture.cs
+// ║║║║╬║╔╣║ [Fixture] and [Test] attributes, and support classes
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 namespace Nori;
 using static BindingFlags;

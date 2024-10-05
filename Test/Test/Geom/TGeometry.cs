@@ -1,6 +1,6 @@
-﻿// ────── ╔╗ Nori.Test
-// ╔═╦╦═╦╦╬╣ Copyright © 2024 Arvind
-// ║║║║╬║╔╣║ Geometry.cs ~ Various Geometry tests
+﻿// ────── ╔╗                                                                                   TEST
+// ╔═╦╦═╦╦╬╣ Geometry.cs
+// ║║║║╬║╔╣║ Various geometry tests
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 namespace Nori.Testing;
 

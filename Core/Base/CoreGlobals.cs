@@ -1,6 +1,6 @@
-﻿// ────── ╔╗ Nori.Core
-// ╔═╦╦═╦╦╬╣ Copyright © 2024 Arvind
-// ║║║║╬║╔╣║ Globals.cs ~ Global usings for this project
+﻿// ────── ╔╗                                                                                   CORE
+// ╔═╦╦═╦╦╬╣ CoreGlobals.cs
+// ║║║║╬║╔╣║ Global usings for the Nore.Core project
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 global using System;
 global using System.Collections.Generic;

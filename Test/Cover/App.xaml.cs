@@ -1,6 +1,6 @@
-// ────── ╔╗ Nori.Cover
-// ╔═╦╦═╦╦╬╣ Copyright © 2024 Arvind
-// ║║║║╬║╔╣║ App.xaml.cs ~ Application entry point for Nori coverage display
+// ────── ╔╗                                                                                  COVER
+// ╔═╦╦═╦╦╬╣ App.xaml.cs
+// ║║║║╬║╔╣║ Application entry point for Nori Coverage Display analyzer
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 using System.Windows;
 

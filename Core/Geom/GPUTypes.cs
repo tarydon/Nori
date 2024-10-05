@@ -1,6 +1,6 @@
-﻿// ────── ╔╗ Nori.Core
-// ╔═╦╦═╦╦╬╣ Copyright © 2024 Arvind
-// ║║║║╬║╔╣║ GPUTypes.cs ~ Types designed for transmitting data to GPUs
+﻿// ────── ╔╗                                                                                   CORE
+// ╔═╦╦═╦╦╬╣ GPUTypes.cs
+// ║║║║╬║╔╣║ Types designed for transmitting data to GPUs
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 namespace Nori;
 

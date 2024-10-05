@@ -1,6 +1,6 @@
-﻿// ────── ╔╗ Nori™
-// ╔═╦╦═╦╦╬╣ Copyright © 2025 Arvind
-// ║║║║╬║╔╣║ Exceptions.cs ~ Various exception types used for Nori
+﻿// ────── ╔╗                                                                                   CORE
+// ╔═╦╦═╦╦╬╣ Exceptions.cs
+// ║║║║╬║╔╣║ Various exception types used for Nori
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 namespace Nori;
 

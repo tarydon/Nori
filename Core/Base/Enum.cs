@@ -1,6 +1,6 @@
-﻿// ────── ╔╗ Nori.Core
-// ╔═╦╦═╦╦╬╣ Copyright © 2024 Arvind
-// ║║║║╬║╔╣║ Enum.cs ~ Implements various Enum types used by the Pix renderer
+﻿// ────── ╔╗                                                                                   CORE
+// ╔═╦╦═╦╦╬╣ Enum.cs
+// ║║║║╬║╔╣║ Implements various Enum types used by the Pix renderer
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 namespace Nori;
 

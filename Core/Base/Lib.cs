@@ -1,8 +1,7 @@
-﻿// ────── ╔╗ Nori.Core
-// ╔═╦╦═╦╦╬╣ Copyright © 2024 Arvind
-// ║║║║╬║╔╣║ Lib.cs ~ Implements the Lib module class that has a number of global functions
+// ────── ╔╗                                                                                   CORE
+// ╔═╦╦═╦╦╬╣ Lib.cs
+// ║║║║╬║╔╣║ Implements the Lib module class that has a number of global functions
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
-using System.Runtime.CompilerServices;
 namespace Nori;
 
 #region class Lib ----------------------------------------------------------------------------------
@@ -14,9 +13,7 @@ public static class Lib {
    public const double HalfPI = Math.PI / 2;
    public const double QuarterPI = Math.PI / 4;
 
-   /// <summary>
-   /// Are we in 'testing' mode?
-   /// </summary>
+   /// <summary>Are we in 'testing' mode?</summary>
    public static bool Testing { get; set; }
 
    /// <summary>The root of Nori projects on developer machines</summary>

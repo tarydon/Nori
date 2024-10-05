@@ -1,6 +1,6 @@
-// ────── ╔╗ Nori.Cover
-// ╔═╦╦═╦╦╬╣ Copyright © 2024 Arvind
-// ║║║║╬║╔╣║ MainWindow.xaml.cs ~ Main window for Nori coverage analyser display
+// ────── ╔╗                                                                                  COVER
+// ╔═╦╦═╦╦╬╣ MainWindow.xaml.cs
+// ║║║║╬║╔╣║ Main window for the Nori coverage analyser display utility
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 using System.IO;
 using System.Windows;

@@ -1,12 +1,7 @@
-﻿// ---------------------------------------------------------------------------------------
-// Pix ~ Scene-graph based rendering engine built on OpenGL
-// ---------------------------------------------------------------------------------------
-// Panel.cs
-// Implements the Pix.Panel class (a WPF UserControl that displays OpenGL content)
-// Also the underlying Pix.Surface class (a Windows Forms Control) that holds the HWND and
-// HDC Windows handles required by OpenGL
-// ---------------------------------------------------------------------------------------
-using System.Windows.Forms;
+﻿// ────── ╔╗                                                                                    WGL
+// ╔═╦╦═╦╦╬╣ Panel.cs
+// ║║║║╬║╔╣║ Implements Pix.Panel (WPF UserControl) and Pix.Surface (Windows Forms Control)
+// ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 using System.Windows.Forms.Integration;
 using static System.Windows.Forms.ControlStyles;
 namespace Nori;

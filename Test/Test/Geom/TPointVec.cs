@@ -1,6 +1,6 @@
-﻿// ────── ╔╗ Nori.Test
-// ╔═╦╦═╦╦╬╣ Copyright © 2024 Arvind
-// ║║║║╬║╔╣║ TPoint.cs ~ Tests of point and vector classes
+﻿// ────── ╔╗                                                                                   TEST
+// ╔═╦╦═╦╦╬╣ TPoint.cs
+// ║║║║╬║╔╣║ Tests of Point and Vector classes
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 namespace Nori.Testing;
 

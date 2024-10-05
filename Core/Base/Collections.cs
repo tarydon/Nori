@@ -1,6 +1,6 @@
-﻿// ────── ╔╗ Nori™
-// ╔═╦╦═╦╦╬╣ Copyright © 2025 Arvind
-// ║║║║╬║╔╣║ Collections.cs ~ Implements collections (including the AList - active list)
+﻿// ────── ╔╗                                                                                   CORE
+// ╔═╦╦═╦╦╬╣ Collections.cs
+// ║║║║╬║╔╣║ Implements collections (including the AList - active list)
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 using System.Collections;
 using System.Reactive.Subjects;

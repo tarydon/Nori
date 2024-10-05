@@ -1,6 +1,6 @@
-﻿// ────── ╔╗ Nori.Test
-// ╔═╦╦═╦╦╬╣ Copyright © 2024 Arvind
-// ║║║║╬║╔╣║ Globals.cs ~ Global includes for the Nori.Test project
+﻿// ────── ╔╗                                                                                   TEST
+// ╔═╦╦═╦╦╬╣ Program.cs
+// ║║║║╬║╔╣║ Entry point into the Nori.Test application
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 namespace Nori.Testing;
 

@@ -1,6 +1,6 @@
-﻿// ────── ╔╗ Nori.Test
-// ╔═╦╦═╦╦╬╣ Copyright © 2024 Arvind
-// ║║║║╬║╔╣║ Misc.cs ~ Miscellaneous tests
+﻿// ────── ╔╗                                                                                   TEST
+// ╔═╦╦═╦╦╬╣ TMisc1.cs
+// ║║║║╬║╔╣║ Miscellaneous tests
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 namespace Nori.Testing;
 

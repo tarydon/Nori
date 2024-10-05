@@ -1,6 +1,6 @@
-﻿// ────── ╔╗ Nori.Con
-// ╔═╦╦═╦╦╬╣ Copyright © 2024 Arvind
-// ║║║║╬║╔╣║ Console.cs ~ Entry point into the Nori.Console program
+﻿// ────── ╔╗                                                                                    CON
+// ╔═╦╦═╦╦╬╣ Console.cs
+// ║║║║╬║╔╣║ Entry point into the Nori.Console program
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 namespace Nori.Con;
 using static System.Reflection.BindingFlags;

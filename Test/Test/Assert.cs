@@ -1,6 +1,6 @@
-﻿// ────── ╔╗ Nori.Test
-// ╔═╦╦═╦╦╬╣ Copyright © 2024 Arvind
-// ║║║║╬║╔╣║ Assert.cs ~ Assert implements various assertions used for testing
+﻿// ────── ╔╗                                                                                   TEST
+// ╔═╦╦═╦╦╬╣ Assert.cs
+// ║║║║╬║╔╣║ Assert class: implements various assertions used for testing
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 using System.Diagnostics;
 using System.Runtime.CompilerServices;

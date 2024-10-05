@@ -1,6 +1,6 @@
-﻿// ────── ╔╗ Nori.Core
-// ╔═╦╦═╦╦╬╣ Copyright © 2024 Arvind
-// ║║║║╬║╔╣║ Coverage.cs ~ Implements the Coverage class, used to load coverage.xml files
+﻿// ────── ╔╗                                                                                   CORE
+// ╔═╦╦═╦╦╬╣ Coverage.cs
+// ║║║║╬║╔╣║ Implements the Coverage class, used to load coverage.xml files from dotnet-coverage
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 using System.Xml.Linq;
 namespace Nori;

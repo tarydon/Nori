@@ -1,6 +1,6 @@
-﻿// ────── ╔╗ Nori.Con
-// ╔═╦╦═╦╦╬╣ Copyright © 2024 Arvind
-// ║║║║╬║╔╣║ Commands.cs ~ Implements several commands (LineCount, SrcClean)
+﻿// ────── ╔╗                                                                                    CON
+// ╔═╦╦═╦╦╬╣ Commands.cs
+// ║║║║╬║╔╣║ Implements several commands (LineCount, SrcClean, ComputeCoverage, GetNextId ...)
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 using System.Diagnostics;
 using System.Reflection;
@@ -196,10 +196,10 @@ static class SrcClean {
       // Next, add the Nori banner for files that don't have them
       if (lines.Count > 1 && !lines[0].Trim ().StartsWith ("//")) {
          string name = Path.GetFileName (file);
-         lines.Insert (0, "// ────── ╔╗ Nori™");
-         lines.Insert (1, "// ╔═╦╦═╦╦╬╣ Copyright © 2025 Arvind");
-         lines.Insert (2, $"// ║║║║╬║╔╣║ {name} ~ <<" + "TODO>>");
-         lines.Insert (3, "// ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────");
+         lines.Insert (0,  "// ────── ╔╗");
+         lines.Insert (1, $"// ╔═╦╦═╦╦╬╣ {name}");
+         lines.Insert (2,  "// ║║║║╬║╔╣║ <<TODO>>");
+         lines.Insert (3,  "// ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────");
          cleaned = true;
       }
       if (cleaned) File.WriteAllLines (file, lines);

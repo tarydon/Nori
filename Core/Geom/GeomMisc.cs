@@ -1,6 +1,6 @@
-﻿// ────── ╔╗ Nori.Core
-// ╔═╦╦═╦╦╬╣ Copyright © 2024 Arvind
-// ║║║║╬║╔╣║ GeomMisc.cs ~ Miscellaneous geometry types
+﻿// ────── ╔╗                                                                                   CORE
+// ╔═╦╦═╦╦╬╣ GeomMisc.cs
+// ║║║║╬║╔╣║ Miscellaneous geometry types
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 using static System.Math;
 namespace Nori;
