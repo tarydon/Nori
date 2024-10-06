@@ -1,6 +1,6 @@
 ﻿// ────── ╔╗                                                                                   CORE
-// ╔═╦╦═╦╦╬╣ GeomMisc.cs
-// ║║║║╬║╔╣║ Miscellaneous geometry types
+// ╔═╦╦═╦╦╬╣ Bound.cs
+// ║║║║╬║╔╣║ Bounds in 1-D (span), 2-D (rectangle), 3-D (cuboid)
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 using static System.Math;
 namespace Nori;

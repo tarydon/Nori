@@ -70,6 +70,7 @@ dotnet_diagnostic.CA1826.severity = None      # Do not use enumerable methods on
 dotnet_diagnostic.IDE0044.severity = None     # Make field readonly
 dotnet_diagnostic.IDE0063.severity = None     # 'Using' statement can be simplified
 dotnet_diagnostic.IDE1006.severity = None     # Naming rule violation
+dotnet_diagnostic.SYSLIB1054.severity = None  # Use 'LibraryImportAttribute' rather than 'DllImportAttribute'
 
 # Diagnostics related to XML documentation
 dotnet_diagnostic.CS1591.severity = None      # Missing XML comment for publicly visible type or member
