@@ -96,8 +96,8 @@ public readonly struct Color4 : IEQuable<Color4> {
    }
 
    // Operators ----------------------------------------------------------------
-   /// <summary>Converts the color to a Vec4H with the X,Y,Z,W components mapping to R,G,B,A</summary>
-   public static explicit operator Vec4H (Color4 c) => new (c.R / 255f, c.G / 255f, c.B / 255f, c.A / 255f);
+   /// <summary>Converts the color to a Vec4f with the X,Y,Z,W components mapping to R,G,B,A</summary>
+   public static explicit operator Vec4F (Color4 c) => new (c.R / 255f, c.G / 255f, c.B / 255f, c.A / 255f);
 
    // Implementation -----------------------------------------------------------
    // Builds the maps that convert 'known' Color4 values to names like Red / Blue etc

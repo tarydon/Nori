@@ -1,4 +1,4 @@
-﻿// ────── ╔╗                                                                                   CORE
+// ────── ╔╗                                                                                   CORE
 // ╔═╦╦═╦╦╬╣ GPUTypes.cs
 // ║║║║╬║╔╣║ Types designed for transmitting data to GPUs
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
@@ -8,6 +8,7 @@ namespace Nori;
 /// <summary>2D vector of floats (used for passing data to OpenGL)</summary>
 [StructLayout (LayoutKind.Sequential, Pack = 4, Size = 8)]
 public readonly record struct Vec2F (float X, float Y) {
+   public Vec2F (double x, double y) : this ((float)x, (float)y) { }
    public static implicit operator Vec2F (Point2 pt) => new ((float)pt.X, (float)pt.Y);
    public static explicit operator Vec2F (Vector2 vec) => new ((float)vec.X, (float)vec.Y);
    public static implicit operator Vector2 (Vec2F vec) => new (vec.X, vec.Y);
@@ -55,102 +56,44 @@ public readonly record struct Vec4H (float X, float Y, float Z, float W) {
    public override string ToString () => $"<{X.R5 ()},{Y.R5 ()},{Z.R5 ()},{W.R5 ()}>";
 }
 
-/// <summary>2D vector of shorts (used for passing data to OpenGL)</summary>
-[StructLayout (LayoutKind.Sequential, Pack = 2, Size = 4)]
-public readonly record struct Vec2S (short X, short Y) {
-   public Vec2S (int x, int y) : this ((short)x, (short)y) { }
-   public bool EQ (Vec2S b) => X == b.X && Y == b.Y;
-   public static readonly Vec2S Zero = new (0, 0);
-   public static readonly Vec2S Nil = new (-32768, -32768);
-   public bool IsNil => X == -32768 && Y == -32768;
-   public Vec2S Move (int dx, int dy) => new (X + dx, Y + dy);
-   public Vec2S Midpoint (Vec2S other) => new ((X + other.X + 1) / 2, (Y + other.Y + 1) / 2);
-   public override string ToString () => $"<{X},{Y}>";
-}
-
-/// <summary>4D vector of shorts (used for passing data to OpenGL)</summary>
-[StructLayout (LayoutKind.Sequential, Pack = 2, Size = 8)]
-public readonly record struct Vec4S (short X, short Y, short Z, short W) {
-   public Vec4S (int x, int y, int z, int w) : this ((short)x, (short)y, (short)z, (short)w) { }
-   public bool EQ (Vec4S b) => X == b.X && Y == b.Y && Z == b.Z && W == b.W;
-   public override string ToString () => $"<{X},{Y},{Z},{W}>";
-}
-
-/// <summary>An axis-aligned pixel-rectangle (components are shorts)</summary>
-/// This follows OpenGL sign conventions : (0,0) is the bottom left corner of the screen, 
-/// and +X is right, +Y is up
-[StructLayout (LayoutKind.Sequential, Pack = 2, Size = 8)]
-public readonly struct RectS : IEQuable<RectS> {
-   public RectS (int left, int bottom, int right, int top) {
-      (Left, Bottom, Right, Top) = ((short)left, (short)bottom, (short)right, (short)top);
-      if (right < left || top < bottom) throw new NotImplementedException ();
-   }
-   public void Deconstruct (out int left, out int bottom, out int right, out int top)
-      => (left, bottom, right, top) = (Left, Bottom, Right, Top);
-
-   public RectS (float left, float bottom, float right, float top) {
-      (Left, Bottom, Right, Top) = ((short)(left + 0.5f), (short)(bottom + 0.5f), (short)(right + 0.5f), (short)(top + 0.5f));
-      if (right < left || top < bottom) throw new NotImplementedException ();
+/// <summary>4x4 transformation matrix, with float components</summary>
+[StructLayout (LayoutKind.Sequential, Size = 64, Pack = 4)]
+public readonly struct Mat4F {
+   // Constructors -------------------------------------------------------------
+   /// <summary>Construct a Mat4f, given the 12 components</summary>
+   public Mat4F (float m11, float m12, float m13, float m21, float m22, float m23, float m31, float m32, float m33, float x, float y, float z) {
+      (M11, M12, M13, M14) = (m11, m12, m13, 0);
+      (M21, M22, M23, M24) = (m21, m22, m23, 0);
+      (M31, M32, M33, M34) = (m31, m32, m33, 0);
+      (X, Y, Z, M44) = (x, y, z, 1);
    }
 
-   public readonly RectS Shifted (int x, int y) => new (Left + x, Bottom + y, Right + x, Top + y);
+   public override string ToString ()
+      => $"[{M11},{M12},{M13},{M14}, {M21},{M22},{M23},{M24}, {M31},{M32},{M33},{M34}, {X},{Y},{Z},{M44}]";
 
-   public static readonly RectS Empty = new (32767, 32767, 32767, 32767);
-   public bool IsEmpty => Left == 32767;
+   public readonly static Mat4F Identity = new (1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0);
+   public readonly static Mat4F Zero = new (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 
-   public readonly bool Contains (Vec2S p)
-      => Left <= p.X && p.X <= Right && Bottom <= p.Y && p.Y <= Top;
+   // Properties ---------------------------------------------------------------
+   public readonly float M11, M12, M13, M14;
+   public readonly float M21, M22, M23, M24;
+   public readonly float M31, M32, M33, M34;
+   public readonly float X, Y, Z, M44;
 
-   public int Width => Right - Left;
-   public int Height => Top - Bottom;
-   public Vec2S Midpoint => new ((Left + Right) / 2, (Top + Bottom) / 2);
-   public Vec2S BottomLeft => new (Left, Bottom);
-   public Vec2S TopRight => new (Right, Top);
-   public override string ToString () => $"[{Width}x{Height} @ {Left},{Bottom}]";
+   // Conversions --------------------------------------------------------------
+   /// <summary>Convert a Matrix3 to a Mat4f</summary>
+   public static explicit operator Mat4F (Matrix3 m)
+      => new ((float)m.M11, (float)m.M12, (float)m.M13,
+              (float)m.M21, (float)m.M22, (float)m.M23,
+              (float)m.M31, (float)m.M32, (float)m.M33,
+              (float)m.DX, (float)m.DY, (float)m.DZ);
 
-   public int CompareTo (RectS b) {
-      int n = Left.CompareTo (b.Left); if (n != 0) return n;
-      n = Bottom.CompareTo (b.Bottom); if (n != 0) return n;
-      n = Right.CompareTo (b.Right); if (n != 0) return n;
-      return Top.CompareTo (b.Top);
-   }
+   // Methods ------------------------------------------------------------------
+   public Mat4F ExtractRotation () => new (M11, M12, M13, M21, M22, M23, M31, M32, M33, 0, 0, 0);
 
-   public bool EQ (RectS b)
-      => Left == b.Left && Bottom == b.Bottom && Right == b.Right && Top == b.Top;
-
-   public static explicit operator Vec2F (RectS cell) => new (cell.Width, cell.Height);
-
-   public readonly short Left, Bottom, Right, Top;
-}
-
-/// <summary>Represents a 'margin', with components expressed as Float</summary>
-/// This might look similar to RectF at first, but there the 4 values here are essentially independent,
-/// and there are no constraints that Right should be more than or equal to Left, for example. 
-[StructLayout (LayoutKind.Sequential, Pack = 4, Size = 16)]
-public readonly record struct MarginF (float Left, float Top, float Right, float Bottom) : IEQuable<MarginF> {
-   public MarginF (float v) : this (v, v, v, v) { }
-   public MarginF (double v) : this ((float)v) { }
-   public MarginF (double l, double t, double r, double b) : this ((float)l, (float)t, (float)r, (float)b) { }
-
-   public override string ToString () {
-      if (Left.EQ (Right) && Left.EQ (Top) && Left.EQ (Bottom)) return Left.ToString ();
-      return $"{Left},{Top},{Right},{Bottom}";
-   }
-
-   public static readonly MarginF Zero = new (0, 0, 0, 0);
-   public bool EQ (MarginF b) => Left.EQ (b.Left) && Right.EQ (b.Right) && Top.EQ (b.Top) && Bottom.EQ (b.Bottom);
-   public float Horz => Left + Right;
-   public float Vert => Top + Bottom;
-
-   public static MarginF Parse (string s) {
-      if (s.Contains (',')) {
-         var v = s.Split (',').Select (float.Parse).ToList ();
-         return new (v[0], v[1], v[2], v[3]);
-      }
-      return new (float.Parse (s));
-   }
-
-   public static implicit operator MarginF (int n) => new (n, n, n, n);
-   public static implicit operator MarginF (double f) => new (f, f, f, f);
+   /// <summary>Returns true if two Mat4f are exactly the same</summary>
+   public bool EQ (ref Mat4F b)
+      => M11 == b.M11 && M12 == b.M12 && M13 == b.M13 && M14 == b.M14 && M21 == b.M21 && M22 == b.M22 && M23 == b.M23 && M24 == b.M24
+      && M31 == b.M31 && M32 == b.M32 && M33 == b.M33 && M34 == b.M34 && X == b.X && Y == b.Y && Z == b.Z && M44 == b.M44;
 }
 #endregion

@@ -189,6 +189,7 @@ public static class TestRunner {
          if (file.EndsWith (".g.cs")) return false;
          file = file.Replace ('\\', '/');
          if (file.StartsWith ($"{Lib.DevRoot}/Test/")) return false;
+         if (file.StartsWith ($"{Lib.DevRoot}/Core/Test")) return false;
          return true;
       }
    }

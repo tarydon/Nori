@@ -75,16 +75,36 @@ public class Matrix3 {
    public static readonly Matrix3 Identity
       = new (1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, EFlag.Zero);
 
-   /// <summary>Compose an OpenGL orthographic projection matrix</summary>
-   /// We take a world space cuboid defined like this:
-   ///   X bounds: left .. right
-   ///   Y bounds: bottom .. top
-   ///   Z bounds: near .. far
-   /// and map it to the OpenGL projection space cube of -1..+1 in all the 3 directions.
-   /// In effect, this is a scaling + translation matrix that maps world space into that cube. 
-   public static Matrix3 Orthographic (double left, double right, double bottom, double top, double near, double far) {
-      double dx = 1 / (right - left), dy = 1 / (top - bottom), dz = 1 / (far - near);
-      return new (2 * dx, 0, 0, 0, 2 * dy, 0, 0, 0, -2 * dz, -dx * (right + left), -dy * (top + bottom), -dz * (near + far));
+   /// <summary>Construct a matrix to map a given 2-D bound to opengl clip-space</summary>
+   /// This first adjusts the bound so that it matches the aspect ratio of the given
+   /// viewport. Then, it constructs a matrix to map this bound to the OpenGL clip space,
+   /// which extends from -1 to +1 in every direction. 
+   public static Matrix3 Map (Bound2 window, (int X, int Y) viewport) {
+      Point2 mid = window.Midpoint;
+      double dx = Max (window.Width / 2.0, 1), dy = Max (window.Height / 2.0, 1);
+      double aspect = Max (viewport.X, 1.0) / Max (viewport.Y, 1.0);
+      if (dx / dy > aspect) dy = dx / aspect;
+      else dx = dy * aspect;
+
+      // Now, dx is half the width of the viewport, and dy is half the height of the 
+      // viewport. We want to first translate the midpoint to 0,0 and then scale the
+      // viewport so the X/Y span is from -1 to +1
+      return Translation (-mid.X, -mid.Y, 0) * Scaling (1 / dx, 1 / dy, 1);
+   }
+
+   /// <summary>Creates an orthographic projection matrix</summary>
+   /// This maps the world-space cuboid (designated by Bound3) to the OpenGL clip space
+   /// which extends from -1 to +1 in every direction. It is up to the caller to ensure that
+   /// the X & Y aspect of the Bound3 passed in match that of the viewport, else distortion
+   /// will occur in X & Y
+   public static Matrix3 Orthographic (Bound3 bound) {
+      double dx = 1 / bound.X.Length, dy = 1 / bound.Y.Length, dz = 1 / bound.Z.Length;
+      Point3 mid = bound.Midpoint;
+      return new (2 * dx,          0,               0,
+                  0,               2 * dy,          0,
+                  0,               0,               -2 * dz,
+                  -2 * dx * mid.X, -2 * dy * mid.Y, -2 * dz * mid.Z,
+                  EFlag.Translate | EFlag.Scale | EFlag.Mirror);
    }
 
    /// <summary> Compose a rotation matrix about one of the 3 basic axes</summary>

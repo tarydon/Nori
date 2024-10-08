@@ -136,6 +136,9 @@ class Matrix2Tests {
       (p1 * m4).Is ("(-1.414214,15.556349)"); (v1 * m4).Is ("<-1.414214,5.656854>");
       var m5 = Matrix2.Rotation (new (1, 2), 90.D2R ());
       (p1 * m5).Is ("(-9,11)"); (v1 * m5).Is ("<-5,3>");
+
+      var m6 = (Matrix3)Matrix2.Translation (1, 2);
+      m6.Is ("[1,0,0, 0,1,0, 0,0,1, 1,2,0]");
    }
 
    [Test (9, "Matrix2 multiplication, inverse")]
@@ -192,9 +195,9 @@ class Matrix3Tests {
       Matrix3.Rotation (V (1, 1, 0), 0).IsIdentity.IsTrue ();
       (p0 * Matrix3.Scaling (1.5)).Is ("(4.5,-6,7.5)");
       (p0 * Matrix3.Scaling (1, 1.5, 2)).Is ("(3,-6,10)");
-      var m = Matrix3.Orthographic (0, 10, 0, 5, 1, 5);
-      m.Is ("[0.2,0,0, 0,0.4,0, 0,0,-0.5, -1,-1,-1.5]");
-      m.HasMirroring.IsTrue ();
+      var m2 = Matrix3.Orthographic (new Bound3 (0, 0, 1, 10, 5, 5));
+      m2.Is ("[0.2,0,0, 0,0.4,0, 0,0,-0.5, -1,-1,-1.5]");
+      m2.HasMirroring.IsTrue ();
 
       var p1 = P (1, 2, 3);
       var q1 = Quaternion.FromAxisRotations (0, 0, 0);
@@ -203,6 +206,9 @@ class Matrix3Tests {
       var q2 = Quaternion.FromAxisRotations (Lib.HalfPI, Lib.HalfPI, Lib.PI);
       var mr2 = Matrix3.Rotation (q2);
       (p1 * mr2).Is ("(3,-1,-2)");
+
+      var m5 = Matrix3.Map (new Bound2 (5, 5, 85, 45), (2000, 1000));
+      m5.Is ("[0.025,0,0, 0,0.05,0, 0,0,1, -1.125,-1.25,0]");
    }
 
    [Test (53, "Test of Matrix3 multiplications")]
@@ -221,7 +227,8 @@ class Matrix3Tests {
       Matrix3 ms = Matrix3.Scaling (3);
       (p0 * (mt1 * ms)).Is ("(6,12,18)");
       (p0 * (ms * mt1)).Is ("(4,8,12)");
-      Matrix3 mo1 = Matrix3.Orthographic (1, 2, 3, 4, 5, 6), mo2 = Matrix3.Orthographic (3, 4, 5, 6, 7, 8);
+      Matrix3 mo1 = Matrix3.Orthographic (new Bound3 (1, 3, 5, 2, 4, 6));
+      Matrix3 mo2 = Matrix3.Orthographic (new Bound3 (3, 5, 7, 4, 6, 8));
       mo1.HasMirroring.IsTrue ();
       (mo1 * mo2).HasMirroring.IsFalse ();
    }
@@ -257,12 +264,14 @@ class GPUTypesTests {
    void Test1 () {
       Vec2F a = new (3.654321f, 2.2f); a.Is ("<3.65432,2.2>");
       Vec2F b = (Vec2F)new Vector2 (1, 2); b.Is ("<1,2>");
+      Vec2F a1 = new (3.654321, 2.2); a1.Is ("<3.65432,2.2>");
       Vector2 c = b; c.Is ("<1,2>");
       Vec2F.Zero.Is ("<0,0>");
       a.EQ (new (3.65432f, 2.2f)).IsTrue ();
       a.EQ (new (3.6543f, 2.2f)).IsFalse ();
 
       Vec3F d = new (3.654321f, 2.2f, 1.1f); d.Is ("<3.65432,2.2,1.1>");
+      Vec3F d1 = new (3.654321, 2.2, 1.1); d1.Is ("<3.65432,2.2,1.1>");
       Vec3F e = (Vec3F)new Vector3 (1, 2, 3); e.Is ("<1,2,3>");
       Vector3 f = e; f.Is ("<1,2,3>");
       Vec3F.Zero.Is ("<0,0,0>");
@@ -270,5 +279,26 @@ class GPUTypesTests {
       d.EQ (new (3.6543f, 2.2f, 1.1f)).IsFalse ();
 
       Vec3H g = new ((Half)1.1, (Half)2.2, (Half)3.3); g.Is ("<1.1,2.199,3.301>");
+      Vec3H g2 = new ((Half)1.1, (Half)2.2, (Half)3.4);
+      g.EQ (g).IsTrue ();  g.EQ (g2).IsFalse ();
+      Vec4H g3 = new (1, 2, 3, 4); g3.Is ("<1,2,3,4>");
+      g3.EQ (g3).IsTrue (); g3.EQ (new (1, 2, 3, 4.00001f)).IsFalse ();
+
+      Vec4F h = new (1.1, 2.2, 3.3, 4.4); h.EQ (h).IsTrue ();
+      Vec4F h2 = new (1.1, 2.2, 3.3, 4.5); h.EQ (h2).IsFalse ();
+      h.CompareTo (h2).Is (-1);
+      h.CompareTo (new (1.2, 2.2, 3.3, 4.4)).Is (-1);
+      h.CompareTo (new (1.1, 2.3, 3.3, 4.4)).Is (-1);
+      h.CompareTo (new (1.1, 2.2, 3.2, 4.4)).Is (1);
+      h.CompareTo (new (1.1, 2.2, 3.3, 4.3)).Is (1);
+
+      Mat4F m0 = new (11, 12, 13, 21, 22, 23, 31, 32, 33, 1, 2, 3);
+      m0.Is ("[11,12,13,0, 21,22,23,0, 31,32,33,0, 1,2,3,1]");
+      Mat4F m1 = (Mat4F)Matrix3.Translation (1, 2, 3);
+      m1.Is ("[1,0,0,0, 0,1,0,0, 0,0,1,0, 1,2,3,1]");
+      Mat4F.Identity.Is ("[1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1]");
+      Mat4F.Zero.Is ("[0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,1]");
+      m0.ExtractRotation ().Is ("[11,12,13,0, 21,22,23,0, 31,32,33,0, 0,0,0,1]");
+      m0.EQ (ref m0).IsTrue (); m0.EQ (ref m1).IsFalse ();
    }
 }

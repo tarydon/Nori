@@ -21,7 +21,7 @@ class TMisc {
       Color4.Gray (128).Is ("#808080");
       Color4.Gray (0x33).Is ("#333");
       new Color4 (0x11, 0x22, 0x33).Is ("#123");
-      ((Vec4H)Color4.Magenta).Is ("<1,0,1,1>");
+      ((Vec4F)Color4.Magenta).Is ("<1,0,1,1>");
       Color4.Random.A.Is ((byte)255);
       Color4.Cyan.Deconstruct (out int r, out int g, out int b, out int a);
       r.Is (0); g.Is (255); b.Is (255); a.Is (255);
@@ -45,6 +45,7 @@ class TMisc {
       // Clamp
       1.5.Clamp (1, 2).Is (1.5); 0.5.Clamp (1, 2).Is (1); 2.5.Clamp (1, 2).Is (2);
       2.0.Clamp ().Is (1);
+      1.5f.Clamp (1, 2).Is (1.5f); 1.5f.Clamp (2, 3).Is (2f);
 
       // D2R, R2D
       30.D2R ().Is (Lib.PI / 6); 45.0.D2R ().Is (Lib.PI / 4); Lib.PI.R2D ().Is (180);
@@ -68,12 +69,25 @@ class TMisc {
       // Numbered
       string[] list = ["zero", "one", "two"];
       string.Join (" | ", list.Numbered ()).Is ("(0, zero) | (1, one) | (2, two)");
+      string tmp1 = "";
+      list.Select (a => a.ToUpper ()).ForEach (s => tmp1 += s);
+      tmp1.Is ("ZEROONETWO");
 
       // Round, R3, R5, R6
       1.23456.Round (3).Is (1.235); 1.23456f.Round (2).Is (1.23);
       Half aa = (Half)1.234567; aa.R3 ().Is (1.234);
       1.2345678f.R5 ().Is ("1.23457");
       1.2345678.R6 ().Is ("1.234568");
+
+      Dictionary<int, int> squares = [];
+      squares.Get (5, n => n * n).Is (25);
+      squares.Get (5, n => n * n).Is (25);
+      5.0.IsNaN ().IsFalse (); double.NaN.IsNaN ().IsTrue ();
+      5f.IsNaN ().IsFalse (); float.NaN.IsNaN ().IsTrue ();
+      5f.IsZero ().IsFalse (); 1e-6f.IsZero ().IsTrue ();
+      22.RoundUp (10).Is (30);
+      "1.5".ToDouble ().Is (1.5);
+      "abc".ToDouble ().Is (0);
    }
 
    [Test (29, "AList<T> tests")]
@@ -81,9 +95,26 @@ class TMisc {
       AList<int> set = [];
       List<ListChange> changes = [];
       set.Subscribe (changes.Add);
-      set.Add (1); set.Add (2); set.Insert (0, 3); set.Remove (2); set.Add (5); set[1] = 10; set.Clear ();
+      set.Add (1); set.Add (2); set.Insert (0, 3); set.Remove (2); set.Add (5); set[1] = 10;
+      set[1].Is (10);
+      set.Count.Is (3);
+      set.Contains (5).IsTrue (); set.Contains (55).IsFalse ();
+      set.Clear ();
+      set.Remove (55).IsFalse ();
       string s = string.Join (' ', changes.Select (a => $"{a.Action.ToString ()[0]}{a.Index}"));
       s.Is ("A0 A1 A0 R2 A2 R1 A1 C2");
+      changes[0].Is ("Added(0)");
+
+      set.IsReadOnly.IsFalse (); set.IsFixedSize.IsFalse (); set.IsSynchronized.IsFalse ();
+      set.Add ((object)24); set.Contains ((object)24).IsTrue (); set.IndexOf ((object)24).Is (0);
+      set.Insert (0, (object)16); set.Remove ((object)16); set[0].Is (24); set.Count.Is (1);
+      ReadOnlySpan<int> span = set; span.Length.Is (1);
+      int[] a1 = new int[100];
+      Exception? e = null;
+      try { set.CopyTo ((Array)a1, 0); } catch (Exception e1) { e = e1; }
+      (e == null).IsFalse ();
+      set.CopyTo (a1, 1);
+      object? o1 = ((System.Collections.IList)set)[0]; 
    }
 
    [Test (50, "Basic test of RBTree")]

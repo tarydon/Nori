@@ -48,14 +48,6 @@ public static class Lib {
    }
    static string? sCodeBase;
 
-   /// <summary>Loads text from an embedded resource</summary>
-   public static string GetResText (string name) {
-      var assembly = Assembly.GetExecutingAssembly ();
-      using var stm = assembly.GetManifestResourceStream ($"Pix.Res.{name}")!;
-      using var reader = new StreamReader (stm);
-      return reader.ReadToEnd ().ReplaceLineEndings ("\n");
-   }
-
    public static bool IsNull<T> (ref readonly T source) => Unsafe.IsNullRef (in source);
 
    /// <summary>Returns the 'nice name' for a type (human readable name like 'int')</summary>
