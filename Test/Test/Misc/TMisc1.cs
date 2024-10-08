@@ -6,27 +6,6 @@ namespace Nori.Testing;
 
 [Fixture (3, "Miscellaneous tests", "Misc")]
 class TMisc {
-   [Test (22, "Test of Color4")]
-   void Test1 () {
-      new Color4 (48, 12, 24, 36).Is ("#300C1824");
-      new Color4 (12, 24, 36).Is ("#0C1824");
-      Color4.Nil.IsNil.Is (true); Color4.Red.IsNil.Is (false);
-      Color4.Red.Is ("Red"); Color4.Nil.Is ("Nil");
-      Color4.Transparent.Is ("Transparent"); Color4.Black.Is ("Black");
-      Color4.Green.Is ("Green"); Color4.Blue.Is ("Blue");
-      Color4.Yellow.Is ("Yellow"); Color4.Magenta.Is ("Magenta");
-      Color4.Cyan.Is ("Cyan"); Color4.White.Is ("White");
-      Color4.Red.EQ (Color4.Red).Is (true);
-      Color4.Red.Value.Is (4278190335U);
-      Color4.Gray (128).Is ("#808080");
-      Color4.Gray (0x33).Is ("#333");
-      new Color4 (0x11, 0x22, 0x33).Is ("#123");
-      ((Vec4F)Color4.Magenta).Is ("<1,0,1,1>");
-      Color4.Random.A.Is ((byte)255);
-      Color4.Cyan.Deconstruct (out int r, out int g, out int b, out int a);
-      r.Is (0); g.Is (255); b.Is (255); a.Is (255);
-   }
-
    [Test (23, "Test of Coverage class")]
    void Test2 () {
       var c = new Coverage ($"{NT.Data}/Misc/coverage.xml");
@@ -173,5 +152,27 @@ class TMisc {
          tree.Add (n); set.Add (n);
       }
       tree.SequenceEqual (set).IsTrue ();
+   }
+
+   [Test (55, "Tests of the Nori.Core.Lib class")]
+   void Test7 () {
+      Lib.Testing.IsTrue ();
+      Lib.Acos (-2).R2D ().Is (180);
+      Lib.GetLocalFile ("Demo").Is ($"{Lib.DevRoot}\\Bin\\Demo");
+      Lib.AddNamespace ("Nori");
+      Lib.NiceName (typeof (System.Boolean)).Is ("bool");
+      Lib.NiceName (typeof (Vector2)).Is ("Vector2");
+      Lib.NormalizeAngle (Lib.TwoPI + Lib.HalfPI).Is (Lib.HalfPI);
+      Lib.NormalizeAngle (-Lib.TwoPI - Lib.QuarterPI).Is (-Lib.QuarterPI);
+      Lib.Print ("", ConsoleColor.Yellow); Lib.Println ("", ConsoleColor.Green);
+      Lib.SolveLinearPair (3, 4, -13.3, 5, 6, -20.7, out var x, out var y).IsTrue ();
+      x.Is (1.5); y.Is (2.2);
+      Lib.SolveLinearPair (3, 4, -13.3, 30, 40, -133, out x, out y).IsFalse ();
+   }
+
+   [Test (56, "Throwing various exceptions")]
+   void Test8 () {
+      new BadCaseException (12).Message.Is ("Unhandled case: 12");
+      new ParseException ("13e", typeof (double)).Message.Is ("Cannot convert '13e' to double");
    }
 }

@@ -6,61 +6,6 @@ namespace Nori.Testing;
 
 [Fixture (1, "Geometry tests", "Geom")]
 class GeometryTests {
-   [Test (3, "class Vector2")]
-   void Test3 () {
-      Vector2 vec = new (3, 4); vec.Length.R6 ().Is ("5");
-      Vector2.Zero.Is ("<0,0>");
-      Vector2.XAxis.Is ("<1,0>");
-      Vector2.YAxis.Is ("<0,1>");
-      vec.EQ (new (3, 4.000001)).Is (false);
-      vec.EQ (new (3, 4.0000001)).Is (true);
-
-      (vec + new Vector2 (10, 20)).Is ("<13,24>");
-      (vec - new Vector2 (0.1, 0.2)).Is ("<2.9,3.8>");
-      (vec * 2.5).Is ("<7.5,10>");
-      (vec / 2).Is ("<1.5,2>");
-      (-vec).Is ("<-3,-4>");
-
-      Vec2F pfa = (Vec2F)vec; pfa.Is ("<3,4>");
-      Vector2 pfc = new Vec2F (7, 9); pfc.Is ("<7,9>");
-      Vec2F pfb = new (-12.112233f, -13.2f); pfb.Is ("<-12.11223,-13.2>");
-
-      Vector2.Along (EDir.E).Is ("<1,0>");
-      Vector2.Along (EDir.S).Is ("<0,-1>");
-      Vector2.Along (EDir.W).Is ("<-1,0>");
-      Vector2.Along (EDir.N).Is ("<0,1>");
-   }
-
-   [Test (4, "class Vector3")]
-   void Test4 () {
-      Vector3 vec = new (3, 4, 5); vec.Length.R6 ().Is ("7.071068");
-      Vector3.Zero.Is ("<0,0,0>");
-      Vector3.XAxis.Is ("<1,0,0>");
-      Vector3.YAxis.Is ("<0,1,0>");
-      Vector3.ZAxis.Is ("<0,0,1>");
-      vec.EQ (new (3, 4.000001, 5)).Is (false);
-      vec.EQ (new (3, 4.0000001, 5)).Is (true);
-
-      (vec + new Vector3 (10, 20, 30)).Is ("<13,24,35>");
-      (vec - new Vector3 (0.1, 0.2, 0.3)).Is ("<2.9,3.8,4.7>");
-      (vec * 2.5).Is ("<7.5,10,12.5>");
-      (vec / 2).Is ("<1.5,2,2.5>");
-      (-vec).Is ("<-3,-4,-5>");
-      Vector3.Zero.CosineTo (Vector3.Zero).R6 ().Is ("0");
-
-      Vector3 vec2 = new (5, -1, 3);
-      vec.CosineTo (vec2).R6 ().Is ("0.621519");
-      vec.Dot (vec2).R6 ().Is ("26");
-      vec.Opposing (vec2).Is (false);
-      vec.Opposing (-vec2).Is (true);
-      (vec * vec2).Is ("<17,16,-23>");
-
-      Vec3F pfa = (Vec3F)vec; pfa.Is ("<3,4,5>");
-      Vector3 pfc = new Vec3F (7, 9, 11); pfc.Is ("<7,9,11>");
-      Vec3F pfb = new (-12.112233f, -13.2f, -14.3f); pfb.Is ("<-12.11223,-13.2,-14.3>");
-      Vec3H pfd = new ((Half)(-1.12345f), (Half)(2.27f), (Half)(-3.35f)); pfd.Is ("<-1.123,2.27,-3.35>");
-   }
-
    [Test (5, "class Bound1")]
    void Test5 () {
       Bound1 b1 = new (), b2 = new (10, 20), b3 = new (3, 1);

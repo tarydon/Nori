@@ -136,12 +136,13 @@ public partial class RBTree<TVal, TKey> : IEnumerable<TVal> where TKey : ICompar
       public TVal Value;         // Value stored at this node
       public EColor Color;       // Color of parent link (link leading into this node)
 
+      /* Debug code, last used 241008
       public override readonly string ToString () {
          string s = $"{Color}Node {Value}";
          if (Left != 0) s += $" L:{Left}";
          if (Right != 0) s += $" R:{Right}";
          return s;
-      }
+      } */
 
       public Node (TVal value, EColor color)
          => (Value, Color) = (value, color);

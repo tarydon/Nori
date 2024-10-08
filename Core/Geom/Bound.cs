@@ -15,7 +15,6 @@ public readonly struct Bound1 : IEQuable<Bound1> {
    public override string ToString () => IsEmpty ? "Empty" : $"{Min.R5 ()}▸{Max.R5 ()}";
 
    // Properties ---------------------------------------------------------------
-   public static readonly Bound1 NaN = new (double.NaN);
    public readonly float Min, Max;
    public double Length => Max - Min;
    public bool IsEmpty => Min > Max;
@@ -182,81 +181,5 @@ public readonly struct Bound3 {
    public static Bound3 operator + (Bound3 a, Bound3 b) => new (a.X + b.X, a.Y + b.Y, a.Z + b.Z);
    /// <summary>Returns the intersection of two Bound3 (could be empty)</summary>
    public static Bound3 operator * (Bound3 a, Bound3 b) => new (a.X * b.X, a.Y * b.Y, a.Z * b.Z);
-}
-#endregion
-
-#region struct Quaternion4 -------------------------------------------------------------------------
-/// <summary>Represents a Quaternion of rotation</summary>
-public readonly struct Quaternion : IEQuable<Quaternion> {
-   // Constructors -------------------------------------------------------------
-   /// <summary>Construct a quaternion given the 4 components</summary>
-   public Quaternion (double x, double y, double z, double w) => (X, Y, Z, W) = (x, y, z, w);
-
-   /// <summary>Makes a quaternion given 3 axis rotations (in radians)</summary>
-   public static Quaternion FromAxisRotations (double xRot, double yRot, double zRot) {
-      Quaternion q1 = FromAxisAngle (Vector3.XAxis, xRot), q2 = FromAxisAngle (Vector3.YAxis, yRot), q3 = FromAxisAngle (Vector3.ZAxis, zRot);
-      return q1 * q2 * q3;
-   }
-
-   /// <summary>Construct a Quaternion4 from a rotation axis, and an angle (in radians)</summary>
-   public static Quaternion FromAxisAngle (Vector3 axis, double angle) {
-      angle = Lib.NormalizeAngle (angle);
-      double length = axis.Length;
-      if (length.IsZero ())
-         throw new ArgumentException ("Quaternion with zero axis", nameof (axis));
-      Vector3 vec = axis * (Sin (0.5 * angle) / length);
-      return new (vec.X, vec.Y, vec.Z, Cos (0.5 * angle));
-   }
-
-   /// <summary>Returns the identity quaternion</summary>
-   public static readonly Quaternion Identity = new (0, 0, 0, 1);
-
-   /// <summary>Parse a Quaternion from a string of the form X,Y,Z:Deg</summary>
-   /// X,Y,Z specify the rotation axis as a 3-component vector, and Deg
-   /// is the rotation angle (in degrees)
-   public static Quaternion Parse (string input) {
-      var w = input.Split (',', ':').Select (a => a.ToDouble ()).ToList ();
-      return FromAxisAngle (new (w[0], w[1], w[2]), w[3].D2R ());
-   }
-
-   // Properties ---------------------------------------------------------------
-   /// <summary>Returns the angle of rotation (in radians)</summary>
-   public readonly double Angle {
-      get {
-         double y = Sqrt (X * X + Y * Y + Z * Z), x = W;
-         return Atan2 (y, x) * 2;
-      }
-   }
-
-   /// <summary>Returns the (normalized) axis of rotation</summary>
-   public readonly Vector3 Axis => new Vector3 (X, Y, Z).Normalized ();
-   /// <summary>Is this an identity quaternion?</summary>
-   public readonly bool IsIdentity => Angle.IsZero ();
-   /// <summary>The components of the quaternion</summary>
-   public readonly double X, Y, Z, W;
-
-   // Methods ------------------------------------------------------------------
-   /// <summary>This constructs a Quaternion from a string in this form: "X,Y,Z:Deg"</summary>
-   /// <summary>Returns true if two quaternions are nearly equal</summary>
-   public readonly bool EQ (Quaternion other)
-      => X.EQ (other.X) && Y.EQ (other.Y) && Z.EQ (other.Z) && W.EQ (other.W);
-
-   /// <summary>Expresses the Quaternion in this form: "X,Y,Z:Deg"</summary>
-   /// The first 3 numbers provide the axis of rotation, and the 4th is the angle of
-   /// rotation in degrees
-   public readonly override string ToString () {
-      var (a, g) = (Axis, Angle.R2D ());
-      return $"{a.X.R6 ()},{a.Y.R6 ()},{a.Z.R6 ()}:{g.R6 ()}";
-   }
-
-   // Operators ----------------------------------------------------------------
-   /// <summary>Composes a composite rotation of two quaternions</summary>
-   public static Quaternion operator * (Quaternion a, Quaternion b) {
-      double x = a.W * b.X + a.X * b.W + a.Y * b.Z - a.Z * b.Y;
-      double y = a.W * b.Y + a.Y * b.W + a.Z * b.X - a.X * b.Z;
-      double z = a.W * b.Z + a.Z * b.W + a.X * b.Y - a.Y * b.X;
-      double w = a.W * b.W - a.X * b.X - a.Y * b.Y - a.Z * b.Z;
-      return new (x, y, z, w);
-   }
 }
 #endregion

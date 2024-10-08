@@ -4,8 +4,8 @@
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 namespace Nori.Testing;
 
-[Fixture (4, "Point2 tests", "Math")]
-class Point2Tests {
+[Fixture (4, "Point tests", "Math")]
+class PointTests {
    [Test (11, "class Point2")]
    void Test1 () {
       // Point2 tests
@@ -16,6 +16,10 @@ class Point2Tests {
       (pa + new Vector2 (10, 20)).Is ("(13,25)");
       (pa - new Vector2 (0.1, 0.2)).Is ("(2.9,4.8)");
       (new Point2 (10, 11) - pa).Is ("<7,6>");
+      new Point2 (1.2345678, 2.23456789).R6 ().Is ("(1.234568,2.234568)");
+      pa.WithX (10).Is ("(10,5)"); pa.WithY (10).Is ("(3,10)");
+      (pa * 3).Is ("(9,15)");
+      ((Vector2)pa).Is ("<3,5>");
 
       // Vector2f tests
       Vec2F pfa = (Vec2F)pa2; pfa.Is ("<3,5>");
@@ -29,6 +33,14 @@ class Point2Tests {
       pa.DistTo (pc).Is (234.2099752358981, 1e-12);
       pa.EQ (new (10 + 2 * Lib.Epsilon, 20)).IsFalse ();
       EQ (pa, new (10 + 0.5 * Lib.Epsilon, 20));
+
+      pa.SnappedToLine (new (0, 0), new (5, 0)).Is ("(10,0)");
+      pa.SnappedToLineSeg (new (0, 0), new (5, 0)).Is ("(5,0)");
+      pa.DistToLine (new (0, 0), new (5, 0)).Is (20);
+      pa.DistToLineSeg (new (0, 0), new (5, 0)).Is (20.615528);
+
+      pa.GetLieOn (new (0, 20), new (100, 20)).Is (0.1);
+      pa.GetLieOn (new (10, 0), new (10, 100)).Is (0.2);
    }
 
    [Test (13, "Point2.AngleTo")]
@@ -151,12 +163,9 @@ class Point2Tests {
    static Point2 PX (double a, double b) => new (a, b);
    static void EQ (Point2 pt, double a, double b) => pt.EQ (PX (a, b)).IsTrue ();
    static void EQ (Point2 pt, Point2 pt2) => pt.EQ (pt2).IsTrue ();
-}
 
-[Fixture (5, "Point3 tests", "Math")]
-class Point3Tests {
    [Test (21, "class Point3")]
-   void Test1 () {
+   void Test11 () {
       // Point3 tests
       Point3 pa = new (3, 5, 7); pa.Is ("(3,5,7)");
       Point3.Zero.Is ("(0,0,0)");
@@ -170,5 +179,114 @@ class Point3Tests {
 
       // Vector3f tests
       Vec3F pfa = (Vec3F)pa2; pfa.Is ("<3,5,7>");
+   }
+
+   [Test (22, "More Point3 tests")]
+   void Test12 () {
+      Point3 p0 = new (0, 0, 0), p1 = new (100, 0, 0);
+      new Point3 (50, 10, 20).SnappedToLine (p0, p1).Is ("(50,0,0)");
+      new Point3 (200, 10, 20).SnappedToLineSeg (p0, p1).Is ("(100,0,0)");
+      new Point3 (50, 10, 20).DistToLine (p0, p1).Is (Math.Sqrt (20 * 20 + 10 * 10));
+      new Point3 (200, 10, 20).DistToLineSeg (p0, p1).Is (p1.DistTo (new (200, 10, 20)));
+
+      new Point3 (1, 2, 3).Midpoint (new Point3 (4, 5, 6)).Is ("(2.5,3.5,4.5)");
+      new Point3 (1, 2, 3).Moved (4, 5, 6).Is ("(5,7,9)");
+      new Point3 (1, 2, 3).WithX (10).Is ("(10,2,3)");
+      new Point3 (1, 2, 3).WithY (10).Is ("(1,10,3)");
+      new Point3 (1, 2, 3).WithZ (10).Is ("(1,2,10)");
+
+      (new Point3 (1, 2, 3) * 10).Is ("(10,20,30)");
+      ((Vector3)new Point3 (1, 2, 3)).Is ("<1,2,3>");
+
+      new Point3 (1, 1, 1).GetLieOn (new (0, 1, 1), new (10, 1, 1)).Is (0.1);
+      new Point3 (1, 1, 1).GetLieOn (new (1, 0, 1), new (1, 20, 1)).Is (0.05);
+      new Point3 (1, 1, 1).GetLieOn (new (1, 1, 0), new (1, 1, 40)).Is (0.025);
+   }
+}
+
+[Fixture (14, "Vector tests", "Math")]
+class VectorTests {
+   [Test (3, "class Vector2")]
+   void Test3 () {
+      Vector2 vec = new (3, 4); vec.Length.R6 ().Is ("5");
+      Vector2.Zero.Is ("<0,0>");
+      Vector2.XAxis.Is ("<1,0>");
+      Vector2.YAxis.Is ("<0,1>");
+      vec.EQ (new (3, 4.000001)).Is (false);
+      vec.EQ (new (3, 4.0000001)).Is (true);
+      Vector2.Zero.Normalized ().Is ("<1,0>");
+
+      (vec + new Vector2 (10, 20)).Is ("<13,24>");
+      (vec - new Vector2 (0.1, 0.2)).Is ("<2.9,3.8>");
+      (vec * 2.5).Is ("<7.5,10>");
+      (vec / 2).Is ("<1.5,2>");
+      (-vec).Is ("<-3,-4>");
+
+      Vec2F pfa = (Vec2F)vec; pfa.Is ("<3,4>");
+      Vector2 pfc = new Vec2F (7, 9); pfc.Is ("<7,9>");
+      Vec2F pfb = new (-12.112233f, -13.2f); pfb.Is ("<-12.11223,-13.2>");
+
+      Vector2.Along (EDir.E).Is ("<1,0>");
+      Vector2.Along (EDir.S).Is ("<0,-1>");
+      Vector2.Along (EDir.W).Is ("<-1,0>");
+      Vector2.Along (EDir.N).Is ("<0,1>");
+
+      Vector2.UnitVec (45.D2R ()).Is ("<0.707107,0.707107>");
+      Vector2.Zero.IsZero.IsTrue ();
+      Vector2.XAxis.AngleTo (new (5, 5)).R2D ().Is (45);
+      Vector2.XAxis.CosineTo (new (-5, 5)).Is (-0.707107);
+      Vector2.XAxis.Dot (new (5, 5)).Is (5);
+      (new Vector2 (1, 2)).Normalized ().Is ("<0.447214,0.894427>");
+      Vector2.XAxis.CosineTo (new (0, 0)).Is (0);
+      Vector2.XAxis.Opposing (-Vector2.XAxis).IsTrue ();
+      Vector2.XAxis.Opposing (Vector2.YAxis).IsFalse ();
+      Vector2.UnitVec (45.D2R ()).Rotated (45.D2R ()).Is ("<0,1>");
+      new Vector2 (1, 2).WithX (10).Is ("<10,2>");
+      new Vector2 (1, 2).WithY (10).Is ("<1,10>");
+
+      ((Point2)new Vector2 (1, 2)).Is ("(1,2)");
+   }
+
+   [Test (4, "class Vector3")]
+   void Test4 () {
+      Vector3 vec = new (3, 4, 5); vec.Length.R6 ().Is ("7.071068");
+      Vector3.Zero.Is ("<0,0,0>");
+      Vector3.XAxis.Is ("<1,0,0>");
+      Vector3.YAxis.Is ("<0,1,0>");
+      Vector3.ZAxis.Is ("<0,0,1>");
+      vec.EQ (new (3, 4.000001, 5)).Is (false);
+      vec.EQ (new (3, 4.0000001, 5)).Is (true);
+
+      (vec + new Vector3 (10, 20, 30)).Is ("<13,24,35>");
+      (vec - new Vector3 (0.1, 0.2, 0.3)).Is ("<2.9,3.8,4.7>");
+      (vec * 2.5).Is ("<7.5,10,12.5>");
+      (vec / 2).Is ("<1.5,2,2.5>");
+      (-vec).Is ("<-3,-4,-5>");
+      Vector3.Zero.CosineTo (Vector3.Zero).R6 ().Is ("0");
+
+      Vector3 vec2 = new (5, -1, 3);
+      vec.CosineTo (vec2).R6 ().Is ("0.621519");
+      vec.Dot (vec2).R6 ().Is ("26");
+      vec.Opposing (vec2).Is (false);
+      vec.Opposing (-vec2).Is (true);
+      (vec * vec2).Is ("<17,16,-23>");
+
+      Vec3F pfa = (Vec3F)vec; pfa.Is ("<3,4,5>");
+      Vector3 pfc = new Vec3F (7, 9, 11); pfc.Is ("<7,9,11>");
+      Vec3F pfb = new (-12.112233f, -13.2f, -14.3f); pfb.Is ("<-12.11223,-13.2,-14.3>");
+      Vec3H pfd = new ((Half)(-1.12345f), (Half)(2.27f), (Half)(-3.35f)); pfd.Is ("<-1.123,2.27,-3.35>");
+
+      Vector3.Zero.IsZero.IsTrue ();
+      new Vector3 (1, 2, 3).IsZero.IsFalse ();
+      Vector3.XAxis.AngleTo (Vector3.YAxis).Is (Lib.HalfPI);
+
+      Vector3.XAxis.Rotated (EAxis.Y, Lib.QuarterPI).Is ("<0.707107,0,-0.707107>");
+      Vector3.XAxis.Rotated (EAxis.Z, Lib.QuarterPI).Is ("<0.707107,0.707107,0>");
+      Vector3.YAxis.Rotated (EAxis.X, Lib.QuarterPI).Is ("<0,0.707107,0.707107>");
+
+      new Vector3 (1, 2, 3).WithX (10).Is ("<10,2,3>");
+      new Vector3 (1, 2, 3).WithY (10).Is ("<1,10,3>");
+      new Vector3 (1, 2, 3).WithZ (10).Is ("<1,2,10>");
+      ((Point3)new Vector3 (1, 2, 3)).Is ("(1,2,3)");
    }
 }

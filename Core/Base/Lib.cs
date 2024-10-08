@@ -55,7 +55,7 @@ public static class Lib {
       if (!sNiceNames.TryGetValue (type, out var s)) {
          s = type.FullName!;
          foreach (var ns in mNamespaces)
-            if (s.StartsWith (ns)) { s = s[ns.Length..]; break; }
+            if (s.StartsWith (ns)) { s = s[(ns.Length + 1)..]; break; }
          sNiceNames[type] = s;
       }
       return s;

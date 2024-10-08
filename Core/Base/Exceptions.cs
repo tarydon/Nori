@@ -12,5 +12,5 @@ public class BadCaseException (object e) : Exception ($"Unhandled case: {e}") { 
 
 #region class ParseException -----------------------------------------------------------------------
 /// <summary>Thrown when we are not able to parse a string to a particular type</summary>
-public class ParseException (string value, Type type) : Exception ($"Cannot convert {value} to {Lib.NiceName (type)}") { }
+public class ParseException (string value, Type type) : Exception ($"Cannot convert '{value}' to {Lib.NiceName (type)}") { }
 #endregion

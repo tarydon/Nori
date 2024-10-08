@@ -25,17 +25,3 @@ public interface IStmLocator {
    public Stream? Open (string name);
 }
 #endregion
-
-#region interface INotifySetChanged ----------------------------------------------------------------
-public interface INotifySetChanged { event SetChangedEventHandler? SetChanged; }
-
-public delegate void SetChangedEventHandler (object? sender, SetChangedEventArgs e);
-
-public readonly struct SetChangedEventArgs (string setName, ESetChange change, int index) {
-   public readonly string SetName => setName;
-   public readonly ESetChange Change = change;
-   public readonly int Index = index;
-}
-
-public enum ESetChange { Add, Remove, Empty, Fill };
-#endregion

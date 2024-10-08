@@ -2,6 +2,7 @@
 // ╔═╦╦═╦╦╬╣ Structs.cs
 // ║║║║╬║╔╣║ Various Miscellaneous structs used by the Nori application
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
+using static System.Math;
 namespace Nori;
 
 #region struct BlockTimer --------------------------------------------------------------------------
@@ -116,19 +117,212 @@ public readonly struct Color4 : IEQuable<Color4> {
 }
 #endregion
 
-#region struct NRange ------------------------------------------------------------------------------
-/// <summary>Represents an 32-bit integer range (inclusive Min .. exclusive Max)</summary>
-public readonly struct NRange {
-   public NRange (int min, int max) {
-      if (min > max) (min, max) = (max, min);
-      (Min, Max) = (min, max);
+#region struct CoordSystem -------------------------------------------------------------------------
+/// <summary>Defines a CoordSystem in 3-D space (given by origin point, x-vector and y-vector)</summary>
+/// The Z-vector of the coordinate system is defined using the right-hand rule: Z = X.Cross(Y)
+public readonly struct CoordSystem {
+   // Constructors -------------------------------------------------------------
+   /// <summary>Constructor to make a CoordSystem given the origin, X and Y axes</summary>
+   public CoordSystem (Point3 org, Vector3 vecx, Vector3 vecy) {
+      (Org, VecX, VecY) = (org, vecx.Normalized (), vecy.Normalized ());
+      if (!VecX.CosineToAlreadyNormalized (VecY).IsZero ())
+         throw new InvalidOperationException ("CoordSystem basis vectors are not orthogonal");
    }
 
-   public readonly bool EQ (NRange b) => Min == b.Min && Max == b.Max;
+   /// <summary>A new coordinate system that has only a shift of origin (alignment is the same as world)</summary>
+   public CoordSystem (Point3 org)
+      => (Org, VecX, VecY) = (org, Vector3.XAxis, Vector3.YAxis);
 
-   public readonly int Min;
-   public readonly int Max;
-   public readonly bool IsEmpty => Min == Max;
-   public static readonly NRange Empty = new (0, 0);
+   // Properties ---------------------------------------------------------------
+   /// <summary>Is this similar to the world coordinate system?</summary>
+   public bool IsWorld => Org.EQ (Point3.Zero) && VecX.EQ (Vector3.XAxis) && VecY.EQ (Vector3.YAxis);
+   /// <summary>Is tihs the 'nil' coordinate system (uninitialized)</summary>
+   public bool IsNil => Org.IsNil;
+
+   /// <summary>The plane-def of the XY plane of the CoordSystem</summary>
+   public PlaneDef PlaneDef => new (Org, VecZ);
+
+   /// <summary>Origin of the CoordSystem</summary>
+   public readonly Point3 Org;
+   /// <summary>X-direction of the CoordSystem</summary>
+   public readonly Vector3 VecX;
+   /// <summary>Y-Direction of the CoordSystem</summary>
+   public readonly Vector3 VecY;
+
+   /// <summary>The Z-direction of the CoordSystem (computed)</summary>
+   public Vector3 VecZ => VecX * VecY;
+
+   /// <summary>This is the 'world' coordinate system (origin at 0,0,0, X and Y axes canonical)</summary>
+   public static readonly CoordSystem World = new (Point3.Zero);
+   /// <summary>The 'nil' coordinate system (uninitialized)</summary>
+   public static readonly CoordSystem Nil = new (Point3.Nil);
+
+   // Operators ----------------------------------------------------------------
+   /// <summary>Shift a coordinate system by a given amount without rotating it</summary>
+   public static CoordSystem operator + (CoordSystem cs, Vector3 vec)
+      => new (cs.Org + vec, cs.VecX, cs.VecY);
+
+   public override string ToString ()
+      => $"CoordSystem:{Org.R6 ()},{VecX.R6 ()},{VecY.R6 ()}";
+}
+#endregion
+
+#region struct PlaneDef ----------------------------------------------------------------------------
+/// <summary>Represents the equation of a plane (using coefficients A,B,C,D)</summary>
+public readonly struct PlaneDef {
+   // Constructors -------------------------------------------------------------
+   /// <summary>Creates a plane-def passing through 3 points, if possible</summary>
+   public PlaneDef (Point3 p1, Point3 p2, Point3 p3) {
+      A = p1.Y * (p2.Z - p3.Z) + p2.Y * (p3.Z - p1.Z) + p3.Y * (p1.Z - p2.Z);
+      B = p1.Z * (p2.X - p3.X) + p2.Z * (p3.X - p1.X) + p3.Z * (p1.X - p2.X);
+      C = p1.X * (p2.Y - p3.Y) + p2.X * (p3.Y - p1.Y) + p3.X * (p1.Y - p2.Y);
+      D = -p1.X * (p2.Y * p3.Z - p3.Y * p2.Z) - p2.X * (p3.Y * p1.Z - p1.Y * p3.Z) - p3.X * (p1.Y * p2.Z - p2.Y * p1.Z);
+      double f = Sqrt (A * A + B * B + C * C);
+      if (f.IsZero ()) throw new InvalidOperationException ("Cannot create a PlaneDef with 3 collinear points");
+      A /= f; B /= f; C /= f; D /= f;
+   }
+
+   /// <summary>Computes a plane-def given a point a normal</summary>
+   public PlaneDef (Point3 pt, Vector3 normal) {
+      normal = normal.Normalized ();
+      A = normal.X; B = normal.Y; C = normal.Z;
+      D = -(A * pt.X + B * pt.Y + C * pt.Z);
+   }
+
+   // Properties ---------------------------------------------------------------
+   /// <summary>Coefficients of the plane equation</summary>
+   /// These are normalized such that A^2 + B^2 + C^2 = 1
+   public readonly double A, B, C, D;
+
+   /// <summary>This is the normal vector of this plane</summary>
+   public Vector3 Normal => new (A, B, C);
+
+   /// <summary>Represents the XY plane (with normal facing in the +Z direction)</summary>
+   public static readonly PlaneDef XY = new (Point3.Zero, Vector3.ZAxis);
+   /// <summary>Represents the YZ plane (with normal facing in +X direction)</summary>
+   public static readonly PlaneDef YZ = new (Point3.Zero, Vector3.XAxis);
+   /// <summary>Represents the ZX plane (with normal facing in the +Y direction)</summary>
+   public static readonly PlaneDef XZ = new (Point3.Zero, Vector3.YAxis);
+
+   // Methods ------------------------------------------------------------------
+   /// <summary>Returns the absolute distance of a point from a plane</summary>
+   public double Dist (Point3 pt) => Abs (SignedDist (pt));
+
+   /// <summary>Get the line of intersection of two plane-defs</summary>
+   /// If the two plane-defs are parallel, this returns false
+   public bool Intersect (PlaneDef other, out Point3 pt, out Vector3 vec) {
+      vec = Normal * other.Normal;
+      if (vec.Length < 1e-6) { pt = Point3.Zero; return false; }
+      vec = vec.Normalized ();
+
+      // If we get here, we know that the line-of-intersection is parallel to v.
+      // We just need to now find any one point on that line. We solve this by 
+      // setting Z=0, then Y=0, then X=0, and solving the resulting pair of linear
+      // equations - at least two of the three below should result in a solution
+      _ = Lib.SolveLinearPair (A, B, D, other.A, other.B, other.D, out double x, out double y)
+         || Lib.SolveLinearPair (A, C, D, other.A, other.C, other.D, out x, out _)
+         || Lib.SolveLinearPair (B, C, D, other.B, other.C, other.D, out y, out _);
+      pt = new (x, y, 0);
+      return true;
+   }
+
+   /// <summary>Gets the intersection between a planedef and an infinite line</summary>
+   /// <returns>The point of interesection, or Point3.Nil otherwise</returns>
+   public Point3 Intersect (Point3 p1, Point3 p2) {
+      double dx = p2.X - p1.X, dy = p2.Y - p1.Y, dz = p2.Z - p1.Z;
+      double a = A * dx + B * dy + C * dz;
+      if (a.IsZero ()) return Point3.Nil;
+      double fLie = -(A * p1.X + B * p1.Y + C * p1.Z + D) / a;
+      return new (p1.X + fLie * dx, p1.Y + fLie * dy, p1.Z + fLie * dz);
+   }
+
+   /// <summary>Snaps the given point to the closest point on the planedef</summary>
+   public Point3 Snap (Point3 p) {
+      double dist = -SignedDist (p);
+      var pt = new Point3 (p.X + dist * A, p.Y + dist * B, p.Z + dist * C);
+      return pt;
+   }
+
+   /// <summary>Given a point, returns the signed distance (+ve means to the left, -ve means to the right)</summary>
+   public double SignedDist (Point3 pt) => A * pt.X + B * pt.Y + C * pt.Z + D;
+
+   public override string ToString ()
+      => $"PlaneDef:{A.R6 ()},{B.R6 ()},{C.R6 ()},{D.R6 ()}";
+}
+#endregion
+
+#region struct Quaternion4 -------------------------------------------------------------------------
+/// <summary>Represents a Quaternion of rotation</summary>
+public readonly struct Quaternion : IEQuable<Quaternion> {
+   // Constructors -------------------------------------------------------------
+   /// <summary>Construct a quaternion given the 4 components</summary>
+   public Quaternion (double x, double y, double z, double w) => (X, Y, Z, W) = (x, y, z, w);
+
+   /// <summary>Makes a quaternion given 3 axis rotations (in radians)</summary>
+   public static Quaternion FromAxisRotations (double xRot, double yRot, double zRot) {
+      Quaternion q1 = FromAxisAngle (Vector3.XAxis, xRot), q2 = FromAxisAngle (Vector3.YAxis, yRot), q3 = FromAxisAngle (Vector3.ZAxis, zRot);
+      return q1 * q2 * q3;
+   }
+
+   /// <summary>Construct a Quaternion4 from a rotation axis, and an angle (in radians)</summary>
+   public static Quaternion FromAxisAngle (Vector3 axis, double angle) {
+      angle = Lib.NormalizeAngle (angle);
+      double length = axis.Length;
+      if (length.IsZero ())
+         throw new ArgumentException ("Value cannot be zero", nameof (axis));
+      Vector3 vec = axis * (Sin (0.5 * angle) / length);
+      return new (vec.X, vec.Y, vec.Z, Cos (0.5 * angle));
+   }
+
+   /// <summary>Returns the identity quaternion</summary>
+   public static readonly Quaternion Identity = new (0, 0, 0, 1);
+
+   /// <summary>Parse a Quaternion from a string of the form X,Y,Z:Deg</summary>
+   /// X,Y,Z specify the rotation axis as a 3-component vector, and Deg
+   /// is the rotation angle (in degrees)
+   public static Quaternion Parse (string input) {
+      var w = input.Split (',', ':').Select (a => a.ToDouble ()).ToList ();
+      return FromAxisAngle (new (w[0], w[1], w[2]), w[3].D2R ());
+   }
+
+   // Properties ---------------------------------------------------------------
+   /// <summary>Returns the angle of rotation (in radians)</summary>
+   public readonly double Angle {
+      get {
+         double y = Sqrt (X * X + Y * Y + Z * Z), x = W;
+         return Atan2 (y, x) * 2;
+      }
+   }
+
+   /// <summary>Returns the (normalized) axis of rotation</summary>
+   public readonly Vector3 Axis => new Vector3 (X, Y, Z).Normalized ();
+   /// <summary>Is this an identity quaternion?</summary>
+   public readonly bool IsIdentity => Angle.IsZero ();
+   /// <summary>The components of the quaternion</summary>
+   public readonly double X, Y, Z, W;
+
+   // Methods ------------------------------------------------------------------
+   /// <summary>This constructs a Quaternion from a string in this form: "X,Y,Z:Deg"</summary>
+   /// <summary>Returns true if two quaternions are nearly equal</summary>
+   public readonly bool EQ (Quaternion other)
+      => X.EQ (other.X) && Y.EQ (other.Y) && Z.EQ (other.Z) && W.EQ (other.W);
+
+   /// <summary>Expresses the Quaternion in this form: "X,Y,Z:Deg"</summary>
+   /// The first 3 numbers provide the axis of rotation, and the 4th is the angle of
+   /// rotation in degrees
+   public readonly override string ToString () {
+      var (a, g) = (Axis, Angle.R2D ());
+      return $"{a.X.R6 ()},{a.Y.R6 ()},{a.Z.R6 ()}:{g.R6 ()}";
+   }
+
+   // Operators ----------------------------------------------------------------
+   /// <summary>Composes a composite rotation of two quaternions</summary>
+   public static Quaternion operator * (Quaternion a, Quaternion b) {
+      double x = a.W * b.X + a.X * b.W + a.Y * b.Z - a.Z * b.Y;
+      double y = a.W * b.Y + a.Y * b.W + a.Z * b.X - a.X * b.Z;
+      double z = a.W * b.Z + a.Z * b.W + a.X * b.Y - a.Y * b.X;
+      double w = a.W * b.W - a.X * b.X - a.Y * b.Y - a.Z * b.Z;
+      return new (x, y, z, w);
+   }
 }
 #endregion
