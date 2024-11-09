@@ -31,7 +31,7 @@ namespace Nori;
 ///   computational geometry algorithms. 
 /// - In the simplest case where the TVal type is itself ordered, and can serve as its own key,
 ///   you can construct the tree with code like this (the key-getter is an identity function):
-///      var tree = new RBTree<double, double> (a => a);
+///      var tree = new RBTree(double,double) (a => a);
 ///   
 /// Implementation notes: the Tree is implemented so it does not allocate one _node_ on the heap
 /// for each element stored in it - all data is stored in a contiguous block that is grown as needed,
@@ -361,7 +361,9 @@ public partial class RBTree<TVal, TKey> : IEnumerable<TVal> where TKey : ICompar
       }
    }
 
-   // Implements IEnumerable<T>
+   /// <summary>
+   /// Returns an enumerator that iterates through each value stored in the tree (in order)
+   /// </summary>
    public IEnumerator<TVal> GetEnumerator () { foreach (var n in Traverse (mRoot)) yield return mA[n].Value; }
    IEnumerator IEnumerable.GetEnumerator () { foreach (var n in Traverse (mRoot)) yield return mA[n].Value; }
 }

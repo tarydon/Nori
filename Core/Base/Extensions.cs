@@ -7,6 +7,13 @@ namespace Nori;
 
 #region class Extensions ---------------------------------------------------------------------------
 public static class Extensions {
+   public static double Along (this double f, double a, double b)
+      => b * f + a * (1 - f);
+   public static Point2 Along (this double f, Point2 a, Point2 b)
+      => new (f.Along (a.X, b.X), f.Along (a.Y, b.Y));
+   public static Point3 Along (this double f, Point3 a, Point3 b)
+      => new (f.Along (a.X, b.X), f.Along (a.Y, b.Y), f.Along (a.Z, b.Z));
+
    public static Span<T> AsSpan<T> (this List<T> list) => CollectionsMarshal.AsSpan (list);
 
    /// <summary>Clamps the given double to lie within min..max (inclusive)</summary>
@@ -77,6 +84,12 @@ public static class Extensions {
    public static float R5 (this float f) => (float)Math.Round (f, 5);
    /// <summary>Returns a double rounded off to 6 decimal places</summary>
    public static double R6 (this double f) => Math.Round (f, 6);
+
+   /// <summary>Removes the last element from a List (and returns it)</summary>
+   public static T RemoveLast<T> (this List<T> list) {
+      T elem = list[^1]; list.RemoveAt (list.Count - 1);
+      return elem;
+   }
 
    /// <summary>Rounds a double to the given number of digits</summary>
    public static double Round (this double a, int digits) => Math.Round (a, digits);

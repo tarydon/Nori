@@ -2,6 +2,7 @@
 // ╔═╦╦═╦╦╬╣ Lib.cs
 // ║║║║╬║╔╣║ Implements the Lib module class that has a number of global functions
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
+using static System.Math;
 namespace Nori;
 
 #region class Lib ----------------------------------------------------------------------------------
@@ -29,6 +30,16 @@ public static class Lib {
    /// is specified, these namespaces are prepended to that name to try to form a match
    public static void AddNamespace (string nameSpace) => mNamespaces.Add ($"{nameSpace}.");
    internal static List<string> mNamespaces = ["Nori"];
+
+   /// <summary>Returns the number of steps required to rasterize and arc with a given tolerance</summary>
+   /// <param name="radius">The radius of the arc</param>
+   /// <param name="angSpan">The angular span of the arc (can be +ve or -ve)</param>
+   /// <param name="tolerance">The error tolerance (chordal deviation)</param>
+   public static int GetArcSteps (double radius, double angSpan, double tolerance) {
+      tolerance = tolerance.Clamp (radius * 0.0001, radius * 0.9999);
+      double angStep = 2 * Acos ((radius - tolerance) / radius);
+      return Max ((int)Ceiling (Abs (angSpan) / angStep), 1);
+   }
 
    /// <summary>Returns the full-path-filename of a 'local' file (relative to startup EXE)</summary>
    static public string GetLocalFile (string file) {
@@ -95,6 +106,11 @@ public static class Lib {
       if (fHypot.IsZero ()) { x = y = 0; return false; }
       x = (B * F - E * C) / fHypot; y = (D * C - A * F) / fHypot;
       return true;
+   }
+
+   /// <summary>Orders two comparable so a is always less than or equal to b</summary>
+   public static void Sort<T> (ref T a, ref T b) where T : IComparable<T> {
+      if (a.CompareTo (b) > 0) (a, b) = (b, a);
    }
 }
 #endregion

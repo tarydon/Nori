@@ -11,3 +11,5 @@ global using System.Reflection;
 global using System.Globalization;
 global using System.Linq;
 global using System.Runtime.CompilerServices;
+global using System.Collections.Immutable;
+global using System.Text;

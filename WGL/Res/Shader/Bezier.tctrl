@@ -20,10 +20,9 @@ void main () {
          gl_TessLevelOuter[1] = 0;         
       } else {
          vec2 invScale = 1 / VPScale;
-         p1 *= invScale; p2 *= invScale; 
-         p3 *= invScale; p4 *= invScale;
-         float len = length (p2 - p1) + length (p3 - p2) + length (p4 - p3);
-         gl_TessLevelOuter[1] = max (float (ceil (len / 10)), 2);
+         p1 *= invScale; p2 *= invScale;
+         float len = length (p2 - p1) + length (p4 - p3);
+         gl_TessLevelOuter[1] = max (float (ceil (len / 4)), 2);
       }
       gl_TessLevelOuter[0] = 1;
    }

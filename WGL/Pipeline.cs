@@ -106,7 +106,7 @@ class Pipeline {
    public static Pipeline ArrowHead => mArrowHead ??= new ("ArrowHead", "Basic2D.vert", "ArrowHead.geom", "ArrowHead.frag");
    static Pipeline? mArrowHead;
 
-   public static Pipeline Bezier => mBezier ??= new ("Bezier", "Basic2D.vert", "Bezier.tctrl", "Bezier.teval", "Line2D.geom", "Line.frag");
+   public static Pipeline Bezier2D => mBezier ??= new ("Bezier", "Basic2D.vert", "Bezier.tctrl", "Bezier.teval", "Line2D.geom", "Line.frag");
    static Pipeline? mBezier;
 
    // Nested types ------------------------------------------------------------

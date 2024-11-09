@@ -6,28 +6,6 @@ using System.Collections;
 using System.Reactive.Subjects;
 namespace Nori;
 
-#region struct ListChange --------------------------------------------------------------------------
-/// <summary>Represents a change happening in a list (adding / removing)</summary>
-public readonly struct ListChange {
-   internal ListChange (E action, int index) => (Action, Index) = (action, index);
-   public override string ToString () => $"{Action}({Index})";
-
-   public enum E {
-      /// <summary>Element added at given index</summary>
-      Added,
-      /// <summary>About to remove the element at the given index</summary>
-      Removing,
-      /// <summary>About to remove all elements from the set</summary>
-      Clearing,
-   }
-
-   /// <summary>The action that happened (add / remove etc)</summary>
-   public readonly E Action;
-   /// <summary>The index at which the action happened</summary>
-   public readonly int Index;
-}
-#endregion
-
 #region class AList<T> -----------------------------------------------------------------------------
 /// <summary>AList implements an Observable list that notifies subscribers when it is modified</summary>
 public class AList<T> : IList, IList<T>, IObservable<ListChange> {
@@ -104,5 +82,30 @@ public class AList<T> : IList, IList<T>, IObservable<ListChange> {
    void Fire (ListChange.E action, int index) => mSubject?.OnNext (new (action, index));
    Subject<ListChange>? mSubject;
    List<T> mList = [];
+}
+#endregion
+
+#region struct ListChange --------------------------------------------------------------------------
+/// <summary>Represents a change happening in a list (adding / removing)</summary>
+public readonly struct ListChange {
+   internal ListChange (E action, int index) => (Action, Index) = (action, index);
+   public override string ToString () => $"{Action}({Index})";
+
+   /// <summary>
+   /// The type of action happening on the List
+   /// </summary>
+   public enum E {
+      /// <summary>Element added at given index</summary>
+      Added,
+      /// <summary>About to remove the element at the given index</summary>
+      Removing,
+      /// <summary>About to remove all elements from the set</summary>
+      Clearing,
+   }
+
+   /// <summary>The action that happened (add / remove etc)</summary>
+   public readonly E Action;
+   /// <summary>The index at which the action happened</summary>
+   public readonly int Index;
 }
 #endregion

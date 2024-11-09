@@ -95,8 +95,8 @@ public class Matrix3 {
    /// <summary>Creates an orthographic projection matrix</summary>
    /// This maps the world-space cuboid (designated by Bound3) to the OpenGL clip space
    /// which extends from -1 to +1 in every direction. It is up to the caller to ensure that
-   /// the X & Y aspect of the Bound3 passed in match that of the viewport, else distortion
-   /// will occur in X & Y
+   /// the X and Y aspect of the Bound3 passed in match that of the viewport, else distortion
+   /// will occur in X and Y
    public static Matrix3 Orthographic (Bound3 bound) {
       double dx = 1 / bound.X.Length, dy = 1 / bound.Y.Length, dz = 1 / bound.Z.Length;
       Point3 mid = bound.Midpoint;

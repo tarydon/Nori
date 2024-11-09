@@ -1,5 +1,5 @@
 ﻿// ────── ╔╗                                                                                   TEST
-// ╔═╦╦═╦╦╬╣ TMisc1.cs
+// ╔═╦╦═╦╦╬╣ TMisc.cs
 // ║║║║╬║╔╣║ Miscellaneous tests
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 namespace Nori.Testing;
@@ -167,7 +167,11 @@ class TMisc {
       Lib.Print ("", ConsoleColor.Yellow); Lib.Println ("", ConsoleColor.Green);
       Lib.SolveLinearPair (3, 4, -13.3, 5, 6, -20.7, out var x, out var y).IsTrue ();
       x.Is (1.5); y.Is (2.2);
-      Lib.SolveLinearPair (3, 4, -13.3, 30, 40, -133, out x, out y).IsFalse ();
+      Lib.SolveLinearPair (3, 4, -13.3, 30, 40, -133, out _, out _).IsFalse ();
+      Lib.GetArcSteps (10, Lib.PI, 0.1).Is (12);
+      Lib.GetArcSteps (10, Lib.PI, 0.01).Is (36);
+      int a = 3, b = 2; Lib.Sort (ref a, ref b);
+      a.Is (2); b.Is (3);
    }
 
    [Test (56, "Throwing various exceptions")]

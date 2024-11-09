@@ -5,6 +5,8 @@
     <Nullable>enable</Nullable>
     <OutDir>..\Bin</OutDir>
     <AssemblyName>Nori.Core</AssemblyName>
+		<Optimize>false</Optimize>
+    <GenerateDocumentationFile>True</GenerateDocumentationFile>
   </PropertyGroup>
 
   <ItemGroup>

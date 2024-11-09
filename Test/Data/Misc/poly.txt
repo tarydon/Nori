@@ -1,0 +1,7 @@
+Segments of M0,0H10V3Q8,5,1H2Q0,3,-1Z:
+LINE (0,0) .. (10,0)  |  False False False True False
+LINE (10,0) .. (10,3)  |  False False False True False
+ARC (10,3) .. (8,5), (8,3) True  |  True True False False False
+LINE (8,5) .. (2,5)  |  False False False True False
+ARC (2,5) .. (0,3), (-0,5) False  |  True False False False False
+LINE (0,3) .. (0,0)  |  False False False True True
