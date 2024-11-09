@@ -1,0 +1,25 @@
+#version 150
+#extension GL_ARB_tessellation_shader : enable
+
+layout (isolines) in;
+
+void main () {
+   float u = gl_TessCoord.x;
+
+   // The patch vertices (control points)
+   vec2 p0 = gl_in[0].gl_Position.xy;
+   vec2 p1 = gl_in[1].gl_Position.xy;
+   vec2 p2 = gl_in[2].gl_Position.xy;
+   vec2 p3 = gl_in[3].gl_Position.xy;
+   float u1 = (1.0 - u), u2 = u * u;
+  
+   // Bernstein polynomials evaluated at u
+   float b3 = u2 * u;
+   float b2 = 3.0 * u2 * u1;
+   float b1 = 3.0 * u * u1 * u1;
+   float b0 = u1 * u1 * u1;
+
+   // Cubic bezier interpolation
+   vec2 p = p0 * b0 + p1 * b1 + p2 * b2 + p3 * b3;
+   gl_Position = vec4 (p, 0, 1);
+}

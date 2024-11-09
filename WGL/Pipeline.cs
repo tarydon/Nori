@@ -106,6 +106,9 @@ class Pipeline {
    public static Pipeline ArrowHead => mArrowHead ??= new ("ArrowHead", "Basic2D.vert", "ArrowHead.geom", "ArrowHead.frag");
    static Pipeline? mArrowHead;
 
+   public static Pipeline Bezier => mBezier ??= new ("Bezier", "Basic2D.vert", "Bezier.tctrl", "Bezier.teval", "Line2D.geom", "Line.frag");
+   static Pipeline? mBezier;
+
    // Nested types ------------------------------------------------------------
    /// <summary>Provides information about a Uniform</summary>
    class UniformInfo {

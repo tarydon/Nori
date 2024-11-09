@@ -24,12 +24,15 @@ enum EDataType : uint {
 }
 
 // Various modes that can be passed to glBegin
-enum EMode : uint { Points = 0, Lines = 1, LineLoop = 2, Triangles = 4, Quads = 7 };
+enum EMode : uint { Points = 0, Lines = 1, LineLoop = 2, LineStrip = 3, Triangles = 4, Quads = 7, Patches = 14 };
 
 // Values passed to GetProgram
 enum EProgramParam : uint {
    InfoLogLength = 0x8B84, LinkStatus = 0x8B82, ActiveAttributes = 0x8B89, ActiveUniforms = 0x8B86
 }
+
+// Used with 'patches' type glDrawElements
+enum EPatchParam : uint { PatchVertices = 36466 }
 
 // The various types of OpenGL shaders
 enum EShader : uint {
@@ -163,6 +166,12 @@ unsafe static class GL {
       => (pLinkProgram ??= Load<glLinkProgram> ()) (program);
    delegate void glLinkProgram (HProgram program);
    static glLinkProgram? pLinkProgram;
+
+   // Set up a parameter for patch rendering (commonly the number of vertices per patch)
+   public static void PatchParameter (EPatchParam pname, int value)
+      => (pPatchParameteri ??= Load<glPatchParameteri> ()) (pname, value);
+   delegate void glPatchParameteri (EPatchParam pname, int value);
+   static glPatchParameteri? pPatchParameteri;
 
    // Set up the source code for a shader ......................................
    public static void ShaderSource (HShader shader, string source)

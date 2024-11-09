@@ -15,7 +15,7 @@ void main (void) {
    float width = LineWidth / 2;
    vec2 dir = normalize (p1 - p0) * width;
    vec2 perpdir = vec2 (dir.y, -dir.x);
-   dir *= 0.25;
+   dir *= 0.0625;
 
    gDist = width * 2.9;
    gl_Position = vec4 (VPScale * (p0 + perpdir - dir), 0, 1);
