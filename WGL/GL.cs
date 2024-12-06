@@ -32,6 +32,13 @@ enum EDataType : uint {
 // Various modes that can be passed to glBegin
 enum EMode : uint { Points = 0, Lines = 1, LineLoop = 2, LineStrip = 3, Triangles = 4, Quads = 7, Patches = 14 };
 
+// Pixel storage formats
+enum EPixelFormat : uint { DepthComponent = 6402, Red = 6403, Rgba = 6408, Bgra = 32993 }
+// Pixel data type
+enum EPixelType : uint { UnsignedByte = 5121, Float = 5126 }
+// Parameter for PixelStore
+enum EPixelStoreParam : uint { UnpackAlignment = 3317, PackAlignment = 3333 }
+
 // Values passed to GetProgram
 enum EProgramParam : uint {
    InfoLogLength = 0x8B84, LinkStatus = 0x8B82, ActiveAttributes = 0x8B89, ActiveUniforms = 0x8B86
@@ -48,6 +55,14 @@ enum EShader : uint {
 
 // Parameters passed to GL.GetShader
 enum EShaderParam : uint { DeleteStatus = 35712, CompileStatus = 35713, InfoLogLength = 0x8B84 }
+
+// Texture related enums
+enum ETexUnit : uint { Tex0 = 33984, Tex1 = 33985, Tex2 = 33986, Tex3 = 33987 }
+enum ETexTarget : uint { Texture1D = 3552, Texture2D = 3553 };
+enum EPixelInternalFormat : uint { Red = 6403 }
+enum ETexParam : uint { MagFilter = 0x2800, MinFilter = 0x2801, WrapS = 0x2802, WrapT = 0x2803 }
+enum ETexFilter { Nearest = 9728, Linear = 9729 };
+enum ETexWrap { Clamp = 10496, Repeat = 10497 }
 #endregion
 
 #region Strongly typed handles ---------------------------------------------------------------------
@@ -66,12 +81,20 @@ enum HShader : ulong { Zero }
 enum HVertexArray : ulong { Zero }
 // OpenGL data Buffer object 
 enum HBuffer : ulong { Zero }
+// Texture object, created with GenTexture
+enum HTexture : ulong { Zero }
 #endregion
 
 #region class GL -----------------------------------------------------------------------------------
 /// <summary>Implements the P-Invoke connections to OpenGL</summary>
 unsafe static class GL {
    // Interface ----------------------------------------------------------------
+   // Select the active texture unit ...........................................
+   public static void ActiveTexture (ETexUnit unit)
+      => (pActiveTexture ??= Load<glActiveTexture> ()) (unit);
+   delegate void glActiveTexture (ETexUnit texture);
+   static glActiveTexture? pActiveTexture;
+
    // Attach a shader to a shader-pipeline (program) ...........................
    public static void AttachShader (HProgram program, HShader shader)
       => (pAttachShader ??= Load<glAttachShader> ()) (program, shader);
@@ -157,6 +180,9 @@ unsafe static class GL {
    unsafe delegate void glGenBuffers (int n, HBuffer* buffers);
    static glGenBuffers? pGenBuffers;
 
+   // Creates a new texture ....................................................
+   public static HTexture GenTexture () { HTexture tex; GenTextures (1, &tex); return tex; }
+
    // Allocate a new VertexArray object (VAO) ..................................
    public unsafe static HVertexArray GenVertexArray () { 
       HVertexArray array; 
@@ -172,8 +198,8 @@ unsafe static class GL {
       Span<byte> data = stackalloc byte[256];
       fixed (byte* p = &data[0]) {
          pGetActiveUniform (program, index, 255, out int length, out size, out type, (Ptr)p);
-         location = GetUniformLocation (program, (Ptr)p);
          name = Encoding.UTF8.GetString (data[0..length]);
+         location = GetUniformLocation (program, name);
       }
    }
    delegate void glGetActiveUniform (HProgram program, int index, int bufSize, out int length, out int size, out EDataType type, Ptr name);
@@ -221,9 +247,9 @@ unsafe static class GL {
    static glGetShaderInfoLog? pGetShaderInfoLog;
 
    // Gets the location (slot) of a uniform variable ...........................
-   public unsafe static int GetUniformLocation (HProgram program, Ptr name)
+   public static int GetUniformLocation (HProgram program, string name)
       => (pGetUniformLocation ??= Load<glGetUniformLocation> ()) (program, name);
-   delegate int glGetUniformLocation (HProgram program, Ptr name);
+   delegate int glGetUniformLocation (HProgram program, string name);
    static glGetUniformLocation? pGetUniformLocation;
 
    // Links all the shaders into a single program (shader-pipeline) ............
@@ -265,6 +291,12 @@ unsafe static class GL {
    delegate void glUniformMatrix4fv (int location, int count, bool transpose, float* value);
    static glUniformMatrix4fv? pUniformMatrix4fv;
 
+   // Loads a uniform defined as an int (like a texture ID) ....................
+   public static void Uniform1i (int location, int n)
+      => (pUniform1i ??= Load<glUniform1i> ()) (location, n);
+   delegate void glUniform1i (int location, int val);
+   static glUniform1i? pUniform1i;
+
    // This sets the program object to use for rendering ........................
    public static void UseProgram (HProgram program)
       => (pUseProgram ??= Load<glUseProgram> ()) (program);
@@ -291,6 +323,7 @@ unsafe static class GL {
    [DllImport (USER32)] public static extern HDC GetDC (HWindow hWnd);
 
    [DllImport (OPENGL32, EntryPoint = "glBegin")] public static extern void Begin (EMode mode);
+   [DllImport (OPENGL32, EntryPoint = "glBindTexture")] public static extern void BindTexture (ETexTarget target, HTexture id);
    [DllImport (OPENGL32, EntryPoint = "glBlendFunc")] static internal extern void BlendFunc (EBlendFactor sfactor, EBlendFactor dfactor);
    [DllImport (OPENGL32, EntryPoint = "glClear")] public static extern void Clear (EBuffer mask);
    [DllImport (OPENGL32, EntryPoint = "glClearColor")] public static extern void ClearColor (float red, float green, float blue, float alpha);
@@ -301,8 +334,12 @@ unsafe static class GL {
    [DllImport (OPENGL32, EntryPoint = "glDrawArrays")] public static extern void DrawArrays (EMode mode, int start, int count);
    [DllImport (OPENGL32, EntryPoint = "glEnable")] public static extern void Enable (ECap cap);
    [DllImport (OPENGL32, EntryPoint = "glEnd")] public static extern void End ();
+   [DllImport (OPENGL32, EntryPoint = "glGenTextures")] public static extern void GenTextures (int n, HTexture* pTex);
    [DllImport (OPENGL32, EntryPoint = "wglGetProcAddress")] public static extern nint GetProcAddress (string name);
    [DllImport (OPENGL32, EntryPoint = "wglMakeCurrent")] public static extern int MakeCurrent (HDC hdc, HGLRC hrc);
+   [DllImport (OPENGL32, EntryPoint = "glPixelStorei")] static internal extern void PixelStore (EPixelStoreParam pname, int param);
+   [DllImport (OPENGL32, EntryPoint = "glTexImage2D")] public static extern void TexImage2D (ETexTarget target, int level, EPixelInternalFormat publicformat, int width, int height, int border, EPixelFormat format, EPixelType type, void* pixels);
+   [DllImport (OPENGL32, EntryPoint = "glTexParameteri")] public static extern void TexParameter (ETexTarget target, ETexParam pname, int param);
    [DllImport (OPENGL32, EntryPoint = "glVertex2f")] public static extern void Vertex (float x, float y);
    [DllImport (OPENGL32, EntryPoint = "glVertex3f")] public static extern void Vertex (float x, float y, float z);
    [DllImport (OPENGL32, EntryPoint = "glViewport")] public static extern void Viewport (int x, int y, int width, int height);
