@@ -37,6 +37,12 @@ public readonly struct Point2 {
       return Lib.NormalizeAngle (Atan2 (dy, dx));
    }
 
+   public Point2 CardinalMoved (double r, EDir dir) 
+      => dir switch {
+            EDir.E => new (X + r, Y), EDir.W => new (X - r, Y),
+            EDir.S => new (X, Y - r), _ => new (X, Y + r)
+         };
+
    /// <summary>Returns a point clamped to a given range</summary>
    public readonly Point2 Clamped (Bound2 bound)
       => new (bound.X.Clamp (X), bound.Y.Clamp (Y));
@@ -149,7 +155,7 @@ public readonly struct Point2 {
       return new (a.X + t * dx, a.Y + t * dy);
    }
 
-   public override string ToString () => $"({X.R6 ()},{Y.R6 ()})";
+   public override string ToString () => $"({X.S6 ()},{Y.S6 ()})";
 }
 #endregion
 
@@ -250,6 +256,6 @@ public readonly struct Point3 {
       return new (a.X + t * dx, a.Y + t * dy, a.Z + t * dz);
    }
 
-   public override string ToString () => $"({X.R6 ()},{Y.R6 ()},{Z.R6 ()})";
+   public override string ToString () => $"({X.S6 ()},{Y.S6 ()},{Z.S6 ()})";
 }
 #endregion

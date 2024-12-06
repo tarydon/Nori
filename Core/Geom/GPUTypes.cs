@@ -29,6 +29,7 @@ public readonly record struct Vec3F (float X, float Y, float Z) {
    public override string ToString () => $"<{X.R5 ()},{Y.R5 ()},{Z.R5 ()}>";
 }
 
+/// <summary>4D vector of floats (used for passing data to OpenGL)</summary>
 [StructLayout (LayoutKind.Sequential, Pack = 4, Size = 16)]
 public readonly record struct Vec4F (float X, float Y, float Z, float W) {
    public Vec4F (double x, double y, double z, double w) : this ((float)x, (float)y, (float)z, (float)w) { }
@@ -49,7 +50,7 @@ public readonly record struct Vec3H (Half X, Half Y, Half Z) {
    public override string ToString () => $"<{X.R3 ()},{Y.R3 ()},{Z.R3 ()}>";
 }
 
-/// <summary>4D vector of floats (used for passing data to OpenGL)</summary>
+/// <summary>4D vector of 16-bit half (used for passing data to OpenGL)</summary>
 [StructLayout (LayoutKind.Sequential, Pack = 4, Size = 16)]
 public readonly record struct Vec4H (float X, float Y, float Z, float W) {
    public bool EQ (Vec4H b) => X.EQ (b.X) && Y.EQ (b.Y) && Z.EQ (b.Z) && W.EQ (b.W);

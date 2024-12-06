@@ -1,4 +1,4 @@
-﻿// ────── ╔╗                                                                                   CORE
+// ────── ╔╗                                                                                   CORE
 // ╔═╦╦═╦╦╬╣ Matrix.cs
 // ║║║║╬║╔╣║ Implements 2D and 3D Matrices
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
@@ -12,15 +12,22 @@ public class Matrix2 {
    public Matrix2 (double m11, double m12, double m21, double m22, double x, double y)
       => (M11, M12, M21, M22, DX, DY) = (m11, m12, m21, m22, x, y);
 
+   /// <summary>Create a translation matrix</summary>
    public static Matrix2 Translation (Vector2 vec) => Translation (vec.X, vec.Y);
+   /// <summary>Create a translation matrix</summary>
    public static Matrix2 Translation (double x, double y) => new (1, 0, 0, 1, x, y);
 
+   /// <summary>Create a uniform scaling matrix (same scale in X, Y) about the origin</summary>
    public static Matrix2 Scaling (double scale) => new (scale, 0, 0, scale, 0, 0);
+   /// <summary>Creates a scaling matrix (with different scales about X and Y) about the origin</summary>
    public static Matrix2 Scaling (double xScale, double yScale) => new (xScale, 0, 0, yScale, 0, 0);
+   /// <summary>Creates a matrix, scaling about a specified center</summary>
    public static Matrix2 Scaling (Point2 center, double xScale, double yScale)
       => new (xScale, 0, 0, yScale, center.X - xScale * center.X, center.Y - yScale * center.Y);
 
+   /// <summary>Create a rotation matrix about the center</summary>
    public static Matrix2 Rotation (double angle) => Rotation (Point2.Zero, angle);
+   /// <summary>Create a matrix, rotating about an arbitrary center</summary>
    public static Matrix2 Rotation (Point2 center, double angle) {
       var (s, c) = (Sin (angle), Cos (angle));
       var (dx, dy) = (center.X * (1 - c) + center.Y * s, center.Y * (1 - c) - center.X * s);
@@ -34,6 +41,7 @@ public class Matrix2 {
    public static readonly Matrix2 Identity = new (1, 0, 0, 1, 0, 0);
 
    // Methods ------------------------------------------------------------------
+   /// <summary>Computes the inverse of a matrix (throws an exception for a singular matrix)</summary>
    public Matrix2 GetInverse () {
       double d = M11 * M22 - M12 * M21;     // The determinant
       if (d == 0) throw new Exception ("Inverting a singular matrix");
@@ -42,8 +50,14 @@ public class Matrix2 {
    }
 
    // Operators ----------------------------------------------------------------
-   public static Point2 operator * (Point2 p, Matrix2 m) => new (m.M11 * p.X + m.M21 * p.Y + m.DX, m.M12 * p.X + m.M22 * p.Y + m.DY);
-   public static Vector2 operator * (Vector2 v, Matrix2 m) => new (m.M11 * v.X + m.M21 * v.Y, m.M12 * v.X + m.M22 * v.Y);
+   /// <summary>Multiply a Point2 by a Matrix</summary>
+   public static Point2 operator * (Point2 p, Matrix2 m) 
+      => new (m.M11 * p.X + m.M21 * p.Y + m.DX, m.M12 * p.X + m.M22 * p.Y + m.DY);
+   /// <summary>Multiply a Vector2 by a Matrix</summary>
+   public static Vector2 operator * (Vector2 v, Matrix2 m) 
+      => new (m.M11 * v.X + m.M21 * v.Y, m.M12 * v.X + m.M22 * v.Y);
+
+   /// <summary>Multiply two matrices together</summary>
    public static Matrix2 operator * (Matrix2 a, Matrix2 b) =>
       new (a.M11 * b.M11 + a.M12 * b.M21, a.M11 * b.M12 + a.M12 * b.M22,
            a.M21 * b.M11 + a.M22 * b.M21, a.M21 * b.M12 + a.M22 * b.M22,

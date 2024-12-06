@@ -89,6 +89,9 @@ class StructTests {
       } catch (ArgumentException e) {
          e.Message.Is ("Value cannot be zero (Parameter 'axis')");
       }
+      var v5 = new Vector3 (1, 1, -1).Normalized ();
+      var q5 = Quaternion.Parse ($"{v5.X},{v5.Y},{v5.Z}:45");
+      q5.Is ("0.57735,0.57735,-0.57735:45");
    }
 
    [Test (60, "CoordSystem tests")]

@@ -9,6 +9,12 @@ using Ptr = nint;
 // The buffers we can clear with glClear
 [Flags] enum EBuffer : uint { Depth = 256, Color = 16384 }
 
+// Buffer targets for BufferData, BindBuffer etc
+enum EBufferTarget : uint { Array = 0x8892, ElementArray = 0x8893 }
+
+// Usage hint for GL.BufferData
+enum EBufferUsage : uint { StaticDraw = 0x88E4 }
+
 // Blend factors used for BlendFunc
 enum EBlendFactor : uint { Zero = 0, One = 1, SrcAlpha = 770, OneMinusSrcAlpha = 771 }
 
@@ -55,6 +61,11 @@ enum HWindow : ulong { Zero };
 enum HProgram : ulong { Zero };
 // An OpenGL shader (part of a pipeline)
 enum HShader : ulong { Zero }
+
+// OpenGL VertexArrayObject (VAO)
+enum HVertexArray : ulong { Zero }
+// OpenGL data Buffer object 
+enum HBuffer : ulong { Zero }
 #endregion
 
 #region class GL -----------------------------------------------------------------------------------
@@ -66,6 +77,24 @@ unsafe static class GL {
       => (pAttachShader ??= Load<glAttachShader> ()) (program, shader);
    delegate void glAttachShader (HProgram program, HShader shader);
    static glAttachShader? pAttachShader;
+
+   // Bind a storage buffer to a buffer target .................................
+   public static void BindBuffer (EBufferTarget target, HBuffer buffer) 
+      => (pBindBuffer ??= Load<glBindBuffer> ()) (target, buffer);
+   delegate void glBindBuffer (EBufferTarget target, HBuffer buffer);
+   static glBindBuffer? pBindBuffer;
+
+   // Bind a vertex array object (VAO) for use .................................
+   public static void BindVertexArray (HVertexArray array) 
+      => (pBindVertexArray ??= Load<glBindVertexArray> ()) (array);
+   delegate void glBindVertexArray (HVertexArray array);
+   static glBindVertexArray? pBindVertexArray;
+
+   // Allocates and copies data to a buffer object's storage ...................
+   public static void BufferData (EBufferTarget target, int size, Ptr data, EBufferUsage usage) 
+      => (pBufferData ??= Load<glBufferData> ()) (target, new Ptr (size), data, usage);
+   delegate void glBufferData (EBufferTarget target, Ptr size, Ptr data, EBufferUsage usage);
+   static glBufferData? pBufferData;
 
    // Compile an OpenGL shader .................................................
    public static void CompileShader (HShader idShader)
@@ -100,6 +129,42 @@ unsafe static class GL {
       => (pCreateShader ??= Load<glCreateShader> ()) (type);
    delegate HShader glCreateShader (EShader type);
    static glCreateShader? pCreateShader;
+
+   // Delete a named buffer object .............................................
+   public static unsafe void DeleteBuffer (HBuffer buffer) 
+      => (pDeleteBuffers ??= Load<glDeleteBuffers> ()) (1, &buffer);
+   unsafe delegate void glDeleteBuffers (int n, HBuffer* buffers);
+   static glDeleteBuffers? pDeleteBuffers;
+
+   // Deletes a vertex array object ............................................
+   public unsafe static void DeleteVertexArray (HVertexArray array) 
+      => (pDeleteVertexArrays ??= Load<glDeleteVertexArrays> ()) (1, &array);
+   unsafe delegate void glDeleteVertexArrays (int n, HVertexArray* textures);
+   static glDeleteVertexArrays? pDeleteVertexArrays;
+
+   // Specify that a particular element (specified by glVertexAttribPointer) is in use
+   public static void EnableVertexAttribArray (int index) 
+      => (pEnableVertexAttribArray ??= Load<glEnableVertexAttribArray> ()) ((uint)index);
+   delegate void glEnableVertexAttribArray (uint index);
+   static glEnableVertexAttribArray? pEnableVertexAttribArray;
+
+   // Allocate a new data-storage buffer object ................................
+   public static unsafe HBuffer GenBuffer () { 
+      HBuffer buffer; 
+      (pGenBuffers ??= Load<glGenBuffers> ()) (1, &buffer); 
+      return buffer; 
+   }
+   unsafe delegate void glGenBuffers (int n, HBuffer* buffers);
+   static glGenBuffers? pGenBuffers;
+
+   // Allocate a new VertexArray object (VAO) ..................................
+   public unsafe static HVertexArray GenVertexArray () { 
+      HVertexArray array; 
+      (pGenVertexArrays ??= Load<glGenVertexArrays> ()) (1, &array); 
+      return array; 
+   }
+   unsafe delegate void glGenVertexArrays (int n, HVertexArray* arrays);
+   static glGenVertexArrays? pGenVertexArrays;
 
    // <summary>Gets information about a uniform variable .......................
    public unsafe static void GetActiveUniform (HProgram program, int index, out int size, out EDataType type, out string name, out int location) {
@@ -206,6 +271,18 @@ unsafe static class GL {
    delegate void glUseProgram (HProgram program);
    static glUseProgram? pUseProgram;
 
+   // Defines an element in a Vertex specification (integral type) .............
+   public static void VertexAttribIPointer (int index, int size, EDataType type, int stride, int offset) 
+      => (pVertexAttribIPointer ??= Load<glVertexAttribIPointer> ()) (index, size, type, stride, offset);
+   delegate void glVertexAttribIPointer (int index, int size, EDataType type, int stride, Ptr pointer);
+   static glVertexAttribIPointer? pVertexAttribIPointer;
+
+   // Defines an element in a Vertex specification (float type) ................
+   public static void VertexAttribPointer (int index, int size, EDataType type, bool normalized, int stride, int offset) 
+      => (pVertexAttribPointer ??= Load<glVertexAttribPointer> ()) (index, size, type, normalized, stride, offset);
+   delegate void glVertexAttribPointer (int index, int size, EDataType type, bool normalized, int stride, Ptr pointer);
+   static glVertexAttribPointer? pVertexAttribPointer;
+
    // P-Invoke imports ---------------------------------------------------------
    [DllImport (GDI32)] public static extern int ChoosePixelFormat (HDC hDC, [In] ref PixelFormatDescriptor pfd);
    [DllImport (GDI32)] public static extern int SetPixelFormat (HDC hDC, int iPixelFormat, [In] ref PixelFormatDescriptor pfd);
@@ -221,6 +298,7 @@ unsafe static class GL {
    [DllImport (OPENGL32, EntryPoint = "wglCreateContext")] public static extern HGLRC CreateContext (HDC hdc);
    [DllImport (OPENGL32, EntryPoint = "wglDeleteContext")] public static extern bool DeleteContext (HGLRC hglrc);
    [DllImport (OPENGL32, EntryPoint = "glDisable")] public static extern void Disable (ECap cap);
+   [DllImport (OPENGL32, EntryPoint = "glDrawArrays")] public static extern void DrawArrays (EMode mode, int start, int count);
    [DllImport (OPENGL32, EntryPoint = "glEnable")] public static extern void Enable (ECap cap);
    [DllImport (OPENGL32, EntryPoint = "glEnd")] public static extern void End ();
    [DllImport (OPENGL32, EntryPoint = "wglGetProcAddress")] public static extern nint GetProcAddress (string name);

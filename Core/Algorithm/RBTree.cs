@@ -1,4 +1,4 @@
-﻿// ────── ╔╗                                                                                   CORE
+// ────── ╔╗                                                                                   CORE
 // ╔═╦╦═╦╦╬╣ RBTree.cs
 // ║║║║╬║╔╣║ Implements a balanced binary (red-black) tree that maintains elements in sorted order
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
@@ -361,9 +361,7 @@ public partial class RBTree<TVal, TKey> : IEnumerable<TVal> where TKey : ICompar
       }
    }
 
-   /// <summary>
-   /// Returns an enumerator that iterates through each value stored in the tree (in order)
-   /// </summary>
+   /// <summary>Returns an enumerator that iterates through each value stored in the tree (in order)</summary>
    public IEnumerator<TVal> GetEnumerator () { foreach (var n in Traverse (mRoot)) yield return mA[n].Value; }
    IEnumerator IEnumerable.GetEnumerator () { foreach (var n in Traverse (mRoot)) yield return mA[n].Value; }
 }

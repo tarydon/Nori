@@ -25,9 +25,16 @@ class TMisc {
       1.5.Clamp (1, 2).Is (1.5); 0.5.Clamp (1, 2).Is (1); 2.5.Clamp (1, 2).Is (2);
       2.0.Clamp ().Is (1);
       1.5f.Clamp (1, 2).Is (1.5f); 1.5f.Clamp (2, 3).Is (2f);
+      1.5f.Clamp ().Is (1f);
+
+      // Along
+      0.5.Along (new Point3 (1, 3, 5), new Point3 (5, 7, 9)).Is ("(3,5,7)");
+      0.5.Along (new Point2 (1, 3), new Point2 (5, 7)).Is ("(3,5)");
+      0.5.Along (1, 5).Is (3);
 
       // D2R, R2D
       30.D2R ().Is (Lib.PI / 6); 45.0.D2R ().Is (Lib.PI / 4); Lib.PI.R2D ().Is (180);
+      "45".ToInt ().Is (45); " 46a".ToInt ().Is (46); "X".ToInt ().Is (0);
 
       // EQ variants
       1.000001.EQ (1.000002).IsFalse (); 1.0000001.EQ (1.0000002).IsTrue ();

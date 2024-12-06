@@ -29,7 +29,7 @@ class PolyTests {
       var sb = new StringBuilder ();
       sb.Append ($"Segments of {p}:\n");
       foreach (var s in p.Segs)
-         sb.Append ($"{s}  |  {s.IsArc} {s.IsCCW} {s.IsCircle} {s.IsLine} {s.IsLast}\n");
+         sb.Append ($"{s}  |  {s.IsArc} {s.IsCCW} {s.IsCircle} {s.IsLast}\n");
       File.WriteAllText (NT.TmpTxt, sb.ToString ());
       Assert.TextFilesEqual ($"{NT.Data}/Misc/poly.txt", NT.TmpTxt);
 
@@ -48,20 +48,23 @@ class PolyTests {
       Poly p1 = p * Matrix2.Translation (2, 1); p1.Is ("M2,1H12V4Q10,6,1H4Q2,4,-1Z");
       Poly p2 = p * Matrix2.Rotation (Lib.HalfPI); p2.Is ("M0,0V10H-3Q-5,8,1V2Q-3,0,-1Z");
       p.GetBound ().Is ("(0▸10,0▸5)");
+
+      p.GetPerimeter ().Is (28.283185);
+      p.GetBound ().Is ("(0▸10,0▸5)");
    }
 
    [Test (68, "Low level PolyBuilder tests")]
    void Test3 () {
       PB ().Line (1, 2).End (3, 4).Is ("M1,2L3,4");
       PB ().Line (new (1, 2)).End (new (3, 4)).Is ("M1,2L3,4");
-      PB ().Build ("M1,2L3,4.").Is ("M1,2L3,4");
+      Poly.Parse ("M1,2L3,4.").Is ("M1,2L3,4");
       PB ().Arc (0, 0, 0, 5, Poly.EFlags.CCW).End (5, 5).Is ("M0,0Q5,5,1");
       PB ().Arc (0, 0, Math.Tan (90.D2R () / 4)).End (5, 5).Is ("M0,0Q5,5,1");
-      PB ().Build ("M1,2Q3,4,0").Is ("M1,2L3,4");
-      PB ().Build ("M0,0 L12,13 3,4 Z").Is ("M0,0L12,13L3,4Z");
+      Poly.Parse ("M1,2Q3,4,0").Is ("M1,2L3,4");
+      Poly.Parse ("M0,0 L12,13 3,4 Z").Is ("M0,0L12,13L3,4Z");
 
       Exception? e = null;
-      try { PB ().Build ("M0,0F1,2Z"); } catch (Exception e1) { e = e1; }
+      try { Poly.Parse ("M0,0F1,2Z"); } catch (Exception e1) { e = e1; }
       (e == null).IsFalse ();
 
       static PolyBuilder PB () => new ();
@@ -102,5 +105,17 @@ class PolyTests {
       foreach (var pt in bez) sb.Append ($"{pt}\n");
       File.WriteAllText (NT.TmpTxt, sb.ToString ());
       Assert.TextFilesEqual ($"{NT.Data}/Misc/poly3.txt", NT.TmpTxt);
+
+      seg = new Seg (new (0, 10), new (-10, 0), Point2.Zero, Poly.EFlags.CCW);
+      seg.Contains (new (0, 10)).IsTrue (); seg.Contains (new (-10, 0)).IsTrue ();
+      seg.Contains (Point2.Zero.Polar (10, 135.D2R ())).IsTrue ();
+      seg.Contains (new (0, -10)).IsFalse ();
+      seg.Contains (new (10, 0)).IsFalse ();
+
+      seg = new Seg (new (0, 10), new (-10, 0), Point2.Zero, Poly.EFlags.CW);
+      seg.Contains (new (0, 10)).IsTrue (); seg.Contains (new (-10, 0)).IsTrue ();
+      seg.Contains (Point2.Zero.Polar (10, 135.D2R ())).IsFalse ();
+      seg.Contains (new (0, -10)).IsTrue ();
+      seg.Contains (new (10, 0)).IsTrue ();
    }
 }

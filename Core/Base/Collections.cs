@@ -1,4 +1,4 @@
-﻿// ────── ╔╗                                                                                   CORE
+// ────── ╔╗                                                                                   CORE
 // ╔═╦╦═╦╦╬╣ Collections.cs
 // ║║║║╬║╔╣║ Implements collections (including the AList - active list)
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
@@ -91,9 +91,7 @@ public readonly struct ListChange {
    internal ListChange (E action, int index) => (Action, Index) = (action, index);
    public override string ToString () => $"{Action}({Index})";
 
-   /// <summary>
-   /// The type of action happening on the List
-   /// </summary>
+   /// <summary>The type of action happening on the List</summary>
    public enum E {
       /// <summary>Element added at given index</summary>
       Added,

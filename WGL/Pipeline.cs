@@ -150,3 +150,21 @@ class Pipeline {
    public override string ToString () => $"Shader: {Name}";
 }
 #endregion
+
+#region struct Attrib ------------------------------------------------------------------------------
+/// <summary>Attrib represents one attribute in a VAO buffer</summary>
+readonly record struct Attrib (int Dims, EDataType Type, int Size, bool Integral) {
+   public static Attrib AVec2f = new (2, EDataType.Float, 8, false);
+   public static Attrib AInt = new (1, EDataType.Int, 4, true);
+   public static Attrib AShort = new (1, EDataType.Short, 2, true);
+   public static Attrib AVec3f = new (3, EDataType.Float, 12, false);
+   public static Attrib AVec4f = new (4, EDataType.Float, 16, false);
+   public static Attrib AVec3h = new (3, EDataType.Half, 6, false);
+
+   public static Dictionary<Type, Attrib> Map = new () {
+      [typeof (Vec2F)] = AVec2f, [typeof (short)] = AShort, [typeof (int)] = AInt, 
+      [typeof (Vec4F)] = AVec4f, [typeof (Vec3F)] = AVec3f, [typeof (Vec3H)] = AVec3h,
+   };
+}
+#endregion
+

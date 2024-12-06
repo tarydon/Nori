@@ -32,7 +32,20 @@ public class Poly {
    public static Poly Line (double x1, double y1, double x2, double y2)
       => Line (new (x1, y1), new (x2, y2));
 
-   /// <summary>Make a Poly from a string description (inverse of ToString)</summary>
+   /// <summary>This constructor makes a Pline from a Pline mini-language encoded string</summary>
+   /// When we do ToString on a Pline, we get an encoding of that Pline in a mini-language.
+   /// This converts that encoding back into a Pline. Note that this is, in general, not a
+   /// good round-tripping mechanism since the encoded string is restricted to an accuracy
+   /// of Lib.Epsilon. Here are the tags that are supported.
+   /// 
+   /// Tag           | Meaning
+   /// --------------|-----------
+   /// Mx,y          | Move to x,y (must be used as the first tag)
+   /// Lx,y          | Line to x,y
+   /// Hx            | Horizontal line to x
+   /// Vy            | Vertical line to y
+   /// Qx,y,t        | Arc to x,y with t quarter-turns. t=1 is 90 degree left turn, t=-0.5 is 45 degree right turn etc.
+   /// Z             | Close the pline (can be used only at the end)
    public static Poly Parse (string s) => new PolyBuilder ().Build (s);
 
    /// <summary>Makes a full-rectangle Poly</summary>
@@ -130,7 +143,11 @@ public class Poly {
       }
    }
 
+   /// <summary>Computes the bounding rectangle of the Poly (not cached)</summary>
    public Bound2 GetBound () => new (Segs.Select (a => a.Bound));
+
+   /// <summary>Computes the length of the Poly</summary>
+   public double GetPerimeter () => Segs.Sum (a => a.Length);
 
    // Operators ----------------------------------------------------------------
    /// <summary>Create a new Poly by applying the transformation matrix</summary>
@@ -165,30 +182,43 @@ public class Poly {
 /// <summary>Helper used to build Poly objects (since they are immutable once created)</summary>
 public class PolyBuilder {
    // Methods ------------------------------------------------------------------
-   public PolyBuilder Arc (double x, double y, double xc, double yc, Poly.EFlags flags) => Arc (new (x, y), new (xc, yc), flags);
-   public PolyBuilder Arc (double x, double y, double bulge) => Arc (new (x, y), bulge);
-
+   /// <summary>Adds an Arc starting at the given point a and with center cen</summary>
    public PolyBuilder Arc (Point2 a, Point2 cen, Poly.EFlags flags) {
       PopBulge (a);
       while (mExtra.Count < mPts.Count) mExtra.Add (new ());
       mPts.Add (a); mExtra.Add (new (cen, flags));
       return this;
    }
+   /// <summary>Adds an arc given starting point and center</summary>
+   public PolyBuilder Arc (double x, double y, double xc, double yc, Poly.EFlags flags)
+      => Arc (new (x, y), new (xc, yc), flags);
 
+   /// <summary>Adds an arc given the starting point and DXF-style bulge</summary>
    public PolyBuilder Arc (Point2 a, double bulge) {
       PopBulge (a); mPts.Add (a); mBulge = bulge;
       return this;
    }
+   /// <summary>Adds an arc given the starting point and DXF-style bulge</summary>
+   public PolyBuilder Arc (double x, double y, double bulge) 
+      => Arc (new (x, y), bulge);
 
-   public PolyBuilder Close () { mClosed = true; return this; }
+   /// <summary>This is called finally to complete the build process to a Poly</summary>
+   public Poly Build () {
+      PopBulge (mPts[0]);
+      Poly.EFlags flags = mClosed ? Poly.EFlags.Closed : 0;
+      var extra = ImmutableArray<Poly.Extra>.Empty;
+      if (mExtra.Count > 0) {
+         extra = ImmutableArray.CreateRange (mExtra);
+         flags |= Poly.EFlags.HasArcs;
+      }
+      var poly = new Poly (ImmutableArray.CreateRange (mPts), extra, flags);
+      Reset ();
+      return poly;
+   }
 
-   public PolyBuilder Line (Point2 a) { PopBulge (a); mPts.Add (a); return this; }
-   public PolyBuilder Line (double x, double y) => Line (new (x, y));
-
-   public Poly End (Point2 e) { Line (e); return Build (); }
-   public Poly End (double x, double y) { Line (x, y); return Build (); }
-
-   public Poly Build (string s) {
+   /// <summary>This constructor makes a Pline from a Pline mini-language encoded string</summary>
+   /// See Poly.Parse for details
+   internal Poly Build (string s) {
       var (mode, n) = ('M', 0);
       Point2 a = Point2.Zero;
       for (; ; ) {
@@ -247,18 +277,18 @@ public class PolyBuilder {
       static bool IsSpace (char ch) => char.IsWhiteSpace (ch) || ch == ',';
    }
 
-   public Poly Build () {
-      PopBulge (mPts[0]);
-      Poly.EFlags flags = mClosed ? Poly.EFlags.Closed : 0;
-      var extra = ImmutableArray<Poly.Extra>.Empty;
-      if (mExtra.Count > 0) {
-         extra = ImmutableArray.CreateRange (mExtra);
-         flags |= Poly.EFlags.HasArcs;
-      }
-      var poly = new Poly (ImmutableArray.CreateRange (mPts), extra, flags);
-      Reset ();
-      return poly;
-   }
+   /// <summary>Marks the Pline as closed</summary>
+   public PolyBuilder Close () { mClosed = true; return this; }
+
+   /// <summary>Adds the given end-point as the last node, makes a Poly and returns it</summary>
+   public Poly End (Point2 e) { Line (e); return Build (); }
+   /// <summary>Adds the given end-point as the last node, makes a Poly and returns it</summary>
+   public Poly End (double x, double y) => End (new (x, y));
+
+   /// <summary>Add a line starting at the given point</summary>
+   public PolyBuilder Line (Point2 a) { PopBulge (a); mPts.Add (a); return this; }
+   /// <summary>Add a line starting at the given point</summary>
+   public PolyBuilder Line (double x, double y) => Line (new (x, y));
 
    // Helpers ------------------------------------------------------------------
    void PopBulge (Point2 b) {
@@ -298,23 +328,11 @@ public readonly struct Seg (Point2 a, Point2 b, Point2 center, Poly.EFlags flags
       return $"LINE {A} .. {B}";
    }
 
-   public bool IsLine => (Flags & (Poly.EFlags.CW | Poly.EFlags.CCW)) == 0;
-   public bool IsArc => (Flags & (Poly.EFlags.CW | Poly.EFlags.CCW)) != 0;
-   public bool IsCCW => (Flags & Poly.EFlags.CCW) != 0;
-   public bool IsCircle => (Flags & Poly.EFlags.Circle) != 0;
-   public bool IsLast => (Flags & Poly.EFlags.Last) != 0;
-
-   // Get the start and end angles (only for a curved segment)
-   public (double S, double E) GetStartAndEndAngles () {
-      double s = Center.AngleTo (A), e = Center.AngleTo (B);
-      if (IsCircle)
-         e = s + Lib.TwoPI * (IsCCW ? 1 : -1);
-      else {
-         if (IsCCW && e < s) e += Lib.TwoPI;
-         if (!IsCCW && e > s) e -= Lib.TwoPI;
-      }
-      return (s, e);
-   }
+   // Properties ---------------------------------------------------------------
+   public readonly Point2 A = a;
+   public readonly Point2 B = b;
+   public readonly Point2 Center = center;
+   public readonly Poly.EFlags Flags = flags;
 
    /// <summary>The subtended angle (+ for CCW, - for CW arcs)</summary>
    public double AngSpan {
@@ -325,22 +343,58 @@ public readonly struct Seg (Point2 a, Point2 b, Point2 center, Poly.EFlags flags
       }
    }
 
-   public double Radius => IsArc ? Center.DistTo (A) : 0;
-
+   /// <summary>The Bound of this segment</summary>
    public Bound2 Bound {
       get {
          Bound2 bound = new (A.X, A.Y, B.X, B.Y);
          if (IsArc) {
-            double r = Radius;
+            // Here, we are repeating the code that is in GetLie because
+            // Segment.Bound is a time-critical routine, and we don't want to 
+            // compute stuff like GetStartAndEndAngles 4 times
+            var (sa, ea) = GetStartAndEndAngles ();
+            double oppMid = (sa + ea) / 2 + Lib.PI * (IsCCW ? 1 : -1);
             for (EDir dir = EDir.E; dir <= EDir.S; dir++) {
-               Point2 pt = Center + Vector2.Along (dir) * r;
-               if (Contains (pt)) bound += pt;
+               Point2 pt = Center.CardinalMoved (Radius, dir);
+               double ang = Center.AngleTo (pt);
+               if (IsCCW) {
+                  if (ang < sa) ang += Lib.TwoPI;
+                  if (ang > oppMid) ang -= Lib.TwoPI;
+               } else {
+                  if (ang > sa) ang -= Lib.TwoPI;
+                  if (ang < oppMid) ang += Lib.TwoPI;
+               }
+               double lie = (ang - sa) / (ea - sa);
+               if (lie is >= 0 and <= 1) bound += pt;
             }
          }
          return bound;
       }
    }
 
+   /// <summary>Is this a curved segment?</summary>
+   public bool IsArc => (Flags & (Poly.EFlags.CW | Poly.EFlags.CCW)) != 0;
+   /// <summary>If curved, does this curve CCW</summary>
+   public bool IsCCW => (Flags & Poly.EFlags.CCW) != 0;
+   /// <summary>Is this a full-circle segment</summary>
+   public bool IsCircle => (Flags & Poly.EFlags.Circle) != 0;
+   /// <summary>Is this the last segment in a Poly</summary>
+   public bool IsLast => (Flags & Poly.EFlags.Last) != 0;
+
+   /// <summary>The length of the segment</summary>
+   public double Length {
+      get {
+         if (IsArc) return Radius * Abs (AngSpan);
+         return A.DistTo (B);
+      }
+   }
+
+   /// <summary>The radius (of a curved segment)</summary>
+   public double Radius => IsArc ? Center.DistTo (A) : 0;
+
+   // Methods ------------------------------------------------------------------
+   /// <summary>Check if the Seg 'contains' the given point</summary>
+   /// For correct results, the point in question must lie on the infinite
+   /// line (if the Seg is linear) or on the circle (if it is curved)
    public bool Contains (Point2 p) => GetLie (p) is >= 0 and <= 1;
 
    /// <summary>This discretizes the segment into the given list of points with a given error threshold</summary>
@@ -357,6 +411,25 @@ public readonly struct Seg (Point2 a, Point2 b, Point2 center, Poly.EFlags flags
             pts.Add (Center.Polar (radius, sa += angstep));
       } else
          pts.Add (B);
+   }
+
+   /// <summary>Returns the lie of a given point</summary>
+   public double GetLie (Point2 p) {
+      if (IsArc) {
+         var (sa, ea) = GetStartAndEndAngles ();
+         double ang = Center.AngleTo (p);
+         if (IsCCW) {
+            double oppMid = (sa + ea) / 2 + Lib.PI;
+            if (ang < sa) ang += Lib.TwoPI;
+            if (ang > oppMid) ang -= Lib.TwoPI;
+         } else {
+            double oppMid = (sa + ea) / 2 - Lib.PI;
+            if (ang > sa) ang -= Lib.TwoPI;
+            if (ang < oppMid) ang += Lib.TwoPI;
+         }
+         return (ang - sa) / (ea - sa);
+      } else
+         return p.GetLieOn (A, B);
    }
 
    /// <summary>Returns a point at a given lie on the segment</summary>
@@ -379,6 +452,21 @@ public readonly struct Seg (Point2 a, Point2 b, Point2 center, Poly.EFlags flags
       return A.AngleTo (B);
    }
 
+   /// <summary>Get the start and end angles (only for a curved segment)</summary>
+   public (double S, double E) GetStartAndEndAngles () {
+      double s = Center.AngleTo (A), e = Center.AngleTo (B);
+      if (IsCircle)
+         e = s + Lib.TwoPI * (IsCCW ? 1 : -1);
+      else {
+         if (IsCCW && e < s) e += Lib.TwoPI;
+         if (!IsCCW && e > s) e -= Lib.TwoPI;
+      }
+      return (s, e);
+   }
+
+   /// <summary>Convert the curved segment into 1 or more beziers</summary>
+   /// We convert the Seg to multiple beziers, such that each bezier spans
+   /// no more than a quarter of a circle
    public void ToBeziers (List<Vec2F> pts) {
       double angSpan = Abs (AngSpan);
       int cBeziers = Max (1, (int)Ceiling ((angSpan - 0.001) / Lib.HalfPI));
@@ -394,28 +482,5 @@ public readonly struct Seg (Point2 a, Point2 b, Point2 center, Poly.EFlags flags
          pts.Add (pb.Polar (-dist, ang2)); pts.Add (pb);
       }
    }
-
-   public double GetLie (Point2 p) {
-      if (IsArc) {
-         var (sa, ea) = GetStartAndEndAngles ();
-         double ang = Center.AngleTo (p);
-         if (IsCCW) {
-            double oppMid = (sa + ea) / 2 + Lib.PI;
-            if (ang < sa) ang += Lib.TwoPI;
-            if (ang > oppMid) ang -= Lib.TwoPI;
-         } else {
-            double oppMid = (sa + ea) / 2 - Lib.PI;
-            if (ang > sa) ang -= Lib.TwoPI;
-            if (ang < oppMid) ang += Lib.TwoPI;
-         }
-         return (ang - sa) / (ea - sa);
-      } else
-         return p.GetLieOn (A, B);
-   }
-
-   public readonly Point2 A = a;
-   public readonly Point2 B = b;
-   public readonly Point2 Center = center;
-   public readonly Poly.EFlags Flags = flags;
 }
 #endregion

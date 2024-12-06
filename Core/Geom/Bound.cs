@@ -1,4 +1,4 @@
-﻿// ────── ╔╗                                                                                   CORE
+// ────── ╔╗                                                                                   CORE
 // ╔═╦╦═╦╦╬╣ Bound.cs
 // ║║║║╬║╔╣║ Bounds in 1-D (span), 2-D (rectangle), 3-D (cuboid)
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
@@ -89,7 +89,9 @@ public readonly struct Bound2 {
 
    // Properties ---------------------------------------------------------------
    public readonly Bound1 X, Y;
+   /// <summary>Width is the X-span of the Bound2</summary>
    public double Width => X.Length;
+   /// <summary>Height is the Y-span of the Bound2</summary>
    public double Height => Y.Length;
    public bool IsEmpty => X.IsEmpty || Y.IsEmpty;
    public Point2 Midpoint => new (X.Mid, Y.Mid);
@@ -154,8 +156,11 @@ public readonly struct Bound3 {
 
    // Properties ---------------------------------------------------------------
    public readonly Bound1 X, Y, Z;
+   /// <summary>Width is the X-span of the Bound3</summary>
    public double Width => X.Length;
+   /// <summary>Height is the Y-span of the Bound3</summary>
    public double Height => Y.Length;
+   /// <summary>Depth is the Z-span of the Bound3</summary>
    public double Depth => Z.Length;
    public bool IsEmpty => X.IsEmpty || Y.IsEmpty || Z.IsEmpty;
    public Point3 Midpoint => new (X.Mid, Y.Mid, Z.Mid);

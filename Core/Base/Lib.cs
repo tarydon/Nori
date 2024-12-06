@@ -8,17 +8,23 @@ namespace Nori;
 #region class Lib ----------------------------------------------------------------------------------
 public static class Lib {
    // Constants ----------------------------------------------------------------
+   /// <summary>Epsilon = 1e-6</summary>
    public const double Epsilon = 1e-6;
+   /// <summary>PI = 180 degrees, in radians</summary>
    public const double PI = Math.PI;
+   /// <summary>TwoPI = 360 degrees, in radians</summary>
    public const double TwoPI = 2 * Math.PI;
+   /// <summary>HalfPI = 90 degrees, in radians</summary>
    public const double HalfPI = Math.PI / 2;
+   /// <summary>QuarterPI = 45 degrees, in radians</summary>
    public const double QuarterPI = Math.PI / 4;
+
+   // Properties ---------------------------------------------------------------
+   /// <summary>The root of Nori projects on developer machines</summary>
+   public const string DevRoot = "N:";
 
    /// <summary>Are we in 'testing' mode?</summary>
    public static bool Testing { get; set; }
-
-   /// <summary>The root of Nori projects on developer machines</summary>
-   public const string DevRoot = "N:";
 
    // Methods ------------------------------------------------------------------
    /// <summary>Returns the cos-inverse of the given value</summary>
@@ -59,6 +65,7 @@ public static class Lib {
    }
    static string? sCodeBase;
 
+   /// <summary>Checks if a reference is a 'null reference'</summary>
    public static bool IsNull<T> (ref readonly T source) => Unsafe.IsNullRef (in source);
 
    /// <summary>Returns the 'nice name' for a type (human readable name like 'int')</summary>

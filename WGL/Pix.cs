@@ -11,12 +11,16 @@ public static class Pix {
    public static UIElement CreatePanel ()
       => Panel.It;
 
-   public static void DrawPoly (Poly p, Mat4F mapping, Vec2F vpscale) {
+   public static unsafe void DrawPolys (Poly[] poly, Mat4F mapping, Vec2F vpscale) {
       List<Vec2F> lines = [], arcs = [];
-      foreach (var seg in p.Segs) {
+      foreach (var seg in poly.SelectMany (a => a.Segs)) {
          if (seg.IsArc) seg.ToBeziers (arcs);
          else lines.AddRange ([(Vec2F)seg.A, (Vec2F)seg.B]);
       }
+
+      RetainBuffer buf = new ();
+      int lineStart = buf.AddData2 (lines.AsSpan ());
+      int arcStart = buf.AddData2 (arcs.AsSpan ());
 
       var pgm = Pipeline.Line2D;
       GL.UseProgram (pgm.Handle);
@@ -24,9 +28,7 @@ public static class Pix {
       pgm.Uniform ("Xfm", mapping);
       pgm.Uniform ("VPScale", vpscale);
       pgm.Uniform ("LineWidth", 3f);
-      GL.Begin (EMode.Lines);
-      foreach (var pt in lines) GL.Vertex (pt.X, pt.Y);
-      GL.End ();
+      buf.Draw (EMode.Lines, [Attrib.AVec2f], 8, lineStart, lines.Count);
 
       pgm = Pipeline.Bezier2D;
       GL.UseProgram (pgm.Handle);
@@ -34,9 +36,9 @@ public static class Pix {
       pgm.Uniform ("Xfm", mapping);
       pgm.Uniform ("VPScale", vpscale);
       pgm.Uniform ("LineWidth", 3f);
-      GL.Begin (EMode.Patches);
-      foreach (var pt in arcs) GL.Vertex (pt.X, pt.Y);
-      GL.End ();
+      buf.Draw (EMode.Patches, [Attrib.AVec2f], 8, arcStart, arcs.Count);
+
+      buf.Release ();
    }
 
    /// <summary>Stub for the Render method that is called when each frame has to be painted</summary>
@@ -59,7 +61,7 @@ public static class Pix {
          Poly.Parse ("M10,10 H90 V30 Q70,50,1 H30 Q10,30,-1 Z"),
          Poly.Circle (new (70, 30), 15)
       ];
-      foreach (var p in polys) DrawPoly (p, mapping, vpscale);
+      DrawPolys (polys, mapping, vpscale);
 
       panel.EndRender ();
    }
