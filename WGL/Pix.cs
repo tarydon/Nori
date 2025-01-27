@@ -12,7 +12,7 @@ public static partial class Pix {
       => Panel.It;
 
    /// <summary>This is a good prototype of how rendering with the Pix renderer will look like</summary>
-   static void DrawScene () { // POI.
+   static void DrawScene () {
       Pix.LineWidth = 3f;
       Pix.DrawColor = Color4.Yellow;
       Pix.Lines ([new (10, 10), new (90, 10), new (90, 10), new (90, 40)]);
@@ -20,6 +20,10 @@ public static partial class Pix {
       Pix.LineWidth = 6f;
       Pix.DrawColor = Color4.White;
       Pix.Beziers ([new (10, 10), new (10, 40), new (80, 20), new (80, 50)]);
+
+      Pix.LineWidth = 12f;
+      Pix.DrawColor = Color4.Blue;
+      Pix.Lines ([new (90, 40), new (10, 10)]);
    }
 
    /// <summary>Stub for the Render method that is called when each frame has to be painted</summary>

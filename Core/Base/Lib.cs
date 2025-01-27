@@ -126,7 +126,7 @@ public static class Lib {
    public static byte[] ReadBytes (string file) {
       using var stm = OpenRead (file);
       byte[] data = new byte[stm.Length];
-      stm.ReadExactly (data); // POI.
+      stm.ReadExactly (data);
       return data;
    }
 

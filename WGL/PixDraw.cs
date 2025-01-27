@@ -32,27 +32,13 @@ public static partial class Pix {
    /// <summary>Draws 2D lines in world coordinates, with Z = 0</summary>
    /// Every pair of Vec2F in the list creates one line, so with n points,
    /// n / 2 lines are drawn.
-   public static void Lines (ReadOnlySpan<Vec2F> pts) {  // POI.
-      var pgm = ShaderImp.Line2D;
-      pgm.Use ();
-      pgm.Uniform ("Xfm", Xfm);
-      pgm.Uniform ("VPScale", VPScale);
-      pgm.Uniform ("DrawColor", (Vec4F)DrawColor);
-      pgm.Uniform ("LineWidth", LineWidth);
-      RBuffer.AddData (pgm, pts);
-   }
+   public static void Lines (ReadOnlySpan<Vec2F> pts)    // POI.
+      => RBuffer.AddData (Line2DShader.It, pts);
 
    /// <summary>Draws 2D lines in world coordinates, with Z = 0</summary>
    /// Every pair of Vec2F in the list creates one line, so with n points,
    /// n / 2 lines are drawn.
-   public static void Beziers (ReadOnlySpan<Vec2F> pts) {
-      var pgm = ShaderImp.Bezier2D;
-      pgm.Use ();
-      pgm.Uniform ("Xfm", Xfm);
-      pgm.Uniform ("VPScale", VPScale);
-      pgm.Uniform ("DrawColor", (Vec4F)DrawColor);
-      pgm.Uniform ("LineWidth", LineWidth);
-      RBuffer.AddData (pgm, pts);
-   }
+   public static void Beziers (ReadOnlySpan<Vec2F> pts) 
+      => RBuffer.AddData (Bezier2DShader.It, pts);
 }
 #endregion

@@ -29,11 +29,11 @@ class RBuffer {
    }
 
    /// <summary>This adds data into a RBuffer, and creates an RBatch wrapping this section of the buffer</summary>
-   public unsafe static void AddData<T> (ShaderImp shader, ReadOnlySpan<T> data) where T : unmanaged {
+   public unsafe static void AddData<T> (Shader shader, ReadOnlySpan<T> data) where T : unmanaged {
       It ??= new ();
       fixed (void* p = &data[0]) {
          int start = It.AddData (p, data.Length * Marshal.SizeOf<T> ());
-         RBatch.All.Add (new RBatch (It, shader, start, data.Length));
+         RBatch.All.Add (new RBatch (It, shader, start, data.Length));  // POI. start in bytes, count in vertices
       }
    }
 
@@ -55,7 +55,7 @@ class RBuffer {
    public void Draw (EMode mode, IReadOnlyList<ShaderImp.AttributeInfo> attribs, int cbVertex, int offset, int count) {
       PushToGPU ();
       int index = 0;
-      foreach (var a in attribs) {  // POI. 
+      foreach (var a in attribs) {
          if (a.Integral) GL.VertexAttribIPointer (index, a.Dimensions, a.ElemType, cbVertex, offset);
          else GL.VertexAttribPointer (index, a.Dimensions, a.ElemType, false, cbVertex, offset);
          GL.EnableVertexAttribArray (index);
@@ -103,20 +103,23 @@ class RBuffer {
 
 #region class RBatch -------------------------------------------------------------------------------
 /// <summary>RBatch is like a 'slice' of a RBuffer representing one batch of draw commands</summary>
-class RBatch { // POI. 
-   public RBatch (RBuffer buffer, ShaderImp shader, int start, int count)
-      => (Buffer, Shader, Start, Count) = (buffer, shader, start, count);
+class RBatch {
+   public RBatch (RBuffer buffer, Shader shader, int start, int count)
+      => (Buffer, Shader, Start, Count, Uniforms) = (buffer, shader, start, count, shader.SnapUniforms ());
 
    public readonly RBuffer Buffer;
-   public readonly ShaderImp Shader;
+   public readonly Shader Shader;
    public readonly int Start;
    public readonly int Count;
+   public readonly object Uniforms; // POI.
 
    public static List<RBatch> All = [];
 
    public void Issue () {
-      Shader.Use ();
-      Buffer.Draw (Shader.Mode, Shader.Attributes, Shader.CBVertex, Start, Count);
+      Shader.ApplyUniforms (Uniforms);
+      var pgm = Shader.Program;
+      pgm.Use ();
+      Buffer.Draw (pgm.Mode, pgm.Attributes, pgm.CBVertex, Start, Count);
    }
 }
 #endregion
