@@ -11,38 +11,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="Res\font.img" />
-    <None Remove="Res\Shader\ArrowHead.frag" />
-    <None Remove="Res\Shader\ArrowHead.geom" />
-    <None Remove="Res\Shader\Basic2D.vert" />
-    <None Remove="Res\Shader\Bezier.tctrl" />
-    <None Remove="Res\Shader\Bezier.teval" />
-    <None Remove="Res\Shader\Line.frag" />
-    <None Remove="Res\Shader\Line2D.geom" />
-    <None Remove="Res\Shader\Point.frag" />
-    <None Remove="Res\Shader\Point2D.geom" />
-    <None Remove="Res\Shader\Text.frag" />
-    <None Remove="Res\Shader\Text.geom" />
-    <None Remove="Res\Shader\Text2D.vert" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <EmbeddedResource Include="Res\font.img" />
-    <EmbeddedResource Include="Res\Shader\ArrowHead.frag" />
-    <EmbeddedResource Include="Res\Shader\ArrowHead.geom" />
-    <EmbeddedResource Include="Res\Shader\Basic2D.vert" />
-    <EmbeddedResource Include="Res\Shader\Bezier.tctrl" />
-    <EmbeddedResource Include="Res\Shader\Bezier.teval" />
-    <EmbeddedResource Include="Res\Shader\Line.frag" />
-    <EmbeddedResource Include="Res\Shader\Line2D.geom" />
-    <EmbeddedResource Include="Res\Shader\Point.frag" />
-    <EmbeddedResource Include="Res\Shader\Point2D.geom" />
-    <EmbeddedResource Include="Res\Shader\Text.frag" />
-    <EmbeddedResource Include="Res\Shader\Text.geom" />
-    <EmbeddedResource Include="Res\Shader\Text2D.vert" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\Core\Nori.Core.csproj" />
   </ItemGroup>
 

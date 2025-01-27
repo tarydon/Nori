@@ -14,6 +14,7 @@ class Program {
    // Implementation -----------------------------------------------------------
    // The constructor gathers all the tests, and also parses the command line arguments
    Program (string[] args) {
+      Lib.Init ();
       foreach (var arg in args) {
          if (int.TryParse (arg, out int n)) {
             if (n >= 0) mTestID.Add (n);

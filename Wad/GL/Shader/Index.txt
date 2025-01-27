@@ -1,0 +1,4 @@
+Name          Mode       Blend  Depth  POffset  Programs
+------------------------------------------------------------------------------------
+Line2D        Lines      1      0      0        World2D.vert|Line2D.geom|Line.frag
+Bezier2D      Patches    1      0      0        World2D.vert|Bezier.tctrl|Bezier.teval|Line2D.geom|Line.frag

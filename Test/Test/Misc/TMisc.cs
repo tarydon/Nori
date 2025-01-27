@@ -179,6 +179,9 @@ class TMisc {
       Lib.GetArcSteps (10, Lib.PI, 0.01).Is (36);
       int a = 3, b = 2; Lib.Sort (ref a, ref b);
       a.Is (2); b.Is (3);
+      Lib.ReadText ("wad:GL/Shader/arrowhead.frag").Length.Is (221);
+      Lib.ReadBytes ("wad:GL/Shader/arrowhead.frag").Length.Is (231);
+      Lib.ReadLines ("wad:GL/Shader/arrowhead.frag").Length.Is (11);
    }
 
    [Test (56, "Throwing various exceptions")]

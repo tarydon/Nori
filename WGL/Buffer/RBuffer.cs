@@ -5,16 +5,16 @@
 namespace Nori;
 using Ptr = nint;
 
-#region class RetainBuffer -------------------------------------------------------------------------
+#region class RBuffer ------------------------------------------------------------------------------
 /// <summary>A wrapper around a VertexArrayObject (VAO), used for 'retained mode' drawing</summary>
-/// We can store vertex data in a RetainBuffer, if we intend to keep that data constant and
+/// We can store vertex data in a RBuffer, if we intend to keep that data constant and
 /// reuse it over multiple frames. The other alternative is StreamBuffer, that is used to 
 /// send data to the GPU that is only going to be used for drawing once. Both have broadly
 /// equivalent functionality, and it is more an optimization issue of which one you use over
 /// the other
-class RetainBuffer {
+class RBuffer {
    // Methods ------------------------------------------------------------------
-   /// <summary>Add raw data into a RetainBuffer</summary>
+   /// <summary>Add raw data into a RBuffer</summary>
    /// <param name="pSrc">Pointer to the data to add</param>
    /// <param name="cb">Count, in bytes, of the data</param>
    /// <returns>The index at which the first byte of data was added</returns>
@@ -28,13 +28,17 @@ class RetainBuffer {
       return n;
    }
 
-   /// <summary>Another variant of AddData that adds the contents of a ReadOnlySpan of T</summary>
-   /// You can add data from a List of T by using the .AsSpan() extension method to 
-   /// get a ReadOnlySpan _view_ of the List (without making a copy)
-   public unsafe int AddData2<T> (ReadOnlySpan<T> data) where T : unmanaged {
-      fixed (void* p = &data[0])
-         return AddData (p, data.Length * Marshal.SizeOf<T> ());
+   /// <summary>This adds data into a RBuffer, and creates an RBatch wrapping this section of the buffer</summary>
+   public unsafe static void AddData<T> (ShaderImp shader, ReadOnlySpan<T> data) where T : unmanaged {
+      It ??= new ();
+      fixed (void* p = &data[0]) {
+         int start = It.AddData (p, data.Length * Marshal.SizeOf<T> ());
+         RBatch.All.Add (new RBatch (It, shader, start, data.Length));
+      }
    }
+
+   /// <summary>TEMPORARY - we are going to use only one RBuffer, keeping it alive only for one frame</summary>
+   public static RBuffer? It;
 
    /// <summary>Adds element indices into the Buffer, if we are using indexed-mode drawing</summary>
    public unsafe int AddIndices (ReadOnlySpan<int> seq) {
@@ -48,12 +52,12 @@ class RetainBuffer {
 
    /// <summary>Draws data from the VAO, after setting up vertex attributes</summary>
    /// This is a place-holder function which will get superseded by a better one later
-   public void Draw (EMode mode, Attrib[] attribs, int cbVertex, int offset, int count) {
+   public void Draw (EMode mode, IReadOnlyList<ShaderImp.AttributeInfo> attribs, int cbVertex, int offset, int count) {
       PushToGPU ();
       int index = 0;
-      foreach (var a in attribs) {
-         if (a.Integral) GL.VertexAttribIPointer (index, a.Dims, a.Type, cbVertex, offset);
-         else GL.VertexAttribPointer (index, a.Dims, a.Type, false, cbVertex, offset);
+      foreach (var a in attribs) {  // POI. 
+         if (a.Integral) GL.VertexAttribIPointer (index, a.Dimensions, a.ElemType, cbVertex, offset);
+         else GL.VertexAttribPointer (index, a.Dimensions, a.ElemType, false, cbVertex, offset);
          GL.EnableVertexAttribArray (index);
          index++; offset += a.Size;
       }
@@ -80,7 +84,7 @@ class RetainBuffer {
 
    /// <summary>Release the VAO after use</summary>
    public void Release () {
-      GL.BindVertexArray (HVertexArray.Zero);   // TODO: Only if this is the current VAO?
+      if (GLState.VAO == mHVAO) GLState.VAO = 0; 
       GL.DeleteBuffer (mHVertex); GL.DeleteBuffer (mHIndex); GL.DeleteVertexArray (mHVAO);
       mHVertex = mHIndex = HBuffer.Zero; mHVAO = HVertexArray.Zero;
    }
@@ -94,5 +98,25 @@ class RetainBuffer {
    HVertexArray mHVAO;              // GL handle to the VAO (allocated by PushToGPU)
    HBuffer mHVertex;                // GL handle to the vertex data storage buffer
    HBuffer mHIndex;                 // GL handle to the index buffer (used only if indexed drawing)
+}
+#endregion
+
+#region class RBatch -------------------------------------------------------------------------------
+/// <summary>RBatch is like a 'slice' of a RBuffer representing one batch of draw commands</summary>
+class RBatch { // POI. 
+   public RBatch (RBuffer buffer, ShaderImp shader, int start, int count)
+      => (Buffer, Shader, Start, Count) = (buffer, shader, start, count);
+
+   public readonly RBuffer Buffer;
+   public readonly ShaderImp Shader;
+   public readonly int Start;
+   public readonly int Count;
+
+   public static List<RBatch> All = [];
+
+   public void Issue () {
+      Shader.Use ();
+      Buffer.Draw (Shader.Mode, Shader.Attributes, Shader.CBVertex, Start, Count);
+   }
 }
 #endregion

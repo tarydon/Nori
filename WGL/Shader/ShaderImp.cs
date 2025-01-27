@@ -1,19 +1,19 @@
 // ────── ╔╗                                                                                    WGL
-// ╔═╦╦═╦╦╬╣ Pipeline.cs
-// ║║║║╬║╔╣║ A low level wrapper around an OpenGL shader pipeline
+// ╔═╦╦═╦╦╬╣ ShaderImp.cs
+// ║║║║╬║╔╣║ ShaderImp is the low level wrapper around an OpenGL shader pipeline
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 using System.IO;
 using System.Reflection;
 namespace Nori;
 
-#region class Pipeline -----------------------------------------------------------------------------
+#region class ShaderImp ----------------------------------------------------------------------------
 /// <summary>Wrapper around an OpenGL shader pipeline</summary>
-class Pipeline {
+class ShaderImp {
    // Constructor --------------------------------------------------------------
    /// <summary>Construct a pipeline given the code for the individual shaders</summary>
-   Pipeline (string name, params string[] code) {
-      Debug.WriteLine ($"Compiling shader pipeline: {name}");
-      (Name, Handle) = (name, GL.CreateProgram ());
+   ShaderImp (string name, EMode mode, string[] code, bool blend, bool depthTest, bool polyOffset) {
+      (Name, Mode, Blending, DepthTest, PolygonOffset, Handle) 
+         = (name, mode, blend, depthTest, polyOffset, GL.CreateProgram ());
       code.ForEach (a => GL.AttachShader (Handle, sCache.Get (a, CompileShader)));
       GL.LinkProgram (Handle);
       string log2 = GL.GetProgramInfoLog (Handle);
@@ -40,18 +40,40 @@ class Pipeline {
          Debug.WriteLine (mUniforms[location]);
       }
 
-      FontTexAddr = GL.GetUniformLocation (Handle, "FontTexture");
+      int cAttributes = GL.GetProgram (Handle, EProgramParam.ActiveAttributes);
+      mAttributes = new AttributeInfo[cAttributes];
+      for (int i = 0; i < cAttributes; i++) {
+         GL.GetActiveAttrib (Handle, i, out int elems, out var type, out string aname, out int location);
+         var (size, integral, dimensions, elemtype) = GetTypeInfo (type);
+         mAttributes[location] = new (aname, type, size, elems, location, integral, dimensions, elemtype);
+         CBVertex += size;
+      }
+      string vertexDesc = string.Join ('_', mAttributes.Select (a => a.Type.ToString ()));
    }
    // A cache of already compiled individual shaders 
    static Dictionary<string, HShader> sCache = [];
-   Dictionary<string, int> mUniformMap = new (StringComparer.OrdinalIgnoreCase);
-   UniformInfo[] mUniforms;
 
    // Properties ---------------------------------------------------------------
+   /// <summary>The list of all the attributes used by this shader</summary>
+   public IReadOnlyList<AttributeInfo> Attributes => mAttributes;
+
+   /// <summary>Enable blending when this program is used</summary>
+   public readonly bool Blending;
+   /// <summary>Size of each vertex</summary>
+   public readonly int CBVertex;
+   /// <summary>Enable depth-testing when this program is used</summary>
+   public readonly bool DepthTest;
    /// <summary>The OpenGL handle for this shader program (set up with GL.UseProgram)</summary>
    public readonly HProgram Handle;
+   /// <summary>The primitive draw-mode used for this program</summary>
+   public readonly EMode Mode;
    /// <summary>The name of this shader</summary>
    public readonly string Name;
+   /// <summary>Enable polygon-offset-fill when this program is used</summary>
+   public readonly bool PolygonOffset;
+
+   /// <summary>The list of all the uniforms used by this shader</summary>
+   public IReadOnlyList<UniformInfo> Uniforms => mUniforms;
 
    // Methods ------------------------------------------------------------------
    /// <summary>Sets a Uniform variable of type float</summary>
@@ -99,30 +121,39 @@ class Pipeline {
    }
 
    /// <summary>Select this Pipeline for use</summary>
-   public void Use () {
-      GL.UseProgram (Handle);
-      if (FontTexAddr != -1) GL.Uniform1i (FontTexAddr, 1);    // Texture unit 1 used for font texture
-   }
+   public void Use () => GLState.Program = this; 
 
    // Standard shaders ---------------------------------------------------------
-   public static Pipeline Line2D => mLine2D ??= new ("Line2D", "Basic2D.vert", "Line2D.geom", "Line.frag");
-   static Pipeline? mLine2D;
-
-   public static Pipeline Point2D => mPoint2D ??= new ("Point2D", "Basic2D.vert", "Point2D.geom", "Point.frag");
-   static Pipeline? mPoint2D;
-
-   public static Pipeline ArrowHead => mArrowHead ??= new ("ArrowHead", "Basic2D.vert", "ArrowHead.geom", "ArrowHead.frag");
-   static Pipeline? mArrowHead;
-
-   public static Pipeline Bezier2D => mBezier2D ??= new ("Bezier", "Basic2D.vert", "Bezier.tctrl", "Bezier.teval", "Line2D.geom", "Line.frag");
-   static Pipeline? mBezier2D;
-
-   public static Pipeline Text2D => mText2D ??= new ("Text2D", "Text2D.vert", "Text.geom", "Text.frag");
-   static Pipeline? mText2D;
+   public static ShaderImp Line2D => mLine2D ??= Load ();
+   public static ShaderImp Bezier2D => mBezier2D ??= Load ();
+   static ShaderImp? mLine2D, mBezier2D;
 
    // Nested types ------------------------------------------------------------
+   /// <summary>Provides information about an attribute</summary>
+   public class AttributeInfo {
+      internal AttributeInfo (string name, EDataType type, int size, int elems, int location, bool integral, int dimensions, EDataType elemType)
+         => (Name, Type, Size, ArrayElems, Location, Integral, Dimensions, ElemType) = (name, type, size, elems, location, integral, dimensions, elemType);
+
+      /// <summary>Name of this attribute</summary>
+      public readonly string Name;
+      /// <summary>Data-type for this attribute</summary>
+      public readonly EDataType Type;
+      /// <summary>Size of each attribute element</summary>
+      public readonly int Size;
+      /// <summary>Size of this attribute (array size)</summary>
+      public readonly int ArrayElems;
+      /// <summary>The attribute location</summary>
+      public readonly int Location;
+      /// <summary>Element type is integral</summary>
+      public readonly bool Integral;
+      /// <summary>The number of dimensions in this attribute (like Vec3f = 3, Vec4f = 4, Float = 1)</summary>
+      public readonly int Dimensions;
+      /// <summary>Type of each element</summary>
+      public readonly EDataType ElemType;
+   }
+
    /// <summary>Provides information about a Uniform</summary>
-   class UniformInfo {
+   public class UniformInfo {
       public UniformInfo (string name, EDataType type, int location, object value)
          => (Name, Type, Location, Value) = (name, type, location, value);
       /// <summary>Name of this uniform</summary>
@@ -139,44 +170,10 @@ class Pipeline {
    }
 
    // Implementation -----------------------------------------------------------
-   // Sets up the address of the font-texture sampler, if one is used in this shader.
-   // The first time this is set up in an OpenGL session, we create the font texture
-   // and load it into texture unit 1 (Tex1)
-   unsafe int FontTexAddr {
-      get => mFontTexAddr;
-      set {
-         mFontTexAddr = value;
-         if (value == -1 || mFontTexMade) return;
-         // The first time we're using the font texture, load that texture into texture unit 1
-         GL.ActiveTexture (ETexUnit.Tex1);
-         GL.BindTexture (ETexTarget.Texture2D, GL.GenTexture ());
-
-         var assembly = Assembly.GetExecutingAssembly ();
-         using var stm = assembly.GetManifestResourceStream ("Nori.WGL.Res.font.img")!;
-         byte[] data = new byte[stm.Length];
-         stm.ReadExactly (data, 0, data.Length);
-
-         GL.PixelStore (EPixelStoreParam.UnpackAlignment, 1);
-         fixed (byte*ptr = &data[0])
-            GL.TexImage2D (ETexTarget.Texture2D, 0, EPixelInternalFormat.Red, 256, 256, 0, EPixelFormat.Red, EPixelType.UnsignedByte, ptr);
-         GL.TexParameter (ETexTarget.Texture2D, ETexParam.WrapS, (int)ETexWrap.Clamp);
-         GL.TexParameter (ETexTarget.Texture2D, ETexParam.WrapT, (int)ETexWrap.Clamp);
-         GL.TexParameter (ETexTarget.Texture2D, ETexParam.MagFilter, (int)ETexFilter.Linear);
-         GL.TexParameter (ETexTarget.Texture2D, ETexParam.MinFilter, (int)ETexFilter.Linear);
-         mFontTexMade = true;
-      }
-   }
-   int mFontTexAddr;
-   static bool mFontTexMade;
-
    // Compiles an individual shader, given the source file (this reuses already compiled
    // shaders where possible, since some shaders are part of multiple pipelines)
    HShader CompileShader (string file) {
-      var assembly = Assembly.GetExecutingAssembly ();
-      file = $"Nori.WGL.Res.Shader.{file}";
-      using var stm = assembly.GetManifestResourceStream (file)!;
-      using var reader = new StreamReader (stm);
-      string text = reader.ReadToEnd ().ReplaceLineEndings ("\n");
+      var text = Lib.ReadText ($"wad:GL/Shader/{file}");
       var eShader = Enum.Parse<EShader> (Path.GetExtension (file)[1..], true);
       var shader = GL.CreateShader (eShader);
       GL.ShaderSource (shader, text);
@@ -188,7 +185,51 @@ class Pipeline {
       return shader;
    }
 
-   public override string ToString () => $"Shader: {Name}";
+   static (int Size, bool Integral, int Dimensions, EDataType ElemType) GetTypeInfo (EDataType type) =>
+      type switch {
+         EDataType.Int => (1, true, 1, EDataType.Int),
+         EDataType.IVec4 => (16, true, 4, EDataType.Int),
+         EDataType.IVec2 => (8, true, 2, EDataType.Int),
+         EDataType.Vec2f => (8, false, 2, EDataType.Float),
+         EDataType.Vec3f => (12, false, 3, EDataType.Float),
+         EDataType.Vec4f => (16, false, 4, EDataType.Float),
+         _ => throw new NotImplementedException ()
+      };
+
+   // This loads the information for a particular shader from the Shader/Index.txt
+   // and builds it (that index contains the list of actual vertex / geometry / fragment
+   // programs)
+   static ShaderImp Load ([CallerMemberName] string name = "") {
+      sIndex ??= Lib.ReadLines ("wad:GL/Shader/Index.txt");
+      // Each line in the index.txt contains these:
+      // 0:Name  1:Mode  2:Blending  3:DepthTest  4:PolygonOffset  6:Programs
+      foreach (var line in sIndex) {
+         var w = line.Split (' ', StringSplitOptions.RemoveEmptyEntries);
+         if (w.Length >= 6 && w[0] == name) {
+            var mode = Enum.Parse<EMode> (w[1]);
+            bool blending = w[2] == "1", depthtest = w[3] == "1", offset = w[4] == "1";
+            var programs = w[5].Split ('|').ToArray ();
+            return new (name, mode, programs, blending, depthtest, offset);
+         }
+      }
+      throw new NotImplementedException ($"Shader {name} not found in Shader/Index.txt");
+   }
+   static string[]? sIndex;
+
+   public override string ToString () {
+      var sb = new StringBuilder ();
+      sb.Append ($"Shader {Name}\nUniforms:\n");
+      Uniforms.ForEach (a => sb.Append ($"  {a.Type} {a.Name}\n"));
+      sb.Append ("Attributes:\n");
+      Attributes.ForEach (a => sb.Append ($"  {a.Type} {a.Name}\n"));
+      return sb.ToString ();
+   }
+
+   // Private data -------------------------------------------------------------
+   AttributeInfo[] mAttributes;     // Set of attributes for this program
+   UniformInfo[] mUniforms;         // Set of uniforms for this program
+   // Dictionary mapping uniform names to uniform locations
+   Dictionary<string, int> mUniformMap = new (StringComparer.OrdinalIgnoreCase);
 }
 #endregion
 

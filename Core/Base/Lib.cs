@@ -65,6 +65,15 @@ public static class Lib {
    }
    static string? sCodeBase;
 
+   /// <summary>This should be called to initialize Nori.Core before use</summary>
+   public static void Init () {
+      if (!sInited) {
+         sInited = true;
+         Register (new FileStmLocator ("wad:", $"{DevRoot}/Wad/"));
+      }
+   }
+   static bool sInited;
+
    /// <summary>Checks if a reference is a 'null reference'</summary>
    public static bool IsNull<T> (ref readonly T source) => Unsafe.IsNullRef (in source);
 
@@ -94,6 +103,14 @@ public static class Lib {
       return fAng;
    }
 
+   /// <summary>Called to open a stream using the IStmLocator service</summary>
+   /// For example, a stream can be opened from the wad using syntax like
+   /// Sys.OpenRead ("wad:GL/point.frag");
+   public static Stream OpenRead (string name) {
+      var stm = sLocators.Select (a => a.Open (name)).FirstOrDefault ();
+      return stm ?? throw new Exception ($"Could not open {name}");
+   }
+
    /// <summary>Print a string with a given console color</summary>
    static public void Print (string text, ConsoleColor color) {
       Console.ForegroundColor = color;
@@ -104,6 +121,29 @@ public static class Lib {
    /// <summary>Prints a string with a given console color, followed by a newline</summary>
    static public void Println (string text, ConsoleColor color)
       => Print ($"{text}\n", color);
+
+   /// <summary>Reads all the bytes from a stream opened by the IStmLocator service</summary>
+   public static byte[] ReadBytes (string file) {
+      using var stm = OpenRead (file);
+      byte[] data = new byte[stm.Length];
+      stm.ReadExactly (data); // POI.
+      return data;
+   }
+
+   /// <summary>Reads text from a stream opened by the IStmLocator service</summary>
+   public static string ReadText (string file) {
+      using var stm = OpenRead (file);
+      using var reader = new StreamReader (stm);
+      return reader.ReadToEnd ().ReplaceLineEndings ("\n");
+   }
+
+   /// <summary>Reads a set of lines from a stream opened by the IStmLocator service</summary>
+   public static string[] ReadLines (string file)
+      => ReadText (file).Split ('\n');
+
+   /// <summary>Register a stream locator</summary>
+   public static void Register (IStmLocator locator) => sLocators.Add (locator);
+   static readonly List<IStmLocator> sLocators = [];
 
    /// <summary>Solves a system of 2 linear equations with 2 unknowns</summary>
    /// Ax + By + C = 0
