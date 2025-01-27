@@ -31,6 +31,7 @@ static class Program {
          HELP         - Display this help message
          NEXTID       - Gets the next available test Id
          OPTIMIZE 0/1 - Turns optimization on / off for all Nori projects
+         XMLDOC 0/1   - Turns XML documentation on / off for all Nori projects
          """);
       Environment.Exit (0);
    }
@@ -47,6 +48,15 @@ static class Program {
       if (!int.TryParse (args[2], out int n)) Help ();
       if (n is < 0 or > 1) Help ();
       SetOptimize.Run (n == 1);
+   }
+
+   [ConsoleCommand]
+   static void XmlDoc () {
+      string[] args = Environment.GetCommandLineArgs ();
+      if (args.Length != 3) Help ();
+      if (!int.TryParse (args[2], out int n)) Help ();
+      if (n is < 0 or > 1) Help ();
+      SetXmlDoc.Run (n == 1);
    }
 
    static int Build = 2;

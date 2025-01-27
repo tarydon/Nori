@@ -49,6 +49,7 @@ static class GLState {
          if (mProgram == value) return;
          mProgram = value;
          if (value != null) {
+            mPgmChanges++;
             Blending = value.Blending;
             DepthTest = value.DepthTest;
             PolygonOffsetFill = value.PolygonOffset;
@@ -57,6 +58,7 @@ static class GLState {
       }
    }
    static ShaderImp? mProgram;
+   static internal int mPgmChanges;    // Number of program changes in this frame
 
    /// <summary>The current vertex-array-object being used</summary>
    public static HVertexArray VAO {
@@ -64,13 +66,15 @@ static class GLState {
       set {
          if (mHVAO == value) return;
          GL.BindVertexArray (mHVAO = value);
+         if (value != 0) mVAOChanges++;
       }
    }
    static HVertexArray mHVAO;
+   static internal int mVAOChanges;    // Number of VAO changes in this frame
 
    // Methods ------------------------------------------------------------------
    /// <summary>Resets everything to a known state (at the start of every frame)</summary>
-   public static void Reset ((int X, int Y) size, Color4 bgrdColor) {
+   public static void StartFrame ((int X, int Y) size, Color4 bgrdColor) {
       GL.Viewport (0, 0, size.X, size.Y);
       // GL.Enable (ECap.ScissorTest);
       GL.BlendFunc (EBlendFactor.SrcAlpha, EBlendFactor.OneMinusSrcAlpha);
@@ -85,6 +89,7 @@ static class GLState {
       mPolygonOffsetFill = true; PolygonOffsetFill = false;
       mProgram = null; GL.UseProgram (0);
       mHVAO = 0; GL.BindVertexArray (0);
+      mPgmChanges = 0; mVAOChanges = 0;
 
       var (r, g, b, a) = bgrdColor;
       GL.ClearColor (r / 255f, g / 255f, b / 255f, a / 255f);

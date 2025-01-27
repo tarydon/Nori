@@ -85,6 +85,69 @@ public class AList<T> : IList, IList<T>, IObservable<ListChange> {
 }
 #endregion
 
+#region class IdxHeap<T> ---------------------------------------------------------------------------
+/// <summary>IdxHeap maintains a collection of IIndexed objects</summary>
+/// Alloc() allocates a new object, assigns an index to it, and stores it in the heap.
+/// Release() releases that object, and adds the slot it previously used to a free-list, 
+/// which allows these slots to be recycled. Internally, the IdxHeap just maintains a
+/// list-of-T, except that some of the slots in the list could now be empty, and reused.
+/// This mechanism allows O(1) time for allocation, freeing and for indexing. 
+public class IdxHeap<T> where T : IIndexed, new() {
+   /// <summary>Create an empty IdxHeap</summary>
+   public IdxHeap () => Resize (8);
+
+   /// <summary>Count of live objects in the IdxHeap</summary>
+   /// The final -1 is because we never use index 0 - it is reserved so that
+   /// we can reliable use 0 as a sentinel to mean 'no object'
+   public int Count => mData.Length - mFree.Count - 1;
+
+   /// <summary>Allocate a new object and return it</summary>
+   /// This stores the object in the mData array at a given index, and
+   /// sets the Idx of that object to that index
+   public ref T Alloc () {
+      if (mFree.Count == 0) Resize (mData.Length * 2);
+      int idx = mRecent = mFree.Pop ();
+      mData[idx] = new ();
+      ref T obj = ref mData[idx]!;
+      obj.Idx = (ushort)idx;
+      return ref obj;
+   }
+   // The object we most recently allocated
+   int mRecent = 0;
+
+   /// <summary>Reference to the most recently allocated T</summary>
+   public ref T Recent => ref this[mRecent];
+
+   /// <summary>Release the object at a specified index</summary>
+   public void Release (int idx) {
+      mData[idx] = default; 
+      mFree.Push (idx);
+   }
+
+   /// <summary>Retrieves the object at a given index</summary>
+   public ref T this[int idx]
+      => ref mData[idx]!;
+
+   // Implementation -----------------------------------------------------------
+   void Resize (int n) {
+      if (n > mData.Length) {
+         int n0 = mData.Length;
+         Array.Resize (ref mData, n);
+         for (int i = n - 1; i >= n0; i--) mFree.Push (i);
+      }
+   }
+
+   public override string ToString ()
+      => $"IdxHeap<{typeof (T).Name}>, Count={Count}";
+
+   // Private data -------------------------------------------------------------
+   // The indices of free slots, if any
+   readonly Stack<int> mFree = [];
+   // The array that maintains the actual objects (we grow this as needed)
+   T?[] mData = [default];
+}
+#endregion
+
 #region struct ListChange --------------------------------------------------------------------------
 /// <summary>Represents a change happening in a list (adding / removing)</summary>
 public readonly struct ListChange {

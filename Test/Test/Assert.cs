@@ -28,6 +28,7 @@ static class Assert {
          (Point3 a, Point3 b) => a.EQ (b),
          (Vector2 a, Vector2 b) => a.EQ (b),
          (Vector3 a, Vector3 b) => a.EQ (b),
+         (Color4 a, Color4 b) => a.EQ (b),
          _ => obj.Equals (check),
       };
       if (!passed) Throw (obj, check, expr1, expr2, member, line, file);

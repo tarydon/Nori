@@ -10,9 +10,9 @@ namespace Nori;
 class ShaderImp {
    // Constructor --------------------------------------------------------------
    /// <summary>Construct a pipeline given the code for the individual shaders</summary>
-   ShaderImp (string name, EMode mode, string[] code, bool blend, bool depthTest, bool polyOffset) {
-      (Name, Mode, Blending, DepthTest, PolygonOffset, Handle) 
-         = (name, mode, blend, depthTest, polyOffset, GL.CreateProgram ());
+   ShaderImp (string name, EMode mode, EVertexSpec vspec, string[] code, bool blend, bool depthTest, bool polyOffset) {
+      (Name, Mode, VSpec, Blending, DepthTest, PolygonOffset, Handle) 
+         = (name, mode, vspec, blend, depthTest, polyOffset, GL.CreateProgram ());
       code.ForEach (a => GL.AttachShader (Handle, sCache.Get (a, CompileShader)));
       GL.LinkProgram (Handle);
       string log2 = GL.GetProgramInfoLog (Handle);
@@ -36,30 +36,14 @@ class ShaderImp {
          };
          mUniformMap[uname] = location;
          mUniforms[location] = new UniformInfo (uname, type, location, value);
-         Debug.WriteLine (mUniforms[location]);
       }
-
-      int cAttributes = GL.GetProgram (Handle, EProgramParam.ActiveAttributes);
-      mAttributes = new AttributeInfo[cAttributes];
-      for (int i = 0; i < cAttributes; i++) {
-         GL.GetActiveAttrib (Handle, i, out int elems, out var type, out string aname, out int location);
-         var (size, integral, dimensions, elemtype) = GetTypeInfo (type);
-         mAttributes[location] = new (aname, type, size, elems, location, integral, dimensions, elemtype);
-         CBVertex += size;
-      }
-      string vertexDesc = string.Join ('_', mAttributes.Select (a => a.Type.ToString ()));
    }
    // A cache of already compiled individual shaders 
    static Dictionary<string, HShader> sCache = [];
 
    // Properties ---------------------------------------------------------------
-   /// <summary>The list of all the attributes used by this shader</summary>
-   public IReadOnlyList<AttributeInfo> Attributes => mAttributes;
-
    /// <summary>Enable blending when this program is used</summary>
    public readonly bool Blending;
-   /// <summary>Size of each vertex</summary>
-   public readonly int CBVertex;
    /// <summary>Enable depth-testing when this program is used</summary>
    public readonly bool DepthTest;
    /// <summary>The OpenGL handle for this shader program (set up with GL.UseProgram)</summary>
@@ -70,87 +54,75 @@ class ShaderImp {
    public readonly string Name;
    /// <summary>Enable polygon-offset-fill when this program is used</summary>
    public readonly bool PolygonOffset;
+   /// <summary>The vertex-specification for this shader</summary>
+   public readonly EVertexSpec VSpec;
 
    /// <summary>The list of all the uniforms used by this shader</summary>
    public IReadOnlyList<UniformInfo> Uniforms => mUniforms;
 
    // Methods ------------------------------------------------------------------
-   /// <summary>Sets a Uniform variable of type float</summary>
-   public void Uniform (string name, float f) {
-      if (mUniformMap.TryGetValue (name, out int n)) Uniform (n, f);
+   /// <summary>Gets the Id of a uniform value</summary>
+   public int GetUniformId (string name) {
+      if (mUniformMap.TryGetValue (name, out int id)) return id;
+      return -1;
    }
+
+   /// <summary>Sets a Uniform variable of type Color4 (we pass these as Vec4F)</summary>
+   public void Set (int index, Color4 color) 
+      => Set (index, (Vec4F)color);
+
    /// <summary>Sets a Uniform variable of type float</summary>
-   public void Uniform (int index, float f) {
+   public void Set (int index, float f) {
       var data = mUniforms[index];
       if (f.EQ ((float)data.Value)) return;
       data.Value = f; GL.Uniform (index, f);
    }
 
    /// <summary>Set a uniform of type Vec2f</summary>
-   public void Uniform (int id, Vec2F v) {
+   public void Set (int id, Vec2F v) {
       var data = mUniforms[id];
       if (v.EQ ((Vec2F)data.Value)) return;
       data.Value = v; GL.Uniform (id, v.X, v.Y);
    }
    /// <summary>Set a uniform of type Vec2f</summary>
-   public void Uniform (string name, Vec2F v) {
-      if (mUniformMap.TryGetValue (name, out int n)) Uniform (n, v);
+   public void Set (string name, Vec2F v) {
+      if (mUniformMap.TryGetValue (name, out int n)) Set (n, v);
    }
 
    /// <summary>Sets a uniform variable of type Vec4f</summary>
    public void Uniform (string name, Vec4F vec) {
-      if (mUniformMap.TryGetValue (name, out int n)) Uniform (n, vec);
+      if (mUniformMap.TryGetValue (name, out int n)) Set (n, vec);
    }
    /// <summary>Sets a uniform variable of type Vec4f</summary>
-   public void Uniform (int index, Vec4F v) {
+   public void Set (int index, Vec4F v) {
       var data = mUniforms[index];
       if (v.EQ ((Vec4F)data.Value)) return;
       data.Value = v; GL.Uniform (index, v.X, v.Y, v.Z, v.W);
    }
 
    /// <summary>Set a uniform of type Mat4f</summary>
-   public unsafe void Uniform (int id, Mat4F m) {
+   public unsafe void Set (int id, Mat4F m) {
       if (id == -1) return;
       var data = mUniforms[id]; data.Value = m;
       GL.Uniform (id, false, &m.M11);
    }
    /// <summary>Set a uniform of type Mat4f</summary>
    public unsafe void Uniform (string name, Mat4F m) {
-      if (mUniformMap.TryGetValue (name, out int n)) Uniform (n, m);
+      if (mUniformMap.TryGetValue (name, out int n)) Set (n, m);
    }
 
    /// <summary>Select this Pipeline for use</summary>
-   public void Use () => GLState.Program = this; 
+   public void Use () => GLState.Program = this;
 
    // Standard shaders ---------------------------------------------------------
-   public static ShaderImp Line2D => mLine2D ??= Load ();
    public static ShaderImp Bezier2D => mBezier2D ??= Load ();
-   static ShaderImp? mLine2D, mBezier2D;
+   public static ShaderImp Line2D => mLine2D ??= Load ();
+   public static ShaderImp Point2D => mPoint2D ??= Load ();
+   public static ShaderImp Triangle2D => mTriangle2D ??= Load ();
+   public static ShaderImp Quad2D => mQuad2D ??= Load ();
+   static ShaderImp? mLine2D, mBezier2D, mPoint2D, mTriangle2D, mQuad2D;
 
    // Nested types ------------------------------------------------------------
-   /// <summary>Provides information about an attribute</summary>
-   public class AttributeInfo {
-      internal AttributeInfo (string name, EDataType type, int size, int elems, int location, bool integral, int dimensions, EDataType elemType)
-         => (Name, Type, Size, ArrayElems, Location, Integral, Dimensions, ElemType) = (name, type, size, elems, location, integral, dimensions, elemType);
-
-      /// <summary>Name of this attribute</summary>
-      public readonly string Name;
-      /// <summary>Data-type for this attribute</summary>
-      public readonly EDataType Type;
-      /// <summary>Size of each attribute element</summary>
-      public readonly int Size;
-      /// <summary>Size of this attribute (array size)</summary>
-      public readonly int ArrayElems;
-      /// <summary>The attribute location</summary>
-      public readonly int Location;
-      /// <summary>Element type is integral</summary>
-      public readonly bool Integral;
-      /// <summary>The number of dimensions in this attribute (like Vec3f = 3, Vec4f = 4, Float = 1)</summary>
-      public readonly int Dimensions;
-      /// <summary>Type of each element</summary>
-      public readonly EDataType ElemType;
-   }
-
    /// <summary>Provides information about a Uniform</summary>
    public class UniformInfo {
       public UniformInfo (string name, EDataType type, int location, object value)
@@ -184,31 +156,21 @@ class ShaderImp {
       return shader;
    }
 
-   static (int Size, bool Integral, int Dimensions, EDataType ElemType) GetTypeInfo (EDataType type) =>
-      type switch {
-         EDataType.Int => (1, true, 1, EDataType.Int),
-         EDataType.IVec4 => (16, true, 4, EDataType.Int),
-         EDataType.IVec2 => (8, true, 2, EDataType.Int),
-         EDataType.Vec2f => (8, false, 2, EDataType.Float),
-         EDataType.Vec3f => (12, false, 3, EDataType.Float),
-         EDataType.Vec4f => (16, false, 4, EDataType.Float),
-         _ => throw new NotImplementedException ()
-      };
-
    // This loads the information for a particular shader from the Shader/Index.txt
    // and builds it (that index contains the list of actual vertex / geometry / fragment
    // programs)
    static ShaderImp Load ([CallerMemberName] string name = "") {
       sIndex ??= Lib.ReadLines ("wad:GL/Shader/Index.txt");
       // Each line in the index.txt contains these:
-      // 0:Name  1:Mode  2:Blending  3:DepthTest  4:PolygonOffset  6:Programs
+      // 0:Name  1:Mode  2:VSpec  3:Blending  4:DepthTest  5:PolygonOffset  6:Programs
       foreach (var line in sIndex) {
          var w = line.Split (' ', StringSplitOptions.RemoveEmptyEntries);
-         if (w.Length >= 6 && w[0] == name) {
-            var mode = Enum.Parse<EMode> (w[1]);
-            bool blending = w[2] == "1", depthtest = w[3] == "1", offset = w[4] == "1";
-            var programs = w[5].Split ('|').ToArray ();
-            return new (name, mode, programs, blending, depthtest, offset);
+         if (w.Length >= 7 && w[0] == name) {
+            var mode = Enum.Parse<EMode> (w[1], true);
+            var vspec = Enum.Parse<EVertexSpec> (w[2], true);
+            bool blending = w[3] == "1", depthtest = w[4] == "1", offset = w[5] == "1";
+            var programs = w[6].Split ('|').ToArray ();
+            return new (name, mode, vspec, programs, blending, depthtest, offset);
          }
       }
       throw new NotImplementedException ($"Shader {name} not found in Shader/Index.txt");
@@ -219,13 +181,10 @@ class ShaderImp {
       var sb = new StringBuilder ();
       sb.Append ($"Shader {Name}\nUniforms:\n");
       Uniforms.ForEach (a => sb.Append ($"  {a.Type} {a.Name}\n"));
-      sb.Append ("Attributes:\n");
-      Attributes.ForEach (a => sb.Append ($"  {a.Type} {a.Name}\n"));
       return sb.ToString ();
    }
 
    // Private data -------------------------------------------------------------
-   AttributeInfo[] mAttributes;     // Set of attributes for this program
    UniformInfo[] mUniforms;         // Set of uniforms for this program
    // Dictionary mapping uniform names to uniform locations
    Dictionary<string, int> mUniformMap = new (StringComparer.OrdinalIgnoreCase);
@@ -243,6 +202,18 @@ readonly record struct Attrib (int Dims, EDataType Type, int Size, bool Integral
    public static Attrib AVec4f = new (4, EDataType.Float, 16, false);
    public static Attrib AVec3h = new (3, EDataType.Half, 6, false);
 
+   public static Attrib[] GetFor (EVertexSpec spec) 
+      => spec switch {
+         EVertexSpec.Vec2F => [Attrib.AVec2f],
+         _ => throw new BadCaseException (spec)
+      };
+
+   public static int GetSize (EVertexSpec spec)
+      => spec switch {
+         EVertexSpec.Vec2F => 8,
+         _ => throw new BadCaseException (spec)
+      };
+
    public static Dictionary<Type, Attrib> Map = new () {
       [typeof (Vec2F)] = AVec2f, [typeof (short)] = AShort, [typeof (int)] = AInt, 
       [typeof (Vec4F)] = AVec4f, [typeof (Vec3F)] = AVec3f, [typeof (Vec3H)] = AVec3h,
@@ -251,3 +222,7 @@ readonly record struct Attrib (int Dims, EDataType Type, int Size, bool Integral
 }
 #endregion
 
+#region enum EVertexSpec ---------------------------------------------------------------------------
+// The various Vertex specifications used by OpenGL shaders
+enum EVertexSpec { Vec2F, _Last };
+#endregion

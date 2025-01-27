@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
@@ -6,7 +6,8 @@
     <OutDir>..\Bin</OutDir>
     <AssemblyName>Nori.Core</AssemblyName>
 		<Optimize>false</Optimize>
-    <GenerateDocumentationFile>True</GenerateDocumentationFile>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <DocumentationFile>..\Bin\Nori.Core.xml</DocumentationFile>
   </PropertyGroup>
 
   <ItemGroup>

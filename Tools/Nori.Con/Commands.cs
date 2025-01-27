@@ -148,6 +148,24 @@ static class SetOptimize {
 }
 #endregion
 
+#region class SetXmlDoc ----------------------------------------------------------------------------
+/// <summary>Turns XML documentation on / off for all Nori projects</summary>
+static class SetXmlDoc {
+   public static void Run (bool generate) {
+      string off = "<GenerateDocumentationFile>false</GenerateDocumentationFile>", on = "<GenerateDocumentationFile>true</GenerateDocumentationFile>";
+      foreach (var file in Directory.EnumerateFiles ("N:/", "*.csproj", SearchOption.AllDirectories)) {
+         string text = File.ReadAllText (file), original = text;
+         if (generate) text = text.Replace (off, on);
+         else text = text.Replace (on, off);
+         if (text != original) {
+            Console.WriteLine (file.Replace ('\\', '/'));
+            File.WriteAllText (file, text);
+         }
+      }
+   }
+}
+#endregion
+
 #region class SrcClean -----------------------------------------------------------------------------
 /// <summary>Helper to clean up source code</summary>
 /// Replaces 3-line summary blocks with single line comments

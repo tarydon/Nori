@@ -7,7 +7,7 @@ namespace Nori;
 #region Types for OpenGL ---------------------------------------------------------------------------
 /// <summary>2D vector of floats (used for passing data to OpenGL)</summary>
 [StructLayout (LayoutKind.Sequential, Pack = 4, Size = 8)]
-public readonly record struct Vec2F (float X, float Y) {
+public readonly record struct Vec2F (float X, float Y) : IEQuable<Vec2F> {
    public Vec2F (double x, double y) : this ((float)x, (float)y) { }
    public static implicit operator Vec2F (Point2 pt) => new ((float)pt.X, (float)pt.Y);
    public static explicit operator Vec2F (Vector2 vec) => new ((float)vec.X, (float)vec.Y);
@@ -19,7 +19,7 @@ public readonly record struct Vec2F (float X, float Y) {
 
 /// <summary>3D vector of floats (used for passing data to OpenGL)</summary>
 [StructLayout (LayoutKind.Sequential, Pack = 4, Size = 12)]
-public readonly record struct Vec3F (float X, float Y, float Z) {
+public readonly record struct Vec3F (float X, float Y, float Z) : IEQuable<Vec3F> {
    public Vec3F (double x, double y, double z) : this ((float)x, (float)y, (float)z) { }
    public static explicit operator Vec3F (Point3 pt) => new ((float)pt.X, (float)pt.Y, (float)pt.Z);
    public static explicit operator Vec3F (Vector3 vec) => new ((float)vec.X, (float)vec.Y, (float)vec.Z);
@@ -31,7 +31,7 @@ public readonly record struct Vec3F (float X, float Y, float Z) {
 
 /// <summary>4D vector of floats (used for passing data to OpenGL)</summary>
 [StructLayout (LayoutKind.Sequential, Pack = 4, Size = 16)]
-public readonly record struct Vec4F (float X, float Y, float Z, float W) {
+public readonly record struct Vec4F (float X, float Y, float Z, float W) : IEQuable<Vec4F> {
    public Vec4F (double x, double y, double z, double w) : this ((float)x, (float)y, (float)z, (float)w) { }
    public int CompareTo (Vec4F b) {
       int n = X.CompareTo (b.X); if (n != 0) return n;
@@ -45,14 +45,14 @@ public readonly record struct Vec4F (float X, float Y, float Z, float W) {
 
 /// <summary>3D vector of 16-bit half (used for passing data to OpenGL)</summary>
 [StructLayout (LayoutKind.Sequential, Pack = 2, Size = 6)]
-public readonly record struct Vec3H (Half X, Half Y, Half Z) {
+public readonly record struct Vec3H (Half X, Half Y, Half Z) : IEQuable<Vec3H> {
    public bool EQ (Vec3H v) => X.EQ (v.X) && Y.EQ (v.Y) && Z.EQ (v.Z);
    public override string ToString () => $"<{X.R3 ()},{Y.R3 ()},{Z.R3 ()}>";
 }
 
 /// <summary>4D vector of 16-bit half (used for passing data to OpenGL)</summary>
 [StructLayout (LayoutKind.Sequential, Pack = 4, Size = 16)]
-public readonly record struct Vec4H (float X, float Y, float Z, float W) {
+public readonly record struct Vec4H (float X, float Y, float Z, float W) : IEQuable<Vec4H> {
    public bool EQ (Vec4H b) => X.EQ (b.X) && Y.EQ (b.Y) && Z.EQ (b.Z) && W.EQ (b.W);
    public override string ToString () => $"<{X.R5 ()},{Y.R5 ()},{Z.R5 ()},{W.R5 ()}>";
 }

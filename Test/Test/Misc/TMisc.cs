@@ -100,7 +100,7 @@ class TMisc {
       try { set.CopyTo ((Array)a1, 0); } catch (Exception e1) { e = e1; }
       (e == null).IsFalse ();
       set.CopyTo (a1, 1);
-      object? o1 = ((System.Collections.IList)set)[0]; 
+      object? o1 = ((System.Collections.IList)set)[0];
    }
 
    [Test (50, "Basic test of RBTree")]
@@ -182,11 +182,38 @@ class TMisc {
       Lib.ReadText ("wad:GL/Shader/arrowhead.frag").Length.Is (221);
       Lib.ReadBytes ("wad:GL/Shader/arrowhead.frag").Length.Is (231);
       Lib.ReadLines ("wad:GL/Shader/arrowhead.frag").Length.Is (11);
+
+      int n = 0; Lib.Set (ref n, 1).IsTrue (); Lib.Set (ref n, 1).IsFalse (); n.Is (1);
+      float f = 0; Lib.Set (ref f, 1).IsTrue (); Lib.Set (ref f, 1).IsFalse (); f.Is (1f);
+      double d = 0; Lib.Set (ref d, 1).IsTrue (); Lib.Set (ref f, 1).IsFalse (); f.Is (1.0);
+      Color4 clr = Color4.Yellow; Lib.Set (ref clr, Color4.Blue).IsTrue (); Lib.Set (ref clr, Color4.Blue).IsFalse (); clr.Is (Color4.Blue);
+      object o1 = new (), o2 = new (); Lib.SetR (ref o1, o2).IsTrue (); Lib.SetR (ref o1, o2).IsFalse (); o1.Equals (o2).IsTrue ();
+      EDir e = EDir.N; Lib.SetE (ref e, EDir.S).IsTrue (); Lib.SetE (ref e, EDir.S).IsFalse (); e.Is (EDir.S);
    }
 
    [Test (56, "Throwing various exceptions")]
    void Test8 () {
       new BadCaseException (12).Message.Is ("Unhandled case: 12");
       new ParseException ("13e", typeof (double)).Message.Is ("Cannot convert '13e' to double");
+   }
+
+   [Test (70, "Test of IdxList")]
+   void Test9 () {
+      IdxHeap<T1Type> list = new ();
+      T1Type a = list.Alloc (), b = list.Alloc (); a.Is ("T1"); b.Is ("T2");
+      list.Count.Is (2);
+      list.Alloc ().Is ("T3");
+      list.Release (b.Idx);
+      list.Count.Is (2);
+      T1Type c = list.Alloc (); c.Is ("T2");
+
+      for (int i = 0; i < 10; i++) list.Alloc ();
+      list.Count.Is (13); list[5].Is ("T5");
+      list.Is ("IdxHeap<T1Type>, Count=13");
+   }
+
+   class T1Type : IIndexed {
+      public override string ToString () => $"T{Idx}";
+      public ushort Idx { get; set; }
    }
 }

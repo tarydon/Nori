@@ -11,6 +11,13 @@ public interface IEQuable<T> {
 }
 #endregion
 
+#region interface IIndexed -------------------------------------------------------------------------
+/// <summary>IIndexed implements a class that has an unsigned 16-bit index</summary>
+public interface IIndexed { 
+   ushort Idx { get; set; }
+}
+#endregion
+
 #region interface IStmLocator ----------------------------------------------------------------------
 /// <summary>The IStmLocator interface provides the basis for the Lib.OpenRead and related functions</summary>
 /// It allows us to open a stream using an abstract filename like "wad:GL/Shader/Pixel.frag", 
