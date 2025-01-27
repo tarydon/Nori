@@ -88,7 +88,8 @@ static class Assert {
 /// <summary>Module class representing the Nori.Test system</summary>
 static class NT {
    /// <summary>Path to test data (typically Nori/Test)</summary>
-   public static readonly string Data = "N:/Test/Data";
+   public static string Data => mData ??= $"{Lib.DevRoot}/Test/Data";
+   static string? mData;
 
    public static string File (string input) => Path.Combine (Data, input);
 

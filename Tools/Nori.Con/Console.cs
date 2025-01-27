@@ -3,6 +3,8 @@
 // ║║║║╬║╔╣║ Entry point into the Nori.Console program
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 namespace Nori.Con;
+
+using System.Diagnostics.CodeAnalysis;
 using static System.Reflection.BindingFlags;
 
 #region class Program ------------------------------------------------------------------------------
@@ -48,6 +50,15 @@ static class Program {
       if (!int.TryParse (args[2], out int n)) Help ();
       if (n is < 0 or > 1) Help ();
       SetOptimize.Run (n == 1);
+   }
+
+   [DoesNotReturn]
+   public static void Fatal (string s) {
+      Console.WriteLine ();
+      Console.ForegroundColor = ConsoleColor.Yellow;
+      Console.WriteLine (s);
+      Console.ResetColor ();
+      Environment.Exit (-1);
    }
 
    [ConsoleCommand]

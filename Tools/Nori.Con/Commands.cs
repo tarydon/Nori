@@ -11,11 +11,15 @@ namespace Nori.Con;
 static class ComputeCoverage {
    public static void Run () {
       // First, run Nori.Test under 'dotnet-coverage' to generate a coverage.xml file in N:/Bin
-      var pi = new ProcessStartInfo ("dotnet-coverage.exe", "collect Nori.Test.exe -f xml -o coverage.xml") { WorkingDirectory = @"N:/Bin" };
-      Process.Start (pi)!.WaitForExit ();
+      try {
+         var pi = new ProcessStartInfo ("dotnet-coverage.exe", "collect Nori.Test.exe -f xml -o coverage.xml") { WorkingDirectory = $"{Lib.DevRoot}/Bin" };
+         Process.Start (pi)!.WaitForExit ();
+      } catch (Exception) {
+         Program.Fatal ("Could not run the dotnet-coverage tool.\nUse 'dotnet tool install --global dotnet-coverage' to install.");
+      }
       // Load the coverage file into N:/Bin/Coverage.xml
       Console.WriteLine ();
-      var c = new Coverage ("N:/Bin/coverage.xml");
+      var c = new Coverage ($"{Lib.DevRoot}/Bin/coverage.xml");
       TestRunner.SetNoriFiles (c);
 
       List<Datum> data = [];
@@ -135,7 +139,7 @@ static class GetNextId {
 static class SetOptimize {
    public static void Run (bool optimize) {
       string off = "<Optimize>false</Optimize>", on = "<Optimize>true</Optimize>";
-      foreach (var file in Directory.EnumerateFiles ("N:/", "*.csproj", SearchOption.AllDirectories)) {
+      foreach (var file in Directory.EnumerateFiles ($"{Lib.DevRoot}/", "*.csproj", SearchOption.AllDirectories)) {
          string text = File.ReadAllText (file), original = text;
          if (optimize) text = text.Replace (off, on);
          else text = text.Replace (on, off);
@@ -153,7 +157,7 @@ static class SetOptimize {
 static class SetXmlDoc {
    public static void Run (bool generate) {
       string off = "<GenerateDocumentationFile>false</GenerateDocumentationFile>", on = "<GenerateDocumentationFile>true</GenerateDocumentationFile>";
-      foreach (var file in Directory.EnumerateFiles ("N:/", "*.csproj", SearchOption.AllDirectories)) {
+      foreach (var file in Directory.EnumerateFiles ($"{Lib.DevRoot}/", "*.csproj", SearchOption.AllDirectories)) {
          string text = File.ReadAllText (file), original = text;
          if (generate) text = text.Replace (off, on);
          else text = text.Replace (on, off);
@@ -172,7 +176,7 @@ static class SetXmlDoc {
 static class SrcClean {
    public static void Run () {
       var (prevDir, nCleaned) = ("", 0);
-      foreach (var file in Directory.EnumerateFiles ("N:/", "*.cs", SearchOption.AllDirectories)) {
+      foreach (var file in Directory.EnumerateFiles ($"{Lib.DevRoot}/", "*.cs", SearchOption.AllDirectories)) {
          if (ExcludeFile (file)) continue;
          var dir = Path.GetDirectoryName (file)!;
          if (dir != prevDir) {
@@ -195,7 +199,7 @@ static class SrcClean {
       if (file.EndsWith (".g.cs")) return true;
       if (file.Contains ("/obj/")) return true;
       if (file.Contains ("GeneratedFile")) return true;
-      if (file.StartsWith ("N:/Scratch/")) return true;
+      if (file.StartsWith ($"{Lib.DevRoot}/Scratch/")) return true;
       return false;
    }
 
