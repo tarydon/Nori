@@ -1,6 +1,6 @@
 ﻿// ────── ╔╗                                                                                    WGL
 // ╔═╦╦═╦╦╬╣ Panel.cs
-// ║║║║╬║╔╣║ Implements Pix.Panel (WPF UserControl) and Pix.Surface (Windows Forms Control)
+// ║║║║╬║╔╣║ Implements Lux.Panel (WPF UserControl) and Lux.Surface (Windows Forms Control)
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 using System.Windows.Forms.Integration;
 using static System.Windows.Forms.ControlStyles;
@@ -10,7 +10,7 @@ namespace Nori;
 /// <summary>A WPF UserControl used that houses an OpenGL rendering surface (used to display all GL content)</summary>
 class Panel : System.Windows.Controls.UserControl {
    // Interface ----------------------------------------------------------------
-   // Called from Pix when we need to start rendering a frame.
+   // Called from Lux when we need to start rendering a frame.
    // Note that a viewport size is passed in, since when we are rendering to an Image, we 
    // could be rendering a size that is different from the panel size. What we do here depends
    // on the render target, but in all cases, we have to make our display surface the 'current'
@@ -123,7 +123,7 @@ class Surface : System.Windows.Forms.UserControl {
 
    // Override OnPaint to call back to PX.Render, where our actual paint code resides
    protected override void OnPaint (PaintEventArgs e)
-      => Pix.Render ();
+      => Lux.Render ();
 
    // Private data -------------------------------------------------------------
    HDC mDC;             // Device contex handle used for rendering

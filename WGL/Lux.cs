@@ -1,57 +1,55 @@
 // ────── ╔╗                                                                                    WGL
-// ╔═╦╦═╦╦╬╣ Pix.cs
-// ║║║║╬║╔╣║ The Pix class: public interface to the Pix rendering engine
+// ╔═╦╦═╦╦╬╣ Lux.cs
+// ║║║║╬║╔╣║ The Lux class: public interface to the Lux rendering engine
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 using System.Reactive.Subjects;
 namespace Nori;
 
-#region class Pix ----------------------------------------------------------------------------------
-/// <summary>The public interface to the Pix renderer</summary>
-public static partial class Pix {
+#region class Lux ----------------------------------------------------------------------------------
+/// <summary>The public interface to the Lux renderer</summary>
+public static partial class Lux {
    public static int Rung;
 
-   /// <summary>Creates the Pix rendering panel</summary>
+   /// <summary>Creates the Lux rendering panel</summary>
    public static UIElement CreatePanel ()
       => Panel.It;
 
-   /// <summary>This is a good prototype of how rendering with the Pix renderer will look like</summary>
+   /// <summary>This is a good prototype of how rendering with the Lux renderer will look like</summary>
    static void DrawScene () {
-      for (int i = 0; i < 10; i++) {
-         PointSize = 36f;
-         DrawColor = Color4.Magenta;
-         Points ([new (98, 48), new (18, 18), new (98, 18)]);
+      PointSize = 36f;
+      DrawColor = Color4.Magenta;
+      Points ([new (98, 48), new (18, 18), new (98, 18)]);
 
-         LineWidth = 3f;
-         DrawColor = Color4.Yellow;
-         Lines ([new (10, 10), new (90, 10), new (90, 10), new (90, 40)]);
-         Lines ([new (13, 13), new (93, 13), new (93, 13), new (93, 43)]);
+      LineWidth = 3f;
+      DrawColor = Color4.Yellow;
+      Lines ([new (10, 10), new (90, 10), new (90, 10), new (90, 40)]);
+      Lines ([new (13, 13), new (93, 13), new (93, 13), new (93, 43)]);
 
-         LineWidth = 6f;
-         DrawColor = Color4.White;
-         Beziers ([new (10, 10), new (10, 40), new (80, 20), new (80, 50)]);
+      LineWidth = 6f;
+      DrawColor = Color4.White;
+      Beziers ([new (10, 10), new (10, 40), new (80, 20), new (80, 50)]);
 
-         LineWidth = 12f;
-         DrawColor = Color4.Blue;
-         Lines ([new (90, 40), new (10, 10)]);
+      LineWidth = 12f;
+      DrawColor = Color4.Blue;
+      Lines ([new (90, 40), new (10, 10)]);
 
-         PointSize = 12f;
-         DrawColor = Color4.Green;
-         Points ([new (95, 45), new (15, 15), new (95, 15)]);
+      PointSize = 12f;
+      DrawColor = Color4.Green;
+      Points ([new (95, 45), new (15, 15), new (95, 15)]);
 
-         LineWidth = 3f;
-         DrawColor = Color4.Yellow;
-         Lines ([new (13, 43), new (93, 13)]);
+      LineWidth = 3f;
+      DrawColor = Color4.Yellow;
+      Lines ([new (13, 43), new (93, 13)]);
 
-         PointSize = 36f;
-         DrawColor = Color4.Magenta;
-         Points ([new (98, 48), new (18, 18), new (98, 18)]);
+      PointSize = 36f;
+      DrawColor = Color4.Magenta;
+      Points ([new (98, 48), new (18, 18), new (98, 18)]);
 
-         DrawColor = Color4.Cyan;
-         Triangles ([new (30, 40), new (40, 40), new (40, 45)]);
+      DrawColor = Color4.Cyan;
+      Triangles ([new (30, 40), new (40, 40), new (40, 45)]);
 
-         DrawColor = Color4.Cyan;
-         Quads ([new (50, 40), new (60, 40), new (65, 45), new (50, 50)]);
-      }
+      DrawColor = Color4.Cyan;
+      Quads ([new (50, 40), new (60, 40), new (65, 45), new (50, 50)]);
    }
 
    /// <summary>Stub for the Render method that is called when each frame has to be painted</summary>
@@ -60,7 +58,7 @@ public static partial class Pix {
       // later go away and be replaced by something more clean
       var panel = Panel.It;
       panel.BeginRender (panel.Size, ETarget.Screen);
-      Pix.StartFrame (panel.Size);
+      Lux.StartFrame (panel.Size);
       GLState.StartFrame (panel.Size, Color4.Black);
       RBatch.StartFrame ();
       Shader.StartFrame ();

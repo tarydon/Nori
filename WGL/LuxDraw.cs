@@ -1,12 +1,12 @@
 // ────── ╔╗                                                                                    WGL
-// ╔═╦╦═╦╦╬╣ PixDraw.cs
-// ║║║║╬║╔╣║ Draw-related properties and methods of the Pix class
+// ╔═╦╦═╦╦╬╣ LuxDraw.cs
+// ║║║║╬║╔╣║ Draw-related properties and methods of the Lux class
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 namespace Nori;
 
-#region class Pix ----------------------------------------------------------------------------------
-/// <summary>The public interface to the Pix renderer</summary>
-public static partial class Pix {
+#region class Lux ----------------------------------------------------------------------------------
+/// <summary>The public interface to the Lux renderer</summary>
+public static partial class Lux {
    // Properties ---------------------------------------------------------------
    /// <summary>The current drawing color (default = white)</summary>
    public static Color4 DrawColor { 
@@ -43,7 +43,7 @@ public static partial class Pix {
    // Methods ------------------------------------------------------------------
    /// <summary>Draws 2D lines in world coordinates, with Z = 0</summary>
    /// Every pair of Vec2F in the list creates one line, so with n points,
-   /// n / 2 lines are drawn. The following Pix properties are used:
+   /// n / 2 lines are drawn. The following Lux properties are used:
    /// - LineWidth : the width of the beziers, in device independent pixels
    /// - DrawColor : color of the lines being drawn
    public static void Beziers (ReadOnlySpan<Vec2F> pts)
@@ -51,14 +51,14 @@ public static partial class Pix {
 
    /// <summary>Draws 2D lines in world coordinates, with Z = 0</summary>
    /// Every pair of Vec2F in the list creates one line, so with n points,
-   /// n / 2 lines are drawn. The following Pix properties are used:
+   /// n / 2 lines are drawn. The following Lux properties are used:
    /// - LineWidth : the width of the beziers, in device independent pixels
    /// - DrawColor : color of the lines being drawn
    public static void Lines (ReadOnlySpan<Vec2F> pts)
       => Line2DShader.It.Draw (pts);
 
    /// <summary>Draws 2D points in world coordinates, with Z = 0</summary>
-   /// The following Pix properties are used:
+   /// The following Lux properties are used:
    /// - PointSize : the diameter of the points, in device independent pixels
    /// - DrawColor : color of the points being drawn
    public static void Points (ReadOnlySpan<Vec2F> pts)
@@ -66,7 +66,7 @@ public static partial class Pix {
 
    /// <summary>Draws 2D quads in world coordinates, with Z = 0</summary>
    /// The quads are drawn with smoothed (anti-aliased) edges. 
-   /// The following Pix properties are used:
+   /// The following Lux properties are used:
    /// - DrawColor : color of the triangles being drawn
    public static void Quads (ReadOnlySpan<Vec2F> a) {
       Quad2DShader.It.Draw (a);
@@ -76,7 +76,7 @@ public static partial class Pix {
 
    /// <summary>Draws 2D triangles in world coordinates, with Z = 0</summary>
    /// The triangles are drawn with smoothed (anti-aliased) edges. 
-   /// The following Pix properties are used:
+   /// The following Lux properties are used:
    /// - DrawColor : color of the triangles being drawn
    public static void Triangles (ReadOnlySpan<Vec2F> a) {
       Triangle2DShader.It.Draw (a);

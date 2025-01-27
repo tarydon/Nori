@@ -38,12 +38,12 @@ class Point2DShader : Shader<Vec2F, Point2DShader.Settings> {
    }
 
    protected override void SetConstantsImp () {
-      Pgm.Set (muVPScale, Pix.VPScale);
-      Pgm.Set (muXfm, Pix.Xfm);
+      Pgm.Set (muVPScale, Lux.VPScale);
+      Pgm.Set (muXfm, Lux.Xfm);
    }
 
    protected override Settings SnapUniformsImp ()
-      => new (Pix.PointSize, Pix.DrawColor);
+      => new (Lux.PointSize, Lux.DrawColor);
 
    // Nested types -------------------------------------------------------------
    public readonly record struct Settings (float PointSize, Color4 Color);
@@ -74,13 +74,13 @@ class Seg2DShader : Shader<Vec2F, Seg2DShader.Settings> {
    }
 
    protected override void SetConstantsImp () {
-      Pgm.Set (muVPScale, Pix.VPScale);
-      // TODO: Pix.Xfm will not be a constant across the frame
-      Pgm.Set (muXfm, Pix.Xfm);
+      Pgm.Set (muVPScale, Lux.VPScale);
+      // TODO: Lux.Xfm will not be a constant across the frame
+      Pgm.Set (muXfm, Lux.Xfm);
    }
 
    protected override Settings SnapUniformsImp () 
-      => new (Pix.LineWidth, Pix.DrawColor);
+      => new (Lux.LineWidth, Lux.DrawColor);
 
    // Nested types -------------------------------------------------------------
    public readonly record struct Settings (float LineWidth, Color4 Color);
@@ -104,10 +104,10 @@ abstract class TriQuad2DShader : Shader<Vec2F, Color4> {
       => (int)(a.Value - b.Value);
 
    protected override void SetConstantsImp ()
-      => Pgm.Set (muXfm, Pix.Xfm);
+      => Pgm.Set (muXfm, Lux.Xfm);
 
    protected override Color4 SnapUniformsImp ()
-      => Pix.DrawColor;
+      => Lux.DrawColor;
 
    // Private data -------------------------------------------------------------
    int muXfm = 0, muDrawColor = 0;

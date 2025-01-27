@@ -10,7 +10,7 @@ namespace Nori;
 /// GL.Scissor etc only when the state actually changes (these are global state). 
 /// Also, at the start of every frame, we call GLState.Reset() to reset 
 /// all this state to a stable known default. This is an internal class,
-/// used primarily by the Pix draw classes.
+/// used primarily by the Lux draw classes.
 static class GLState {
    // Properties ---------------------------------------------------------------
    /// <summary>Is Blending now enable (default = false)</summary>

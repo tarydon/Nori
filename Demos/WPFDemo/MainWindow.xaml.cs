@@ -12,8 +12,8 @@ public partial class MainWindow : Window {
    public MainWindow () {
       Lib.Init ();
       InitializeComponent ();
-      Content = Pix.CreatePanel ();
-      Pix.Info.Subscribe (FrameDone);
+      Content = Lux.CreatePanel ();
+      Lux.Info.Subscribe (FrameDone);
       KeyDown += OnKey;
    }
 
@@ -21,7 +21,7 @@ public partial class MainWindow : Window {
       if (e.Key == Key.Escape) Close ();
    }
 
-   void FrameDone (Pix.Stats s) {
+   void FrameDone (Lux.Stats s) {
       Title = $"Frame {s.NFrame}, Pgms:{s.PgmChanges}, VAO:{s.VAOChanges}, Uniforms:{s.ApplyUniforms}, Draws:{s.DrawCalls}, Verts:{s.VertsDrawn}, Const:{s.SetConstants}";
    }
 }

@@ -1,6 +1,6 @@
 ﻿// ────── ╔╗                                                                                   CORE
 // ╔═╦╦═╦╦╬╣ Enum.cs
-// ║║║║╬║╔╣║ Implements various Enum types used by the Pix renderer
+// ║║║║╬║╔╣║ Implements various Enum types used by the Lux renderer
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 namespace Nori;
 
@@ -11,6 +11,6 @@ public enum EAxis { X, Y, Z }
 /// <summary>The 4 cardinal directions</summary>
 public enum EDir { E, N, W, S };
 
-/// <summary>Various render-targets for Pix.Panel</summary>
+/// <summary>Various render-targets for Lux.Panel</summary>
 public enum ETarget { Screen, Image, Pick }
 #endregion

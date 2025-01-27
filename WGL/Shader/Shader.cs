@@ -50,7 +50,7 @@ abstract class Shader {
    public abstract void ApplyUniforms (int idxUniform);
 
    /// <summary>Copy vertex data to the specified RBuffer</summary>
-   /// When we create the draw calls (using Pix.Lines, Pix.Mesh etc), the data is first
+   /// When we create the draw calls (using Lux.Lines, Lux.Mesh etc), the data is first
    /// gathered in the respective mData buffers of each shader. Then later when the entire
    /// scene has been thus drawn, we move all this data into RBuffer objects using this method.
    public abstract int CopyVertices (RBuffer buffer, int start, int count);
@@ -76,7 +76,7 @@ abstract class Shader {
 
    /// <summary>This is called to 'capture' the current uniforms into a UBlock structure</summary>
    /// This is overridden in each of the shaders to capture the relevant globals
-   /// like Pix.DrawColor, Pix.LineWidth into the UBlock of that shader. Since each 
+   /// like Lux.DrawColor, Lux.LineWidth into the UBlock of that shader. Since each 
    /// shader uses a different set of uniforms, this has to be a virtual function. 
    /// This returns the index of the UBlock with that shader's Uniforms list. Later,
    /// that can be applied into a shader program by calling ApplyUniforms(int). 
@@ -214,9 +214,9 @@ abstract class Shader<TVertex, TUniform> : Shader, IComparer<TUniform> where TVe
 
    /// <summary>Set the constants (like viewport size) that don't change during the entire frame</summary>
    public sealed override void SetConstants () {
-      // If this shader has already been used in this frame (mRung2 == Pix.Rung),
+      // If this shader has already been used in this frame (mRung2 == Lux.Rung),
       // then the constants have already been set, and we don't need ot set them again
-      if (!Lib.Set (ref mRung2, Pix.Rung)) return;
+      if (!Lib.Set (ref mRung2, Lux.Rung)) return;
       mSetConstants++;
       SetConstantsImp ();
    }
@@ -227,13 +227,13 @@ abstract class Shader<TVertex, TUniform> : Shader, IComparer<TUniform> where TVe
    public override sealed ushort SnapUniforms () {
       // If the uniforms have not changed at all since the last time we called SnapUniforms,
       // just reuse the last one. Note that this comparison will never return true when
-      // mUniforms is empty because we bump up Pix.Rung at the start of each frame, and our
+      // mUniforms is empty because we bump up Lux.Rung at the start of each frame, and our
       // own internal mRung value will never match for the first time this shader is used
       // in that frame. 
-      if (!Lib.Set (ref mRung1, Pix.Rung)) return (ushort)(mUniforms.Count - 1);      // Fast happy path
+      if (!Lib.Set (ref mRung1, Lux.Rung)) return (ushort)(mUniforms.Count - 1);      // Fast happy path
 
-      // Otherwise, we capture a new set of uniforms (from the Pix state like Pix.DrawColor,
-      // Pix.BorderColor etc). That could also actually end up equivalent to the last used
+      // Otherwise, we capture a new set of uniforms (from the Lux state like Lux.DrawColor,
+      // Lux.BorderColor etc). That could also actually end up equivalent to the last used
       // uniforms, so we recycle that if OrderUniforms returns 0
       int n = mUniforms.Count;
       mUniforms.Add (SnapUniformsImp ());    // New uniform added at index n
