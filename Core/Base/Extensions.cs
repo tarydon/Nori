@@ -18,6 +18,14 @@ public static class Extensions {
    public static Point3 Along (this double f, Point3 a, Point3 b)
       => new (f.Along (a.X, b.X), f.Along (a.Y, b.Y), f.Along (a.Z, b.Z));
 
+   /// <summary>Gets the underlying T array for an immutablearray</summary>
+   public static T[] AsArray<T> (this ImmutableArray<T> iarray)
+      => ImmutableCollectionsMarshal.AsArray (iarray)!;
+
+   /// <summary>Create an ImmutableArray view over an array (no copying)</summary>
+   public static ImmutableArray<T> AsIArray<T> (this T[] array) 
+      => ImmutableCollectionsMarshal.AsImmutableArray (array);
+
    /// <summary>Gets a Span&lt;T&gt; view over the data in a list</summary>
    /// Note that you should not add or remove items from the list while the Span is being used.
    public static ReadOnlySpan<T> AsSpan<T> (this List<T> list) => CollectionsMarshal.AsSpan (list);

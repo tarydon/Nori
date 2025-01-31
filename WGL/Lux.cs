@@ -14,43 +14,7 @@ public static partial class Lux {
    public static UIElement CreatePanel ()
       => Panel.It;
 
-   /// <summary>This is a good prototype of how rendering with the Lux renderer will look like</summary>
-   static void DrawScene () {
-      PointSize = 36f;
-      DrawColor = Color4.Magenta;
-      Points ([new (98, 48), new (18, 18), new (98, 18)]);
-
-      LineWidth = 3f;
-      DrawColor = Color4.Yellow;
-      Lines ([new (10, 10), new (90, 10), new (90, 10), new (90, 40)]);
-      Lines ([new (13, 13), new (93, 13), new (93, 13), new (93, 43)]);
-
-      LineWidth = 6f;
-      DrawColor = Color4.White;
-      Beziers ([new (10, 10), new (10, 40), new (80, 20), new (80, 50)]);
-
-      LineWidth = 12f;
-      DrawColor = Color4.Blue;
-      Lines ([new (90, 40), new (10, 10)]);
-
-      PointSize = 12f;
-      DrawColor = Color4.Green;
-      Points ([new (95, 45), new (15, 15), new (95, 15)]);
-
-      LineWidth = 3f;
-      DrawColor = Color4.Yellow;
-      Lines ([new (13, 43), new (93, 13)]);
-
-      PointSize = 36f;
-      DrawColor = Color4.Magenta;
-      Points ([new (98, 48), new (18, 18), new (98, 18)]);
-
-      DrawColor = Color4.Cyan;
-      Triangles ([new (30, 40), new (40, 40), new (40, 45)]);
-
-      DrawColor = Color4.Cyan;
-      Quads ([new (50, 40), new (60, 40), new (65, 45), new (50, 50)]);
-   }
+   public static Action<(int, int)>? DrawScene;
 
    /// <summary>Stub for the Render method that is called when each frame has to be painted</summary>
    public static void Render () {
@@ -59,12 +23,12 @@ public static partial class Lux {
       var panel = Panel.It;
       panel.BeginRender (panel.Size, ETarget.Screen);
       Lux.StartFrame (panel.Size);
-      GLState.StartFrame (panel.Size, Color4.Black);
+      GLState.StartFrame (panel.Size, Color4.Gray (96));
       RBatch.StartFrame ();
       Shader.StartFrame ();
       mFrame++;
 
-      DrawScene ();
+      DrawScene?.Invoke (panel.Size);
 
       RBatch.IssueAll ();
       RBatch.ReleaseAll ();
@@ -74,10 +38,12 @@ public static partial class Lux {
    }
    static int mFrame;
 
+   public static void Redraw ()
+      => Panel.It.Redraw ();
+
    /// <summary>This is called at the start of every frame to reset to known</summary>
    public static void StartFrame ((int X, int Y) viewport) {
       VPScale = new Vec2F (2.0 / viewport.X, 2.0 / viewport.Y);
-      Xfm = (Mat4F)Matrix3.Map (new Bound2 (0, 0, 100, 100), viewport);
       DrawColor = Color4.White;
       LineWidth = 3f;
       PointSize = 3f;
@@ -97,7 +63,6 @@ public static partial class Lux {
       public int DrawCalls => RBatch.mDrawCalls;
       /// <summary>Number of vertices drawn</summary>
       public int VertsDrawn => RBatch.mVertsDrawn;
-      public int SetConstants => Shader.mSetConstants;
    }
    static Stats sStats = new ();
 

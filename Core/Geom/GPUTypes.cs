@@ -52,7 +52,7 @@ public readonly record struct Vec3H (Half X, Half Y, Half Z) : IEQuable<Vec3H> {
 
 /// <summary>4D vector of 16-bit half (used for passing data to OpenGL)</summary>
 [StructLayout (LayoutKind.Sequential, Pack = 4, Size = 16)]
-public readonly record struct Vec4H (float X, float Y, float Z, float W) : IEQuable<Vec4H> {
+public readonly record struct Vec4H (float X, float Y, float Z, float W) : IEquatable<Vec4H> {
    public bool EQ (Vec4H b) => X.EQ (b.X) && Y.EQ (b.Y) && Z.EQ (b.Z) && W.EQ (b.W);
    public override string ToString () => $"<{X.R5 ()},{Y.R5 ()},{Z.R5 ()},{W.R5 ()}>";
 }

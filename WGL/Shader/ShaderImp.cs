@@ -73,6 +73,7 @@ class ShaderImp {
 
    /// <summary>Sets a Uniform variable of type float</summary>
    public void Set (int index, float f) {
+      if (index == -1) return;
       var data = mUniforms[index];
       if (f.EQ ((float)data.Value)) return;
       data.Value = f; GL.Uniform (index, f);
@@ -121,6 +122,12 @@ class ShaderImp {
    public static ShaderImp Triangle2D => mTriangle2D ??= Load ();
    public static ShaderImp Quad2D => mQuad2D ??= Load ();
    static ShaderImp? mLine2D, mBezier2D, mPoint2D, mTriangle2D, mQuad2D;
+
+   public static ShaderImp StencilLine => mStencilLine ??= Load ();
+   public static ShaderImp Gourad => mGourad ??= Load ();
+   public static ShaderImp Phong => mPhong ??= Load ();
+   public static ShaderImp FlatFacet => mFlatFacet ??= Load ();
+   static ShaderImp? mStencilLine, mGourad, mPhong, mFlatFacet;
 
    // Nested types ------------------------------------------------------------
    /// <summary>Provides information about a Uniform</summary>
@@ -204,13 +211,15 @@ readonly record struct Attrib (int Dims, EDataType Type, int Size, bool Integral
 
    public static Attrib[] GetFor (EVertexSpec spec) 
       => spec switch {
-         EVertexSpec.Vec2F => [Attrib.AVec2f],
+         EVertexSpec.Vec2F => [AVec2f],
+         EVertexSpec.Vec3F_Vec3H => [AVec3f, AVec3h],
          _ => throw new BadCaseException (spec)
       };
 
    public static int GetSize (EVertexSpec spec)
       => spec switch {
          EVertexSpec.Vec2F => 8,
+         EVertexSpec.Vec3F_Vec3H => 18,
          _ => throw new BadCaseException (spec)
       };
 
@@ -224,5 +233,5 @@ readonly record struct Attrib (int Dims, EDataType Type, int Size, bool Integral
 
 #region enum EVertexSpec ---------------------------------------------------------------------------
 // The various Vertex specifications used by OpenGL shaders
-enum EVertexSpec { Vec2F, _Last };
+enum EVertexSpec { Vec2F, Vec3F_Vec3H, _Last };
 #endregion

@@ -30,6 +30,9 @@ enum EDataType : uint {
    Sampler2DRect = 0x8B63, Sampler2D = 0x8B5E,
 }
 
+// Data types that could be used for the indices in a DrawElement call
+enum EIndexType : uint { UByte = 5121, UShort = 5123, UInt = 5125 }
+
 // Various modes that can be passed to glBegin
 enum EMode : uint { Points = 0, Lines = 1, LineLoop = 2, LineStrip = 3, Triangles = 4, Quads = 7, Patches = 14 };
 

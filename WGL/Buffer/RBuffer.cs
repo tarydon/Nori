@@ -62,17 +62,22 @@ class RBuffer : IIndexed {
    public unsafe int AddIndices (ReadOnlySpan<int> seq) {
       int n = mIndexUsed, c = seq.Length;
       if (mIndexUsed + c > mIndex.Length)
-         Array.Resize (ref mData, Math.Max (mIndexUsed + c, mData.Length * 2));
+         Array.Resize (ref mIndex, Math.Max (mIndexUsed + c, mIndex.Length * 2));
       seq.CopyTo (mIndex.AsSpan (mIndexUsed));
       mIndexUsed += c;
       return n;
    }
 
-   /// <summary>Draws data from the VAO, after setting up vertex attributes</summary>
-   /// This is a place-holder function which will get superseded by a better one later
+   /// <summary>Draws data from the VAO using a simple DrawArrays call</summary>
    public void Draw (EMode mode, int offset, int count) {
       PushToGPU ();
       GL.DrawArrays (mode, offset / mcbVertex, count);
+   }
+
+   /// <summary>Draws data from the VAO using a more complex DrawElements call (indexed drawing)</summary>
+   public void Draw (EMode mode, int offset, int ioffset, int icount) {
+      PushToGPU ();
+      GL.DrawElementsBaseVertex (mode, icount, EIndexType.UInt, ioffset * 4, offset / mcbVertex);
    }
 
    /// <summary>Gets a currently open RBuffer corresponding to a given vertex-spec</summary>
@@ -171,6 +176,11 @@ struct RBatch : IIndexed {
    /// Total number of bytes used for this batch is Count * Shader.CBVertex
    public int Count;
 
+   /// <summary>Start offset of this batch within the index buffer (if we're using indices)</summary>
+   public int IOffset;
+   /// <summary>Count of indices used for this batch (0 if we are not using indexed drawing)</summary>
+   public int ICount;
+
    /// <summary>As batches are being drawn, batches are accumulated here</summary>
    public static List<int> Staging = [];
 
@@ -198,6 +208,8 @@ struct RBatch : IIndexed {
       // TODO: Check both belong to the same VModel?
       // TODO: Check ZLevel and ClipRect
       if (NShader != rb.NShader || NBuffer != rb.NBuffer) return false;
+      // Don't merge two RBatch that use indexed drawing
+      if (ICount > 0 || rb.ICount > 0) return false;
       var shader = Shader.Get (NShader);
       int n = shader.OrderUniforms (NUniform, rb.NUniform); if (n != 0) return false;
       return Offset + count * shader.CBVertex == rb.Offset;
@@ -228,15 +240,24 @@ struct RBatch : IIndexed {
       // is already selected, this is a no-op
       var buffer = RBuffer.All[NBuffer];
       GLState.VAO = buffer.VAO;
-      // Finally draw 'count' vertices starting at this batch's vertex
-      // offset (byte offset within that buffer). Note that we are not using
-      // this RBatch's count, but the count is passed in from outside. This
-      // is because IssueAll() sees if this batch and the subsequent one(s)
-      // all use the same shader, VAO and uniforms and thus can be merged into
-      // a larger single draw. 
-      buffer.Draw (shader.Pgm.Mode, Offset, count);
+
+      if (ICount > 0) {
+         // If we are using indexed drawing mode, we ignore the count that is passed
+         // in, and use this.ICount as the number of elements to draw
+         buffer.Draw (shader.Pgm.Mode, Offset, IOffset, ICount);
+      } else {
+         // If ICount = 0: we are using simple DrawArrays. 
+         // We have to draw 'count' vertices starting at this batch's vertex
+         // offset (byte offset within that buffer). Note that we are not using
+         // this RBatch's count, but the count is passed in from outside. This
+         // is because IssueAll() sees if this batch and the subsequent one(s)
+         // all use the same shader, VAO and uniforms and thus can be merged into
+         // a larger single draw. 
+         buffer.Draw (shader.Pgm.Mode, Offset, count);
+         mVertsDrawn += count;
+      }
       // Update stats
-      mDrawCalls++; mVertsDrawn += count;
+      mDrawCalls++;
    }
    static internal int mDrawCalls, mVertsDrawn;
 
@@ -289,9 +310,12 @@ struct RBatch : IIndexed {
             // If the data of this RBatch has still not been uploaded to the GPU,
             // allocate a RB,,uffer and copy the data there
             var shader = Shader.Get (rb.NShader);
-            var buf = RBuffer.Get (EVertexSpec.Vec2F); // TODO: Use the correct vertex-spec
+            var buf = RBuffer.Get (shader.Pgm.VSpec);
             rb.NBuffer = buf.Idx;
-            rb.Offset = shader.CopyVertices (buf, rb.Offset, rb.Count);
+            if (rb.ICount > 0)
+               (rb.Offset, rb.IOffset) = shader.CopyVertices (buf, rb.Offset, rb.Count, rb.IOffset, rb.ICount);
+            else 
+               rb.Offset = shader.CopyVertices (buf, rb.Offset, rb.Count);
             buf.References++;
          }
       }

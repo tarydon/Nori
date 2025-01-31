@@ -1,7 +1,11 @@
-Name        Mode       VSpec  Blend  Depth  POffset  Programs
+Name          Mode       VSpec        Blend  Depth  POffset  Programs
 ------------------------------------------------------------------------------------
-Line2D      Lines      Vec2F  1      0      0        World2D.vert|Line2D.geom|Line.frag
-Bezier2D    Patches    Vec2F  1      0      0        World2D.vert|Bezier.tctrl|Bezier.teval|Line2D.geom|Line.frag
-Point2D     Points     Vec2F  1      0      0        World2D.vert|Point2D.geom|Point.frag
-Triangle2D  Triangles  Vec2F  0      0      0        World2D.vert|Flat.frag
-Quad2D      Quads      Vec2F  0      0      0        World2D.vert|Flat.frag
+Line2D        Lines      Vec2F        1      0      0        World2D.vert|Line2D.geom|Line.frag
+Bezier2D      Patches    Vec2F        1      0      0        World2D.vert|Bezier.tctrl|Bezier.teval|Line2D.geom|Line.frag
+Point2D       Points     Vec2F        1      0      0        World2D.vert|Point2D.geom|Point.frag
+Triangle2D    Triangles  Vec2F        0      0      0        World2D.vert|Flat.frag
+Quad2D        Quads      Vec2F        0      0      0        World2D.vert|Flat.frag
+StencilLine   Lines      Vec3F_Vec3H  1      1      0        World3D.vert|Line3D.geom|Line.frag
+Gourad        Triangles  Vec3F_Vec3H  0      1      1        Gourad.vert|Gourad.frag
+Phong         Triangles  Vec3F_Vec3H  0      1      1        Phong.vert|Phong.frag
+FlatFacet     Triangles  Vec3F_Vec3H  0      1      1        FlatFacet.vert|FlatFacet.frag

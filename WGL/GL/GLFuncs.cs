@@ -85,6 +85,12 @@ unsafe static class GL {
    unsafe delegate void glDeleteVertexArrays (int n, HVertexArray* textures);
    static glDeleteVertexArrays? pDeleteVertexArrays;
 
+   // Indexed drawing from an array (with baseVertex added to each index) ......
+   public static void DrawElementsBaseVertex (EMode mode, int count, EIndexType type, Ptr indices, int baseVertex)
+      => (pDrawElementsBaseVertex ??= Load<glDrawElementsBaseVertex> ()) (mode, count, type, indices, baseVertex);
+   delegate void glDrawElementsBaseVertex (EMode mode, int count, EIndexType type, Ptr indices, int baseVertex);
+   static glDrawElementsBaseVertex? pDrawElementsBaseVertex;
+
    // Specify that a particular element (specified by glVertexAttribPointer) is in use
    public static void EnableVertexAttribArray (int index) 
       => (pEnableVertexAttribArray ??= Load<glEnableVertexAttribArray> ()) ((uint)index);

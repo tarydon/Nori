@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net8.0-windows</TargetFramework>
@@ -12,6 +12,13 @@
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
     <DocumentationFile>..\Bin\Nori.WGL.xml</DocumentationFile>
   </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="Res\**" />
+    <EmbeddedResource Remove="Res\**" />
+    <None Remove="Res\**" />
+    <Page Remove="Res\**" />
+  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Core\Nori.Core.csproj" />

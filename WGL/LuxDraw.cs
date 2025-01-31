@@ -22,6 +22,10 @@ public static partial class Lux {
    }
    static float mLineWidth;
 
+   /// <summary>The normal transform (rotation component of Xfm) used for Gourad, Phong shading</summary>
+   public static Mat4F NormalXfm { get => mNormalXfm; set { mNormalXfm = value; Rung++; } }
+   static Mat4F mNormalXfm;
+
    /// <summary>The diameter of a point, in device-independent pixels</summary>
    public static float PointSize { 
       get => mPointSize;
@@ -56,6 +60,24 @@ public static partial class Lux {
    /// - DrawColor : color of the lines being drawn
    public static void Lines (ReadOnlySpan<Vec2F> pts)
       => Line2DShader.It.Draw (pts);
+
+   /// <summary>Draws a CMesh using one of the shade-modes</summary>
+   /// The shade modes are
+   ///   0 - Flat shading
+   ///   1 - Gourad shading
+   ///   2 - Phong shading
+   /// (This is primarily for learning purposes. Later we will remove the other shade
+   /// modes, and use only Phong shading)
+   public static void Mesh (CMesh mesh, int shadeMode) {
+      CMesh.Node[] nodes = mesh.Vertex.AsArray ();
+      int[] tris = mesh.Triangle.AsArray (), wires = mesh.Wire.AsArray ();
+      switch (shadeMode) {
+         case 0: FlatFacetShader.It.Draw (nodes, tris); break;
+         case 1: GouradShader.It.Draw (nodes, tris); break;
+         default: PhongShader.It.Draw (nodes, tris); break;
+      }
+      StencilLineShader.It.Draw (nodes, wires);
+   }
 
    /// <summary>Draws 2D points in world coordinates, with Z = 0</summary>
    /// The following Lux properties are used:

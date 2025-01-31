@@ -12,6 +12,77 @@ class Bezier2DShader : Seg2DShader {
 }
 #endregion
 
+class StencilLineShader : Shader<CMesh.Node, StencilLineShader.Settings> {
+   public StencilLineShader () : base (ShaderImp.StencilLine) => Bind ();
+
+   protected override void ApplyUniformsImp (ref readonly Settings settings) {
+      Pgm.Set (muLineWidth, settings.LineWidth);
+      Pgm.Set (muDrawColor, settings.Color);
+   }
+
+   protected override int OrderUniformsImp (ref readonly Settings a, ref readonly Settings b) {
+      int n = a.LineWidth.CompareTo (b.LineWidth); if (n != 0) return n;
+      return (int)(a.Color.Value - b.Color.Value);
+   }
+
+   protected override void SetConstantsImp () {
+      Pgm.Set (muXfm, Lux.Xfm);
+      Pgm.Set (muVPScale, Lux.VPScale);
+   }
+
+   protected override Settings SnapUniformsImp ()
+      => new (3, Color4.Black);
+
+   public readonly record struct Settings (float LineWidth, Color4 Color);
+
+   // These contain the slot numbers of the uniforms
+   int muXfm = 0, muVPScale = 0, muLineWidth = 0, muDrawColor = 0;
+   public static readonly StencilLineShader It = new ();
+}
+
+#region class FacetShader --------------------------------------------------------------------------
+abstract class FacetShader : Shader<CMesh.Node, Color4> {
+   protected FacetShader (ShaderImp imp) : base (imp) => Bind ();
+
+   protected override void ApplyUniformsImp (ref readonly Color4 settings)
+      => Pgm.Set (muDrawColor, settings);
+
+   protected override int OrderUniformsImp (ref readonly Color4 a, ref readonly Color4 b)
+      => (int)(a.Value - b.Value);
+
+   protected override void SetConstantsImp () {
+      Pgm.Set (muXfm, Lux.Xfm);
+      Pgm.Set (muNormalXfm, Lux.NormalXfm);
+   }
+
+   protected override Color4 SnapUniformsImp ()
+      => Lux.DrawColor;
+
+   int muXfm = 0, muNormalXfm = 0, muDrawColor = 0;
+}
+#endregion
+
+#region class GouradShader -------------------------------------------------------------------------
+class GouradShader : FacetShader {
+   public GouradShader () : base (ShaderImp.Gourad) { }
+   public static readonly GouradShader It = new ();
+}
+#endregion
+
+#region class FlatFacetShader ----------------------------------------------------------------------
+class FlatFacetShader : FacetShader {
+   public FlatFacetShader () : base (ShaderImp.FlatFacet) { }
+   public static readonly FlatFacetShader It = new ();
+}
+#endregion
+
+#region class PhongShader --------------------------------------------------------------------------
+class PhongShader : FacetShader {
+   public PhongShader () : base (ShaderImp.Phong) { }
+   public static readonly PhongShader It = new ();
+}
+#endregion
+
 #region class Line2DShader -------------------------------------------------------------------------
 /// <summary>A specialization of Seg2DShader, used to draw linear segs</summary>
 class Line2DShader : Seg2DShader {

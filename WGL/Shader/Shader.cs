@@ -37,7 +37,6 @@ abstract class Shader {
       mApplyUniforms = 0;
    }
    protected internal static int mApplyUniforms;
-   protected internal static int mSetConstants;
 
    // Overrrideables -----------------------------------------------------------
    /// <summary>Override this to apply a particular UBlock into the shader program</summary>
@@ -54,6 +53,27 @@ abstract class Shader {
    /// gathered in the respective mData buffers of each shader. Then later when the entire
    /// scene has been thus drawn, we move all this data into RBuffer objects using this method.
    public abstract int CopyVertices (RBuffer buffer, int start, int count);
+
+   /// <summary>
+   /// Copy indexed vertex data to the specified RBuffer
+   /// </summary>
+   /// This is similar to the routine above, but the drawing in this case is done using indices.
+   /// That is, if we want to draw N vertices, we don't actually submit N vertices, but submit only
+   /// M (where M < N) and then use a separate _index_ array (that contains only integers). This index
+   /// array contains N elements, which act as indices into the vertex array. For example, if we are
+   /// drawing a square using 4 vertices, we might pass in a vertex array like this:
+   ///    [(0, 0, 0), (100, 0, 0), (100, 100, 0), (100, 100, 0)]
+   /// Then, that could be drawn using 2 triangle calls using these above vertices (numbered 0..3)
+   /// thus:
+   ///   [0, 1, 2,   0, 2, 3] 
+   /// Each set of 3 integers, treated as indices into the array above, provides the vertices for 
+   /// a triangle, which together make up the square. The point of this indirection is that we 
+   /// don't have to actually pass in 6 'Point3' vertices (which would cost us more memory). Instead,
+   /// we pass in just the 4 unique vertices and reuse them by specifying some indices (like 0, 2) 
+   /// more than once. In OpenGL terminology, this is the difference between the simpler glDrawArrays,
+   /// and the more complex glDrawElements (this CopyVertices maps to a glDrawElements call, the
+   /// earlier one to a glDrawArrays call). 
+   public abstract (int, int) CopyVertices (RBuffer buffer, int start, int count, int istart, int icount);
 
    /// <summary>This is called after each frame to cleanup any frame-specific artifacts / data</summary>
    /// For all shaders, we clear the mUniforms[] array
@@ -143,6 +163,27 @@ abstract class Shader<TVertex, TUniform> : Shader, IComparer<TUniform> where TVe
       }
    }
 
+   /// <summary>Adds vertices and element indices into our local data array, and creates an RBatch pointing to them</summary>
+   /// Since we have vertices and indices, we are going to later use this for a DrawElements call,
+   /// while the version of Draw above results in a RBatch that uses no 'indices' and is a simple
+   /// DrawArrays call. How do we distinguish between the two types of RBatch? This indexed-drawing
+   /// RBatch has a non-zero ICount value.
+   public void Draw (ReadOnlySpan<TVertex> data, ReadOnlySpan<int> indices) {
+      ref RBatch rb = ref RBatch.Alloc ();
+      rb.NShader = Idx; rb.NUniform = SnapUniforms (); rb.NBuffer = 0;
+      rb.Offset = mData.Count; rb.Count = data.Length;
+      rb.IOffset = mIndex.Count; rb.ICount = indices.Length;
+      RBatch.Staging.Add (rb.Idx);
+
+      mData.AddRange (data);
+      // Note that these indices are all zero-relative (as in the original mesh data). Later, when
+      // we copy these indices into an RBuffer's index data, they continue to remain zero relative.
+      // However, the actual position of the vertex data in the final RBuffer is not starting at zero,
+      // so we have to use DrawElementsBaseVertex and pass the starting index of this batch's vertex
+      // data to that
+      mIndex.AddRange (indices);
+   }
+
    // Overrides ----------------------------------------------------------------
    /// <summary>Copies vertices from our local mData storage to an RBuffer</summary>
    /// This copies 'count' vertices from our local mData storage into the given
@@ -152,6 +193,13 @@ abstract class Shader<TVertex, TUniform> : Shader, IComparer<TUniform> where TVe
       var span = CollectionsMarshal.AsSpan (mData);
       fixed (void* p = &span[offset])
          return buffer.AddData (p, count * CBVertex);
+   }
+
+   public unsafe override (int, int) CopyVertices (RBuffer buffer, int offset, int count, int ioffset, int icount) {
+      int dataOffset = CopyVertices (buffer, offset, count);
+      var span = CollectionsMarshal.AsSpan (mIndex);
+      int indexOffset = buffer.AddIndices (span);
+      return (dataOffset, indexOffset);
    }
 
    /// <summary>Describe a particular uniform in human readable way (used for debugging)</summary>
@@ -201,13 +249,13 @@ abstract class Shader<TVertex, TUniform> : Shader, IComparer<TUniform> where TVe
       foreach (var f in fields)
          if (f.Name.StartsWith ("mu") && f.FieldType.FullName == "System.Int32") {
             int id = Pgm.GetUniformId (f.Name[2..]);
-            if (id == -1) throw new Exception ($"Uniform '{f.Name[2..]}' not found in shader '{Pgm.Name}'");
+            if (id == -1) Debug.Write ($"Uniform '{f.Name[2..]}' not found in shader '{Pgm.Name}'");
             f.SetValue (this, id);
          }
    }
 
    /// <summary>Called at the end of every frame</summary>
-   public override void Cleanup () { mUniforms.Clear (); mData.Clear (); }
+   public override void Cleanup () { mUniforms.Clear (); mData.Clear (); mIndex.Clear (); }
 
    /// <summary>Implementation of IComparer interface</summary>
    public int Compare (TUniform? a, TUniform? b) => OrderUniformsImp (in a!, in b!);
@@ -217,7 +265,6 @@ abstract class Shader<TVertex, TUniform> : Shader, IComparer<TUniform> where TVe
       // If this shader has already been used in this frame (mRung2 == Lux.Rung),
       // then the constants have already been set, and we don't need ot set them again
       if (!Lib.Set (ref mRung2, Lux.Rung)) return;
-      mSetConstants++;
       SetConstantsImp ();
    }
    int mRung2;
@@ -246,5 +293,6 @@ abstract class Shader<TVertex, TUniform> : Shader, IComparer<TUniform> where TVe
    // Private data -------------------------------------------------------------
    List<TUniform> mUniforms = [];
    List<TVertex> mData = [];
+   List<int> mIndex = [];
 }
 #endregion
