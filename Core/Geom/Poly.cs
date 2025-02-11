@@ -12,6 +12,10 @@ public class Poly {
    internal Poly (ImmutableArray<Point2> pts, ImmutableArray<Extra> extra, EFlags flags)
       => (mPts, mExtra, mFlags) = (pts, extra, flags);
 
+   /// <summary>Make a single-arc Poly</summary>
+   public static Poly Arc (Point2 start, Point2 cen, Point2 end)
+      => new PolyBuilder ().Arc (start, cen, EFlags.HasArcs | EFlags.CCW).End (end);
+
    /// <summary>Make a full-circle Poly</summary>
    public static Poly Circle (Point2 pt, double radius) {
       Point2 a = pt + new Vector2 (radius, 0);
