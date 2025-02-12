@@ -13,8 +13,12 @@ public class Poly {
       => (mPts, mExtra, mFlags) = (pts, extra, flags);
 
    /// <summary>Make a single-arc Poly</summary>
-   public static Poly Arc (Point2 start, Point2 cen, Point2 end)
-      => new PolyBuilder ().Arc (start, cen, EFlags.HasArcs | EFlags.CCW).End (end);
+   public static Poly Arc (Point2 center, double radius, double startAngle, double endAngle, bool ccw) {
+      Point2 a = center.Polar (radius, startAngle.D2R ()), b = center.Polar (radius, endAngle.D2R ());
+      var pts = ImmutableArray.CreateRange ([a, b]);
+      var extra = ImmutableArray.Create (new Extra (center, ccw ? EFlags.CCW : EFlags.CW));
+      return new Poly (pts, extra, EFlags.HasArcs);
+   }
 
    /// <summary>Make a full-circle Poly</summary>
    public static Poly Circle (Point2 pt, double radius) {
