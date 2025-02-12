@@ -85,6 +85,146 @@ public class AList<T> : IList, IList<T>, IObservable<ListChange> {
 }
 #endregion
 
+#region class Chains<T> ----------------------------------------------------------------------------
+/// <summary>Implements a collection of linked-lists efficiently in a single array</summary>
+/// A collection of multiple linked lists residing in a single array is called a 'Chains' data 
+/// structure. Suppose we want to maintain multiple linked-lists of T with efficient adding, removal
+/// and flushing of chains. We don't want to use a conventional linked-list structure since we don't want
+/// the expense of a separate memory allocation for every node (especially important if each node is a tiny
+/// payload, such as an integer). 
+/// 
+/// We create a Chains&lt;T&gt; structure and allocate integers to hold the 'chain numbers'. These are like
+/// linked-list 'handles'. We create a new chain, or add to an existing chain by using the Add method. We
+/// pass in the chain-handle as the first parameter to this. If this is 0, we are creating a new chain (and
+/// that parameter gets set to the freshly allocated chain-handle). If this is non-zero, we are adding a new
+/// value to that chain. Note that even when we are adding a new value to an existing chain, the chain-handle
+/// will actually be changed by the Add method. In other words, each time we add to a chain, the chain 
+/// handle changes! Since this is a ref parameter, the handle changing underneath will not require any
+/// special handling. 
+/// 
+/// We can later remove one item out of a chain, or 'release' all the elements from a chain completely.
+/// During all these operations, no actual movement of the elements takes place; links are adjusted to 
+/// effect these changes, and the 'empty spaces' are used subsequently when we add something to a chain.
+/// Thus, the memory used by a Chains structure monotonically increases while it is in use; it never 
+/// reduces.
+public class Chains<T> {
+   /// <summary>Add an value to an already existing chain, or create a new chain with the value (takes O(1) time)</summary>
+   /// <param name="chain">The chain-handle; if this is 0, we are effectively creating a new chain</param>
+   /// <param name="value">The value to be added to that chain</param>
+   /// This returns nothing, but always modifies the chain-handle parameter 'chain'. If this is a new
+   /// chain, the value will change from 0 to some non-zero value. Even if this is an existing chain, 
+   /// the value will change (in effect, imagine that a new chain is always created by appending this
+   /// new value to the previous chain).
+   public void Add (ref int chain, T value) {
+      if (mcFree == 0) {
+         // There are no free spaces left in the Data array. Create some
+         if (mFree == null) {
+            // This is the first time add has been called, so initialize all the arrays
+            Data = new T[8]; mLinks = new int[8];
+            for (int i = 7; i >= 1; i--) Arr.Add (ref mFree, ref mcFree, i);
+         } else {
+            int n = Data.Length;
+            Array.Resize (ref Data, n * 2); Array.Resize (ref mLinks, n * 2);
+            for (int i = n * 2 - 1; i >= n; i--) Arr.Add (ref mFree, ref mcFree, i);
+         }
+      }
+      int next = mFree![--mcFree];
+      mLinks[next] = chain; Data[next] = value;
+      chain = next;
+   }
+
+   /// <summary>Returns true if the chain contains a given value (takes O(N) time, where N is the chain length)</summary>
+   /// <param name="chain">The chain-handle of the chain</param>
+   /// <param name="value">The value to search for (the Equals method is used to compare)</param>
+   /// <returns>True if the chain contains the given value, false otherwise</returns>
+   public bool Contains (int chain, T value) {
+      while (chain > 0) {
+         if (Data[chain]?.Equals (value) == true) return true;
+         chain = mLinks[chain];
+      }
+      return false;
+   }
+
+   /// <summary>Enumerates the values from a given chain</summary>
+   /// <param name="chain">The chain-handle from which we want to get the values</param>
+   public IEnumerable<T> Enum (int chain) {
+      while (chain != 0) {
+         yield return Data[chain];
+         chain = mLinks[chain];
+      }
+   }
+
+   /// <summary>Gathers the raw indices of the elements from a given chain</summary>
+   /// <param name="chain">The chain-handle whose elements we want to gather</param>
+   /// <param name="indices">A list into which the indicaes are added</param>
+   /// This is a fairly 'low-level' method that you should not really be required to use, except if
+   /// you want to manipulate some 'value-type' elements in the chain, in-situ. The indices returned here
+   /// can be used to index into the Data[] array, which holds the raw elements in the chain. Use with
+   /// great care!
+   /// 
+   /// For most normal use, the Enum() method gives a simpler way to enumerate the values from a chain.
+   public void GatherRawIndices (int chain, List<int> indices) {
+      indices.Clear ();
+      while (chain != 0) { indices.Add (chain); chain = mLinks[chain]; }
+   }
+
+   /// <summary>This releases an entire chain of values (takes O(N) time, where N is the length of the chain)</summary>
+   /// After this, the chain-handle will be 0, to indicate an empty chain, and the space
+   /// used by the erstwhile values will be released into the free-pool for subsequent reuse.
+   public void ReleaseChain (ref int chain) {
+      while (chain > 0) {
+         Arr.Add (ref mFree, ref mcFree, chain);
+         chain = mLinks[chain];
+      }
+   }
+
+   /// <summary>Removes one value from a chain - takes O(N) time, where N is the length of the chain.</summary>
+   /// <param name="chain">The chain-handle in question (this may be modified by the routine)</param>
+   /// <param name="value">The value to search for and remove</param>
+   public void Remove (ref int chain, T value) {
+      if (chain == 0) return;
+
+      // Handle the case where Data is the first element in the array
+      if (Data[chain]?.Equals (value) == true) {
+         Arr.Add (ref mFree, ref mcFree, chain);
+         chain = mLinks[chain];
+         return;
+      }
+
+      int prev = 0, elem = chain;
+      while (elem > 0) {
+         if (Data[elem]?.Equals (value) == true) {
+            // Found the item; connect the previous to the next to skip this
+            // element in the chain
+            Arr.Add (ref mFree, ref mcFree, elem);
+            mLinks[prev] = mLinks[elem];
+            return;
+         }
+         prev = elem; elem = mLinks[elem];
+      }
+   }
+
+   #region Properties ---------------------------------------------
+   /// <summary>The raw Data making up the chain</summary>
+   /// This should not normally be required to be accessed. Advanced scenarios which require
+   /// efficient in-place modification of value-type elements within some chains may require
+   /// this. In that case, use GatherRawIndices to get the indices into this array of the elements
+   /// within a chain.
+   public T[] Data = [];
+   #endregion
+
+   #region Private data -------------------------------------------
+   /// <summary>Contains the 'links' connecting elements into chains.</summary>
+   int[] mLinks = [];
+
+   /// <summary>Contains the indices of slots in the Data array that are free</summary>
+   int[]? mFree;
+   /// <summary>mFree[0] to mFree[mcFree - 1] are the free slots in the Data array</summary>
+   int mcFree;
+   #endregion
+}
+#endregion
+
 #region class IdxHeap<T> ---------------------------------------------------------------------------
 /// <summary>IdxHeap maintains a collection of IIndexed objects</summary>
 /// Alloc() allocates a new object, assigns an index to it, and stores it in the heap.
@@ -168,5 +308,16 @@ public readonly struct ListChange {
    public readonly E Action;
    /// <summary>The index at which the action happened</summary>
    public readonly int Index;
+}
+#endregion
+
+#region class Arr ----------------------------------------------------------------------------------
+internal static class Arr {
+   /// <summary>Add an element into an array, growing the array as needed</summary>
+   public static void Add<T> ([NotNull] ref T[]? data, ref int cUsed, T value) {
+      int n = data?.Length ?? 0;
+      if (cUsed >= n || data == null) { n = Math.Max (8, n * 2); Array.Resize (ref data, n); }
+      data[cUsed++] = value;
+   }
 }
 #endregion

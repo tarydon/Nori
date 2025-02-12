@@ -30,7 +30,18 @@ public partial class MainWindow : Window {
    int xRot = -60, zRot = 135, nShader = 0;
 
    void Draw3DScene ((int X, int Y) viewport) {
-      mMesh ??= CMesh.LoadTMesh ("n:/demos/data/part.tmesh");
+      if (mMesh == null) {
+         // robot-1.tmesh, part.tmesh, suzanne.tmesh
+         mMesh ??= CMesh.LoadTMesh ("n:/demos/data/part.tmesh");
+
+         List<Point3> pts = [];
+         for (int i = 0; i < mMesh.Triangle.Length; i++) {
+            var pos = mMesh.Vertex[mMesh.Triangle[i]].Pos;
+            pts.Add (new Point3 (pos.X, pos.Y, pos.Z));
+         }
+         mMesh = new CMeshBuilder (pts.AsSpan ()).Build ();
+      }
+
       var bound = mMesh.Bound; var mid = bound.Midpoint;
       var viewpoint = Quaternion.FromAxisRotations (xRot.D2R (), 0, zRot.D2R ());
       var worldXfm = Matrix3.Translation (-mid.X, -mid.Y, -mid.Z) * Matrix3.Rotation (viewpoint);

@@ -161,7 +161,7 @@ public readonly struct Point2 {
 
 #region struct Point3 ------------------------------------------------------------------------------
 /// <summary>Point in 2 dimensions, 64-bit double components</summary>
-public readonly struct Point3 {
+public readonly struct Point3 : IEquatable<Point3> {
    // Constructors -------------------------------------------------------------
    /// <summary>Construct a Point3 given the X, Y, Z, ordinates</summary>
    public Point3 (double x, double y, double z) => (X, Y, Z) = (x, y, z);
@@ -197,6 +197,21 @@ public readonly struct Point3 {
 
    /// <summary>Compares two points are equal to within EPSILON</summary>
    public bool EQ (Point3 b) => X.EQ (b.X) && Y.EQ (b.Y) && Z.EQ (b.Z);
+
+   /// <summary>Unboxed version of Equals.</summary>
+   public bool Equals (Point3 other) => EQ (other);
+
+   /// <summary>Compares two Point3 for equality</summary>
+   public override bool Equals ([NotNullWhen (true)] object? obj) {
+      if (obj is not Point3 other) return false;
+      return EQ (other);
+   }
+
+   /// <summary>Returns the Hash-code of the Point3 (based on their rounded-off approximations)</summary>
+   public override int GetHashCode () {
+      var pt = R6 ();
+      return (pt.X, pt.Y, pt.Z).GetHashCode ();
+   }
 
    /// <summary>Gets the lie of this point on the given line segment a..b</summary>
    /// This is accurate only if the point actually lies on the infinite line through a..b
