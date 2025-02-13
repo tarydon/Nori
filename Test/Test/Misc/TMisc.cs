@@ -212,6 +212,24 @@ class TMisc {
       list.Is ("IdxHeap<T1Type>, Count=13");
    }
 
+   [Test (71, "class CMesh, CMeshBuilder")]
+   void Test71 () {
+      // CMesh IO test
+      var part = CMesh.LoadTMesh ($"{NT.Data}/Geom/CMesh/part.tmesh");
+      part.Save (NT.TmpTxt);
+      Assert.TextFilesEqual ($"{NT.Data}/Geom/CMesh/part-out.tmesh", NT.TmpTxt);
+
+      // CMeshBuilder test
+      List<Point3> pts = [];
+      for (int i = 0; i < part.Triangle.Length; i++) {
+         var pos = part.Vertex[part.Triangle[i]].Pos;
+         pts.Add (new Point3 (pos.X, pos.Y, pos.Z));
+      }
+
+      new CMeshBuilder (pts.AsSpan ()).Build ().Save (NT.TmpTxt);
+      Assert.TextFilesEqual ($"{NT.Data}/Geom/CMesh/part-gen.tmesh", NT.TmpTxt);
+   }
+
    class T1Type : IIndexed {
       public override string ToString () => $"T{Idx}";
       public ushort Idx { get; set; }

@@ -108,7 +108,7 @@ public class AList<T> : IList, IList<T>, IObservable<ListChange> {
 /// Thus, the memory used by a Chains structure monotonically increases while it is in use; it never 
 /// reduces.
 public class Chains<T> {
-   /// <summary>Add an value to an already existing chain, or create a new chain with the value (takes O(1) time)</summary>
+   /// <summary>Add a value to an already existing chain, or create a new chain with the value (takes O(1) time)</summary>
    /// <param name="chain">The chain-handle; if this is 0, we are effectively creating a new chain</param>
    /// <param name="value">The value to be added to that chain</param>
    /// This returns nothing, but always modifies the chain-handle parameter 'chain'. If this is a new

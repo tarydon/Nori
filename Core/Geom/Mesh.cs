@@ -74,6 +74,72 @@ public class CMesh (ImmutableArray<CMesh.Node> vertex, ImmutableArray<int> trian
       void Fatal () => throw new Exception ("Invalid TMESH file");
       string Line () => lines[n++];
    }
+
+   /// <summary>Saves the mesh to a TMesh file.</summary>
+   /// The TMESH file has following sections:
+   /// 1. HEADER: The header section contains file format signature and file version.
+   /// 2. VERTICES: This section contains the vertex table where a vertex node is defined
+   ///    by a vertex position and the normal.
+   /// 3. TRIANGLES: These are the triangles table where a row contains three vertex indices 
+   ///    for a triangle corner each.
+   /// 4. STENCILS: This section contains the stencil lines defined with a pair of vertex indeces.
+   /// 5. The file is terminated with an EOF (end-of-file) marker.
+   /// 
+   /// The data sections (2, 3 and 4) start with the count followed by the one-per-line entries.
+   /// A sample mesh file with two triangles forming a rectangular plane and a border:
+   /// <code>
+   /// <![CDATA[
+   /// TMESH
+   /// 1
+   /// 4
+   /// 5,-50,-30,  1,0,0
+   /// 5,50,-30,  1,0,0
+   /// 5,50,30,  1,0,0
+   /// 5,-50,30,  1,0,0
+   /// 2
+   /// 0 1 2
+   /// 2 3 0
+   /// 4
+   /// 0 1
+   /// 1 2
+   /// 2 3
+   /// 3 0
+   /// EOF
+   /// ]]>
+   /// </code>
+   public void Save (string filename) {
+      // 1. HEADER
+      StringBuilder sb = new ($"TMESH\n1\n");
+      // 2. VERTICES
+      // Vertices count.
+      sb.Append ($"{Vertex.Length}\n");
+      // Vertex data
+      for (int i = 0; i < Vertex.Length; i++) {
+         var p = Vertex[i].Pos; var v = Vertex[i].Vec;
+         sb.Append ($"{p.X:R},{p.Y:R},{p.Z:R},  {v.X:R},{v.Y:R},{v.Z:R}\n");
+      }
+
+      // 3. TRIANGLES
+      // Triangle count
+      sb.Append ($"{Triangle.Length / 3}\n");
+      // Triangle data
+      for (int i = 0; i < Triangle.Length; i += 3) {
+         sb.Append ($"{Triangle[i]} {Triangle[i + 1]} {Triangle[i + 2]}\n");
+      }
+
+      // 4. STENCILS
+      // Stencil line count
+      sb.Append ($"{Wire.Length / 2}\n");
+      // Stencil data
+      for (int i = 0; i < Wire.Length; i += 2) {
+         sb.Append ($"{Wire[i]} {Wire[i + 1]}\n");
+      }
+
+      // 5. EOF - End of file
+      sb.Append ("EOF\n");
+      File.WriteAllText (filename, sb.ToString ());
+   }
+
 }
 #endregion
 
@@ -113,6 +179,7 @@ public class CMeshBuilder {
 
       CMesh.Node[] nodes = new CMesh.Node[mcVertex]; int cNodes = 0;
       List<int> wires = [], tries = [];
+      HashSet<(Point3, Point3)> lines = [];
 
       // First go through the faces touching each corner and gather them into smoothing-groups
       for (int i = 0; i < mcVertex; i++) GroupFaces (ref mVertex[i], ref nodes, ref cNodes);
@@ -120,11 +187,12 @@ public class CMeshBuilder {
       // Now we have enough information to try and create the faces
       for (int i = 0; i < mcFace; i++) AddTriangle (i);
 
+      return new CMesh (nodes.AsSpan (0, cNodes).ToImmutableArray (), [.. tries], [.. wires]);
+
       // Assigns a reference to the given face to a given vertex
       // This tells the vertex that the face nFace references this vertex
-      void AssignFace (int nVert, int nFace) {
+      void AssignFace (int nVert, int nFace) =>
          mChains.Add (ref mVertex[nVert].FaceChain, new FaceData (nFace));
-      }
 
       // Records a mesh triangle and the stencil line.
       void AddTriangle (int nFace) {
@@ -133,9 +201,17 @@ public class CMeshBuilder {
          int n1 = GetVID (v1, nFace), n2 = GetVID (v2, nFace), n3 = GetVID (v3, nFace);
 
          tries.Add (n1); tries.Add (n2); tries.Add (n3);
-         if (IsStencil (v1, f.B)) { wires.Add (n1); wires.Add (n2); }
-         if (IsStencil (v2, f.C)) { wires.Add (n2); wires.Add (n3); }
-         if (IsStencil (v3, f.A)) { wires.Add (n3); wires.Add (n1); }
+         if (IsStencil (v1, f.B)) AddLine (n1, n2, v1, v2);
+         if (IsStencil (v2, f.C)) AddLine (n2, n3, v2, v3);
+         if (IsStencil (v3, f.A)) AddLine (n3, n1, v3, v1);
+      }
+
+      // Adds an entry to the stencil array
+      void AddLine (int n1, int n2, in Vertex v1, in Vertex v2) {
+         // Skip duplicate lines.
+         if (lines.Contains ((v1.Pos, v2.Pos)) || lines.Contains ((v2.Pos, v1.Pos))) return;
+         lines.Add ((v1.Pos, v2.Pos));
+         wires.Add (n1); wires.Add (n2);
       }
 
       // Returns the vertex ID of a corner, as it appears in face nFace
@@ -143,9 +219,7 @@ public class CMeshBuilder {
          foreach (var fd in mChains.Enum (v.FaceChain))
             if (fd.NFace == nFace) return fd.NGroup;
          throw new NotImplementedException ();
-      }
-      
-      return new CMesh (nodes.AsSpan (0, cNodes).ToImmutableArray (), [.. tries], [.. wires]);
+      }      
    }
 
    /// <summary>Given a Vertex c, this assigns group codes to each face referencing this vertex</summary>
@@ -166,14 +240,13 @@ public class CMeshBuilder {
       // previous face uses that face's group code. Otherwise, it begins a new group. 
       mChains.GatherRawIndices (c.FaceChain, mVF);
       for (int i = 0; i < mVF.Count; i++) {
-         FaceData fd1 = mChains.Data[mVF[i]];
+         ref FaceData fd1 = ref mChains.Data[mVF[i]];
          Vector3 vec = mFace[fd1.NFace].Vec;
          for (int j = 0; j < i; j++) {
-            FaceData fd2 = mChains.Data[mVF[j]];
+            ref FaceData fd2 = ref mChains.Data[mVF[j]];
             if (mFace[fd2.NFace].Vec.CosineToAlreadyNormalized (vec) > mCos) fd1.NGroup = fd2.NGroup;
          }
          if (fd1.NGroup == -1) fd1.NGroup = max++;
-         mChains.Data[mVF[i]] = fd1;
       }
 
       // At this Point, max is the number of groups at this vertex (this is usually a small number,
@@ -209,15 +282,6 @@ public class CMeshBuilder {
          mChains.Data[n].NGroup = mVIDs[mChains.Data[n].NGroup];
    }
 
-   /// <summary>This is the list of faces at this vertex (a temporary used only by GroupFaces)</summary>
-   List<int> mVF = [];
-   /// <summary>The list of group-wise averages (a temporary used only by GroupFaces)</summary>
-   List<Vector3> mAvgs = [];
-   /// <summary>The list of vertex-IDs for these groups (a temporary used only by GroupFaces)</summary>
-   List<int> mVIDs = [];
-
-   public bool Wireframe = false;
-
    /// <summary>This tells us if the edge from this vertex (c) to the next vertex (next) is 'sharp'</summary>
    bool IsStencil (Vertex c, int next) {
       if (Wireframe) return true;
@@ -233,6 +297,15 @@ public class CMeshBuilder {
       // Note that we will not find 3 faces in any well-formed mesh. 
       return true;
    }
+
+   /// <summary>This is the list of faces at this vertex (a temporary used only by GroupFaces)</summary>
+   List<int> mVF = [];
+   /// <summary>The list of group-wise averages (a temporary used only by GroupFaces)</summary>
+   List<Vector3> mAvgs = [];
+   /// <summary>The list of vertex-IDs for these groups (a temporary used only by GroupFaces)</summary>
+   List<int> mVIDs = [];
+
+   public bool Wireframe = false;
 
    /// <summary>If two faces have a cosine less than this between them, it's a sharp edge</summary>
    const double mCos = 0.5;
@@ -253,11 +326,11 @@ public class CMeshBuilder {
    List<int> mIdx = [];
 
    /// <summary>This holds the data about a Face (the 3 vertices it is made of, the normal, the area)</summary>
-   /// <param name="A">Face corner</param>
-   /// <param name="B">Face corner</param>
-   /// <param name="C">Face corner</param>
+   /// <param name="A">The first Face corner</param>
+   /// <param name="B">The second Face corner</param>
+   /// <param name="C">The third Face corner</param>
    /// <param name="Vec">The face normal</param>
-   /// <param name="Area">The area of this face (used when computing an average normal at a corner)</param>
+   /// <param name="Area">Area of 'this' face (used when computing an average normal at a corner)</param>
    readonly record struct Face (int A, int B, int C, Vector3 Vec, double Area) {
       /// <summary>Returns true if the given vertex belongs to this face</summary>
       readonly public bool Contains (int n) => A == n || B == n || C == n;
@@ -266,14 +339,19 @@ public class CMeshBuilder {
    /// <summary>This structure holds the reference of a face within a vertex</summary>
    /// It is primarily used to assign group numbers to these faces such that all faces
    /// sharing a group number are part of the same 'smoothing group'.
-   /// <param name="NFace">The face index</param>
-   /// <param name="NGroup">Faces with the same group code are in the same smoothing group</param>
-   record struct FaceData (int NFace, int NGroup = -1);
+   record struct FaceData (in int NFace) {
+      /// <summary>The face reference.</summary>
+      public readonly int NFace = NFace;
+      /// <summary>Faces with the same group code are in the same smoothing-group</summary>
+      public int NGroup = -1;
+   }
 
    /// <summary>This maintains the data for a given vertex</summary>
    /// This holds the list of faces this vertex is referenced by, and the actual 
    /// geometric position of the vertex
    record struct Vertex (in Point3 Pos) {
+      /// <summary>Position of 'this' vertex.</summary>
+      public readonly Point3 Pos = Pos;
       /// <summary>This is the chain of faces connected to this corner</summary>
       public int FaceChain;
    }
