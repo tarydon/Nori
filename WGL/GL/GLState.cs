@@ -74,7 +74,7 @@ static class GLState {
 
    // Methods ------------------------------------------------------------------
    /// <summary>Resets everything to a known state (at the start of every frame)</summary>
-   public static void StartFrame ((int X, int Y) size, Color4 bgrdColor) {
+   public static void StartFrame (Vec2S size, Color4 bgrdColor) {
       GL.Viewport (0, 0, size.X, size.Y);
       // GL.Enable (ECap.ScissorTest);
       GL.BlendFunc (EBlendFactor.SrcAlpha, EBlendFactor.OneMinusSrcAlpha);

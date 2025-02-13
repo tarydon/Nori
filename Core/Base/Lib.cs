@@ -2,6 +2,7 @@
 // ╔═╦╦═╦╦╬╣ Lib.cs
 // ║║║║╬║╔╣║ Implements the Lib module class that has a number of global functions
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
+using System.Threading;
 using static System.Math;
 namespace Nori;
 
@@ -109,6 +110,13 @@ public static class Lib {
    public static Stream OpenRead (string name) {
       var stm = sLocators.Select (a => a.Open (name)).FirstOrDefault ();
       return stm ?? throw new Exception ($"Could not open {name}");
+   }
+
+   /// <summary>Calls a function asynchronously on the current thread</summary>
+   static public void Post (Action act) {
+      var sc = SynchronizationContext.Current;
+      if (sc != null) sc.Post (_ => act (), null);
+      else act ();
    }
 
    /// <summary>Print a string with a given console color</summary>
