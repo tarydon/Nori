@@ -7,7 +7,7 @@ namespace Nori;
 
 #region struct Vector2 -----------------------------------------------------------------------------
 /// <summary>Vector in 2D, with 64-bit double components</summary>
-public readonly struct Vector2 {
+public readonly struct Vector2 : IEQuable<Vector2> {
    // Constructors -------------------------------------------------------------
    /// <summary>Construct a Vector2 given the X and Y components</summary>
    public Vector2 (double x, double y) => (X, Y) = (x, y);
@@ -100,7 +100,7 @@ public readonly struct Vector2 {
 
 #region struct Vector3 -----------------------------------------------------------------------------
 /// <summary>Vector in 3 dimensions, with 64-bit double components</summary>
-public readonly struct Vector3 {
+public readonly struct Vector3 : IEQuable<Vector3> {
    // Constructors -------------------------------------------------------------
    /// <summary>Construct a Vector3 given the X, Y, Z components</summary>
    public Vector3 (double x, double y, double z) => (X, Y, Z) = (x, y, z);

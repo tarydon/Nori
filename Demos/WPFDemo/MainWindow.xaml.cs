@@ -13,7 +13,7 @@ public partial class MainWindow : Window {
    public MainWindow () {
       Lib.Init ();
       InitializeComponent ();
-      mContent.Child = Lux.CreatePanel ();
+      Content = Lux.CreatePanel ();
 
       Lux.UIScene = new DemoScene3 ();
       Lux.OnReady = OnReady;
@@ -21,61 +21,14 @@ public partial class MainWindow : Window {
 
    void OnReady () {
       HW.Keys.Where (a => a.IsPress ()).Subscribe (OnKey);
-      HW.MouseClicks.Subscribe (OnMouseClick);
-      HW.MouseWheel.Subscribe (OnMouseWheel);
+      new SceneManipulator ();
    }
-
-   void OnMouseMove (Vec2S mm) {
-      Echo ($"Move {mm}");
-   }
-
-   void OnMouseWheel (MouseWheelInfo mw) {
-      Echo ($"Wheel {mw.Delta} at {mw.Position}");
-   }
-
-   void OnMouseClick (MouseClickInfo mi) {
-      Echo ($"{mi.State} {mi.Button} at {mi.Position}");
-      if (mi.IsPress) mDragging = HW.MouseMoves.Subscribe (OnMouseMove);
-      else mDragging?.Dispose ();
-   }
-   IDisposable? mDragging;
-
-   public void Echo (string s) {
-      mText.Add ($"{++mLineNo} {s}"); 
-      while (mText.Count > 30) mText.RemoveAt (0);
-      mList.ItemsSource = null; mList.ItemsSource = mText;
-   }
-   static int mLineNo;
-   List<string> mText = [];
 
    void OnKey (KeyInfo k) {
       switch (k.Key) {
-         case EKey.Escape: 
-            Close (); 
-            break;
-         // Use Left/Right to rotate 3D scenes about vertical axis
-         case EKey.Left: case EKey.Right: 
-            if (Lux.UIScene is Scene3 s3) {
-               var (x, z) = s3.Viewpoint;
-               z += k.Key == EKey.Left ? -1 : 1;
-               s3.Viewpoint = (x, z);
-            }
-            break;
-         // Use Up/Down to zoom 2D scenes in/out
-         case EKey.Up: case EKey.Down:
-            if (Lux.UIScene is Scene2 s2) {
-               var b = s2.Bound;
-               s2.Bound = b.InflatedF (k.Key == EKey.Up ? 0.99 : (1 / 0.99));
-            }
-            break;
-         // Use '2' key to switch to a 2D scene
-         case EKey.D2: 
-            Lux.UIScene = new DemoScene2 (); 
-            break;
-         // Use '3' key to switch to a 3D scene
-         case EKey.D3: 
-            Lux.UIScene = new DemoScene3 (); 
-            break;
+         case EKey.Escape: Close (); break;
+         case EKey.D2: Lux.UIScene = new DemoScene2 (); break;
+         case EKey.D3: Lux.UIScene = new DemoScene3 (); break;
       }
    }
 }

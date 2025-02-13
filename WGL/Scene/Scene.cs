@@ -11,15 +11,18 @@ namespace Nori;
 /// to draw the content
 public abstract class Scene {
    // Properties ---------------------------------------------------------------
+   /// <summary>The pan-vector (0,0) means centered</summary>
+   /// This is in OpenGL clip-space coordinates 
+   public Vector2 PanVector {
+      get => mPanVector;
+      set { if (Lib.Set (ref mPanVector, value)) XfmChanged (); } 
+   }
+   Vector2 mPanVector = Vector2.Zero;
+
    /// <summary>Used by Lux render to set the viewport for this Scene</summary>
    public Vec2S Viewport {
       get => mViewport;
-      set {
-         // Any time the viewport changes, reset the mXfm so it gets
-         // computed again
-         if (Lib.Set (ref mViewport, value))
-            mXfm = null; 
-      }
+      set { if (Lib.Set (ref mViewport, value)) XfmChanged (); }  
    }
    Vec2S mViewport;
 
@@ -29,6 +32,13 @@ public abstract class Scene {
 
    /// <summary>Background color (clear color) for this scene</summary>
    public abstract Color4 BgrdColor { get; }
+
+   /// <summary>The zoom factor</summary>
+   public double ZoomFactor { 
+      get => mZoomFactor;
+      set { if (Lib.Set (ref mZoomFactor, value)) XfmChanged (); }
+   }
+   double mZoomFactor = 1;
 
    // Methods ------------------------------------------------------------------
    /// <summary>Override this to do the actual drawing</summary>
@@ -56,8 +66,8 @@ public abstract class Scene2 : Scene {
 
    // Implementation -----------------------------------------------------------
    // Computes the transformation to map the bounding rectangle to the viewport
-   protected override Matrix3 ComputeXfm () 
-      => Matrix3.Map (mBound, Viewport);
+   protected override Matrix3 ComputeXfm ()
+      => Matrix3.Map (mBound, Viewport) * Matrix3.Translation (PanVector.X, PanVector.Y, 0);
 }
 #endregion
 
@@ -75,11 +85,11 @@ public abstract class Scene3 : Scene {
    Bound3 mBound = new (0, 0, 0, 10, 10, 10);
 
    /// <summary>The rotation angle viewpoint</summary>
-   public (int XRot, int ZRot) Viewpoint {
+   public (double XRot, double ZRot) Viewpoint {
       get => mViewpoint;
       set { mViewpoint = value; XfmChanged (); }
    }
-   (int, int) mViewpoint = (-60, 135);
+   (double, double) mViewpoint = (-60, 135);
 
    // Implementation -----------------------------------------------------------
    // Compute the transform (based on the model Bound and the Viewpoint of rotation)
@@ -101,7 +111,7 @@ public abstract class Scene3 : Scene {
       var projectionXfm = Matrix3.Orthographic (frustum);
 
       // This, then, is the overall Xfm from model coordinates to OpenGL clip space:
-      return worldXfm * projectionXfm;
+      return worldXfm * projectionXfm * Matrix3.Translation (PanVector.X, PanVector.Y, 0);
    }
 }
 #endregion

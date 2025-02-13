@@ -12,6 +12,9 @@ public static partial class Lux {
    public static Scene? UIScene { get => mUIScene; set { mUIScene = value; Redraw (); } }
    static Scene? mUIScene;
 
+   public static Vec2S Viewport => mViewport; 
+   static Vec2S mViewport;
+
    internal static int Rung;
 
    /// <summary>Creates the Lux rendering panel</summary>
@@ -55,6 +58,7 @@ public static partial class Lux {
 
    /// <summary>This is called at the start of every frame to reset to known</summary>
    public static void StartFrame (Vec2S viewport) {
+      mViewport = viewport;
       VPScale = new Vec2F (2.0 / viewport.X, 2.0 / viewport.Y);
       DrawColor = Color4.White;
       LineWidth = 3f;

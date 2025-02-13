@@ -35,13 +35,13 @@ public abstract class MouseDragger {
 
    // Overrides ----------------------------------------------------------------
    /// <summary>This is called when the drag operation starts (the start point is in Anchor)</summary>
-   public virtual void Start () { }
+   protected virtual void Start () { }
    /// <summary>This is called each time the mouse is moved (the previous move position is in LastPt)</summary>
-   public abstract void Move (Vec2S pt);
+   protected abstract void Move (Vec2S pt);
    /// <summary>This is called when the drag is successfully completed (mouse button released)</summary>
-   public virtual void End () { }
+   protected virtual void End () { }
    /// <summary>This is called when the drag is cancelled (by Esc, or by capture being lost)</summary>
-   public virtual void Cancel () { }
+   protected virtual void Cancel () { }
 
    // Properties ---------------------------------------------------------------
    /// <summary>The anchor point is where the mouse was originally clicked (starting the drag)</summary>
@@ -61,3 +61,44 @@ public abstract class MouseDragger {
    MultiDispose? mObservers;
 }
 #endregion
+
+// class SceneManipulator --------------------------------------------------------------------------
+public class SceneManipulator {
+   public SceneManipulator () {
+      HW.MouseClicks.Where (a => a.IsPress).Subscribe (OnMouseClick);
+   }
+
+   void OnMouseClick (MouseClickInfo mi) {
+      if (Lux.UIScene is Scene sc) {
+         if (mi.Button == EMouseButton.Left && sc is Scene3 sc3) new SceneRotator (sc3, mi.Position);
+         if (mi.Button == EMouseButton.Middle) new ScenePanner (sc, mi.Position);
+      }
+   }
+}
+
+// class SceneRotator ------------------------------------------------------------------------------
+class SceneRotator (Scene3 scene, Vec2S anchor) : MouseDragger (anchor) {
+   protected override void Start () => (mx0, mz0) = mScene.Viewpoint;
+   readonly Scene3 mScene = scene;
+   double mx0, mz0;
+
+   protected override void Move (Vec2S pt) {
+      double x = mx0 + (pt.Y - Anchor.Y), z = mz0 + (pt.X - Anchor.X);
+      mScene.Viewpoint = (x, z);
+   }
+}
+
+// clsas ScenePanner -------------------------------------------------------------------------------
+class ScenePanner (Scene scene, Vec2S anchor) : MouseDragger (anchor) {
+   protected override void Start () => mPan0 = mScene.PanVector;
+   readonly Scene mScene = scene;
+   Vector2 mPan0;
+
+   protected override void Move (Vec2S pt) {
+      // Compute the new pan vector in OpenGL clip coordinates (where we 
+      // assume the window extents goes from (-1,-1) to (+1,+1) with (-1,-1) at
+      // bottom left
+      double dx = 2.0 * (pt.X - Anchor.X) / Lux.Viewport.X, dy = 2.0 * (Anchor.Y - pt.Y) / Lux.Viewport.Y;
+      mScene.PanVector = mPan0 + new Vector2 (dx, dy);
+   }
+}

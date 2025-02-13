@@ -6,8 +6,6 @@
         xmlns:local="clr-namespace:WPFDemo"
         Width="600" Height="600" Top="100" Left="100"
         Title="MainWindow" WindowState="Maximized" Background="Black">
-   <DockPanel>
-      <ListBox Name="mList" DockPanel.Dock="Left" MinWidth="200"></ListBox>
-      <Border Name="mContent"></Border>
-   </DockPanel>
+   <Grid>
+   </Grid>
 </Window>
