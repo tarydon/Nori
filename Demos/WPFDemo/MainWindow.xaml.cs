@@ -13,12 +13,40 @@ public partial class MainWindow : Window {
    public MainWindow () {
       Lib.Init ();
       InitializeComponent ();
-      Content = Lux.CreatePanel ();
+      mContent.Child = Lux.CreatePanel ();
 
-      Lux.UIScene = new DemoScene2 ();
-      Lux.Info.Subscribe (FrameDone);
-      Lux.OnReady = () => HW.Keys.Where (a => a.State == EKeyState.Pressed).Subscribe (OnKey);
+      Lux.UIScene = new DemoScene3 ();
+      Lux.OnReady = OnReady;
    }
+
+   void OnReady () {
+      HW.Keys.Where (a => a.IsPress ()).Subscribe (OnKey);
+      HW.MouseClicks.Subscribe (OnMouseClick);
+      HW.MouseWheel.Subscribe (OnMouseWheel);
+   }
+
+   void OnMouseMove (Vec2S mm) {
+      Echo ($"Move {mm}");
+   }
+
+   void OnMouseWheel (MouseWheelInfo mw) {
+      Echo ($"Wheel {mw.Delta} at {mw.Position}");
+   }
+
+   void OnMouseClick (MouseClickInfo mi) {
+      Echo ($"{mi.State} {mi.Button} at {mi.Position}");
+      if (mi.IsPress) mDragging = HW.MouseMoves.Subscribe (OnMouseMove);
+      else mDragging?.Dispose ();
+   }
+   IDisposable? mDragging;
+
+   public void Echo (string s) {
+      mText.Add ($"{++mLineNo} {s}"); 
+      while (mText.Count > 30) mText.RemoveAt (0);
+      mList.ItemsSource = null; mList.ItemsSource = mText;
+   }
+   static int mLineNo;
+   List<string> mText = [];
 
    void OnKey (KeyInfo k) {
       switch (k.Key) {
@@ -49,10 +77,6 @@ public partial class MainWindow : Window {
             Lux.UIScene = new DemoScene3 (); 
             break;
       }
-   }
-
-   void FrameDone (Lux.Stats s) {
-      Title = $"Frame {s.NFrame}, Pgms:{s.PgmChanges}, VAO:{s.VAOChanges}, Uniforms:{s.ApplyUniforms}, Draws:{s.DrawCalls}, Verts:{s.VertsDrawn}";
    }
 }
 

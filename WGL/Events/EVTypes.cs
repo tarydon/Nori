@@ -38,7 +38,11 @@ public enum EKeyState : byte { Pressed = 1, Released = 2 }
 #region struct KeyInfo -----------------------------------------------------------------------------
 /// <summary>Data about a key being pressed or released</summary>
 public readonly struct KeyInfo {
-   public KeyInfo (EKey key, EKeyModifier modifier, EKeyState state) => (Key, Modifier, State) = (key, modifier, state);
+   public KeyInfo (EKey key, EKeyModifier modifier, EKeyState state) 
+      => (Key, Modifier, State) = (key, modifier, state);
+
+   public bool IsPress () => State == EKeyState.Pressed;
+   public bool IsPress (EKey key) => key == Key && State == EKeyState.Pressed;
 
    /// <summary>Which key on the keyboard was pressed or released</summary>
    public readonly EKey Key;
@@ -46,5 +50,43 @@ public readonly struct KeyInfo {
    public readonly EKeyModifier Modifier;
    /// <summary>Is the key being pressed or released</summary>
    public readonly EKeyState State;
+}
+#endregion
+
+#region enum EMouseButton --------------------------------------------------------------------------
+/// <summary>Used by MouseInfo to specify which mouse button is clicked</summary>
+public enum EMouseButton : byte { Left, Middle, Right };
+#endregion
+
+#region struct MouseClickInfo ----------------------------------------------------------------------
+/// <summary>Data about a mouse button being pressed or released</summary>
+public readonly struct MouseClickInfo {
+   public MouseClickInfo (EMouseButton button, Vec2S position, EKeyModifier modifier, EKeyState state)
+      => (Button, Position, Modifier, State) = (button, position, modifier, state);
+
+   public bool IsPress => State == EKeyState.Pressed;
+   public bool IsRelease => State == EKeyState.Released;
+
+   /// <summary>Which mouse button is pressed or released</summary>
+   public readonly EMouseButton Button;
+   /// <summary>The position where the mouse was clicked</summary>
+   public readonly Vec2S Position;
+   /// <summary>Which modifiers (like Shift, Control, Alt) are being held down</summary>
+   public readonly EKeyModifier Modifier;
+   /// <summary>Is the mouse button being pressed, or being released</summary>
+   public readonly EKeyState State;
+}
+#endregion
+
+#region struct MouseWheelInfo ----------------------------------------------------------------------
+/// <summary>Data about a mouse-wheel being rotated up or down</summary>
+public readonly struct MouseWheelInfo {
+   public MouseWheelInfo (int delta, Vec2S position)
+      => (Delta, Position) = (delta, position);
+
+   /// <summary>How much has the mouse-wheel been rotated (+ or - value)</summary>
+   public readonly int Delta;
+   /// <summary>The position where the mouse wheel was rotated</summary>
+   public readonly Vec2S Position;
 }
 #endregion

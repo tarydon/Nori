@@ -66,11 +66,62 @@ abstract class EventWrapper<T> : IObservable<T> {
 #region class HW -----------------------------------------------------------------------------------
 /// <summary>This class represents the low-level hardware and provides a number of event streams</summary>
 public static class HW {
-   internal static GLPanel? Panel { get; set; }
+   // Properties ---------------------------------------------------------------
+   /// <summary>Is the ALT key currently pressed?</summary>
+   public static bool IsAltDown => (GetKeyState (VK_ALT) & PRESSED) != 0;
+   /// <summary>Is the CONTROL key currently pressed?</summary>
+   public static bool IsCtrlDown => (GetKeyState (VK_CONTROL) & PRESSED) != 0;
+   /// <summary>Is the SHIFT key currently pressed?</summary>
+   public static bool IsShiftDown => (GetKeyState (VK_SHIFT) & PRESSED) != 0;
+
+   // Methods ------------------------------------------------------------------
+   public static bool CaptureMouse (bool capture) {
+      var panel = Panel; if (panel == null) return false;
+      panel.Capture = capture;
+      return panel.Capture;
+   }
+
+   // Observable points --------------------------------------------------------
+   public static IObservable<int> MouseLost => mLost ??= new ();
+   static CaptureLostWrap? mLost;
 
    /// <summary>Subscribe to this to watch key-press and key-release events</summary>
    public static IObservable<KeyInfo> Keys => mKeys ??= new ();
    static KeysWrap? mKeys;
+
+   /// <summary>Subscribe to this to watch for mouse button click and release events</summary>
+   public static IObservable<MouseClickInfo> MouseClicks => mMouseClicks ??= new ();
+   static MouseClicksWrap? mMouseClicks;
+
+   /// <summary>Subscribe to this to watch for all mouse move events</summary>
+   public static IObservable<Vec2S> MouseMoves => mMouseMoves ??= new ();
+   static MouseMovesWrap? mMouseMoves;
+
+   /// <summary>Subscribe to this to watch for mouse-wheel events</summary>
+   public static IObservable<MouseWheelInfo> MouseWheel => mMouseWheel ??= new ();
+   static MouseWheelWrap? mMouseWheel;
+
+   // Implementation -----------------------------------------------------------
+   const int PRESSED = 0x8000;
+   const int VK_CONTROL = 0x11, VK_SHIFT = 0x10, VK_ALT = 0x12;
+   [DllImport ("user32.dll")]
+   static extern ushort GetKeyState (int key);
+
+   internal static GLPanel? Panel { get; set; }
+}
+#endregion
+
+#region class CaptureLostWrap ----------------------------------------------------------------------
+/// <summary>EventWrapper implementation to handle the mouse-capture-lost event</summary>
+class CaptureLostWrap : EventWrapper<int> {
+   protected override void Connect (bool connect) {
+      var panel = HW.Panel; if (panel == null) return;
+      if (connect) panel.MouseCaptureChanged += OnCaptureLost;
+      else panel.MouseCaptureChanged -= OnCaptureLost;
+   }
+
+   void OnCaptureLost (object? sender, EventArgs e)
+      => Push (0);
 }
 #endregion
 
@@ -83,7 +134,7 @@ class KeysWrap : EventWrapper<KeyInfo> {
    protected override void Connect (bool connect) {
       var panel = HW.Panel; if (panel == null) return;
       if (connect) { panel.KeyDown += OnKeyDown; panel.KeyUp += OnKeyUp; }
-      else { panel.KeyDown -= OnKeyDown; panel.KeyUp += OnKeyUp; }
+      else { panel.KeyDown -= OnKeyDown; panel.KeyUp -= OnKeyUp; }
    }
    #endregion
 
@@ -105,7 +156,7 @@ class KeysWrap : EventWrapper<KeyInfo> {
    // Internal dictionary used to map Windows.Keys enumeration values to our EKey values.
    // If any entries are missing in this dictionary, then the numerical values of the Windows.Keys
    // and Nori.EKey enumerations for those are identical (for example, all the alphabet keys). 
-   static Dictionary<Keys, EKey> mMap = new () {
+   static readonly Dictionary<Keys, EKey> mMap = new () {
       [Keys.Escape] = EKey.Escape, [Keys.F1] = EKey.F1, [Keys.F2] = EKey.F2, [Keys.F3] = EKey.F3,
       [Keys.F4] = EKey.F4, [Keys.F5] = EKey.F5, [Keys.F6] = EKey.F6, [Keys.F7] = EKey.F7, 
       [Keys.F8] = EKey.F8, [Keys.F9] = EKey.F9, [Keys.F10] = EKey.F10, [Keys.F11] = EKey.F11,
@@ -125,5 +176,62 @@ class KeysWrap : EventWrapper<KeyInfo> {
       [Keys.NumPad9] = EKey.NPad9, [Keys.Space] = EKey.Space,
    };
    #endregion
+}
+#endregion
+
+#region class MouseClicksWrap ----------------------------------------------------------------------
+/// <summary>Handles mouse click events (used by HW.MouseClicks)</summary>
+class MouseClicksWrap : EventWrapper<MouseClickInfo> {
+   protected override void Connect (bool connect) {
+      var panel = HW.Panel; if (panel == null) return;
+      if (connect) { panel.MouseDown += OnMouseDown; panel.MouseUp += OnMouseUp; }
+      else { panel.MouseDown -= OnMouseDown; panel.MouseUp -= OnMouseUp; }
+   }
+
+   void OnMouseDown (object? sender, MouseEventArgs e) => Process (e, EKeyState.Pressed);
+   void OnMouseUp (object? sender, MouseEventArgs e) => Process (e, EKeyState.Released);
+
+   void Process (MouseEventArgs e, EKeyState state) {
+      if (!mMap.TryGetValue (e.Button, out EMouseButton btn)) return;
+      var mods = EKeyModifier.None;
+      if (HW.IsCtrlDown) mods |= EKeyModifier.Control;
+      if (HW.IsShiftDown) mods |= EKeyModifier.Shift;
+      if (HW.IsAltDown) mods |= EKeyModifier.Alt;
+      Vec2S position = new (e.X, e.Y);
+      Push (new (btn, position, mods, state));
+   }
+
+   static readonly Dictionary<MouseButtons, EMouseButton> mMap = new () {
+      [MouseButtons.Left] = EMouseButton.Left, [MouseButtons.Middle] = EMouseButton.Middle, 
+      [MouseButtons.Right ] = EMouseButton.Right
+   };
+}
+#endregion
+
+#region class MouseMovesWrap -----------------------------------------------------------------------
+/// <summary>Handles mouse-move events (used by HW.MouseMoves)</summary>
+class MouseMovesWrap : EventWrapper<Vec2S> {
+   protected override void Connect (bool connect) {
+      var panel = HW.Panel; if (panel == null) return;
+      if (connect) panel.MouseMove += OnMouseMove;
+      else panel.MouseMove -= OnMouseMove;
+   }
+
+   void OnMouseMove (object? sender, MouseEventArgs e)
+      => Push (new (e.X, e.Y));
+}
+#endregion
+
+#region class MouseWheelWrap -----------------------------------------------------------------------
+/// <summary>Handles mouse-wheel events (used by HW.MouseWheel)</summary>
+class MouseWheelWrap : EventWrapper<MouseWheelInfo> {
+   protected override void Connect (bool connect) {
+      var panel = HW.Panel; if (panel == null) return;
+      if (connect) panel.MouseWheel += OnMouseWheel;
+      else panel.MouseWheel -= OnMouseWheel;
+   }
+
+   void OnMouseWheel (object? sender, MouseEventArgs e)
+      => Push (new (e.Delta, new (e.X, e.Y)));
 }
 #endregion
