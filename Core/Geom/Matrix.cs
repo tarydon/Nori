@@ -93,7 +93,7 @@ public class Matrix3 {
    /// This first adjusts the bound so that it matches the aspect ratio of the given
    /// viewport. Then, it constructs a matrix to map this bound to the OpenGL clip space,
    /// which extends from -1 to +1 in every direction. 
-   public static Matrix3 Map (Bound2 window, (int X, int Y) viewport) {
+   public static Matrix3 Map (Bound2 window, Vec2S viewport) {
       Point2 mid = window.Midpoint;
       double dx = Max (window.Width / 2.0, 1), dy = Max (window.Height / 2.0, 1);
       double aspect = Max (viewport.X, 1.0) / Max (viewport.Y, 1.0);
@@ -187,6 +187,8 @@ public class Matrix3 {
    public bool HasMirroring => (Flags & EFlag.Mirror) != 0;
 
    // Methods ------------------------------------------------------------------
+   public Matrix3 ExtractRotation () => new (M11, M12, M13, M21, M22, M23, M31, M32, M33, 0, 0, 0);
+
    /// <summary>Returns the inverse of this matrix</summary>
    public Matrix3 GetInverse () {
       // Trivial cases first

@@ -152,7 +152,7 @@ class Matrix3Tests {
       var mr2 = Matrix3.Rotation (q2);
       (p1 * mr2).Is ("(3,-1,-2)");
 
-      var m5 = Matrix3.Map (new Bound2 (5, 5, 85, 45), (2000, 1000));
+      var m5 = Matrix3.Map (new Bound2 (5, 5, 85, 45), new (2000, 1000));
       m5.Is ("[0.025,0,0, 0,0.05,0, 0,0,1, -1.125,-1.25,0]");
    }
 
@@ -243,7 +243,9 @@ class GPUTypesTests {
       m1.Is ("[1,0,0,0, 0,1,0,0, 0,0,1,0, 1,2,3,1]");
       Mat4F.Identity.Is ("[1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1]");
       Mat4F.Zero.Is ("[0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,1]");
-      m0.ExtractRotation ().Is ("[11,12,13,0, 21,22,23,0, 31,32,33,0, 0,0,0,1]");
       m0.EQ (ref m0).IsTrue (); m0.EQ (ref m1).IsFalse ();
+
+      Matrix3 m2 = new (11, 12, 13, 21, 22, 23, 31, 32, 33, 1, 2, 3);
+      m2.ExtractRotation ().Is ("[11,12,13, 21,22,23, 31,32,33, 0,0,0]");
    }
 }

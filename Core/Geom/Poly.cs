@@ -15,19 +15,15 @@ public class Poly {
    /// <summary>Make a full-circle Poly</summary>
    public static Poly Circle (Point2 pt, double radius) {
       Point2 a = pt + new Vector2 (radius, 0);
-      var pts = ImmutableArray.Create (a);
-      var extra = ImmutableArray.Create (new Extra (pt, EFlags.CCW | EFlags.Circle));
-      return new Poly (pts, extra, EFlags.Closed | EFlags.HasArcs | EFlags.Circle);
+      return new Poly ([a], [new Extra (pt, EFlags.CCW | EFlags.Circle)], EFlags.Closed | EFlags.HasArcs | EFlags.Circle);
    }
    /// <summary>Make a full-circle Poly</summary>
    public static Poly Circle (double x, double y, double radius)
       => Circle (new (x, y), radius);
 
    /// <summary>Make a single-line Poly</summary>
-   public static Poly Line (Point2 pt, Point2 pt2) {
-      var pts = ImmutableArray.CreateRange (new[] { pt, pt2 });
-      return new Poly (pts, [], 0);
-   }
+   public static Poly Line (Point2 pt, Point2 pt2) 
+      => new ([pt, pt2], [], 0);
    /// <summary>Make a single-line Poly</summary>
    public static Poly Line (double x1, double y1, double x2, double y2)
       => Line (new (x1, y1), new (x2, y2));

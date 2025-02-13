@@ -17,6 +17,13 @@ public readonly record struct Vec2F (float X, float Y) : IEQuable<Vec2F> {
    public override string ToString () => $"<{X.R5 ()},{Y.R5 ()}>";
 }
 
+/// <summary>2D vector of short-ints (used to represent viewport sizes etc)</summary>
+public readonly record struct Vec2S (short X, short Y) : IEQuable<Vec2S> {
+   public Vec2S (int x, int y) : this ((short)x, (short)y) { }
+   public bool EQ (Vec2S b) => X == b.X && Y == b.Y;
+   public override string ToString () => $"<{X},{Y}>";
+}
+
 /// <summary>3D vector of floats (used for passing data to OpenGL)</summary>
 [StructLayout (LayoutKind.Sequential, Pack = 4, Size = 12)]
 public readonly record struct Vec3F (float X, float Y, float Z) : IEQuable<Vec3F> {
@@ -88,9 +95,6 @@ public readonly struct Mat4F {
               (float)m.M21, (float)m.M22, (float)m.M23,
               (float)m.M31, (float)m.M32, (float)m.M33,
               (float)m.DX, (float)m.DY, (float)m.DZ);
-
-   // Methods ------------------------------------------------------------------
-   public Mat4F ExtractRotation () => new (M11, M12, M13, M21, M22, M23, M31, M32, M33, 0, 0, 0);
 
    /// <summary>Returns true if two Mat4f are exactly the same</summary>
    public bool EQ (ref Mat4F b)

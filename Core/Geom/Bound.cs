@@ -68,7 +68,7 @@ public readonly struct Bound1 : IEQuable<Bound1> {
 
 #region struct Bound2 ------------------------------------------------------------------------------
 /// <summary>Represents a bound in 2 dimensions (a bounding rectangle)</summary>
-public readonly struct Bound2 {
+public readonly struct Bound2 : IEQuable<Bound2> {
    // Constructors -------------------------------------------------------------
    public Bound2 () => (X, Y) = (new (), new ());
    public Bound2 (double x, double y) => (X, Y) = (new (x), new (y));
@@ -104,7 +104,12 @@ public readonly struct Bound2 {
    }
 
    // Methods ------------------------------------------------------------------
+   /// <summary>Check if a Bound2 contains a given 2D point</summary>
    public readonly bool Contains (Point2 pt) => X.Contains (pt.X) && Y.Contains (pt.Y);
+
+   /// <summary>Compares two Bound2 for equality</summary>
+   public bool EQ (Bound2 other) => X.EQ (other.X) && Y.EQ (other.Y);
+
    /// <summary>Returns a Bound2 inflated by a given factor about the midpoint</summary>
    public readonly Bound2 InflatedF (double factor) => new (X.InflatedF (factor), Y.InflatedF (factor));
    /// <summary>Returns a Bound2 padded by a given linear margin on all sides</summary>
@@ -141,7 +146,7 @@ public readonly struct Bound2 {
 
 #region struct Bound3 ------------------------------------------------------------------------------
 /// <summary>Represents a bound in 3 dimensions (a bounding cuboid)</summary>
-public readonly struct Bound3 {
+public readonly struct Bound3 : IEQuable<Bound3> {
    // Constructors -------------------------------------------------------------
    public Bound3 () => (X, Y, Z) = (new (), new (), new ());
    public Bound3 (double xmin, double ymin, double zmin, double xmax, double ymax, double zmax)
@@ -173,7 +178,12 @@ public readonly struct Bound3 {
    }
 
    // Methods ------------------------------------------------------------------
+   /// <summary>Check if a Bound3 contains a given 3D point</summary>
    public readonly bool Contains (Point3 pt) => X.Contains (pt.X) && Y.Contains (pt.Y) && Z.Contains (pt.Z);
+
+   /// <summary>Compares two Bound3 for equality</summary>
+   public bool EQ (Bound3 other) => X.EQ (other.X) && Y.EQ (other.Y) && Z.EQ (other.Z);
+
    /// <summary>Returns a Bound3 inflated by a given factor about the midpoint</summary>
    public readonly Bound3 InflatedF (double factor) => new (X.InflatedF (factor), Y.InflatedF (factor), Z.InflatedF (factor));
    /// <summary>Returns a Bound3 padded by a given linear margin on all sides</summary>
