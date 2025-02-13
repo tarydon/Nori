@@ -14,10 +14,8 @@ public class Poly {
 
    /// <summary>Make a single-arc Poly</summary>
    public static Poly Arc (Point2 center, double radius, double startAngle, double endAngle, bool ccw) {
-      Point2 a = center.Polar (radius, startAngle.D2R ()), b = center.Polar (radius, endAngle.D2R ());
-      var pts = ImmutableArray.CreateRange ([a, b]);
-      var extra = ImmutableArray.Create (new Extra (center, ccw ? EFlags.CCW : EFlags.CW));
-      return new Poly (pts, extra, EFlags.HasArcs);
+      Point2 a = center.Polar (radius, startAngle), b = center.Polar (radius, endAngle);
+      return new Poly ([a, b], [new Extra (center, ccw ? EFlags.CCW : EFlags.CW)], EFlags.HasArcs);
    }
 
    /// <summary>Make a full-circle Poly</summary>
