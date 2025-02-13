@@ -3,6 +3,7 @@
 // ║║║║╬║╔╣║ Implements Lux.Panel (WPF UserControl) and Lux.Surface (Windows Forms Control)
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 using System.Windows.Forms.Integration;
+using System.Windows.Threading;
 using static System.Windows.Forms.ControlStyles;
 namespace Nori;
 
@@ -15,7 +16,7 @@ class Panel : System.Windows.Controls.UserControl {
    // could be rendering a size that is different from the panel size. What we do here depends
    // on the render target, but in all cases, we have to make our display surface the 'current'
    // GL context
-   public void BeginRender ((int X, int Y) viewport, ETarget _)
+   public void BeginRender (Vec2S viewport, ETarget _)
       => mSurface?.BeginRender (viewport);
 
    // Called when the scene is finished rendering, and we need to 'show' it.
@@ -34,10 +35,10 @@ class Panel : System.Windows.Controls.UserControl {
       => mSurface?.Invalidate ();
 
    /// <summary>Size of the rendering panel, in pixels (needed to set up GL correctly)</summary>
-   public (int X, int Y) Size {
+   public Vec2S Size {
       get {
-         if (mSurface == null) return (64, 64);
-         return (mSurface.Width, mSurface.Height);
+         if (mSurface == null) return new (64, 64);
+         return new (mSurface.Width, mSurface.Height);
       }
    }
    Surface? mSurface;
@@ -48,15 +49,18 @@ class Panel : System.Windows.Controls.UserControl {
 
    // Called when the panel is plugged into the display stack, we create
    // the PixSurface here at this late stage only since it needs a HDC to work
-   void OnLoaded (object _, RoutedEventArgs __)
-      => Content = new WindowsFormsHost { Child = mSurface = new (), Focusable = false };
+   void OnLoaded (object _, RoutedEventArgs __) {
+      Content = new WindowsFormsHost { Child = mSurface = new (), Focusable = false };
+      var timer = new DispatcherTimer { Interval = TimeSpan.FromSeconds (0.1), IsEnabled = true };
+      timer.Tick += (s, e) => { mSurface.Focus (); timer.IsEnabled = false; };
+   }
 
    // When this panel is unloaded, we dispose the surface and the WindowsFormsHost
    // container that contains it
    void OnUnloaded (object _, RoutedEventArgs __) {
       mSurface?.Dispose (); mSurface = null;
       (Content as WindowsFormsHost)?.Dispose (); Content = null;
-      mIt = null;
+      mIt = null; 
    }
 }
 #endregion
@@ -72,7 +76,7 @@ class Surface : System.Windows.Forms.UserControl {
       foreach (var style in new[] { OptimizedDoubleBuffer, Selectable }) SetStyle (style, false);
    }
 
-   public void BeginRender ((int X, int Y) viewport) {
+   public void BeginRender (Vec2S viewport) {
       GL.MakeCurrent (mDC, mGLRC);
       GL.Viewport (0, 0, viewport.X, viewport.Y);
    }

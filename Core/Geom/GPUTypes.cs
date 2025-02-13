@@ -17,6 +17,13 @@ public readonly record struct Vec2F (float X, float Y) : IEQuable<Vec2F> {
    public override string ToString () => $"<{X.R5 ()},{Y.R5 ()}>";
 }
 
+/// <summary>2D vector of short-ints (used to represent viewport sizes etc)</summary>
+public readonly record struct Vec2S (short X, short Y) : IEQuable<Vec2S> {
+   public Vec2S (int x, int y) : this ((short)x, (short)y) { }
+   public bool EQ (Vec2S b) => X == b.X && Y == b.Y;
+   public override string ToString () => $"<{X},{Y}>";
+}
+
 /// <summary>3D vector of floats (used for passing data to OpenGL)</summary>
 [StructLayout (LayoutKind.Sequential, Pack = 4, Size = 12)]
 public readonly record struct Vec3F (float X, float Y, float Z) : IEQuable<Vec3F> {

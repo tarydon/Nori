@@ -152,7 +152,7 @@ class Matrix3Tests {
       var mr2 = Matrix3.Rotation (q2);
       (p1 * mr2).Is ("(3,-1,-2)");
 
-      var m5 = Matrix3.Map (new Bound2 (5, 5, 85, 45), (2000, 1000));
+      var m5 = Matrix3.Map (new Bound2 (5, 5, 85, 45), new (2000, 1000));
       m5.Is ("[0.025,0,0, 0,0.05,0, 0,0,1, -1.125,-1.25,0]");
    }
 

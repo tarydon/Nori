@@ -8,27 +8,39 @@ namespace Nori;
 #region class Lux ----------------------------------------------------------------------------------
 /// <summary>The public interface to the Lux renderer</summary>
 public static partial class Lux {
-   public static int Rung;
+   /// <summary>The current scene that is rendered in the visible viewport</summary>
+   public static Scene? UIScene { get => mUIScene; set { mUIScene = value; Redraw (); } }
+   static Scene? mUIScene;
+
+   internal static int Rung;
 
    /// <summary>Creates the Lux rendering panel</summary>
    public static UIElement CreatePanel ()
       => Panel.It;
 
-   public static Action<(int, int)>? DrawScene;
+   public static Action? OnReady;
+   static bool mReadyFired;
 
    /// <summary>Stub for the Render method that is called when each frame has to be painted</summary>
    public static void Render () {
       // Don't look at all this too closely - it is temporary code that will
       // later go away and be replaced by something more clean
+      if (!mReadyFired) { mReadyFired = true; OnReady?.Invoke (); }
+
       var panel = Panel.It;
       panel.BeginRender (panel.Size, ETarget.Screen);
-      Lux.StartFrame (panel.Size);
-      GLState.StartFrame (panel.Size, Color4.Gray (96));
+      StartFrame (panel.Size);
+      GLState.StartFrame (panel.Size, mUIScene?.BgrdColor ?? Color4.Gray (96));
       RBatch.StartFrame ();
       Shader.StartFrame ();
       mFrame++;
 
-      DrawScene?.Invoke (panel.Size);
+      if (mUIScene != null) {
+         mUIScene.Viewport = panel.Size;
+         Xfm = (Mat4F)mUIScene.Xfm;
+         NormalXfm = Xfm.ExtractRotation ();
+         mUIScene.Draw ();
+      }
 
       RBatch.IssueAll ();
       RBatch.ReleaseAll ();
@@ -42,7 +54,7 @@ public static partial class Lux {
       => Panel.It.Redraw ();
 
    /// <summary>This is called at the start of every frame to reset to known</summary>
-   public static void StartFrame ((int X, int Y) viewport) {
+   public static void StartFrame (Vec2S viewport) {
       VPScale = new Vec2F (2.0 / viewport.X, 2.0 / viewport.Y);
       DrawColor = Color4.White;
       LineWidth = 3f;
@@ -50,7 +62,7 @@ public static partial class Lux {
       Rung++;
    }
 
-   public class Stats {
+    public class Stats {
       /// <summary>The current frame number</summary>
       public int NFrame => mFrame;
       /// <summary>How many times is a program change happening, per frame</summary>

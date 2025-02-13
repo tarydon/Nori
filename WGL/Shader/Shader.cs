@@ -54,9 +54,7 @@ abstract class Shader {
    /// scene has been thus drawn, we move all this data into RBuffer objects using this method.
    public abstract int CopyVertices (RBuffer buffer, int start, int count);
 
-   /// <summary>
-   /// Copy indexed vertex data to the specified RBuffer
-   /// </summary>
+   /// <summary>Copy indexed vertex data to the specified RBuffer</summary>
    /// This is similar to the routine above, but the drawing in this case is done using indices.
    /// That is, if we want to draw N vertices, we don't actually submit N vertices, but submit only
    /// M (where M < N) and then use a separate _index_ array (that contains only integers). This index

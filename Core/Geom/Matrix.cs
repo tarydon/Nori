@@ -93,7 +93,7 @@ public class Matrix3 {
    /// This first adjusts the bound so that it matches the aspect ratio of the given
    /// viewport. Then, it constructs a matrix to map this bound to the OpenGL clip space,
    /// which extends from -1 to +1 in every direction. 
-   public static Matrix3 Map (Bound2 window, (int X, int Y) viewport) {
+   public static Matrix3 Map (Bound2 window, Vec2S viewport) {
       Point2 mid = window.Midpoint;
       double dx = Max (window.Width / 2.0, 1), dy = Max (window.Height / 2.0, 1);
       double aspect = Max (viewport.X, 1.0) / Max (viewport.Y, 1.0);
