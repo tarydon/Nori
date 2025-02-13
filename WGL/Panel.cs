@@ -51,6 +51,7 @@ class Panel : System.Windows.Controls.UserControl {
    // the PixSurface here at this late stage only since it needs a HDC to work
    void OnLoaded (object _, RoutedEventArgs __) {
       Content = new WindowsFormsHost { Child = mSurface = new (), Focusable = false };
+      HW.Panel = mSurface;
       var timer = new DispatcherTimer { Interval = TimeSpan.FromSeconds (0.1), IsEnabled = true };
       timer.Tick += (s, e) => { mSurface.Focus (); timer.IsEnabled = false; };
    }
@@ -60,7 +61,7 @@ class Panel : System.Windows.Controls.UserControl {
    void OnUnloaded (object _, RoutedEventArgs __) {
       mSurface?.Dispose (); mSurface = null;
       (Content as WindowsFormsHost)?.Dispose (); Content = null;
-      mIt = null; 
+      mIt = null; HW.Panel = null;
    }
 }
 #endregion
