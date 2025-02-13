@@ -62,43 +62,75 @@ public abstract class MouseDragger {
 }
 #endregion
 
-// class SceneManipulator --------------------------------------------------------------------------
+#region class SceneManipulator ---------------------------------------------------------------------
+/// <summary>Provides standard mouse handling for Lux Scenes (both 2D and 3D)</summary>
+/// The following interaction is provided:
+/// - When the left mouse button is clicked and dragged, the scene is rotated (only for 3D)
+/// - When the middle mouse button is clicked and dragged, the scene is panned
+/// - When the mouse-wheel is rolled up / down, the scene is zoomed in / out about that point
+/// - When Ctrl+E is pressed on the keyboard, a 'Zoom-Extents' operation is done
 public class SceneManipulator {
+   // Constructor --------------------------------------------------------------
    public SceneManipulator () {
       HW.MouseClicks.Where (a => a.IsPress).Subscribe (OnMouseClick);
+      HW.MouseWheel.Subscribe (OnMouseWheel);
+      HW.Keys.Where (a => a.IsPress ()).Subscribe (OnKey);
    }
 
+   // Implementation -----------------------------------------------------------
+   // When Ctrl+E is pressed, do a zoom-extents
+   void OnKey (KeyInfo ki) {
+      if (ki.Key == EKey.E && ki.Modifier == EKeyModifier.Control)
+         Lux.UIScene.ZoomExtents ();
+   }
+
+   // Start rotating when the left mouse button is clicked (if the current scene is 3D)
+   // Start panning when the middle mouse button is clicked 
    void OnMouseClick (MouseClickInfo mi) {
-      if (Lux.UIScene is Scene sc) {
-         if (mi.Button == EMouseButton.Left && sc is Scene3 sc3) new SceneRotator (sc3, mi.Position);
-         if (mi.Button == EMouseButton.Middle) new ScenePanner (sc, mi.Position);
-      }
+      var sc = Lux.UIScene;
+      if (mi.Button == EMouseButton.Left && sc is Scene3 sc3) new SceneRotator (sc3, mi.Position);
+      if (mi.Button == EMouseButton.Middle) new ScenePanner (sc, mi.Position);
    }
-}
 
-// class SceneRotator ------------------------------------------------------------------------------
+   // Zoom in/out when the mouse wheel is rotated
+   void OnMouseWheel (MouseWheelInfo mw) 
+      => Lux.UIScene.Zoom (mw.Position, mw.Delta > 0 ? 0.95 : (1 / 0.95));
+}
+#endregion
+
+#region class SceneRotator -------------------------------------------------------------------------
+/// <summary>MouseDragger widget used to rotate a 3D scene</summary>
 class SceneRotator (Scene3 scene, Vec2S anchor) : MouseDragger (anchor) {
+   // Overrides ----------------------------------------------------------------
+   // At start, capture the initial viewpoint of the Scene
    protected override void Start () => (mx0, mz0) = mScene.Viewpoint;
    readonly Scene3 mScene = scene;
    double mx0, mz0;
 
+   // Subsequently, adjust the viewpoint based on the vector from AnchorPt to
+   // the current mouse Pt
    protected override void Move (Vec2S pt) {
       double x = mx0 + (pt.Y - Anchor.Y), z = mz0 + (pt.X - Anchor.X);
       mScene.Viewpoint = (x, z);
    }
 }
+#endregion
 
-// clsas ScenePanner -------------------------------------------------------------------------------
+#region class ScenePanner --------------------------------------------------------------------------
+/// <summary>MouseDragger widget used to pan the scene</summary>
 class ScenePanner (Scene scene, Vec2S anchor) : MouseDragger (anchor) {
+   // Overrides ----------------------------------------------------------------
+   // At start, capture the initial pan-vector of the scene
    protected override void Start () => mPan0 = mScene.PanVector;
    readonly Scene mScene = scene;
    Vector2 mPan0;
 
+   // Subsequently, on Move, adjust the pan vector in OpenGL clip space coordinates
+   // where we assume the window extents goes from (-1,-1) at the bottom left to
+   // (+1,+1) at top right
    protected override void Move (Vec2S pt) {
-      // Compute the new pan vector in OpenGL clip coordinates (where we 
-      // assume the window extents goes from (-1,-1) to (+1,+1) with (-1,-1) at
-      // bottom left
       double dx = 2.0 * (pt.X - Anchor.X) / Lux.Viewport.X, dy = 2.0 * (Anchor.Y - pt.Y) / Lux.Viewport.Y;
       mScene.PanVector = mPan0 + new Vector2 (dx, dy);
    }
 }
+#endregion

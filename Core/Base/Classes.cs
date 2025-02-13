@@ -6,9 +6,8 @@ namespace Nori;
 
 #region class MultiDispose -------------------------------------------------------------------------
 /// <summary>Helper to hold on to, and dispose, multiple IDisposables</summary>
-public class MultiDispose : IDisposable {
-   public MultiDispose (params IDisposable?[] disps) => mDisposables = disps;
+public class MultiDispose (params IDisposable?[] disps) : IDisposable {
    public void Dispose () => mDisposables.ForEach (a => a?.Dispose ());
-   IDisposable?[] mDisposables;
+   IDisposable?[] mDisposables = disps;
 }
 #endregion

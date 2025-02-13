@@ -96,9 +96,6 @@ public readonly struct Mat4F {
               (float)m.M31, (float)m.M32, (float)m.M33,
               (float)m.DX, (float)m.DY, (float)m.DZ);
 
-   // Methods ------------------------------------------------------------------
-   public Mat4F ExtractRotation () => new (M11, M12, M13, M21, M22, M23, M31, M32, M33, 0, 0, 0);
-
    /// <summary>Returns true if two Mat4f are exactly the same</summary>
    public bool EQ (ref Mat4F b)
       => M11 == b.M11 && M12 == b.M12 && M13 == b.M13 && M14 == b.M14 && M21 == b.M21 && M22 == b.M22 && M23 == b.M23 && M24 == b.M24

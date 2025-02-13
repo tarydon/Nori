@@ -187,6 +187,8 @@ public class Matrix3 {
    public bool HasMirroring => (Flags & EFlag.Mirror) != 0;
 
    // Methods ------------------------------------------------------------------
+   public Matrix3 ExtractRotation () => new (M11, M12, M13, M21, M22, M23, M31, M32, M33, 0, 0, 0);
+
    /// <summary>Returns the inverse of this matrix</summary>
    public Matrix3 GetInverse () {
       // Trivial cases first

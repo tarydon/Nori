@@ -9,8 +9,8 @@ namespace Nori;
 /// <summary>The public interface to the Lux renderer</summary>
 public static partial class Lux {
    /// <summary>The current scene that is rendered in the visible viewport</summary>
-   public static Scene? UIScene { get => mUIScene; set { mUIScene = value; Redraw (); } }
-   static Scene? mUIScene;
+   public static Scene UIScene { get => mUIScene; set { mUIScene = value; Redraw (); } }
+   static Scene mUIScene = new BlankScene ();
 
    public static Vec2S Viewport => mViewport; 
    static Vec2S mViewport;
@@ -41,7 +41,7 @@ public static partial class Lux {
       if (mUIScene != null) {
          mUIScene.Viewport = panel.Size;
          Xfm = (Mat4F)mUIScene.Xfm;
-         NormalXfm = Xfm.ExtractRotation ();
+         NormalXfm = (Mat4F)mUIScene.NormalXfm;
          mUIScene.Draw ();
       }
 
