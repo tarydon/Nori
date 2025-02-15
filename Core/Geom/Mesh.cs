@@ -160,7 +160,7 @@ public class CMeshBuilder {
          if (!verts.TryGetValue (pt, out int id)) {
             id = verts.Count;
             verts.Add (pt, id);
-            Arr.Add (ref mVertex, ref mcVertex, new (pt));
+            Add (ref mVertex, ref mcVertex, new (pt));
          }
          mIdx.Add (id);
       }
@@ -174,7 +174,7 @@ public class CMeshBuilder {
          var norm = (b - a) * (c - a);
          Face f = new (A, B, C, norm / norm.Length, norm.Length);
          AssignFace (f.A, mcFace); AssignFace (f.B, mcFace); AssignFace (f.C, mcFace);
-         Arr.Add (ref mFace, ref mcFace, f);
+         Add (ref mFace, ref mcFace, f);
       }
 
       CMesh.Node[] nodes = new CMesh.Node[mcVertex]; int cNodes = 0;
@@ -271,7 +271,7 @@ public class CMeshBuilder {
          var norm = mAvgs[i].Normalized ();
          int vid = cNodes;
          CMesh.Node node = new ((Vec3F)c.Pos, new ((Half)norm.X, (Half)norm.Y, (Half)norm.Z));
-         Arr.Add (ref nodes, ref cNodes, node);
+         Add (ref nodes, ref cNodes, node);
          mVIDs[i] = vid;
       }
       // Now update the facedata with the VIDs. After this, the NGroup values in the FaceData contain
@@ -298,14 +298,14 @@ public class CMeshBuilder {
       return true;
    }
 
+   public bool Wireframe = false;
+
    /// <summary>This is the list of faces at this vertex (a temporary used only by GroupFaces)</summary>
    List<int> mVF = [];
    /// <summary>The list of group-wise averages (a temporary used only by GroupFaces)</summary>
    List<Vector3> mAvgs = [];
    /// <summary>The list of vertex-IDs for these groups (a temporary used only by GroupFaces)</summary>
    List<int> mVIDs = [];
-
-   public bool Wireframe = false;
 
    /// <summary>If two faces have a cosine less than this between them, it's a sharp edge</summary>
    const double mCos = 0.5;
@@ -325,6 +325,13 @@ public class CMeshBuilder {
    /// <summary>This is the temporary array into which indices are gathered (they are used only when Build() is called)</summary>
    List<int> mIdx = [];
 
+   /// <summary>Add an element into an array, growing the array as needed</summary>
+   static void Add<T> ([NotNull] ref T[]? data, ref int cUsed, T value) {
+      int n = data?.Length ?? 0;
+      if (cUsed >= n || data == null) { n = Math.Max (8, n * 2); Array.Resize (ref data, n); }
+      data[cUsed++] = value;
+   }
+
    /// <summary>This holds the data about a Face (the 3 vertices it is made of, the normal, the area)</summary>
    /// <param name="A">The first Face corner</param>
    /// <param name="B">The second Face corner</param>
@@ -339,9 +346,9 @@ public class CMeshBuilder {
    /// <summary>This structure holds the reference of a face within a vertex</summary>
    /// It is primarily used to assign group numbers to these faces such that all faces
    /// sharing a group number are part of the same 'smoothing group'.
-   record struct FaceData (in int NFace) {
+   struct FaceData (int nFace) {
       /// <summary>The face reference.</summary>
-      public readonly int NFace = NFace;
+      public readonly int NFace = nFace;
       /// <summary>Faces with the same group code are in the same smoothing-group</summary>
       public int NGroup = -1;
    }
@@ -349,9 +356,9 @@ public class CMeshBuilder {
    /// <summary>This maintains the data for a given vertex</summary>
    /// This holds the list of faces this vertex is referenced by, and the actual 
    /// geometric position of the vertex
-   record struct Vertex (in Point3 Pos) {
+   struct Vertex (in Point3 pos) {
       /// <summary>Position of 'this' vertex.</summary>
-      public readonly Point3 Pos = Pos;
+      public readonly Point3 Pos = pos;
       /// <summary>This is the chain of faces connected to this corner</summary>
       public int FaceChain;
    }

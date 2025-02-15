@@ -116,19 +116,19 @@ public class Chains<T> {
    /// the value will change (in effect, imagine that a new chain is always created by appending this
    /// new value to the previous chain).
    public void Add (ref int chain, T value) {
-      if (mcFree == 0) {
+      if (mFree.Count == 0) {
          // There are no free spaces left in the Data array. Create some
-         if (mFree == null) {
+         if (mLinks.Length == 0) {
             // This is the first time add has been called, so initialize all the arrays
             Data = new T[8]; mLinks = new int[8];
-            for (int i = 7; i >= 1; i--) Arr.Add (ref mFree, ref mcFree, i);
+            for (int i = 7; i >= 1; i--) mFree.Push (i);
          } else {
             int n = Data.Length;
             Array.Resize (ref Data, n * 2); Array.Resize (ref mLinks, n * 2);
-            for (int i = n * 2 - 1; i >= n; i--) Arr.Add (ref mFree, ref mcFree, i);
+            for (int i = n * 2 - 1; i >= n; i--) mFree.Push (i);
          }
       }
-      int next = mFree![--mcFree];
+      int next = mFree.Pop ();
       mLinks[next] = chain; Data[next] = value;
       chain = next;
    }
@@ -173,7 +173,7 @@ public class Chains<T> {
    /// used by the erstwhile values will be released into the free-pool for subsequent reuse.
    public void ReleaseChain (ref int chain) {
       while (chain > 0) {
-         Arr.Add (ref mFree, ref mcFree, chain);
+         mFree.Push (chain);
          chain = mLinks[chain];
       }
    }
@@ -186,7 +186,7 @@ public class Chains<T> {
 
       // Handle the case where Data is the first element in the array
       if (Data[chain]?.Equals (value) == true) {
-         Arr.Add (ref mFree, ref mcFree, chain);
+         mFree.Push (chain);
          chain = mLinks[chain];
          return;
       }
@@ -196,7 +196,7 @@ public class Chains<T> {
          if (Data[elem]?.Equals (value) == true) {
             // Found the item; connect the previous to the next to skip this
             // element in the chain
-            Arr.Add (ref mFree, ref mcFree, elem);
+            mFree.Push (elem);
             mLinks[prev] = mLinks[elem];
             return;
          }
@@ -218,9 +218,7 @@ public class Chains<T> {
    int[] mLinks = [];
 
    /// <summary>Contains the indices of slots in the Data array that are free</summary>
-   int[]? mFree;
-   /// <summary>mFree[0] to mFree[mcFree - 1] are the free slots in the Data array</summary>
-   int mcFree;
+   readonly Stack<int> mFree = [];
    #endregion
 }
 #endregion
@@ -260,7 +258,7 @@ public class IdxHeap<T> where T : IIndexed, new() {
 
    /// <summary>Release the object at a specified index</summary>
    public void Release (int idx) {
-      mData[idx] = default; 
+      mData[idx] = default;
       mFree.Push (idx);
    }
 
@@ -308,16 +306,5 @@ public readonly struct ListChange {
    public readonly E Action;
    /// <summary>The index at which the action happened</summary>
    public readonly int Index;
-}
-#endregion
-
-#region class Arr ----------------------------------------------------------------------------------
-internal static class Arr {
-   /// <summary>Add an element into an array, growing the array as needed</summary>
-   public static void Add<T> ([NotNull] ref T[]? data, ref int cUsed, T value) {
-      int n = data?.Length ?? 0;
-      if (cUsed >= n || data == null) { n = Math.Max (8, n * 2); Array.Resize (ref data, n); }
-      data[cUsed++] = value;
-   }
 }
 #endregion
