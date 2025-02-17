@@ -1,0 +1,75 @@
+The LFONT file format
+
+LFont files are used to store vector fonts for use in AutoCAD. A vector font means that each
+character is represented as a set of lines and arcs (Poly objects, actually). These LFONT 
+files are similar to AutoCAD SHP or SHX files (vector font files originally packaged with
+AutoCAD), and in fact most LFONT files are derived by converting SHP files. 
+
+An LFONT file is a text file that starts with a header line like this:
+
+LFONT,simplex,1
+
+This line contains the token LFONT, the name of the font, and the revision number (which is
+always set to 1). 
+
+The next line contains the following values:
+
+NChars,Ascender,Descender,VAdvance
+
+A typical example would be like:
+
+176,100,-33,166.2
+
+The meaning of these variables are:
+
+NChars    : The number of character glyphs found in this font file
+Ascender  : The height of the 'M' character (typically called the em-box) in the font, above 
+            the baseline. In effect, you can consider this as the height of the font. 
+Descender : Lowest position (relative to the baseline) of the bounding box bottoms of all
+            the characters. For example, characters like g, y, descend below the baseline,
+			and this value is the maximum value of such descent (this is a negative value)
+VAdvance  : The recommended vertical spacing between consective lines of text
+
+Following these two lines of header are the actual character records. Each character record
+starts with a line that specifies the following:
+
+CharCode,HAdvance,NPoly,Char
+
+A typical example would be like:
+
+107,0.81,3,k
+
+The meanings of these variables are:
+
+CharCode : The unicode character code, in this case 107 (meaning lower-case k) 
+HAdvance : The width this character uses, in terms of Ascender units. In this case,
+           if the ascender is 100, it means the character uses 0.81*100 = 81 units
+		   by that scale
+NPoly    : The number of Poly objects used to define this character
+Char     : The actual character itself (in this case 'k') - this is not used by the 
+           LFONT parser, but is more to assist easy reading of LFONT files
+
+This is followed by NPoly lines each of which encode a Poly using the path specification
+syntax of Poly. For this particular character, these lines look like:
+
+ M52,0 L19,39
+ M48,67 L0,19
+ M0,0 V100
+
+If you are familiar with the path specification syntax of Poly (see Poly class documentation),
+you can easily see that these 3 lines define a shape that looks like a lowercase k. It is also
+clear the k extends vertically from Y=0 to Y=100 (as evidenced by the last line). The glyph
+uses a maximum width of 52 units, so using the recommended HAdvance would mean there is about
+29 units of empty space between this character and the next one. 
+
+Here's another character definiton, this time for a '+' sign:
+
+43,1.24,2,+
+ M85,43 H0
+ M43,85 V0
+
+This is made of 2 Polys. Note that a character can be defined with 0 Polys, as we can see
+from this complete definition of the ' ' (space character): 
+
+32,0.91,0, 
+
