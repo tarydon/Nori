@@ -79,6 +79,12 @@ unsafe static class GL {
    unsafe delegate void glDeleteBuffers (int n, HBuffer* buffers);
    static glDeleteBuffers? pDeleteBuffers;
 
+   // Delete a texture .........................................................
+   public static unsafe void DeleteTexture (HTexture texture)
+      => (pDeleteTextures ??= Load<glDeleteTextures> ()) (1, &texture);
+   unsafe delegate void glDeleteTextures (int n, HTexture* textures);
+   static glDeleteTextures? pDeleteTextures;
+
    // Deletes a vertex array object ............................................
    public unsafe static void DeleteVertexArray (HVertexArray array) 
       => (pDeleteVertexArrays ??= Load<glDeleteVertexArrays> ()) (1, &array);
@@ -291,6 +297,8 @@ unsafe static class GL {
    [DllImport (OPENGL32, EntryPoint = "glPixelStorei")] static internal extern void PixelStore (EPixelStoreParam pname, int param);
    [DllImport (OPENGL32, EntryPoint = "glPolygonOffset")] static internal extern void PolygonOffset (float factor, float units);
    [DllImport (OPENGL32, EntryPoint = "glTexImage2D")] public static extern void TexImage2D (ETexTarget target, int level, EPixelInternalFormat publicformat, int width, int height, int border, EPixelFormat format, EPixelType type, void* pixels);
+   public static void TexImage2D (ETexTarget target, EPixelInternalFormat infmt, int width, int height, EPixelFormat fmt, EPixelType type, byte[] data) 
+      { fixed (byte* p = &data[0]) TexImage2D (target, 0, infmt, width, height, 0, fmt, type, p); }
    [DllImport (OPENGL32, EntryPoint = "glTexParameteri")] public static extern void TexParameter (ETexTarget target, ETexParam pname, int param);
    [DllImport (OPENGL32, EntryPoint = "glVertex2f")] public static extern void Vertex (float x, float y);
    [DllImport (OPENGL32, EntryPoint = "glVertex3f")] public static extern void Vertex (float x, float y, float z);

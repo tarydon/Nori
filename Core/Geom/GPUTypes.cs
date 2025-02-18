@@ -36,6 +36,13 @@ public readonly record struct Vec3F (float X, float Y, float Z) : IEQuable<Vec3F
    public override string ToString () => $"<{X.R5 ()},{Y.R5 ()},{Z.R5 ()}>";
 }
 
+/// <summary>3D vector of 16-bit half (used for passing data to OpenGL)</summary>
+[StructLayout (LayoutKind.Sequential, Pack = 2, Size = 6)]
+public readonly record struct Vec3H (Half X, Half Y, Half Z) : IEQuable<Vec3H> {
+   public bool EQ (Vec3H v) => X.EQ (v.X) && Y.EQ (v.Y) && Z.EQ (v.Z);
+   public override string ToString () => $"<{X.R3 ()},{Y.R3 ()},{Z.R3 ()}>";
+}
+
 /// <summary>4D vector of floats (used for passing data to OpenGL)</summary>
 [StructLayout (LayoutKind.Sequential, Pack = 4, Size = 16)]
 public readonly record struct Vec4F (float X, float Y, float Z, float W) : IEQuable<Vec4F> {
@@ -50,18 +57,19 @@ public readonly record struct Vec4F (float X, float Y, float Z, float W) : IEQua
    public override string ToString () => $"<{X.R5 ()},{Y.R5 ()},{Z.R5 ()},{W.R5 ()}>";
 }
 
-/// <summary>3D vector of 16-bit half (used for passing data to OpenGL)</summary>
-[StructLayout (LayoutKind.Sequential, Pack = 2, Size = 6)]
-public readonly record struct Vec3H (Half X, Half Y, Half Z) : IEQuable<Vec3H> {
-   public bool EQ (Vec3H v) => X.EQ (v.X) && Y.EQ (v.Y) && Z.EQ (v.Z);
-   public override string ToString () => $"<{X.R3 ()},{Y.R3 ()},{Z.R3 ()}>";
-}
-
 /// <summary>4D vector of 16-bit half (used for passing data to OpenGL)</summary>
 [StructLayout (LayoutKind.Sequential, Pack = 4, Size = 16)]
 public readonly record struct Vec4H (float X, float Y, float Z, float W) : IEquatable<Vec4H> {
    public bool EQ (Vec4H b) => X.EQ (b.X) && Y.EQ (b.Y) && Z.EQ (b.Z) && W.EQ (b.W);
    public override string ToString () => $"<{X.R5 ()},{Y.R5 ()},{Z.R5 ()},{W.R5 ()}>";
+}
+
+/// <summary>4D vector of shorts (used for passing data to OpenGL)</summary>
+[StructLayout (LayoutKind.Sequential, Pack = 2, Size = 8)]
+public readonly record struct Vec4S (short X, short Y, short Z, short W) {
+   public Vec4S (int x, int y, int z, int w) : this ((short)x, (short)y, (short)z, (short)w) { }
+   public bool EQ (Vec4S b) => X == b.X && Y == b.Y && Z == b.Z && W == b.W;
+   public override string ToString () => $"<{X},{Y},{Z},{W}>";
 }
 
 /// <summary>4x4 transformation matrix, with float components</summary>
@@ -100,5 +108,48 @@ public readonly struct Mat4F {
    public bool EQ (ref Mat4F b)
       => M11 == b.M11 && M12 == b.M12 && M13 == b.M13 && M14 == b.M14 && M21 == b.M21 && M22 == b.M22 && M23 == b.M23 && M24 == b.M24
       && M31 == b.M31 && M32 == b.M32 && M33 == b.M33 && M34 == b.M34 && X == b.X && Y == b.Y && Z == b.Z && M44 == b.M44;
+}
+
+/// <summary>An axis-aligned pixel-rectangle (components are shorts)</summary>
+/// This follows OpenGL sign conventions : (0,0) is the bottom left corner of the screen, 
+/// and +X is right, +Y is up
+[StructLayout (LayoutKind.Sequential, Pack = 2, Size = 8)]
+public readonly struct RectS : IEQuable<RectS> {
+   public RectS (int left, int bottom, int right, int top) {
+      (Left, Bottom, Right, Top) = ((short)left, (short)bottom, (short)right, (short)top);
+      if (right < left || top < bottom) throw new NotImplementedException ();
+   }
+
+   public RectS (float left, float bottom, float right, float top) {
+      (Left, Bottom, Right, Top) = ((short)(left + 0.5f), (short)(bottom + 0.5f), (short)(right + 0.5f), (short)(top + 0.5f));
+      if (right < left || top < bottom) throw new NotImplementedException ();
+   }
+
+   public readonly RectS Shifted (int x, int y) => new (Left + x, Bottom + y, Right + x, Top + y);
+
+   public static readonly RectS Empty = new (32767, 32767, 32767, 32767);
+   public bool IsEmpty => Left == 32767;
+
+   public readonly bool Contains (Vec2S p)
+      => Left <= p.X && p.X <= Right && Bottom <= p.Y && p.Y <= Top;
+
+   public int Width => Right - Left;
+   public int Height => Top - Bottom;
+   public Vec2S Midpoint => new ((Left + Right) / 2, (Top + Bottom) / 2);
+   public Vec2S BottomLeft => new (Left, Bottom);
+   public Vec2S TopRight => new (Right, Top);
+   public override string ToString () => $"[{Width}x{Height} @ {Left},{Bottom}]";
+
+   public int CompareTo (RectS b) {
+      int n = Left.CompareTo (b.Left); if (n != 0) return n;
+      n = Bottom.CompareTo (b.Bottom); if (n != 0) return n;
+      n = Right.CompareTo (b.Right); if (n != 0) return n;
+      return Top.CompareTo (b.Top);
+   }
+
+   public bool EQ (RectS b)
+      => Left == b.Left && Bottom == b.Bottom && Right == b.Right && Top == b.Top;
+
+   public readonly short Left, Bottom, Right, Top;
 }
 #endregion
