@@ -170,7 +170,13 @@ class PointTests {
       Point3 pa = new (3, 5, 7); pa.Is ("(3,5,7)");
       Point3.Zero.Is ("(0,0,0)");
       Point3 pa2 = new (3.000001, 5, 7); pa.EQ (pa2).IsFalse ();
+      (pa.GetHashCode () == pa2.GetHashCode ()).IsFalse ();
       Point3 pa3 = new (3.0000001, 5, 7); pa.EQ (pa3).IsTrue ();
+      pa.Equals (pa3).IsTrue ();
+      pa.Equals ((object)pa3).IsTrue ();
+      pa.Equals ((Vector3)pa3).IsFalse ();
+      (pa.GetHashCode () == pa3.GetHashCode ()).IsTrue ();
+
       (pa + new Vector3 (10, 20, 30)).Is ("(13,25,37)");
       (pa - new Vector3 (0.1, 0.2, 0.3)).Is ("(2.9,4.8,6.7)");
       (new Point3 (10, 11, 12) - pa).Is ("<7,6,5>");

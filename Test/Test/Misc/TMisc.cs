@@ -212,6 +212,55 @@ class TMisc {
       list.Is ("IdxHeap<T1Type>, Count=13");
    }
 
+   [Test (71, "Chains (a linked-list collection) test")]
+   void Test71 () {
+      Chains<int> chains = new ();
+      int ones = 0, twos = 0;
+      // Create two chains in parallel
+      chains.Add (ref ones, 1);      
+      chains.Add (ref ones, 11);
+      chains.Add (ref twos, 2);
+      chains.Add (ref ones, 111);
+      chains.Add (ref twos, 22);
+      chains.Add (ref twos, 222);
+      // Validate chains
+      chains.Contains (ones, 111).IsTrue ();
+      chains.Contains (ones, 222).IsFalse ();
+      chains.Contains (twos, 222).IsTrue ();
+      string.Join (",", chains.Enum (ones)).Is ("111,11,1");
+      // Release a chain
+      chains.ReleaseChain (ref twos); twos.Is (0);
+      // Remove and add a few items
+      chains.Remove (ref ones, 11); 
+      chains.Remove (ref ones, 111);
+      chains.Add (ref ones, 1111);
+      chains.Contains (ones, 11).IsFalse ();
+      string.Join (",", chains.Enum (ones)).Is ("1111,1");
+      // Gather indices test
+      List<int> indices = [];
+      chains.GatherRawIndices (ones, indices);
+      indices.Count.Is (2);
+      chains.Data[indices.Last ()].Is (1);
+   }
+
+   [Test (72, "class CMesh, CMeshBuilder")]
+   void Test72 () {
+      // CMesh IO test
+      var part = CMesh.LoadTMesh ($"{NT.Data}/Geom/CMesh/part.tmesh");
+      part.Save (NT.TmpTxt);
+      Assert.TextFilesEqual ($"{NT.Data}/Geom/CMesh/part-out.tmesh", NT.TmpTxt);
+
+      // CMeshBuilder test
+      List<Point3> pts = [];
+      for (int i = 0; i < part.Triangle.Length; i++) {
+         var pos = part.Vertex[part.Triangle[i]].Pos;
+         pts.Add (new Point3 (pos.X, pos.Y, pos.Z));
+      }
+
+      new CMeshBuilder (pts.AsSpan ()).Build ().Save (NT.TmpTxt);
+      Assert.TextFilesEqual ($"{NT.Data}/Geom/CMesh/part-gen.tmesh", NT.TmpTxt);
+   }
+
    class T1Type : IIndexed {
       public override string ToString () => $"T{Idx}";
       public ushort Idx { get; set; }
