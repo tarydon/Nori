@@ -59,6 +59,9 @@ public readonly struct Point2 {
    /// <summary>Compares two points are equal to within EPSILON</summary>
    public bool EQ (Point2 b) => X.EQ (b.X) && Y.EQ (b.Y);
 
+   /// <summary>Get bound for the point</summary>
+   public Bound2 GetBound () => new (X, Y);
+
    /// <summary>Gets the lie of this point on the given line segment a..b</summary>
    /// This is accurate only if the point actually lies on the infinite line through a..b
    public double GetLieOn (Point2 a, Point2 b) {
