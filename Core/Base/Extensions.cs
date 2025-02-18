@@ -119,6 +119,13 @@ public static class Extensions {
    /// <summary>Rounds up the given integer to the next multiple of the given chunk size</summary>
    public static int RoundUp (this int n, int chunk) => chunk * ((n + chunk - 1) / chunk);
 
+   /// <summary>Returns a value from a dictionary, or default value (of appropriate type) if the key does not exist</summary>
+   public static U? SafeGet<T, U> (this IReadOnlyDictionary<T, U> dict, T key) 
+      => dict.TryGetValue (key, out var value) ? value : default;
+   /// <summary>Returns a value from a dictionary, or a user-supplied fallback if the key is not present</summary>
+   public static U SafeGet<T, U> (this IReadOnlyDictionary<T, U> dict, T key, U fallback)
+      => dict.TryGetValue (key, out var value) ? value : fallback;
+
    /// <summary>Converts a float to a double, rounded to 6 decimal places</summary>
    public static string S6 (this double f) {
       string s = Round (f, 6).ToString ();
@@ -138,5 +145,9 @@ public static class Extensions {
       if (char.IsDigit (s[0])) return int.Parse (new string (s.TakeWhile (char.IsDigit).ToArray ()));
       return 0;
    }
+
+   /// <summary>Convert a C style char * pointer to a C# string</summary>
+   public static string ToUTF8 (this nint ptr)
+      => Marshal.PtrToStringUTF8 (ptr) ?? string.Empty;
 }
 #endregion
