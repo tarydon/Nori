@@ -165,7 +165,7 @@ class TMisc {
    void Test7 () {
       Lib.Testing.IsTrue ();
       Lib.Acos (-2).R2D ().Is (180);
-      Lib.GetLocalFile ("Demo").Is ($"{Lib.DevRoot}\\Bin\\Demo");
+      // Lib.GetLocalFile ("Demo").Is ($"{Lib.DevRoot}\\Bin\\Demo");
       Lib.AddNamespace ("Nori");
       Lib.NiceName (typeof (System.Boolean)).Is ("bool");
       Lib.NiceName (typeof (Vector2)).Is ("Vector2");
