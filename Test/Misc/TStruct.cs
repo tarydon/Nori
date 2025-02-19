@@ -123,9 +123,9 @@ class StructTests {
       b.Clamp (5f).Is (10);
       b.EQ (b).IsTrue (); b.EQ (new (10, 20.001)).IsFalse ();
       double f1 = 1.1, f2 = 2.2;
-      Bound1 b2 = (Bound1)((f1, f2)); b2.Is ("1.1▸2.2");
+      Bound1 b2 = (Bound1)((f1, f2)); b2.Is ("1.1~2.2");
       Bound1 b3 = new (15, 25), b4 = new (5, 15);
-      (b + b3).Is ("10▸25"); (b * b4).Is ("10▸15");
+      (b + b3).Is ("10~25"); (b * b4).Is ("10~15");
       Bound1 b5 = new (100, 200);
       (b * b5).Is ("Empty");
    }
@@ -133,23 +133,23 @@ class StructTests {
    [Test (64, "Tests of Bound2")]
    void Test7 () {
       Point2[] pts = [new (1, 20), new (10, 2)];
-      Bound2 b1 = new (pts); b1.Is ("(1▸10,2▸20)");
-      Bound2 b2 = new (5, 50); new Bound2 ([b1, b2]).Is ("(1▸10,2▸50)");
+      Bound2 b1 = new (pts); b1.Is ("(1~10,2~20)");
+      Bound2 b2 = new (5, 50); new Bound2 ([b1, b2]).Is ("(1~10,2~50)");
       b1.Diagonal.Is (Math.Sqrt (9 * 9 + 18 * 18));
-      b1.InflatedF (2, new (5, 5)).Is ("(-3▸15,-1▸35)");
+      b1.InflatedF (2, new (5, 5)).Is ("(-3~15,-1~35)");
       (new Bound2 ()).InflatedF (2, Point2.Zero).Is ("Empty");
       Bound2 b3 = new (5, 15, 25, 30);
-      (b1 * b3).Is ("(5▸10,15▸20)");
-      (b1 * Matrix2.Translation (100, 100)).Is ("(101▸110,102▸120)");
+      (b1 * b3).Is ("(5~10,15~20)");
+      (b1 * Matrix2.Translation (100, 100)).Is ("(101~110,102~120)");
    }
 
    [Test (65, "Tests of Bound3")]
    void Test8 () {
       Vec3F[] pts = [new (1, 20, 4), new (10, 2, 5)];
-      Bound3 b1 = new (pts); b1.Is ("(1▸10,2▸20,4▸5)");
+      Bound3 b1 = new (pts); b1.Is ("(1~10,2~20,4~5)");
       b1.Diagonal.Is (20.149442);
       Bound3 b2 = new (5, 10, 4.5, 20, 30, 10);
-      (b1 + b2).Is ("(1▸20,2▸30,4▸10)");
-      (b1 * b2).Is ("(5▸10,10▸20,4.5▸5)");
+      (b1 + b2).Is ("(1~20,2~30,4~10)");
+      (b1 * b2).Is ("(5~10,10~20,4.5~5)");
    }
 }

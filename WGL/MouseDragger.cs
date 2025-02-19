@@ -1,6 +1,6 @@
 // ────── ╔╗
-// ╔═╦╦═╦╦╬╣ Widget.cs
-// ║║║║╬║╔╣║ <<TODO>>
+// ╔═╦╦═╦╦╬╣ MouseDragger.cs
+// ║║║║╬║╔╣║ Implements the MouseDragger base class and some widgets derived from that
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 namespace Nori;
 

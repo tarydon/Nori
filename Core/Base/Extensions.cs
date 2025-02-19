@@ -126,9 +126,16 @@ public static class Extensions {
    public static U SafeGet<T, U> (this IReadOnlyDictionary<T, U> dict, T key, U fallback)
       => dict.TryGetValue (key, out var value) ? value : fallback;
 
-   /// <summary>Converts a float to a double, rounded to 6 decimal places</summary>
+   /// <summary>Convert a double to a string, rounded to 6 decimal places (no trailing zeroes)</summary>
+   /// This has special handling to avoid the annoying "-0"
    public static string S6 (this double f) {
       string s = Round (f, 6).ToString ();
+      return s == "-0" ? "0" : s;
+   }
+   /// <summary>Convert a float a string, rounded to 5 decimal places (no trailing zeroes)</summary>
+   /// This has special handling to prevent the annoying "-0"
+   public static string S5 (this float f) {
+      string s = Round (f, 5).ToString ();
       return s == "-0" ? "0" : s;
    }
 

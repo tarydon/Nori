@@ -47,10 +47,10 @@ class PolyTests {
       
       Poly p1 = p * Matrix2.Translation (2, 1); p1.Is ("M2,1H12V4Q10,6,1H4Q2,4,-1Z");
       Poly p2 = p * Matrix2.Rotation (Lib.HalfPI); p2.Is ("M0,0V10H-3Q-5,8,1V2Q-3,0,-1Z");
-      p.GetBound ().Is ("(0▸10,0▸5)");
+      p.GetBound ().Is ("(0~10,0~5)");
 
       p.GetPerimeter ().Is (28.283185);
-      p.GetBound ().Is ("(0▸10,0▸5)");
+      p.GetBound ().Is ("(0~10,0~5)");
    }
 
    [Test (68, "Low level PolyBuilder tests")]
