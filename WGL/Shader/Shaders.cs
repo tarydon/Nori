@@ -181,7 +181,7 @@ partial class TextPxShader : Shader<TextPxShader.Args, TextPxShader.Settings> {
    }
 
    protected override void SetConstantsImp () => Pgm.Set (muVPScale, Lux.VPScale).Set (muFontTexture, 0);
-   protected override Settings SnapUniformsImp () => new (Lux.DrawColor, Lux.TypeFace);
+   protected override Settings SnapUniformsImp () => new (Lux.DrawColor, Lux.TypeFace ?? TypeFace.Default);
 
    // Nested types -------------------------------------------------------------
    [StructLayout (LayoutKind.Sequential)]

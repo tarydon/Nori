@@ -137,7 +137,7 @@ public static partial class Lux {
       if (text.IsWhiteSpace ()) return;
       Span<TextPxShader.Args> cells = stackalloc TextPxShader.Args[text.Length];
       int x = pos.X, y = pos.Y, n = 0; uint idx0 = 0;
-      var face = TypeFace;
+      var face = TypeFace ?? TypeFace.Default;
       foreach (var ch in text) {
          uint idx1 = face.GetGlyphIndex (ch);
          var metric = face.GetMetrics (idx1);
