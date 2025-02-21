@@ -106,6 +106,36 @@ class Seg2DShader : Shader<Vec2F, Seg2DShader.Settings> {
 }
 #endregion
 
+#region class DashLine2DShader ---------------------------------------------------------------------
+/// <summary>Shader used to draw lines with a dash pattern (dashed / dotted / centerline etc)</summary>
+[Singleton]
+partial class DashLine2DShader : Shader<Vec2F, DashLine2DShader.Settings> {
+   // Constructor --------------------------------------------------------------
+   public DashLine2DShader () : base (ShaderImp.DashLine2D) => Bind ();
+   int muVPScale = 0, muXfm = 0, muLineWidth = 0, muLineType = 0, muLTScale = 0, muDrawColor = 0, muLTypeTexture = 0;
+
+   protected override void ApplyUniformsImp (ref readonly Settings a) {
+      float fLType = ((int)a.LineType + 0.5f) / 10.0f;
+      Pgm.Set (muLineWidth, a.LineWidth).Set (muLineType, fLType).Set (muDrawColor, a.Color);
+   }
+
+   protected override int OrderUniformsImp (ref readonly Settings a, ref readonly Settings b) {
+      int n = a.LineWidth.CompareTo (b.LineWidth); if (n != 0) return n;
+      n = a.LineType.CompareTo (b.LineType); if (n != 0) return n;
+      return (int)(a.Color.Value - b.Color.Value);
+   }
+
+   protected override void SetConstantsImp () {
+      Pgm.Set (muVPScale, Lux.VPScale).Set (muXfm, Lux.Xfm).Set (muLTypeTexture, 1).Set (muLTScale, Lux.LTScale);
+   }
+
+   protected override Settings SnapUniformsImp ()
+      => new (Lux.LineWidth, Lux.LineType, Lux.DrawColor);
+
+   public readonly record struct Settings (float LineWidth, ELineType LineType, Color4 Color);
+}
+#endregion
+
 #region class StencilLineShader --------------------------------------------------------------------
 /// <summary>Shader used to draw the black stencil lines for a mesh</summary>
 [Singleton]

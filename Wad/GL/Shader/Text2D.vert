@@ -1,20 +1,18 @@
-#version 150
-#extension GL_ARB_explicit_attrib_location : enable
+#version 330
 
 uniform mat4 Xfm;
 
-layout (location = 0) in vec2 VertexPos;
-layout (location = 1) in vec2 Offset;
-layout (location = 2) in float Scale;
-layout (location = 3) in int Character;
+layout (location = 0) in ivec4 CharBoxN;
+layout (location = 1) in vec2 VertexPos;
+layout (location = 2) in int TexOffset;
 
-out int vCharacter;
-out vec2 vOffset;
-out float vScale;
+out ivec2 vCellSize;
+out int vTexOffset;
 
-void main (void) {
-   vCharacter = Character;
-   vOffset = Offset;
-   vScale = Scale;
-   gl_Position = Xfm * vec4 (VertexPos, 0, 1);
+void main () {
+   vCellSize = ivec2 (CharBoxN.z - CharBoxN.x, CharBoxN.w - CharBoxN.y);
+   vTexOffset = TexOffset;
+   vec2 xy0 = Xfm * vec4 (VertexPos, 0, 1).xy;
+   vec2 xy1 = xy0 + vCellSize * VPScale;
+   gl_Position = vec4 (xy0, xy1) - vec4 (1, 1, 1, 1);
 }

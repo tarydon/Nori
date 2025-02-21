@@ -22,6 +22,20 @@ public static partial class Lux {
    }
    static float mLineWidth;
 
+   /// <summary>The current line-type</summary>
+   public static ELineType LineType {
+      get => mLineType;
+      set { if (Lib.SetE (ref mLineType, value)) Rung++; }
+   }
+   static ELineType mLineType;
+
+   /// <summary>The current line-type scaling</summary>
+   public static float LTScale {
+      get => mLTScale;
+      set { if (Lib.Set (ref mLTScale, value)) Rung++; }
+   }
+   static float mLTScale = 100;
+
    /// <summary>The normal transform (rotation component of Xfm) used for Gourad, Phong shading</summary>
    public static Mat4F NormalXfm { get => mNormalXfm; set { mNormalXfm = value; Rung++; } }
    static Mat4F mNormalXfm;
@@ -65,8 +79,10 @@ public static partial class Lux {
    /// n / 2 lines are drawn. The following Lux properties are used:
    /// - LineWidth : the width of the beziers, in device independent pixels
    /// - DrawColor : color of the lines being drawn
-   public static void Lines (ReadOnlySpan<Vec2F> pts)
-      => Line2DShader.It.Draw (pts);
+   public static void Lines (ReadOnlySpan<Vec2F> pts) {
+      if (LineType == ELineType.Continuous) Line2DShader.It.Draw (pts);
+      else DashLine2DShader.It.Draw (pts);
+   }
 
    /// <summary>Draws a CMesh using one of the shade-modes</summary>
    /// The shade modes are

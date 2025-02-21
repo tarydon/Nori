@@ -272,9 +272,7 @@ readonly struct Vector26_6 {
 #endregion
 
 #region class Glyph --------------------------------------------------------------------------------
-/// <summary>
-/// Represents a single glyph from a freetype font
-/// </summary>
+/// <summary>Represents a single glyph from a freetype font</summary>
 class Glyph {
    internal void Update (nint ptrGlyphSlot) {
       CGlyphSlot data = Marshal.PtrToStructure<CGlyphSlot> (ptrGlyphSlot);

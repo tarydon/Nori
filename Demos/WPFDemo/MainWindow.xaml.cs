@@ -4,9 +4,7 @@
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 using System.Windows;
 using Nori;
-using System.Reactive.Linq;
 namespace WPFDemo;
-using static Lux;
 
 // class MainWindow --------------------------------------------------------------------------------
 public partial class MainWindow : Window {
@@ -15,19 +13,30 @@ public partial class MainWindow : Window {
       InitializeComponent ();
       Content = Lux.CreatePanel ();
 
-      Lux.UIScene = new TextScene ();
+      Lux.UIScene = new LTypeScene ();
    }
 }
 
-class TextScene : Scene2 {
-   public TextScene () => Bound = new Bound2 (0, 0, 100, 60);
+// class LTypeScene --------------------------------------------------------------------------------
+// Demo scene for various line-types
+class LTypeScene : Scene2 {
+   public LTypeScene () => Bound = new Bound2 (0, 0, 100, 60);
 
    public override Color4 BgrdColor => Color4.Gray (200);
 
    public override void Draw () {
-      Lux.TypeFace = mFace;
       Lux.DrawColor = Color4.Black;
-      Lux.Text ("Hello, World!", new (100, Viewport.Y - 200));
+      Lux.LineWidth = 4f;
+      Lux.TypeFace = mFace;
+      for (var e = ELineType.Continuous; e <= ELineType.Phantom; e++) {
+         Lux.LineType = e;
+         double y = ((int)e + 1) * 3;
+         Lux.Lines ([new (5, y), new (95, y)]);
+
+         var pt = new Point3 (5, y + 0.5, 0) * Xfm;
+         double xTxt = (pt.X + 1) / Lux.VPScale.X, yTxt = (pt.Y + 1) / Lux.VPScale.Y;
+         Lux.Text (e.ToString (), new Vec2S ((short)xTxt, (short)yTxt));
+      }
    }
-   TypeFace mFace = new ("C:/Windows/Fonts/constan.ttf", 96);
+   TypeFace mFace = new ("C:/Windows/Fonts/segoeui.ttf", 24);
 }

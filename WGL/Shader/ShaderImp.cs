@@ -36,6 +36,7 @@ class ShaderImp {
          };
          mUniformMap[uname] = location;
          mUniforms[location] = new UniformInfo (uname, type, location, value);
+         if (uname == "LTypeTexture") MakeLTypeTexture ();
       }
    }
    // A cache of already compiled individual shaders 
@@ -119,10 +120,11 @@ class ShaderImp {
    // Standard shaders ---------------------------------------------------------
    public static ShaderImp Bezier2D => mBezier2D ??= Load ();
    public static ShaderImp Line2D => mLine2D ??= Load ();
+   public static ShaderImp DashLine2D => mDashLine2D ??= Load ();
    public static ShaderImp Point2D => mPoint2D ??= Load ();
    public static ShaderImp Triangle2D => mTriangle2D ??= Load ();
    public static ShaderImp Quad2D => mQuad2D ??= Load ();
-   static ShaderImp? mLine2D, mBezier2D, mPoint2D, mTriangle2D, mQuad2D;
+   static ShaderImp? mLine2D, mBezier2D, mPoint2D, mTriangle2D, mQuad2D, mDashLine2D;
 
    public static ShaderImp StencilLine => mStencilLine ??= Load ();
    public static ShaderImp Gourad => mGourad ??= Load ();
@@ -187,6 +189,47 @@ class ShaderImp {
       throw new NotImplementedException ($"Shader {name} not found in Shader/Index.txt");
    }
    static string[]? sIndex;
+
+   // This is called exactly once in the application lifetime to make the line-type texture.
+   // We store the different line-type patterns in a texture. The t coordinate is used to select
+   // one of the different line-types and then the s coordinate is used to pick up the stipple 
+   // pattern for that linetype.
+   static void MakeLTypeTexture () {
+      if (miLTypeTextureMade) return;
+      miLTypeTextureMade = true;
+      // We're always hardcoding that texture-unit 1 will be used for the linetype texture
+      // (just like texture unit 0 is used for truetype font texture)
+      GL.ActiveTexture (ETexUnit.Tex1);
+      HTexture idTexture = GL.GenTexture ();
+      GL.BindTexture (ETexTarget.Texture2D, idTexture);
+
+      byte[,] data = new byte[10, 60];
+      foreach (string s in mLTypeData) {
+         string[] w = s.Split ([' '], StringSplitOptions.RemoveEmptyEntries);
+         int n = (int)Enum.Parse<ELineType> (w[0], true);
+         for (int j = 0; j < 60; j++) data[n, j] = (w[1][j] == 'x') ? (byte)255 : (byte)0;
+      }
+      GL.PixelStore (EPixelStoreParam.UnpackAlignment, 1);
+      GL.TexImage2D (ETexTarget.Texture2D, EPixelInternalFormat.Red, 60, 10, EPixelFormat.Red, EPixelType.UByte, data);
+      GL.TexParameter (ETexTarget.Texture2D, ETexParam.MagFilter, (int)ETexFilter.Linear);
+      GL.TexParameter (ETexTarget.Texture2D, ETexParam.MinFilter, (int)ETexFilter.Linear);
+      GL.TexParameter (ETexTarget.Texture2D, ETexParam.WrapS, (int)ETexWrap.Repeat);
+   }
+   // This gets set to true once we have made the linetype texture
+   static bool miLTypeTextureMade;
+   // This defines the actual bit patterns for each of the linetypes
+   static readonly string[] mLTypeData = [
+      "Phantom     xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx....xxxxxxxx....xxxxxxxx....",
+      "Dash        xxxxxxxxxx.....xxxxxxxxxx.....xxxxxxxxxx.....xxxxxxxxxx.....",
+      "DashDotDot  xxxxxxxxxxxxxxxxxxxxxxxxxxxx........xxxx........xxxx........",
+      "Dot         xxx...xxx...xxx...xxx...xxx...xxx...xxx...xxx...xxx...xxx...",
+      "Dash2       xxxxxxxxxxxxxxxxxx............xxxxxxxxxxxxxxxxxx............",
+      "Hidden      xxxxxxx........xxxxxxx........xxxxxxx........xxxxxxx........",
+      "Center      xxxxxxxxxx......xxxx......xxxxxxxxxxxxxx......xxxx......xxxx",
+      "Border      xxxxxxxxxxxxxxxxx.....xxxxxxxxxxxxxxxxxx........xxxx........",
+      "DashDot     xxxxxxxxxxxxxxxxxxxx....xx....xxxxxxxxxxxxxxxxxxxx....xx....",
+      "Continuous  xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+   ];
 
    public override string ToString () {
       var sb = new StringBuilder ();
