@@ -48,11 +48,14 @@ public static partial class Lux {
    static float mPointSize;
 
    /// <summary>The typeface to use for drawing</summary>
-   public static TypeFace TypeFace {
+   public static TypeFace? TypeFace {
       get => mTypeface;
-      set { if (Lib.SetR (ref mTypeface, value)) Rung++; }
+      set {
+         if (ReferenceEquals (mTypeface, value)) return;
+         mTypeface = value; Rung++;
+      }
    }
-   static TypeFace mTypeface = TypeFace.Default;
+   static TypeFace? mTypeface;
 
    /// <summary>Viewport scale (convert viewport pixels to GL clip coordinates -1 .. +1)</summary>
    public static Vec2F VPScale { 

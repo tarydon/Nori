@@ -65,7 +65,6 @@ public static partial class Lux {
       PointSize = 3f;
       LineType = ELineType.Continuous;
       LTScale = 100f;
-      TypeFace = TypeFace.Default;
       Rung++;
    }
 
