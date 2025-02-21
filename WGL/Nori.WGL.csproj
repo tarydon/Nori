@@ -24,4 +24,7 @@
     <ProjectReference Include="..\Core\Nori.Core.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+	<ProjectReference Include="..\Tools\Generate\Nori.Gen.csproj" ReferenceOutputAssembly="false" OutputItemType="Analyzer" />
+  </ItemGroup>
 </Project>

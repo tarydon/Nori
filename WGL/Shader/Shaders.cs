@@ -6,125 +6,80 @@ namespace Nori;
 
 #region class Bezier2DShader -----------------------------------------------------------------------
 /// <summary>A specialization of Seg2DShader, used to draw curved segs (using beziers)</summary>
-class Bezier2DShader : Seg2DShader {
-   public Bezier2DShader () : base (ShaderImp.Bezier2D) { }
-   public static readonly Bezier2DShader It = new ();
-}
+[Singleton]
+partial class Bezier2DShader () : Seg2DShader (ShaderImp.Bezier2D) { }
 #endregion
 
-class StencilLineShader : Shader<CMesh.Node, StencilLineShader.Settings> {
-   public StencilLineShader () : base (ShaderImp.StencilLine) => Bind ();
-
-   protected override void ApplyUniformsImp (ref readonly Settings settings) {
-      Pgm.Set (muLineWidth, settings.LineWidth);
-      Pgm.Set (muDrawColor, settings.Color);
-   }
-
-   protected override int OrderUniformsImp (ref readonly Settings a, ref readonly Settings b) {
-      int n = a.LineWidth.CompareTo (b.LineWidth); if (n != 0) return n;
-      return (int)(a.Color.Value - b.Color.Value);
-   }
-
-   protected override void SetConstantsImp () {
-      Pgm.Set (muXfm, Lux.Xfm);
-      Pgm.Set (muVPScale, Lux.VPScale);
-   }
-
-   protected override Settings SnapUniformsImp ()
-      => new (3, Color4.Black);
-
-   public readonly record struct Settings (float LineWidth, Color4 Color);
-
-   // These contain the slot numbers of the uniforms
-   int muXfm = 0, muVPScale = 0, muLineWidth = 0, muDrawColor = 0;
-   public static readonly StencilLineShader It = new ();
-}
-
 #region class FacetShader --------------------------------------------------------------------------
+/// <summary>Base class for various types of 3D shader (Flat / Gourad / Phong)</summary>
 abstract class FacetShader : Shader<CMesh.Node, Color4> {
+   // Constructors -------------------------------------------------------------
    protected FacetShader (ShaderImp imp) : base (imp) => Bind ();
 
-   protected override void ApplyUniformsImp (ref readonly Color4 settings)
-      => Pgm.Set (muDrawColor, settings);
+   // Overrides ----------------------------------------------------------------
+   protected override void ApplyUniformsImp (ref readonly Color4 settings) => Pgm.Set (muDrawColor, settings);
+   protected override int OrderUniformsImp (ref readonly Color4 a, ref readonly Color4 b) => (int)(a.Value - b.Value);
+   protected override void SetConstantsImp () => Pgm.Set (muXfm, Lux.Xfm).Set (muNormalXfm, Lux.NormalXfm);
+   protected override Color4 SnapUniformsImp () => Lux.DrawColor;
 
-   protected override int OrderUniformsImp (ref readonly Color4 a, ref readonly Color4 b)
-      => (int)(a.Value - b.Value);
-
-   protected override void SetConstantsImp () {
-      Pgm.Set (muXfm, Lux.Xfm);
-      Pgm.Set (muNormalXfm, Lux.NormalXfm);
-   }
-
-   protected override Color4 SnapUniformsImp ()
-      => Lux.DrawColor;
-
+   // Private data -------------------------------------------------------------
    int muXfm = 0, muNormalXfm = 0, muDrawColor = 0;
 }
 #endregion
 
-#region class GouradShader -------------------------------------------------------------------------
-class GouradShader : FacetShader {
-   public GouradShader () : base (ShaderImp.Gourad) { }
-   public static readonly GouradShader It = new ();
-}
-#endregion
-
 #region class FlatFacetShader ----------------------------------------------------------------------
-class FlatFacetShader : FacetShader {
-   public FlatFacetShader () : base (ShaderImp.FlatFacet) { }
-   public static readonly FlatFacetShader It = new ();
-}
+/// <summary>3D shader using flat shading (no interpolation)</summary>
+[Singleton]
+partial class FlatFacetShader () : FacetShader (ShaderImp.FlatFacet) { }
 #endregion
 
-#region class PhongShader --------------------------------------------------------------------------
-class PhongShader : FacetShader {
-   public PhongShader () : base (ShaderImp.Phong) { }
-   public static readonly PhongShader It = new ();
-}
+#region class GouradShader -------------------------------------------------------------------------
+/// <summary>3D shader using the Gourad shader model (color interpolation)</summary>
+[Singleton]
+partial class GouradShader () : FacetShader (ShaderImp.Gourad) { }
 #endregion
 
 #region class Line2DShader -------------------------------------------------------------------------
 /// <summary>A specialization of Seg2DShader, used to draw linear segs</summary>
-class Line2DShader : Seg2DShader {
-   public Line2DShader () : base (ShaderImp.Line2D) { }
-   public static readonly Line2DShader It = new ();
-}
+[Singleton]
+partial class Line2DShader () : Seg2DShader (ShaderImp.Line2D) { }
+#endregion
+
+#region class PhongShader --------------------------------------------------------------------------
+/// <summary>3D shader using the Phong shading model (normal vector interpolation)</summary>
+[Singleton]
+partial class PhongShader () : FacetShader (ShaderImp.Phong) { }
 #endregion
 
 #region class Point2DShader ------------------------------------------------------------------------
 /// <summary>Shader used to draw points</summary>
-class Point2DShader : Shader<Vec2F, Point2DShader.Settings> {
+[Singleton]
+partial class Point2DShader : Shader<Vec2F, Point2DShader.Settings> {
    // Constructor --------------------------------------------------------------
    public Point2DShader () : base (ShaderImp.Point2D) => Bind ();
+   int muVPScale = 0, muXfm = 0, muPointSize = 0, muDrawColor = 0;
 
    // Overrides ----------------------------------------------------------------
-   protected override void ApplyUniformsImp (ref readonly Settings a) {
-      Pgm.Set (muPointSize, a.PointSize);
-      Pgm.Set (muDrawColor, a.Color);
-   }
+   protected override void ApplyUniformsImp (ref readonly Settings a)
+      => Pgm.Set (muPointSize, a.PointSize).Set (muDrawColor, a.Color);
 
    protected override int OrderUniformsImp (ref readonly Settings a, ref readonly Settings b) {
       int n = a.PointSize.CompareTo (b.PointSize); if (n != 0) return n;
       return (int)(a.Color.Value - b.Color.Value);
    }
 
-   protected override void SetConstantsImp () {
-      Pgm.Set (muVPScale, Lux.VPScale);
-      Pgm.Set (muXfm, Lux.Xfm);
-   }
-
-   protected override Settings SnapUniformsImp ()
-      => new (Lux.PointSize, Lux.DrawColor);
+   protected override void SetConstantsImp () => Pgm.Set (muVPScale, Lux.VPScale).Set (muXfm, Lux.Xfm);
+   protected override Settings SnapUniformsImp () => new (Lux.PointSize, Lux.DrawColor);
 
    // Nested types -------------------------------------------------------------
    public readonly record struct Settings (float PointSize, Color4 Color);
-
-   // Private data -------------------------------------------------------------
-   // These contain the slot numbers of the uniforms
-   int muVPScale = 0, muXfm = 0, muPointSize = 0, muDrawColor = 0;
-
-   public static readonly Point2DShader It = new ();
 }
+#endregion
+
+#region class Quad2DShader -------------------------------------------------------------------------
+/// <summary>Shader to draw simple quads in 2D (specified in world space, no anti-aliasing)</summary>
+[Singleton]
+partial class Quad2DShader () : TriQuad2DShader (ShaderImp.Quad2D) { }
 #endregion
 
 #region class Seg2DShader --------------------------------------------------------------------------
@@ -132,71 +87,96 @@ class Point2DShader : Shader<Vec2F, Point2DShader.Settings> {
 class Seg2DShader : Shader<Vec2F, Seg2DShader.Settings> {
    // Constructor --------------------------------------------------------------
    public Seg2DShader (ShaderImp shader) : base (shader) => Bind ();
+   int muVPScale = 0, muXfm = 0, muLineWidth = 0, muDrawColor = 0;
 
    // Overrides ----------------------------------------------------------------
-   protected override void ApplyUniformsImp (ref readonly Settings a) {
-      Pgm.Set (muLineWidth, a.LineWidth);
-      Pgm.Set (muDrawColor, a.Color);
-   }
+   protected override void ApplyUniformsImp (ref readonly Settings a)
+      => Pgm.Set (muLineWidth, a.LineWidth).Set (muDrawColor, a.Color);
 
    protected override int OrderUniformsImp (ref readonly Settings a, ref readonly Settings b) {
       int n = a.LineWidth.CompareTo (b.LineWidth); if (n != 0) return n;
       return (int)(a.Color.Value - b.Color.Value);
    }
 
-   protected override void SetConstantsImp () {
-      Pgm.Set (muVPScale, Lux.VPScale);
-      // TODO: Lux.Xfm will not be a constant across the frame
-      Pgm.Set (muXfm, Lux.Xfm);
-   }
-
-   protected override Settings SnapUniformsImp () 
-      => new (Lux.LineWidth, Lux.DrawColor);
+   protected override void SetConstantsImp () => Pgm.Set (muVPScale, Lux.VPScale).Set (muXfm, Lux.Xfm);
+   protected override Settings SnapUniformsImp () => new (Lux.LineWidth, Lux.DrawColor);
 
    // Nested types -------------------------------------------------------------
    public readonly record struct Settings (float LineWidth, Color4 Color);
-
-   // Private data -------------------------------------------------------------
-   // These contain the slot numbers of the uniforms
-   int muVPScale = 0, muXfm = 0, muLineWidth = 0, muDrawColor = 0;
 }
+#endregion
+
+#region class StencilLineShader --------------------------------------------------------------------
+/// <summary>Shader used to draw the black stencil lines for a mesh</summary>
+[Singleton]
+partial class StencilLineShader : Shader<CMesh.Node, StencilLineShader.Settings> {
+   // Constructor --------------------------------------------------------------
+   public StencilLineShader () : base (ShaderImp.StencilLine) => Bind ();
+   int muXfm = 0, muVPScale = 0, muLineWidth = 0, muDrawColor = 0;
+
+   // Overrides ----------------------------------------------------------------
+   protected override void ApplyUniformsImp (ref readonly Settings settings)
+      => Pgm.Set (muLineWidth, settings.LineWidth).Set (muDrawColor, settings.Color);
+
+   protected override int OrderUniformsImp (ref readonly Settings a, ref readonly Settings b) {
+      int n = a.LineWidth.CompareTo (b.LineWidth); if (n != 0) return n;
+      return (int)(a.Color.Value - b.Color.Value);
+   }
+
+   protected override void SetConstantsImp () => Pgm.Set (muXfm, Lux.Xfm).Set (muVPScale, Lux.VPScale);
+   protected override Settings SnapUniformsImp () => new (3, Color4.Black);
+
+   // Nested types -------------------------------------------------------------
+   public readonly record struct Settings (float LineWidth, Color4 Color);
+}
+#endregion
+
+#region class TextPxShader -------------------------------------------------------------------------
+/// <summary>Draws text defined in pixel coordinates</summary>
+[Singleton]
+partial class TextPxShader : Shader<TextPxShader.Args, TextPxShader.Settings> {
+   // Constructor --------------------------------------------------------------
+   public TextPxShader () : base (ShaderImp.TextPx) => Bind ();
+   int muVPScale = 0, muDrawColor = 0, muFontTexture = 0;
+
+   // Overrides ----------------------------------------------------------------
+   protected override int OrderUniformsImp (ref readonly Settings a, ref readonly Settings b) {
+      int n = a.Face.UID - b.Face.UID; if (n != 0) return n;
+      return (int)(a.Color.Value - b.Color.Value);
+   }
+
+   protected override void ApplyUniformsImp (ref readonly Settings settings) {
+      GLState.TypeFace = settings.Face;
+      Pgm.Set (muDrawColor, settings.Color);
+   }
+
+   protected override void SetConstantsImp () => Pgm.Set (muVPScale, Lux.VPScale).Set (muFontTexture, 0);
+   protected override Settings SnapUniformsImp () => new (Lux.DrawColor, Lux.TypeFace);
+
+   // Nested types -------------------------------------------------------------
+   [StructLayout (LayoutKind.Sequential)]
+   public readonly record struct Args (Vec4S Cell, int TexOffset);
+   public readonly record struct Settings (Color4 Color, TypeFace Face);
+}
+#endregion
+
+#region class Triangle2DShader ---------------------------------------------------------------------
+/// <summary>Shader to draw simple triangles in 2D (specified in world space, no anti-aliasing)</summary>
+[Singleton]
+partial class Triangle2DShader () : TriQuad2DShader (ShaderImp.Triangle2D) { }
 #endregion
 
 #region class TriQuad2DShader ----------------------------------------------------------------------
 /// <summary>TriQuad2DShader is the base class for Triangle2DShader and Quad2DShader</summary>
 abstract class TriQuad2DShader : Shader<Vec2F, Color4> {
+   // Constructors -------------------------------------------------------------
    protected TriQuad2DShader (ShaderImp imp) : base (imp) => Bind ();
+   int muXfm = 0, muDrawColor = 0;
 
    // Overrides ----------------------------------------------------------------
-   protected override void ApplyUniformsImp (ref readonly Color4 color)
-      => Pgm.Set (muDrawColor, color);
-
-   protected override int OrderUniformsImp (ref readonly Color4 a, ref readonly Color4 b)
-      => (int)(a.Value - b.Value);
-
-   protected override void SetConstantsImp ()
-      => Pgm.Set (muXfm, Lux.Xfm);
-
-   protected override Color4 SnapUniformsImp ()
-      => Lux.DrawColor;
-
-   // Private data -------------------------------------------------------------
-   int muXfm = 0, muDrawColor = 0;
-}
-#endregion
-
-#region class Triangle2DShader ---------------------------------------------------------------------
-/// <summary>Shadernori. to draw simple triangles in 2D (specified in world space, no anti-aliasing)</summary>
-class Triangle2DShader : TriQuad2DShader {
-   public Triangle2DShader () : base (ShaderImp.Triangle2D) { }
-   public static readonly Triangle2DShader It = new ();
-}
-#endregion
-
-#region class Quad2DShader -------------------------------------------------------------------------
-/// <summary>Shader to draw simple quads in 2D (specified in world space, no anti-aliasing)</summary>
-class Quad2DShader : TriQuad2DShader {
-   public Quad2DShader () : base (ShaderImp.Quad2D) { }
-   public static readonly Quad2DShader It = new ();
+   protected override void ApplyUniformsImp (ref readonly Color4 color) => Pgm.Set (muDrawColor, color);
+   protected override int OrderUniformsImp (ref readonly Color4 a, ref readonly Color4 b) => (int)(a.Value - b.Value);
+   protected override void SetConstantsImp () => Pgm.Set (muXfm, Lux.Xfm);
+   protected override Color4 SnapUniformsImp () => Lux.DrawColor;
 }
 #endregion

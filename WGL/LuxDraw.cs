@@ -33,6 +33,13 @@ public static partial class Lux {
    }
    static float mPointSize;
 
+   /// <summary>The typeface to use for drawing</summary>
+   public static TypeFace TypeFace {
+      get => mTypeface;
+      set { if (Lib.SetR (ref mTypeface, value)) Rung++; }
+   }
+   static TypeFace mTypeface = TypeFace.Default;
+
    /// <summary>Viewport scale (convert viewport pixels to GL clip coordinates -1 .. +1)</summary>
    public static Vec2F VPScale { 
       get => mVPScale;
@@ -104,6 +111,25 @@ public static partial class Lux {
       Triangle2DShader.It.Draw (a);
       for (int i = 0; i < a.Length; i += 3)
          Line2DShader.It.Draw ([a[i], a[i + 1], a[i + 1], a[i + 2], a[i + 2], a[i]]);
+   }
+
+   /// <summary>Draws text at specified pixel-coordinates (uses the current TypeFace and DrawColor)</summary>
+   public static void Text (ReadOnlySpan<char> text, Vec2S pos) {
+      if (text.IsWhiteSpace ()) return;
+      Span<TextPxShader.Args> cells = stackalloc TextPxShader.Args[text.Length];
+      int x = pos.X, y = pos.Y, n = 0; uint idx0 = 0;
+      var face = TypeFace;
+      foreach (var ch in text) {
+         uint idx1 = face.GetGlyphIndex (ch);
+         var metric = face.GetMetrics (idx1);
+         int kern = face.GetKerning (idx0, idx1);
+         short xChar = (short)(x + metric.LeftBearing + kern), yChar = (short)(y + metric.TopBearing);
+         var vec = new Vec4S (xChar, yChar - metric.Rows, xChar + metric.Columns, yChar);
+         cells[n++] = new (vec, metric.TexOffset);
+         x += metric.Advance + kern;
+         idx0 = idx1;
+      }
+      TextPxShader.It.Draw (cells);
    }
 }
 #endregion

@@ -63,6 +63,7 @@ public static partial class Lux {
       DrawColor = Color4.White;
       LineWidth = 3f;
       PointSize = 3f;
+      TypeFace = TypeFace.Default;
       Rung++;
    }
 

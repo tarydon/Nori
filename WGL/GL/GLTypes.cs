@@ -39,7 +39,7 @@ enum EMode : uint { Points = 0, Lines = 1, LineLoop = 2, LineStrip = 3, Triangle
 // Pixel storage formats
 enum EPixelFormat : uint { DepthComponent = 6402, Red = 6403, Rgba = 6408, Bgra = 32993 }
 // Pixel data type
-enum EPixelType : uint { UnsignedByte = 5121, Float = 5126 }
+enum EPixelType : uint { UByte = 5121, Float = 5126 }
 // Parameter for PixelStore
 enum EPixelStoreParam : uint { UnpackAlignment = 3317, PackAlignment = 3333 }
 
@@ -62,7 +62,7 @@ enum EShaderParam : uint { DeleteStatus = 35712, CompileStatus = 35713, InfoLogL
 
 // Texture related enums
 enum ETexUnit : uint { Tex0 = 33984, Tex1 = 33985, Tex2 = 33986, Tex3 = 33987 }
-enum ETexTarget : uint { Texture1D = 3552, Texture2D = 3553 };
+enum ETexTarget : uint { Texture1D = 3552, Texture2D = 3553, TexRectangle = 0x84F5 };
 enum EPixelInternalFormat : uint { Red = 6403 }
 enum ETexParam : uint { MagFilter = 0x2800, MinFilter = 0x2801, WrapS = 0x2802, WrapT = 0x2803 }
 enum ETexFilter { Nearest = 9728, Linear = 9729 };

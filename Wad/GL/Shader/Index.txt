@@ -9,3 +9,4 @@ StencilLine   Lines      Vec3F_Vec3H  1      1      0        World3D.vert|Line3D
 Gourad        Triangles  Vec3F_Vec3H  0      1      1        Gourad.vert|Gourad.frag
 Phong         Triangles  Vec3F_Vec3H  0      1      1        Phong.vert|Phong.frag
 FlatFacet     Triangles  Vec3F_Vec3H  0      1      1        FlatFacet.vert|FlatFacet.frag
+TextPx        Points     Vec4S_Int    1      0      0        Text.vert|Text.geom|Text.frag

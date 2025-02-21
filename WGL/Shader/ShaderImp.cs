@@ -68,52 +68,53 @@ class ShaderImp {
    }
 
    /// <summary>Sets a Uniform variable of type Color4 (we pass these as Vec4F)</summary>
-   public void Set (int index, Color4 color) 
+   public ShaderImp Set (int index, Color4 color)
       => Set (index, (Vec4F)color);
 
    /// <summary>Sets a Uniform variable of type float</summary>
-   public void Set (int index, float f) {
-      if (index == -1) return;
-      var data = mUniforms[index];
-      if (f.EQ ((float)data.Value)) return;
-      data.Value = f; GL.Uniform (index, f);
+   public ShaderImp Set (int index, float f) {
+      if (index != -1) {
+         var data = mUniforms[index];
+         if (!f.EQ ((float)data.Value)) { data.Value = f; GL.Uniform (index, f); }
+      }
+      return this;
+   }
+
+   /// <summary>Sets a Uniform variable of type int</summary>
+   public ShaderImp Set (int index, int n) {
+      if (index != -1) {
+         var data = mUniforms[index];
+         if (n != (int)data.Value) { data.Value = n; GL.Uniform1i (index, n); }
+      }
+      return this;
    }
 
    /// <summary>Set a uniform of type Vec2f</summary>
-   public void Set (int id, Vec2F v) {
-      var data = mUniforms[id];
-      if (v.EQ ((Vec2F)data.Value)) return;
-      data.Value = v; GL.Uniform (id, v.X, v.Y);
-   }
-   /// <summary>Set a uniform of type Vec2f</summary>
-   public void Set (string name, Vec2F v) {
-      if (mUniformMap.TryGetValue (name, out int n)) Set (n, v);
+   public ShaderImp Set (int index, Vec2F v) {
+      if (index != -1) {
+         var data = mUniforms[index];
+         if (!v.EQ ((Vec2F)data.Value)) { data.Value = v; GL.Uniform (index, v.X, v.Y); }
+      }
+      return this;
    }
 
    /// <summary>Sets a uniform variable of type Vec4f</summary>
-   public void Uniform (string name, Vec4F vec) {
-      if (mUniformMap.TryGetValue (name, out int n)) Set (n, vec);
-   }
-   /// <summary>Sets a uniform variable of type Vec4f</summary>
-   public void Set (int index, Vec4F v) {
-      var data = mUniforms[index];
-      if (v.EQ ((Vec4F)data.Value)) return;
-      data.Value = v; GL.Uniform (index, v.X, v.Y, v.Z, v.W);
+   public ShaderImp Set (int index, Vec4F v) {
+      if (index != -1) {
+         var data = mUniforms[index];
+         if (!v.EQ ((Vec4F)data.Value)) { data.Value = v; GL.Uniform (index, v.X, v.Y, v.Z, v.W); }
+      }
+      return this;
    }
 
    /// <summary>Set a uniform of type Mat4f</summary>
-   public unsafe void Set (int id, Mat4F m) {
-      if (id == -1) return;
-      var data = mUniforms[id]; data.Value = m;
-      GL.Uniform (id, false, &m.M11);
+   public unsafe ShaderImp Set (int index, Mat4F m) {
+      if (index != -1) {
+         var data = mUniforms[index]; data.Value = m;
+         GL.Uniform (index, false, &m.M11);
+      }
+      return this;
    }
-   /// <summary>Set a uniform of type Mat4f</summary>
-   public unsafe void Uniform (string name, Mat4F m) {
-      if (mUniformMap.TryGetValue (name, out int n)) Set (n, m);
-   }
-
-   /// <summary>Select this Pipeline for use</summary>
-   public void Use () => GLState.Program = this;
 
    // Standard shaders ---------------------------------------------------------
    public static ShaderImp Bezier2D => mBezier2D ??= Load ();
@@ -128,6 +129,9 @@ class ShaderImp {
    public static ShaderImp Phong => mPhong ??= Load ();
    public static ShaderImp FlatFacet => mFlatFacet ??= Load ();
    static ShaderImp? mStencilLine, mGourad, mPhong, mFlatFacet;
+
+   public static ShaderImp TextPx => mTextPx ??= Load ();
+   static ShaderImp? mTextPx;
 
    // Nested types ------------------------------------------------------------
    /// <summary>Provides information about a Uniform</summary>
@@ -208,11 +212,13 @@ readonly record struct Attrib (int Dims, EDataType Type, int Size, bool Integral
    public static Attrib AVec3f = new (3, EDataType.Float, 12, false);
    public static Attrib AVec4f = new (4, EDataType.Float, 16, false);
    public static Attrib AVec3h = new (3, EDataType.Half, 6, false);
+   public static Attrib AVec4s = new (4, EDataType.Short, 8, true);
 
    public static Attrib[] GetFor (EVertexSpec spec) 
       => spec switch {
          EVertexSpec.Vec2F => [AVec2f],
          EVertexSpec.Vec3F_Vec3H => [AVec3f, AVec3h],
+         EVertexSpec.Vec4S_Int => [AVec4s, AInt],
          _ => throw new BadCaseException (spec)
       };
 
@@ -220,18 +226,13 @@ readonly record struct Attrib (int Dims, EDataType Type, int Size, bool Integral
       => spec switch {
          EVertexSpec.Vec2F => 8,
          EVertexSpec.Vec3F_Vec3H => 18,
+         EVertexSpec.Vec4S_Int => 12,
          _ => throw new BadCaseException (spec)
       };
-
-   public static Dictionary<Type, Attrib> Map = new () {
-      [typeof (Vec2F)] = AVec2f, [typeof (short)] = AShort, [typeof (int)] = AInt, 
-      [typeof (Vec4F)] = AVec4f, [typeof (Vec3F)] = AVec3f, [typeof (Vec3H)] = AVec3h,
-      [typeof (float)] = AFloat,
-   };
 }
 #endregion
 
 #region enum EVertexSpec ---------------------------------------------------------------------------
 // The various Vertex specifications used by OpenGL shaders
-enum EVertexSpec { Vec2F, Vec3F_Vec3H, _Last };
+enum EVertexSpec { Vec2F, Vec3F_Vec3H, Vec4S_Int, _Last };
 #endregion

@@ -60,6 +60,20 @@ static class GLState {
    static ShaderImp? mProgram;
    static internal int mPgmChanges;    // Number of program changes in this frame
 
+   /// <summary>The current typeface being used</summary>
+   public static TypeFace? TypeFace {
+      set {
+         if (mTypeFaceId == value?.UID) return;
+         if (value != null) {
+            GL.ActiveTexture (ETexUnit.Tex0);
+            GL.PixelStore (EPixelStoreParam.UnpackAlignment, 1);
+            GL.BindTexture (ETexTarget.TexRectangle, value.Texture);
+            mTypeFaceId = value.UID;
+         }
+      }
+   }
+   static int mTypeFaceId = 0;
+
    /// <summary>The current vertex-array-object being used</summary>
    public static HVertexArray VAO {
       get => mHVAO;
@@ -90,6 +104,7 @@ static class GLState {
       mProgram = null; GL.UseProgram (0);
       mHVAO = 0; GL.BindVertexArray (0);
       mPgmChanges = 0; mVAOChanges = 0;
+      mTypeFaceId = 0;
 
       var (r, g, b, a) = bgrdColor;
       GL.ClearColor (r / 255f, g / 255f, b / 255f, a / 255f);
