@@ -151,8 +151,9 @@ public class CMesh (ImmutableArray<CMesh.Node> vertex, ImmutableArray<int> trian
 /// as the target and adds triangles into that mesh. Note that you never need to supply normals to this. 
 /// It computes normals based on which parts should be 'smooth' and which ones should be 'sharp'. 
 public class CMeshBuilder {
-   // Initialize a CMeshBuilder with a set of points
-   // These points, taken 3 at a time, define a set of triangles
+   /// <summary>Initialize a CMeshBuilder with a set of points </summary>
+   /// These points, taken 3 at a time, define a set of triangles.
+   /// <param name="pts">Triangle points.</param>
    public CMeshBuilder (ReadOnlySpan<Point3> pts) {
       Dictionary<Point3, int> verts = [];
       for (int i = 0; i < pts.Length; i++) {
@@ -166,7 +167,7 @@ public class CMeshBuilder {
       }
    }
 
-   // Construct a CMesh object from this set of triangles
+   /// <summary>Constructs a CMesh object from the given set of 'smoothed' triangles.</summary>
    public CMesh Build () {
       for (int i = 0; i < mIdx.Count; i += 3) {
          int A = mIdx[i], B = mIdx[i + 1], C = mIdx[i + 2];

@@ -28,7 +28,7 @@ Ascender  : The height of the 'M' character (typically called the em-box) in the
 Descender : Lowest position (relative to the baseline) of the bounding box bottoms of all
             the characters. For example, characters like g, y, descend below the baseline,
 			and this value is the maximum value of such descent (this is a negative value)
-VAdvance  : The recommended vertical spacing between consective lines of text
+VAdvance  : The recommended vertical spacing between consecutive lines of text
 
 Following these two lines of header are the actual character records. Each character record
 starts with a line that specifies the following:
@@ -62,7 +62,7 @@ clear the k extends vertically from Y=0 to Y=100 (as evidenced by the last line)
 uses a maximum width of 52 units, so using the recommended HAdvance would mean there is about
 29 units of empty space between this character and the next one. 
 
-Here's another character definiton, this time for a '+' sign:
+Here's another character definition, this time for a '+' sign:
 
 43,1.24,2,+
  M85,43 H0
