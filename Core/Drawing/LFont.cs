@@ -8,7 +8,7 @@ namespace Nori;
 /// <summary>Represents fonts that define each character glyph as a set of lines and arcs.</summary>
 public class LineFont {
    // A private constructor used to instantiate the LineFont object.
-   private LineFont (string name, int nchars, double asc, double desc, double adv, ImmutableArray<Glyph> glyphs) =>
+   private LineFont (string name, int nchars, double asc, double desc, double adv, ImmutableArray<Glyph?> glyphs) =>
       (Name, NChars, Ascender, Descender, VAdvance, Glyphs) = (name, nchars, asc, desc, adv, glyphs);
 
    /// <summary>The name of the font</summary>
@@ -95,13 +95,13 @@ public class LineFont {
             x = pos.X; y -= dy;
             continue;
          }
-         var g = ch > 31 && ch < 256 ? Glyphs[ch - 32] : Glyphs.Skip (256).FirstOrDefault (x => x.CharCode == ch);
+         var g = ch > 31 && ch < 256 ? Glyphs[ch - 32] : Glyphs.Skip (256).FirstOrDefault (x => x!.CharCode == ch);
          if (g == null) continue;
-         if (g.Shape.Length > 0) {
+         if (g.Shapes.Length > 0) {
             // Transform and output the glyph shape.
             var mat = mat0 * Matrix2.Translation (x, y);
             if (!angle.IsZero ()) mat *= Matrix2.Rotation (angle);
-            output.AddRange (g.Shape.Select (x => x * mat));
+            output.AddRange (g.Shapes.Select (x => x * mat));
          }
          // Advance the x-position by HAdvance.
          x += g.HAdvance * height;
@@ -111,11 +111,11 @@ public class LineFont {
    public override string ToString () => $"{Name}.lfont";
 
    // The font glyphs. 
-   readonly ImmutableArray<Glyph> Glyphs;
+   readonly ImmutableArray<Glyph?> Glyphs;
 
    // A glyph contains the shape data needed to render an individual character.
    // An example: 107,0.81,3,k
-   class Glyph (int code, double adv, char ch, ImmutableArray<Poly> shape) {
+   class Glyph (int code, double adv, char ch, ImmutableArray<Poly> shapes) {
       // The unicode character code, in this case 107 (meaning lower-case k) 
       public readonly int CharCode = code;
       // The width this character uses, in terms of Ascender units. In this case,
@@ -123,12 +123,12 @@ public class LineFont {
       // by that scale
       public readonly double HAdvance = adv;
       // The number of Poly objects used to define this character
-      public readonly int NPoly = shape.Length;
+      public readonly int NPoly = shapes.Length;
       // The actual character itself (in this case 'k') - this is not used by the
       // LFONT parser, but is more to assist easy reading of LFONT files
       public readonly char Char = ch;
       // The shape geometry
-      public readonly ImmutableArray<Poly> Shape = shape;
+      public readonly ImmutableArray<Poly> Shapes = shapes;
       public override string ToString () => $"{Char}:{CharCode}";
    }
 }
