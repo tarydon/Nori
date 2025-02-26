@@ -62,7 +62,7 @@ public static partial class Lux {
       VPScale = new Vec2F (2.0 / viewport.X, 2.0 / viewport.Y);
       DrawColor = Color4.White;
       LineWidth = 3f;
-      PointSize = 3f;
+      PointSize = 7f;
       LineType = ELineType.Continuous;
       LTScale = 100f;
       Rung++;
