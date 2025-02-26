@@ -213,7 +213,7 @@ class TMisc {
    }
 
    [Test (71, "Chains (a linked-list collection) test")]
-   void Test71 () {
+   void Test10 () {
       Chains<int> chains = new ();
       int ones = 0, twos = 0;
       // Create two chains in parallel
@@ -243,8 +243,8 @@ class TMisc {
       chains.Data[indices.Last ()].Is (1);
    }
 
-   [Test (72, "class CMesh, CMeshBuilder")]
-   void Test72 () {
+   [Test (72, "class CMesh, CMeshBuilder test")]
+   void Test11 () {
       // CMesh IO test
       var part = CMesh.LoadTMesh ($"{NT.Data}/Geom/CMesh/part.tmesh");
       part.Save (NT.TmpTxt);
@@ -259,6 +259,23 @@ class TMisc {
 
       new CMeshBuilder (pts.AsSpan ()).Build ().Save (NT.TmpTxt);
       Assert.TextFilesEqual ($"{NT.Data}/Geom/CMesh/part-gen.tmesh", NT.TmpTxt);
+   }
+
+   [Test (73, "LineFont test")]
+   void Test12 () {
+      const string text = """
+            Mr. Jock, TV quiz Ph. D., bags few lynx!
+            (12 + 34 - 56 / 78) * 90 = ?
+            """;
+      // Get test
+      LineFont.Get ("ROMANS").Name.Is ("romans");
+      // Fallback test.
+      LineFont.Get ("A-Missing-Font").Name.Is ("simplex");
+      // Render test.
+      List<Poly> polys = [];
+      LineFont.Get ("romans").Render (text, new (10, 100), 10, 10.D2R (), polys);
+      File.WriteAllText (NT.TmpTxt, string.Join ('\n', polys));
+      Assert.TextFilesEqual ($"{NT.Data}/Misc/LineFont.txt", NT.TmpTxt);
    }
 
    class T1Type : IIndexed {

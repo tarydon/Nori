@@ -97,11 +97,11 @@ public class LineFont {
          }
          var g = ch > 31 && ch < 256 ? Glyphs[ch - 32] : Glyphs.Skip (256).FirstOrDefault (x => x!.CharCode == ch);
          if (g == null) continue;
-         if (g.Shapes.Length > 0) {
+         if (g.Polys.Length > 0) {
             // Transform and output the glyph shape.
             var mat = mat0 * Matrix2.Translation (x, y);
             if (!angle.IsZero ()) mat *= Matrix2.Rotation (angle);
-            output.AddRange (g.Shapes.Select (x => x * mat));
+            output.AddRange (g.Polys.Select (x => x * mat));
          }
          // Advance the x-position by HAdvance.
          x += g.HAdvance * height;
@@ -115,7 +115,7 @@ public class LineFont {
 
    // A glyph contains the shape data needed to render an individual character.
    // An example: 107,0.81,3,k
-   class Glyph (int code, double adv, char ch, ImmutableArray<Poly> shapes) {
+   class Glyph (int code, double adv, char ch, ImmutableArray<Poly> polys) {
       // The unicode character code, in this case 107 (meaning lower-case k) 
       public readonly int CharCode = code;
       // The width this character uses, in terms of Ascender units. In this case,
@@ -123,12 +123,12 @@ public class LineFont {
       // by that scale
       public readonly double HAdvance = adv;
       // The number of Poly objects used to define this character
-      public readonly int NPoly = shapes.Length;
+      public readonly int NPoly = polys.Length;
       // The actual character itself (in this case 'k') - this is not used by the
       // LFONT parser, but is more to assist easy reading of LFONT files
       public readonly char Char = ch;
       // The shape geometry
-      public readonly ImmutableArray<Poly> Shapes = shapes;
+      public readonly ImmutableArray<Poly> Polys = polys;
       public override string ToString () => $"{Char}:{CharCode}";
    }
 }
