@@ -38,9 +38,7 @@ public static class Extensions {
    public static float Clamp (this float a, float min, float max) => a < min ? min : (a > max ? max : a);
    /// <summary>Clamps the given float to the range 0..1</summary>
    public static float Clamp (this float a) => a < 0 ? 0 : (a > 1 ? 1 : a);
-   /// <summary>
-   /// Clamps a given integer to lie within min..max (inclusive)
-   /// </summary>
+   /// <summary>Clamps a given integer to lie within min..max (inclusive)</summary>
    public static int Clamp (this int a, int min, int max) => a < min ? min : (a > max ? max : a);
 
    /// <summary>Convert an angle from degrees to radians</summary>
