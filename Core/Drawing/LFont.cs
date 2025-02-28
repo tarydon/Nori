@@ -2,13 +2,15 @@
 // ╔═╦╦═╦╦╬╣ LFont.cs
 // ║║║║╬║╔╣║ Contains the LineFont class needed to render vector fonts in a drawing.
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
+using System.Collections.Frozen;
+
 namespace Nori;
 
 #region class LineFont -----------------------------------------------------------------------------
 /// <summary>Represents fonts that define each character glyph as a set of lines and arcs.</summary>
 public class LineFont {
    // A private constructor used to instantiate the LineFont object.
-   private LineFont (string name, int nchars, double asc, double desc, double adv, ImmutableArray<Glyph?> glyphs) =>
+   private LineFont (string name, int nchars, double asc, double desc, double adv, FrozenDictionary<int, Glyph> glyphs) =>
       (Name, NChars, Ascender, Descender, VAdvance, Glyphs) = (name, nchars, asc, desc, adv, glyphs);
 
    /// <summary>The name of the font</summary>
@@ -41,13 +43,9 @@ public class LineFont {
       // As font resources are one of the internal data files, rigorous error handling
       // has been ommitted during the load in favor of simpler code.
       try { lines = Lib.ReadLines ($"wad:DXF/{lname}.lfont"); } catch { }
-      if (lines == null || lines.Length == 0) return Default ();
+      if (lines == null || lines.Length == 0) return Get ("simplex");
       int n = 0; string[] w = Next (3); name = w[1];
-      // There is a small bit of storage optimization below.
-      // Most of the glyphs across all fonts are in [32..255] code-range. Therefore the cache
-      // is optimized to return these glyphs quickly by simply storing them at their
-      // respective code-index and others are appended to the list.
-      List<Glyph?> glyphs = [.. Enumerable.Range (0, 256 - 32).Select (_ => (Glyph?)null)];
+      Dictionary<int, Glyph> glyphs = [];
       w = Next ();
       var (nchars, asc, desc, vadv) = (w[0].ToInt (), w[1].ToDouble (), w[2].ToDouble (), w[3].ToDouble ());
       List<Poly> polys = []; PolyBuilder builder = new ();
@@ -55,21 +53,16 @@ public class LineFont {
          polys.Clear (); w = Next ();
          var (code, adv, npoly, ch) = (w[0].ToInt (), w[1].ToDouble (), w[2].ToInt (), w[3][0]);
          for (int j = 0; j < npoly; j++) polys.Add (builder.Build (Line ()));
-         Glyph g = new (code, adv, ch, [.. polys]);
-         if (code > 31 && code < 256) glyphs[code - 32] = g;
-         else glyphs.Add (g);
+         glyphs[code] = new (code, adv, ch, [.. polys]);
       }
-      font = new LineFont (name, nchars, asc, desc, vadv, [.. glyphs]);
+      font = new LineFont (name, nchars, asc, desc, vadv, glyphs.ToFrozenDictionary ());
       return sFonts[font.Name.ToLower ()] = font;
 
       string Line () => lines[n++]; // Fetch next line
       string[] Next (int n = 4) => Line ().Split (',', n); // Fetch tokens from next line
-      static LineFont Default () => sDefault ??= Get ("simplex");
    }
    // The LFONT database.
    static readonly Dictionary<string, LineFont> sFonts = [];
-   // Default font
-   static LineFont? sDefault = null;
 
    /// <summary>This renders the given text to a List of Poly. </summary>
    /// Each character in the text is taken, and the set of Poly objects representing that character
@@ -85,7 +78,8 @@ public class LineFont {
       // Initialize the factor by which glyphs have to be scaled.
       // It will be a constant for this render call.
       var scale = height / Ascender;
-      Matrix2 mat0 = Matrix2.Scaling (scale);
+      // Compose the scaling and rotation matrices.
+      Matrix2 mat0 = Matrix2.Scaling (scale), mat1 = Matrix2.Rotation (pos, angle);
       // Initialize the (x, y) positions of the 'next' char along with the line-gap, dy.
       double x = pos.X, y = pos.Y, dy = scale * VAdvance;
       // Render the text characters now.
@@ -95,12 +89,11 @@ public class LineFont {
             x = pos.X; y -= dy;
             continue;
          }
-         var g = ch > 31 && ch < 256 ? Glyphs[ch - 32] : Glyphs.Skip (256).FirstOrDefault (x => x!.CharCode == ch);
-         if (g == null) continue;
+         if (!Glyphs.TryGetValue (ch, out var g)) continue;
          if (g.Polys.Length > 0) {
             // Transform and output the glyph shape.
             var mat = mat0 * Matrix2.Translation (x, y);
-            if (!angle.IsZero ()) mat *= Matrix2.Rotation (angle);
+            if (!angle.IsZero ()) mat *= mat1;
             output.AddRange (g.Polys.Select (x => x * mat));
          }
          // Advance the x-position by HAdvance.
@@ -109,9 +102,9 @@ public class LineFont {
    }
 
    public override string ToString () => $"{Name}.lfont";
-
-   // The font glyphs. 
-   readonly ImmutableArray<Glyph?> Glyphs;
+   
+   // The immutable, readonly font glyphs. 
+   readonly FrozenDictionary<int, Glyph> Glyphs;
 
    // A glyph contains the shape data needed to render an individual character.
    // An example: 107,0.81,3,k
