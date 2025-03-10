@@ -74,6 +74,20 @@ class TMisc {
       22.RoundUp (10).Is (30);
       "1.5".ToDouble ().Is (1.5);
       "abc".ToDouble ().Is (0);
+
+      // List.SafeGet tests
+      List<double> doubles = [];
+      doubles.SafeGet (0).Is (0);
+      doubles.Add (1);
+      doubles.SafeGet (0).Is (1);
+      doubles.SafeGet (5).Is (0);
+      doubles.SafeGet (-5).Is (0);
+      List<double?> ndoubles = [];
+      (ndoubles.SafeGet (0) == null).IsTrue ();
+      ndoubles.Add (11);
+      (ndoubles.SafeGet (0) == 11).IsTrue ();
+      (ndoubles.SafeGet (5) == null).IsTrue ();
+      (ndoubles.SafeGet (-5) == null).IsTrue ();
    }
 
    [Test (29, "AList<T> tests")]

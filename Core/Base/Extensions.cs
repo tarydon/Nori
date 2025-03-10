@@ -128,6 +128,10 @@ public static class Extensions {
    public static U SafeGet<T, U> (this IReadOnlyDictionary<T, U> dict, T key, U fallback)
       => dict.TryGetValue (key, out var value) ? value : fallback;
 
+   /// <summary>Returns a value from a list at a given index, or 'default' value if the given index is out-of-range</summary>
+   public static T? SafeGet<T> (this IReadOnlyList<T> list, int n) 
+      => n >= 0 && n < list.Count ? list[n] : default;
+
    /// <summary>Convert a double to a string, rounded to 6 decimal places (no trailing zeroes)</summary>
    /// This has special handling to avoid the annoying "-0"
    public static string S6 (this double f) {
