@@ -264,8 +264,12 @@ class TMisc {
    [Test (73, "LineFont test")]
    void Test12 () {
       const string text = """
-            Mr. Jock, TV quiz Ph. D., bags few lynx!
-            (12 + 34 - 56 / 78) * 90 = ?
+             !"#$%&'()*+,-./0123456789:;<=>
+            ?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^
+            _`abcdefghijklmnopqrstuvwxyz{|}~
+             ¡¢£¥§ª«°±µº»¼½¿ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏ
+            ÐÑÒÓÔÕÖØÙÚÛÜÝÞßàáâãäåæçèéêëì∅íîï
+            ðñòóôõö÷øùúûüýþÿ
             """;
       // Get test
       LineFont.Get ("ROMANS").Name.Is ("romans");
