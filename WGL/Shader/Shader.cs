@@ -139,22 +139,27 @@ abstract class Shader<TVertex, TUniform> : Shader, IComparer<TUniform> where TVe
    // Methods ------------------------------------------------------------------
    /// <summary>Adds some vertices into our local data array, and creates an RBatch pointing to them</summary>
    public void Draw (ReadOnlySpan<TVertex> data) {
+      if (data.Length == 0) return;
       ushort nUniform = SnapUniforms ();
+      VNode vnode = Lux.VNode!;
       if (!ExtendBatch (data.Length)) {
          ref RBatch rb = ref RBatch.Alloc ();
+         rb.IDVNode = (ushort)vnode.Id;
          rb.NShader = Idx; rb.NUniform = nUniform; rb.NBuffer = 0;
          rb.Offset = mData.Count; rb.Count = data.Length;
-         RBatch.Staging.Add (rb.Idx);
+         vnode.Batches.Add ((rb.Idx, rb.NUniform));
       }
       mData.AddRange (data);
 
       // Helper fuction to see if we can just extend the last batch we added to 
       // include these vertices as well. For this to work:
+      // - The previous batch should be for the same VNode (since we are going to store
+      //   this batch in the mBatch list of that VNode. 
       // - The previous batch should use the same shader (this)
       // - The previous batch should be using the same set of uniforms
       bool ExtendBatch (int delta) {
-         // TODO: Ensure the two RBatch belong to the same VNode
          ref RBatch rb = ref RBatch.Recent ();
+         if (rb.IDVNode != vnode.Id) return false;
          if (rb.NShader != Idx || rb.NUniform != nUniform || rb.NBuffer != 0) return false;
          rb.Extend (delta);
          return true; 
@@ -168,10 +173,11 @@ abstract class Shader<TVertex, TUniform> : Shader, IComparer<TUniform> where TVe
    /// RBatch has a non-zero ICount value.
    public void Draw (ReadOnlySpan<TVertex> data, ReadOnlySpan<int> indices) {
       ref RBatch rb = ref RBatch.Alloc ();
+      rb.IDVNode = (ushort)Lux.VNode!.Id;
       rb.NShader = Idx; rb.NUniform = SnapUniforms (); rb.NBuffer = 0;
       rb.Offset = mData.Count; rb.Count = data.Length;
       rb.IOffset = mIndex.Count; rb.ICount = indices.Length;
-      RBatch.Staging.Add (rb.Idx);
+      Lux.VNode!.Batches.Add ((rb.Idx, rb.NUniform));
 
       mData.AddRange (data);
       // Note that these indices are all zero-relative (as in the original mesh data). Later, when
@@ -212,6 +218,7 @@ abstract class Shader<TVertex, TUniform> : Shader, IComparer<TUniform> where TVe
    abstract protected int OrderUniformsImp (ref readonly TUniform a, ref readonly TUniform b);
 
    public override int OrderUniforms (int id1, int id2) {
+      if (id1 == id2) return 0;
       var span = mUniforms.AsSpan ();
       ref readonly TUniform ub1 = ref span[id1], ub2 = ref span[id2];
       return OrderUniformsImp (in ub1, in ub2);

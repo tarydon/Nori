@@ -128,8 +128,9 @@ public static class Extensions {
    public static U SafeGet<T, U> (this IReadOnlyDictionary<T, U> dict, T key, U fallback)
       => dict.TryGetValue (key, out var value) ? value : fallback;
 
-   public static T? SafeGet<T> (this IReadOnlyList<T> list, int index)
-      => index < 0 || index >= list.Count ? default : list[index];
+   /// <summary>Returns a value from an list, or default value (of appropriate type) if the index is out of range</summary>
+   public static T? SafeGet<T> (this IReadOnlyList<T> list, int n)
+      => n >= 0 && n < list.Count ? list[n] : default;
 
    /// <summary>Convert a double to a string, rounded to 6 decimal places (no trailing zeroes)</summary>
    /// This has special handling to avoid the annoying "-0"
@@ -142,6 +143,24 @@ public static class Extensions {
    public static string S5 (this float f) {
       string s = Round (f, 5).ToString ();
       return s == "-0" ? "0" : s;
+   }
+
+   /// <summary>Converts an IEnumerable into a comma-separated list</summary>
+   /// This takes each object out of the IEnumerable and prints it using it's ToString operator.
+   /// It then returns all of them as a comma separated list. If any of the items has the separator
+   /// appearing within it, it is quoted. If the quote character appears within any of the strings,
+   /// the quote character is simply removed. 
+   public static string ToCSV<T> (this IEnumerable<T> collection, string separator = ",", string quote = "'") {
+      bool iFirst = true;
+      if (collection == null) return "";
+      StringBuilder sb = new ();
+      foreach (var obj in collection) {
+         if (!iFirst) sb.Append (','); iFirst = false;
+         string s = (obj?.ToString () ?? "").Replace ("\'", "");
+         if (s.Contains ('\'')) s = $"'{s}'";
+         sb.Append (s);
+      }
+      return sb.ToString ();
    }
 
    /// <summary>Convert a string to a double - if the conversion fails, this silently returns 0</summary>

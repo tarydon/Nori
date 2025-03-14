@@ -11,32 +11,39 @@ public partial class MainWindow : Window {
    public MainWindow () {
       Lib.Init ();
       InitializeComponent ();
-      Content = Lux.CreatePanel ();
+      mPanel.Child = Lux.CreatePanel ();
 
-      Lux.UIScene = new LTypeScene ();
+      Lux.UIScene = new RoadScene (mRoad);
+      Lux.OnReady = (() => new SceneManipulator ());
    }
+   Road mRoad = new ();
+
+   void Recolor (object sender, RoutedEventArgs e) 
+      => GetBus ().Color = Color4.Random;
+
+   void Reposition (object sender, RoutedEventArgs e) {
+      var bus = GetBus ();
+      int xPos = mRand.Next (5, (int)(mRoad.Span.Max - bus.Size.X - 5));
+      bus.Pos = new (xPos, 0);
+   }
+
+   void Resize (object sender, RoutedEventArgs e) {
+      var bus = GetBus ();
+      int dx = mRand.Next (10, 20), dy = mRand.Next (5, 10);
+      bus.Size = new (dx, dy);
+   }
+
+   Random mRand = new ();
+   Bus GetBus () => mRoad.Buses[mRand.Next (mRoad.Buses.Count)];
 }
 
-// class LTypeScene --------------------------------------------------------------------------------
-// Demo scene for various line-types
-class LTypeScene : Scene2 {
-   public LTypeScene () => Bound = new Bound2 (0, 0, 100, 60);
-
-   public override Color4 BgrdColor => Color4.Gray (200);
-
-   public override void Draw () {
-      Lux.DrawColor = Color4.Black;
-      Lux.LineWidth = 4f;
-      Lux.TypeFace = mFace;
-      for (var e = ELineType.Continuous; e <= ELineType.Phantom; e++) {
-         Lux.LineType = e;
-         double y = ((int)e + 1) * 3;
-         Lux.Lines ([new (5, y), new (95, y)]);
-
-         var pt = new Point3 (5, y + 0.5, 0) * Xfm;
-         double xTxt = (pt.X + 1) / Lux.VPScale.X, yTxt = (pt.Y + 1) / Lux.VPScale.Y;
-         Lux.Text (e.ToString (), new Vec2S ((short)xTxt, (short)yTxt));
-      }
+class RoadScene : Scene2 {
+   public RoadScene (Road road) : base (new RoadVN (road)) {
+      var span = (mRoad = road).Span;
+      double dy = span.Length * 0.6;
+      Bound = new (span.Min, -dy * 0.2, span.Max, dy * 0.8);
    }
-   TypeFace mFace = new ("C:/Windows/Fonts/segoeui.ttf", 24);
+   readonly Road mRoad;
+
+   public override Color4 BgrdColor => Color4.Gray (225);
 }

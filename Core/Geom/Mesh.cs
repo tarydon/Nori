@@ -40,6 +40,16 @@ public class CMesh (ImmutableArray<CMesh.Node> vertex, ImmutableArray<int> trian
       readonly Vec3H mVec;
    }
 
+   /// <summary>Returns a copy of the mesh shifted by the given vector</summary>
+   public CMesh Translated (Vector3 vec) {
+      var nodes = new Node[Vertex.Length];
+      for (int i = 0; i < Vertex.Length; i++) {
+         var node = Vertex[i];
+         nodes[i] = new Node ((Vec3F)(node.Pos + vec), node.Vec);
+      }
+      return new ([..nodes], Triangle, Wire);
+   }
+
    /// <summary>Loads data from a TMesh file</summary>
    public static CMesh LoadTMesh (string filename) {
       int n = 0;

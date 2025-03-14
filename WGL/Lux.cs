@@ -8,7 +8,10 @@ namespace Nori;
 #region class Lux ----------------------------------------------------------------------------------
 /// <summary>The public interface to the Lux renderer</summary>
 public static partial class Lux {
-   /// <summary>The current scene that is rendered in the visible viewport</summary>
+   /// <summary>The scene that is currently being rendered (set only during a Render() call)</summary>
+   public static Scene? Scene;
+
+   /// <summary>The current scene that is bound to the visible viewport</summary>
    public static Scene UIScene { get => mUIScene; set { mUIScene = value; Redraw (); } }
    static Scene mUIScene = new BlankScene ();
 
@@ -16,6 +19,44 @@ public static partial class Lux {
    static Vec2S mViewport;
 
    internal static int Rung;
+
+   /// <summary>Called when we start rendering a VNode (and it's subtree)</summary>
+   /// The corresponding EndNode is called after the entire subtree under
+   /// this VNode is completed rendering. Because of this, there could be multiple
+   /// open 'BeginNode' calls whose EndNode is pending
+   public static void BeginNode (VNode node) {
+      mNodeStack.Push ((mVNode, mChanged));
+      (mVNode, mChanged) = (node, ELuxAttr.None);
+   }
+   static Stack<(VNode?, ELuxAttr)> mNodeStack = [];
+
+   static bool Get (ELuxAttr flags, ELuxAttr bit) => (flags & bit) != 0;
+   static bool Set (ELuxAttr attr) {
+      if ((mChanged & attr) != 0) return false;
+      mChanged |= attr; return true; 
+   }
+   static ELuxAttr mChanged;
+
+   public static bool PopAttr (ELuxAttr flags) {
+      flags &= mChanged;
+      if (flags != ELuxAttr.None) {
+         if ((flags & ELuxAttr.Color) != 0) mColor = mColors.Pop ();
+         if ((flags & ELuxAttr.LineType) != 0) mLineType = mLineTypes.Pop ();
+         if ((flags & ELuxAttr.LineWidth) != 0) mLineWidth = mLineWidths.Pop ();
+         if ((flags & ELuxAttr.LTScale) != 0) mLTScale = mLTScales.Pop ();
+         if ((flags & ELuxAttr.PointSize) != 0) mPointSize = mPointSizes.Pop ();
+         if ((flags & ELuxAttr.TypeFace) != 0) mTypeface = mTypefaces.Pop ();
+         if ((flags & ELuxAttr.Xfm) != 0) mIDXfm = mIDXfms.Pop ();
+         mChanged &= ~flags;
+         return true;
+      }
+      return false;
+   }
+
+   public static void EndNode () {
+      if (PopAttr (mChanged)) Rung++;
+      (mVNode, mChanged) = mNodeStack.Pop ();
+   }
 
    /// <summary>Creates the Lux rendering panel</summary>
    public static UIElement CreatePanel ()
@@ -30,24 +71,14 @@ public static partial class Lux {
       // later go away and be replaced by something more clean
       if (!mReadyFired) { mReadyFired = true; OnReady?.Invoke (); }
 
+      mFrame++;
       var panel = Panel.It;
       panel.BeginRender (panel.Size, ETarget.Screen);
       StartFrame (panel.Size);
       GLState.StartFrame (panel.Size, mUIScene?.BgrdColor ?? Color4.Gray (96));
       RBatch.StartFrame ();
       Shader.StartFrame ();
-      mFrame++;
-
-      if (mUIScene != null) {
-         mUIScene.Viewport = panel.Size;
-         Xfm = (Mat4F)mUIScene.Xfm;
-         NormalXfm = (Mat4F)mUIScene.NormalXfm;
-         mUIScene.Draw ();
-      }
-
-      RBatch.IssueAll ();
-      RBatch.ReleaseAll ();
-
+      mUIScene?.Render (panel.Size);
       panel.EndRender ();
       Info.FrameOver ();
    }
@@ -60,11 +91,14 @@ public static partial class Lux {
    public static void StartFrame (Vec2S viewport) {
       mViewport = viewport;
       VPScale = new Vec2F (2.0 / viewport.X, 2.0 / viewport.Y);
-      DrawColor = Color4.White;
-      LineWidth = 3f;
-      PointSize = 7f;
-      LineType = ELineType.Continuous;
-      LTScale = 100f;
+      mColors.Clear (); mColor = Color4.White;
+      mLineWidths.Clear (); mLineWidth = 4f;
+      mPointSizes.Clear (); mPointSize = 7f;
+      mLineTypes.Clear (); mLineType = ELineType.Continuous;
+      mLTScales.Clear (); mLTScale = 100f;
+      mTypefaces.Clear (); mTypeface = null;
+      mIDXfms.Clear (); mIDXfm = 0;
+      mChanged = ELuxAttr.None;
       Rung++;
    }
 

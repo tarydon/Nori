@@ -4,58 +4,88 @@
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 namespace Nori;
 
+[Flags]
+public enum ELuxAttr {
+   None = 0,
+   Color = 1 << 0, LineWidth = 1 << 1, LineType = 1 << 2, LTScale = 1 << 3, 
+   Xfm = 1 << 4, PointSize = 1 << 5, TypeFace = 1 << 6, 
+}
+
 #region class Lux ----------------------------------------------------------------------------------
 /// <summary>The public interface to the Lux renderer</summary>
 public static partial class Lux {
    // Properties ---------------------------------------------------------------
    /// <summary>The current drawing color (default = white)</summary>
-   public static Color4 DrawColor { 
-      get => mDrawColor;
-      set { if (Lib.Set (ref mDrawColor, value)) Rung++; }
+   public static Color4 Color { 
+      get => mColor;
+      set {
+         if (mColor.EQ (value)) return;
+         if (Set (ELuxAttr.Color)) mColors.Push (mColor);
+         mColor = value; Rung++;
+      }
    }
-   static Color4 mDrawColor;
+   static Color4 mColor;
+   static Stack<Color4> mColors = [];
 
    /// <summary>The current line-width, in device-independent pixels</summary>
    public static float LineWidth { 
       get => mLineWidth;
-      set { if (Lib.Set (ref mLineWidth, value)) Rung++; } 
+      set {
+         if (mLineWidth.EQ (value)) return;
+         if (Set (ELuxAttr.LineWidth)) mLineWidths.Push (mLineWidth); 
+         mLineWidth = value; Rung++;
+      } 
    }
    static float mLineWidth;
+   static Stack<float> mLineWidths = [];
 
    /// <summary>The current line-type</summary>
    public static ELineType LineType {
       get => mLineType;
-      set { if (Lib.SetE (ref mLineType, value)) Rung++; }
+      set {
+         if (mLineType == value) return;
+         if (Set (ELuxAttr.LineType)) mLineTypes.Push (mLineType); 
+         mLineType = value; Rung++;
+      }
    }
    static ELineType mLineType;
+   static Stack<ELineType> mLineTypes = [];
 
    /// <summary>The current line-type scaling</summary>
    public static float LTScale {
       get => mLTScale;
-      set { if (Lib.Set (ref mLTScale, value)) Rung++; }
+      set {
+         if (mLTScale.EQ (value)) return;
+         if (Set (ELuxAttr.LTScale)) mLTScales.Push (mLTScale);
+         mLTScale = value; Rung++;
+      }
    }
    static float mLTScale = 100;
-
-   /// <summary>The normal transform (rotation component of Xfm) used for Gourad, Phong shading</summary>
-   public static Mat4F NormalXfm { get => mNormalXfm; set { mNormalXfm = value; Rung++; } }
-   static Mat4F mNormalXfm;
+   static Stack<float> mLTScales = [];
 
    /// <summary>The diameter of a point, in device-independent pixels</summary>
    public static float PointSize { 
       get => mPointSize;
-      set { if (Lib.Set (ref mPointSize, value)) Rung++; }
+      set {
+         if (mPointSize.EQ (value)) return;
+         if (Set (ELuxAttr.PointSize)) mPointSizes.Push (mPointSize);
+         mPointSize = value; Rung++;
+      }
    }
    static float mPointSize;
+   static Stack<float> mPointSizes = [];
 
    /// <summary>The typeface to use for drawing</summary>
    public static TypeFace? TypeFace {
       get => mTypeface;
       set {
          if (ReferenceEquals (mTypeface, value)) return;
+         if (Set (ELuxAttr.TypeFace)) mTypefaces.Push (mTypeface);
          mTypeface = value; Rung++;
       }
    }
    static TypeFace? mTypeface;
+   static Stack<TypeFace?> mTypefaces = [];
 
    /// <summary>Viewport scale (convert viewport pixels to GL clip coordinates -1 .. +1)</summary>
    public static Vec2F VPScale { 
@@ -64,9 +94,30 @@ public static partial class Lux {
    }
    static Vec2F mVPScale;
 
-   /// <summary>The current transform to use for the rendering</summary>
-   public static Mat4F Xfm { get => mXfm; set { mXfm = value; Rung++; } }
-   static Mat4F mXfm;
+   public static VNode? VNode => mVNode;
+   static VNode? mVNode;
+
+   /// <summary>The index of the current transform in use</summary>
+   /// This is an index into Scene.Xfms[] 
+   public static int IDXfm {
+      get => mIDXfm;
+      private set {
+         if (mIDXfm == value) return;
+         if (Set (ELuxAttr.Xfm)) mIDXfms.Push (mIDXfm);
+         mIDXfm = value; Rung++;
+      }
+   }
+   static int mIDXfm;
+   static Stack<int> mIDXfms = [];
+
+   public static Matrix3 Xfm {
+      set {
+         if (value.IsIdentity) return;
+         var xe = new XfmEntry (Scene!.Xfms[IDXfm], value);
+         IDXfm = Scene.Xfms.Count; 
+         Scene.Xfms.Add (xe);
+      }
+   }
 
    // Methods ------------------------------------------------------------------
    /// <summary>Draws 2D lines in world coordinates, with Z = 0</summary>
@@ -94,15 +145,19 @@ public static partial class Lux {
    ///   2 - Phong shading
    /// (This is primarily for learning purposes. Later we will remove the other shade
    /// modes, and use only Phong shading)
-   public static void Mesh (CMesh mesh, int shadeMode) {
+   public static void Mesh (CMesh mesh, EShadeMode shadeMode) {
       CMesh.Node[] nodes = mesh.Vertex.AsArray ();
       int[] tris = mesh.Triangle.AsArray (), wires = mesh.Wire.AsArray ();
       switch (shadeMode) {
-         case 0: FlatFacetShader.It.Draw (nodes, tris); break;
-         case 1: GouradShader.It.Draw (nodes, tris); break;
+         case EShadeMode.Flat: FlatFacetShader.It.Draw (nodes, tris); break;
+         case EShadeMode.Gourad: GouradShader.It.Draw (nodes, tris); break;
+         case EShadeMode.Glass: GlassShader.It.Draw (nodes, tris); break;
          default: PhongShader.It.Draw (nodes, tris); break;
       }
-      StencilLineShader.It.Draw (nodes, wires);
+      switch (shadeMode) {
+         case EShadeMode.Glass: GlassLineShader.It.Draw (nodes, wires); break;
+         default: BlackLineShader.It.Draw (nodes, wires); break;
+      }
    }
 
    /// <summary>Draws 2D points in world coordinates, with Z = 0</summary>
@@ -111,6 +166,27 @@ public static partial class Lux {
    /// - DrawColor : color of the points being drawn
    public static void Points (ReadOnlySpan<Vec2F> pts)
       => Point2DShader.It.Draw (pts);
+
+   /// <summary>Draws a Poly object in world coordinates, with Z = 0</summary>
+   public static void Poly (Poly p) {
+      mPolys.Clear (); mPolys.Add (p);
+      Polys (mPolys.AsSpan ());
+   }
+   static List<Poly> mPolys = [];
+   static List<Vec2F> mLines = [], mBeziers = [];
+
+   /// <summary>Draw multiple Polys in world coordinates, with Z = 0</summary>
+   public static void Polys (ReadOnlySpan<Poly> polys) {
+      mLines.Clear (); mBeziers.Clear ();
+      foreach (var p in polys) {
+         foreach (var seg in p.Segs) {
+            if (seg.IsArc) seg.ToBeziers (mBeziers);
+            else { mLines.Add (seg.A); mLines.Add (seg.B); }
+         }
+      }
+      Lines (mLines.AsSpan ());
+      Beziers (mBeziers.AsSpan ());
+   }
 
    /// <summary>Draws 2D quads in world coordinates, with Z = 0</summary>
    /// The quads are drawn with smoothed (anti-aliased) edges. 
