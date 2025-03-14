@@ -116,6 +116,11 @@ class ShaderImp {
       }
       return this;
    }
+   /// <summary>Set a uniform of type Mat4f</summary>
+   public unsafe ShaderImp Set (int index, float *m) {
+      if (index != -1) GL.Uniform (index, false, m);
+      return this;
+   }
 
    // Standard shaders ---------------------------------------------------------
    public static ShaderImp Bezier2D => mBezier2D ??= Load ();

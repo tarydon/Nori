@@ -2,6 +2,7 @@
 // ╔═╦╦═╦╦╬╣ MainWindow.xaml.cs
 // ║║║║╬║╔╣║ Window class for WPFDemo application
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
+using System.Reactive.Subjects;
 using System.Windows;
 using Nori;
 namespace WPFDemo;
@@ -13,28 +14,18 @@ public partial class MainWindow : Window {
       InitializeComponent ();
       Content = Lux.CreatePanel ();
 
-      Lux.UIScene = new MeshScene ();
+      Lux.UIScene = new RoadScene (new Road ());
       Lux.OnReady = (() => new SceneManipulator ());
    }
 }
 
-// class LTypeScene --------------------------------------------------------------------------------
-// Demo scene for various line-types
-class MeshScene : Scene3 {
-   public MeshScene () {
-      mMesh1 = CMesh.LoadTMesh ("N:/Demos/Data/part.tmesh");
-      Bound = mMesh1.Bound;
-      mMesh2 = mMesh1.Translated (new (0, 0, -Bound.Z.Length * 1.5));
-      Bound += mMesh2.Bound;
+class RoadScene : Scene2 {
+   public RoadScene (Road road) : base (new RoadVN (road)) {
+      var span = (mRoad = road).Span;
+      double dy = span.Length * 0.6;
+      Bound = new (span.Min, -dy * 0.2, span.Max, dy * 0.8);
    }
-   CMesh mMesh1, mMesh2;
+   readonly Road mRoad;
 
-   public override Color4 BgrdColor => Color4.Gray (64);
-
-   public override void Draw () {
-      Lux.DrawColor = Color4.Red;
-      Lux.Mesh (mMesh1, EShadeMode.Gourad);
-      Lux.DrawColor = Color4.Green;
-      Lux.Mesh (mMesh2, EShadeMode.Glass);
-   }
+   public override Color4 BgrdColor => Color4.Gray (225);
 }

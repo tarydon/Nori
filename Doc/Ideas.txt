@@ -1,0 +1,22 @@
+[IDEA001]
+
+Each frame, each Shader drops all the uniforms it has snapped, and subsequent
+SnapUniforms() calls build up the Uniforms[] list again within that shader. 
+Many times, the new uniforms will match exactly what already existed there, so
+this is wasted effort. 
+
+Instead: suppose the set of uniforms for a Shader is an IdxHeap[]. Then, we
+need not flush the Uniforms[] list of the shader at the start of every frame.
+When an RBatch is retired, it will release its uniform back into the heap. 
+And when an RBatch is _recolored_ (fresh uniforms), we can reuse the same
+slot in the IdxHeap to store those new uniforms.
+
+The advantage is that if there are large subtrees where no recoloring is needed,
+we can even avoid doing this re-Snapping of the uniforms, since we can just
+use the old one that already exists in the Shader's uniforms IdxHeap. 
+
+The uniforms need to be re-snapped only for VNode that have their AttributesDirty
+bit set (and the entire subtree underneath that, because of attribute propagation). 
+So we could pass in a flag into the Render routine, which could get ORed with the
+AttributesDirty at each stage so subtrees of VNodes with AttributesDirty will
+have their uniforms re-gathered again. 

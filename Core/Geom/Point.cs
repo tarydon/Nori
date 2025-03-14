@@ -7,7 +7,7 @@ namespace Nori;
 
 #region struct Point2 ------------------------------------------------------------------------------
 /// <summary>Point in 2 dimensions, 64-bit double components</summary>
-public readonly struct Point2 {
+public readonly struct Point2 : IEQuable<Point2> {
    // Constructors -------------------------------------------------------------
    /// <summary>Construct a Point2 given the X and Y ordinates</summary>
    public Point2 (double x, double y) => (X, Y) = (x, y);
