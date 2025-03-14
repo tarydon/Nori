@@ -71,11 +71,12 @@ class EPropClassGenerator : IIncrementalGenerator {
       // raises the appropriate notification call
       foreach (var field in lines.Skip (1)) {
          string[] fwords = field.Split ();
-         string name = fwords[1];
+         string name = fwords[1], typename = fwords[0], eprop = fwords[2];
+         if (typename.StartsWith ("Nori.")) typename = typename.Substring (5);
          sb.Append ($$"""
-               public {{fwords[0]}} {{name.Substring (1)}} {
+               public {{typename}} {{name.Substring (1)}} {
                   get => {{name}};
-                  set { if (Lib.Set (ref {{name}}, value)) Notify ({{fwords[2].Substring (5)}}); }
+                  set { if (Lib.Set (ref {{name}}, value)) Notify ({{eprop.Substring (5)}}); }
                }
 
             """);

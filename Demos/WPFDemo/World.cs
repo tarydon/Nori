@@ -22,33 +22,16 @@ class Road {
 
 #region class Bus ----------------------------------------------------------------------------------
 // Bus is the next level of the hierarchy - a road has multiple buses on it
-public class Bus : IObservable<EProp> {
+[EPropClass]
+public partial class Bus : IObservable<EProp> {
    public Bus (Point2 pos, Vector2 size, Color4 color)
       => (mPos, mSize, mColor) = (pos, size, color);
 
    // Bus position (bottom left corner of the bus bounding rectangle)
-   public Point2 Pos {
-      get => mPos;
-      set { if (Lib.Set (ref mPos, value)) Notify (EProp.Xfm); }
-   }
-   Point2 mPos;
-
+   [EPropField (EProp.Xfm)] Point2 mPos;
    // Size of the bus body
-   public Vector2 Size {
-      get => mSize;
-      set { if (Lib.Set (ref mSize, value)) Notify (EProp.Geometry); }
-   }
-   Vector2 mSize;
-
+   [EPropField (EProp.Geometry)] Vector2 mSize;
    // Color of the bus
-   public Color4 Color {
-      get => mColor;
-      set { if (Lib.Set (ref mColor, value)) Notify (EProp.Attributes); }
-   }
-   Color4 mColor;
-
-   public IDisposable Subscribe (IObserver<EProp> observer) => (mSubject ??= new ()).Subscribe (observer);
-   void Notify (EProp prop) => mSubject?.OnNext (prop);
-   Subject<EProp>? mSubject;
+   [EPropField (EProp.Attributes)] Color4 mColor;
 }
 #endregion
