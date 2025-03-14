@@ -169,15 +169,24 @@ public static partial class Lux {
 
    /// <summary>Draws a Poly object in world coordinates, with Z = 0</summary>
    public static void Poly (Poly p) {
+      mPolys.Clear (); mPolys.Add (p);
+      Polys (mPolys.AsSpan ());
+   }
+   static List<Poly> mPolys = [];
+   static List<Vec2F> mLines = [], mBeziers = [];
+
+   /// <summary>Draw multiple Polys in world coordinates, with Z = 0</summary>
+   public static void Polys (ReadOnlySpan<Poly> polys) {
       mLines.Clear (); mBeziers.Clear ();
-      foreach (var seg in p.Segs) {
-         if (seg.IsArc) seg.ToBeziers (mBeziers);
-         else { mLines.Add (seg.A); mLines.Add (seg.B); }
+      foreach (var p in polys) {
+         foreach (var seg in p.Segs) {
+            if (seg.IsArc) seg.ToBeziers (mBeziers);
+            else { mLines.Add (seg.A); mLines.Add (seg.B); }
+         }
       }
       Lines (mLines.AsSpan ());
       Beziers (mBeziers.AsSpan ());
    }
-   static List<Vec2F> mLines = [], mBeziers = [];
 
    /// <summary>Draws 2D quads in world coordinates, with Z = 0</summary>
    /// The quads are drawn with smoothed (anti-aliased) edges. 
