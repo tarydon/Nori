@@ -92,8 +92,8 @@ public static partial class Lux {
       mViewport = viewport;
       VPScale = new Vec2F (2.0 / viewport.X, 2.0 / viewport.Y);
       mColors.Clear (); mColor = Color4.White;
-      mLineWidths.Clear (); mLineWidth = 3f;
-      mPointSizes.Clear (); mPointSize = 3f;
+      mLineWidths.Clear (); mLineWidth = 4f;
+      mPointSizes.Clear (); mPointSize = 7f;
       mLineTypes.Clear (); mLineType = ELineType.Continuous;
       mLTScales.Clear (); mLTScale = 100f;
       mTypefaces.Clear (); mTypeface = null;

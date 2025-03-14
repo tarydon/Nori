@@ -65,6 +65,10 @@ public class VNode {
    /// <summary>The domain-space Object which this VNode is rendering</summary>
    public readonly object? Obj;
 
+   // Methods ------------------------------------------------------------------
+   /// <summary>Called when geometry has changed and complete redraw of this VNode is needed</summary>
+   public void Redraw () { mGeometryDirty = true; Lux.Redraw ();  }
+
    // Overrides ----------------------------------------------------------------
    /// <summary>Specifies which attributes are inherited by children of this VNode</summary>
    public virtual ELuxAttr Bequeath => ELuxAttr.Color | ELuxAttr.Xfm | ELuxAttr.TypeFace;
@@ -105,7 +109,7 @@ public class VNode {
    /// TODO: Check we are disconnecting correctly
    protected virtual void OnChanged (EProp prop) {
       switch (prop) {
-         case EProp.Geometry: mGeometryDirty = true; Lux.Redraw (); break;
+         case EProp.Geometry: Redraw (); break;
          case EProp.Attributes: case EProp.Xfm: Lux.Redraw (); break;
       }
    }

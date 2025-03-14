@@ -6,6 +6,12 @@
         xmlns:local="clr-namespace:WPFDemo"
         Width="600" Height="600" Top="100" Left="100"
         Title="MainWindow" WindowState="Maximized" Background="Black">
-   <Grid>
-   </Grid>
+   <DockPanel>
+      <StackPanel DockPanel.Dock="Left" MinWidth="100" Background="#888">
+         <Button Padding="4,2,4,2" Margin="4,4,4,0" Click="Recolor">Recolor</Button>
+         <Button Padding="4,2,4,2" Margin="4,4,4,0" Click="Reposition">Reposition</Button>
+         <Button Padding="4,2,4,2" Margin="4,4,4,0" Click="Resize">Resize</Button>
+      </StackPanel>
+      <Border Name="mPanel"></Border>
+   </DockPanel>
 </Window>

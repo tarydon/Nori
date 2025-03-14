@@ -2,7 +2,6 @@
 // ╔═╦╦═╦╦╬╣ MainWindow.xaml.cs
 // ║║║║╬║╔╣║ Window class for WPFDemo application
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
-using System.Reactive.Subjects;
 using System.Windows;
 using Nori;
 namespace WPFDemo;
@@ -12,11 +11,30 @@ public partial class MainWindow : Window {
    public MainWindow () {
       Lib.Init ();
       InitializeComponent ();
-      Content = Lux.CreatePanel ();
+      mPanel.Child = Lux.CreatePanel ();
 
-      Lux.UIScene = new RoadScene (new Road ());
+      Lux.UIScene = new RoadScene (mRoad);
       Lux.OnReady = (() => new SceneManipulator ());
    }
+   Road mRoad = new ();
+
+   void Recolor (object sender, RoutedEventArgs e) 
+      => GetBus ().Color = Color4.Random;
+
+   void Reposition (object sender, RoutedEventArgs e) {
+      var bus = GetBus ();
+      int xPos = mRand.Next (5, (int)(mRoad.Span.Max - bus.Size.X - 5));
+      bus.Pos = new (xPos, 0);
+   }
+
+   void Resize (object sender, RoutedEventArgs e) {
+      var bus = GetBus ();
+      int dx = mRand.Next (10, 20), dy = mRand.Next (5, 10);
+      bus.Size = new (dx, dy);
+   }
+
+   Random mRand = new ();
+   Bus GetBus () => mRoad.Buses[mRand.Next (mRoad.Buses.Count)];
 }
 
 class RoadScene : Scene2 {
