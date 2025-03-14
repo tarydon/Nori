@@ -273,7 +273,7 @@ class TMisc {
       LineFont.Get ("A-Missing-Font").Name.Is ("simplex");
       // Render test.
       List<Poly> polys = [];
-      LineFont.Get ("romans").Render (text, new (10, 100), 10, 10.D2R (), polys);
+      LineFont.Get ("romans").Render (text, new (10, 100), 0, 1, 10, 10.D2R (), polys);
       File.WriteAllText (NT.TmpTxt, string.Join ('\n', polys));
       Assert.TextFilesEqual ($"{NT.Data}/Misc/LineFont.txt", NT.TmpTxt);
    }
