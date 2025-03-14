@@ -36,6 +36,9 @@ enum EIndexType : uint { UByte = 5121, UShort = 5123, UInt = 5125 }
 // Various modes that can be passed to glBegin
 enum EMode : uint { Points = 0, Lines = 1, LineLoop = 2, LineStrip = 3, Triangles = 4, Quads = 7, Patches = 14 };
 
+/// <summary>Various shading modes to pass to Lux.Mesh(...)</summary>
+public enum EShadeMode { Flat, Gourad, Phong, Glass };
+
 // Pixel storage formats
 enum EPixelFormat : uint { DepthComponent = 6402, Red = 6403, Rgba = 6408, Bgra = 32993 }
 // Pixel data type

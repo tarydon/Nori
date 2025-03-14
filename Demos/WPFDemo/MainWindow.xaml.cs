@@ -13,30 +13,28 @@ public partial class MainWindow : Window {
       InitializeComponent ();
       Content = Lux.CreatePanel ();
 
-      Lux.UIScene = new LTypeScene ();
+      Lux.UIScene = new MeshScene ();
+      Lux.OnReady = (() => new SceneManipulator ());
    }
 }
 
 // class LTypeScene --------------------------------------------------------------------------------
 // Demo scene for various line-types
-class LTypeScene : Scene2 {
-   public LTypeScene () => Bound = new Bound2 (0, 0, 100, 60);
+class MeshScene : Scene3 {
+   public MeshScene () {
+      mMesh1 = CMesh.LoadTMesh ("N:/Demos/Data/part.tmesh");
+      Bound = mMesh1.Bound;
+      mMesh2 = mMesh1.Translated (new (0, 0, -Bound.Z.Length * 1.5));
+      Bound += mMesh2.Bound;
+   }
+   CMesh mMesh1, mMesh2;
 
-   public override Color4 BgrdColor => Color4.Gray (200);
+   public override Color4 BgrdColor => Color4.Gray (64);
 
    public override void Draw () {
-      Lux.DrawColor = Color4.Black;
-      Lux.LineWidth = 4f;
-      Lux.TypeFace = mFace;
-      for (var e = ELineType.Continuous; e <= ELineType.Phantom; e++) {
-         Lux.LineType = e;
-         double y = ((int)e + 1) * 3;
-         Lux.Lines ([new (5, y), new (95, y)]);
-
-         var pt = new Point3 (5, y + 0.5, 0) * Xfm;
-         double xTxt = (pt.X + 1) / Lux.VPScale.X, yTxt = (pt.Y + 1) / Lux.VPScale.Y;
-         Lux.Text (e.ToString (), new Vec2S ((short)xTxt, (short)yTxt));
-      }
+      Lux.DrawColor = Color4.Red;
+      Lux.Mesh (mMesh1, EShadeMode.Gourad);
+      Lux.DrawColor = Color4.Green;
+      Lux.Mesh (mMesh2, EShadeMode.Glass);
    }
-   TypeFace mFace = new ("C:/Windows/Fonts/segoeui.ttf", 24);
 }

@@ -94,15 +94,19 @@ public static partial class Lux {
    ///   2 - Phong shading
    /// (This is primarily for learning purposes. Later we will remove the other shade
    /// modes, and use only Phong shading)
-   public static void Mesh (CMesh mesh, int shadeMode) {
+   public static void Mesh (CMesh mesh, EShadeMode shadeMode) {
       CMesh.Node[] nodes = mesh.Vertex.AsArray ();
       int[] tris = mesh.Triangle.AsArray (), wires = mesh.Wire.AsArray ();
       switch (shadeMode) {
-         case 0: FlatFacetShader.It.Draw (nodes, tris); break;
-         case 1: GouradShader.It.Draw (nodes, tris); break;
+         case EShadeMode.Flat: FlatFacetShader.It.Draw (nodes, tris); break;
+         case EShadeMode.Gourad: GouradShader.It.Draw (nodes, tris); break;
+         case EShadeMode.Glass: GlassShader.It.Draw (nodes, tris); break;
          default: PhongShader.It.Draw (nodes, tris); break;
       }
-      StencilLineShader.It.Draw (nodes, wires);
+      switch (shadeMode) {
+         case EShadeMode.Glass: GlassLineShader.It.Draw (nodes, wires); break;
+         default: BlackLineShader.It.Draw (nodes, wires); break;
+      }
    }
 
    /// <summary>Draws 2D points in world coordinates, with Z = 0</summary>

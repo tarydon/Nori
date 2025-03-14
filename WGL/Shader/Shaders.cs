@@ -10,6 +10,42 @@ namespace Nori;
 partial class Bezier2DShader () : Seg2DShader (ShaderImp.Bezier2D) { }
 #endregion
 
+#region class BlackLineShader ----------------------------------------------------------------------
+/// <summary>Variant of StencilLineShader that draws solid black lines in 3D (anti-aliased)</summary>
+[Singleton]
+partial class BlackLineShader () : StencilLineShader (ShaderImp.BlackLine) { }
+#endregion
+
+#region class DashLine2DShader ---------------------------------------------------------------------
+/// <summary>Shader used to draw lines with a dash pattern (dashed / dotted / centerline etc)</summary>
+[Singleton]
+partial class DashLine2DShader : Shader<Vec2F, DashLine2DShader.Settings> {
+   // Constructor --------------------------------------------------------------
+   public DashLine2DShader () : base (ShaderImp.DashLine2D) => Bind ();
+   int muVPScale = 0, muXfm = 0, muLineWidth = 0, muLineType = 0, muLTScale = 0, muDrawColor = 0, muLTypeTexture = 0;
+
+   protected override void ApplyUniformsImp (ref readonly Settings a) {
+      float fLType = ((int)a.LineType + 0.5f) / 10.0f;
+      Pgm.Set (muLineWidth, a.LineWidth).Set (muLineType, fLType).Set (muDrawColor, a.Color);
+   }
+
+   protected override int OrderUniformsImp (ref readonly Settings a, ref readonly Settings b) {
+      int n = a.LineWidth.CompareTo (b.LineWidth); if (n != 0) return n;
+      n = a.LineType.CompareTo (b.LineType); if (n != 0) return n;
+      return (int)(a.Color.Value - b.Color.Value);
+   }
+
+   protected override void SetConstantsImp () {
+      Pgm.Set (muVPScale, Lux.VPScale).Set (muXfm, Lux.Xfm).Set (muLTypeTexture, 1).Set (muLTScale, Lux.LTScale);
+   }
+
+   protected override Settings SnapUniformsImp ()
+      => new (Lux.LineWidth, Lux.LineType, Lux.DrawColor);
+
+   public readonly record struct Settings (float LineWidth, ELineType LineType, Color4 Color);
+}
+#endregion
+
 #region class FacetShader --------------------------------------------------------------------------
 /// <summary>Base class for various types of 3D shader (Flat / Gourad / Phong)</summary>
 abstract class FacetShader : Shader<CMesh.Node, Color4> {
@@ -31,6 +67,18 @@ abstract class FacetShader : Shader<CMesh.Node, Color4> {
 /// <summary>3D shader using flat shading (no interpolation)</summary>
 [Singleton]
 partial class FlatFacetShader () : FacetShader (ShaderImp.FlatFacet) { }
+#endregion
+
+#region class GlassShader --------------------------------------------------------------------------
+/// <summary>3D shader that simulates translucency using stippling</summary>
+[Singleton]
+partial class GlassShader () : FacetShader (ShaderImp.Glass) { }
+#endregion
+
+#region class GlassLineShader ----------------------------------------------------------------------
+/// <summary>Variant of StencilLineShader that draws stippled lines (50% transparency)</summary>
+[Singleton]
+partial class GlassLineShader () : StencilLineShader (ShaderImp.GlassLine) { }
 #endregion
 
 #region class GouradShader -------------------------------------------------------------------------
@@ -106,42 +154,11 @@ class Seg2DShader : Shader<Vec2F, Seg2DShader.Settings> {
 }
 #endregion
 
-#region class DashLine2DShader ---------------------------------------------------------------------
-/// <summary>Shader used to draw lines with a dash pattern (dashed / dotted / centerline etc)</summary>
-[Singleton]
-partial class DashLine2DShader : Shader<Vec2F, DashLine2DShader.Settings> {
-   // Constructor --------------------------------------------------------------
-   public DashLine2DShader () : base (ShaderImp.DashLine2D) => Bind ();
-   int muVPScale = 0, muXfm = 0, muLineWidth = 0, muLineType = 0, muLTScale = 0, muDrawColor = 0, muLTypeTexture = 0;
-
-   protected override void ApplyUniformsImp (ref readonly Settings a) {
-      float fLType = ((int)a.LineType + 0.5f) / 10.0f;
-      Pgm.Set (muLineWidth, a.LineWidth).Set (muLineType, fLType).Set (muDrawColor, a.Color);
-   }
-
-   protected override int OrderUniformsImp (ref readonly Settings a, ref readonly Settings b) {
-      int n = a.LineWidth.CompareTo (b.LineWidth); if (n != 0) return n;
-      n = a.LineType.CompareTo (b.LineType); if (n != 0) return n;
-      return (int)(a.Color.Value - b.Color.Value);
-   }
-
-   protected override void SetConstantsImp () {
-      Pgm.Set (muVPScale, Lux.VPScale).Set (muXfm, Lux.Xfm).Set (muLTypeTexture, 1).Set (muLTScale, Lux.LTScale);
-   }
-
-   protected override Settings SnapUniformsImp ()
-      => new (Lux.LineWidth, Lux.LineType, Lux.DrawColor);
-
-   public readonly record struct Settings (float LineWidth, ELineType LineType, Color4 Color);
-}
-#endregion
-
 #region class StencilLineShader --------------------------------------------------------------------
 /// <summary>Shader used to draw the black stencil lines for a mesh</summary>
-[Singleton]
-partial class StencilLineShader : Shader<CMesh.Node, StencilLineShader.Settings> {
+abstract class StencilLineShader : Shader<CMesh.Node, StencilLineShader.Settings> {
    // Constructor --------------------------------------------------------------
-   public StencilLineShader () : base (ShaderImp.StencilLine) => Bind ();
+   public StencilLineShader (ShaderImp imp) : base (imp) => Bind ();
    int muXfm = 0, muVPScale = 0, muLineWidth = 0, muDrawColor = 0;
 
    // Overrides ----------------------------------------------------------------
@@ -181,7 +198,7 @@ partial class TextPxShader : Shader<TextPxShader.Args, TextPxShader.Settings> {
    }
 
    protected override void SetConstantsImp () => Pgm.Set (muVPScale, Lux.VPScale).Set (muFontTexture, 0);
-   protected override Settings SnapUniformsImp () => new (Lux.DrawColor, Lux.TypeFace ?? TypeFace.Default);
+   protected override Settings SnapUniformsImp () => new (Lux.DrawColor, Lux.TypeFace);
 
    // Nested types -------------------------------------------------------------
    [StructLayout (LayoutKind.Sequential)]
