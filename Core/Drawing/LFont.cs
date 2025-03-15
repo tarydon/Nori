@@ -74,14 +74,16 @@ public class LineFont {
    /// <param name="height">Height of the font.</param>
    /// <param name="angle">Rotation angle in radians.</param>
    /// <param name="output">The output list where the rendered output is collected.</param>
-   public void Render (string text, Point2 pos, double height, double angle, List<Poly> output) {
+   public void Render (string text, Point2 pos, double oblique, double xscale, double height, double angle, List<Poly> output) {
       // Initialize the factor by which glyphs have to be scaled.
       // It will be a constant for this render call.
       var scale = height / Ascender;
       // Compose the scaling and rotation matrices.
-      Matrix2 mat0 = Matrix2.Scaling (scale), mat1 = Matrix2.Rotation (pos, angle);
+      Matrix2 mat0 = Matrix2.Scaling (xscale * scale, scale), mat1 = Matrix2.Rotation (pos, angle);
       // Initialize the (x, y) positions of the 'next' char along with the line-gap, dy.
       double x = pos.X, y = pos.Y, dy = scale * VAdvance;
+      // Compose the oblique matrix
+      if (!oblique.IsZero ()) mat0 *= new Matrix2 (1, 0, Math.Tan (oblique), 1, 0, 0);
       // Render the text characters now.
       foreach (char ch in text) {
          if (ch == '\n') {
