@@ -26,6 +26,14 @@ public enum EProp {
    Visibility
 }
 
+/// <summary>The possible values for text-alignment within a box</summary>
+public enum ETextAlign {
+   TopLeft = 1, TopCenter = 2, TopRight = 3,
+   MidLeft = 4, MidCenter = 5, MidRight = 6,
+   BotLeft = 7, BotCenter = 8, BotRight = 9,
+   BaseLeft = 10, BaseCenter = 11, BaseRight = 12
+}
+
 /// <summary>Various render-targets for Lux.Panel</summary>
 public enum ETarget { Screen, Image, Pick }
 #endregion
