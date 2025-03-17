@@ -100,8 +100,8 @@ public class LineFont {
             if (!angle.IsZero ()) mat *= mat1;
             output.AddRange (g.Polys.Select (x => x * mat));
          }
-         // Advance the x-position by HAdvance.
-         x += g.HAdvance * height;
+         // Advance the x-position by HAdvance with xscaling.
+         x += g.HAdvance * xscale * height;
       }
    }
 
