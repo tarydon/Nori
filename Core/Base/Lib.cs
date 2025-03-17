@@ -159,8 +159,6 @@ public static class Lib {
    public static bool Set (ref float f0, float f1) { if (f0.EQ (f1)) return false; f0 = f1; return true; }
    /// <summary>Sets an int , and returns true if it has changed</summary>
    public static bool Set (ref int n0, int n1) { if (n0 == n1) return false; n0 = n1; return true; }
-   /// <summary>Sets an string , and returns true if it has changed</summary>
-   public static bool Set (ref string s0, string s1) { if (s0.EqIC (s1)) return false; s0 = s1; return true; }
    /// <summary>Sets a value, and returns true if it has changed (for any IEQuable)</summary>
    public static bool Set<T> (ref T t0, T t1) where T : struct, IEQuable<T> { if (t0.EQ (t1)) return false; t0 = t1; return true; }
    /// <summary>Sets a value and returns true if it has changed (for any reference type)</summary>

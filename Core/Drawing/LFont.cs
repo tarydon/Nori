@@ -71,6 +71,8 @@ public class LineFont {
    /// Thus, the input point pos becomes the lower-left corner where we start rendering the text.
    /// <param name="text">The text to render.</param>
    /// <param name="pos">The start position.</param>
+   /// <param name="oblique">Oblique angle of the font in radians.</param>
+   /// <param name="xscale">XScale factor of the font.</param>
    /// <param name="height">Height of the font.</param>
    /// <param name="angle">Rotation angle in radians.</param>
    /// <param name="output">The output list where the rendered output is collected.</param>
