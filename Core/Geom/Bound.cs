@@ -12,6 +12,7 @@ public readonly struct Bound1 : IEQuable<Bound1> {
    public Bound1 () => (Min, Max) = (float.MaxValue, float.MinValue);
    public Bound1 (double v) => Min = Max = (float)v;
    public Bound1 (double a, double b) => (Min, Max) = ((float)Min (a, b), (float)Max (a, b));
+   public void Deconstruct (out float min, out float max) => (min, max) = (Min, Max);
    public override string ToString () => IsEmpty ? "Empty" : $"{Min.S5 ()}~{Max.S5 ()}";
 
    // Properties ---------------------------------------------------------------

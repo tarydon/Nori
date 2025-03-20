@@ -10,9 +10,9 @@ namespace Nori;
 class ShaderImp {
    // Constructor --------------------------------------------------------------
    /// <summary>Construct a pipeline given the code for the individual shaders</summary>
-   ShaderImp (string name, EMode mode, EVertexSpec vspec, string[] code, bool blend, bool depthTest, bool polyOffset) {
-      (Name, Mode, VSpec, Blending, DepthTest, PolygonOffset, Handle) 
-         = (name, mode, vspec, blend, depthTest, polyOffset, GL.CreateProgram ());
+   ShaderImp (string name, EMode mode, EVertexSpec vspec, string[] code, bool blend, bool depthTest, bool polyOffset, EStencilBehavior stencil) {
+      (Name, Mode, VSpec, Blending, DepthTest, PolygonOffset, StencilBehavior, Handle) 
+         = (name, mode, vspec, blend, depthTest, polyOffset, stencil, GL.CreateProgram ());
       code.ForEach (a => GL.AttachShader (Handle, sCache.Get (a, CompileShader)));
       GL.LinkProgram (Handle);
       string log2 = GL.GetProgramInfoLog (Handle);
@@ -53,6 +53,8 @@ class ShaderImp {
    public readonly EMode Mode;
    /// <summary>The name of this shader</summary>
    public readonly string Name;
+   /// <summary>What is the special 'stencil-buffer' behavior of this program</summary>
+   public readonly EStencilBehavior StencilBehavior;
    /// <summary>Enable polygon-offset-fill when this program is used</summary>
    public readonly bool PolygonOffset;
    /// <summary>The vertex-specification for this shader</summary>
@@ -134,6 +136,10 @@ class ShaderImp {
    public static ShaderImp FlatFacet => mFlatFacet ??= Load ();
    static ShaderImp? mBlackLine, mGlassLine, mGourad, mPhong, mFlatFacet, mGlass;
 
+   public static ShaderImp TriFanStencil => mTriFanStencil ??= Load ();
+   public static ShaderImp TriFanCover => mTriFanCover ??= Load ();
+   static ShaderImp? mTriFanStencil, mTriFanCover;
+
    public static ShaderImp TextPx => mTextPx ??= Load ();
    static ShaderImp? mTextPx;
 
@@ -177,15 +183,16 @@ class ShaderImp {
    static ShaderImp Load ([CallerMemberName] string name = "") {
       sIndex ??= Lib.ReadLines ("wad:GL/Shader/Index.txt");
       // Each line in the index.txt contains these:
-      // 0:Name  1:Mode  2:VSpec  3:Blending  4:DepthTest  5:PolygonOffset  6:Programs
+      // 0:Name  1:Mode  2:VSpec  3:Blending  4:DepthTest  5:PolygonOffset  6:StencilBehavior  7:Programs
       foreach (var line in sIndex) {
          var w = line.Split (' ', StringSplitOptions.RemoveEmptyEntries);
-         if (w.Length >= 7 && w[0] == name) {
+         if (w.Length >= 8 && w[0] == name) {
             var mode = Enum.Parse<EMode> (w[1], true);
             var vspec = Enum.Parse<EVertexSpec> (w[2], true);
             bool blending = w[3] == "1", depthtest = w[4] == "1", offset = w[5] == "1";
-            var programs = w[6].Split ('|').ToArray ();
-            return new (name, mode, vspec, programs, blending, depthtest, offset);
+            var stencil = Enum.Parse<EStencilBehavior> (w[6], true);
+            var programs = w[7].Split ('|').ToArray ();
+            return new (name, mode, vspec, programs, blending, depthtest, offset, stencil);
          }
       }
       throw new NotImplementedException ($"Shader {name} not found in Shader/Index.txt");
@@ -280,4 +287,10 @@ readonly record struct Attrib (int Dims, EDataType Type, int Size, bool Integral
 #region enum EVertexSpec ---------------------------------------------------------------------------
 // The various Vertex specifications used by OpenGL shaders
 enum EVertexSpec { Vec2F, Vec3F_Vec3H, Vec4S_Int, _Last };
+#endregion
+
+#region enum EStencilBehavior ----------------------------------------------------------------------
+/// <summary>Does this shader have any special behavior related to the stencil-buffer?</summary>
+/// See the TriFanStencil and TriFanCover shaders for more details on this
+enum EStencilBehavior { None, Stencil, Cover };
 #endregion

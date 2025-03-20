@@ -128,6 +128,35 @@ public static partial class Lux {
    public static void Beziers (ReadOnlySpan<Vec2F> pts)
       => Bezier2DShader.It.Draw (pts);
 
+   /// <summary>This fills a set of closed paths (made of line segments) with the current Color</summary>
+   /// The input to this function is a set of triangle-fans representing the closed paths. 
+   /// pts[0] is, by convention, some arbitrary point in the 2D space that acts as the tip
+   /// vertex of every triangle we are going to draw (the bases of these triangles being made
+   /// up of each segment of each path contour). We recommend picking the midpoint of the 
+   /// bounding rectangle of the paths (to minimize the number of pixels to be covered by 
+   /// the algorithm).
+   /// 
+   /// Suppose we have a path with two contours a quad whose vertices are at [1,2,3,4] in the
+   /// pts list, and a triangle whose vertices are at [5,6,7] in the pts list. We will create
+   /// two triangle fans with pts[0] as the tip vertex and each segment of each of these contours
+   /// as a base. Since we are using a restartable primitive (triangle-fan), we can use the 
+   /// special value -1 to indicate that we are finished with one fan. So the indices list in 
+   /// this example should be like: [0,1,2,3,4,1,-1, 0,5,6,7,5,-1]. Note that vertex 1 and 
+   /// vertex 5 repeat to 'close' the contour and to draw the last triangle (between 0,4,1 and
+   /// 0,7,5 respectively). 
+   /// 
+   /// The bound parameter is just the bounding rectangle of the pts list - we pass it in 
+   /// as a parameter to avoid this function computing it (since it is very often known by the
+   /// caller). We need this bound to figure out a minimal covering rectangle to apply the paint
+   /// through, after the stencil is prepared. See the notes on TriFanStencilShader for more
+   /// details on the algorithm. 
+   public static void FillPath (ReadOnlySpan<Vec2F> pts, ReadOnlySpan<int> indices, Bound2 bound) {
+      TriFanStencilShader.It.Draw (pts, indices);
+      bound = bound.InflatedF (1.01);
+      var (x0, x1) = bound.X; var (y0, y1) = bound.Y;
+      TriFanCoverShader.It.Draw ([new (x0, y0), new (x1, y0), new (x1, y1), new (x0, y1)]);
+   }
+
    /// <summary>Draws 2D lines in world coordinates, with Z = 0</summary>
    /// Every pair of Vec2F in the list creates one line, so with n points,
    /// n / 2 lines are drawn. The following Lux properties are used:

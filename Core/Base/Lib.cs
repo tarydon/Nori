@@ -158,8 +158,10 @@ public static class Lib {
    public static bool Set (ref double f0, double f1) { if (f0.EQ (f1)) return false; f0 = f1; return true; }
    /// <summary>Sets a float, and returns true if it has changed</summary>
    public static bool Set (ref float f0, float f1) { if (f0.EQ (f1)) return false; f0 = f1; return true; }
-   /// <summary>Sets an int , and returns true if it has changed</summary>
+   /// <summary>Sets an int, and returns true if it has changed</summary>
    public static bool Set (ref int n0, int n1) { if (n0 == n1) return false; n0 = n1; return true; }
+   /// <summary>Sets a bool, and returns true if it has changed</summary>
+   public static bool Set (ref bool b0, bool b1) { if (b0 == b1) return false; b0 = b1; return true; }
    /// <summary>Sets a value, and returns true if it has changed (for any IEQuable)</summary>
    public static bool Set<T> (ref T t0, T t1) where T : struct, IEQuable<T> { if (t0.EQ (t1)) return false; t0 = t1; return true; }
    /// <summary>Sets a value and returns true if it has changed (for any reference type)</summary>

@@ -117,7 +117,7 @@ class Surface : System.Windows.Forms.UserControl {
       foreach (int version in versions) {
          int major = version / 10, minor = version % 10;
          HGLRC glrc = GL.CreateContextAttribsARB (mDC, HGLRC.Zero, major, minor, debug: false, core: false);
-         if (glrc == HGLRC.Zero) {
+         if (glrc != HGLRC.Zero) {
             GL.MakeCurrent (HDC.Zero, HGLRC.Zero);
             GL.DeleteContext (mGLRC);
             GL.MakeCurrent (mDC, mGLRC = glrc);

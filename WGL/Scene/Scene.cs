@@ -10,9 +10,6 @@ namespace Nori;
 /// types of scenes, and the important Draw() method that will be overridden in derived types
 /// to draw the content
 public abstract partial class Scene {
-   // Consructors --------------------------------------------------------------
-   protected Scene (VNode root) => (mRoot = root).Register ();
-
    // Properties ---------------------------------------------------------------
    /// <summary>Background color (clear color) for this scene</summary>
    public abstract Color4 BgrdColor { get; }
@@ -30,8 +27,14 @@ public abstract partial class Scene {
    Matrix3 mProjectionXfm = Matrix3.Identity;
 
    /// <summary>The root VNode of this Scene</summary>
-   public VNode Root => mRoot;
-   readonly VNode mRoot;
+   public VNode? Root { 
+      get => mRoot;
+      set {
+         Debug.Assert (mRoot == null);
+         (mRoot = value)?.Register (); 
+      }
+   }
+   VNode? mRoot;
 
    /// <summary>The World transform (transforms model coordinates to world at (0,0,0)</summary>
    internal Matrix3 WorldXfm {
@@ -51,14 +54,14 @@ public abstract partial class Scene {
       if (Lib.Set (ref mViewport, viewport)) Xfms.Clear ();
       if (Xfms.Count == 0) Xfms.Add (new XfmEntry (this));
       Xfms.RemoveRange (1, Xfms.Count - 1);
-      Root.Render ();
+      mRoot?.Render ();
       RBatch.IssueAll ();
       Lux.Scene = null;
    }
    protected Vec2S mViewport;
 
    /// <summary>Called when the scene is detached from the Lux renderer</summary>
-   public void Detach () => Root.Deregister ();
+   public void Detach () => mRoot?.Deregister ();
 
    /// <summary>Override this to zoom in or out about the given position (in pixels)</summary>
    public void Zoom (Vec2S pos, double factor) {
@@ -96,7 +99,7 @@ public abstract partial class Scene {
 #region class Scene2 -------------------------------------------------------------------------------
 /// <summary>Represents a 2D scene (override Draw in derived classes)</summary>
 /// - The world extent is expressed as a Bound2 (world is defined on XY plane)
-public abstract class Scene2 (VNode root) : Scene (root) {
+public abstract class Scene2 : Scene {
    // Properties ---------------------------------------------------------------
    /// <summary>The bounding rectangle of the drawing</summary>
    public Bound2 Bound {
@@ -120,7 +123,7 @@ public abstract class Scene2 (VNode root) : Scene (root) {
 /// <summary>Represents a 3D scene (override Draw in derived classes)</summary>
 /// - The world extent is expressed as a Bound3
 /// - The 'viewpoint' is expressed using an X + Z turntable convention
-public abstract class Scene3 (VNode root) : Scene (root) {
+public abstract class Scene3 : Scene {
    // Properties ---------------------------------------------------------------
    /// <summary>The bounding cuboid of the model</summary>
    public Bound3 Bound {
@@ -164,7 +167,7 @@ public abstract class Scene3 (VNode root) : Scene (root) {
 
 #region class BlankScene ---------------------------------------------------------------------------
 /// <summary>An empty scene (draws nothing) that is the default scene when Lux starts up</summary>
-public class BlankScene () : Scene2 (new VNode ()) {
+public class BlankScene () : Scene2 {
    public override Color4 BgrdColor => Color4.Gray (96);
 }
 #endregion

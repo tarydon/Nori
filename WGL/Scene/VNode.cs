@@ -406,14 +406,10 @@ public class XfmVN : VNode {
    /// <summary>Make an XfmVn given an xfm and a child VNode to transform</summary>
    /// If you need to transform multiple things, that child VNode could be a 
    /// GroupVN which has its own children
-   public XfmVN (string name, Matrix3 xfm, VNode child) => (mName, mXfm, mChild) = (name, xfm, child);
+   public XfmVN (Matrix3 xfm, VNode child) => (mXfm, mChild) = (xfm, child);
    VNode mChild;
 
    // Properties ---------------------------------------------------------------
-   /// <summary>A name for this VNode, useful during debugging</summary>
-   public string Name => mName;
-   readonly string mName;
-
    /// <summary>The Xfm to apply for this subtree (relative to the parent)</summary>
    public Matrix3 Xfm {
       get => mXfm;
