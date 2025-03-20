@@ -8,8 +8,23 @@ namespace WPFDemo;
 #region class RoadVN -------------------------------------------------------------------------------
 // Draws a Road as a dotted line
 class RoadVN : VNode {
-   public RoadVN (Road road) : base (road) => mRoad = road;
+   public RoadVN (Road road) : base (road) {
+      mRoad = road;
+      mRoad.Buses.Subscribe (OnBusesChanged);
+   }
    readonly Road mRoad;
+
+   void OnBusesChanged (ListChange ch) {
+      switch (ch.Action) {
+         case ListChange.E.Added: 
+            ChildAdded (); 
+            break;
+         case ListChange.E.Removing:
+            ChildRemoved (mBusVNs[ch.Index]);
+            mBusVNs.RemoveAt (ch.Index);
+            break;
+      }
+   }
 
    public override void SetAttributes () {
       Lux.LineWidth = 8f;
@@ -22,9 +37,11 @@ class RoadVN : VNode {
    }
 
    public override VNode? GetChild (int n) {
-      if (n < mRoad.Buses.Count) return new BusVN (mRoad.Buses[n]);
-      return null;
+      while (mBusVNs.Count < mRoad.Buses.Count)
+         mBusVNs.Add (new BusVN (mRoad.Buses[mBusVNs.Count]));
+      return mBusVNs.SafeGet (n);
    }
+   List<BusVN> mBusVNs = [];
 }
 #endregion
 

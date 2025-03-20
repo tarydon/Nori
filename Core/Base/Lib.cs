@@ -2,6 +2,7 @@
 // ╔═╦╦═╦╦╬╣ Lib.cs
 // ║║║║╬║╔╣║ Implements the Lib module class that has a number of global functions
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
+using System.Diagnostics;
 using System.Threading;
 using static System.Math;
 namespace Nori;
@@ -180,5 +181,9 @@ public static class Lib {
    public static void Sort<T> (ref T a, ref T b) where T : IComparable<T> {
       if (a.CompareTo (b) > 0) (a, b) = (b, a);
    }
+
+   public static void Trace (string text) => Tracer.Invoke (text);
+
+   public static Action<string> Tracer = s => Debug.Write (s);
 }
 #endregion

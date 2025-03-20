@@ -11,10 +11,7 @@ namespace Nori;
 /// to draw the content
 public abstract partial class Scene {
    // Consructors --------------------------------------------------------------
-   protected Scene (VNode root) {
-      Debug.Assert (root.Id == 0);
-      VNode.Register (mRoot = root);
-   }
+   protected Scene (VNode root) => (mRoot = root).Register ();
 
    // Properties ---------------------------------------------------------------
    /// <summary>Background color (clear color) for this scene</summary>
@@ -61,7 +58,7 @@ public abstract partial class Scene {
    protected Vec2S mViewport;
 
    /// <summary>Called when the scene is detached from the Lux renderer</summary>
-   public void Detach () => Root.DoDetach ();
+   public void Detach () => Root.Deregister ();
 
    /// <summary>Override this to zoom in or out about the given position (in pixels)</summary>
    public void Zoom (Vec2S pos, double factor) {
@@ -167,7 +164,7 @@ public abstract class Scene3 (VNode root) : Scene (root) {
 
 #region class BlankScene ---------------------------------------------------------------------------
 /// <summary>An empty scene (draws nothing) that is the default scene when Lux starts up</summary>
-public class BlankScene () : Scene2 (VNode.Blank) {
+public class BlankScene () : Scene2 (new VNode ()) {
    public override Color4 BgrdColor => Color4.Gray (96);
 }
 #endregion

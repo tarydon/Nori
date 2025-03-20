@@ -2,7 +2,6 @@
 // ╔═╦╦═╦╦╬╣ World.cs
 // ║║║║╬║╔╣║ <<TODO>>
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
-using System.Reactive.Subjects;
 using Nori;
 namespace WPFDemo;
 
@@ -10,10 +9,10 @@ namespace WPFDemo;
 // Road is the root of our model hierarchy
 class Road {
    // A Road has an X-Span, and lies at Y = 0 (rendered as a dotted line on screen)
-   public Bound1 Span = new (0, 100);
+   public Bound1 Span = new (0, 200);
 
    // A Road has a list of buses on it
-   public List<Bus> Buses = [
+   public AList<Bus> Buses = [
       new Bus (new (10, 0), new (10, 5), Color4.Blue),
       new Bus (new (25, 0), new (14, 6), new (0x008000)),
    ];

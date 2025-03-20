@@ -53,10 +53,6 @@ public class VNode {
    /// different locations (instancing). 
    internal List<(int NBatch, ushort NUniform)> Batches = [];
 
-   /// <summary>A Blank VNode draws nothing, and has no children (it's used like a placeholder or stub)</summary>
-   public static VNode Blank => mBlank ??= new ();
-   static VNode? mBlank;
-
    // The unique Id of this VNode within this scene. 
    // If the Id = 0, then the VNode has not yet been 'registered' into this Scene,
    // and has been freshly created.
@@ -66,6 +62,18 @@ public class VNode {
    public readonly object? Obj;
 
    // Methods ------------------------------------------------------------------
+   /// <summary>Should be called from outside when the parent object has new children</summary>
+   public void ChildAdded () { mChildrenAdded = true; Lux.Redraw (); }
+
+   /// <summary>Called to tell this parent one of its children is removed</summary>
+   public void ChildRemoved (VNode child) {
+      mFamily.Remove (ref mChildren, child.Id);
+      mFamily.Remove (ref child.mParents, Id);
+      if (--child.mCRefs <= 0) child.Deregister ();
+      mKnownChildren--;
+      Lux.Redraw ();
+   }
+
    /// <summary>Called when geometry has changed and complete redraw of this VNode is needed</summary>
    public void Redraw () { mGeometryDirty = true; Lux.Redraw ();  }
 
@@ -98,7 +106,7 @@ public class VNode {
    /// <summary>Override this to do something specific when this VNode is getting 'detached'</summary>
    /// When the VNode is retiring from the scene-graph of a Scene, this is called before
    /// the actual detaching takes place
-   public virtual void OnDetach () { }
+   public virtual void OnDetach () { Lib.Trace ($"Detach {this}\n"); }  // TODO: Removethis
 
    /// <summary>Observer implementation that watches the owner Obj for changes</summary>
    /// If the Obj this VNode is displaying implements IObservable(EProp), then
@@ -114,44 +122,10 @@ public class VNode {
       }
    }
 
+   public override string ToString ()
+      => $"{GetType ().Name} ({Obj})";
+
    // Implementation -----------------------------------------------------------
-   // Adds a child to a parent (sets up bidirectional links, and increments
-   // the child's CRefs count
-   static void AddChild (VNode parent, VNode child) {
-      mFamily.Add (ref parent.mChildren, child.Id);
-      mFamily.Add (ref child.mParents, parent.Id);
-      child.mCRefs++;
-   }
-
-   // DoAttach is called the first time a VNode is called upon to render itself.
-   // This sets up observing the Obj that it is rendering, if that implements
-   // IObservable(EProp), and then calls OnAttach() so derived classes an do any
-   // custom setup
-   void DoAttach () {
-      if (!mAttached) {
-         mAttached = true;
-         if (Obj is IObservable<EProp> observable)
-            mObserver = observable.Subscribe (OnChanged);
-         OnAttach ();
-      }
-   }
-   bool mAttached;
-   IDisposable? mObserver;
-
-   // DoDetach is called when the scene is being unloaded, by Scene.Detach().
-   // It releases the batches we're using for rendering (which in turn will end
-   // up releasing the RBuffers eventually), and calls DoDetach on all children
-   internal void DoDetach () {
-      if (mAttached) {
-         mAttached = false;
-         OnDetach ();
-         mObserver?.Dispose ();
-         ReleaseBatches ();
-         foreach (var c in mFamily.Enum (mChildren))
-            Get (c).DoDetach ();
-      }
-   }
-
    // Release all the geometry batches owned by this VNode.
    // This is called when the VNode is finally detached from the renderer, and
    // also whenever the geometry is dirty and new batches have to be gathered
@@ -167,7 +141,6 @@ public class VNode {
    // under it. So, call Scene.Root.Render() will draw the entire scene. 
    internal void Render () {
       Lux.BeginNode (this);
-      if (!mAttached) DoAttach ();
       try {
          // If the GeometryDirty flag is set, it means the geometry of this VNode
          // has changed - the batches it might be holding on to are all useless now, and we
@@ -225,10 +198,12 @@ public class VNode {
                if (child == null) break;
                // Note that a child returned here might have an Id > 0 (already registered), since
                // the same child can occur multiple times in the scene's DAG of nodes. 
-               if (child.Id == 0) Register (child);
+               if (child.Id == 0) child.Register ();
                // This sets up the bi-directional links connecting a parent to all of its children,
                // and a child to all of its parents (there may be more than 1).
-               AddChild (this, child);
+               mFamily.Add (ref mChildren, child.Id);
+               mFamily.Add (ref child.mParents, Id);
+               child.mCRefs++;
             }
             mChildrenAdded = false;
          }
@@ -247,19 +222,47 @@ public class VNode {
       }
    }
 
-   // This is called to allot an ID for this VNode and to add it to the list of nodes
-   internal static int Register (VNode node) {
+   // This is called to allot an ID for this VNode and to add it to the list of nodes.
+   // This is called exactly once in the lifetime of the node, and is balanced eventually
+   // by one call to Deregister (this is true even if the node is participating in multiple
+   // scenes - Register will be called only once).
+   internal void Register () {
+      Debug.Assert (Id == 0);
       if (mFreeIDs.Count == 0) {
          int size = Math.Max (mNodes.Length * 2, 8);
          for (int i = size - 1; i >= mNodes.Length; i--) mFreeIDs.Push (i);
          Array.Resize (ref mNodes, size);
       }
-      int id = mFreeIDs.Pop ();
-      mNodes[id] = node; node.Id = id;
-      return id;
+      Id = mFreeIDs.Pop (); mNodes[Id] = this; 
+      if (Obj is IObservable<EProp> observable)
+         mObserver = observable.Subscribe (OnChanged);
+      OnAttach ();
    }
    static VNode?[] mNodes = [null];
    static Stack<int> mFreeIDs = [];
+   IDisposable? mObserver;
+
+   // Deregister is called when this VNode is no longer ever required.
+   // This means it is not part of any scenes and its 'parent refs' counter has
+   // run down to zero.
+   internal void Deregister () {
+      Debug.Assert (Id > 0);
+      OnDetach ();
+      mObserver?.Dispose ();
+      ReleaseBatches ();
+      foreach (var c in mFamily.Enum (mChildren)) {
+         // Walk through the children, and disconnect them from _this_ parent. 
+         // The child may continue living, since it may have other parents. 
+         // Otherwise, it will end up Deregistering itself
+         var child = Get (c);
+         mFamily.Remove (ref child.mParents, Id);
+         if (--child.mCRefs <= 0) child.Deregister ();
+      }
+      mFamily.ReleaseChain (ref mChildren);
+      mFreeIDs.Push (Id); mNodes[Id] = null;
+      mGeometryDirty = mChildrenAdded = true;
+      Id = 0; 
+   }
 
    // Private data -------------------------------------------------------------
    // The number of children this Node is already known to have
