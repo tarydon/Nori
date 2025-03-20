@@ -109,16 +109,11 @@ class ShaderImp {
    }
 
    /// <summary>Set a uniform of type Mat4f</summary>
-   public unsafe ShaderImp Set (int index, Mat4F m) {
+   public unsafe ShaderImp Set (int index, ref Mat4F m) {
       if (index != -1) {
          var data = mUniforms[index]; data.Value = m;
-         GL.Uniform (index, false, &m.M11);
+         fixed (float* f = &m.M11) GL.Uniform (index, false, f);
       }
-      return this;
-   }
-   /// <summary>Set a uniform of type Mat4f</summary>
-   public unsafe ShaderImp Set (int index, float *m) {
-      if (index != -1) GL.Uniform (index, false, m);
       return this;
    }
 

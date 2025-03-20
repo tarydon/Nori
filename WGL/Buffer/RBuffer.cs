@@ -107,8 +107,8 @@ class RBuffer : IIndexed {
    // the data into that and transmits it to the GPU. Subsequent calls simply bind the
    // VAO object as the current one to use 
    unsafe void PushToGPU () {
-      if (mHVAO != 0) { GL.BindVertexArray (mHVAO); return; }
-      GL.BindVertexArray (mHVAO = GL.GenVertexArray ());
+      if (mHVAO != 0) { GLState.VAO = mHVAO; return; }
+      GLState.VAO = mHVAO = GL.GenVertexArray ();
       GL.BindBuffer (EBufferTarget.Array, mHVertex = GL.GenBuffer ());
       fixed (void* p = &mData[0])
          GL.BufferData (EBufferTarget.Array, mUsed, (Ptr)p, EBufferUsage.StaticDraw);

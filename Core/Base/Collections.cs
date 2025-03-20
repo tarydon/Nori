@@ -251,7 +251,11 @@ public class IdxHeap<T> where T : IIndexed, new() {
    /// This stores the object in the mData array at a given index, and
    /// sets the Idx of that object to that index
    public ref T Alloc () {
-      if (mFree.Count == 0) Resize (mData.Length * 2);
+      if (mFree.Count == 0) {
+         if (mData.Length >= 65536) 
+            throw new Exception ($"Only 64K {typeof (T).Name} supported");
+         Resize (mData.Length * 2);
+      }
       int idx = mRecent = mFree.Pop ();
       mData[idx] = new ();
       ref T obj = ref mData[idx]!;

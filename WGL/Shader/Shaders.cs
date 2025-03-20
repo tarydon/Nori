@@ -25,7 +25,7 @@ partial class DashLine2DShader : Shader<Vec2F, DashLine2DShader.Settings> {
    int muVPScale = 0, muXfm = 0, muLineWidth = 0, muLineType = 0, muLTScale = 0, muDrawColor = 0, muLTypeTexture = 0;
 
    protected override void ApplyUniformsImp (ref readonly Settings a) {
-      Pgm.Set (muXfm, Lux.Scene!.Xfms[a.IDXfm].Xfm);
+      Pgm.Set (muXfm, ref Lux.Scene!.Xfms[a.IDXfm].Xfm);
       float fLType = ((int)a.LineType + 0.5f) / 10.0f;
       Pgm.Set (muLineWidth, a.LineWidth).Set (muLineType, fLType).Set (muDrawColor, a.Color);
    }
@@ -58,8 +58,8 @@ abstract class FacetShader : Shader<CMesh.Node, FacetShader.Settings> {
    protected unsafe override void ApplyUniformsImp (ref readonly Settings a) {
       //ref Mat4F xfm = ref Lux.Scene!.Xfms[a.IDXfm].Xfm; TODO check if this works
       //fixed (float* f = &xfm.M11) Pgm.Set (muXfm, f);
-      Pgm.Set (muXfm, Lux.Scene!.Xfms[a.IDXfm].Xfm);
-      Pgm.Set (muNormalXfm, Lux.Scene!.Xfms[a.IDXfm].NormalXfm);
+      Pgm.Set (muXfm, ref Lux.Scene!.Xfms[a.IDXfm].Xfm);
+      Pgm.Set (muNormalXfm, ref Lux.Scene!.Xfms[a.IDXfm].NormalXfm);
       Pgm.Set (muDrawColor, a.Color);
    }
 
@@ -124,7 +124,7 @@ partial class Point2DShader : Shader<Vec2F, Point2DShader.Settings> {
 
    // Overrides ----------------------------------------------------------------
    protected override void ApplyUniformsImp (ref readonly Settings a) {
-      Pgm.Set (muXfm, Lux.Scene!.Xfms[a.IDXfm].Xfm);
+      Pgm.Set (muXfm, ref Lux.Scene!.Xfms[a.IDXfm].Xfm);
       Pgm.Set (muPointSize, a.PointSize).Set (muDrawColor, a.Color);
    }
 
@@ -156,8 +156,8 @@ class Seg2DShader : Shader<Vec2F, Seg2DShader.Settings> {
    int muVPScale = 0, muXfm = 0, muLineWidth = 0, muDrawColor = 0;
 
    // Overrides ----------------------------------------------------------------
-   protected override void ApplyUniformsImp (ref readonly Settings a) {
-      Pgm.Set (muXfm, Lux.Scene!.Xfms[a.IDXfm].Xfm);
+   protected unsafe override void ApplyUniformsImp (ref readonly Settings a) {
+      Pgm.Set (muXfm, ref Lux.Scene!.Xfms[a.IDXfm].Xfm);
       Pgm.Set (muLineWidth, a.LineWidth).Set (muDrawColor, a.Color);
    }
 
@@ -184,7 +184,7 @@ abstract class StencilLineShader : Shader<CMesh.Node, StencilLineShader.Settings
 
    // Overrides ----------------------------------------------------------------
    protected override void ApplyUniformsImp (ref readonly Settings a) {
-      Pgm.Set (muXfm, Lux.Scene!.Xfms[a.IDXfm].Xfm);
+      Pgm.Set (muXfm, ref Lux.Scene!.Xfms[a.IDXfm].Xfm);
       Pgm.Set (muLineWidth, a.LineWidth).Set (muDrawColor, a.Color);
    }
 
@@ -246,7 +246,7 @@ abstract class TriQuad2DShader : Shader<Vec2F, TriQuad2DShader.Settings> {
 
    // Overrides ----------------------------------------------------------------
    protected override void ApplyUniformsImp (ref readonly Settings a) {
-      Pgm.Set (muXfm, Lux.Scene!.Xfms[a.IDXfm].Xfm);
+      Pgm.Set (muXfm, ref Lux.Scene!.Xfms[a.IDXfm].Xfm);
       Pgm.Set (muDrawColor, a.Color);
    }
 

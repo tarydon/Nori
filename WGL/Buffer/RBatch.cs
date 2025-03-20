@@ -44,8 +44,9 @@ struct RBatch : IIndexed {
 
    /// <summary>Start position, in bytes, of this RBatch within the RBuffer</summary>
    /// In the initial phase (when we have not yet shifted the data into a RBuffer),
-   /// this offset points into the mData maintained by that shader. After the data has
-   /// moved into a RBuffer, the Offset points into that RBuffer
+   /// this offset points into the mData maintained by that shader, and at that point,
+   /// it is an INDEX. After the data has moved into a RBuffer, the Offset points 
+   /// into that RBuffer, and at that point it is a BYTE-OFFSET
    public int Offset;
    /// <summary>Count of _vertices_ used by this batch</summary>
    /// Total number of bytes used for this batch is Count * Shader.CBVertex
@@ -135,7 +136,8 @@ struct RBatch : IIndexed {
       int n = shader.OrderUniforms (uni0, uni1); if (n != 0) return false;
       // Finally, the two batches storage should be back to back so that 
       // rb1's storage followed immediately after this one
-      return Offset + count * shader.CBVertex == rb1.Offset;
+      if (NBuffer == 0) return Offset + count == rb1.Offset;
+      else return Offset + count * shader.CBVertex == rb1.Offset;
    }
 
    // <summary>This is called to 'issue' this batch (the actual DrawArrays or DrawElements)</summary>
@@ -185,8 +187,25 @@ struct RBatch : IIndexed {
    // to change shader programs, than to change the uniforms within a shader program,
    // for example.
    static void Sort () {
-      Staging.Sort (Order);
-      foreach (var (b, u) in Staging) {
+      // Sort the Staging array - since the sorting is just an optimization to minimize
+      // state changes, we don't want to spend too much time sorting. If the number of 
+      // batches in the Staging array is very large (tens of thousands), then the Sort
+      // itself will take too much time (since it is O(n log n)). To avoid this, we don't
+      // sort the entire array, but sort only 'batch-sized' sections of it.
+      // Some experimentation shows that a batch size of between 200 to 600 seems to work
+      // the best. For now, this is 256. As the batch size increases, sort time will increase.
+      // As the batch size decreases, OpenGL state-transition time will increase (we'll spend
+      // more time swapping between shaders, uniforms etc). 
+      int batch = 256;
+      int n = (Staging.Count + batch - 1) / batch;
+      for (int i = 0; i < n; i++) {
+         int a = i * batch, b = Math.Min (batch, Staging.Count - a);
+         Staging.Sort (a, b, RBatchCompare.It);
+      }
+
+      // If any of these batches point to data that has not yet been loaded into an 
+      // RBuffer, we will do that here. 
+      foreach (var (b, _) in Staging) {
          ref RBatch rb = ref mAll[b];
          if (rb.NBuffer == 0) {
             // If the data of this RBatch has still not been uploaded to the GPU,
@@ -201,18 +220,6 @@ struct RBatch : IIndexed {
             buf.References++;
          }
       }
-
-      // Helper .................................
-      // Compares two RBatch, given their index
-      static int Order ((int B, ushort U) ub0, (int B, ushort U) ub1) {
-         ref RBatch ra = ref mAll[ub0.B], rb = ref mAll[ub1.B];
-         int n = ra.NShader - rb.NShader; if (n != 0) return n;
-         n = ra.NBuffer - rb.NBuffer; if (n != 0) return n;
-         var shader = Shader.Get (ra.NShader);
-         n = shader.OrderUniforms (ub0.U, ub1.U);
-         if (n != 0) return n;
-         return ra.Offset - rb.Offset;
-      }
    }
 
    public override readonly string ToString () {
@@ -222,6 +229,21 @@ struct RBatch : IIndexed {
          string uniform = shader.DescribeUniforms (NUniform);
          return $"{shader.Pgm.Name}[{uniform}]  {Count} @ {Offset / shader.CBVertex}";
       }
+   }
+
+   // Nested types -------------------------------------------------------------
+   // IComparer implementation used to sort the Staging area
+   class RBatchCompare : IComparer<(int B, ushort U)> {
+      public int Compare ((int B, ushort U) ub0, (int B, ushort U) ub1) {
+         ref RBatch ra = ref mAll[ub0.B], rb = ref mAll[ub1.B];
+         int n = ra.NShader - rb.NShader; if (n != 0) return n;
+         n = ra.NBuffer - rb.NBuffer; if (n != 0) return n;
+         var shader = Shader.Get (ra.NShader);
+         n = shader.OrderUniforms (ub0.U, ub1.U);
+         if (n != 0) return n;
+         return ra.Offset - rb.Offset;
+      }
+      internal static RBatchCompare It = new ();
    }
 }
 #endregion

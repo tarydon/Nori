@@ -256,10 +256,8 @@ public class VNode {
          // Now all the geometry is drawn (or the batch attributes have changed), we can take all
          // the batches we have and add them to the global staging area - this is collecting all
          // the batches we want to render in this frame
-         foreach (var (b, u) in Batches) {
-            ref RBatch rb = ref RBatch.Get (b);
-            RBatch.Staging.Add ((b, u));
-         }
+         RBatch.Staging.AddRange (Batches);
+
          // From the BeginNode call above to this point, this node might have changed some attributes.
          // But not all of these are changes we want to pass on to our children (which we are going to 
          // draw shortly below). So reset some of these attributes (all that are not 'bequeathed' to
