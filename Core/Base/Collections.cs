@@ -6,9 +6,17 @@ using System.Collections;
 using System.Reactive.Subjects;
 namespace Nori;
 
+#region interface IAList ---------------------------------------------------------------------------
+/// <summary>The IAList interface signals a collection as an 'active list'</summary>
+/// Any type that implements IList (to fetch object at given index) and IObservable(ListChange)
+/// (to know when items are added / removed from that list) can serve as an IAList interface.
+/// In particular, AList(T) below implements IAList
+public interface IAList : IList, IObservable<ListChange> {  }
+#endregion
+
 #region class AList<T> -----------------------------------------------------------------------------
 /// <summary>AList implements an Observable list that notifies subscribers when it is modified</summary>
-public class AList<T> : IList, IList<T>, IObservable<ListChange> {
+public class AList<T> : IList, IList<T>, IObservable<ListChange>, IAList {
    // Properties ---------------------------------------------------------------
    /// <summary>The count of elements in this list</summary>
    public int Count => mList.Count;

@@ -53,6 +53,16 @@ public class VNode {
    /// different locations (instancing). 
    internal List<(int NBatch, ushort NUniform)> Batches = [];
 
+   /// <summary>This is the container within our Obj from which we can get child objects</summary>
+   /// If a ChildSource collection is specified for a VNode, it completely automates the 
+   /// creation, management and deletion of child VNodes for that node. The ChildSource should
+   /// implement IList and IObservable(ListChange) so it can be used to fetch items by index,
+   /// and also to listen to changes in that list. The AList(T) collection implements both
+   /// these interfaces, so you can just pass in an AList(T) and that will work. 
+   public IAList? ChildSource { get => mChildSource; init => mChildSource = value; }
+   IDisposable? mChildWatcher;
+   IAList? mChildSource;
+
    // The unique Id of this VNode within this scene. 
    // If the Id = 0, then the VNode has not yet been 'registered' into this Scene,
    // and has been freshly created.
@@ -74,8 +84,64 @@ public class VNode {
       Lux.Redraw ();
    }
 
+   /// <summary>'Virtual constructor' to make a VNode for a given object type</summary>
+   /// An assembly that implements various types of VNode (like CircleVN, CubeVN etc) can
+   /// be _Registered_ to the VNode system by calling VNode.RegisterAssembly(...). That builds 
+   /// up a mBuilder dictionary that maps object types to VNode types (their constructors, 
+   /// actually). Then, when that kind of object comes in, we can pick the appropriate constructor
+   /// and construct the VNode for that. See RegisterAssembly for more details.
+   public static VNode MakeFor (object obj) {
+      ArgumentNullException.ThrowIfNull (obj);
+      if (!mBuilders.TryGetValue (obj.GetType (), out var ci))
+         throw new Exception ($"No VNode found for {obj.GetType ().FullName}");
+      return (VNode)ci.Invoke ([obj]);
+   }
+
    /// <summary>Called when geometry has changed and complete redraw of this VNode is needed</summary>
    public void Redraw () { mGeometryDirty = true; Lux.Redraw ();  }
+
+   /// <summary>Register an assembly as containing potential VNode types</summary>
+   /// This is used in conjunction with the VNode.Makefor(...) above to construct a VNode
+   /// given an object. It basically walks through all VNode-derived types in that assembly, 
+   /// sees if they have a construct that takes some type T and if so, registers that VNode
+   /// as the corresponding VNode for objects of type T. The type and the constructor should
+   /// be public. If you have multiple VNode types for a given type T that will raise an 
+   /// exception when attempting to register the assembly (this is ambiguous). To avoid this 
+   /// situation, you could 'hide' one of those two VNode types by adding additional dummy 
+   /// parameters to the constructor.
+   public static void RegisterAssembly (Assembly assy) {
+      if (mAssemblies.Add (assy)) {
+         // Get all the types in the assembly where 'VModels' are defined. Here, we just
+         // use the assembly where VModel is defined, and we are assuming that all VModel types
+         // are in this assembly. In the more general case, this will have to be a list of assemblies
+         // where VModel derived types are defined. Perhaps all those assemblies will 'register' 
+         // themselves with the VModel system so this virtual constructor table can be built
+         // correctly.
+         using var time = new BlockTimer ($"RegisterAssembly {assy.GetName ().Name}");
+         var allTypes = assy.GetTypes ();
+         var vmTypes = allTypes.Where (a => a.IsAssignableTo (typeof (VNode))).ToList ();
+         foreach (var vm in vmTypes) {
+            // Skip abstract VModel types - we cannot build instances of 
+            // those (for example, skip the actual "VModel" class itself). 
+            if (vm.IsAbstract) continue;
+            foreach (var ci in vm.GetConstructors ()) {
+               // Get constructors that take one parameter and add them to the
+               // map. Note that we are using Dictionary.Add, so if we have two VModel types
+               // both handling Line entity, this will throw an exception. Presumably, that case
+               // should not happen. If there are multiple ways to draw a line based on some 
+               // parameters of the line, there should be a single LineVM that handles all those
+               // cases in its Draw() method
+               var args = ci.GetParameters ();
+               if (args.Length == 1) mBuilders.Add (args[0].ParameterType, ci);
+            }
+         }
+      }
+   }
+   // This dictionary maps particular domain types (like Poly, Text etc) to constructors
+   // in appropriate VNode types (like PolyVN, TextVN etc)
+   static Dictionary<Type, ConstructorInfo> mBuilders = [];
+   // These are the assemblies we have already searched to find VNode-derived types
+   static HashSet<Assembly> mAssemblies = [];
 
    // Overrides ----------------------------------------------------------------
    /// <summary>Specifies which attributes are inherited by children of this VNode</summary>
@@ -91,7 +157,21 @@ public class VNode {
    /// The Lux system will call GetChild, starting with an index of 0 and
    /// going to successive indices, as long as this returns a non-null child. So,
    /// returning null for this call is the way to indicate 'no-more-children'. 
-   public virtual VNode? GetChild (int n) => null;
+   /// 
+   /// We provide a default implementation of this if the ChildSource property is set.
+   /// Then, the mAutoChildren list is maintained here having a one-to-one correspondence
+   /// between the child objects in ChildSource and the child VNodes. Given a particular
+   /// child object, the MakeFor 'virtual constructor' is used to create the corresponding
+   /// VNode. 
+   public virtual VNode? GetChild (int n) {
+      if (mAutoChildren != null) {
+         while (mAutoChildren.Count < mChildSource!.Count)
+            mAutoChildren.Add (MakeFor (mChildSource[mAutoChildren.Count]!));
+         return mAutoChildren.SafeGet (n);
+      }
+      return null;
+   }
+   List<VNode>? mAutoChildren;
 
    /// <summary>Override this to set up the attributes for the VNode</summary>
    /// By default, Color, Xfm and TypeFace are inherited by the entire sub-tree under
@@ -106,7 +186,7 @@ public class VNode {
    /// <summary>Override this to do something specific when this VNode is getting 'detached'</summary>
    /// When the VNode is retiring from the scene-graph of a Scene, this is called before
    /// the actual detaching takes place
-   public virtual void OnDetach () { Lib.Trace ($"Detach {this}\n"); }  // TODO: Removethis
+   public virtual void OnDetach () { } 
 
    /// <summary>Observer implementation that watches the owner Obj for changes</summary>
    /// If the Obj this VNode is displaying implements IObservable(EProp), then
@@ -222,6 +302,31 @@ public class VNode {
       }
    }
 
+   // Helper to handle the case where we have a 'child-source' collection that is 
+   // observable. In this case, we handle adding and removing of children from that collection
+   // by doing corresponding adds and remove of child VNodes
+   void OnChildrenChanged (ListChange ch) {
+      IAList source = mChildSource!;
+      switch (ch.Action) {
+         case ListChange.E.Added:
+            mAutoChildren!.Add (MakeFor (source[ch.Index]!));
+            ChildAdded ();
+            break;
+         case ListChange.E.Removing: 
+            Remove (ch.Index); 
+            break;
+         case ListChange.E.Clearing:
+            for (int i = mAutoChildren!.Count - 1; i >= 0; i--) Remove (i);
+            break;
+      }
+
+      // Helper ............................................
+      void Remove (int n) {
+         ChildRemoved (mAutoChildren![ch.Index]);
+         mAutoChildren.RemoveAt (ch.Index);
+      }
+   }
+
    // This is called to allot an ID for this VNode and to add it to the list of nodes.
    // This is called exactly once in the lifetime of the node, and is balanced eventually
    // by one call to Deregister (this is true even if the node is participating in multiple
@@ -236,6 +341,10 @@ public class VNode {
       Id = mFreeIDs.Pop (); mNodes[Id] = this; 
       if (Obj is IObservable<EProp> observable)
          mObserver = observable.Subscribe (OnChanged);
+      if (mChildSource != null) {
+         mAutoChildren = new List<VNode> (mChildSource.Count);
+         mChildWatcher = mChildSource.Subscribe (OnChildrenChanged);
+      }
       OnAttach ();
    }
    static VNode?[] mNodes = [null];
@@ -247,8 +356,10 @@ public class VNode {
    // run down to zero.
    internal void Deregister () {
       Debug.Assert (Id > 0);
+      Lib.Trace ($"Detach {this}\n");
       OnDetach ();
       mObserver?.Dispose ();
+      mChildWatcher?.Dispose ();
       ReleaseBatches ();
       foreach (var c in mFamily.Enum (mChildren)) {
          // Walk through the children, and disconnect them from _this_ parent. 

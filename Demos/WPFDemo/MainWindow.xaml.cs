@@ -10,12 +10,13 @@ namespace WPFDemo;
 public partial class MainWindow : Window {
    public MainWindow () {
       Lib.Init ();
+      Lib.Tracer = AddLog;
       InitializeComponent ();
       mPanel.Child = Lux.CreatePanel ();
+      VNode.RegisterAssembly (typeof (BusVN).Assembly);
 
       Lux.UIScene = new RoadScene (mRoad);
       Lux.OnReady = (() => new SceneManipulator ());
-      Lib.Tracer = AddLog;
    }
    Road mRoad = new ();
 

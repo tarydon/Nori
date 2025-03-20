@@ -81,20 +81,21 @@ public class SceneManipulator {
    // When Ctrl+E is pressed, do a zoom-extents
    void OnKey (KeyInfo ki) {
       if (ki.Key == EKey.E && ki.Modifier == EKeyModifier.Control)
-         Lux.UIScene.ZoomExtents ();
+         Lux.UIScene?.ZoomExtents ();
    }
 
    // Start rotating when the left mouse button is clicked (if the current scene is 3D)
    // Start panning when the middle mouse button is clicked 
    void OnMouseClick (MouseClickInfo mi) {
-      var sc = Lux.UIScene;
-      if (mi.Button == EMouseButton.Left && sc is Scene3 sc3) new SceneRotator (sc3, mi.Position);
-      if (mi.Button == EMouseButton.Middle) new ScenePanner (sc, mi.Position);
+      if (Lux.UIScene is Scene sc) {
+         if (mi.Button == EMouseButton.Left && sc is Scene3 sc3) new SceneRotator (sc3, mi.Position);
+         if (mi.Button == EMouseButton.Middle) new ScenePanner (sc, mi.Position);
+      }
    }
 
    // Zoom in/out when the mouse wheel is rotated
    void OnMouseWheel (MouseWheelInfo mw) 
-      => Lux.UIScene.Zoom (mw.Position, mw.Delta > 0 ? 0.95 : (1 / 0.95));
+      => Lux.UIScene?.Zoom (mw.Position, mw.Delta > 0 ? 0.95 : (1 / 0.95));
 }
 #endregion
 

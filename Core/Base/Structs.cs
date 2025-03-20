@@ -14,7 +14,7 @@ public readonly struct BlockTimer : IDisposable {
 
    public void Dispose () {
       double time = (DateTime.Now - mStart).TotalMilliseconds;
-      Console.WriteLine ($"{mText}: {time:F2} ms");
+      Lib.Trace ($"{mText}: {time:F2} ms\n");
    }
 
    readonly string mText;

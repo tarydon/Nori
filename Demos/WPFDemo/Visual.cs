@@ -9,22 +9,10 @@ namespace WPFDemo;
 // Draws a Road as a dotted line
 class RoadVN : VNode {
    public RoadVN (Road road) : base (road) {
+      ChildSource = (mRoad = road).Buses;
       mRoad = road;
-      mRoad.Buses.Subscribe (OnBusesChanged);
    }
    readonly Road mRoad;
-
-   void OnBusesChanged (ListChange ch) {
-      switch (ch.Action) {
-         case ListChange.E.Added: 
-            ChildAdded (); 
-            break;
-         case ListChange.E.Removing:
-            ChildRemoved (mBusVNs[ch.Index]);
-            mBusVNs.RemoveAt (ch.Index);
-            break;
-      }
-   }
 
    public override void SetAttributes () {
       Lux.LineWidth = 8f;
@@ -35,13 +23,6 @@ class RoadVN : VNode {
    public override void Draw () {
       Lux.Lines ([new (mRoad.Span.Min, 0), new (mRoad.Span.Max, 0)]);
    }
-
-   public override VNode? GetChild (int n) {
-      while (mBusVNs.Count < mRoad.Buses.Count)
-         mBusVNs.Add (new BusVN (mRoad.Buses[mBusVNs.Count]));
-      return mBusVNs.SafeGet (n);
-   }
-   List<BusVN> mBusVNs = [];
 }
 #endregion
 
@@ -75,7 +56,7 @@ class BusVN : VNode {
          return mChildren ??= [
             MakeWheel ("Left", 0, 1), 
             MakeWheel ("Right", mBus.Size.X, 1), 
-            new WindowVN (mBus)
+            new WindowVN (mBus, 5)
          ];
 
          static VNode MakeWheel (string name, double x, double y)
@@ -89,15 +70,16 @@ class BusVN : VNode {
 #region class WindowVN -----------------------------------------------------------------------------
 // Draws a Bus Window, inheriting the color and Xfm from the Bus itself
 class WindowVN : VNode {
-   public WindowVN (Bus bus) => mBus = bus;
+   public WindowVN (Bus bus, int windows) => (mBus, mWindows) = (bus, windows);
+   int mWindows;
    Bus mBus;
 
    public override void Draw () {
       var size = mBus.Size;
       Bound2 rect = new (0.5, size.Y / 2, size.X - 0.5, size.Y - 0.5);
       Lux.Poly (Poly.Rectangle (rect));
-      for (int i = 1; i < 5; i++) {
-         double x = (i / 5.0).Along (rect.X.Min, rect.X.Max);
+      for (int i = 1; i < mWindows; i++) {
+         double x = (i / (double)mWindows).Along (rect.X.Min, rect.X.Max);
          Lux.Lines ([new (x, rect.Y.Min), new (x, rect.Y.Max)]);
       }
    }

@@ -12,14 +12,14 @@ public static partial class Lux {
    public static Scene? Scene;
 
    /// <summary>The current scene that is bound to the visible viewport</summary>
-   public static Scene UIScene { 
+   public static Scene? UIScene { 
       get => mUIScene; 
       set {
          mUIScene?.Detach ();
          mUIScene = value; Redraw (); 
       } 
    }
-   static Scene mUIScene = new BlankScene ();
+   static Scene? mUIScene;
 
    public static Vec2S Viewport => mViewport; 
    static Vec2S mViewport;
