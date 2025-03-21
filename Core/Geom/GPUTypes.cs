@@ -10,6 +10,7 @@ namespace Nori;
 public readonly record struct Vec2F (float X, float Y) : IEQuable<Vec2F> {
    public Vec2F (double x, double y) : this ((float)x, (float)y) { }
    public static implicit operator Vec2F (Point2 pt) => new ((float)pt.X, (float)pt.Y);
+   public static explicit operator Point2 (Vec2F vec) => new (vec.X, vec.Y);
    public static explicit operator Vec2F (Vector2 vec) => new ((float)vec.X, (float)vec.Y);
    public static implicit operator Vector2 (Vec2F vec) => new (vec.X, vec.Y);
    public static readonly Vec2F Zero = new (0, 0);

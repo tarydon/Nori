@@ -227,6 +227,18 @@ unsafe static class GL {
    delegate void glShaderSource (HShader shader, int count, string[] source, int[] length);
    static glShaderSource? pShaderSource;
 
+   // Set up the stencil function for testing ..................................
+   public static void StencilFunc (EFace face, EStencilFunc func, int value, uint mask)
+      => (pStencilFunc ??= Load<glStencilFuncSeparate> ()) (face, func, value, mask);
+   delegate void glStencilFuncSeparate (EFace face, EStencilFunc func, int value, uint mask);
+   static glStencilFuncSeparate? pStencilFunc;
+
+   // Set up the stencil op for front or back face .............................
+   public static void StencilOp (EFace face, EStencilOp sfail, EStencilOp dpfail, EStencilOp dppass)
+      => (pStencilOp ??= Load<glStencilOpSeparate> ()) (face, sfail, dpfail, dppass);
+   delegate void glStencilOpSeparate (EFace face, EStencilOp sfail, EStencilOp dpfail, EStencilOp dppass);
+   static glStencilOpSeparate? pStencilOp;
+
    // Specify the value of a uniform variable ..................................
    public static void Uniform (int location, float f0)
       => (pUniform1f ??= Load<glUniform1f> ()) (location, f0);
@@ -290,6 +302,8 @@ unsafe static class GL {
    [DllImport (OPENGL32, EntryPoint = "glDisable")] public static extern void Disable (ECap cap);
    [DllImport (OPENGL32, EntryPoint = "glDrawArrays")] public static extern void DrawArrays (EMode mode, int start, int count);
    [DllImport (OPENGL32, EntryPoint = "glEnable")] public static extern void Enable (ECap cap);
+   public static void Enable (ECap cap, bool v) { if (v) Enable (cap); else Disable (cap); }
+
    [DllImport (OPENGL32, EntryPoint = "glEnd")] public static extern void End ();
    [DllImport (OPENGL32, EntryPoint = "glGenTextures")] public static extern void GenTextures (int n, HTexture* pTex);
    [DllImport (OPENGL32, EntryPoint = "wglGetProcAddress")] public static extern nint GetProcAddress (string name);

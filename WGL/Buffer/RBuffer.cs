@@ -95,6 +95,7 @@ class RBuffer : IIndexed {
    // A VAO is released after all the RBatch objects pointing into it are
    // released (when this.References goes down to zero)
    public void Release () {
+      Lib.Trace ($"RBuffer {mHVAO} released\n");
       if (GLState.VAO == mHVAO) GLState.VAO = 0;
       GL.DeleteBuffer (mHVertex); GL.DeleteBuffer (mHIndex); GL.DeleteVertexArray (mHVAO);
       mHVertex = mHIndex = HBuffer.Zero; mHVAO = HVertexArray.Zero;
@@ -106,8 +107,8 @@ class RBuffer : IIndexed {
    // the data into that and transmits it to the GPU. Subsequent calls simply bind the
    // VAO object as the current one to use 
    unsafe void PushToGPU () {
-      if (mHVAO != 0) { GL.BindVertexArray (mHVAO); return; }
-      GL.BindVertexArray (mHVAO = GL.GenVertexArray ());
+      if (mHVAO != 0) { GLState.VAO = mHVAO; return; }
+      GLState.VAO = mHVAO = GL.GenVertexArray ();
       GL.BindBuffer (EBufferTarget.Array, mHVertex = GL.GenBuffer ());
       fixed (void* p = &mData[0])
          GL.BufferData (EBufferTarget.Array, mUsed, (Ptr)p, EBufferUsage.StaticDraw);
@@ -126,6 +127,7 @@ class RBuffer : IIndexed {
          GL.EnableVertexAttribArray (index);
          index++; offset += a.Size;
       }
+      Lib.Trace ($"RBuffer {mHVAO} pushed to GPU\n");
    }
 
    // Private data -------------------------------------------------------------

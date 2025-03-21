@@ -25,7 +25,7 @@ partial class DashLine2DShader : Shader<Vec2F, DashLine2DShader.Settings> {
    int muVPScale = 0, muXfm = 0, muLineWidth = 0, muLineType = 0, muLTScale = 0, muDrawColor = 0, muLTypeTexture = 0;
 
    protected override void ApplyUniformsImp (ref readonly Settings a) {
-      Pgm.Set (muXfm, Lux.Scene!.Xfms[a.IDXfm].Xfm);
+      Pgm.Set (muXfm, ref Lux.Scene!.Xfms[a.IDXfm].Xfm);
       float fLType = ((int)a.LineType + 0.5f) / 10.0f;
       Pgm.Set (muLineWidth, a.LineWidth).Set (muLineType, fLType).Set (muDrawColor, a.Color);
    }
@@ -58,8 +58,8 @@ abstract class FacetShader : Shader<CMesh.Node, FacetShader.Settings> {
    protected unsafe override void ApplyUniformsImp (ref readonly Settings a) {
       //ref Mat4F xfm = ref Lux.Scene!.Xfms[a.IDXfm].Xfm; TODO check if this works
       //fixed (float* f = &xfm.M11) Pgm.Set (muXfm, f);
-      Pgm.Set (muXfm, Lux.Scene!.Xfms[a.IDXfm].Xfm);
-      Pgm.Set (muNormalXfm, Lux.Scene!.Xfms[a.IDXfm].NormalXfm);
+      Pgm.Set (muXfm, ref Lux.Scene!.Xfms[a.IDXfm].Xfm);
+      Pgm.Set (muNormalXfm, ref Lux.Scene!.Xfms[a.IDXfm].NormalXfm);
       Pgm.Set (muDrawColor, a.Color);
    }
 
@@ -124,7 +124,7 @@ partial class Point2DShader : Shader<Vec2F, Point2DShader.Settings> {
 
    // Overrides ----------------------------------------------------------------
    protected override void ApplyUniformsImp (ref readonly Settings a) {
-      Pgm.Set (muXfm, Lux.Scene!.Xfms[a.IDXfm].Xfm);
+      Pgm.Set (muXfm, ref Lux.Scene!.Xfms[a.IDXfm].Xfm);
       Pgm.Set (muPointSize, a.PointSize).Set (muDrawColor, a.Color);
    }
 
@@ -156,8 +156,8 @@ class Seg2DShader : Shader<Vec2F, Seg2DShader.Settings> {
    int muVPScale = 0, muXfm = 0, muLineWidth = 0, muDrawColor = 0;
 
    // Overrides ----------------------------------------------------------------
-   protected override void ApplyUniformsImp (ref readonly Settings a) {
-      Pgm.Set (muXfm, Lux.Scene!.Xfms[a.IDXfm].Xfm);
+   protected unsafe override void ApplyUniformsImp (ref readonly Settings a) {
+      Pgm.Set (muXfm, ref Lux.Scene!.Xfms[a.IDXfm].Xfm);
       Pgm.Set (muLineWidth, a.LineWidth).Set (muDrawColor, a.Color);
    }
 
@@ -184,7 +184,7 @@ abstract class StencilLineShader : Shader<CMesh.Node, StencilLineShader.Settings
 
    // Overrides ----------------------------------------------------------------
    protected override void ApplyUniformsImp (ref readonly Settings a) {
-      Pgm.Set (muXfm, Lux.Scene!.Xfms[a.IDXfm].Xfm);
+      Pgm.Set (muXfm, ref Lux.Scene!.Xfms[a.IDXfm].Xfm);
       Pgm.Set (muLineWidth, a.LineWidth).Set (muDrawColor, a.Color);
    }
 
@@ -237,6 +237,49 @@ partial class TextPxShader : Shader<TextPxShader.Args, TextPxShader.Settings> {
 partial class Triangle2DShader () : TriQuad2DShader (ShaderImp.Triangle2D) { }
 #endregion
 
+#region class TriFanStencilShader ------------------------------------------------------------------
+/// <summary>Shader used to implement stage 1 of the stencil-then-cover algorithm</summary>
+/// This is a simple algorithm that uses the stencil buffer to fill the interior of a set of
+/// closed paths. The paths are defined as contours, each consisting of a number of line segments.
+/// The orientation (winding) of these contours is not important, nor are there any constraints on
+/// whether the can self-intersect or cross each other. 
+/// 
+/// This animation https://www.ekioh.com/devblog/gpu-filling-vector-paths/ shows very clearly
+/// how this algorithm works. basically we pick an arbitrary point on the scene and draw a triangle
+/// from that point using each 'segment' on the path as a base. For all the pixels lying within
+/// that triangle, we invert bit 0 of the stencil buffer. When we are finished, all the points lying
+/// within a contour (that is, an odd number of 'crossings' from the arbitrary point) will have
+/// their stencil bit 0 set, and the rest will not. 
+/// 
+/// This is done by the TriFanStencilShader. It requires as input a triangle fan, and uses
+/// indexed drawing to minimize the amount of data transfered. For example, suppose the path to 
+/// be filled is one quad (with indices [1,2,3,4]) and one triangle (with indices [5,6,7]). We
+/// use a convention that Pts[0] is the 'arbitray point' on the screen. Then, the Indices input
+/// to this shader will look like this. Remember we are drawing triangle fans, and that -1 is the
+/// 'start new primitive' marker: [0,1,2,3,4,1,-1, 0,5,6,7,5,-1]. As you can see, that will draw
+/// two triangle fans, one with 4 triangles and one with 3. Every triangle drawn has Pts[0] as 
+/// the tip vertex. The caller must prepare the data in this format, and we use this so that the
+/// entire stencil can be drawn with a single draw call.
+/// 
+/// During the running of this shader, we set the StencilFunc to GL_NEVER to avoid updating 
+/// any of the color-buffer pixels - we are only drawing into the stencil buffer at this point.
+/// Subsequently, the TriFanCoverShader uses this stencil to fill in the pixels where stencil
+/// bit 0 is set
+[Singleton]
+partial class TriFanStencilShader () : TriQuad2DShader (ShaderImp.TriFanStencil) { }
+#endregion
+
+#region class TriFanCoverShader --------------------------------------------------------------------
+/// <summary>Shader used to implement stage 2 of the stencil-then-cover algorithm</summary>
+/// This works after the TriFanStencilShader has updated the stencil buffer. This shader uses
+/// bit 0 of the stencil buffer, and wherever that is set, it simply applies the Lux.Color to that
+/// pixel. For this to work, the shader needs as input a triangle fan that fully covers the
+/// paths in question. The implementation in Lux.FillPoly uses the bounding box of the set of
+/// paths and creates a triangle fan with 2 triangles that apply paint into this bounding box. 
+[Singleton]
+partial class TriFanCoverShader () : TriQuad2DShader (ShaderImp.TriFanCover) { }
+#endregion
+
 #region class TriQuad2DShader ----------------------------------------------------------------------
 /// <summary>TriQuad2DShader is the base class for Triangle2DShader and Quad2DShader</summary>
 abstract class TriQuad2DShader : Shader<Vec2F, TriQuad2DShader.Settings> {
@@ -246,7 +289,7 @@ abstract class TriQuad2DShader : Shader<Vec2F, TriQuad2DShader.Settings> {
 
    // Overrides ----------------------------------------------------------------
    protected override void ApplyUniformsImp (ref readonly Settings a) {
-      Pgm.Set (muXfm, Lux.Scene!.Xfms[a.IDXfm].Xfm);
+      Pgm.Set (muXfm, ref Lux.Scene!.Xfms[a.IDXfm].Xfm);
       Pgm.Set (muDrawColor, a.Color);
    }
 

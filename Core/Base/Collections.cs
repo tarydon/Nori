@@ -6,9 +6,17 @@ using System.Collections;
 using System.Reactive.Subjects;
 namespace Nori;
 
+#region interface IAList ---------------------------------------------------------------------------
+/// <summary>The IAList interface signals a collection as an 'active list'</summary>
+/// Any type that implements IList (to fetch object at given index) and IObservable(ListChange)
+/// (to know when items are added / removed from that list) can serve as an IAList interface.
+/// In particular, AList(T) below implements IAList
+public interface IAList : IList, IObservable<ListChange> {  }
+#endregion
+
 #region class AList<T> -----------------------------------------------------------------------------
 /// <summary>AList implements an Observable list that notifies subscribers when it is modified</summary>
-public class AList<T> : IList, IList<T>, IObservable<ListChange> {
+public class AList<T> : IList, IList<T>, IObservable<ListChange>, IAList {
    // Properties ---------------------------------------------------------------
    /// <summary>The count of elements in this list</summary>
    public int Count => mList.Count;
@@ -243,7 +251,11 @@ public class IdxHeap<T> where T : IIndexed, new() {
    /// This stores the object in the mData array at a given index, and
    /// sets the Idx of that object to that index
    public ref T Alloc () {
-      if (mFree.Count == 0) Resize (mData.Length * 2);
+      if (mFree.Count == 0) {
+         if (mData.Length >= 65536) 
+            throw new Exception ($"Only 64K {typeof (T).Name} supported");
+         Resize (mData.Length * 2);
+      }
       int idx = mRecent = mFree.Pop ();
       mData[idx] = new ();
       ref T obj = ref mData[idx]!;

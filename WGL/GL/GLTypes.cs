@@ -6,7 +6,7 @@ namespace Nori;
 
 #region OpenGL enums -------------------------------------------------------------------------------
 // The buffers we can clear with glClear
-[Flags] enum EBuffer : uint { Depth = 256, Color = 16384 }
+[Flags] enum EBuffer : uint { Depth = 256, Color = 16384, Stencil = 1024 }
 
 // Buffer targets for BufferData, BindBuffer etc
 enum EBufferTarget : uint { Array = 0x8892, ElementArray = 0x8893 }
@@ -20,6 +20,7 @@ enum EBlendFactor : uint { Zero = 0, One = 1, SrcAlpha = 770, OneMinusSrcAlpha =
 // Various capabilities we can Enable / Disable
 enum ECap : uint { 
    Blend = 0xBE2, DepthTest = 0xB71, PolygonOffsetFill = 0x8037, ScissorTest = 0xC11,
+   CullFace = 0xB44, StencilTest = 0xB90, PrimitiveRestart = 0x8F9D
 };
 
 // <summary>Various data types for storing in vertex array buffers</summary>
@@ -33,8 +34,14 @@ enum EDataType : uint {
 // Data types that could be used for the indices in a DrawElement call
 enum EIndexType : uint { UByte = 5121, UShort = 5123, UInt = 5125 }
 
+// Values to pass to GL.StencilOpSeparate, GL.StencilFuncSeparate
+enum EFace : uint { Front = 0x404, Back = 0x405, FrontAndBack = 0x408 };
+
 // Various modes that can be passed to glBegin
-enum EMode : uint { Points = 0, Lines = 1, LineLoop = 2, LineStrip = 3, Triangles = 4, Quads = 7, Patches = 14 };
+enum EMode : uint { 
+   Points = 0, Lines = 1, LineLoop = 2, LineStrip = 3, Triangles = 4, TriangleFan = 6,
+   TriangleStrip = 5, Quads = 7, Patches = 14 
+};
 
 /// <summary>Various shading modes to pass to Lux.Mesh(...)</summary>
 public enum EShadeMode { Flat, Gourad, Phong, Glass };
@@ -62,6 +69,14 @@ enum EShader : uint {
 
 // Parameters passed to GL.GetShader
 enum EShaderParam : uint { DeleteStatus = 35712, CompileStatus = 35713, InfoLogLength = 0x8B84 }
+
+// Parameter for GL.StencilFunc
+enum EStencilFunc : uint { 
+   Never = 0x200, Less = 0x201, LEqual = 0x203, Greater = 0x204, GEqual = 0x206, 
+   Equal = 0x202, NotEqual = 0x205, Always = 0x207 
+}
+// Parameters passed to GL.StencilOp
+enum EStencilOp : uint { Keep = 0x1e00, Zero = 0, Replace = 0x1e01, Incr = 0x1e02, Decr = 0x1e03, Invert = 0x150a }
 
 // Texture related enums
 enum ETexUnit : uint { Tex0 = 33984, Tex1 = 33985, Tex2 = 33986, Tex3 = 33987 }
@@ -110,7 +125,7 @@ struct PixelFormatDescriptor {
          PixelFormatDescriptor pfd = new () {
             Size = 40, Version = 1,
             Flags = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER,
-            ColorBits = 32, DepthBits = 32
+            ColorBits = 32, DepthBits = 32, StencilBits = 8,
          };
          if (40 != Marshal.SizeOf<PixelFormatDescriptor> ())
             throw new Exception ("Unexpected size for PixelFormatDescriptor");

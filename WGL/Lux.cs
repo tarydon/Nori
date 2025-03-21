@@ -3,6 +3,7 @@
 // ║║║║╬║╔╣║ The Lux class: public interface to the Lux rendering engine
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 using System.Reactive.Subjects;
+using System.Windows.Threading;
 namespace Nori;
 
 #region class Lux ----------------------------------------------------------------------------------
@@ -12,8 +13,14 @@ public static partial class Lux {
    public static Scene? Scene;
 
    /// <summary>The current scene that is bound to the visible viewport</summary>
-   public static Scene UIScene { get => mUIScene; set { mUIScene = value; Redraw (); } }
-   static Scene mUIScene = new BlankScene ();
+   public static Scene? UIScene { 
+      get => mUIScene; 
+      set {
+         mUIScene?.Detach ();
+         mUIScene = value; Redraw (); 
+      } 
+   }
+   static Scene? mUIScene;
 
    public static Vec2S Viewport => mViewport; 
    static Vec2S mViewport;
@@ -81,11 +88,69 @@ public static partial class Lux {
       mUIScene?.Render (panel.Size);
       panel.EndRender ();
       Info.FrameOver ();
+      FPS.FrameOver ();
+      if (sRenderCompletes.Count > 0) Lib.Post (NextFrame);
+
+      // Helpers ...........................................
+      static void NextFrame () {
+         var sFrametime = DateTime.Now;
+         double elapsed = (sFrametime - sLastFrametime).TotalSeconds;
+         for (int i = sRenderCompletes.Count - 1; i >= 0; i--)
+            sRenderCompletes[i] (elapsed);
+         sLastFrametime = sFrametime;
+         Redraw ();
+      }
    }
    static int mFrame;
 
    public static void Redraw ()
       => Panel.It.Redraw ();
+
+   /// <summary>This is called to initiate 'continuous rendering'</summary>
+   /// This function takes a 'callback' that will be invoked after each frame is rendered. Once
+   /// this is started, Lux renders frames continuously, attempting to render at the monitor
+   /// refresh rate (60 fps) if the hardware is fast enough. If Lux.VSync is turned off, then
+   /// it renders at the maximum possible rate (regardless of monitor refresh rate). 
+   /// 
+   /// The 'elapsed-time' since the last time the callback was called (in seconds) is passed as 
+   /// a parameter to the callback, which can use this parameter to adjust the positions
+   /// of objects in the scene. Thus, it is possible to create simulation where the simulation
+   /// speed is not dependent on the number of frames we render per second. 
+   /// 
+   /// It is possible to call StartContinuousRender any number of times, attaching different
+   /// callbacks. The continuous-render goes on as long as at least one such callback is attached,
+   /// and after each frame is rendered, all these callbacks are invoked. Once all these callbacks
+   /// retire (by calling StopContinuousRender), we stop the render pump, and subsequent renders
+   /// happen only on-demand (when the VNode tree changes, or the window size changes etc)
+   public static void StartContinuousRender (Action<double> renderComplete) {
+      sRenderCompletes.Add (renderComplete);
+      if (sRenderCompletes.Count == 1) {
+         // If this is the first render-complete function, start the backup timer running. 
+         // We need this backup timer because the RenderComplete event is not always dependable.
+         // Normally, if we are running at 60 fps, we should hit the render-complete each 16.66 ms,
+         // and the timer would never fire.
+         if (sTimer == null) {
+            sTimer = new () { Interval = TimeSpan.FromMilliseconds (40), IsEnabled = true };
+            sTimer.Tick += (s, e) => Redraw ();
+         }
+         // Issue one redraw to prime things off
+         sTimer.Start ();
+         sLastFrametime = DateTime.Now; 
+         Redraw ();
+      }
+   }
+   static DateTime sLastFrametime;
+   static readonly List<Action<double>> sRenderCompletes = [];
+   static DispatcherTimer? sTimer;
+
+   /// <summary>This detaches a callback from the continous-render loop</summary>
+   /// This is the opposite of StartContinuousRender above. Once all the callbacks have
+   /// retired, we stop the loop. 
+   public static void StopContinuousRender (Action<double> renderComplete) {
+      sRenderCompletes.Remove (renderComplete);
+      if (sRenderCompletes.Count == 0 && sTimer != null) 
+         sTimer.Stop ();
+   }
 
    /// <summary>This is called at the start of every frame to reset to known</summary>
    public static void StartFrame (Vec2S viewport) {
@@ -125,5 +190,24 @@ public static partial class Lux {
       Subject<Stats>? mSubject;
    }
    static public TInfo Info = new ();
+
+   public class TFPS : IObservable<int> {
+      public IDisposable Subscribe (IObserver<int> observer) => (mSubject ??= new ()).Subscribe (observer);
+
+      public void FrameOver () {
+         sFrames++;
+         double elapsed = (DateTime.Now - sLastTime).TotalSeconds;
+         if (elapsed >= 1) {
+            int fps = (int)(sFrames / elapsed + 0.5);
+            mSubject?.OnNext (fps);
+            (sLastTime, sFrames) = (DateTime.Now, 0);
+         }
+      }
+      Subject<int>? mSubject;
+
+      static DateTime sLastTime;
+      static int sFrames;
+   }
+   public static TFPS FPS = new ();
 }
 #endregion
