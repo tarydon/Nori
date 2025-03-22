@@ -15,6 +15,8 @@ public partial class MainWindow : Window {
       Content = Lux.CreatePanel ();
       Lux.UIScene = new FillScene ();
    }
+
+
 }
 
 class FillScene : Scene2 {

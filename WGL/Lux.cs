@@ -73,23 +73,24 @@ public static partial class Lux {
    static bool mReadyFired;
 
    /// <summary>Stub for the Render method that is called when each frame has to be painted</summary>
-   public static void Render () {
+   public static object? Render (Vec2S viewport, ETarget target) {
       // Don't look at all this too closely - it is temporary code that will
       // later go away and be replaced by something more clean
       if (!mReadyFired) { mReadyFired = true; OnReady?.Invoke (); }
 
       mFrame++;
       var panel = Panel.It;
-      panel.BeginRender (panel.Size, ETarget.Screen);
-      StartFrame (panel.Size);
-      GLState.StartFrame (panel.Size, mUIScene?.BgrdColor ?? Color4.Gray (96));
+      panel.BeginRender (viewport, ETarget.Screen);
+      StartFrame (viewport);
+      GLState.StartFrame (viewport, mUIScene?.BgrdColor ?? Color4.Gray (96));
       RBatch.StartFrame ();
       Shader.StartFrame ();
-      mUIScene?.Render (panel.Size);
-      panel.EndRender ();
+      mUIScene?.Render (viewport);
+      object? obj = panel.EndRender ();
       Info.FrameOver ();
       FPS.FrameOver ();
       if (sRenderCompletes.Count > 0) Lib.Post (NextFrame);
+      return obj;
 
       // Helpers ...........................................
       static void NextFrame () {

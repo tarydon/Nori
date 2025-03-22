@@ -2,7 +2,9 @@
 // ╔═╦╦═╦╦╬╣ Panel.cs
 // ║║║║╬║╔╣║ Implements Lux.Panel (WPF UserControl) and Lux.Surface (Windows Forms Control)
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
+using System.Windows.Documents;
 using System.Windows.Forms.Integration;
+using System.Windows.Media.Media3D;
 using System.Windows.Threading;
 using static System.Windows.Forms.ControlStyles;
 namespace Nori;
@@ -16,13 +18,52 @@ class Panel : System.Windows.Controls.UserControl {
    // could be rendering a size that is different from the panel size. What we do here depends
    // on the render target, but in all cases, we have to make our display surface the 'current'
    // GL context
-   public void BeginRender (Vec2S viewport, ETarget _)
-      => mSurface?.BeginRender (viewport);
+   public void BeginRender (Vec2S viewport, ETarget target) {
+      if (mSurface == null) return; 
+      mSurface.BeginRender (viewport);
+      if (target is ETarget.Image or ETarget.Pick) {
+         mFBViewport = viewport;
+         if (mFrameBuffer == 0) {
+            mFrameBuffer = GL.GenFrameBuffer ();
+            mColorBuffer = GL.GenRenderBuffer (); mDepthBuffer = GL.GenRenderBuffer ();
+         }
+         GL.BindFrameBuffer (EFrameBufferTarget.DrawAndRead, mFrameBuffer);
+         if (viewport.X > mFBSize.X || viewport.Y > mFBSize.Y) {
+            mFBSize = viewport;
+            GL.BindRenderBuffer (ERenderBufferTarget.RenderBuffer, mColorBuffer);
+            GL.RenderBufferStorage (ERenderBufferFormat.RGBA8, viewport.X, viewport.Y);
+            GL.BindRenderBuffer (ERenderBufferTarget.RenderBuffer, mDepthBuffer);
+            GL.RenderBufferStorage (ERenderBufferFormat.Depth24Stencil8, viewport.X, viewport.Y);
+            GL.FrameBufferRenderBuffer (EFrameBufferTarget.DrawAndRead, EFrameBufferAttachment.Color0, mColorBuffer);
+            GL.FrameBufferRenderBuffer (EFrameBufferTarget.DrawAndRead, EFrameBufferAttachment.DepthStencil, mDepthBuffer);
+            if (GL.CheckFrameBufferStatus (EFrameBufferTarget.Draw) != EFrameBufferStatus.Complete)
+               throw new NotImplementedException ();
+         }
+      } else
+         GL.BindFrameBuffer (EFrameBufferTarget.DrawAndRead, 0);
+   }
 
    // Called when the scene is finished rendering, and we need to 'show' it.
    // What this returns depends on the render target 
-   public object? EndRender () {
-      mSurface?.EndRender ();
+   public object? EndRender (ETarget target) {
+      switch (target) {
+         case ETarget.Screen:
+            mSurface?.EndRender ();
+            break;
+         case ETarget.Image: case ETarget.Pick:
+            GL.Finish ();
+            int x = mFBViewport.X, y = mFBViewport.Y, stride = x * 4;
+            GL.PixelStore (EPixelStoreParam.PackAlignment, 4);
+            if (target == ETarget.Image) {
+               byte[] data = new byte[stride * y];
+               GL.ReadPixels (0, 0, x, y, EPixelFormat.Bgra, EPixelType.UByte, data);
+               //Figure fig = new Figure (Figure.EFmt.PixelRGBA, data, x, y, stride);
+               //fig.FlipY ();
+               return data;
+            } else {
+               throw new NotImplementedException ();
+            }
+      }
       return null;
    }
 
@@ -63,6 +104,12 @@ class Panel : System.Windows.Controls.UserControl {
       (Content as WindowsFormsHost)?.Dispose (); Content = null;
       mIt = null; HW.Panel = null;
    }
+
+   // Private data -------------------------------------------------------------
+   Vec2S mFBViewport;            // Viewport size, when rendering to a frame-buffer
+   HFrameBuffer mFrameBuffer;    // Frame-buffer for image rendering
+   HRenderBuffer mColorBuffer, mDepthBuffer;    // Render buffers for the same
+   Vec2S mFBSize;                // The size of the frame-buffer
 }
 #endregion
 
@@ -128,7 +175,7 @@ class Surface : System.Windows.Forms.UserControl {
 
    // Override OnPaint to call back to PX.Render, where our actual paint code resides
    protected override void OnPaint (PaintEventArgs e)
-      => Lux.Render ();
+      => Lux.Render (new (Width, Height), ETarget.Screen);
 
    // Private data -------------------------------------------------------------
    HDC mDC;             // Device contex handle used for rendering
