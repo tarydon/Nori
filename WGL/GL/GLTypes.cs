@@ -56,7 +56,9 @@ enum EMode : uint {
 public enum EShadeMode { Flat, Gourad, Phong, Glass };
 
 // Pixel storage formats
-enum EPixelFormat : uint { DepthComponent = 6402, Red = 6403, Rgba = 6408, Bgra = 32993 }
+enum EPixelFormat : uint { 
+   DepthComponent = 0x1902, Red = 0x1903, RGB = 0x1907, RGBA = 0x1908, BGRA = 32993 
+}
 // Pixel data type
 enum EPixelType : uint { Byte = 5120, UByte = 5121, Float = 5126 }
 

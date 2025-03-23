@@ -13,10 +13,39 @@ public partial class MainWindow : Window {
       Lib.Init ();
       InitializeComponent ();
       Content = Lux.CreatePanel ();
-      Lux.UIScene = new FillScene ();
+      Lux.OnReady = OnLuxReady;
    }
 
+   void OnLuxReady () {
+      new PNGReader (File.ReadAllBytes ("c:/etc/tiny.png")).Load ();
 
+      var scene = new TestScene ();
+      var data = (byte[])Lux.Render (scene, new (100, 50), ETarget.Image)!;
+      var bmp = new DIBitmap (100, 50, DIBitmap.EFormat.RGB8, data);
+      byte[] bytes = new PNGWriter (bmp).Write ();
+
+      var reader = new PNGReader (bytes);
+      reader.Load ();
+   }
+}
+
+class TestScene : Scene2 {
+   public TestScene () {
+      Bound = new Bound2 (0, 0, 100, 50);
+      Root = new TestVN ();
+   }
+   public override Color4 BgrdColor => Color4.Blue;
+
+   class TestVN : VNode {
+      public override void SetAttributes () {
+         Lux.Color = Color4.Yellow;
+         Lux.LineWidth = 12f;
+      }
+      public override void Draw () {
+         for (int i = 10; i <= 90; i += 5)
+            Lux.Lines ([new (i, 5), new (i, 45)]);
+      }
+   }
 }
 
 class FillScene : Scene2 {

@@ -52,11 +52,11 @@ class Panel : System.Windows.Controls.UserControl {
             break;
          case ETarget.Image: case ETarget.Pick:
             GL.Finish ();
-            int x = mFBViewport.X, y = mFBViewport.Y, stride = x * 4;
+            int x = mFBViewport.X, y = mFBViewport.Y, stride = x * 3;
             GL.PixelStore (EPixelStoreParam.PackAlignment, 4);
             if (target == ETarget.Image) {
                byte[] data = new byte[stride * y];
-               GL.ReadPixels (0, 0, x, y, EPixelFormat.Bgra, EPixelType.UByte, data);
+               GL.ReadPixels (0, 0, x, y, EPixelFormat.RGB, EPixelType.UByte, data);
                //Figure fig = new Figure (Figure.EFmt.PixelRGBA, data, x, y, stride);
                //fig.FlipY ();
                return data;
@@ -175,7 +175,7 @@ class Surface : System.Windows.Forms.UserControl {
 
    // Override OnPaint to call back to PX.Render, where our actual paint code resides
    protected override void OnPaint (PaintEventArgs e)
-      => Lux.Render (new (Width, Height), ETarget.Screen);
+      => Lux.Render (Lux.UIScene, new (Width, Height), ETarget.Screen);
 
    // Private data -------------------------------------------------------------
    HDC mDC;             // Device contex handle used for rendering

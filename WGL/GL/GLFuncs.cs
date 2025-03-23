@@ -269,7 +269,7 @@ unsafe static class GL {
    public static void ReadPixels<T> (int x, int y, int width, int height, EPixelFormat format, EPixelType ptype, T[] data) where T : struct {
       GCHandle pixelptr = GCHandle.Alloc (data, GCHandleType.Pinned);
       try {
-         ReadPixels (x, y, width, height, (uint)format, (uint)ptype, pixelptr.AddrOfPinnedObject ());
+         ReadPixels (x, y, width, height, format, ptype, pixelptr.AddrOfPinnedObject ());
       } finally {
          pixelptr.Free ();
       }
@@ -367,7 +367,7 @@ unsafe static class GL {
    [DllImport (OPENGL32, EntryPoint = "glEnd")] public static extern void End ();
    [DllImport (OPENGL32, EntryPoint = "glFinish")] public static extern void Finish ();
    [DllImport (OPENGL32, EntryPoint = "glGenTextures")] public static extern void GenTextures (int n, HTexture* pTex);
-   [DllImport (OPENGL32, EntryPoint = "glReadPixels")] public static extern void ReadPixels (int x, int y, int width, int height, uint format, uint type, Ptr pixels);
+   [DllImport (OPENGL32, EntryPoint = "glReadPixels")] public static extern void ReadPixels (int x, int y, int width, int height, EPixelFormat format, EPixelType type, Ptr pixels);
    [DllImport (OPENGL32, EntryPoint = "wglGetProcAddress")] public static extern nint GetProcAddress (string name);
    [DllImport (OPENGL32, EntryPoint = "wglMakeCurrent")] public static extern int MakeCurrent (HDC hdc, HGLRC hrc);
    [DllImport (OPENGL32, EntryPoint = "glPixelStorei")] static internal extern void PixelStore (EPixelStoreParam pname, int param);
