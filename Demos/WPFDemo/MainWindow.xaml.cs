@@ -17,12 +17,11 @@ public partial class MainWindow : Window {
    }
 
    void OnLuxReady () {
-      new PNGReader (File.ReadAllBytes ("c:/etc/tiny.png")).Load ();
-
       var scene = new TestScene ();
-      var data = (byte[])Lux.Render (scene, new (100, 50), ETarget.Image)!;
-      var bmp = new DIBitmap (100, 50, DIBitmap.EFormat.RGB8, data);
+      var data = (byte[])Lux.Render (scene, new (500, 500), ETarget.Image)!;
+      var bmp = new DIBitmap (500, 500, DIBitmap.EFormat.RGB8, data);
       byte[] bytes = new PNGWriter (bmp).Write ();
+      File.WriteAllBytes ("c:/etc/output.png", bytes);
 
       var reader = new PNGReader (bytes);
       reader.Load ();
@@ -34,15 +33,14 @@ class TestScene : Scene2 {
       Bound = new Bound2 (0, 0, 100, 50);
       Root = new TestVN ();
    }
-   public override Color4 BgrdColor => Color4.Blue;
+   public override Color4 BgrdColor => Color4.Black;
 
    class TestVN : VNode {
       public override void SetAttributes () {
-         Lux.Color = Color4.Yellow;
-         Lux.LineWidth = 12f;
+         Lux.Color = Color4.White;
       }
       public override void Draw () {
-         for (int i = 10; i <= 90; i += 5)
+         for (int i = 10; i <= 90; i += 10)
             Lux.Lines ([new (i, 5), new (i, 45)]);
       }
    }
