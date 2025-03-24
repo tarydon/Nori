@@ -4,11 +4,15 @@
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 using System.Diagnostics;
 using System.IO.Compression;
+using System.IO.Enumeration;
 namespace Nori;
 
 #region class PNGReader ----------------------------------------------------------------------------
 /// <summary>Decoder for PNG files (converts them into NImage)</summary>
-public class PNGReader (byte[] data) : PNGCore {
+public class PNGReader : PNGCore {
+   public PNGReader (byte[] data) => mStm = new (data);
+   public PNGReader (string filename) : this (File.ReadAllBytes (filename)) { }
+
    // Methods ------------------------------------------------------------------
    /// <summary>Loads the actual PNG data from the stream</summary>
    public void Load () {
@@ -29,7 +33,7 @@ public class PNGReader (byte[] data) : PNGCore {
       ApplyFilters ();
       ApplyPalette ();
    }
-   readonly ReadStm mStm = new (data);
+   readonly ReadStm mStm;
    int N => (int)mStm.Position;
 
    // Implementation -----------------------------------------------------------
@@ -154,7 +158,6 @@ public class PNGReader (byte[] data) : PNGCore {
    EFormat mFormat;        // Color format
    int mBPP;               // Bytes-per-pixel
    int mRawStride;         // Stride between lines in the mRaw buffer
-   int mRead;              // Current position used during inflation into mRaw buffer
    int mFilterStride;      // Stride between lines in mFiltered buffer 
    byte[] mFiltered = [];  // Filtered buffer (after applying filters)
    byte[] mPalette = [];   // Pallet entries (each 3 bytes defines one RGB)

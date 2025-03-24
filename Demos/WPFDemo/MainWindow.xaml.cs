@@ -14,17 +14,21 @@ public partial class MainWindow : Window {
       InitializeComponent ();
       Content = Lux.CreatePanel ();
       Lux.OnReady = OnLuxReady;
+      // Lux.UIScene = new TestScene ();
    }
 
    void OnLuxReady () {
       var scene = new TestScene ();
-      var data = (byte[])Lux.Render (scene, new (500, 500), ETarget.Image)!;
-      var bmp = new DIBitmap (500, 500, DIBitmap.EFormat.RGB8, data);
-      byte[] bytes = new PNGWriter (bmp).Write ();
-      File.WriteAllBytes ("c:/etc/output.png", bytes);
+      DIBitmap bmp = Lux.RenderToImage (scene, new (1000, 500), DIBitmap.EFormat.RGB8);
+      new PNGWriter (bmp).Write ("c:/etc/png/rgb8.png");
 
-      var reader = new PNGReader (bytes);
-      reader.Load ();
+      //bmp = Lux.RenderToImage (scene, new (1000, 500), DIBitmap.EFormat.RGBA8);
+      //new PNGWriter (bmp).Write ("c:/etc/png/rgba8.png");
+
+      //bmp = Lux.RenderToImage (scene, new (1000, 500), DIBitmap.EFormat.Gray8);
+      //new PNGWriter (bmp).Write ("c:/etc/png/gray8.png");
+
+      new PNGReader ("c:/etc/output.png").Load ();
    }
 }
 

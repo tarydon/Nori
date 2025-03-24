@@ -2,9 +2,7 @@
 // ╔═╦╦═╦╦╬╣ Panel.cs
 // ║║║║╬║╔╣║ Implements Lux.Panel (WPF UserControl) and Lux.Surface (Windows Forms Control)
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
-using System.Windows.Documents;
 using System.Windows.Forms.Integration;
-using System.Windows.Media.Media3D;
 using System.Windows.Threading;
 using static System.Windows.Forms.ControlStyles;
 namespace Nori;
@@ -45,24 +43,24 @@ class Panel : System.Windows.Controls.UserControl {
 
    // Called when the scene is finished rendering, and we need to 'show' it.
    // What this returns depends on the render target 
-   public object? EndRender (ETarget target) {
+   public object? EndRender (ETarget target, DIBitmap.EFormat fmt) {
       switch (target) {
          case ETarget.Screen:
             mSurface?.EndRender ();
             break;
-         case ETarget.Image: case ETarget.Pick:
+         case ETarget.Image: 
             GL.Finish ();
-            int x = mFBViewport.X, y = mFBViewport.Y, stride = x * 3;
+            int x = mFBViewport.X, y = mFBViewport.Y, bpp = fmt.BytesPerPixel ();
+            var pxfmt = fmt switch {
+               DIBitmap.EFormat.RGBA8 => EPixelFormat.RGBA,
+               DIBitmap.EFormat.RGB8 => EPixelFormat.RGB,
+               DIBitmap.EFormat.Gray8 => EPixelFormat.Red,
+               _ => throw new BadCaseException (fmt)
+            };
             GL.PixelStore (EPixelStoreParam.PackAlignment, 4);
-            if (target == ETarget.Image) {
-               byte[] data = new byte[stride * y];
-               GL.ReadPixels (0, 0, x, y, EPixelFormat.RGB, EPixelType.UByte, data);
-               //Figure fig = new Figure (Figure.EFmt.PixelRGBA, data, x, y, stride);
-               //fig.FlipY ();
-               return data;
-            } else {
-               throw new NotImplementedException ();
-            }
+            byte[] data = new byte[bpp * x * y];
+            GL.ReadPixels (0, 0, x, y, pxfmt, EPixelType.UByte, data);
+            return new DIBitmap (x, y, fmt, data);
       }
       return null;
    }
@@ -171,11 +169,12 @@ class Surface : System.Windows.Forms.UserControl {
             break;
          }
       }
+      Lux.OnReady?.Invoke ();
    }
 
    // Override OnPaint to call back to PX.Render, where our actual paint code resides
    protected override void OnPaint (PaintEventArgs e)
-      => Lux.Render (Lux.UIScene, new (Width, Height), ETarget.Screen);
+      => Lux.Render (Lux.UIScene, new (Width, Height), ETarget.Screen, DIBitmap.EFormat.Unknown);
 
    // Private data -------------------------------------------------------------
    HDC mDC;             // Device contex handle used for rendering

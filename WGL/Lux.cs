@@ -70,14 +70,14 @@ public static partial class Lux {
       => Panel.It;
 
    public static Action? OnReady;
-   static bool mReadyFired;
+
+   public static DIBitmap RenderToImage (Scene scene, Vec2S size, DIBitmap.EFormat fmt) {
+      if (size.X % 4 != 0) throw new ArgumentException ($"Lux.RenderToImage: image width must be a multiple of 4");
+      return (DIBitmap)Render (scene, size, ETarget.Image, fmt)!;
+   }
 
    /// <summary>Stub for the Render method that is called when each frame has to be painted</summary>
-   public static object? Render (Scene? scene, Vec2S viewport, ETarget target) {
-      // Don't look at all this too closely - it is temporary code that will
-      // later go away and be replaced by something more clean
-      if (!mReadyFired) { mReadyFired = true; OnReady?.Invoke (); }
-
+   internal static object? Render (Scene? scene, Vec2S viewport, ETarget target, DIBitmap.EFormat fmt) {
       mFrame++;
       var panel = Panel.It;
       panel.BeginRender (viewport, target);
@@ -86,10 +86,10 @@ public static partial class Lux {
       RBatch.StartFrame ();
       Shader.StartFrame ();
       scene?.Render (viewport);
-      object? obj = panel.EndRender (target);
+      object? obj = panel.EndRender (target, fmt);
       Info.FrameOver ();
       FPS.FrameOver ();
-      if (sRenderCompletes.Count > 0) Lib.Post (NextFrame);
+      if (target == ETarget.Screen && sRenderCompletes.Count > 0) Lib.Post (NextFrame);
       return obj;
 
       // Helpers ...........................................

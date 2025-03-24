@@ -87,6 +87,18 @@ public static class Extensions {
    /// <summary>Checks if a given float is zero to within 1e-5</summary>
    public static bool IsZero (this float a) => Abs (a) < 1e-5;
 
+   /// <summary>
+   /// Computes the index of the 'minimum' value in a sequence (or -1 if the sequence is empty)
+   /// </summary>
+   public static int MinIndex<T> (this IReadOnlyList<T> seq) where T : IComparable {
+      if (seq.Count == 0) return -1;
+      int index = 0; T minimum = seq[0];
+      for (int i = 1; i < seq.Count; i++) 
+         if (seq[i].CompareTo (minimum) < 0)
+            (index, minimum) = (i, seq[i]);
+      return index;
+   }
+
    /// <summary>Returns a random bool</summary>
    public static bool NextBool (this Random r) => r.Next (10000) < 5000;
 
@@ -180,5 +192,23 @@ public static class Extensions {
    /// <summary>Convert a C style char * pointer to a C# string</summary>
    public static string ToUTF8 (this nint ptr)
       => Marshal.PtrToStringUTF8 (ptr) ?? string.Empty;
+}
+#endregion
+
+#region class EnumExtensions -----------------------------------------------------------------------
+/// <summary>
+/// Extension methods on various Nori-defined enums
+/// </summary>
+public static class EnumExtensions {
+   /// <summary>
+   /// How many bytes to encode each pixel, with a given DIBitmap format
+   /// </summary>
+   public static int BytesPerPixel (this DIBitmap.EFormat fmt) => 
+      fmt switch {
+         DIBitmap.EFormat.RGB8 => 3,
+         DIBitmap.EFormat.Gray8 => 1,
+         DIBitmap.EFormat.RGBA8 => 4,
+         _ => throw new BadCaseException (fmt)
+      };
 }
 #endregion

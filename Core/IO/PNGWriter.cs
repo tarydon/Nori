@@ -14,7 +14,7 @@ abstract public class PNGCore {
    };
 
    [Flags]
-   protected enum EFormat { Palette = 1, Color = 2, Alpha = 4 };
+   protected enum EFormat { Gray = 0, Palette = 1, Color = 2, Alpha = 4 };
 
    // Implementation -----------------------------------------------------------
    protected uint ComputeCRC (ReadOnlySpan<byte> data) {
@@ -64,6 +64,10 @@ public class PNGWriter : PNGCore {
       mBmp = bmp; mStm = new ();
    }
 
+   public void Write (string file) {
+      File.WriteAllBytes (file, Write ());
+   }
+
    public byte[] Write () {
       foreach (var b in mSign) mStm.WriteByte (b);
       WriteIHDR ();
@@ -73,21 +77,71 @@ public class PNGWriter : PNGCore {
    }
 
    void WriteIDAT () {
-      U32 (1000);    // Don't know the actual length, so just write some dummy value
+      // We don't know the actual length (of the compressed data), so just write some
+      // dummy value now - we'll come back and update this at the end of this function
+      U32 (1000);
       int n = (int)mStm.Position;
       U32 (EChunk.IDAT);
-      U8 (24); U8 (87);
-      int stride = mBmp.Stride;
+      U8 (24); U8 (87);    // CompressionMethod and Flags for Deflate (always the same?)
+      int stride = mBmp.Stride, bpp = mBmp.Fmt.BytesPerPixel (), size = 4 + stride;
+
+      byte[] prior = new byte[size], current = new byte[size];
+      byte[][] filtered = [current, new byte[size], new byte[size]];
+      int[] cost = new int[3];
+
       using (var ds = new DeflateStream (mStm, CompressionLevel.SmallestSize, true)) {
          for (int i = 0; i < mBmp.Height; i++) {
-            ReadOnlySpan<byte> row = mBmp.Data.AsSpan (i * stride, stride);
-            ds.WriteByte (0); ds.Write (row);
+            // Copy one row of data into 'row' (starting at offset 4, so that we don't have to
+            // do any special case handling for the leftmost pixel)
+            Array.Copy (mBmp.Data, i * stride, current, 4, stride);
+
+            // For each row, we are going to compute a good filter type by computing all the 
+            // possible filter values, and evaluating which would be best. Since the 'best' 
+            // means the minimum data after compression, it is not easy to evaluate accurately
+            // without actually compressing (which we don't want to do). As an approximation, we
+            // are going to simply 'sum' the filtered values and pick the one with the minimum sum.
+            // (This is the heuristic recommended in the PNG specification). Note that we are only
+            // trying the NONE, SUB and UP filters for simplicity. In practice, I could not find
+            // any PNG samples where adding the AVG or PAETH filters improved things noticeably.
+
+            // The data unmodified is filter type NONE.
+            // cost[0] is going to be the cost for the NONE filter
+            cost[0] = Sum (current);
+
+            // Compute the SUB filter, and its cost
+            byte[] sub = filtered[1];
+            for (int x = 4; x < size; x++) sub[x] = (byte)(current[x] - current[x - bpp]);
+            cost[1] = Sum (sub);
+
+            // Compute the UP filter, and its cost
+            byte[] up = filtered[2];
+            for (int x = 4; x < size; x++) up[x] = (byte)(current[x] - prior[x]);
+            cost[2] = Sum (up);
+
+            int filter = cost.MinIndex ();
+            byte[] towrite = filtered[filter];
+            ds.WriteByte ((byte)filter); ds.Write (towrite.AsSpan (4, stride));
+
+            // Now store the 'current' row as the 'prior' row and continue
+            (prior, current) = (current, prior);
+            filtered[0] = current;
+
+            // Helper ............................
+            static int Sum (byte[] data) {
+               int sum = 0;
+               foreach (var b in data) sum += b;
+               return sum;
+            }
          }
       }
+
+      // Now that we've finished writing the compressed data, we know the compressed
+      // length so we can go back and update that in the chunk header
       int length = (int)mStm.Position - n - 4;  
       U32 (ComputeCRC (mStm.WorkBuffer.AsSpan (n, length + 4)));
       mStm.Position = n - 4; I32 (length);
       mStm.Position = mStm.Length;
+
    }
 
    void WriteIEND () {
@@ -98,10 +152,16 @@ public class PNGWriter : PNGCore {
    }
 
    void WriteIHDR () {
-      U32 (13);
+      U32 (13);      // Length of IHDR is always 13 bytes
       int n = (int)mStm.Position;
       U32 (EChunk.IHDR); I32 (mBmp.Width); I32 (mBmp.Height); U8 (8);
-      U8 ((byte)EFormat.Color); U8 (0); U8 (0); U8 (0);
+      var fmt = mBmp.Fmt switch {
+         DIBitmap.EFormat.RGB8 => EFormat.Color,
+         DIBitmap.EFormat.RGBA8 => EFormat.Color | EFormat.Alpha,
+         DIBitmap.EFormat.Gray8 => EFormat.Gray,
+         _ => throw new BadCaseException (mBmp.Fmt),
+      };
+      U8 ((byte)fmt); U8 (0); U8 (0); U8 (0);
       U32 (ComputeCRC (mStm.WorkBuffer.AsSpan (n, 17))); // 13 byte data, 4 byte chunk-type
    }
 
@@ -117,8 +177,10 @@ public class PNGWriter : PNGCore {
 public class DIBitmap {
    public DIBitmap (int width, int height, EFormat fmt, byte[] data) {
       (Width, Height, Fmt, Data) = (width, height, fmt, data);
-      Stride = Width * 3;
+      Stride = Width * fmt.BytesPerPixel ();
    }
+
+   public override string ToString () => $"DIBitmap: {Width}x{Height}, {Fmt}";
 
    public readonly int Width;
    public readonly int Height;
@@ -127,8 +189,10 @@ public class DIBitmap {
    public readonly int Stride;
 
    public enum EFormat {
+      Unknown,
       RGB8,
       RGBA8,
+      Gray8,
    }
 }
 
@@ -168,4 +232,3 @@ class WriteStm : Stream {
 
    public byte[] Data { get { Array.Resize (ref mData, mLength); return mData; } }
 }
-
