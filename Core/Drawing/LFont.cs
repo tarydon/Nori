@@ -68,36 +68,53 @@ public class LineFont {
    /// Each character in the text is taken, and the set of Poly objects representing that character
    /// is cloned, scaled, rotated and translated based on pos, height and angle. It is then added to 
    /// the output, and the 'current position' is advanced by the advance width of that character.
-   /// Thus, the input point pos becomes the lower-left corner where we start rendering the text.
+   /// The text will be aligned based on the specified alignment type at the given alignment point.
    /// <param name="text">The text to render.</param>
    /// <param name="pos">The start position.</param>
+   /// <param name="align">The text alignment</param>
    /// <param name="height">Height of the font.</param>
    /// <param name="angle">Rotation angle in radians.</param>
    /// <param name="output">The output list where the rendered output is collected.</param>
-   public void Render (string text, Point2 pos, double height, double angle, List<Poly> output) {
+   public void Render (string text, Point2 pos, ETextAlign align, double height, double angle, List<Poly> output) {
       // Initialize the factor by which glyphs have to be scaled.
       // It will be a constant for this render call.
-      var scale = height / Ascender;
-      // Compose the scaling and rotation matrices.
-      Matrix2 mat0 = Matrix2.Scaling (scale), mat1 = Matrix2.Rotation (pos, angle);
-      // Initialize the (x, y) positions of the 'next' char along with the line-gap, dy.
-      double x = pos.X, y = pos.Y, dy = scale * VAdvance;
-      // Render the text characters now.
-      foreach (char ch in text) {
-         if (ch == '\n') {
-            // We found a linebreak. Reset x and advance y.
-            x = pos.X; y -= dy;
-            continue;
+      var nAlign = (int)align - 1;
+      var lines = text.Split ('\n').Select (DrawLine).ToList (); // Split the text if it is a multiline text and get the line width also for alignment computation
+      var (delX, delY) = (DX (lines.Max (a => a.Width)), DY (lines.Count));
+      List<Poly> aPolys = []; // Align all the polys for the specified alignment
+      foreach (var (shape, width) in lines) {
+         aPolys.AddRange (shape.Select (a => a * Matrix2.Translation (delX, delY))); // Shift the polys based on the specified alignment
+         delY -= VAdvance;
+      }
+
+      // Apply the scale, rotation and the translation transforms
+      var xfm = Matrix2.Scaling (height / Ascender); 
+      if (!angle.IsZero ()) xfm *= Matrix2.Rotation (angle);
+      xfm *= Matrix2.Translation (pos.X, pos.Y);
+      foreach (var p in aPolys) output.Add (p * xfm);
+      
+      // These computes the shift for the given text alignment
+      double DX (double width) => -((nAlign % 3) switch { 1 => width / 2, 2 => width, _ => 0 });
+      double DY (int lines) {
+         double block = (lines - 1) * VAdvance;
+         return -((nAlign / 3) switch {
+            0 => Ascender,                                     // Top alignment
+            1 => (Ascender - block) / 2,                       // Center alignment
+            2 => Descender - block,                            // Bottom alignment
+            _ => -block                                        // Baseline
+         });
+      }
+
+      // This computes the geometry for a line of text, and also the width of that text
+      (Poly[] Shape, double Width) DrawLine (string text) {
+         (double x, List<Poly> output) = (0, []);
+         for (int i = 0, n = text.Length - 1; i <= n; i++) {
+            if (!Glyphs.TryGetValue (text[i], out var g)) continue;
+            var mat = Matrix2.Translation (x, 0);
+            output.AddRange (g.Polys.Select (p => p * mat));
+            x += (g.HAdvance * Ascender);
          }
-         if (!Glyphs.TryGetValue (ch, out var g)) continue;
-         if (g.Polys.Length > 0) {
-            // Transform and output the glyph shape.
-            var mat = mat0 * Matrix2.Translation (x, y);
-            if (!angle.IsZero ()) mat *= mat1;
-            output.AddRange (g.Polys.Select (x => x * mat));
-         }
-         // Advance the x-position by HAdvance.
-         x += g.HAdvance * height;
+         return (output.ToArray (), x);
       }
    }
 
