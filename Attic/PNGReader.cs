@@ -4,7 +4,6 @@
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 using System.Diagnostics;
 using System.IO.Compression;
-using System.IO.Enumeration;
 namespace Nori;
 
 #region class PNGReader ----------------------------------------------------------------------------

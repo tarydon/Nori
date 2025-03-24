@@ -23,8 +23,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nori.Test", "Test\Nori.Test
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nori.Gen", "Tools\Generate\Nori.Gen.csproj", "{94945620-A3F1-40DC-8C31-AE329E0F1A34}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PNGTest", "Demos\PNGTest\PNGTest.csproj", "{89BFE120-5AE0-4A01-9326-DB147A4EF79C}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -59,10 +57,6 @@ Global
 		{94945620-A3F1-40DC-8C31-AE329E0F1A34}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{94945620-A3F1-40DC-8C31-AE329E0F1A34}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{94945620-A3F1-40DC-8C31-AE329E0F1A34}.Release|Any CPU.Build.0 = Release|Any CPU
-		{89BFE120-5AE0-4A01-9326-DB147A4EF79C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{89BFE120-5AE0-4A01-9326-DB147A4EF79C}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{89BFE120-5AE0-4A01-9326-DB147A4EF79C}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{89BFE120-5AE0-4A01-9326-DB147A4EF79C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -73,7 +67,6 @@ Global
 		{7C615F61-E560-4F50-B0F8-E2DCC7B446F5} = {F03CAFEB-AE20-4D17-A6C4-43C95C0AF071}
 		{B6AC97D1-288F-4092-A99D-24B5535D960A} = {2E62A53E-5EB7-41FE-A2FD-97E5331598E7}
 		{94945620-A3F1-40DC-8C31-AE329E0F1A34} = {F03CAFEB-AE20-4D17-A6C4-43C95C0AF071}
-		{89BFE120-5AE0-4A01-9326-DB147A4EF79C} = {6E506A96-E329-4ACA-8B24-11CE8537A28A}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {4F1DDE23-1A06-4684-9597-815592E80399}

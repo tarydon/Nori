@@ -1,22 +1,25 @@
-﻿using System.IO.Compression;
-
+// ────── ╔╗
+// ╔═╦╦═╦╦╬╣ PNGWriter.cs
+// ║║║║╬║╔╣║ Implements a PNG writer that can handle a few bitmap formats
+// ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
+using System.IO.Compression;
 namespace Nori;
 
 #region class PNGCore ------------------------------------------------------------------------------
-/// <summary>
-/// PNGCore is the base class for both PNGReader and PNGWriter
-/// </summary>
+/// <summary>PNGCore is the base class for both PNGReader and PNGWriter</summary>
 abstract public class PNGCore {
    // Internal types -----------------------------------------------------------
+   // The various chunk types we need to deal with (for now, only 4)
    protected enum EChunk : uint {
-      IHDR = 0x49484452, sRGB = 0x73524742, gAMA = 0x67414D41, PLTE = 0x504C5445,
-      pHYs = 0x70485973, IDAT = 0x49444154, IEND = 0x49454E44,
+      IHDR = 0x49484452, PLTE = 0x504C5445, IDAT = 0x49444154, IEND = 0x49454E44,
    };
 
+   // Possible bits for the PNG format value in IHDR
    [Flags]
    protected enum EFormat { Gray = 0, Palette = 1, Color = 2, Alpha = 4 };
 
    // Implementation -----------------------------------------------------------
+   // Given a block of data, computes the PNG CRC checksum for that block
    protected uint ComputeCRC (ReadOnlySpan<byte> data) {
       // If the CRC seed table has not yet been computed, compute that first
       if (mCRCTable == null) {
@@ -41,41 +44,61 @@ abstract public class PNGCore {
    static uint[]? mCRCTable;
 
    // Private data -------------------------------------------------------------
-   protected static readonly byte[] mSign = [137, 80, 78, 71, 13, 10, 26, 10]; // PNG file signature
+   // This 8 byte sequence is the signature found at the start of every PNG file
+   protected static readonly byte[] mSign = [137, 80, 78, 71, 13, 10, 26, 10]; 
 }
 #endregion
 
-/*
-class PNGWriter (Stream stm, DIBitmap bmp) : PNGCore (stm) {
-   public void Save () {
-      for (int i = 0; i < 8; i++) W (mSign[i]);
-   }
-
-   // Implementation -----------------------------------------------------------
-   void W (byte b) => mStm.WriteByte (b);
-
-   // Private data -------------------------------------------------------------
-   readonly DIBitmap mBmp = bmp;
-}
-*/
-
+#region class PNGWriter ----------------------------------------------------------------------------
+/// <summary>PNGWriter can save a bitmap in PNG format</summary>
+/// This supports a few bitmap formats: RGB, RGBA and Greyscale (each with 8 bits per
+/// component). It does not use palletes. 
 public class PNGWriter : PNGCore {
-   public PNGWriter (DIBitmap bmp) {
-      mBmp = bmp; mStm = new ();
-   }
+   // Constructors -------------------------------------------------------------
+   /// <summary>Construct a PNGWriter, given a DIBitmap to write</summary>
+   public PNGWriter (DIBitmap bmp) { mBmp = bmp; mStm = new (); }
+   readonly WriteStm mStm;
+   readonly DIBitmap mBmp;
 
-   public void Write (string file) {
-      File.WriteAllBytes (file, Write ());
-   }
+   // Methods ------------------------------------------------------------------
+   /// <summary>Save PNG to a file</summary>
+   public void Write (string file) => File.WriteAllBytes (file, Write ());
 
+   /// <summary>Save PNG to a byte-array</summary>
    public byte[] Write () {
-      foreach (var b in mSign) mStm.WriteByte (b);
+      mSign.ForEach (mStm.WriteByte);
       WriteIHDR ();
       WriteIDAT ();
       WriteIEND ();      
       return mStm.Data;
    }
 
+   // Chunk writers ------------------------------------------------------------
+   // Write an IHDR chunk (specifies width, height, format etc)
+   void WriteIHDR () {
+      U32 (13);      // Length of IHDR is always 13 bytes
+      int n = (int)mStm.Position;
+      U32 (EChunk.IHDR); I32 (mBmp.Width); I32 (mBmp.Height); U8 (8);
+      var fmt = mBmp.Fmt switch {
+         DIBitmap.EFormat.RGB8 => EFormat.Color,
+         DIBitmap.EFormat.RGBA8 => EFormat.Color | EFormat.Alpha,
+         DIBitmap.EFormat.Gray8 => EFormat.Gray,
+         _ => throw new BadCaseException (mBmp.Fmt),
+      };
+      U8 ((byte)fmt); U8 (0); U8 (0); U8 (0);
+      U32 (ComputeCRC (mStm.WorkBuffer.AsSpan (n, 17))); // 13 byte data, 4 byte chunk-type
+   }
+
+   // Writes the IDAT chunk (the main payload for the bitmap).
+   // The data is written as a series of rows, each prefixed with a 1-byte "filter" code.
+   // This code tells us how to interpret the row data (see PNG specification for more details).
+   // For example a filter code of UP means that the values in the row are deltas relative to
+   // the corresponding pixel one row above. On top of this, the whole IDAT chunk is
+   // compressed using the Deflate algorithm.
+   // 
+   // We use an adaptive algorithm that tries 3 different filters (NONE, SUB, UP) for each
+   // row and picks the best using a simple heuristic that tries to estimate which would 
+   // compress the best (without actually trying to compress each of the variants). 
    void WriteIDAT () {
       // We don't know the actual length (of the compressed data), so just write some
       // dummy value now - we'll come back and update this at the end of this function
@@ -136,99 +159,27 @@ public class PNGWriter : PNGCore {
       }
 
       // Now that we've finished writing the compressed data, we know the compressed
-      // length so we can go back and update that in the chunk header
+      // length so we can go back and update that in the chunk header, and we can also
+      // compute the checksum and write that out (note that the checksum is for the 
+      // 'compressed' bytes). 
       int length = (int)mStm.Position - n - 4;  
       U32 (ComputeCRC (mStm.WorkBuffer.AsSpan (n, length + 4)));
       mStm.Position = n - 4; I32 (length);
       mStm.Position = mStm.Length;
-
    }
 
+   // Write an IEND chunk (last chunk, zero bytes of data)
    void WriteIEND () {
       U32 ((uint)0);
       int n = (int)mStm.Position;
       U32 (EChunk.IEND);
-      U32 (ComputeCRC (mStm.WorkBuffer.AsSpan (n, 4))); 
+      U32 (ComputeCRC (mStm.WorkBuffer.AsSpan (n, 4)));
    }
 
-   void WriteIHDR () {
-      U32 (13);      // Length of IHDR is always 13 bytes
-      int n = (int)mStm.Position;
-      U32 (EChunk.IHDR); I32 (mBmp.Width); I32 (mBmp.Height); U8 (8);
-      var fmt = mBmp.Fmt switch {
-         DIBitmap.EFormat.RGB8 => EFormat.Color,
-         DIBitmap.EFormat.RGBA8 => EFormat.Color | EFormat.Alpha,
-         DIBitmap.EFormat.Gray8 => EFormat.Gray,
-         _ => throw new BadCaseException (mBmp.Fmt),
-      };
-      U8 ((byte)fmt); U8 (0); U8 (0); U8 (0);
-      U32 (ComputeCRC (mStm.WorkBuffer.AsSpan (n, 17))); // 13 byte data, 4 byte chunk-type
-   }
-
+   // Implementation -----------------------------------------------------------
    void U8 (uint b) => mStm.WriteByte ((byte)b);
    void U32 (uint v) { U8 (v >> 24); U8 (v >> 16); U8 (v >> 8); U8 (v); }
    void I32 (int v) => U32 ((uint)v);
    void U32 (EChunk v) => U32 ((uint)v);
-
-   readonly WriteStm mStm;
-   readonly DIBitmap mBmp;
 }
-
-public class DIBitmap {
-   public DIBitmap (int width, int height, EFormat fmt, byte[] data) {
-      (Width, Height, Fmt, Data) = (width, height, fmt, data);
-      Stride = Width * fmt.BytesPerPixel ();
-   }
-
-   public override string ToString () => $"DIBitmap: {Width}x{Height}, {Fmt}";
-
-   public readonly int Width;
-   public readonly int Height;
-   public readonly EFormat Fmt;
-   public readonly byte[] Data;
-   public readonly int Stride;
-
-   public enum EFormat {
-      Unknown,
-      RGB8,
-      RGBA8,
-      Gray8,
-   }
-}
-
-/// <summary>
-/// Implements a stream that writes to a memory-buffer
-/// </summary>
-/// This is similar to a MemoryStream, but provides access to the underlying 
-class WriteStm : Stream {
-   public override bool CanRead => false;
-   public override bool CanSeek => false;
-   public override bool CanWrite => true;
-
-   public override long Length => mLength;
-
-   public override long Position { get => mPosition; set => mPosition = (int)value; }
-   public override void Flush () { }
-
-   public override int Read (byte[] buffer, int offset, int count) => throw new NotImplementedException ();
-   public override long Seek (long offset, SeekOrigin origin) => throw new NotImplementedException ();
-   public override void SetLength (long value) => throw new NotImplementedException ();
-
-   public override void Write (byte[] buffer, int offset, int count) {
-      while (mPosition + count >= mData.Length) Array.Resize (ref mData, mData.Length * 2);
-      Array.Copy (buffer, offset, mData, mPosition, count);
-      mPosition += count; mLength = Math.Max (mPosition, mLength);
-   }
-
-   public override void WriteByte (byte value) {
-      if (mPosition + 1 >= mData.Length) Array.Resize (ref mData, mData.Length * 2);
-      mData[mPosition++] = value; mLength = Math.Max (mPosition, mLength);
-   }
-
-   public byte[] WorkBuffer => mData;
-   byte[] mData = new byte[1024];
-
-   int mLength = 0, mPosition = 0; 
-
-   public byte[] Data { get { Array.Resize (ref mData, mLength); return mData; } }
-}
+#endregion

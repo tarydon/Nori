@@ -87,9 +87,7 @@ public static class Extensions {
    /// <summary>Checks if a given float is zero to within 1e-5</summary>
    public static bool IsZero (this float a) => Abs (a) < 1e-5;
 
-   /// <summary>
-   /// Computes the index of the 'minimum' value in a sequence (or -1 if the sequence is empty)
-   /// </summary>
+   /// <summary>Computes the index of the 'minimum' value in a sequence (or -1 if the sequence is empty)</summary>
    public static int MinIndex<T> (this IReadOnlyList<T> seq) where T : IComparable {
       if (seq.Count == 0) return -1;
       int index = 0; T minimum = seq[0];
@@ -196,13 +194,9 @@ public static class Extensions {
 #endregion
 
 #region class EnumExtensions -----------------------------------------------------------------------
-/// <summary>
-/// Extension methods on various Nori-defined enums
-/// </summary>
+/// <summary>Extension methods on various Nori-defined enums</summary>
 public static class EnumExtensions {
-   /// <summary>
-   /// How many bytes to encode each pixel, with a given DIBitmap format
-   /// </summary>
+   /// <summary>How many bytes to encode each pixel, with a given DIBitmap format</summary>
    public static int BytesPerPixel (this DIBitmap.EFormat fmt) => 
       fmt switch {
          DIBitmap.EFormat.RGB8 => 3,

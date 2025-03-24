@@ -67,7 +67,7 @@ class Panel : System.Windows.Controls.UserControl {
 
    // The Panel singleton (only one GL context, so only one Panel, one Surface)
    public static Panel It => mIt ??= new ();
-   static Panel? mIt;
+   internal static Panel? mIt;
 
    // Force-issue a WM_PAINT message (redraw)
    public void Redraw ()
