@@ -64,10 +64,32 @@ public class LineFont {
    // The LFONT database.
    static readonly Dictionary<string, LineFont> sFonts = [];
 
-   public void Render (string text, Point2 pos, ETextAlign align, double oblique, double xscale, double height, double angle, List<Poly> output) {
-      string[] lines = [.. text.Split ('\n')];
-      List<double> widths = [.. lines.Select (GetWidth)];
+   public void Render (string text, Point2 pos, ETextAlign align, double oblique, double xstretch, double height, double angle, List<Poly> output) {
+      string[] lines = [.. text.Split ('\n')];                 // Split the text into lines, 
+      List<double> widths = [.. lines.Select (GetWidth)];      // and get their widths (assuming height=1)
 
+      double scaleY = height / Ascender, scaleX = xstretch * scaleY;
+      double x = pos.X, dyTotal = (lines.Length * Ascender + (lines.Length - 1) * Descender);
+      double y = (((int)align - 1) / 3) switch {
+         0 => -Ascender,               // Top 
+         1 => -dyTotal / 2,            // Center
+         2 => dyTotal - Descender,     // Bottom alignment
+         _ => 0,                       // Baseline alignment
+      };
+      y = pos.Y + y * scaleY;
+      for (int i = 0; i < lines.Length; i++) {
+         var line = lines[i];
+         var xfm = Matrix2.Scaling (scaleX, scaleY);
+         foreach (var ch in line) {
+            if (Glyphs.TryGetValue (ch, out var g)) {
+               output.AddRange (g.Polys.Select (a => a * xfm * Matrix2.Translation (x, y)));
+               x += g.HAdvance;
+            }
+         }
+         x = pos.X; y -= VAdvance;
+      }
+
+      // Helpers .................................
       // Gets the width of a line of text, when rendered at size = 1, xscale = 1
       double GetWidth (string line) {
          double x = 0;
