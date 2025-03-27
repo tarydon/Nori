@@ -64,45 +64,6 @@ public class LineFont {
    // The LFONT database.
    static readonly Dictionary<string, LineFont> sFonts = [];
 
-   public void Render (string text, Point2 pos, ETextAlign align, double oblique, double xstretch, double height, double angle, List<Poly> output) {
-      string[] lines = [.. text.Split ('\n')];                 // Split the text into lines, 
-      List<double> widths = [.. lines.Select (GetWidth)];      // and get their widths (assuming height=1)
-
-      double scaleY = height / Ascender, scaleX = xstretch * scaleY;
-      double x = pos.X, dyTotal = (lines.Length * Ascender + (lines.Length - 1) * Descender);
-      double y = (((int)align - 1) / 3) switch {
-         0 => -Ascender,               // Top 
-         1 => -dyTotal / 2,            // Center
-         2 => dyTotal - Descender,     // Bottom alignment
-         _ => 0,                       // Baseline alignment
-      };
-      y = pos.Y + y * scaleY;
-      for (int i = 0; i < lines.Length; i++) {
-         var line = lines[i];
-         var xfm = Matrix2.Scaling (scaleX, scaleY);
-         foreach (var ch in line) {
-            if (Glyphs.TryGetValue (ch, out var g)) {
-               output.AddRange (g.Polys.Select (a => a * xfm * Matrix2.Translation (x, y)));
-               x += g.HAdvance;
-            }
-         }
-         x = pos.X; y -= VAdvance;
-      }
-
-      // Helpers .................................
-      // Gets the width of a line of text, when rendered at size = 1, xscale = 1
-      double GetWidth (string line) {
-         double x = 0;
-         for (int i = 0; i < line.Length; i++) {
-            if (!Glyphs.TryGetValue (line[i], out var g)) continue;
-            if (i < line.Length - 1) x += g.HAdvance;
-            else x += g.Width;
-         }
-         return x; 
-      }
-   }
-
-   /*
    /// <summary>This renders the given text to a List of Poly. </summary>
    /// Each character in the text is taken, and the set of Poly objects representing that character
    /// is cloned, scaled, rotated and translated based on pos, height and angle. It is then added to 
@@ -110,114 +71,54 @@ public class LineFont {
    /// The text will be aligned based on the specified alignment type at the given alignment point.
    /// <param name="text">The text to render.</param>
    /// <param name="pos">The start position.</param>
-<<<<<<< HEAD
    /// <param name="align">The text alignment</param>
-||||||| d77610a
-=======
    /// <param name="oblique">Oblique angle of the font in radians.</param>
-   /// <param name="xscale">XScale factor of the font.</param>
->>>>>>> main
+   /// <param name="xstretch">XScale factor of the font.</param>
    /// <param name="height">Height of the font.</param>
    /// <param name="angle">Rotation angle in radians.</param>
    /// <param name="output">The output list where the rendered output is collected.</param>
-<<<<<<< HEAD
-   public void Render (string text, Point2 pos, ETextAlign align, double height, double angle, List<Poly> output) {
-||||||| d77610a
-   public void Render (string text, Point2 pos, double height, double angle, List<Poly> output) {
-=======
-   public void Render (string text, Point2 pos, double oblique, double xscale, double height, double angle, List<Poly> output) {
->>>>>>> main
-      // Initialize the factor by which glyphs have to be scaled.
-      // It will be a constant for this render call.
-<<<<<<< HEAD
+   public void Render (string text, Point2 pos, ETextAlign align, double oblique, double xstretch, double height, double angle, List<Poly> output) {
+      (Poly[] Shapes, double Width)[] lines = [.. text.Split ('\n').Select (GetPolysAndWidth)];  // Split the text into lines and get their widths and geometry (assuming height=1)
+      
       var nAlign = (int)align - 1;
-      var lines = text.Split ('\n').Select (DrawLine).ToList (); // Split the text if it is a multiline text and get the line width also for alignment computation
-      var (delX, delY) = (DX (lines.Max (a => a.Width)), DY (lines.Count));
-      List<Poly> aPolys = []; // Align all the polys for the specified alignment
-      foreach (var (shape, width) in lines) {
-         aPolys.AddRange (shape.Select (a => a * Matrix2.Translation (delX, delY))); // Shift the polys based on the specified alignment
-         delY -= VAdvance;
-      }
+      // By default all the polys will be at the base of the first line. We need to place them based on the given alignment
+      var maxW = lines.Max (a => a.Width);
+      double dx = -((nAlign % 3) switch { 1 => maxW / 2, 2 => maxW, _ => 0 }); // Get the horizontal shift
 
-      // Apply the scale, rotation and the translation transforms
-      var xfm = Matrix2.Scaling (height / Ascender); 
+      double dyTotal = (lines.Length - 1) * VAdvance;  // VAdvance is the distance between 2 consecutive base lines
+      double dy = (nAlign / 3) switch {                // Get the vertical shift 
+         0 => -Ascender,                               // Top 
+         1 => -(Ascender - dyTotal) / 2,               // Center
+         2 => dyTotal - Descender,                     // Bottom alignment
+         _ => dyTotal                                  // Baseline alignment
+      };
+
+      // Compute the transform based on the given properties and apply the transform.
+      var xfm = Matrix2.Identity;
+      if (!oblique.IsZero ()) xfm *= new Matrix2 (1, 0, Math.Tan (oblique), 1, 0, 0);
+      double scaleY = height / Ascender, scaleX = xstretch * scaleY;
+      xfm *= Matrix2.Scaling (scaleX, scaleY);
       if (!angle.IsZero ()) xfm *= Matrix2.Rotation (angle);
       xfm *= Matrix2.Translation (pos.X, pos.Y);
-      foreach (var p in aPolys) output.Add (p * xfm);
-      
-      // These computes the shift for the given text alignment
-      double DX (double width) => -((nAlign % 3) switch { 1 => width / 2, 2 => width, _ => 0 });
-      double DY (int lines) {
-         double block = (lines - 1) * VAdvance;
-         return -((nAlign / 3) switch {
-            0 => Ascender,                                     // Top alignment
-            1 => (Ascender - block) / 2,                       // Center alignment
-            2 => Descender - block,                            // Bottom alignment
-            _ => -block                                        // Baseline
-         });
+      // Shift the polys based on the specified alignment and then apply the transform
+      foreach (var shape in lines.Select (a => a.Shapes)) {
+         output.AddRange (shape.Select (a => a * Matrix2.Translation (dx, dy) * xfm));
+         dy -= VAdvance;
       }
 
-      // This computes the geometry for a line of text, and also the width of that text
-      (Poly[] Shape, double Width) DrawLine (string text) {
+      // Helpers .................................
+      // Gets the polys and the width of a line of text, when rendered at size = 1, xscale = 1
+      (Poly[], double) GetPolysAndWidth (string line) {
          (double x, List<Poly> output) = (0, []);
-         for (int i = 0, n = text.Length - 1; i <= n; i++) {
-            if (!Glyphs.TryGetValue (text[i], out var g)) continue;
+         for (int i = 0; i < line.Length; i++) {
+            if (!Glyphs.TryGetValue (line[i], out var g)) continue;
             var mat = Matrix2.Translation (x, 0);
             output.AddRange (g.Polys.Select (p => p * mat));
-            x += (g.HAdvance * Ascender);
-||||||| d77610a
-      var scale = height / Ascender;
-      // Compose the scaling and rotation matrices.
-      Matrix2 mat0 = Matrix2.Scaling (scale), mat1 = Matrix2.Rotation (pos, angle);
-      // Initialize the (x, y) positions of the 'next' char along with the line-gap, dy.
-      double x = pos.X, y = pos.Y, dy = scale * VAdvance;
-      // Render the text characters now.
-      foreach (char ch in text) {
-         if (ch == '\n') {
-            // We found a linebreak. Reset x and advance y.
-            x = pos.X; y -= dy;
-            continue;
-=======
-      var scale = height / Ascender;
-      // Compose the scaling and rotation matrices.
-      Matrix2 mat0 = Matrix2.Scaling (xscale * scale, scale), mat1 = Matrix2.Rotation (pos, angle);
-      // Initialize the (x, y) positions of the 'next' char along with the line-gap, dy.
-      double x = pos.X, y = pos.Y, dy = scale * VAdvance;
-      // Compose the oblique matrix
-      if (!oblique.IsZero ()) mat0 *= new Matrix2 (1, 0, Math.Tan (oblique), 1, 0, 0);
-      // Render the text characters now.
-      foreach (char ch in text) {
-         if (ch == '\n') {
-            // We found a linebreak. Reset x and advance y.
-            x = pos.X; y -= dy;
-            continue;
->>>>>>> main
+            x += ((i < line.Length - 1) ? g.HAdvance : g.Width);
          }
-<<<<<<< HEAD
          return (output.ToArray (), x);
-||||||| d77610a
-         if (!Glyphs.TryGetValue (ch, out var g)) continue;
-         if (g.Polys.Length > 0) {
-            // Transform and output the glyph shape.
-            var mat = mat0 * Matrix2.Translation (x, y);
-            if (!angle.IsZero ()) mat *= mat1;
-            output.AddRange (g.Polys.Select (x => x * mat));
-         }
-         // Advance the x-position by HAdvance.
-         x += g.HAdvance * height;
-=======
-         if (!Glyphs.TryGetValue (ch, out var g)) continue;
-         if (g.Polys.Length > 0) {
-            // Transform and output the glyph shape.
-            var mat = mat0 * Matrix2.Translation (x, y);
-            if (!angle.IsZero ()) mat *= mat1;
-            output.AddRange (g.Polys.Select (x => x * mat));
-         }
-         // Advance the x-position by HAdvance with xscaling.
-         x += g.HAdvance * xscale * height;
->>>>>>> main
       }
-   } */
+   }
 
    public override string ToString () => $"{Name}.lfont";
    
