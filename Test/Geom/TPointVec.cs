@@ -43,7 +43,7 @@ class PointTests {
       pa.GetLieOn (new (10, 0), new (10, 100)).Is (0.2);
    }
 
-   [Test (11, "Point2.AngleTo")]
+   [Test (47, "Point2.AngleTo")]
    void Test3 () {
       Point2 pa = new (10, 20), pb = new (30, 20);
       pa.AngleTo (pb).Is (0, E);
