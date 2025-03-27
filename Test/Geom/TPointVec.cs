@@ -6,7 +6,7 @@ namespace Nori.Testing;
 
 [Fixture (4, "Point tests", "Math")]
 class PointTests {
-   [Test (11, "class Point2")]
+   [Test (10, "class Point2")]
    void Test1 () {
       // Point2 tests
       Point2 pa = new (3, 5); pa.Is ("(3,5)");
@@ -25,7 +25,7 @@ class PointTests {
       Vec2F pfa = (Vec2F)pa2; pfa.Is ("<3,5>");
    }
 
-   [Test (12, "Point2.DistTo, Point2.EQ")]
+   [Test (11, "Point2.DistTo, Point2.EQ")]
    void Test2 () {
       Point2 pa = new (10, 20), pb = new (40, 60);
       pa.DistTo (pb).Is (50);
@@ -43,7 +43,7 @@ class PointTests {
       pa.GetLieOn (new (10, 0), new (10, 100)).Is (0.2);
    }
 
-   [Test (13, "Point2.AngleTo")]
+   [Test (11, "Point2.AngleTo")]
    void Test3 () {
       Point2 pa = new (10, 20), pb = new (30, 20);
       pa.AngleTo (pb).Is (0, E);
@@ -59,7 +59,7 @@ class PointTests {
       fAngle.Is (Math.PI, E);
    }
 
-   [Test (14, "Point2.Clamp, DistToSq, Rotate")]
+   [Test (13, "Point2.Clamp, DistToSq, Rotate")]
    void Test4 () {
       Bound2 r = new (2, 1, 20, 10);
       EQ (PX (-2, 3).Clamped (r), PX (2, 3));
@@ -73,7 +73,7 @@ class PointTests {
 
    const double E = 1e-8;
 
-   [Test (15, "Point2.SnapToLine, Point2.DistToLine")]
+   [Test (14, "Point2.SnapToLine, Point2.DistToLine")]
    void Test5 () {
       var pa = PX (13, 14);
       var pb = pa.SnappedToLine (new (0, 0), new (10, 0));
@@ -93,7 +93,7 @@ class PointTests {
       EQ (pc, PX (50, 50));
    }
 
-   [Test (16, "Point2.SnapToLineSeg, Point2.DistToLineSeg")]
+   [Test (15, "Point2.SnapToLineSeg, Point2.DistToLineSeg")]
    void Test6 () {
       Point2 pa = new (13, 14);
       Point2 pb = pa.SnappedToLineSeg (new (0, 0), new (10, 0));
@@ -109,7 +109,7 @@ class PointTests {
       EQ (pc, PX (50, 50));
    }
 
-   [Test (17, "Point2.IsLeftOf, Point2.Side, ToString, Equals, GetHashCode")]
+   [Test (16, "Point2.IsLeftOf, Point2.Side, ToString, Equals, GetHashCode")]
    void Test7 () {
       Point2 pa = new (13, 14);
       Point2 pc = new (30, -10), pd = new (-50, 25);
@@ -120,7 +120,7 @@ class PointTests {
       pa.Side (pe, pf).Is (0); pa.Side (pf, pe).Is (0);
    }
 
-   [Test (18, "Point2 operators, IsNil, Nil")]
+   [Test (17, "Point2 operators, IsNil, Nil")]
    void Test8 () {
       Point2 pa = new (10, 5), pb = new (21, 18);
       Vector2 va = new (3, -1);
@@ -133,7 +133,7 @@ class PointTests {
       Point2.Nil.IsNil.Is (true);
    }
 
-   [Test (19, "Point2.GetLieOn")]
+   [Test (18, "Point2.GetLieOn")]
    void Test9 () {
       Point2 a = new (0, 0), b = new (10, 5), c = new (4, 12);
       a.GetLieOn (a, b).Is (0, E); b.GetLieOn (a, b).Is (1, E);
@@ -143,7 +143,7 @@ class PointTests {
       new Point2 (40, 120).GetLieOn (a, c).Is (10, E);
    }
 
-   [Test (20, "Point2.Midpoint, Move, Polar, Mirror, Rotate, Scale")]
+   [Test (19, "Point2.Midpoint, Move, Polar, Mirror, Rotate, Scale")]
    void Test10 () {
       Point2 a = new (13, 14), b = new (22, 30);
       EQ (a.Midpoint (b), new (17.5, 22));
@@ -164,7 +164,7 @@ class PointTests {
    static void EQ (Point2 pt, double a, double b) => pt.EQ (PX (a, b)).IsTrue ();
    static void EQ (Point2 pt, Point2 pt2) => pt.EQ (pt2).IsTrue ();
 
-   [Test (21, "class Point3")]
+   [Test (20, "class Point3")]
    void Test11 () {
       // Point3 tests
       Point3 pa = new (3, 5, 7); pa.Is ("(3,5,7)");
@@ -187,7 +187,7 @@ class PointTests {
       Vec3F pfa = (Vec3F)pa2; pfa.Is ("<3,5,7>");
    }
 
-   [Test (22, "More Point3 tests")]
+   [Test (21, "More Point3 tests")]
    void Test12 () {
       Point3 p0 = new (0, 0, 0), p1 = new (100, 0, 0);
       new Point3 (50, 10, 20).SnappedToLine (p0, p1).Is ("(50,0,0)");
@@ -212,7 +212,7 @@ class PointTests {
 
 [Fixture (14, "Vector tests", "Math")]
 class VectorTests {
-   [Test (3, "class Vector2")]
+   [Test (22, "class Vector2")]
    void Test3 () {
       Vector2 vec = new (3, 4); vec.Length.R6 ().Is ("5");
       Vector2.Zero.Is ("<0,0>");
@@ -253,7 +253,7 @@ class VectorTests {
       ((Point2)new Vector2 (1, 2)).Is ("(1,2)");
    }
 
-   [Test (4, "class Vector3")]
+   [Test (23, "class Vector3")]
    void Test4 () {
       Vector3 vec = new (3, 4, 5); vec.Length.R6 ().Is ("7.071068");
       Vector3.Zero.Is ("<0,0,0>");
