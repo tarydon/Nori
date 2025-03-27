@@ -29,6 +29,7 @@ public class Matrix2 {
    public static Matrix2 Rotation (double angle) => Rotation (Point2.Zero, angle);
    /// <summary>Create a matrix, rotating about an arbitrary center</summary>
    public static Matrix2 Rotation (Point2 center, double angle) {
+      if (angle.IsZero ()) return Identity;
       var (s, c) = (Sin (angle), Cos (angle));
       var (dx, dy) = (center.X * (1 - c) + center.Y * s, center.Y * (1 - c) - center.X * s);
       return new (c, s, -s, c, dx, dy);
