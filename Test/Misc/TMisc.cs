@@ -6,7 +6,7 @@ namespace Nori.Testing;
 
 [Fixture (3, "Miscellaneous tests", "Misc")]
 class TMisc {
-   [Test (23, "Test of Coverage class")]
+   [Test (28, "Test of Coverage class")]
    void Test2 () {
       var c = new Coverage ($"{NT.Data}/Misc/coverage.xml");
       TestRunner.SetNoriFiles (c);
@@ -19,7 +19,7 @@ class TMisc {
    }
 
    // Test of various extension methods
-   [Test (24, "Extensions test")]
+   [Test (29, "Extensions test")]
    void Test3 () {
       // Clamp
       1.5.Clamp (1, 2).Is (1.5); 0.5.Clamp (1, 2).Is (1); 2.5.Clamp (1, 2).Is (2);
@@ -76,7 +76,7 @@ class TMisc {
       "abc".ToDouble ().Is (0);
    }
 
-   [Test (29, "AList<T> tests")]
+   [Test (30, "AList<T> tests")]
    void Test4 () {
       AList<int> set = [];
       List<ListChange> changes = [];
@@ -103,7 +103,7 @@ class TMisc {
       object? o1 = ((System.Collections.IList)set)[0];
    }
 
-   [Test (50, "Basic test of RBTree")]
+   [Test (31, "Basic test of RBTree")]
    void Test5 () {
       // Values in this tree are 4-character strings of the form "[12]", and the key
       // for that string is just the 2-digit integer in the middle (as shown in the key-extractor
@@ -133,7 +133,7 @@ class TMisc {
       tree.Count.Is (5);
    }
 
-   [Test (51, "Stress test of RBTree")]
+   [Test (32, "Stress test of RBTree")]
    void Test6 () {
       Random r = new (1);
       RBTree<int, int> tree = new (a => a);
@@ -161,7 +161,7 @@ class TMisc {
       tree.SequenceEqual (set).IsTrue ();
    }
 
-   [Test (55, "Tests of the Nori.Core.Lib class")]
+   [Test (33, "Tests of the Nori.Core.Lib class")]
    void Test7 () {
       Lib.Testing.IsTrue ();
       Lib.Acos (-2).R2D ().Is (180);
@@ -191,13 +191,13 @@ class TMisc {
       EDir e = EDir.N; Lib.SetE (ref e, EDir.S).IsTrue (); Lib.SetE (ref e, EDir.S).IsFalse (); e.Is (EDir.S);
    }
 
-   [Test (56, "Throwing various exceptions")]
+   [Test (34, "Throwing various exceptions")]
    void Test8 () {
       new BadCaseException (12).Message.Is ("Unhandled case: 12");
       new ParseException ("13e", typeof (double)).Message.Is ("Cannot convert '13e' to double");
    }
 
-   [Test (70, "Test of IdxList")]
+   [Test (35, "Test of IdxList")]
    void Test9 () {
       IdxHeap<T1Type> list = new ();
       T1Type a = list.Alloc (), b = list.Alloc (); a.Is ("T1"); b.Is ("T2");
@@ -212,7 +212,7 @@ class TMisc {
       list.Is ("IdxHeap<T1Type>, Count=13");
    }
 
-   [Test (71, "Chains (a linked-list collection) test")]
+   [Test (36, "Chains (a linked-list collection) test")]
    void Test10 () {
       Chains<int> chains = new ();
       int ones = 0, twos = 0;
@@ -243,7 +243,7 @@ class TMisc {
       chains.Data[indices.Last ()].Is (1);
    }
 
-   [Test (72, "class CMesh, CMeshBuilder test")]
+   [Test (37, "class CMesh, CMeshBuilder test")]
    void Test11 () {
       // CMesh IO test
       var part = CMesh.LoadTMesh ($"{NT.Data}/Geom/CMesh/part.tmesh");
@@ -261,21 +261,58 @@ class TMisc {
       Assert.TextFilesEqual ($"{NT.Data}/Geom/CMesh/part-gen.tmesh", NT.TmpTxt);
    }
 
-   [Test (73, "LineFont test")]
+   [Test (38, "LineFont test")]
    void Test12 () {
-      const string text = """
-            Mr. Jock, TV quiz Ph. D., bags few lynx!
-            (12 + 34 - 56 / 78) * 90 = ?
-            """;
-      // Get test
-      LineFont.Get ("ROMANS").Name.Is ("romans");
-      // Fallback test.
-      LineFont.Get ("A-Missing-Font").Name.Is ("simplex");
-      // Render test.
-      List<Poly> polys = [];
-      LineFont.Get ("romans").Render (text, new (10, 100), 0, 1, 10, 10.D2R (), polys);
-      File.WriteAllText (NT.TmpTxt, string.Join ('\n', polys));
+      List<Poly> poly = [];
+      List<Point2> pts = [];
+      pts.AddRange ([new (0, 0), new (0, 5), new (0, 10), new (0, 15)]);
+      var lf = LineFont.Get ("simplex");
+      Out (0, 0, ETextAlign.BotLeft);
+      Out (0, 5, ETextAlign.BaseLeft);
+      Out (0, 10, ETextAlign.MidLeft);
+      Out (0, 15, ETextAlign.TopLeft);
+
+      pts.AddRange ([new (15, 0), new (15, 10), new (15, 22), new (15, 34), new (34, 34)]);
+      Out2 (15, 0, ETextAlign.BotLeft);
+      Out2 (15, 10, ETextAlign.BaseLeft);
+      Out2 (15, 22, ETextAlign.MidLeft);
+      Out2 (15, 34, ETextAlign.TopLeft);
+      Out2 (34, 34, ETextAlign.TopRight);
+
+      pts.AddRange ([new (8, 20), new (8, 25), new (8, 30), new (0, 17)]);
+      Out3 (8, 20, ETextAlign.BaseLeft);
+      Out3 (8, 25, ETextAlign.BaseCenter);
+      Out3 (8, 30, ETextAlign.BaseRight);
+      lf.Render ("TRIPE", new (0, 17), ETextAlign.BaseLeft, 15.D2R (), 1, 2, 0, poly);
+
+      poly.Add (Poly.Line (-1, 5, 9, 5));
+      poly.Add (Poly.Line (-1, 7, 9, 7));
+
+      pts.AddRange ([new (30, 0), new (33, 17), new (30, 22), new (43, 0), new (58, 0), new (52, 14), new (59, 21)]);
+      Out4 (30, 0, ETextAlign.BaseLeft);
+      Out4 (33, 17, ETextAlign.TopRight);
+      Out4 (30, 22, ETextAlign.MidCenter);
+      lf.Render ("ELONGATE", new (43, 0), ETextAlign.BaseLeft, 15.D2R (), 1.5, 3, 90.D2R (), poly);
+
+      lf.Render ("Sub\nSaharan\nAntarctica", new (58, 0), ETextAlign.BaseRight, 0, 1, 1.5, 0, poly);
+      lf.Render ("Sub\nSaharan\nAntarctica", new (52, 14), ETextAlign.MidCenter, 0, 1, 1.5, 0, poly);
+      lf.Render ("Reversed", new Point2 (59, 21), ETextAlign.BaseLeft, 0, -0.5, 4, 0, poly);
+
+      var sb = new StringBuilder ();
+      poly.ForEach (a => sb.AppendLine (a.ToString ()));
+      pts.ForEach (a => sb.AppendLine ($"P{a.X},{a.Y}"));
+      File.WriteAllText (NT.TmpTxt, sb.ToString ());
       Assert.TextFilesEqual ($"{NT.Data}/Misc/LineFont.txt", NT.TmpTxt);
+
+      // Helpers ...............................................................
+      void Out (double x, double y, ETextAlign align)
+         => lf.Render ("Cray{}", new (x, y), align, 0, 1, 2, 0, poly);
+      void Out2 (double x, double y, ETextAlign align)
+         => lf.Render ("A()\nCray{}\n[123]", new (x, y), align, 0, 1, 1.5, 0, poly);
+      void Out3 (double x, double y, ETextAlign align)
+         => lf.Render ("MAX", new (x, y), align, 0, 0.5, 3, 0, poly);
+      void Out4 (double x, double y, ETextAlign align)
+         => lf.Render ("Hello\nWorld", new (x, y), align, 0, 1, 2, 30.D2R (), poly);
    }
 
    class T1Type : IIndexed {

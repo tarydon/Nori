@@ -60,7 +60,7 @@ class FillScene : Scene2 {
 class LinesNode (List<Vec2F> pts) : VNode {
    public override void SetAttributes () => Lux.Color = Color4.Black;
    public override void Draw () => Lux.Lines (pts.AsSpan ());
-}
+   }
 
 class FillNode (List<Vec2F> pts, List<int> indices, Bound2 bound) : VNode {
    public override void SetAttributes () => Lux.Color = new Color4 (192, 255, 192);

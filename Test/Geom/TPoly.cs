@@ -6,7 +6,7 @@ namespace Nori.Testing;
 
 [Fixture (15, "Poly class tests", "Geom")]
 class PolyTests {
-   [Test (66, "Basic constructors")]
+   [Test (24, "Basic constructors")]
    void Test1 () {
       Poly.Circle (new (10, 5), 3).Is ("C10,5,3");
       Poly.Circle (10, 5, 3).Is ("C10,5,3");
@@ -23,7 +23,7 @@ class PolyTests {
       p.IsLine.IsFalse (); p.IsOpen.IsFalse ();
    }
 
-   [Test (67, "Discretization, Seg enumerate, Xfm")]
+   [Test (25, "Discretization, Seg enumerate, Xfm")]
    void Test2 () {
       var p = Poly.Parse ("M0,0 H10 V3 Q8,5,1 H2 Q0,3,-1 Z");
       var sb = new StringBuilder ();
@@ -53,7 +53,7 @@ class PolyTests {
       p.GetBound ().Is ("(0~10,0~5)");
    }
 
-   [Test (68, "Low level PolyBuilder tests")]
+   [Test (26, "Low level PolyBuilder tests")]
    void Test3 () {
       PB ().Line (1, 2).End (3, 4).Is ("M1,2L3,4");
       PB ().Line (new (1, 2)).End (new (3, 4)).Is ("M1,2L3,4");
@@ -70,7 +70,7 @@ class PolyTests {
       static PolyBuilder PB () => new ();
    }
 
-   [Test (69, "Seg tests")]
+   [Test (27, "Seg tests")]
    void Test4 () {
       var p = Poly.Parse ("M0,0 H10 V3 Q8,5,1 H2 Q0,3,-1 Z");
       var seg = p[0];
