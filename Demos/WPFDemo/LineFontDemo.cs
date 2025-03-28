@@ -32,7 +32,7 @@ class LineFontScene : Scene2 {
       polys.Add (Poly.Line (-1, 5, 9, 5));
       polys.Add (Poly.Line (-1, 7, 9, 7));
 
-      pts.AddRange ([new (30, 0), new (33, 17), new (30, 22), new (43, 0), new (58, 0), new (52, 14), new (59, 21)]);
+      pts.AddRange ([new (30, 0), new (33, 17), new (30, 22), new (43, 0), new (58, 0), new (52, 14), new (47, 21), new (59, 30)]);
       Out4 (30, 0, ETextAlign.BaseLeft);
       Out4 (33, 17, ETextAlign.TopRight);
       Out4 (30, 22, ETextAlign.MidCenter);
@@ -40,7 +40,8 @@ class LineFontScene : Scene2 {
 
       lf.Render ("Sub\nSaharan\nAntarctica", new (58, 0), ETextAlign.BaseRight, 0, 1, 1.5, 0, polys);
       lf.Render ("Sub\nSaharan\nAntarctica", new (52, 14), ETextAlign.MidCenter, 0, 1, 1.5, 0, polys);
-      lf.Render ("Reversed", new Point2 (59, 21), ETextAlign.BaseLeft, 0, -0.5, 4, 0, polys);
+      lf.Render ("Sub\nSaharan\nAntarctica", new (47, 21), ETextAlign.BaseLeft, 30.D2R (), 1, 1.5, 0, polys);
+      lf.Render ("Reversed", new Point2 (59, 30), ETextAlign.BaseLeft, 0, -0.5, 4, 0, polys);
 
       Bound = new Bound2 (polys.Select (a => a.GetBound ())).InflatedF (1.1);
       Root = new LinesAndPointsNode (polys, [.. pts.Select (a => (Vec2F)a)]);
