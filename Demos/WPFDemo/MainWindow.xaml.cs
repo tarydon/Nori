@@ -1,6 +1,6 @@
-// ────── ╔╗                                                                                WPFDEMO
+// ────── ╔╗
 // ╔═╦╦═╦╦╬╣ MainWindow.xaml.cs
-// ║║║║╬║╔╣║ Window class for WPFDemo application
+// ║║║║╬║╔╣║ Main window of WPF demo application (various scenes implemented)
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 using System.Windows;
 using Nori;

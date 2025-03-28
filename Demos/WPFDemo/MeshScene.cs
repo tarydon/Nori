@@ -1,4 +1,8 @@
-﻿namespace WPFDemo;
+// ────── ╔╗
+// ╔═╦╦═╦╦╬╣ MeshScene.cs
+// ║║║║╬║╔╣║ Demo that uses Lux.Mesh to draw a 3D mesh, with stencil lines
+// ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
+namespace WPFDemo;
 using Nori;
 
 class MeshScene : Scene3 {

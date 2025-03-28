@@ -1,4 +1,8 @@
-﻿namespace WPFDemo;
+// ────── ╔╗
+// ╔═╦╦═╦╦╬╣ LineFontDemo.cs
+// ║║║║╬║╔╣║ Demo showing various options to LineFont.Render (alignment, oblique, x-stretch etc)
+// ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
+namespace WPFDemo;
 using Nori;
 
 class LineFontScene : Scene2 {

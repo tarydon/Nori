@@ -1,4 +1,8 @@
-﻿namespace WPFDemo;
+// ────── ╔╗
+// ╔═╦╦═╦╦╬╣ TrueTypeDemo.cs
+// ║║║║╬║╔╣║ Demo that uses Lux.Text to draw TrueType text with pixel-positioning (meant for UI)
+// ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
+namespace WPFDemo;
 using Nori;
 
 class TrueTypeScene : Scene2 {

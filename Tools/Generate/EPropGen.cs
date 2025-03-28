@@ -1,12 +1,31 @@
-﻿// ────── ╔╗
+// ────── ╔╗
 // ╔═╦╦═╦╦╬╣ EProp.cs
-// ║║║║╬║╔╣║ <<TODO>>
+// ║║║║╬║╔╣║ Source generator to implement [EPropClass] and [EPropField] behavior
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 using System.Linq;
 using System.Text;
 namespace Nori.Gen;
 
 #region class EPropGenerator -----------------------------------------------------------------------
+/// <summary>EPropClass implements something similar to an INotifyPropertyChanged, for EProps</summary>
+/// You can implement IObservable(EProp) by adding the [EPropClass] attribute on top of
+/// a class. Then, each field tagged with the [EPropField] attrribute within that class 
+/// becomes an 'active field' and the source generator will create a corresponding property
+/// that wraps around that field. When the property is written to, it will raise the 
+/// notification (through the enclosing class's IObservable interface). So you just write
+/// something like this:
+/// 
+///   [EPropField (EProp.Xfm)] Vector2 mPos;
+///   
+/// and the source generator will auto-generate a property like this:
+/// 
+///   public Vector2 Pos {
+///      get => mPos;
+///      set { mPos = value; mSubject?.OnNext (EProp.Xfm); }
+///   }
+///   
+/// This code is simplified - it uses Lib.Set to check if the property has actually been
+/// changed before raising the notification. 
 [Generator]
 class EPropClassGenerator : IIncrementalGenerator {
    /// <summary>Implement the IIncrementalGenerator interface</summary>

@@ -1,4 +1,4 @@
-﻿// ────── ╔╗                                                                                   CORE
+// ────── ╔╗                                                                                   CORE
 // ╔═╦╦═╦╦╬╣ LFont.cs
 // ║║║║╬║╔╣║ Contains the LineFont class needed to render vector fonts in a drawing.
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
@@ -63,9 +63,7 @@ public class LineFont {
    // The LFONT database.
    static readonly Dictionary<string, LineFont> mFonts = [];
 
-   /// <summary>
-   /// Render text using this font into a a set of polylines
-   /// </summary>
+   /// <summary>Render text using this font into a a set of polylines</summary>
    /// <param name="text">The text to render (multi-line text supported, separate lines with \n characters)</param>
    /// <param name="pos">Reference point of the text</param>
    /// <param name="align">Specifies which corner of the text bounding box the 'pos' is aligned to</param>
