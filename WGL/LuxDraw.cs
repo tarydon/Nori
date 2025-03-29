@@ -163,7 +163,7 @@ public static partial class Lux {
    /// - LineWidth : the width of the beziers, in device independent pixels
    /// - DrawColor : color of the lines being drawn
    public static void Lines (ReadOnlySpan<Vec2F> pts) {
-      if (LineType == ELineType.Continuous) Line2DShader.It.Draw (pts);
+      if (LineType == ELineType.Solid) Line2DShader.It.Draw (pts);
       else DashLine2DShader.It.Draw (pts);
    }
 

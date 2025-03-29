@@ -46,13 +46,18 @@ public abstract partial class Scene {
    Matrix3? mWorldXfm;
 
    /// <summary>The stack of Xfms for this Scene (referenced by various VNode batches)</summary>
-   internal List<XfmEntry> Xfms = [];
+   internal List<XfmEntry> Xfms {
+      get {
+         if (mXfms.Count == 0) mXfms.Add (new XfmEntry (this));
+         return mXfms;
+      }
+   }
+   List<XfmEntry> mXfms = [];
 
    // Methods ------------------------------------------------------------------
    public void Render (Vec2S viewport) {
       Lux.Scene = this;
-      if (Lib.Set (ref mViewport, viewport)) Xfms.Clear ();
-      if (Xfms.Count == 0) Xfms.Add (new XfmEntry (this));
+      if (Lib.Set (ref mViewport, viewport)) mXfms.Clear ();
       Xfms.RemoveRange (1, Xfms.Count - 1);
       mRoot?.Render ();
       RBatch.IssueAll ();
@@ -81,7 +86,7 @@ public abstract partial class Scene {
    protected double mZoomFactor = 1;
 
    // Called when the root transform is changed
-   protected void XfmChanged () { Xfms.Clear (); Lux.Redraw (); }
+   protected void XfmChanged () { mXfms.Clear (); mWorldXfm = null; Lux.Redraw (); }
 
    public void ZoomExtents () { 
       mZoomFactor = 1; mPanVector = Vector2.Zero;
@@ -213,6 +218,10 @@ class XfmEntry {
    /// <summary>The overall transform from the world to the OpenGL clip coordinates</summary>
    public ref Mat4F Xfm { get { _ = ObjToWorld; return ref mXfm; } }
    Mat4F mXfm, mNormalXfm;
+
+   /// <summary>Inverse transform that transforms OpenGL clip spaces to world (inverse of Xfm)</summary>
+   public Matrix3 InvXfm => mInvXfm ??= (mScene.WorldXfm * mScene.ProjectionXfm).GetInverse ();
+   Matrix3? mInvXfm;
 
    // Private data -------------------------------------------------------------
    readonly Scene mScene;           // The scene we're working with

@@ -212,7 +212,7 @@ class MouseClicksWrap : EventWrapper<MouseClickInfo> {
 /// <summary>Handles mouse-move events (used by HW.MouseMoves)</summary>
 class MouseMovesWrap : EventWrapper<Vec2S> {
    protected override void Connect (bool connect) {
-      var panel = HW.Panel; if (panel == null) return;
+      var panel = HW.Panel; Debug.Assert (panel != null);
       if (connect) panel.MouseMove += OnMouseMove;
       else panel.MouseMove -= OnMouseMove;
    }

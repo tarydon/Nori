@@ -128,7 +128,7 @@ class Surface : System.Windows.Forms.UserControl {
 
    // Override OnPaint to call back to PX.Render, where our actual paint code resides
    protected override void OnPaint (PaintEventArgs e)
-      => Lux.Render ();
+      => Lux.RenderToScreen ();
 
    // Private data -------------------------------------------------------------
    HDC mDC;             // Device contex handle used for rendering
