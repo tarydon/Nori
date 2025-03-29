@@ -95,7 +95,7 @@ public class SceneManipulator {
 
    // Zoom in/out when the mouse wheel is rotated
    void OnMouseWheel (MouseWheelInfo mw) 
-      => Lux.UIScene?.Zoom (mw.Position, mw.Delta > 0 ? 0.95 : (1 / 0.95));
+      => Lux.UIScene?.Zoom (mw.Position, mw.Delta < 0 ? 0.95 : (1 / 0.95));
 }
 #endregion
 

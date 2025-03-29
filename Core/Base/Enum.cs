@@ -12,7 +12,7 @@ public enum EAxis { X, Y, Z }
 public enum EDir { E, N, W, S };
 
 /// <summary>Different linetypes (supported by the Pix renderer, PDF writer etc)</summary>
-public enum ELineType { Solid, Dot, Dash, DashDot, DashDotDot, Center, Border, Hidden, Dash2, Phantom };
+public enum ELineType { Continuous, Dot, Dash, DashDot, DashDotDot, Center, Border, Hidden, Dash2, Phantom };
 
 /// <summary>Various 'well-known' properties</summary>
 public enum EProp {

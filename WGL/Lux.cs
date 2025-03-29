@@ -42,13 +42,12 @@ public static partial class Lux {
       => Panel.It;
 
    /// <summary>Converts a pixel coordinate to world coordinates</summary>
-   public static Point3 PixelToWorld (Vec2S pixel) {
-      if (mUIScene == null) return new (pixel.X, pixel.Y, 0);
-      // Convert pixel coordinate to OpenGL clip space coordinates. First, compute
-      // x value and y value that go from 0..1 (left->right, top->bottom)
-      double x = (double)pixel.X / mViewport.X, y = (double)pixel.Y / mViewport.Y;
-      // Next convert them to clip space coordinates
-      Point3 clip = new (x * 2 - 1, 1 - y * 2, 0);
+   public static Point3 PixelToWorld (Vec2S pix) {
+      if (mUIScene == null) return new (pix.X, pix.Y, 0);
+
+      // Convert pixel coordinate to OpenGL clip space coordinates. 
+      Vec2S vp = mViewport;
+      Point3 clip = new (2.0 * pix.X / vp.X - 1, 1.0 - 2.0 * pix.Y / vp.Y, 0);
       return clip * mUIScene.Xfms[0].InvXfm;
    }
 
@@ -195,7 +194,7 @@ public static partial class Lux {
       mColors.Clear (); mColor = Color4.White;
       mLineWidths.Clear (); mLineWidth = 4f;
       mPointSizes.Clear (); mPointSize = 7f;
-      mLineTypes.Clear (); mLineType = ELineType.Solid;
+      mLineTypes.Clear (); mLineType = ELineType.Continuous;
       mLTScales.Clear (); mLTScale = 100f;
       mTypefaces.Clear (); mTypeface = null;
       mIDXfms.Clear (); mIDXfm = 0;
