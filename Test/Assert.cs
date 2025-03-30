@@ -73,6 +73,16 @@ static class Assert {
       throw new TestException ($"Files different: {reference} and {test}");
    }
 
+   /// <summary>
+   /// Checks if two PNG files are equal
+   /// </summary>
+   public static void PNGFilesEqual (string reference, string test) {
+      if (!File.Exists (reference)) { File.Copy (test, reference, true); return; }
+      byte[] data1 = File.ReadAllBytes (reference), data2 = File.ReadAllBytes (test);
+      if (data1.SequenceEqual (data2)) return;
+      throw new TestException ($"Files different: {reference} and {test}");
+   }
+
    // Helper used to throw a TestException
    static void Throw (object obj, object check, string? expr1, string? expr2, string? member, int line, string? file)
       => throw new TestException ($"""
@@ -94,7 +104,7 @@ static class NT {
    public static string File (string input) => Path.Combine (Data, input);
 
    public static readonly string TmpTxt = $"{Data}/tmpfile.txt";
-   public static readonly string TmpNim = $"{Data}/tmpfile.nim";
+   public static readonly string TmpPNG = $"{Data}/tmpfile.png";
    public static readonly string TmpDXF = $"{Data}/tmpfile.dxf";
 }
 #endregion

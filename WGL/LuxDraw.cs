@@ -120,9 +120,9 @@ public static partial class Lux {
    }
 
    // Methods ------------------------------------------------------------------
-   /// <summary>Draws 2D lines in world coordinates, with Z = 0</summary>
-   /// Every pair of Vec2F in the list creates one line, so with n points,
-   /// n / 2 lines are drawn. The following Lux properties are used:
+   /// <summary>Draws beziers in world coordinates, with Z = 0</summary>
+   /// Every set of 4 points in the list creates one bezier curve so n / 4 
+   /// beziers are drawn. The following Lux properties are used:
    /// - LineWidth : the width of the beziers, in device independent pixels
    /// - DrawColor : color of the lines being drawn
    public static void Beziers (ReadOnlySpan<Vec2F> pts)

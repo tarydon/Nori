@@ -9,4 +9,4 @@ Bin/*
 **/launchSettings.json
 **/bin/*
 **/obj/*
-Test/Data/tmpfile.txt
+TData/tmpfile.*
