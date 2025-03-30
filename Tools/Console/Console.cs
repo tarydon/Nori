@@ -45,25 +45,6 @@ static class Program {
    [ConsoleCommand] static void NextId () => GetNextId.Run ();
 
    [ConsoleCommand]
-   static void TestBMP () {
-      Lib.Init ();
-      Lux.CreatePanel (true);
-      var figure = Lux.RenderToImage (new TestScene (), new Vec2S (200, 100), DIBitmap.EFormat.RGB8);
-      new PNGWriter (figure).Write ("c:/etc/test.png");
-   }
-   class TestVN : VNode {
-      public override void SetAttributes () => Lux.Color = Color4.Black;
-      public override void Draw () => Lux.Poly (Poly.Parse ("M0,0,H100V30Q80,50,1H0Z"));
-   }
-   class TestScene : Scene2 {
-      public TestScene () {
-         Bound = new Bound2 (-10, -10, 110, 60);
-         Root = new TestVN ();
-      }
-      public override Color4 BgrdColor => Color4.Gray (255);
-   }
-
-   [ConsoleCommand]
    static void Optimize () {
       string[] args = Environment.GetCommandLineArgs ();
       if (args.Length != 3) Help ();
