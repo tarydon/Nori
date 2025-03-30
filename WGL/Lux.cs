@@ -36,6 +36,10 @@ public static partial class Lux {
       }
    }
 
+   /// <summary>The viewport size (in pixels) of the Lux rendering panel</summary>
+   public static Vec2S Viewport => mViewport;
+   static Vec2S mViewport;
+
    // Methods ------------------------------------------------------------------
    /// <summary>Creates the Lux rendering panel</summary>
    public static UIElement CreatePanel ()
@@ -107,10 +111,6 @@ public static partial class Lux {
 
    /// <summary>The scene that is currently being rendered (set only during a Render() call)</summary>
    internal static Scene? Scene;
-
-   /// <summary>The viewport size (in pixels) of the Lux rendering panel</summary>
-   internal static Vec2S Viewport => mViewport; 
-   static Vec2S mViewport;
 
    // Internal methods ---------------------------------------------------------
    /// <summary>Called when we start rendering a VNode (and it's subtree)</summary>
