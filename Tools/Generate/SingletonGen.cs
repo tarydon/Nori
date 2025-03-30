@@ -1,6 +1,6 @@
 // ────── ╔╗
 // ╔═╦╦═╦╦╬╣ Singleton.cs
-// ║║║║╬║╔╣║ <<TODO>>
+// ║║║║╬║╔╣║ A source-code generator that implements the [Singleton] pattern
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 namespace Nori.Gen;
 

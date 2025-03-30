@@ -1,9 +1,8 @@
-﻿// ────── ╔╗                                                                                   CORE
+// ────── ╔╗                                                                                   CORE
 // ╔═╦╦═╦╦╬╣ LFont.cs
 // ║║║║╬║╔╣║ Contains the LineFont class needed to render vector fonts in a drawing.
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 using System.Collections.Frozen;
-
 namespace Nori;
 
 #region class LineFont -----------------------------------------------------------------------------
@@ -36,7 +35,7 @@ public class LineFont {
    public static LineFont Get (string name) {
       string lname = name.ToLower ();
       // Try to get font from the cache.
-      var font = sFonts.SafeGet (lname);
+      var font = mFonts.SafeGet (lname);
       if (font != null) return font;
       string[]? lines = null;
       // Load font from wad and return default if the font file is missing.
@@ -53,63 +52,94 @@ public class LineFont {
          polys.Clear (); w = Next ();
          var (code, adv, npoly, ch) = (w[0].ToInt (), w[1].ToDouble (), w[2].ToInt (), w[3][0]);
          for (int j = 0; j < npoly; j++) polys.Add (builder.Build (Line ()));
-         glyphs[code] = new (code, adv, ch, [.. polys]);
+         glyphs[code] = new (code, adv * asc, ch, [.. polys]);
       }
       font = new LineFont (name, nchars, asc, desc, vadv, glyphs.ToFrozenDictionary ());
-      return sFonts[font.Name.ToLower ()] = font;
+      return mFonts[font.Name.ToLower ()] = font;
 
       string Line () => lines[n++]; // Fetch next line
       string[] Next (int n = 4) => Line ().Split (',', n); // Fetch tokens from next line
    }
    // The LFONT database.
-   static readonly Dictionary<string, LineFont> sFonts = [];
+   static readonly Dictionary<string, LineFont> mFonts = [];
 
-   /// <summary>This renders the given text to a List of Poly. </summary>
-   /// Each character in the text is taken, and the set of Poly objects representing that character
-   /// is cloned, scaled, rotated and translated based on pos, height and angle. It is then added to 
-   /// the output, and the 'current position' is advanced by the advance width of that character.
-   /// Thus, the input point pos becomes the lower-left corner where we start rendering the text.
-   /// <param name="text">The text to render.</param>
-   /// <param name="pos">The start position.</param>
-   /// <param name="oblique">Oblique angle of the font in radians.</param>
-   /// <param name="xscale">XScale factor of the font.</param>
-   /// <param name="height">Height of the font.</param>
-   /// <param name="angle">Rotation angle in radians.</param>
-   /// <param name="output">The output list where the rendered output is collected.</param>
-   public void Render (string text, Point2 pos, double oblique, double xscale, double height, double angle, List<Poly> output) {
-      // Initialize the factor by which glyphs have to be scaled.
-      // It will be a constant for this render call.
-      var scale = height / Ascender;
-      // Compose the scaling and rotation matrices.
-      Matrix2 mat0 = Matrix2.Scaling (xscale * scale, scale), mat1 = Matrix2.Rotation (pos, angle);
-      // Initialize the (x, y) positions of the 'next' char along with the line-gap, dy.
-      double x = pos.X, y = pos.Y, dy = scale * VAdvance;
-      // Compose the oblique matrix
-      if (!oblique.IsZero ()) mat0 *= new Matrix2 (1, 0, Math.Tan (oblique), 1, 0, 0);
-      // Render the text characters now.
-      foreach (char ch in text) {
-         if (ch == '\n') {
-            // We found a linebreak. Reset x and advance y.
-            x = pos.X; y -= dy;
-            continue;
+   /// <summary>Render text using this font into a a set of polylines</summary>
+   /// <param name="text">The text to render (multi-line text supported, separate lines with \n characters)</param>
+   /// <param name="pos">Reference point of the text</param>
+   /// <param name="align">Specifies which corner of the text bounding box the 'pos' is aligned to</param>
+   /// <param name="oblique">The text obliquing angle (in radians), use 0 for non-italic text</param>
+   /// <param name="xstretch">How much is the text 'stretched' in X direction (1 = normal, less than 1 for condensed etc)</param>
+   /// <param name="height">Text height (height of a capital M, typically)</param>
+   /// <param name="angle">Rotation angle of the baseline, in radians</param>
+   /// <param name="output">The List(Poly) the text is output into</param>
+   public void Render (string text, Point2 pos, ETextAlign align, double oblique, double xstretch, double height, double angle, List<Poly> output) {
+      string[] lines = [.. text.Split ('\n')];                 // Split the text into lines, 
+      List<double> widths = [.. lines.Select (GetWidth)];      // and get their widths (assuming height=1)
+
+      // Compute the scale factors in X and Y (from font data to final output), 
+      // and then the unit vectors to move 'across' a line, and 'down' between lines
+      int cLines = lines.Length;
+      double scaleY = height / Ascender, scaleX = xstretch * scaleY;
+      // Compute the 'across' vector that moves along the text baseline, and the
+      // 'down' vector that moves us to the next line (these depend on the rotation angle,
+      // text height, and the xstretch factor). 
+      var rotation = Matrix2.Rotation (angle);
+      Vector2 across = new Vector2 (scaleX, 0) * rotation, down = new Vector2 (0, -scaleY) * rotation;
+      double y0 = (((int)align - 1) / 3) switch {
+         0 => -Ascender,                              // Top alignment
+         2 => -Descender + VAdvance * (cLines - 1),   // Bottom alignment
+         1 => (VAdvance * (cLines - 1) - Ascender) / 2,  // Center
+         _ => VAdvance * (cLines - 1),                // Baseline alignment
+      };
+
+      // posChar is first set to the start point (baseline) of the first character 
+      // on the first line
+      Point2 posChar = pos + new Vector2 (0, y0 * scaleY) * rotation;
+      // xfm is a transform that handles the rotation, scaling, x-stretch. In addition to this
+      // we need a translation by posChar to position individual characters, but that changes with
+      // each charcter so we compute that translation as posChar gets updated
+      var xfm = Matrix2.Scaling (scaleX, scaleY) * Matrix2.Rotation (angle);
+      if (!oblique.IsZero ()) xfm = new Matrix2 (1, 0, Math.Tan (oblique), 1, 0, 0) * xfm;
+
+      for (int i = 0; i < lines.Length; i++) {
+         // At the start of each line, 'park' the position at the start of the line
+         var (line, posPark) = (lines[i], posChar);
+         // xshift is based on the horizontal alignment, since posPark was computed assuming a 
+         // left alignment, we have to adjust it if we are using centered or right alignment
+         double xshift = (((int)align - 1) % 3) switch { 1 => -widths[i] / 2, 2 => -widths[i], _ => 0 };
+         posChar += across * xshift;
+         foreach (var ch in line) {
+            // As we output each character, adjust posChar by the horizontal advance of this character
+            if (Glyphs.TryGetValue (ch, out var g)) {
+               output.AddRange (g.Polys.Select (a => a * xfm * Matrix2.Translation (posChar.X, posChar.Y)));
+               posChar += across * g.HAdvance;
+            }
          }
-         if (!Glyphs.TryGetValue (ch, out var g)) continue;
-         if (g.Polys.Length > 0) {
-            // Transform and output the glyph shape.
-            var mat = mat0 * Matrix2.Translation (x, y);
-            if (!angle.IsZero ()) mat *= mat1;
-            output.AddRange (g.Polys.Select (x => x * mat));
+         // Line is over, go back to the start of the line (posPark) and then go down to the next line
+         posChar = posPark + down * VAdvance;
+      }
+
+      // Helpers .................................
+      // Gets the width of a line of text, when rendered at size = 1, xscale = 1
+      double GetWidth (string line) {
+         double x = 0;
+         for (int i = 0; i < line.Length; i++) {
+            if (!Glyphs.TryGetValue (line[i], out var g)) continue;
+            // For most of the characters, we use HAdvance (which includes the padding space
+            // to use after this character), but for the last character we use Width (which is 
+            // just up to the right edge of the bounding box of this character)
+            if (i < line.Length - 1) x += g.HAdvance;
+            else x += g.Width;
          }
-         // Advance the x-position by HAdvance with xscaling.
-         x += g.HAdvance * xscale * height;
+         return x; 
       }
    }
-
    public override string ToString () => $"{Name}.lfont";
    
    // The immutable, readonly font glyphs. 
    readonly FrozenDictionary<int, Glyph> Glyphs;
 
+   // Nested types -------------------------------------------------------------
    // A glyph contains the shape data needed to render an individual character.
    // An example: 107,0.81,3,k
    class Glyph (int code, double adv, char ch, ImmutableArray<Poly> polys) {
@@ -126,6 +156,8 @@ public class LineFont {
       public readonly char Char = ch;
       // The shape geometry
       public readonly ImmutableArray<Poly> Polys = polys;
+      // The width of the character (not including the whitespace on the right)
+      public readonly double Width = polys.IsEmpty ? 0 : polys.Max (a => a.GetBound ().X.Max);
       public override string ToString () => $"{Char}:{CharCode}";
    }
 }

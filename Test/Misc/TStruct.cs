@@ -6,7 +6,7 @@ namespace Nori.Testing;
 
 [Fixture (13, "Tests for various structs", "Core")]
 class StructTests {
-   [Test (62, "Test of Color4")]
+   [Test (39, "Test of Color4")]
    void Test1 () {
       new Color4 (48, 12, 24, 36).Is ("#300C1824");
       new Color4 (12, 24, 36).Is ("#0C1824");
@@ -43,7 +43,7 @@ class StructTests {
       }
    }
 
-   [Test (58, "PlaneDef tests")]
+   [Test (40, "PlaneDef tests")]
    void Test2 () {
       PlaneDef.XY.Normal.Is ("<0,0,1>");
       PlaneDef.YZ.Normal.Is ("<1,0,0>");
@@ -69,7 +69,7 @@ class StructTests {
       pd.Is ("PlaneDef:-0.707107,0.707107,0,0");
    }
 
-   [Test (59, "Quaternion tests")]
+   [Test (41, "Quaternion tests")]
    void Test3 () {
       Quaternion.Identity.Is ("1,0,0:0");
       Quaternion.Identity.IsIdentity.IsTrue ();
@@ -94,7 +94,7 @@ class StructTests {
       q5.Is ("0.57735,0.57735,-0.57735:45");
    }
 
-   [Test (60, "CoordSystem tests")]
+   [Test (42, "CoordSystem tests")]
    void Test4 () {
       CoordSystem.World.IsWorld.IsTrue ();
       new CoordSystem (Point3.Nil).IsNil.IsTrue ();
@@ -112,12 +112,12 @@ class StructTests {
       }
    }
 
-   [Test (61, "Tests of BlockTimer")]
+   [Test (43, "Tests of BlockTimer")]
    void Test5 () {
       new BlockTimer ("Test of BlockTimer").Dispose ();
    }
 
-   [Test (63, "Tests of Bound1")]
+   [Test (44, "Tests of Bound1")]
    void Test6 () {
       Bound1 b = new (10, 20);
       b.Clamp (5f).Is (10);
@@ -130,7 +130,7 @@ class StructTests {
       (b * b5).Is ("Empty");
    }
 
-   [Test (64, "Tests of Bound2")]
+   [Test (45, "Tests of Bound2")]
    void Test7 () {
       Point2[] pts = [new (1, 20), new (10, 2)];
       Bound2 b1 = new (pts); b1.Is ("(1~10,2~20)");
@@ -143,7 +143,7 @@ class StructTests {
       (b1 * Matrix2.Translation (100, 100)).Is ("(101~110,102~120)");
    }
 
-   [Test (65, "Tests of Bound3")]
+   [Test (46, "Tests of Bound3")]
    void Test8 () {
       Vec3F[] pts = [new (1, 20, 4), new (10, 2, 5)];
       Bound3 b1 = new (pts); b1.Is ("(1~10,2~20,4~5)");

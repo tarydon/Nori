@@ -6,7 +6,7 @@ namespace Nori.Testing;
 
 [Fixture (1, "Geometry tests", "Geom")]
 class GeometryTests {
-   [Test (5, "class Bound1")]
+   [Test (1, "class Bound1")]
    void Test5 () {
       Bound1 b1 = new (), b2 = new (10, 20), b3 = new (3, 1);
       b1.IsEmpty.Is (true); b1.ToString ().Is ("Empty");
@@ -23,7 +23,7 @@ class GeometryTests {
       (new Bound1 (5)).Is ("5~5");
    }
 
-   [Test (6, "class Bound2")]
+   [Test (2, "class Bound2")]
    void Test6 () {
       Bound2 b1 = new (), b2 = new (10, 100, 20, 200), b3 = new (10, 10, 1, 1);
       b1.IsEmpty.Is (true); b1.ToString ().Is ("Empty");
@@ -38,7 +38,7 @@ class GeometryTests {
       (new Bound2 (5, 6)).Is ("(5~5,6~6)");
    }
 
-   [Test (7, "class Bound3")]
+   [Test (3, "class Bound3")]
    void Test7 () {
       Bound3 b1 = new (), b2 = new (10, 100, 1000, 20, 200, 2000), b3 = new (10, 10, 10, 1, 1, 1);
       b1.IsEmpty.Is (true); b1.ToString ().Is ("Empty");
@@ -57,7 +57,7 @@ class GeometryTests {
 
 [Fixture (2, "Matrix2 tests", "Geom")]
 class Matrix2Tests {
-   [Test (8, "Matrix2 basics")]
+   [Test (4, "Matrix2 basics")]
    void Test1 () {
       new Matrix2 (1, 2, 3, 4, 5, 6).Is ("[1,2 | 3,4 | 5,6]");
 
@@ -86,7 +86,7 @@ class Matrix2Tests {
       m6.Is ("[1,0,0, 0,1,0, 0,0,1, 1,2,0]");
    }
 
-   [Test (9, "Matrix2 multiplication, inverse")]
+   [Test (5, "Matrix2 multiplication, inverse")]
    void Test2 () {
       Matrix2 m1 = Matrix2.Translation (5, 3), m2 = Matrix2.Rotation (90.D2R ());
       Point2 p1 = new (10, 15); ((p1 * m1) * m2).Is ("(-18,15)");
@@ -120,7 +120,7 @@ class Matrix2Tests {
 
 [Fixture (12, "Matrix3 tests", "Geom")]
 class Matrix3Tests {
-   [Test (52, "Test of Matrix3 constructors")]
+   [Test (6, "Test of Matrix3 constructors")]
    void Test1 () {
       var p0 = P (3, -4, 5);
       var v0 = V (1, 2, 3);
@@ -156,7 +156,7 @@ class Matrix3Tests {
       m5.Is ("[0.025,0,0, 0,0.05,0, 0,0,1, -1.125,-1.25,0]");
    }
 
-   [Test (53, "Test of Matrix3 multiplications")]
+   [Test (7, "Test of Matrix3 multiplications")]
    void Test2 () {
       var p0 = P (1, 2, 3);
       Matrix3 mi = Matrix3.Identity;
@@ -178,7 +178,7 @@ class Matrix3Tests {
       (mo1 * mo2).HasMirroring.IsFalse ();
    }
 
-   [Test (54, "Test of Matrix3 inversion")]
+   [Test (8, "Test of Matrix3 inversion")]
    void Test3 () {
       var p0 = P (1, 2, 3);
       Matrix3 mi = Matrix3.Identity;
@@ -205,7 +205,7 @@ class Matrix3Tests {
 
 [Fixture (9, "GPUTypes tests", "Geom")]
 class GPUTypesTests {
-   [Test (1, "Test of VecNf (floating point Vector types")]
+   [Test (9, "Test of VecNf (floating point Vector types")]
    void Test1 () {
       Vec2F a = new (3.654321f, 2.2f); a.Is ("<3.65432,2.2>");
       Vec2F b = (Vec2F)new Vector2 (1, 2); b.Is ("<1,2>");

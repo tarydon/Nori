@@ -9,62 +9,38 @@ namespace Nori;
 #region class Lux ----------------------------------------------------------------------------------
 /// <summary>The public interface to the Lux renderer</summary>
 public static partial class Lux {
-   /// <summary>The scene that is currently being rendered (set only during a Render() call)</summary>
-   public static Scene? Scene;
+   // Properties ---------------------------------------------------------------
+   /// <summary>Set up a delegate here to know when the Lux renderer is ready to render</summary>
+   /// Temporary code, will go away later
+   public static Action? OnReady;
+   internal static bool mReady;
 
    /// <summary>The current scene that is bound to the visible viewport</summary>
-   public static Scene? UIScene { 
-      get => mUIScene; 
+   public static Scene? UIScene {
+      get => mUIScene;
       set {
          mUIScene?.Detach ();
-         mUIScene = value; Redraw (); 
-      } 
+         mUIScene = value; Redraw ();
+      }
    }
    static Scene? mUIScene;
 
-   public static Vec2S Viewport => mViewport; 
+   /// <summary>How many world units does one pixel correspond to (for the current scene)</summary>
+   public static double PixelScale {
+      get {
+         if (mUIScene == null) return 1;
+         var xfm = mUIScene.Xfms[0].InvXfm;
+         double dx = 2.0 / mViewport.X;   // 
+         Point3 pa = Point3.Zero * xfm, pb = new Point3 (dx, 0, 0) * xfm;
+         return pa.DistTo (pb);
+      }
+   }
+
+   /// <summary>The viewport size (in pixels) of the Lux rendering panel</summary>
+   public static Vec2S Viewport => mViewport;
    static Vec2S mViewport;
 
-   internal static int Rung;
-
-   /// <summary>Called when we start rendering a VNode (and it's subtree)</summary>
-   /// The corresponding EndNode is called after the entire subtree under
-   /// this VNode is completed rendering. Because of this, there could be multiple
-   /// open 'BeginNode' calls whose EndNode is pending
-   public static void BeginNode (VNode node) {
-      mNodeStack.Push ((mVNode, mChanged));
-      (mVNode, mChanged) = (node, ELuxAttr.None);
-   }
-   static Stack<(VNode?, ELuxAttr)> mNodeStack = [];
-
-   static bool Get (ELuxAttr flags, ELuxAttr bit) => (flags & bit) != 0;
-   static bool Set (ELuxAttr attr) {
-      if ((mChanged & attr) != 0) return false;
-      mChanged |= attr; return true; 
-   }
-   static ELuxAttr mChanged;
-
-   public static bool PopAttr (ELuxAttr flags) {
-      flags &= mChanged;
-      if (flags != ELuxAttr.None) {
-         if ((flags & ELuxAttr.Color) != 0) mColor = mColors.Pop ();
-         if ((flags & ELuxAttr.LineType) != 0) mLineType = mLineTypes.Pop ();
-         if ((flags & ELuxAttr.LineWidth) != 0) mLineWidth = mLineWidths.Pop ();
-         if ((flags & ELuxAttr.LTScale) != 0) mLTScale = mLTScales.Pop ();
-         if ((flags & ELuxAttr.PointSize) != 0) mPointSize = mPointSizes.Pop ();
-         if ((flags & ELuxAttr.TypeFace) != 0) mTypeface = mTypefaces.Pop ();
-         if ((flags & ELuxAttr.Xfm) != 0) mIDXfm = mIDXfms.Pop ();
-         mChanged &= ~flags;
-         return true;
-      }
-      return false;
-   }
-
-   public static void EndNode () {
-      if (PopAttr (mChanged)) Rung++;
-      (mVNode, mChanged) = mNodeStack.Pop ();
-   }
-
+   // Methods ------------------------------------------------------------------
    /// <summary>Creates the Lux rendering panel</summary>
    public static UIElement CreatePanel (bool createHost = false) {
       if (createHost) {
@@ -84,14 +60,20 @@ public static partial class Lux {
       }
       return Panel.It;
    }
-   public static Action? OnReady;
    static Window? sHost;
-
-   internal static bool mReady;
 
    public static DIBitmap RenderToImage (Scene scene, Vec2S size, DIBitmap.EFormat fmt) {
       if (size.X % 4 != 0) throw new ArgumentException ($"Lux.RenderToImage: image width must be a multiple of 4");
       return (DIBitmap)Render (scene, size, ETarget.Image, fmt)!;
+   }
+
+   /// <summary>Converts a pixel coordinate to world coordinates</summary>
+   public static Point3 PixelToWorld (Vec2S pix) {
+      if (mUIScene == null) return new (pix.X, pix.Y, 0);
+      // Convert pixel coordinate to OpenGL clip space coordinates. 
+      Vec2S vp = mViewport;
+      Point3 clip = new (2.0 * pix.X / vp.X - 1, 1.0 - 2.0 * pix.Y / vp.Y, 0);
+      return clip * mUIScene.Xfms[0].InvXfm;
    }
 
    /// <summary>Stub for the Render method that is called when each frame has to be painted</summary>
@@ -122,6 +104,7 @@ public static partial class Lux {
    }
    static int mFrame;
 
+   /// <summary>Prompts the Lux system to redraw the screen (asynchronous)</summary>
    public static void Redraw ()
       => Panel.It.Redraw ();
 
@@ -154,7 +137,7 @@ public static partial class Lux {
          }
          // Issue one redraw to prime things off
          sTimer.Start ();
-         sLastFrametime = DateTime.Now; 
+         sLastFrametime = DateTime.Now;
          Redraw ();
       }
    }
@@ -167,12 +150,63 @@ public static partial class Lux {
    /// retired, we stop the loop. 
    public static void StopContinuousRender (Action<double> renderComplete) {
       sRenderCompletes.Remove (renderComplete);
-      if (sRenderCompletes.Count == 0 && sTimer != null) 
+      if (sRenderCompletes.Count == 0 && sTimer != null)
          sTimer.Stop ();
    }
 
+   // Internal properties ------------------------------------------------------
+   /// <summary>Bumped up whenever any Lux draw property is changed (used for shader optimizations)</summary>
+   internal static int Rung;
+
+   /// <summary>The scene that is currently being rendered (set only during a Render() call)</summary>
+   internal static Scene? Scene;
+
+   // Internal methods ---------------------------------------------------------
+   /// <summary>Called when we start rendering a VNode (and it's subtree)</summary>
+   /// The corresponding EndNode is called after the entire subtree under
+   /// this VNode is completed rendering. Because of this, there could be multiple
+   /// open 'BeginNode' calls whose EndNode is pending
+   internal static void BeginNode (VNode node) {
+      mNodeStack.Push ((mVNode, mChanged));
+      (mVNode, mChanged) = (node, ELuxAttr.None);
+   }
+   static Stack<(VNode?, ELuxAttr)> mNodeStack = [];
+
+   /// <summary>Called when a node is finished drawing</summary>
+   internal static void EndNode () {
+      if (PopAttr (mChanged)) Rung++;
+      (mVNode, mChanged) = mNodeStack.Pop ();
+   }
+
+   /// <summary>Used internally to reset some set of attributes to the previous values</summary>
+   /// This is called after a node (and it's subtree) are drawn, so that we can reset
+   /// all attributes like Color, LineType etc to their previous values.
+   internal static bool PopAttr (ELuxAttr flags) {
+      flags &= mChanged;
+      if (flags != ELuxAttr.None) {
+         if ((flags & ELuxAttr.Color) != 0) mColor = mColors.Pop ();
+         if ((flags & ELuxAttr.LineType) != 0) mLineType = mLineTypes.Pop ();
+         if ((flags & ELuxAttr.LineWidth) != 0) mLineWidth = mLineWidths.Pop ();
+         if ((flags & ELuxAttr.LTScale) != 0) mLTScale = mLTScales.Pop ();
+         if ((flags & ELuxAttr.PointSize) != 0) mPointSize = mPointSizes.Pop ();
+         if ((flags & ELuxAttr.TypeFace) != 0) mTypeface = mTypefaces.Pop ();
+         if ((flags & ELuxAttr.Xfm) != 0) mIDXfm = mIDXfms.Pop ();
+         mChanged &= ~flags;
+         return true;
+      }
+      return false;
+   }
+
+   // Implementation -----------------------------------------------------------
+   static bool Get (ELuxAttr flags, ELuxAttr bit) => (flags & bit) != 0;
+   static bool Set (ELuxAttr attr) {
+      if ((mChanged & attr) != 0) return false;
+      mChanged |= attr; return true; 
+   }
+   static ELuxAttr mChanged;
+
    /// <summary>This is called at the start of every frame to reset to known</summary>
-   public static void StartFrame (Vec2S viewport) {
+   static void StartFrame (Vec2S viewport) {
       mViewport = viewport;
       VPScale = new Vec2F (2.0 / viewport.X, 2.0 / viewport.Y);
       mColors.Clear (); mColor = Color4.White;
@@ -186,7 +220,7 @@ public static partial class Lux {
       Rung++;
    }
 
-    public class Stats {
+   public class Stats {
       /// <summary>The current frame number</summary>
       public int NFrame => mFrame;
       /// <summary>How many times is a program change happening, per frame</summary>
