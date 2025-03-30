@@ -62,9 +62,11 @@ public static partial class Lux {
    }
    static Window? sHost;
 
-   public static DIBitmap RenderToImage (Scene scene, Vec2S size, DIBitmap.EFormat fmt) {
+   public static DIBitmap RenderToImage (Scene scene, Vec2S size, DIBitmap.EFormat fmt, bool keepAlive = false) {
       if (size.X % 4 != 0) throw new ArgumentException ($"Lux.RenderToImage: image width must be a multiple of 4");
-      return (DIBitmap)Render (scene, size, ETarget.Image, fmt)!;
+      var dib =  (DIBitmap)Render (scene, size, ETarget.Image, fmt)!;
+      if (!keepAlive) scene.Detach ();
+      return dib; 
    }
 
    /// <summary>Converts a pixel coordinate to world coordinates</summary>

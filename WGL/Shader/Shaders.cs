@@ -27,7 +27,8 @@ partial class DashLine2DShader : Shader<Vec2F, DashLine2DShader.Settings> {
    protected override void ApplyUniformsImp (ref readonly Settings a) {
       Pgm.Set (muXfm, ref Lux.Scene!.Xfms[a.IDXfm].Xfm);
       float fLType = ((int)a.LineType + 0.5f) / 10.0f;
-      Pgm.Set (muLineWidth, a.LineWidth).Set (muLineType, fLType).Set (muDrawColor, a.Color);
+      Pgm.Set (muLineWidth, a.LineWidth).Set (muLineType, fLType);
+      Pgm.Set (muDrawColor, a.Color).Set (muLTScale, Lux.LTScale);
    }
 
    protected override int OrderUniformsImp (ref readonly Settings a, ref readonly Settings b) {
@@ -38,7 +39,7 @@ partial class DashLine2DShader : Shader<Vec2F, DashLine2DShader.Settings> {
    }
 
    protected override void SetConstantsImp () {
-      Pgm.Set (muVPScale, Lux.VPScale).Set (muLTypeTexture, 1).Set (muLTScale, Lux.LTScale);
+      Pgm.Set (muVPScale, Lux.VPScale).Set (muLTypeTexture, 1);
    }
 
    protected override Settings SnapUniformsImp ()
