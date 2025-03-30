@@ -27,6 +27,18 @@ unsafe static class GL {
    delegate void glBindBuffer (EBufferTarget target, HBuffer buffer);
    static glBindBuffer? pBindBuffer;
 
+   // Bind a frame buffer ......................................................
+   public static void BindFrameBuffer (EFrameBufferTarget target, HFrameBuffer buffer) 
+      => (pBindFrameBuffer ??= Load<glBindFramebuffer> ()) (target, buffer);
+   delegate void glBindFramebuffer (EFrameBufferTarget target, HFrameBuffer buffer);
+   static glBindFramebuffer? pBindFrameBuffer;
+
+   // ..........................................................................
+   public static void BindRenderBuffer (ERenderBufferTarget target, HRenderBuffer buffer) 
+      => (pBindRenderBuffer ??= Load<glBindRenderbuffer> ()) (target, buffer);
+   delegate void glBindRenderbuffer (ERenderBufferTarget target, HRenderBuffer buffer);
+   static glBindRenderbuffer? pBindRenderBuffer;
+
    // Bind a vertex array object (VAO) for use .................................
    public static void BindVertexArray (HVertexArray array) 
       => (pBindVertexArray ??= Load<glBindVertexArray> ()) (array);
@@ -38,6 +50,12 @@ unsafe static class GL {
       => (pBufferData ??= Load<glBufferData> ()) (target, new Ptr (size), data, usage);
    delegate void glBufferData (EBufferTarget target, Ptr size, Ptr data, EBufferUsage usage);
    static glBufferData? pBufferData;
+
+   // Check the completeness of the frame buffer ...............................
+   public static EFrameBufferStatus CheckFrameBufferStatus (EFrameBufferTarget target) 
+      => (pCheckFramebufferStatus ??= Load<glCheckFramebufferStatus> ()) (target);
+   delegate EFrameBufferStatus glCheckFramebufferStatus (EFrameBufferTarget target);
+   static glCheckFramebufferStatus? pCheckFramebufferStatus;
 
    // Compile an OpenGL shader .................................................
    public static void CompileShader (HShader idShader)
@@ -103,6 +121,12 @@ unsafe static class GL {
    delegate void glEnableVertexAttribArray (uint index);
    static glEnableVertexAttribArray? pEnableVertexAttribArray;
 
+   // Attach render-buffer to frame buffer .....................................
+   public static void FrameBufferRenderBuffer (EFrameBufferTarget ftarget, EFrameBufferAttachment attachment, HRenderBuffer rbo) 
+      => (pFrameBufferRenderBuffer ??= Load<glFramebufferRenderbuffer> ()) (ftarget, attachment, ERenderBufferTarget.RenderBuffer, rbo);
+   delegate void glFramebufferRenderbuffer (EFrameBufferTarget target, EFrameBufferAttachment attachment, ERenderBufferTarget rendertarget, HRenderBuffer rbo);
+   static glFramebufferRenderbuffer? pFrameBufferRenderBuffer;
+
    // Allocate a new data-storage buffer object ................................
    public static unsafe HBuffer GenBuffer () { 
       HBuffer buffer; 
@@ -111,6 +135,26 @@ unsafe static class GL {
    }
    unsafe delegate void glGenBuffers (int n, HBuffer* buffers);
    static glGenBuffers? pGenBuffers;
+
+   // Create a new framebuffer (for render-to-image) ...........................
+   public static HFrameBuffer GenFrameBuffer () {
+      HFrameBuffer buffer;
+      (pGenFrameBuffers ??= Load<glGenFramebuffers> ()) (1, &buffer);
+      return buffer;
+   }
+   unsafe delegate void glGenFramebuffers (int n, HFrameBuffer* buffers);
+   static glGenFramebuffers? pGenFrameBuffers;
+
+   // Create a new render buffer ...............................................
+   // Multiple render buffers (color, depth etc) are attached to a frame-buffer
+   // to create a full rendering environment
+   public static HRenderBuffer GenRenderBuffer () {
+      HRenderBuffer buffer;
+      (pGenRenderBuffers ??= Load<glGenRenderbuffers> ()) (1, &buffer);
+      return buffer;
+   }
+   unsafe delegate void glGenRenderbuffers (int n, HRenderBuffer* buffers);
+   static glGenRenderbuffers? pGenRenderBuffers;
 
    // Creates a new texture ....................................................
    public static HTexture GenTexture () { HTexture tex; GenTextures (1, &tex); return tex; }
@@ -221,6 +265,22 @@ unsafe static class GL {
    delegate void glPrimitiveRestartIndex (uint index);
    static glPrimitiveRestartIndex? pPrimitiveRestartIndex;
 
+   // Reads pixels from the current framebuffer ................................
+   public static void ReadPixels<T> (int x, int y, int width, int height, EPixelFormat format, EPixelType ptype, T[] data) where T : struct {
+      GCHandle pixelptr = GCHandle.Alloc (data, GCHandleType.Pinned);
+      try {
+         ReadPixels (x, y, width, height, format, ptype, pixelptr.AddrOfPinnedObject ());
+      } finally {
+         pixelptr.Free ();
+      }
+   }
+
+   // Allocates render buffer storage ..........................................
+   public static void RenderBufferStorage (ERenderBufferFormat format, int cx, int cy) 
+      => (pRenderBufferStorage ??= Load<glRenderbufferStorage> ()) (ERenderBufferTarget.RenderBuffer, format, cx, cy);
+   delegate void glRenderbufferStorage (ERenderBufferTarget target, ERenderBufferFormat format, int cx, int cy);
+   static glRenderbufferStorage? pRenderBufferStorage;
+
    // Set up the source code for a shader ......................................
    public static void ShaderSource (HShader shader, string source)
       => (pShaderSource ??= Load<glShaderSource> ()) (shader, 1, [source], [source.Length]);
@@ -305,7 +365,9 @@ unsafe static class GL {
    public static void Enable (ECap cap, bool v) { if (v) Enable (cap); else Disable (cap); }
 
    [DllImport (OPENGL32, EntryPoint = "glEnd")] public static extern void End ();
+   [DllImport (OPENGL32, EntryPoint = "glFinish")] public static extern void Finish ();
    [DllImport (OPENGL32, EntryPoint = "glGenTextures")] public static extern void GenTextures (int n, HTexture* pTex);
+   [DllImport (OPENGL32, EntryPoint = "glReadPixels")] public static extern void ReadPixels (int x, int y, int width, int height, EPixelFormat format, EPixelType type, Ptr pixels);
    [DllImport (OPENGL32, EntryPoint = "wglGetProcAddress")] public static extern nint GetProcAddress (string name);
    [DllImport (OPENGL32, EntryPoint = "wglMakeCurrent")] public static extern int MakeCurrent (HDC hdc, HGLRC hrc);
    [DllImport (OPENGL32, EntryPoint = "glPixelStorei")] static internal extern void PixelStore (EPixelStoreParam pname, int param);

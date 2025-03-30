@@ -10,6 +10,7 @@ using static System.Reflection.BindingFlags;
 #region class Program ------------------------------------------------------------------------------
 static class Program {
    /// <summary>Entry point into the Nori.Con program</summary>
+   [STAThread]
    static void Main (string[] args) {
       if (args.Length == 0) Help ();
       else {

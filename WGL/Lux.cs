@@ -13,7 +13,7 @@ public static partial class Lux {
    /// <summary>Set up a delegate here to know when the Lux renderer is ready to render</summary>
    /// Temporary code, will go away later
    public static Action? OnReady;
-   static bool mReadyFired;
+   internal static bool mReady;
 
    /// <summary>The current scene that is bound to the visible viewport</summary>
    public static Scene? UIScene {
@@ -42,18 +42,67 @@ public static partial class Lux {
 
    // Methods ------------------------------------------------------------------
    /// <summary>Creates the Lux rendering panel</summary>
-   public static UIElement CreatePanel ()
-      => Panel.It;
+   public static UIElement CreatePanel (bool createHost = false) {
+      if (createHost) {
+         // If this is specified, we must also create a floating 'host window' to house
+         // the LuxPanel. This is used when Flux is running in some console mode, but still
+         // has to produce OpenGL images (for NC code, thumbnails etc)
+         if (sHost == null) {
+            sHost = new Window {
+               Title = "Snapshot", ShowInTaskbar = false, ShowActivated = false,
+               WindowStyle = WindowStyle.ToolWindow, ResizeMode = ResizeMode.NoResize,
+               Width = 500, Height = 500, Top = 0, Left = -5000
+            };
+            sHost.Show ();
+            sHost.Content = Panel.It;
+            while (!mReady) sHost.Dispatcher.Invoke (DispatcherPriority.Background, () => { });
+         }
+      }
+      return Panel.It;
+   }
+   static Window? sHost;
+
+   public static DIBitmap RenderToImage (Scene scene, Vec2S size, DIBitmap.EFormat fmt) {
+      if (size.X % 4 != 0) throw new ArgumentException ($"Lux.RenderToImage: image width must be a multiple of 4");
+      return (DIBitmap)Render (scene, size, ETarget.Image, fmt)!;
+   }
 
    /// <summary>Converts a pixel coordinate to world coordinates</summary>
    public static Point3 PixelToWorld (Vec2S pix) {
       if (mUIScene == null) return new (pix.X, pix.Y, 0);
-
       // Convert pixel coordinate to OpenGL clip space coordinates. 
       Vec2S vp = mViewport;
       Point3 clip = new (2.0 * pix.X / vp.X - 1, 1.0 - 2.0 * pix.Y / vp.Y, 0);
       return clip * mUIScene.Xfms[0].InvXfm;
    }
+
+   /// <summary>Stub for the Render method that is called when each frame has to be painted</summary>
+   internal static object? Render (Scene? scene, Vec2S viewport, ETarget target, DIBitmap.EFormat fmt) {
+      mFrame++;
+      var panel = Panel.It;
+      panel.BeginRender (viewport, target);
+      StartFrame (viewport);
+      GLState.StartFrame (viewport, scene?.BgrdColor ?? Color4.Gray (96));
+      RBatch.StartFrame ();
+      Shader.StartFrame ();
+      scene?.Render (viewport);
+      object? obj = panel.EndRender (target, fmt);
+      Info.FrameOver ();
+      FPS.FrameOver ();
+      if (target == ETarget.Screen && sRenderCompletes.Count > 0) Lib.Post (NextFrame);
+      return obj;
+
+      // Helpers ...........................................
+      static void NextFrame () {
+         var sFrametime = DateTime.Now;
+         double elapsed = (sFrametime - sLastFrametime).TotalSeconds;
+         for (int i = sRenderCompletes.Count - 1; i >= 0; i--)
+            sRenderCompletes[i] (elapsed);
+         sLastFrametime = sFrametime;
+         Redraw ();
+      }
+   }
+   static int mFrame;
 
    /// <summary>Prompts the Lux system to redraw the screen (asynchronous)</summary>
    public static void Redraw ()
@@ -147,37 +196,6 @@ public static partial class Lux {
       }
       return false;
    }
-
-   /// <summary>Called on every WM_PAINT, renders the current UIScene to screen</summary>
-   internal static void RenderToScreen () {
-      // Don't look at all this too closely - it is temporary code that will
-      // later go away and be replaced by something more clean
-      if (!mReadyFired) { mReadyFired = true; OnReady?.Invoke (); }
-
-      mFrame++;
-      var panel = Panel.It;
-      panel.BeginRender (panel.Size, ETarget.Screen);
-      StartFrame (panel.Size);
-      GLState.StartFrame (panel.Size, mUIScene?.BgrdColor ?? Color4.Gray (96));
-      RBatch.StartFrame ();
-      Shader.StartFrame ();
-      mUIScene?.Render (panel.Size);
-      panel.EndRender ();
-      Info.FrameOver ();
-      FPS.FrameOver ();
-      if (sRenderCompletes.Count > 0) Lib.Post (NextFrame);
-
-      // Helpers ...........................................
-      static void NextFrame () {
-         var sFrametime = DateTime.Now;
-         double elapsed = (sFrametime - sLastFrametime).TotalSeconds;
-         for (int i = sRenderCompletes.Count - 1; i >= 0; i--)
-            sRenderCompletes[i] (elapsed);
-         sLastFrametime = sFrametime;
-         Redraw ();
-      }
-   }
-   static int mFrame;
 
    // Implementation -----------------------------------------------------------
    static bool Get (ELuxAttr flags, ELuxAttr bit) => (flags & bit) != 0;

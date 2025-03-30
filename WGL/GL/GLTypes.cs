@@ -23,13 +23,22 @@ enum ECap : uint {
    CullFace = 0xB44, StencilTest = 0xB90, PrimitiveRestart = 0x8F9D
 };
 
-// <summary>Various data types for storing in vertex array buffers</summary>
+// Various data types for storing in vertex array buffers
 enum EDataType : uint {
    Byte = 0x1400, UByte = 0x1401, Short = 0x1402, UShort = 0x1403, Int = 0x1404, UInt = 0x1405,
    Half = 0x140B, Float = 0x1406, Double = 0x140A, Vec2f = 0x8B50, Vec3f = 0x8B51, Vec4f = 0x8B52,
    Mat2f = 0x8B5A, Mat3f = 0x8B5B, Mat4f = 0x8B5C, IVec4 = 0x8B55, IVec2 = 0x8B53,
    Sampler2DRect = 0x8B63, Sampler2D = 0x8B5E,
 }
+
+// Binding targets for a FrameBuffer
+enum EFrameBufferTarget : uint { Draw = 0x8CA9, Read = 0x8CA8, DrawAndRead = 0x8D40 };
+
+// Defines a frame-buffer attachment point
+enum EFrameBufferAttachment { Depth = 0x8D00, Color0 = 0x8CE0, Color1 = 0x8CE1, DepthStencil = 0x821A }
+
+// Values returned by CheckFrameBufferStatus
+enum EFrameBufferStatus { Complete = 0x8CD5 }
 
 // Data types that could be used for the indices in a DrawElement call
 enum EIndexType : uint { UByte = 5121, UShort = 5123, UInt = 5125 }
@@ -47,9 +56,12 @@ enum EMode : uint {
 public enum EShadeMode { Flat, Gourad, Phong, Glass };
 
 // Pixel storage formats
-enum EPixelFormat : uint { DepthComponent = 6402, Red = 6403, Rgba = 6408, Bgra = 32993 }
+enum EPixelFormat : uint { 
+   DepthComponent = 0x1902, Red = 0x1903, RGB = 0x1907, RGBA = 0x1908, BGRA = 32993 
+}
 // Pixel data type
-enum EPixelType : uint { UByte = 5121, Float = 5126 }
+enum EPixelType : uint { Byte = 5120, UByte = 5121, Float = 5126 }
+
 // Parameter for PixelStore
 enum EPixelStoreParam : uint { UnpackAlignment = 3317, PackAlignment = 3333 }
 
@@ -60,6 +72,12 @@ enum EProgramParam : uint {
 
 // Used with 'patches' type glDrawElements
 enum EPatchParam : uint { PatchVertices = 36466 }
+
+// Binding targets for a RenderBuffer
+enum ERenderBufferTarget : uint { RenderBuffer = 0x8D41 };
+
+// Storage formats in render buffer
+public enum ERenderBufferFormat : uint  { RGBA8 = 0x8058, Depth32 = 0x81A7, Depth16 = 0x81A5, Depth24Stencil8 = 0x88F0 }
 
 // The various types of OpenGL shaders
 enum EShader : uint {
@@ -103,6 +121,10 @@ enum HShader : ulong { Zero }
 enum HVertexArray : ulong { Zero }
 // OpenGL data Buffer object 
 enum HBuffer : ulong { Zero }
+// OpenGL frame-buffer object
+enum HFrameBuffer : ulong { Zero }
+// OpenGL render-buffer object
+enum HRenderBuffer : ulong { Zero }
 // Texture object, created with GenTexture
 enum HTexture : ulong { Zero }
 #endregion
