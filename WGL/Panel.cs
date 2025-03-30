@@ -169,6 +169,7 @@ class Surface : System.Windows.Forms.UserControl {
             break;
          }
       }
+      Lux.mReady = true;
       Lux.OnReady?.Invoke ();
    }
 

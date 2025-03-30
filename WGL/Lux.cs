@@ -66,10 +66,28 @@ public static partial class Lux {
    }
 
    /// <summary>Creates the Lux rendering panel</summary>
-   public static UIElement CreatePanel ()
-      => Panel.It;
-
+   public static UIElement CreatePanel (bool createHost = false) {
+      if (createHost) {
+         // If this is specified, we must also create a floating 'host window' to house
+         // the LuxPanel. This is used when Flux is running in some console mode, but still
+         // has to produce OpenGL images (for NC code, thumbnails etc)
+         if (sHost == null) {
+            sHost = new Window {
+               Title = "Snapshot", ShowInTaskbar = false, ShowActivated = false,
+               WindowStyle = WindowStyle.ToolWindow, ResizeMode = ResizeMode.NoResize,
+               Width = 500, Height = 500, Top = 0, Left = -5000
+            };
+            sHost.Show ();
+            sHost.Content = Panel.It;
+            while (!mReady) sHost.Dispatcher.Invoke (DispatcherPriority.Background, () => { });
+         }
+      }
+      return Panel.It;
+   }
    public static Action? OnReady;
+   static Window? sHost;
+
+   internal static bool mReady;
 
    public static DIBitmap RenderToImage (Scene scene, Vec2S size, DIBitmap.EFormat fmt) {
       if (size.X % 4 != 0) throw new ArgumentException ($"Lux.RenderToImage: image width must be a multiple of 4");

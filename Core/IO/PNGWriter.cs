@@ -116,7 +116,8 @@ public class PNGWriter : PNGCore {
          for (int i = 0; i < mBmp.Height; i++) {
             // Copy one row of data into 'row' (starting at offset 4, so that we don't have to
             // do any special case handling for the leftmost pixel)
-            Array.Copy (mBmp.Data, i * stride, current, 4, stride);
+            int idx = mBmp.Height - 1 - i;
+            Array.Copy (mBmp.Data, idx * stride, current, 4, stride);
 
             // For each row, we are going to compute a good filter type by computing all the 
             // possible filter values, and evaluating which would be best. Since the 'best' 
