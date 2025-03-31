@@ -40,27 +40,20 @@ class TLux {
       }
    }
 
-   Scene MakeScene (Color4 bgrd, double x0, double y0, double x1, double y1, Action draw) {
+   TestScene MakeScene (Color4 bgrd, double x0, double y0, double x1, double y1, Action draw) {
       var vnode = new SimpleVN (draw);
-      return new SimpleScene (bgrd, new Bound2 (x0, y0, x1, y1), vnode);
+      return new TestScene (bgrd, new Bound2 (x0, y0, x1, y1), vnode);
    }
 
    void TestPNG (Scene scene, Vec2S size, DIBitmap.EFormat format, string file) {
       var dib = Lux.RenderToImage (scene, size, format);
       new PNGWriter (dib).Write (NT.TmpPNG);
-      Assert.PNGFilesEqual ($"{NT.Data}/Misc/{file}", NT.TmpPNG);
+      Assert.PNGFilesEqual ($"{NT.Data}/Lux/{file}", NT.TmpPNG);
    }
 
-   class SimpleScene : Scene2 {
-      public SimpleScene (Color4 bgrd, Bound2 bound, VNode root) {
-         mBgrd = bgrd; Bound = bound; Root = root;
-      }
-
+   class TestScene : Scene2 {
+      public TestScene (Color4 bgrd, Bound2 bound, VNode root) => (mBgrd, Bound, Root) = (bgrd, bound, root);
       public override Color4 BgrdColor => mBgrd;
       readonly Color4 mBgrd;
-   }
-      
-   class SimpleVN (Action draw) : VNode (draw) {
-      public override void Draw () => draw ();
-   }
+   }      
 }

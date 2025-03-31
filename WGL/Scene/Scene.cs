@@ -105,6 +105,8 @@ public abstract partial class Scene {
 /// <summary>Represents a 2D scene (override Draw in derived classes)</summary>
 /// - The world extent is expressed as a Bound2 (world is defined on XY plane)
 public abstract class Scene2 : Scene {
+   public Scene2 () { }
+
    // Properties ---------------------------------------------------------------
    /// <summary>The bounding rectangle of the drawing</summary>
    public Bound2 Bound {

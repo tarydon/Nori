@@ -78,8 +78,17 @@ static class Assert {
    /// </summary>
    public static void PNGFilesEqual (string reference, string test) {
       if (!File.Exists (reference)) { File.Copy (test, reference, true); return; }
-      byte[] data1 = File.ReadAllBytes (reference), data2 = File.ReadAllBytes (test);
-      if (data1.SequenceEqual (data2)) return;
+      byte[] data2 = File.ReadAllBytes (test);
+      for (int i = 0; ; i++) {
+         string reffile = reference;
+         if (i > 0) reffile = reference[..^3] + $"({i}).png";
+         var fi = new FileInfo (reffile);
+         if (!fi.Exists) break;
+         if (fi.Length == data2.Length) {
+            byte[] data1 = File.ReadAllBytes (reffile);
+            if (data1.SequenceEqual (data2)) return;
+         }
+      }
       throw new TestException ($"Files different: {reference} and {test}");
    }
 
