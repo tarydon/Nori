@@ -1,30 +1,30 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFramework>net9.0-windows</TargetFramework>
-    <Nullable>enable</Nullable>
-    <UseWPF>true</UseWPF>
-    <UseWindowsForms>true</UseWindowsForms>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <OutDir>..\Bin</OutDir>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <Optimize>false</Optimize>
-    <GenerateDocumentationFile>false</GenerateDocumentationFile>
-    <DocumentationFile>..\Bin\Nori.WGL.xml</DocumentationFile>
-  </PropertyGroup>
+	<PropertyGroup>
+		<TargetFramework>net9.0-windows</TargetFramework>
+		<Nullable>enable</Nullable>
+		<UseWPF>true</UseWPF>
+		<UseWindowsForms>true</UseWindowsForms>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<OutDir>..\Bin</OutDir>
+		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+		<Optimize>false</Optimize>
+		<GenerateDocumentationFile>false</GenerateDocumentationFile>
+		<DocumentationFile>..\Bin\Nori.WGL.xml</DocumentationFile>
+	</PropertyGroup>
 
-  <ItemGroup>
-    <Compile Remove="Res\**" />
-    <EmbeddedResource Remove="Res\**" />
-    <None Remove="Res\**" />
-    <Page Remove="Res\**" />
-  </ItemGroup>
+	<ItemGroup>
+		<Compile Remove="Res\**" />
+		<EmbeddedResource Remove="Res\**" />
+		<None Remove="Res\**" />
+		<Page Remove="Res\**" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\Core\Nori.Core.csproj" />
-  </ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\Core\Nori.Core.csproj" />
+	</ItemGroup>
 
-  <ItemGroup>
-	<ProjectReference Include="..\Tools\Generate\Nori.Gen.csproj" ReferenceOutputAssembly="false" OutputItemType="Analyzer" />
-  </ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\Tools\Generate\Nori.Gen.csproj" ReferenceOutputAssembly="false" OutputItemType="Analyzer" />
+	</ItemGroup>
 </Project>

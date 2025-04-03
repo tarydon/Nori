@@ -57,7 +57,7 @@ public abstract partial class Scene {
    // Methods ------------------------------------------------------------------
    public void Render (Vec2S viewport) {
       Lux.Scene = this;
-      if (Lib.Set (ref mViewport, viewport)) mXfms.Clear ();
+      if (Lib.Set (ref mViewport, viewport)) XfmChanged ();
       Xfms.RemoveRange (1, Xfms.Count - 1);
       mRoot?.Render ();
       RBatch.IssueAll ();
