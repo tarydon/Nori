@@ -60,9 +60,10 @@ public readonly record struct Vec4F (float X, float Y, float Z, float W) : IEQua
 
 /// <summary>4D vector of 16-bit half (used for passing data to OpenGL)</summary>
 [StructLayout (LayoutKind.Sequential, Pack = 4, Size = 16)]
-public readonly record struct Vec4H (float X, float Y, float Z, float W) : IEquatable<Vec4H> {
+public readonly struct Vec4H (float x, float y, float z, float w) : IEQuable<Vec4H> {
    public bool EQ (Vec4H b) => X.EQ (b.X) && Y.EQ (b.Y) && Z.EQ (b.Z) && W.EQ (b.W);
    public override string ToString () => $"<{X.R5 ()},{Y.R5 ()},{Z.R5 ()},{W.R5 ()}>";
+   public readonly float X = x, Y = y, Z = z, W = w;
 }
 
 /// <summary>4D vector of shorts (used for passing data to OpenGL)</summary>
@@ -88,8 +89,8 @@ public readonly struct Mat4F {
    public override string ToString ()
       => $"[{M11},{M12},{M13},{M14}, {M21},{M22},{M23},{M24}, {M31},{M32},{M33},{M34}, {X},{Y},{Z},{M44}]";
 
-   public readonly static Mat4F Identity = new (1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0);
-   public readonly static Mat4F Zero = new (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+   public static readonly Mat4F Identity = new (1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0);
+   public static readonly Mat4F Zero = new (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 
    // Properties ---------------------------------------------------------------
    public readonly float M11, M12, M13, M14;
@@ -126,12 +127,12 @@ public readonly struct RectS : IEQuable<RectS> {
       if (right < left || top < bottom) throw new NotImplementedException ();
    }
 
-   public readonly RectS Shifted (int x, int y) => new (Left + x, Bottom + y, Right + x, Top + y);
+   public RectS Shifted (int x, int y) => new (Left + x, Bottom + y, Right + x, Top + y);
 
    public static readonly RectS Empty = new (32767, 32767, 32767, 32767);
    public bool IsEmpty => Left == 32767;
 
-   public readonly bool Contains (Vec2S p)
+   public bool Contains (Vec2S p)
       => Left <= p.X && p.X <= Right && Bottom <= p.Y && p.Y <= Top;
 
    public int Width => Right - Left;

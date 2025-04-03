@@ -22,7 +22,7 @@ public class Coverage {
          Dictionary<int, string> tmpMap = [];
          foreach (var file in module.Descendants ("source_file")) {
             int id = AttrN (file, "id");
-            string path = AttrS (file, "path").Replace (@"W:\Nori", @"N:").Replace (@"w:\Nori", @"N:");
+            string path = AttrS (file, "path").Replace (@"W:\Nori", "N:").Replace (@"w:\Nori", "N:");
             tmpMap.Add (id, path);
          }
 
@@ -39,10 +39,9 @@ public class Coverage {
       mBlocks.Sort ();
       for (int i = mBlocks.Count - 1; i >= 1; i--) {
          Block b0 = mBlocks[i - 1], b1 = mBlocks[i];
-         if (b0.CompareTo (b1) == 0) {
-            mBlocks[i - 1] = new Block (b0.FileId, b0.Start, b0.End, b0.Covered | b1.Covered);
-            mBlocks.RemoveAt (i);
-         }
+         if (b0.CompareTo (b1) != 0) continue;
+         mBlocks[i - 1] = new Block (b0.FileId, b0.Start, b0.End, b0.Covered | b1.Covered);
+         mBlocks.RemoveAt (i);
       }
    }
 
@@ -75,21 +74,18 @@ public class Coverage {
 
    // Nested types -------------------------------------------------------------
    /// <summary>The Block structure maintains the data for each atomic code-execution block</summary>
-   public readonly struct Block : IComparable<Block> {
-      public Block (int file, (int L, int C) start, (int L, int C) end, bool covered)
-         => (FileId, Start, End, Covered) = (file, start, end, covered);
-      public override string ToString () => $"{FileId} : {Start.Line}:{Start.Col} - {End.Line}:{End.Col}";
-
-      public readonly int FileId;
-      public readonly (int Line, int Col) Start;
-      public readonly (int Line, int Col) End;
-      public readonly bool Covered;
+   public readonly struct Block (int file, (int L, int C) start, (int L, int C) end, bool covered) : IComparable<Block> {
+      public readonly int FileId = file;
+      public readonly (int Line, int Col) Start = start;
+      public readonly (int Line, int Col) End = end;
+      public readonly bool Covered = covered;
 
       public int CompareTo (Block other) {
          int n = FileId - other.FileId; if (n != 0) return n;
          n = Start.Line - other.Start.Line; if (n != 0) return n;
          return Start.Col - other.Start.Col;
       }
+      public override string ToString () => $"{FileId} : {Start.Line}:{Start.Col} - {End.Line}:{End.Col}";
    }
 
    // Implementation -----------------------------------------------------------
@@ -106,14 +102,11 @@ public class Coverage {
    // Extract a string attribute from an XElement
    static string AttrS (XElement elem, string name) {
       XAttribute? attr = elem.Attribute (name);
-      if (attr == null) return "";
-      return attr.Value;
+      return attr == null ? "" : attr.Value;
    }
 
    // Extract an integer attribute from an XElement
-   static int AttrN (XElement elem, string name) {
-      if (!int.TryParse (AttrS (elem, name), out int n)) return 0;
-      return n;
-   }
+   static int AttrN (XElement elem, string name) 
+      => int.TryParse (AttrS (elem, name), out int n) ? n : 0;
 }
 #endregion

@@ -140,10 +140,10 @@ public static class Extensions {
 
    /// <summary>Returns a value from a dictionary, or default value (of appropriate type) if the key does not exist</summary>
    public static U? SafeGet<T, U> (this IReadOnlyDictionary<T, U> dict, T key) 
-      => dict.TryGetValue (key, out var value) ? value : default;
+      => dict.GetValueOrDefault (key);
    /// <summary>Returns a value from a dictionary, or a user-supplied fallback if the key is not present</summary>
    public static U SafeGet<T, U> (this IReadOnlyDictionary<T, U> dict, T key, U fallback)
-      => dict.TryGetValue (key, out var value) ? value : fallback;
+      => dict.GetValueOrDefault (key, fallback);
 
    /// <summary>Returns a value from an list, or default value (of appropriate type) if the index is out of range</summary>
    public static T? SafeGet<T> (this IReadOnlyList<T> list, int n)
@@ -152,13 +152,13 @@ public static class Extensions {
    /// <summary>Convert a double to a string, rounded to 6 decimal places (no trailing zeroes)</summary>
    /// This has special handling to avoid the annoying "-0"
    public static string S6 (this double f) {
-      string s = Round (f, 6).ToString ();
+      string s = Round (f, 6).ToString (CultureInfo.InvariantCulture);
       return s == "-0" ? "0" : s;
    }
    /// <summary>Convert a float a string, rounded to 5 decimal places (no trailing zeroes)</summary>
    /// This has special handling to prevent the annoying "-0"
    public static string S5 (this float f) {
-      string s = Round (f, 5).ToString ();
+      string s = Round (f, 5).ToString (CultureInfo.InvariantCulture);
       return s == "-0" ? "0" : s;
    }
 
@@ -169,7 +169,6 @@ public static class Extensions {
    /// the quote character is simply removed. 
    public static string ToCSV<T> (this IEnumerable<T> collection, string separator = ",", string quote = "'") {
       bool iFirst = true;
-      if (collection == null) return "";
       StringBuilder sb = new ();
       foreach (var obj in collection) {
          if (!iFirst) sb.Append (','); iFirst = false;

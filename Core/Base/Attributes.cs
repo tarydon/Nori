@@ -2,14 +2,15 @@
 // ╔═╦╦═╦╦╬╣ Attributes.cs
 // ║║║║╬║╔╣║ Defines attributes used by Nori.Core, and by Nori source generators
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
+using JetBrains.Annotations;
 namespace Nori;
 
 #region [EPropClass] attribute ---------------------------------------------------------------------
 /// <summary>[EPropClass] attribute, used to auto-implement IObservable(EProp) for a type.</summary>
 /// The class then will have one or more fields decorated with [EPropField], and when
 /// any of those fields are modified, observers watching this class are notified. 
-[AttributeUsage (AttributeTargets.Class)]
-public class EPropClassAttribute : Attribute { }
+[AttributeUsage (AttributeTargets.Class), UsedImplicitly]
+public sealed class EPropClassAttribute : Attribute;
 #endregion
 
 #region [EPropField] attribute ---------------------------------------------------------------------
@@ -43,5 +44,6 @@ public class EPropFieldAttribute (EProp prop) : Attribute {
 /// `static TClass It { get; }`
 /// This constructs a single instance of this type and returns it (this is thread-safe)
 [AttributeUsage (AttributeTargets.Class)]
-public class SingletonAttribute : Attribute { }
+public class SingletonAttribute : Attribute;
 #endregion
+

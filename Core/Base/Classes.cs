@@ -39,7 +39,7 @@ public class DIBitmap {
       /// <summary>8-bit Red, Green, Blue, Alpha components (32 bits per pixel)</summary>
       RGBA8,
       /// <summary>8-bit Grayscale values (8-bits per pixel)</summary>
-      Gray8,
+      Gray8
    }
 }
 #endregion
@@ -47,7 +47,6 @@ public class DIBitmap {
 #region class MultiDispose -------------------------------------------------------------------------
 /// <summary>Helper to hold on to, and dispose, multiple IDisposables</summary>
 public class MultiDispose (params IDisposable?[] disps) : IDisposable {
-   public void Dispose () => mDisposables.ForEach (a => a?.Dispose ());
-   IDisposable?[] mDisposables = disps;
+   public void Dispose () => disps.ForEach (a => a?.Dispose ());
 }
 #endregion

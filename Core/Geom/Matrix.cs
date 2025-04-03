@@ -7,11 +7,8 @@ namespace Nori;
 
 #region class Matrix2 ------------------------------------------------------------------------------
 /// <summary>A Matrix in 2 dimensions</summary>
-public class Matrix2 {
+public class Matrix2 (double m11, double m12, double m21, double m22, double x, double y) {
    // Constructors -------------------------------------------------------------
-   public Matrix2 (double m11, double m12, double m21, double m22, double x, double y)
-      => (M11, M12, M21, M22, DX, DY) = (m11, m12, m21, m22, x, y);
-
    /// <summary>Create a translation matrix</summary>
    public static Matrix2 Translation (Vector2 vec) => Translation (vec.X, vec.Y);
    /// <summary>Create a translation matrix</summary>
@@ -38,7 +35,7 @@ public class Matrix2 {
    public override string ToString () => $"[{M11.R6 ()},{M12.R6 ()} | {M21.R6 ()},{M22.R6 ()} | {DX.R6 ()},{DY.R6 ()}]";
 
    // Properties ---------------------------------------------------------------
-   public readonly double M11, M12, M21, M22, DX, DY;
+   public readonly double M11 = m11, M12 = m12, M21 = m21, M22 = m22, DX = x, DY = y;
    public static readonly Matrix2 Identity = new (1, 0, 0, 1, 0, 0);
 
    // Methods ------------------------------------------------------------------
@@ -317,8 +314,8 @@ public class Matrix3 {
 
    public override string ToString ()
       => string.Format ("[{0},{1},{2}, {3},{4},{5}, {6},{7},{8}, {9},{10},{11}]",
-         M11.S6 (), M12.S6 (), M13.S6 (), M21.S6 (), M22.S6 (), M23.S6 (),
-         M31.S6 (), M32.S6 (), M33.S6 (), DX.S6 (), DY.S6 (), DZ.S6 ());
+            M11.S6 (), M12.S6 (), M13.S6 (), M21.S6 (), M22.S6 (), M23.S6 (),
+            M31.S6 (), M32.S6 (), M33.S6 (), DX.S6 (), DY.S6 (), DZ.S6 ());
 
    // Private data -------------------------------------------------------------
    internal readonly double M11, M12, M13, M21, M22, M23, M31, M32, M33, DX, DY, DZ;

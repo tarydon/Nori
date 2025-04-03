@@ -53,7 +53,7 @@ public readonly struct Color4 : IEQuable<Color4> {
             case 7: for (int i = 0; i < 6; i++) inp[i + 2] = s[i + 1]; break;
             default: for (int i = 0; i < 8; i++) inp[i] = s[i + 1]; break;
          }
-         return new (uint.Parse (inp, System.Globalization.NumberStyles.HexNumber));
+         return new (uint.Parse (inp, NumberStyles.HexNumber));
       }
       throw new ParseException (s, typeof (Color4));
    }
@@ -104,16 +104,15 @@ public readonly struct Color4 : IEQuable<Color4> {
    // Builds the maps that convert 'known' Color4 values to names like Red / Blue etc
    // and the reverse map that converts such strings into name values
    static void BuildMap () {
-      if (sNames.Count == 0) {
-         foreach (var fi in typeof (Color4).GetFields (BindingFlags.Public | BindingFlags.Static)) {
-            Color4 color = (Color4)fi.GetValue (null)!;
-            sNames[color] = fi.Name; sParse[fi.Name] = color;
-         }
+      if (sNames.Count != 0) return;
+      foreach (var fi in typeof (Color4).GetFields (BindingFlags.Public | BindingFlags.Static)) {
+         Color4 color = (Color4)fi.GetValue (null)!;
+         sNames[color] = fi.Name; sParse[fi.Name] = color;
       }
    }
-   static Dictionary<Color4, string> sNames = [];
-   static Dictionary<string, Color4> sParse = new (StringComparer.OrdinalIgnoreCase);
-   static Random mRand = new ();
+   static readonly Dictionary<Color4, string> sNames = [];
+   static readonly Dictionary<string, Color4> sParse = new (StringComparer.OrdinalIgnoreCase);
+   static readonly Random mRand = new ();
 }
 #endregion
 
@@ -287,7 +286,7 @@ public readonly struct Quaternion : IEQuable<Quaternion> {
 
    // Properties ---------------------------------------------------------------
    /// <summary>Returns the angle of rotation (in radians)</summary>
-   public readonly double Angle {
+   public double Angle {
       get {
          double y = Sqrt (X * X + Y * Y + Z * Z), x = W;
          return Atan2 (y, x) * 2;
@@ -295,22 +294,22 @@ public readonly struct Quaternion : IEQuable<Quaternion> {
    }
 
    /// <summary>Returns the (normalized) axis of rotation</summary>
-   public readonly Vector3 Axis => new Vector3 (X, Y, Z).Normalized ();
+   public Vector3 Axis => new Vector3 (X, Y, Z).Normalized ();
    /// <summary>Is this an identity quaternion?</summary>
-   public readonly bool IsIdentity => Angle.IsZero ();
+   public bool IsIdentity => Angle.IsZero ();
    /// <summary>The components of the quaternion</summary>
    public readonly double X, Y, Z, W;
 
    // Methods ------------------------------------------------------------------
    /// <summary>This constructs a Quaternion from a string in this form: "X,Y,Z:Deg"</summary>
    /// <summary>Returns true if two quaternions are nearly equal</summary>
-   public readonly bool EQ (Quaternion other)
+   public bool EQ (Quaternion other)
       => X.EQ (other.X) && Y.EQ (other.Y) && Z.EQ (other.Z) && W.EQ (other.W);
 
    /// <summary>Expresses the Quaternion in this form: "X,Y,Z:Deg"</summary>
    /// The first 3 numbers provide the axis of rotation, and the 4th is the angle of
    /// rotation in degrees
-   public readonly override string ToString () {
+   public override string ToString () {
       var (a, g) = (Axis, Angle.R2D ());
       return $"{a.X.R6 ()},{a.Y.R6 ()},{a.Z.R6 ()}:{g.R6 ()}";
    }

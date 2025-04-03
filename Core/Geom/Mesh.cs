@@ -29,15 +29,11 @@ public class CMesh (ImmutableArray<CMesh.Node> vertex, ImmutableArray<int> trian
    Bound3 mBound = new ();
 
    [StructLayout (LayoutKind.Sequential, Pack = 2, Size = 18)]
-   public readonly struct Node {
-      public Node (Vec3F pos, Vec3H vec) => (mPos, mVec) = (pos, vec);
-      public override string ToString () => $"{mPos}, {mVec}";
-
-      public Vec3F Pos => mPos;
-      public Vec3H Vec => mVec;
-
-      readonly Vec3F mPos;
-      readonly Vec3H mVec;
+   public readonly struct Node (Vec3F pos, Vec3H vec) {
+      public Vec3F Pos => pos;
+      public Vec3H Vec => vec;
+      public void Deconstruct (out Vec3F p, out Vec3H v) => (p, v) = (Pos, Vec);
+      public override string ToString () => $"{pos}, {vec}";
    }
 
    /// <summary>Returns a copy of the mesh shifted by the given vector</summary>
@@ -118,38 +114,23 @@ public class CMesh (ImmutableArray<CMesh.Node> vertex, ImmutableArray<int> trian
    /// ]]>
    /// </code>
    public void Save (string filename) {
-      // 1. HEADER
-      StringBuilder sb = new ($"TMESH\n1\n");
-      // 2. VERTICES
-      // Vertices count.
-      sb.Append ($"{Vertex.Length}\n");
-      // Vertex data
-      for (int i = 0; i < Vertex.Length; i++) {
-         var p = Vertex[i].Pos; var v = Vertex[i].Vec;
-         sb.Append ($"{p.X:R},{p.Y:R},{p.Z:R},  {v.X:R},{v.Y:R},{v.Z:R}\n");
-      }
+      // Version, Vertex count, vertices
+      StringBuilder sb = new ($"TMESH\n1\n{Vertex.Length}\n");
+      foreach (var (pos, vec) in Vertex) 
+         sb.Append ($"{pos.X},{pos.Y},{pos.Z},  {vec.X},{vec.Y},{vec.Z}\n");
 
-      // 3. TRIANGLES
-      // Triangle count
+      // Triangle count, triangle indices
       sb.Append ($"{Triangle.Length / 3}\n");
-      // Triangle data
-      for (int i = 0; i < Triangle.Length; i += 3) {
+      for (int i = 0; i < Triangle.Length; i += 3) 
          sb.Append ($"{Triangle[i]} {Triangle[i + 1]} {Triangle[i + 2]}\n");
-      }
 
-      // 4. STENCILS
-      // Stencil line count
+      // Stencil count, stencil indices
       sb.Append ($"{Wire.Length / 2}\n");
-      // Stencil data
-      for (int i = 0; i < Wire.Length; i += 2) {
+      for (int i = 0; i < Wire.Length; i += 2) 
          sb.Append ($"{Wire[i]} {Wire[i + 1]}\n");
-      }
 
-      // 5. EOF - End of file
-      sb.Append ("EOF\n");
-      File.WriteAllText (filename, sb.ToString ());
+      File.WriteAllText (filename, sb.Append ("EOF\n").ToString ());
    }
-
 }
 #endregion
 
@@ -166,8 +147,7 @@ public class CMeshBuilder {
    /// <param name="pts">Triangle points.</param>
    public CMeshBuilder (ReadOnlySpan<Point3> pts) {
       Dictionary<Point3, int> verts = [];
-      for (int i = 0; i < pts.Length; i++) {
-         Point3 pt = pts[i];
+      foreach (var pt in pts) {
          if (!verts.TryGetValue (pt, out int id)) {
             id = verts.Count;
             verts.Add (pt, id);
@@ -198,7 +178,7 @@ public class CMeshBuilder {
       // Now we have enough information to try and create the faces
       for (int i = 0; i < mcFace; i++) AddTriangle (i);
 
-      return new CMesh (nodes.AsSpan (0, cNodes).ToImmutableArray (), [.. tries], [.. wires]);
+      return new CMesh ([..nodes.AsSpan (0, cNodes)], [.. tries], [.. wires]);
 
       // Assigns a reference to the given face to a given vertex
       // This tells the vertex that the face nFace references this vertex
@@ -311,32 +291,32 @@ public class CMeshBuilder {
 
    public bool Wireframe = false;
 
-   /// <summary>This is the list of faces at this vertex (a temporary used only by GroupFaces)</summary>
-   List<int> mVF = [];
-   /// <summary>The list of group-wise averages (a temporary used only by GroupFaces)</summary>
-   List<Vector3> mAvgs = [];
-   /// <summary>The list of vertex-IDs for these groups (a temporary used only by GroupFaces)</summary>
-   List<int> mVIDs = [];
+   // This is the list of faces at this vertex (a temporary used only by GroupFaces)
+   readonly List<int> mVF = [];
+   // The list of group-wise averages (a temporary used only by GroupFaces)
+   readonly List<Vector3> mAvgs = [];
+   // The list of vertex-IDs for these groups (a temporary used only by GroupFaces)
+   readonly List<int> mVIDs = [];
 
-   /// <summary>If two faces have a cosine less than this between them, it's a sharp edge</summary>
+   // If two faces have a cosine less than this between them, it's a sharp edge
    const double mCos = 0.5;
 
-   /// <summary>This is the list of vertices</summary>
-   Vertex[] mVertex = [];
-   /// <summary>How many of these vertices are used?</summary>
-   int mcVertex;
+   // This is the list of vertices
+   readonly Vertex[] mVertex = [];
+   // How many of these vertices are used?
+   readonly int mcVertex;
 
-   /// <summary>This is the list of all the faces (each has 3 vertices, area and normal)</summary>
+   // This is the list of all the faces (each has 3 vertices, area and normal)
    Face[] mFace = [];
-   /// <summary>How many of the elements from this array are used?</summary>
+   // How many of the elements from this array are used?
    int mcFace;
 
-   /// <summary>These contain the chains of face-data stored with each vertex</summary>
-   Chains<FaceData> mChains = new ();
-   /// <summary>This is the temporary array into which indices are gathered (they are used only when Build() is called)</summary>
-   List<int> mIdx = [];
+   // These contain the chains of face-data stored with each vertex
+   readonly Chains<FaceData> mChains = new ();
+   // This is the temporary array into which indices are gathered (they are used only when Build() is called)
+   readonly List<int> mIdx = [];
 
-   /// <summary>Add an element into an array, growing the array as needed</summary>
+   // Add an element into an array, growing the array as needed
    static void Add<T> ([NotNull] ref T[]? data, ref int cUsed, T value) {
       int n = data?.Length ?? 0;
       if (cUsed >= n || data == null) { n = Math.Max (8, n * 2); Array.Resize (ref data, n); }
@@ -351,7 +331,7 @@ public class CMeshBuilder {
    /// <param name="Area">Area of 'this' face (used when computing an average normal at a corner)</param>
    readonly record struct Face (int A, int B, int C, Vector3 Vec, double Area) {
       /// <summary>Returns true if the given vertex belongs to this face</summary>
-      readonly public bool Contains (int n) => A == n || B == n || C == n;
+      public bool Contains (int n) => A == n || B == n || C == n;
    }
 
    /// <summary>This structure holds the reference of a face within a vertex</summary>

@@ -68,9 +68,9 @@ public class Poly {
    /// <summary>Converts a string to a path-description (similar to the format used by Flux)</summary>
    public override string ToString () {
       var sb = new StringBuilder ();
-      Point2 a = A, b;
+      Point2 a = A;
       foreach (var seg in Segs) {
-         b = seg.B;
+         Point2 b = seg.B;
          if (IsCircle) return $"C{seg.Center.X.R6 ()},{seg.Center.Y.R6 ()},{seg.Radius.R6 ()}";
          if (sb.Length == 0) sb.Append ($"M{a.X.R6 ()},{a.Y.R6 ()}");
          if (seg.IsArc) {
@@ -129,8 +129,8 @@ public class Poly {
          if (HasArcs && i < mExtra.Length) {
             var extra = mExtra[i];
             return new (a, b, extra.Center, extra.Flags | flags);
-         } else
-            return new (a, b, Point2.Zero, flags);
+         } 
+         return new (a, b, Point2.Zero, flags);
       }
    }
 
@@ -156,7 +156,7 @@ public class Poly {
    public static Poly operator * (Poly p, Matrix2 xfm) {
       var pts = p.Pts.Select (a => a * xfm).ToImmutableArray ();
       var extra = ImmutableArray<Extra>.Empty;
-      if (p.HasArcs) extra = p.mExtra.Select (a => a * xfm).ToImmutableArray ();
+      if (p.HasArcs) extra = [..p.mExtra.Select (a => a * xfm)];
       return new Poly (pts, extra, p.mFlags);
    }
 
@@ -166,7 +166,7 @@ public class Poly {
       Closed = 1, HasArcs = 2,
       CW = 4, CCW = 8, Circle = 16, Last = 32
    }
-   EFlags mFlags;
+   readonly EFlags mFlags;
 
    /// <summary>Addition information stored for curved segments (center point, winding)</summary>
    internal readonly struct Extra (Point2 center, EFlags flags) {
@@ -210,10 +210,10 @@ public class PolyBuilder {
       Poly.EFlags flags = mClosed ? Poly.EFlags.Closed : 0;
       var extra = ImmutableArray<Poly.Extra>.Empty;
       if (mExtra.Count > 0) {
-         extra = ImmutableArray.CreateRange (mExtra);
+         extra = [..mExtra];
          flags |= Poly.EFlags.HasArcs;
       }
-      var poly = new Poly (ImmutableArray.CreateRange (mPts), extra, flags);
+      var poly = new Poly ([..mPts], extra, flags);
       Reset ();
       return poly;
    }
@@ -295,19 +295,18 @@ public class PolyBuilder {
    // Helpers ------------------------------------------------------------------
    void PopBulge (Point2 b) {
       // The bulge is the tangent of one quarter of the turn angle
-      if (!mBulge.IsNaN ()) {
-         double bulge = mBulge; mBulge = double.NaN;
-         if (bulge > 1e6 || bulge.IsZero ()) return;  // Only a Line
+      if (mBulge.IsNaN ()) return;
+      double bulge = mBulge; mBulge = double.NaN;
+      if (bulge > 1e6 || bulge.IsZero ()) return;  // Only a Line
 
-         bool ccw = bulge > 0; bulge = Abs (bulge);
-         bool large = bulge > 1;
-         double shift = large ? 1 / Tan (PI - Atan (bulge) * 2) : 1 / Tan (Atan (bulge) * 2);
-         if (large == ccw) shift = -shift;
-         Point2 a = mPts.RemoveLast ();
-         double dx = (b.X - a.X) / 2, dy = (b.Y - a.Y) / 2;
-         Point2 cen = new (a.X + dx - dy * shift, a.Y + dy + dx * shift);
-         Arc (a, cen, ccw ? Poly.EFlags.CCW : Poly.EFlags.CW);
-      }
+      bool ccw = bulge > 0; bulge = Abs (bulge);
+      bool large = bulge > 1;
+      double shift = large ? 1 / Tan (PI - Atan (bulge) * 2) : 1 / Tan (Atan (bulge) * 2);
+      if (large == ccw) shift = -shift;
+      Point2 a = mPts.RemoveLast ();
+      double dx = (b.X - a.X) / 2, dy = (b.Y - a.Y) / 2;
+      Point2 cen = new (a.X + dx - dy * shift, a.Y + dy + dx * shift);
+      Arc (a, cen, ccw ? Poly.EFlags.CCW : Poly.EFlags.CW);
    }
 
    void Reset () {
@@ -315,8 +314,8 @@ public class PolyBuilder {
    }
 
    // Private data -------------------------------------------------------------
-   List<Point2> mPts = [];
-   List<Poly.Extra> mExtra = [];
+   readonly List<Point2> mPts = [];
+   readonly List<Poly.Extra> mExtra = [];
    double mBulge = double.NaN;
    bool mClosed;
 }
@@ -325,10 +324,10 @@ public class PolyBuilder {
 #region struct Seg ---------------------------------------------------------------------------------
 /// <summary>Represents a single Segment of a Poly (can be a single line or an arc)</summary>
 public readonly struct Seg (Point2 a, Point2 b, Point2 center, Poly.EFlags flags) {
-   public override string ToString () {
-      if (IsArc) return $"ARC {A} .. {B}, {Center} {IsCCW}";
-      return $"LINE {A} .. {B}";
-   }
+   public override string ToString ()
+      => IsArc 
+         ? $"ARC {A} .. {B}, {Center} {IsCCW}"
+         : $"LINE {A} .. {B}";
 
    // Properties ---------------------------------------------------------------
    public readonly Point2 A = a;
@@ -430,12 +429,12 @@ public readonly struct Seg (Point2 a, Point2 b, Point2 center, Poly.EFlags flags
             if (ang < oppMid) ang += Lib.TwoPI;
          }
          return (ang - sa) / (ea - sa);
-      } else
-         return p.GetLieOn (A, B);
+      } 
+      return p.GetLieOn (A, B);
    }
 
    /// <summary>Returns a point at a given lie on the segment</summary>
-   public readonly Point2 GetPointAt (double lie) {
+   public Point2 GetPointAt (double lie) {
       if (IsArc) {
          var (ang1, ang2) = GetStartAndEndAngles ();
          return Center.Polar (Radius, lie.Along (ang1, ang2));
@@ -444,7 +443,7 @@ public readonly struct Seg (Point2 a, Point2 b, Point2 center, Poly.EFlags flags
    }
 
    /// <summary>Returns the tangential slope at a particular point of the segment</summary>
-   public readonly double GetSlopeAt (double lie) {
+   public double GetSlopeAt (double lie) {
       if (IsArc) {
          var (ang1, ang2) = GetStartAndEndAngles ();
          double ang = ang1 * (1 - lie) + ang2 * lie;
