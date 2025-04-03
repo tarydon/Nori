@@ -6,7 +6,7 @@ namespace Nori;
 
 #region interface IEQuable<T> ----------------------------------------------------------------------
 /// <summary>Interface implemented by classes / structs that have an EQ comparision method</summary>
-public interface IEQuable<T> {
+public interface IEQuable<in T> {
    public bool EQ (T other);
 }
 #endregion

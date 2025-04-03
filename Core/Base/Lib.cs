@@ -50,7 +50,7 @@ public static class Lib {
    }
 
    /// <summary>Returns the full-path-filename of a 'local' file (relative to startup EXE)</summary>
-   static public string GetLocalFile (string file) {
+   public static string GetLocalFile (string file) {
       if (sCodeBase == null) {
          string? location = GetLocation (Assembly.GetEntryAssembly ())
             ?? GetLocation (Assembly.GetExecutingAssembly ())
@@ -60,10 +60,8 @@ public static class Lib {
       return Path.GetFullPath (Path.Combine (sCodeBase, file));
 
       // Helpers ..............................
-      static string? GetLocation (Assembly? asm) {
-         if (asm == null) return null;
-         return new Uri (asm.Location).LocalPath;
-      }
+      static string? GetLocation (Assembly? asm) 
+         => asm == null ? null : new Uri (asm.Location).LocalPath;
    }
    static string? sCodeBase;
 
@@ -89,7 +87,7 @@ public static class Lib {
       }
       return s;
    }
-   static Dictionary<Type, string> sNiceNames = new () {
+   static readonly Dictionary<Type, string> sNiceNames = new () {
       [typeof (int)] = "int", [typeof (float)] = "float", [typeof (double)] = "double",
       [typeof (void)] = "void", [typeof (short)] = "short", [typeof (uint)] = "uint",
       [typeof (ushort)] = "ushort", [typeof (byte)] = "byte", [typeof (bool)] = "bool",
@@ -114,21 +112,21 @@ public static class Lib {
    }
 
    /// <summary>Calls a function asynchronously on the current thread</summary>
-   static public void Post (Action act) {
+   public static void Post (Action act) {
       var sc = SynchronizationContext.Current;
       if (sc != null) sc.Post (_ => act (), null);
       else act ();
    }
 
    /// <summary>Print a string with a given console color</summary>
-   static public void Print (string text, ConsoleColor color) {
+   public static void Print (string text, ConsoleColor color) {
       Console.ForegroundColor = color;
       Console.Write (text);
       Console.ResetColor ();
    }
 
    /// <summary>Prints a string with a given console color, followed by a newline</summary>
-   static public void Println (string text, ConsoleColor color)
+   public static void Println (string text, ConsoleColor color)
       => Print ($"{text}\n", color);
 
    /// <summary>Reads all the bytes from a stream opened by the IStmLocator service</summary>

@@ -8,16 +8,13 @@ using static BindingFlags;
 #region [Fixture] attribute ------------------------------------------------------------------------
 /// <summary>Attribute to attach to a type to label it as a test fixture</summary>
 [AttributeUsage (AttributeTargets.Class)]
-public class FixtureAttribute : Attribute {
-   public FixtureAttribute (int id, string name, string module)
-      => (Id, Description, Module) = (id, name, module);
-
+public class FixtureAttribute (int id, string name, string module) : Attribute {
    /// <summary>Id for this fixture (use Nori.Con NextID to generate the next one)</summary>
-   public readonly int Id;
+   public readonly int Id = id;
    /// <summary>Description for this fixture (keep this to within 80 chars)</summary>
-   public readonly string Description;
+   public readonly string Description = name;
    /// <summary>The test fixture's 'module', like "Fold" or "Bend.Cell"</summary>
-   public readonly string Module;
+   public readonly string Module = module;
    /// <summary>If set, all tests in this fixture are skipped</summary>
    public bool Skip { get; set; }
 }
@@ -59,14 +56,11 @@ public class Fixture {
 /// The method should take no parameters, should be an instance method, and should
 /// return void. It need not be public. 
 [AttributeUsage (AttributeTargets.Method)]
-public class TestAttribute : Attribute {
-   public TestAttribute (int id, string name)
-      => (Id, Description) = (id, name);
-
+public class TestAttribute (int id, string name) : Attribute {
    /// <summary>The Id for this test (use nori.con nextid to generate a candidate)</summary>
-   public readonly int Id;
+   public readonly int Id = id;
    /// <summary>Description of this test (keep this to within 80 chars)</summary>
-   public readonly string Description;
+   public readonly string Description = name;
    /// <summary>If set, this test is skipped</summary>
    public bool Skip { get; set; }
 }
@@ -95,5 +89,5 @@ public class Test {
 
 #region TestException ------------------------------------------------------------------------------
 /// <summary>Exception that is thrown when a test fails</summary>
-public class TestException (string message) : Exception (message) { }
+public class TestException (string message) : Exception (message);
 #endregion

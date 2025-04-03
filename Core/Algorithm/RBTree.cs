@@ -71,8 +71,7 @@ public partial class RBTree<TVal, TKey> : IEnumerable<TVal> where TKey : ICompar
    /// <summary>Reserves space for future Add methods (this is only a performance tweak, and rarely needed)</summary>
    /// Any requests to reduce the capacity below the current count will be quietly ignored.
    public void EnsureCapacity (int n) {
-      n++;
-      if (mA.Length < n) {
+      if (mA.Length < ++n) {
          mFree.EnsureCapacity (n);
          for (int min = mA.Length, i = n - 1; i >= min; i--) mFree.Push (i);
          Array.Resize (ref mA, n);
@@ -131,10 +130,10 @@ public partial class RBTree<TVal, TKey> : IEnumerable<TVal> where TKey : ICompar
    // array. When a node is freed, its index is added to the mFree list, and it is eventually
    // reused. The mA array never shrinks, even when elements are removed. Note that mA[0] is
    // not a valid node, and the index value 0 is effectively the same as NULL. 
-   struct Node {
-      public int Left, Right;    // Links to left and right subtrees (or 0)
-      public TVal Value;         // Value stored at this node
-      public EColor Color;       // Color of parent link (link leading into this node)
+   struct Node (TVal value, EColor color) {
+      public int Left, Right;       // Links to left and right subtrees (or 0)
+      public TVal Value = value;    // Value stored at this node
+      public EColor Color = color;  // Color of parent link (link leading into this node)
 
       /* Debug code, last used 241008
       public override readonly string ToString () {
@@ -143,13 +142,10 @@ public partial class RBTree<TVal, TKey> : IEnumerable<TVal> where TKey : ICompar
          if (Right != 0) s += $" R:{Right}";
          return s;
       } */
-
-      public Node (TVal value, EColor color)
-         => (Value, Color) = (value, color);
    }
-   Stack<int> mFree = new ();    // Indices of free slots in the mA array (for reuse)
-   Node[] mA = new Node[1];      // The array containing all the nodes (mA[0] is not used, and is a sentinel)
-   int mRoot;                    // Root node of the tree (or 0 when the tree is empty)
+   readonly Stack<int> mFree = [];  // Indices of free slots in the mA array (for reuse)
+   Node[] mA = new Node[1];         // The array containing all the nodes (mA[0] is not used, and is a sentinel)
+   int mRoot;                       // Root node of the tree (or 0 when the tree is empty)
 
    // Implementation -----------------------------------------------------------
    // Recursive helper used by Add. This adds a given value (with a given key)
@@ -166,10 +162,11 @@ public partial class RBTree<TVal, TKey> : IEnumerable<TVal> where TKey : ICompar
       }
 
       ref Node node = ref mA[h];
-      int comp = key.CompareTo (mKeyer (node.Value));
-      if (comp < 0) node.Left = AddImp (node.Left, key, value);
-      else if (comp > 0) node.Right = AddImp (node.Right, key, value);
-      else node.Value = value;
+      switch (key.CompareTo (mKeyer (node.Value))) {
+         case < 0: node.Left = AddImp (node.Left, key, value); break;
+         case > 0: node.Right = AddImp (node.Right, key, value); break;
+         default: node.Value = value; break;
+      }
 
       // Fix up any right-leaning links
       if (IsRed (node.Right) && !IsRed (node.Left))

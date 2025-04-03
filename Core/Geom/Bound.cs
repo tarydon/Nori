@@ -23,15 +23,15 @@ public readonly struct Bound1 : IEQuable<Bound1> {
 
    // Methods ------------------------------------------------------------------
    /// <summary>Returns the value clamped to this Bound1</summary>
-   public readonly double Clamp (double f) => f.Clamp (Min, Max);
+   public double Clamp (double f) => f.Clamp (Min, Max);
    /// <summary>Returns the value clamped to this Bound1</summary>
    /// Note that this handles correctly the situations where Min or Max (or both)
    /// could be NaN, in which case there is effectively no limit on that side of the
    /// range
-   public readonly float Clamp (float f) => f.Clamp (Min, Max);
+   public float Clamp (float f) => f.Clamp (Min, Max);
 
    /// <summary>Returns true if f lies within the specific Bound1</summary>
-   public readonly bool Contains (double f) => Min <= f && f <= Max;
+   public bool Contains (double f) => Min <= f && f <= Max;
 
    /// <summary>Compares two Bound1 for equality</summary>
    public bool EQ (Bound1 other) => Min.EQ (other.Min) && Max.EQ (other.Max);
@@ -106,18 +106,18 @@ public readonly struct Bound2 : IEQuable<Bound2> {
 
    // Methods ------------------------------------------------------------------
    /// <summary>Check if a Bound2 contains a given 2D point</summary>
-   public readonly bool Contains (Point2 pt) => X.Contains (pt.X) && Y.Contains (pt.Y);
+   public bool Contains (Point2 pt) => X.Contains (pt.X) && Y.Contains (pt.Y);
 
    /// <summary>Compares two Bound2 for equality</summary>
    public bool EQ (Bound2 other) => X.EQ (other.X) && Y.EQ (other.Y);
 
    /// <summary>Returns a Bound2 inflated by a given factor about the midpoint</summary>
-   public readonly Bound2 InflatedF (double factor) => new (X.InflatedF (factor), Y.InflatedF (factor));
+   public Bound2 InflatedF (double factor) => new (X.InflatedF (factor), Y.InflatedF (factor));
    /// <summary>Returns a Bound2 padded by a given linear margin on all sides</summary>
-   public readonly Bound2 InflatedL (double delta) => new (X.InflatedL (delta), Y.InflatedL (delta));
+   public Bound2 InflatedL (double delta) => new (X.InflatedL (delta), Y.InflatedL (delta));
 
    /// <summary>Scales the rectangle by a given scale factor, about a given center of scaling</summary>
-   public readonly Bound2 InflatedF (double factor, Point2 pm) {
+   public Bound2 InflatedF (double factor, Point2 pm) {
       if (IsEmpty) return new ();
       double left = (X.Min - pm.X) * factor, right = (X.Max - pm.X) * factor;
       double top = (Y.Max - pm.Y) * factor, bottom = (Y.Min - pm.Y) * factor;
@@ -180,15 +180,15 @@ public readonly struct Bound3 : IEQuable<Bound3> {
 
    // Methods ------------------------------------------------------------------
    /// <summary>Check if a Bound3 contains a given 3D point</summary>
-   public readonly bool Contains (Point3 pt) => X.Contains (pt.X) && Y.Contains (pt.Y) && Z.Contains (pt.Z);
+   public bool Contains (Point3 pt) => X.Contains (pt.X) && Y.Contains (pt.Y) && Z.Contains (pt.Z);
 
    /// <summary>Compares two Bound3 for equality</summary>
    public bool EQ (Bound3 other) => X.EQ (other.X) && Y.EQ (other.Y) && Z.EQ (other.Z);
 
    /// <summary>Returns a Bound3 inflated by a given factor about the midpoint</summary>
-   public readonly Bound3 InflatedF (double factor) => new (X.InflatedF (factor), Y.InflatedF (factor), Z.InflatedF (factor));
+   public Bound3 InflatedF (double factor) => new (X.InflatedF (factor), Y.InflatedF (factor), Z.InflatedF (factor));
    /// <summary>Returns a Bound3 padded by a given linear margin on all sides</summary>
-   public readonly Bound3 InflatedL (double delta) => new (X.InflatedL (delta), Y.InflatedL (delta), Z.InflatedL (delta));
+   public Bound3 InflatedL (double delta) => new (X.InflatedL (delta), Y.InflatedL (delta), Z.InflatedL (delta));
 
    // Operators ----------------------------------------------------------------
    /// <summary>Returns a Bound3 expanded to include the given Point3</summary>
