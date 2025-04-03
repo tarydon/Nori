@@ -44,7 +44,7 @@ public readonly struct Point2 : IEQuable<Point2> {
          };
 
    /// <summary>Returns a point clamped to a given range</summary>
-   public readonly Point2 Clamped (Bound2 bound)
+   public Point2 Clamped (Bound2 bound)
       => new (bound.X.Clamp (X), bound.Y.Clamp (Y));
 
    /// <summary>Distance between this point and another</summary>
@@ -63,8 +63,7 @@ public readonly struct Point2 : IEQuable<Point2> {
    /// This is accurate only if the point actually lies on the infinite line through a..b
    public double GetLieOn (Point2 a, Point2 b) {
       double dx = b.X - a.X, dy = b.Y - a.Y;
-      if (Abs (dx) > Abs (dy)) return (X - a.X) / dx;
-      else return (Y - a.Y) / dy;
+      return Abs (dx) > Abs (dy) ? (X - a.X) / dx : (Y - a.Y) / dy;
    }
 
    /// <summary>Returns true if this point lies to the left of the given line a..b</summary>
@@ -102,7 +101,7 @@ public readonly struct Point2 : IEQuable<Point2> {
       => Moved (-c.X, -c.Y).Rotated (theta).Moved (c.X, c.Y);
 
    /// <summary>Scales the point about the origin</summary>
-   public readonly Point2 Scaled (double scale) => new (X * scale, Y * scale);
+   public Point2 Scaled (double scale) => new (X * scale, Y * scale);
 
    /// <summary>Scales the point about an arbitrary center of scaling</summary>
    public Point2 Scaled (Point2 cen, double fScale) {
@@ -113,9 +112,7 @@ public readonly struct Point2 : IEQuable<Point2> {
    /// <summary>Returns +1 (LEFT), 0 (ON) or -1 (RIGHT) depending on whether the point lies on the line a..b (to within epsilon)</summary>
    public int Side (Point2 a, Point2 b) {
       double cross = (b.X - a.X) * (Y - a.Y) - (X - a.X) * (b.Y - a.Y);
-      if (cross > Lib.Epsilon) return 1;
-      if (cross < -Lib.Epsilon) return -1;
-      return 0;
+      return cross switch { > Lib.Epsilon => 1, < -Lib.Epsilon => -1, _ => 0 };
    }
 
    /// <summary>Returns the closest point on the given line a..b</summary>
@@ -205,10 +202,7 @@ public readonly struct Point3 : IEquatable<Point3> {
    public bool Equals (Point3 other) => EQ (other);
 
    /// <summary>Compares two Point3 for equality</summary>
-   public override bool Equals ([NotNullWhen (true)] object? obj) {
-      if (obj is not Point3 other) return false;
-      return EQ (other);
-   }
+   public override bool Equals ([NotNullWhen (true)] object? obj) => obj is Point3 other && EQ (other);
 
    /// <summary>Returns the Hash-code of the Point3 (based on their rounded-off approximations)</summary>
    public override int GetHashCode () {

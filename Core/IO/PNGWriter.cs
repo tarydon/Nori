@@ -7,16 +7,16 @@ namespace Nori;
 
 #region class PNGCore ------------------------------------------------------------------------------
 /// <summary>PNGCore is the base class for both PNGReader and PNGWriter</summary>
-abstract public class PNGCore {
+public abstract class PNGCore {
    // Internal types -----------------------------------------------------------
    // The various chunk types we need to deal with (for now, only 4)
    protected enum EChunk : uint {
-      IHDR = 0x49484452, PLTE = 0x504C5445, IDAT = 0x49444154, IEND = 0x49454E44,
-   };
+      IHDR = 0x49484452, PLTE = 0x504C5445, IDAT = 0x49444154, IEND = 0x49454E44
+   }
 
    // Possible bits for the PNG format value in IHDR
    [Flags]
-   protected enum EFormat { Gray = 0, Palette = 1, Color = 2, Alpha = 4 };
+   protected enum EFormat { Gray = 0, Palette = 1, Color = 2, Alpha = 4 }
 
    // Implementation -----------------------------------------------------------
    // Given a block of data, computes the PNG CRC checksum for that block
@@ -30,7 +30,7 @@ abstract public class PNGCore {
                if ((c & 1) != 0)
                   c = 0xEDB88320 ^ (c >> 1);
                else
-                  c = c >> 1;
+                  c >>= 1;
             }
             mCRCTable[n] = c;
          }
@@ -83,7 +83,7 @@ public class PNGWriter : PNGCore {
          DIBitmap.EFormat.RGB8 => EFormat.Color,
          DIBitmap.EFormat.RGBA8 => EFormat.Color | EFormat.Alpha,
          DIBitmap.EFormat.Gray8 => EFormat.Gray,
-         _ => throw new BadCaseException (mBmp.Fmt),
+         _ => throw new BadCaseException (mBmp.Fmt)
       };
       U8 ((byte)fmt); U8 (0); U8 (0); U8 (0);
       U32 (ComputeCRC (mStm.WorkBuffer.AsSpan (n, 17))); // 13 byte data, 4 byte chunk-type

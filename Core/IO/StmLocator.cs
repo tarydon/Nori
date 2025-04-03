@@ -5,18 +5,15 @@
 namespace Nori;
 
 #region class FileStmLocator -----------------------------------------------------------------------
-class FileStmLocator : IStmLocator {
-   public FileStmLocator (string prefix, string baseDir)
-      => (mPrefix, mBaseDir) = (prefix, baseDir);
+class FileStmLocator (string prefix, string baseDir) : IStmLocator {
+   // Properties ---------------------------------------------------------------
+   public string Prefix => prefix;
 
-   public string Prefix => mPrefix;
-   readonly string mPrefix, mBaseDir;
-
+   // Methods ------------------------------------------------------------------
    public Stream? Open (string name) {
-      if (!name.StartsWith (mPrefix)) return null;
-      string fullName = Path.Combine (mBaseDir, name[mPrefix.Length..]);
-      if (!Path.Exists (fullName)) return null;
-      return File.OpenRead (fullName);
+      if (!name.StartsWith (prefix)) return null;
+      string fullName = Path.Combine (baseDir, name[prefix.Length..]);
+      return Path.Exists (fullName) ? File.OpenRead (fullName) : null;
    }
 }
 #endregion

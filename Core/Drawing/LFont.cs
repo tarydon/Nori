@@ -50,15 +50,15 @@ public class LineFont {
       List<Poly> polys = []; PolyBuilder builder = new ();
       for (int i = 0; i < nchars; i++) {
          polys.Clear (); w = Next ();
-         var (code, adv, npoly, ch) = (w[0].ToInt (), w[1].ToDouble (), w[2].ToInt (), w[3][0]);
+         var (code, adv, npoly, _) = (w[0].ToInt (), w[1].ToDouble (), w[2].ToInt (), w[3][0]);
          for (int j = 0; j < npoly; j++) polys.Add (builder.Build (Line ()));
-         glyphs[code] = new (code, adv * asc, ch, [.. polys]);
+         glyphs[code] = new (adv * asc, [.. polys]);
       }
       font = new LineFont (name, nchars, asc, desc, vadv, glyphs.ToFrozenDictionary ());
       return mFonts[font.Name.ToLower ()] = font;
 
       string Line () => lines[n++]; // Fetch next line
-      string[] Next (int n = 4) => Line ().Split (',', n); // Fetch tokens from next line
+      string[] Next (int ntok = 4) => Line ().Split (',', ntok); // Fetch tokens from next line
    }
    // The LFONT database.
    static readonly Dictionary<string, LineFont> mFonts = [];
@@ -89,7 +89,7 @@ public class LineFont {
          0 => -Ascender,                              // Top alignment
          2 => -Descender + VAdvance * (cLines - 1),   // Bottom alignment
          1 => (VAdvance * (cLines - 1) - Ascender) / 2,  // Center
-         _ => VAdvance * (cLines - 1),                // Baseline alignment
+         _ => VAdvance * (cLines - 1) // Baseline alignment
       };
 
       // posChar is first set to the start point (baseline) of the first character 
@@ -142,23 +142,15 @@ public class LineFont {
    // Nested types -------------------------------------------------------------
    // A glyph contains the shape data needed to render an individual character.
    // An example: 107,0.81,3,k
-   class Glyph (int code, double adv, char ch, ImmutableArray<Poly> polys) {
-      // The unicode character code, in this case 107 (meaning lower-case k) 
-      public readonly int CharCode = code;
+   class Glyph (double adv, ImmutableArray<Poly> polys) {
       // The width this character uses, in terms of Ascender units. In this case,
       // if the ascender is 100, it means the character uses 0.81*100 = 81 units
       // by that scale
       public readonly double HAdvance = adv;
-      // The number of Poly objects used to define this character
-      public readonly int NPoly = polys.Length;
-      // The actual character itself (in this case 'k') - this is not used by the
-      // LFONT parser, but is more to assist easy reading of LFONT files
-      public readonly char Char = ch;
       // The shape geometry
       public readonly ImmutableArray<Poly> Polys = polys;
       // The width of the character (not including the whitespace on the right)
       public readonly double Width = polys.IsEmpty ? 0 : polys.Max (a => a.GetBound ().X.Max);
-      public override string ToString () => $"{Char}:{CharCode}";
    }
 }
 #endregion

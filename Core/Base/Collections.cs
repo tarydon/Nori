@@ -11,12 +11,12 @@ namespace Nori;
 /// Any type that implements IList (to fetch object at given index) and IObservable(ListChange)
 /// (to know when items are added / removed from that list) can serve as an IAList interface.
 /// In particular, AList(T) below implements IAList
-public interface IAList : IList, IObservable<ListChange> {  }
+public interface IAList : IList, IObservable<ListChange>;
 #endregion
 
 #region class AList<T> -----------------------------------------------------------------------------
 /// <summary>AList implements an Observable list that notifies subscribers when it is modified</summary>
-public class AList<T> : IList, IList<T>, IObservable<ListChange>, IAList {
+public class AList<T> : IList<T>, IAList {
    // Properties ---------------------------------------------------------------
    /// <summary>The count of elements in this list</summary>
    public int Count => mList.Count;
@@ -66,7 +66,7 @@ public class AList<T> : IList, IList<T>, IObservable<ListChange>, IAList {
 
    // Type convertors ----------------------------------------------------------
    /// <summary>Implicit conversion from AList to ReadOnlySpan</summary>
-   static public implicit operator ReadOnlySpan<T> (AList<T> list) => list.mList.AsSpan ();
+   public static implicit operator ReadOnlySpan<T> (AList<T> list) => list.mList.AsSpan ();
 
    // IList implementation -----------------------------------------------------
    public bool IsReadOnly => false;
@@ -89,7 +89,7 @@ public class AList<T> : IList, IList<T>, IObservable<ListChange>, IAList {
    // Implementation -----------------------------------------------------------
    void Fire (ListChange.E action, int index) => mSubject?.OnNext (new (action, index));
    Subject<ListChange>? mSubject;
-   List<T> mList = [];
+   readonly List<T> mList = [];
 }
 #endregion
 
@@ -263,7 +263,7 @@ public class IdxHeap<T> where T : IIndexed, new() {
       return ref obj;
    }
    // The object we most recently allocated
-   int mRecent = 0;
+   int mRecent;
 
    /// <summary>Reference to the most recently allocated T</summary>
    public ref T Recent => ref this[mRecent];
@@ -311,7 +311,7 @@ public readonly struct ListChange {
       /// <summary>About to remove the element at the given index</summary>
       Removing,
       /// <summary>About to remove all elements from the set</summary>
-      Clearing,
+      Clearing
    }
 
    /// <summary>The action that happened (add / remove etc)</summary>

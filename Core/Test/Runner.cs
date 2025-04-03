@@ -43,7 +43,7 @@ public interface ITestCallback {
 
 #region ConsoleTestCallback ------------------------------------------------------------------------
 /// <summary>Implementation of ITestCallback that echoes to the console</summary>
-public partial class ConsoleTestCallback : ITestCallback {
+public class ConsoleTestCallback : ITestCallback {
    // ITestCallback implementation ---------------------------------------------
    public void Begin (int cFixtures, int cTests) => WriteLine ($"{cFixtures} fixtures, {cTests} tests");
    public void StartTest (Test test) => Write ($" {test.Id}. {test.Description} ");
@@ -71,9 +71,9 @@ public partial class ConsoleTestCallback : ITestCallback {
 
    public void End (int cTotal, int cFailed, int cCrashed, int cSkipped, TimeSpan elapsed) {
       ForegroundColor = White; BackgroundColor = DarkBlue;
-      string s;
-      if (cFailed + cCrashed + cSkipped == 0) s = $"All {cTotal} tests passed";
-      else s = $"{cTotal} tests, {cFailed} failed, {cCrashed} crashed, {cSkipped} skipped";
+      string s = cFailed + cCrashed + cSkipped == 0 
+         ? $"All {cTotal} tests passed" 
+         : $"{cTotal} tests, {cFailed} failed, {cCrashed} crashed, {cSkipped} skipped";
       s += $", {Math.Round (elapsed.TotalSeconds, 1)} seconds";
       Write (s.PadRight (WindowWidth - 1));
       ResetColor ();
@@ -88,7 +88,7 @@ public partial class ConsoleTestCallback : ITestCallback {
       WriteLine ();
    }
 
-   public readonly static ConsoleTestCallback It = new ();
+   public static readonly ConsoleTestCallback It = new ();
 }
 #endregion
 
@@ -100,7 +100,7 @@ public static class TestRunner {
    // Methods ------------------------------------------------------------------
    /// <summary>Gather all the tests from the given set of assemblies</summary>
    public static List<Test> Gather (Assembly[] assemblies)
-      => Gather (assemblies, t => ETest.Run);
+      => Gather (assemblies, _ => ETest.Run);
 
    /// <summary>Gathers a filtered set of tests from the given set of assemblies</summary>
    /// The given filter function should return one of Run / Skip / Hide for each test that is
@@ -111,14 +111,13 @@ public static class TestRunner {
       List<Test> tests = [];
       foreach (var type in assemblies.SelectMany (a => a.GetTypes ())) {
          var attr = type.GetCustomAttribute<FixtureAttribute> ();
-         if (attr != null && !attr.Skip) {
-            foreach (var t in new Fixture (type, attr).Tests) {
-               switch (filter (t)) {
-                  case ETest.Hide: continue;
-                  case ETest.Skip: t.Skip = true; break;
-               }
-               tests.Add (t);
+         if (attr == null || attr.Skip) continue;
+         foreach (var t in new Fixture (type, attr).Tests) {
+            switch (filter (t)) {
+               case ETest.Hide: continue;
+               case ETest.Skip: t.Skip = true; break;
             }
+            tests.Add (t);
          }
       }
       tests = [.. tests.OrderBy (a => a.Fixture.Id)];
@@ -165,7 +164,7 @@ public static class TestRunner {
             }
             switch (except) {
                case TestException te: echo.TestFailed (test, te); cFailed++; break;
-               case Exception ex: echo.TestCrashed (test, ex); cCrashed++; break;
+               case Exception: echo.TestCrashed (test, except); cCrashed++; break;
                default: echo.TestPassed (test); break;
             }
          }
@@ -196,6 +195,6 @@ public static class TestRunner {
 
    // Nested types -------------------------------------------------------------
    /// <summary>Values returned by the test-filter</summary>
-   public enum ETest { Run, Skip, Hide };
+   public enum ETest { Run, Skip, Hide }
 }
 #endregion
