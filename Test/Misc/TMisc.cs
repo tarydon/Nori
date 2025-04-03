@@ -28,8 +28,8 @@ class TMisc {
       1.5f.Clamp ().Is (1f);
 
       // Along
-      0.5.Along (new Point3 (1, 3, 5), new Point3 (5, 7, 9)).Is ("(3,5,7)");
-      0.5.Along (new Point2 (1, 3), new Point2 (5, 7)).Is ("(3,5)");
+      0.5.Along ((1, 3, 5), (5, 7, 9)).Is ("(3,5,7)");
+      0.5.Along ((1, 3), (5, 7)).Is ("(3,5)");
       0.5.Along (1, 5).Is (3);
 
       // D2R, R2D
@@ -254,7 +254,7 @@ class TMisc {
       List<Point3> pts = [];
       for (int i = 0; i < part.Triangle.Length; i++) {
          var pos = part.Vertex[part.Triangle[i]].Pos;
-         pts.Add (new Point3 (pos.X, pos.Y, pos.Z));
+         pts.Add ((Point3)(pos.X, pos.Y, pos.Z));
       }
 
       new CMeshBuilder (pts.AsSpan ()).Build ().Save (NT.TmpTxt);
@@ -265,39 +265,39 @@ class TMisc {
    void Test12 () {
       List<Poly> poly = [];
       List<Point2> pts = [];
-      pts.AddRange ([new (0, 0), new (0, 5), new (0, 10), new (0, 15)]);
+      pts.AddRange ([(0, 0), (0, 5), (0, 10), (0, 15)]);
       var lf = LineFont.Get ("simplex");
       Out (0, 0, ETextAlign.BotLeft);
       Out (0, 5, ETextAlign.BaseLeft);
       Out (0, 10, ETextAlign.MidLeft);
       Out (0, 15, ETextAlign.TopLeft);
 
-      pts.AddRange ([new (15, 0), new (15, 10), new (15, 22), new (15, 34), new (34, 34)]);
+      pts.AddRange ([(15, 0), (15, 10), (15, 22), (15, 34), (34, 34)]);
       Out2 (15, 0, ETextAlign.BotLeft);
       Out2 (15, 10, ETextAlign.BaseLeft);
       Out2 (15, 22, ETextAlign.MidLeft);
       Out2 (15, 34, ETextAlign.TopLeft);
       Out2 (34, 34, ETextAlign.TopRight);
 
-      pts.AddRange ([new (8, 20), new (8, 25), new (8, 30), new (0, 17)]);
+      pts.AddRange ([(8, 20), (8, 25), (8, 30), (0, 17)]);
       Out3 (8, 20, ETextAlign.BaseLeft);
       Out3 (8, 25, ETextAlign.BaseCenter);
       Out3 (8, 30, ETextAlign.BaseRight);
-      lf.Render ("TRIPE", new (0, 17), ETextAlign.BaseLeft, 15.D2R (), 1, 2, 0, poly);
+      lf.Render ("TRIPE", (0, 17), ETextAlign.BaseLeft, 15.D2R (), 1, 2, 0, poly);
 
       poly.Add (Poly.Line (-1, 5, 9, 5));
       poly.Add (Poly.Line (-1, 7, 9, 7));
 
-      pts.AddRange ([new (30, 0), new (33, 17), new (30, 22), new (43, 0), new (58, 0), new (52, 14), new (47, 21), new (59, 30)]);
+      pts.AddRange ([(30, 0), (33, 17), (30, 22), (43, 0), (58, 0), (52, 14), (47, 21), (59, 30)]);
       Out4 (30, 0, ETextAlign.BaseLeft);
       Out4 (33, 17, ETextAlign.TopRight);
       Out4 (30, 22, ETextAlign.MidCenter);
-      lf.Render ("ELONGATE", new (43, 0), ETextAlign.BaseLeft, 15.D2R (), 1.5, 3, 90.D2R (), poly);
+      lf.Render ("ELONGATE", (43, 0), ETextAlign.BaseLeft, 15.D2R (), 1.5, 3, 90.D2R (), poly);
 
-      lf.Render ("Sub\nSaharan\nAntarctica", new (58, 0), ETextAlign.BaseRight, 0, 1, 1.5, 0, poly);
-      lf.Render ("Sub\nSaharan\nAntarctica", new (52, 14), ETextAlign.MidCenter, 0, 1, 1.5, 0, poly);
-      lf.Render ("Sub\nSaharan\nAntarctica", new (47, 21), ETextAlign.BaseLeft, 30.D2R (), 1, 1.5, 0, poly);
-      lf.Render ("Reversed", new Point2 (59, 30), ETextAlign.BaseLeft, 0, -0.5, 4, 0, poly);
+      lf.Render ("Sub\nSaharan\nAntarctica", (58, 0), ETextAlign.BaseRight, 0, 1, 1.5, 0, poly);
+      lf.Render ("Sub\nSaharan\nAntarctica", (52, 14), ETextAlign.MidCenter, 0, 1, 1.5, 0, poly);
+      lf.Render ("Sub\nSaharan\nAntarctica", (47, 21), ETextAlign.BaseLeft, 30.D2R (), 1, 1.5, 0, poly);
+      lf.Render ("Reversed", (59, 30), ETextAlign.BaseLeft, 0, -0.5, 4, 0, poly);
 
       var sb = new StringBuilder ();
       poly.ForEach (a => sb.AppendLine (a.ToString ()));
@@ -311,7 +311,7 @@ class TMisc {
       void Out2 (double x, double y, ETextAlign align)
          => lf.Render ("A()\nCray{}\n[123]", new (x, y), align, 0, 1, 1.5, 0, poly);
       void Out3 (double x, double y, ETextAlign align)
-         => lf.Render ("MAX", new (x, y), align, 0, 0.5, 3, 0, poly);
+         => lf.Render ("MAX", (x, y), align, 0, 0.5, 3, 0, poly);
       void Out4 (double x, double y, ETextAlign align)
          => lf.Render ("Hello\nWorld", new (x, y), align, 0, 1, 2, 30.D2R (), poly);
    }
