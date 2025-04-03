@@ -152,4 +152,18 @@ class StructTests {
       (b1 + b2).Is ("(1~20,2~30,4~10)");
       (b1 * b2).Is ("(5~10,10~20,4.5~5)");
    }
+
+   /// <summary>Misc. struct tests.</summary>
+   [Test (50, "Misc. struct tests.")]
+   void Test9 () {
+      Point3 a = new (10, 20, 30); 
+      var (x, y, z) = a;
+      a.EQ ((10, 20, 30)).IsTrue ();
+      a.EQ ((x, y, z)).IsTrue ();
+
+      Point2 b = new (40, 50);
+      (x, y) = b;
+      b.EQ ((40, 50)).IsTrue ();
+      b.EQ ((x, y)).IsTrue ();
+   }
 }
