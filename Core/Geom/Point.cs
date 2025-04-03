@@ -202,10 +202,7 @@ public readonly struct Point3 : IEquatable<Point3> {
    public bool Equals (Point3 other) => EQ (other);
 
    /// <summary>Compares two Point3 for equality</summary>
-   public override bool Equals ([NotNullWhen (true)] object? obj) {
-      if (obj is not Point3 other) return false;
-      return EQ (other);
-   }
+   public override bool Equals ([NotNullWhen (true)] object? obj) => obj is Point3 other && EQ (other);
 
    /// <summary>Returns the Hash-code of the Point3 (based on their rounded-off approximations)</summary>
    public override int GetHashCode () {

@@ -263,7 +263,7 @@ public class IdxHeap<T> where T : IIndexed, new() {
       return ref obj;
    }
    // The object we most recently allocated
-   int mRecent = 0;
+   int mRecent;
 
    /// <summary>Reference to the most recently allocated T</summary>
    public ref T Recent => ref this[mRecent];

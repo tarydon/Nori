@@ -147,8 +147,6 @@ public class LineFont {
       // if the ascender is 100, it means the character uses 0.81*100 = 81 units
       // by that scale
       public readonly double HAdvance = adv;
-      // The number of Poly objects used to define this character
-      public readonly int NPoly = polys.Length;
       // The shape geometry
       public readonly ImmutableArray<Poly> Polys = polys;
       // The width of the character (not including the whitespace on the right)

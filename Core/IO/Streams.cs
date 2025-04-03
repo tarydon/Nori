@@ -47,7 +47,7 @@ class WriteStm : Stream {
       Array.Copy (buffer, offset, mData, mPosition, count);
       mPosition += count; mLength = Math.Max (mPosition, mLength);
    }
-   int mLength = 0, mPosition = 0;
+   int mLength, mPosition;
 
    public override void WriteByte (byte value) {
       if (mPosition + 1 >= mData.Length) Array.Resize (ref mData, mData.Length * 2);

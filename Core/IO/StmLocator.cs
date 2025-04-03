@@ -13,8 +13,7 @@ class FileStmLocator (string prefix, string baseDir) : IStmLocator {
    public Stream? Open (string name) {
       if (!name.StartsWith (prefix)) return null;
       string fullName = Path.Combine (baseDir, name[prefix.Length..]);
-      if (!Path.Exists (fullName)) return null;
-      return File.OpenRead (fullName);
+      return Path.Exists (fullName) ? File.OpenRead (fullName) : null;
    }
 }
 #endregion

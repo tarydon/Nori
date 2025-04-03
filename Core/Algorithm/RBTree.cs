@@ -123,7 +123,7 @@ public partial class RBTree<TVal, TKey> : IEnumerable<TVal> where TKey : ICompar
 
    // Nested types -------------------------------------------------------------
    // Marker for whether each node is Red or Black 
-   enum EColor : byte { Black, Red };
+   enum EColor : byte { Black, Red }
 
    // The actual Node structure. We maintain nodes in the mA array - there are no pointers
    // used and the links between nodes are maintained using the Left / Right indices into this
