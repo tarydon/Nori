@@ -41,6 +41,13 @@ public static class Extensions {
    /// <summary>Clamps a given integer to lie within min..max (inclusive)</summary>
    public static int Clamp (this int a, int min, int max) => a < min ? min : (a > max ? max : a);
 
+   /// <summary>Deconstructs a Point2 to a (double, double)</summary>
+   public static void Deconstruct (this in Point2 pt, out double x, out double y)
+      => (x, y) = (pt.X, pt.Y);
+   /// <summary>Deconstructs a Point3 to a (double, double, double)</summary>
+   public static void Deconstruct (this in Point3 pt, out double x, out double y, out double z)
+      => (x, y, z) = (pt.X, pt.Y, pt.Z);
+
    /// <summary>Convert an angle from degrees to radians</summary>
    public static double D2R (this double f) => f * RadiansPerDegree;
    /// <summary>Convert an angle from degrees to radians</summary>
