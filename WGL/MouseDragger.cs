@@ -72,7 +72,7 @@ public abstract class MouseDragger {
 public class SceneManipulator {
    // Constructor --------------------------------------------------------------
    public SceneManipulator () {
-      HW.MouseClicks.Where (a => a.IsPress).Subscribe (OnMouseClick);
+      HW.MouseClicks.Where (a => a.IsPress ()).Subscribe (OnMouseClick);
       HW.MouseWheel.Subscribe (OnMouseWheel);
       HW.Keys.Where (a => a.IsPress ()).Subscribe (OnKey);
    }

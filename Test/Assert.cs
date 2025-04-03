@@ -1,4 +1,4 @@
-﻿// ────── ╔╗                                                                                   TEST
+// ────── ╔╗                                                                                   TEST
 // ╔═╦╦═╦╦╬╣ Assert.cs
 // ║║║║╬║╔╣║ Assert class: implements various assertions used for testing
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
@@ -73,9 +73,7 @@ static class Assert {
       throw new TestException ($"Files different: {reference} and {test}");
    }
 
-   /// <summary>
-   /// Checks if two PNG files are equal
-   /// </summary>
+   /// <summary>Checks if two PNG files are equal</summary>
    public static void PNGFilesEqual (string reference, string test) {
       if (!File.Exists (reference)) { File.Copy (test, reference, true); return; }
       byte[] data2 = File.ReadAllBytes (test);

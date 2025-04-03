@@ -1,4 +1,4 @@
-﻿// ────── ╔╗                                                                                   CORE
+// ────── ╔╗                                                                                   CORE
 // ╔═╦╦═╦╦╬╣ Point.cs
 // ║║║║╬║╔╣║ Various point classes (in 2D and 3D)
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
@@ -257,6 +257,8 @@ public readonly struct Point3 : IEquatable<Point3> {
 
    /// <summary>Convert a Point3 to a Vector3</summary>
    public static explicit operator Vector3 (Point3 a) => new (a.X, a.Y, a.Z);
+   /// <summary>Convert a Point3 to a Point2 (drop the Z coordinate)</summary>
+   public static explicit operator Point2 (Point3 a) => new (a.X, a.Y);
 
    // Implementation -----------------------------------------------------------
    // Helper used by SnappedToLine and SnappedToLineSeg

@@ -64,7 +64,8 @@ public readonly struct MouseClickInfo {
    public MouseClickInfo (EMouseButton button, Vec2S position, EKeyModifier modifier, EKeyState state)
       => (Button, Position, Modifier, State) = (button, position, modifier, state);
 
-   public bool IsPress => State == EKeyState.Pressed;
+   public bool IsPress () => State == EKeyState.Pressed;
+   public bool IsPress (EMouseButton btn) => State == EKeyState.Pressed && Button == btn;
    public bool IsRelease => State == EKeyState.Released;
 
    /// <summary>Which mouse button is pressed or released</summary>
