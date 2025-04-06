@@ -16,7 +16,7 @@ public interface IAList : IList, IObservable<ListChange>;
 
 #region class AList<T> -----------------------------------------------------------------------------
 /// <summary>AList implements an Observable list that notifies subscribers when it is modified</summary>
-public class AList<T> : IList<T>, IAList {
+public class AList<T> : IReadOnlyList<T>, IList<T>, IAList {
    // Properties ---------------------------------------------------------------
    /// <summary>The count of elements in this list</summary>
    public int Count => mList.Count;
