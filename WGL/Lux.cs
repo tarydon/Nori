@@ -75,7 +75,10 @@ public static partial class Lux {
       // Convert pixel coordinate to OpenGL clip space coordinates. 
       Vec2S vp = mViewport;
       Point3 clip = new (2.0 * pix.X / vp.X - 1, 1.0 - 2.0 * pix.Y / vp.Y, 0);
-      return clip * mUIScene.Xfms[0].InvXfm;
+      clip *= mUIScene.Xfms[0].InvXfm;
+      int d = Lux.PixelScale switch { > 1 => 0, > 0.1 => 1, > 0.01 => 2, > 0.001 => 3, _ => 4 };
+      clip = new (Math.Round (clip.X, d), Math.Round (clip.Y, d), Math.Round (clip.Z, d));
+      return clip;
    }
 
    /// <summary>Stub for the Render method that is called when each frame has to be painted</summary>
