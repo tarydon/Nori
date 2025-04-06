@@ -163,7 +163,7 @@ class KeysWrap : EventWrapper<KeyInfo> {
       [Keys.F12] = EKey.F12, [Keys.Scroll] = EKey.Scroll, [Keys.Oemtilde] = EKey.Tilde,
       [Keys.OemMinus] = EKey.Hyphen, [Keys.Oemplus] = EKey.Equals, [Keys.OemOpenBrackets] = EKey.OpenBracket,
       [Keys.OemCloseBrackets] = EKey.CloseBracket, [Keys.OemPipe] = EKey.Backslash, [Keys.LWin] = EKey.Windows,
-      [Keys.RWin] = EKey.Windows, [Keys.ControlKey] = EKey.Control, [Keys.ShiftKey] = EKey.Shift, 
+      [Keys.RWin] = EKey.Windows, [Keys.ControlKey] = EKey.Ctrl, [Keys.ShiftKey] = EKey.Shift, 
       [Keys.Menu] = EKey.Alt, [Keys.Capital] = EKey.CapsLock, [Keys.Apps] = EKey.Menu, [Keys.Pause] = EKey.Pause,
       [Keys.Insert] = EKey.Insert, [Keys.Home] = EKey.Home, [Keys.PageUp] = EKey.PageUp, 
       [Keys.PageDown] = EKey.PageDown, [Keys.Delete] = EKey.Delete, [Keys.End] = EKey.End,

@@ -18,7 +18,7 @@ public enum EKey : short {
 
    F1 = 140, F2, F3, F4, F5, F6, F7, F8, F9, F10, F11, F12,
 
-   Scroll = 168, CapsLock, Windows, Pause, Shift, Control, Alt, Menu, Insert, Home, PageUp,
+   Scroll = 168, CapsLock, Windows, Pause, Shift, Ctrl, Alt, Menu, Insert, Home, PageUp,
    Delete, End, PageDown, Up, Left, Down, Right, NumLock, NDivide, NMultiply, NSubtract, NAdd,
    NEnter, NPeriod,
 };
