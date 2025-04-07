@@ -13,6 +13,8 @@ public static partial class Lux {
    /// <summary>Set up a delegate here to know when the Lux renderer is ready to render</summary>
    /// Temporary code, will go away later
    public static Action? OnReady;
+
+   public static bool Ready => mReady;
    internal static bool mReady;
 
    /// <summary>The current scene that is bound to the visible viewport</summary>
@@ -110,8 +112,9 @@ public static partial class Lux {
    static int mFrame;
 
    /// <summary>Prompts the Lux system to redraw the screen (asynchronous)</summary>
-   public static void Redraw ()
-      => Panel.It.Redraw ();
+   public static void Redraw () {
+      if (mReady) Panel.It.Redraw (); 
+   }
 
    /// <summary>This is called to initiate 'continuous rendering'</summary>
    /// This function takes a 'callback' that will be invoked after each frame is rendered. Once
