@@ -37,6 +37,10 @@ public class Matrix2 (double m11, double m12, double m21, double m22, double x, 
    // Properties ---------------------------------------------------------------
    public readonly double M11 = m11, M12 = m12, M21 = m21, M22 = m22, DX = x, DY = y;
    public static readonly Matrix2 Identity = new (1, 0, 0, 1, 0, 0);
+   /// <summary>A matrix that mirrors about Y (horizontally)</summary>
+   public static readonly Matrix2 HMirror = new (-1, 0, 0, 1, 0, 0);
+   /// <summary>A matrix that mirrors about X (vertically)</summary>
+   public static readonly Matrix2 VMirror = new (1, 0, 0, -1, 0, 0);
 
    // Methods ------------------------------------------------------------------
    /// <summary>Computes the inverse of a matrix (throws an exception for a singular matrix)</summary>
