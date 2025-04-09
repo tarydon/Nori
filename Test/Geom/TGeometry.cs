@@ -29,8 +29,8 @@ class GeometryTests {
       b1.IsEmpty.Is (true); b1.ToString ().Is ("Empty");
       b2.Is ("(10~20,100~200)"); b3.Is ("(1~10,1~10)");
       b2.Width.Is (10); b2.Height.Is (100); b2.Midpoint.Is ("(15,150)");
-      b2.Contains (new (11, 110)).Is (true);
-      b2.Contains (new (11, 210)).Is (false); b2.Contains (new (21, 110)).Is (false);
+      b2.Contains (new Point2 (11, 110)).Is (true);
+      b2.Contains (new Point2 (11, 210)).Is (false); b2.Contains (new Point2 (21, 110)).Is (false);
       b2.InflatedF (1.2).Is ("(9~21,90~210)");
       b2.InflatedL (1.2).Is ("(8.8~21.2,98.8~201.2)");
       (b2 + new Point2 (5, 205) + new Point2 (21, 99)).Is ("(5~21,99~205)");

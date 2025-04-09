@@ -32,6 +32,8 @@ public readonly struct Bound1 : IEQuable<Bound1> {
 
    /// <summary>Returns true if f lies within the specific Bound1</summary>
    public bool Contains (double f) => Min <= f && f <= Max;
+   /// <summary>Returns true if b lies within the specified Bound1</summary>
+   public bool Contains (Bound1 b) => Contains (b.Min) && Contains (b.Max);
 
    /// <summary>Compares two Bound1 for equality</summary>
    public bool EQ (Bound1 other) => Min.EQ (other.Min) && Max.EQ (other.Max);
@@ -107,6 +109,8 @@ public readonly struct Bound2 : IEQuable<Bound2> {
    // Methods ------------------------------------------------------------------
    /// <summary>Check if a Bound2 contains a given 2D point</summary>
    public bool Contains (Point2 pt) => X.Contains (pt.X) && Y.Contains (pt.Y);
+   /// <summary>Checks if a Bound2 contains another bound (exact overlap is treated as containment)</summary>
+   public bool Contains (Bound2 bound) => X.Contains (bound.X) && Y.Contains (bound.Y);
 
    /// <summary>Compares two Bound2 for equality</summary>
    public bool EQ (Bound2 other) => X.EQ (other.X) && Y.EQ (other.Y);

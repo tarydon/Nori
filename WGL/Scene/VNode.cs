@@ -117,7 +117,6 @@ public class VNode {
          // where VModel derived types are defined. Perhaps all those assemblies will 'register' 
          // themselves with the VModel system so this virtual constructor table can be built
          // correctly.
-         using var time = new BlockTimer ($"RegisterAssembly {assy.GetName ().Name}");
          var allTypes = assy.GetTypes ();
          var vmTypes = allTypes.Where (a => a.IsAssignableTo (typeof (VNode))).ToList ();
          foreach (var vm in vmTypes) {

@@ -39,6 +39,13 @@ public static class Lib {
    public static void AddNamespace (string nameSpace) => mNamespaces.Add ($"{nameSpace}.");
    internal static List<string> mNamespaces = ["Nori"];
 
+   /// <summary>Checks a condition, and throws an exception in debug mode</summary>
+   /// In release mode, this just returns the condition quietly
+   public static bool Check (bool condition, string message) {
+      if (!condition) throw new Exception (message);
+      return condition;
+   }
+
    /// <summary>Returns the number of steps required to rasterize and arc with a given tolerance</summary>
    /// <param name="radius">The radius of the arc</param>
    /// <param name="angSpan">The angular span of the arc (can be +ve or -ve)</param>
