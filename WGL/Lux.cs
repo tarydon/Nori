@@ -32,7 +32,7 @@ public static partial class Lux {
       get {
          if (mUIScene == null) return 1;
          var xfm = mUIScene.Xfms[0].InvXfm;
-         double dx = 2.0 / mViewport.X;   // 
+         double dx = 2.0 / mViewport.X;  
          Point3 pa = Point3.Zero * xfm, pb = new Point3 (dx, 0, 0) * xfm;
          return pa.DistTo (pb);
       }

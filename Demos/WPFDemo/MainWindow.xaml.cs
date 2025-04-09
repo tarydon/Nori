@@ -12,6 +12,18 @@ public partial class MainWindow : Window {
       Lib.Init ();
       InitializeComponent ();
       mContent.Child = Lux.CreatePanel ();
+      Lux.OnReady = Ready;
+   }
+
+   void Ready () {
+      new SceneManipulator ();
+      Lux.UIScene = new LeafDemoScene ();
+      HW.MouseMoves.Subscribe (OnMove);
+   }
+
+   void OnMove (Vec2S vec) {
+      Point2 pt = (Point2)Lux.PixelToWorld (vec);
+      mStatus.Text = pt.ToString ();
    }
 
    void LeafDemo (object sender, RoutedEventArgs e) => Lux.UIScene = new LeafDemoScene ();

@@ -19,6 +19,7 @@
          <Button Click="TrueTypeDemo">TrueType Demo</Button>
          <Button Click="MeshDemo">Mesh Demo</Button>
       </StackPanel>
+      <TextBlock Background="#BBB" Name="mStatus" DockPanel.Dock="Bottom" Padding="10,1,1,1" FontSize="20">OK</TextBlock>
       <Border Name="mContent" />
    </DockPanel>
 </Window>
