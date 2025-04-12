@@ -148,6 +148,9 @@ public class Poly {
    /// <summary>Computes the bounding rectangle of the Poly (not cached)</summary>
    public Bound2 GetBound () => new (Segs.Select (a => a.Bound));
 
+   /// <summary>Computes the bounding rectangle of the Poly, under a given transform</summary>
+   public Bound2 GetBound (Matrix2 xfm) => new (Segs.Select (a => a.GetBound (xfm)));
+
    /// <summary>Computes the length of the Poly</summary>
    public double GetPerimeter () => Segs.Sum (a => a.Length);
 
@@ -370,6 +373,33 @@ public readonly struct Seg (Point2 a, Point2 b, Point2 center, Poly.EFlags flags
          }
          return bound;
       }
+   }
+
+   /// <summary>Computes the bounding rectangle of the Seg, under a given transform</summary>
+   public Bound2 GetBound (Matrix2 xfm) {
+      Bound2 bound = new ([A * xfm, B * xfm]);
+      if (IsArc) {
+         // Some repeated code here again because of the time-critical nature
+         // of the Bound code - we don't want to keep that routine as tight as possible
+         double dAngle = (Vector2.XAxis * xfm).Heading;
+         var (sa, ea) = GetStartAndEndAngles ();
+         (sa, ea) = (sa + dAngle, ea + dAngle);
+         double oppMid = (sa + ea) / 2 + Lib.PI * (IsCCW ? 1 : -1);
+         for (EDir dir = EDir.E; dir <= EDir.S; dir++) {
+            Point2 pt = Center.CardinalMoved (Radius, dir);
+            double ang = Center.AngleTo (pt);
+            if (IsCCW) {
+               if (ang < sa) ang += Lib.TwoPI;
+               if (ang > oppMid) ang -= Lib.TwoPI;
+            } else {
+               if (ang > sa) ang -= Lib.TwoPI;
+               if (ang < oppMid) ang += Lib.TwoPI;
+            }
+            double lie = (ang - sa) / (ea - sa);
+            if (lie is >= 0 and <= 1) bound += pt * xfm;
+         }
+      }
+      return bound; 
    }
 
    /// <summary>Is this a curved segment?</summary>
