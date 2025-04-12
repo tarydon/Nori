@@ -75,8 +75,14 @@ public readonly struct Bound2 : IEQuable<Bound2> {
    // Constructors -------------------------------------------------------------
    public Bound2 () => (X, Y) = (new (), new ());
    public Bound2 (double x, double y) => (X, Y) = (new (x), new (y));
+   public Bound2 (Point2 pt) => (X, Y) = (new (pt.X), new (pt.Y));
    public Bound2 (double xmin, double ymin, double xmax, double ymax) => (X, Y) = (new (xmin, xmax), new (ymin, ymax));
    public Bound2 (Bound1 x, Bound1 y) => (X, Y) = (x, y);
+
+   public static Bound2 Update (ref Bound2 bound, Func<Bound2> computer) {
+      if (bound.IsEmpty) bound = computer ();
+      return bound; 
+   }
 
    public Bound2 (IEnumerable<Point2> pts) {
       (X, Y) = (new (), new ());

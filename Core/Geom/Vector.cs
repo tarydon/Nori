@@ -32,7 +32,7 @@ public readonly struct Vector2 : IEQuable<Vector2> {
    /// <summary>Square of the length of the vector</summary>
    public double LengthSq => X * X + Y * Y;
    /// <summary>The 'slope' is the heading of this vector (0=east, pi/2=north etc)</summary>
-   public double Slope => Atan2 (Y, X);
+   public double Heading => Atan2 (Y, X);
 
    /// <summary>Unit vector, aligned to the X axis</summary>
    public static readonly Vector2 XAxis = new (1, 0);
