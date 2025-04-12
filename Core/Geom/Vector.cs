@@ -1,4 +1,4 @@
-﻿// ────── ╔╗                                                                                   CORE
+// ────── ╔╗                                                                                   CORE
 // ╔═╦╦═╦╦╬╣ Vector.cs
 // ║║║║╬║╔╣║ Various vector classes (in 2D and 3D)
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
@@ -31,9 +31,7 @@ public readonly struct Vector2 : IEQuable<Vector2> {
    public double Length => Sqrt (LengthSq);
    /// <summary>Square of the length of the vector</summary>
    public double LengthSq => X * X + Y * Y;
-   /// <summary>
-   /// The 'slope' is the heading of this vector (0=east, pi/2=north etc)
-   /// </summary>
+   /// <summary>The 'slope' is the heading of this vector (0=east, pi/2=north etc)</summary>
    public double Slope => Atan2 (Y, X);
 
    /// <summary>Unit vector, aligned to the X axis</summary>
@@ -70,6 +68,9 @@ public readonly struct Vector2 : IEQuable<Vector2> {
    }
 
    public bool Opposing (Vector2 v) => Dot (v) < 0;
+
+   /// <summary>Gets a vector perpendicular to this one (rotated +90 to this vector)</summary>
+   public Vector2 Perpendicular () => new (-Y, X);
 
    /// <summary>Rotates a vector about a given angle</summary>
    public Vector2 Rotated (double angle) {
