@@ -209,7 +209,7 @@ abstract class StencilLineShader : Shader<CMesh.Node, StencilLineShader.Settings
 partial class TextPxShader : Shader<TextPxShader.Args, TextPxShader.Settings> {
    // Constructor --------------------------------------------------------------
    public TextPxShader () : base (ShaderImp.TextPx) => Bind ();
-   int muXfm = 0, muVPScale = 0, muDrawColor = 0, muFontTexture = 0;
+   int muVPScale = 0, muDrawColor = 0, muFontTexture = 0;
 
    // Overrides ----------------------------------------------------------------
    protected override void ApplyUniformsImp (ref readonly Settings a) {

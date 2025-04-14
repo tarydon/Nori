@@ -12,7 +12,8 @@ namespace Nori;
 public abstract partial class Scene {
    // Properties ---------------------------------------------------------------
    /// <summary>Background color (clear color) for this scene</summary>
-   public abstract Color4 BgrdColor { get; }
+   public Color4 BgrdColor { get => mBgrdColor; set { mBgrdColor = value; Lux.Redraw (); } }
+   Color4 mBgrdColor = Color4.Gray (128); 
 
    /// <summary>The pan-vector (0,0) means centered</summary>
    /// This is in OpenGL clip-space coordinates 
@@ -104,8 +105,10 @@ public abstract partial class Scene {
 #region class Scene2 -------------------------------------------------------------------------------
 /// <summary>Represents a 2D scene (override Draw in derived classes)</summary>
 /// - The world extent is expressed as a Bound2 (world is defined on XY plane)
-public abstract class Scene2 : Scene {
+public class Scene2 : Scene {
    public Scene2 () { }
+   public Scene2 (Color4 bgrd, Bound2 bound, VNode? root)
+      => (BgrdColor, Bound, Root) = (bgrd, bound, root);
 
    // Properties ---------------------------------------------------------------
    /// <summary>The bounding rectangle of the drawing</summary>
@@ -169,13 +172,6 @@ public abstract class Scene3 : Scene {
 
    // Returns the 'midpoint' of the model we are displaying
    protected override Point3 Midpoint => mBound.Midpoint;
-}
-#endregion
-
-#region class BlankScene ---------------------------------------------------------------------------
-/// <summary>An empty scene (draws nothing) that is the default scene when Lux starts up</summary>
-public class BlankScene () : Scene2 {
-   public override Color4 BgrdColor => Color4.Gray (96);
 }
 #endregion
 

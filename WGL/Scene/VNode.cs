@@ -445,6 +445,7 @@ public class GroupVN : VNode {
 /// Draw(). However, if the attributes will never change in the future (as in this case),
 /// then we can pack all of that into the draw function
 public class SimpleVN (Action setattr, Action draw) : VNode (draw) {
+   public SimpleVN (Action draw) : this (() => { }, draw) { }
    public override void SetAttributes () => setattr ();
    public override void Draw () => draw ();
 }

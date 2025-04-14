@@ -6,8 +6,10 @@ namespace WPFDemo;
 using Nori;
 
 class TrueTypeScene : Scene2 {
-   public TrueTypeScene () => Root = new GroupVN ([new BigTextNode (), new TextNode ()]);
-   public override Color4 BgrdColor => Color4.Gray (64);
+   public TrueTypeScene () {
+      Root = new GroupVN ([new BigTextNode (), new TextNode ()]);
+      BgrdColor = Color4.Gray (64);
+   }
 }
 
 class TextNode : VNode {

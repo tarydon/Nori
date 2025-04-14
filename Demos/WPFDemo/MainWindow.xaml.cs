@@ -32,6 +32,7 @@ class DemoScene : Scene2 {
          new SimpleVN (() => { Lux.Color = Color4.Black; Lux.TypeFace = tf; Lux.ZLevel = -1; }, () => Lux.Text2D ("Hello, World!", new (13.25, 25), ETextAlign.BaseLeft)),
          new SimpleVN (() => { Lux.Color = Color4.Black; Lux.TypeFace = tf; Lux.ZLevel = 1; }, () => Lux.Text2D ("Hello, World!", new (13.25, 28), ETextAlign.BaseLeft)),
       ]);
+      BgrdColor = Color4.Gray (240);
       Bound = new (0, 0, 100, 50);
       Root = gn;
    }
@@ -58,6 +59,4 @@ class DemoScene : Scene2 {
       Lux.Text2D ("BtC{}", new (23, 5), ETextAlign.BotCenter);
       Lux.Text2D ("BtR{}", new (36, 5), ETextAlign.BotRight);
    }
-
-   public override Color4 BgrdColor => Color4.Gray (240);
 }
