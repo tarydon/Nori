@@ -252,23 +252,41 @@ public static partial class Lux {
    public static void Text2D (ReadOnlySpan<char> text, Vec2F pos, ETextAlign align) {
       if (text.IsWhiteSpace ()) return;
       var face = TypeFace ?? TypeFace.Default;
-      int x = 0, y = 0, n = 0; uint idx0 = 0;
+      int x = 0, n = 0, yMax = 0; uint idx0 = 0;
       Span<Text2DShader.Args> cells = stackalloc Text2DShader.Args[text.Length];
+      var cellM = face.Measure ("M", true);
       foreach (var ch in text) {
          uint idx1 = face.GetGlyphIndex (ch);
          var metric = face.GetMetrics (idx1);
          int kern = face.GetKerning (idx0, idx1);
-         short xChar = (short)(x + metric.LeftBearing + kern), yChar = (short)(y + metric.TopBearing);
+         yMax = Math.Max (yMax, metric.TopBearing);
+         short xChar = (short)(x + metric.LeftBearing + kern), yChar = metric.TopBearing;
          var vec = new Vec4S (xChar, yChar - metric.Rows, xChar + metric.Columns, yChar);
          cells[n++] = new (pos, vec, metric.TexOffset);
          x += metric.Advance + kern;
          idx0 = idx1;
       }
+      short dx = 0, dy = 0;
+      int nAlign = (int)align - 1;
+      switch (nAlign % 3) {
+         case 1: dx = (short)(-x / 2); break;
+         case 2: dx = (short)-x; break;
+      }
+      switch (nAlign / 3) {
+         case 1: dy = (short)(-cellM.Top / 2); break;
+         case 0: dy = (short)(-cellM.Top); break;
+         case 2: dy = (short)face.Descender; break;
+      }
+      for (int i = 0; i < cells.Length; i++) {
+         ref Text2DShader.Args cell = ref cells[i];
+         var v = cell.Cell;
+         cells[i] = new (cell.Pos, new (v.X + dx, v.Y + dy, v.Z + dx, v.W + dy), cell.TexOffset);
+      }
       Text2DShader.It.Draw (cells);
    }
 
    /// <summary>Draws text at specified pixel-coordinates (uses the current TypeFace and DrawColor)</summary>
-   public static void PxText (ReadOnlySpan<char> text, Vec2S pos, ETextAlign align) {
+   public static void TextPx (ReadOnlySpan<char> text, Vec2S pos) {
       if (text.IsWhiteSpace ()) return;
       Span<TextPxShader.Args> cells = stackalloc TextPxShader.Args[text.Length];
       int x = pos.X, y = pos.Y, n = 0; uint idx0 = 0;

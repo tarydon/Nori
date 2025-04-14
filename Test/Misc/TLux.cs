@@ -31,17 +31,17 @@ class TLux {
          Lux.LineWidth = 10f;
          var font = new TypeFace (Lib.ReadBytes ("wad:GL/Fonts/Roboto-Regular.ttf"), 28);
          Lux.TypeFace = font;
-         Lux.PxText ("Chapter", new (10, 114));
+         Lux.TextPx ("Chapter", new (10, 114));
          Lux.Lines ([new (0, 65), new (100, 65)]);
          Lux.TypeFace = TypeFace.Default;
-         Lux.PxText ("An example", new (10, 65));
-         Lux.PxText ("of TrueType", new (10, 40));
-         Lux.PxText ("text.", new (10, 15));
+         Lux.TextPx ("An example", new (10, 65));
+         Lux.TextPx ("of TrueType", new (10, 40));
+         Lux.TextPx ("text.", new (10, 15));
       }
    }
 
    TestScene MakeScene (Color4 bgrd, double x0, double y0, double x1, double y1, Action draw) {
-      var vnode = new SimpleVN (draw);
+      var vnode = new SimpleVN (() => { }, draw);
       return new TestScene (bgrd, new Bound2 (x0, y0, x1, y1), vnode);
    }
 
