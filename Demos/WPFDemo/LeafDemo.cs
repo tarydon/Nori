@@ -39,11 +39,10 @@ class LeafDemoScene : Scene2 {
       }
       pts[0] = b.Midpoint;
 
+      BgrdColor = Color4.Gray (160);
       Bound = b.InflatedF (1.1);
       Root = new GroupVN ([new LinesNode (trace), new FillNode (pts, indices, b)]);
    }
-
-   public override Color4 BgrdColor => Color4.Gray (160);
 }
 
 class LinesNode (List<Vec2F> pts) : VNode {
@@ -52,6 +51,9 @@ class LinesNode (List<Vec2F> pts) : VNode {
 }
 
 class FillNode (List<Vec2F> pts, List<int> indices, Bound2 bound) : VNode {
-   public override void SetAttributes () => Lux.Color = new Color4 (192, 255, 192);
+   public override void SetAttributes () {
+      Lux.ZLevel = -10;
+      Lux.Color = new Color4 (192, 255, 192);
+   }
    public override void Draw () => Lux.FillPath (pts.AsSpan (), indices.AsSpan (), bound);
 }

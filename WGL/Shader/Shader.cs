@@ -145,6 +145,7 @@ abstract class Shader<TVertex, TUniform> : Shader, IComparer<TUniform> where TVe
       if (!ExtendBatch (data.Length)) {
          ref RBatch rb = ref RBatch.Alloc ();
          rb.IDVNode = (ushort)vnode.Id;
+         rb.ZLevel = (short)Lux.ZLevel;
          rb.NShader = Idx; rb.NUniform = nUniform; rb.NBuffer = 0;
          rb.Offset = mData.Count; rb.Count = data.Length;
          vnode.Batches.Add ((rb.Idx, rb.NUniform));
@@ -174,6 +175,7 @@ abstract class Shader<TVertex, TUniform> : Shader, IComparer<TUniform> where TVe
    public void Draw (ReadOnlySpan<TVertex> data, ReadOnlySpan<int> indices) {
       ref RBatch rb = ref RBatch.Alloc ();
       rb.IDVNode = (ushort)Lux.VNode!.Id;
+      rb.ZLevel = (short)Lux.ZLevel;
       rb.NShader = Idx; rb.NUniform = SnapUniforms (); rb.NBuffer = 0;
       rb.Offset = mData.Count; rb.Count = data.Length;
       rb.IOffset = mIndex.Count; rb.ICount = indices.Length;

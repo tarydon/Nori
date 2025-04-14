@@ -6,8 +6,10 @@ namespace WPFDemo;
 using Nori;
 
 class TrueTypeScene : Scene2 {
-   public TrueTypeScene () => Root = new GroupVN ([new BigTextNode (), new TextNode ()]);
-   public override Color4 BgrdColor => Color4.Gray (64);
+   public TrueTypeScene () {
+      Root = new GroupVN ([new BigTextNode (), new TextNode ()]);
+      BgrdColor = Color4.Gray (64);
+   }
 }
 
 class TextNode : VNode {
@@ -15,7 +17,7 @@ class TextNode : VNode {
    public override void Draw () {
       int y = Lux.Viewport.Y - 200;
       foreach (var line in mText.Split ('\n')) {
-         Lux.Text (line, new Vec2S (60, y));
+         Lux.TextPx (line, new Vec2S (60, y));
          y -= 35;
       }
    }
@@ -50,7 +52,7 @@ class BigTextNode : VNode {
    public override void SetAttributes () => Lux.TypeFace = mFace;
    public override void Draw () {
       int y = Lux.Viewport.Y;
-      Lux.Text ("Chapter 1.", new Vec2S (60, y - 100));
+      Lux.TextPx ("Chapter 1.", new Vec2S (60, y - 100));
    }
 
    TypeFace mFace = new ("c:/Windows/fonts/constan.ttf", 40);

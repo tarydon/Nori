@@ -8,7 +8,7 @@ namespace Nori;
 public enum ELuxAttr {
    None = 0,
    Color = 1 << 0, LineWidth = 1 << 1, LineType = 1 << 2, LTScale = 1 << 3, 
-   Xfm = 1 << 4, PointSize = 1 << 5, TypeFace = 1 << 6, 
+   Xfm = 1 << 4, PointSize = 1 << 5, TypeFace = 1 << 6, ZLevel = 1 << 7, 
 }
 
 #region class Lux ----------------------------------------------------------------------------------
@@ -118,6 +118,18 @@ public static partial class Lux {
          Scene.Xfms.Add (xe);
       }
    }
+
+   /// <summary>The Z-Level of rendering (small values are drawn earlier)</summary>
+   public static int ZLevel {
+      get => mZLevel;
+      set {
+         if (mZLevel.Equals (value)) return;
+         if (Set (ELuxAttr.ZLevel)) mZLevels.Push (mZLevel);
+         mZLevel = value; Rung++;
+      }
+   }
+   static int mZLevel;
+   static Stack<int> mZLevels = [];
 
    // Methods ------------------------------------------------------------------
    /// <summary>Draws beziers in world coordinates, with Z = 0</summary>
@@ -237,8 +249,44 @@ public static partial class Lux {
          Line2DShader.It.Draw ([a[i], a[i + 1], a[i + 1], a[i + 2], a[i + 2], a[i]]);
    }
 
+   public static void Text2D (ReadOnlySpan<char> text, Vec2F pos, ETextAlign align) {
+      if (text.IsWhiteSpace ()) return;
+      var face = TypeFace ?? TypeFace.Default;
+      int x = 0, n = 0, yMax = 0; uint idx0 = 0;
+      Span<Text2DShader.Args> cells = stackalloc Text2DShader.Args[text.Length];
+      var cellM = face.Measure ("M", true);
+      foreach (var ch in text) {
+         uint idx1 = face.GetGlyphIndex (ch);
+         var metric = face.GetMetrics (idx1);
+         int kern = face.GetKerning (idx0, idx1);
+         yMax = Math.Max (yMax, metric.TopBearing);
+         short xChar = (short)(x + metric.LeftBearing + kern), yChar = metric.TopBearing;
+         var vec = new Vec4S (xChar, yChar - metric.Rows, xChar + metric.Columns, yChar);
+         cells[n++] = new (pos, vec, metric.TexOffset);
+         x += metric.Advance + kern;
+         idx0 = idx1;
+      }
+      short dx = 0, dy = 0;
+      int nAlign = (int)align - 1;
+      switch (nAlign % 3) {
+         case 1: dx = (short)(-x / 2); break;
+         case 2: dx = (short)-x; break;
+      }
+      switch (nAlign / 3) {
+         case 1: dy = (short)(-cellM.Top / 2); break;
+         case 0: dy = (short)(-cellM.Top); break;
+         case 2: dy = (short)face.Descender; break;
+      }
+      for (int i = 0; i < cells.Length; i++) {
+         ref Text2DShader.Args cell = ref cells[i];
+         var v = cell.Cell;
+         cells[i] = new (cell.Pos, new (v.X + dx, v.Y + dy, v.Z + dx, v.W + dy), cell.TexOffset);
+      }
+      Text2DShader.It.Draw (cells);
+   }
+
    /// <summary>Draws text at specified pixel-coordinates (uses the current TypeFace and DrawColor)</summary>
-   public static void Text (ReadOnlySpan<char> text, Vec2S pos) {
+   public static void TextPx (ReadOnlySpan<char> text, Vec2S pos) {
       if (text.IsWhiteSpace ()) return;
       Span<TextPxShader.Args> cells = stackalloc TextPxShader.Args[text.Length];
       int x = pos.X, y = pos.Y, n = 0; uint idx0 = 0;

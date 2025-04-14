@@ -43,6 +43,7 @@ class LineFontScene : Scene2 {
       lf.Render ("Sub\nSaharan\nAntarctica", new (47, 21), ETextAlign.BaseLeft, 30.D2R (), 1, 1.5, 0, polys);
       lf.Render ("Reversed", new Point2 (59, 30), ETextAlign.BaseLeft, 0, -0.5, 4, 0, polys);
 
+      BgrdColor = Color4.Gray (216);
       Bound = new Bound2 (polys.Select (a => a.GetBound ())).InflatedF (1.1);
       Root = new LinesAndPointsNode (polys, [.. pts.Select (a => (Vec2F)a)]);
 
@@ -56,8 +57,6 @@ class LineFontScene : Scene2 {
       void Out4 (double x, double y, ETextAlign align)
          => lf.Render ("Hello\nWorld", new (x, y), align, 0, 1, 2, 30.D2R (), polys);
    }
-
-   public override Color4 BgrdColor => Color4.Gray (216);
 }
 
 class LinesAndPointsNode (List<Poly> polys, List<Vec2F> points) : VNode {

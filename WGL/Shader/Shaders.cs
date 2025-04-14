@@ -212,14 +212,14 @@ partial class TextPxShader : Shader<TextPxShader.Args, TextPxShader.Settings> {
    int muVPScale = 0, muDrawColor = 0, muFontTexture = 0;
 
    // Overrides ----------------------------------------------------------------
+   protected override void ApplyUniformsImp (ref readonly Settings a) {
+      GLState.TypeFace = a.Face;
+      Pgm.Set (muDrawColor, a.Color);
+   }
+
    protected override int OrderUniformsImp (ref readonly Settings a, ref readonly Settings b) {
       int n = a.Face.UID - b.Face.UID; if (n != 0) return n;
       return (int)(a.Color.Value - b.Color.Value);
-   }
-
-   protected override void ApplyUniformsImp (ref readonly Settings settings) {
-      GLState.TypeFace = settings.Face;
-      Pgm.Set (muDrawColor, settings.Color);
    }
 
    protected override void SetConstantsImp () => Pgm.Set (muVPScale, Lux.VPScale).Set (muFontTexture, 0);
@@ -229,6 +229,37 @@ partial class TextPxShader : Shader<TextPxShader.Args, TextPxShader.Settings> {
    [StructLayout (LayoutKind.Sequential)]
    public readonly record struct Args (Vec4S Cell, int TexOffset);
    public readonly record struct Settings (Color4 Color, TypeFace Face);
+}
+#endregion
+
+#region class Text2DShader -------------------------------------------------------------------------
+/// <summary>Draws the text defined in world coordinates</summary>
+[Singleton]
+partial class Text2DShader : Shader<Text2DShader.Args, Text2DShader.Settings> {
+   // Constructor --------------------------------------------------------------
+   public Text2DShader () : base (ShaderImp.Text2D) => Bind ();
+   int muXfm = 0, muVPScale = 0, muDrawColor = 0, muFontTexture = 0;
+
+   // Overrides ----------------------------------------------------------------
+   protected override void ApplyUniformsImp (ref readonly Settings a) {
+      GLState.TypeFace = a.Face;
+      Pgm.Set (muXfm, ref Lux.Scene!.Xfms[a.IDXfm].Xfm);
+      Pgm.Set (muDrawColor, a.Color);
+   }
+
+   protected override int OrderUniformsImp (ref readonly Settings a, ref readonly Settings b) {
+      int n = a.Face.UID - b.Face.UID; if (n != 0) return n;
+      n = a.IDXfm - b.IDXfm; if (n != 0) return n;
+      return (int)(a.Color.Value - b.Color.Value);
+   }
+
+   protected override void SetConstantsImp () => Pgm.Set (muVPScale, Lux.VPScale).Set (muFontTexture, 0);
+   protected override Settings SnapUniformsImp () => new (Lux.IDXfm, Lux.Color, Lux.TypeFace ?? TypeFace.Default);
+
+   // Nested types -------------------------------------------------------------
+   [StructLayout (LayoutKind.Sequential)]
+   public readonly record struct Args (Vec2F Pos, Vec4S Cell, int TexOffset);
+   public readonly record struct Settings (int IDXfm, Color4 Color, TypeFace Face);
 }
 #endregion
 
