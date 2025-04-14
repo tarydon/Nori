@@ -31,12 +31,12 @@ class TLux {
          Lux.LineWidth = 10f;
          var font = new TypeFace (Lib.ReadBytes ("wad:GL/Fonts/Roboto-Regular.ttf"), 28);
          Lux.TypeFace = font;
-         Lux.Text ("Chapter", new (10, 114));
+         Lux.PxText ("Chapter", new (10, 114));
          Lux.Lines ([new (0, 65), new (100, 65)]);
          Lux.TypeFace = TypeFace.Default;
-         Lux.Text ("An example", new (10, 65));
-         Lux.Text ("of TrueType", new (10, 40));
-         Lux.Text ("text.", new (10, 15));
+         Lux.PxText ("An example", new (10, 65));
+         Lux.PxText ("of TrueType", new (10, 40));
+         Lux.PxText ("text.", new (10, 15));
       }
    }
 

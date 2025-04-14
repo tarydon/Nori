@@ -42,6 +42,9 @@ struct RBatch : IIndexed {
    /// uniforms). 
    public ushort NUniform;
 
+   /// <summary>'ZLevel' is like a sort order for RBatch (they are drawn from min..max order)</summary>
+   public short ZLevel;
+
    /// <summary>Start position, in bytes, of this RBatch within the RBuffer</summary>
    /// In the initial phase (when we have not yet shifted the data into a RBuffer),
    /// this offset points into the mData maintained by that shader, and at that point,
@@ -126,7 +129,7 @@ struct RBatch : IIndexed {
    // not when gathering the batches for storage within the VNode, we don't care if these
    // two RBatch belong to different VNodes. 
    readonly bool CanMerge (ref RBatch rb1, int count, ushort uni0, ushort uni1) {
-      if (NShader != rb1.NShader || NBuffer != rb1.NBuffer) return false;
+      if (NShader != rb1.NShader || NBuffer != rb1.NBuffer || ZLevel != rb1.ZLevel) return false;
       // Don't merge two RBatch that use indexed drawing
       if (ICount > 0 || rb1.ICount > 0) return false;
       // If both are not using the same uniforms, we can't merge. We can't 
@@ -236,7 +239,8 @@ struct RBatch : IIndexed {
    class RBatchCompare : IComparer<(int B, ushort U)> {
       public int Compare ((int B, ushort U) ub0, (int B, ushort U) ub1) {
          ref RBatch ra = ref mAll[ub0.B], rb = ref mAll[ub1.B];
-         int n = ra.NShader - rb.NShader; if (n != 0) return n;
+         int n = ra.ZLevel - rb.ZLevel; if (n != 0) return n;
+         n = ra.NShader - rb.NShader; if (n != 0) return n;
          n = ra.NBuffer - rb.NBuffer; if (n != 0) return n;
          var shader = Shader.Get (ra.NShader);
          n = shader.OrderUniforms (ub0.U, ub1.U);

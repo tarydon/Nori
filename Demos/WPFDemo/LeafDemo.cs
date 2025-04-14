@@ -52,6 +52,9 @@ class LinesNode (List<Vec2F> pts) : VNode {
 }
 
 class FillNode (List<Vec2F> pts, List<int> indices, Bound2 bound) : VNode {
-   public override void SetAttributes () => Lux.Color = new Color4 (192, 255, 192);
+   public override void SetAttributes () {
+      Lux.ZLevel = -10;
+      Lux.Color = new Color4 (192, 255, 192);
+   }
    public override void Draw () => Lux.FillPath (pts.AsSpan (), indices.AsSpan (), bound);
 }

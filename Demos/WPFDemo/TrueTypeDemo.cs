@@ -15,7 +15,7 @@ class TextNode : VNode {
    public override void Draw () {
       int y = Lux.Viewport.Y - 200;
       foreach (var line in mText.Split ('\n')) {
-         Lux.Text (line, new Vec2S (60, y));
+         Lux.PxText (line, new Vec2S (60, y), ETextAlign.BaseLeft);
          y -= 35;
       }
    }
@@ -50,7 +50,7 @@ class BigTextNode : VNode {
    public override void SetAttributes () => Lux.TypeFace = mFace;
    public override void Draw () {
       int y = Lux.Viewport.Y;
-      Lux.Text ("Chapter 1.", new Vec2S (60, y - 100));
+      Lux.PxText ("Chapter 1.", new Vec2S (60, y - 100), ETextAlign.BaseLeft);
    }
 
    TypeFace mFace = new ("c:/Windows/fonts/constan.ttf", 40);

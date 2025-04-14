@@ -199,6 +199,7 @@ public static partial class Lux {
          if ((flags & ELuxAttr.PointSize) != 0) mPointSize = mPointSizes.Pop ();
          if ((flags & ELuxAttr.TypeFace) != 0) mTypeface = mTypefaces.Pop ();
          if ((flags & ELuxAttr.Xfm) != 0) mIDXfm = mIDXfms.Pop ();
+         if ((flags & ELuxAttr.ZLevel) != 0) mZLevel = mZLevels.Pop ();
          mChanged &= ~flags;
          return true;
       }
@@ -224,6 +225,7 @@ public static partial class Lux {
       mLTScales.Clear (); mLTScale = 100f;
       mTypefaces.Clear (); mTypeface = null;
       mIDXfms.Clear (); mIDXfm = 0;
+      mZLevels.Clear (); mZLevel = 0; 
       mChanged = ELuxAttr.None;
       Rung++;
    }

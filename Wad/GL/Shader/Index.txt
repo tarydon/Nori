@@ -15,3 +15,4 @@ TextPx         Points       Vec4S_Int        1      0      0        None     Tex
 DashLine2D     Lines        Vec2F            1      0      0        None     World2D.vert|DashLine2D.geom|DashLine.frag
 TriFanCover    TriangleFan  Vec2F            0      0      0        Cover    World2D.vert|Flat.frag
 TriFanStencil  TriangleFan  Vec2F            0      0      0        Stencil  World2D.vert|Flat.frag
+Text2D         Points       Vec2F_Vec4S_Int  1      0      0        None     Text2D.vert|Text.geom|Text.frag

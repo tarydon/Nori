@@ -141,7 +141,8 @@ class ShaderImp {
    static ShaderImp? mTriFanStencil, mTriFanCover;
 
    public static ShaderImp TextPx => mTextPx ??= Load ();
-   static ShaderImp? mTextPx;
+   public static ShaderImp Text2D => mText2D ??= Load ();
+   static ShaderImp? mTextPx, mText2D;
 
    // Nested types ------------------------------------------------------------
    /// <summary>Provides information about a Uniform</summary>
@@ -271,6 +272,7 @@ readonly record struct Attrib (int Dims, EDataType Type, int Size, bool Integral
          EVertexSpec.Vec2F => [AVec2f],
          EVertexSpec.Vec3F_Vec3H => [AVec3f, AVec3h],
          EVertexSpec.Vec4S_Int => [AVec4s, AInt],
+         EVertexSpec.Vec2F_Vec4S_Int => [AVec2f, AVec4s, AInt],
          _ => throw new BadCaseException (spec)
       };
 
@@ -279,6 +281,7 @@ readonly record struct Attrib (int Dims, EDataType Type, int Size, bool Integral
          EVertexSpec.Vec2F => 8,
          EVertexSpec.Vec3F_Vec3H => 18,
          EVertexSpec.Vec4S_Int => 12,
+         EVertexSpec.Vec2F_Vec4S_Int => 20,
          _ => throw new BadCaseException (spec)
       };
 }
@@ -286,7 +289,7 @@ readonly record struct Attrib (int Dims, EDataType Type, int Size, bool Integral
 
 #region enum EVertexSpec ---------------------------------------------------------------------------
 // The various Vertex specifications used by OpenGL shaders
-enum EVertexSpec { Vec2F, Vec3F_Vec3H, Vec4S_Int, _Last };
+enum EVertexSpec { Vec2F, Vec3F_Vec3H, Vec4S_Int, Vec2F_Vec4S_Int, _Last };
 #endregion
 
 #region enum EStencilBehavior ----------------------------------------------------------------------
