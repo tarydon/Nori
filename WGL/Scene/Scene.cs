@@ -87,7 +87,10 @@ public abstract partial class Scene {
    protected double mZoomFactor = 1;
 
    // Called when the root transform is changed
-   protected void XfmChanged () { mXfms.Clear (); mWorldXfm = null; Lux.Redraw (); }
+   protected void XfmChanged () { 
+      mXfms.Clear (); mWorldXfm = null;
+      Lux.mViewBound.OnNext (0); Lux.Redraw (); 
+   }
 
    public void ZoomExtents () { 
       mZoomFactor = 1; mPanVector = Vector2.Zero;

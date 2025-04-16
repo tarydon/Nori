@@ -9,5 +9,5 @@ out vec4 gFragColor;
 void main (void) {
    float d = abs (gDist) / LineWidth;
    float a = exp2 (-2 * d * d);
-   gFragColor = vec4 (DrawColor.rgb, a);
+   gFragColor = vec4 (DrawColor.rgb, a * DrawColor.a);
 }

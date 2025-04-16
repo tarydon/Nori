@@ -10,10 +10,19 @@ namespace Nori;
 /// <summary>The public interface to the Lux renderer</summary>
 public static partial class Lux {
    // Properties ---------------------------------------------------------------
-   /// <summary>Set up a delegate here to know when the Lux renderer is ready to render</summary>
-   /// Temporary code, will go away later
-   public static Action? OnReady;
+   /// <summary>Subscribe to this to get a FPS (frames-per-second) report each second</summary>
+   public static IObservable<int> FPS => mFPS;
+   static Subject<int> mFPS = new ();
 
+   /// <summary>Subscribe to this to get statistics after each frame is rendered</summary>
+   public static IObservable<Stats> Info => mInfo;
+   static Subject<Stats> mInfo = new ();
+
+   /// <summary>Subscribe to this to know when Lux is ready (event raised only once)</summary>
+   public static IObservable<int> OnReady => mOnReady;
+   internal static Subject<int> mOnReady = new ();
+
+   /// <summary>Read this property to know if Lux is ready (panel created, GL surface initialized)</summary>
    public static bool Ready => mReady;
    internal static bool mReady;
 
@@ -22,7 +31,7 @@ public static partial class Lux {
       get => mUIScene;
       set {
          mUIScene?.Detach ();
-         mUIScene = value; Redraw ();
+         mUIScene = value; mViewBound.OnNext (0); Redraw ();
       }
    }
    static Scene? mUIScene;
@@ -37,6 +46,10 @@ public static partial class Lux {
          return pa.DistTo (pb);
       }
    }
+
+   /// <summary>Subscribe to this to know when the 'View-Bound' changes (view is zoomed, panned or rotated)</summary>
+   static public IObservable<int> ViewBound => mViewBound;
+   internal static Subject<int> mViewBound = new ();
 
    /// <summary>The viewport size (in pixels) of the Lux rendering panel</summary>
    public static Vec2S Viewport => mViewport;
@@ -60,6 +73,7 @@ public static partial class Lux {
             while (!mReady) sHost.Dispatcher.Invoke (DispatcherPriority.Background, () => { });
          }
       }
+      mFPSReportTS = mLastFrameTS = DateTime.Now;
       return Panel.It;
    }
    static Window? sHost;
@@ -85,7 +99,7 @@ public static partial class Lux {
 
    /// <summary>Stub for the Render method that is called when each frame has to be painted</summary>
    internal static object? Render (Scene? scene, Vec2S viewport, ETarget target, DIBitmap.EFormat fmt) {
-      mFrame++;
+      mcFrames++; mcFPSFrames++;
       var panel = Panel.It;
       panel.BeginRender (viewport, target);
       StartFrame (viewport);
@@ -94,27 +108,40 @@ public static partial class Lux {
       Shader.StartFrame ();
       scene?.Render (viewport);
       object? obj = panel.EndRender (target, fmt);
-      Info.FrameOver ();
-      FPS.FrameOver ();
-      if (target == ETarget.Screen && sRenderCompletes.Count > 0) Lib.Post (NextFrame);
+      
+      // Various post-processing after frame render
+      // Issue stats, and keep 'continuous render' loop going
+      mInfo.OnNext (sStats);
+      var frameTS = DateTime.Now; 
+      mLastFrameTime = (DateTime.Now - frameTS).TotalSeconds;
+      if (sRenderCompletes.Count > 0 && target == ETarget.Screen) {
+         Lib.Post (NextFrame);
+         double elapsed = (frameTS - mFPSReportTS).TotalSeconds;
+         if (elapsed >= 1.0) {
+            // Every 1 second, issue an FPS (frames-per-second) report
+            int fps = (int)(mcFPSFrames / elapsed + 0.5);
+            mFPS?.OnNext (fps); 
+            (mcFPSFrames, mFPSReportTS) = (0, frameTS);
+         }
+      }
+      mLastFrameTS = frameTS;
       return obj;
 
       // Helpers ...........................................
       static void NextFrame () {
-         var sFrametime = DateTime.Now;
-         double elapsed = (sFrametime - sLastFrametime).TotalSeconds;
          for (int i = sRenderCompletes.Count - 1; i >= 0; i--)
-            sRenderCompletes[i] (elapsed);
-         sLastFrametime = sFrametime;
+            sRenderCompletes[i] (mLastFrameTime);
          Redraw ();
       }
    }
-   static int mFrame;
+   static int mcFrames;             // Frames rendered totally
+   static double mLastFrameTime;    // How many seconds did the last frame take to render
+   static DateTime mLastFrameTS;    // What was the timestamp at which we rendered the last frame
+   static DateTime mFPSReportTS;    // When did we last issue an FPS report
+   static int mcFPSFrames;          // Frames rendered since that time
 
    /// <summary>Prompts the Lux system to redraw the screen (asynchronous)</summary>
-   public static void Redraw () {
-      if (mReady) Panel.It.Redraw (); 
-   }
+   public static void Redraw () => Panel.mIt?.Redraw ();
 
    /// <summary>This is called to initiate 'continuous rendering'</summary>
    /// This function takes a 'callback' that will be invoked after each frame is rendered. Once
@@ -230,9 +257,11 @@ public static partial class Lux {
       Rung++;
    }
 
+   // Nested types -------------------------------------------------------------
+   /// <summary>Stats provides information on number of draw calls, verts drawn, pgm-changes made etc</summary>
    public class Stats {
       /// <summary>The current frame number</summary>
-      public int NFrame => mFrame;
+      public int NFrame => mcFrames;
       /// <summary>How many times is a program change happening, per frame</summary>
       public int PgmChanges => GLState.mPgmChanges;
       /// <summary>How many times is a new VAO bound, per frame</summary>
@@ -245,32 +274,5 @@ public static partial class Lux {
       public int VertsDrawn => RBatch.mVertsDrawn;
    }
    static Stats sStats = new ();
-
-   public class TInfo : IObservable<Stats> {
-      public IDisposable Subscribe (IObserver<Stats> observer) => (mSubject ??= new ()).Subscribe (observer);
-
-      public void FrameOver () => mSubject?.OnNext (sStats);
-      Subject<Stats>? mSubject;
-   }
-   static public TInfo Info = new ();
-
-   public class TFPS : IObservable<int> {
-      public IDisposable Subscribe (IObserver<int> observer) => (mSubject ??= new ()).Subscribe (observer);
-
-      public void FrameOver () {
-         sFrames++;
-         double elapsed = (DateTime.Now - sLastTime).TotalSeconds;
-         if (elapsed >= 1) {
-            int fps = (int)(sFrames / elapsed + 0.5);
-            mSubject?.OnNext (fps);
-            (sLastTime, sFrames) = (DateTime.Now, 0);
-         }
-      }
-      Subject<int>? mSubject;
-
-      static DateTime sLastTime;
-      static int sFrames;
-   }
-   public static TFPS FPS = new ();
 }
 #endregion

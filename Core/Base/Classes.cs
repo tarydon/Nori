@@ -46,7 +46,17 @@ public class DIBitmap {
 
 #region class MultiDispose -------------------------------------------------------------------------
 /// <summary>Helper to hold on to, and dispose, multiple IDisposables</summary>
-public class MultiDispose (params IDisposable?[] disps) : IDisposable {
-   public void Dispose () => disps.ForEach (a => a?.Dispose ());
+public class MultiDispose : IDisposable {
+   // Constructors -------------------------------------------------------------
+   /// <summary>Construct a MultiDispose with zero or more disposables to hold on to</summary>
+   public MultiDispose (params IDisposable?[] disps) => mDisposables.AddRange (disps);
+   List<IDisposable?> mDisposables = [];
+
+   // Methods ------------------------------------------------------------------
+   /// <summary>Add an additional disposable</summary>
+   public void Add (IDisposable? disp) => mDisposables.Add (disp); 
+
+   // Implement IDisposable ----------------------------------------------------
+   public void Dispose () { mDisposables.ForEach (a => a?.Dispose ()); mDisposables.Clear (); }
 }
 #endregion
