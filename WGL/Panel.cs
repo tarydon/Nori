@@ -170,7 +170,7 @@ class Surface : System.Windows.Forms.UserControl {
          }
       }
       Lux.mReady = true;
-      Lux.OnReady?.Invoke ();
+      Lux.mOnReady.OnNext (0);
    }
 
    // Override OnPaint to call back to PX.Render, where our actual paint code resides

@@ -60,7 +60,6 @@ public class VNode {
    /// and also to listen to changes in that list. The AList(T) collection implements both
    /// these interfaces, so you can just pass in an AList(T) and that will work. 
    public IAList? ChildSource { get => mChildSource; init => mChildSource = value; }
-   IDisposable? mChildWatcher;
    IAList? mChildSource;
 
    // The unique Id of this VNode within this scene. 
@@ -83,6 +82,16 @@ public class VNode {
       mKnownChildren--;
       Lux.Redraw ();
    }
+
+   /// <summary>Holds onto an IDisposable and disposes it when the VNode is detached</summary>
+   /// Many VNodes watch various objects (like the owner, the Lux ViewBounds, the
+   /// list of Children in the owner etc). All those watches are implemented using
+   /// the observable pattern, and so we end up with a number of disposables we need
+   /// to clear when we detach. This routine shifts that responsibility to VNode, and
+   /// all derived types can simply hand over their IDisposables to this routie which 
+   /// will track them and dispose of them when OnDetach is called
+   public void DisposeOnDetach (IDisposable disp) => (mDisposer ??= new ()).Add (disp);
+   MultiDispose? mDisposer;
 
    /// <summary>'Virtual constructor' to make a VNode for a given object type</summary>
    /// An assembly that implements various types of VNode (like CircleVN, CubeVN etc) can
@@ -337,16 +346,17 @@ public class VNode {
       }
       Id = mFreeIDs.Pop (); mNodes[Id] = this; 
       if (Obj is IObservable<EProp> observable)
-         mObserver = observable.Subscribe (OnChanged);
+         DisposeOnDetach (observable.Subscribe (OnChanged));
       if (mChildSource != null) {
          mAutoChildren = new List<VNode> (mChildSource.Count);
-         mChildWatcher = mChildSource.Subscribe (OnChildrenChanged);
+         DisposeOnDetach(mChildSource.Subscribe (OnChildrenChanged));
       }
+      if (GetType ().HasAttribute<RedrawOnZoomAttribute> ())
+         DisposeOnDetach (Lux.ViewBound.Subscribe (_ => Redraw ()));
       OnAttach ();
    }
    static VNode?[] mNodes = [null];
    static Stack<int> mFreeIDs = [];
-   IDisposable? mObserver;
 
    // Deregister is called when this VNode is no longer ever required.
    // This means it is not part of any scenes and its 'parent refs' counter has
@@ -355,8 +365,7 @@ public class VNode {
       Debug.Assert (Id > 0);
       Lib.Trace ($"Detach {this}\n");
       OnDetach ();
-      mObserver?.Dispose ();
-      mChildWatcher?.Dispose ();
+      mDisposer?.Dispose ();
       ReleaseBatches ();
       foreach (var c in mFamily.Enum (mChildren)) {
          // Walk through the children, and disconnect them from _this_ parent. 

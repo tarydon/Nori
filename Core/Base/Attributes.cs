@@ -37,6 +37,12 @@ public class EPropFieldAttribute (EProp prop) : Attribute {
 }
 #endregion
 
+#region [RedrawOnZoom] attribute -------------------------------------------------------------------
+/// <summary>Attach [RedrawOnZoom] to a widget to have it be automatically redrawn when the scene is zoomed or panned</summary>
+[AttributeUsage (AttributeTargets.Class)]
+public class RedrawOnZoomAttribute : Attribute { }
+#endregion
+
 #region [Singleton] attribute ----------------------------------------------------------------------
 /// <summary>[Singleton] attribute, used to auto-implement a singleton pattern</summary>
 /// Decorate a class TClass with the [Singleton] attribute, and make sure it has a private, 
@@ -46,4 +52,3 @@ public class EPropFieldAttribute (EProp prop) : Attribute {
 [AttributeUsage (AttributeTargets.Class)]
 public class SingletonAttribute : Attribute;
 #endregion
-

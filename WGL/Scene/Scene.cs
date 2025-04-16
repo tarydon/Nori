@@ -89,7 +89,7 @@ public abstract partial class Scene {
    // Called when the root transform is changed
    protected void XfmChanged () { 
       mXfms.Clear (); mWorldXfm = null;
-      Lux.Bound.Changed (); Lux.Redraw (); 
+      Lux.mViewBound.OnNext (0); Lux.Redraw (); 
    }
 
    public void ZoomExtents () { 

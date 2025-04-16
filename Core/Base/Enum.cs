@@ -17,13 +17,15 @@ public enum ELineType { Continuous, Dot, Dash, DashDot, DashDotDot, Center, Bord
 /// <summary>Various 'well-known' properties</summary>
 public enum EProp {
    /// <summary>The transform of an entity (and its subtree) has changed</summary>
-   Xfm, 
+   Xfm = 1, 
    /// <summary>An entity's geometry has changed (needs new geomery-gather)</summary>
    Geometry,
    /// <summary>An entity's attributes have changed (like color, typeface etc)</summary>
    Attributes,
    /// <summary>An entity's visibility has changed</summary>
-   Visibility
+   Visibility,
+
+   Grid, FillInterior, 
 }
 
 /// <summary>The possible values for text-alignment within a box</summary>
