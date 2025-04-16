@@ -249,59 +249,99 @@ public static partial class Lux {
          Line2DShader.It.Draw ([a[i], a[i + 1], a[i + 1], a[i + 2], a[i + 2], a[i]]);
    }
 
+   /// <summary>Draws text positioned at a given point in world coordinates</summary>
+   /// The position _pos_ specifies a point in world coordinates (with Z = 0) where 
+   /// the text is positioned. Based on the alignment parameter, there are 12 different
+   /// 'reference points' on the text which get mapped to this position pos. See
+   /// file://n:/tdata/lux/text2d.png for an example of all the 12 alignments. 
+   /// 
+   /// The following Lux properties are used by this shader:
+   /// - Xfm       : current transformation matrix
+   /// - DrawColor : color of the text being drawn
+   /// - TypeFace  : font, style, size of the text being drawn
    public static void Text2D (ReadOnlySpan<char> text, Vec2F pos, ETextAlign align) {
       if (text.IsWhiteSpace ()) return;
+      // First, get the basic cells as we would for a TextPx shader, assuming the text
+      // is starting at a position of (0,0)
       var face = TypeFace ?? TypeFace.Default;
-      int x = 0, n = 0, yMax = 0; uint idx0 = 0;
-      Span<Text2DShader.Args> cells = stackalloc Text2DShader.Args[text.Length];
+      Span<TextPxShader.Args> cells = stackalloc TextPxShader.Args[text.Length];
+      int x = GetTextCells (text, new (0, 0), cells);
+
+      // If we are going to draw the text with a 'BaseLeft' alignment, then the cells
+      // we obtained are already correct (since the transformed coordinates of the _pos_
+      // parameter from above will get added to each cell position). However, if we want
+      // other alignments like TopRight or MidCenter, we need to adjust all these cells.
+      // Let's compute the dx and dy for that adjustment here: 
       var cellM = face.Measure ("M", true);
-      foreach (var ch in text) {
-         uint idx1 = face.GetGlyphIndex (ch);
-         var metric = face.GetMetrics (idx1);
-         int kern = face.GetKerning (idx0, idx1);
-         yMax = Math.Max (yMax, metric.TopBearing);
-         short xChar = (short)(x + metric.LeftBearing + kern), yChar = metric.TopBearing;
-         var vec = new Vec4S (xChar, yChar - metric.Rows, xChar + metric.Columns, yChar);
-         cells[n++] = new (pos, vec, metric.TexOffset);
-         x += metric.Advance + kern;
-         idx0 = idx1;
-      }
-      short dx = 0, dy = 0;
-      int nAlign = (int)align - 1;
+      short dx = 0, dy = 0, nAlign = (short)(align - 1);
+      Span<Text2DShader.Args> output = stackalloc Text2DShader.Args[text.Length];
+
+      // First compute the dx needed based on the horizontal alignment (left alignment
+      // is the default value of 0 in the case below)
       switch (nAlign % 3) {
-         case 1: dx = (short)(-x / 2); break;
-         case 2: dx = (short)-x; break;
+         case 1: dx = (short)(-x / 2); break;   // 'Mid' alignment (shift left by half the width)
+         case 2: dx = (short)-x; break;         // 'Right' alignment (shift left by the width)
       }
+      // Then, compute the dy needed based on the vertical alignment (base alignment is the
+      // default value of 3 in the case below)
       switch (nAlign / 3) {
-         case 1: dy = (short)(-cellM.Top / 2); break;
-         case 0: dy = (short)(-cellM.Top); break;
-         case 2: dy = (short)face.Descender; break;
+         case 0: dy = (short)(-cellM.Top); break;        // Top alignment
+         case 1: dy = (short)(-cellM.Top / 2); break;    // Center alignment
+         case 2: dy = (short)face.Descender; break;      // Bottom alignment (based on face bounding box)
       }
       for (int i = 0; i < cells.Length; i++) {
-         ref Text2DShader.Args cell = ref cells[i];
-         var v = cell.Cell;
-         cells[i] = new (cell.Pos, new (v.X + dx, v.Y + dy, v.Z + dx, v.W + dy), cell.TexOffset);
+         ref TextPxShader.Args input = ref cells[i];
+         var v = input.Cell;
+         output[i] = new (pos, new (v.X + dx, v.Y + dy, v.Z + dx, v.W + dy), input.TexOffset);
       }
-      Text2DShader.It.Draw (cells);
+      Text2DShader.It.Draw (output);
    }
 
    /// <summary>Draws text at specified pixel-coordinates (uses the current TypeFace and DrawColor)</summary>
+   /// The pixel (0,0) is the bottom left of the screen, and pixel coordinates increase going
+   /// to the right, or upwards. The following Lux properties are used by this shader:
+   /// 
+   /// The following Lux properties are used by this shader:
+   /// - DrawColor : color of the text being drawn
+   /// - TypeFace  : font, style, size of the text being drawn
    public static void TextPx (ReadOnlySpan<char> text, Vec2S pos) {
       if (text.IsWhiteSpace ()) return;
       Span<TextPxShader.Args> cells = stackalloc TextPxShader.Args[text.Length];
-      int x = pos.X, y = pos.Y, n = 0; uint idx0 = 0;
+      GetTextCells (text, pos, cells);
+      TextPxShader.It.Draw (cells);
+   }
+
+   // Implementation -----------------------------------------------------------
+   // Given some text, this converts it into a series of TextPxShader.Args (cells) that
+   // each contain one 'vertex' to draw one character. The first cell starts with its bottom
+   // left corner at the specified pos, and subsequent cells advance left to right (based on the
+   // width of each character, and the kerning adjustment between successive characters). 
+   // The output from this can be directly used by the TextPx shader, or it can be used to 
+   // compute the cells for the Text2D shader (which have some additional information about
+   // the position in world coordinates where the text should start). 
+   // 
+   // This routine fills up the cells output array with the vertices we generate. It also returns
+   // the final X position after all the rendering (which is useful if we want to do a right-aligned
+   // text positioning)
+   static int GetTextCells (ReadOnlySpan<char> text, Vec2S pos, Span<TextPxShader.Args> cells) {
       var face = TypeFace ?? TypeFace.Default;
+      int x = pos.X, y = pos.Y, n = 0;  uint idx0 = 0;
       foreach (var ch in text) {
-         uint idx1 = face.GetGlyphIndex (ch);
-         var metric = face.GetMetrics (idx1);
-         int kern = face.GetKerning (idx0, idx1);
+         uint idx1 = face.GetGlyphIndex (ch);         // Get glyph index for the character
+         var metric = face.GetMetrics (idx1);         // Get the metrics for this character
+         int kern = face.GetKerning (idx0, idx1);     // Then, the kerning adjustment between the previous character and this one
          short xChar = (short)(x + metric.LeftBearing + kern), yChar = (short)(y + metric.TopBearing);
+         // We are using a Vec4S to store a 'cell' in pixels where the character is to be drawn. 
+         // It has lower left corner at (X,Y) of the Vec4S and the top right corner at (Z,W) of the
+         // Vec4S. The other bit of data is the offset into the font texture for this glyph
+         // (a single number suffices since we store the texture in a linear-unpacked format,
+         // not as a 2D bitmap). 
          var vec = new Vec4S (xChar, yChar - metric.Rows, xChar + metric.Columns, yChar);
          cells[n++] = new (vec, metric.TexOffset);
          x += metric.Advance + kern;
          idx0 = idx1;
       }
-      TextPxShader.It.Draw (cells);
+      return x; 
    }
 }
 #endregion
