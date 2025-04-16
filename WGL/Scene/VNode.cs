@@ -394,7 +394,7 @@ public class VNode {
    bool mChildrenAdded = true;
    // If set, this means the geometry has changed and fresh RBatches have to 
    // be gathered for our geometry
-   bool mGeometryDirty = true;
+   protected bool mGeometryDirty = true;
 }
 #endregion
 

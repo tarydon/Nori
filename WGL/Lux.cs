@@ -22,7 +22,7 @@ public static partial class Lux {
       get => mUIScene;
       set {
          mUIScene?.Detach ();
-         mUIScene = value; Redraw ();
+         mUIScene = value; Bound.Changed (); Redraw ();
       }
    }
    static Scene? mUIScene;
@@ -112,9 +112,7 @@ public static partial class Lux {
    static int mFrame;
 
    /// <summary>Prompts the Lux system to redraw the screen (asynchronous)</summary>
-   public static void Redraw () {
-      if (mReady) Panel.It.Redraw (); 
-   }
+   public static void Redraw () => Panel.It.Redraw ();
 
    /// <summary>This is called to initiate 'continuous rendering'</summary>
    /// This function takes a 'callback' that will be invoked after each frame is rendered. Once
@@ -246,9 +244,15 @@ public static partial class Lux {
    }
    static Stats sStats = new ();
 
+   public class TBound : IObservable<int> {
+      public IDisposable Subscribe (IObserver<int> observer) => (mSubject ??= new ()).Subscribe (observer);
+      public void Changed () => mSubject?.OnNext (0);
+      Subject<int>? mSubject;
+   }
+   static public TBound Bound = new ();
+
    public class TInfo : IObservable<Stats> {
       public IDisposable Subscribe (IObserver<Stats> observer) => (mSubject ??= new ()).Subscribe (observer);
-
       public void FrameOver () => mSubject?.OnNext (sStats);
       Subject<Stats>? mSubject;
    }
