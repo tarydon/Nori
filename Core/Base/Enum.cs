@@ -25,7 +25,7 @@ public enum EProp {
    /// <summary>An entity's visibility has changed</summary>
    Visibility,
 
-   Grid, FillInterior, 
+   Grid, FillInterior, CurrentLayer,
 }
 
 /// <summary>The possible values for text-alignment within a box</summary>
