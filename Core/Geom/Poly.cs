@@ -35,10 +35,9 @@ public class Poly {
       => Line (new (x1, y1), new (x2, y2));
 
    /// <summary>Make a multi-segment PolyLine</summary>
-   public static Poly Lines (List<Point2> points) {
+   public static Poly Lines (IEnumerable<Point2> points) {
       var pb = new PolyBuilder ();
-      var pts = points.ToArray ();
-      for (var i = 0; i < pts.Length; i++) pb.Line (pts[i]);
+      foreach (var pt in points) pb.Line (pt);
       return pb.Close ().Build ();
    }
 
