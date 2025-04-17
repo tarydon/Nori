@@ -19,7 +19,7 @@ class ShaderImp {
       if (GL.GetProgram (Handle, EProgramParam.LinkStatus) == 0)
          throw new Exception ($"GLProgram link error in program '{Name}':\r\n{log2}");
       if (!string.IsNullOrWhiteSpace (log2))
-         Lib.Trace ($"Warning while linking program '{Name}':\r\n{log2}\n");
+         Lib.Trace ($"Warning while linking program '{Name}':\n{log2}\n");
 
       // Get information about the uniforms
       int cUniforms = GL.GetProgram (Handle, EProgramParam.ActiveUniforms);
