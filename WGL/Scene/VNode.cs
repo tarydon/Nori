@@ -363,7 +363,6 @@ public class VNode {
    // run down to zero.
    internal void Deregister () {
       Debug.Assert (Id > 0);
-      Lib.Trace ($"Detach {this}\n");
       OnDetach ();
       mDisposer?.Dispose ();
       ReleaseBatches ();

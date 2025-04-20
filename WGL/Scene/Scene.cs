@@ -92,7 +92,7 @@ public abstract partial class Scene {
       Lux.mViewBound.OnNext (0); Lux.Redraw (); 
    }
 
-   public void ZoomExtents () { 
+   public virtual void ZoomExtents () { 
       mZoomFactor = 1; mPanVector = Vector2.Zero;
       XfmChanged ();  
    }

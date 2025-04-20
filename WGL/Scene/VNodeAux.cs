@@ -95,7 +95,7 @@ public partial class TraceVN : VNode {
    }
 
    // Private data -------------------------------------------------------------
-   int mDYLine;         // Height of each line in pixes
+   int mDYLine = 20;    // Height of each line in pixes
    int mcLines = 100;   // Number of lines that will fit on the screen
    DispatcherTimer? mTimer;
    List<(DateTime TS, string Text)> mLines = [];
