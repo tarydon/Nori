@@ -104,6 +104,17 @@ public static class Extensions {
       return index;
    }
 
+   // Returns the index of the element that returns the lowest value after being passed
+   // through the evaluator function func. If the sequence is empty, this returns -1
+   public static int MinIndexBy<T> (this IEnumerable<T> seq, Func<T, double> func) {
+      double min = double.MaxValue; int minIdx = -1, i = -1;
+      foreach (var elem in seq) {
+         double dist = func.Invoke (elem); i++;
+         if (dist < min) (min, minIdx) = (dist, i);
+      }
+      return minIdx;
+   }
+
    /// <summary>Returns a random bool</summary>
    public static bool NextBool (this Random r) => r.Next (10000) < 5000;
 
@@ -130,14 +141,14 @@ public static class Extensions {
       return elem;
    }
 
-   /// <summary>
-   /// 'Rolls' a list, treating it as a circular list, starting with element N
-   /// </summary>
+   /// <summary>'Rolls' a list, treating it as a circular list, starting with element N</summary>
    /// The element N is returned first, then N+1 and so on, until we finish with
-   /// the element N-1
+   /// the element N-1. Thus, [1,2,3,4,5].Roll (2) will return [3,4,5,1,2]. 
+   /// You can also pass in a negative index, so [1,2,3,4,5].Roll (-1) will return
+   /// [5,1,2,3,4]
    public static IEnumerable<T> Roll<T> (this IReadOnlyList<T> list, int n) {
       for (int i = 0, count = list.Count; i < count; i++)
-         yield return list[(i + n) % count];
+         yield return list[(i + n).Wrap (count)];
    }
 
    /// <summary>Rounds a double to the given number of digits</summary>
@@ -207,9 +218,7 @@ public static class Extensions {
    public static string ToUTF8 (this nint ptr)
       => Marshal.PtrToStringUTF8 (ptr) ?? string.Empty;
 
-   /// <summary>
-   /// Wrap an integer to a range within 0..max-1
-   /// </summary>
+   /// <summary>Wrap an integer to a range within 0..max-1</summary>
    public static int Wrap (this int n, int max) => (n + max) % max;
 }
 #endregion

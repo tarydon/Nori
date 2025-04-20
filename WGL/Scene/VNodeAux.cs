@@ -90,7 +90,7 @@ public partial class TraceVN : VNode {
    // Timer handler, removes text that is more than 7 seconds old
    void OnTick (object? s, EventArgs e) {
       int n = mLines.Count;
-      while (mLines.Count > 0 && mLines[0].TS + TimeSpan.FromSeconds (7) < DateTime.Now) mLines.RemoveAt (0);
+      while (mLines.Count > 0 && mLines[0].TS + TimeSpan.FromSeconds (20) < DateTime.Now) mLines.RemoveAt (0);
       if (n != mLines.Count) Redraw ();
    }
 

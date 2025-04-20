@@ -39,7 +39,7 @@ public static partial class Lux {
    /// <summary>How many world units does one pixel correspond to (for the current scene)</summary>
    public static double PixelScale {
       get {
-         if (mUIScene == null) return 1;
+         if (mUIScene == null || mViewport.X == 0) return 1;
          var xfm = mUIScene.Xfms[0].InvXfm;
          double dx = 2.0 / mViewport.X;   // 
          Point3 pa = Point3.Zero * xfm, pb = new Point3 (dx, 0, 0) * xfm;
