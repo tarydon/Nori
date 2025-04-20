@@ -130,6 +130,16 @@ public static class Extensions {
       return elem;
    }
 
+   /// <summary>
+   /// 'Rolls' a list, treating it as a circular list, starting with element N
+   /// </summary>
+   /// The element N is returned first, then N+1 and so on, until we finish with
+   /// the element N-1
+   public static IEnumerable<T> Roll<T> (this IReadOnlyList<T> list, int n) {
+      for (int i = 0, count = list.Count; i < count; i++)
+         yield return list[(i + n) % count];
+   }
+
    /// <summary>Rounds a double to the given number of digits</summary>
    public static double Round (this double a, int digits) => Math.Round (a, digits);
    /// <summary>Rounds a float to the given number of digits</summary>
@@ -196,6 +206,11 @@ public static class Extensions {
    /// <summary>Convert a C style char * pointer to a C# string</summary>
    public static string ToUTF8 (this nint ptr)
       => Marshal.PtrToStringUTF8 (ptr) ?? string.Empty;
+
+   /// <summary>
+   /// Wrap an integer to a range within 0..max-1
+   /// </summary>
+   public static int Wrap (this int n, int max) => (n + max) % max;
 }
 #endregion
 

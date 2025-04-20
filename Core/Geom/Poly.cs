@@ -7,7 +7,7 @@ using static Math;
 
 #region class Poly ---------------------------------------------------------------------------------
 /// <summary>Represents a polyline (composed of lines, and arcs)</summary>
-public class Poly {
+public partial class Poly {
    // Constructor --------------------------------------------------------------
    internal Poly (ImmutableArray<Point2> pts, ImmutableArray<Extra> extra, EFlags flags)
       => (mPts, mExtra, mFlags) = (pts, extra, flags);
@@ -147,6 +147,19 @@ public class Poly {
          foreach (var seg in Segs) seg.Discretize (pts, threshold);
          if (IsClosed) pts.RemoveLast ();
       }
+   }
+
+   /// <summary>
+   /// Gets the closest distance of this Poly to the given point
+   /// </summary>
+   /// This also returns the segment that is the closest 
+   public (double Dist, int Seg) GetDistance (Point2 pt) {
+      var (minDist, nSeg) = (1e99, 0);
+      for (int i = Count - 1; i >= 0; i--) {
+         double dist = this[i].GetDist (pt, minDist);
+         if (dist < minDist) (minDist, nSeg) = (dist, i);
+      }
+      return (minDist, nSeg); 
    }
 
    /// <summary>Computes the bounding rectangle of the Poly (not cached)</summary>
@@ -423,6 +436,11 @@ public readonly struct Seg (Point2 a, Point2 b, Point2 center, Poly.EFlags flags
       }
    }
 
+   /// <summary>
+   /// Gets the slope at the middle of the line / arc
+   /// </summary>
+   public double Slope => GetSlopeAt (0.5);
+
    /// <summary>The radius (of a curved segment)</summary>
    public double Radius => IsArc ? Center.DistTo (A) : 0;
 
@@ -446,6 +464,24 @@ public readonly struct Seg (Point2 a, Point2 b, Point2 center, Poly.EFlags flags
             pts.Add (Center.Polar (radius, sa += angstep));
       } else
          pts.Add (B);
+   }
+
+   /// <summary>
+   /// Returns the closest distance of the given point pt to this seg
+   /// </summary>
+   /// If the distance is more than the cutoff distance, this does not return
+   /// the exact distance, but a conservative distance (greater than actual distance)
+   public double GetDist (Point2 p, double cutoff) {
+      if (IsArc) {
+         double dist = Abs (Center.DistTo (p) - Radius);
+         if (dist >= cutoff) return dist;
+         double lie = GetLie (p).Clamp ();
+         return p.DistTo (GetPointAt (lie));
+      } else {
+         double dist = p.DistToLine (A, B);
+         if (dist >= cutoff) return dist;
+         return p.DistToLineSeg (A, B);
+      }
    }
 
    /// <summary>Returns the lie of a given point</summary>
