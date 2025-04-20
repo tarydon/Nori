@@ -2,15 +2,17 @@
 
 public partial class Poly {
    // Operations ---------------------------------------------------------------
-   public Poly? Chamfer (int n, double d1, double d2) {
+   public Poly? Chamfer (int n, double d1, double d2, Point2 hint) {
       // Handle the special case where we are chamfering at node 0 of a 
       // closed Poly (by rolling the poly and making it a chamfer at N-1)
       if (IsClosed && n == 0 || n == Count)
-         return Roll (1).Chamfer (Count - 1, d1, d2);
+         return Roll (1).Chamfer (Count - 1, d1, d2, hint);
       if (n <= 0 || n >= Count) return null;
 
       Seg s1 = this[n - 1], s2 = this[n];
       if (s1.IsArc || s2.IsArc || s1.Length <= d1 || s2.Length <= d2) return null;
+
+      if (!hint.IsNil && s2.GetDist (hint) < s1.GetDist (hint)) (d1, d2) = (d2, d1);
 
       PolyBuilder pb = new ();
       const EFlags mask = EFlags.CW | EFlags.CCW;

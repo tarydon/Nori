@@ -484,6 +484,8 @@ public readonly struct Seg (Point2 a, Point2 b, Point2 center, Poly.EFlags flags
       }
    }
 
+   public double GetDist (Point2 p) => GetDist (p, 1e99);
+
    /// <summary>Returns the lie of a given point</summary>
    public double GetLie (Point2 p) {
       if (IsArc) {
