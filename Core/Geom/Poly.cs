@@ -7,7 +7,7 @@ using static Math;
 
 #region class Poly ---------------------------------------------------------------------------------
 /// <summary>Represents a polyline (composed of lines, and arcs)</summary>
-public class Poly {
+public partial class Poly {
    // Constructor --------------------------------------------------------------
    internal Poly (ImmutableArray<Point2> pts, ImmutableArray<Extra> extra, EFlags flags)
       => (mPts, mExtra, mFlags) = (pts, extra, flags);
@@ -127,7 +127,7 @@ public class Poly {
    /// <summary>Returns the Nth segment from the Pline</summary>
    public Seg this[int i] {
       get {
-         int n = Count;
+         int n = Count; i = i.Wrap (n);
          EFlags flags = (i == n - 1) ? EFlags.Last : 0;
          Point2 a = mPts[i], b = mPts[(i + 1) % mPts.Length];
          if (HasArcs && i < mExtra.Length) {
@@ -147,6 +147,24 @@ public class Poly {
          foreach (var seg in Segs) seg.Discretize (pts, threshold);
          if (IsClosed) pts.RemoveLast ();
       }
+   }
+
+   /// <summary>Returns the index of the closest node</summary>
+   public int GetClosestNode (Point2 pt) => mPts.MinIndexBy (a => a.DistToSq (pt));
+
+   /// <summary>Gets the closest distance of this Poly to the given point</summary>
+   /// This also returns the closest segment and the closest node on that segment
+   /// to the given point. Note that this means that we first pick the closest segment,
+   /// and then pick if the closest node is the start or end of that segment. So
+   /// Node will either be Seg, or Seg+1 always. 
+   public (double Dist, int Seg, int Node) GetDistance (Point2 pt) {
+      var (minDist, nSeg, fLie) = (1e99, 0, 0.0);
+      for (int i = Count - 1; i >= 0; i--) {
+         Seg seg = this[i];
+         double dist = seg.GetDist (pt, minDist); 
+         if (dist < minDist) (minDist, nSeg, fLie) = (dist, i, seg.GetLie (pt));
+      }
+      return (minDist, nSeg, nSeg + (fLie > 0.5 ? 1 : 0)); 
    }
 
    /// <summary>Computes the bounding rectangle of the Poly (not cached)</summary>
@@ -190,7 +208,7 @@ public class Poly {
    [Flags]
    public enum EFlags : ushort {
       Closed = 1, HasArcs = 2,
-      CW = 4, CCW = 8, Circle = 16, Last = 32
+      CW = 4, CCW = 8, Circle = 16, Last = 32, Arc = CW | CCW,
    }
    readonly EFlags mFlags;
 
@@ -444,6 +462,9 @@ public readonly struct Seg (Point2 a, Point2 b, Point2 center, Poly.EFlags flags
       }
    }
 
+   /// <summary>Gets the slope at the middle of the line / arc</summary>
+   public double Slope => GetSlopeAt (0.5);
+
    /// <summary>The radius (of a curved segment)</summary>
    public double Radius => IsArc ? Center.DistTo (A) : 0;
 
@@ -468,6 +489,24 @@ public readonly struct Seg (Point2 a, Point2 b, Point2 center, Poly.EFlags flags
       } else
          pts.Add (B);
    }
+
+   /// <summary>Returns the closest distance of the given point pt to this seg</summary>
+   /// If the distance is more than the cutoff distance, this does not return
+   /// the exact distance, but a conservative distance (greater than actual distance)
+   public double GetDist (Point2 p, double cutoff) {
+      if (IsArc) {
+         double dist = Abs (Center.DistTo (p) - Radius);
+         if (dist >= cutoff) return dist;
+         double lie = GetLie (p).Clamp ();
+         return p.DistTo (GetPointAt (lie));
+      } else {
+         double dist = p.DistToLine (A, B);
+         if (dist >= cutoff) return dist;
+         return p.DistToLineSeg (A, B);
+      }
+   }
+
+   public double GetDist (Point2 p) => GetDist (p, 1e99);
 
    /// <summary>Returns the lie of a given point</summary>
    public double GetLie (Point2 p) {

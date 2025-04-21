@@ -74,6 +74,11 @@ class TMisc {
       22.RoundUp (10).Is (30);
       "1.5".ToDouble ().Is (1.5);
       "abc".ToDouble ().Is (0);
+
+      int[] ints = [1, 2, 3, 4, 5];
+      ints.Roll (2).ToCSV ().Is ("3,4,5,1,2");
+      ints.Roll (-1).ToCSV ().Is ("5,1,2,3,4");
+      ints.Roll (0).ToCSV ().Is ("1,2,3,4,5");
    }
 
    [Test (30, "AList<T> tests")]

@@ -90,12 +90,12 @@ public partial class TraceVN : VNode {
    // Timer handler, removes text that is more than 7 seconds old
    void OnTick (object? s, EventArgs e) {
       int n = mLines.Count;
-      while (mLines.Count > 0 && mLines[0].TS + TimeSpan.FromSeconds (7) < DateTime.Now) mLines.RemoveAt (0);
+      while (mLines.Count > 0 && mLines[0].TS + TimeSpan.FromSeconds (20) < DateTime.Now) mLines.RemoveAt (0);
       if (n != mLines.Count) Redraw ();
    }
 
    // Private data -------------------------------------------------------------
-   int mDYLine;         // Height of each line in pixes
+   int mDYLine = 20;    // Height of each line in pixes
    int mcLines = 100;   // Number of lines that will fit on the screen
    DispatcherTimer? mTimer;
    List<(DateTime TS, string Text)> mLines = [];
