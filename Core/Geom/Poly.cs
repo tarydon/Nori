@@ -34,6 +34,10 @@ public class Poly {
    public static Poly Line (double x1, double y1, double x2, double y2)
       => Line (new (x1, y1), new (x2, y2));
 
+   /// <summary>Make a multi-segment PolyLine</summary>
+   public static Poly Lines (IEnumerable<Point2> points)
+      => new ([.. points], [], EFlags.Closed);
+
    /// <summary>This constructor makes a Pline from a Pline mini-language encoded string</summary>
    /// When we do ToString on a Pline, we get an encoding of that Pline in a mini-language.
    /// This converts that encoding back into a Pline. Note that this is, in general, not a
