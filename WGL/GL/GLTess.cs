@@ -8,7 +8,7 @@ namespace Nori;
 
 /// <summary>A helper class used to inject the GLU based 2D tessllator implementations.</summary>
 public class GLTess2D : Tess2D {
-   public override List<int> Do (IEnumerable<Point2> pts, IEnumerable<int> splits) {
+   public override List<int> Do (List<Point2> pts, IReadOnlyList<int> splits) {
       var tess = new GLTess2DImp (pts, splits); 
       var res = tess.Process ();
       mError = tess.Error;
@@ -65,19 +65,17 @@ abstract class GLTessImp : Tessellator {
 }
 
 /// <summary>Given a list of points as inner and outer polygon contours, generate a tesselation in 2D</summary>
-class GLTess2DImp (IEnumerable<Point2> pts, IEnumerable<int> splits) : GLTessImp {
+class GLTess2DImp (List<Point2> pts, IReadOnlyList<int> splits) : GLTessImp {
    #region Implementation --------------------------------------------
    public unsafe override List<int> Process () {
       // Initialize tessellator the first time we are called
       var tess = sTess == HTesselator.Zero ? (sTess = NewTess ()) : sTess;
       // Setup tessellation callbacks
-      tess.SetCallback (TessBegin);
-      tess.SetCallback (TessVertex);
-      tess.SetCallback (TessCombine);
-      tess.SetCallback (TessError);
-      tess.SetCallback (NeedEdgeFlags ? TessEdgeFlag : null!);
-      // Set up the tessellation properties
-      tess.SetWinding (WindingRule);
+      tess.SetCallback (TessBegin).SetCallback (TessVertex)
+         .SetCallback (TessCombine).SetCallback (TessError)
+         .SetCallback (NeedEdgeFlags ? TessEdgeFlag : null!)
+         // Set up the tessellation properties
+         .SetWinding (WindingRule);
 
       // Generate the array of doubles we use to provide input
       int n = mPts.Count;
@@ -134,7 +132,7 @@ class GLTess2DImp (IEnumerable<Point2> pts, IEnumerable<int> splits) : GLTessImp
             var vec2 = (Vector3)(mPts[n2 & 0xffffff] - mPts[n3 & 0xffffff]);
             if ((vec1 * vec2).LengthSq < MinArea) return;
          }
-         mResult.AddRange ([n1, n2, n3]);
+         mResult.AddRange (stackalloc[] { n1, n2, n3 });
       }
    };
 
@@ -154,9 +152,9 @@ class GLTess2DImp (IEnumerable<Point2> pts, IEnumerable<int> splits) : GLTessImp
 
    #region Data ------------------------------------------------------
    // Polygon to tessellate.
-   readonly List<Point2> mPts = [..pts];
+   readonly List<Point2> mPts = pts;
    // Polygon outer/inner contours
-   readonly IReadOnlyList<int> mSplit = [..splits];
+   readonly IReadOnlyList<int> mSplit = splits;
    // The GLU tessellator object
    [ThreadStatic]
    static HTesselator sTess;

@@ -13,12 +13,12 @@ public abstract class TessBase {
 
 /// <summary>A base class to help select the appropriate 2D tessellation implementation</summary>
 public abstract class Tess2D : TessBase {
-   public abstract List<int> Do (IEnumerable<Point2> pts, IEnumerable<int> splits);
+   public abstract List<int> Do (List<Point2> pts, IReadOnlyList<int> splits);
 }
 
 /// <summary>A base class to help select the appropriate 3D tessellation implementation</summary>
 public abstract class Tess3D : TessBase {
-   public abstract List<int> Do (IEnumerable<Point3> pts, IEnumerable<int> splits);
+   public abstract List<int> Do (ReadOnlySpan<Point3> pts, ReadOnlySpan<int> splits);
 }
 
 /// <summary>A base class for all Nori tessellators.</summary>

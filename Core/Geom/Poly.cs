@@ -158,6 +158,25 @@ public class Poly {
    /// <summary>Computes the length of the Poly</summary>
    public double GetPerimeter () => Segs.Sum (a => a.Length);
 
+   /// <summary>Creates and returns a new reversed Poly of 'this'</summary>
+   public Poly Reversed () {
+      if (!HasArcs) {
+         return new ([..mPts.Reverse ()], [], mFlags);
+      } else {
+         PolyBuilder builder = new ();
+         for (int i = Count - 1; i >= 0; i--) {
+            Seg s = this[i];
+            if (s.IsArc) {
+               var flags = s.IsCCW ? EFlags.CW : EFlags.CCW;
+               if (s.IsCircle) flags |= EFlags.Circle;
+               builder.Arc (s.B, s.Center, flags);
+            } else builder.Line (s.B);
+         }
+         if (!IsClosed) builder.Line (A); else builder.Close ();
+         return builder.Build ();
+      }
+   }
+
    // Operators ----------------------------------------------------------------
    /// <summary>Create a new Poly by applying the transformation matrix</summary>
    public static Poly operator * (Poly p, Matrix2 xfm) {
@@ -219,6 +238,8 @@ public class PolyBuilder {
       if (mExtra.Count > 0) {
          extra = [..mExtra];
          flags |= Poly.EFlags.HasArcs;
+         if (extra[0].Flags.HasFlag (Poly.EFlags.Circle))
+            flags |= Poly.EFlags.Circle;
       }
       var poly = new Poly ([..mPts], extra, flags);
       Reset ();

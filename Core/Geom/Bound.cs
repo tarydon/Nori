@@ -104,7 +104,7 @@ public readonly struct Bound2 : IEQuable<Bound2> {
    public double Height => Y.Length;
    public bool IsEmpty => X.IsEmpty || Y.IsEmpty;
    public Point2 Midpoint => new (X.Mid, Y.Mid);
-
+   public double Area => X.Length * Y.Length;
    public double Diagonal {
       get {
          double dx = X.Length, dy = Y.Length;

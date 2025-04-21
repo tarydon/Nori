@@ -409,12 +409,18 @@ unsafe static class GLU {
    public delegate void GLUtessEndProc ();
    public delegate void GLUtessVertexDataProc (Ptr data, Ptr data2);
 
-   public static void SetWinding (this HTesselator tess, EWindingRule winding) 
-      => tess.SetProperty (GLU_TESS_WINDING_RULE, (int)winding);
+   public static HTesselator SetWinding (this HTesselator tess, EWindingRule winding) {
+      tess.SetProperty (GLU_TESS_WINDING_RULE, (int)winding); return tess;
+   }
+
+   public static HTesselator SetOnlyBoundary (this HTesselator tess, bool onlyBoundary) {
+      tess.SetProperty (GLU_TESS_BOUNDARY_ONLY, onlyBoundary ? 1 : 0); return tess;
+   }
 
    // Assigns GLU callback function
-   public static void SetCallback<TCallback> (this HTesselator tess, TCallback cb) where TCallback : Delegate {
+   public static HTesselator SetCallback<TCallback> (this HTesselator tess, TCallback cb) where TCallback : Delegate {
       tess.SetCallback (GetProc (), cb);
+      return tess;
 
       static uint GetProc () {
          var type = typeof (TCallback);
