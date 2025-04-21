@@ -538,9 +538,7 @@ public readonly struct Seg (Point2 a, Point2 b, Point2 center, Poly.EFlags flags
       return (s, e);
    }
 
-   /// <summary>
-   /// Returns true if the given point is to the 'left' of this segment
-   /// </summary>
+   /// <summary>Returns true if the given point is to the 'left' of this segment</summary>
    public bool IsPointOnLeft (Point2 pt) {
       if (IsArc) {
          double dist = Center.DistTo (pt);
