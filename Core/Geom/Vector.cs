@@ -97,7 +97,8 @@ public readonly struct Vector2 : IEQuable<Vector2> {
 
    /// <summary>Convert a Vector2 to a Point2</summary>
    public static explicit operator Point2 (Vector2 a) => new (a.X, a.Y);
-
+   /// <summary>Convert a Vector2 to a Vector3.</summary>
+   public static explicit operator Vector3 (Vector2 a) => new (a.X, a.Y, 0);
    // Implementation -----------------------------------------------------------
    public override string ToString () => $"<{X.R6 ()},{Y.R6 ()}>";
 }
