@@ -428,13 +428,13 @@ unsafe static class GLU {
       }
    }
 
-   [DllImport (GLU32, EntryPoint = "gluTessVertex")] static internal extern void AddVertex (this HTesselator tess, double* location, void* data);
+   [DllImport (GLU32, EntryPoint = "gluTessVertex")] static internal extern void AddVertex (this HTesselator tess, double* location, Ptr data);
    [DllImport (GLU32, EntryPoint = "gluNewTess")] static internal extern HTesselator NewTess ();
    [DllImport (GLU32, EntryPoint = "gluDeleteTess")] static internal extern void Delete (this HTesselator tess);
    [DllImport (GLU32, EntryPoint = "gluTessProperty")] static internal extern void SetProperty (this HTesselator tess, uint prop, double value);
    [DllImport (GLU32, EntryPoint = "gluTessNormal")] static internal extern void SetNormal (this HTesselator tess, double x, double y, double z);
    [DllImport (GLU32, EntryPoint = "gluTessBeginContour")] static internal extern void BeginContour (this HTesselator tess);
-   [DllImport (GLU32, EntryPoint = "gluTessBeginPolygon")] static internal extern void BeginPolygon (this HTesselator tess, void* data);
+   [DllImport (GLU32, EntryPoint = "gluTessBeginPolygon")] static internal extern void BeginPolygon (this HTesselator tess, Ptr data);
    [DllImport (GLU32, EntryPoint = "gluTessCallback")] static extern void SetCallback (this HTesselator tess, uint which, Delegate proc);
    [DllImport (GLU32, EntryPoint = "gluTessEndContour")] static internal extern void EndContour (this HTesselator tess);
    [DllImport (GLU32, EntryPoint = "gluTessEndPolygon")] static internal extern void EndPolygon (this HTesselator tess);

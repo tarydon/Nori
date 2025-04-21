@@ -6,9 +6,19 @@ using static Nori.GLU;
 
 namespace Nori;
 
+/// <summary>A helper class used to inject the GLU based 2D tessllator implementations.</summary>
+public class GLTess2D : Tess2D {
+   public override List<int> Do (IEnumerable<Point2> pts, IEnumerable<int> splits) {
+      var tess = new GLTess2DImp (pts, splits); 
+      var res = tess.Process ();
+      mError = tess.Error;
+      return res;
+   }
+}
+
 /// <summary>A base class for all GLU based tessellators.</summary>
-public abstract class GLUTess : Tessellator {
-   public GLUTess () => WindingRule = EWindingRule.Odd;
+abstract class GLTessImp : Tessellator {
+   public GLTessImp () => WindingRule = EWindingRule.Odd;
 
    #region Properties ------------------------------------------------
    /// <summary>If this is turned on, then we need the tessellator to return edge flags.</summary>
@@ -26,11 +36,11 @@ public abstract class GLUTess : Tessellator {
 
    #region GLU callbacks ---------------------------------------------
    /// <summary>Called whenever a new triangle begins</summary>
-   protected private GLUtessBeginProc TessBegin => type => (mPrimType, mnVerts) = (type, mnTriangles = 0);
+   protected GLUtessBeginProc TessBegin => type => (mPrimType, mnVerts) = (type, mnTriangles = 0);
    /// <summary>Called to set the edge flag before outputting a vertex</summary>
-   protected private GLUtessEdgeFlagProc TessEdgeFlag => (byte flag) => miNextEdge = flag != 0;
+   protected GLUtessEdgeFlagProc TessEdgeFlag => (byte flag) => miNextEdge = flag != 0;
    /// <summary>Callback used to report errors during tessellation (this is very very rare)</summary>
-   protected private GLUtessErrorProc TessError => (int error) => mError = $"Tesselation error: {error}";
+   protected GLUtessErrorProc TessError => (int error) => mError = $"Tesselation error: {error}";
    #endregion
 
    #region Private/Protected data ------------------------------------
@@ -38,6 +48,7 @@ public abstract class GLUTess : Tessellator {
    protected bool miUseEdgeFlags;
    /// <summary>Values shared between TessBegin and TessVertex callbacks</summary>
    protected int mnVerts, mnTriangles;
+   /// <summary>The current primitive type the tessellator is outputing.</summary>
    protected EPrimitive mPrimType;
    /// <summary>Is the next edge (to be output to TessVertex) a boundary edge?</summary>
    protected bool miNextEdge;
@@ -54,7 +65,7 @@ public abstract class GLUTess : Tessellator {
 }
 
 /// <summary>Given a list of points as inner and outer polygon contours, generate a tesselation in 2D</summary>
-public class GLUTess2D (IEnumerable<Point2> pts, IEnumerable<int> splits) : GLUTess {
+class GLTess2DImp (IEnumerable<Point2> pts, IEnumerable<int> splits) : GLTessImp {
    #region Implementation --------------------------------------------
    public unsafe override List<int> Process () {
       // Initialize tessellator the first time we are called
@@ -64,22 +75,22 @@ public class GLUTess2D (IEnumerable<Point2> pts, IEnumerable<int> splits) : GLUT
       tess.SetCallback (TessVertex);
       tess.SetCallback (TessCombine);
       tess.SetCallback (TessError);
+      tess.SetCallback (NeedEdgeFlags ? TessEdgeFlag : null!);
       // Set up the tessellation properties
       tess.SetWinding (WindingRule);
-      tess.SetCallback (NeedEdgeFlags ? TessEdgeFlag : null!);
 
       // Generate the array of doubles we use to provide input
       int n = mPts.Count;
       double[] vals = new double[n * 3];
-      for (int i = 0; i < n; i++) { var pt = mPts[i]; vals[i * 3] = pt.X; vals[i * 3 + 1] = pt.Y; }
+      for (int i = 0; i < n; i++) (vals[i * 3], vals[i * 3 + 1]) = mPts[i];
       fixed (double* pf = vals) {
          tess.SetNormal (0, 0, 1);
-         tess.BeginPolygon ((void*)0);
+         tess.BeginPolygon (nint.Zero);
          for (int i = 1; i < mSplit.Count; i++) {
             int a = mSplit[i - 1], b = mSplit[i];
             tess.BeginContour ();
             for (int j = a; j < b; j++)
-               tess.AddVertex (pf + j * 3, (void*)j);
+               tess.AddVertex (pf + j * 3, j);
             tess.EndContour ();
          }
          tess.EndPolygon ();

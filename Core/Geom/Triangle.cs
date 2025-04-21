@@ -2,10 +2,36 @@
 // ╔═╦╦═╦╦╬╣ Triangle.cs
 // ║║║║╬║╔╣║ Implements variaous tessellators to generate triangles in 2D and 3D
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
-namespace Nori; 
+namespace Nori;
+
+/// <summary>A base class for 2D/3D tesselator selectors.</summary>
+public abstract class TessBase {
+   /// <summary>Error results after tessellation (if any)</summary>
+   public string Error => mError;
+   protected string mError = string.Empty;
+}
+
+/// <summary>A base class to help select the appropriate 2D tessellation implementation</summary>
+public abstract class Tess2D : TessBase {
+   public abstract List<int> Do (IEnumerable<Point2> pts, IEnumerable<int> splits);
+}
+
+/// <summary>A base class to help select the appropriate 3D tessellation implementation</summary>
+public abstract class Tess3D : TessBase {
+   public abstract List<int> Do (IEnumerable<Point3> pts, IEnumerable<int> splits);
+}
 
 /// <summary>A base class for all Nori tessellators.</summary>
 public abstract class Tessellator {
+   /// <summary>Given the implementation type, instantiates and returns a 2D tessellator object</summary>
+   /// In practice, the actual tessellator implementation may reside in different assembly from
+   /// where the interface is defined. This method helps _inject_ the implementation into the interface.
+   /// <typeparam name="TessImp">The 2D tessellator implementation type</typeparam>
+   /// <returns>The 2D tessellator implementation instance</returns>
+   public static Tess2D TwoD<TessImp> () where TessImp : Tess2D, new () => new TessImp ();
+
+   public static Tess3D ThreeD<TessImp> () where TessImp : Tess3D, new () => new TessImp ();
+
    /// <summary>Error results after tessellation (if any)</summary>
    public string Error => mError;
    protected string mError = string.Empty;
@@ -19,7 +45,6 @@ public abstract class Tessellator {
    /// <summary>This stores the resultant tessellation</summary>
    protected readonly List<int> mResult = [];
 }
-
 
 class EarClip2 (ImmutableArray<Point2> pts, ImmutableArray<int> splits) : Tessellator {
    readonly ImmutableArray<Point2> Pts = pts;
