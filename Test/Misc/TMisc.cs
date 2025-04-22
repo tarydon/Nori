@@ -325,8 +325,8 @@ class TMisc {
    void Test13 () {
       // Create poly with holes
       PolyBuilder outer = new ();
-      outer.Line (0, 0).Line (500, 0).Arc (500, 200, 500, 300, Poly.EFlags.CW)
-         .Line (300, 300).Arc (100, 300, 100, 200, Poly.EFlags.CCW).Line (0, 200).Close ();
+      outer.Line (0, 0).Line (500, 0).Line (500, 200).Arc (500, 200, 500, 300, Poly.EFlags.CW)
+         .Line (400, 300).Arc (100, 300, 100, 200, Poly.EFlags.CCW).Line (0, 200).Close ();
       List<Poly> polys = [
          outer.Build (),
          Poly.Circle ((80, 80), 60),

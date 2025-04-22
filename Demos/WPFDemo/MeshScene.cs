@@ -17,14 +17,11 @@ class MeshScene : Scene3 {
    CMesh MakeMesh () {
       if (!TessDemo) return CMesh.LoadTMesh ($"{Lib.DevRoot}/TData/Geom/CMesh/part.tmesh");
       // Tessellation demo makes a 'thick plane' from a Poly with holes.
-      // 1. Create a flat with an outer contour and inner holes.
       const double thk = 10;     // Plane thickness
-      // 1.a. Make outer contour
-      PolyBuilder outer = new ();
-      outer.Line (0, 0).Line (500, 0).Arc (500, 200, 500, 300, Poly.EFlags.CW)
-         .Line (300, 300).Arc (100, 300, 100, 200, Poly.EFlags.CCW).Line (0, 200).Close ();
+      // 1. Create a flat with an outer contour and inner holes.
       List<Poly> polys = [ 
-         outer.Build (),
+         // 1.a. Make outer contour
+         Poly.Parse ("M0,0H500V200V200Q400,300,-1H100Q0,200,1Z"),
          // 1.b. Add inner contours
          Poly.Circle ((80, 80), 60),
          Poly.Circle ((450, 70), 20),
@@ -47,7 +44,7 @@ class MeshScene : Scene3 {
       // 3. Tessellate the polygon into triangles
       var tries = Tessellator.TwoD<GLTess2D> ().Do (pts, splits);
 
-      // 4. Create a thick plane from trianles and contours
+      // 4. Create a thick plane from triangles and contours
       // 4.a. Make top plane from triangles
       var nodes = tries.Select (n => (Point3)pts[n]).ToList ();
       // 4.b. Shift top plane by thickness to make the bottom plane
