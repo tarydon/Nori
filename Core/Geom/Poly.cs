@@ -162,14 +162,14 @@ public partial class Poly {
    /// to the given point. Note that this means that we first pick the closest segment,
    /// and then pick if the closest node is the start or end of that segment. So
    /// Node will either be Seg, or Seg+1 always. 
-   public (double Dist, int Seg, int Node) GetDistance (Point2 pt) {
-      var (minDist, nSeg, fLie) = (1e99, 0, 0.0);
+   public (double Dist, int Seg) GetDistance (Point2 pt) {
+      var (minDist, nSeg) = (1e99, 0);
       for (int i = Count - 1; i >= 0; i--) {
          Seg seg = this[i];
          double dist = seg.GetDist (pt, minDist); 
-         if (dist < minDist) (minDist, nSeg, fLie) = (dist, i, seg.GetLie (pt));
+         if (dist < minDist) (minDist, nSeg) = (dist, i);
       }
-      return (minDist, nSeg, nSeg + (fLie > 0.5 ? 1 : 0)); 
+      return (minDist, nSeg);
    }
 
    /// <summary>Computes the bounding rectangle of the Poly (not cached)</summary>
@@ -543,6 +543,15 @@ public readonly struct Seg (Point2 a, Point2 b, Point2 center, Poly.EFlags flags
          if (!IsCCW && e > s) e -= Lib.TwoPI;
       }
       return (s, e);
+   }
+
+   /// <summary>Returns true if the given point is to the 'left' of this segment</summary>
+   public bool IsPointOnLeft (Point2 pt) {
+      if (IsArc) {
+         double dist = Center.DistTo (pt);
+         return (dist > Radius) ^ IsCCW;
+      } else 
+         return pt.LeftOf (A, B);
    }
 
    /// <summary>Convert the curved segment into 1 or more beziers</summary>
