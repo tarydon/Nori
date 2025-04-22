@@ -4,8 +4,8 @@
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 namespace Nori.Testing;
 
-[Fixture (1, "Geometry tests", "Geom")]
-class GeometryTests {
+[Fixture (1, "Bound tests", "Geom")]
+class BoundTests {
    [Test (1, "class Bound1")]
    void Test5 () {
       Bound1 b1 = new (), b2 = new (10, 20), b3 = new (3, 1);
@@ -247,5 +247,54 @@ class GPUTypesTests {
 
       Matrix3 m2 = new (11, 12, 13, 21, 22, 23, 31, 32, 33, 1, 2, 3);
       m2.ExtractRotation ().Is ("[11,12,13, 21,22,23, 31,32,33, 0,0,0]");
+   }
+}
+
+[Fixture (18, "Geo class tests", "Geom")]
+class GeoTests {
+   [Test (55, "Test of LineXLine")]
+   void Test1 () {
+      Point2 a = new (0, 0), b = new (10, 5), c = new (5, -1), d = new (-1, 8);
+      Geo.LineXLine (a, b, c, d).Is ("(3.25,1.625)");
+      Point2 e = new (1, -10), f = new (1, 0);
+      Geo.LineXLine (a, b, e, f).Is ("(1,0.5)");
+      Point2 g = new (0, 1), h = new (10, 6);
+      Geo.LineXLine (a, b, g, h).IsNil.IsTrue ();
+   }
+
+   [Test (56, "Test of LineSegXLineSeg")]
+   void Test2 () {
+      Point2 a = new (-10, 0), b = new (10, 0), c = new (0, -10), d = new (0, 10);
+      Geo.LineSegXLineSeg (a, b, c, d).Is ("(0,0)");
+      Geo.LineSegXLineSeg (a, b, new (0, -10), new (0, 0)).Is ("(0,0)");
+      Geo.LineSegXLineSeg (a, b, new (0, 0), new (0, 10)).Is ("(0,0)");
+      Geo.LineSegXLineSeg (a, b, new (0, -10), new (0, -1)).IsNil.IsTrue ();
+      Geo.LineSegXLineSeg (a, b, new (0, 1), new (0, 10)).IsNil.IsTrue ();
+      Geo.LineSegXLineSeg (new (-10, 0), new (0, 0), c, d).Is ("(0,0)");
+      Geo.LineSegXLineSeg (new (0, 0), new (10, 0), c, d).Is ("(0,0)");
+      Geo.LineSegXLineSeg (new (-10, 0), new (-1, 0), c, d).IsNil.IsTrue ();
+      Geo.LineSegXLineSeg (new (1, 0), new (10, 0), c, d).IsNil.IsTrue ();
+   }
+
+   [Test (57, "Test of CircleXCircle")]
+   void Test3 () {
+      Span<Point2> buffer = stackalloc Point2[2];
+      Point2 a = new (0, 0), b = new (10, 0), c = new (10, 5);
+      Geo.CircleXCircle (a, 10, a, 5, buffer).Length.Is (0);
+      var pts = Geo.CircleXCircle (a, 6, b, 4, buffer); 
+      pts.Length.Is (1); pts[0].Is ("(6,0)");
+
+      double dist = Math.Sqrt (10 * 10 + 5 * 5);
+      pts = Geo.CircleXCircle (a, dist * 0.45, c, dist * 0.55, buffer);
+      pts.Length.Is (1); pts[0].Is ("(4.5,2.25)");
+      pts = Geo.CircleXCircle (a, 8, b, 8, buffer);
+      pts.Length.Is (2); pts[0].Is ("(5,-6.244998)"); pts[1].Is ("(5,6.244998)");
+      pts = Geo.CircleXCircle (a, dist * 0.7, c, dist * 0.7, buffer);
+      pts.Length.Is (2);
+      pts[0].Is ("(7.44949,-2.398979)");
+      pts[1].Is ("(2.55051,7.398979)");
+
+      Geo.CircleXCircle (a, dist * 0.49, c, dist * 0.49, buffer).Length.Is (0);
+      Geo.CircleXCircle (a, 4.999, b, 4.999, buffer).Length.Is (0);
    }
 }

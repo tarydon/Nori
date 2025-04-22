@@ -65,31 +65,6 @@ public static class Geo {
       return buffer[0..2];
    }
 
-   /// <summary>Returns the intersections between two circles</summary>
-   /// There can be 1 or 2 intersecions, so this returns an array.
-   /// If there are no intersections, it returns null
-   public static bool CircleXCircle2 (Point2 cen1, double fRad1, Point2 cen2, double fRad2, out Point2[]? pints) {
-      double fDist = cen1.DistTo (cen2);
-      if (fDist.IsZero ()) { pints = null; return false; }
-      if (fDist.EQ (fRad1 + fRad2) || fDist.EQ (Math.Abs (fRad1 - fRad2))) {
-         // Circles are touching tangentially, only one intersection Point2
-         double fToMove = fRad1, fAngle = cen1.AngleTo (cen2);
-         if (fRad2.EQ (fRad1 + fDist)) fToMove = -fToMove;
-         pints = new[] { cen1.Polar(fToMove, fAngle) };
-         return true;
-      } else {
-         // Two intersection points (see figure 4)
-         if (fDist < Math.Abs (fRad1 - fRad2) || fDist > fRad1 + fRad2) { pints = null; return false; }
-         double fD1 = (fRad1 * fRad1 + fDist * fDist - fRad2 * fRad2) / (2 * fDist);
-         double fHt = Math.Sqrt (Math.Abs (fRad1 * fRad1 - fD1 * fD1));
-         double fAngle = cen1.AngleTo (cen2);
-         Point2 p1 = cen1.Polar(fD1, fAngle).Polar(fHt, fAngle + Math.PI / 2);
-         Point2 p2 = p1.Polar(-fHt * 2, fAngle + Math.PI / 2);
-         pints = new[] { p1, p2 };
-         return true;
-      }
-   }
-
    /// <summary>Return the intersection Point2 of two lines A-B and C-D</summary>
    /// <param name="A">First Point2 on line 1</param>
    /// <param name="B">Second Point2 on line 1</param>
