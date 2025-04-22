@@ -3,6 +3,7 @@
 // ║║║║╬║╔╣║ Implements the Poly class (polyline), and the Seg class (segment)
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 namespace Nori;
+using static Geo;
 using static Math;
 
 #region class Poly ---------------------------------------------------------------------------------
@@ -37,6 +38,10 @@ public partial class Poly {
    /// <summary>Make a multi-segment PolyLine</summary>
    public static Poly Lines (IEnumerable<Point2> points)
       => new ([.. points], [], EFlags.Closed);
+
+   /// <summary>Create a polygon of given size at a given center and sides.</summary>
+   public static Poly Polygon (Point2 cen, double radius, int sides) 
+      => Lines (Enumerable.Range (0, sides).Select (i => cen.Polar (radius, HalfPI + TwoPI * i / sides)));
 
    /// <summary>This constructor makes a Pline from a Pline mini-language encoded string</summary>
    /// When we do ToString on a Pline, we get an encoding of that Pline in a mini-language.
@@ -175,25 +180,6 @@ public partial class Poly {
 
    /// <summary>Computes the length of the Poly</summary>
    public double GetPerimeter () => Segs.Sum (a => a.Length);
-
-   /// <summary>Creates and returns a new reversed Poly of 'this'</summary>
-   public Poly Reversed () {
-      if (!HasArcs) {
-         return new ([..mPts.Reverse ()], [], mFlags);
-      } else {
-         PolyBuilder builder = new ();
-         for (int i = Count - 1; i >= 0; i--) {
-            Seg s = this[i];
-            if (s.IsArc) {
-               var flags = s.IsCCW ? EFlags.CW : EFlags.CCW;
-               if (s.IsCircle) flags |= EFlags.Circle;
-               builder.Arc (s.B, s.Center, flags);
-            } else builder.Line (s.B);
-         }
-         if (!IsClosed) builder.Line (A); else builder.Close ();
-         return builder.Build ();
-      }
-   }
 
    // Operators ----------------------------------------------------------------
    /// <summary>Create a new Poly by applying the transformation matrix</summary>

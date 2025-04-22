@@ -61,6 +61,20 @@ public partial class Poly {
       return pb.Build ();
    }
 
+   /// <summary>Creates and returns a new reversed Poly of 'this'</summary>
+   public Poly Reverse () {
+      if (!HasArcs) return new ([.. mPts.Reverse ()], [], mFlags);
+      PolyBuilder builder = new ();
+      const EFlags Mask = EFlags.CW | EFlags.CCW;
+      for (int i = Count - 1; i >= 0; i--) {
+         Seg s = this[i];
+         if (s.IsArc) builder.Arc (s.B, s.Center, s.Flags ^ Mask);
+         else builder.Line (s.B);
+      }
+      if (!IsClosed) builder.Line (A); else builder.Close ();
+      return builder.Build ();
+   }
+
    /// <summary>'Rolls' a closed Poly so that node N becomes the starting node</summary>
    /// This returns a new Poly that looks identical, but whose start point is different. 
    /// It is mainly used to simplify some routines (like Chamfer) so they never have to 

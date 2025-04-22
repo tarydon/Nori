@@ -18,6 +18,7 @@
          <Button Click="LineFontDemo">LineFont Demo</Button>
          <Button Click="TrueTypeDemo">TrueType Demo</Button>
          <Button Click="MeshDemo">Mesh Demo</Button>
+         <Button Click="TessDemo">Tessellation Demo</Button>
       </StackPanel>
       <Border Name="mContent" />
    </DockPanel>

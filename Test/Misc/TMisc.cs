@@ -321,6 +321,41 @@ class TMisc {
          => lf.Render ("Hello\nWorld", new (x, y), align, 0, 1, 2, 30.D2R (), poly);
    }
 
+   [Test (55, "2D tessellation tests")]
+   void Test13 () {
+      // Create poly with holes
+      PolyBuilder outer = new ();
+      outer.Line (0, 0).Line (500, 0).Arc (500, 200, 500, 300, Poly.EFlags.CW)
+         .Line (300, 300).Arc (100, 300, 100, 200, Poly.EFlags.CCW).Line (0, 200).Close ();
+      List<Poly> polys = [
+         outer.Build (),
+         Poly.Circle ((80, 80), 60),
+         Poly.Circle ((450, 70), 20),
+         Poly.Circle ((250, 120), 20),
+         Poly.Rectangle (160, 160, 180, 180),
+         Poly.Rectangle (170, 20, 280, 40),
+         Poly.Polygon ((350, 150), 30, 6),
+         Poly.Polygon ((350, 50), 20, 5),
+         Poly.Polygon ((50, 250), 20, 3),
+         Poly.Circle ((250, 250), 20),
+      ];
+
+      // Make tessellation inputs
+      List<Point2> pts = []; List<int> splits = [0];
+      foreach (var poly in polys) {
+         poly.Discretize (pts, 0.1);
+         splits.Add (pts.Count);
+      }
+
+      // Tessellate the polygon into triangles
+      var tries = Tessellator.TwoD<GLTess2D> ().Do (pts, splits);
+      var nodes = tries.Select (n => (Point3)pts[n]).ToList ();
+
+      // Build and compare the mesh
+      new CMeshBuilder (nodes.AsSpan ()).Build ().Save (NT.TmpTxt);
+      Assert.TextFilesEqual ($"{NT.Data}/Geom/Tess/gl2d.tmesh", NT.TmpTxt);
+   }
+
    class T1Type : IIndexed {
       public override string ToString () => $"T{Idx}";
       public ushort Idx { get; set; }
