@@ -11,14 +11,22 @@ namespace Nori;
 public readonly struct BlockTimer : IDisposable {
    /// <summary>Construct a Blocktimer, given the text to display when the block finishes</summary>
    public BlockTimer (string text) => (mText, mStart) = (text, DateTime.Now);
+   public BlockTimer (int iterations, string text) => (mIterations, mText, mStart) = (iterations, text, DateTime.Now);
 
    public void Dispose () {
       double time = (DateTime.Now - mStart).TotalMilliseconds;
       Lib.Trace ($"{mText}: {time:F2} ms\n");
+      if (mIterations > 1) {
+         var (value, suffix) = (time / mIterations, "ms");
+         if (value < 1) { value *= 1000; suffix = "\u00b5s"; }
+         if (value < 1) { value *= 1000; suffix = "ns"; }
+         Lib.Trace ($"{value:F1} {suffix} per iteration\n");
+      }
    }
 
    readonly string mText;
    readonly DateTime mStart;
+   readonly int mIterations = 1; 
 }
 #endregion
 
