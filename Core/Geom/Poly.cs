@@ -176,6 +176,16 @@ public partial class Poly {
    /// <summary>Computes the length of the Poly</summary>
    public double GetPerimeter () => Segs.Sum (a => a.Length);
 
+   /// <summary>This returns the 'turn angle' at a particular node</summary>
+   /// This is how much the pline 'turns' at this node. The angle returned is from -PI .. +PI, and
+   /// +ve values mean a left turn. If 0 is returned, then this is a tangential corner
+   public double GetTurnAngle (int nNode) {
+      int cSegs = Count;
+      double outAngle = this[nNode].GetSlopeAt (0);
+      double inAngle = this[(nNode - 1).Wrap (cSegs)].GetSlopeAt (1);
+      return Lib.NormalizeAngle (outAngle - inAngle);
+   }
+
    // Operators ----------------------------------------------------------------
    /// <summary>Create a new Poly by applying the transformation matrix</summary>
    public static Poly operator * (Poly p, Matrix2 xfm) {
