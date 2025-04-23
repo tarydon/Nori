@@ -69,6 +69,7 @@ public partial class Poly {
    /// <param name="radius">Fillet radius</param>
    /// <param name="left">Indicates how the fillet arc winds around target node</param>
    public Poly? Fillet (int node, double radius, bool left) {
+      if (radius.IsZero ()) return null;
       // Handle the special case where we are filleting at node 0 of a 
       // closed Poly (by rolling the poly and making a fillet at N-1)
       if (IsClosed && (node == 0 || node == Count))
