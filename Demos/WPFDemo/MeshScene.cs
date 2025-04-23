@@ -21,7 +21,7 @@ class MeshScene : Scene3 {
       // 1. Create a flat with an outer contour and inner holes.
       List<Poly> polys = [ 
          // 1.a. Make outer contour
-         Poly.Parse ("M0,0H500V200V200Q400,300,-1H100Q0,200,1Z"),
+         Poly.Parse ("M0,0H500V200Q400,300,-1H100Q0,200,1Z"),
          // 1.b. Add inner contours
          Poly.Circle ((80, 80), 60),
          Poly.Circle ((450, 70), 20),
@@ -42,12 +42,12 @@ class MeshScene : Scene3 {
       }
 
       // 3. Tessellate the polygon into triangles
-      var tries = Tessellator.TwoD<GLTess2D> ().Do (pts, splits);
+      var tries = Tess2D.Process (pts, splits);
 
       // 4. Create a thick plane from triangles and contours
-      // 4.a. Make top plane from triangles
+      // 4.a. Make the bottom plane from triangles at Z=0
       var nodes = tries.Select (n => (Point3)pts[n]).ToList ();
-      // 4.b. Shift top plane by thickness to make the bottom plane
+      // 4.b. Shift the bottom plane by thickness in Z to make the top plane
       nodes.AddRange (nodes.Select (x => x.WithZ (thk)).ToArray ());
       // 4.c. Make side walls from the polygon contours
       var span = pts.AsSpan ();

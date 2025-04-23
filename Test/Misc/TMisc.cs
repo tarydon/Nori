@@ -325,7 +325,7 @@ class TMisc {
    void Test13 () {
       // Create poly with holes
       PolyBuilder outer = new ();
-      outer.Line (0, 0).Line (500, 0).Line (500, 200).Arc (500, 200, 500, 300, Poly.EFlags.CW)
+      outer.Line (0, 0).Line (500, 0).Arc (500, 200, 500, 300, Poly.EFlags.CW)
          .Line (400, 300).Arc (100, 300, 100, 200, Poly.EFlags.CCW).Line (0, 200).Close ();
       List<Poly> polys = [
          outer.Build (),
@@ -346,9 +346,9 @@ class TMisc {
          poly.Discretize (pts, 0.1);
          splits.Add (pts.Count);
       }
-
+      
       // Tessellate the polygon into triangles
-      var tries = Tessellator.TwoD<GLTess2D> ().Do (pts, splits);
+      var tries = Tess2D.Process (pts, splits);
       var nodes = tries.Select (n => (Point3)pts[n]).ToList ();
 
       // Build and compare the mesh

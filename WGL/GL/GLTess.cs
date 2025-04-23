@@ -6,21 +6,19 @@ using static Nori.GLU;
 
 namespace Nori;
 
-/// <summary>A helper class used to inject the GLU based 2D tessllator implementations.</summary>
-public class GLTess2D : Tess2D {
-   public override List<int> Do (List<Point2> pts, IReadOnlyList<int> splits) {
-      var tess = new GLTess2DImp (pts, splits); 
-      var res = tess.Process ();
-      mError = tess.Error;
-      return res;
-   }
-}
+#region class Tess2D -------------------------------------------------------------------------------
+/// <summary>Given a list of points as inner and outer polygon contours, generate a tesselation in 2D</summary>
+/// This OpenGL based tessellator uses the GLU libraries to tessellate polygons.
+/// (See Tessellators and Quadrics in "The Red Book" for more details on using tessellation sub-API)
+public class Tess2D (List<Point2> pts, IReadOnlyList<int> splits) : Tessellator {
+   /// <summary>Tessellates the polygons with outer and inner contours into triangles</summary>
+   /// <param name="pts">List of all contour points.</param>
+   /// <param name="splits">List of indices defining the contour boundaries.</param>
+   /// <returns>The triangle indices</returns>
+   public static List<int> Process (List<Point2> pts, IReadOnlyList<int> splits)
+      => new Tess2D (pts, splits).Process ();
 
-/// <summary>A base class for all GLU based tessellators.</summary>
-abstract class GLTessImp : Tessellator {
-   public GLTessImp () => WindingRule = EWindingRule.Odd;
-
-   #region Properties ------------------------------------------------
+   // Properties ---------------------------------------------------------------
    /// <summary>If this is turned on, then we need the tessellator to return edge flags.</summary>
    /// The tessellator normally return a list of integers. These integers, taken in sets of
    /// 3, provide the indices into the points array to define each triangle. If this flag
@@ -31,42 +29,9 @@ abstract class GLTessImp : Tessellator {
 
    /// <summary>Set the winding rule to use for computing the tessellation.</summary>
    /// See the documentation for gluTessProperty to understand about the winding rule
-   public EWindingRule WindingRule { protected get; set; }
-   #endregion
+   public EWindingRule WindingRule { protected get; set; } = EWindingRule.Odd;
 
-   #region GLU callbacks ---------------------------------------------
-   /// <summary>Called whenever a new triangle begins</summary>
-   protected GLUtessBeginProc TessBegin => type => (mPrimType, mnVerts) = (type, mnTriangles = 0);
-   /// <summary>Called to set the edge flag before outputting a vertex</summary>
-   protected GLUtessEdgeFlagProc TessEdgeFlag => (byte flag) => miNextEdge = flag != 0;
-   /// <summary>Callback used to report errors during tessellation (this is very very rare)</summary>
-   protected GLUtessErrorProc TessError => (int error) => mError = $"Tesselation error: {error}";
-   #endregion
-
-   #region Private/Protected data ------------------------------------
-   /// <summary>If set, then we are generating edge-flag bits</summary>
-   protected bool miUseEdgeFlags;
-   /// <summary>Values shared between TessBegin and TessVertex callbacks</summary>
-   protected int mnVerts, mnTriangles;
-   /// <summary>The current primitive type the tessellator is outputing.</summary>
-   protected EPrimitive mPrimType;
-   /// <summary>Is the next edge (to be output to TessVertex) a boundary edge?</summary>
-   protected bool miNextEdge;
-   /// <summary>The list of edge flags; each value here is 0 or 0x40000000</summary>
-   protected readonly int[] miEdge = new int[3];
-   /// <summary>The list of indices for the triangle</summary>
-   protected readonly int[] mIdx = new int[3];
-   #endregion
-
-   #region Nested types and constants --------------------------------
-   /// <summary>This is the bit that is set when we return edge flags</summary>
-   public const int EdgeBit = 0x40000000;
-   #endregion
-}
-
-/// <summary>Given a list of points as inner and outer polygon contours, generate a tesselation in 2D</summary>
-class GLTess2DImp (List<Point2> pts, IReadOnlyList<int> splits) : GLTessImp {
-   #region Implementation --------------------------------------------
+   // Implementation -----------------------------------------------------------
    public unsafe override List<int> Process () {
       // Initialize tessellator the first time we are called
       var tess = sTess == HTesselator.Zero ? (sTess = NewTess ()) : sTess;
@@ -95,15 +60,21 @@ class GLTess2DImp (List<Point2> pts, IReadOnlyList<int> splits) : GLTessImp {
       }
       return mResult;
    }
-   #endregion
 
-   #region GLU callbacks ---------------------------------------------
+   // GLU callbacks ------------------------------------------------------------
+   // Called whenever a new triangle primitive begins
+   GLUtessBeginProc TessBegin => type => (mPrimType, mnVerts) = (type, mnTriangles = 0);
+   // Called to set the edge flag before outputting a vertex
+   GLUtessEdgeFlagProc TessEdgeFlag => (byte flag) => miNextEdge = flag != 0;
+   // Callback used to report errors during tessellation (this is very very rare)
+   GLUtessErrorProc TessError => (int error) => mError = $"Tesselation error: {error}";
+   // Called to record triangle indices
    GLUtessVertexDataProc TessVertex => (nint data, nint another) => {
       miEdge[mnVerts] = miNextEdge ? EdgeBit : 0;
       mIdx[mnVerts] = (int)data;
       if (++mnVerts == 3) {
          // If we got 3 vertices, we can output a triangle
-         if (miUseEdgeFlags)
+         if (NeedEdgeFlags)
             AddTriangle (mIdx[0] | miEdge[0], mIdx[1] | miEdge[1], mIdx[2] | miEdge[2]);
          else
             AddTriangle (mIdx[0], mIdx[1], mIdx[2]);
@@ -135,7 +106,6 @@ class GLTess2DImp (List<Point2> pts, IReadOnlyList<int> splits) : GLTessImp {
          mResult.AddRange (stackalloc[] { n1, n2, n3 });
       }
    };
-
    // Called when a new vertex needs to be generated at an intersection point.
    // The paramter coords contains the location of the new point to be added to the list
    // of points. We must return the index of the newly added point into *pout. 
@@ -148,15 +118,30 @@ class GLTess2DImp (List<Point2> pts, IReadOnlyList<int> splits) : GLTessImp {
          return mPts.Count - 1;
       }
    };
-   #endregion
 
-   #region Data ------------------------------------------------------
+   // Private data -------------------------------------------------------------
    // Polygon to tessellate.
    readonly List<Point2> mPts = pts;
-   // Polygon outer/inner contours
+   // Polygon outer/inner contour boundaries.
    readonly IReadOnlyList<int> mSplit = splits;
+
+   // Values shared between TessBegin and TessVertex callbacks
+   int mnVerts, mnTriangles;
+   // The current primitive type the tessellator is outputing.
+   EPrimitive mPrimType;
+   // Is the next edge (to be output to TessVertex) a boundary edge?
+   bool miNextEdge;
+   // The list of edge flags; each value here is 0 or 0x40000000
+   readonly int[] miEdge = new int[3];
+   // The list of indices for the triangle
+   readonly int[] mIdx = new int[3];
+
    // The GLU tessellator object
    [ThreadStatic]
    static HTesselator sTess;
-   #endregion
+
+   // Nested types and constants -----------------------------------------------
+   // This is the bit that is set when we return edge flags
+   internal const int EdgeBit = 0x40000000;
 }
+#endregion
