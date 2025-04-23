@@ -7,6 +7,7 @@ namespace Nori;
 
 #region struct Point2 ------------------------------------------------------------------------------
 /// <summary>Point in 2 dimensions, 64-bit double components</summary>
+[AuPrimitive]
 public readonly struct Point2 : IEQuable<Point2> {
    // Constructors -------------------------------------------------------------
    /// <summary>Construct a Point2 given the X and Y ordinates</summary>
@@ -156,6 +157,8 @@ public readonly struct Point2 : IEQuable<Point2> {
    }
 
    public override string ToString () => $"({X.S6 ()},{Y.S6 ()})";
+
+   public void Write (ByteWriter B) => B.Put (X.R6 ()).Put (',').Put (Y.R6 ());
 }
 #endregion
 

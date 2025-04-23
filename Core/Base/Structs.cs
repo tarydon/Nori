@@ -32,6 +32,7 @@ public readonly struct BlockTimer : IDisposable {
 
 #region struct Color -------------------------------------------------------------------------------
 /// <summary>Represents a 32-bit color value</summary>
+[AuPrimitive]
 public readonly struct Color4 : IEQuable<Color4> {
    // Constructor --------------------------------------------------------------
    /// <summary>Construct a color with given R, G, B values (from 0..255), and alpha 0xFF</summary>
@@ -121,6 +122,8 @@ public readonly struct Color4 : IEQuable<Color4> {
    static readonly Dictionary<Color4, string> sNames = [];
    static readonly Dictionary<string, Color4> sParse = new (StringComparer.OrdinalIgnoreCase);
    static readonly Random mRand = new ();
+
+   void Write (ByteWriter B) => B.Put ('#').Put (Value, true);
 }
 #endregion
 

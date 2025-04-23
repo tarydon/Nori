@@ -2,6 +2,8 @@
 // ╔═╦╦═╦╦╬╣ Classes.cs
 // ║║║║╬║╔╣║ Various utility classes
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
+using System.Buffers.Text;
+
 namespace Nori;
 
 #region class DIBitmap -----------------------------------------------------------------------------
@@ -60,3 +62,67 @@ public class MultiDispose : IDisposable {
    public void Dispose () { mDisposables.ForEach (a => a?.Dispose ()); mDisposables.Clear (); }
 }
 #endregion
+
+public class ByteWriter {
+   public ByteWriter Put (char ch) { Grow (1); D[N++] = (byte)ch; return this; }
+
+   public ByteWriter Put (byte[] data) {
+      int n = data.Length;
+      Grow (n); data.CopyTo (D, N); N += n;
+      return this;
+   }
+   public ByteWriter Put (ReadOnlySpan<byte> data) {
+      int n = data.Length;
+      Grow (n); data.CopyTo (D.AsSpan (N)); N += n;
+      return this;
+   }
+
+   public ByteWriter Put (double f) {
+      Grow (32);
+      Utf8Formatter.TryFormat (f, D.AsSpan (N), out int cb); 
+      N += cb; return this; 
+   }
+
+   public ByteWriter Put (int n) {
+      Grow (32);
+      Utf8Formatter.TryFormat (n, D.AsSpan (N), out int cb);
+      N += cb; return this; 
+   }
+
+   public ByteWriter Put (float f) {
+      Grow (32);
+      Utf8Formatter.TryFormat (f, D.AsSpan (N), out int cb);
+      N += cb; return this; 
+   }
+
+   public ByteWriter Put (bool v) {
+      Grow (32);
+      Utf8Formatter.TryFormat (v, D.AsSpan (N), out int cb);
+      N += cb; return this; 
+   }
+
+   public ByteWriter Put (uint n, bool hex) {
+      Grow (32);
+      Utf8Formatter.TryFormat (n, D.AsSpan (N), out int cb, new System.Buffers.StandardFormat ('X'));
+      N += cb; return this;
+   }
+
+   public ByteWriter Put (string s) {
+      Grow (Encoding.UTF8.GetByteCount (s));
+      int cb = Encoding.UTF8.GetBytes (s, D.AsSpan (N));
+      N += cb; return this; 
+   }
+
+   void Grow (int required) {
+      while (N + required >= D.Length)
+         Array.Resize (ref D, D.Length * 2);
+   }
+
+   public byte[] Trimmed () {
+      Array.Resize (ref D, N);
+      return D;
+   }
+
+   byte[] D = new byte[256];
+   int N;
+}

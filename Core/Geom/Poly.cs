@@ -7,6 +7,7 @@ using static Math;
 
 #region class Poly ---------------------------------------------------------------------------------
 /// <summary>Represents a polyline (composed of lines, and arcs)</summary>
+[AuPrimitive]
 public partial class Poly {
    // Constructor --------------------------------------------------------------
    internal Poly (ImmutableArray<Point2> pts, ImmutableArray<Extra> extra, EFlags flags)
@@ -91,6 +92,31 @@ public partial class Poly {
          a = b;
       }
       return sb.ToString ();
+   }
+
+   void Write (ByteWriter w) {
+      bool first = true;
+      Point2 a = A;
+      foreach (var seg in Segs) {
+         if (IsCircle) {
+            w.Put ('C'); seg.Center.Write (w); w.Put (',').Put (seg.Radius.R6 ());
+            return;
+         }
+         if (first) { first = false; w.Put ('M'); a.Write (w); }
+         Point2 b = seg.B;
+         if (seg.IsArc) {
+            double t = seg.AngSpan / (PI / 2);
+            w.Put ('Q'); b.Write (w); w.Put (',').Put (t.R6 ());
+         } else {
+            if (!(seg.IsLast && IsClosed)) {
+               if (a.X.EQ (b.X)) w.Put ('V').Put (b.Y.R6 ());
+               else if (a.Y.EQ (b.Y)) w.Put ('H').Put (b.X.R6 ());
+               else { w.Put ('L'); b.Write (w); }
+            } 
+         }
+         a = b; 
+      }
+      if (IsClosed) w.Put ('Z'); 
    }
 
    // Properties ---------------------------------------------------------------

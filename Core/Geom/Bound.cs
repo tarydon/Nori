@@ -71,6 +71,7 @@ public readonly struct Bound1 : IEQuable<Bound1> {
 
 #region struct Bound2 ------------------------------------------------------------------------------
 /// <summary>Represents a bound in 2 dimensions (a bounding rectangle)</summary>
+[AuPrimitive]
 public readonly struct Bound2 : IEQuable<Bound2> {
    // Constructors -------------------------------------------------------------
    public Bound2 () => (X, Y) = (new (), new ());
@@ -95,6 +96,9 @@ public readonly struct Bound2 : IEQuable<Bound2> {
    }
 
    public override string ToString () => IsEmpty ? "Empty" : $"({X},{Y})";
+
+   public void Write (ByteWriter buf) 
+      => buf.Put (X.Min).Put (',').Put (Y.Min).Put (',').Put (X.Max).Put (',').Put (Y.Max);
 
    // Properties ---------------------------------------------------------------
    public readonly Bound1 X, Y;
