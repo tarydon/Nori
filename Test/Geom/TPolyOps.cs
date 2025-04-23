@@ -4,9 +4,9 @@
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 namespace Nori.Testing;
 
-[Fixture (15, "Poly node mangler tests", "Geom")]
+[Fixture (19, "Poly node mangler tests", "Geom")]
 class PolyOpsTests {
-   [Test (24, "Poly fillet tests")]
+   [Test (58, "Poly fillet tests")]
    void Test1 () {
       Poly rect = Poly.Rectangle (0, 0, 200, 100);
       Poly? poly;
