@@ -5,6 +5,9 @@
 using JetBrains.Annotations;
 namespace Nori;
 
+[AttributeUsage (AttributeTargets.Struct | AttributeTargets.Class)]
+public sealed class AuPrimitiveAttribute : Attribute;
+
 #region [EPropClass] attribute ---------------------------------------------------------------------
 /// <summary>[EPropClass] attribute, used to auto-implement IObservable(EProp) for a type.</summary>
 /// The class then will have one or more fields decorated with [EPropField], and when

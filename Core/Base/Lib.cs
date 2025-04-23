@@ -37,7 +37,7 @@ public static class Lib {
    /// We use this to when searching for a type by name. If only the core name of the type
    /// is specified, these namespaces are prepended to that name to try to form a match
    public static void AddNamespace (string nameSpace) => mNamespaces.Add ($"{nameSpace}.");
-   internal static List<string> mNamespaces = ["Nori"];
+   internal static List<string> mNamespaces = ["Nori", "System.Collections.Generic", "System"];
 
    /// <summary>Checks a condition, and throws an exception in debug mode</summary>
    /// In release mode, this just returns the condition quietly
@@ -87,7 +87,12 @@ public static class Lib {
    /// <summary>Returns the 'nice name' for a type (human readable name like 'int')</summary>
    public static string NiceName (Type type) {
       if (!sNiceNames.TryGetValue (type, out var s)) {
-         s = type.FullName!;
+         if (type.IsGenericType) {
+            s = type.GetGenericTypeDefinition ().FullName!;
+            s = s[..s.IndexOf ('`')];
+            s += $"<{type.GetGenericArguments ().Select (NiceName).ToCSV ()}>";
+         } else 
+            s = type.FullName!;
          foreach (var ns in mNamespaces)
             if (s.StartsWith (ns)) { s = s[(ns.Length + 1)..]; break; }
          sNiceNames[type] = s;
