@@ -66,6 +66,61 @@ public class MultiDispose : IDisposable {
 public class ByteWriter {
    public ByteWriter Put (char ch) { Grow (1); D[N++] = (byte)ch; return this; }
 
+   public ByteWriter Del () { N--; return this; }
+
+   public void DoIndent () {
+      Stack<int> starts = [];
+      for (int i = 0; i < N; i++) {
+         // Skip past comments, and skip past content within a string
+         if (Bypass ((byte)';', ref i, (byte)'\n')) continue;
+         if (Bypass ((byte)'"', ref i, (byte)'"')) continue;
+
+         byte b = D[i];
+         if (Starter (b)) starts.Push (i);
+         else if (Ender (b)) { 
+            // Found a block. If it's less than 80 chars long, replace all \n 
+            // in this block with spaces
+            int st = starts.Pop (), len = i - st;
+            if (len < 80)
+               MemoryExtensions.Replace (D.AsSpan (st, len), (byte)'\n', (byte)' ');
+         }
+      }
+
+      int cLevel = 0, cDone = 0; 
+      List<byte> output = [];
+      for (int i = 0; i < N; i++) {
+         if (Bypass ((byte)';', ref i, (byte)'\n')) continue;
+         if (Bypass ((byte)'"', ref i, (byte)'"')) continue;
+         byte b = D[i];
+         if (Starter (b)) cLevel += 2;
+         else if (Ender (b)) cLevel -= 2;
+         else if (b == '\n') {
+            if (cLevel > 0 && Ender (D[i + 1])) {
+               DoCopy (); cLevel -= 2; i++;
+               Indent ();
+               continue; 
+            }
+            DoCopy (); Indent (); 
+         }
+
+         void DoCopy () { while (cDone <= i) output.Add (D[cDone++]); }
+         void Indent () { for (int j = 0; j < cLevel; j++) output.Add ((byte)' '); }
+      }
+      D = [.. output]; N = D.Length;
+
+      // Helpers .................................
+      bool Bypass (byte starter, ref int idx, byte ender) {
+         if (D[idx] == starter) {
+            while (D[++idx] != ender) { }
+            return true; 
+         }
+         return false;
+      }
+
+      static bool Starter (byte b) => b == '{' || b == '[';
+      static bool Ender (byte b) => b == '}' || b == ']';
+   }
+
    public ByteWriter Put (byte[] data) {
       int n = data.Length;
       Grow (n); data.CopyTo (D, N); N += n;
@@ -75,6 +130,10 @@ public class ByteWriter {
       int n = data.Length;
       Grow (n); data.CopyTo (D.AsSpan (N)); N += n;
       return this;
+   }
+
+   public void NL () {
+      if (D[N - 1] != '\n') Put ('\n');
    }
 
    public ByteWriter Put (double f) {
