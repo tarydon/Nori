@@ -2,6 +2,7 @@
 // ╔═╦╦═╦╦╬╣ Classes.cs
 // ║║║║╬║╔╣║ Various utility classes
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
+using System.Buffers;
 using System.Buffers.Text;
 
 namespace Nori;
@@ -166,7 +167,14 @@ public class ByteWriter {
       N += cb; return this;
    }
 
+   static SearchValues<char> mSpl = SearchValues.Create ("\'\":[{()}]=");
+
    public ByteWriter Put (string s) {
+      bool quote = s.Any (a => a is < (char)32 or > (char)128) || s.Any (mSpl.Contains);
+      if (quote) {
+         s = s.Replace ('"', '\''); 
+         if (quote) s = $"\"{s}\"";
+      }
       Grow (Encoding.UTF8.GetByteCount (s));
       int cb = Encoding.UTF8.GetBytes (s, D.AsSpan (N));
       N += cb; return this; 
