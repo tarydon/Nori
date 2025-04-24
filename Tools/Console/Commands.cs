@@ -82,8 +82,10 @@ static class LineCount {
       }
       Console.WriteLine ("---------------------------------------------------------------------------");
       string tPercent = (100.0 * nComments / nLines).ToString ("F1");
-      Console.WriteLine ($"{nFiles,4}{nLines,53}{nComments,9}{tPercent,8}%");
-
+      var dt = DateTime.Now; dt = new DateTime (dt.Year, dt.Month, dt.Day);
+      var dt0 = new DateTime (2024, 10, 13);
+      int days = (int)((dt - dt0).TotalDays + 0.5);
+      Console.WriteLine ($"{nFiles,4}                     Day {days,-4} {nLines,23}{nComments,9}{tPercent,8}%");
    }
 }
 #endregion
