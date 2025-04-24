@@ -398,3 +398,68 @@ unsafe static class GL {
    }
 }
 #endregion
+
+#region class GLU ----------------------------------------------------------------------------------
+// Contains the GLU interface functions
+unsafe static class GLU {
+   const string GLU32 = "glu32.dll";
+   // Callback types -----------------------------------------------------------
+   public delegate void GLUtessBeginProc (EPrimitive type);
+   public delegate void GLUtessErrorProc (int type);
+   public delegate void GLUtessEdgeFlagProc (byte type);
+   public delegate void GLUtessCombineProc (double* coords, void** vdata, float* d3, int* pout);
+   public delegate void GLUtessEndProc ();
+   public delegate void GLUtessVertexDataProc (Ptr data, Ptr data2);
+
+   // Interface functions ------------------------------------------------------
+   // Assigns GLU callback function
+   public static HTesselator SetCallback<TCallback> (this HTesselator tess, TCallback cb) where TCallback : Delegate {
+      tess.SetCallback (GetType (), cb);
+      return tess;
+
+      // Return the Callback type constant.
+      static uint GetType () {
+         var type = typeof (TCallback);
+         if (type == typeof (GLUtessBeginProc)) return GLU_TESS_BEGIN;
+         if (type == typeof (GLUtessEdgeFlagProc)) return GLU_TESS_EDGE_FLAG;
+         if (type == typeof (GLUtessCombineProc)) return GLU_TESS_COMBINE;
+         if (type == typeof (GLUtessVertexDataProc)) return GLU_TESS_VERTEX_DATA;
+         if (type == typeof (GLUtessErrorProc)) return GLU_TESS_ERROR;
+         if (type == typeof (GLUtessEndProc)) return GLU_TESS_END;
+         throw new NotImplementedException ();
+      }
+   }
+
+   // Need only boundary output?
+   public static HTesselator SetOnlyBoundary (this HTesselator tess, bool onlyBoundary) {
+      tess.SetProperty (GLU_TESS_BOUNDARY_ONLY, onlyBoundary ? 1 : 0); return tess;
+   }
+
+   // Sets the tessellation winding rule
+   public static HTesselator SetWinding (this HTesselator tess, EWindingRule winding) {
+      tess.SetProperty (GLU_TESS_WINDING_RULE, (int)winding); return tess;
+   }
+
+   // PInvokes -----------------------------------------------------------------
+   [DllImport (GLU32, EntryPoint = "gluTessVertex")] static internal extern void AddVertex (this HTesselator tess, double* location, Ptr data);
+   [DllImport (GLU32, EntryPoint = "gluNewTess")] static internal extern HTesselator NewTess ();
+   [DllImport (GLU32, EntryPoint = "gluDeleteTess")] static internal extern void Delete (this HTesselator tess);
+   [DllImport (GLU32, EntryPoint = "gluTessProperty")] static internal extern void SetProperty (this HTesselator tess, uint prop, double value);
+   [DllImport (GLU32, EntryPoint = "gluTessNormal")] static internal extern void SetNormal (this HTesselator tess, double x, double y, double z);
+   [DllImport (GLU32, EntryPoint = "gluTessBeginContour")] static internal extern void BeginContour (this HTesselator tess);
+   [DllImport (GLU32, EntryPoint = "gluTessBeginPolygon")] static internal extern void BeginPolygon (this HTesselator tess, Ptr data);
+   [DllImport (GLU32, EntryPoint = "gluTessCallback")] static extern void SetCallback (this HTesselator tess, uint which, Delegate proc);
+   [DllImport (GLU32, EntryPoint = "gluTessEndContour")] static internal extern void EndContour (this HTesselator tess);
+   [DllImport (GLU32, EntryPoint = "gluTessEndPolygon")] static internal extern void EndPolygon (this HTesselator tess);
+
+   // Constants ----------------------------------------------------------------
+   const uint GLU_TESS_BEGIN = 100100;
+   const uint GLU_TESS_END = 100102;
+   const uint GLU_TESS_VERTEX_DATA = 100107;
+   const uint GLU_TESS_COMBINE = 100105;
+   const uint GLU_TESS_ERROR = 100103;
+   const uint GLU_TESS_EDGE_FLAG = 100104;
+   const uint GLU_TESS_WINDING_RULE = 100140;
+   const uint GLU_TESS_BOUNDARY_ONLY = 100141;
+}
+#endregion
