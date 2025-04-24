@@ -3,6 +3,7 @@
 // ║║║║╬║╔╣║ Implements the Poly class (polyline), and the Seg class (segment)
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 namespace Nori;
+using static Geo;
 using static Math;
 
 #region class Poly ---------------------------------------------------------------------------------
@@ -37,6 +38,10 @@ public partial class Poly {
    /// <summary>Make a multi-segment PolyLine</summary>
    public static Poly Lines (IEnumerable<Point2> points)
       => new ([.. points], [], EFlags.Closed);
+
+   /// <summary>Create a polygon of given size at a given center and sides.</summary>
+   public static Poly Polygon (Point2 cen, double radius, int sides) 
+      => Lines (Enumerable.Range (0, sides).Select (i => cen.Polar (radius, HalfPI + TwoPI * i / sides)));
 
    /// <summary>This constructor makes a Pline from a Pline mini-language encoded string</summary>
    /// When we do ToString on a Pline, we get an encoding of that Pline in a mini-language.
@@ -247,6 +252,8 @@ public class PolyBuilder {
       if (mExtra.Count > 0) {
          extra = [..mExtra];
          flags |= Poly.EFlags.HasArcs;
+         if (extra[0].Flags.HasFlag (Poly.EFlags.Circle))
+            flags |= Poly.EFlags.Circle;
       }
       var poly = new Poly ([..mPts], extra, flags);
       Reset ();

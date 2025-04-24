@@ -299,7 +299,7 @@ public class CMeshBuilder {
    readonly List<int> mVIDs = [];
 
    // If two faces have a cosine less than this between them, it's a sharp edge
-   const double mCos = 0.5;
+   const double mCos = 0.51;
 
    // This is the list of vertices
    readonly Vertex[] mVertex = [];
