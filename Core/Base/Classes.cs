@@ -64,12 +64,12 @@ public class MultiDispose : IDisposable {
 }
 #endregion
 
-public class ByteWriter {
-   public ByteWriter Put (char ch) { Grow (1); D[N++] = (byte)ch; return this; }
+public class UTFWriter {
+   public UTFWriter Put (char ch) { Grow (1); D[N++] = (byte)ch; return this; }
 
-   public ByteWriter Del () { N--; return this; }
+   public UTFWriter Del () { N--; return this; }
 
-   public void DoIndent () {
+   public byte[] Indented () {
       Stack<int> starts = [];
       for (int i = 0; i < N; i++) {
          // Skip past comments, and skip past content within a string
@@ -108,6 +108,7 @@ public class ByteWriter {
          void Indent () { for (int j = 0; j < cLevel; j++) output.Add ((byte)' '); }
       }
       D = [.. output]; N = D.Length;
+      return D;
 
       // Helpers .................................
       bool Bypass (byte starter, ref int idx, byte ender) {
@@ -122,12 +123,12 @@ public class ByteWriter {
       static bool Ender (byte b) => b == '}' || b == ']';
    }
 
-   public ByteWriter Put (byte[] data) {
+   public UTFWriter Put (byte[] data) {
       int n = data.Length;
       Grow (n); data.CopyTo (D, N); N += n;
       return this;
    }
-   public ByteWriter Put (ReadOnlySpan<byte> data) {
+   public UTFWriter Put (ReadOnlySpan<byte> data) {
       int n = data.Length;
       Grow (n); data.CopyTo (D.AsSpan (N)); N += n;
       return this;
@@ -137,31 +138,31 @@ public class ByteWriter {
       if (D[N - 1] != '\n') Put ('\n');
    }
 
-   public ByteWriter Put (double f) {
+   public UTFWriter Put (double f) {
       Grow (32);
       Utf8Formatter.TryFormat (f, D.AsSpan (N), out int cb); 
       N += cb; return this; 
    }
 
-   public ByteWriter Put (int n) {
+   public UTFWriter Put (int n) {
       Grow (32);
       Utf8Formatter.TryFormat (n, D.AsSpan (N), out int cb);
       N += cb; return this; 
    }
 
-   public ByteWriter Put (float f) {
+   public UTFWriter Put (float f) {
       Grow (32);
       Utf8Formatter.TryFormat (f, D.AsSpan (N), out int cb);
       N += cb; return this; 
    }
 
-   public ByteWriter Put (bool v) {
+   public UTFWriter Put (bool v) {
       Grow (32);
       Utf8Formatter.TryFormat (v, D.AsSpan (N), out int cb);
       N += cb; return this; 
    }
 
-   public ByteWriter Put (uint n, bool hex) {
+   public UTFWriter Put (uint n, bool hex) {
       Grow (32);
       Utf8Formatter.TryFormat (n, D.AsSpan (N), out int cb, new System.Buffers.StandardFormat ('X'));
       N += cb; return this;
@@ -169,7 +170,7 @@ public class ByteWriter {
 
    static SearchValues<char> mSpl = SearchValues.Create ("\'\":[{()}]=");
 
-   public ByteWriter Put (string s) {
+   public UTFWriter Put (string s) {
       bool quote = s.Any (a => a is < (char)32 or > (char)128) || s.Any (mSpl.Contains);
       if (quote) {
          s = s.Replace ('"', '\''); 
@@ -183,11 +184,6 @@ public class ByteWriter {
    void Grow (int required) {
       while (N + required >= D.Length)
          Array.Resize (ref D, D.Length * 2);
-   }
-
-   public byte[] Trimmed () {
-      Array.Resize (ref D, N);
-      return D;
    }
 
    byte[] D = new byte[256];

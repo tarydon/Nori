@@ -22,8 +22,16 @@ public static class Lib {
    public const double QuarterPI = Math.PI / 4;
 
    // Properties ---------------------------------------------------------------
+   /// <summary>
+   /// The list of known assemblies
+   /// </summary>
+   public static IEnumerable<Assembly> Assemblies => mAssemblies;
+   static HashSet<Assembly> mAssemblies = [];
+
    /// <summary>The root of Nori projects on developer machines</summary>
    public const string DevRoot = "N:";
+
+   public static IEnumerable<string> Namespaces => mNamespaces;
 
    /// <summary>Are we in 'testing' mode?</summary>
    public static bool Testing { get; set; }
@@ -33,11 +41,17 @@ public static class Lib {
    /// This clamps values beyond the range -1 .. +1 to lie within that range
    public static double Acos (double f) => Math.Acos (f.Clamp (-1, 1));
 
+   /// <summary>
+   /// Add an assembly to the list of 'known' assemblies
+   /// </summary>
+   /// These are the assemblies searched when we try to get a type by name
+   public static void AddAssembly (Assembly assy) => mAssemblies.Add (assy);
+
    /// <summary>Adds a namespace to the list of 'known namespaces'</summary>
    /// We use this to when searching for a type by name. If only the core name of the type
    /// is specified, these namespaces are prepended to that name to try to form a match
    public static void AddNamespace (string nameSpace) => mNamespaces.Add ($"{nameSpace}.");
-   internal static List<string> mNamespaces = ["Nori", "System.Collections.Generic", "System"];
+   internal static List<string> mNamespaces = ["Nori", "Pix", "System.Collections.Generic", "System"];
 
    /// <summary>Checks a condition, and throws an exception in debug mode</summary>
    /// In release mode, this just returns the condition quietly
@@ -77,6 +91,7 @@ public static class Lib {
       if (!sInited) {
          sInited = true;
          Register (new FileStmLocator ("wad:", $"{DevRoot}/Wad/"));
+         AddAssembly (Assembly.GetExecutingAssembly ());
       }
    }
    static bool sInited;

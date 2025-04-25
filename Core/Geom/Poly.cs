@@ -94,7 +94,7 @@ public partial class Poly {
       return sb.ToString ();
    }
 
-   void Write (ByteWriter w) {
+   void Write (UTFWriter w) {
       bool first = true;
       Point2 a = A;
       foreach (var seg in Segs) {

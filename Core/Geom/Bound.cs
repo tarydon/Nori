@@ -97,7 +97,7 @@ public readonly struct Bound2 : IEQuable<Bound2> {
 
    public override string ToString () => IsEmpty ? "Empty" : $"({X},{Y})";
 
-   public void Write (ByteWriter buf) 
+   public void Write (UTFWriter buf) 
       => buf.Put (X.Min).Put (',').Put (Y.Min).Put (',').Put (X.Max).Put (',').Put (Y.Max);
 
    // Properties ---------------------------------------------------------------

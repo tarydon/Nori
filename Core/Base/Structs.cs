@@ -123,7 +123,7 @@ public readonly struct Color4 : IEQuable<Color4> {
    static readonly Dictionary<string, Color4> sParse = new (StringComparer.OrdinalIgnoreCase);
    static readonly Random mRand = new ();
 
-   void Write (ByteWriter B) => B.Put ('#').Put (Value, true);
+   void Write (UTFWriter B) => B.Put ('#').Put (Value, true);
 }
 #endregion
 

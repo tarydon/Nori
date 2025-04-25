@@ -158,7 +158,7 @@ public readonly struct Point2 : IEQuable<Point2> {
 
    public override string ToString () => $"({X.S6 ()},{Y.S6 ()})";
 
-   public void Write (ByteWriter B) => B.Put (X.R6 ()).Put (',').Put (Y.R6 ());
+   public void Write (UTFWriter B) => B.Put (X.R6 ()).Put (',').Put (Y.R6 ());
 }
 #endregion
 
