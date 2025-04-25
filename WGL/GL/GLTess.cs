@@ -145,3 +145,171 @@ public class Tess2D (List<Point2> pts, IReadOnlyList<int> splits) : Tessellator 
    internal const int EdgeBit = 0x40000000;
 }
 #endregion
+
+#region class BooleanOps ---------------------------------------------------------------------------
+/// <summary>BooleanOps is used to do fast boolean operations on polys with no curves</summary>
+public static class BooleanOps {
+   /// <summary>This performs a union of a number of polys</summary>
+   public static IList<Poly> Union (this IList<Poly> input) {
+      return Do (input, 0);
+
+      static List<Poly> Do (IList<Poly> input, int level) {
+         const int Chunk = 15;
+         if (input.Count > Chunk && level != int.MaxValue) {
+            // Otherwise, if there are more than 15 polys in the input, process these polys 15
+            // at a time, generating smaller sets.
+            int pieces = (input.Count + Chunk - 1) / Chunk, cOps = 0;
+            List<Poly> outset = [], tmp = [];
+            for (int piece = 0; piece < pieces; piece++) {
+               int start = piece * Chunk, end = Math.Min ((piece + 1) * Chunk, input.Count);
+               for (int i = start; i < end; i++) tmp.Add (input[i]);
+               outset.AddRange (Do (tmp, level + 1)); cOps++;
+               tmp.Clear ();
+            }
+            if (cOps == 1) return outset;
+            return Do (outset, outset.Count >= input.Count ? int.MaxValue : level + 1);
+         }
+         return new Boolean (input).Process ();
+      }
+   }
+
+   /// <summary>Computes the intersection of two polys</summary>
+   public static IList<Poly> Intersect (this Poly a, Poly b) => new Boolean ([a, b]).Process (true);
+
+   /// <summary>Computes the intersection of given polys.</summary>
+   public static IList<Poly> Intersect (this IList<Poly> polys) {
+      if (polys.Count < 2) return polys;
+      List<Poly> result = [polys[^1]], remaining = [.. polys.Take (polys.Count - 1)];
+      for (int i = remaining.Count - 1; i >= 0; i--)
+         result = [.. result.SelectMany (a => Intersect (a, remaining[i]))];
+      return result;
+   }
+
+   /// <summary>Subtract one set of polys from another.</summary>
+   /// <param name="positive">The polys from which other polys are subtracted.</param>
+   /// <param name="negative">The polys which are subtracted.</param>
+   /// <param name="iNegativesAlreadyReversed">Whether the negative polys have already been reversed.</param>
+   /// Subtraction operation requires the negative polys to be reversed, which is an additional
+   /// operation. If the input polys are already reversed, it saves an additional operation, making
+   /// computation a bit faster.
+   public static IList<Poly> Subtract (this IList<Poly> positive, IList<Poly> negative, bool iNegativesAlreadyReversed = false) {
+      List<Poly> ret = [.. positive];
+      if (!iNegativesAlreadyReversed) negative = negative.Select (x => x.Reverse ()).ToList ();
+      // Process negative polys 15 at a time.
+      const int Chunk = 15;
+      int added = 0;
+      for (int i = 0, c = negative.Count; i < c; i++) {
+         ret.Add (negative[i]); added++;
+         if (added == Chunk || i == c - 1) {
+            ret = new Boolean (ret).Process ();
+            added = 0;
+            if (ret.Count == 0) break;
+         }
+      }
+      return ret!;
+   }
+
+   /// <summary>Subtracts negative poly from the positive one.</summary>
+   /// This routine assumes that both positive and negative have same winding.
+   /// <param name="positive">The poly object to be subtracted from.</param>
+   /// <param name="negative">The poly object being subtracted.</param>
+   /// <returns></returns>
+   public static IList<Poly> Subtract (this Poly positive, Poly negative) => Subtract ([positive], [negative]);
+
+   // Implementation -----------------------------------------------------------
+   class Boolean {
+      // Constructs a Boolean object with a number of polys
+      public Boolean (IEnumerable<Poly> input) {
+         mSplit.Add (0);
+         List<Point2> pts = [];
+         foreach (var poly in input) {
+            // Snap the polys to a micron grid.
+            if (poly.HasArcs) {
+               pts.Clear ();
+               poly.Discretize (pts, 0.05);
+               mPts.AddRange (pts.Select (p => p.R6 ()));
+            } else mPts.AddRange (poly.Pts.Select (x => x.R6 ()));
+            mSplit.Add (mPts.Count);
+         }
+         mcStdPts = mPts.Count;
+      }
+
+      // Does the actual processing
+      internal unsafe List<Poly> Process (bool intersection = false) {
+         var tess = sTesselator;
+         if (tess == HTesselator.Zero) tess = sTesselator = NewTess ();
+         var rule = intersection ? EWindingRule.AbsGeqTwo : EWindingRule.Positive;
+         // Set up the callbacks
+         tess.SetCallback (TessBegin).SetCallback (TessVertex)
+            .SetCallback (TessCombine).SetCallback (TessEnd)
+            .SetCallback (TessError)
+            // Set up the winding rule property, and the 'boundary-only' flag
+            .SetWinding (rule).SetOnlyBoundary (true);
+         // Submit tessellation input.
+         double[] vals = new double[mPts.Count * 3];
+         for (int i = 0; i < mPts.Count; i++)
+            (vals[i * 3], vals[i * 3 + 1]) = mPts[i];
+         fixed (double* pf = vals) {
+            tess.SetNormal (0, 0, 1);
+            tess.BeginPolygon (nint.Zero);
+            for (int i = 1; i < mSplit.Count; i++) {
+               int a = mSplit[i - 1], b = mSplit[i];
+               tess.BeginContour ();
+               for (int j = a; j < b; j++)
+                  tess.AddVertex (pf + j * 3, j);
+               tess.EndContour ();
+            }
+            // Invoke tessellation
+            tess.EndPolygon ();
+         }
+         return mOutput;
+      }
+      // The GLU tessellator object.
+      [ThreadStatic]
+      static HTesselator sTesselator;
+
+      // Callbacks ----------------------------------------------------------------
+      // Called whenever a new triangle begins. The first call alone creates a new PolyBuilder
+      // which is reset automatically after PolyBuilder.Build () in TessEnd call.
+      // So subsequent TessBegin calls are no-ops.
+      GLUtessBeginProc TessBegin => _ => mBuilder ??= new ();
+      PolyBuilder mBuilder = null!;
+      // Called when a new vertex needs to be generated at an intersection point.
+      // The paramter coords contains the location of the new point to be added to the list
+      // of points. We must return the index of the newly added point into *pout.
+      unsafe GLUtessCombineProc TessCombine => (double* coords, void** d2, float* d3, int* pout) => {
+         *pout = NewVertex (coords[0], coords[1]);
+
+         // Generates a new vertex or returns an existing (added in a previous Combine call) and 
+         // returns the vertex index.
+         int NewVertex (double x, double y) {
+            Point2 pt = new (x, y);
+            for (int i = mPts.Count - 1; i >= mcStdPts; i--)
+               if (mPts[i].EQ (pt)) return i;
+            mPts.Add (pt);
+            return mPts.Count - 1;
+         }
+      };
+      // This is called when a poly ends; we add the poly we're constructing in
+      GLUtessEndProc TessEnd => () => {
+         var poly = mBuilder.Close ().Build ();
+         if (poly.Count > 2 || poly.GetBound ().Area > 0.1) mOutput.Add (poly);
+      };
+      // Callback used to report errors during tesselation (this is very very rare)
+      GLUtessErrorProc TessError => error => Console.WriteLine ("TessError {0}", error);
+      // Called to output a new vertex; we handle all cases of triangle, triangle-strip and triangle-fan
+      GLUtessVertexDataProc TessVertex => (data, _) => mBuilder.Line (mPts[(int)data]);
+
+      // Private data -------------------------------------------------------------
+      // This is the list of points in all the polys
+      readonly List<Point2> mPts = [];
+      // These are the splits that slice up the list of pts into individual polygons
+      readonly List<int> mSplit = [];
+      // The number of points we added in the original input.
+      // Points beyond this in the mPts array were added by the combine-callback
+      readonly int mcStdPts;
+      // The output list
+      readonly List<Poly> mOutput = [];
+   }
+}
+#endregion

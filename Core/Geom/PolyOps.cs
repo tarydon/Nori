@@ -135,7 +135,7 @@ public partial class Poly {
    /// Roll the Poly and now the node for chamfering becomes an interior node, which simplifies
    /// the logic. 
    public Poly Roll (int n) {
-      if (!IsClosed) throw new InvalidOperationException ("Pline.Roll() works only with closed plines");
+      if (!IsClosed) throw new InvalidOperationException ("Poly.Roll() works only with closed plines");
       if (!HasArcs) return new ([.. mPts.Roll (n)], [], mFlags);
       var knots = mExtra.ToList ();
       while (knots.Count < mPts.Length) knots.Add (new (Point2.Nil, 0));
