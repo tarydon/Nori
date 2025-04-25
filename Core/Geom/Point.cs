@@ -139,6 +139,8 @@ public readonly struct Point2 : IEQuable<Point2> {
 
    /// <summary>Converts a Point2 to a Vector2</summary>
    public static explicit operator Vector2 (Point2 a) => new (a.X, a.Y);
+   /// <summary>Convert a Point2 to a Point3 with Zero Z.</summary>
+   public static explicit operator Point3 (Point2 a) => new (a.X, a.Y, 0);
 
    /// <summary>Converts a tuple (double, double) to Point2</summary>
    public static implicit operator Point2 ((double x, double y) p) => new (p.x, p.y);
