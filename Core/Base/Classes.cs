@@ -64,6 +64,105 @@ public class MultiDispose : IDisposable {
 }
 #endregion
 
+public class UTFReader {
+   public UTFReader (string file) => D = File.ReadAllBytes (file);
+
+   readonly byte[] D;
+   int mN;
+   public int N => mN;
+
+   public byte Peek { get { SkipSpace (); return D[mN]; } }
+
+   public ReadOnlySpan<byte> GetSpan (int start, int length) => D.AsSpan (start, length);
+
+   public UTFReader Match (char b) {
+      SkipSpace ();
+      if (D[mN++] != b) Fatal ($"Expecting '{b}', found '{(char)D[--mN]}'");
+      return this;
+   }
+
+   public bool ReadBoolean () {
+      SkipSpace ();
+      if (!Utf8Parser.TryParse (D.AsSpan (mN), out bool value, out int delta)) Fatal ("Expecting boolean");
+      mN += delta; return value;
+   }
+
+   public int ReadInt32 () {
+      SkipSpace ();
+      if (!Utf8Parser.TryParse (D.AsSpan (mN), out int value, out int delta)) Fatal ("Expecting int");
+      mN += delta; return value;
+   }
+
+   public uint ReadUInt32 (bool hex) {
+      SkipSpace ();
+      if (!Utf8Parser.TryParse (D.AsSpan (mN), out uint value, out int delta, hex ? 'X' : '\0')) Fatal ("Expecting uint");
+      mN += delta; return value;
+   }
+
+   public float ReadSingle () {
+      SkipSpace ();
+      if (!Utf8Parser.TryParse (D.AsSpan (mN), out float value, out int delta)) Fatal ("Expecting float");
+      mN += delta; return value;
+   }
+
+   public double ReadDouble () {
+      SkipSpace ();
+      if (!Utf8Parser.TryParse (D.AsSpan (mN), out double value, out int delta)) Fatal ("Expecting double");
+      mN += delta; return value;
+   }
+
+   public string ReadString () {
+      SkipSpace ();
+      if (Peek == '"') {
+         mN++;
+         var s = Encoding.UTF8.GetString (TakeUntil (mQuote));
+         mN++; return s;
+      }
+      return Encoding.UTF8.GetString (TakeUntil (mSpace));
+   }
+   static readonly SearchValues<byte> mQuote
+      = SearchValues.Create ((byte)'"');
+
+   public bool TryMatch (char b) {
+      if (Peek == b) { Skip (); return true; }
+      return false;
+   }
+
+   public void SkipTo (char b) {
+      while (D[mN++] != b) { }
+   }
+
+   public ReadOnlySpan<byte> TakeUntil (SearchValues<byte> stopper) {
+      SkipSpace (); int start = mN;
+      while (!stopper.Contains (D[mN++])) { }
+      return D.AsSpan (start, --mN - start);
+   }
+
+   public UTFReader SkipSpace () {
+      while (mSpace.Contains (D[mN])) mN++;
+      return this;
+   }
+   static readonly SearchValues<byte> mSpace
+      = SearchValues.Create (9, 10, 11, 13, 32);
+
+   public ReadOnlySpan<byte> Upto (char b) {
+      int start = mN; SkipTo (b);
+      return D.AsSpan (start, mN - start - 1);
+   }
+
+   void Fatal (string s) => throw new Exception (s);
+
+   public override string ToString () {
+      int length = Math.Min (D.Length - mN - 1, 100);
+      return Encoding.UTF8.GetString (D.AsSpan (mN, length));
+   }
+
+   /// <summary>
+   /// Skip one character
+   /// </summary>
+   public UTFReader Skip () { mN++; return this; }
+}
+
 public class UTFWriter {
    public UTFWriter Put (char ch) { Grow (1); D[N++] = (byte)ch; return this; }
 

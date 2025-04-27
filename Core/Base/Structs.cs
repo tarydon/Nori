@@ -86,7 +86,7 @@ public readonly struct Color4 : IEQuable<Color4> {
 
    public bool IsTransparent => A == 0;
    public bool IsNil => A == 0 && R == 0 && G == 0 && B == 0;
-   public uint Value => (uint)((A << 24) | (B << 16) | (G << 8) | R);
+   public uint Value => (uint)((A << 24) | (R << 16) | (G << 8) | B);
 
    // Methods ------------------------------------------------------------------
    /// <summary>Compares two color4 for equality</summary>
@@ -123,7 +123,8 @@ public readonly struct Color4 : IEQuable<Color4> {
    static readonly Dictionary<string, Color4> sParse = new (StringComparer.OrdinalIgnoreCase);
    static readonly Random mRand = new ();
 
-   void Write (UTFWriter B) => B.Put ('#').Put (Value, true);
+   void Write (UTFWriter W) => W.Put ('#').Put (Value, true);
+   static Color4 Read (UTFReader R) { R.Match ('#'); return new (R.ReadUInt32 (true)); }
 }
 #endregion
 
