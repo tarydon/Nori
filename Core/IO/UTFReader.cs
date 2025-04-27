@@ -68,12 +68,12 @@ public class UTFReader {
       SkipSpace ();
       if (Peek == '"') {
          mN++;
-         var s = Encoding.UTF8.GetString (TakeUntil (mQuote));
+         var s = Encoding.UTF8.GetString (TakeUntil (sQuote, false));
          mN++; return s;
       }
-      return Encoding.UTF8.GetString (TakeUntil (sSpace));
+      return Encoding.UTF8.GetString (TakeUntil (sSpace, false));
    }
-   static readonly SearchValues<byte> mQuote = SearchValues.Create ((byte)'"');
+   static readonly SearchValues<byte> sQuote = SearchValues.Create ((byte)'"');
 
    /// <summary>Read an UInt32 value from the stream, in decimal or hexadecimal format (skips past leading whitespace)</summary>
    public uint ReadUInt32 (bool hex) {
@@ -107,8 +107,8 @@ public class UTFReader {
    /// <summary>This reads characters until one of the given 'stop' characters is found</summary>
    /// This returns that set of characters as a ReadOnlySpan. The stop character
    /// itself is not read in (since it could be any one of the stopper characters)
-   public ReadOnlySpan<byte> TakeUntil (SearchValues<byte> stopper) {
-      SkipSpace (); int start = mN;
+   public ReadOnlySpan<byte> TakeUntil (SearchValues<byte> stopper, bool skipSpace) {
+      if (skipSpace) SkipSpace (); int start = mN;
       while (!stopper.Contains (D[mN++])) { }
       return D.AsSpan (start, --mN - start);
    }
@@ -122,7 +122,11 @@ public class UTFReader {
    }
 
    // Implementation -----------------------------------------------------------
-   void Fatal (string s) => throw new Exception (s);
+   void Fatal (string s) {
+      File.WriteAllBytes ("c:/etc/dump.txt", D.AsSpan (0, mN + 10));
+      throw new Exception (s);
+   }
+
 
    public override string ToString () {
       int length = Math.Min (D.Length - mN - 1, 100);

@@ -147,7 +147,7 @@ public class UTFWriter {
    /// Double quotes in the string are replaced with single quotes (this is temporary,
    /// and later we will implement a proper 'escape sequence mechanism' to handle this.
    public UTFWriter Write (string s) {
-      bool quote = s.Any (a => a is < (char)32 or > (char)128) || s.Any (mSpl.Contains);
+      bool quote = s.Any (a => a is < (char)33 or > (char)128) || s.Any (mSpl.Contains) || s == "";
       if (quote) {
          s = s.Replace ('"', '\'');
          if (quote) s = $"\"{s}\"";
@@ -156,7 +156,7 @@ public class UTFWriter {
       int cb = Encoding.UTF8.GetBytes (s, D.AsSpan (N));
       N += cb; return this;
    }
-   static SearchValues<char> mSpl = SearchValues.Create ("\'\":[{()}]=");
+   static SearchValues<char> mSpl = SearchValues.Create (" \'\":[{()}]=");
 
    /// <summary>Write an unsigned integer to the stream in default or hexadecimal formatting</summary>
    /// If hexadecimal formatting is used, this does not write out any leading 
