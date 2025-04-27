@@ -6,9 +6,7 @@ using JetBrains.Annotations;
 namespace Nori;
 
 #region [AuPrimitive] attribute --------------------------------------------------------------------
-/// <summary>
-/// [AuPrimitive] tells the Au system that a type behaves like a 'Primitive'
-/// </summary>
+/// <summary>[AuPrimitive] tells the Au system that a type behaves like a 'Primitive'</summary>
 /// This means that the type knows how to read or write itself into Curl or AuBinary 
 /// files. This is basically a pattern - the type will implement some 'well known'
 /// methods like Write(ByteWriter) etc. 

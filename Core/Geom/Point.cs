@@ -160,7 +160,7 @@ public readonly struct Point2 : IEQuable<Point2> {
 
    public override string ToString () => $"({X.S6 ()},{Y.S6 ()})";
 
-   public void Write (UTFWriter B) => B.Put (X.R6 ()).Put (',').Put (Y.R6 ());
+   public void Write (UTFWriter B) => B.Write (X.R6 ()).Write (',').Write (Y.R6 ());
    public static Point2 Read (UTFReader R) {
       double x = R.ReadDouble (); R.Match (','); double y = R.ReadDouble ();
       return new (x, y);

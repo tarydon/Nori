@@ -100,7 +100,7 @@ public partial class Poly {
       return sb.ToString ();
    }
 
-   void Write (UTFWriter w) => w.Put (ToString ());
+   void Write (UTFWriter w) => w.Write (ToString ());
    static Poly Read (UTFReader s) => Parse (s.ReadString ());
 
    // Properties ---------------------------------------------------------------

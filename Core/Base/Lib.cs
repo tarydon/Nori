@@ -22,9 +22,7 @@ public static class Lib {
    public const double QuarterPI = Math.PI / 4;
 
    // Properties ---------------------------------------------------------------
-   /// <summary>
-   /// The list of known assemblies
-   /// </summary>
+   /// <summary>The list of known assemblies</summary>
    public static IEnumerable<Assembly> Assemblies => mAssemblies;
    static HashSet<Assembly> mAssemblies = [];
 
@@ -41,9 +39,7 @@ public static class Lib {
    /// This clamps values beyond the range -1 .. +1 to lie within that range
    public static double Acos (double f) => Math.Acos (f.Clamp (-1, 1));
 
-   /// <summary>
-   /// Add an assembly to the list of 'known' assemblies
-   /// </summary>
+   /// <summary>Add an assembly to the list of 'known' assemblies</summary>
    /// These are the assemblies searched when we try to get a type by name
    public static void AddAssembly (Assembly assy) => mAssemblies.Add (assy);
 
