@@ -55,7 +55,7 @@ public class Eval {
          if (ch == '(') { mBasePrecedence += 10; return; }
          if (ch == ')') { mBasePrecedence -= 10; return; }
          bool negOperation = ch == '-' && !minusIsSubtract;
-         Operator op = negOperation ? new (EOperation.Neg, mBasePrecedence) : new (sOperationMap[tokenizer.GetLiteral ().ToString ()], mBasePrecedence);
+         Operator op = negOperation ? new (EOperation.Neg, mBasePrecedence) : new (sOperationMap[tokenizer.GetLiteral ()], mBasePrecedence);
          while (mOperators.Count > 0 && op.Precedence <= mOperators.Peek ().Precedence)
             ApplyOperator (mOperators.Pop ());
          mOperators.Push (op);
@@ -93,12 +93,12 @@ public class Eval {
       static double D2R (double f) => f * Math.PI / 180;
    }
 
-   static Dictionary<string, EOperation> sOperationMap = new Dictionary<string, EOperation> () {
+   static Dictionary<string, EOperation>.AlternateLookup<ReadOnlySpan<char>> sOperationMap = new Dictionary<string, EOperation> () {
       ["+"] = EOperation.Add, ["-"] = EOperation.Sub, ["*"] = EOperation.Mul, ["/"] = EOperation.Div,
       ["sin"] = EOperation.Sin, ["cos"] = EOperation.Cos, ["tan"] = EOperation.Tan,
       ["asin"] = EOperation.Asin, ["acos"] = EOperation.Acos, ["atan"] = EOperation.Atan, ["atan2"] = EOperation.Atan2,
       ["log"] = EOperation.Log, ["exp"] = EOperation.Exp, ["sqrt"] = EOperation.Sqrt, ["sqr"] = EOperation.Sqr, ["abs"] = EOperation.Abs,
-   };
+   }.GetAlternateLookup<ReadOnlySpan<char>> ();
 
    // Nested -------------------------------------------------------------------
    /// <summary>Specifies all the currently supported operations</summary>
