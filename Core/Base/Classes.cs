@@ -2,9 +2,6 @@
 // ╔═╦╦═╦╦╬╣ Classes.cs
 // ║║║║╬║╔╣║ Various utility classes
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
-using System.Buffers;
-using System.Buffers.Text;
-
 namespace Nori;
 
 #region class DIBitmap -----------------------------------------------------------------------------

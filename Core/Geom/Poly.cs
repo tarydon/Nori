@@ -100,9 +100,6 @@ public partial class Poly {
       return sb.ToString ();
    }
 
-   void Write (UTFWriter w) => w.Write (ToString ());
-   static Poly Read (UTFReader s) => Parse (s.ReadString ());
-
    // Properties ---------------------------------------------------------------
    /// <summary>Start point of the Poly</summary>
    public Point2 A => mPts[0];
@@ -195,6 +192,10 @@ public partial class Poly {
       double inAngle = this[(nNode - 1).Wrap (cSegs)].GetSlopeAt (1);
       return Lib.NormalizeAngle (outAngle - inAngle);
    }
+
+   // Implementation -----------------------------------------------------------
+   static Poly Read (UTFReader s) => Parse (s.ReadString ());
+   void Write (UTFWriter w) => w.Write (ToString ());
 
    // Operators ----------------------------------------------------------------
    /// <summary>Create a new Poly by applying the transformation matrix</summary>
