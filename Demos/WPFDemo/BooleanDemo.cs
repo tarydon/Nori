@@ -120,7 +120,7 @@ class BooleanRootVN (List<Poly> polys, Bound2 bound) : VNode {
       public override void Draw () => Lux.Polys (mPolys.AsSpan ());
 
       public override VNode? GetChild (int n) {
-         if (mPane == EPane.Subtraction && n == 0) 
+         if (mPane >= EPane.Union && n == 0) 
             return new FillVN (mPolys);
          return null;
       }

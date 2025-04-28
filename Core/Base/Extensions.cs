@@ -34,7 +34,7 @@ public static class Extensions {
    public static ReadOnlySpan<T> AsSpan<T> (this IEnumerable<T> seq) {
       return seq switch {
          List<T> list => list.AsSpan (),
-         T[] arr => new ReadOnlySpan<T> (arr, 0, arr.Length),
+         T[] arr => new (arr, 0, arr.Length),
          _ => seq.ToArray ().AsSpan ()
       };
    }
