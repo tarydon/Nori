@@ -163,11 +163,22 @@ public static partial class Lux {
    /// through, after the stencil is prepared. See the notes on TriFanStencilShader for more
    /// details on the algorithm. 
    public static void FillPath (ReadOnlySpan<Vec2F> pts, ReadOnlySpan<int> indices, Bound2 bound) {
+      // We do this hacking of ZLevels because we have some very specific sequencing requirements
+      // for the stencil RBatch and the cover RBatch. They should be drawn one immediately after the
+      // other. So we use unique ZLevels for each stencil+cover RBatch pair starting with
+      // -19999,-19998, etc. This is because the stencil that is created by the first batch must
+      // be used immediately by the cover step, and definitely before any other stencil batch is 
+      // drawn. Note that the cover shader not only uses the stencil, but also zeroes it out so it
+      // is ready for the next application of the stencil shader
+      ZLevel = ++mcFillPaths - 20000;
       TriFanStencilShader.It.Draw (pts, indices);
       bound = bound.InflatedF (1.01);
       var (x0, x1) = bound.X; var (y0, y1) = bound.Y;
+      ZLevel = ++mcFillPaths - 20000;
       TriFanCoverShader.It.Draw ([new (x0, y0), new (x1, y0), new (x1, y1), new (x0, y1)]);
    }
+   // This gets reset to 0 at the start of every frame
+   static int mcFillPaths = 0; 
 
    /// <summary>Draws 2D lines in world coordinates, with Z = 0</summary>
    /// Every pair of Vec2F in the list creates one line, so with n points,
