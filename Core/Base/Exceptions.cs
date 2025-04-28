@@ -1,4 +1,4 @@
-﻿// ────── ╔╗                                                                                   CORE
+// ────── ╔╗                                                                                   CORE
 // ╔═╦╦═╦╦╬╣ Exceptions.cs
 // ║║║║╬║╔╣║ Various exception types used for Nori
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
@@ -16,9 +16,7 @@ public class ParseException (string value, Type type) : Exception ($"Cannot conv
 #endregion
 
 #region class IncompleteCodeException --------------------------------------------------------------
-/// <summary>
-/// Signals that some code is incomplete (some cases not handled, for example)
-/// </summary>
+/// <summary>Signals that some code is incomplete (some cases not handled, for example)</summary>
 public class IncompleteCodeException (string text) : Exception ($"Incomplete code: {text}");
 #endregion
 

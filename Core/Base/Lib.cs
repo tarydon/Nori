@@ -29,9 +29,7 @@ public static class Lib {
    /// <summary>The root of Nori projects on developer machines</summary>
    public const string DevRoot = "N:";
 
-   /// <summary>
-   /// The list of 'well-known' namespaces
-   /// </summary>
+   /// <summary>The list of 'well-known' namespaces</summary>
    /// When writing types out, or getting the friendly names of types (using
    /// Lib.GetNiceName, these namespace prefixes are removed. So we will get 
    /// "Point2" rather than "Nori.Point2"
