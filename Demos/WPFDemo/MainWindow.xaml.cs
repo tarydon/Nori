@@ -12,6 +12,7 @@ public partial class MainWindow : Window {
       Lib.Init ();
       InitializeComponent ();
       mContent.Child = Lux.CreatePanel ();
+      Loaded += delegate { BooleanDemo (this, new ()); };
    }
 
    void LeafDemo (object sender, RoutedEventArgs e) => Lux.UIScene = new LeafDemoScene ();
@@ -19,4 +20,5 @@ public partial class MainWindow : Window {
    void TrueTypeDemo (object sender, RoutedEventArgs e) => Lux.UIScene = new TrueTypeScene ();
    void MeshDemo (object sender, RoutedEventArgs e) => Lux.UIScene = new MeshScene ();
    void TessDemo (object sender, RoutedEventArgs e) => Lux.UIScene = new MeshScene (true);
+   void BooleanDemo (object sender, RoutedEventArgs e) => Lux.UIScene = new BooleanScene ();
 }

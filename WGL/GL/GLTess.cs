@@ -149,41 +149,53 @@ public class Tess2D (List<Point2> pts, IReadOnlyList<int> splits) : Tessellator 
 #region class BooleanOps ---------------------------------------------------------------------------
 /// <summary>BooleanOps is used to do fast boolean operations on polys with no curves</summary>
 public static class BooleanOps {
+   /// <summary>This performs a union of two given poly objects</summary>
+   public static List<Poly> Union (this Poly a, Poly b) => UnionPolys ([a, b]);
    /// <summary>This performs a union of a number of polys</summary>
-   public static IList<Poly> Union (this IList<Poly> input) {
+   public static List<Poly> UnionPolys (this IEnumerable<Poly> input) => UnionPolys (input.AsSpan ());
+   /// <summary>This performs a union of a number of polys</summary>
+   public static List<Poly> UnionPolys (this ReadOnlySpan<Poly> input) {
       return Do (input, 0);
 
-      static List<Poly> Do (IList<Poly> input, int level) {
+      static List<Poly> Do (ReadOnlySpan<Poly> input, int level) {
          const int Chunk = 15;
-         if (input.Count > Chunk && level != int.MaxValue) {
+         if (input.Length > Chunk && level != int.MaxValue) {
             // Otherwise, if there are more than 15 polys in the input, process these polys 15
             // at a time, generating smaller sets.
-            int pieces = (input.Count + Chunk - 1) / Chunk, cOps = 0;
-            List<Poly> outset = [], tmp = [];
+            int pieces = (input.Length + Chunk - 1) / Chunk, cOps = 0;
+            List<Poly> outset = [];
             for (int piece = 0; piece < pieces; piece++) {
-               int start = piece * Chunk, end = Math.Min ((piece + 1) * Chunk, input.Count);
-               for (int i = start; i < end; i++) tmp.Add (input[i]);
-               outset.AddRange (Do (tmp, level + 1)); cOps++;
-               tmp.Clear ();
+               int start = piece * Chunk, end = Math.Min ((piece + 1) * Chunk, input.Length);
+               outset.AddRange (Do (input[start..end], level + 1)); cOps++;
             }
             if (cOps == 1) return outset;
-            return Do (outset, outset.Count >= input.Count ? int.MaxValue : level + 1);
+            return Do (outset.AsSpan (), outset.Count >= input.Length? int.MaxValue : level + 1);
          }
          return new Boolean (input).Process ();
       }
    }
 
    /// <summary>Computes the intersection of two polys</summary>
-   public static IList<Poly> Intersect (this Poly a, Poly b) => new Boolean ([a, b]).Process (true);
+   public static List<Poly> Intersect (this Poly a, Poly b) => new Boolean ([a, b]).Process (true);
 
    /// <summary>Computes the intersection of given polys.</summary>
-   public static IList<Poly> Intersect (this IList<Poly> polys) {
-      if (polys.Count < 2) return polys;
-      List<Poly> result = [polys[^1]], remaining = [.. polys.Take (polys.Count - 1)];
+   public static List<Poly> IntersectPolys (this IEnumerable<Poly> input) => IntersectPolys (input.AsSpan ());
+
+   /// <summary>Computes the intersection of given polys.</summary>
+   public static List<Poly> IntersectPolys (this ReadOnlySpan<Poly> input) {
+      if (input.Length < 2) return [..input];
+      List<Poly> result = [input[^1]], remaining = [..input[..^1]];
       for (int i = remaining.Count - 1; i >= 0; i--)
          result = [.. result.SelectMany (a => Intersect (a, remaining[i]))];
       return result;
    }
+
+   /// <summary>Subtracts negative poly from the positive one.</summary>
+   /// This routine assumes that both positive and negative have same winding.
+   /// <param name="positive">The poly object to be subtracted from.</param>
+   /// <param name="negative">The poly object being subtracted.</param>
+   /// <returns></returns>
+   public static List<Poly> Subtract (this Poly positive, Poly negative) => SubtractPolys ([positive], [negative]);
 
    /// <summary>Subtract one set of polys from another.</summary>
    /// <param name="positive">The polys from which other polys are subtracted.</param>
@@ -192,16 +204,32 @@ public static class BooleanOps {
    /// Subtraction operation requires the negative polys to be reversed, which is an additional
    /// operation. If the input polys are already reversed, it saves an additional operation, making
    /// computation a bit faster.
-   public static IList<Poly> Subtract (this IList<Poly> positive, IList<Poly> negative, bool iNegativesAlreadyReversed = false) {
+   public static List<Poly> SubtractPolys (this IEnumerable<Poly> positive, IEnumerable<Poly> negative, bool iNegativesAlreadyReversed = false)
+      => SubtractPolys (positive.AsSpan (), negative.AsSpan (), iNegativesAlreadyReversed);
+
+   /// <summary>Subtract one set of polys from another.</summary>
+   /// <param name="positive">The polys from which other polys are subtracted.</param>
+   /// <param name="negative">The polys which are subtracted.</param>
+   /// <param name="iNegativesAlreadyReversed">Whether the negative polys have already been reversed.</param>
+   /// Subtraction operation requires the negative polys to be reversed, which is an additional
+   /// operation. If the input polys are already reversed, it saves an additional operation, making
+   /// computation a bit faster.
+   public static List<Poly> SubtractPolys (this ReadOnlySpan<Poly> positive, ReadOnlySpan<Poly> negative, bool iNegativesAlreadyReversed = false) {
       List<Poly> ret = [.. positive];
-      if (!iNegativesAlreadyReversed) negative = negative.Select (x => x.Reverse ()).ToList ();
+      
+      if (!iNegativesAlreadyReversed) {
+         Poly[] arr = new Poly[negative.Length];
+         for (int i = 0; i < arr.Length; i++)
+            arr[i] = negative[i].Reverse ();
+         negative = arr;
+      }
       // Process negative polys 15 at a time.
       const int Chunk = 15;
       int added = 0;
-      for (int i = 0, c = negative.Count; i < c; i++) {
+      for (int i = 0, c = negative.Length; i < c; i++) {
          ret.Add (negative[i]); added++;
          if (added == Chunk || i == c - 1) {
-            ret = new Boolean (ret).Process ();
+            ret = new Boolean (ret.AsSpan ()).Process ();
             added = 0;
             if (ret.Count == 0) break;
          }
@@ -209,17 +237,10 @@ public static class BooleanOps {
       return ret!;
    }
 
-   /// <summary>Subtracts negative poly from the positive one.</summary>
-   /// This routine assumes that both positive and negative have same winding.
-   /// <param name="positive">The poly object to be subtracted from.</param>
-   /// <param name="negative">The poly object being subtracted.</param>
-   /// <returns></returns>
-   public static IList<Poly> Subtract (this Poly positive, Poly negative) => Subtract ([positive], [negative]);
-
    // Implementation -----------------------------------------------------------
    class Boolean {
       // Constructs a Boolean object with a number of polys
-      public Boolean (IEnumerable<Poly> input) {
+      public Boolean (ReadOnlySpan<Poly> input) {
          mSplit.Add (0);
          List<Point2> pts = [];
          foreach (var poly in input) {

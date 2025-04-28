@@ -30,6 +30,15 @@ public static class Extensions {
    /// Note that you should not add or remove items from the list while the Span is being used.
    public static ReadOnlySpan<T> AsSpan<T> (this List<T> list) => CollectionsMarshal.AsSpan (list);
 
+   /// <summary>Gets a Span&lt;T&gt; view over the data in a sequence</summary>
+   public static ReadOnlySpan<T> AsSpan<T> (this IEnumerable<T> seq) {
+      return seq switch {
+         List<T> list => list.AsSpan (),
+         T[] arr => new ReadOnlySpan<T> (arr, 0, arr.Length),
+         _ => seq.ToArray ().AsSpan ()
+      };
+   }
+
    /// <summary>Clamps the given double to lie within min..max (inclusive)</summary>
    public static double Clamp (this double a, double min, double max) => a < min ? min : (a > max ? max : a);
    /// <summary>Clamps the given double to the range 0..1</summary>
@@ -47,6 +56,12 @@ public static class Extensions {
    /// <summary>Deconstructs a Point3 to a (double, double, double)</summary>
    public static void Deconstruct (this in Point3 pt, out double x, out double y, out double z)
       => (x, y, z) = (pt.X, pt.Y, pt.Z);
+   /// <summary>Deconstructs a Vector2 to a (double, double)</summary>
+   public static void Deconstruct (this in Vector2 vec, out double dx, out double dy)
+      => (dx, dy) = (vec.X, vec.Y);
+   /// <summary>Deconstructs a Vector3 to a (double, double, double)</summary>
+   public static void Deconstruct (this in Vector3 vec, out double dx, out double dy, out double dz)
+      => (dx, dy, dz) = (vec.X, vec.Y, vec.Z);
 
    /// <summary>Convert an angle from degrees to radians</summary>
    public static double D2R (this double f) => f * RadiansPerDegree;

@@ -40,8 +40,8 @@ public partial class Poly {
       => new ([.. points], [], EFlags.Closed);
 
    /// <summary>Create a polygon of given size at a given center and sides.</summary>
-   public static Poly Polygon (Point2 cen, double radius, int sides) 
-      => Lines (Enumerable.Range (0, sides).Select (i => cen.Polar (radius, HalfPI + TwoPI * i / sides)));
+   public static Poly Polygon (Point2 cen, double radius, int sides, double angle = 0) 
+      => Lines (Enumerable.Range (0, sides).Select (i => cen.Polar (radius, angle + Lib.HalfPI + Lib.TwoPI * i / sides)));
 
    /// <summary>This constructor makes a Pline from a Pline mini-language encoded string</summary>
    /// When we do ToString on a Pline, we get an encoding of that Pline in a mini-language.
