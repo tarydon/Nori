@@ -42,6 +42,13 @@ public class UTFReader {
       mN += delta; return value;
    }
 
+   /// <summary>Reads a DateTime value from the stream (skips past leading whitespace)</summary>
+   public DateTime ReadDateTime () {
+      SkipSpace ();
+      if (!Utf8Parser.TryParse (D.AsSpan (mN), out DateTime value, out int delta)) Fatal ("Expecting DateTime value");
+      mN += delta; return value;
+   }
+
    /// <summary>Read a double value from the stream (skips past leading whitespace)</summary>
    public double ReadDouble () {
       SkipSpace ();
@@ -49,10 +56,31 @@ public class UTFReader {
       mN += delta; return value;
    }
 
+   /// <summary>Reads a Guid value from the stream (skips past leading whitespace)</summary>
+   public Guid ReadGuid () {
+      SkipSpace ();
+      if (!Utf8Parser.TryParse (D.AsSpan (mN), out Guid value, out int delta)) Fatal ("Expecting Guid value");
+      mN += delta; return value; 
+   }
+
+   /// <summary>Reads an Int16 value from the stream (skips past leading whitespace)</summary>
+   public short ReadInt16 () {
+      SkipSpace ();
+      if (!Utf8Parser.TryParse (D.AsSpan (mN), out short value, out int delta)) Fatal ("Expecting short value");
+      mN += delta; return value;
+   }
+
    /// <summary>Read an Int32 value from the stream (skips past leading whitespace)</summary>
    public int ReadInt32 () {
       SkipSpace ();
       if (!Utf8Parser.TryParse (D.AsSpan (mN), out int value, out int delta)) Fatal ("Expecting int value");
+      mN += delta; return value;
+   }
+
+   /// <summary>Read an Int64 value from the stream (skips past leading whitespace)</summary>
+   public long ReadInt64 () {
+      SkipSpace ();
+      if (!Utf8Parser.TryParse (D.AsSpan (mN), out long value, out int delta)) Fatal ("Expecting long value");
       mN += delta; return value;
    }
 
@@ -74,11 +102,32 @@ public class UTFReader {
       return Encoding.UTF8.GetString (TakeUntil (sSpace, false));
    }
    static readonly SearchValues<byte> sQuote = SearchValues.Create ((byte)'"');
+   
+   /// <summary>Reads a TimeSpan value from the stream (skips past leading whitespace)</summary>
+   public TimeSpan ReadTimeSpan () {
+      SkipSpace ();
+      if (!Utf8Parser.TryParse (D.AsSpan (mN), out TimeSpan value, out int delta)) Fatal ("Expecting TimeSpan value");
+      mN += delta; return value; 
+   }
+
+   /// <summary>Reads an ushort value from the stream (skips past leading whitespace)</summary>
+   public ushort ReadUInt16 () {
+      SkipSpace ();
+      if (!Utf8Parser.TryParse (D.AsSpan (mN), out ushort value, out int delta)) Fatal ("Expecting ushort value");
+      mN += delta; return value;
+   }
 
    /// <summary>Read an UInt32 value from the stream, in decimal or hexadecimal format (skips past leading whitespace)</summary>
    public uint ReadUInt32 (bool hex) {
       SkipSpace ();
       if (!Utf8Parser.TryParse (D.AsSpan (mN), out uint value, out int delta, hex ? 'X' : '\0')) Fatal ("Expecting uint value");
+      mN += delta; return value;
+   }
+
+   /// <summary>Read an UInt64 value from the stream (skips past leading whitespace)</summary>
+   public ulong ReadUInt64 () {
+      SkipSpace ();
+      if (!Utf8Parser.TryParse (D.AsSpan (mN), out ulong value, out int delta)) Fatal ("Expecting ulong value");
       mN += delta; return value;
    }
 
@@ -126,7 +175,6 @@ public class UTFReader {
       File.WriteAllBytes ("c:/etc/dump.txt", D.AsSpan (0, mN + 10));
       throw new Exception (s);
    }
-
 
    public override string ToString () {
       int length = Math.Min (D.Length - mN - 1, 100);

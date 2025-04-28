@@ -117,6 +117,12 @@ public class UTFWriter {
       return Write (Encoding.UTF8.GetBytes ([value]));
    }
 
+   /// <summary>Write a DateTime to a UTF8 stream using default formatting</summary>
+   public UTFWriter Write (DateTime value) {
+      while (!Utf8Formatter.TryFormat (value, D.AsSpan (N), out mDelta)) Grow ();
+      return Bump ();
+   }
+
    /// <summary>Write a double to a UTF8 stream using default formatting</summary>
    public UTFWriter Write (double value) {
       while (!Utf8Formatter.TryFormat (value, D.AsSpan (N), out mDelta)) Grow ();
@@ -124,10 +130,15 @@ public class UTFWriter {
    }
 
    /// <summary>Write a float to a UTF8 stream using default formatting</summary>
-   public UTFWriter Write (float f) {
-      EnsureSize (32);
-      Utf8Formatter.TryFormat (f, D.AsSpan (N), out int cb);
-      N += cb; return this;
+   public UTFWriter Write (float value) {
+      while (!Utf8Formatter.TryFormat (value, D.AsSpan (N), out mDelta)) Grow ();
+      return Bump ();
+   }
+
+   /// <summary>Write a Guid to a UTF8 stream</summary>
+   public UTFWriter Write (Guid value) {
+      while (!Utf8Formatter.TryFormat (value, D.AsSpan (N), out mDelta)) Grow ();
+      return Bump ();
    }
 
    /// <summary>Write an integer to a UTF8 stream using default formatting</summary>
@@ -157,6 +168,12 @@ public class UTFWriter {
       N += cb; return this;
    }
    static SearchValues<char> mSpl = SearchValues.Create (" \'\":[{()}]=");
+
+   /// <summary>Write a TimeSpan to a UTF8 stream using default formatting</summary>
+   public UTFWriter Write (TimeSpan value) {
+      while (!Utf8Formatter.TryFormat (value, D.AsSpan (N), out mDelta)) Grow ();
+      return Bump ();
+   }
 
    /// <summary>Write an unsigned integer to the stream in default or hexadecimal formatting</summary>
    /// If hexadecimal formatting is used, this does not write out any leading 
