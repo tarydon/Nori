@@ -62,6 +62,8 @@ class PolyTests {
       PB ().Arc (0, 0, Math.Tan (90.D2R () / 4)).End (5, 5).Is ("M0,0Q5,5,1");
       Poly.Parse ("M1,2Q3,4,0").Is ("M1,2L3,4");
       Poly.Parse ("M0,0 L12,13 3,4 Z").Is ("M0,0L12,13L3,4Z");
+      Poly.Parse ("M5,3 H10 V6 Z").Is ("M5,3H10V6Z");
+      Poly.Parse ("M5,3 L10,3 10,6 Z").Is ("M5,3H10V6Z");
 
       Exception? e = null;
       try { Poly.Parse ("M0,0F1,2Z"); } catch (Exception e1) { e = e1; }

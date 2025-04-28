@@ -124,8 +124,12 @@ public class UTFWriter {
    }
 
    /// <summary>Write a double to a UTF8 stream using default formatting</summary>
-   public UTFWriter Write (double value) {
-      while (!Utf8Formatter.TryFormat (value, D.AsSpan (N), out mDelta)) Grow ();
+   public UTFWriter Write (double value) => Write (value, default);
+   /// <summary>
+   /// Write a double to a UTF8 stream with specified formatting
+   /// </summary>
+   public UTFWriter Write (double value, StandardFormat fmt) {
+      while (!Utf8Formatter.TryFormat (value, D.AsSpan (N), out mDelta, fmt)) Grow ();
       return Bump ();
    }
 
@@ -204,6 +208,8 @@ public class UTFWriter {
 
    // Double the size of the buffer
    void Grow () => Array.Resize (ref D, D.Length * 2);
+
+   public ReadOnlySpan<byte> Trimmed () => D.AsSpan (0, N);
 
    byte[] D = new byte[256];  // The byte-array that we grow as needed
    int N;                     // The 'write-pointer' into that array

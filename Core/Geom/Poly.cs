@@ -3,6 +3,8 @@
 // ║║║║╬║╔╣║ Implements the Poly class (polyline), and the Seg class (segment)
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 namespace Nori;
+
+using System.Buffers;
 using static Geo;
 using static Math;
 
@@ -78,6 +80,10 @@ public partial class Poly {
 
    /// <summary>Converts a string to a path-description (similar to the format used by Flux)</summary>
    public override string ToString () {
+      UTFWriter w = new (); Write (w);
+      return Encoding.UTF8.GetString (w.Trimmed ());
+
+      /*
       var sb = new StringBuilder ();
       Point2 a = A;
       foreach (var seg in Segs) {
@@ -97,7 +103,37 @@ public partial class Poly {
          if (seg.IsLast && IsClosed) { sb.Append ('Z'); break; }
          a = b;
       }
-      return sb.ToString ();
+      return sb.ToString (); 
+      */
+   }
+
+   void Write (UTFWriter w) {
+      Point2 a = A;
+      bool first = true;
+      foreach (var seg in Segs) {
+         if (first) {
+            if (IsCircle) {
+               w.Write ('C').Write (seg.Center.X.R6 ()).Write (',').
+                  Write (seg.Center.Y.R6 ()).Write (',').Write (seg.Radius.R6 ());
+               return;
+            }
+            w.Write ('M').Write (a.X.R6 ()).Write (',').Write (a.Y.R6 ());
+            first = false;
+         }
+         Point2 b = seg.B;
+         if (seg.IsArc) {
+            double t = seg.AngSpan / (PI / 2);
+            w.Write ('Q').Write (b.X.R6 ()).Write (',').Write (b.Y.R6 ()).Write (',').Write (t.R6 ());
+         } else {
+            if (!(seg.IsLast && IsClosed)) {
+               if (a.X.EQ (b.X)) w.Write ('V').Write (b.Y.R6 ());
+               else if (a.Y.EQ (b.Y)) w.Write ('H').Write (b.X.R6 ());
+               else w.Write ('L').Write (b.X.R6 ()).Write(',').Write (b.Y.R6 ());
+            }
+         }
+         a = b;
+      }
+      if (IsClosed) w.Write ('Z'); 
    }
 
    // Properties ---------------------------------------------------------------
@@ -195,7 +231,6 @@ public partial class Poly {
 
    // Implementation -----------------------------------------------------------
    static Poly Read (UTFReader s) => Parse (s.ReadString ());
-   void Write (UTFWriter w) => w.Write (ToString ());
 
    // Operators ----------------------------------------------------------------
    /// <summary>Create a new Poly by applying the transformation matrix</summary>
