@@ -111,7 +111,7 @@ public static class Lib {
          } else 
             s = type.FullName!;
          foreach (var ns in mNamespaces)
-            if (s.StartsWith (ns)) { s = s[(ns.Length + 1)..]; break; }
+            if (s.StartsWith (ns)) { s = s[ns.Length..]; break; }
          sNiceNames[type] = s;
       }
       return s;

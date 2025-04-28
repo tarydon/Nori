@@ -17,7 +17,7 @@ class StructTests {
       Color4.Yellow.Is ("Yellow"); Color4.Magenta.Is ("Magenta");
       Color4.Cyan.Is ("Cyan"); Color4.White.Is ("White");
       Color4.Red.EQ (Color4.Red).Is (true);
-      Color4.Red.Value.Is (4278190335U);
+      Color4.Red.Value.Is (0xFFFF0000);
       Color4.Gray (128).Is ("#808080");
       Color4.Gray (0x33).Is ("#333");
       Vec4F v1 = (Vec4F)Color4.Magenta; v1.Is ("<1,0,1,1>");
