@@ -20,3 +20,9 @@ bit set (and the entire subtree underneath that, because of attribute propagatio
 So we could pass in a flag into the Render routine, which could get ORed with the
 AttributesDirty at each stage so subtrees of VNodes with AttributesDirty will
 have their uniforms re-gathered again. 
+
+---
+
+Use UTF8Formatter for writing
+Use UTF8Parser for reading
+

@@ -1,4 +1,4 @@
-﻿// ────── ╔╗                                                                                   CORE
+// ────── ╔╗                                                                                   CORE
 // ╔═╦╦═╦╦╬╣ Structs.cs
 // ║║║║╬║╔╣║ Various Miscellaneous structs used by the Nori application
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
@@ -32,6 +32,7 @@ public readonly struct BlockTimer : IDisposable {
 
 #region struct Color -------------------------------------------------------------------------------
 /// <summary>Represents a 32-bit color value</summary>
+[AuPrimitive]
 public readonly struct Color4 : IEQuable<Color4> {
    // Constructor --------------------------------------------------------------
    /// <summary>Construct a color with given R, G, B values (from 0..255), and alpha 0xFF</summary>
@@ -85,7 +86,7 @@ public readonly struct Color4 : IEQuable<Color4> {
 
    public bool IsTransparent => A == 0;
    public bool IsNil => A == 0 && R == 0 && G == 0 && B == 0;
-   public uint Value => (uint)((A << 24) | (B << 16) | (G << 8) | R);
+   public uint Value => (uint)((A << 24) | (R << 16) | (G << 8) | B);
 
    // Methods ------------------------------------------------------------------
    /// <summary>Compares two color4 for equality</summary>
@@ -93,6 +94,9 @@ public readonly struct Color4 : IEQuable<Color4> {
 
    /// <summary>Constructs a Gray color with value 0..255</summary>
    public static Color4 Gray (int v) => new (v, v, v);
+
+   /// <summary>Read a Color4 from a UTF8 stream</summary>
+   static public Color4 Read (UTFReader R) { R.Match ('#'); return new (R.ReadUInt32 (true)); }
 
    public override string ToString () {
       BuildMap ();
@@ -103,6 +107,9 @@ public readonly struct Color4 : IEQuable<Color4> {
          s = $"{s[0]}{s[2]}{s[4]}";
       return $"#{s}";
    }
+
+   /// <summary>Write a Color4 to a UTF8 stream</summary>
+   public void Write (UTFWriter W) => W.Write ('#').Write (Value, true);
 
    // Operators ----------------------------------------------------------------
    /// <summary>Converts the color to a Vec4f with the X,Y,Z,W components mapping to R,G,B,A</summary>

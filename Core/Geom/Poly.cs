@@ -2,14 +2,17 @@
 // ╔═╦╦═╦╦╬╣ Poly.cs
 // ║║║║╬║╔╣║ Implements the Poly class (polyline), and the Seg class (segment)
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
+using static System.Math;
+using System.Buffers;
 namespace Nori;
 using static Geo;
-using static Math;
 
 #region class Poly ---------------------------------------------------------------------------------
 /// <summary>Represents a polyline (composed of lines, and arcs)</summary>
+[AuPrimitive]
 public partial class Poly {
    // Constructor --------------------------------------------------------------
+   Poly () { }
    internal Poly (ImmutableArray<Point2> pts, ImmutableArray<Extra> extra, EFlags flags)
       => (mPts, mExtra, mFlags) = (pts, extra, flags);
 
@@ -76,26 +79,37 @@ public partial class Poly {
 
    /// <summary>Converts a string to a path-description (similar to the format used by Flux)</summary>
    public override string ToString () {
-      var sb = new StringBuilder ();
+      UTFWriter w = new (); Write (w);
+      return Encoding.UTF8.GetString (w.Trimmed ());
+   }
+
+   void Write (UTFWriter w) {
       Point2 a = A;
+      bool first = true;
       foreach (var seg in Segs) {
+         if (first) {
+            if (IsCircle) {
+               w.Write ('C').Write (seg.Center.X.R6 ()).Write (',').
+                  Write (seg.Center.Y.R6 ()).Write (',').Write (seg.Radius.R6 ());
+               return;
+            }
+            w.Write ('M').Write (a.X.R6 ()).Write (',').Write (a.Y.R6 ());
+            first = false;
+         }
          Point2 b = seg.B;
-         if (IsCircle) return $"C{seg.Center.X.R6 ()},{seg.Center.Y.R6 ()},{seg.Radius.R6 ()}";
-         if (sb.Length == 0) sb.Append ($"M{a.X.R6 ()},{a.Y.R6 ()}");
          if (seg.IsArc) {
-            double t = seg.AngSpan / (PI / 2);   // Number of quarter turns
-            sb.Append ($"Q{b.X.R6 ()},{b.Y.R6 ()},{t.R6 ()}");
+            double t = seg.AngSpan / (PI / 2);
+            w.Write ('Q').Write (b.X.R6 ()).Write (',').Write (b.Y.R6 ()).Write (',').Write (t.R6 ());
          } else {
             if (!(seg.IsLast && IsClosed)) {
-               if (a.X.EQ (b.X)) sb.Append ($"V{b.Y.R6 ()}");
-               else if (a.Y.EQ (b.Y)) sb.Append ($"H{b.X.R6 ()}");
-               else sb.Append ($"L{b.X.R6 ()},{b.Y.R6 ()}");
+               if (a.X.EQ (b.X)) w.Write ('V').Write (b.Y.R6 ());
+               else if (a.Y.EQ (b.Y)) w.Write ('H').Write (b.X.R6 ());
+               else w.Write ('L').Write (b.X.R6 ()).Write(',').Write (b.Y.R6 ());
             }
          }
-         if (seg.IsLast && IsClosed) { sb.Append ('Z'); break; }
          a = b;
       }
-      return sb.ToString ();
+      if (IsClosed) w.Write ('Z'); 
    }
 
    // Properties ---------------------------------------------------------------
@@ -191,6 +205,9 @@ public partial class Poly {
       return Lib.NormalizeAngle (outAngle - inAngle);
    }
 
+   // Implementation -----------------------------------------------------------
+   static Poly Read (UTFReader s) => Parse (s.ReadString ());
+
    // Operators ----------------------------------------------------------------
    /// <summary>Create a new Poly by applying the transformation matrix</summary>
    public static Poly operator * (Poly p, Matrix2 xfm) {
@@ -262,12 +279,18 @@ public class PolyBuilder {
 
    /// <summary>This constructor makes a Pline from a Pline mini-language encoded string</summary>
    /// See Poly.Parse for details
-   internal Poly Build (string s) {
-      var (mode, n) = ('M', 0);
+   internal Poly Build (string s) => Build (new UTFReader (Encoding.UTF8.GetBytes (s)));
+
+   /// <summary>This constructor makes a Pline from a Pline mini-language encoded string</summary>
+   /// See Poly.Parse for details
+   internal Poly Build (UTFReader R) {
+      var mode = 'M';
       Point2 a = Point2.Zero;
+      R.Match ('M');
       for (; ; ) {
          char ch = GetMode ();
          switch (ch) {
+            case 'C': a = GetP (); double r = GetD (); return Poly.Circle (a, r);
             case 'M': a = GetP (); break;
             case 'L': Line (a); a = GetP (); break;
             case 'H': Line (a); a = new (GetD (), a.Y); break;
@@ -286,7 +309,7 @@ public class PolyBuilder {
                   a = b;
                }
                break;
-            default: throw new NotImplementedException ();
+            default: throw new ParseException ($"Unexpected mode '{ch}' in Poly.Parse");
          }
       }
 
@@ -294,32 +317,17 @@ public class PolyBuilder {
       // Read the current mode character (like M, L, V, H etc). Since repeated modes can 
       // be elided, this simply returns the 'current mode' if we see a number instead
       char GetMode () {
-         while (n < s.Length) {
-            char ch = s[n++];
-            if (IsSpace (ch)) continue;
-            if (char.IsLetter (ch)) return mode = char.ToUpper (ch);
-            n--; return mode;
-         }
-         return '.';
+         if (!R.TryPeek (out var b)) return '.';
+         char ch = (char)b; if (char.IsLetter (ch)) { R.Skip (); return mode = char.ToUpper (ch); }
+         return mode; 
       }
 
       // Expecting two doubles (separated by whitespace or commas) to make a Point
       Point2 GetP () => new (GetD (), GetD ());
-
       // Expecting a double, prefixed possibly by whitespace
-      double GetD () {
-         while (n < s.Length && IsSpace (s[n])) n++;
-         int start = n;
-         while (n < s.Length) {
-            char ch = s[n++];
-            if (IsSpace (ch) || (char.IsLetter (ch) && ch != 'E' && ch != 'e')) { n--; break; }
-         }
-         return s[start..n].ToDouble ();
-      }
-
-      // Treat commas like spaces
-      static bool IsSpace (char ch) => char.IsWhiteSpace (ch) || ch == ',';
+      double GetD () => R.Skip (sSpaceAndComma).ReadDouble ();
    }
+   static SearchValues<byte> sSpaceAndComma = SearchValues.Create (" \r\n\f\t,"u8);
 
    /// <summary>Marks the Pline as closed</summary>
    public PolyBuilder Close () { mClosed = true; return this; }

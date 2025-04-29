@@ -7,10 +7,17 @@ namespace Nori;
 
 #region struct Point2 ------------------------------------------------------------------------------
 /// <summary>Point in 2 dimensions, 64-bit double components</summary>
+[AuPrimitive]
 public readonly struct Point2 : IEQuable<Point2> {
    // Constructors -------------------------------------------------------------
    /// <summary>Construct a Point2 given the X and Y ordinates</summary>
    public Point2 (double x, double y) => (X, Y) = (x, y);
+
+   /// <summary>Read a Point2 from a UTF8 stream</summary>
+   public static Point2 Read (UTFReader R) {
+      double x = R.ReadDouble (); R.Match (','); double y = R.ReadDouble ();
+      return new (x, y);
+   }
 
    // Properties ---------------------------------------------------------------
    /// <summary>X ordinate of the Point2</summary>
@@ -125,6 +132,9 @@ public readonly struct Point2 : IEQuable<Point2> {
    public Point2 WithX (double x) => new (x, Y);
    /// <summary>A copy of this point, with just the Y ordinate changed</summary>
    public Point2 WithY (double y) => new (X, y);
+
+   /// <summary>Write a Point2 to a UTF8 stream</summary>
+   public void Write (UTFWriter B) => B.Write (X.R6 ()).Write (',').Write (Y.R6 ());
 
    // Operators ----------------------------------------------------------------
    /// <summary>Returns the displaced point got by adding a Vector2 to a Point2</summary>
