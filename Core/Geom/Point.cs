@@ -7,10 +7,17 @@ namespace Nori;
 
 #region struct Point2 ------------------------------------------------------------------------------
 /// <summary>Point in 2 dimensions, 64-bit double components</summary>
+[AuPrimitive]
 public readonly struct Point2 : IEQuable<Point2> {
    // Constructors -------------------------------------------------------------
    /// <summary>Construct a Point2 given the X and Y ordinates</summary>
    public Point2 (double x, double y) => (X, Y) = (x, y);
+
+   /// <summary>Read a Point2 from a UTF8 stream</summary>
+   public static Point2 Read (UTFReader R) {
+      R.Read (out double x).Match (',').Read (out double y);
+      return new (x, y);
+   }
 
    // Properties ---------------------------------------------------------------
    /// <summary>X ordinate of the Point2</summary>
@@ -37,7 +44,7 @@ public readonly struct Point2 : IEQuable<Point2> {
       return Lib.NormalizeAngle (Atan2 (dy, dx));
    }
 
-   public Point2 CardinalMoved (double r, EDir dir) 
+   public Point2 CardinalMoved (double r, EDir dir)
       => dir switch {
             EDir.E => new (X + r, Y), EDir.W => new (X - r, Y),
             EDir.S => new (X, Y - r), _ => new (X, Y + r)
@@ -126,6 +133,9 @@ public readonly struct Point2 : IEQuable<Point2> {
    /// <summary>A copy of this point, with just the Y ordinate changed</summary>
    public Point2 WithY (double y) => new (X, y);
 
+   /// <summary>Write a Point2 to a UTF8 stream</summary>
+   public void Write (UTFWriter B) => B.Write (X.R6 ()).Write (',').Write (Y.R6 ());
+
    // Operators ----------------------------------------------------------------
    /// <summary>Returns the displaced point got by adding a Vector2 to a Point2</summary>
    public static Point2 operator + (Point2 a, Vector2 b) => new (a.X + b.X, a.Y + b.Y);
@@ -193,8 +203,8 @@ public readonly struct Point3 : IEquatable<Point3> {
 
    /// <summary>Square of the distance between this point and another</summary>
    public double DistToSq (Point3 b) {
-      double dx = b.X - X, dy = b.Y - Y, dz = b.Z - Z; 
-      return dx * dx + dy * dy + dz * dz; 
+      double dx = b.X - X, dy = b.Y - Y, dz = b.Z - Z;
+      return dx * dx + dy * dy + dz * dz;
    }
 
    /// <summary>Compares two points are equal to within EPSILON</summary>

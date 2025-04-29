@@ -48,6 +48,9 @@ public static class Extensions {
    public static void Deconstruct (this in Point3 pt, out double x, out double y, out double z)
       => (x, y, z) = (pt.X, pt.Y, pt.Z);
 
+   /// <summary>Get the description</summary>
+   public static string Description (this Exception e) => $"{Lib.NiceName (e.GetType ())}: {e.Message}";
+
    /// <summary>Convert an angle from degrees to radians</summary>
    public static double D2R (this double f) => f * RadiansPerDegree;
    /// <summary>Convert an angle from degrees to radians</summary>
