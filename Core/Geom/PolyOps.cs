@@ -113,6 +113,71 @@ public partial class Poly {
       return pb.Build ();
    }
 
+   /// <summary>Adds a step at a given node (returns null if not possible)</summary>
+   /// If the node number passed in the start or end node of an open pline, this 
+   /// return null. Otherwise, this is an 'interior' node, and there are two segments
+   /// touching at that node (a lead-in segment, and a lead-out segment). If either
+   /// of those segments are curved, or too short to make a step, this returns 
+   /// null. 
+   /// dist1 is the distance from the corner along the lead-in segment, and dist2
+   /// is the distance from the corner along the lead-out segment.
+   /// 'left' indicates how the step gets added w.r.t to the target node
+   /// 'pos' indicates the reference position w.r.t the lead-in and lead-out segments
+   public Poly? CornerStep (int node, double dist1, double dist2, ECornerOpFlags flags) {
+      // Handle the special case where we are in-filleting at node 0 of a 
+      // closed Poly (by rolling the poly and making a in-fillet at N-1)
+      if (IsClosed && (node == 0 || node == Count))
+         return Roll (1).CornerStep (Count - 1, dist1, dist2, flags);
+
+      // If this is not an interior node, or if one of the two segments attached
+      // to the node is either an arc or too short, we return null
+      if (node <= 0 || node >= Count) return null;
+      var (onSameSide, nearLeadOut) = ((flags & ECornerOpFlags.SameSideOfBothSegments) != 0, (flags & ECornerOpFlags.NearLeadOut) != 0);
+      Seg s1 = this[node - 1], s2 = this[node];
+      if (s1.IsArc || s2.IsArc || (onSameSide && (s1.Length <= dist1 || s2.Length <= dist2))) return null;
+      // When the step is outside the actual poly, it should be possible to add the step even
+      // though the lengths are less than the desired step length
+      if (!onSameSide) {
+         if (nearLeadOut) {
+            if (s2.Length <= dist2) return null;
+         } else if (s1.Length <= dist1) return null;
+      }
+
+      // Use a PolyBuilder to build the in-filleted poly. The target node where
+      // the in-fillet is to be added is 'node'
+      PolyBuilder pb = new ();
+      for (int i = 0; i < mPts.Length; i++) {
+         Point2 pt = mPts[i];
+         // If we are going to add the target node, shift it forward by dist2
+         // along the lead-out segment slope (this is the end of the in-fillet). See the code
+         // below that would have already added the beginning of the in-fillet (the
+         // i == node - 1 check)
+         if (i == node) pt = pt.Polar ((onSameSide || nearLeadOut) ? dist2 : -dist2, s2.Slope);
+
+         // This code adds all the other nodes (they could be the starts of line or arc
+         // segments, and we handle both by looking through the mExtra array). Note that
+         // we directly read the mExtra array rather than use Seg objects for better
+         // performance
+         if (HasArcs && i < mExtra.Length) {
+            var extra = mExtra[i];
+            if ((extra.Flags & EFlags.Arc) != 0) pb.Arc (pt, extra.Center, extra.Flags);
+            else pb.Line (pt);
+         } else
+            pb.Line (pt);
+
+         // If we are heading towards the target node, add an new node for the beginning
+         // of the step, by moving backwards or forwards depending on the pick point by dist1 along the lead-in segment slope
+         if (i == node - 1) {
+            var st = s2.A.Polar ((onSameSide || !nearLeadOut) ? -dist1 : dist1, s1.Slope);
+            pb.Line (st);
+            pb.Line (st.Polar ((onSameSide || nearLeadOut) ? dist2 : -dist2, s2.Slope));
+         }
+      }
+      // Done, close the poly if needed and return it
+      if (IsClosed) pb.Close ();
+      return pb.Build ();
+   }
+
    /// <summary>Creates and returns a new reversed Poly of 'this'</summary>
    public Poly Reverse () {
       if (!HasArcs) return new ([.. mPts.Reverse ()], [], mFlags);
@@ -140,5 +205,19 @@ public partial class Poly {
       var knots = mExtra.ToList ();
       while (knots.Count < mPts.Length) knots.Add (new (Point2.Nil, 0));
       return new ([.. mPts.Roll (n)], [.. knots.Roll (n)], mFlags);
+   }
+
+   /// <summary>Flags to perform some corner operations like fillet, corner-step etc</summary>
+   [Flags]
+   public enum ECornerOpFlags : ushort {
+      None = 0,
+      /// <summary>Reference point on the left of the nearest segment</summary>
+      Left = 1,
+      /// <summary>Reference point nearer to the lead-out segment. If this flag is not set, then the point is nearer to the lead-in segment</summary>
+      NearLeadOut = 2,
+      /// <summary>Reference point is on the same side of both the lead-in and lead-out segments</summary>
+      SameSideOfBothSegments = 4,
+      /// <summary>The closest seg closer to horizontal than vertical</summary>
+      Horz = 8
    }
 }
