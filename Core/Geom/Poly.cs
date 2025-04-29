@@ -32,7 +32,7 @@ public partial class Poly {
       => Circle (new (x, y), radius);
 
    /// <summary>Make a single-line Poly</summary>
-   public static Poly Line (Point2 pt, Point2 pt2) 
+   public static Poly Line (Point2 pt, Point2 pt2)
       => new ([pt, pt2], [], 0);
    /// <summary>Make a single-line Poly</summary>
    public static Poly Line (double x1, double y1, double x2, double y2)
@@ -43,7 +43,7 @@ public partial class Poly {
       => new ([.. points], [], EFlags.Closed);
 
    /// <summary>Create a polygon of given size at a given center and sides.</summary>
-   public static Poly Polygon (Point2 cen, double radius, int sides) 
+   public static Poly Polygon (Point2 cen, double radius, int sides)
       => Lines (Enumerable.Range (0, sides).Select (i => cen.Polar (radius, HalfPI + TwoPI * i / sides)));
 
    /// <summary>This constructor makes a Pline from a Pline mini-language encoded string</summary>
@@ -51,7 +51,7 @@ public partial class Poly {
    /// This converts that encoding back into a Pline. Note that this is, in general, not a
    /// good round-tripping mechanism since the encoded string is restricted to an accuracy
    /// of Lib.Epsilon. Here are the tags that are supported.
-   /// 
+   ///
    /// Tag           | Meaning
    /// --------------|-----------
    /// Mx,y          | Move to x,y (must be used as the first tag)
@@ -109,7 +109,7 @@ public partial class Poly {
          }
          a = b;
       }
-      if (IsClosed) w.Write ('Z'); 
+      if (IsClosed) w.Write ('Z');
    }
 
    // Properties ---------------------------------------------------------------
@@ -138,7 +138,7 @@ public partial class Poly {
    /// <summary>Enumerates the segments in the Poly</summary>
    public IEnumerable<Seg> Segs {
       get {
-         for (int i = 0, n = Count; i < n; i++) 
+         for (int i = 0, n = Count; i < n; i++)
             yield return this[i];
       }
    }
@@ -152,7 +152,7 @@ public partial class Poly {
          if (HasArcs && i < mExtra.Length) {
             var extra = mExtra[i];
             return new (a, b, extra.Center, extra.Flags | flags);
-         } 
+         }
          return new (a, b, Point2.Zero, flags);
       }
    }
@@ -175,12 +175,12 @@ public partial class Poly {
    /// This also returns the closest segment and the closest node on that segment
    /// to the given point. Note that this means that we first pick the closest segment,
    /// and then pick if the closest node is the start or end of that segment. So
-   /// Node will either be Seg, or Seg+1 always. 
+   /// Node will either be Seg, or Seg+1 always.
    public (double Dist, int Seg) GetDistance (Point2 pt) {
       var (minDist, nSeg) = (1e99, 0);
       for (int i = Count - 1; i >= 0; i--) {
          Seg seg = this[i];
-         double dist = seg.GetDist (pt, minDist); 
+         double dist = seg.GetDist (pt, minDist);
          if (dist < minDist) (minDist, nSeg) = (dist, i);
       }
       return (minDist, nSeg);
@@ -206,7 +206,7 @@ public partial class Poly {
    }
 
    // Implementation -----------------------------------------------------------
-   static Poly Read (UTFReader s) => Parse (s.ReadString ());
+   static Poly Read (UTFReader ur) => new PolyBuilder ().Build (ur);
 
    // Operators ----------------------------------------------------------------
    /// <summary>Create a new Poly by applying the transformation matrix</summary>
@@ -258,7 +258,7 @@ public class PolyBuilder {
       return this;
    }
    /// <summary>Adds an arc given the starting point and DXF-style bulge</summary>
-   public PolyBuilder Arc (double x, double y, double bulge) 
+   public PolyBuilder Arc (double x, double y, double bulge)
       => Arc (new (x, y), bulge);
 
    /// <summary>This is called finally to complete the build process to a Poly</summary>
@@ -314,18 +314,18 @@ public class PolyBuilder {
       }
 
       // Helpers ...........................................
-      // Read the current mode character (like M, L, V, H etc). Since repeated modes can 
+      // Read the current mode character (like M, L, V, H etc). Since repeated modes can
       // be elided, this simply returns the 'current mode' if we see a number instead
       char GetMode () {
          if (!R.TryPeek (out var b)) return '.';
          char ch = (char)b; if (char.IsLetter (ch)) { R.Skip (); return mode = char.ToUpper (ch); }
-         return mode; 
+         return mode;
       }
 
       // Expecting two doubles (separated by whitespace or commas) to make a Point
       Point2 GetP () => new (GetD (), GetD ());
       // Expecting a double, prefixed possibly by whitespace
-      double GetD () => R.Skip (sSpaceAndComma).ReadDouble ();
+      double GetD () { R.Skip (sSpaceAndComma).Read (out double v); return v; }
    }
    static SearchValues<byte> sSpaceAndComma = SearchValues.Create (" \r\n\f\t,"u8);
 
@@ -375,7 +375,7 @@ public class PolyBuilder {
 /// <summary>Represents a single Segment of a Poly (can be a single line or an arc)</summary>
 public readonly struct Seg (Point2 a, Point2 b, Point2 center, Poly.EFlags flags) {
    public override string ToString ()
-      => IsArc 
+      => IsArc
          ? $"ARC {A} .. {B}, {Center} {IsCCW}"
          : $"LINE {A} .. {B}";
 
@@ -400,7 +400,7 @@ public readonly struct Seg (Point2 a, Point2 b, Point2 center, Poly.EFlags flags
          Bound2 bound = new (A.X, A.Y, B.X, B.Y);
          if (IsArc) {
             // Here, we are repeating the code that is in GetLie because
-            // Segment.Bound is a time-critical routine, and we don't want to 
+            // Segment.Bound is a time-critical routine, and we don't want to
             // compute stuff like GetStartAndEndAngles 4 times
             var (sa, ea) = GetStartAndEndAngles ();
             double oppMid = (sa + ea) / 2 + Lib.PI * (IsCCW ? 1 : -1);
@@ -446,7 +446,7 @@ public readonly struct Seg (Point2 a, Point2 b, Point2 center, Poly.EFlags flags
             if (lie is >= 0 and <= 1) bound += pt * xfm;
          }
       }
-      return bound; 
+      return bound;
    }
 
    /// <summary>Is this a curved segment?</summary>
@@ -527,7 +527,7 @@ public readonly struct Seg (Point2 a, Point2 b, Point2 center, Poly.EFlags flags
             if (ang < oppMid) ang += Lib.TwoPI;
          }
          return (ang - sa) / (ea - sa);
-      } 
+      }
       return p.GetLieOn (A, B);
    }
 
@@ -568,7 +568,7 @@ public readonly struct Seg (Point2 a, Point2 b, Point2 center, Poly.EFlags flags
       if (IsArc) {
          double dist = Center.DistTo (pt);
          return (dist > Radius) ^ IsCCW;
-      } else 
+      } else
          return pt.LeftOf (A, B);
    }
 

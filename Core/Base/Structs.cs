@@ -26,7 +26,7 @@ public readonly struct BlockTimer : IDisposable {
 
    readonly string mText;
    readonly DateTime mStart;
-   readonly int mIterations = 1; 
+   readonly int mIterations = 1;
 }
 #endregion
 
@@ -96,7 +96,7 @@ public readonly struct Color4 : IEQuable<Color4> {
    public static Color4 Gray (int v) => new (v, v, v);
 
    /// <summary>Read a Color4 from a UTF8 stream</summary>
-   static public Color4 Read (UTFReader R) { R.Match ('#'); return new (R.ReadUInt32 (true)); }
+   static public Color4 Read (UTFReader R) { R.Match ('#').Read (out uint value, true); return new (value); }
 
    public override string ToString () {
       BuildMap ();
@@ -230,7 +230,7 @@ public readonly struct PlaneDef {
       vec = vec.Normalized ();
 
       // If we get here, we know that the line-of-intersection is parallel to v.
-      // We just need to now find any one point on that line. We solve this by 
+      // We just need to now find any one point on that line. We solve this by
       // setting Z=0, then Y=0, then X=0, and solving the resulting pair of linear
       // equations - at least two of the three below should result in a solution
       _ = Lib.SolveLinearPair (A, B, D, other.A, other.B, other.D, out double x, out double y)
