@@ -13,6 +13,12 @@ public readonly struct Point2 : IEQuable<Point2> {
    /// <summary>Construct a Point2 given the X and Y ordinates</summary>
    public Point2 (double x, double y) => (X, Y) = (x, y);
 
+   /// <summary>Read a Point2 from a UTF8 stream</summary>
+   public static Point2 Read (UTFReader R) {
+      double x = R.ReadDouble (); R.Match (','); double y = R.ReadDouble ();
+      return new (x, y);
+   }
+
    // Properties ---------------------------------------------------------------
    /// <summary>X ordinate of the Point2</summary>
    public readonly double X;
@@ -127,6 +133,9 @@ public readonly struct Point2 : IEQuable<Point2> {
    /// <summary>A copy of this point, with just the Y ordinate changed</summary>
    public Point2 WithY (double y) => new (X, y);
 
+   /// <summary>Write a Point2 to a UTF8 stream</summary>
+   public void Write (UTFWriter B) => B.Write (X.R6 ()).Write (',').Write (Y.R6 ());
+
    // Operators ----------------------------------------------------------------
    /// <summary>Returns the displaced point got by adding a Vector2 to a Point2</summary>
    public static Point2 operator + (Point2 a, Vector2 b) => new (a.X + b.X, a.Y + b.Y);
@@ -159,12 +168,6 @@ public readonly struct Point2 : IEQuable<Point2> {
    }
 
    public override string ToString () => $"({X.S6 ()},{Y.S6 ()})";
-
-   public void Write (UTFWriter B) => B.Write (X.R6 ()).Write (',').Write (Y.R6 ());
-   public static Point2 Read (UTFReader R) {
-      double x = R.ReadDouble (); R.Match (','); double y = R.ReadDouble ();
-      return new (x, y);
-   }
 }
 #endregion
 

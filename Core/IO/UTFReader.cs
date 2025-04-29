@@ -4,6 +4,7 @@
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 using System.Buffers;
 using System.Buffers.Text;
+namespace Nori;
 
 #region clss UTFReader -----------------------------------------------------------------------------
 /// <summary>UTFReader is an alternative to TextReader to read from a UTF8 stream directly</summary>
@@ -15,10 +16,11 @@ using System.Buffers.Text;
 public class UTFReader {
    // Constructors -------------------------------------------------------------
    /// <summary>Construct a UTFReader given an array of bytes</summary>
-   public UTFReader (byte[] data) => D = data;
+   public UTFReader (byte[] data) => Max = (D = data).Length;
 
    /// <summary>Construct a UTFReader by reading data from a file</summary>
-   public UTFReader (string file) : this (File.ReadAllBytes (file)) { }
+   public UTFReader (string file) : this (File.ReadAllBytes (file)) => mFile = file;
+   string? mFile;
 
    // Properties ---------------------------------------------------------------
    /// <summary>Matches and discards a given byte</summary>
@@ -33,7 +35,14 @@ public class UTFReader {
    public ReadOnlySpan<byte> GetSpan (int start, int length) => D.AsSpan (start, length);
 
    /// <summary>Peeks at the next character in the stream, skipping past whitespace</summary>
+   /// If we are already at the end of the stream, this throws an exception
    public byte Peek { get { SkipSpace (); return D[mN]; } }
+
+   public bool TryPeek (out byte b) {
+      SkipSpace ();
+      if (mN < Max) { b = D[mN]; return true; }
+      b = 0; return false;
+   }
 
    /// <summary>Read a boolean value from the stream (skips past leading whitespace)</summary>
    public bool ReadBoolean () {
@@ -134,9 +143,19 @@ public class UTFReader {
    /// <summary>Skip one character</summary>
    public UTFReader Skip () { mN++; return this; }
 
+   /// <summary>Skip past any of the values</summary>
+   public UTFReader Skip (SearchValues<byte> noise) {
+      for (; ; ) {
+         if (mN == Max) return this;
+         if (!noise.Contains (D[mN++])) break;
+      }
+      mN--;
+      return this; 
+   }
+
    /// <summary>Skips past any whitespace</summary>
    public UTFReader SkipSpace () {
-      while (sSpace.Contains (D[mN])) mN++;
+      while (mN < Max && sSpace.Contains (D[mN])) mN++;
       return this;
    }
    static readonly SearchValues<byte> sSpace = SearchValues.Create (9, 10, 11, 13, 32);
@@ -171,17 +190,26 @@ public class UTFReader {
    }
 
    // Implementation -----------------------------------------------------------
+   [DoesNotReturn]
    void Fatal (string s) {
-      File.WriteAllBytes ("c:/etc/dump.txt", D.AsSpan (0, mN + 10));
-      throw new Exception (s);
+      // Convert the current position into a Line,Column within the text
+      int nLine = D.Take (mN).Count (a => a == '\n') + 1, nColumn = mN + 1;
+      if (nLine > 0) 
+         for (int n = mN - 1; n >= 0; n--) if (D[n] == '\n') { nColumn = mN - n; break; }
+      var sb = new StringBuilder ();
+      sb.Append ($"At ({nLine},{nColumn})");
+      if (mFile != null) sb.Append ($" of {mFile}");
+      sb.Append ($": {s}");
+      Except.Parse (sb.ToString ());
    }
 
    public override string ToString () {
-      int length = Math.Min (D.Length - mN - 1, 100);
+      int length = Math.Min (Max - mN - 1, 100);
       return Encoding.UTF8.GetString (D.AsSpan (mN, length));
    }
 
    readonly byte[] D;
+   readonly int Max;
    int mN;
 }
 #endregion

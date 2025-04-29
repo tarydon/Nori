@@ -125,9 +125,7 @@ public class UTFWriter {
 
    /// <summary>Write a double to a UTF8 stream using default formatting</summary>
    public UTFWriter Write (double value) => Write (value, default);
-   /// <summary>
-   /// Write a double to a UTF8 stream with specified formatting
-   /// </summary>
+   /// <summary>Write a double to a UTF8 stream with specified formatting</summary>
    public UTFWriter Write (double value, StandardFormat fmt) {
       while (!Utf8Formatter.TryFormat (value, D.AsSpan (N), out mDelta, fmt)) Grow ();
       return Bump ();

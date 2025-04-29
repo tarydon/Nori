@@ -65,9 +65,23 @@ class PolyTests {
       Poly.Parse ("M5,3 H10 V6 Z").Is ("M5,3H10V6Z");
       Poly.Parse ("M5,3 L10,3 10,6 Z").Is ("M5,3H10V6Z");
 
-      Exception? e = null;
-      try { Poly.Parse ("M0,0F1,2Z"); } catch (Exception e1) { e = e1; }
-      (e == null).IsFalse ();
+      // These should all crash
+      string message = "A";
+      try { Poly.Parse ("M0,0F1,2Z"); } catch (Exception e1) { message = e1.Description (); }
+      message.Is ("ParseException: Unexpected mode 'F' in Poly.Parse");
+      message = "B";
+      try { Poly.Parse ("M0,0L"); } catch (Exception e1) { message = e1.Description (); }
+      message.Is ("ParseException: At (1,6): Expecting double value");
+      message = "C";
+      try { Poly.Parse ("M0,0L3"); } catch (Exception e1) { message = e1.Description (); }
+      message.Is ("ParseException: At (1,7): Expecting double value");
+      message = "D";
+      try { Poly.Parse ("M123.456,456.789\nL12.3,"); } catch (Exception e1) { message = e1.Description (); }
+      message.Is ("ParseException: At (2,7): Expecting double value");
+      // And this should work, thouhg the string is spread over 2 lines
+      message = "OK";
+      try { Poly.Parse ("M123.456,456.789\nL12.3,5"); } catch (Exception e1) { message = e1.Description (); }
+      message.Is ("OK");
 
       static PolyBuilder PB () => new ();
    }

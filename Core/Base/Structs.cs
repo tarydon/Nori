@@ -1,4 +1,4 @@
-﻿// ────── ╔╗                                                                                   CORE
+// ────── ╔╗                                                                                   CORE
 // ╔═╦╦═╦╦╬╣ Structs.cs
 // ║║║║╬║╔╣║ Various Miscellaneous structs used by the Nori application
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
@@ -95,6 +95,9 @@ public readonly struct Color4 : IEQuable<Color4> {
    /// <summary>Constructs a Gray color with value 0..255</summary>
    public static Color4 Gray (int v) => new (v, v, v);
 
+   /// <summary>Read a Color4 from a UTF8 stream</summary>
+   static public Color4 Read (UTFReader R) { R.Match ('#'); return new (R.ReadUInt32 (true)); }
+
    public override string ToString () {
       BuildMap ();
       if (sNames.TryGetValue (this, out var s)) return $"{s}";
@@ -104,6 +107,9 @@ public readonly struct Color4 : IEQuable<Color4> {
          s = $"{s[0]}{s[2]}{s[4]}";
       return $"#{s}";
    }
+
+   /// <summary>Write a Color4 to a UTF8 stream</summary>
+   public void Write (UTFWriter W) => W.Write ('#').Write (Value, true);
 
    // Operators ----------------------------------------------------------------
    /// <summary>Converts the color to a Vec4f with the X,Y,Z,W components mapping to R,G,B,A</summary>
@@ -122,9 +128,6 @@ public readonly struct Color4 : IEQuable<Color4> {
    static readonly Dictionary<Color4, string> sNames = [];
    static readonly Dictionary<string, Color4> sParse = new (StringComparer.OrdinalIgnoreCase);
    static readonly Random mRand = new ();
-
-   void Write (UTFWriter W) => W.Write ('#').Write (Value, true);
-   static Color4 Read (UTFReader R) { R.Match ('#'); return new (R.ReadUInt32 (true)); }
 }
 #endregion
 
