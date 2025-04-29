@@ -15,7 +15,7 @@ public readonly struct Point2 : IEQuable<Point2> {
 
    /// <summary>Read a Point2 from a UTF8 stream</summary>
    public static Point2 Read (UTFReader R) {
-      double x = R.ReadDouble (); R.Match (','); double y = R.ReadDouble ();
+      R.Read (out double x).Match (',').Read (out double y);
       return new (x, y);
    }
 
@@ -44,7 +44,7 @@ public readonly struct Point2 : IEQuable<Point2> {
       return Lib.NormalizeAngle (Atan2 (dy, dx));
    }
 
-   public Point2 CardinalMoved (double r, EDir dir) 
+   public Point2 CardinalMoved (double r, EDir dir)
       => dir switch {
             EDir.E => new (X + r, Y), EDir.W => new (X - r, Y),
             EDir.S => new (X, Y - r), _ => new (X, Y + r)
@@ -203,8 +203,8 @@ public readonly struct Point3 : IEquatable<Point3> {
 
    /// <summary>Square of the distance between this point and another</summary>
    public double DistToSq (Point3 b) {
-      double dx = b.X - X, dy = b.Y - Y, dz = b.Z - Z; 
-      return dx * dx + dy * dy + dz * dz; 
+      double dx = b.X - X, dy = b.Y - Y, dz = b.Z - Z;
+      return dx * dx + dy * dy + dz * dz;
    }
 
    /// <summary>Compares two points are equal to within EPSILON</summary>

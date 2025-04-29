@@ -8,10 +8,10 @@ namespace Nori;
 
 #region clss UTFReader -----------------------------------------------------------------------------
 /// <summary>UTFReader is an alternative to TextReader to read from a UTF8 stream directly</summary>
-/// Using a TextReader (by reading text with File.ReadAllText or File.ReadAllLines) involves 
-/// converting text from UTF8 (in which most files are encoded) into UTF16 (which is how 
+/// Using a TextReader (by reading text with File.ReadAllText or File.ReadAllLines) involves
+/// converting text from UTF8 (in which most files are encoded) into UTF16 (which is how
 /// chars are rprsented). We can avoid that cost by using UTFReader, which directly converts
-/// from UTF8 byte sequences into types like double, int etc. It uses UTF8Parser to do the 
+/// from UTF8 byte sequences into types like double, int etc. It uses UTF8Parser to do the
 /// actual parsing
 public class UTFReader {
    // Constructors -------------------------------------------------------------
@@ -45,99 +45,110 @@ public class UTFReader {
    }
 
    /// <summary>Read a boolean value from the stream (skips past leading whitespace)</summary>
-   public bool ReadBoolean () {
+   /// Throws an exception if a valid boolean value "True" or "False" is not found
+   public UTFReader Read (out bool value) {
       SkipSpace ();
-      if (!Utf8Parser.TryParse (D.AsSpan (mN), out bool value, out int delta)) Fatal ("Expecting bool value");
-      mN += delta; return value;
+      if (!Utf8Parser.TryParse (D.AsSpan (mN), out value, out int delta)) Fatal ("Expecting bool value");
+      mN += delta; return this;
    }
 
    /// <summary>Reads a DateTime value from the stream (skips past leading whitespace)</summary>
-   public DateTime ReadDateTime () {
+   /// Throws an exception if a valid DateTime value is not found
+   public UTFReader Read (out DateTime value) {
       SkipSpace ();
-      if (!Utf8Parser.TryParse (D.AsSpan (mN), out DateTime value, out int delta)) Fatal ("Expecting DateTime value");
-      mN += delta; return value;
+      if (!Utf8Parser.TryParse (D.AsSpan (mN), out value, out int delta)) Fatal ("Expecting DateTime value");
+      mN += delta; return this;
    }
 
    /// <summary>Read a double value from the stream (skips past leading whitespace)</summary>
-   public double ReadDouble () {
+   /// Throws an exception if a valid double value is not found
+   public UTFReader Read (out double value) {
       SkipSpace ();
-      if (!Utf8Parser.TryParse (D.AsSpan (mN), out double value, out int delta)) Fatal ("Expecting double value");
-      mN += delta; return value;
+      if (!Utf8Parser.TryParse (D.AsSpan (mN), out value, out int delta)) Fatal ("Expecting double value");
+      mN += delta; return this;
    }
 
    /// <summary>Reads a Guid value from the stream (skips past leading whitespace)</summary>
-   public Guid ReadGuid () {
+   /// Throws an exception if a valid Guid value is not found
+   public UTFReader Read (out Guid value) {
       SkipSpace ();
-      if (!Utf8Parser.TryParse (D.AsSpan (mN), out Guid value, out int delta)) Fatal ("Expecting Guid value");
-      mN += delta; return value; 
+      if (!Utf8Parser.TryParse (D.AsSpan (mN), out value, out int delta)) Fatal ("Expecting Guid value");
+      mN += delta; return this;
    }
 
    /// <summary>Reads an Int16 value from the stream (skips past leading whitespace)</summary>
-   public short ReadInt16 () {
+   /// Throws an exception if a valid short (Int16) value is not found
+   public UTFReader Read (out short value) {
       SkipSpace ();
-      if (!Utf8Parser.TryParse (D.AsSpan (mN), out short value, out int delta)) Fatal ("Expecting short value");
-      mN += delta; return value;
+      if (!Utf8Parser.TryParse (D.AsSpan (mN), out value, out int delta)) Fatal ("Expecting short value");
+      mN += delta; return this;
    }
 
    /// <summary>Read an Int32 value from the stream (skips past leading whitespace)</summary>
-   public int ReadInt32 () {
+   /// Throws an exception if a valid int (Int32) value is not found
+   public UTFReader Read (out int value) {
       SkipSpace ();
-      if (!Utf8Parser.TryParse (D.AsSpan (mN), out int value, out int delta)) Fatal ("Expecting int value");
-      mN += delta; return value;
+      if (!Utf8Parser.TryParse (D.AsSpan (mN), out value, out int delta)) Fatal ("Expecting int value");
+      mN += delta; return this;
    }
 
    /// <summary>Read an Int64 value from the stream (skips past leading whitespace)</summary>
-   public long ReadInt64 () {
+   /// Throws an exception if a valid long (Int64) value is not found
+   public UTFReader Read (out long value) {
       SkipSpace ();
-      if (!Utf8Parser.TryParse (D.AsSpan (mN), out long value, out int delta)) Fatal ("Expecting long value");
-      mN += delta; return value;
+      if (!Utf8Parser.TryParse (D.AsSpan (mN), out value, out int delta)) Fatal ("Expecting long value");
+      mN += delta; return this;
    }
 
    /// <summary>Reads a Single value from the stream (skips past leading whitespace)</summary>
-   public float ReadSingle () {
+   /// Throws an exception if a valid float (Single) value is not found
+   public UTFReader Read (out float value) {
       SkipSpace ();
-      if (!Utf8Parser.TryParse (D.AsSpan (mN), out float value, out int delta)) Fatal ("Expecting float value");
-      mN += delta; return value;
+      if (!Utf8Parser.TryParse (D.AsSpan (mN), out value, out int delta)) Fatal ("Expecting float value");
+      mN += delta; return this;
    }
 
    /// <summary>Reads a string from the stream (if the string is "quoted", removes the quotes)</summary>
-   public string ReadString () {
+   public UTFReader Read (out string str) {
       SkipSpace ();
       if (Peek == '"') {
-         mN++;
-         var s = Encoding.UTF8.GetString (TakeUntil (sQuote, false));
-         mN++; return s;
-      }
-      return Encoding.UTF8.GetString (TakeUntil (sSpace, false));
+         mN++; str = Encoding.UTF8.GetString (TakeUntil (sQuote, false)); mN++;
+      } else
+         str = Encoding.UTF8.GetString (TakeUntil (sSpace, false));
+      return this;
    }
    static readonly SearchValues<byte> sQuote = SearchValues.Create ((byte)'"');
-   
+
    /// <summary>Reads a TimeSpan value from the stream (skips past leading whitespace)</summary>
-   public TimeSpan ReadTimeSpan () {
+   /// Throws an exception if a valid TimeSpan value is not found
+   public UTFReader Read (out  TimeSpan value) {
       SkipSpace ();
-      if (!Utf8Parser.TryParse (D.AsSpan (mN), out TimeSpan value, out int delta)) Fatal ("Expecting TimeSpan value");
-      mN += delta; return value; 
+      if (!Utf8Parser.TryParse (D.AsSpan (mN), out value, out int delta)) Fatal ("Expecting TimeSpan value");
+      mN += delta; return this;
    }
 
    /// <summary>Reads an ushort value from the stream (skips past leading whitespace)</summary>
-   public ushort ReadUInt16 () {
+   /// Throws an exception if a valid ushort (UInt16) value is not found
+   public UTFReader Read (out ushort value) {
       SkipSpace ();
-      if (!Utf8Parser.TryParse (D.AsSpan (mN), out ushort value, out int delta)) Fatal ("Expecting ushort value");
-      mN += delta; return value;
+      if (!Utf8Parser.TryParse (D.AsSpan (mN), out value, out int delta)) Fatal ("Expecting ushort value");
+      mN += delta; return this;
    }
 
    /// <summary>Read an UInt32 value from the stream, in decimal or hexadecimal format (skips past leading whitespace)</summary>
-   public uint ReadUInt32 (bool hex) {
+   /// Throws an exception if a valid uint (UInt32) value is not found
+   public UTFReader Read (out uint value, bool hex) {
       SkipSpace ();
-      if (!Utf8Parser.TryParse (D.AsSpan (mN), out uint value, out int delta, hex ? 'X' : '\0')) Fatal ("Expecting uint value");
-      mN += delta; return value;
+      if (!Utf8Parser.TryParse (D.AsSpan (mN), out value, out int delta, hex ? 'X' : '\0')) Fatal ("Expecting uint value");
+      mN += delta; return this;
    }
 
    /// <summary>Read an UInt64 value from the stream (skips past leading whitespace)</summary>
-   public ulong ReadUInt64 () {
+   /// Throws an exception if a valid ulong (UInt64) value is not found
+   public UTFReader Read (out ulong value) {
       SkipSpace ();
-      if (!Utf8Parser.TryParse (D.AsSpan (mN), out ulong value, out int delta)) Fatal ("Expecting ulong value");
-      mN += delta; return value;
+      if (!Utf8Parser.TryParse (D.AsSpan (mN), out value, out int delta)) Fatal ("Expecting ulong value");
+      mN += delta; return this;
    }
 
    /// <summary>Skip one character</summary>
@@ -150,7 +161,7 @@ public class UTFReader {
          if (!noise.Contains (D[mN++])) break;
       }
       mN--;
-      return this; 
+      return this;
    }
 
    /// <summary>Skips past any whitespace</summary>
@@ -164,7 +175,7 @@ public class UTFReader {
    public void SkipTo (char b) { while (D[mN++] != b) { } }
 
    /// <summary>Tries to match the given character, if it is found</summary>
-   /// If the next character in the stream (skipping past whitespace) is the given 
+   /// If the next character in the stream (skipping past whitespace) is the given
    /// character, this consumes that character and returns true. Otherwise, it leaves the
    /// character unread, and returns false
    public bool TryMatch (char b) {
@@ -194,7 +205,7 @@ public class UTFReader {
    void Fatal (string s) {
       // Convert the current position into a Line,Column within the text
       int nLine = D.Take (mN).Count (a => a == '\n') + 1, nColumn = mN + 1;
-      if (nLine > 0) 
+      if (nLine > 0)
          for (int n = mN - 1; n >= 0; n--) if (D[n] == '\n') { nColumn = mN - n; break; }
       var sb = new StringBuilder ();
       sb.Append ($"At ({nLine},{nColumn})");
