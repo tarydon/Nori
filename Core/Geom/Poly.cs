@@ -286,6 +286,7 @@ public class PolyBuilder {
    internal Poly Build (UTFReader R) {
       var mode = 'M';
       Point2 a = Point2.Zero;
+      R.Match ('M');
       for (; ; ) {
          char ch = GetMode ();
          switch (ch) {

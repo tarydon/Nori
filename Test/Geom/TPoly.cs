@@ -78,6 +78,9 @@ class PolyTests {
       message = "D";
       try { Poly.Parse ("M123.456,456.789\nL12.3,"); } catch (Exception e1) { message = e1.Description (); }
       message.Is ("ParseException: At (2,7): Expecting double value");
+      message = "E";
+      try { Poly.Parse ("L0,0"); } catch (Exception e1) { message = e1.Description (); }
+      message.Is ("ParseException: At (1,1): Expecting 'M', found 'L'");
       // And this should work, thouhg the string is spread over 2 lines
       message = "OK";
       try { Poly.Parse ("M123.456,456.789\nL12.3,5"); } catch (Exception e1) { message = e1.Description (); }
