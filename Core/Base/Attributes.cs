@@ -7,9 +7,9 @@ namespace Nori;
 
 #region [AuPrimitive] attribute --------------------------------------------------------------------
 /// <summary>[AuPrimitive] tells the Au system that a type behaves like a 'Primitive'</summary>
-/// This means that the type knows how to read or write itself into Curl or AuBinary 
+/// This means that the type knows how to read or write itself into Curl or AuBinary
 /// files. This is basically a pattern - the type will implement some 'well known'
-/// methods like Write(ByteWriter) etc. 
+/// methods like Write(ByteWriter) etc.
 [AttributeUsage (AttributeTargets.Struct | AttributeTargets.Class)]
 public sealed class AuPrimitiveAttribute : Attribute;
 #endregion
@@ -17,20 +17,20 @@ public sealed class AuPrimitiveAttribute : Attribute;
 #region [EPropClass] attribute ---------------------------------------------------------------------
 /// <summary>[EPropClass] attribute, used to auto-implement IObservable(EProp) for a type.</summary>
 /// The class then will have one or more fields decorated with [EPropField], and when
-/// any of those fields are modified, observers watching this class are notified. 
+/// any of those fields are modified, observers watching this class are notified.
 [AttributeUsage (AttributeTargets.Class), UsedImplicitly]
 public sealed class EPropClassAttribute : Attribute;
 #endregion
 
 #region [EPropField] attribute ---------------------------------------------------------------------
 /// <summary>[EPropField] attribute, used to mark a field as an 'active' field</summary>
-/// A field decorated with [EPropField] can appear within a class decorated with 
+/// A field decorated with [EPropField] can appear within a class decorated with
 /// [EPropClass]. Then, the generator writes a wrapper property around that field,
 /// and when that property is written to, it notifies the observers. It's a bit like
 /// INotifyPropertyChanged, except that instead of the property name, we use one of
-/// the EProp enumerated values instead. 
-/// For this, you just write the field, name it with an initial m prefix and decorate it 
-/// with this attribute. The property is generated with the same name as the field, but 
+/// the EProp enumerated values instead.
+/// For this, you just write the field, name it with an initial m prefix and decorate it
+/// with this attribute. The property is generated with the same name as the field, but
 /// without the leading 'm' character. For example:
 ///   [EPropClass]
 ///   class Circle {
@@ -54,7 +54,7 @@ public class RedrawOnZoomAttribute : Attribute { }
 
 #region [Singleton] attribute ----------------------------------------------------------------------
 /// <summary>[Singleton] attribute, used to auto-implement a singleton pattern</summary>
-/// Decorate a class TClass with the [Singleton] attribute, and make sure it has a private, 
+/// Decorate a class TClass with the [Singleton] attribute, and make sure it has a private,
 /// parameterless constructor. Then, the Nori.Gen code generator implements a static property:
 /// `static TClass It { get; }`
 /// This constructs a single instance of this type and returns it (this is thread-safe)

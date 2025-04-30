@@ -30,7 +30,7 @@ public class AuReader {
    }
 
    object? ReadClass (AuType auType) {
-      if (R.TryMatch ('(')) auType = AuType.Find (R.TakeUntil (')'));
+      if (R.TryMatch ('(')) auType = AuType.Get (R.TakeUntil (')'));
       object owner = auType.CreateInstance ();
       mStack.Add (owner);
       R.Match ('{');

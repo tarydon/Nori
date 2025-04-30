@@ -7,13 +7,27 @@ enum EAuTypeKind { Unknown, Primitive, AuPrimitive, Enum, List, Dictionary, Stru
 
 enum EAuCurl { Std, Skip, ByName, Uplink, }
 
+#region class AuType -------------------------------------------------------------------------------
+/// <summary>
+/// AuType is a wrapper around System.Type that holds additional information needed by the Au system
+/// </summary>
+/// The first time a type is read or written, the corresponding AuType wrapper object is
+/// constructed. If it is a struct or class type, then for each field in the type we get
+/// the 'tactics' for it (how it is to be serialized). For example, the 'Skip' tactic will
+/// mean we don't serialize that field. The 'ByName' tactic means we serialize only the
+/// 'Name' field of the subobject etc. These tactics are read in from the AuManifest.txt
+/// file for each field of each class that is to be serialized.
 class AuType {
+   // Constructor --------------------------------------------------------------
    AuType (Type type) {
       mDict[mType = type] = this;
       Kind = Classify (type);
-      const BindingFlags bfi = Instance | Public | NonPublic | DeclaredOnly;
-      const BindingFlags bfs = Static | Public | NonPublic | DeclaredOnly;
+      const BindingFlags bfInstance = Instance | Public | NonPublic | DeclaredOnly;
+      const BindingFlags bfStatic = Static | Public | NonPublic | DeclaredOnly;
+
       switch (Kind) {
+         // Constructing a Struct or Class AuType requires us to build AuField wrappers
+         // for all the fields we're going to write
          case EAuTypeKind.Struct or EAuTypeKind.Class:
             // Get all the base types (all the way to System.Object), so we can gather all the
             // fields from all of them
@@ -23,10 +37,15 @@ class AuType {
                if (parent == null || parent == typeof (object) || parent == typeof (ValueType)) break;
                ancestry.Add (parent);
             }
+            // Next, gather all the fields (walking through all the way from the hierarchy).
+            // Some simple conventions we follow:
+            // - If the field name starts with _ we skip it (it is a cached or computed field)
+            // - If the field name starts with m that is a 'member' prefix and we remove that
+            //   m when serializing the field's name
             List<AuField> fields = [];
             foreach (var t in ancestry) {
                string tname = Lib.NiceName (t);
-               foreach (var fi in t.GetFields (bfi).Where (AuField.Include)) {
+               foreach (var fi in t.GetFields (bfInstance).Where (AuField.Include)) {
                   string fname = fi.Name;
                   if (fname.StartsWith ('m')) fname = fname[1..];
                   if (Tactics.TryGetValue ($"{tname}.{fname}", out var data)) {
@@ -38,12 +57,15 @@ class AuType {
             }
             mFields = [.. fields.OrderBy (a => a.Sort)];
             break;
+
+         // For an AuPrimitive field, we find the reader and writer methods using
+         // reflection and hold onto them
          case EAuTypeKind.AuPrimitive:
-            mMIWriter = type.GetMethods (bfi).FirstOrDefault (a => a.Name == "Write"
+            mMIWriter = type.GetMethods (bfInstance).FirstOrDefault (a => a.Name == "Write"
                && a.GetParameters ().Length == 1
                && a.GetParameters ()[0].ParameterType == typeof (UTFWriter)) ??
                throw new Exception ($"Missing {type.FullName}.Write({nameof (UTFWriter)})");
-            mMIReader = type.GetMethods (bfs).FirstOrDefault (a => a.Name == "Read"
+            mMIReader = type.GetMethods (bfStatic).FirstOrDefault (a => a.Name == "Read"
                && a.GetParameters ().Length == 1
                && a.GetParameters ()[0].ParameterType == typeof (UTFReader)) ??
                throw new Exception ($"Missing {type.FullName}.Read({nameof (UTFReader)})");
@@ -51,6 +73,9 @@ class AuType {
                case "Color4": mSkipValue = Color4.Nil; break;
             }
             break;
+
+         // For .Net primitive types, we set up the 'skip value' (the default value
+         // that is not serialized but implicit)
          case EAuTypeKind.Primitive:
             switch (Lib.NiceName (type)) {
                case "double": mSkipValue = 0.0; break;
@@ -61,9 +86,26 @@ class AuType {
             break;
       }
    }
-   MethodInfo? mMIWriter;
-   MethodInfo? mMIReader;
-   object? mSkipValue;
+
+   /// <summary>
+   /// Get an AuType given the name (used during read serialization)
+   /// </summary>
+   /// When we see the name of a type in a Curl file, in parentheses, like "(Dwg2)",
+   /// this method is called to fetch the AuType matching that name
+   public static AuType Get (ReadOnlySpan<byte> name) {
+      if (mByName.TryGetValue (name, out var aut)) return aut;
+      var sname = Encoding.UTF8.GetString (name);
+      foreach (var assy in Lib.Assemblies)
+         foreach (var ns in Lib.Namespaces) {
+            Type? type = assy.GetType ($"{ns}{sname}");
+            if (type != null) {
+               mByName.Add (sname, aut = new AuType (type));
+               return aut;
+            }
+         }
+      throw new Exception ($"Type {sname} not found");
+   }
+   static SymTable<AuType> mByName = new ();
 
    public object CreateInstance () {
       if (mConstructor == null)
@@ -185,20 +227,10 @@ class AuType {
    public static AuType Get (Type type) => mDict.GetValueOrDefault (type) ?? new AuType (type);
    static Dictionary<Type, AuType> mDict = [];
 
-   public static AuType Find (ReadOnlySpan<byte> name) {
-      if (mByName.TryGetValue (name, out var aut)) return aut;
-      var sname = Encoding.UTF8.GetString (name);
-      foreach (var assy in Lib.Assemblies)
-         foreach (var ns in Lib.Namespaces) {
-            Type? type = assy.GetType ($"{ns}{sname}");
-            if (type != null) {
-               mByName.Add (sname, aut = new AuType (type));
-               return aut;
-            }
-         }
-      throw new Exception ($"Type {sname} not found");
-   }
-   static SymTable<AuType> mByName = new ();
+   // Private data -------------------------------------------------------------
+   MethodInfo? mMIWriter;  // Pointer to the Write(UTFWriter) method
+   MethodInfo? mMIReader;  // Pointer to the Read(UTFReader) method
+   object? mSkipValue;     // If set, the 'default' value that we can skip writing out
 }
 
 class AuField {
