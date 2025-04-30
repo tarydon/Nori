@@ -8,40 +8,41 @@ using System;
 
 class BooleanScene : Scene2 {
    public BooleanScene () {
-      List<Poly> polys = [
-         Poly.Polygon ((300, 350), 300, 3),
-         Poly.Polygon ((300, 350), 300, 3, Lib.PI),
+      List<Poly[]> polys = [
+         [Poly.Polygon ((300, 350), 300, 3),
+         Poly.Polygon ((300, 350), 300, 3, Lib.PI)],
 
-         Poly.Circle ((350, 1050), 250),
-         Poly.Circle ((350, 1350), 250),
+         [Poly.Circle ((375, 1250), 200),
+         Poly.Circle ((250, 1000), 200),
+         Poly.Circle ((500, 1000), 200)],
 
-         Poly.Rectangle (850, 50, 1350, 550),
-         Poly.Circle ((1100, 300), 275),
+         [Poly.Rectangle (850, 50, 1350, 550),
+         Poly.Circle ((1100, 300), 275)],
 
-         Poly.Circle ((1150, 1050), 250),
-         Poly.Rectangle (850, 950, 1450, 1150),
+         [Poly.Circle ((1150, 1050), 250),
+         Poly.Rectangle (850, 950, 1450, 1150)],
 
          // Results in multiple intersection polys
-         Poly.Rectangle (1700, 50, 2150, 650),
-         Poly.Rectangle (1850, 150, 2300, 550).Subtract (Poly.Rectangle (1850, 275, 2225, 425)).First (),
+         [Poly.Rectangle (1700, 50, 2150, 650),
+         Poly.Rectangle (1850, 150, 2300, 550).Subtract (Poly.Rectangle (1850, 275, 2225, 425)).First ()],
 
          // Combine outer with hole
-         Poly.Parse ("M1700,850H2700V1250Q2500,1450,-1H1900Q1700,1250,1Z"),
-         Poly.Circle ((2000, 1150), 180)
+         [Poly.Parse ("M1700,850H2500V1250Q2300,1450,-1H1900Q1700,1250,1Z"),
+         Poly.Circle ((2000, 1150), 180)]
       ];
       BgrdColor = Color4.Gray (216);
-      var bound = new Bound2 (polys.Select (a => a.GetBound ()));
+      var bound = new Bound2 (polys.SelectMany (a => a).Select (a => a.GetBound ()));
       bound += new Point2 (2 * bound.X.Max, 2 * bound.Y.Max);
       Bound = bound.InflatedF (1.05);
       Root = new BooleanRootVN (polys, bound);
    }
 }
 
-class BooleanRootVN (List<Poly> polys, Bound2 bound) : VNode {
+class BooleanRootVN (List<Poly[]> polys, Bound2 bound) : VNode {
    enum EPane { None = -1, Polys = 0, Union = 1, Intersection = 2, Subtraction = 3 }
 
    readonly Bound2 ViewBound = bound;
-   readonly List<Poly> mPolys = polys;
+   readonly List<Poly[]> mPolys = polys;
 
    public override void SetAttributes () {
       Lux.LineWidth = 6;
@@ -54,19 +55,15 @@ class BooleanRootVN (List<Poly> polys, Bound2 bound) : VNode {
       EPane pane = (EPane) n;
       var polys = pane switch {
          EPane.Union => Union (mPolys),
-         EPane.Intersection => GetPair ().SelectMany (pair => Intersect (pair.A, pair.B)).ToList (),
-         EPane.Subtraction => Subtract (GetPair ().Select (x => x.A), GetPair ().Select (x => x.B)),
-         _ => mPolys
+         EPane.Intersection => Intersect (mPolys),
+         EPane.Subtraction => Subtract (mPolys),
+         _ => mPolys.SelectMany (a => a).ToList ()
       };
       return new XfmVN (Matrix3.Translation ((Vector3)GetOffset ((EPane)n, ViewBound)), new PolyVN (polys, pane));
 
-      static List<Poly> Union (List<Poly> polys) => polys.UnionPolys ();
-      static List<Poly> Intersect (Poly a, Poly b) => a.Intersect (b);
-      static List<Poly> Subtract (IEnumerable<Poly> positive, IEnumerable<Poly> negative) => positive.SubtractPolys (negative);
-      IEnumerable<(Poly A, Poly B)> GetPair () {
-         for (int i = 0; i < mPolys.Count; i += 2) 
-            yield return (mPolys[i], mPolys[i + 1]);
-      }
+      static List<Poly> Union (List<Poly[]> polys) => polys.SelectMany (x => x).UnionPolys ();
+      static List<Poly> Intersect (List<Poly[]> polys) => polys.SelectMany (a => a.IntersectPolys ()).ToList ();
+      static List<Poly> Subtract (List<Poly[]> polys) => polys.SelectMany (a => a[..1].SubtractPolys (a[1..])).ToList ();
    }
 
    public override void Draw () {
@@ -136,7 +133,7 @@ class BooleanRootVN (List<Poly> polys, Bound2 bound) : VNode {
 
       public override void Draw () {
          List<Point2> pts = []; List<int> indices = [];
-         Bound2 bound = new Bound2 (mPolys.Select (x => x.GetBound ())).InflatedF (1.01);
+         Bound2 bound = new (mPolys.Select (x => x.GetBound ()));
          List<Vec2F> path = [bound.Midpoint];
          mPolys.ForEach (x => {
             pts.Clear ();

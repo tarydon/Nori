@@ -321,7 +321,7 @@ class TMisc {
          => lf.Render ("Hello\nWorld", new (x, y), align, 0, 1, 2, 30.D2R (), poly);
    }
 
-   [Test (58, "2D tessellation tests")]
+   [Test (59, "2D tessellation tests")]
    void Test13 () {
       // Create poly with holes
       PolyBuilder outer = new ();

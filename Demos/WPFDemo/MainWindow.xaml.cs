@@ -12,7 +12,6 @@ public partial class MainWindow : Window {
       Lib.Init ();
       InitializeComponent ();
       mContent.Child = Lux.CreatePanel ();
-      Loaded += delegate { BooleanDemo (this, new ()); };
    }
 
    void LeafDemo (object sender, RoutedEventArgs e) => Lux.UIScene = new LeafDemoScene ();
