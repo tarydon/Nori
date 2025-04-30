@@ -206,7 +206,7 @@ public partial class Poly {
    }
 
    // Implementation -----------------------------------------------------------
-   static Poly Read (UTFReader ur) => new PolyBuilder ().Build (ur);
+   static Poly Read (UTFReader ur) => new PolyBuilder ().Build (ur, true);
 
    // Operators ----------------------------------------------------------------
    /// <summary>Create a new Poly by applying the transformation matrix</summary>
@@ -283,10 +283,10 @@ public class PolyBuilder {
 
    /// <summary>This constructor makes a Pline from a Pline mini-language encoded string</summary>
    /// See Poly.Parse for details
-   internal Poly Build (UTFReader R) {
+   internal Poly Build (UTFReader R, bool fromCurl = false) {
       var mode = 'M';
       Point2 a = Point2.Zero;
-      R.Match ('M');
+      if (R.Peek is not (byte)'M' and not (byte)'C') throw new ParseException ($"Poly should start with 'M' or 'C'");
       for (; ; ) {
          char ch = GetMode ();
          switch (ch) {
@@ -318,6 +318,7 @@ public class PolyBuilder {
       // be elided, this simply returns the 'current mode' if we see a number instead
       char GetMode () {
          if (!R.TryPeek (out var b)) return '.';
+         if (fromCurl && sCurlSpl.Contains (R.Peek)) return '.';
          char ch = (char)b; if (char.IsLetter (ch)) { R.Skip (); return mode = char.ToUpper (ch); }
          return mode;
       }
@@ -328,6 +329,7 @@ public class PolyBuilder {
       double GetD () { R.Skip (sSpaceAndComma).Read (out double v); return v; }
    }
    static SearchValues<byte> sSpaceAndComma = SearchValues.Create (" \r\n\f\t,"u8);
+   static SearchValues<byte> sCurlSpl = SearchValues.Create (" }]"u8);
 
    /// <summary>Marks the Pline as closed</summary>
    public PolyBuilder Close () { mClosed = true; return this; }

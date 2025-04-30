@@ -121,7 +121,7 @@ public class UTFReader {
 
    /// <summary>Reads a TimeSpan value from the stream (skips past leading whitespace)</summary>
    /// Throws an exception if a valid TimeSpan value is not found
-   public UTFReader Read (out  TimeSpan value) {
+   public UTFReader Read (out TimeSpan value) {
       SkipSpace ();
       if (!Utf8Parser.TryParse (D.AsSpan (mN), out value, out int delta)) Fatal ("Expecting TimeSpan value");
       mN += delta; return this;
@@ -149,6 +149,26 @@ public class UTFReader {
       SkipSpace ();
       if (!Utf8Parser.TryParse (D.AsSpan (mN), out value, out int delta)) Fatal ("Expecting ulong value");
       mN += delta; return this;
+   }
+
+   /// <summary>
+   /// Reads a .Net primitive type from the stream, given the TypeCode
+   /// </summary>
+   public object ReadPrimitive (TypeCode code) {
+      switch (code) {
+         case TypeCode.Boolean: Read (out bool b); return b;
+         case TypeCode.DateTime: Read (out DateTime dt); return dt;
+         case TypeCode.Double: Read (out double d); return d;
+         case TypeCode.Int16: Read (out short s); return s;
+         case TypeCode.Int32: Read (out int n); return n;
+         case TypeCode.Int64: Read (out long l); return l;
+         case TypeCode.Single: Read (out float f); return f;
+         case TypeCode.String: Read (out string st); return st;
+         case TypeCode.UInt16: Read (out ushort us); return us;
+         case TypeCode.UInt32: Read (out uint un, false); return un;
+         case TypeCode.UInt64: Read (out ulong ul); return ul;
+         default: throw new BadCaseException (code);
+      }
    }
 
    /// <summary>Skip one character</summary>

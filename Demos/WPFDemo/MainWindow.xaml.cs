@@ -2,6 +2,7 @@
 // ╔═╦╦═╦╦╬╣ MainWindow.xaml.cs
 // ║║║║╬║╔╣║ Main window of WPF demo application (various scenes implemented)
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
+using System.Text;
 using System.Windows;
 using Nori;
 namespace WPFDemo;
