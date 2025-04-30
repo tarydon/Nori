@@ -1,3 +1,7 @@
+// ────── ╔╗
+// ╔═╦╦═╦╦╬╣ SymTable.cs
+// ║║║║╬║╔╣║ <<TODO>>
+// ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 using System.Diagnostics.CodeAnalysis;
 using System.Text;
 namespace Nori;

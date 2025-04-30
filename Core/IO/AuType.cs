@@ -1,16 +1,13 @@
+// ────── ╔╗
+// ╔═╦╦═╦╦╬╣ AuType.cs
+// ║║║║╬║╔╣║ <<TODO>>
+// ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 using System.Collections;
 namespace Nori;
 using static System.Reflection.BindingFlags;
 
-// What 'kind' of type is represented by a given AuType (primitive / list / enum / class etc)
-enum EAuTypeKind { Unknown, Primitive, AuPrimitive, Enum, List, Dictionary, Struct, Class };
-
-enum EAuCurl { Std, Skip, ByName, Uplink, }
-
 #region class AuType -------------------------------------------------------------------------------
-/// <summary>
-/// AuType is a wrapper around System.Type that holds additional information needed by the Au system
-/// </summary>
+/// <summary>AuType is a wrapper around System.Type that holds additional information needed by the Au system</summary>
 /// The first time a type is read or written, the corresponding AuType wrapper object is
 /// constructed. If it is a struct or class type, then for each field in the type we get
 /// the 'tactics' for it (how it is to be serialized). For example, the 'Skip' tactic will
@@ -19,6 +16,7 @@ enum EAuCurl { Std, Skip, ByName, Uplink, }
 /// file for each field of each class that is to be serialized.
 class AuType {
    // Constructor --------------------------------------------------------------
+   // Internal constructor, accessed using Get(name) or Get(Type)
    AuType (Type type) {
       mDict[mType = type] = this;
       Kind = Classify (type);
@@ -77,19 +75,17 @@ class AuType {
          // For .Net primitive types, we set up the 'skip value' (the default value
          // that is not serialized but implicit)
          case EAuTypeKind.Primitive:
-            switch (Lib.NiceName (type)) {
-               case "double": mSkipValue = 0.0; break;
-               case "float": mSkipValue = 0f; break;
-               case "int": mSkipValue = 0; break;
-               case "bool": mSkipValue = false; break;
-            }
+            mSkipValue = Lib.NiceName (type) switch {
+               "double" => 0.0, "float" => 0f, "bool" => false,
+               "int" => 0, "short" => (short)0, "long" => (long)0,
+               "uint" => (uint)0, "ushort" => (ushort)0, "ulong" => (ulong)0,
+               _ => null
+            };
             break;
       }
    }
 
-   /// <summary>
-   /// Get an AuType given the name (used during read serialization)
-   /// </summary>
+   /// <summary>Get an AuType given the name (used during read serialization)</summary>
    /// When we see the name of a type in a Curl file, in parentheses, like "(Dwg2)",
    /// this method is called to fetch the AuType matching that name
    public static AuType Get (ReadOnlySpan<byte> name) {
@@ -99,7 +95,7 @@ class AuType {
          foreach (var ns in Lib.Namespaces) {
             Type? type = assy.GetType ($"{ns}{sname}");
             if (type != null) {
-               mByName.Add (sname, aut = new AuType (type));
+               mByName.Add (sname, aut = Get (type));
                return aut;
             }
          }
@@ -107,6 +103,25 @@ class AuType {
    }
    static SymTable<AuType> mByName = new ();
 
+   /// <summary>
+   /// Get an AuType given the System.Type
+   /// </summary>
+   /// We maintain a static dictionary so each AuType is constructed only once during the
+   /// lifetime of the application
+   public static AuType Get (Type type) => mDict.GetValueOrDefault (type) ?? new AuType (type);
+   static Dictionary<Type, AuType> mDict = [];
+
+   /// <summary>
+   /// Properties --------------------------------------------------------------
+   /// </summary>
+   /// The underlying System.Type this is wrapped around
+   public Type Type => mType;
+   readonly Type mType;
+
+   // Methods ------------------------------------------------------------------
+   /// <summary>
+   /// Creates an instance of the object using its parameterless constructor
+   /// </summary>
    public object CreateInstance () {
       if (mConstructor == null)
          mConstructor = mType.GetConstructor (Public | Instance | NonPublic, []) ??
@@ -221,12 +236,6 @@ class AuType {
    public ReadOnlySpan<AuField> Fields => mFields.AsSpan ();
    readonly ImmutableArray<AuField> mFields = [];
 
-   public Type Type => mType;
-   readonly Type mType;
-
-   public static AuType Get (Type type) => mDict.GetValueOrDefault (type) ?? new AuType (type);
-   static Dictionary<Type, AuType> mDict = [];
-
    // Private data -------------------------------------------------------------
    MethodInfo? mMIWriter;  // Pointer to the Write(UTFWriter) method
    MethodInfo? mMIReader;  // Pointer to the Read(UTFReader) method
@@ -283,3 +292,9 @@ class AuField {
 
    public readonly string Name;
 }
+
+// What 'kind' of type is represented by a given AuType (primitive / list / enum / class etc)
+enum EAuTypeKind { Unknown, Primitive, AuPrimitive, Enum, List, Dictionary, Struct, Class };
+
+enum EAuCurl { Std, Skip, ByName, Uplink, }
+

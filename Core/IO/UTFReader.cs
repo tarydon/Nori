@@ -151,9 +151,7 @@ public class UTFReader {
       mN += delta; return this;
    }
 
-   /// <summary>
-   /// Reads a .Net primitive type from the stream, given the TypeCode
-   /// </summary>
+   /// <summary>Reads a .Net primitive type from the stream, given the TypeCode</summary>
    public object ReadPrimitive (TypeCode code) {
       switch (code) {
          case TypeCode.Boolean: Read (out bool b); return b;

@@ -1,7 +1,3 @@
-// ╔═╦╗
-// ║╬╠╬╦╗ AuReader.cs
-// ║╔╣╠║╣ <<TODO>>
-// ╚╝╚╩╩╝ ──────────────────────────────────────────────────────────────────────────────────────────
 using System.Buffers;
 using System.Collections;
 namespace Nori;
