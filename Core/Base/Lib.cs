@@ -22,8 +22,19 @@ public static class Lib {
    public const double QuarterPI = Math.PI / 4;
 
    // Properties ---------------------------------------------------------------
+   /// <summary>The list of known assemblies</summary>
+   public static IEnumerable<Assembly> Assemblies => mAssemblies;
+   static HashSet<Assembly> mAssemblies = [];
+
    /// <summary>The root of Nori projects on developer machines</summary>
    public const string DevRoot = "N:";
+
+   /// <summary>The list of 'well-known' namespaces</summary>
+   /// When writing types out, or getting the friendly names of types (using
+   /// Lib.GetNiceName, these namespace prefixes are removed. So we will get 
+   /// "Point2" rather than "Nori.Point2"
+   public static IEnumerable<string> Namespaces => mNamespaces;
+   static HashSet<string> mNamespaces = [];
 
    /// <summary>Are we in 'testing' mode?</summary>
    public static bool Testing { get; set; }
@@ -33,11 +44,14 @@ public static class Lib {
    /// This clamps values beyond the range -1 .. +1 to lie within that range
    public static double Acos (double f) => Math.Acos (f.Clamp (-1, 1));
 
+   /// <summary>Add an assembly to the list of 'known' assemblies</summary>
+   /// These are the assemblies searched when we try to get a type by name
+   public static void AddAssembly (Assembly assy) => mAssemblies.Add (assy);
+
    /// <summary>Adds a namespace to the list of 'known namespaces'</summary>
    /// We use this to when searching for a type by name. If only the core name of the type
    /// is specified, these namespaces are prepended to that name to try to form a match
-   public static void AddNamespace (string nameSpace) => mNamespaces.Add ($"{nameSpace}.");
-   internal static List<string> mNamespaces = ["Nori"];
+   public static void AddNamespace (string nameSpace) => mNamespaces.Add ($"{nameSpace.TrimEnd ('.')}.");
 
    /// <summary>Checks a condition, and throws an exception in debug mode</summary>
    /// In release mode, this just returns the condition quietly
@@ -77,6 +91,9 @@ public static class Lib {
       if (!sInited) {
          sInited = true;
          Register (new FileStmLocator ("wad:", $"{DevRoot}/Wad/"));
+         AddAssembly (Assembly.GetExecutingAssembly ());
+         AddNamespace ("Nori"); AddNamespace ("System"); AddNamespace ("System.Collections.Generic");
+         AddNamespace ("Pix");
       }
    }
    static bool sInited;
@@ -87,9 +104,14 @@ public static class Lib {
    /// <summary>Returns the 'nice name' for a type (human readable name like 'int')</summary>
    public static string NiceName (Type type) {
       if (!sNiceNames.TryGetValue (type, out var s)) {
-         s = type.FullName!;
+         if (type.IsGenericType) {
+            s = type.GetGenericTypeDefinition ().FullName!;
+            s = s[..s.IndexOf ('`')];
+            s += $"<{type.GetGenericArguments ().Select (NiceName).ToCSV ()}>";
+         } else 
+            s = type.FullName!;
          foreach (var ns in mNamespaces)
-            if (s.StartsWith (ns)) { s = s[(ns.Length + 1)..]; break; }
+            if (s.StartsWith (ns)) { s = s[ns.Length..]; break; }
          sNiceNames[type] = s;
       }
       return s;

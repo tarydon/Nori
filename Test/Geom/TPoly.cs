@@ -62,10 +62,29 @@ class PolyTests {
       PB ().Arc (0, 0, Math.Tan (90.D2R () / 4)).End (5, 5).Is ("M0,0Q5,5,1");
       Poly.Parse ("M1,2Q3,4,0").Is ("M1,2L3,4");
       Poly.Parse ("M0,0 L12,13 3,4 Z").Is ("M0,0L12,13L3,4Z");
+      Poly.Parse ("M5,3 H10 V6 Z").Is ("M5,3H10V6Z");
+      Poly.Parse ("M5,3 L10,3 10,6 Z").Is ("M5,3H10V6Z");
 
-      Exception? e = null;
-      try { Poly.Parse ("M0,0F1,2Z"); } catch (Exception e1) { e = e1; }
-      (e == null).IsFalse ();
+      // These should all crash
+      string message = "A";
+      try { Poly.Parse ("M0,0F1,2Z"); } catch (Exception e1) { message = e1.Description (); }
+      message.Is ("ParseException: Unexpected mode 'F' in Poly.Parse");
+      message = "B";
+      try { Poly.Parse ("M0,0L"); } catch (Exception e1) { message = e1.Description (); }
+      message.Is ("ParseException: At (1,6): Expecting double value");
+      message = "C";
+      try { Poly.Parse ("M0,0L3"); } catch (Exception e1) { message = e1.Description (); }
+      message.Is ("ParseException: At (1,7): Expecting double value");
+      message = "D";
+      try { Poly.Parse ("M123.456,456.789\nL12.3,"); } catch (Exception e1) { message = e1.Description (); }
+      message.Is ("ParseException: At (2,7): Expecting double value");
+      message = "E";
+      try { Poly.Parse ("L0,0"); } catch (Exception e1) { message = e1.Description (); }
+      message.Is ("ParseException: At (1,1): Expecting 'M', found 'L'");
+      // And this should work, thouhg the string is spread over 2 lines
+      message = "OK";
+      try { Poly.Parse ("M123.456,456.789\nL12.3,5"); } catch (Exception e1) { message = e1.Description (); }
+      message.Is ("OK");
 
       static PolyBuilder PB () => new ();
    }

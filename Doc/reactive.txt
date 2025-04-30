@@ -1,0 +1,42 @@
+Properties like TextBox.Text, NumericBox.Value etc:
+   - Other code needs to know when these values are changed (typed in by user).
+	  So these are Observable properties.
+   - These properties may also be 'computed' based on some expression. And some
+	  of the values in those expressions may themselves be observable. So this
+	  property has to watch all those and update itself
+
+Properties like MouseOver, GotFocus:
+   ? 
+
+Events like Click:
+	?
+
+
+Examples
+--------
+mText.BgrdColor => IsMouseOver ? Blue : White;
+mText.FgrdColor => mText.BgrdColor == Blue ? LightGray : DarkGray;
+mText.Transparency => Elapsed => ((e - 5.0) / 3.0).Clamp ();	    // After waiting 5 seconds, fades out in 3 seconds
+
+mText.Transparency => Elapsed (8.0, 0.1)		// Generate an 'elapsed time' value for 8 seconds, with 0.1 s frequency
+                                             // after which the value will remain 'stuck' at 8 with no more events (OnComplete)
+                      .Select (e => ((e - 5) / 3.0).Clamp ());
+
+
+Reactive:
+---------
+readonly ObservableAsPropertyHelper<string> firstName;
+public string FirstName => firstName.Value;
+
+firstName = this
+    .WhenAnyValue(x => x.Name)
+    .Select(name => name.Split(' ')[0])
+    .ToProperty(this, x => x.FirstName);
+
+Mine:
+----
+public Prop<string> FirstName => Name.Split (' ')[0];
+
+mSaveButton.IsEnabled => !(FirstName.IsBlank () && LastName.IsBlank ());
+
+mLabel.Text = People[mPeopleList.SelectedIndex].FirstName;   

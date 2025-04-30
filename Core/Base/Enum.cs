@@ -24,6 +24,8 @@ public enum EProp {
    Attributes,
    /// <summary>An entity's visibility has changed</summary>
    Visibility,
+   /// <summary>The selection state is changed</summary>
+   Selected,
 
    Grid, FillInterior, CurrentLayer,
 }

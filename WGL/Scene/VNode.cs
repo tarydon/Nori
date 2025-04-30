@@ -206,7 +206,7 @@ public class VNode {
    protected virtual void OnChanged (EProp prop) {
       switch (prop) {
          case EProp.Geometry: Redraw (); break;
-         case EProp.Attributes: case EProp.Xfm: Lux.Redraw (); break;
+         case EProp.Attributes or EProp.Xfm or EProp.Selected: Lux.Redraw (); break;
       }
    }
 
