@@ -1,35 +1,47 @@
 // ────── ╔╗
 // ╔═╦╦═╦╦╬╣ AuReader.cs
-// ║║║║╬║╔╣║ <<TODO>>
+// ║║║║╬║╔╣║ AuReader: reads an object from a curl file
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 using System.Buffers;
 using System.Collections;
 namespace Nori;
 
+#region class AuReader -----------------------------------------------------------------------------
+/// <summary>AuReader is used to read an object from an AuCurl file</summary>
 public class AuReader {
-   public static object? Load (string file) {
-      AuReader r = new (new (file));
+   // Methods ------------------------------------------------------------------
+   /// <summary>Load an object from a file</summary>
+   public static object Load (string file)
+      => Load (File.ReadAllBytes (file));
+
+   /// <summary>Load an object from an array of bytes</summary>
+   public static object Load (byte[] bytes) {
+      AuReader r = new (new (bytes));
       return r.ReadClass (AuType.Get (typeof (object)));
    }
 
-   AuReader (UTFReader r) {
-      R = r;
-      while (R.Peek == ';') R.SkipTo ('\n');
-   }
+   // Properties ---------------------------------------------------------------
+   /// <summary>These are the characters that stop parsing an identifier</summary>
+   public static SearchValues<byte> NameStop => mNameStop;
+   static readonly SearchValues<byte> mNameStop = SearchValues.Create ("\n\t\f :([{}])"u8);
+
+   // Implementation -----------------------------------------------------------
+   // Construct a UTFReader, and skips past any leading comments
+   AuReader (UTFReader r) { R = r; while (R.Peek == ';') R.SkipTo ('\n'); }
    readonly UTFReader R;
 
-   object? Read (AuType type) {
-      switch (type.Kind) {
-         case EAuTypeKind.Class or EAuTypeKind.Struct: return ReadClass (type);
-         case EAuTypeKind.List: return ReadList (type);
-         case EAuTypeKind.Primitive: return ReadPrimitive (type);
-         case EAuTypeKind.AuPrimitive: return ReadAuPrimitive (type);
-         case EAuTypeKind.Enum: return type.ReadEnum (R);
-         default: throw new NotImplementedException ();
-      }
-   }
+   // Top level routine used to read an object given the AuType
+   object? Read (AuType type) => type.Kind switch {
+      EAuTypeKind.Class or EAuTypeKind.Struct => ReadClass (type),
+      EAuTypeKind.List => ReadList (type),
+      EAuTypeKind.Primitive => ReadPrimitive (type),
+      EAuTypeKind.AuPrimitive => ReadAuPrimitive (type),
+      EAuTypeKind.Enum => type.ReadEnum (R),
+      _ => throw new NotImplementedException (),
+   };
 
-   object? ReadClass (AuType auType) {
+   // Reads a class or a struct
+   object ReadClass (AuType auType) {
       if (R.TryMatch ('(')) auType = AuType.Get (R.TakeUntil (')'));
       object owner = auType.CreateInstance ();
       mStack.Add (owner);
@@ -76,7 +88,5 @@ public class AuReader {
    object ReadPrimitive (AuType auType)
       => R.ReadPrimitive (Type.GetTypeCode (auType.Type));
 
-   public static SearchValues<byte> NameStop => mNameStop;
-   static readonly SearchValues<byte> mNameStop
-      = SearchValues.Create (Encoding.UTF8.GetBytes ("\n\t\f :([{}])"));
 }
+#endregion

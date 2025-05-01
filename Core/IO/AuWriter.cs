@@ -1,27 +1,38 @@
 // ────── ╔╗
 // ╔═╦╦═╦╦╬╣ AuWriter.cs
-// ║║║║╬║╔╣║ <<TODO>>
+// ║║║║╬║╔╣║ AuWriter: Writes an object out to a Curl file
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 using System.Collections;
-using Nori;
+namespace Nori;
 
+#region class AuWriter -----------------------------------------------------------------------------
+/// <summary>AuWriter is used to write out an object to an AuCurl file</summary>
+/// If the type is a class or struct, we need metadata for the type, and this is
+/// loaded from AuManifest files
 public class AuWriter {
-   public static byte[] Write (object obj, string? comment)
-      => new AuWriter ().WriteImp (obj, comment);
-
-   public static void Write (object obj, string? comment, string file)
-      => File.WriteAllBytes (file, Write (obj, comment));
-
-   byte[] WriteImp (object obj, string? comment) {
-      if (comment != null) B.Write ("; "u8).Write (comment).Write ('\n');
-      Write (obj, AuType.Get (typeof (object)));
-      return B.IndentAndReturn ();
+   // Methods ------------------------------------------------------------------
+   /// <summary>Write an object (with a possible leading comment) to a byte[]</summary>
+   static byte[] Write (object obj, string? comment = null) {
+      var w = new AuWriter ();
+      if (comment != null) w.B.Write ("; "u8).Write (comment).Write ('\n');
+      w.Write (obj, AuType.Get (typeof (object)));
+      return w.B.IndentAndReturn ();
    }
 
+   /// <summary>Write an object (with a possible header comment) to a file</summary>
+   public static void WriteToFile (object obj, string file, string? comment = null)
+      => File.WriteAllBytes (file, Write (obj, comment));
+
+   // Implementation -----------------------------------------------------------
+   // Recursive routine that writes out any object
    void Write (object? obj, AuType nominal) {
       if (obj == null) return;
       AuType at = AuType.Get (obj.GetType ());
       switch (at.Kind) {
+         // Write out a class or struct. This is delimited by { } and contains a list of
+         // fields expressed as Name:Value pairs. Before we start writing out the object,
+         // we may write out an optional type override like "(E2Poly)" if that will be needed
+         // during the read-back to disambiguate
          case EAuTypeKind.Class or EAuTypeKind.Struct:
             if (at != nominal) at.WriteOverride (B);
             B.Write ("{\n"u8);
@@ -37,10 +48,18 @@ public class AuWriter {
             }
             B.Write ("}\n"u8);
             break;
+
+         // Write out a list. This is delimited by [ ] and contains the actual objects written out
+         // between these delimiters. We could just call Write recursively here to write out all the
+         // elements, but we expand out the loop to improve performance. That is, if we know that
+         // the elements are AuPrimitive, we can bypass some of the logic above by directly calling
+         // WriteAuPrimitive as we do here
          case EAuTypeKind.List:
             B.Write ("[\n"u8);
             Type elemType = at.Type.IsArray ? at.Type.GetElementType ()! : at.Type.GetGenericArguments ()[0];
             AuType elemAuType = AuType.Get (elemType);
+            // We could just call Write recursively here to write out all the elements. However,
+            // to improve performance we expand that loop out here
             switch (elemAuType.Kind) {
                case EAuTypeKind.AuPrimitive:
                   foreach (var elem in (IList)obj) { elemAuType.WriteAuPrimitive (B, elem); B.NewLine (); }
@@ -58,6 +77,10 @@ public class AuWriter {
             }
             B.Write ("]\n"u8);
             break;
+
+         // The AuPrimitive, Primitive and Enum kinds are written out by calling the
+         // appropriate methods in the underlying AuType. Those methods use reflection to pick
+         // up the corresponding write methods (which are cached) and then invoke them
          case EAuTypeKind.AuPrimitive: at.WriteAuPrimitive (B, obj); break;
          case EAuTypeKind.Primitive: at.WritePrimitive (B, obj); break;
          case EAuTypeKind.Enum: at.WriteEnum (B, obj); break;
@@ -66,5 +89,5 @@ public class AuWriter {
    }
 
    UTFWriter B = new ();
-   HashSet<AuType> mSeen = [];
 }
+#endregion
