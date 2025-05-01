@@ -1,3 +1,7 @@
+// ────── ╔╗
+// ╔═╦╦═╦╦╬╣ AuWriter.cs
+// ║║║║╬║╔╣║ <<TODO>>
+// ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 using System.Collections;
 using Nori;
 
@@ -23,11 +27,11 @@ public class AuWriter {
             B.Write ("{\n"u8);
             foreach (var af in at.Fields) {
                object? value = af.GetValue (obj);
-               if (af.Skip (value)) continue;
+               if (af.SkipWriting (value)) continue;
                af.WriteLabel (B);
                switch (af.Tactic) {
-                  case EAuCurl.ByName: af.WriteByName (B, value); break;
-                  default: Write (value, af.AuType); break;
+                  case EAuCurlTactic.ByName: af.WriteByName (B, value); break;
+                  default: Write (value, af.FieldType); break;
                }
                B.NewLine ();
             }

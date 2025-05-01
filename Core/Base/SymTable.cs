@@ -2,8 +2,6 @@
 // ╔═╦╦═╦╦╬╣ SymTable.cs
 // ║║║║╬║╔╣║ <<TODO>>
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
-using System.Diagnostics.CodeAnalysis;
-using System.Text;
 namespace Nori;
 
 #region class SymTable -----------------------------------------------------------------------------
@@ -22,7 +20,7 @@ public class SymTable<T> {
       => Add (key.ToArray (), value);
 
    /// <summary>Add a key-value pair into the SymTable (key as a byte[])</summary>
-   /// Note that we are biased towards optimizing for fast searches, rather than 
+   /// Note that we are biased towards optimizing for fast searches, rather than
    /// fast Adds (though the adds are not very slow, either)
    public void Add (byte[] key, T value) {
       int hash = GetHashCode (key);
@@ -41,11 +39,11 @@ public class SymTable<T> {
          // Otherwise, add this new entry into the list and return
          list1.Add (entry); return;
       }
-      // Next, see if we have already added a single item with this hash key 
+      // Next, see if we have already added a single item with this hash key
       // into mDict0 (this is the first hash collision happening for this hash)
       // If not, we are done (the item is stored in mDict0)
       if (mDict0.TryAdd (hash, entry)) return;
-      // If there is a hash collision, this is exactly the second item with this 
+      // If there is a hash collision, this is exactly the second item with this
       // particular hash value, so promote this item from mDict0 (single items)
       // to mDict1 (list of items). Note that it is important to remove this from
       // mDict0!
@@ -77,7 +75,7 @@ public class SymTable<T> {
 
    /// <summary>Gets the value stored with a particular key (key passed as string)</summary>
    /// Note: this is not as efficient as passing the key as a ReadOnlySpan(byte)
-   public T this[string key] 
+   public T this[string key]
       => this[Encoding.UTF8.GetBytes (key)];
 
    /// <summary>Tries to get a value stored with a particular key (or returns false if the key is not found)</summary>
@@ -123,9 +121,9 @@ public class SymTable<T> {
    // occur for a given hash value
    Dictionary<int, Entry> mDict0 = [];
    // Once a hash collision occurs, the hashcode and its now multiplicity of values are
-   // moved to this dictionary, that maintains a list for each hash code (open-hashing). 
+   // moved to this dictionary, that maintains a list for each hash code (open-hashing).
    // This two-tier structure is a bit wasteful of memory, perhaps, but is optimized for
-   // the common case happy-path that hash collisions are rare. 
+   // the common case happy-path that hash collisions are rare.
    Dictionary<int, List<Entry>> mDict1 = [];
 }
 #endregion

@@ -1,3 +1,7 @@
+// ────── ╔╗
+// ╔═╦╦═╦╦╬╣ AuReader.cs
+// ║║║║╬║╔╣║ <<TODO>>
+// ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 using System.Buffers;
 using System.Collections;
 namespace Nori;
@@ -37,11 +41,11 @@ public class AuReader {
          R.Match (':');
          object? value = null;
          switch (field.Tactic) {
-            case EAuCurl.ByName:
+            case EAuCurlTactic.ByName:
                R.Read (out string str);
-               value = field.AuType.ByName (mStack, str);
+               value = field.FieldType.ReadByName (mStack, str);
                break;
-            default: value = Read (field.AuType); break;
+            default: value = Read (field.FieldType); break;
          }
          field.SetValue (owner, value);
       }
@@ -74,5 +78,5 @@ public class AuReader {
 
    public static SearchValues<byte> NameStop => mNameStop;
    static readonly SearchValues<byte> mNameStop
-      = SearchValues.Create (Encoding.UTF8.GetBytes (" :(\n\t\f[{"));
+      = SearchValues.Create (Encoding.UTF8.GetBytes ("\n\t\f :([{}])"));
 }
