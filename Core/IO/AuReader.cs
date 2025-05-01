@@ -30,7 +30,8 @@ public class AuReader {
    AuReader (UTFReader r) { R = r; while (R.Peek == ';') R.SkipTo ('\n'); }
    readonly UTFReader R;
 
-   // Top level routine used to read an object given the AuType
+   // Top level routine used to read an object given the AuType, just switches based
+   // on the Kind of type to the appropriate low level read routine
    object? Read (AuType type) => type.Kind switch {
       EAuTypeKind.Class or EAuTypeKind.Struct => ReadClass (type),
       EAuTypeKind.List => ReadList (type),
@@ -42,16 +43,20 @@ public class AuReader {
 
    // Reads a class or a struct
    object ReadClass (AuType auType) {
+      // Optionally, there may be a type override before the actual object data starts,
+      // so read that first
       if (R.TryMatch ('(')) auType = AuType.Get (R.TakeUntil (')'));
+
+      // Create an object, and push it on the stack of objects being partially read,
+      // we will need that to handle 'uplink' fields (and sometimes 'byname' fields)
       object owner = auType.CreateInstance ();
       mStack.Add (owner);
       R.Match ('{');
       for (; ; ) {
          if (R.TryMatch ('}')) break;     // Finished reading all the fields
-         var name = R.TakeUntil (mNameStop, true);
-         var field = auType.GetField (name)!;
+         var field = auType.GetField (R.TakeUntil (mNameStop, true))!;
          R.Match (':');
-         object? value = null;
+         object? value;
          switch (field.Tactic) {
             case EAuCurlTactic.ByName:
                R.Read (out string str);
@@ -61,10 +66,12 @@ public class AuReader {
          }
          field.SetValue (owner, value);
       }
+      // Pop off the stack of partially read objects and return
       return mStack.RemoveLast ();
    }
    List<object> mStack = [];
 
+   // Reads a list (or any one-dimensional collection) from the curl file
    object? ReadList (AuType auType) {
       var type = auType.Type;
       IList list = type.IsArray ? new List<object> () : (IList)auType.CreateInstance ();
@@ -82,11 +89,13 @@ public class AuReader {
       return list;
    }
 
-   object? ReadAuPrimitive (AuType auType)
-      => auType.ReadAuPrimitive (R);
+   // Reads an [AuPrimitive] from the curl file
+   // The underlying auType implements the ReadAuPrimitive that has a cached pointer
+   // to the Read(UTFReader) method on the type and that is used to read the primitive
+   object? ReadAuPrimitive (AuType auType) => auType.ReadAuPrimitive (R);
 
-   object ReadPrimitive (AuType auType)
-      => R.ReadPrimitive (Type.GetTypeCode (auType.Type));
-
+   // Reads a .Net primitve type from the curl file
+   // This is handled by the UTFReader.ReadPrimitive core method
+   object ReadPrimitive (AuType auType) => R.ReadPrimitive (Type.GetTypeCode (auType.Type));
 }
 #endregion
