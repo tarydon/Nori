@@ -3,6 +3,7 @@
 // ║║║║╬║╔╣║ Tests of the Au system (curl read / write, binary read / write)
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 using System.Collections.Immutable;
+using System.Reactive.Subjects;
 using System.Reflection;
 namespace Nori.Testing;
 
@@ -46,6 +47,12 @@ class TAuSystem {
       Lion
       Tiger
         Stripes
+      CType1
+        Loc
+      Location
+        X Y
+      CType2
+        JBuf
       """;
 
    [Test (61, "Test primitives")]
@@ -61,56 +68,43 @@ class TAuSystem {
 
    [Test (62, "Various Au errors")]
    void Test2 () {
-      string message = "";
-      try { AuWriter.WriteToFile (new Bad1 (), NT.TmpCurl); } catch (Exception e) { message = e.Description (); }
+      string message = Crasher (() => AuWriter.WriteToFile (new Bad1 (), NT.TmpCurl));
       message.Is ("AuException: No metadata for Nori.Testing.Bad1");
 
-      message = "";
-      try { AuWriter.WriteToFile (new Bad2 (), NT.TmpCurl); } catch (Exception e) { message = e.Description (); }
+      message = Crasher (() => AuWriter.WriteToFile (new Bad2 (), NT.TmpCurl));
       message.Is ("AuException: Tactic missing for Nori.Testing.Bad2.Age");
 
-      message = "";
-      try {
-         byte[] data = AuWriter.Write (new Bad3 ("Hello"));
-         object obj = AuReader.Load (data);
-      } catch (Exception e) { message = e.Description (); }
+      message = Crasher (() => AuReader.Load (AuWriter.Write (new Bad3 ("Hello"))));
       message.Is ("AuException: No parameterless constructor found for Nori.Testing.Bad3");
 
-      message = "";
-      try {
+      message = Crasher (() => {
          Drawing dwg = new ("Temp");
          dwg.Add (new Layer ("Std", Color4.Black, ELineType.Continuous));
          dwg.Add (new Circle (dwg, dwg.Layers[0], (1, 2), 3));
          byte[] data = AuWriter.Write (dwg.Shapes[0]);
-         object obj = AuReader.Load (data);
-      } catch (Exception e) { message = e.Description (); }
+         AuReader.Load (data);
+      });
       message.Is ("AuException: Nori.Testing.Circle.Dwg cannot be set to null");
 
-      message = "";
-      Layer3 layer3 = new Layer3 { Name = "Outline" };
-      Shape3 shape3 = new Shape3 (3.5, layer3);
+      var layer3 = new Layer3 { Name = "Outline" };
+      var shape3 = new Shape3 (3.5, layer3);
       Check (shape3, "T003.curl", "T003");
-      try { object obj = AuReader.Load (NT.TmpCurl); } catch (Exception e) { message = e.Description (); }
+      message = Crasher (() => AuReader.Load (NT.TmpCurl));
       message.Is ("AuException: Missing Nori.Testing.Layer3.ByName(IReadOnlyList<object>,string)");
 
-      message = "";
       Holder holder = new Holder ();
       Check (holder, "T004.curl", "T004");
-      try { object obj = AuReader.Load (NT.TmpCurl); } catch (Exception e) { message = e.Description (); }
+      message = Crasher (() => AuReader.Load (NT.TmpCurl));
       message.Is ("AuException: Missing Nori.Testing.Prim0.Read(UTFReader)");
 
-      message = "";
       holder = new Holder () { Prim1 = new Prim1 () };
-      try { AuWriter.WriteToFile (holder, NT.TmpCurl); } catch (Exception e) { message = e.Description (); }
+      message = Crasher (() => AuWriter.WriteToFile (holder, NT.TmpCurl));
       message.Is ("AuException: Missing Nori.Testing.Prim1.Write(UTFWriter)");
 
-      message = "";
       holder = new Holder () { Prim1 = new Prim1 () };
-      try { AuWriter.WriteToFile (holder, NT.TmpCurl); } catch (Exception e) { message = e.Description (); }
-      message.Is ("AuException: Missing Nori.Testing.Prim1.Write(UTFWriter)");
+      message = Crasher (() => AuWriter.WriteToFile (holder, NT.TmpCurl));
 
-      message = "";
-      try { AuReader.Load ($"{NT.Data}/IO/T007.curl"); } catch (Exception e) { message = e.Description (); }
+      message = Crasher (() => AuReader.Load ($"{NT.Data}/IO/T007.curl"));
       message.Is ("AuException: Type Leopard not found");
    }
 
@@ -129,13 +123,8 @@ class TAuSystem {
 
    [Test (64, "Test various IList")]
    void Test4 () {
-      Collection c = new Collection ();
-      c.List = [1, 2, 3];
-      c.Array = [4, 5, 6];
-      c.Immutable = [7, 8, 9];
-      c.AList = [10, 11, 12];
+      var c = new Collection { List = [1, 2, 3], Array = [4, 5, 6], Immutable = [7, 8, 9], AList = [10, 11, 12] };
       Check (c, "T005.curl", "T005");
-
       var c2 = (Collection)AuReader.Load (NT.TmpCurl);
       Check (c2, "T005.curl", "T005");
    }
@@ -149,6 +138,29 @@ class TAuSystem {
 
       var zoo2 = (Zoo)AuReader.Load (NT.TmpCurl);
       Check (zoo2, "T006.curl", "T006");
+
+      AuType.Get (typeof (Zoo)).ToString ().Is ("AuType Zoo");
+      AuType.Get (typeof (Zoo)).Fields[0].Is ("AuField string Zoo.Name");
+   }
+
+   [Test (66, "Further Au exceptions")]
+   void Test6 () {
+      string message = Crasher (() => AuType.Get (typeof (Drawing)).WritePrimitive (new UTFWriter (), Point2.Nil));
+      message.Is ("BadCaseException: Unhandled case 'Nori.Testing.Drawing' in WritePrimitive");
+
+      var ct1 = new CType1 { Loc = new Location { X = 1, Y = 2 } };
+      Check (ct1, "T008.curl", "T008");
+      var ct1b = (CType1)AuReader.Load (NT.TmpCurl);
+      Check (ct1b, "T008.curl", "T008");
+
+      message = Crasher (() => AuWriter.WriteToFile (new CType2 (), NT.TmpCurl));
+      message.Is ("AuException: 64-bit enums are not supported");
+   }
+
+   static string Crasher (Action act) {
+      string message = "No exception";
+      try { act (); } catch (Exception e) { message = e.Description (); }
+      return message;
    }
 
    void Check (object obj, string file, string? comment) {
@@ -211,6 +223,8 @@ class Square : Shape {
    Square () { }
    public Square (Drawing dwg, Layer layer, Point2 pos, int size) : base (dwg, layer, pos) => Size = size;
    public readonly int Size;
+   public double _Area;
+   public Subject<int>? Pusher;
 }
 class Circle : Shape {
    Circle () { }
@@ -267,4 +281,15 @@ class Tiger : Animal {
    public Tiger (int age, string name) { Name = name; Age = age; Stripes = true; }
    public bool Stripes;
 }
+
+// .........................................................
+struct Location {
+   public Location () { }
+   public int X;
+   public int Y;
+}
+enum EJumpBuffer : ulong { Back = 1, Forward = 2 };
+
+class CType1 { public Location Loc; }
+class CType2 { public EJumpBuffer JBuf; }
 #pragma warning restore 0414

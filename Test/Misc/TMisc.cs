@@ -186,7 +186,7 @@ class TMisc {
 
    [Test (34, "Throwing various exceptions")]
    void Test8 () {
-      new BadCaseException (12).Message.Is ("Unhandled case: 12");
+      new BadCaseException (12).Message.Is ($"Unhandled case '12' in {nameof(Test8)}");
       new ParseException ("13e", typeof (double)).Message.Is ("Cannot convert '13e' to double");
    }
 

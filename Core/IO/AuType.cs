@@ -297,7 +297,7 @@ class AuType {
       if (type == typeof (string) || type.IsPrimitive) return EAuTypeKind.Primitive;
       if (type.IsEnum) {
          var utype = Type.GetTypeCode (type.GetEnumUnderlyingType ());
-         if (utype is TypeCode.Int64 or TypeCode.UInt64) throw new AuException ("64-bit enums not supported by AuCurl");
+         if (utype is TypeCode.Int64 or TypeCode.UInt64) throw new AuException ("64-bit enums are not supported");
          return EAuTypeKind.Enum;
       }
       if (type.HasAttribute<AuPrimitiveAttribute> ()) return EAuTypeKind.AuPrimitive;

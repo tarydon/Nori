@@ -12,7 +12,7 @@ public sealed class AuException (string message) : Exception (message) { }
 #region class BadCaseException ---------------------------------------------------------------------
 /// <summary>Thrown when a case is not handled in some switch statement</summary>
 /// This is typically a sign of unfinished code
-public class BadCaseException (object e) : Exception ($"Unhandled case: {e}");
+public class BadCaseException (object e, [CallerMemberName] string? caller = null) : Exception ($"Unhandled case '{e}' in {caller}") { }
 #endregion
 
 #region class ParseException -----------------------------------------------------------------------

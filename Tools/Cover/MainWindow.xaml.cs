@@ -87,7 +87,6 @@ public partial class MainWindow : Window {
       static bool Passes (string file) {
          if (file.EndsWith (".g.cs")) return false;
          file = file.Replace ('\\', '/');
-         if (!file.StartsWith ("N:/Core/IO")) return false;
          if (file.StartsWith ("N:/Test/")) return false;
          if (file.StartsWith ("N:/Core/Test")) return false;
          return true;

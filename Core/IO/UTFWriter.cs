@@ -4,6 +4,7 @@
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 using System.Buffers;
 using System.Buffers.Text;
+using JetBrains.Annotations;
 namespace Nori;
 
 #region class UTFWriter ----------------------------------------------------------------------------
@@ -217,8 +218,7 @@ public class UTFWriter {
    // by most of the Write routines to indicate how many bytes have been written)
    UTFWriter Bump () {
       N += mDelta;
-      if (N > D.Length)
-         throw new NotImplementedException (); // REMOVETHIS
+      if (N > D.Length) throw new NotImplementedException ();
       return this;
    }
    int mDelta;
