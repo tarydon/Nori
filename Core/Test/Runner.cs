@@ -187,7 +187,6 @@ public static class TestRunner {
       static bool Passes (string file) {
          if (file.EndsWith (".g.cs")) return false;
          file = file.Replace ('\\', '/');
-         if (!file.StartsWith ($"{Lib.DevRoot}/Core/IO/")) return false;
          if (file.StartsWith ($"{Lib.DevRoot}/Test/")) return false;
          if (file.StartsWith ($"{Lib.DevRoot}/Core/Test")) return false;
          return true;

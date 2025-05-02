@@ -32,6 +32,8 @@ public readonly struct Bound1 : IEQuable<Bound1> {
 
    /// <summary>Returns true if f lies within the specific Bound1</summary>
    public bool Contains (double f) => Min <= f && f <= Max;
+   /// <summary>Returns true if f lies within the specific Bound1</summary>
+   public bool Contains (float f) => Min <= f && f <= Max;
    /// <summary>Returns true if b lies within the specified Bound1</summary>
    public bool Contains (Bound1 b) => Contains (b.Min) && Contains (b.Max);
 
@@ -82,7 +84,7 @@ public readonly struct Bound2 : IEQuable<Bound2> {
 
    public static Bound2 Update (ref Bound2 bound, Func<Bound2> computer) {
       if (bound.IsEmpty) bound = computer ();
-      return bound; 
+      return bound;
    }
 
    public Bound2 (IEnumerable<Point2> pts) {
@@ -97,7 +99,7 @@ public readonly struct Bound2 : IEQuable<Bound2> {
 
    public override string ToString () => IsEmpty ? "Empty" : $"({X},{Y})";
 
-   public void Write (UTFWriter buf) 
+   public void Write (UTFWriter buf)
       => buf.Write (X.Min).Write (',').Write (Y.Min).Write (',').Write (X.Max).Write (',').Write (Y.Max);
 
    // Properties ---------------------------------------------------------------
@@ -121,6 +123,8 @@ public readonly struct Bound2 : IEQuable<Bound2> {
    public bool Contains (Point2 pt) => X.Contains (pt.X) && Y.Contains (pt.Y);
    /// <summary>Checks if a Bound2 contains another bound (exact overlap is treated as containment)</summary>
    public bool Contains (Bound2 bound) => X.Contains (bound.X) && Y.Contains (bound.Y);
+   /// <summary>Check if the a Bound2 contains the given 2D point</summary>
+   public bool Contains (Vec2F pt) => X.Contains (pt.X) && Y.Contains (pt.Y);
 
    /// <summary>Compares two Bound2 for equality</summary>
    public bool EQ (Bound2 other) => X.EQ (other.X) && Y.EQ (other.Y);
@@ -148,7 +152,7 @@ public readonly struct Bound2 : IEQuable<Bound2> {
 
    /// <summary>Transform a bound by the given Xfm</summary>
    /// Note that this just takes the 4 corner points, applies the transform, and computes
-   /// a new bound. If the transform contains a rotation, the resulting bound might be 
+   /// a new bound. If the transform contains a rotation, the resulting bound might be
    /// too conservative (not tight)
    public static Bound2 operator * (Bound2 a, Matrix2 m) {
       Bound2 b = new ();

@@ -12,7 +12,7 @@ class BoundTests {
       b1.IsEmpty.Is (true); b1.ToString ().Is ("Empty");
       b2.Is ("10~20"); b3.Is ("1~3");
       b2.Length.Is (10); b2.Mid.Is (15);
-      b2.Contains (11).Is (true); b2.Contains (21).Is (false);
+      b2.Contains (11f).Is (true); b2.Contains (21f).Is (false);
       b2.InflatedF (1.2).Is ("9~21");
       b2.InflatedL (1.2).Is ("8.8~21.2");
       (b3 + 0 + 10).Is ("0~10");
@@ -281,7 +281,7 @@ class GeoTests {
       Span<Point2> buffer = stackalloc Point2[2];
       Point2 a = new (0, 0), b = new (10, 0), c = new (10, 5);
       Geo.CircleXCircle (a, 10, a, 5, buffer).Length.Is (0);
-      var pts = Geo.CircleXCircle (a, 6, b, 4, buffer); 
+      var pts = Geo.CircleXCircle (a, 6, b, 4, buffer);
       pts.Length.Is (1); pts[0].Is ("(6,0)");
 
       double dist = Math.Sqrt (10 * 10 + 5 * 5);
