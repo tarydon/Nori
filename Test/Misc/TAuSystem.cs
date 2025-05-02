@@ -1,0 +1,270 @@
+// ────── ╔╗                                                                                   TEST
+// ╔═╦╦═╦╦╬╣ TAuSystem.cs
+// ║║║║╬║╔╣║ Tests of the Au system (curl read / write, binary read / write)
+// ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
+using System.Collections.Immutable;
+using System.Reflection;
+namespace Nori.Testing;
+
+[Fixture (20, "Test of AuSystem", "IO")]
+class TAuSystem {
+   TAuSystem () {
+      Lib.AddAssembly (Assembly.GetExecutingAssembly ());
+      Lib.AddNamespace ("Nori.Testing");
+      Lib.AddMetadata (mMetadata.Split ('\n'));
+   }
+
+   string mMetadata = """
+      Primitives
+        Bool Short Int Long UShort UInt ULong Float Double Date Guid TSpan String -Unserialized
+      Bad2
+        Name
+      Bad3
+        Name
+      Drawing
+        Name Layers Shapes
+      Shape
+        ^Dwg Layer.Name Pos
+      Square
+        Size
+      Circle
+        Radius
+      Layer
+        Name Color Linetype
+      Shape3
+        Weight Layer.Name
+      Layer3
+        Name
+      Holder
+        Name Prim Prim1
+      Collection
+        AList Immutable Array List
+      Zoo
+        Name Animals
+      Animal
+        Age Name
+      Lion
+      Tiger
+        Stripes
+      """;
+
+   [Test (61, "Test primitives")]
+   void Test1 () {
+      var prim0 = new Primitives ();
+      prim0.Init ();
+      Check (prim0, "T001.curl", "T001");
+
+      var prim1 = (Primitives)AuReader.Load (NT.TmpCurl);
+      prim1.Unserialized.Is (0);
+      Check (prim1, "T001.curl", "T001");
+   }
+
+   [Test (62, "Various Au errors")]
+   void Test2 () {
+      string message = "";
+      try { AuWriter.WriteToFile (new Bad1 (), NT.TmpCurl); } catch (Exception e) { message = e.Description (); }
+      message.Is ("AuException: No metadata for Nori.Testing.Bad1");
+
+      message = "";
+      try { AuWriter.WriteToFile (new Bad2 (), NT.TmpCurl); } catch (Exception e) { message = e.Description (); }
+      message.Is ("AuException: Tactic missing for Nori.Testing.Bad2.Age");
+
+      message = "";
+      try {
+         byte[] data = AuWriter.Write (new Bad3 ("Hello"));
+         object obj = AuReader.Load (data);
+      } catch (Exception e) { message = e.Description (); }
+      message.Is ("AuException: No parameterless constructor found for Nori.Testing.Bad3");
+
+      message = "";
+      try {
+         Drawing dwg = new ("Temp");
+         dwg.Add (new Layer ("Std", Color4.Black, ELineType.Continuous));
+         dwg.Add (new Circle (dwg, dwg.Layers[0], (1, 2), 3));
+         byte[] data = AuWriter.Write (dwg.Shapes[0]);
+         object obj = AuReader.Load (data);
+      } catch (Exception e) { message = e.Description (); }
+      message.Is ("AuException: Nori.Testing.Circle.Dwg cannot be set to null");
+
+      message = "";
+      Layer3 layer3 = new Layer3 { Name = "Outline" };
+      Shape3 shape3 = new Shape3 (3.5, layer3);
+      Check (shape3, "T003.curl", "T003");
+      try { object obj = AuReader.Load (NT.TmpCurl); } catch (Exception e) { message = e.Description (); }
+      message.Is ("AuException: Missing Nori.Testing.Layer3.ByName(IReadOnlyList<object>,string)");
+
+      message = "";
+      Holder holder = new Holder ();
+      Check (holder, "T004.curl", "T004");
+      try { object obj = AuReader.Load (NT.TmpCurl); } catch (Exception e) { message = e.Description (); }
+      message.Is ("AuException: Missing Nori.Testing.Prim0.Read(UTFReader)");
+
+      message = "";
+      holder = new Holder () { Prim1 = new Prim1 () };
+      try { AuWriter.WriteToFile (holder, NT.TmpCurl); } catch (Exception e) { message = e.Description (); }
+      message.Is ("AuException: Missing Nori.Testing.Prim1.Write(UTFWriter)");
+
+      message = "";
+      holder = new Holder () { Prim1 = new Prim1 () };
+      try { AuWriter.WriteToFile (holder, NT.TmpCurl); } catch (Exception e) { message = e.Description (); }
+      message.Is ("AuException: Missing Nori.Testing.Prim1.Write(UTFWriter)");
+
+      message = "";
+      try { AuReader.Load ($"{NT.Data}/IO/T007.curl"); } catch (Exception e) { message = e.Description (); }
+      message.Is ("AuException: Type Leopard not found");
+   }
+
+   [Test (63, "Test of Uplink, ByName, ById")]
+   void Test3 () {
+      Drawing dwg = new ("FloorPlan");
+      dwg.Add (new Layer ("Std", Color4.Black, ELineType.Continuous));
+      dwg.Add (new Layer ("Bend", Color4.Blue, ELineType.Dash));
+      dwg.Add (new Circle (dwg, dwg.Layers[0], (1, 2), 3));
+      dwg.Add (new Square (dwg, dwg.Layers[1], (4, 5), 6));
+      Check (dwg, "T002.curl", "T002");
+
+      Drawing dwg2 = (Drawing)AuReader.Load (NT.TmpCurl);
+      dwg2.Shapes[0].Dwg.Name.Is ("FloorPlan");    // Check that Shape.Dwg is set by Uplink
+   }
+
+   [Test (64, "Test various IList")]
+   void Test4 () {
+      Collection c = new Collection ();
+      c.List = [1, 2, 3];
+      c.Array = [4, 5, 6];
+      c.Immutable = [7, 8, 9];
+      c.AList = [10, 11, 12];
+      Check (c, "T005.curl", "T005");
+
+      var c2 = (Collection)AuReader.Load (NT.TmpCurl);
+      Check (c2, "T005.curl", "T005");
+   }
+
+   [Test (65, "Test of dictionary")]
+   void Test5 () {
+      Zoo zoo = new () { Name = "London (Main)" };
+      zoo.Animals.Add ('L', new Lion () { Name = "Simba", Age = 12 });
+      zoo.Animals.Add ('T', new Tiger () { Name = "Elsa", Age = 18 });
+      Check (zoo, "T006.curl", "T006");
+
+      var zoo2 = (Zoo)AuReader.Load (NT.TmpCurl);
+      Check (zoo2, "T006.curl", "T006");
+   }
+
+   void Check (object obj, string file, string? comment) {
+      AuWriter.WriteToFile (obj, NT.TmpCurl, comment);
+      Assert.TextFilesEqual ($"{NT.Data}/IO/{file}", NT.TmpCurl);
+   }
+}
+
+#pragma warning disable 0414
+// .........................................................
+class Primitives {
+   public void Init () {
+      Bool = true; Short = 1; Int = 2; Long = 3; UShort = 4; UInt = 5;  ULong = 6;
+      Float = 7.1f; Double = 8.2; Date = new (2001, 6, 21, 10, 25, 35);
+      Guid = new ("9A19103F-16F7-4668-BE54-9A1E7A4F7556");
+      TSpan = new (1, 2, 3, 4, 5, 6); String = "Ten"; Unserialized = 11;
+   }
+
+   bool Bool; short Short; int Int; long Long; ushort UShort; uint UInt;
+   ulong ULong; float Float; double Double; DateTime Date; Guid Guid;
+   TimeSpan TSpan; string String = ""; public int Unserialized;
+}
+
+class Bad1 { string Name = "Hello"; int Age = 1; }
+class Bad2 { string Name = "Hello"; int Age = 1; }
+class Bad3 (string name) { string Name = name; }
+
+// .........................................................
+class Drawing {
+   Drawing () => Name = "";
+   public Drawing (string name) => Name = name;
+   public readonly string Name;
+   public IReadOnlyList<Shape> Shapes => mShapes;
+   readonly List<Shape> mShapes = [];
+   public void Add (Shape shape) { shape.Dwg = this; mShapes.Add (shape); }
+   public void Add (Layer layer) => mLayers.Add (layer);
+   public IReadOnlyList<Layer> Layers => mLayers;
+   readonly List<Layer> mLayers = [];
+}
+class Layer {
+   public Layer () => Name = string.Empty;
+   public Layer (string name, Color4 color, ELineType linetype) => (Name, Color, Linetype) = (name, color, linetype);
+   public readonly string Name;
+   public readonly Color4 Color;
+   public readonly ELineType Linetype;
+   static Layer? ByName (IReadOnlyList<object> stack, string name) {
+      for (int i = stack.Count - 1; i >= 0; i--)
+         if (stack[i] is Drawing dwg) return dwg.Layers.FirstOrDefault (a => a.Name == name);
+      return null;
+   }
+}
+class Shape {
+   protected Shape () => (Dwg, Layer) = (null!, null!);
+   public Shape (Drawing dwg, Layer layer, Point2 pos) => (Dwg, Layer, Pos) = (dwg, layer, pos);
+   public Drawing Dwg;
+   public Layer Layer;
+   public readonly Point2 Pos;
+}
+class Square : Shape {
+   Square () { }
+   public Square (Drawing dwg, Layer layer, Point2 pos, int size) : base (dwg, layer, pos) => Size = size;
+   public readonly int Size;
+}
+class Circle : Shape {
+   Circle () { }
+   public Circle (Drawing dwg, Layer layer, Point2 pos, int radius) : base (dwg, layer, pos) => Radius = radius;
+   public readonly int Radius;
+}
+
+// .........................................................
+class Layer3 { public string? Name; }
+class Shape3 {
+   Shape3 () => Layer = null!;
+   public Shape3 (double w, Layer3 l) => (Weight, Layer) = (w, l);
+   public double Weight;
+   public Layer3 Layer;
+}
+
+class Holder {
+   public string Name = "Holder";
+   public Prim0 Prim = new () { X = 1.5, Y = 2.5 };
+   public Prim1? Prim1 = null;
+}
+[AuPrimitive]
+class Prim0 {
+   public double X, Y;
+   void Write (UTFWriter w) => w.Write (X).Write (',').Write (Y);
+}
+[AuPrimitive]
+class Prim1 {
+   public double X = 0, Y = 0;
+}
+
+// .........................................................
+class Collection {
+   public List<int>? List;
+   public int[]? Array;
+   public ImmutableArray<int> Immutable;
+   public AList<int>? AList;
+}
+
+class Zoo {
+   public string Name = "";
+   public Dictionary<char, Animal> Animals = [];
+}
+abstract class Animal {
+   public int Age;
+   public string Name = "";
+}
+class Lion : Animal {
+   public Lion () { }
+   public Lion (int age, string name) { Name = name; Age = age; }
+}
+class Tiger : Animal {
+   public Tiger () { }
+   public Tiger (int age, string name) { Name = name; Age = age; Stripes = true; }
+   public bool Stripes;
+}
+#pragma warning restore 0414

@@ -83,8 +83,8 @@ public class UTFWriter {
          }
          return false;
       }
-      static bool Starter (byte b) => b == '{' || b == '[';
-      static bool Ender (byte b) => b == '}' || b == ']';
+      static bool Starter (byte b) => b == '{' || b == '[' || b == '<';
+      static bool Ender (byte b) => b == '}' || b == ']' || b == '>';
    }
 
    /// <summary>Writes a NewLine character ('\n') to the stream, avoiding multiple \n</summary>
@@ -120,9 +120,10 @@ public class UTFWriter {
 
    /// <summary>Write a DateTime to a UTF8 stream using default formatting</summary>
    public UTFWriter Write (DateTime value) {
-      while (!Utf8Formatter.TryFormat (value, D.AsSpan (N), out mDelta)) Grow ();
+      while (!Utf8Formatter.TryFormat (value, D.AsSpan (N), out mDelta, sDateFmt)) Grow ();
       return Bump ();
    }
+   static StandardFormat sDateFmt = new ('O');
 
    /// <summary>Write a double to a UTF8 stream using default formatting</summary>
    public UTFWriter Write (double value) => Write (value, default);
@@ -150,6 +151,18 @@ public class UTFWriter {
       return Bump ();
    }
 
+   /// <summary>Write a 16-bit integer to a UTF8 stream using default formatting</summary>
+   public UTFWriter Write (short value) {
+      while (!Utf8Formatter.TryFormat (value, D.AsSpan (N), out mDelta)) Grow ();
+      return Bump ();
+   }
+
+   /// <summary>Write a 64-bit integer to a UTF8 stream using default formatting</summary>
+   public UTFWriter Write (long value) {
+      while (!Utf8Formatter.TryFormat (value, D.AsSpan (N), out mDelta)) Grow ();
+      return Bump ();
+   }
+
    /// <summary>Write a readonly span of bytes to the stream</summary>
    public UTFWriter Write (ReadOnlySpan<byte> value) {
       EnsureSize (mDelta = value.Length);
@@ -170,7 +183,7 @@ public class UTFWriter {
       int cb = Encoding.UTF8.GetBytes (s, D.AsSpan (N));
       N += cb; return this;
    }
-   static SearchValues<char> mSpl = SearchValues.Create (" \'\":[{()}]=");
+   static SearchValues<char> mSpl = SearchValues.Create (" \'\":[{(<>)}]=");
 
    /// <summary>Write a TimeSpan to a UTF8 stream using default formatting</summary>
    public UTFWriter Write (TimeSpan value) {
@@ -186,6 +199,18 @@ public class UTFWriter {
       return Bump ();
    }
    static StandardFormat sHexFormat = new ('X');
+
+   /// <summary>Write a 16-bit unsigned integer to a UTF8 stream using default formatting</summary>
+   public UTFWriter Write (ushort value) {
+      while (!Utf8Formatter.TryFormat (value, D.AsSpan (N), out mDelta)) Grow ();
+      return Bump ();
+   }
+
+   /// <summary>Write a 64-bit unsigned integer to a UTF8 stream using default formatting</summary>
+   public UTFWriter Write (ulong value) {
+      while (!Utf8Formatter.TryFormat (value, D.AsSpan (N), out mDelta)) Grow ();
+      return Bump ();
+   }
 
    // Implementation -----------------------------------------------------------
    // Called to bump up the write pointer by the variable mDelta (which is set

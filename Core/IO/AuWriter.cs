@@ -3,6 +3,7 @@
 // ║║║║╬║╔╣║ AuWriter: Writes an object out to a Curl file
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 using System.Collections;
+using System.Collections.Generic;
 namespace Nori;
 
 #region class AuWriter -----------------------------------------------------------------------------
@@ -12,7 +13,7 @@ namespace Nori;
 public class AuWriter {
    // Methods ------------------------------------------------------------------
    /// <summary>Write an object (with a possible leading comment) to a byte[]</summary>
-   static byte[] Write (object obj, string? comment = null) {
+   public static byte[] Write (object obj, string? comment = null) {
       var w = new AuWriter ();
       if (comment != null) w.B.Write ("; "u8).Write (comment).Write ('\n');
       w.Write (obj, AuType.Get (typeof (object)));
@@ -76,6 +77,16 @@ public class AuWriter {
                   break;
             }
             B.Write ("]\n"u8);
+            break;
+
+         case EAuTypeKind.Dictionary:
+            B.Write ("<\n"u8);
+            var targs = at.GenericArgs;
+            var idict = (IDictionary)obj;
+            foreach (var key in idict.Keys) {
+               Write (key, targs[0]); B.Write ('='); Write (idict[key], targs[1]); B.NewLine ();
+            }
+            B.Write (">\n"u8);
             break;
 
          // The AuPrimitive, Primitive and Enum kinds are written out by calling the

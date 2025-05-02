@@ -2,8 +2,7 @@
 // ╔═╦╦═╦╦╬╣ TEval.cs
 // ║║║║╬║╔╣║ Expression evaluator tests
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
-using Nori.Testing;
-using Nori;
+namespace Nori.Testing;
 
 [Fixture (17, "Expression evaluation tests", "UI.Input")]
 class EvalTest {

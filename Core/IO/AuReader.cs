@@ -2,8 +2,10 @@
 // ╔═╦╦═╦╦╬╣ AuReader.cs
 // ║║║║╬║╔╣║ AuReader: reads an object from a curl file
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
+using System;
 using System.Buffers;
 using System.Collections;
+using System.Threading;
 namespace Nori;
 
 #region class AuReader -----------------------------------------------------------------------------
@@ -38,6 +40,7 @@ public class AuReader {
       EAuTypeKind.Primitive => ReadPrimitive (type),
       EAuTypeKind.AuPrimitive => ReadAuPrimitive (type),
       EAuTypeKind.Enum => type.ReadEnum (R),
+      EAuTypeKind.Dictionary => ReadDictionary (type),
       _ => throw new NotImplementedException (),
    };
 
@@ -50,6 +53,13 @@ public class AuReader {
       // Create an object, and push it on the stack of objects being partially read,
       // we will need that to handle 'uplink' fields (and sometimes 'byname' fields)
       object owner = auType.CreateInstance ();
+      foreach (var upf in auType.Uplinks) {
+         var uptype = upf.FieldType.Type;
+         var uplink = mStack.LastOrDefault (a => a?.GetType ().IsAssignableFrom (uptype) ?? false);
+         if (!upf.IsNullable && uplink == null) throw new AuException ($"{auType.Type.FullName}.{upf.Name} cannot be set to null");
+         upf.SetValue (owner, uplink);
+      }
+
       mStack.Add (owner);
       R.Match ('{');
       for (; ; ) {
@@ -74,19 +84,34 @@ public class AuReader {
    // Reads a list (or any one-dimensional collection) from the curl file
    object? ReadList (AuType auType) {
       var type = auType.Type;
-      IList list = type.IsArray ? new List<object> () : (IList)auType.CreateInstance ();
-      var elemType = AuType.Get (type.IsArray ? type.GetElementType ()! : type.GetGenericArguments ()[0]);
+      bool makeArray = type.IsArray || auType.IsImmutableArray;
+      IList list = makeArray ? new List<object> () : (IList)auType.CreateInstance ();
+      var elemType = auType.GenericArgs[0];
       R.Match ('[');
       for (; ; ) {
          if (R.TryMatch (']')) break;
          list.Add (Read (elemType));
       }
-      if (type.IsArray) {
-         var array = Array.CreateInstanceFromArrayType (type, list.Count);
-         list.CopyTo (array, 0);
-         return array;
+      if (!makeArray) return list;
+      var array = Array.CreateInstance (elemType.Type, list.Count);
+      list.CopyTo (array, 0);
+      if (type.IsArray) return array;
+      return auType.IArrayFromArray.Invoke (null, [array]);
+   }
+
+   object? ReadDictionary (AuType auType) {
+      var type = auType.Type;
+      IDictionary dict = (IDictionary)auType.CreateInstance ();
+      R.Match ('<');
+      AuType keyType = auType.GenericArgs[0], valueType = auType.GenericArgs[1];
+      for (; ; ) {
+         if (R.TryMatch ('>')) break;
+         object key = Read (keyType)!; 
+         R.Match ('=');
+         object? value = Read (valueType);
+         dict.Add (key, value);
       }
-      return list;
+      return dict; 
    }
 
    // Reads an [AuPrimitive] from the curl file
@@ -96,6 +121,6 @@ public class AuReader {
 
    // Reads a .Net primitve type from the curl file
    // This is handled by the UTFReader.ReadPrimitive core method
-   object ReadPrimitive (AuType auType) => R.ReadPrimitive (Type.GetTypeCode (auType.Type));
+   object ReadPrimitive (AuType auType) => R.ReadPrimitive (auType.Type);
 }
 #endregion

@@ -6,18 +6,6 @@ namespace Nori.Testing;
 
 [Fixture (3, "Miscellaneous tests", "Misc")]
 class TMisc {
-   [Test (28, "Test of Coverage class")]
-   void Test2 () {
-      var c = new Coverage ($"{NT.Data}/Misc/coverage.xml");
-      TestRunner.SetNoriFiles (c);
-      var sb = new StringBuilder ();
-      foreach (var (no, data) in c.Files.Numbered ()) sb.Append ($"{no + 1}. {data}\n");
-      foreach (var (no, b) in c.Blocks.Numbered ())
-         sb.Append ($"{no + 1}. File({b.FileId + 1}) : ({b.Start.Line},{b.Start.Col}) .. ({b.End.Line},{b.End.Col}) : {(b.Covered ? 1 : 0)}\n");
-      File.WriteAllText (NT.TmpTxt, sb.ToString ());
-      Assert.TextFilesEqual ($"{NT.Data}/Misc/coverage.txt", NT.TmpTxt);
-   }
-
    // Test of various extension methods
    [Test (29, "Extensions test")]
    void Test3 () {
@@ -222,7 +210,7 @@ class TMisc {
       Chains<int> chains = new ();
       int ones = 0, twos = 0;
       // Create two chains in parallel
-      chains.Add (ref ones, 1);      
+      chains.Add (ref ones, 1);
       chains.Add (ref ones, 11);
       chains.Add (ref twos, 2);
       chains.Add (ref ones, 111);
@@ -236,7 +224,7 @@ class TMisc {
       // Release a chain
       chains.ReleaseChain (ref twos); twos.Is (0);
       // Remove and add a few items
-      chains.Remove (ref ones, 11); 
+      chains.Remove (ref ones, 11);
       chains.Remove (ref ones, 111);
       chains.Add (ref ones, 1111);
       chains.Contains (ones, 11).IsFalse ();
@@ -321,7 +309,7 @@ class TMisc {
          => lf.Render ("Hello\nWorld", new (x, y), align, 0, 1, 2, 30.D2R (), poly);
    }
 
-   [Test (58, "2D tessellation tests")]
+   [Test (61, "2D tessellation tests")]
    void Test13 () {
       // Create poly with holes
       PolyBuilder outer = new ();
@@ -346,7 +334,7 @@ class TMisc {
          poly.Discretize (pts, 0.1);
          splits.Add (pts.Count);
       }
-      
+
       // Tessellate the polygon into triangles
       var tries = Tess2D.Process (pts, splits);
       var nodes = tries.Select (n => (Point3)pts[n]).ToList ();

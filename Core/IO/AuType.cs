@@ -33,6 +33,8 @@ class AuType {
                if (parent == null || parent == typeof (object) || parent == typeof (ValueType)) break;
                ancestry.Add (parent);
             }
+            if (!KnownTypes.Contains (Lib.NiceName (type)))
+               throw new AuException ($"No metadata for {type.FullName}");
             // Next, gather all the fields (walking through all the way from the hierarchy).
             // Some simple conventions we follow:
             // - If the field name starts with _ we skip it (it is a cached or computed field)
@@ -48,7 +50,7 @@ class AuType {
                      if (data.Tactic != EAuCurlTactic.Skip)
                         fields.Add (new AuField (this, fi, data.Tactic, data.Sort));
                   } else
-                     Except.Incomplete ($"Tactic missing for {tname}.{fname}");
+                     throw new AuException ($"Tactic missing for {t.FullName}.{fname}");
                }
             }
             mFields = [.. fields.OrderBy (a => a.Sort)];
@@ -72,8 +74,29 @@ class AuType {
                _ => null
             };
             break;
+
+         case EAuTypeKind.List:
+            IsImmutableArray = type.Name == "ImmutableArray`1";
+            break;
       }
    }
+
+   public MethodInfo IArrayFromArray =>
+      mFromArray ??= typeof (ImmutableArray).GetMethods ()
+      .Where (a => a.GetParameters ().Length == 1 && a.GetParameters ()[0].ParameterType.IsArray)
+      .Single ().MakeGenericMethod (mType.GetGenericArguments ()[0]);
+   MethodInfo? mFromArray;
+
+   public AuType[] GenericArgs {
+      get {
+         if (mGenericArgs == null) {
+            if (mType.IsArray) mGenericArgs = [Get (mType.GetElementType ()!)];
+            else mGenericArgs = [.. mType.GetGenericArguments ().Select (Get)];
+         }
+         return mGenericArgs;
+      }
+   }
+   AuType[]? mGenericArgs;
 
    /// <summary>Get an AuType given the name (used during read serialization)</summary>
    /// When we see the name of a type in a Curl file, in parentheses, like "(Dwg2)",
@@ -111,9 +134,16 @@ class AuType {
    public Type Type => mType;
    readonly Type mType;
 
+   /// <summary>Is this an immutable array type?</summary>
+   readonly public bool IsImmutableArray;
+
    /// <summary>The default value for this type (if field value equals this, we don't need to write it out)</summary>
    public object? SkipValue => mSkipValue;
    object? mSkipValue;     // If set, the 'default' value that we can skip writing out
+
+   /// <summary>The list of all 'uplink' fields of this type</summary>
+   public IReadOnlyList<AuField> Uplinks => mUplinks ??= [.. mFields.Where (a => a.Tactic == EAuCurlTactic.Uplink)];
+   List<AuField>? mUplinks;
 
    // Methods ------------------------------------------------------------------
    /// <summary>Creates an instance of the object using its parameterless constructor</summary>
@@ -224,12 +254,22 @@ class AuType {
    /// <summary>Writes out an object that is a .Net primitive</summary>
    public void WritePrimitive (UTFWriter stm, object value) {
       switch (Type.GetTypeCode (mType)) {
+         case TypeCode.Char: stm.Write ((char)value); break;
          case TypeCode.Boolean: stm.Write ((bool)value); break;
+         case TypeCode.Int16: stm.Write ((short)value); break;
          case TypeCode.Int32: stm.Write ((int)value); break;
+         case TypeCode.Int64: stm.Write ((long)value); break;
          case TypeCode.String: stm.Write ((string)value); break;
          case TypeCode.Double: stm.Write ((double)value); break;
          case TypeCode.Single: stm.Write ((float)value); break;
-         default: throw new NotImplementedException ();
+         case TypeCode.UInt16: stm.Write ((ushort)value); break;
+         case TypeCode.UInt32: stm.Write ((uint)value); break;
+         case TypeCode.UInt64: stm.Write ((ulong)value); break;
+         case TypeCode.DateTime: stm.Write ((DateTime)value); break;
+         default:
+            if (value is Guid guid) { stm.Write (guid); break; }
+            if (value is TimeSpan tspan) { stm.Write (tspan); break; }
+            throw new BadCaseException (mType.FullName!);
       }
    }
 
@@ -263,6 +303,7 @@ class AuType {
       if (type.HasAttribute<AuPrimitiveAttribute> ()) return EAuTypeKind.AuPrimitive;
       if (type.IsAssignableTo (typeof (IList))) return EAuTypeKind.List;
       if (type.IsAssignableTo (typeof (IDictionary))) return EAuTypeKind.Dictionary;
+      if (type == typeof (DateTime) || type == typeof (TimeSpan) || type == typeof (Guid)) return EAuTypeKind.Primitive;
       if (type.IsClass) return EAuTypeKind.Class;
       return EAuTypeKind.Struct;
    }
@@ -271,27 +312,37 @@ class AuType {
    static Dictionary<string, (EAuCurlTactic Tactic, int Sort)> Tactics {
       get {
          if (mTactic == null) {
-            mTactic = [];
-            string tname = ""; int n = 0;
-            foreach (var line in File.ReadAllLines ("A:/Wad/AuManifest.txt")) {
-               if (line.IsBlank ()) continue;
-               if (line.StartsWith (' ')) {
-                  string[] words = line.Split (' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-                  for (int i = 0; i < words.Length; i++) {
-                     var (w, tactic) = (words[i], EAuCurlTactic.Std);
-                     if (w[0] == '-') (w, tactic) = (w[1..], EAuCurlTactic.Skip);
-                     else if (w[0] == '^') (w, tactic) = (w[1..], EAuCurlTactic.Uplink);
-                     else if (w.EndsWith (".Name")) (w, tactic) = (w[..^5], EAuCurlTactic.ByName);
-                     mTactic[$"{tname}.{w}"] = (tactic, ++n);
-                  }
-               } else
-                  tname = line.Trim ();
-            }
+            mTactic = []; mKnownTypes = ["object"];
+            AddTactics (File.ReadAllLines ("A:/Wad/AuManifest.txt"));
          }
          return mTactic;
       }
    }
    static Dictionary<string, (EAuCurlTactic Tactic, int Sort)>? mTactic;
+
+   static HashSet<string> KnownTypes { get { _ = Tactics; return mKnownTypes; } }
+   static HashSet<string> mKnownTypes = [];
+
+   public static void AddTactics (string[] text) {
+      string tname = ""; int n = 0;
+      var tactics = Tactics;
+      foreach (var line in text) {
+         if (line.IsBlank ()) continue;
+         if (line.StartsWith (' ')) {
+            string[] words = line.Split (' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+            for (int i = 0; i < words.Length; i++) {
+               var (w, tactic) = (words[i], EAuCurlTactic.Std);
+               if (w[0] == '-') (w, tactic) = (w[1..], EAuCurlTactic.Skip);
+               else if (w[0] == '^') (w, tactic) = (w[1..], EAuCurlTactic.Uplink);
+               else if (w.EndsWith (".Name")) (w, tactic) = (w[..^5], EAuCurlTactic.ByName);
+               tactics.Add ($"{tname}.{w}", (tactic, ++n));
+            }
+         } else {
+            tname = line.Trim ();
+            mKnownTypes.Add (tname);
+         }
+      }
+   }
 
    public override string ToString () => $"AuType {Lib.NiceName (mType)}";
 }
@@ -304,10 +355,10 @@ class AuField {
    // Constructor --------------------------------------------------------------
    public AuField (AuType owner, FieldInfo fi, EAuCurlTactic tactic, int sort) {
       Name = (mFI = fi).Name;
-      mOwner = owner;
-      Tactic = tactic; Sort = sort;
+      mOwner = owner; Tactic = tactic; Sort = sort;
       if (Name.StartsWith ('m')) Name = Name[1..];
       mFieldType = AuType.Get (mFI.FieldType);
+      IsNullable = mFI.HasAttribute<NullableAttribute> ();
    }
    readonly AuType mOwner;
 
@@ -318,6 +369,9 @@ class AuField {
 
    /// <summary>Name of this field</summary>
    public readonly string Name;
+
+   /// <summary>It this field nullable?</summary>
+   public readonly bool IsNullable;
 
    /// <summary>Sort order of this field within the enclosing type</summary>
    public readonly int Sort;
@@ -341,9 +395,9 @@ class AuField {
    /// - Field name that are delegate types, events, observable pattern implementation helpers
    ///   etc are skipped
    public static bool SkipMetadata (FieldInfo fi) {
-      if (fi.Name.StartsWith ('_')) return false;
-      if (fi.FieldType.Name == "Subject`1") return false;
-      return true;
+      if (fi.Name.StartsWith ('_')) return true;
+      if (fi.FieldType.Name == "Subject`1") return true;
+      return false;
    }
 
    /// <summary>Returns true if this field can be skipped when writing</summary>

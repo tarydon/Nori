@@ -1,0 +1,5 @@
+; T006
+(Zoo){
+  Name:"London (Main)"
+  Animals:< L=(Lion){ Age:12 Name:Simba } T=(Leopard){ Age:18 Name:Elsa } >
+}

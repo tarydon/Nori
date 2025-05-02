@@ -4,6 +4,7 @@
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 using System.Buffers;
 using System.Buffers.Text;
+using System.Data;
 namespace Nori;
 
 #region clss UTFReader -----------------------------------------------------------------------------
@@ -52,11 +53,18 @@ public class UTFReader {
       mN += delta; return this;
    }
 
+   /// <summary>Read a char value from the stream</summary>
+   /// TODO: Improve
+   public UTFReader Read (out char ch) {
+      byte b = D[mN++]; if (b < 128) { ch = (char)b; return this; }
+      throw new Exception ("Error reading char");
+   }
+
    /// <summary>Reads a DateTime value from the stream (skips past leading whitespace)</summary>
    /// Throws an exception if a valid DateTime value is not found
    public UTFReader Read (out DateTime value) {
       SkipSpace ();
-      if (!Utf8Parser.TryParse (D.AsSpan (mN), out value, out int delta)) Fatal ("Expecting DateTime value");
+      if (!Utf8Parser.TryParse (D.AsSpan (mN), out value, out int delta, 'O')) Fatal ("Expecting DateTime value");
       mN += delta; return this;
    }
 
@@ -152,8 +160,10 @@ public class UTFReader {
    }
 
    /// <summary>Reads a .Net primitive type from the stream, given the TypeCode</summary>
-   public object ReadPrimitive (TypeCode code) {
+   public object ReadPrimitive (Type type) {
+      var code = Type.GetTypeCode (type);
       switch (code) {
+         case TypeCode.Char: Read (out char c); return c;
          case TypeCode.Boolean: Read (out bool b); return b;
          case TypeCode.DateTime: Read (out DateTime dt); return dt;
          case TypeCode.Double: Read (out double d); return d;
@@ -165,7 +175,10 @@ public class UTFReader {
          case TypeCode.UInt16: Read (out ushort us); return us;
          case TypeCode.UInt32: Read (out uint un, false); return un;
          case TypeCode.UInt64: Read (out ulong ul); return ul;
-         default: throw new BadCaseException (code);
+         default:
+            if (type == typeof (Guid)) { Read (out Guid guid); return guid; }
+            if (type == typeof (TimeSpan)) { Read (out TimeSpan tspan); return tspan; }
+            throw new BadCaseException (code);
       }
    }
 
