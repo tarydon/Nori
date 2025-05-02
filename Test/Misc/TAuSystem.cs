@@ -169,7 +169,7 @@ class TAuSystem {
    }
 }
 
-#pragma warning disable 0414
+#pragma warning disable 0414, 0649
 // .........................................................
 class Primitives {
    public void Init () {
@@ -292,4 +292,4 @@ enum EJumpBuffer : ulong { Back = 1, Forward = 2 };
 
 class CType1 { public Location Loc; }
 class CType2 { public EJumpBuffer JBuf; }
-#pragma warning restore 0414
+#pragma warning restore 0414, 0649

@@ -122,7 +122,7 @@ public class UTFReader {
       if (Peek == '"') {
          mN++; str = Encoding.UTF8.GetString (TakeUntil (sQuote, false)); mN++;
       } else
-         str = Encoding.UTF8.GetString (TakeUntil (sSpace, false));
+         str = Encoding.UTF8.GetString (TakeUntil (AuReader.NameStop, false));
       return this;
    }
    static readonly SearchValues<byte> sQuote = SearchValues.Create ((byte)'"');

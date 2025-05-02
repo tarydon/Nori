@@ -2,10 +2,8 @@
 // ╔═╦╦═╦╦╬╣ AuReader.cs
 // ║║║║╬║╔╣║ AuReader: reads an object from a curl file
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
-using System;
 using System.Buffers;
 using System.Collections;
-using System.Threading;
 namespace Nori;
 
 #region class AuReader -----------------------------------------------------------------------------
@@ -25,7 +23,7 @@ public class AuReader {
    // Properties ---------------------------------------------------------------
    /// <summary>These are the characters that stop parsing an identifier</summary>
    public static SearchValues<byte> NameStop => mNameStop;
-   static readonly SearchValues<byte> mNameStop = SearchValues.Create ("\n\t\f :([{}])"u8);
+   static readonly SearchValues<byte> mNameStop = SearchValues.Create ("\r\n\t\f :([{}])="u8);
 
    // Implementation -----------------------------------------------------------
    // Construct a UTFReader, and skips past any leading comments
@@ -49,6 +47,8 @@ public class AuReader {
       // Optionally, there may be a type override before the actual object data starts,
       // so read that first
       if (R.TryMatch ('(')) auType = AuType.Get (R.TakeUntil (')'));
+      if (auType.Kind is not EAuTypeKind.Class and not EAuTypeKind.Struct)
+         return Read (auType)!;
 
       // Create an object, and push it on the stack of objects being partially read,
       // we will need that to handle 'uplink' fields (and sometimes 'byname' fields)
@@ -64,7 +64,8 @@ public class AuReader {
       R.Match ('{');
       for (; ; ) {
          if (R.TryMatch ('}')) break;     // Finished reading all the fields
-         var field = auType.GetField (R.TakeUntil (mNameStop, true))!;
+         var fieldName = R.TakeUntil (mNameStop, true);
+         var field = auType.GetField (fieldName) ?? throw new AuException ($"Field {Encoding.UTF8.GetString (fieldName)} not found in {auType.Type.FullName}");
          R.Match (':');
          object? value;
          switch (field.Tactic) {
@@ -106,12 +107,12 @@ public class AuReader {
       AuType keyType = auType.GenericArgs[0], valueType = auType.GenericArgs[1];
       for (; ; ) {
          if (R.TryMatch ('>')) break;
-         object key = Read (keyType)!; 
+         object key = Read (keyType)!;
          R.Match ('=');
          object? value = Read (valueType);
          dict.Add (key, value);
       }
-      return dict; 
+      return dict;
    }
 
    // Reads an [AuPrimitive] from the curl file

@@ -18,7 +18,7 @@ class AuType {
    // Constructor --------------------------------------------------------------
    // Public constructor, accessed using Get(name) or Get(Type)
    AuType (Type type) {
-      mDict[mType = type] = this;
+      mType = type;
       Kind = Classify (type);
       const BindingFlags bfInstance = Instance | Public | NonPublic | DeclaredOnly;
       switch (Kind) {
@@ -108,7 +108,8 @@ class AuType {
          foreach (var ns in Lib.Namespaces) {
             Type? type = assy.GetType ($"{ns}{sname}");
             if (type != null) {
-               mByName.Add (sname, aut = Get (type));
+               mByName.Add (sname, aut = new AuType (type));
+               mDict.Add (type, aut);
                return aut;
             }
          }
@@ -119,7 +120,14 @@ class AuType {
    /// <summary>Get an AuType given the System.Type</summary>
    /// We maintain a static dictionary so each AuType is constructed only once during the
    /// lifetime of the application
-   public static AuType Get (Type type) => mDict.GetValueOrDefault (type) ?? new AuType (type);
+   public static AuType Get (Type type) {
+      AuType? aut = mDict.GetValueOrDefault (type);
+      if (aut == null) {
+         aut = new AuType (type); mDict.Add (type, aut);
+         mByName.Add (Lib.NiceName (type), aut);
+      }
+      return aut;
+   }
    static Dictionary<Type, AuType> mDict = [];
 
    // Properties --------------------------------------------------------------
@@ -314,6 +322,7 @@ class AuType {
          if (mTactic == null) {
             mTactic = []; mKnownTypes = ["object"];
             AddTactics (File.ReadAllLines ("A:/Wad/AuManifest.txt"));
+            mByName.Add ("Single", Get (typeof (float)));
          }
          return mTactic;
       }

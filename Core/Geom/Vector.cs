@@ -13,7 +13,7 @@ public readonly struct Vector2 : IEQuable<Vector2> {
    public Vector2 (double x, double y) => (X, Y) = (x, y);
 
    /// <summary>Returns the unit vector2 along a given cardinal direction </summary>
-   public static Vector2 Along (EDir d) 
+   public static Vector2 Along (EDir d)
       => d switch { EDir.N => new (0, 1), EDir.W => new (-1, 0), EDir.S => new (0, -1), _ => new (1, 0) };
 
    /// <summary>Returns the unit-vector along a given angle</summary>
@@ -106,10 +106,17 @@ public readonly struct Vector2 : IEQuable<Vector2> {
 
 #region struct Vector3 -----------------------------------------------------------------------------
 /// <summary>Vector in 3 dimensions, with 64-bit double components</summary>
+[AuPrimitive]
 public readonly struct Vector3 : IEQuable<Vector3> {
    // Constructors -------------------------------------------------------------
    /// <summary>Construct a Vector3 given the X, Y, Z components</summary>
    public Vector3 (double x, double y, double z) => (X, Y, Z) = (x, y, z);
+
+   /// <summary>Read a Point2 from a UTF8 stream</summary>
+   public static Vector3 Read (UTFReader R) {
+      R.Read (out double x).Match (',').Read (out double y).Match (',').Read (out double z);
+      return new (x, y, z);
+   }
 
    // Properties ---------------------------------------------------------------
    /// <summary>The X component of the Vector3</summary>
@@ -189,9 +196,12 @@ public readonly struct Vector3 : IEQuable<Vector3> {
    /// <summary>A copy of this vector, with just the Z component changed</summary>
    public Vector3 WithZ (double z) => new (X, Y, z);
 
+   /// <summary>Write a Vector3 to a UTF8 stream</summary>
+   public void Write (UTFWriter B) => B.Write (X.R6 ()).Write (',').Write (Y.R6 ()).Write (',').Write (Z.R6 ());
+
    // Operators ----------------------------------------------------------------
    /// <summary>Returns the cross-product of two Vector3</summary>
-   public static Vector3 operator * (Vector3 a, Vector3 b) 
+   public static Vector3 operator * (Vector3 a, Vector3 b)
       => new (a.Y * b.Z - a.Z * b.Y, a.Z * b.X - a.X * b.Z, a.X * b.Y - a.Y * b.X);
    /// <summary>Adds one Vector3 to another</summary>
    public static Vector3 operator + (Vector3 a, Vector3 b) => new (a.X + b.X, a.Y + b.Y, a.Z + b.Z);

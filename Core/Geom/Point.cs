@@ -173,10 +173,17 @@ public readonly struct Point2 : IEQuable<Point2> {
 
 #region struct Point3 ------------------------------------------------------------------------------
 /// <summary>Point in 2 dimensions, 64-bit double components</summary>
+[AuPrimitive]
 public readonly struct Point3 : IEquatable<Point3> {
    // Constructors -------------------------------------------------------------
    /// <summary>Construct a Point3 given the X, Y, Z, ordinates</summary>
    public Point3 (double x, double y, double z) => (X, Y, Z) = (x, y, z);
+
+   /// <summary>Read a Point2 from a UTF8 stream</summary>
+   public static Point3 Read (UTFReader R) {
+      R.Read (out double x).Match (',').Read (out double y).Match (',').Read (out double z);
+      return new (x, y, z);
+   }
 
    // Properties ---------------------------------------------------------------
    /// <summary>The X ordinate of the Point3</summary>
@@ -253,6 +260,9 @@ public readonly struct Point3 : IEquatable<Point3> {
    public Point3 WithY (double y) => new (X, y, Z);
    /// <summary>A copy of this Point3, with just the Z ordinate changed</summary>
    public Point3 WithZ (double z) => new (X, Y, z);
+
+   /// <summary>Write a Point3 to a UTF8 stream</summary>
+   public void Write (UTFWriter B) => B.Write (X.R6 ()).Write (',').Write (Y.R6 ()).Write (',').Write (Z.R6 ());
 
    // Operators ----------------------------------------------------------------
    /// <summary>Returns the displaced point got by adding a Vector2 to a Point2</summary>
