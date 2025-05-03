@@ -164,7 +164,7 @@ public static class TestRunner {
             }
             switch (except) {
                case TestException te: echo.TestFailed (test, te); cFailed++; break;
-               case Exception: echo.TestCrashed (test, except); cCrashed++; break;
+               case not null: echo.TestCrashed (test, except); cCrashed++; break;
                default: echo.TestPassed (test); break;
             }
          }

@@ -4,7 +4,6 @@
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 using System.Buffers;
 using System.Buffers.Text;
-using System.Data;
 namespace Nori;
 
 #region clss UTFReader -----------------------------------------------------------------------------

@@ -41,7 +41,7 @@ class TAuSystem {
       Collection
         AList Immutable Array List
       Zoo
-        Name Animals
+        Name Animals Extra
       Animal
         Age Name
       Lion
@@ -134,6 +134,16 @@ class TAuSystem {
       Zoo zoo = new () { Name = "London (Main)" };
       zoo.Animals.Add ('L', new Lion () { Name = "Simba", Age = 12 });
       zoo.Animals.Add ('T', new Tiger () { Name = "Elsa", Age = 18 });
+
+      zoo.Extra = [];
+      zoo.Extra["Single"] = 1.2f;
+      zoo.Extra["Int"] = 12;
+      zoo.Extra["String"] = "Hello";
+      zoo.Extra["Point2"] = new Point2 (3, 5);
+      zoo.Extra["Animal"] = new Lion () { Name = "Nala", Age = 3 };
+      zoo.Extra["Array"] = new int[] { 1, 2, 3, 4, 5 };
+      zoo.Extra["List"] = new List<double> { 1.1, 2.2, 3.3 };
+      zoo.Extra["Dict"] = new Dictionary<int, string> () { [1] = "One", [2] = "Two" };
       Check (zoo, "T006.curl", "T006");
 
       var zoo2 = (Zoo)AuReader.Load (NT.TmpCurl);
@@ -267,6 +277,7 @@ class Collection {
 class Zoo {
    public string Name = "";
    public Dictionary<char, Animal> Animals = [];
+   public Dictionary<string, object>? Extra;
 }
 abstract class Animal {
    public int Age;

@@ -4,7 +4,6 @@
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 using System.Buffers;
 using System.Buffers.Text;
-using JetBrains.Annotations;
 namespace Nori;
 
 #region class UTFWriter ----------------------------------------------------------------------------
@@ -45,7 +44,7 @@ public class UTFWriter {
             // in this block with spaces
             int st = starts.Pop (), len = i - st;
             if (len < 80)
-               MemoryExtensions.Replace (D.AsSpan (st, len), (byte)'\n', (byte)' ');
+               D.AsSpan (st, len).Replace ((byte)'\n', (byte)' ');
          }
       }
 

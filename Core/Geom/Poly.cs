@@ -12,7 +12,7 @@ using static Geo;
 [AuPrimitive]
 public partial class Poly {
    // Constructor --------------------------------------------------------------
-   Poly () { }
+   [Used] Poly () { }
    internal Poly (ImmutableArray<Point2> pts, ImmutableArray<Extra> extra, EFlags flags)
       => (mPts, mExtra, mFlags) = (pts, extra, flags);
 
@@ -221,7 +221,7 @@ public partial class Poly {
    [Flags]
    public enum EFlags : ushort {
       Closed = 1, HasArcs = 2,
-      CW = 4, CCW = 8, Circle = 16, Last = 32, Arc = CW | CCW,
+      CW = 4, CCW = 8, Circle = 16, Last = 32, Arc = CW | CCW
    }
    readonly EFlags mFlags;
 
@@ -286,7 +286,7 @@ public class PolyBuilder {
    internal Poly Build (UTFReader R, bool fromCurl = false) {
       var mode = 'M';
       Point2 a = Point2.Zero;
-      if (R.Peek is not (byte)'M' and not (byte)'C') throw new ParseException ($"Poly should start with 'M' or 'C'");
+      if (R.Peek is not (byte)'M' and not (byte)'C') throw new ParseException ("Poly should start with 'M' or 'C'");
       for (; ; ) {
          char ch = GetMode ();
          switch (ch) {

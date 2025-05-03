@@ -14,7 +14,7 @@ public static class Geo {
    public const double TwoPI = 2 * PI;
 
    /// <summary>Computes the intersection points between two circles (could be zero, one or two points)</summary>
-   /// <param name="c1">Center point of first circle/param>
+   /// <param name="c1">Center point of first circle</param>
    /// <param name="r1">Radius of the first circle</param>
    /// <param name="c2">Center point of the second circle</param>
    /// <param name="r2">Radius of the second circle</param>

@@ -49,7 +49,7 @@ public class EPropFieldAttribute (EProp prop) : Attribute {
 #region [RedrawOnZoom] attribute -------------------------------------------------------------------
 /// <summary>Attach [RedrawOnZoom] to a widget to have it be automatically redrawn when the scene is zoomed or panned</summary>
 [AttributeUsage (AttributeTargets.Class)]
-public class RedrawOnZoomAttribute : Attribute { }
+public class RedrawOnZoomAttribute : Attribute;
 #endregion
 
 #region [Singleton] attribute ----------------------------------------------------------------------
@@ -61,3 +61,6 @@ public class RedrawOnZoomAttribute : Attribute { }
 [AttributeUsage (AttributeTargets.Class)]
 public class SingletonAttribute : Attribute;
 #endregion
+
+[AttributeUsage (AttributeTargets.All), MeansImplicitUse]
+public sealed class UsedAttribute : Attribute;

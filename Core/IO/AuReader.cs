@@ -39,8 +39,14 @@ public class AuReader {
       EAuTypeKind.AuPrimitive => ReadAuPrimitive (type),
       EAuTypeKind.Enum => type.ReadEnum (R),
       EAuTypeKind.Dictionary => ReadDictionary (type),
-      _ => throw new NotImplementedException (),
+      EAuTypeKind.Object => ReadObject (),
+      _ => throw new NotImplementedException ()
    };
+
+   object? ReadObject () {
+      R.Match ('('); var auType = AuType.Get (R.TakeUntil (')'));
+      return Read (auType);
+   }
 
    // Reads a class or a struct
    object ReadClass (AuType auType) {
@@ -100,7 +106,7 @@ public class AuReader {
       return auType.IArrayFromArray.Invoke (null, [array]);
    }
 
-   object? ReadDictionary (AuType auType) {
+   object ReadDictionary (AuType auType) {
       var type = auType.Type;
       IDictionary dict = (IDictionary)auType.CreateInstance ();
       R.Match ('<');

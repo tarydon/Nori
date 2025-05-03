@@ -27,7 +27,7 @@ public enum EProp {
    /// <summary>The selection state is changed</summary>
    Selected,
 
-   Grid, FillInterior, CurrentLayer,
+   Grid, FillInterior, CurrentLayer
 }
 
 /// <summary>The possible values for text-alignment within a box</summary>

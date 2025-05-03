@@ -123,7 +123,7 @@ public static class Lib {
       [typeof (void)] = "void", [typeof (short)] = "short", [typeof (uint)] = "uint",
       [typeof (ushort)] = "ushort", [typeof (byte)] = "byte", [typeof (bool)] = "bool",
       [typeof (long)] = "long", [typeof (ulong)] = "ulong", [typeof (sbyte)] = "sbyte",
-      [typeof (string)] = "string", [typeof (char)] = "char", [typeof (object)] = "object",
+      [typeof (string)] = "string", [typeof (char)] = "char", [typeof (object)] = "object"
    };
 
    /// <summary>Normalizes an angle (in radians) to lie in the half open range (-PI .. PI]</summary>

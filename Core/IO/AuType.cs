@@ -4,7 +4,7 @@
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 using System.Collections;
 namespace Nori;
-using static System.Reflection.BindingFlags;
+using static BindingFlags;
 
 #region class AuType -------------------------------------------------------------------------------
 /// <summary>AuType is a wrapper around System.Type that holds additional information needed by the Au system</summary>
@@ -143,7 +143,7 @@ class AuType {
    readonly Type mType;
 
    /// <summary>Is this an immutable array type?</summary>
-   readonly public bool IsImmutableArray;
+   public readonly bool IsImmutableArray;
 
    /// <summary>The default value for this type (if field value equals this, we don't need to write it out)</summary>
    public object? SkipValue => mSkipValue;
@@ -220,7 +220,7 @@ class AuType {
    /// <summary>Handles the reading-in of an enum value from a Curl file</summary>
    /// For each Enum type, we build a symbol table that maps the enum tags to actual Enum values.
    /// This table is then used for a fast lookup
-   public object? ReadEnum (UTFReader stm) {
+   public object ReadEnum (UTFReader stm) {
       if (mEnumMap == null) {
          mEnumMap = new ();
          var (names, values) = (Enum.GetNames (mType), Enum.GetValues (mType));
@@ -302,6 +302,7 @@ class AuType {
    // Implementation -----------------------------------------------------------
    // Classifies this type (computes the Kind property)
    static EAuTypeKind Classify (Type type) {
+      if (type == typeof (object)) return EAuTypeKind.Object;
       if (type == typeof (string) || type.IsPrimitive) return EAuTypeKind.Primitive;
       if (type.IsEnum) {
          var utype = Type.GetTypeCode (type.GetEnumUnderlyingType ());
@@ -442,10 +443,10 @@ class AuField {
 
 #region enum EAuTypeKind ---------------------------------------------------------------------------
 /// <summary>What 'Kind' of type is represented by a given AuType (primitive / list / enum / dict / class etc)</summary>
-enum EAuTypeKind { Unknown, Primitive, AuPrimitive, Enum, List, Dictionary, Struct, Class };
+enum EAuTypeKind { Unknown, Object, Primitive, AuPrimitive, Enum, List, Dictionary, Struct, Class };
 #endregion
 
 #region enum EAuCurlTactic -------------------------------------------------------------------------
 /// <summary>The curl tactics to be used for a particular field</summary>
-enum EAuCurlTactic { Std, Skip, ByName, Uplink, }
+enum EAuCurlTactic { Std, Skip, ByName, Uplink }
 #endregion

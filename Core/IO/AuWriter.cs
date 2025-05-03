@@ -3,7 +3,6 @@
 // ║║║║╬║╔╣║ AuWriter: Writes an object out to a Curl file
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 using System.Collections;
-using System.Collections.Generic;
 namespace Nori;
 
 #region class AuWriter -----------------------------------------------------------------------------
@@ -28,14 +27,16 @@ public class AuWriter {
    // Recursive routine that writes out any object
    void Write (object? obj, AuType nominal) {
       if (obj == null) return;
-      AuType at = AuType.Get (obj.GetType ());
+      AuType at = nominal;
+      if (nominal.Kind is EAuTypeKind.Object or EAuTypeKind.Class)
+         at = AuType.Get (obj.GetType ());
+      if (at != nominal) at.WriteOverride (B);
       switch (at.Kind) {
          // Write out a class or struct. This is delimited by { } and contains a list of
          // fields expressed as Name:Value pairs. Before we start writing out the object,
          // we may write out an optional type override like "(E2Poly)" if that will be needed
          // during the read-back to disambiguate
          case EAuTypeKind.Class or EAuTypeKind.Struct:
-            if (at != nominal) at.WriteOverride (B);
             B.Write ("{\n"u8);
             foreach (var af in at.Fields) {
                object? value = af.GetValue (obj);
