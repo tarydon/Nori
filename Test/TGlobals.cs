@@ -1,5 +1,5 @@
 ﻿// ────── ╔╗                                                                                   TEST
-// ╔═╦╦═╦╦╬╣ TGlobals.cs 
+// ╔═╦╦═╦╦╬╣ TGlobals.cs
 // ║║║║╬║╔╣║ Global includes for the Nori.Test project
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 global using System;

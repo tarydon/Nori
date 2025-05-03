@@ -1,4 +1,4 @@
-﻿using Nori;
+using Nori;
 namespace Flux;
 
 #pragma warning disable 649
@@ -7,7 +7,7 @@ public enum EBGSystem {
    T4AxisTandem = 9, T6AxisTandem = 10
 }
 
-public enum SH : ushort {
+public enum SH : int {
    Nil = 0, InnerCCW = 1, OuterCCW = 2, AppLength = 3, AppRadius = 4,
    AppAngle = 5, EscLength = 6, EscRadius = 7, EscAngle = 8,
    ReverseRepo = 10, CornerjointWidth = 11, WirejointWidth = 12, RepositionLate = 13, RepoBackHome = 14,

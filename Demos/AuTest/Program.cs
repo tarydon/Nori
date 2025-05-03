@@ -1,4 +1,4 @@
-﻿using System.Reflection;
+using System.Reflection;
 using Nori;
 namespace AuTest;
 
@@ -10,18 +10,16 @@ class Program {
       Lib.AddMetadata (File.ReadAllLines ("N:/Demos/AuTest/metadata.txt"));
       Lib.Tracer = Console.Write;
 
-      for (int i = 0; i < 10; i++) {
-         int n = 0;
-         var lines = File.ReadAllLines ("N:/Demos/AuTest/bmlist.txt");
-         using (var bt = new BlockTimer (100064, "Timing")) {
-            for (int t = 0; t < 59; t++) {
-               foreach (var line in lines) {
-                  var obj = AuReader.Load ($"X:/Data/Archive/Machines/{line}/machine.curl");
-                  n++;
-               }
-            }
+      int n = 0;
+      Directory.CreateDirectory ("c:/etc/BMDump");
+      var lines = File.ReadAllLines ("N:/Demos/AuTest/bmlist.txt");
+      using (var bt = new BlockTimer (lines.Length, "Timing")) {
+         foreach (var line in lines) {
+            var obj = AuReader.Load ($"X:/Data/Archive/Machines/{line}/machine.curl");
+            AuWriter.WriteToFile (obj, $"c:/etc/BMDump/{line}.curl");
+            n++;
          }
-         Lib.Trace ($"Loaded {n} machines\n\n");
       }
+      Lib.Trace ($"Loaded {n} machines\n\n");
    }
 }
