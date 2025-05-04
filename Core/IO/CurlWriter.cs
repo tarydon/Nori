@@ -1,19 +1,19 @@
 // ────── ╔╗
-// ╔═╦╦═╦╦╬╣ AuWriter.cs
-// ║║║║╬║╔╣║ AuWriter: Writes an object out to a Curl file
+// ╔═╦╦═╦╦╬╣ CurlWriter.cs
+// ║║║║╬║╔╣║ CurlWriter: Writes an object out to a Curl file
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 using System.Collections;
 namespace Nori;
 
-#region class AuWriter -----------------------------------------------------------------------------
-/// <summary>AuWriter is used to write out an object to an AuCurl file</summary>
+#region class CurlWriter ---------------------------------------------------------------------------
+/// <summary>AuWriter is used to write out an object to a Curl file</summary>
 /// If the type is a class or struct, we need metadata for the type, and this is
 /// loaded from AuManifest files
-public class AuWriter {
+public class CurlWriter {
    // Methods ------------------------------------------------------------------
    /// <summary>Write an object (with a possible leading comment) to a byte[]</summary>
-   public static byte[] Write (object obj, string? comment = null) {
-      var w = new AuWriter ();
+   public static byte[] WriteToSpan (object obj, string? comment = null) {
+      var w = new CurlWriter ();
       if (comment != null) w.B.Write ("; "u8).Write (comment).Write ('\n');
       w.Write (obj, AuType.Get (typeof (object)));
       return w.B.IndentAndReturn ();
@@ -21,7 +21,7 @@ public class AuWriter {
 
    /// <summary>Write an object (with a possible header comment) to a file</summary>
    public static void WriteToFile (object obj, string file, string? comment = null)
-      => File.WriteAllBytes (file, Write (obj, comment));
+      => File.WriteAllBytes (file, WriteToSpan (obj, comment));
 
    // Implementation -----------------------------------------------------------
    // Recursive routine that writes out any object
@@ -43,7 +43,7 @@ public class AuWriter {
                if (af.SkipWriting (value)) continue;
                af.WriteLabel (B);
                switch (af.Tactic) {
-                  case EAuCurlTactic.ByName: af.WriteByName (B, value); break;
+                  case ECurlTactic.ByName: af.WriteByName (B, value); break;
                   default: Write (value, af.FieldType); break;
                }
                B.NewLine ();

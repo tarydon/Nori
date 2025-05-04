@@ -1,14 +1,14 @@
 // ────── ╔╗
-// ╔═╦╦═╦╦╬╣ AuReader.cs
-// ║║║║╬║╔╣║ AuReader: reads an object from a curl file
+// ╔═╦╦═╦╦╬╣ CurlReader.cs
+// ║║║║╬║╔╣║ CurlReader: reads an object from a curl file
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 using System.Buffers;
 using System.Collections;
 namespace Nori;
 
-#region class AuReader -----------------------------------------------------------------------------
-/// <summary>AuReader is used to read an object from an AuCurl file</summary>
-public class AuReader {
+#region class CurlReader ---------------------------------------------------------------------------
+/// <summary>CurlReader is used to read an object from an AuCurl file</summary>
+public class CurlReader {
    // Methods ------------------------------------------------------------------
    /// <summary>Load an object from a file</summary>
    public static object Load (string file)
@@ -16,7 +16,7 @@ public class AuReader {
 
    /// <summary>Load an object from an array of bytes</summary>
    public static object Load (byte[] bytes) {
-      AuReader r = new (new (bytes));
+      CurlReader r = new (new (bytes));
       return r.ReadClass (AuType.Get (typeof (object)));
    }
 
@@ -27,7 +27,7 @@ public class AuReader {
 
    // Implementation -----------------------------------------------------------
    // Construct a UTFReader, and skips past any leading comments
-   AuReader (UTFReader r) { R = r; while (R.Peek == ';') R.SkipTo ('\n'); }
+   CurlReader (UTFReader r) { R = r; while (R.Peek == ';') R.SkipTo ('\n'); }
    readonly UTFReader R;
 
    // Top level routine used to read an object given the AuType, just switches based
@@ -75,7 +75,7 @@ public class AuReader {
          R.Match (':');
          object? value;
          switch (field.Tactic) {
-            case EAuCurlTactic.ByName:
+            case ECurlTactic.ByName:
                R.Read (out string str);
                value = field.FieldType.ReadByName (mStack, str);
                break;

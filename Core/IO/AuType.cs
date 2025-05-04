@@ -47,7 +47,7 @@ class AuType {
                   string fname = fi.Name;
                   if (fname.StartsWith ('m')) fname = fname[1..];
                   if (Tactics.TryGetValue ($"{tname}.{fname}", out var data)) {
-                     if (data.Tactic != EAuCurlTactic.Skip)
+                     if (data.Tactic != ECurlTactic.Skip)
                         fields.Add (new AuField (this, fi, data.Tactic, data.Sort));
                   } else
                      throw new AuException ($"Tactic missing for {t.FullName}.{fname}");
@@ -150,7 +150,7 @@ class AuType {
    object? mSkipValue;     // If set, the 'default' value that we can skip writing out
 
    /// <summary>The list of all 'uplink' fields of this type</summary>
-   public IReadOnlyList<AuField> Uplinks => mUplinks ??= [.. mFields.Where (a => a.Tactic == EAuCurlTactic.Uplink)];
+   public IReadOnlyList<AuField> Uplinks => mUplinks ??= [.. mFields.Where (a => a.Tactic == ECurlTactic.Uplink)];
    List<AuField>? mUplinks;
 
    // Methods ------------------------------------------------------------------
@@ -226,7 +226,7 @@ class AuType {
          var (names, values) = (Enum.GetNames (mType), Enum.GetValues (mType));
          for (int i = 0; i < names.Length; i++) mEnumMap.Add (names[i], values.GetValue (i)!);
       }
-      return mEnumMap[stm.TakeUntil (AuReader.NameStop, true)];
+      return mEnumMap[stm.TakeUntil (CurlReader.NameStop, true)];
    }
    SymTable<object>? mEnumMap;
    // REFINE: Handle [Flags] enums
@@ -318,7 +318,7 @@ class AuType {
    }
 
    // Tactics for each field of each type (loaded from the AuManifest first time it is accesssed)
-   static Dictionary<string, (EAuCurlTactic Tactic, int Sort)> Tactics {
+   static Dictionary<string, (ECurlTactic Tactic, int Sort)> Tactics {
       get {
          if (mTactic == null) {
             mTactic = []; mKnownTypes = ["object"];
@@ -328,7 +328,7 @@ class AuType {
          return mTactic;
       }
    }
-   static Dictionary<string, (EAuCurlTactic Tactic, int Sort)>? mTactic;
+   static Dictionary<string, (ECurlTactic Tactic, int Sort)>? mTactic;
 
    static HashSet<string> KnownTypes { get { _ = Tactics; return mKnownTypes; } }
    static HashSet<string> mKnownTypes = [];
@@ -341,10 +341,10 @@ class AuType {
          if (line.StartsWith (' ')) {
             string[] words = line.Split (' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
             for (int i = 0; i < words.Length; i++) {
-               var (w, tactic) = (words[i], EAuCurlTactic.Std);
-               if (w[0] == '-') (w, tactic) = (w[1..], EAuCurlTactic.Skip);
-               else if (w[0] == '^') (w, tactic) = (w[1..], EAuCurlTactic.Uplink);
-               else if (w.EndsWith (".Name")) (w, tactic) = (w[..^5], EAuCurlTactic.ByName);
+               var (w, tactic) = (words[i], ECurlTactic.Std);
+               if (w[0] == '-') (w, tactic) = (w[1..], ECurlTactic.Skip);
+               else if (w[0] == '^') (w, tactic) = (w[1..], ECurlTactic.Uplink);
+               else if (w.EndsWith (".Name")) (w, tactic) = (w[..^5], ECurlTactic.ByName);
                tactics.Add ($"{tname}.{w}", (tactic, ++n));
             }
          } else {
@@ -363,7 +363,7 @@ class AuType {
 /// For example, this holds the serialization _tactic_ for this particular field
 class AuField {
    // Constructor --------------------------------------------------------------
-   public AuField (AuType owner, FieldInfo fi, EAuCurlTactic tactic, int sort) {
+   public AuField (AuType owner, FieldInfo fi, ECurlTactic tactic, int sort) {
       Name = (mFI = fi).Name;
       mOwner = owner; Tactic = tactic; Sort = sort;
       if (Name.StartsWith ('m')) Name = Name[1..];
@@ -387,7 +387,7 @@ class AuField {
    public readonly int Sort;
 
    /// <summary>The tactics used for this field when writing to curl file (Skip / Std / ByName etc)</summary>
-   public readonly EAuCurlTactic Tactic;
+   public readonly ECurlTactic Tactic;
 
    // Methods ------------------------------------------------------------------
    /// <summary>Reads the value from this field (given the container object)</summary>
@@ -414,7 +414,7 @@ class AuField {
    /// A field is skipped if its value is null, or if the value matches the 'default skipvalue'
    /// of the underlying type (for example, Color4.Nil is the skip value for the Color4 type)
    public bool SkipWriting ([NotNullWhen (false)] object? value) {
-      if (value == null || Tactic == EAuCurlTactic.Uplink) return true;
+      if (value == null || Tactic == ECurlTactic.Uplink) return true;
       if (Equals (value, mFieldType.SkipValue)) return true;
       return false;
    }
@@ -446,7 +446,7 @@ class AuField {
 enum EAuTypeKind { Unknown, Object, Primitive, AuPrimitive, Enum, List, Dictionary, Struct, Class };
 #endregion
 
-#region enum EAuCurlTactic -------------------------------------------------------------------------
+#region enum ECurlTactic ---------------------------------------------------------------------------
 /// <summary>The curl tactics to be used for a particular field</summary>
-enum EAuCurlTactic { Std, Skip, ByName, Uplink }
+enum ECurlTactic { Std, Skip, ByName, Uplink }
 #endregion
