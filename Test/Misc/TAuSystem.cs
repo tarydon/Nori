@@ -61,50 +61,50 @@ class TAuSystem {
       prim0.Init ();
       Check (prim0, "T001.curl", "T001");
 
-      var prim1 = (Primitives)CurlReader.Load (NT.TmpCurl);
+      var prim1 = (Primitives)CurlReader.FromFile (NT.TmpCurl);
       prim1.Unserialized.Is (0);
       Check (prim1, "T001.curl", "T001");
    }
 
    [Test (62, "Various Au errors")]
    void Test2 () {
-      string message = Crasher (() => CurlWriter.WriteToFile (new Bad1 (), NT.TmpCurl));
+      string message = Crasher (() => CurlWriter.ToFile (new Bad1 (), NT.TmpCurl));
       message.Is ("AuException: No metadata for Nori.Testing.Bad1");
 
-      message = Crasher (() => CurlWriter.WriteToFile (new Bad2 (), NT.TmpCurl));
+      message = Crasher (() => CurlWriter.ToFile (new Bad2 (), NT.TmpCurl));
       message.Is ("AuException: Tactic missing for Nori.Testing.Bad2.Age");
 
-      message = Crasher (() => CurlReader.Load (CurlWriter.WriteToSpan (new Bad3 ("Hello"))));
+      message = Crasher (() => CurlReader.FromByteArray (CurlWriter.ToByteArray (new Bad3 ("Hello"))));
       message.Is ("AuException: No parameterless constructor found for Nori.Testing.Bad3");
 
       message = Crasher (() => {
          Drawing dwg = new ("Temp");
          dwg.Add (new Layer ("Std", Color4.Black, ELineType.Continuous));
          dwg.Add (new Circle (dwg, dwg.Layers[0], (1, 2), 3));
-         byte[] data = CurlWriter.WriteToSpan (dwg.Shapes[0]);
-         CurlReader.Load (data);
+         byte[] data = CurlWriter.ToByteArray (dwg.Shapes[0]);
+         CurlReader.FromByteArray (data);
       });
       message.Is ("AuException: Nori.Testing.Circle.Dwg cannot be set to null");
 
       var layer3 = new Layer3 { Name = "Outline" };
       var shape3 = new Shape3 (3.5, layer3);
       Check (shape3, "T003.curl", "T003");
-      message = Crasher (() => CurlReader.Load (NT.TmpCurl));
+      message = Crasher (() => CurlReader.FromFile (NT.TmpCurl));
       message.Is ("AuException: Missing Nori.Testing.Layer3.ByName(IReadOnlyList<object>,string)");
 
       Holder holder = new Holder ();
       Check (holder, "T004.curl", "T004");
-      message = Crasher (() => CurlReader.Load (NT.TmpCurl));
+      message = Crasher (() => CurlReader.FromFile (NT.TmpCurl));
       message.Is ("AuException: Missing Nori.Testing.Prim0.Read(UTFReader)");
 
       holder = new Holder () { Prim1 = new Prim1 () };
-      message = Crasher (() => CurlWriter.WriteToFile (holder, NT.TmpCurl));
+      message = Crasher (() => CurlWriter.ToFile (holder, NT.TmpCurl));
       message.Is ("AuException: Missing Nori.Testing.Prim1.Write(UTFWriter)");
 
       holder = new Holder () { Prim1 = new Prim1 () };
-      message = Crasher (() => CurlWriter.WriteToFile (holder, NT.TmpCurl));
+      message = Crasher (() => CurlWriter.ToFile (holder, NT.TmpCurl));
 
-      message = Crasher (() => CurlReader.Load ($"{NT.Data}/IO/T007.curl"));
+      message = Crasher (() => CurlReader.FromFile ($"{NT.Data}/IO/T007.curl"));
       message.Is ("AuException: Type Leopard not found");
    }
 
@@ -117,7 +117,7 @@ class TAuSystem {
       dwg.Add (new Square (dwg, dwg.Layers[1], (4, 5), 6));
       Check (dwg, "T002.curl", "T002");
 
-      Drawing dwg2 = (Drawing)CurlReader.Load (NT.TmpCurl);
+      Drawing dwg2 = (Drawing)CurlReader.FromFile (NT.TmpCurl);
       dwg2.Shapes[0].Dwg.Name.Is ("FloorPlan");    // Check that Shape.Dwg is set by Uplink
    }
 
@@ -125,7 +125,7 @@ class TAuSystem {
    void Test4 () {
       var c = new Collection { List = [1, 2, 3], Array = [4, 5, 6], Immutable = [7, 8, 9], AList = [10, 11, 12] };
       Check (c, "T005.curl", "T005");
-      var c2 = (Collection)CurlReader.Load (NT.TmpCurl);
+      var c2 = (Collection)CurlReader.FromFile (NT.TmpCurl);
       Check (c2, "T005.curl", "T005");
    }
 
@@ -146,7 +146,7 @@ class TAuSystem {
       zoo.Extra["Dict"] = new Dictionary<int, string> () { [1] = "One", [2] = "Two" };
       Check (zoo, "T006.curl", "T006");
 
-      var zoo2 = (Zoo)CurlReader.Load (NT.TmpCurl);
+      var zoo2 = (Zoo)CurlReader.FromFile (NT.TmpCurl);
       Check (zoo2, "T006.curl", "T006");
 
       AuType.Get (typeof (Zoo)).ToString ().Is ("AuType Zoo");
@@ -160,10 +160,10 @@ class TAuSystem {
 
       var ct1 = new CType1 { Loc = new Location { X = 1, Y = 2 } };
       Check (ct1, "T008.curl", "T008");
-      var ct1b = (CType1)CurlReader.Load (NT.TmpCurl);
+      var ct1b = (CType1)CurlReader.FromFile (NT.TmpCurl);
       Check (ct1b, "T008.curl", "T008");
 
-      message = Crasher (() => CurlWriter.WriteToFile (new CType2 (), NT.TmpCurl));
+      message = Crasher (() => CurlWriter.ToFile (new CType2 (), NT.TmpCurl));
       message.Is ("AuException: 64-bit enums are not supported");
    }
 
@@ -174,7 +174,7 @@ class TAuSystem {
    }
 
    void Check (object obj, string file, string? comment) {
-      CurlWriter.WriteToFile (obj, NT.TmpCurl, comment);
+      CurlWriter.ToFile (obj, NT.TmpCurl, comment);
       Assert.TextFilesEqual ($"{NT.Data}/IO/{file}", NT.TmpCurl);
    }
 }

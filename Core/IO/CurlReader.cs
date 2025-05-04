@@ -10,15 +10,15 @@ namespace Nori;
 /// <summary>CurlReader is used to read an object from an AuCurl file</summary>
 public class CurlReader {
    // Methods ------------------------------------------------------------------
-   /// <summary>Load an object from a file</summary>
-   public static object Load (string file)
-      => Load (File.ReadAllBytes (file));
-
    /// <summary>Load an object from an array of bytes</summary>
-   public static object Load (byte[] bytes) {
+   public static object FromByteArray (byte[] bytes) {
       CurlReader r = new (new (bytes));
       return r.ReadClass (AuType.Get (typeof (object)));
    }
+
+   /// <summary>Load an object from a file</summary>
+   public static object FromFile (string file)
+      => FromByteArray (File.ReadAllBytes (file));
 
    // Properties ---------------------------------------------------------------
    /// <summary>These are the characters that stop parsing an identifier</summary>

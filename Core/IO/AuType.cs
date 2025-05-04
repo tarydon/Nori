@@ -448,5 +448,5 @@ enum EAuTypeKind { Unknown, Object, Primitive, AuPrimitive, Enum, List, Dictiona
 
 #region enum ECurlTactic ---------------------------------------------------------------------------
 /// <summary>The curl tactics to be used for a particular field</summary>
-enum ECurlTactic { Std, Skip, ByName, Uplink }
+enum ECurlTactic { Std, Skip, ByName, ById, Uplink }
 #endregion

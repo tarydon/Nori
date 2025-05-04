@@ -75,35 +75,6 @@ static class Program {
    // Placeholder for putting in some test code and running it
    [ConsoleCommand]
    static void TestHook () {
-      Random r = new (3);
-      int count = 400000000;
-      Bound2 b = new (0.25, 0.25, 0.75, 0.75);
-      var xfm = Matrix2.Rotation (new Point2 (0.5, 0.5), 45.D2R ());
-      {
-         List<Point2> pts = [];
-         Stopwatch sw = Stopwatch.StartNew ();
-         for (int i = 0; i < count; i++)
-            pts.Add (new (r.NextDouble (), r.NextDouble ()));
-
-         int fraction = pts.Select (a => a * xfm).Count (b.Contains);
-         sw.Stop ();
-         Console.WriteLine ($"Ratio: {(double)fraction / count}");
-         Console.WriteLine ($"Point2: {sw.Elapsed.TotalMilliseconds}");
-      }
-      {
-         List<Vec2F> pts2 = [];
-         var sw = Stopwatch.StartNew ();
-         for (int i = 0; i < count; i++)
-            pts2.Add (new ((float)r.NextDouble (), (float)r.NextDouble ()));
-
-         var fraction = pts2.Select (a => a * xfm).Count (b.Contains);
-         sw.Stop ();
-         Console.WriteLine ($"Ratio: {(double)fraction / count}");
-         Console.WriteLine ($"Vec2F: {sw.Elapsed.TotalMilliseconds}");
-      }
-
-      Half h = (Half)1000.82;
-      Console.WriteLine ((double)h);
    }
 
    static int Build = 2;
