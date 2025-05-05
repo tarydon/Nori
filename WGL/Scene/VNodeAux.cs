@@ -14,7 +14,7 @@ public class GroupVN : VNode {
    VNode[] mChildren;
 
    // Overrides ----------------------------------------------------------------
-   // Return the children 
+   // Return the children
    public override VNode? GetChild (int n) => mChildren.SafeGet (n);
 }
 #endregion
@@ -36,6 +36,10 @@ public class SimpleVN (Action setattr, Action draw) : VNode (draw) {
 /// <summary>Displays Trace text in the window</summary>
 [Singleton]
 public partial class TraceVN : VNode {
+   // Properties ---------------------------------------------------------------
+   /// <summary>Text color</summary>
+   public static Color4 TextColor = Color4.Blue;
+
    // Methods ------------------------------------------------------------------
    /// <summary>Prints text to the TraceVN (this is static, since the class is a singleton)</summary>
    /// The text can contain \n separators to split it into multiple lines. The text
@@ -56,13 +60,13 @@ public partial class TraceVN : VNode {
 
    // Set up the text color, typeface and ZLevel (to be above all the other drawing)
    public override void SetAttributes () {
-      if (mLines.Count > 0) 
-         (Lux.Color, Lux.TypeFace, Lux.ZLevel) = (Color4.Blue, Face, 100);
+      if (mLines.Count > 0)
+         (Lux.Color, Lux.TypeFace, Lux.ZLevel) = (TextColor, Face, 100);
    }
 
    // Implementation -----------------------------------------------------------
-   // Internal routine called to add text to the trace. It splits text into multiple 
-   // lines based on the \n separator. If there are more lines of text than we can 
+   // Internal routine called to add text to the trace. It splits text into multiple
+   // lines based on the \n separator. If there are more lines of text than we can
    // display, the oldest lines are removed
    void Add (string s) {
       _ = Face;      // Reading this computes a good value for mDYLine (text height in pixels)
@@ -107,7 +111,7 @@ public partial class TraceVN : VNode {
 public class XfmVN : VNode {
    // Constructors -------------------------------------------------------------
    /// <summary>Make an XfmVn given an xfm and a child VNode to transform</summary>
-   /// If you need to transform multiple things, that child VNode could be a 
+   /// If you need to transform multiple things, that child VNode could be a
    /// GroupVN which has its own children
    public XfmVN (Matrix3 xfm, VNode child) => (mXfm, mChild) = (xfm, child);
    VNode mChild;

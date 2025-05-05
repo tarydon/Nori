@@ -89,6 +89,9 @@ public readonly struct Color4 : IEQuable<Color4> {
    public uint Value => (uint)((A << 24) | (R << 16) | (G << 8) | B);
 
    // Methods ------------------------------------------------------------------
+   /// <summary>Returns a darkened version of a given color</summary>
+   public Color4 Darkened () => new (Min (R, (byte)160), Min (G, (byte)160), Min (B, (byte)160));
+
    /// <summary>Compares two color4 for equality</summary>
    public bool EQ (Color4 other) => R == other.R && G == other.G && B == other.B && A == other.A;
 
