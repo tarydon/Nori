@@ -29,10 +29,10 @@ public partial class Poly {
 
       // The center of the arc is the intersection of the below two lines:
       // Line 1: Line perpendicular to the tangent (i.e the normal)
-      Point2 normalEndPt = start.Polar (100, startTangentAngle + HalfPI * arcDir);
+      Point2 normalEndPt = start.Polar (100, startTangentAngle + HalfPI);
       // Line 2: Perpendicular bisector of the chord connecting start and end point
       Point2 mid = start.Midpoint (end);
-      Point2 bisectorEndPt = mid.Polar (100, start.AngleTo (end) + HalfPI * arcDir);
+      Point2 bisectorEndPt = mid.Polar (100, start.AngleTo (end) + HalfPI);
       var cen = LineXLine (start, normalEndPt, mid, bisectorEndPt);
 
       var (sa, ea) = (cen.AngleTo (start), cen.AngleTo (end));
