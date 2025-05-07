@@ -22,6 +22,28 @@ public partial class Poly {
       return new Poly ([a, b], [new Extra (center, ccw ? EFlags.CCW : EFlags.CW)], EFlags.HasArcs);
    }
 
+   /// <summary>Make a single-arc Poly</summary>
+   public static Poly Arc (Point2 start, double startTangentAngle, Point2 end) {
+      Point2 tangentPt = start.Polar (100, startTangentAngle); // An arbitrary tangent point
+      int arcDir = end.Side (start, tangentPt); // CW (-1), CCW (+1), Line (0)
+
+      // The center of the arc is the intersection of the below two lines:
+      // Line 1: Line perpendicular to the tangent (i.e the normal)
+      Point2 normalEndPt = start.Polar (100, startTangentAngle + HalfPI);
+      // Line 2: Perpendicular bisector of the chord connecting start and end point
+      Point2 mid = start.Midpoint (end);
+      Point2 bisectorEndPt = mid.Polar (100, start.AngleTo (end) + HalfPI);
+      var cen = LineXLine (start, normalEndPt, mid, bisectorEndPt);
+
+      var (sa, ea) = (cen.AngleTo (start), cen.AngleTo (end));
+      if (arcDir < 0) while (ea > sa) ea -= TwoPI;
+      else while (ea < sa) ea += TwoPI;
+
+      // If the end point lies along the tangent, return a line from start to end.
+      if (arcDir == 0 || cen.IsNil) return Line (start, end);
+      return Arc (cen, cen.DistTo (start), sa, ea, arcDir > 0);
+   }
+
    /// <summary>Make a full-circle Poly</summary>
    public static Poly Circle (Point2 pt, double radius) {
       Point2 a = pt + new Vector2 (radius, 0);
