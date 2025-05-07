@@ -21,6 +21,20 @@ class PolyTests {
       var p = Poly.Parse ("M0,0 H10 V3 Q8,5,1 H2 Q0,3,-1 Z");
       p.Is ("M0,0H10V3Q8,5,1H2Q0,3,-1Z");
       p.IsLine.IsFalse (); p.IsOpen.IsFalse ();
+
+      var p2 = Poly.Arc (new (0, 1), 1, 180.D2R(), 0, false);
+      p2.A.Is ("(-1,1)"); p2.B.Is ("(1,1)");
+      p2.Is ("M-1,1Q1,1,-2"); p2.HasArcs.IsTrue (); p2.IsOpen.IsTrue (); 
+      var p3 = Poly.Arc (new (0, 1), 1, 180.D2R (), 0, true);
+      p3.Is ("M-1,1Q1,1,2"); p3.HasArcs.IsTrue (); p3.IsOpen.IsTrue ();
+      var p4 = Poly.Arc (new (0, 0), 90.D2R (), new (10, 0));
+      p4.A.Is ("(0,0)"); p4.B.Is ("(10,0)");
+      p4.Is ("M0,0Q10,0,-2"); p4.HasArcs.IsTrue (); p4.IsOpen.IsTrue ();
+      var p5 = Poly.Arc (new (0, 0), 90.D2R (), new (-10, 0));
+      p5.Is ("M0,0Q-10,0,2"); p5.HasArcs.IsTrue (); p5.IsOpen.IsTrue ();
+      Poly.Arc (new (0, 0), 0, (10, 0)).IsLine.IsTrue ();
+      var p6 = Poly.Arc (new (0, 0), 45.D2R (), (-5, -5));
+      p6.HasArcs.IsFalse (); p6.Is ("M0,0L-5,-5");
    }
 
    [Test (25, "Discretization, Seg enumerate, Xfm")]
