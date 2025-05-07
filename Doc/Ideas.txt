@@ -26,3 +26,6 @@ have their uniforms re-gathered again.
 Use UTF8Formatter for writing
 Use UTF8Parser for reading
 
+WebUI
+WebView
+WebGPU
