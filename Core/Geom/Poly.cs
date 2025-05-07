@@ -56,7 +56,6 @@ public partial class Poly {
    /// <summary>Make a single-line Poly</summary>
    public static Poly Line (Point2 pt, Point2 pt2)
       => new ([pt, pt2], [], 0);
-
    /// <summary>Make a single-line Poly</summary>
    public static Poly Line (double x1, double y1, double x2, double y2)
       => Line (new (x1, y1), new (x2, y2));
