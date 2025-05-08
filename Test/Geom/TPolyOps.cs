@@ -51,7 +51,7 @@ class PolyOpsTests {
 class BooleanOpsTests {
    [Test (62, "Basic boolean operations")]
    void Test1 () {
-      List<Poly[]> polys = [ 
+      List<List<Poly>> polys = [ 
          // Union => Star
          [Poly.Polygon ((300, 350), 300, 3),
          Poly.Polygon ((300, 350), 300, 3, Lib.PI)],
@@ -88,9 +88,9 @@ class BooleanOpsTests {
          sb.Clear (); output.Clear ();
          foreach (var inset in polys) {
             output.AddRange (i switch {
-               0 => inset.UnionPolys (),
-               1 => inset.Take (1).SubtractPolys (inset.Skip (1)),
-               2 => inset.IntersectPolys (),
+               0 => inset.AsSpan ().Union (),
+               1 => inset.AsSpan ()[..1].Subtract (inset.AsSpan ()[1..]),
+               2 => inset.AsSpan ().Intersect (),
                _ => throw new NotImplementedException ()
             });
          }

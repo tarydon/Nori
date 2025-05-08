@@ -10,7 +10,16 @@ namespace Nori;
 /// <summary>Given a list of points as inner and outer polygon contours, generate a tesselation in 2D</summary>
 /// This OpenGL based tessellator uses the GLU libraries to tessellate polygons.
 /// (See Tessellators and Quadrics in "The Red Book" for more details on using tessellation sub-API)
-public class Tess2D (List<Point2> pts, IReadOnlyList<int> splits) : Tessellator {
+/// <param name="pts">Set of all contour points</param>
+/// <param name="splits">Contour indices in the points array. E.g: [0, 10, 14] has two contours [0, 10) and [10, 14)</param>
+public class Tess2D (List<Point2> pts, IReadOnlyList<int> splits) {
+   /// <summary>Error results after tessellation (if any)</summary>
+   public string Error => mError;
+   string mError = string.Empty;
+
+   /// <summary>What is the minimum area of triangles below which they are rejected?</summary>
+   public double MinArea { get; set; } = 1E-12;
+
    /// <summary>Tessellates the polygons with outer and inner contours into triangles</summary>
    /// <param name="pts">List of all contour points.</param>
    /// <param name="splits">List of indices defining the contour boundaries.</param>
@@ -32,7 +41,7 @@ public class Tess2D (List<Point2> pts, IReadOnlyList<int> splits) : Tessellator 
    public EWindingRule WindingRule { protected get; set; } = EWindingRule.Odd;
 
    // Implementation -----------------------------------------------------------
-   public unsafe override List<int> Process () {
+   public unsafe List<int> Process () {
       // Initialize tessellator the first time we are called
       var tess = sTess == HTesselator.Zero ? (sTess = NewTess ()) : sTess;
       // Setup tessellation callbacks
@@ -135,6 +144,8 @@ public class Tess2D (List<Point2> pts, IReadOnlyList<int> splits) : Tessellator 
    readonly int[] miEdge = new int[3];
    // The list of indices for the triangle
    readonly int[] mIdx = new int[3];
+   /// <summary>This stores the resultant tessellation</summary>
+   readonly List<int> mResult = [];
 
    // The GLU tessellator object
    [ThreadStatic]
@@ -150,43 +161,22 @@ public class Tess2D (List<Point2> pts, IReadOnlyList<int> splits) : Tessellator 
 /// <summary>BooleanOps is used to do fast boolean operations on polys with no curves</summary>
 public static class BooleanOps {
    /// <summary>This performs a union of two given poly objects</summary>
-   public static List<Poly> Union (this Poly a, Poly b) => UnionPolys ([a, b]);
+   public static List<Poly> Union (this Poly a, Poly b) => Union ([a, b]);
    /// <summary>This performs a union of a number of polys</summary>
-   public static List<Poly> UnionPolys (this IEnumerable<Poly> input) => UnionPolys (input.AsSpan ());
-   /// <summary>This performs a union of a number of polys</summary>
-   public static List<Poly> UnionPolys (this ReadOnlySpan<Poly> input) {
-      return Do (input, 0);
-
-      static List<Poly> Do (ReadOnlySpan<Poly> input, int level) {
-         const int Chunk = 15;
-         if (input.Length > Chunk && level != int.MaxValue) {
-            // Otherwise, if there are more than 15 polys in the input, process these polys 15
-            // at a time, generating smaller sets.
-            int pieces = (input.Length + Chunk - 1) / Chunk, cOps = 0;
-            List<Poly> outset = [];
-            for (int piece = 0; piece < pieces; piece++) {
-               int start = piece * Chunk, end = Math.Min ((piece + 1) * Chunk, input.Length);
-               outset.AddRange (Do (input[start..end], level + 1)); cOps++;
-            }
-            if (cOps == 1) return outset;
-            return Do (outset.AsSpan (), outset.Count >= input.Length? int.MaxValue : level + 1);
-         }
-         return new Boolean (input).Process ();
-      }
-   }
+   public static List<Poly> Union (this ReadOnlySpan<Poly> input) 
+      => new Boolean (input).Process ();
 
    /// <summary>Computes the intersection of two polys</summary>
-   public static List<Poly> Intersect (this Poly a, Poly b) => new Boolean ([a, b]).Process (true);
+   public static List<Poly> Intersect (this Poly a, Poly b) => new Boolean ([a, b]).Process (EWindingRule.AbsGeqTwo);
 
    /// <summary>Computes the intersection of given polys.</summary>
-   public static List<Poly> IntersectPolys (this IEnumerable<Poly> input) => IntersectPolys (input.AsSpan ());
-
-   /// <summary>Computes the intersection of given polys.</summary>
-   public static List<Poly> IntersectPolys (this ReadOnlySpan<Poly> input) {
+   public static List<Poly> Intersect (this ReadOnlySpan<Poly> input) {
       if (input.Length < 2) return [..input];
-      List<Poly> result = [input[^1]], remaining = [..input[..^1]];
-      for (int i = remaining.Count - 1; i >= 0; i--)
-         result = [.. result.SelectMany (a => Intersect (a, remaining[i]))];
+      List<Poly> result = [input[^1]];
+      for (int i = input.Length - 2; i >= 0; i--) {
+         var b = input[i];
+         result = [.. result.SelectMany (a => Intersect (a, b))];
+      }
       return result;
    }
 
@@ -195,46 +185,18 @@ public static class BooleanOps {
    /// <param name="positive">The poly object to be subtracted from.</param>
    /// <param name="negative">The poly object being subtracted.</param>
    /// <returns></returns>
-   public static List<Poly> Subtract (this Poly positive, Poly negative) => SubtractPolys ([positive], [negative]);
+   public static List<Poly> Subtract (this Poly positive, Poly negative) => Subtract ([positive], [negative]);
 
    /// <summary>Subtract one set of polys from another.</summary>
    /// <param name="positive">The polys from which other polys are subtracted.</param>
    /// <param name="negative">The polys which are subtracted.</param>
-   /// <param name="iNegativesAlreadyReversed">Whether the negative polys have already been reversed.</param>
    /// Subtraction operation requires the negative polys to be reversed, which is an additional
-   /// operation. If the input polys are already reversed, it saves an additional operation, making
-   /// computation a bit faster.
-   public static List<Poly> SubtractPolys (this IEnumerable<Poly> positive, IEnumerable<Poly> negative, bool iNegativesAlreadyReversed = false)
-      => SubtractPolys (positive.AsSpan (), negative.AsSpan (), iNegativesAlreadyReversed);
-
-   /// <summary>Subtract one set of polys from another.</summary>
-   /// <param name="positive">The polys from which other polys are subtracted.</param>
-   /// <param name="negative">The polys which are subtracted.</param>
-   /// <param name="iNegativesAlreadyReversed">Whether the negative polys have already been reversed.</param>
-   /// Subtraction operation requires the negative polys to be reversed, which is an additional
-   /// operation. If the input polys are already reversed, it saves an additional operation, making
-   /// computation a bit faster.
-   public static List<Poly> SubtractPolys (this ReadOnlySpan<Poly> positive, ReadOnlySpan<Poly> negative, bool iNegativesAlreadyReversed = false) {
-      List<Poly> ret = [.. positive];
-      
-      if (!iNegativesAlreadyReversed) {
-         Poly[] arr = new Poly[negative.Length];
-         for (int i = 0; i < arr.Length; i++)
-            arr[i] = negative[i].Reverse ();
-         negative = arr;
-      }
-      // Process negative polys 15 at a time.
-      const int Chunk = 15;
-      int added = 0;
-      for (int i = 0, c = negative.Length; i < c; i++) {
-         ret.Add (negative[i]); added++;
-         if (added == Chunk || i == c - 1) {
-            ret = new Boolean (ret.AsSpan ()).Process ();
-            added = 0;
-            if (ret.Count == 0) break;
-         }
-      }
-      return ret!;
+   /// operation. If the input polys are already reversed, call Union to do the subtraction instead.
+   public static List<Poly> Subtract (this ReadOnlySpan<Poly> positive, ReadOnlySpan<Poly> negative) {
+      List<Poly> input = [.. positive];
+      for (int i = 0; i < negative.Length; i++) 
+         input.Add (negative [i].Reverse ());
+      return Union (input.AsSpan ());
    }
 
    // Implementation -----------------------------------------------------------
@@ -256,16 +218,15 @@ public static class BooleanOps {
       }
 
       // Does the actual processing
-      internal unsafe List<Poly> Process (bool intersection = false) {
+      internal unsafe List<Poly> Process (EWindingRule winding = EWindingRule.Positive) {
          var tess = sTesselator;
          if (tess == HTesselator.Zero) tess = sTesselator = NewTess ();
-         var rule = intersection ? EWindingRule.AbsGeqTwo : EWindingRule.Positive;
          // Set up the callbacks
          tess.SetCallback (TessBegin).SetCallback (TessVertex)
             .SetCallback (TessCombine).SetCallback (TessEnd)
             .SetCallback (TessError)
             // Set up the winding rule property, and the 'boundary-only' flag
-            .SetWinding (rule).SetOnlyBoundary (true);
+            .SetWinding (winding).SetOnlyBoundary (true);
          // Submit tessellation input.
          double[] vals = new double[mPts.Count * 3];
          for (int i = 0; i < mPts.Count; i++)

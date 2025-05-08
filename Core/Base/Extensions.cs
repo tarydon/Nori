@@ -30,15 +30,6 @@ public static class Extensions {
    /// Note that you should not add or remove items from the list while the Span is being used.
    public static ReadOnlySpan<T> AsSpan<T> (this List<T> list) => CollectionsMarshal.AsSpan (list);
 
-   /// <summary>Gets a Span&lt;T&gt; view over the data in a sequence</summary>
-   public static ReadOnlySpan<T> AsSpan<T> (this IEnumerable<T> seq) {
-      return seq switch {
-         List<T> list => list.AsSpan (),
-         T[] arr => new (arr),
-         _ => new (seq.ToArray ())
-      };
-   }
-
    /// <summary>Clamps the given double to lie within min..max (inclusive)</summary>
    public static double Clamp (this double a, double min, double max) => a < min ? min : (a > max ? max : a);
    /// <summary>Clamps the given double to the range 0..1</summary>

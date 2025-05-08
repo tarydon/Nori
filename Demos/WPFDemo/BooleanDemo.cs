@@ -8,13 +8,13 @@ using System;
 
 class BooleanScene : Scene2 {
    public BooleanScene () {
-      List<Poly[]> polys = [
+      List<List<Poly>> polys = [
          [Poly.Polygon ((300, 350), 300, 3),
          Poly.Polygon ((300, 350), 300, 3, Lib.PI)],
 
-         [Poly.Circle ((375, 1250), 200),
-         Poly.Circle ((250, 1000), 200),
-         Poly.Circle ((500, 1000), 200)],
+         [Poly.Circle ((325, 1250), 200),
+         Poly.Circle ((200, 1000), 200),
+         Poly.Circle ((425, 1000), 200)],
 
          [Poly.Rectangle (850, 50, 1350, 550),
          Poly.Circle ((1100, 300), 275)],
@@ -38,11 +38,11 @@ class BooleanScene : Scene2 {
    }
 }
 
-class BooleanRootVN (List<Poly[]> polys, Bound2 bound) : VNode {
+class BooleanRootVN (List<List<Poly>> polys, Bound2 bound) : VNode {
    enum EPane { None = -1, Polys = 0, Union = 1, Intersection = 2, Subtraction = 3 }
 
    readonly Bound2 ViewBound = bound;
-   readonly List<Poly[]> mPolys = polys;
+   readonly List<List<Poly>> mPolys = polys;
 
    public override void SetAttributes () {
       Lux.LineWidth = 6;
@@ -61,9 +61,9 @@ class BooleanRootVN (List<Poly[]> polys, Bound2 bound) : VNode {
       };
       return new XfmVN (Matrix3.Translation ((Vector3)GetOffset ((EPane)n, ViewBound)), new PolyVN (polys, pane));
 
-      static List<Poly> Union (List<Poly[]> polys) => polys.SelectMany (x => x).UnionPolys ();
-      static List<Poly> Intersect (List<Poly[]> polys) => polys.SelectMany (a => a.IntersectPolys ()).ToList ();
-      static List<Poly> Subtract (List<Poly[]> polys) => polys.SelectMany (a => a[..1].SubtractPolys (a[1..])).ToList ();
+      static List<Poly> Union (List<List<Poly>> polys) => polys.SelectMany (x => x).ToList ().AsSpan ().Union ();
+      static List<Poly> Intersect (List<List<Poly>> polys) => polys.SelectMany (a => a.AsSpan ().Intersect ()).ToList ();
+      static List<Poly> Subtract (List<List<Poly>> polys) => polys.SelectMany (a => a.AsSpan ()[..1].Subtract (a.AsSpan ()[1..])).ToList ();
    }
 
    public override void Draw () {
