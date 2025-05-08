@@ -113,7 +113,7 @@ public readonly struct Mat4F {
 }
 
 /// <summary>An axis-aligned pixel-rectangle (components are shorts)</summary>
-/// This follows OpenGL sign conventions : (0,0) is the bottom left corner of the screen, 
+/// This follows OpenGL sign conventions : (0,0) is the bottom left corner of the screen,
 /// and +X is right, +Y is up
 [StructLayout (LayoutKind.Sequential, Pack = 2, Size = 8)]
 public readonly struct RectS : IEQuable<RectS> {

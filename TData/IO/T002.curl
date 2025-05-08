@@ -1,0 +1,9 @@
+; T002
+(Drawing){
+  Name:FloorPlan
+  Layers:[
+    { Name:Std Color:#FF000000 Linetype:Continuous }
+    { Name:Bend Color:#FF0000FF Linetype:Dash }
+  ]
+  Shapes:[ (Circle){ Layer:Std Pos:1,2 Radius:3 } (Square){ Layer:Bend Pos:4,5 Size:6 } ]
+}

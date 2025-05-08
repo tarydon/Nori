@@ -21,6 +21,20 @@ class PolyTests {
       var p = Poly.Parse ("M0,0 H10 V3 Q8,5,1 H2 Q0,3,-1 Z");
       p.Is ("M0,0H10V3Q8,5,1H2Q0,3,-1Z");
       p.IsLine.IsFalse (); p.IsOpen.IsFalse ();
+
+      var p2 = Poly.Arc (new (0, 1), 1, 180.D2R(), 0, false);
+      p2.A.Is ("(-1,1)"); p2.B.Is ("(1,1)");
+      p2.Is ("M-1,1Q1,1,-2"); p2.HasArcs.IsTrue (); p2.IsOpen.IsTrue (); 
+      var p3 = Poly.Arc (new (0, 1), 1, 180.D2R (), 0, true);
+      p3.Is ("M-1,1Q1,1,2"); p3.HasArcs.IsTrue (); p3.IsOpen.IsTrue ();
+      var p4 = Poly.Arc (new (0, 0), 90.D2R (), new (10, 0));
+      p4.A.Is ("(0,0)"); p4.B.Is ("(10,0)");
+      p4.Is ("M0,0Q10,0,-2"); p4.HasArcs.IsTrue (); p4.IsOpen.IsTrue ();
+      var p5 = Poly.Arc (new (0, 0), 90.D2R (), new (-10, 0));
+      p5.Is ("M0,0Q-10,0,2"); p5.HasArcs.IsTrue (); p5.IsOpen.IsTrue ();
+      Poly.Arc (new (0, 0), 0, (10, 0)).IsLine.IsTrue ();
+      var p6 = Poly.Arc (new (0, 0), 45.D2R (), (-5, -5));
+      p6.HasArcs.IsFalse (); p6.Is ("M0,0L-5,-5");
    }
 
    [Test (25, "Discretization, Seg enumerate, Xfm")]
@@ -36,15 +50,15 @@ class PolyTests {
       List<Point2> pts = [];
       p.Discretize (pts, 0.05);
       sb.Clear ();
-      sb.Append ($"Discretization of {p}:\n");   
+      sb.Append ($"Discretization of {p}:\n");
       foreach (var pt in pts) sb.Append (pt.ToString () + "\n");
       File.WriteAllText (NT.TmpTxt, sb.ToString ());
       Assert.TextFilesEqual ($"{NT.Data}/Misc/poly2.txt", NT.TmpTxt);
 
-      pts.Clear (); 
+      pts.Clear ();
       Poly.Line (1, 2, 3, 4).Discretize (pts, 0.1);
       pts.Count.Is (2);
-      
+
       Poly p1 = p * Matrix2.Translation (2, 1); p1.Is ("M2,1H12V4Q10,6,1H4Q2,4,-1Z");
       Poly p2 = p * Matrix2.Rotation (Lib.HalfPI); p2.Is ("M0,0V10H-3Q-5,8,1V2Q-3,0,-1Z");
       p.GetBound ().Is ("(0~10,0~5)");
@@ -80,7 +94,7 @@ class PolyTests {
       message.Is ("ParseException: At (2,7): Expecting double value");
       message = "E";
       try { Poly.Parse ("L0,0"); } catch (Exception e1) { message = e1.Description (); }
-      message.Is ("ParseException: At (1,1): Expecting 'M', found 'L'");
+      message.Is ("ParseException: Poly should start with 'M' or 'C'");
       // And this should work, thouhg the string is spread over 2 lines
       message = "OK";
       try { Poly.Parse ("M123.456,456.789\nL12.3,5"); } catch (Exception e1) { message = e1.Description (); }

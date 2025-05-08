@@ -6,13 +6,14 @@ using static System.Math;
 using System.Buffers;
 namespace Nori;
 using static Geo;
+using static Lib;
 
 #region class Poly ---------------------------------------------------------------------------------
 /// <summary>Represents a polyline (composed of lines, and arcs)</summary>
 [AuPrimitive]
 public partial class Poly {
    // Constructor --------------------------------------------------------------
-   Poly () { }
+   [Used] Poly () { }
    internal Poly (ImmutableArray<Point2> pts, ImmutableArray<Extra> extra, EFlags flags)
       => (mPts, mExtra, mFlags) = (pts, extra, flags);
 
@@ -20,6 +21,28 @@ public partial class Poly {
    public static Poly Arc (Point2 center, double radius, double startAngle, double endAngle, bool ccw) {
       Point2 a = center.Polar (radius, startAngle), b = center.Polar (radius, endAngle);
       return new Poly ([a, b], [new Extra (center, ccw ? EFlags.CCW : EFlags.CW)], EFlags.HasArcs);
+   }
+
+   /// <summary>Make a single-arc Poly</summary>
+   public static Poly Arc (Point2 start, double startTangentAngle, Point2 end) {
+      Point2 tangentPt = start.Polar (100, startTangentAngle); // An arbitrary tangent point
+      int arcDir = end.Side (start, tangentPt); // CW (-1), CCW (+1), Line (0)
+
+      // The center of the arc is the intersection of the below two lines:
+      // Line 1: Line perpendicular to the tangent (i.e the normal)
+      Point2 normalEndPt = start.Polar (100, startTangentAngle + HalfPI);
+      // Line 2: Perpendicular bisector of the chord connecting start and end point
+      Point2 mid = start.Midpoint (end);
+      Point2 bisectorEndPt = mid.Polar (100, start.AngleTo (end) + HalfPI);
+      var cen = LineXLine (start, normalEndPt, mid, bisectorEndPt);
+
+      var (sa, ea) = (cen.AngleTo (start), cen.AngleTo (end));
+      if (arcDir < 0) while (ea > sa) ea -= TwoPI;
+      else while (ea < sa) ea += TwoPI;
+
+      // If the end point lies along the tangent, return a line from start to end.
+      if (arcDir == 0 || cen.IsNil) return Line (start, end);
+      return Arc (cen, cen.DistTo (start), sa, ea, arcDir > 0);
    }
 
    /// <summary>Make a full-circle Poly</summary>
@@ -206,7 +229,7 @@ public partial class Poly {
    }
 
    // Implementation -----------------------------------------------------------
-   static Poly Read (UTFReader ur) => new PolyBuilder ().Build (ur);
+   static Poly Read (UTFReader ur) => new PolyBuilder ().Build (ur, true);
 
    // Operators ----------------------------------------------------------------
    /// <summary>Create a new Poly by applying the transformation matrix</summary>
@@ -221,7 +244,7 @@ public partial class Poly {
    [Flags]
    public enum EFlags : ushort {
       Closed = 1, HasArcs = 2,
-      CW = 4, CCW = 8, Circle = 16, Last = 32, Arc = CW | CCW,
+      CW = 4, CCW = 8, Circle = 16, Last = 32, Arc = CW | CCW
    }
    readonly EFlags mFlags;
 
@@ -283,10 +306,10 @@ public class PolyBuilder {
 
    /// <summary>This constructor makes a Pline from a Pline mini-language encoded string</summary>
    /// See Poly.Parse for details
-   internal Poly Build (UTFReader R) {
+   internal Poly Build (UTFReader R, bool fromCurl = false) {
       var mode = 'M';
       Point2 a = Point2.Zero;
-      R.Match ('M');
+      if (R.Peek is not (byte)'M' and not (byte)'C') throw new ParseException ("Poly should start with 'M' or 'C'");
       for (; ; ) {
          char ch = GetMode ();
          switch (ch) {
@@ -318,6 +341,7 @@ public class PolyBuilder {
       // be elided, this simply returns the 'current mode' if we see a number instead
       char GetMode () {
          if (!R.TryPeek (out var b)) return '.';
+         if (fromCurl && sCurlSpl.Contains (R.Peek)) return '.';
          char ch = (char)b; if (char.IsLetter (ch)) { R.Skip (); return mode = char.ToUpper (ch); }
          return mode;
       }
@@ -328,6 +352,7 @@ public class PolyBuilder {
       double GetD () { R.Skip (sSpaceAndComma).Read (out double v); return v; }
    }
    static SearchValues<byte> sSpaceAndComma = SearchValues.Create (" \r\n\f\t,"u8);
+   static SearchValues<byte> sCurlSpl = SearchValues.Create (" }]"u8);
 
    /// <summary>Marks the Pline as closed</summary>
    public PolyBuilder Close () { mClosed = true; return this; }

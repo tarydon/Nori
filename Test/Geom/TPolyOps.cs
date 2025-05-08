@@ -37,7 +37,7 @@ class PolyOpsTests {
       poly = rect.CornerStep (1, 20, 10, Poly.ECornerOpFlags.None); poly!.Is ("M0,0V80H-10V100H200V0");
    }
 
-   [Test (61, "Poly chamfer tests")]
+   [Test (67, "Poly chamfer tests")]
    void Test3 () {
       Poly rect = Poly.Rectangle (0, 0, 200, 100);
       Poly? poly;
@@ -47,9 +47,9 @@ class PolyOpsTests {
    }
 }
 
-[Fixture (20, "Polygon boolean operations tests", "Geom")]
+[Fixture (21, "Polygon boolean operations tests", "Geom")]
 class BooleanOpsTests {
-   [Test (62, "Basic boolean operations")]
+   [Test (69, "Basic boolean operations")]
    void Test1 () {
       List<List<Poly>> polys = [ 
          // Union => Star

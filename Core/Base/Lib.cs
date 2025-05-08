@@ -31,7 +31,7 @@ public static class Lib {
 
    /// <summary>The list of 'well-known' namespaces</summary>
    /// When writing types out, or getting the friendly names of types (using
-   /// Lib.GetNiceName, these namespace prefixes are removed. So we will get 
+   /// Lib.GetNiceName, these namespace prefixes are removed. So we will get
    /// "Point2" rather than "Nori.Point2"
    public static IEnumerable<string> Namespaces => mNamespaces;
    static HashSet<string> mNamespaces = [];
@@ -52,6 +52,8 @@ public static class Lib {
    /// We use this to when searching for a type by name. If only the core name of the type
    /// is specified, these namespaces are prepended to that name to try to form a match
    public static void AddNamespace (string nameSpace) => mNamespaces.Add ($"{nameSpace.TrimEnd ('.')}.");
+
+   public static void AddMetadata (string[] metadata) => AuType.AddTactics (metadata);
 
    /// <summary>Checks a condition, and throws an exception in debug mode</summary>
    /// In release mode, this just returns the condition quietly
@@ -81,7 +83,7 @@ public static class Lib {
       return Path.GetFullPath (Path.Combine (sCodeBase, file));
 
       // Helpers ..............................
-      static string? GetLocation (Assembly? asm) 
+      static string? GetLocation (Assembly? asm)
          => asm == null ? null : new Uri (asm.Location).LocalPath;
    }
    static string? sCodeBase;
@@ -108,9 +110,9 @@ public static class Lib {
             s = type.GetGenericTypeDefinition ().FullName!;
             s = s[..s.IndexOf ('`')];
             s += $"<{type.GetGenericArguments ().Select (NiceName).ToCSV ()}>";
-         } else 
+         } else
             s = type.FullName!;
-         foreach (var ns in mNamespaces)
+         foreach (var ns in mNamespaces.OrderByDescending (a => a.Length))
             if (s.StartsWith (ns)) { s = s[ns.Length..]; break; }
          sNiceNames[type] = s;
       }
@@ -121,7 +123,7 @@ public static class Lib {
       [typeof (void)] = "void", [typeof (short)] = "short", [typeof (uint)] = "uint",
       [typeof (ushort)] = "ushort", [typeof (byte)] = "byte", [typeof (bool)] = "bool",
       [typeof (long)] = "long", [typeof (ulong)] = "ulong", [typeof (sbyte)] = "sbyte",
-      [typeof (string)] = "string", [typeof (char)] = "char"
+      [typeof (string)] = "string", [typeof (char)] = "char", [typeof (object)] = "object"
    };
 
    /// <summary>Normalizes an angle (in radians) to lie in the half open range (-PI .. PI]</summary>
@@ -215,7 +217,7 @@ public static class Lib {
    public static void Trace (object obj) => Tracer.Invoke ($"{obj}");
 
    /// <summary>Set this to point to your own trace handler</summary>
-   /// By default, this just outputs to Debug.Write, but you could set this to 
+   /// By default, this just outputs to Debug.Write, but you could set this to
    /// something like Console.Write or TraceVN.Print
    public static Action<string> Tracer = s => Debug.Write (s);
 }

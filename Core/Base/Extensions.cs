@@ -23,7 +23,7 @@ public static class Extensions {
       => ImmutableCollectionsMarshal.AsArray (iarray)!;
 
    /// <summary>Create an ImmutableArray view over an array (no copying)</summary>
-   public static ImmutableArray<T> AsIArray<T> (this T[] array) 
+   public static ImmutableArray<T> AsIArray<T> (this T[] array)
       => ImmutableCollectionsMarshal.AsImmutableArray (array);
 
    /// <summary>Gets a Span&lt;T&gt; view over the data in a list</summary>
@@ -75,6 +75,12 @@ public static class Extensions {
    /// <summary>Compares two string for equality, ignoring case</summary>
    public static bool EqIC (this string a, string b) => a.Equals (b, StringComparison.OrdinalIgnoreCase);
 
+   /// <summary>Returns all elements of a sequence _except_ those that match the specified predicate</summary>
+   public static IEnumerable<T> Except<T> (this IEnumerable<T> sequence, Predicate<T> excluder) {
+      foreach (var elem in sequence)
+         if (!excluder (elem)) yield return elem;
+   }
+
    /// <summary>Performs an action on each element of a sequence</summary>
    public static void ForEach<T> (this IEnumerable<T> seq, Action<T> action) {
       foreach (var elem in seq) action (elem);
@@ -82,8 +88,8 @@ public static class Extensions {
 
    /// <summary>Gets a value from a dictionary, or adds a new one (synthesized by the maker function)</summary>
    public static U Get<T, U> (this IDictionary<T, U> dict, T key, Func<T, U> maker) {
-      if (!dict.TryGetValue (key, out var value)) 
-         dict[key] = value = maker (key); 
+      if (!dict.TryGetValue (key, out var value))
+         dict[key] = value = maker (key);
       return value;
    }
 
@@ -107,7 +113,7 @@ public static class Extensions {
    public static int MinIndex<T> (this IReadOnlyList<T> seq) where T : IComparable {
       if (seq.Count == 0) return -1;
       int index = 0; T minimum = seq[0];
-      for (int i = 1; i < seq.Count; i++) 
+      for (int i = 1; i < seq.Count; i++)
          if (seq[i].CompareTo (minimum) < 0)
             (index, minimum) = (i, seq[i]);
       return index;
@@ -152,7 +158,7 @@ public static class Extensions {
 
    /// <summary>'Rolls' a list, treating it as a circular list, starting with element N</summary>
    /// The element N is returned first, then N+1 and so on, until we finish with
-   /// the element N-1. Thus, [1,2,3,4,5].Roll (2) will return [3,4,5,1,2]. 
+   /// the element N-1. Thus, [1,2,3,4,5].Roll (2) will return [3,4,5,1,2].
    /// You can also pass in a negative index, so [1,2,3,4,5].Roll (-1) will return
    /// [5,1,2,3,4]
    public static IEnumerable<T> Roll<T> (this IReadOnlyList<T> list, int n) {
@@ -169,7 +175,7 @@ public static class Extensions {
    public static int RoundUp (this int n, int chunk) => chunk * ((n + chunk - 1) / chunk);
 
    /// <summary>Returns a value from a dictionary, or default value (of appropriate type) if the key does not exist</summary>
-   public static U? SafeGet<T, U> (this IReadOnlyDictionary<T, U> dict, T key) 
+   public static U? SafeGet<T, U> (this IReadOnlyDictionary<T, U> dict, T key)
       => dict.GetValueOrDefault (key);
    /// <summary>Returns a value from a dictionary, or a user-supplied fallback if the key is not present</summary>
    public static U SafeGet<T, U> (this IReadOnlyDictionary<T, U> dict, T key, U fallback)
@@ -196,7 +202,7 @@ public static class Extensions {
    /// This takes each object out of the IEnumerable and prints it using it's ToString operator.
    /// It then returns all of them as a comma separated list. If any of the items has the separator
    /// appearing within it, it is quoted. If the quote character appears within any of the strings,
-   /// the quote character is simply removed. 
+   /// the quote character is simply removed.
    public static string ToCSV<T> (this IEnumerable<T> collection, string separator = ",", string quote = "'") {
       bool iFirst = true;
       StringBuilder sb = new ();
@@ -236,7 +242,7 @@ public static class Extensions {
 /// <summary>Extension methods on various Nori-defined enums</summary>
 public static class EnumExtensions {
    /// <summary>How many bytes to encode each pixel, with a given DIBitmap format</summary>
-   public static int BytesPerPixel (this DIBitmap.EFormat fmt) => 
+   public static int BytesPerPixel (this DIBitmap.EFormat fmt) =>
       fmt switch {
          DIBitmap.EFormat.RGB8 => 3,
          DIBitmap.EFormat.Gray8 => 1,

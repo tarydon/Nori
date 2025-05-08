@@ -1,6 +1,6 @@
 // ────── ╔╗
 // ╔═╦╦═╦╦╬╣ TLux.cs
-// ║║║║╬║╔╣║ <<TODO>>
+// ║║║║╬║╔╣║ Tests of Lux rendering system
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 namespace Nori.Testing;
 
@@ -49,8 +49,8 @@ class TLux {
       TestPNG (scene, new (420, 280), DIBitmap.EFormat.Gray8, "Text2D.png");
 
       static void SetAttributes1 () { Lux.Color = Color4.Gray (160); Lux.ZLevel = -1;  }
-      static void Draw1 () => Lux.Lines ([new (10, 5), new (36, 5), new (10, 10), new (36, 10), 
-         new (10, 15), new (36, 15), new (10, 20), new (36, 20), new (10, 5), new (10, 20), 
+      static void Draw1 () => Lux.Lines ([new (10, 5), new (36, 5), new (10, 10), new (36, 10),
+         new (10, 15), new (36, 15), new (10, 20), new (36, 20), new (10, 5), new (10, 20),
          new (23, 5), new (23, 20), new (36, 5), new (36, 20)]);
 
       void SetAttributes2 () { Lux.Color = Color4.Black; Lux.TypeFace = mFace; }
@@ -81,7 +81,7 @@ class TLux {
       TestPNG (scene, new (264, 144), DIBitmap.EFormat.Gray8, "ZLevel.png");
 
       void SetAttributes1 () => Lux.Color = Color4.Gray (160);
-      void Draw1 () => Lux.Quads ([new (20, 0), new (40, 0), new (20, 20), new (0, 20)]); 
+      void Draw1 () => Lux.Quads ([new (20, 0), new (40, 0), new (20, 20), new (0, 20)]);
 
       void SetAttributes2 () { Lux.Color = Color4.Black; Lux.TypeFace = mFace; Lux.ZLevel = -1; }
       void Draw2 () => Lux.Text2D ("Hello, World!", new (0, 5), ETextAlign.MidLeft);

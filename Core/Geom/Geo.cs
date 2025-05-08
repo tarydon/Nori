@@ -9,7 +9,7 @@ namespace Nori;
 /// <summary>The Geo class contains a number of core Geoetry functions</summary>
 public static class Geo {
    /// <summary>Computes the intersection points between two circles (could be zero, one or two points)</summary>
-   /// <param name="c1">Center point of first circle/param>
+   /// <param name="c1">Center point of first circle</param>
    /// <param name="r1">Radius of the first circle</param>
    /// <param name="c2">Center point of the second circle</param>
    /// <param name="r2">Radius of the second circle</param>

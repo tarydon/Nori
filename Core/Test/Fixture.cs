@@ -24,8 +24,10 @@ public class FixtureAttribute (int id, string name, string module) : Attribute {
 /// <summary>Represents a test fixture (that contains a number of tests)</summary>
 public class Fixture {
    internal Fixture (Type type, FixtureAttribute fa) {
+      const BindingFlags bf = Instance | Public | NonPublic | DeclaredOnly;
       (Type, Id, Description, Module, Skip) = (type, fa.Id, fa.Description, fa.Module, fa.Skip);
-      Constructor = type.GetConstructor ([])!;
+      Constructor = type.GetConstructor (bf, [])
+         ?? throw new Exception ($"No parameterless constructor found for {type.FullName}");
       foreach (var mi in type.GetMethods (Instance | Public | NonPublic)) {
          TestAttribute? ta = mi.GetCustomAttribute<TestAttribute> ();
          if (ta != null) mTests.Add (new (mi, ta, this));
@@ -54,7 +56,7 @@ public class Fixture {
 #region [Test] attribute ---------------------------------------------------------------------------
 /// <summary>Attribute to attach to a method to label it as a test</summary>
 /// The method should take no parameters, should be an instance method, and should
-/// return void. It need not be public. 
+/// return void. It need not be public.
 [AttributeUsage (AttributeTargets.Method)]
 public class TestAttribute (int id, string name) : Attribute {
    /// <summary>The Id for this test (use nori.con nextid to generate a candidate)</summary>
