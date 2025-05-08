@@ -1,5 +1,5 @@
 ﻿// ────── ╔╗                                                                                   TEST
-// ╔═╦╦═╦╦╬╣ TPoint.cs
+// ╔═╦╦═╦╦╬╣ TPointVec.cs
 // ║║║║╬║╔╣║ Tests of Point and Vector classes
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 namespace Nori.Testing;

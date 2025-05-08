@@ -1,0 +1,24 @@
+BendMachine
+  Id Name NCName Brand ControlType NCExtension Post MacroSizeLimit EPost EquipmentNumber
+  OpenHeight ClosedHeight DieRefHeight TableLength BGSystem CylinderGap NCXCenter Tonnage MinTonnageFactor
+  BGMaxYDiff BendGuardBeamWidth Flags BGKinematic PunchValency DieValency Gauges BGAxisNames
+  ACB HemTable Extra Materials MaterialMap ToolMap Clamp ACBShadow SHDict
+BackGaugeDef
+  Surfaces Stroke GapToNext
+BGSurfDef
+  Support DZ UIIndex NCIndex
+FlatBGSurfDef
+  Cen DX
+FingerBGSurfDef
+  Cen1 Rad1 SAng1 EAng1 Cen2 Rad2 SAng2 EAng2
+ACBConfig
+  MinDistBetween MinDistToCrowning MaxDistCrowningToCenter MaxDiskMeasures MaxLaserMeasures
+ClampDef
+  Count Geometry MinPitch Pitch
+GeometrySource
+XExtrudedGeometry
+  File Shift Spans
+FileGeometry
+  File Shift -Rotate
+HemTableConfig
+  Opening HemPoint TipPoint

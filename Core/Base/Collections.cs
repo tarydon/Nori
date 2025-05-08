@@ -95,32 +95,32 @@ public class AList<T> : IReadOnlyList<T>, IList<T>, IAList {
 
 #region class Chains<T> ----------------------------------------------------------------------------
 /// <summary>Implements a collection of linked-lists efficiently in a single array</summary>
-/// A collection of multiple linked lists residing in a single array is called a 'Chains' data 
+/// A collection of multiple linked lists residing in a single array is called a 'Chains' data
 /// structure. Suppose we want to maintain multiple linked-lists of T with efficient adding, removal
 /// and flushing of chains. We don't want to use a conventional linked-list structure since we don't want
 /// the expense of a separate memory allocation for every node (especially important if each node is a tiny
-/// payload, such as an integer). 
-/// 
+/// payload, such as an integer).
+///
 /// We create a Chains&lt;T&gt; structure and allocate integers to hold the 'chain numbers'. These are like
 /// linked-list 'handles'. We create a new chain, or add to an existing chain by using the Add method. We
 /// pass in the chain-handle as the first parameter to this. If this is 0, we are creating a new chain (and
 /// that parameter gets set to the freshly allocated chain-handle). If this is non-zero, we are adding a new
 /// value to that chain. Note that even when we are adding a new value to an existing chain, the chain-handle
-/// will actually be changed by the Add method. In other words, each time we add to a chain, the chain 
+/// will actually be changed by the Add method. In other words, each time we add to a chain, the chain
 /// handle changes! Since this is a ref parameter, the handle changing underneath will not require any
-/// special handling. 
-/// 
+/// special handling.
+///
 /// We can later remove one item out of a chain, or 'release' all the elements from a chain completely.
-/// During all these operations, no actual movement of the elements takes place; links are adjusted to 
+/// During all these operations, no actual movement of the elements takes place; links are adjusted to
 /// effect these changes, and the 'empty spaces' are used subsequently when we add something to a chain.
-/// Thus, the memory used by a Chains structure monotonically increases while it is in use; it never 
+/// Thus, the memory used by a Chains structure monotonically increases while it is in use; it never
 /// reduces.
 public class Chains<T> {
    /// <summary>Add a value to an already existing chain, or create a new chain with the value (takes O(1) time)</summary>
    /// <param name="chain">The chain-handle; if this is 0, we are effectively creating a new chain</param>
    /// <param name="value">The value to be added to that chain</param>
    /// This returns nothing, but always modifies the chain-handle parameter 'chain'. If this is a new
-   /// chain, the value will change from 0 to some non-zero value. Even if this is an existing chain, 
+   /// chain, the value will change from 0 to some non-zero value. Even if this is an existing chain,
    /// the value will change (in effect, imagine that a new chain is always created by appending this
    /// new value to the previous chain).
    public void Add (ref int chain, T value) {
@@ -169,7 +169,7 @@ public class Chains<T> {
    /// you want to manipulate some 'value-type' elements in the chain, in-situ. The indices returned here
    /// can be used to index into the Data[] array, which holds the raw elements in the chain. Use with
    /// great care!
-   /// 
+   ///
    /// For most normal use, the Enum() method gives a simpler way to enumerate the values from a chain.
    public void GatherRawIndices (int chain, List<int> indices) {
       indices.Clear ();
@@ -212,32 +212,29 @@ public class Chains<T> {
       }
    }
 
-   #region Properties ---------------------------------------------
+   // Properties ---------------------------------------------------------------
    /// <summary>The raw Data making up the chain</summary>
    /// This should not normally be required to be accessed. Advanced scenarios which require
    /// efficient in-place modification of value-type elements within some chains may require
    /// this. In that case, use GatherRawIndices to get the indices into this array of the elements
    /// within a chain.
    public T[] Data = [];
-   #endregion
 
-   #region Private data -------------------------------------------
-   /// <summary>Contains the 'links' connecting elements into chains.</summary>
+   // Private data -------------------------------------------------------------
+   // Contains the 'links' connecting elements into chains
    int[] mLinks = [];
-
-   /// <summary>Contains the indices of slots in the Data array that are free</summary>
+   // Contains the indices of slots in the Data array that are free
    readonly Stack<int> mFree = [];
-   #endregion
 }
 #endregion
 
 #region class IdxHeap<T> ---------------------------------------------------------------------------
 /// <summary>IdxHeap maintains a collection of IIndexed objects</summary>
 /// Alloc() allocates a new object, assigns an index to it, and stores it in the heap.
-/// Release() releases that object, and adds the slot it previously used to a free-list, 
+/// Release() releases that object, and adds the slot it previously used to a free-list,
 /// which allows these slots to be recycled. Internally, the IdxHeap just maintains a
 /// list-of-T, except that some of the slots in the list could now be empty, and reused.
-/// This mechanism allows O(1) time for allocation, freeing and for indexing. 
+/// This mechanism allows O(1) time for allocation, freeing and for indexing.
 public class IdxHeap<T> where T : IIndexed, new() {
    /// <summary>Create an empty IdxHeap</summary>
    public IdxHeap () => Resize (8);
@@ -252,7 +249,7 @@ public class IdxHeap<T> where T : IIndexed, new() {
    /// sets the Idx of that object to that index
    public ref T Alloc () {
       if (mFree.Count == 0) {
-         if (mData.Length >= 65536) 
+         if (mData.Length >= 65536)
             throw new Exception ($"Only 64K {typeof (T).Name} supported");
          Resize (mData.Length * 2);
       }

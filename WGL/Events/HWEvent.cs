@@ -11,16 +11,16 @@ using GLPanel = UserControl;
 /// some kind of event related information like KeyInfo, MouseInfo etc. Derived classes must
 /// implement Connect to connect and disconnect from the underlying event source (typically
 /// by attaching or detaching an event handler). Even time the derived class detects the event
-/// being fired, it can simply call Push(T) on this type and that will take care of the 
+/// being fired, it can simply call Push(T) on this type and that will take care of the
 /// IObservable dispatch. This class also handles subscribe and implements an internal type
-/// (EventWrapper.Disposer) that handles the disconnection correctly. 
+/// (EventWrapper.Disposer) that handles the disconnection correctly.
 abstract class EventWrapper<T> : IObservable<T> {
    // Methods ------------------------------------------------------------------
    /// <summary>Implements the IObservable contract</summary>
    /// When the first subscriber connects, this calls Connect(true) on its derived
    /// class, which in turn will actually connect an event handler to the underlying
    /// event. This returns an instance of the Disposer (see below) that when disposed
-   /// disconnects the observer from our list of observers. 
+   /// disconnects the observer from our list of observers.
    public IDisposable Subscribe (IObserver<T> observer) {
       (mObservers ??= []).Add (observer);
       if (mObservers.Count == 1) Connect (true);
@@ -37,8 +37,8 @@ abstract class EventWrapper<T> : IObservable<T> {
    // only event handler that is signed up (since we call Connect only when the first observer
    // signs up). This push method will then distribute the event to all observers that have
    // signed up.
-   // NOTE: This is done in a last-come, first-served method. The most recent observer to 
-   // sign up will get the first look at the event. 
+   // NOTE: This is done in a last-come, first-served method. The most recent observer to
+   // sign up will get the first look at the event.
    protected void Push (T item) {
       if (mObservers == null) return;
       for (int i = mObservers.Count - 1; i >= 0; i--)
@@ -128,7 +128,7 @@ class CaptureLostWrap : EventWrapper<int> {
 #region class KeysWrap -----------------------------------------------------------------------------
 /// <summary>EventWrapper implementation that handles keydown and keyup events (used by HW.Keys)</summary>
 class KeysWrap : EventWrapper<KeyInfo> {
-   #region Overrides -----------------------------------------------------------
+   // Overrides ----------------------------------------------------------------
    /// <summary>Connect sets up / takes down event handlers for KeyDown and KeyUp events on the GL surface</summary>
    /// <param name="connect"></param>
    protected override void Connect (bool connect) {
@@ -136,9 +136,8 @@ class KeysWrap : EventWrapper<KeyInfo> {
       if (connect) { panel.KeyDown += OnKeyDown; panel.KeyUp += OnKeyUp; }
       else { panel.KeyDown -= OnKeyDown; panel.KeyUp -= OnKeyUp; }
    }
-   #endregion
 
-   #region Implementation ------------------------------------------------------
+   // Implementation -----------------------------------------------------------
    void OnKeyDown (object? _, KeyEventArgs e) => Process (e, EKeyState.Pressed);
    void OnKeyUp (object? _, KeyEventArgs e) => Process (e, EKeyState.Released);
 
@@ -151,31 +150,30 @@ class KeysWrap : EventWrapper<KeyInfo> {
       if ((e.Modifiers & Keys.Control) > 0) mods |= EKeyModifier.Control;
       if ((e.Modifiers & Keys.Alt) > 0) mods |= EKeyModifier.Alt;
       Push (new (key, mods, state));
-      // REFINE: Use e.Modifiers to distinguish between Enter and Numpad-Enter etc 
+      // REFINE: Use e.Modifiers to distinguish between Enter and Numpad-Enter etc
    }
    // Internal dictionary used to map Windows.Keys enumeration values to our EKey values.
    // If any entries are missing in this dictionary, then the numerical values of the Windows.Keys
-   // and Nori.EKey enumerations for those are identical (for example, all the alphabet keys). 
+   // and Nori.EKey enumerations for those are identical (for example, all the alphabet keys).
    static readonly Dictionary<Keys, EKey> mMap = new () {
       [Keys.Escape] = EKey.Escape, [Keys.F1] = EKey.F1, [Keys.F2] = EKey.F2, [Keys.F3] = EKey.F3,
-      [Keys.F4] = EKey.F4, [Keys.F5] = EKey.F5, [Keys.F6] = EKey.F6, [Keys.F7] = EKey.F7, 
+      [Keys.F4] = EKey.F4, [Keys.F5] = EKey.F5, [Keys.F6] = EKey.F6, [Keys.F7] = EKey.F7,
       [Keys.F8] = EKey.F8, [Keys.F9] = EKey.F9, [Keys.F10] = EKey.F10, [Keys.F11] = EKey.F11,
       [Keys.F12] = EKey.F12, [Keys.Scroll] = EKey.Scroll, [Keys.Oemtilde] = EKey.Tilde,
       [Keys.OemMinus] = EKey.Hyphen, [Keys.Oemplus] = EKey.Equals, [Keys.OemOpenBrackets] = EKey.OpenBracket,
       [Keys.OemCloseBrackets] = EKey.CloseBracket, [Keys.OemPipe] = EKey.Backslash, [Keys.LWin] = EKey.Windows,
-      [Keys.RWin] = EKey.Windows, [Keys.ControlKey] = EKey.Ctrl, [Keys.ShiftKey] = EKey.Shift, 
+      [Keys.RWin] = EKey.Windows, [Keys.ControlKey] = EKey.Ctrl, [Keys.ShiftKey] = EKey.Shift,
       [Keys.Menu] = EKey.Alt, [Keys.Capital] = EKey.CapsLock, [Keys.Apps] = EKey.Menu, [Keys.Pause] = EKey.Pause,
-      [Keys.Insert] = EKey.Insert, [Keys.Home] = EKey.Home, [Keys.PageUp] = EKey.PageUp, 
+      [Keys.Insert] = EKey.Insert, [Keys.Home] = EKey.Home, [Keys.PageUp] = EKey.PageUp,
       [Keys.PageDown] = EKey.PageDown, [Keys.Delete] = EKey.Delete, [Keys.End] = EKey.End,
       [Keys.Up] = EKey.Up, [Keys.Down] = EKey.Down, [Keys.Left] = EKey.Left, [Keys.Right] = EKey.Right,
-      [Keys.NumLock] = EKey.NumLock, [Keys.Divide] = EKey.NDivide, [Keys.Multiply] = EKey.NMultiply, 
+      [Keys.NumLock] = EKey.NumLock, [Keys.Divide] = EKey.NDivide, [Keys.Multiply] = EKey.NMultiply,
       [Keys.Subtract] = EKey.NSubtract, [Keys.Add] = EKey.NAdd, [Keys.Decimal] = EKey.NPeriod,
-      [Keys.NumPad0] = EKey.NPad0, [Keys.NumPad1] = EKey.NPad1, [Keys.NumPad2] = EKey.NPad2, 
-      [Keys.NumPad3] = EKey.NPad3, [Keys.NumPad4] = EKey.NPad4, [Keys.Clear] = EKey.NPad5, 
+      [Keys.NumPad0] = EKey.NPad0, [Keys.NumPad1] = EKey.NPad1, [Keys.NumPad2] = EKey.NPad2,
+      [Keys.NumPad3] = EKey.NPad3, [Keys.NumPad4] = EKey.NPad4, [Keys.Clear] = EKey.NPad5,
       [Keys.NumPad6] = EKey.NPad6, [Keys.NumPad7] = EKey.NPad7, [Keys.NumPad8] = EKey.NPad8,
       [Keys.NumPad9] = EKey.NPad9, [Keys.Space] = EKey.Space,
    };
-   #endregion
 }
 #endregion
 
@@ -202,7 +200,7 @@ class MouseClicksWrap : EventWrapper<MouseClickInfo> {
    }
 
    static readonly Dictionary<MouseButtons, EMouseButton> mMap = new () {
-      [MouseButtons.Left] = EMouseButton.Left, [MouseButtons.Middle] = EMouseButton.Middle, 
+      [MouseButtons.Left] = EMouseButton.Left, [MouseButtons.Middle] = EMouseButton.Middle,
       [MouseButtons.Right ] = EMouseButton.Right
    };
 }

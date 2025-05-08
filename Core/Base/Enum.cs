@@ -17,7 +17,7 @@ public enum ELineType { Continuous, Dot, Dash, DashDot, DashDotDot, Center, Bord
 /// <summary>Various 'well-known' properties</summary>
 public enum EProp {
    /// <summary>The transform of an entity (and its subtree) has changed</summary>
-   Xfm = 1, 
+   Xfm = 1,
    /// <summary>An entity's geometry has changed (needs new geomery-gather)</summary>
    Geometry,
    /// <summary>An entity's attributes have changed (like color, typeface etc)</summary>
@@ -27,7 +27,7 @@ public enum EProp {
    /// <summary>The selection state is changed</summary>
    Selected,
 
-   Grid, FillInterior, CurrentLayer,
+   Grid, FillInterior, CurrentLayer
 }
 
 /// <summary>The possible values for text-alignment within a box</summary>

@@ -50,15 +50,15 @@ class PolyTests {
       List<Point2> pts = [];
       p.Discretize (pts, 0.05);
       sb.Clear ();
-      sb.Append ($"Discretization of {p}:\n");   
+      sb.Append ($"Discretization of {p}:\n");
       foreach (var pt in pts) sb.Append (pt.ToString () + "\n");
       File.WriteAllText (NT.TmpTxt, sb.ToString ());
       Assert.TextFilesEqual ($"{NT.Data}/Misc/poly2.txt", NT.TmpTxt);
 
-      pts.Clear (); 
+      pts.Clear ();
       Poly.Line (1, 2, 3, 4).Discretize (pts, 0.1);
       pts.Count.Is (2);
-      
+
       Poly p1 = p * Matrix2.Translation (2, 1); p1.Is ("M2,1H12V4Q10,6,1H4Q2,4,-1Z");
       Poly p2 = p * Matrix2.Rotation (Lib.HalfPI); p2.Is ("M0,0V10H-3Q-5,8,1V2Q-3,0,-1Z");
       p.GetBound ().Is ("(0~10,0~5)");
@@ -94,7 +94,7 @@ class PolyTests {
       message.Is ("ParseException: At (2,7): Expecting double value");
       message = "E";
       try { Poly.Parse ("L0,0"); } catch (Exception e1) { message = e1.Description (); }
-      message.Is ("ParseException: At (1,1): Expecting 'M', found 'L'");
+      message.Is ("ParseException: Poly should start with 'M' or 'C'");
       // And this should work, thouhg the string is spread over 2 lines
       message = "OK";
       try { Poly.Parse ("M123.456,456.789\nL12.3,5"); } catch (Exception e1) { message = e1.Description (); }

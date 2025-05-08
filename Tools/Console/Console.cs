@@ -4,6 +4,7 @@
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 namespace Nori.Con;
 
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using static System.Reflection.BindingFlags;
 
@@ -69,6 +70,11 @@ static class Program {
       if (!int.TryParse (args[2], out int n)) Help ();
       if (n is < 0 or > 1) Help ();
       SetXmlDoc.Run (n == 1);
+   }
+
+   // Placeholder for putting in some test code and running it
+   [ConsoleCommand]
+   static void TestHook () {
    }
 
    static int Build = 2;
