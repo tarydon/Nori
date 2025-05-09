@@ -1,0 +1,15 @@
+; T006
+(Zoo){
+  Name:"London (Main)"
+  Animals:< L=(Lion){ Age:12 Name:Simba } T=(Tiger){ Age:18 Name:Elsa } >
+  Extra:<
+    Single=(float)1.2
+    Int=(int)12
+    String=(string)Hello
+    Point2=(Point2)3,5
+    Animal=(Lion){ Age:3 Name:Nala }
+    Array=(Int32[])[ 1 2 3 4 5 ]
+    List=(List<double>)[ 1.1 2.2 3.3 ]
+    Dict=(Dictionary<int,string>)< 1=One 2=Two >
+  >
+}

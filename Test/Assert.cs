@@ -113,5 +113,6 @@ static class NT {
    public static readonly string TmpTxt = $"{Data}/tmpfile.txt";
    public static readonly string TmpPNG = $"{Data}/tmpfile.png";
    public static readonly string TmpDXF = $"{Data}/tmpfile.dxf";
+   public static readonly string TmpCurl = $"{Data}/tmpfile.curl";
 }
 #endregion

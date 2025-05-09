@@ -1,0 +1,20 @@
+Dwg
+  Layers Blocks -Bound CurrentLayer.Name Ents -FillInterior Grid
+Layer2
+  Name Color Linetype Visible
+Grid2
+  Pitch Subdivs Visible Snap Origin Rotation
+Ent2
+  Layer.Name Color
+E2Point
+  Pt
+E2Poly
+  Poly -Bound
+E2Text
+  Angle -Bound Height Pt Text
+Block2
+  Name Base Ents
+E2Solid
+  Pts
+E2Insert
+  -Block ^Dwg BlockName Pt Angle XScale YScale -Bound

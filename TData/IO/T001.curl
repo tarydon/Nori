@@ -1,0 +1,16 @@
+; T001
+(Primitives){
+  Bool:True
+  Short:1
+  Int:2
+  Long:3
+  UShort:4
+  UInt:5
+  ULong:6
+  Float:7.1
+  Double:8.2
+  Date:2001-06-21T10:25:35.0000000
+  Guid:9a19103f-16f7-4668-be54-9a1e7a4f7556
+  TSpan:1.02:03:04.0050060
+  String:Ten
+}

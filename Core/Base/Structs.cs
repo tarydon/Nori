@@ -99,7 +99,7 @@ public readonly struct Color4 : IEQuable<Color4> {
    public static Color4 Gray (int v) => new (v, v, v);
 
    /// <summary>Read a Color4 from a UTF8 stream</summary>
-   static public Color4 Read (UTFReader R) { R.Match ('#').Read (out uint value, true); return new (value); }
+   public static Color4 Read (UTFReader R) { R.Match ('#').Read (out uint value, true); return new (value); }
 
    public override string ToString () {
       BuildMap ();

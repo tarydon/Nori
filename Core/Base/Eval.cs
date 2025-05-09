@@ -6,7 +6,7 @@ namespace Nori;
 using System.Buffers;
 
 #region class EvalException ------------------------------------------------------------------------
-file class EvalException (string message) : Exception (message) { }
+file class EvalException (string message) : Exception (message);
 #endregion
 
 #region class Eval ---------------------------------------------------------------------------------
@@ -97,7 +97,7 @@ public class Eval {
       ["+"] = EOperation.Add, ["-"] = EOperation.Sub, ["*"] = EOperation.Mul, ["/"] = EOperation.Div,
       ["sin"] = EOperation.Sin, ["cos"] = EOperation.Cos, ["tan"] = EOperation.Tan,
       ["asin"] = EOperation.Asin, ["acos"] = EOperation.Acos, ["atan"] = EOperation.Atan, ["atan2"] = EOperation.Atan2,
-      ["log"] = EOperation.Log, ["exp"] = EOperation.Exp, ["sqrt"] = EOperation.Sqrt, ["sqr"] = EOperation.Sqr, ["abs"] = EOperation.Abs,
+      ["log"] = EOperation.Log, ["exp"] = EOperation.Exp, ["sqrt"] = EOperation.Sqrt, ["sqr"] = EOperation.Sqr, ["abs"] = EOperation.Abs
    }.GetAlternateLookup<ReadOnlySpan<char>> ();
 
    // Nested -------------------------------------------------------------------
@@ -105,7 +105,7 @@ public class Eval {
    public enum EOperation {
       Add, Sub, Mul, Div, Neg,
       Sin, Asin, Cos, Acos, Tan, Atan, Atan2,
-      Exp, Log, Sqrt, Sqr, Abs,
+      Exp, Log, Sqrt, Sqr, Abs
    }
 
    /// <summary>Operator info pushed onto operator stack, or applied to modify operand stack</summary>
@@ -126,7 +126,7 @@ public class Eval {
       static int[] sCOperands = [
          2, 2, 2, 2, 1,
          1, 1, 1, 1, 1, 1, 2,
-         1, 1, 1, 1, 1,
+         1, 1, 1, 1, 1
       ];
    }
 
@@ -193,7 +193,7 @@ public class Eval {
    /// <summary>Evaluator's operator stack</summary>
    readonly Stack<Operator> mOperators = new ();
    /// <summary>Current base precedence level</summary>
-   int mBasePrecedence = 0;
+   int mBasePrecedence;
 }
 #endregion
 

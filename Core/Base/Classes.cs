@@ -13,7 +13,7 @@ public class DIBitmap {
    /// <summary>Construct a bitmap given the width, height, format and actual raw data</summary>
    /// Note that this format has no padding at the end of each line to align it
    /// on any 4-byte or 8-byte boundary. The data for successive lines is tightly
-   /// packed. 
+   /// packed.
    public DIBitmap (int width, int height, EFormat fmt, byte[] data) {
       (Width, Height, Fmt, Data) = (width, height, fmt, data);
       Stride = Width * fmt.BytesPerPixel ();
@@ -54,7 +54,7 @@ public class MultiDispose : IDisposable {
 
    // Methods ------------------------------------------------------------------
    /// <summary>Add an additional disposable</summary>
-   public void Add (IDisposable? disp) => mDisposables.Add (disp); 
+   public void Add (IDisposable? disp) => mDisposables.Add (disp);
 
    // Implement IDisposable ----------------------------------------------------
    public void Dispose () { mDisposables.ForEach (a => a?.Dispose ()); mDisposables.Clear (); }

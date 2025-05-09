@@ -52,11 +52,18 @@ public class UTFReader {
       mN += delta; return this;
    }
 
+   /// <summary>Read a char value from the stream</summary>
+   /// TODO: Improve
+   public UTFReader Read (out char ch) {
+      byte b = D[mN++]; if (b < 128) { ch = (char)b; return this; }
+      throw new Exception ("Error reading char");
+   }
+
    /// <summary>Reads a DateTime value from the stream (skips past leading whitespace)</summary>
    /// Throws an exception if a valid DateTime value is not found
    public UTFReader Read (out DateTime value) {
       SkipSpace ();
-      if (!Utf8Parser.TryParse (D.AsSpan (mN), out value, out int delta)) Fatal ("Expecting DateTime value");
+      if (!Utf8Parser.TryParse (D.AsSpan (mN), out value, out int delta, 'O')) Fatal ("Expecting DateTime value");
       mN += delta; return this;
    }
 
@@ -114,14 +121,14 @@ public class UTFReader {
       if (Peek == '"') {
          mN++; str = Encoding.UTF8.GetString (TakeUntil (sQuote, false)); mN++;
       } else
-         str = Encoding.UTF8.GetString (TakeUntil (sSpace, false));
+         str = Encoding.UTF8.GetString (TakeUntil (CurlReader.NameStop, false));
       return this;
    }
    static readonly SearchValues<byte> sQuote = SearchValues.Create ((byte)'"');
 
    /// <summary>Reads a TimeSpan value from the stream (skips past leading whitespace)</summary>
    /// Throws an exception if a valid TimeSpan value is not found
-   public UTFReader Read (out  TimeSpan value) {
+   public UTFReader Read (out TimeSpan value) {
       SkipSpace ();
       if (!Utf8Parser.TryParse (D.AsSpan (mN), out value, out int delta)) Fatal ("Expecting TimeSpan value");
       mN += delta; return this;
@@ -149,6 +156,29 @@ public class UTFReader {
       SkipSpace ();
       if (!Utf8Parser.TryParse (D.AsSpan (mN), out value, out int delta)) Fatal ("Expecting ulong value");
       mN += delta; return this;
+   }
+
+   /// <summary>Reads a .Net primitive type from the stream, given the TypeCode</summary>
+   public object ReadPrimitive (Type type) {
+      var code = Type.GetTypeCode (type);
+      switch (code) {
+         case TypeCode.Char: Read (out char c); return c;
+         case TypeCode.Boolean: Read (out bool b); return b;
+         case TypeCode.DateTime: Read (out DateTime dt); return dt;
+         case TypeCode.Double: Read (out double d); return d;
+         case TypeCode.Int16: Read (out short s); return s;
+         case TypeCode.Int32: Read (out int n); return n;
+         case TypeCode.Int64: Read (out long l); return l;
+         case TypeCode.Single: Read (out float f); return f;
+         case TypeCode.String: Read (out string st); return st;
+         case TypeCode.UInt16: Read (out ushort us); return us;
+         case TypeCode.UInt32: Read (out uint un, false); return un;
+         case TypeCode.UInt64: Read (out ulong ul); return ul;
+         default:
+            if (type == typeof (Guid)) { Read (out Guid guid); return guid; }
+            if (type == typeof (TimeSpan)) { Read (out TimeSpan tspan); return tspan; }
+            throw new BadCaseException (code);
+      }
    }
 
    /// <summary>Skip one character</summary>

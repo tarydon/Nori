@@ -53,10 +53,13 @@ public class Matrix2 (double m11, double m12, double m21, double m22, double x, 
 
    // Operators ----------------------------------------------------------------
    /// <summary>Multiply a Point2 by a Matrix</summary>
-   public static Point2 operator * (Point2 p, Matrix2 m) 
+   public static Point2 operator * (Point2 p, Matrix2 m)
+      => new (m.M11 * p.X + m.M21 * p.Y + m.DX, m.M12 * p.X + m.M22 * p.Y + m.DY);
+   /// <summary>Multiply a Vec2F by a Matrix (returns a Vec2F)</summary>
+   public static Vec2F operator * (Vec2F p, Matrix2 m)
       => new (m.M11 * p.X + m.M21 * p.Y + m.DX, m.M12 * p.X + m.M22 * p.Y + m.DY);
    /// <summary>Multiply a Vector2 by a Matrix</summary>
-   public static Vector2 operator * (Vector2 v, Matrix2 m) 
+   public static Vector2 operator * (Vector2 v, Matrix2 m)
       => new (m.M11 * v.X + m.M21 * v.Y, m.M12 * v.X + m.M22 * v.Y);
 
    /// <summary>Multiply two matrices together</summary>
@@ -94,7 +97,7 @@ public class Matrix3 {
    /// <summary>Construct a matrix to map a given 2-D bound to opengl clip-space</summary>
    /// This first adjusts the bound so that it matches the aspect ratio of the given
    /// viewport. Then, it constructs a matrix to map this bound to the OpenGL clip space,
-   /// which extends from -1 to +1 in every direction. 
+   /// which extends from -1 to +1 in every direction.
    public static Matrix3 Map (Bound2 window, Vec2S viewport) {
       Point2 mid = window.Midpoint;
       double dx = Max (window.Width / 2.0, 1), dy = Max (window.Height / 2.0, 1);
@@ -102,7 +105,7 @@ public class Matrix3 {
       if (dx / dy > aspect) dy = dx / aspect;
       else dx = dy * aspect;
 
-      // Now, dx is half the width of the viewport, and dy is half the height of the 
+      // Now, dx is half the width of the viewport, and dy is half the height of the
       // viewport. We want to first translate the midpoint to 0,0 and then scale the
       // viewport so the X/Y span is from -1 to +1
       return Translation (-mid.X, -mid.Y, 0) * Scaling (1 / dx, 1 / dy, 1);

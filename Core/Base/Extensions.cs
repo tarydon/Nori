@@ -69,6 +69,12 @@ public static class Extensions {
    /// <summary>Compares two string for equality, ignoring case</summary>
    public static bool EqIC (this string a, string b) => a.Equals (b, StringComparison.OrdinalIgnoreCase);
 
+   /// <summary>Returns all elements of a sequence _except_ those that match the specified predicate</summary>
+   public static IEnumerable<T> Except<T> (this IEnumerable<T> sequence, Predicate<T> excluder) {
+      foreach (var elem in sequence)
+         if (!excluder (elem)) yield return elem;
+   }
+
    /// <summary>Performs an action on each element of a sequence</summary>
    public static void ForEach<T> (this IEnumerable<T> seq, Action<T> action) {
       foreach (var elem in seq) action (elem);
