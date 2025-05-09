@@ -165,5 +165,13 @@ class StructTests {
       (x, y) = b;
       b.EQ ((40, 50)).IsTrue ();
       b.EQ ((x, y)).IsTrue ();
+
+      Vector3 va = new (10, 20, 30);
+      (x, y, z) = va;
+      va.EQ (new (x, y, z)).IsTrue ();
+
+      Vector2 vb = new (40, 50);
+      (x, y) = vb;
+      vb.EQ (new (x, y)).IsTrue ();
    }
 }

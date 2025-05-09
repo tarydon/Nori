@@ -41,19 +41,6 @@ public static class Extensions {
    /// <summary>Clamps a given integer to lie within min..max (inclusive)</summary>
    public static int Clamp (this int a, int min, int max) => a < min ? min : (a > max ? max : a);
 
-   /// <summary>Deconstructs a Point2 to a (double, double)</summary>
-   public static void Deconstruct (this in Point2 pt, out double x, out double y)
-      => (x, y) = (pt.X, pt.Y);
-   /// <summary>Deconstructs a Point3 to a (double, double, double)</summary>
-   public static void Deconstruct (this in Point3 pt, out double x, out double y, out double z)
-      => (x, y, z) = (pt.X, pt.Y, pt.Z);
-   /// <summary>Deconstructs a Vector2 to a (double, double)</summary>
-   public static void Deconstruct (this in Vector2 vec, out double dx, out double dy)
-      => (dx, dy) = (vec.X, vec.Y);
-   /// <summary>Deconstructs a Vector3 to a (double, double, double)</summary>
-   public static void Deconstruct (this in Vector3 vec, out double dx, out double dy, out double dz)
-      => (dx, dy, dz) = (vec.X, vec.Y, vec.Z);
-
    /// <summary>Get the description</summary>
    public static string Description (this Exception e) => $"{Lib.NiceName (e.GetType ())}: {e.Message}";
 
