@@ -8,11 +8,6 @@ namespace Nori;
 #region class Geo ----------------------------------------------------------------------------------
 /// <summary>The Geo class contains a number of core Geoetry functions</summary>
 public static class Geo {
-   /// <summary>The 90 degree angle in radians</summary>
-   public const double HalfPI = PI / 2;
-   /// <summary>The 360 degree angle in radians</summary>
-   public const double TwoPI = 2 * PI;
-
    /// <summary>Computes the intersection points between two circles (could be zero, one or two points)</summary>
    /// <param name="c1">Center point of first circle</param>
    /// <param name="r1">Radius of the first circle</param>

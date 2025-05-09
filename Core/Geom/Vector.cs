@@ -54,6 +54,9 @@ public readonly struct Vector2 : IEQuable<Vector2> {
       return fNumer / fDenom;
    }
 
+   /// <summary>Deconstructs a Vector2 to a (double, double)</summary>
+   public void Deconstruct (out double dx, out double dy) => (dx, dy) = (X, Y);
+
    /// <summary>Returns the dot product of this vector with another</summary>
    public double Dot (Vector2 v) => X * v.X + Y * v.Y;
 
@@ -156,6 +159,9 @@ public readonly struct Vector3 : IEQuable<Vector3> {
 
    /// <summary>Similar to CosineTo, but works for already-normalized vectors</summary>
    public double CosineToAlreadyNormalized (Vector3 v2) => X * v2.X + Y * v2.Y + Z * v2.Z;
+
+   /// <summary>Deconstructs a Vector3 to a (double, double, double)</summary>
+   public void Deconstruct (out double dx, out double dy, out double dz) => (dx, dy, dz) = (X, Y, Z);
 
    /// <summary>Returns the dot product of this vector with another</summary>
    public double Dot (Vector3 b) => X * b.X + Y * b.Y + Z * b.Z;

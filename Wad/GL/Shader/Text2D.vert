@@ -13,9 +13,10 @@ out int vTexOffset;
 void main () {
    vCellSize = ivec2 (CharBoxN.z - CharBoxN.x, CharBoxN.w - CharBoxN.y);
    vTexOffset = TexOffset;
-   vec2 xy0 = (Xfm * vec4 (VertexPos, 0, 1)).xy;   // xy0 now in clip space
-   xy0 = floor (xy0 / VPScale + vec2 (0.5, 0.5));  // now in integer pixel coordinates
-   xy0 = (xy0 + CharBoxN.xy) * VPScale;             // Now black in clip space
-   vec2 xy1 = xy0 + vCellSize * VPScale;
-   gl_Position = vec4 (xy0, xy1);
+   vec2 xyref = (Xfm * vec4 (VertexPos, 0, 1)).xy;     // xy0 now in clip space
+   xyref = floor (xyref / VPScale);                    // now in pixel coordinates
+   xyref = xyref + vec2 (0.01, 0.01);                  // delta to avoid truncation errors
+   vec2 xy0 = (xyref + CharBoxN.xy); 
+   vec2 xy1 = (xyref + CharBoxN.zw);
+   gl_Position = vec4 (xy0 * VPScale, xy1 * VPScale);
 }

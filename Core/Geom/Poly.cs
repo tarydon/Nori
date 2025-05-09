@@ -6,6 +6,7 @@ using static System.Math;
 using System.Buffers;
 namespace Nori;
 using static Geo;
+using static Lib;
 
 #region class Poly ---------------------------------------------------------------------------------
 /// <summary>Represents a polyline (composed of lines, and arcs)</summary>
@@ -63,10 +64,10 @@ public partial class Poly {
    /// <summary>Make a multi-segment PolyLine</summary>
    public static Poly Lines (IEnumerable<Point2> points)
       => new ([.. points], [], EFlags.Closed);
-
-   /// <summary>Create a polygon of given size at a given center and sides.</summary>
-   public static Poly Polygon (Point2 cen, double radius, int sides)
-      => Lines (Enumerable.Range (0, sides).Select (i => cen.Polar (radius, HalfPI + TwoPI * i / sides)));
+   
+   /// <summary>Create a polygon of given size at a given center, sides and rotation angle.</summary>
+   public static Poly Polygon (Point2 cen, double radius, int sides, double angle = 0) 
+      => Lines (Enumerable.Range (0, sides).Select (i => cen.Polar (radius, angle + Lib.HalfPI + Lib.TwoPI * i / sides)));
 
    /// <summary>This constructor makes a Pline from a Pline mini-language encoded string</summary>
    /// When we do ToString on a Pline, we get an encoding of that Pline in a mini-language.

@@ -63,6 +63,9 @@ public readonly struct Point2 : IEQuable<Point2> {
    /// <summary>Square of the distance between this point and another</summary>
    public double DistToSq (Point2 b) { double dx = b.X - X, dy = b.Y - Y; return dx * dx + dy * dy; }
 
+   /// <summary>Deconstructs a Point2 to a (double, double)</summary>
+   public void Deconstruct (out double x, out double y) => (x, y) = (X, Y);
+
    /// <summary>Compares two points are equal to within EPSILON</summary>
    public bool EQ (Point2 b) => X.EQ (b.X) && Y.EQ (b.Y);
 
@@ -213,6 +216,9 @@ public readonly struct Point3 : IEquatable<Point3> {
       double dx = b.X - X, dy = b.Y - Y, dz = b.Z - Z;
       return dx * dx + dy * dy + dz * dz;
    }
+
+   /// <summary>Deconstructs a Point3 to a (double, double, double)</summary>
+   public void Deconstruct (out double x, out double y, out double z) => (x, y, z) = (X, Y, Z);
 
    /// <summary>Compares two points are equal to within EPSILON</summary>
    public bool EQ (Point3 b) => X.EQ (b.X) && Y.EQ (b.Y) && Z.EQ (b.Z);

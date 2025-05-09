@@ -243,6 +243,7 @@ public static partial class Lux {
 
    /// <summary>This is called at the start of every frame to reset to known</summary>
    static void StartFrame (Vec2S viewport) {
+      mcFillPaths = 0;
       mViewport = viewport;
       VPScale = new Vec2F (2.0 / viewport.X, 2.0 / viewport.Y);
       mColors.Clear (); mColor = Color4.White;
