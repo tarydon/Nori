@@ -137,6 +137,8 @@ public static class Extensions {
    public static double R2D (this double f) => f * DegreesPerRadian;
    const double DegreesPerRadian = 180 / PI;
 
+   public static float R2D (this float f) => (float)(f * DegreesPerRadian);
+
    /// <summary>Returns a Half rounded off to 5 decimal places</summary>
    public static float R3 (this Half f) => (float)Math.Round ((float)f, 3);
    /// <summary>Returns a float rounded off to 5 decimal places</summary>
