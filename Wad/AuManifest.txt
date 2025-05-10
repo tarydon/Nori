@@ -1,5 +1,5 @@
 Dwg
-  Layers Blocks Styles -Bound CurrentLayer.Name Ents -FillInterior Grid
+  Layers Styles Blocks -Bound CurrentLayer.Name Ents -FillInterior Grid
 Layer2
   Name Color Linetype Visible
 Grid2
