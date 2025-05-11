@@ -20,3 +20,5 @@ E2Solid
   Pts
 E2Insert
   -Block ^Dwg BlockName Pt Angle XScale YScale -Bound
+E2Dimension
+  -Bound Ents
