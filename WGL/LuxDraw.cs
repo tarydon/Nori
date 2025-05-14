@@ -7,8 +7,8 @@ namespace Nori;
 [Flags]
 public enum ELuxAttr {
    None = 0,
-   Color = 1 << 0, LineWidth = 1 << 1, LineType = 1 << 2, LTScale = 1 << 3, 
-   Xfm = 1 << 4, PointSize = 1 << 5, TypeFace = 1 << 6, ZLevel = 1 << 7, 
+   Color = 1 << 0, LineWidth = 1 << 1, LineType = 1 << 2, LTScale = 1 << 3,
+   Xfm = 1 << 4, PointSize = 1 << 5, TypeFace = 1 << 6, ZLevel = 1 << 7,
 }
 
 #region class Lux ----------------------------------------------------------------------------------
@@ -16,7 +16,7 @@ public enum ELuxAttr {
 public static partial class Lux {
    // Properties ---------------------------------------------------------------
    /// <summary>The current drawing color (default = white)</summary>
-   public static Color4 Color { 
+   public static Color4 Color {
       get => mColor;
       set {
          if (mColor.EQ (value)) return;
@@ -28,13 +28,13 @@ public static partial class Lux {
    static Stack<Color4> mColors = [];
 
    /// <summary>The current line-width, in device-independent pixels</summary>
-   public static float LineWidth { 
+   public static float LineWidth {
       get => mLineWidth;
       set {
          if (mLineWidth.EQ (value)) return;
-         if (Set (ELuxAttr.LineWidth)) mLineWidths.Push (mLineWidth); 
+         if (Set (ELuxAttr.LineWidth)) mLineWidths.Push (mLineWidth);
          mLineWidth = value; Rung++;
-      } 
+      }
    }
    static float mLineWidth;
    static Stack<float> mLineWidths = [];
@@ -44,7 +44,7 @@ public static partial class Lux {
       get => mLineType;
       set {
          if (mLineType == value) return;
-         if (Set (ELuxAttr.LineType)) mLineTypes.Push (mLineType); 
+         if (Set (ELuxAttr.LineType)) mLineTypes.Push (mLineType);
          mLineType = value; Rung++;
       }
    }
@@ -64,7 +64,7 @@ public static partial class Lux {
    static Stack<float> mLTScales = [];
 
    /// <summary>The diameter of a point, in device-independent pixels</summary>
-   public static float PointSize { 
+   public static float PointSize {
       get => mPointSize;
       set {
          if (mPointSize.EQ (value)) return;
@@ -88,7 +88,7 @@ public static partial class Lux {
    static Stack<TypeFace?> mTypefaces = [];
 
    /// <summary>Viewport scale (convert viewport pixels to GL clip coordinates -1 .. +1)</summary>
-   public static Vec2F VPScale { 
+   public static Vec2F VPScale {
       get => mVPScale;
       set { if (Lib.Set (ref mVPScale, value)) Rung++; }
    }
@@ -98,7 +98,7 @@ public static partial class Lux {
    static VNode? mVNode;
 
    /// <summary>The index of the current transform in use</summary>
-   /// This is an index into Scene.Xfms[] 
+   /// This is an index into Scene.Xfms[]
    public static int IDXfm {
       get => mIDXfm;
       private set {
@@ -114,7 +114,7 @@ public static partial class Lux {
       set {
          if (value.IsIdentity) return;
          var xe = new XfmEntry (Scene!.Xfms[IDXfm], value);
-         IDXfm = Scene.Xfms.Count; 
+         IDXfm = Scene.Xfms.Count;
          Scene.Xfms.Add (xe);
       }
    }
@@ -133,7 +133,7 @@ public static partial class Lux {
 
    // Methods ------------------------------------------------------------------
    /// <summary>Draws beziers in world coordinates, with Z = 0</summary>
-   /// Every set of 4 points in the list creates one bezier curve so n / 4 
+   /// Every set of 4 points in the list creates one bezier curve so n / 4
    /// beziers are drawn. The following Lux properties are used:
    /// - LineWidth : the width of the beziers, in device independent pixels
    /// - DrawColor : color of the lines being drawn
@@ -141,27 +141,27 @@ public static partial class Lux {
       => Bezier2DShader.It.Draw (pts);
 
    /// <summary>This fills a set of closed paths (made of line segments) with the current Color</summary>
-   /// The input to this function is a set of triangle-fans representing the closed paths. 
+   /// The input to this function is a set of triangle-fans representing the closed paths.
    /// pts[0] is, by convention, some arbitrary point in the 2D space that acts as the tip
    /// vertex of every triangle we are going to draw (the bases of these triangles being made
-   /// up of each segment of each path contour). We recommend picking the midpoint of the 
-   /// bounding rectangle of the paths (to minimize the number of pixels to be covered by 
+   /// up of each segment of each path contour). We recommend picking the midpoint of the
+   /// bounding rectangle of the paths (to minimize the number of pixels to be covered by
    /// the algorithm).
-   /// 
+   ///
    /// Suppose we have a path with two contours a quad whose vertices are at [1,2,3,4] in the
    /// pts list, and a triangle whose vertices are at [5,6,7] in the pts list. We will create
    /// two triangle fans with pts[0] as the tip vertex and each segment of each of these contours
-   /// as a base. Since we are using a restartable primitive (triangle-fan), we can use the 
-   /// special value -1 to indicate that we are finished with one fan. So the indices list in 
-   /// this example should be like: [0,1,2,3,4,1,-1, 0,5,6,7,5,-1]. Note that vertex 1 and 
+   /// as a base. Since we are using a restartable primitive (triangle-fan), we can use the
+   /// special value -1 to indicate that we are finished with one fan. So the indices list in
+   /// this example should be like: [0,1,2,3,4,1,-1, 0,5,6,7,5,-1]. Note that vertex 1 and
    /// vertex 5 repeat to 'close' the contour and to draw the last triangle (between 0,4,1 and
-   /// 0,7,5 respectively). 
-   /// 
-   /// The bound parameter is just the bounding rectangle of the pts list - we pass it in 
+   /// 0,7,5 respectively).
+   ///
+   /// The bound parameter is just the bounding rectangle of the pts list - we pass it in
    /// as a parameter to avoid this function computing it (since it is very often known by the
    /// caller). We need this bound to figure out a minimal covering rectangle to apply the paint
    /// through, after the stencil is prepared. See the notes on TriFanStencilShader for more
-   /// details on the algorithm. 
+   /// details on the algorithm.
    public static void FillPath (ReadOnlySpan<Vec2F> pts, ReadOnlySpan<int> indices, Bound2 bound) {
       // We do this hacking of ZLevels because we have some very specific sequencing requirements
       // for the stencil RBatch and the cover RBatch. They should be drawn one immediately after the
@@ -241,7 +241,7 @@ public static partial class Lux {
    }
 
    /// <summary>Draws 2D quads in world coordinates, with Z = 0</summary>
-   /// The quads are drawn with smoothed (anti-aliased) edges. 
+   /// The quads are drawn with smoothed (anti-aliased) edges.
    /// The following Lux properties are used:
    /// - DrawColor : color of the triangles being drawn
    public static void Quads (ReadOnlySpan<Vec2F> a) {
@@ -251,7 +251,7 @@ public static partial class Lux {
    }
 
    /// <summary>Draws 2D triangles in world coordinates, with Z = 0</summary>
-   /// The triangles are drawn with smoothed (anti-aliased) edges. 
+   /// The triangles are drawn with smoothed (anti-aliased) edges.
    /// The following Lux properties are used:
    /// - DrawColor : color of the triangles being drawn
    public static void Triangles (ReadOnlySpan<Vec2F> a) {
@@ -261,11 +261,11 @@ public static partial class Lux {
    }
 
    /// <summary>Draws text positioned at a given point in world coordinates</summary>
-   /// The position _pos_ specifies a point in world coordinates (with Z = 0) where 
+   /// The position _pos_ specifies a point in world coordinates (with Z = 0) where
    /// the text is positioned. Based on the alignment parameter, there are 12 different
    /// 'reference points' on the text which get mapped to this position pos. See
-   /// file://n:/tdata/lux/text2d.png for an example of all the 12 alignments. 
-   /// 
+   /// file://n:/tdata/lux/text2d.png for an example of all the 12 alignments.
+   ///
    /// The following Lux properties are used by this shader:
    /// - Xfm       : current transformation matrix
    /// - DrawColor : color of the text being drawn
@@ -282,7 +282,7 @@ public static partial class Lux {
       // we obtained are already correct (since the transformed coordinates of the _pos_
       // parameter from above will get added to each cell position). However, if we want
       // other alignments like TopRight or MidCenter, we need to adjust all these cells.
-      // Let's compute the dx and dy for that adjustment here: 
+      // Let's compute the dx and dy for that adjustment here:
       var cellM = face.Measure ("M", true);
       short dx = 0, dy = 0, nAlign = (short)(align - 1);
       Span<Text2DShader.Args> output = stackalloc Text2DShader.Args[text.Length];
@@ -311,7 +311,7 @@ public static partial class Lux {
    /// <summary>Draws text at specified pixel-coordinates (uses the current TypeFace and DrawColor)</summary>
    /// The pixel (0,0) is the bottom left of the screen, and pixel coordinates increase going
    /// to the right, or upwards. The following Lux properties are used by this shader:
-   /// 
+   ///
    /// The following Lux properties are used by this shader:
    /// - DrawColor : color of the text being drawn
    /// - TypeFace  : font, style, size of the text being drawn
@@ -326,11 +326,11 @@ public static partial class Lux {
    // Given some text, this converts it into a series of TextPxShader.Args (cells) that
    // each contain one 'vertex' to draw one character. The first cell starts with its bottom
    // left corner at the specified pos, and subsequent cells advance left to right (based on the
-   // width of each character, and the kerning adjustment between successive characters). 
-   // The output from this can be directly used by the TextPx shader, or it can be used to 
+   // width of each character, and the kerning adjustment between successive characters).
+   // The output from this can be directly used by the TextPx shader, or it can be used to
    // compute the cells for the Text2D shader (which have some additional information about
-   // the position in world coordinates where the text should start). 
-   // 
+   // the position in world coordinates where the text should start).
+   //
    // This routine fills up the cells output array with the vertices we generate. It also returns
    // the final X position after all the rendering (which is useful if we want to do a right-aligned
    // text positioning)
@@ -342,17 +342,17 @@ public static partial class Lux {
          var metric = face.GetMetrics (idx1);         // Get the metrics for this character
          int kern = face.GetKerning (idx0, idx1);     // Then, the kerning adjustment between the previous character and this one
          short xChar = (short)(x + metric.LeftBearing + kern), yChar = (short)(y + metric.TopBearing);
-         // We are using a Vec4S to store a 'cell' in pixels where the character is to be drawn. 
+         // We are using a Vec4S to store a 'cell' in pixels where the character is to be drawn.
          // It has lower left corner at (X,Y) of the Vec4S and the top right corner at (Z,W) of the
          // Vec4S. The other bit of data is the offset into the font texture for this glyph
          // (a single number suffices since we store the texture in a linear-unpacked format,
-         // not as a 2D bitmap). 
+         // not as a 2D bitmap).
          var vec = new Vec4S (xChar, yChar - metric.Rows, xChar + metric.Columns, yChar);
          cells[n++] = new (vec, metric.TexOffset);
          x += metric.Advance + kern;
          idx0 = idx1;
       }
-      return x; 
+      return x;
    }
 }
 #endregion

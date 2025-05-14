@@ -20,8 +20,10 @@ public partial class Poly {
    public Poly? Chamfer (int node, double dist1, double dist2) {
       // Handle the special case where we are chamfering at node 0 of a 
       // closed Poly (by rolling the poly and making it a chamfer at N-1)
-      if (IsClosed && (node == 0 || node == Count))
-         return Roll (1).Chamfer (Count - 1, dist1, dist2);
+      if (IsClosed && (node == 0 || node == Count)) {
+         var r = Roll (1);
+         return r.IsCircle ? null : r.Chamfer (Count - 1, dist1, dist2); //No chamfer for circles
+      }
 
       // If this is not an interior node, or if one of the two segments attached
       // to the node is either an arc or too short, we return null
@@ -72,8 +74,10 @@ public partial class Poly {
       if (radius.IsZero ()) return null;
       // Handle the special case where we are in-filleting at node 0 of a 
       // closed Poly (by rolling the poly and making a in-fillet at N-1)
-      if (IsClosed && (node == 0 || node == Count))
-         return Roll (1).InFillet (Count - 1, radius, left);
+      if (IsClosed && (node == 0 || node == Count)) {
+         var r = Roll (1);
+         return r.IsCircle ? null : r.InFillet (Count - 1, radius, left); // No Infillet for circles
+      }
 
       // If this is not an interior node, or if one of the two segments attached
       // to the node is either an arc or too short, we return null
@@ -126,8 +130,10 @@ public partial class Poly {
    public Poly? CornerStep (int node, double dist1, double dist2, ECornerOpFlags flags) {
       // Handle the special case where we are in-filleting at node 0 of a 
       // closed Poly (by rolling the poly and making a in-fillet at N-1)
-      if (IsClosed && (node == 0 || node == Count))
-         return Roll (1).CornerStep (Count - 1, dist1, dist2, flags);
+      if (IsClosed && (node == 0 || node == Count)) {
+         var r = Roll (1);
+         return r.IsCircle ? null : r.CornerStep (Count - 1, dist1, dist2, flags); // No corner step for circles
+      }
 
       // If this is not an interior node, or if one of the two segments attached
       // to the node is either an arc or too short, we return null
@@ -200,6 +206,7 @@ public partial class Poly {
    /// Roll the Poly and now the node for chamfering becomes an interior node, which simplifies
    /// the logic. 
    public Poly Roll (int n) {
+      if (IsCircle) return this;
       if (!IsClosed) throw new InvalidOperationException ("Poly.Roll() works only with closed plines");
       if (!HasArcs) return new ([.. mPts.Roll (n)], [], mFlags);
       var knots = mExtra.ToList ();

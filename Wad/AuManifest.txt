@@ -1,5 +1,5 @@
 Dwg
-  Layers Blocks -Bound CurrentLayer.Name Ents -FillInterior Grid
+  Layers Styles Blocks -Bound CurrentLayer.Name Ents -FillInterior Grid
 Layer2
   Name Color Linetype Visible
 Grid2
@@ -11,10 +11,14 @@ E2Point
 E2Poly
   Poly -Bound
 E2Text
-  Angle -Bound Height Pt Text
+  Pt Text Style.Name Angle Alignment -Bound Height Oblique XScale
 Block2
   Name Base Ents
+Style2
+  Name Font Height Oblique XScale
 E2Solid
   Pts
 E2Insert
   -Block ^Dwg BlockName Pt Angle XScale YScale -Bound
+E2Dimension
+  -Bound Ents

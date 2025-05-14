@@ -1,4 +1,4 @@
-﻿// ────── ╔╗                                                                                   CORE
+// ────── ╔╗                                                                                   CORE
 // ╔═╦╦═╦╦╬╣ Runner.cs
 // ║║║║╬║╔╣║ Implements the TestRunner class
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
@@ -97,6 +97,12 @@ public class ConsoleTestCallback : ITestCallback {
 /// The TestRunner gathers and runs the tests. It uses a callback to report progress when the
 /// tests are running
 public static class TestRunner {
+   // Properties ---------------------------------------------------------------
+   /// <summary>Run a Diff tool on test failures</summary>
+   public static bool RunDiff;
+   /// <summary>Stop tests when a failure occurs</summary>
+   public static bool StopOnFail;
+
    // Methods ------------------------------------------------------------------
    /// <summary>Gather all the tests from the given set of assemblies</summary>
    public static List<Test> Gather (Assembly[] assemblies)
@@ -151,11 +157,12 @@ public static class TestRunner {
             echo.StartFixture (fixture);
             fxObject = fixture.Constructor.Invoke (null);
          }
+
+         Exception? except = null;
          echo.StartTest (test);
          if (test.Skip) {
             echo.TestSkipped (test); cSkipped++;
          } else {
-            Exception? except = null;
             try {
                test.Method.Invoke (fxObject, null);
             } catch (Exception ex) {
@@ -169,9 +176,15 @@ public static class TestRunner {
             }
          }
          echo.EndTest (test, ++cDone, cTests, DateTime.Now - start);
+         if (except != null && StopOnFail) break;
       }
       if (fxObject is IDisposable disp) disp.Dispose ();
       echo.End (cTests, cFailed, cCrashed, cSkipped, DateTime.Now - start);
+   }
+
+   public static void ParseArgs (string[] args) {
+      if (args.Contains ("-diff")) RunDiff = true;
+      if (args.Contains ("-stop")) StopOnFail = true;
    }
 
    /// <summary>Given a Coverage object with all files, this marks only the files of interest to Nori testing</summary>
