@@ -90,14 +90,14 @@ public partial class Poly {
       var (m, w, h) = (bound.Midpoint, bound.Width / 2, bound.Height / 2);
       var pb = new PolyBuilder ();
       pb.Line (m.X - w, m.Y - h).Line (m.X + w, m.Y - h).Line (m.X + w, m.Y + h).Line (m.X - w, m.Y + h);
-      return pb.Close ().Build ();
+      return pb.Close ().Rect ().Build ();
    }
    /// <summary>Makes a full-rectangle Poly</summary>
    public static Poly Rectangle (double x0, double y0, double x1, double y1) {
       var pb = new PolyBuilder ();
       Lib.Sort (ref x0, ref x1); Lib.Sort (ref y0, ref y1);
       pb.Line (x0, y0).Line (x1, y0).Line (x1, y1).Line (x0, y1);
-      return pb.Close ().Build ();
+      return pb.Close ().Rect ().Build ();
    }
 
    /// <summary>Converts a string to a path-description (similar to the format used by Flux)</summary>
@@ -153,6 +153,8 @@ public partial class Poly {
    public bool IsLine => Count == 1 && !HasArcs;
    /// <summary>Is this an 'open' Poly?</summary>
    public bool IsOpen => (mFlags & EFlags.Closed) == 0;
+   /// <summary>Is this a Rectangle?</summary>
+   public bool IsRect => (mFlags & EFlags.Rect) != 0;
 
    /// <summary>The set of nodes of this Poly</summary>
    public ImmutableArray<Point2> Pts => mPts;
@@ -244,7 +246,7 @@ public partial class Poly {
    [Flags]
    public enum EFlags : ushort {
       Closed = 1, HasArcs = 2,
-      CW = 4, CCW = 8, Circle = 16, Last = 32, Arc = CW | CCW
+      CW = 4, CCW = 8, Circle = 16, Last = 32, Arc = CW | CCW, Rect = 64
    }
    readonly EFlags mFlags;
 
@@ -288,6 +290,7 @@ public class PolyBuilder {
    public Poly Build () {
       PopBulge (mPts[0]);
       Poly.EFlags flags = mClosed ? Poly.EFlags.Closed : 0;
+      if (mRect) flags |= Poly.EFlags.Rect;
       var extra = ImmutableArray<Poly.Extra>.Empty;
       if (mExtra.Count > 0) {
          extra = [..mExtra];
@@ -357,6 +360,9 @@ public class PolyBuilder {
    /// <summary>Marks the Pline as closed</summary>
    public PolyBuilder Close () { mClosed = true; return this; }
 
+   /// <summary>Marks the Poly as Rectangle</summary>
+   public PolyBuilder Rect () { mRect = true; return this; }
+
    /// <summary>Adds the given end-point as the last node, makes a Poly and returns it</summary>
    public Poly End (Point2 e) { Line (e); return Build (); }
    /// <summary>Adds the given end-point as the last node, makes a Poly and returns it</summary>
@@ -392,7 +398,7 @@ public class PolyBuilder {
    readonly List<Point2> mPts = [];
    readonly List<Poly.Extra> mExtra = [];
    double mBulge = double.NaN;
-   bool mClosed;
+   bool mClosed, mRect;
 }
 #endregion
 
