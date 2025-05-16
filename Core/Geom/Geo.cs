@@ -65,6 +65,32 @@ public static class Geo {
       return buffer[0..2];
    }
 
+   /// <summary>Returns the intersections between a circle and a line</summary>
+   /// There could be 1 or 2 intersections, so this returns an array.
+   /// If there are no intersections, this returns null.
+   public static ReadOnlySpan<Point2> CircleXLine (Point2 cen, double fRad, Point2 p1, Point2 p2, Span<Point2> buffer) {
+      Point2 p = cen.SnappedToLine (p1, p2);
+      double fDist = cen.DistTo (p), fAng, fHt;
+      if (fDist > fRad + Lib.Epsilon) return buffer[0..0];
+      if (fDist.IsZero ()) {
+         fAng = p1.AngleTo (p2) + Math.PI / 2; fHt = fRad;
+      } else {
+         fAng = cen.AngleTo (p);
+         double fsqr = fRad * fRad - fDist * fDist; if (fsqr < 0) fsqr = 0;
+         fHt = Sqrt (fsqr);
+      }
+
+      Point2 pa = cen.Polar (fDist, fAng).Polar (fHt, fAng + Lib.HalfPI);
+      if (fHt.IsZero ()) {
+         buffer[0] = pa;
+         return buffer[0..1];
+      } else {
+         Point2 pb = pa.Polar (-fHt * 2, fAng + Lib.HalfPI);
+         (buffer[0], buffer[1]) = (pa, pb);
+         return buffer[0..2];
+      }
+   }
+
    /// <summary>Return the intersection Point2 of two lines A-B and C-D</summary>
    /// <param name="A">First Point2 on line 1</param>
    /// <param name="B">Second Point2 on line 1</param>
