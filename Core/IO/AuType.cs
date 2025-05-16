@@ -227,6 +227,8 @@ class AuType {
          for (int i = 0; i < names.Length; i++) mEnumMap.Add (names[i], NormalizedEnumInteger (mType, values.GetValue (i)!));
       }
       var desc = stm.TakeUntil (CurlReader.NameStop, true);
+      if (desc[0] is >= (byte)'0' and <= (byte)'9') // Outlier enum value
+         return ReconstructEnumObject (ulong.Parse (desc));
       if (mEnumMap.TryGetValue (desc, out var value))
          return ReconstructEnumObject (value);
       if (mType.HasAttribute<FlagsAttribute> ()) {
@@ -235,8 +237,6 @@ class AuType {
             bits |= mEnumMap[desc[r]];
          return ReconstructEnumObject (bits);
       }
-      if (desc[0] is >= (byte)'0' and <= (byte)'9') // Outlier enum value
-         return ReconstructEnumObject (ulong.Parse (desc));
       throw new NotImplementedException (mType.FullName!);
 
       // Reconstructs enum's backing-type compatible integral value object, given normalized value
@@ -335,7 +335,6 @@ class AuType {
       }
       if (mType.HasAttribute<FlagsAttribute> ()) {
          ulong bits = NormalizedEnumInteger (mType, value);
-         bool comma = false;
          int cBit = Type.GetTypeCode (mType) switch {
             TypeCode.Int32 or TypeCode.UInt32 => 32, // Default backing type
             TypeCode.Int16 or TypeCode.UInt16 => 16,
@@ -343,6 +342,14 @@ class AuType {
             TypeCode.Int64 or TypeCode.UInt64 => 64,
             _ => throw new BadCaseException (mType.FullName!)
          };
+         // Valid bit-field value: Composed of some combination of defined bits.
+         //    Everything else is considered an arbirary value, which is serialized as is.
+         bool gotValid = Enumerable.Range (0, cBit).Select (i => (ulong)1 << i).Where (b => (bits & b) != 0).All (k => mEnumDescs.ContainsKey (k));
+         if (!gotValid) {
+            stm.Write (bits);
+            return;
+         }
+         bool comma = false;
          for (int i = 0; i < cBit; i++) {
             if ((bits & ((ulong)1 << i)) != 0) {
                if (comma) stm.Write (',');

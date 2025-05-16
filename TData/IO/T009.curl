@@ -1,2 +1,2 @@
 ; T009
-(EFlagTest){ SingleBit:Two MultiBit:One,Two MultiBit2:Five Outlier:One,Two,Four }
+(EFlagTest){ SingleBit:Two MultiBit:One,Two MultiBit2:Nine Outlier:7 }

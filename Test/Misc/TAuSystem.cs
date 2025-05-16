@@ -328,12 +328,12 @@ class CType2 { public EJumpBuffer JBuf; }
 
 // .........................................................
 [Flags]
-enum Bits : uint { One = 0x1, Two = 0x2, Four = 0x4, Five = Four | One }
+enum Bits : uint { One = 0x1, Two = 0x2, Eight = 0x8, Nine = Eight | One }
 
 class EFlagTest {
    public Bits SingleBit = Bits.Two;
    public Bits MultiBit = Bits.One | Bits.Two;
-   public Bits MultiBit2 = Bits.Five;
+   public Bits MultiBit2 = Bits.Nine;
    public Bits Outlier = (Bits)0x7;
 }
 
