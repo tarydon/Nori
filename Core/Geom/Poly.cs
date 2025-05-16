@@ -230,9 +230,10 @@ public partial class Poly {
 
    /// <summary>Is this a rectangle?</summary>
    public bool IsRectangle () {
-      if (Count != 4) return false;
-      return mPts[0].DistTo (mPts[1]).EQ (mPts[2].DistTo (mPts[3]))
-          && mPts[1].DistTo (mPts[2]).EQ (mPts[0].DistTo (mPts[3]));
+      if (Count != 4 && !IsClosed) return false;
+      var (pt1, pt2, pt3, pt4) = (mPts[0], mPts[1], mPts[2], mPts[3]);
+      var (a1, a2, a3, a4) = (pt1.AngleTo (pt2), pt2.AngleTo (pt3), pt4.AngleTo (pt3), pt1.AngleTo (pt4));
+      return a1.EQ (0) && a2.EQ (HalfPI) && a3.EQ (0) && a4.EQ (HalfPI);
    }
 
    // Implementation -----------------------------------------------------------
