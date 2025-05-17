@@ -72,6 +72,40 @@ static class Program {
       SetXmlDoc.Run (n == 1);
    }
 
+   // Converts one or more `.lff` font definition files to `.lfont` format using LFF2LFontConverter.
+   // Expects at least one file path passed as a command-line argument.
+   // Writes output files to a fixed directory: N:\Wad\DXF
+   [ConsoleCommand]
+   static void LFFtoLFONT () {
+      string[] args = Environment.GetCommandLineArgs ();
+      if (args.Length < 3) {
+         Console.ForegroundColor = ConsoleColor.Yellow;
+         Console.WriteLine ("Usage: LFFtoLFONT <file1.lff> [file2.lff] ...");
+         Console.ResetColor ();
+         Environment.Exit (1);
+      }
+      // Process each input .lff file
+      for (int i = 2; i < args.Length; i++) {
+         string lffPath = args[i];
+         if (!File.Exists (lffPath)) {
+            Console.WriteLine ($"File not found: {lffPath}");
+            continue;
+         }
+         try {
+            string outPath = Path.Combine (@"N:\Wad\DXF", Path.GetFileNameWithoutExtension (lffPath) + ".lfont");
+            // Perform the actual conversion
+            LFF2LFontConverter.BuildLFont (lffPath, outPath);
+            Console.ForegroundColor = ConsoleColor.Green;
+            Console.WriteLine ("Conversion successful.\n");
+            Console.ResetColor ();
+         } catch (Exception ex) {
+            Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.WriteLine ($"Error converting {lffPath}: {ex.Message}\n");
+            Console.ResetColor ();
+         }
+      }
+   }
+
    // Placeholder for putting in some test code and running it
    [ConsoleCommand]
    static void TestHook () {

@@ -50,7 +50,7 @@ public class LineFont {
       List<Poly> polys = []; PolyBuilder builder = new ();
       for (int i = 0; i < nchars; i++) {
          polys.Clear (); w = Next ();
-         var (code, adv, npoly, _) = (w[0].ToInt (), w[1].ToDouble (), w[2].ToInt (), w[3][0]);
+         var (code, adv, npoly, _) = (w[0].ToInt (), w[1].ToDouble (), w[2].ToInt (),  string.IsNullOrEmpty(w[3]) ? '\0' : w[3][0]);
          for (int j = 0; j < npoly; j++) polys.Add (builder.Build (Line ()));
          glyphs[code] = new (adv * asc, [.. polys]);
       }
