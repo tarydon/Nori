@@ -42,7 +42,11 @@ public class LineFont {
       // As font resources are one of the internal data files, rigorous error handling
       // has been ommitted during the load in favor of simpler code.
       try { lines = Lib.ReadLines ($"wad:DXF/{lname}.lfont"); } catch { }
-      if (lines == null || lines.Length == 0) return Get ("simplex");
+      if (lines == null || lines.Length == 0) {
+         var lfont = Get ("simplex");
+         mFonts[lname] = lfont;
+         return lfont;
+      }
       int n = 0; string[] w = Next (3); name = w[1];
       Dictionary<int, Glyph> glyphs = [];
       w = Next ();

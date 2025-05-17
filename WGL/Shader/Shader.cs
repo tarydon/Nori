@@ -201,10 +201,19 @@ abstract class Shader<TVertex, TUniform> : Shader, IComparer<TUniform> where TVe
          return buffer.AddData (p, count * CBVertex);
    }
 
+   /// <summary>Variant that copies not only vertices but also indices</summary>
+   /// The vertices are copied from our local mData storage into the given RBuffer (this will
+   /// copy 'count * CBVertex' bytes of data. Indices are copied from our local mIndex array 
+   /// into the RBuffer's private index array (this will copy '4 * icount' bytes of data, 
+   /// since the indices are always integers). This returns a tuple: (dataOffset, indexOffset)
+   /// where dataOffset is the _byte_ offset within the RBuffer where the vertex data has been
+   /// copied. And indexOffset is the index (not byte-offset) into the RBuffer's index buffer
+   /// where the indices have been copied. Both of these are used later as arguments for 
+   /// a DrawElementsBaseVertex call. 
    public unsafe override (int, int) CopyVertices (RBuffer buffer, int offset, int count, int ioffset, int icount) {
       int dataOffset = CopyVertices (buffer, offset, count);
       var span = CollectionsMarshal.AsSpan (mIndex);
-      int indexOffset = buffer.AddIndices (span);
+      int indexOffset = buffer.AddIndices (span[ioffset..(ioffset + icount)]);
       return (dataOffset, indexOffset);
    }
 

@@ -23,6 +23,12 @@ class PointTests {
 
       // Vector2f tests
       Vec2F pfa = (Vec2F)pa2; pfa.Is ("<3,5>");
+
+      // Point2-Tuple conversion tests
+      Point2 b = new (40, 50);
+      var (x, y) = b;
+      b.EQ ((40, 50)).IsTrue ();
+      b.EQ ((x, y)).IsTrue ();
    }
 
    [Test (11, "Point2.DistTo, Point2.EQ")]
@@ -207,6 +213,12 @@ class PointTests {
       new Point3 (1, 1, 1).GetLieOn (new (0, 1, 1), new (10, 1, 1)).Is (0.1);
       new Point3 (1, 1, 1).GetLieOn (new (1, 0, 1), new (1, 20, 1)).Is (0.05);
       new Point3 (1, 1, 1).GetLieOn (new (1, 1, 0), new (1, 1, 40)).Is (0.025);
+
+      // Tuple conversion tests
+      Point3 a = new (10, 20, 30);
+      var (x, y, z) = a;
+      a.EQ ((10, 20, 30)).IsTrue ();
+      a.EQ ((x, y, z)).IsTrue ();
    }
 }
 
@@ -251,6 +263,11 @@ class VectorTests {
       new Vector2 (1, 2).WithY (10).Is ("<1,10>");
 
       ((Point2)new Vector2 (1, 2)).Is ("(1,2)");
+
+      // Deconstruct test
+      Vector2 vb = new (40, 50);
+      var (x, y) = vb;
+      vb.EQ (new (x, y)).IsTrue ();
    }
 
    [Test (23, "class Vector3")]
@@ -294,5 +311,9 @@ class VectorTests {
       new Vector3 (1, 2, 3).WithY (10).Is ("<1,10,3>");
       new Vector3 (1, 2, 3).WithZ (10).Is ("<1,2,10>");
       ((Point3)new Vector3 (1, 2, 3)).Is ("(1,2,3)");
+      
+      Vector3 va = new (10, 20, 30);
+      var (x, y, z) = va;
+      va.EQ (new (x, y, z)).IsTrue ();
    }
 }

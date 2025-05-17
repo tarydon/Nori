@@ -207,7 +207,7 @@ public partial class Poly {
    /// the logic. 
    public Poly Roll (int n) {
       if (IsCircle) return this;
-      if (!IsClosed) throw new InvalidOperationException ("Pline.Roll() works only with closed plines");
+      if (!IsClosed) throw new InvalidOperationException ("Poly.Roll() works only with closed plines");
       if (!HasArcs) return new ([.. mPts.Roll (n)], [], mFlags);
       var knots = mExtra.ToList ();
       while (knots.Count < mPts.Length) knots.Add (new (Point2.Nil, 0));
