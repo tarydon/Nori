@@ -90,24 +90,25 @@ public static class Lib {
 
    /// <summary>This should be called to initialize Nori.Core before use</summary>
    public static void Init () {
-      if (sInited) return;
-      sInited = true;
-      // List of candidate drives or folders where WAD might be found
-      List<string> wadRoots = [];
-      // Use DevRoot if exists
-      if (Directory.Exists ($"{DevRoot}/Wad/")) wadRoots.Add ($"{DevRoot}/Wad/");
-      // Detect other drives (A:, C:, N:, etc.) with a Wad folder at root
-      foreach (var drive in DriveInfo.GetDrives ()) {
-         string wadPath = Path.Combine (drive.Name, "Wad");
-         if (Directory.Exists (wadPath) && !wadRoots.Contains (wadPath)) wadRoots.Add (wadPath);
+      if (!sInited) {
+         sInited = true;
+         // List of candidate drives or folders where WAD might be found
+         List<string> wadRoots = [];
+         // Use DevRoot if exists
+         if (Directory.Exists ($"{DevRoot}/Wad/")) wadRoots.Add ($"{DevRoot}/Wad/");
+         // Detect other drives (A:, C:, N:, etc.) with a Wad folder at root
+         foreach (var drive in DriveInfo.GetDrives ()) {
+            string wadPath = Path.Combine (drive.Name, "Wad");
+            if (Directory.Exists (wadPath) && !wadRoots.Contains (wadPath)) wadRoots.Add (wadPath);
+         }
+
+         // Register all found Wad paths under the same virtual "wad:" prefix
+         foreach (var path in wadRoots) Register (new FileStmLocator ("wad:", path));
+
+         AddAssembly (Assembly.GetExecutingAssembly ());
+         AddNamespace ("Nori"); AddNamespace ("System"); AddNamespace ("System.Collections.Generic");
+         AddNamespace ("Pix");
       }
-
-      // Register all found Wad paths under the same virtual "wad:" prefix
-      foreach (var path in wadRoots) Register (new FileStmLocator ("wad:", path));
-
-      AddAssembly (Assembly.GetExecutingAssembly ());
-      AddNamespace ("Nori"); AddNamespace ("System"); AddNamespace ("System.Collections.Generic");
-      AddNamespace ("Pix");
    }
    static bool sInited;
 
