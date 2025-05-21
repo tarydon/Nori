@@ -234,7 +234,7 @@ static class SrcClean {
 }
 #endregion
 
-#region LFF2LFontConverter ------------------------------------------------------------------------
+#region class LFF2LFontConverter -------------------------------------------------------------------
 /// <summary>Converts LFF font files to the custom LFONT format</summary>
 // This utility parses character definitions from an LFF file,
 // scales and translates the glyph geometry, and outputs an LFONT-compliant
@@ -259,7 +259,7 @@ public class LFF2LFontConverter {
       var glyphLines = new List<string> (); // Temporary glyph drawing output
       FontChar? fc = null;
       double maxX = 0, minX = 0, maxY = 0, minY = 0,
-             letterSpacing = 0, wordSpacing = 0, lineSpacingFactor = 1;
+             letterSpacing = 0, wordSpacing = 0, lineSpacingFactor = 0;
 
       // Process each line in the LFF file
       foreach (var rawLine in lines) {
@@ -294,12 +294,11 @@ public class LFF2LFontConverter {
 
             case '\0':
                // End of glyph block
-               if (fc != null &&
-                   int.TryParse (codeHex, NumberStyles.HexNumber, null, out int charCode)) {
+               if (fc != null && int.TryParse (codeHex, NumberStyles.HexNumber, null, out int charCode)) {
                   fc.CharCode = charCode;
                   fc.Symbol = currentChar.ToString ();
                   fc.ReuseKey = charCache.TryGetValue (reuseKey.ToString ().ToLower (), out var reused) ? reused : null;
-                  fc.Width = Math.Abs (maxX - minX) + letterSpacing; // Calculate advance width
+                  fc.Width = Math.Abs (maxX - minX) + (2 * letterSpacing); // Calculate advance width
                   charCache[codeHex.ToString ()] = fc;
                }
                // Reset state for next glyph
@@ -340,7 +339,6 @@ public class LFF2LFontConverter {
          // Add reused polylines if any
          if (val.ReuseKey?.Points is { Count: > 0 } reusedPts)
             output.AddRange (reusedPts);
-
          foreach (var line in val.Points) {
             var parts = line.Split (';');
             if (parts.Length < 2) continue;
@@ -400,14 +398,14 @@ public class LFF2LFontConverter {
    }
 
    // Scales and converts a <see cref="Point2"/> to a comma-separated string
-   static string FormatPt (Point2 pt) => $"{pt.X},{pt.Y}";
+   static string FormatPt (Point2 pt) => $"{pt.X.R6 ()},{pt.Y.R6 ()}";
 
    // Returns a compact drawing command string based on the relative position of two points
    static string GetCommand (Point2 a, Point2 b) =>
      (a.X.EQ (b.X), a.Y.EQ (b.Y)) switch {
-        (true, _) => $" V{b.Y}",  // Vertical line: same X
-        (_, true) => $" H{b.X}",  // Horizontal line: same Y
-        _ => $" L{b.X},{b.Y}"     // General line
+        (true, _) => $" V{b.Y.R6 ()}",  // Vertical line: same X
+        (_, true) => $" H{b.X.R6 ()}",  // Horizontal line: same Y
+        _ => $" L{b.X.R6 ()},{b.Y.R6 ()}"     // General line
      };
 
    // Calculates the midpoint of the arc (not the circle center) defined by a start and end point with a given bulge
@@ -424,7 +422,7 @@ public class LFF2LFontConverter {
 
    // Generates a list of points approximating an arc from start to end using the specified bulge
    // returns a list of representing points along the arc.
-   static List<Point2> GetArcPoints (Point2 start, Point2 end, double bulge, int segments = 3) {
+   static List<Point2> GetArcPoints (Point2 start, Point2 end, double bulge) {
       Point2 arcCenter = GetArcCenter (start, end, bulge), // Midpoint of the arc (not the circle center)
              center = Get3PCircle (start, arcCenter, end); // Center of the circle defined by the 3 points
 
@@ -433,11 +431,13 @@ public class LFF2LFontConverter {
       Vector2 vStart = center - start, vEnd = center - end;
       // Calculate the angle swept by the arc and the angle to the start point
       double centralAng = vStart.AngleTo (vEnd), startAng = center.AngleTo (start);
+      int segments = Lib.GetArcSteps (center.DistTo (start), centralAng, 0.1); // Calculate number of segments based on distance
+
       List<Point2> pts = [];
       // Interpolate points along the arc using the specified number of segments
       for (int i = 0; i < segments; i++) {
-         double t = (double)i / segments;
-         double angle = startAng + (bulge > 0 ? +1 : -1) * t * centralAng;
+         double t = (double)i / segments,
+                angle = startAng + (bulge > 0 ? +1 : -1) * t * centralAng;
          // Generate a point at the given angle and radius, and round it
          pts.Add (center.Polar (center.DistTo (start), angle).R6 ());
       }

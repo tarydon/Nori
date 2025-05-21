@@ -36,6 +36,7 @@ static class Program {
          NEXTID       - Gets the next available test Id
          OPTIMIZE 0/1 - Turns optimization on / off for all Nori projects
          XMLDOC 0/1   - Turns XML documentation on / off for all Nori projects
+         LFFtoLFONT   - Converts one or more .lff font definition files to .lfont format
          """);
       Environment.Exit (0);
    }
