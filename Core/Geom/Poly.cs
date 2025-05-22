@@ -230,7 +230,7 @@ public partial class Poly {
 
    /// <summary>Checks for a rectangular Poly</summary>
    public bool IsRectangle () {
-      if (!(Count >= 4 && IsClosed)) return false;
+      if (Count < 4 || !IsClosed || HasArcs) return false;
       // Removes collinear middle points where two or more segments form one side
       var pts = GetCornerPts ([.. mPts]);
       if (pts.Count != 4) return false;
