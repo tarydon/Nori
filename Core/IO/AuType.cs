@@ -224,14 +224,52 @@ class AuType {
       if (mEnumMap == null) {
          mEnumMap = new ();
          var (names, values) = (Enum.GetNames (mType), Enum.GetValues (mType));
-         for (int i = 0; i < names.Length; i++) mEnumMap.Add (names[i], values.GetValue (i)!);
+         for (int i = 0; i < names.Length; i++) mEnumMap.Add (names[i], NormalizedEnumInteger (mType, values.GetValue (i)!));
       }
-      return mEnumMap[stm.TakeUntil (CurlReader.NameStop, true)];
+      var desc = stm.TakeUntil (CurlReader.NameStop, true);
+      if (desc[0] is >= (byte)'0' and <= (byte)'9') // Outlier enum value
+         return ReconstructEnumObject (ulong.Parse (desc));
+      if (mEnumMap.TryGetValue (desc, out var value))
+         return ReconstructEnumObject (value);
+      if (mType.HasAttribute<FlagsAttribute> ()) {
+         ulong bits = 0;
+         foreach (var r in desc.Split ((byte)','))
+            bits |= mEnumMap[desc[r]];
+         return ReconstructEnumObject (bits);
+      }
+      throw new NotImplementedException (mType.FullName!);
+
+      // Reconstructs enum's backing-type compatible integral value object, given normalized value
+      object ReconstructEnumObject (ulong v) {
+         return Type.GetTypeCode (mType) switch {
+            TypeCode.Int32 => Enum.ToObject (mType, (int)v), // Default backing type
+            TypeCode.UInt32 => Enum.ToObject (mType, (uint)v),
+            TypeCode.Int64 => Enum.ToObject (mType, (long)v),
+            TypeCode.UInt64 => Enum.ToObject (mType, (ulong)v),
+            TypeCode.Int16 => Enum.ToObject (mType, (short)v),
+            TypeCode.UInt16 => Enum.ToObject (mType, (ushort)v),
+            TypeCode.Byte => Enum.ToObject (mType, (byte)v),
+            TypeCode.SByte => Enum.ToObject (mType, (sbyte)v),
+            _ => throw new BadCaseException (mType.FullName!)
+         };
+      }
    }
-   SymTable<object>? mEnumMap;
-   // REFINE: Handle [Flags] enums
-   // REFINE: Handle the case where the enum value has been written out as an integer (because it
-   // did not match any of the tags)
+   SymTable<ulong>? mEnumMap;
+
+   /// <summary>Normalizes given enum's (integral) value to UInt64</summary>
+   static ulong NormalizedEnumInteger (Type enumType, object o) {
+      return Type.GetTypeCode (enumType) switch { // Note: Unboxing needs exact cast
+         TypeCode.Int32 => (ulong)(int)o, // Default backing type
+         TypeCode.UInt32 => (ulong)(uint)o,
+         TypeCode.Int64 => (ulong)(long)o,
+         TypeCode.UInt64 => (ulong)o,
+         TypeCode.Int16 => (ulong)(short)o,
+         TypeCode.UInt16 => (ulong)(ushort)o,
+         TypeCode.Byte => (ulong)(byte)o,
+         TypeCode.SByte => (ulong)(sbyte)o,
+         _ => throw new BadCaseException (enumType.FullName!)
+      };
+   }
 
    // Write methods ------------------------------------------------------------
    /// <summary>Writes an object of a type that is tagged as [AuPrimitive]</summary>
@@ -286,18 +324,48 @@ class AuType {
    /// we build a map that maps each enumeration value (integer) into a byte[] that is a
    /// UTF8 encoding of the string.
    public void WriteEnum (UTFWriter stm, object value) {
-      if (mEnumValues == null) {
-         mEnumValues = [];
-         var (names, values) = (Enum.GetNames (mType), Enum.GetValues (mType));
-         for (int i = 0; i < names.Length; i++)
-            mEnumValues.TryAdd ((int)values.GetValue (i)!, Encoding.UTF8.GetBytes (names[i]));
+      mEnumDescs = [];
+      var (names, values) = (Enum.GetNames (mType), Enum.GetValues (mType));
+      for (int i = 0; i < names.Length; i++)
+         mEnumDescs.TryAdd (NormalizedEnumInteger (mType, values.GetValue (i)!), Encoding.UTF8.GetBytes (names[i]));
+
+      if (mEnumDescs.TryGetValue (NormalizedEnumInteger (mType, value), out var desc)) {
+         stm.Write (desc);
+         return;
       }
-      stm.Write (mEnumValues[(int)value]);
+      if (mType.HasAttribute<FlagsAttribute> ()) {
+         ulong bits = NormalizedEnumInteger (mType, value);
+         int cBit = Type.GetTypeCode (mType) switch {
+            TypeCode.Int32 or TypeCode.UInt32 => 32, // Default backing type
+            TypeCode.Int16 or TypeCode.UInt16 => 16,
+            TypeCode.Byte or TypeCode.SByte => 8,
+            TypeCode.Int64 or TypeCode.UInt64 => 64,
+            _ => throw new BadCaseException (mType.FullName!)
+         };
+         // Valid bit-field value: Composed of some combination of defined bits.
+         //    Everything else is considered an arbirary value, which is serialized as is.
+         bool gotValid = Enumerable.Range (0, cBit).Select (i => (ulong)1 << i).Where (b => (bits & b) != 0).All (k => mEnumDescs.ContainsKey (k));
+         if (!gotValid) {
+            stm.Write (bits);
+            return;
+         }
+         bool comma = false;
+         for (int i = 0; i < cBit; i++) {
+            if ((bits & ((ulong)1 << i)) != 0) {
+               if (comma) stm.Write (',');
+               stm.Write (mEnumDescs[(ulong)1 << i]);
+               comma = true;
+            }
+         }
+         return;
+      }
+      if (!Enum.IsDefined (mType, value)) {
+         stm.Write (NormalizedEnumInteger (mType, value));
+         return;
+      }
+      throw new NotImplementedException ();
    }
-   Dictionary<int, byte[]>? mEnumValues;
-   // REFINE: Handle [Flags] enums
-   // REFINE: Handle the case where the Enum value is not one of the names (write it out as
-   // an integer, and update Read to handle that case)
+   Dictionary<ulong, byte[]>? mEnumDescs;
 
    // Implementation -----------------------------------------------------------
    // Classifies this type (computes the Kind property)
