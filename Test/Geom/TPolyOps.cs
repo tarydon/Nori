@@ -45,6 +45,14 @@ class PolyOpsTests {
       poly = rect.Chamfer (0, 10, 20); poly!.Is ("M200,0V100H0V10L20,0Z");
       poly = rect.Chamfer (0, 10, 10); poly!.Is ("M200,0V100H0V10L10,0Z");
    }
+
+   [Test (70, "Poly fillet tests")]
+   void Test4 () {
+      Poly rect = Poly.Rectangle (0, 0, 200, 100);
+      Poly? poly;
+      poly = rect.Fillet (0, 5); poly?.Is ("M200,0V100H0V5Q5,0,1Z");
+      poly = rect.Fillet (3, 10); poly?.Is ("M0,0H200V100H10Q0,90,1Z");
+   }
 }
 
 [Fixture (21, "Polygon boolean operations tests", "Geom")]
