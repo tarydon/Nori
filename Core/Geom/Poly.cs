@@ -230,27 +230,12 @@ public partial class Poly {
 
    /// <summary>Checks for a rectangular Poly</summary>
    public bool IsRectangle () {
-      if (Count < 4 || !IsClosed || HasArcs) return false;
-      // Removes collinear middle points where two or more segments form one side
-      var pts = GetCornerPts ([.. mPts]);
-      if (pts.Count != 4) return false;
-
+      if (!(Count == 4 && IsClosed) || HasArcs) return false;
       for (int i = 0; i < 4; i++)
-         if (!IsRightAngle (pts[(i + 3) % 4], pts[i], pts[(i + 1) % 4])) return false;
+         if (!IsRightAngle (mPts[(i + 3) % 4], mPts[i], mPts[(i + 1) % 4])) return false;
       return true;
 
-      // Helpers ---------------------------------------------------------------
-      static List<Point2> GetCornerPts (List<Point2> pts) {
-         var cornerPts = new List<Point2> (); int c = pts.Count;
-         for (int i = 0; i < c; i++) {
-            var pt = pts[i];
-            if (!AreCollinear (pts[(i + c - 1) % c], pt, pts[(i + 1) % c])) cornerPts.Add (pt);
-         }
-         return cornerPts;
-      }
-
-      static bool AreCollinear (Point2 p1, Point2 p2, Point2 p3) => (p1.X * (p2.Y - p3.Y) + p2.X * (p3.Y - p1.Y) + p3.X * (p1.Y - p2.Y)).EQ (0);
-
+      // Helper ---------------------------------------------------------------
       static bool IsRightAngle (Point2 p1, Point2 p2, Point2 p3) {
          var v1 = new Vector2 (p1.X - p2.X, p1.Y - p2.Y);
          var v2 = new Vector2 (p3.X - p2.X, p3.Y - p2.Y);
