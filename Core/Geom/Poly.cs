@@ -231,16 +231,8 @@ public partial class Poly {
    /// <summary>Checks for a rectangular Poly</summary>
    public bool IsRectangle () {
       if (!(Count == 4 && IsClosed) || HasArcs) return false;
-      for (int i = 0; i < 4; i++)
-         if (!IsRightAngle (mPts[(i + 3) % 4], mPts[i], mPts[(i + 1) % 4])) return false;
+      for (int i = 0; i < 4; i++) if (!GetTurnAngle (i).EQ (HalfPI)) return false;
       return true;
-
-      // Helper ---------------------------------------------------------------
-      static bool IsRightAngle (Point2 p1, Point2 p2, Point2 p3) {
-         var v1 = new Vector2 (p1.X - p2.X, p1.Y - p2.Y);
-         var v2 = new Vector2 (p3.X - p2.X, p3.Y - p2.Y);
-         return v1.Dot (v2).EQ (0);
-      }
    }
 
    // Implementation -----------------------------------------------------------
