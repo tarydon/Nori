@@ -241,7 +241,7 @@ public partial class Poly {
    }
 
    /// <summary>Creates and returns a new reversed Poly of 'this'</summary>
-   public Poly Reverse () {
+   public Poly Reversed () {
       if (!HasArcs) return new ([.. mPts.Reverse ()], [], mFlags);
       PolyBuilder builder = new ();
       const EFlags Mask = EFlags.CW | EFlags.CCW;
