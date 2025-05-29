@@ -46,7 +46,7 @@ class PolyOpsTests {
       poly = rect.Chamfer (0, 10, 10); poly!.Is ("M200,0V100H0V10L10,0Z");
    }
 
-   [Test (70, "Poly fillet tests")]
+   [Test (72, "Poly fillet tests")]
    void Test4 () {
       Poly rect = Poly.Rectangle (0, 0, 200, 100);
       Poly? poly;
