@@ -256,9 +256,8 @@ public class LFF2LFontConverter {
 
       var charCache = new Dictionary<string, FontChar> (); // Cache of parsed characters
       ReadOnlySpan<char> codeHex = "", currentChar = "", reuseKey = "";
-      var glyphLines = new List<string> (); // Temporary glyph drawing output
       FontChar? fc = null;
-      double maxX = 0, minX = 0, maxY = 0, minY = 0,
+      double maxY = 0, minY = 0,
              letterSpacing = 0, wordSpacing = 0, lineSpacingFactor = 0;
 
       // Process each line in the LFF file
@@ -298,79 +297,75 @@ public class LFF2LFontConverter {
                   fc.CharCode = charCode;
                   fc.Symbol = currentChar.ToString ();
                   fc.ReuseKey = charCache.TryGetValue (reuseKey.ToString ().ToLower (), out var reused) ? reused : null;
-                  fc.Width = Math.Abs (maxX - minX) + (2 * letterSpacing); // Calculate advance width
+                  for (var reuse = fc.ReuseKey; reuse != null; reuse = reuse.ReuseKey)
+                     if (reuse.Strokes.Count > 0) fc.Strokes.AddRange (reuse.Strokes);
                   charCache[codeHex.ToString ()] = fc;
                }
+
                // Reset state for next glyph
                fc = null;
-               maxX = minX = maxY = minY = 0;
-               glyphLines.Clear ();
+               maxY = double.MinValue; minY = double.MaxValue;
                reuseKey = "";
                break;
 
             default:
                // Glyph polyline definition
                fc ??= new FontChar ();
-               fc.Points.Add (line);
 
-               // Parse and compute bounds
-               var pts = line.Split (';').Select (ParsePoint).ToArray ();
-               maxX = Math.Max (maxX, pts.Max (p => p.X));
-               minX = Math.Min (minX, pts.Min (p => p.X));
-               maxY = Math.Max (maxY, pts.Max (p => p.Y));
-               minY = Math.Min (minY, pts.Min (p => p.Y));
+               var segs = line.Split (';');
+               if (segs.Length < 2) continue;
 
-               // Update global font metrics
-               if (maxY > mAscender) mAscender = maxY;
+               var pts = new List<Point2> { ParsePoint (segs[0]) };
+               var last = pts[0];
+
+               for (int i = 1; i < segs.Length; i++) {
+                  var s = segs[i];
+                  if (s.Contains ('A')) {  // Parse arc segment and generate intermediate points
+                     var (arcEnd, bulge) = ParseArc (s);
+                     pts.AddRange (bulge == 0 ? [arcEnd] : GetArcPoints (last, arcEnd, bulge));
+                     last = arcEnd;
+                  } else { // Parse a straight line segment
+                     var pt = ParsePoint (s);
+                     pts.Add (pt);
+                     last = pt;
+                  }
+               }
+
+               var trace = Poly.Lines (pts);
+               var box = trace.GetBound ();
+               fc.Strokes.Add (trace);
+               maxY = Math.Max (maxY, box.Y.Max);
+               minY = Math.Min (minY, box.Y.Min);
+               // Use 'M' (0x004D) height as ascender if tallest
+               if (codeHex.ToString ().ToLower ().EqIC ("004d") && maxY > mAscender) mAscender = maxY;
                if (minY < mDescender) mDescender = minY;
                break;
          }
       }
 
       // Add a default space glyph (code 32)
-      charCache["0020"] = new FontChar { Symbol = " ", CharCode = 32, Width = wordSpacing, Points = [] };
+      charCache["0020"] = new FontChar { Symbol = " ", CharCode = 32 };
       // Write font header (character count, ascender, descender, vAdvance)
-      output.Add ($"{charCache.Count},{mAscender:R},{mDescender:R},{(mAscender - mDescender) * lineSpacingFactor:R}");
+      output.Add ($"{charCache.Count},{mAscender.R6 ()},{mDescender.R6 ()},{(mAscender - mDescender).R6 () * lineSpacingFactor:R}");
+
       // Build LFONT glyph output
       foreach (var val in charCache.Values) {
-         double hAdvance = (val.Width / mAscender).R6 ();
-         // Character metadata: code, advance width, polyline count, symbol
-         output.Add ($"{val.CharCode},{hAdvance},{val.Count},{val.Symbol}");
-         // Add reused polylines if any
-         if (val.ReuseKey?.Points is { Count: > 0 } reusedPts)
-            output.AddRange (reusedPts);
-         foreach (var line in val.Points) {
-            var parts = line.Split (';');
-            if (parts.Length < 2) continue;
-            var p0 = ParsePoint (parts[0]);
-            var seg = new StringBuilder ().Append (" M").Append (FormatPt (ScalePt (p0, hAdvance, lineSpacingFactor)));
-            var prev = p0;
+         // Use wordSpacing as fallback width if glyph width is zero
+         double w = val.Width == 0 ? wordSpacing : val.Width;
+         // Normalize horizontal advance based on ascender height
+         double hAdvance = ((w + letterSpacing) / mAscender).R6 ();
+         output.Add ($"{val.CharCode},{hAdvance},{val.Strokes.Count},{val.Symbol}");
 
-            // Process each point or arc in the polyline
-            for (int j = 1; j < parts.Length; j++) {
-               var pt = parts[j];
-               if (pt.Contains ('A')) {
-                  var (arcEnd, bulge) = ParseArc (pt);
-                  if (bulge == 0) {
-                     // Treat zero-bulge arc as line
-                     seg.Append (" L").Append (FormatPt (ScalePt (arcEnd, hAdvance, lineSpacingFactor)));
-                     prev = arcEnd;
-                  } else {
-                     foreach (var arcPoint in GetArcPoints (prev, arcEnd, bulge))
-                        seg.Append (" L").Append (FormatPt (ScalePt (arcPoint, hAdvance, lineSpacingFactor)));
-                     prev = arcEnd;
-                  }
-               } else {
-                  var currentPt = ParsePoint (pt);
-                  seg.Append (GetCommand (ScalePt (prev, hAdvance, lineSpacingFactor), ScalePt (currentPt, hAdvance, lineSpacingFactor)));
-                  prev = currentPt;
-               }
-            }
-            glyphLines.Add (seg.ToString ());
-            output.Add (seg.ToString ());
+         // Output each stroke (polyline) as a series of commands
+         foreach (var poly in val.Strokes) {
+            var pts = poly.Pts;
+            if (pts.Length < 2) continue;
+            var seg = new StringBuilder (" M" + $"{pts[0].X.R6 ()},{pts[0].Y.R6 ()}");
+            for (int j = 1; j < pts.Length; j++)
+               seg.Append (GetCommand (pts[j - 1].R6 (), pts[j].R6 ()));
+            var segStr = seg.ToString ();
+            output.Add (segStr);
          }
-         val.Points = [.. glyphLines];
-         glyphLines.Clear ();
       }
 
       // Write final LFONT file
@@ -385,9 +380,6 @@ public class LFF2LFontConverter {
       return new Point2 (double.Parse (parts[0]), double.Parse (parts[1]));
    }
 
-   // Scales a point by separate X and Y scale factors
-   static Point2 ScalePt (Point2 pt, double scaleX, double scaleY) => new (pt.X * scaleX, pt.Y * scaleY);
-
    // Parses a point with an optional bulge value from a string.
    static (Point2 Point, double Bulge) ParseArc (string s) {
       var parts = s.Split (',');
@@ -397,15 +389,13 @@ public class LFF2LFontConverter {
           : (ParsePoint (s), 0);
    }
 
-   // Scales and converts a <see cref="Point2"/> to a comma-separated string
-   static string FormatPt (Point2 pt) => $"{pt.X.R6 ()},{pt.Y.R6 ()}";
 
    // Returns a compact drawing command string based on the relative position of two points
    static string GetCommand (Point2 a, Point2 b) =>
      (a.X.EQ (b.X), a.Y.EQ (b.Y)) switch {
-        (true, _) => $" V{b.Y.R6 ()}",  // Vertical line: same X
-        (_, true) => $" H{b.X.R6 ()}",  // Horizontal line: same Y
-        _ => $" L{b.X.R6 ()},{b.Y.R6 ()}"     // General line
+        (true, _) => $" V{b.Y}",  // Vertical line: same X
+        (_, true) => $" H{b.X}",  // Horizontal line: same Y
+        _ => $" L{b.X},{b.Y}"     // General line
      };
 
    // Calculates the midpoint of the arc (not the circle center) defined by a start and end point with a given bulge
@@ -431,7 +421,7 @@ public class LFF2LFontConverter {
       Vector2 vStart = center - start, vEnd = center - end;
       // Calculate the angle swept by the arc and the angle to the start point
       double centralAng = vStart.AngleTo (vEnd), startAng = center.AngleTo (start);
-      int segments = Lib.GetArcSteps (center.DistTo (start), centralAng, 0.1); // Calculate number of segments based on distance
+      int segments = Lib.GetArcSteps (center.DistTo (start), centralAng, Math.Clamp (center.DistTo (start) * 0.05, 0.01, 0.1)); // Calculate number of segments based on distance
 
       List<Point2> pts = [];
       // Interpolate points along the arc using the specified number of segments
@@ -441,7 +431,6 @@ public class LFF2LFontConverter {
          // Generate a point at the given angle and radius, and round it
          pts.Add (center.Polar (center.DistTo (start), angle).R6 ());
       }
-      pts.Add (end);
       return pts;
    }
 
@@ -454,28 +443,26 @@ public class LFF2LFontConverter {
       Vector2 perp1 = (b - a).Perpendicular (), perp2 = (c - b).Perpendicular ();
 
       // The center is the intersection of these two perpendicular bisectors
-      return Nori.Geo.LineXLine (mid1, mid1 + perp1, mid2, mid2 + perp2);
+      return Geo.LineXLine (mid1, mid1 + perp1, mid2, mid2 + perp2);
    }
 
-   /// <summary>Represents a single character definition in a font, including geometry, code, and optional reuse data</summary>
+   // Nested types -------------------------------------------------------------
+   // Represents a single character definition in a font, including geometry, code, and optional reuse data
    class FontChar {
-      /// <summary>Symbol of the character (e.g., "A", "-", " ") that this glyph represents</summary>
+      // Symbol of the character (e.g., "A", "-", " ") that this glyph represents
       public string Symbol { get; set; } = "";
 
-      /// <summary>Character code for this glyph</summary>
+      // Unicode character code (e.g., 65 for 'A')
       public int CharCode { get; set; }
 
-      /// <summary>An optional reference to another FontChar whose points should be reused</summary>
+      // An optional reference to another FontChar whose points should be reused
       public FontChar? ReuseKey { get; set; }
 
-      /// <summary>List of drawing instructions (typically polylines or arcs) defining the shape of this glyph</summary>
-      public List<string> Points { get; set; } = [];
+      // Strokes (lines/arcs) defining this character
+      public List<Poly> Strokes { get; set; } = [];
 
-      /// <summary>Total number of polylines used to draw this character, including those from a reused character if present</summary>
-      public int Count => Points.Count + (ReuseKey?.Count ?? 0);
-
-      /// <summary>Width of the glyph</summary>
-      public double Width { get; set; }
+      // <summary>Width of the glyph
+      public double Width => Strokes.Count == 0 ? 0 : Strokes.Max (a => a.GetBound ().X.Max);
    }
 }
 #endregion
