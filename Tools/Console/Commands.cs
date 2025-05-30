@@ -3,7 +3,6 @@
 // ║║║║╬║╔╣║ Implements several commands (LineCount, SrcClean, ComputeCoverage, GetNextId ...)
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 using System.Diagnostics;
-using System.Globalization;
 using System.Reflection;
 using System.Text;
 namespace Nori.Con;
@@ -236,66 +235,61 @@ static class SrcClean {
 
 #region class LFF2LFontConverter -------------------------------------------------------------------
 /// <summary>Converts LFF font files to the custom LFONT format</summary>
-// This utility parses character definitions from an LFF file,
-// scales and translates the glyph geometry, and outputs an LFONT-compliant
-// file with character codes, names, and polyline path data.
+// This utility parses character definitions from an LFF file
+// and outputs an LFONT-compliant file containing character codes,
+// names, and raw polyline and arc path data.
 public class LFF2LFontConverter {
    /// <summary>Builds an LFONT file from an LFF font definition file</summary>
    /// This method reads an LFF file containing glyph definitions (points, arcs, reuse info),
    /// processes each character, scales its geometry, and writes a structured LFONT output.
-   /// <param name="lffFilePath">Path to the source LFF font file.</param>
-   /// <param name="lfontFilePath">Path to the destination LFONT file to be created.</param>
-   public static void BuildLFont (string lffFilePath, string lfontFilePath) {
+   /// <param name="lffFile">Path to the source LFF font file.</param>
+   /// <param name="lFontFile">Path to the destination LFONT file to be created.</param>
+   public static void BuildLFont (string lffFile, string lFontFile) {
       // Read all lines from the LFF file
-      var lines = File.ReadAllLines (lffFilePath);
+      var lines = File.ReadAllLines (lffFile);
 
       // Initialize LFONT header with name and version (1)
-      var output = new List<string> {
-        $"LFONT,{Path.GetFileNameWithoutExtension(lffFilePath)},1",
-    };
+      List<string> output = [$"LFONT,{Path.GetFileNameWithoutExtension (lffFile)},1"];
 
-      var charCache = new Dictionary<string, FontChar> (); // Cache of parsed characters
-      ReadOnlySpan<char> codeHex = "", currentChar = "", reuseKey = "";
+      Dictionary<string, FontChar> charCache = []; // Cache of parsed characters
+      ReadOnlySpan<char> codeHex = "", reuseKey = "";
       FontChar? fc = null;
-      double maxY = 0, minY = 0,
-             letterSpacing = 0, wordSpacing = 0, lineSpacingFactor = 0;
+      double maxY = 0, minY = 0, letterSpacing = 0, wordSpacing = 0, lineSpacingFactor = 0;
+      const string LetterSpacingTkn = "# LetterSpacing:", WordSpacingTkn = "# WordSpacing:", LineSpacingFactorTkn = "# LineSpacingFactor:";
 
-      // Process each line in the LFF file
+      // Process each line in the LFF file ...
       foreach (var rawLine in lines) {
          var line = rawLine.Trim ();
          switch (line.FirstOrDefault ()) {
             case '#': // Comment line
                switch (line) {
-                  case var s when s.StartsWith ("# LetterSpacing:"):
-                     letterSpacing = double.Parse (s["# LetterSpacing:".Length..].Trim ());
+                  case string s when s.StartsWith (LetterSpacingTkn):
+                     letterSpacing = double.Parse (s[LetterSpacingTkn.Length..].Trim ());
                      break;
-
-                  case var s when s.StartsWith ("# WordSpacing:"):
-                     wordSpacing = double.Parse (s["# WordSpacing:".Length..].Trim ());
+                  case string s when s.StartsWith (WordSpacingTkn):
+                     wordSpacing = double.Parse (s[WordSpacingTkn.Length..].Trim ());
                      break;
-
-                  case var s when s.StartsWith ("# LineSpacingFactor:"):
-                     lineSpacingFactor = double.Parse (s["# LineSpacingFactor:".Length..].Trim ());
+                  case string s when s.StartsWith (LineSpacingFactorTkn):
+                     lineSpacingFactor = double.Parse (s[LineSpacingFactorTkn.Length..].Trim ());
                      break;
                }
                break;
 
             case '[':
                // Start of new glyph
-               codeHex = line.AsSpan ()[1..5];   // Hex code (e.g., 0041 for 'A')
-               currentChar = line[6..].Trim ();  // Symbol (e.g., 'A')
+               codeHex = line.AsSpan ()[1..5];  // Hex code (e.g., 0041 for 'A')
+               fc = new FontChar (codeHex.ToString ());
                break;
 
             case 'C':
-               // Reuse key declaration
+               // Extract reuse key from the line, skipping the leading 'C' character.
+               // Example: If the line is "C0041", the reuse key is "0041"
                reuseKey = line.AsSpan ()[1..];
                break;
 
             case '\0':
                // End of glyph block
-               if (fc != null && int.TryParse (codeHex, NumberStyles.HexNumber, null, out int charCode)) {
-                  fc.CharCode = charCode;
-                  fc.Symbol = currentChar.ToString ();
+               if (fc != null && fc.Strokes.Count != 0) {
                   fc.ReuseKey = charCache.TryGetValue (reuseKey.ToString ().ToLower (), out var reused) ? reused : null;
                   for (var reuse = fc.ReuseKey; reuse != null; reuse = reuse.ReuseKey)
                      if (reuse.Strokes.Count > 0) fc.Strokes.AddRange (reuse.Strokes);
@@ -310,24 +304,24 @@ public class LFF2LFontConverter {
 
             default:
                // Glyph polyline definition
-               fc ??= new FontChar ();
+               if (fc is null) break;
 
                var segs = line.Split (';');
                if (segs.Length < 2) continue;
 
-               var pts = new List<Point2> { ParsePoint (segs[0]) };
-               var last = pts[0];
+               List<Point2> pts = [ExtractPoint (segs[0])];
+               var prev = pts[0];
 
                for (int i = 1; i < segs.Length; i++) {
                   var s = segs[i];
                   if (s.Contains ('A')) {  // Parse arc segment and generate intermediate points
-                     var (arcEnd, bulge) = ParseArc (s);
-                     pts.AddRange (bulge == 0 ? [arcEnd] : GetArcPoints (last, arcEnd, bulge));
-                     last = arcEnd;
+                     var (arcEnd, bulge) = ExtractArc (s);
+                     pts.AddRange (GetArcPoints (prev, arcEnd, bulge));
+                     prev = arcEnd;
                   } else { // Parse a straight line segment
-                     var pt = ParsePoint (s);
+                     var pt = ExtractPoint (s);
                      pts.Add (pt);
-                     last = pt;
+                     prev = pt;
                   }
                }
 
@@ -337,21 +331,21 @@ public class LFF2LFontConverter {
                maxY = Math.Max (maxY, box.Y.Max);
                minY = Math.Min (minY, box.Y.Min);
                // Use 'M' (0x004D) height as ascender if tallest
-               if (codeHex.ToString ().ToLower ().EqIC ("004d") && maxY > mAscender) mAscender = maxY;
+               if (codeHex.ToString ().EqIC ("004d") && maxY > mAscender) mAscender = maxY;
                if (minY < mDescender) mDescender = minY;
                break;
          }
       }
 
       // Add a default space glyph (code 32)
-      charCache["0020"] = new FontChar { Symbol = " ", CharCode = 32 };
+      charCache.Add ("0020", new FontChar ("0020"));
       // Write font header (character count, ascender, descender, vAdvance)
       output.Add ($"{charCache.Count},{mAscender.R6 ()},{mDescender.R6 ()},{(mAscender - mDescender).R6 () * lineSpacingFactor:R}");
 
       // Build LFONT glyph output
       foreach (var val in charCache.Values) {
          // Use wordSpacing as fallback width if glyph width is zero
-         double w = val.Width == 0 ? wordSpacing : val.Width;
+         double w = val.CharCode == 32 ? wordSpacing : val.Width;
          // Normalize horizontal advance based on ascender height
          double hAdvance = ((w + letterSpacing) / mAscender).R6 ();
          output.Add ($"{val.CharCode},{hAdvance},{val.Strokes.Count},{val.Symbol}");
@@ -360,35 +354,28 @@ public class LFF2LFontConverter {
          foreach (var poly in val.Strokes) {
             var pts = poly.Pts;
             if (pts.Length < 2) continue;
-            var seg = new StringBuilder (" M" + $"{pts[0].X.R6 ()},{pts[0].Y.R6 ()}");
+            var seg = new StringBuilder (" M" + $"{pts[0].X},{pts[0].Y}");
             for (int j = 1; j < pts.Length; j++)
-               seg.Append (GetCommand (pts[j - 1].R6 (), pts[j].R6 ()));
-            var segStr = seg.ToString ();
-            output.Add (segStr);
+               seg.Append (GetCommand (pts[j - 1], pts[j]));
+            output.Add (seg.ToString ());
          }
       }
 
       // Write final LFONT file
-      File.WriteAllLines (lfontFilePath, output);
+      File.WriteAllLines (lFontFile, output);
    }
-   static double mAscender,   // Highest Y value in all characters (top of font)
+   static double mAscender,   // Highest Y value of 'M' character (top of font)
                  mDescender;  // Lowest Y value in all characters (bottom of font)
 
-   // Parses a point from a string formatted as "X,Y".
-   static Point2 ParsePoint (string s) {
+   // Parses a 2D point from a string in the format "X,Y" with coordinate rounding.
+   static Point2 ExtractPoint (string s) {
       var parts = s.Split (',');
-      return new Point2 (double.Parse (parts[0]), double.Parse (parts[1]));
+      return new Point2 (double.Parse (parts[0]).R6 (), double.Parse (parts[1]).R6 ());
    }
 
-   // Parses a point with an optional bulge value from a string.
-   static (Point2 Point, double Bulge) ParseArc (string s) {
-      var parts = s.Split (',');
-      // If third part exists and starts with 'A', parse bulge from it; else bulge = 0
-      return (parts.Length == 3 && parts[2].StartsWith ('A'))
-          ? (ParsePoint (s), double.Parse (parts[2][1..]))
-          : (ParsePoint (s), 0);
-   }
-
+   // Parses a 2D point and a bulge value from a string in the format "X,Y,A{bulge}".
+   // Assumes the string always has three parts, and the third part starts with 'A' followed by the bulge value.
+   static (Point2 Point, double Bulge) ExtractArc (string s) => (ExtractPoint (s), double.Parse (s.Split (',')[2][1..]));
 
    // Returns a compact drawing command string based on the relative position of two points
    static string GetCommand (Point2 a, Point2 b) =>
@@ -398,8 +385,9 @@ public class LFF2LFontConverter {
         _ => $" L{b.X},{b.Y}"     // General line
      };
 
-   // Calculates the midpoint of the arc (not the circle center) defined by a start and end point with a given bulge
-   // Midpoint of the arc’s curve, offset perpendicular to the chord
+   // Calculates a point on the arc's circumference — the midpoint of the curved segment 
+   // defined by a start and end point with a given bulge value. This point lies along the arc,
+   // offset perpendicularly from the chord connecting the endpoints.
    static Point2 GetArcCenter (Point2 start, Point2 end, double bulge) {
       Vector2 chord = end - start;
       double cl = chord.Length;
@@ -421,7 +409,7 @@ public class LFF2LFontConverter {
       Vector2 vStart = center - start, vEnd = center - end;
       // Calculate the angle swept by the arc and the angle to the start point
       double centralAng = vStart.AngleTo (vEnd), startAng = center.AngleTo (start);
-      int segments = Lib.GetArcSteps (center.DistTo (start), centralAng, Math.Clamp (center.DistTo (start) * 0.05, 0.01, 0.1)); // Calculate number of segments based on distance
+      int segments = Lib.GetArcSteps (center.DistTo (start), centralAng, 0.1); // Calculate number of segments based on distance
 
       List<Point2> pts = [];
       // Interpolate points along the arc using the specified number of segments
@@ -431,6 +419,7 @@ public class LFF2LFontConverter {
          // Generate a point at the given angle and radius, and round it
          pts.Add (center.Polar (center.DistTo (start), angle).R6 ());
       }
+      pts.Add (end);
       return pts;
    }
 
@@ -449,11 +438,19 @@ public class LFF2LFontConverter {
    // Nested types -------------------------------------------------------------
    // Represents a single character definition in a font, including geometry, code, and optional reuse data
    class FontChar {
-      // Symbol of the character (e.g., "A", "-", " ") that this glyph represents
-      public string Symbol { get; set; } = "";
+      /// <summary>Constructs a FontChar from a hex code string (e.g., "0041" for 'A')</summary>
+      public FontChar (string hexCode) {
+         if (!int.TryParse (hexCode, System.Globalization.NumberStyles.HexNumber, null, out int code))
+            throw new ArgumentException ($"Invalid hex character code: {hexCode}", nameof (hexCode));
+         CharCode = code;
+         Symbol = char.ConvertFromUtf32 (CharCode);
+      }
+
+      // Character representation (e.g., "A", "-", " "). Falls back to CharCode if unset.
+      public readonly string Symbol;
 
       // Unicode character code (e.g., 65 for 'A')
-      public int CharCode { get; set; }
+      public readonly int CharCode;
 
       // An optional reference to another FontChar whose points should be reused
       public FontChar? ReuseKey { get; set; }
