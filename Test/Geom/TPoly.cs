@@ -173,4 +173,14 @@ class PolyTests {
       var p4 = Poly.Parse ("M0,0H500V200Q400,300,-1H100Q0,200,1Z");
       p4.Reversed ().Is ("M0,0V200Q100,300,-1H400Q500,200,1V0Z");
    }
+
+   [Test (28, "Poly.GetWinding tests")]
+   void Test6 () {
+      var poly = Poly.Parse ("M0,0 L10,0 10,10 0,10 Z");
+      Assert.IsTrue (poly.IsCCW);
+      var poly1 = Poly.Parse ("M10,0 L0,0 0,10 10,10Z");
+      Assert.IsTrue (poly1.GetWinding () is Poly.EWinding.CW);
+      var poly2 = Poly.Parse ("M0,0 L10,10");
+      Assert.IsTrue (poly2.GetWinding () is Poly.EWinding.Indeterminate);
+   }
 }
