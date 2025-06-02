@@ -153,9 +153,7 @@ public partial class Poly {
    public bool IsLine => Count == 1 && !HasArcs;
    /// <summary>Is this an 'open' Poly?</summary>
    public bool IsOpen => (mFlags & EFlags.Closed) == 0;
-   /// <summary>Is the winding of this poly CCW?</summary>
-   public bool IsCCW => GetWinding () is EWinding.CCW;
- 
+
    /// <summary>The set of nodes of this Poly</summary>
    public ImmutableArray<Point2> Pts => mPts;
    readonly ImmutableArray<Point2> mPts;

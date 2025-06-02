@@ -177,7 +177,7 @@ class PolyTests {
    [Test (28, "Poly.GetWinding tests")]
    void Test6 () {
       var poly = Poly.Parse ("M0,0 L10,0 10,10 0,10 Z");
-      Assert.IsTrue (poly.IsCCW);
+      Assert.IsTrue (poly.GetWinding () is Poly.EWinding.CCW);
       var poly1 = Poly.Parse ("M10,0 L0,0 0,10 10,10Z");
       Assert.IsTrue (poly1.GetWinding () is Poly.EWinding.CW);
       var poly2 = Poly.Parse ("M0,0 L10,10");
