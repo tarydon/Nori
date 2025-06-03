@@ -194,7 +194,7 @@ public static class BooleanOps {
    public static List<Poly> Subtract (this ReadOnlySpan<Poly> positive, ReadOnlySpan<Poly> negative) {
       List<Poly> input = [.. positive];
       for (int i = 0; i < negative.Length; i++) 
-         input.Add (negative [i].Reverse ());
+         input.Add (negative [i].Reversed ());
       return Union (input.AsSpan ());
    }
 

@@ -179,7 +179,10 @@ static class SetXmlDoc {
 static class SrcClean {
    public static void Run () {
       var (prevDir, nCleaned) = ("", 0);
-      foreach (var file in Directory.EnumerateFiles ($"{Lib.DevRoot}/", "*.cs", SearchOption.AllDirectories)) {
+      var args = Environment.GetCommandLineArgs ();
+      string root = args.Length >= 3 ? Path.GetFullPath (args[2]) : Lib.DevRoot;
+      bool addHeader = args.Length < 3;
+      foreach (var file in Directory.EnumerateFiles ($"{root}/", "*.cs", SearchOption.AllDirectories)) {
          if (ExcludeFile (file)) continue;
          var dir = Path.GetDirectoryName (file)!;
          if (dir != prevDir) {
@@ -188,7 +191,7 @@ static class SrcClean {
          }
          string name = $"  {Path.GetFileNameWithoutExtension (file)}";
          if (Console.CursorLeft + name.Length >= Console.WindowWidth) Console.WriteLine ();
-         bool cleaned = Clean (file);
+         bool cleaned = Clean (file, addHeader);
          if (cleaned) nCleaned++;
          Lib.Print (name, cleaned ? ConsoleColor.Yellow : ConsoleColor.DarkGray);
       }
@@ -206,7 +209,7 @@ static class SrcClean {
       return false;
    }
 
-   static bool Clean (string file) {
+   static bool Clean (string file, bool addHeader) {
       // First, clean up 3-line summary descriptions into single lines
       var (lines, cleaned) = (File.ReadAllLines (file).ToList (), false);
       for (int i = lines.Count - 3; i >= 0; i--) {
@@ -219,7 +222,7 @@ static class SrcClean {
       }
 
       // Next, add the Nori banner for files that don't have them
-      if (lines.Count > 1 && !lines[0].Trim ().StartsWith ("//")) {
+      if (addHeader && lines.Count > 1 && !lines[0].Trim ().StartsWith ("//")) {
          string name = Path.GetFileName (file);
          lines.Insert (0,  "// ────── ╔╗");
          lines.Insert (1, $"// ╔═╦╦═╦╦╬╣ {name}");

@@ -184,8 +184,64 @@ public partial class Poly {
       return pb.Build ();
    }
 
+   /// <summary>Add a fillet at a given node (returns null if not possible)</summary>
+   /// If the node number passed in the start or end node of an open pline, this 
+   /// return null. Otherwise, this is an 'interior' node, and there are two segments
+   /// touching at that node (a lead-in segment, and a lead-out segment). If either
+   /// of those segments are curved, or too short to take a fillet, this returns null. 
+   /// <param name="radius">Fillet radius</param>
+   public Poly? Fillet (int node, double radius) {
+      if (radius.IsZero ()) return null;
+      // Handle the special case where we are filleting at node 0 of a 
+      // closed Poly (by rolling the poly and making a fillet at N-1)
+      if (IsClosed && (node == 0 | node == Count)) {
+         var r = Roll (1);
+         return r.IsCircle ? null : r.Fillet (Count - 1, radius); // No Fillet for circles
+      }
+
+      // If this is not an interior node, or if one of the two segments attached
+      // to the node is either an arc or too short, we return null
+      if (node <= 0 | node >= Count) return null;
+      Seg s1 = this[node - 1], s2 = this[node];
+      if (s1.IsArc | s2.IsArc | s1.Length <= radius | s2.Length <= radius) return null;
+
+      // Use a PolyBuilder to build the fillet poly. The target node where
+      // the fillet is to be added is 'node'
+      PolyBuilder pb = new ();
+      for (int i = 0; i < Count; i++) {
+         Point2 pt = mPts[i];
+         // If we are going to add the target node, shift it forward by radius
+         // along the lead-out segment slope (this is the end of the fillet). See the code
+         // below that would have already added the beginning of the fillet (the
+         // i == node - 1 check)
+         if (i == node) pt = pt.Polar (radius, s2.Slope);
+
+         // This code adds all the other nodes (they could be the starts of line or arc
+         // segments, and we handle both by looking through the mExtra array). Note that
+         // we directly read the mExtra array rather than use Seg objects for better
+         // performance
+         if (HasArcs && i < mExtra.Length) {
+            var extra = mExtra[i];
+            if ((extra.Flags & EFlags.Arc) != 0) pb.Arc (pt, extra.Center, extra.Flags);
+            else pb.Line (pt);
+         } else
+            pb.Line (pt);
+
+         // If we are heading towards the target node, add an new node for the beginning
+         // of the fillet, by moving backwards by radius along the lead-in segment slope
+         if (i == node - 1) {
+            var start = s2.A.Polar (-radius, s1.Slope); var pt1 = start + (s2.A - start).Perpendicular ();
+            var end = s2.A.Polar (radius, s2.Slope); var pt2 = end + (end - s2.A).Perpendicular ();
+            pb.Arc (start, Geo.LineXLine (start, pt1, end, pt2), EFlags.CCW);
+         }
+      }
+      // Done, close the poly if needed and return it
+      if (IsClosed) pb.Close ();
+      return pb.Build ();
+   }
+
    /// <summary>Creates and returns a new reversed Poly of 'this'</summary>
-   public Poly Reverse () {
+   public Poly Reversed () {
       if (!HasArcs) return new ([.. mPts.Reverse ()], [], mFlags);
       PolyBuilder builder = new ();
       const EFlags Mask = EFlags.CW | EFlags.CCW;

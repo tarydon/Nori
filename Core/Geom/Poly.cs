@@ -228,6 +228,13 @@ public partial class Poly {
       return Lib.NormalizeAngle (outAngle - inAngle);
    }
 
+   /// <summary>Checks for a rectangular Poly</summary>
+   public bool IsRectangle () {
+      if (!(Count == 4 && IsClosed) || HasArcs) return false;
+      for (int i = 0; i < 4; i++) if (!GetTurnAngle (i).EQ (HalfPI)) return false;
+      return true;
+   }
+
    // Implementation -----------------------------------------------------------
    static Poly Read (UTFReader ur) => new PolyBuilder ().Build (ur, true);
 
