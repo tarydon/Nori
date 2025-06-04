@@ -231,6 +231,7 @@ public partial class Poly {
    /// <summary>Returns the winding of the Poly</summary>
    public EWinding GetWinding () {
       if (IsOpen) return EWinding.Indeterminate;
+      if (IsCircle) return this[0].IsCCW ? EWinding.CCW : EWinding.CW;
       int node = mPts.MinIndexBy (pt => pt.Y);
       var pp = this[(node - 1 + Count) % Count].GetPointAt (0.9);
       var pn = this[(node + 1) % Count].GetPointAt (0.1);
