@@ -96,9 +96,7 @@ public static class Extensions {
    /// <summary>Checks if a given float is zero to within 1e-5</summary>
    public static bool IsZero (this float a) => Abs (a) < 1e-5;
 
-   /// <summary>
-   /// Returns the index of the element that returns the highest value
-   /// </summary>
+   /// <summary>Returns the index of the element that returns the highest value</summary>
    public static int MaxIndexBy<T> (this IEnumerable<T> seq, Func<T, double> func)
       => seq.MinIndexBy (a => -func (a));
 

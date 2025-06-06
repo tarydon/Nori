@@ -68,9 +68,7 @@ public readonly struct Point2 : IEQuable<Point2> {
 
    /// <summary>Compares two points are equal to within EPSILON</summary>
    public bool EQ (Point2 b) => X.EQ (b.X) && Y.EQ (b.Y);
-   /// <summary>
-   /// Compares two points are equal to within the given threshold
-   /// </summary>
+   /// <summary>Compares two points are equal to within the given threshold</summary>
    public bool EQ (Point2 b, double threshold) => X.EQ (b.X, threshold) && Y.EQ (b.Y, threshold);
 
    /// <summary>Gets the lie of this point on the given line segment a..b</summary>
