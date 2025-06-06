@@ -5,9 +5,7 @@
 namespace Nori;
 
 #region class EShape -------------------------------------------------------------------------------
-/// <summary>
-/// Enumeration for all the 'standard shapes' that we can recognize / construct
-/// </summary>
+/// <summary>Enumeration for all the 'standard shapes' that we can recognize / construct</summary>
 public enum EShape {
    None, Circle, Rect, ChamferSquare, ChamferRect, RoundRect, Obround, SingleD, DoubleD,
    HalfObround, Diamond, Diajoint, Trapezoid, RoundTrapezoid, RightTriangle, Parallelogram,
@@ -19,9 +17,7 @@ public enum EShape {
 #endregion
 
 #region class ShapeDesc ----------------------------------------------------------------------------
-/// <summary>
-/// Descriptor for a standard shape
-/// </summary>
+/// <summary>Descriptor for a standard shape</summary>
 /// Given a Poly, the ShapeRecognizer can analyze it and build a ShapeDesc for that shape.
 /// Given a ShapeDesc, the ShapeMaker can build a Poly that matches
 public class ShapeDesc {
@@ -32,21 +28,13 @@ public class ShapeDesc {
    public override string ToString () => $"{Shape} {Center.R6 ()} {Angle.R2D ().R6 ()}\u00b0 [{Args.Select (a => a.R6 ()).ToCSV ()}]";
 
    // Properties ---------------------------------------------------------------
-   /// <summary>
-   /// Type of shape this is (could be Shape.None to indicate we cannot recognize it)
-   /// </summary>
+   /// <summary>Type of shape this is (could be Shape.None to indicate we cannot recognize it)</summary>
    public readonly EShape Shape;
-   /// <summary>
-   /// 'Center point' of the shape
-   /// </summary>
+   /// <summary>'Center point' of the shape</summary>
    public readonly Point2 Center;
-   /// <summary>
-   /// Rotation angle of the shape, relative to X axis
-   /// </summary>
+   /// <summary>Rotation angle of the shape, relative to X axis</summary>
    public readonly double Angle;
-   /// <summary>
-   /// The 'parameters' for the shape (depends on type of shape)
-   /// </summary>
+   /// <summary>The 'parameters' for the shape (depends on type of shape)</summary>
    public ImmutableArray<double> Args;
 
    public bool IsNone => Shape == EShape.None;
@@ -56,9 +44,7 @@ public class ShapeDesc {
 #endregion
 
 #region class ShapeRecognizer ----------------------------------------------------------------------
-/// <summary>
-/// ShapeRecognizer recognizes many 'standard' shapes, and constructs ShapeDesc
-/// </summary>
+/// <summary>ShapeRecognizer recognizes many 'standard' shapes, and constructs ShapeDesc</summary>
 /// For example, these include shapes like Rect, FilletRect, Obround etc. The ShapeDesc
 /// contains:
 /// - the 'center' of the shape
@@ -66,9 +52,7 @@ public class ShapeDesc {
 /// - the 'parameters' for the shape (for example, a FilletRect has Length, Width, Radius)
 public static class ShapeRecognizer {
    // Methods ------------------------------------------------------------------
-   /// <summary>
-   /// Gets the ShapeDesc for a Poly
-   /// </summary>
+   /// <summary>Gets the ShapeDesc for a Poly</summary>
    /// If the poly is not any recognizable shape (or open), this returns a ShapeDesc
    /// with Shape set to EShape.None (you can check that with the ShapeDesc.IsNone property)
    public static ShapeDesc Recognize (Poly poly) {
