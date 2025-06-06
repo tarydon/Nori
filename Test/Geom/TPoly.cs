@@ -173,4 +173,25 @@ class PolyTests {
       var p4 = Poly.Parse ("M0,0H500V200Q400,300,-1H100Q0,200,1Z");
       p4.Reversed ().Is ("M0,0V200Q100,300,-1H400Q500,200,1V0Z");
    }
+
+   [Test (75, "Poly.Append tests")]
+   void Test7 () {
+      Poly p = Poly.Parse ("M0,50 V0 H100 V50Z"), other = Poly.Parse ("M0,50 H10");
+      p.TryAppend (other, out Poly? p1); p1?.Is (false);       // Can't append to a closed pline
+      p = Poly.Parse ("M0,50 V0 H100 V50"); other = Poly.Parse ("M100,50 H110");
+      p.TryAppend (other, out Poly? p2);
+      p2?.Is ("M0,50V0H100V50H110");                           // Normal append
+      other = Poly.Parse ("M110,50 H100");
+      p.TryAppend (other, out Poly? p3);
+      p3?.Is ("M0,50V0H100V50H110");                           // Flip pline then append
+      other = Poly.Parse ("M10,50 H0");
+      p.TryAppend (other, out Poly? p4);
+      p4?.Is ("M10,50H0V0H100V50");                            // Flip pline, and prepend
+      other = Poly.Parse ("M0,50 H10");
+      p.TryAppend (other, out Poly? p5);
+      p5?.Is ("M10,50H0V0H100V50");                            // Prepend seg
+      other = Poly.Parse ("M0,50 H100");
+      p.TryAppend (other, out Poly? p6);
+      p6?.Is ("M0,50V0H100V50Z");                              // Result is closed
+   }
 }

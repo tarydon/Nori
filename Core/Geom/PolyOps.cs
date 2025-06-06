@@ -270,6 +270,30 @@ public partial class Poly {
       return new ([.. mPts.Roll (n)], [.. knots.Roll (n)], mFlags);
    }
 
+   /// <summary>This tries to append the other poly to the current only if their endpoints are within the threshold</summary>
+   public bool TryAppend (Poly other, out Poly? result, double threshold = 1e-6) {
+      result = null;
+      if (IsClosed || other.IsClosed) return false;
+      List<Point2> combined = [.. mPts];
+      bool append = false, prepend = false;
+      if (B.EQ (other.A)) append = true;
+      else if (B.EQ (other.B)) { other = other.Reversed (); append = true; } else if (A.EQ (other.B)) { other = other.Reversed (); prepend = true; } else if (A.EQ (other.A)) prepend = true;
+      if (append) {
+         combined.Remove (B);
+         combined.AddRange (from points in other.mPts select points);
+      } else if (prepend) {
+         List<Point2> otherPoints = [.. other.mPts];
+         otherPoints.Remove (A);
+         otherPoints.AddRange (from points in combined select points);
+         combined = otherPoints;
+      } else return false;
+      bool closed = combined[0].EQ (combined[^1]);
+      if (closed) combined.RemoveAt (combined.Count - 1);
+      var flags = closed ? EFlags.Closed : mFlags;
+      result = new Poly ([.. combined], [], flags);
+      return true;
+   }
+
    /// <summary>Flags to perform some corner operations like fillet, corner-step etc</summary>
    [Flags]
    public enum ECornerOpFlags : ushort {
