@@ -64,9 +64,9 @@ public partial class Poly {
    /// <summary>Make a multi-segment PolyLine</summary>
    public static Poly Lines (IEnumerable<Point2> points)
       => new ([.. points], [], EFlags.Closed);
-   
+
    /// <summary>Create a polygon of given size at a given center, sides and rotation angle.</summary>
-   public static Poly Polygon (Point2 cen, double radius, int sides, double angle = 0) 
+   public static Poly Polygon (Point2 cen, double radius, int sides, double angle = 0)
       => Lines (Enumerable.Range (0, sides).Select (i => cen.Polar (radius, angle + Lib.HalfPI + Lib.TwoPI * i / sides)));
 
    /// <summary>This constructor makes a Pline from a Pline mini-language encoded string</summary>
@@ -167,6 +167,10 @@ public partial class Poly {
    }
 
    /// <summary>Returns the Nth segment from the Pline</summary>
+   /// The poly is considered as a looped collection, so a value outside the range
+   /// of segs in the poly is automatically wrapped around (thus, this[Count] is
+   /// the same as this[0] for a closed poly, and this[-1] returns the last
+   /// segment).
    public Seg this[int i] {
       get {
          int n = Count; i = i.Wrap (n);
@@ -193,6 +197,67 @@ public partial class Poly {
 
    /// <summary>Returns the index of the closest node</summary>
    public int GetClosestNode (Point2 pt) => mPts.MinIndexBy (a => a.DistToSq (pt));
+
+   /// <summary>Composes a 'Logo code' description of this Poly, starting with the longest seg</summary>
+   /// This is a description of this Poly, as a series of 'moves' and 'turns'. The point
+   /// is that this description is independent of the position and orientation of the
+   /// shape, and so can be used as an input for the ShapeRecognizer.
+   ///
+   /// We call it 'Logo' code since it is similar to the move and turn based description
+   /// used in the Logo programming language to control the 'turtle':
+   /// https://en.wikipedia.org/wiki/Turtle_graphics.
+   /// For example, a description of a 10x5 rectangle could be like:
+   /// "F10 L F5 L F10 L F5 L ."
+   ///
+   /// We start with the longest straight line segment, and use the following codes to
+   /// represent each linear or curved segment, and each of the 'turns' at the corners.
+   /// All numerical values in the code are rounded using the 'decimals' setting.
+   /// - For a linear segment, append "F{length}"
+   /// - For a curved segment, we use the codes G for CCW arcs, and D for CW arcs. These
+   ///   letters come from the french terms 'Gauche (left)' or 'Droite (right)' indicating
+   ///   the arc turns we are making. For a 90 degree left or right turn, we output simply
+   ///   "G{radius}" or "D{radius}" respectively. Otherwise, we output "G{radius},{angle}"
+   ///   or "D{radius},{angle}", where angle is the turn angle in degrees.
+   /// - At each 'corner' between two segments, we have a left or right turn and we use
+   ///   the letters L and R to indicate these. If we have a 90 degree turn, we simply output
+   ///   "L" or "R". Otherwise, we output "L{angle}" or "R{angle}" where angle is turn angle
+   ///   at the corner, in degrees. If the corner is a tangential corner, then we don't output
+   ///   either L or R.
+   public (int Seg, string Desc) GetLogoCode (int decimals) {
+      if (IsCircle || IsOpen) return (0, "");
+      var segs = Segs.ToList ();
+      int longest = segs.MaxIndexBy (a => a.IsArc ? 0 : a.Length);
+      if (segs[longest].IsArc) return (0, "");
+
+      var sb = new StringBuilder ();
+      for (int i = 0; i < segs.Count; i++) {
+         Seg seg = segs[(i + longest) % segs.Count];
+         // For a line segment, append "F{length}"
+         if (seg.IsLine) sb.Append ($"F{seg.Length.Round (decimals)} ");
+         else {
+            // Output 'G' for CCW, and 'D' for CW arcs. The radius is always included,
+            // but the angle is included only if it is not 90 degrees
+            double ang = seg.AngSpan.R2D ().Round (decimals), rad = seg.Radius.Round (decimals);
+            if (ang >= 0) sb.Append ('G'); else sb.Append ('D');
+            sb.Append (rad);
+            ang = Abs (ang);
+            if (!ang.EQ (90)) sb.Append ($",{ang}");
+            sb.Append (' ');
+         }
+
+         // Now compute the turn angle at the corner, if this is not a tangential corner.
+         // For a 90 degree turn, we don't output the angle.
+         double turn = GetTurnAngle (i + 1).R2D ().Round (decimals);
+         if (!turn.IsZero ()) {
+            if (turn >= 0) sb.Append ('L'); else sb.Append ('R');
+            turn = Abs (turn);
+            if (!turn.EQ (90)) sb.Append (turn);
+            sb.Append (' ');
+         }
+      }
+      sb.Append ('.');
+      return (longest, sb.ToString ());
+   }
 
    /// <summary>Gets the closest distance of this Poly to the given point</summary>
    /// This also returns the closest segment and the closest node on that segment
@@ -223,9 +288,9 @@ public partial class Poly {
    /// +ve values mean a left turn. If 0 is returned, then this is a tangential corner
    public double GetTurnAngle (int nNode) {
       int cSegs = Count;
-      double outAngle = this[nNode].GetSlopeAt (0);
+      double outAngle = this[nNode.Wrap (cSegs)].GetSlopeAt (0);
       double inAngle = this[(nNode - 1).Wrap (cSegs)].GetSlopeAt (1);
-      return Lib.NormalizeAngle (outAngle - inAngle);
+      return NormalizeAngle (outAngle - inAngle);
    }
 
    /// <summary>Returns the winding of the Poly</summary>
@@ -501,6 +566,8 @@ public readonly struct Seg (Point2 a, Point2 b, Point2 center, Poly.EFlags flags
 
    /// <summary>Is this a curved segment?</summary>
    public bool IsArc => (Flags & (Poly.EFlags.CW | Poly.EFlags.CCW)) != 0;
+   /// <summary>Is this a line segment?</summary>
+   public bool IsLine => (Flags & (Poly.EFlags.CW | Poly.EFlags.CCW)) == 0;
    /// <summary>If curved, does this curve CCW</summary>
    public bool IsCCW => (Flags & Poly.EFlags.CCW) != 0;
    /// <summary>Is this a full-circle segment</summary>
