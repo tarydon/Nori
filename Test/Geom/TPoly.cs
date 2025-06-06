@@ -151,4 +151,38 @@ class PolyTests {
       seg.Contains (new (0, -10)).IsTrue ();
       seg.Contains (new (10, 0)).IsTrue ();
    }
+
+   [Test (73, "Poly.Reversed tests")]
+   void Test5 () {
+      // Line
+      var p1 = Poly.Lines ([(0,10), (10,20), (20,30)]);
+      p1.Reversed ().Is ("M20,30L10,20L0,10Z");
+      // Arc
+      var ccw = true;
+      var p2 = Poly.Arc (new (0, 10), 20, 180.D2R (), 0, ccw);
+      var p2r = p2.Reversed (); var s1 = p2r[0];
+      s1.IsArc.IsTrue (); s1.IsCCW.Is (!ccw);
+      p2r.A.Is (p2.B); p2r.B.Is (p2.A);
+      // Circle
+      var cen = new Point2 (0, 10); var rad = 10;
+      var p3 = Poly.Circle (cen, rad);
+      var p3r = p3.Reversed (); var s2 = p3r[0];
+      p3r.IsCircle.IsTrue (); p3r.IsClosed.IsTrue ();
+      s2.IsCCW.IsFalse (); s2.Center.Is (cen); s2.Radius.Is (rad);
+      // A closed poly with lines and arcs.
+      var p4 = Poly.Parse ("M0,0H500V200Q400,300,-1H100Q0,200,1Z");
+      p4.Reversed ().Is ("M0,0V200Q100,300,-1H400Q500,200,1V0Z");
+   }
+
+   [Test (28, "Poly.GetWinding tests")]
+   void Test6 () {
+      var poly = Poly.Parse ("M0,0 L10,0 10,10 0,10 Z");
+      Assert.IsTrue (poly.GetWinding () is Poly.EWinding.CCW);
+      var poly1 = Poly.Parse ("M10,0 L0,0 0,10 10,10Z");
+      Assert.IsTrue (poly1.GetWinding () is Poly.EWinding.CW);
+      var poly2 = Poly.Parse ("M0,0 L10,10");
+      Assert.IsTrue (poly2.GetWinding () is Poly.EWinding.Indeterminate);
+      var poly3 = Poly.Parse ("C10,5,3");
+      Assert.IsTrue (poly3.GetWinding () is Poly.EWinding.CCW);
+   }
 }

@@ -1,0 +1,2 @@
+; T010
+(EOutlierTest){ InRange:One Outlier:99 }

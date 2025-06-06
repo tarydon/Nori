@@ -53,6 +53,10 @@ class TAuSystem {
         X Y
       CType2
         JBuf
+      EFlagTest
+         SingleBit MultiBit MultiBit2 Outlier
+      EOutlierTest
+         InRange Outlier
       """;
 
    [Test (61, "Test primitives")]
@@ -165,6 +169,24 @@ class TAuSystem {
 
       message = Crasher (() => CurlWriter.ToFile (new CType2 (), NT.TmpCurl));
       message.Is ("AuException: 64-bit enums are not supported");
+   }
+
+   [Test (70, "Test [Flags] Enum")]
+   void Test7 () {
+      var f0 = new EFlagTest ();
+      Check (f0, "T009.curl", "T009");
+
+      var f1 = (EFlagTest)CurlReader.FromFile (NT.TmpCurl);
+      Check (f1, "T009.curl", "T009");
+   }
+
+   [Test (71, "Test outlier Enum value")]
+   void Test8 () {
+      var f0 = new EOutlierTest ();
+      Check (f0, "T010.curl", "T010");
+
+      var f1 = (EOutlierTest)CurlReader.FromFile (NT.TmpCurl);
+      Check (f1, "T010.curl", "T010");
    }
 
    static string Crasher (Action act) {
@@ -303,4 +325,23 @@ enum EJumpBuffer : ulong { Back = 1, Forward = 2 };
 
 class CType1 { public Location Loc; }
 class CType2 { public EJumpBuffer JBuf; }
+
+// .........................................................
+[Flags]
+enum Bits : uint { One = 0x1, Two = 0x2, Eight = 0x8, Nine = Eight | One }
+
+class EFlagTest {
+   public Bits SingleBit = Bits.Two;
+   public Bits MultiBit = Bits.One | Bits.Two;
+   public Bits MultiBit2 = Bits.Nine;
+   public Bits Outlier = (Bits)0x7;
+}
+
+// .........................................................
+enum EType { One = 1, Two }
+
+class EOutlierTest {
+   public EType InRange = (EType)1;
+   public EType Outlier = (EType)99;
+}
 #pragma warning restore 0414, 0649

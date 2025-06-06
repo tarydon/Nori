@@ -5,7 +5,7 @@ Layer2
 Grid2
   Pitch Subdivs Visible Snap Origin Rotation
 Ent2
-  Layer.Name Color
+  Layer.Name Color -Flags
 E2Point
   Pt
 E2Poly
