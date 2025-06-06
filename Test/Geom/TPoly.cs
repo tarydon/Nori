@@ -174,7 +174,19 @@ class PolyTests {
       p4.Reversed ().Is ("M0,0V200Q100,300,-1H400Q500,200,1V0Z");
    }
 
-   [Test (75, "Poly.Append tests")]
+   [Test (28, "Poly.GetWinding tests")]
+   void Test6 () {
+      var poly = Poly.Parse ("M0,0 L10,0 10,10 0,10 Z");
+      Assert.IsTrue (poly.GetWinding () is Poly.EWinding.CCW);
+      var poly1 = Poly.Parse ("M10,0 L0,0 0,10 10,10Z");
+      Assert.IsTrue (poly1.GetWinding () is Poly.EWinding.CW);
+      var poly2 = Poly.Parse ("M0,0 L10,10");
+      Assert.IsTrue (poly2.GetWinding () is Poly.EWinding.Indeterminate);
+      var poly3 = Poly.Parse ("C10,5,3");
+      Assert.IsTrue (poly3.GetWinding () is Poly.EWinding.CCW);
+   }
+
+   [Test (74, "Poly.Append tests")]
    void Test7 () {
       Poly p = Poly.Parse ("M0,50 V0 H100 V50Z"), other = Poly.Parse ("M0,50 H10");
       p.TryAppend (other, out Poly? p1); p1?.Is (false);       // Can't append to a closed pline

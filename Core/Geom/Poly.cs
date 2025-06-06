@@ -228,6 +228,17 @@ public partial class Poly {
       return Lib.NormalizeAngle (outAngle - inAngle);
    }
 
+   /// <summary>Returns the winding of the Poly</summary>
+   public EWinding GetWinding () {
+      if (IsOpen) return EWinding.Indeterminate;
+      if (IsCircle) return this[0].IsCCW ? EWinding.CCW : EWinding.CW;
+      int node = mPts.MinIndexBy (pt => pt.Y);
+      var pp = this[(node - 1 + Count) % Count].GetPointAt (0.9);
+      var pn = this[(node + 1) % Count].GetPointAt (0.1);
+      if (pp.X.EQ (pn.X)) return EWinding.Indeterminate;
+      return pp.X < pn.X ? EWinding.CCW : EWinding.CW;
+   }
+
    /// <summary>Checks for a rectangular Poly</summary>
    public bool IsRectangle () {
       if (!(Count == 4 && IsClosed) || HasArcs) return false;
@@ -254,6 +265,13 @@ public partial class Poly {
       CW = 4, CCW = 8, Circle = 16, Last = 32, Arc = CW | CCW
    }
    readonly EFlags mFlags;
+
+   public enum EWinding {
+      Unknown,        // We haven't computed the winding
+      CW,             // Clockwise
+      CCW,            // Counter-clockwise
+      Indeterminate   // Cannot say - open poly, self-intersecting poly etc
+   };
 
    /// <summary>Addition information stored for curved segments (center point, winding)</summary>
    internal readonly struct Extra (Point2 center, EFlags flags) {

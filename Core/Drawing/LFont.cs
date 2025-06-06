@@ -33,6 +33,7 @@ public class LineFont {
    /// routine always returns at least a fallback font.</remarks>
    /// <param name="name">The font name.</param>
    public static LineFont Get (string name) {
+      if (name.IsBlank ()) name = "simplex";
       string lname = name.ToLower ();
       // Try to get font from the cache.
       var font = mFonts.SafeGet (lname);
