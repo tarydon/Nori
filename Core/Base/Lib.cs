@@ -92,22 +92,9 @@ public static class Lib {
    public static void Init () {
       if (!sInited) {
          sInited = true;
-         // List of candidate drives or folders where WAD might be found
-         List<string> wadRoots = [];
-         // Use DevRoot if exists
-         if (Directory.Exists ($"{DevRoot}/Wad/")) wadRoots.Add ($"{DevRoot}/Wad/");
-         // Detect other drives (A:, C:, N:, etc.) with a Wad folder at root
-         foreach (var drive in DriveInfo.GetDrives ()) {
-            string wadPath = Path.Combine (drive.Name, "Wad");
-            if (Directory.Exists (wadPath) && !wadRoots.Contains (wadPath)) wadRoots.Add (wadPath);
-         }
-
-         // Register all found Wad paths under the same virtual "wad:" prefix
-         foreach (var path in wadRoots) Register (new FileStmLocator ("wad:", path));
-
+         Register (new FileStmLocator ("nwad:", $"{DevRoot}/Wad/"));
          AddAssembly (Assembly.GetExecutingAssembly ());
          AddNamespace ("Nori"); AddNamespace ("System"); AddNamespace ("System.Collections.Generic");
-         AddNamespace ("Pix");
       }
    }
    static bool sInited;
