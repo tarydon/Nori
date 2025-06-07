@@ -166,7 +166,7 @@ class ShaderImp {
    // Compiles an individual shader, given the source file (this reuses already compiled
    // shaders where possible, since some shaders are part of multiple pipelines)
    HShader CompileShader (string file) {
-      var text = Lib.ReadText ($"wad:GL/Shader/{file}");
+      var text = Lib.ReadText ($"nwad:GL/Shader/{file}");
       var eShader = Enum.Parse<EShader> (Path.GetExtension (file)[1..], true);
       var shader = GL.CreateShader (eShader);
       GL.ShaderSource (shader, text);
@@ -182,7 +182,7 @@ class ShaderImp {
    // and builds it (that index contains the list of actual vertex / geometry / fragment
    // programs)
    static ShaderImp Load ([CallerMemberName] string name = "") {
-      sIndex ??= Lib.ReadLines ("wad:GL/Shader/Index.txt");
+      sIndex ??= Lib.ReadLines ("nwad:GL/Shader/Index.txt");
       // Each line in the index.txt contains these:
       // 0:Name  1:Mode  2:VSpec  3:Blending  4:DepthTest  5:PolygonOffset  6:StencilBehavior  7:Programs
       foreach (var line in sIndex) {

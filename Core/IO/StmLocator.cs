@@ -5,7 +5,7 @@
 namespace Nori;
 
 #region class FileStmLocator -----------------------------------------------------------------------
-class FileStmLocator (string prefix, string baseDir) : IStmLocator {
+public class FileStmLocator (string prefix, string baseDir) : IStmLocator {
    // Properties ---------------------------------------------------------------
    public string Prefix => prefix;
 

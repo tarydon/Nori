@@ -42,7 +42,7 @@ public class LineFont {
       // Load font from wad and return default if the font file is missing.
       // As font resources are one of the internal data files, rigorous error handling
       // has been ommitted during the load in favor of simpler code.
-      try { lines = Lib.ReadLines ($"wad:DXF/{lname}.lfont"); } catch { }
+      try { lines = Lib.ReadLines ($"nwad:DXF/{lname}.lfont"); } catch { }
       if (lines == null || lines.Length == 0) {
          var lfont = Get ("simplex");
          mFonts[lname] = lfont;

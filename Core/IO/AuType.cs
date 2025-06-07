@@ -390,7 +390,7 @@ class AuType {
       get {
          if (mTactic == null) {
             mTactic = []; mKnownTypes = ["object"];
-            AddTactics (Lib.ReadLines ("wad:AuManifest.txt"));
+            AddTactics (Lib.ReadLines ("nwad:AuManifest.txt"));
             mByName.Add ("Single", Get (typeof (float)));
          }
          return mTactic;
