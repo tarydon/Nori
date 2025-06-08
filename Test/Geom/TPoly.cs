@@ -24,7 +24,7 @@ class PolyTests {
 
       var p2 = Poly.Arc (new (0, 1), 1, 180.D2R(), 0, false);
       p2.A.Is ("(-1,1)"); p2.B.Is ("(1,1)");
-      p2.Is ("M-1,1Q1,1,-2"); p2.HasArcs.IsTrue (); p2.IsOpen.IsTrue (); 
+      p2.Is ("M-1,1Q1,1,-2"); p2.HasArcs.IsTrue (); p2.IsOpen.IsTrue ();
       var p3 = Poly.Arc (new (0, 1), 1, 180.D2R (), 0, true);
       p3.Is ("M-1,1Q1,1,2"); p3.HasArcs.IsTrue (); p3.IsOpen.IsTrue ();
       var p4 = Poly.Arc (new (0, 0), 90.D2R (), new (10, 0));
@@ -184,5 +184,17 @@ class PolyTests {
       Assert.IsTrue (poly2.GetWinding () is Poly.EWinding.Indeterminate);
       var poly3 = Poly.Parse ("C10,5,3");
       Assert.IsTrue (poly3.GetWinding () is Poly.EWinding.CCW);
+   }
+
+   [Test (74, "Poly.Close tests")]
+   void Test7 () {
+      var poly = Poly.Circle (Point2.Zero, 5);
+      poly.Closed ().Is ("C0,0,5");
+      Poly.Parse ("M0,0 Q10,0,1 Q0,0,0.9").Closed ().Is ("M0,0Q10,0,1Q0,0,0.9Z");
+      Poly.Parse ("M0,0H10V5H0V0").Closed ().Is ("M0,0H10V5H0Z");
+      Poly.Parse ("M0,0H9Q10,1,1V5H0V0").Closed ().Is ("M0,0H9Q10,1,1V5H0Z");
+      Poly.Parse ("M0,0H10V5H0").Closed ().Is ("M0,0H10V5H0Z");
+      Poly.Parse ("M0,0H10").Closed ().Is ("M0,0H10Z");
+      Poly.Parse ("M0,0H10V5H0Z").Closed ().Is ("M0,0H10V5H0Z");
    }
 }
