@@ -205,5 +205,11 @@ class PolyTests {
       other = Poly.Parse ("M0,50 H100");
       p.TryAppend (other, out Poly? p6);
       p6?.Is ("M0,50V0H100V50Z");                              // Result is closed
+      other = Poly.Arc (new (98, 50), 2, 180.D2R (), 0, false);
+      p.TryAppend (other, out Poly? P7);                       // Arc append
+      P7?.Is ("M0,50V0H100V50Q96,50,2");
+      other = Poly.Arc (new Point2 (2, 50), 2, 180.D2R (), 0, false);
+      p.TryAppend (other, out Poly? p8);                       // Arc prepend
+      p8?.Is ("M4,50Q0,50,2V0H100V50");
    }
 }

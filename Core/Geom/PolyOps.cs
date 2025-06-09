@@ -274,24 +274,35 @@ public partial class Poly {
    public bool TryAppend (Poly other, out Poly? result, double threshold = 1e-6) {
       result = null;
       if (IsClosed || other.IsClosed) return false;
-      List<Point2> combined = [.. mPts];
+      if (ReferenceEquals (this, other)) { result = this; return true; }
       bool append = false, prepend = false;
       if (B.EQ (other.A)) append = true;
-      else if (B.EQ (other.B)) { other = other.Reversed (); append = true; } else if (A.EQ (other.B)) { other = other.Reversed (); prepend = true; } else if (A.EQ (other.A)) prepend = true;
-      if (append) {
-         combined.Remove (B);
-         combined.AddRange (from points in other.mPts select points);
-      } else if (prepend) {
-         List<Point2> otherPoints = [.. other.mPts];
-         otherPoints.Remove (A);
-         otherPoints.AddRange (from points in combined select points);
-         combined = otherPoints;
-      } else return false;
-      bool closed = combined[0].EQ (combined[^1]);
-      if (closed) combined.RemoveAt (combined.Count - 1);
-      var flags = closed ? EFlags.Closed : mFlags;
-      result = new Poly ([.. combined], [], flags);
+      else if (B.EQ (other.B)) { other = other.HasArcs ? other : other.Reversed (); append = true; } 
+      else if (A.EQ (other.B)) prepend = true;
+      else if (A.EQ (other.A)) { other = other.HasArcs ? other : other.Reversed (); prepend = true; }
+      if (!append && !prepend) return false;
+      List<Seg> combined = append ? [.. Segs] : [.. other.Segs];
+      combined.AddRange (append ? other.Segs : Segs);
+      result = Append (combined);
       return true;
+   }
+
+   public Poly Append (IEnumerable<Seg> segs) {
+      List<Point2> pts = []; List<Extra> extra = [];
+      bool hasArcs = false;
+      foreach (var seg in segs) {
+         if (seg.IsArc) {
+            hasArcs = true;
+            pts.Add (seg.IsCCW ? seg.A : seg.B);
+            extra.Add (new Extra (seg.Center, seg.IsCCW ? EFlags.CW : EFlags.CCW));
+         } else { pts.Add (seg.A); extra.Add (new Extra ()); }
+      }
+      var last = segs.Last ();
+      pts.Add (last.IsArc && !last.IsCCW ? last.A : last.B);
+      bool closed = pts[0].EQ (pts[^1]); 
+      if (closed) pts.RemoveAt (pts.Count - 1);
+      var flags = (hasArcs ? EFlags.HasArcs : 0) | (closed ? EFlags.Closed : 0);
+      return new Poly ([.. pts], [.. extra], flags);
    }
 
    /// <summary>Flags to perform some corner operations like fillet, corner-step etc</summary>
