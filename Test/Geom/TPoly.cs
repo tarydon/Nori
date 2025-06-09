@@ -186,8 +186,20 @@ class PolyTests {
       Assert.IsTrue (poly3.GetWinding () is Poly.EWinding.CCW);
    }
 
-   [Test (74, "Poly.Append tests")]
+   [Test (74, "Poly.Close tests")]
    void Test7 () {
+      var poly = Poly.Circle (Point2.Zero, 5);
+      poly.Closed ().Is ("C0,0,5");
+      Poly.Parse ("M0,0 Q10,0,1 Q0,0,0.9").Closed ().Is ("M0,0Q10,0,1Q0,0,0.9Z");
+      Poly.Parse ("M0,0H10V5H0V0").Closed ().Is ("M0,0H10V5H0Z");
+      Poly.Parse ("M0,0H9Q10,1,1V5H0V0").Closed ().Is ("M0,0H9Q10,1,1V5H0Z");
+      Poly.Parse ("M0,0H10V5H0").Closed ().Is ("M0,0H10V5H0Z");
+      Poly.Parse ("M0,0H10").Closed ().Is ("M0,0H10Z");
+      Poly.Parse ("M0,0H10V5H0Z").Closed ().Is ("M0,0H10V5H0Z");
+   }
+
+   [Test (75, "Poly.Append tests")]
+   void Test8 () {
       Poly p = Poly.Parse ("M0,50 V0 H100 V50Z"), other = Poly.Parse ("M0,50 H10");
       p.TryAppend (other, out Poly? p1); p1?.Is (false);       // Can't append to a closed pline
       p = Poly.Parse ("M0,50 V0 H100 V50"); other = Poly.Parse ("M100,50 H110");
