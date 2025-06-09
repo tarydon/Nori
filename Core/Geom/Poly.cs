@@ -185,6 +185,22 @@ public partial class Poly {
    }
 
    // Methods ------------------------------------------------------------------
+   /// <summary>Returns a 'closed' version of this Poly</summary>
+   /// If the start and end points are touching (within 1e-6), the end point is 'merged' with
+   /// the start point. Otherwise, a line segment is drawn from the end point to the start point
+   /// closing the Poly (regardless of their gap)
+   public Poly Closed () {
+      if (IsClosed || mPts.Length < 2) return this;
+      var flags = mFlags | EFlags.Closed;
+      if (mPts[0].EQ (mPts[^1])) {
+         ImmutableArray<Point2> pts = [.. mPts.Take (mPts.Length - 1)];
+         if (!HasArcs) return new (pts, [], flags);
+         ImmutableArray<Extra> extra = [.. mExtra.Take (pts.Length)];
+         return new (pts, extra, flags);
+      }
+      return new (mPts, mExtra, flags);
+   }
+
    /// <summary>Discretizes the pline with a given error threshold into the given set of points</summary>
    public void Discretize (List<Point2> pts, double threshold) {
       if (!HasArcs) pts.AddRange (mPts);
