@@ -275,14 +275,14 @@ public partial class Poly {
       result = null;
       if (IsClosed || other.IsClosed) return false;
       if (ReferenceEquals (this, other)) { result = this; return true; }
-      bool append = false, prepend = false;
-      if (B.EQ (other.A)) append = true;
-      else if (B.EQ (other.B)) { other = other.HasArcs ? other : other.Reversed (); append = true; } 
-      else if (A.EQ (other.B)) prepend = true;
-      else if (A.EQ (other.A)) { other = other.HasArcs ? other : other.Reversed (); prepend = true; }
-      if (!append && !prepend) return false;
-      List<Seg> combined = append ? [.. Segs] : [.. other.Segs];
-      combined.AddRange (append ? other.Segs : Segs);
+      bool IsAppend = false, IsPrepend = false;
+      if (B.EQ (other.A)) IsAppend = true;
+      else if (B.EQ (other.B)) { other = other.HasArcs ? other : other.Reversed (); IsAppend = true; } 
+      else if (A.EQ (other.B)) IsPrepend = true;
+      else if (A.EQ (other.A)) { other = other.HasArcs ? other : other.Reversed (); IsPrepend = true; }
+      if (!IsAppend && !IsPrepend) return false;
+      List<Seg> combined = IsAppend ? [.. Segs] : [.. other.Segs];
+      combined.AddRange (IsAppend ? other.Segs : Segs);
       result = Append (combined);
       return true;
    }
@@ -293,12 +293,12 @@ public partial class Poly {
       foreach (var seg in segs) {
          if (seg.IsArc) {
             hasArcs = true;
-            pts.Add (seg.IsCCW ? seg.A : seg.B);
+            pts.Add (seg.B);
             extra.Add (new Extra (seg.Center, seg.IsCCW ? EFlags.CW : EFlags.CCW));
          } else { pts.Add (seg.A); extra.Add (new Extra ()); }
       }
       var last = segs.Last ();
-      pts.Add (last.IsArc && !last.IsCCW ? last.A : last.B);
+      pts.Add (last.IsArc ? last.A : last.B);
       bool closed = pts[0].EQ (pts[^1]); 
       if (closed) pts.RemoveAt (pts.Count - 1);
       var flags = (hasArcs ? EFlags.HasArcs : 0) | (closed ? EFlags.Closed : 0);

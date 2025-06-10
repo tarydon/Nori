@@ -223,5 +223,11 @@ class PolyTests {
       other = Poly.Arc (new Point2 (2, 50), 2, 180.D2R (), 0, false);
       p.TryAppend (other, out Poly? p8);                       // Arc prepend
       p8?.Is ("M4,50Q0,50,2V0H100V50");
+      other = Poly.Arc (new (98, 50), 2, 180.D2R (), 0, true);
+      p.TryAppend (other, out Poly? P9);                       // Arc append,ccw
+      P9?.Is ("M0,50V0H100V50Q96,50,-2");
+      other = Poly.Arc (new Point2 (2, 50), 2, 180.D2R (), 0, true);
+      p.TryAppend (other, out Poly? p10);                      // Arc prepend,ccw
+      p10?.Is ("M4,50Q0,50,-2V0H100V50");
    }
 }
