@@ -274,27 +274,25 @@ public partial class Poly {
    public bool TryAppend (Poly other, out Poly? result, double threshold = 1e-6) {
       result = null;
       if (IsClosed || other.IsClosed || ReferenceEquals (this, other)) return false;
-      bool hasArcs = false, isAppend;
+      bool isAppend;
       if (B.EQ (other.A)) isAppend = true;
       else if (B.EQ (other.B)) { other = other.Reversed (); isAppend = true; } 
       else if (A.EQ (other.B)) isAppend = false;
       else if (A.EQ (other.A)) { other = other.Reversed (); isAppend = false; }
       else return false;
-      List<Seg> combined = isAppend ? [.. Segs] : [.. other.Segs];
-      combined.AddRange (isAppend ? other.Segs : Segs);
-      List<Point2> pts = []; List<Extra> extra = [];
+      List<Seg> combined = isAppend ? [.. Segs, .. other.Segs] : [.. other.Segs, .. Segs];
+      List<Point2> pts = []; List<Extra> extra = []; EFlags flags = 0;
       foreach (var seg in combined) {
          pts.Add (seg.A);
          if (seg.IsArc) {
-            hasArcs = true;
-            extra.Add (new Extra (seg.Center, seg.IsCCW ? EFlags.CCW : EFlags.CW));
+            extra.Add (new Extra (seg.Center, seg.IsCCW ? EFlags.CCW : EFlags.CW)); flags |= EFlags.HasArcs;
          } else extra.Add (new Extra ());
       }
-      pts.Add (combined.Last ().B);
-      bool closed = pts[0].EQ (pts[^1]); 
-      if (closed) pts.RemoveAt (pts.Count - 1);
-      var flags = (hasArcs ? EFlags.HasArcs : 0) | (closed ? EFlags.Closed : 0);
-      result = new Poly ([.. pts], [.. extra], flags); return true;
+      var last = combined[^1].B;
+      if (pts[0].EQ (last)) flags |= EFlags.Closed;
+      else pts.Add (last);
+      result = new Poly ([.. pts], [.. extra], flags);
+      return true;
    }
 
    /// <summary>Flags to perform some corner operations like fillet, corner-step etc</summary>
