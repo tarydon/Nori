@@ -365,14 +365,13 @@ public partial class Poly {
       if (Count < 2) { result = null; return false; }
       (Seg prev, int baseSegIdx) = (this[0], 0);
       (List<Point2> pts, List<Extra> extras) = ([], []);
-      var (mergedSegs, pendingMerge) = (false, false);
+      bool mergedSegs = false;
       for (int i = 1; ; i++) {
          Seg curr = this[i];
          bool canMerge = CanMerge (prev, curr, threshold);
-         pendingMerge |= canMerge;
+         mergedSegs |= canMerge;
          if (canMerge && !curr.IsLast)
             continue; // Continue gathering mergeable segs, as long as mergeability condition is satisfied.
-         mergedSegs |= pendingMerge;
 
          pts.Add (prev.A);
          if (HasArcs && baseSegIdx < mExtra.Length)
