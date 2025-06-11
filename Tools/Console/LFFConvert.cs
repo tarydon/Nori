@@ -3,48 +3,36 @@
 // ║║║║╬║╔╣║ Converts LFF font to LFONT format, preserving lines and arcs for vector text rendering.
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 using System.Text;
-
 namespace Nori.Con;
+
 #region class LFF2LFontConverter -------------------------------------------------------------------
 /// <summary>Converts LFF font files to the custom LFONT format</summary>
 // This utility parses character definitions from an LFF file
 // and outputs an LFONT-compliant file containing character codes,
 // names, and raw polyline and arc path data.
 public class LFF2LFontConverter {
+   public LFF2LFontConverter (string lff, string lfont) {
+      mOutputFile = lfont;
+      mFontName = Path.GetFileNameWithoutExtension (lff);
+      mLffLines = File.ReadAllLines (lff);
+   }
+
+   // Methods ------------------------------------------------------------------
    /// <summary>Builds an LFONT file from an LFF font definition file</summary>
    /// This method reads an LFF file containing glyph definitions (points, arcs, reuse info),
    /// processes each character, scales its geometry, and writes a structured LFONT output.
    /// <param name="lffFile">Path to the source LFF font file.</param>
    /// <param name="lFontFile">Path to the destination LFONT file to be created.</param>
-   public static void BuildLFont (string lffFile, string lFontFile) {
-      // Read all lines from the LFF file
-      var lines = File.ReadAllLines (lffFile);
-
-      // Initialize LFONT header with name and version (1)
-      List<string> output = [$"LFONT,{Path.GetFileNameWithoutExtension (lffFile)},1"];
-
-      Dictionary<string, FontChar> charCache = []; // Cache of parsed characters
+   public void BuildLFont () {
       ReadOnlySpan<char> codeHex = "", reuseKey = "";
       FontChar? fc = null;
-      double maxY = 0, minY = 0, letterSpacing = 0, wordSpacing = 0, lineSpacingFactor = 0;
-      const string LetterSpacingTkn = "# LetterSpacing:", WordSpacingTkn = "# WordSpacing:", LineSpacingFactorTkn = "# LineSpacingFactor:";
 
       // Process each line in the LFF file ...
-      foreach (var rawLine in lines) {
+      foreach (var rawLine in mLffLines) {
          var line = rawLine.Trim ();
          switch (line.FirstOrDefault ()) {
             case '#': // Comment line
-               switch (line) {
-                  case string s when s.StartsWith (LetterSpacingTkn):
-                     letterSpacing = double.Parse (s[LetterSpacingTkn.Length..].Trim ());
-                     break;
-                  case string s when s.StartsWith (WordSpacingTkn):
-                     wordSpacing = double.Parse (s[WordSpacingTkn.Length..].Trim ());
-                     break;
-                  case string s when s.StartsWith (LineSpacingFactorTkn):
-                     lineSpacingFactor = double.Parse (s[LineSpacingFactorTkn.Length..].Trim ());
-                     break;
-               }
+               SetSpacingParams (line);
                break;
 
             case '[':
@@ -61,79 +49,120 @@ public class LFF2LFontConverter {
 
             case '\0':
                // End of glyph block
-               if (fc != null && fc.Strokes.Count != 0) {
-                  fc.ReuseKey = charCache.TryGetValue (reuseKey.ToString ().ToLower (), out var reused) ? reused : null;
-                  for (var reuse = fc.ReuseKey; reuse != null; reuse = reuse.ReuseKey) {
-                     if (reuse.Strokes.Count > 0) fc.Strokes.AddRange (reuse.Strokes);
-                     if (reuse.PenMoves.Count > 0) fc.PenMoves.AddRange (reuse.PenMoves);
-                  }
-                  charCache[codeHex.ToString ()] = fc;
-               }
-
+               SetGlyphParams (codeHex.ToString (), reuseKey.ToString (), fc);
                // Reset state for next glyph
                fc = null;
-               maxY = double.MinValue; minY = double.MaxValue;
                reuseKey = "";
                break;
 
             default:
                // Glyph polyline definition
                if (fc is null) break;
-               var sb = new StringBuilder ();
-               var segs = line.Split (';');
-               if (segs.Length < 2) continue;
-
-               List<Point2> pts = [ExtractPoint (segs[0])];
-               var prev = pts[0];
-               sb.Append (" M" + $"{prev.X},{prev.Y}");
-               for (int i = 1; i < segs.Length; i++) {
-                  var s = segs[i];
-                  if (s.Contains ('A')) {  // Parse arc segment and generate intermediate points
-                     var (arcEnd, bulge) = ExtractArc (s);
-                     sb.Append (" Q" + $"{arcEnd.X},{arcEnd.Y},{((8 * Math.Atan (bulge)) / Lib.PI).R6 ()}");
-                     pts.Add (prev); pts.Add (arcEnd);
-                     prev = arcEnd;
-                  } else { // Parse a straight line segment
-                     var pt = ExtractPoint (s);
-                     sb.Append (GetCommand (prev, pt));
-                     pts.Add (pt);
-                     prev = pt;
-                  }
-               }
-               fc.PenMoves.Add (sb.ToString ()); // Store the command string for this glyph
-               var trace = Poly.Lines (pts);
-               var box = trace.GetBound ();
-               fc.Strokes.Add (trace);
-               maxY = Math.Max (maxY, box.Y.Max);
-               minY = Math.Min (minY, box.Y.Min);
-               // Use 'M' (0x004D) height as ascender if tallest
-               if (codeHex.ToString ().EqIC ("004d") && maxY > mAscender) mAscender = maxY;
-               if (minY < mDescender) mDescender = minY;
+               ParseGlyphStroke (line, fc);
                break;
          }
       }
 
       // Add a default space glyph (code 32)
-      charCache.Add ("0020", new FontChar ("0020"));
-      // Write font header (character count, ascender, descender, vAdvance)
-      output.Add ($"{charCache.Count},{mAscender.R6 ()},{mDescender.R6 ()},{(mAscender - mDescender).R6 () * lineSpacingFactor:R}");
+      mCharCache.Add ("0020", new FontChar ("0020"));
+      ShipLFontFile (mOutputFile);
+   }
 
-      // Build LFONT glyph output
-      foreach (var val in charCache.Values) {
-         // Use wordSpacing as fallback width if glyph width is zero
-         double w = val.CharCode == 32 ? wordSpacing : val.Width,
-         // Normalize horizontal advance based on ascender height
-         hAdvance = ((w + letterSpacing) / mAscender).R6 ();
-         output.Add ($"{val.CharCode},{hAdvance},{val.Strokes.Count},{val.Symbol}");
-         // Output each stroke (polyline) as a series of commands
-         foreach (var s in val.PenMoves) output.Add (s);
+   // Implementation -----------------------------------------------------------
+   // Parses font spacing metadata from comments
+   void SetSpacingParams (string line) {
+      const string LetterSpacingTkn = "# LetterSpacing:", WordSpacingTkn = "# WordSpacing:", LineSpacingFactorTkn = "# LineSpacingFactor:";
+      switch (line) {
+         case string s when s.StartsWith (LetterSpacingTkn):
+            mLetterSpacing = double.Parse (s[LetterSpacingTkn.Length..].Trim ());
+            break;
+         case string s when s.StartsWith (WordSpacingTkn):
+            mWordSpacing = double.Parse (s[WordSpacingTkn.Length..].Trim ());
+            break;
+         case string s when s.StartsWith (LineSpacingFactorTkn):
+            mLineSpacingFactor = double.Parse (s[LineSpacingFactorTkn.Length..].Trim ());
+            break;
+      }
+   }
+
+   // Parses a glyph stroke definition and adds the corresponding drawing instructions to a FontChar.
+   // The input is a semicolon-separated string of segments:(e.g., "0,0;10,0;A10,10,0.414")
+   // A segment like "x,y" represents a line to that point.
+   // A segment like "AendX,endY,bulge" represents an arc to (endX, endY) with the given bulge value.
+   // This method builds a vector path string (e.g., "Mx,y Lx,y Qx,y,q") and parses it into a Poly object
+   // that is stored in the FontChar for rendering and bounds calculation.
+   void ParseGlyphStroke (string line, FontChar fc) {
+      StringBuilder sb = new ();
+      var segs = line.Split (';');
+      var prev = ExtractPoint (segs[0]); // Starting point of the glyph stroke
+      sb.Append (" M" + $"{prev.X},{prev.Y}");
+      for (int i = 1; i < segs.Length; i++) {
+         var s = segs[i];
+         // Arc segment: starts with 'A'
+         // Convert arc segment to quadratic arc command (Qx,y,q : where q is the number of quarter-turns in the arc)
+         if (s.Contains ('A')) {
+            var (arcEnd, bulge) = ExtractArc (s);
+            sb.Append (" Q" + $"{arcEnd.X},{arcEnd.Y},{((8 * Math.Atan (bulge)) / Lib.PI).R6 ()}");
+            prev = arcEnd;
+         } else {
+            // Regular line segment
+            var pt = ExtractPoint (s);
+            sb.Append (GetCommand (prev, pt));
+            prev = pt;
+         }
       }
 
-      // Write final LFONT file
-      File.WriteAllLines (lFontFile, output);
+      // Finalize the path string and add it to FontChar
+      var path = sb.ToString ();
+      fc.PenMoves.Add (path);
+      var trace = Poly.Parse (path);
+      fc.Strokes.Add (trace);
+
+      // Update global ascender/descender metrics based on this character
+      var box = trace.GetBound ();
+      if (fc.CharCode == 77 && box.Y.Max > mAscender)  // 'M' used as reference for ascender
+         mAscender = box.Y.Max;
+      mDescender = Math.Min (mDescender, box.Y.Min);
    }
-   static double mAscender,   // Highest Y value of 'M' character (top of font)
-                 mDescender;  // Lowest Y value in all characters (bottom of font)
+
+   // Finalizes a FontChar glyph by optionally merging strokes and pen moves from a reused glyph,
+   // then caches the resulting FontChar by its hexadecimal code key.
+   void SetGlyphParams (string codeHex, string reuseKey, FontChar? fc) {
+      if (fc != null && fc.Strokes.Count != 0) {
+         if (mCharCache.TryGetValue (reuseKey.ToLower (), out var reused)) {
+            fc.ReuseKey = reused;
+            for (var r = reused; r != null; r = r.ReuseKey) {
+               if (r.Strokes.Count > 0) fc.Strokes.AddRange (r.Strokes);
+               if (r.PenMoves.Count > 0) fc.PenMoves.AddRange (r.PenMoves);
+            }
+         }
+         mCharCache[codeHex] = fc;
+      }
+   }
+
+   // Exports the cached font characters and metrics into an LFONT format file.
+   // The method writes the LFONT header, font metrics, and glyph definitions
+   // including character codes, horizontal advances, stroke counts, symbols,
+   // and pen move commands for each glyph.
+   void ShipLFontFile (string lFontFile) {
+      var sb = new StringBuilder ();
+
+      // Header: LFONT name and version
+      sb.AppendLine ($"LFONT,{mFontName},1");
+
+      // Font metrics: character count, ascender, descender, vertical advance
+      sb.AppendLine ($"{mCharCache.Count},{mAscender.R6 ()},{mDescender.R6 ()},{(mAscender - mDescender).R6 () * mLineSpacingFactor:R}");
+
+      foreach (var val in mCharCache.Values) {
+         // Use wordSpacing as fallback width if glyph width is zero
+         double w = val.CharCode == 32 ? mWordSpacing : val.Width,
+         // Normalize horizontal advance based on ascender height
+         hAdvance = ((w + mLetterSpacing) / mAscender).R6 ();
+         sb.AppendLine ($"{val.CharCode},{hAdvance},{val.Strokes.Count},{val.Symbol}");
+         foreach (var stroke in val.PenMoves) sb.AppendLine (stroke);
+      }
+      File.WriteAllText (lFontFile, sb.ToString ());
+   }
 
    // Parses a 2D point from a string in the format "X,Y" with coordinate rounding.
    static Point2 ExtractPoint (string s) {
@@ -152,6 +181,15 @@ public class LFF2LFontConverter {
         (_, true) => $" H{b.X}",  // Horizontal line: same Y
         _ => $" L{b.X},{b.Y}"     // General line
      };
+
+   // Private fields ------------------------------------------------
+   Dictionary<string, FontChar> mCharCache = []; // Cache of parsed characters
+   double mAscender = double.MinValue,   // Highest Y value of 'M' character (top of font)
+          mDescender = double.MaxValue,  // Lowest Y value in all characters (bottom of font)
+          mLetterSpacing = 0, mWordSpacing = 0, mLineSpacingFactor = 1;
+   string mFontName,
+          mOutputFile; // Output LFONT file paths
+   string[] mLffLines; // All raw lines read from the LFF font file
 
    // Nested types -------------------------------------------------------------
    // Represents a single character definition in a font, including geometry, code, and optional reuse data

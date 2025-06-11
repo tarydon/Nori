@@ -3,8 +3,6 @@
 // ║║║║╬║╔╣║ Entry point into the Nori.Console program
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 namespace Nori.Con;
-
-using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using static System.Reflection.BindingFlags;
 
@@ -79,31 +77,31 @@ static class Program {
    [ConsoleCommand]
    static void LFFtoLFONT () {
       string[] args = Environment.GetCommandLineArgs ();
-      if (args.Length < 3) {
+      // args[0] = executable name, args[1] = "LFFtoLFONT", args[2] = font1.lff
+      if (args.Length != 3) {
          Console.ForegroundColor = ConsoleColor.Yellow;
-         Console.WriteLine ("Usage: LFFtoLFONT <file1.lff> [file2.lff] ...");
+         Console.WriteLine ("Usage: LFFtoLFONT <file.lff>");
          Console.ResetColor ();
          Environment.Exit (1);
       }
-      // Process each input .lff file
-      for (int i = 2; i < args.Length; i++) {
-         string lffPath = args[i];
-         if (!File.Exists (lffPath)) {
-            Console.WriteLine ($"File not found: {lffPath}");
-            continue;
-         }
-         try {
-            string outPath = Path.Combine (@"N:\Wad\DXF", Path.GetFileNameWithoutExtension (lffPath) + ".lfont");
-            // Perform the actual conversion
-            LFF2LFontConverter.BuildLFont (lffPath, outPath);
-            Console.ForegroundColor = ConsoleColor.Green;
-            Console.WriteLine ("Conversion successful.\n");
-            Console.ResetColor ();
-         } catch (Exception ex) {
-            Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.WriteLine ($"Error converting {lffPath}: {ex.Message}\n");
-            Console.ResetColor ();
-         }
+      string lffPath = args[2];
+      if (!File.Exists (lffPath)) {
+         Console.ForegroundColor = ConsoleColor.Red;
+         Console.WriteLine ($"File not found: {lffPath}");
+         Console.ResetColor ();
+         Environment.Exit (1);
+      }
+      try {
+         string outPath = Path.Combine (@"N:\Wad\DXF", Path.GetFileNameWithoutExtension (lffPath) + ".lfont");
+         // Perform the actual conversion
+         new LFF2LFontConverter (lffPath, outPath).BuildLFont ();
+         Console.ForegroundColor = ConsoleColor.Green;
+         Console.WriteLine ($"Converted {Path.GetFileName (lffPath)} → {outPath}");
+         Console.ResetColor ();
+      } catch (Exception ex) {
+         Console.ForegroundColor = ConsoleColor.Red;
+         Console.WriteLine ($"Error converting {lffPath}:\n{ex.Message}");
+         Console.ResetColor ();
       }
    }
 
