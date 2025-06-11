@@ -327,6 +327,80 @@ public partial class Poly {
       return true;
    }
 
+   public bool TryCleanup (out Poly? result, double threshold = 1e-6) {
+      if (IsCircle) { result = null; return false; }
+
+      bool cleaned = TryCleanupZeroSegs (out result, threshold);
+      if (cleaned && result!.Count == 0) return true; // Empty poly!
+
+      if ((result ?? this).TryMergeAlignedSegs (out Poly? result2, threshold))
+         result = result2;
+
+      return result != null;
+   }
+
+   bool TryCleanupZeroSegs (out Poly? result, double threshold = 1e-6) {
+      HashSet<int> idxs = [];
+      for (int i = 0, limit = mPts.Length - 1; i < limit; i++) {
+         if (mPts[i].EQ (mPts[i + 1], threshold))
+            idxs.Add (i);
+      }
+      if (idxs.Count == 0) { result = null; return false; }
+
+      var pts = mPts.Select ((pt, idx) => (pt, idx)).Where (a => !idxs.Contains (a.idx)).Select (a => a.pt);
+      List<Extra> extra = [];
+      if (HasArcs) {
+         foreach (var idx in idxs) {
+            if (idx >= mExtra.Length) break;
+            extra.Add (mExtra[idx]);
+         }
+      }
+      var flags = mFlags;
+      if (extra.Count == 0) flags &= ~EFlags.HasArcs;
+      result = new ([.. pts], [.. extra], flags);
+      return true;
+   }
+
+   bool TryMergeAlignedSegs (out Poly? result, double threshold = 1e-6) {
+      if (Count < 2) { result = null; return false; }
+      (Seg prev, int baseSegIdx) = (this[0], 0);
+      (List<Point2> pts, List<Extra> extras) = ([], []);
+      var (mergedSegs, pendingMerge) = (false, false);
+      for (int i = 1; ; i++) {
+         Seg curr = this[i];
+         bool canMerge = CanMerge (prev, curr, threshold);
+         pendingMerge |= canMerge;
+         if (canMerge && !curr.IsLast)
+            continue; // Continue gathering mergeable segs, as long as mergeability condition is satisfied.
+         mergedSegs |= pendingMerge;
+
+         pts.Add (prev.A);
+         if (HasArcs && baseSegIdx < mExtra.Length)
+            extras.Add (mExtra[baseSegIdx]);
+
+         if (curr.IsLast) {
+            // [ ] Check mergeability of last seg with first seg, for a closed poly.
+            if (!canMerge)
+               pts.Add (curr.A);
+            if (!IsClosed)
+               pts.Add (curr.B);
+            break;
+         }
+         
+         (prev, baseSegIdx) = (curr, i);
+      }
+
+      result = mergedSegs ? new Poly ([.. pts], [.. extras], mFlags) : null;
+      return mergedSegs;
+
+      static bool CanMerge (Seg a, Seg b, double threshold) {
+         // Note: Line segs mergeability uses DistToLineSeg (v/s DistToLine) to allow "slits".
+         return a.IsArc == b.IsArc
+            && ((!a.IsArc && a.B.DistToLineSeg (a.A, b.B) < threshold) // Line segs mergeability check
+            || (a.IsArc && a.Center.EQ (b.Center, threshold) && a.Radius.EQ (b.Radius, threshold))); // Arc segs mergeability check
+      }
+   }
+
    // Implementation -----------------------------------------------------------
    static Poly Read (UTFReader ur) => new PolyBuilder ().Build (ur, true);
 
