@@ -76,6 +76,7 @@ class Matrix2Tests {
       m3 = Matrix2.Scaling (new (1, 2), 2, 3); m3.Is ("[2,0 | 0,3 | -1,-4]");
       (p1 * m3).Is ("(19,32)"); (v1 * m3).Is ("<6,15>");
       (new Point2 (1, 2) * m3).Is ("(1,2)");
+      m3.ScaleFactor.Is (2.0);
 
       var m4 = Matrix2.Rotation (45.D2R ()); m4.Is ("[0.707107,0.707107 | -0.707107,0.707107 | 0,0]");
       (p1 * m4).Is ("(-1.414214,15.556349)"); (v1 * m4).Is ("<-1.414214,5.656854>");
@@ -143,6 +144,7 @@ class Matrix3Tests {
       var m2 = Matrix3.Orthographic (new Bound3 (0, 0, 1, 10, 5, 5));
       m2.Is ("[0.2,0,0, 0,0.4,0, 0,0,-0.5, -1,-1,-1.5]");
       m2.HasMirroring.IsTrue ();
+      Matrix3.Scaling (0.75).ScaleFactor.Is (0.75);
 
       var p1 = P (1, 2, 3);
       var q1 = Quaternion.FromAxisRotations (0, 0, 0);
