@@ -42,6 +42,9 @@ public class Matrix2 (double m11, double m12, double m21, double m22, double x, 
    /// <summary>A matrix that mirrors about X (vertically)</summary>
    public static readonly Matrix2 VMirror = new (1, 0, 0, -1, 0, 0);
 
+   /// <summary>The 'scaling factor' of this matrix (assuming equal scaling in all axes)</summary>
+   public double ScaleFactor => (Vector2.XAxis * this).Length;
+
    // Methods ------------------------------------------------------------------
    /// <summary>Computes the inverse of a matrix (throws an exception for a singular matrix)</summary>
    public Matrix2 GetInverse () {
@@ -190,6 +193,9 @@ public class Matrix3 {
 
    /// <summary>Does this matrix include mirroring?</summary>
    public bool HasMirroring => (Flags & EFlag.Mirror) != 0;
+
+   /// <summary>The 'scaling factor' of this matrix (assuming equal scaling in all axes)</summary>
+   public double ScaleFactor => (Vector3.XAxis * this).Length;
 
    // Methods ------------------------------------------------------------------
    public Matrix3 ExtractRotation () => new (M11, M12, M13, M21, M22, M23, M31, M32, M33, 0, 0, 0);
