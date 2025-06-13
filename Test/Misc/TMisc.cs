@@ -172,9 +172,9 @@ class TMisc {
       Lib.GetArcSteps (10, Lib.PI, 0.01).Is (36);
       int a = 3, b = 2; Lib.Sort (ref a, ref b);
       a.Is (2); b.Is (3);
-      Lib.ReadText ("wad:GL/Shader/arrowhead.frag").Length.Is (240);
-      Lib.ReadBytes ("wad:GL/Shader/arrowhead.frag").Length.Is (251);
-      Lib.ReadLines ("wad:GL/Shader/arrowhead.frag").Length.Is (12);
+      Lib.ReadText ("nori:GL/Shader/arrowhead.frag").Length.Is (240);
+      Lib.ReadBytes ("nori:GL/Shader/arrowhead.frag").Length.Is (251);
+      Lib.ReadLines ("nori:GL/Shader/arrowhead.frag").Length.Is (12);
 
       int n = 0; Lib.Set (ref n, 1).IsTrue (); Lib.Set (ref n, 1).IsFalse (); n.Is (1);
       float f = 0; Lib.Set (ref f, 1).IsTrue (); Lib.Set (ref f, 1).IsFalse (); f.Is (1f);
@@ -334,7 +334,7 @@ class TMisc {
          poly.Discretize (pts, 0.1);
          splits.Add (pts.Count);
       }
-      
+
       // Tessellate the polygon into triangles
       var tries = Tess2D.Process (pts, splits);
       var nodes = tries.Select (n => (Point3)pts[n]).ToList ();
