@@ -270,6 +270,31 @@ public partial class Poly {
       return new ([.. mPts.Roll (n)], [.. knots.Roll (n)], mFlags);
    }
 
+   /// <summary>This tries to append the other poly to the current, only if their endpoints are within the threshold</summary>
+   public bool TryAppend (Poly other, out Poly? result, double threshold = 1e-6) {
+      result = null;
+      if (IsClosed || other.IsClosed || ReferenceEquals (this, other)) return false;
+      bool isAppend;
+      if (B.EQ (other.A)) isAppend = true;
+      else if (B.EQ (other.B)) { other = other.Reversed (); isAppend = true; } 
+      else if (A.EQ (other.B)) isAppend = false;
+      else if (A.EQ (other.A)) { other = other.Reversed (); isAppend = false; }
+      else return false;
+      List<Seg> combined = isAppend ? [.. Segs, .. other.Segs] : [.. other.Segs, .. Segs];
+      List<Point2> pts = []; List<Extra> extra = []; EFlags flags = 0;
+      foreach (var seg in combined) {
+         pts.Add (seg.A);
+         if (seg.IsArc) {
+            extra.Add (new Extra (seg.Center, seg.IsCCW ? EFlags.CCW : EFlags.CW)); flags |= EFlags.HasArcs;
+         } else extra.Add (new Extra ());
+      }
+      var last = combined[^1].B;
+      if (pts[0].EQ (last)) flags |= EFlags.Closed;
+      else pts.Add (last);
+      result = new Poly ([.. pts], [.. extra], flags);
+      return true;
+   }
+
    /// <summary>Flags to perform some corner operations like fillet, corner-step etc</summary>
    [Flags]
    public enum ECornerOpFlags : ushort {
