@@ -61,7 +61,7 @@ public class TypeFace {
 
    /// <summary>Returns an always-available default typeface (Roboto, 18px)</summary>
    public static TypeFace Default {
-      get => mDefault ??= new (Lib.ReadBytes ("wad:GL/Fonts/Roboto-Regular.ttf"), 18);
+      get => mDefault ??= new (Lib.ReadBytes ("nori:GL/Fonts/Roboto-Regular.ttf"), 18);
       set => mDefault = value;
    }
    static TypeFace? mDefault;
