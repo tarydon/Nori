@@ -13,20 +13,20 @@ public interface IEQuable<in T> {
 
 #region interface IIndexed -------------------------------------------------------------------------
 /// <summary>IIndexed implements a class that has an unsigned 16-bit index</summary>
-public interface IIndexed { 
+public interface IIndexed {
    ushort Idx { get; set; }
 }
 #endregion
 
 #region interface IStmLocator ----------------------------------------------------------------------
 /// <summary>The IStmLocator interface provides the basis for the Lib.OpenRead and related functions</summary>
-/// It allows us to open a stream using an abstract filename like "wad:GL/Shader/Pixel.frag", 
+/// It allows us to open a stream using an abstract filename like "nori:GL/Shader/Pixel.frag",
 /// without having to worry about where that file is stored. It could be different on developer
 /// machines, and different on installations on different operating systems. In general, we will
 /// never try to open any standard resource files using raw filenames, but should always use a
-/// stream-locator to open the file. In this example, the _prefix_ "wad:" routes this call to
+/// stream-locator to open the file. In this example, the _prefix_ "nori:" routes this call to
 /// a specific stream locator for that virtual drive, and that would have been registered earlier
-/// using Lib.Register(IStmLocator). 
+/// using Lib.Register(IStmLocator).
 public interface IStmLocator {
    public string Prefix { get; }
    public Stream? Open (string name);

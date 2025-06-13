@@ -11,7 +11,7 @@ class ShaderImp {
    // Constructor --------------------------------------------------------------
    /// <summary>Construct a pipeline given the code for the individual shaders</summary>
    ShaderImp (string name, EMode mode, EVertexSpec vspec, string[] code, bool blend, bool depthTest, bool polyOffset, EStencilBehavior stencil) {
-      (Name, Mode, VSpec, Blending, DepthTest, PolygonOffset, StencilBehavior, Handle) 
+      (Name, Mode, VSpec, Blending, DepthTest, PolygonOffset, StencilBehavior, Handle)
          = (name, mode, vspec, blend, depthTest, polyOffset, stencil, GL.CreateProgram ());
       code.ForEach (a => GL.AttachShader (Handle, sCache.Get (a, CompileShader)));
       GL.LinkProgram (Handle);
@@ -39,7 +39,7 @@ class ShaderImp {
          if (uname == "LTypeTexture") MakeLTypeTexture ();
       }
    }
-   // A cache of already compiled individual shaders 
+   // A cache of already compiled individual shaders
    static Dictionary<string, HShader> sCache = [];
 
    // Properties ---------------------------------------------------------------
@@ -166,7 +166,7 @@ class ShaderImp {
    // Compiles an individual shader, given the source file (this reuses already compiled
    // shaders where possible, since some shaders are part of multiple pipelines)
    HShader CompileShader (string file) {
-      var text = Lib.ReadText ($"nwad:GL/Shader/{file}");
+      var text = Lib.ReadText ($"nori:GL/Shader/{file}");
       var eShader = Enum.Parse<EShader> (Path.GetExtension (file)[1..], true);
       var shader = GL.CreateShader (eShader);
       GL.ShaderSource (shader, text);
@@ -182,7 +182,7 @@ class ShaderImp {
    // and builds it (that index contains the list of actual vertex / geometry / fragment
    // programs)
    static ShaderImp Load ([CallerMemberName] string name = "") {
-      sIndex ??= Lib.ReadLines ("nwad:GL/Shader/Index.txt");
+      sIndex ??= Lib.ReadLines ("nori:GL/Shader/Index.txt");
       // Each line in the index.txt contains these:
       // 0:Name  1:Mode  2:VSpec  3:Blending  4:DepthTest  5:PolygonOffset  6:StencilBehavior  7:Programs
       foreach (var line in sIndex) {
@@ -202,7 +202,7 @@ class ShaderImp {
 
    // This is called exactly once in the application lifetime to make the line-type texture.
    // We store the different line-type patterns in a texture. The t coordinate is used to select
-   // one of the different line-types and then the s coordinate is used to pick up the stipple 
+   // one of the different line-types and then the s coordinate is used to pick up the stipple
    // pattern for that linetype.
    static void MakeLTypeTexture () {
       if (miLTypeTextureMade) return;
@@ -267,7 +267,7 @@ readonly record struct Attrib (int Dims, EDataType Type, int Size, bool Integral
    public static Attrib AVec3h = new (3, EDataType.Half, 6, false);
    public static Attrib AVec4s = new (4, EDataType.Short, 8, true);
 
-   public static Attrib[] GetFor (EVertexSpec spec) 
+   public static Attrib[] GetFor (EVertexSpec spec)
       => spec switch {
          EVertexSpec.Vec2F => [AVec2f],
          EVertexSpec.Vec3F_Vec3H => [AVec3f, AVec3h],

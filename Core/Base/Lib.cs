@@ -92,7 +92,7 @@ public static class Lib {
    public static void Init () {
       if (!sInited) {
          sInited = true;
-         Register (new FileStmLocator ("nwad:", $"{DevRoot}/Wad/"));
+         Register (new FileStmLocator ("nori:", $"{DevRoot}/Wad/"));
          AddAssembly (Assembly.GetExecutingAssembly ());
          AddNamespace ("Nori"); AddNamespace ("System"); AddNamespace ("System.Collections.Generic");
       }
@@ -135,7 +135,7 @@ public static class Lib {
 
    /// <summary>Called to open a stream using the IStmLocator service</summary>
    /// For example, a stream can be opened from the wad using syntax like
-   /// Sys.OpenRead ("wad:GL/point.frag");
+   /// Sys.OpenRead ("nori:GL/point.frag");
    public static Stream OpenRead (string name) =>
                sLocators.Select (locator => locator.Open (name)).FirstOrDefault (stm => stm != null)
                ?? throw new Exception ($"Could not open {name}");
