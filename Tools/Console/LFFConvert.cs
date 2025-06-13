@@ -33,6 +33,7 @@ public class LFF2LFontConverter {
          switch (line.FirstOrDefault ()) {
             case '#': // Comment line
                SetSpacingParams (line);
+               TrySetFontName(line);
                break;
 
             case '[':
@@ -71,17 +72,20 @@ public class LFF2LFontConverter {
    // Implementation -----------------------------------------------------------
    // Parses font spacing metadata from comments
    void SetSpacingParams (string line) {
-      const string LetterSpacingTkn = "# LetterSpacing:", WordSpacingTkn = "# WordSpacing:", LineSpacingFactorTkn = "# LineSpacingFactor:";
-      switch (line) {
-         case string s when s.StartsWith (LetterSpacingTkn):
-            mLetterSpacing = double.Parse (s[LetterSpacingTkn.Length..].Trim ());
-            break;
-         case string s when s.StartsWith (WordSpacingTkn):
-            mWordSpacing = double.Parse (s[WordSpacingTkn.Length..].Trim ());
-            break;
-         case string s when s.StartsWith (LineSpacingFactorTkn):
-            mLineSpacingFactor = double.Parse (s[LineSpacingFactorTkn.Length..].Trim ());
-            break;
+      if (line.StartsWith ("# LetterSpacing:"))
+         mLetterSpacing = double.Parse (line[16..].Trim ());      // "# LetterSpacing:".Length == 16
+      else if (line.StartsWith ("# WordSpacing:"))
+         mWordSpacing = double.Parse (line[14..].Trim ());        // "# WordSpacing:".Length == 14
+      else if (line.StartsWith ("# LineSpacingFactor:"))
+         mLineSpacingFactor = double.Parse (line[21..].Trim ());  // "# LineSpacingFactor:".Length == 21
+   }
+
+   // Checks if the line contains a valid # Name: header and sets the font name.
+   void TrySetFontName (string line) {
+      if (line.StartsWith ("# Name:")) {
+         var name = line[7..].Trim (); // "# Name:".Length == 7
+         if (!name.IsBlank ())
+            mFontName = name;
       }
    }
 
@@ -132,8 +136,8 @@ public class LFF2LFontConverter {
          if (mCharCache.TryGetValue (reuseKey.ToLower (), out var reused)) {
             fc.ReuseKey = reused;
             for (var r = reused; r != null; r = r.ReuseKey) {
-               if (r.Strokes.Count > 0) fc.Strokes.AddRange (r.Strokes);
-               if (r.PenMoves.Count > 0) fc.PenMoves.AddRange (r.PenMoves);
+               fc.Strokes.AddRange (r.Strokes);
+               fc.PenMoves.AddRange (r.PenMoves);
             }
          }
          mCharCache[codeHex] = fc;
@@ -175,19 +179,18 @@ public class LFF2LFontConverter {
    static (Point2 Point, double Bulge) ExtractArc (string s) => (ExtractPoint (s), double.Parse (s.Split (',')[2][1..]));
 
    // Returns a compact drawing command string based on the relative position of two points
-   static string GetCommand (Point2 a, Point2 b) =>
-     (a.X.EQ (b.X), a.Y.EQ (b.Y)) switch {
-        (true, _) => $" V{b.Y}",  // Vertical line: same X
-        (_, true) => $" H{b.X}",  // Horizontal line: same Y
-        _ => $" L{b.X},{b.Y}"     // General line
-     };
+   static string GetCommand (Point2 a, Point2 b) {
+      if (a.X.EQ (b.X)) return $" V{b.Y}";  // Vertical line: same X
+      if (a.Y.EQ (b.Y)) return $" H{b.X}";  // Horizontal line: same Y
+      return $" L{b.X},{b.Y}";              // General line
+   }
 
    // Private fields ------------------------------------------------
    Dictionary<string, FontChar> mCharCache = []; // Cache of parsed characters
    double mAscender = double.MinValue,   // Highest Y value of 'M' character (top of font)
           mDescender = double.MaxValue,  // Lowest Y value in all characters (bottom of font)
           mLetterSpacing = 0, mWordSpacing = 0, mLineSpacingFactor = 1;
-   string mFontName,
+   string mFontName = "",
           mOutputFile; // Output LFONT file paths
    string[] mLffLines; // All raw lines read from the LFF font file
 

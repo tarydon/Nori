@@ -92,10 +92,11 @@ static class Program {
          Environment.Exit (1);
       }
       try {
-         string outPath = Path.Combine (@"N:\Wad\DXF", Path.GetFileNameWithoutExtension (lffPath) + ".lfont");
+         string outPath = $"{Lib.DevRoot}/Wad/DXF/{Path.GetFileNameWithoutExtension (lffPath)}.lfont";
          // Perform the actual conversion
          new LFF2LFontConverter (lffPath, outPath).BuildLFont ();
          Console.ForegroundColor = ConsoleColor.Green;
+         Console.OutputEncoding = System.Text.Encoding.UTF8;
          Console.WriteLine ($"Converted {Path.GetFileName (lffPath)} → {outPath}");
          Console.ResetColor ();
       } catch (Exception ex) {
