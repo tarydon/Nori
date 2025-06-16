@@ -92,10 +92,9 @@ public static class Lib {
    public static void Init () {
       if (!sInited) {
          sInited = true;
-         Register (new FileStmLocator ("wad:", $"{DevRoot}/Wad/"));
+         Register (new FileStmLocator ("nori:", $"{DevRoot}/Wad/"));
          AddAssembly (Assembly.GetExecutingAssembly ());
          AddNamespace ("Nori"); AddNamespace ("System"); AddNamespace ("System.Collections.Generic");
-         AddNamespace ("Pix");
       }
    }
    static bool sInited;
@@ -136,11 +135,10 @@ public static class Lib {
 
    /// <summary>Called to open a stream using the IStmLocator service</summary>
    /// For example, a stream can be opened from the wad using syntax like
-   /// Sys.OpenRead ("wad:GL/point.frag");
-   public static Stream OpenRead (string name) {
-      var stm = sLocators.Select (a => a.Open (name)).FirstOrDefault ();
-      return stm ?? throw new Exception ($"Could not open {name}");
-   }
+   /// Sys.OpenRead ("nori:GL/point.frag");
+   public static Stream OpenRead (string name) =>
+               sLocators.Select (locator => locator.Open (name)).FirstOrDefault (stm => stm != null)
+               ?? throw new Exception ($"Could not open {name}");
 
    /// <summary>Calls a function asynchronously on the current thread</summary>
    public static void Post (Action act) {
