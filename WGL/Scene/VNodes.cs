@@ -1,6 +1,6 @@
 // ────── ╔╗
-// ╔═╦╦═╦╦╬╣ VNodeAux.cs
-// ║║║║╬║╔╣║ <<TODO>>
+// ╔═╦╦═╦╦╬╣ VNodes.cs
+// ║║║║╬║╔╣║ Some derived types of VNode (GroupVN, SimpleVN, TraceVN, XfmVN etc)
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 using System.Windows.Threading;
 namespace Nori;

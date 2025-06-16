@@ -17,6 +17,8 @@ class Program {
    Program (string[] args) {
       Lib.Init ();
       Lux.CreatePanel (true);
+      DXFReader.DarkenColors = false;
+      DXFReader.WhiteToBlack = false;
       foreach (var arg in args) {
          if (int.TryParse (arg, out int n)) {
             if (n >= 0) mTestID.Add (n);
