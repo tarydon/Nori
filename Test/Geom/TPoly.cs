@@ -197,4 +197,27 @@ class PolyTests {
       Poly.Parse ("M0,0H10").Closed ().Is ("M0,0H10Z");
       Poly.Parse ("M0,0H10V5H0Z").Closed ().Is ("M0,0H10V5H0Z");
    }
+
+   [Test (75, "Poly.TryCleanup tests")]
+   void Test8 () {
+      // Zero-length segs
+      Poly.Parse ("M0,0L0,0").TryCleanup (out Poly? poly); poly!.Is (""); // Expected "M0,0"
+      Poly.Parse ("M0,0L0,0H0V0").TryCleanup (out poly); poly!.Is ("");
+      Poly.Parse ("M0,0L0,0H10V10").TryCleanup (out poly); poly!.Is ("M0,0H10V10");
+      Poly.Parse ("M0,0L0,0H10V10V10").TryCleanup (out poly); poly!.Is ("M0,0H10V10");
+      Poly.Parse ("M0,0L0,0H10V10V10Z").TryCleanup (out poly); poly!.Is ("M0,0H10V10Z");
+
+      // Overlapping segs
+      Poly.Parse ("M0,0H5H10").TryCleanup (out poly); poly!.Is ("M0,0H10");
+      Poly.Parse ("M0,0Q10,10,1Q0,20,1").TryCleanup (out poly); poly!.Is ("M0,0Q0,20,2");
+      Poly.Parse ("M0,0H10H5").TryCleanup (out poly).Is (false); // Folds back on itself; Essentially a "slit".
+      Poly.Parse ("M0,0Q0,20,2Q10,10,-1").TryCleanup (out poly); poly!.Is ("M0,0Q10,10,1"); // Folds back on itself; Gets truncated.
+
+      // Multiple overlapping segs (w/o fold-back/slits)
+      Poly.Parse ("M0,0H10V10V15V20H0").TryCleanup (out poly); poly!.Is ("M0,0H10V20H0");
+      Poly.Parse ("M0,0H10V10V15V20H0Z").TryCleanup (out poly); poly!.Is ("M0,0H10V20H0Z");
+
+      // Mergeable last and first segs
+
+   }
 }
