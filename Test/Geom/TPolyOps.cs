@@ -59,7 +59,7 @@ class PolyOpsTests {
 class BooleanOpsTests {
    [Test (69, "Basic boolean operations")]
    void Test1 () {
-      List<List<Poly>> polys = [ 
+      List<List<Poly>> polys = [
          // Union => Star
          [Poly.Polygon ((300, 350), 300, 3),
          Poly.Polygon ((300, 350), 300, 3, Lib.PI)],
@@ -104,7 +104,7 @@ class BooleanOpsTests {
          }
          output.ForEach (poly => sb.AppendLine (poly.ToString ()));
          File.WriteAllText (NT.TmpTxt, sb.ToString ());
-         Assert.TextFilesEqual ($"{NT.Data}/Geom/Poly/Boolean/basic-{ops[i]}.txt", NT.TmpTxt);
+         Assert.TextFilesEqual1 ($"Geom/Poly/Boolean/basic-{ops[i]}.txt", NT.TmpTxt);
       }
    }
 }
