@@ -328,7 +328,10 @@ public partial class Poly {
    }
 
    public bool TryCleanup (out Poly? result, double threshold = 1e-6) {
-      if (IsCircle) { result = null; return false; }
+      if (IsCircle || mPts.Length < 2) { result = null; return false; }
+
+      if (!IsClosed && Pts[0].EQ (Pts[^1], threshold))
+         return this.Closed ().TryCleanup (out result, threshold);
 
       bool cleaned = TryCleanupZeroSegs (out result, threshold);
       if (cleaned && result!.Count == 0) return true; // Empty poly!
@@ -340,18 +343,19 @@ public partial class Poly {
    }
 
    bool TryCleanupZeroSegs (out Poly? result, double threshold = 1e-6) {
-      HashSet<int> idxs = [];
+      HashSet<int> skipIdxs = [];
       for (int i = 0, limit = mPts.Length - 1; i < limit; i++) {
          if (mPts[i].EQ (mPts[i + 1], threshold))
-            idxs.Add (i);
+            skipIdxs.Add (i);
       }
-      if (idxs.Count == 0) { result = null; return false; }
+      if (skipIdxs.Count == 0) { result = null; return false; }
 
-      var pts = mPts.Select ((pt, idx) => (pt, idx)).Where (a => !idxs.Contains (a.idx)).Select (a => a.pt);
+      var pts = mPts.Select ((pt, idx) => (pt, idx)).Where (a => !skipIdxs.Contains (a.idx)).Select (a => a.pt);
       List<Extra> extra = [];
       if (HasArcs) {
-         foreach (var idx in idxs) {
+         foreach (var idx in Enumerable.Range (0, mExtra.Length)) {
             if (idx >= mExtra.Length) break;
+            if (skipIdxs.Contains (idx)) continue;
             extra.Add (mExtra[idx]);
          }
       }
@@ -378,7 +382,6 @@ public partial class Poly {
             extras.Add (mExtra[baseSegIdx]);
 
          if (curr.IsLast) {
-            // [ ] Check mergeability of last seg with first seg, for a closed poly.
             if (!canMerge)
                pts.Add (curr.A);
             if (!IsClosed)
