@@ -1,3 +1,7 @@
+// ────── ╔╗
+// ╔═╦╦═╦╦╬╣ DXFReader.cs
+// ║║║║╬║╔╣║ Implements DXFReader: reads in a Dwg2 from a DXF file
+// ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 namespace Nori;
 
 public partial class DXFReader {
@@ -7,7 +11,7 @@ public partial class DXFReader {
 
    // Methods ------------------------------------------------------------------
    /// <summary>Parse the file, Build the DXF and return it</summary>
-   public Dwg Build () {
+   public Dwg2 Build () {
       // In general, we have a 'backing variable' for each group code, like
       // 1=>Text, 62=>ColorNo, 2=>Name, 10=>X0 etc.
       // However, there are a few entities (like LWPOLYLINE, HATCH, LEADER)
@@ -43,7 +47,7 @@ public partial class DXFReader {
    }
 
    /// <summary>Helper to load a DXF file, given the filename</summary>
-   public static Dwg FromFile (string name) => new DXFReader (name).Build ();
+   public static Dwg2 FromFile (string name) => new DXFReader (name).Build ();
 
    // Implementation -----------------------------------------------------------
    // Called at the start of each section.

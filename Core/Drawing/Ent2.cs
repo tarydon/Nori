@@ -1,4 +1,71 @@
+// ────── ╔╗
+// ╔═╦╦═╦╦╬╣ Ent2.cs
+// ║║║║╬║╔╣║ Implements various types of Ent2 (2D entities in a drawing)
+// ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 namespace Nori;
+
+#region class Ent2 ---------------------------------------------------------------------------------
+/// <summary>Base class for all the entities in 2D</summary>
+[EPropClass]
+public abstract partial class Ent2 {
+   // Constructors -------------------------------------------------------------
+   protected Ent2 () => mLayer = null!;
+   protected Ent2 (Layer2 layer) => mLayer = layer;
+   protected Ent2 (Ent2 other) => (mLayer, mColor, mFlags) = (other.mLayer, other.mColor, other.mFlags);
+
+   // Properties ---------------------------------------------------------------
+   /// <summary>Returns the Bound of this entity in the drawing</summary>
+   public abstract Bound2 Bound { get; }
+
+   /// <summary>Returns the color of this entity, if it has a specific color</summary>
+   /// If this is set to Color4.Nil, then the entity simply uses the color from
+   /// the layer
+   public Color4 Color { get => mColor; set => mColor = value; }
+   Color4 mColor = Color4.Nil;
+
+   /// <summary>The layer on which this Ent2 exists</summary>
+   public Layer2 Layer => mLayer;
+   Layer2 mLayer;
+
+   /// <summary>Is this entity selected?</summary>
+   public bool IsSelected {
+      get => Get (E2Flags.Selected);
+      set { if (Set (E2Flags.Selected, value)) Notify (EProp.Selected); }
+   }
+
+   /// <summary>Is this entity part of a block definition?</summary>
+   public bool InBlock {
+      get => Get (E2Flags.InBlock);
+      set => Set (E2Flags.InBlock, value);
+   }
+
+   // Methods ------------------------------------------------------------------
+   /// <summary>Computes the Bound of this entity, after a given transform is applied to it</summary>
+   /// This is useful to compute the bound of an Insert - we take each entity in the Block
+   /// referenced by the Insert, and get the bound of that entity under this rotation. That gives
+   /// us the bound of the Insert
+   public abstract Bound2 GetBound (Matrix2 xfm);
+
+   /// <summary>Method used to pick the closest entity in a drawing</summary>
+   /// In derived classes, override this to check if the given point pt is closer
+   /// than the given threshold to the entity. If so:
+   /// - Return true
+   /// - Set threshold to the minimum distance
+   public virtual bool IsCloser (Point2 pt, ref double threshold) => false;
+
+   // Protected ----------------------------------------------------------------
+   // Bitflags for this entity
+   protected E2Flags mFlags;
+   // Returns true if the specified bit is set
+   protected bool Get (E2Flags bit) => (mFlags & bit) != 0;
+   // Sets/resets one bit from the flags, returns true if state changed
+   protected bool Set (E2Flags bits, bool value) {
+      var old = mFlags;
+      if (value) mFlags |= bits; else mFlags &= ~bits;
+      return mFlags != old;
+   }
+}
+#endregion
 
 #region class E2Dimension --------------------------------------------------------------------------
 /// <summary>Represents a dimension entity</summary>
@@ -27,7 +94,7 @@ public class E2Dimension : Ent2 {
 public class E2Insert : Ent2 {
    // Constructors -------------------------------------------------------------
    E2Insert () => (mBlockName, mDwg) = ("", null!);
-   public E2Insert (Dwg dwg, Layer2 layer, string blockName, Point2 pt, double angle, double xScale, double yScale) : base (layer)
+   public E2Insert (Dwg2 dwg, Layer2 layer, string blockName, Point2 pt, double angle, double xScale, double yScale) : base (layer)
       => (mDwg, mAngle, mBlockName, XScale, YScale, mPt) = (dwg, angle, blockName, xScale, yScale, pt);
 
    // Properties ---------------------------------------------------------------
@@ -38,7 +105,7 @@ public class E2Insert : Ent2 {
    /// <summary>The Block this E2Insert is referencing</summary>
    public Block2 Block => mBlock ??= mDwg.GetBlock (mBlockName) ?? throw new Exception ($"Block {mBlockName} not found");
    Block2? mBlock;
-   Dwg mDwg;
+   Dwg2 mDwg;
 
    /// <summary>Name of the block</summary>
    public string BlockName => mBlockName;

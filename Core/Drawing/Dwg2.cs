@@ -1,10 +1,14 @@
+// ────── ╔╗
+// ╔═╦╦═╦╦╬╣ Dwg2.cs
+// ║║║║╬║╔╣║ Implements the Dwg class, representing a 2D drawing with different types of entities
+// ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 namespace Nori;
 
-#region class Dwg ----------------------------------------------------------------------------------
+#region class Dwg2 ---------------------------------------------------------------------------------
 /// <summary>Class to represent a drawing in 2D</summary>
 [EPropClass]
-public partial class Dwg {
-   public Dwg () => Ents.Subscribe (OnEntsChanged);
+public partial class Dwg2 {
+   public Dwg2 () => Ents.Subscribe (OnEntsChanged);
 
    // Properties ---------------------------------------------------------------
    /// <summary>The bounding rectangle of the drawing</summary>
@@ -136,7 +140,7 @@ public partial class Dwg {
    }
 
    /// <summary>Purges layers, blocks, styles that are unused</summary>
-   public Dwg Purge () {
+   public Dwg2 Purge () {
       HashSet<Style2> styles = [];
       HashSet<Block2> blocks = [];
       HashSet<Layer2> layers = [];

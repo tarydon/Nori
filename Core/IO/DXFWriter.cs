@@ -1,6 +1,10 @@
+// ────── ╔╗
+// ╔═╦╦═╦╦╬╣ DXFWriter.cs
+// ║║║║╬║╔╣║ Implements DXFWriter: writes out a Dwg2 to a DXF file
+// ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 namespace Nori;
 
-public class DXFWriter (Dwg dwg) {
+public class DXFWriter (Dwg2 dwg) {
    public string Write () {
       S.Clear ();
       Out (" 0\nSECTION\n 2\nHEADER\n 0\nENDSEC\n 0\nSECTION\n 2\nTABLES\n");
@@ -13,7 +17,7 @@ public class DXFWriter (Dwg dwg) {
       return S.ToString ();
    }
 
-   public static void SaveFile (Dwg dwg, string file)
+   public static void SaveFile (Dwg2 dwg, string file)
       => File.WriteAllText (file, new DXFWriter (dwg).Write ());
 
    int Out (string s) { S.Append (s); return 0; }
@@ -182,6 +186,6 @@ public class DXFWriter (Dwg dwg) {
       return 0;
    }
 
-   readonly Dwg mDwg = dwg;
+   readonly Dwg2 mDwg = dwg;
    readonly StringBuilder S = new ();
 }

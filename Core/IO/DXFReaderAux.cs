@@ -1,6 +1,8 @@
-﻿using System.Diagnostics;
-using System.Globalization;
-using System.Text.RegularExpressions;
+// ────── ╔╗
+// ╔═╦╦═╦╦╬╣ DXFReaderAux.cs
+// ║║║║╬║╔╣║ Continuation of the DXFReader implementation
+// ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
+using System.Diagnostics;
 namespace Nori;
 
 public partial class DXFReader {
@@ -187,7 +189,7 @@ public partial class DXFReader {
 
    // Private data -------------------------------------------------------------
    int G; string V = "";         // Current Group-Code and Group-Value (updated by Next())
-   readonly Dwg mDwg = new ();   // The drawing we are building;
+   readonly Dwg2 mDwg = new ();   // The drawing we are building;
    readonly string mFile;        // The file we're reading from
    StreamReader mReader;         // Reader we're loading from
    static readonly HashSet<string> sSkipBlocks = [

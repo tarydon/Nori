@@ -311,7 +311,7 @@ class GeoTests {
          ((400, 200), (460, 220), (430, 270))
       ];
 
-      var dwg = new Dwg ();
+      var dwg = new Dwg2 ();
       foreach (var (a, b, c) in testCases) {
          dwg.Add (Poly.Line (a, b)); dwg.Add (Poly.Line (b, c)); dwg.Add (Poly.Line (c, a));
          var s = Geo.Get3PCircle (a, b, c);
@@ -339,7 +339,7 @@ class GeoTests {
          ((50, 50), (90, 70), (65, 45), (70, 80), (57, 53), (69, 74)),
       ];
 
-      var dwg = new Dwg ();
+      var dwg = new Dwg2 ();
       _ = dwg.CurrentLayer;      // Force layer 0 to be made
       var layer2 = new Layer2 ("BISECT", Color4.Blue, ELineType.Dot);
       dwg.Add (layer2);
@@ -366,7 +366,7 @@ class GeoTests {
 
    [Test (103, "Geo.CircleTangentLLL")]
    void Test6 () {
-      var dwg = new Dwg ();
+      var dwg = new Dwg2 ();
       _ = dwg.CurrentLayer;      // Force layer 0 to be made
       var layer2 = new Layer2 ("BISECT", Color4.Blue, ELineType.Dot);
       dwg.Add (layer2);
