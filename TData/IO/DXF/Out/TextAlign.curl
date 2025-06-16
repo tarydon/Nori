@@ -1,0 +1,129 @@
+(Dwg){
+  Layers:[ { Name:0 Color:#FF333333 Linetype:Continuous Visible:True } ]
+  Styles:[ { Name:STANDARD Font:SIMPLEX XScale:1 } ]
+  Ents:[
+    (E2Poly){ Layer:0 Poly:C0,-30,0.5 }
+    (E2Text){
+      Layer:0
+      Pt:0,-30
+      Text:"BL{y}"
+      Style:STANDARD
+      Alignment:BotLeft
+      Height:10
+      XScale:1
+    }
+    (E2Poly){ Layer:0 Poly:C80,-30,0.5 }
+    (E2Text){
+      Layer:0
+      Pt:80,-30
+      Text:"BC{y}"
+      Style:STANDARD
+      Alignment:BotCenter
+      Height:10
+      XScale:1
+    }
+    (E2Poly){ Layer:0 Poly:C160,-30,0.5 }
+    (E2Text){
+      Layer:0
+      Pt:160,-30
+      Text:"BR{y}"
+      Style:STANDARD
+      Alignment:BotRight
+      Height:10
+      XScale:1
+    }
+    (E2Poly){ Layer:0 Poly:M-5,0H-20 }
+    (E2Poly){ Layer:0 Poly:M-5,10H-20 }
+    (E2Poly){ Layer:0 Poly:C0,0,0.5 }
+    (E2Text){
+      Layer:0
+      Pt:0,0
+      Text:"AL{y}"
+      Style:STANDARD
+      Alignment:BaseLeft
+      Height:10
+      XScale:1
+    }
+    (E2Poly){ Layer:0 Poly:C80,0,0.5 }
+    (E2Text){
+      Layer:0
+      Pt:80,0
+      Text:"AC{y}"
+      Style:STANDARD
+      Alignment:BaseCenter
+      Height:10
+      XScale:1
+    }
+    (E2Poly){ Layer:0 Poly:C160,0,0.5 }
+    (E2Text){
+      Layer:0
+      Pt:160,0
+      Text:"AR{y}"
+      Style:STANDARD
+      Alignment:BaseRight
+      Height:10
+      XScale:1
+    }
+    (E2Poly){ Layer:0 Poly:C0,30,0.5 }
+    (E2Text){
+      Layer:0
+      Pt:0,30
+      Text:"ML{y}"
+      Style:STANDARD
+      Alignment:MidLeft
+      Height:10
+      XScale:1
+    }
+    (E2Poly){ Layer:0 Poly:C80,30,0.5 }
+    (E2Text){
+      Layer:0
+      Pt:80,30
+      Text:"MC{y}"
+      Style:STANDARD
+      Alignment:MidCenter
+      Height:10
+      XScale:1
+    }
+    (E2Poly){ Layer:0 Poly:C160,30,0.5 }
+    (E2Text){
+      Layer:0
+      Pt:160,30
+      Text:"MR{y}"
+      Style:STANDARD
+      Alignment:MidRight
+      Height:10
+      XScale:1
+    }
+    (E2Poly){ Layer:0 Poly:C0,60,0.5 }
+    (E2Text){
+      Layer:0
+      Pt:0,60
+      Text:"TL{y}"
+      Style:STANDARD
+      Alignment:TopLeft
+      Height:10
+      XScale:1
+    }
+    (E2Poly){ Layer:0 Poly:C80,60,0.5 }
+    (E2Text){
+      Layer:0
+      Pt:80,60
+      Text:"TC{y}"
+      Style:STANDARD
+      Alignment:TopCenter
+      Height:10
+      XScale:1
+    }
+    (E2Poly){ Layer:0 Poly:C160,60,0.5 }
+    (E2Text){
+      Layer:0
+      Pt:160,60
+      Text:"TR{y}"
+      Style:STANDARD
+      Alignment:TopRight
+      Height:10
+      XScale:1
+    }
+    (E2Poly){ Layer:0 Poly:M-30,-40H180V70H-30Z }
+  ]
+}
