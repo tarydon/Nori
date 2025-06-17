@@ -274,24 +274,26 @@ public partial class Poly {
    public bool TryAppend (Poly other, out Poly? result, double threshold = 1e-6) {
       result = null;
       if (IsClosed || other.IsClosed || ReferenceEquals (this, other)) return false;
-      bool isAppend;
-      if (B.EQ (other.A)) isAppend = true;
-      else if (B.EQ (other.B)) { other = other.Reversed (); isAppend = true; } 
-      else if (A.EQ (other.B)) isAppend = false;
-      else if (A.EQ (other.A)) { other = other.Reversed (); isAppend = false; }
+      Poly a, b;
+      if (B.EQ (other.A, threshold)) (a, b) = (this, other);
+      else if (B.EQ (other.B, threshold)) (a, b) = (this, other.Reversed ());
+      else if (A.EQ (other.B, threshold)) (a, b) = (other, this);
+      else if (A.EQ (other.A, threshold)) (a, b) = (other.Reversed (), this);
       else return false;
-      List<Seg> combined = isAppend ? [.. Segs, .. other.Segs] : [.. other.Segs, .. Segs];
-      List<Point2> pts = []; List<Extra> extra = []; EFlags flags = 0;
-      foreach (var seg in combined) {
-         pts.Add (seg.A);
-         if (seg.IsArc) {
-            extra.Add (new Extra (seg.Center, seg.IsCCW ? EFlags.CCW : EFlags.CW)); flags |= EFlags.HasArcs;
-         } else extra.Add (new Extra ());
+      ImmutableArray<Point2> pts = [.. a.mPts.SkipLast (1), .. b.mPts];
+      EFlags flags = 0;
+      if (pts[0].EQ (pts[^1])) {
+         flags |= EFlags.Closed; pts = [.. pts.SkipLast (1)];
       }
-      var last = combined[^1].B;
-      if (pts[0].EQ (last)) flags |= EFlags.Closed;
-      else pts.Add (last);
-      result = new Poly ([.. pts], [.. extra], flags);
+      if (!a.HasArcs && !b.HasArcs) result = new Poly (pts, [], flags);
+      else {
+         var extra = new List<Extra> (a.Count + b.Count);
+         for (int i = 0; i < a.Count; i++)
+            extra.Add (i < a.mExtra.Length ? a.mExtra[i] : new Extra ());
+         for (int i = 0; i < b.mExtra.Length; i++)
+            extra.Add (b.mExtra[i]);
+         result = new Poly (pts, [.. extra], flags | EFlags.HasArcs);
+      }
       return true;
    }
 

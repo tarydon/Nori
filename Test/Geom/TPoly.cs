@@ -201,33 +201,24 @@ class PolyTests {
    [Test (75, "Poly.Append tests")]
    void Test8 () {
       Poly p = Poly.Parse ("M0,50 V0 H100 V50Z"), other = Poly.Parse ("M0,50 H10");
-      p.TryAppend (other, out Poly? p1); p1?.Is (false);       // Can't append to a closed pline
-      p = Poly.Parse ("M0,50 V0 H100 V50"); other = Poly.Parse ("M100,50 H110");
-      p.TryAppend (other, out Poly? p2);
-      p2?.Is ("M0,50V0H100V50H110");                           // Normal append
-      other = Poly.Parse ("M110,50 H100");
-      p.TryAppend (other, out Poly? p3);
-      p3?.Is ("M0,50V0H100V50H110");                           // Flip pline then append
-      other = Poly.Parse ("M10,50 H0");
-      p.TryAppend (other, out Poly? p4);
-      p4?.Is ("M10,50H0V0H100V50");                            // Flip pline, and prepend
-      other = Poly.Parse ("M0,50 H10");
-      p.TryAppend (other, out Poly? p5);
-      p5?.Is ("M10,50H0V0H100V50");                            // Prepend seg
-      other = Poly.Parse ("M0,50 H100");
-      p.TryAppend (other, out Poly? p6);
-      p6?.Is ("M0,50V0H100V50Z");                              // Result is closed
-      other = Poly.Arc (new (98, 50), 2, 180.D2R (), 0, false);
-      p.TryAppend (other, out Poly? P7);                       // Arc append
-      P7?.Is ("M0,50V0H100V50Q96,50,2");
-      other = Poly.Arc (new Point2 (2, 50), 2, 180.D2R (), 0, false);
-      p.TryAppend (other, out Poly? p8);                       // Arc prepend
-      p8?.Is ("M4,50Q0,50,2V0H100V50");
-      other = Poly.Arc (new (98, 50), 2, 180.D2R (), 0, true);
-      p.TryAppend (other, out Poly? P9);                       // Arc append,ccw
-      P9?.Is ("M0,50V0H100V50Q96,50,-2");
-      other = Poly.Arc (new Point2 (2, 50), 2, 180.D2R (), 0, true);
-      p.TryAppend (other, out Poly? p10);                      // Arc prepend,ccw
-      p10?.Is ("M4,50Q0,50,-2V0H100V50");
+      p.TryAppend (other, out Poly? p1); p1?.Is (false);             // Can't append to a closed pline
+      p = Poly.Parse ("M0,50 V0 H100 V50");
+      var tests = new (string Other, string Expected)[]
+      {
+        ("M100,50 H110",                "M0,50V0H100V50H110"),       // Normal append
+        ("M110,50 H100",                "M0,50V0H100V50H110"),       // Flip then append
+        ("M10,50 H0",                   "M10,50H0V0H100V50"),        // Flip then prepend
+        ("M0,50 H10",                   "M10,50H0V0H100V50"),        // Prepend seg
+        ("M0,50 H100",                  "M0,50V0H100V50Z"),          // Result is closed
+        (Poly.Arc(new(98, 50), 2, 180.D2R(), 0, false).ToString(),  "M0,50V0H100V50Q96,50,2"),   // Arc append (cw)
+        (Poly.Arc(new(2, 50), 2, 180.D2R(), 0, false).ToString(),   "M4,50Q0,50,2V0H100V50"),    // Arc prepend (cw)
+        (Poly.Arc(new(98, 50), 2, 180.D2R(), 0, true).ToString(),   "M0,50V0H100V50Q96,50,-2"),  // Arc append (ccw)
+        (Poly.Arc(new(2, 50), 2, 180.D2R(), 0, true).ToString(),    "M4,50Q0,50,-2V0H100V50")    // Arc prepend (ccw)
+      };
+      foreach (var (otherPoly, expected) in tests) {
+         Poly others = Poly.Parse (otherPoly);
+         p.TryAppend (others, out Poly? result);
+         result?.Is (expected);
+      }
    }
 }
