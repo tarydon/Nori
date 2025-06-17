@@ -198,7 +198,7 @@ class PolyTests {
       Poly.Parse ("M0,0H10V5H0Z").Closed ().Is ("M0,0H10V5H0Z");
    }
 
-   [Test (75, "Poly.Append tests")]
+   [Test (59, "Poly.Append tests")]
    void Test8 () {
       Poly p = Poly.Parse ("M0,50 V0 H100 V50Z"), other = Poly.Parse ("M0,50 H10");
       p.TryAppend (other, out Poly? p1); p1?.Is (false);             // Can't append to a closed pline

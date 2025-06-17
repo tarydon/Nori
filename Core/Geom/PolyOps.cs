@@ -271,7 +271,7 @@ public partial class Poly {
    }
 
    /// <summary>This tries to append the other poly to the current, only if their endpoints are within the threshold</summary>
-   public bool TryAppend (Poly other, out Poly? result, double threshold = 1e-6) {
+   public bool TryAppend (Poly other, [MaybeNullWhen (false)] out Poly result, double threshold = 1e-6) {
       result = null;
       if (IsClosed || other.IsClosed || ReferenceEquals (this, other)) return false;
       Poly a, b;
