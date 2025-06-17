@@ -97,5 +97,5 @@ class TLux {
       Assert.PNGFilesEqual ($"{NT.Data}/Lux/{file}", NT.TmpPNG);
    }
 
-   TypeFace mFace = new (Lib.ReadBytes ("wad:GL/Fonts/Roboto-Regular.ttf"), 28);
+   TypeFace mFace = new (Lib.ReadBytes ("nori:GL/Fonts/Roboto-Regular.ttf"), 28);
 }

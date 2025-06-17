@@ -1,0 +1,118 @@
+ 0
+SECTION
+ 2
+HEADER
+ 0
+ENDSEC
+ 0
+SECTION
+ 2
+TABLES
+ 0
+TABLE
+ 2
+LAYER
+ 70
+1
+ 0
+LAYER
+ 70
+0
+ 2
+0
+ 62
+250
+ 6
+CONTINUOUS
+ 0
+ENDTAB
+ 0
+ENDSEC
+ 0
+SECTION
+ 2
+ENTITIES
+ 0
+LINE
+ 8
+0
+ 10
+0
+ 20
+0
+ 11
+100
+ 21
+0
+ 0
+CIRCLE
+ 8
+0
+ 10
+10
+ 20
+10
+ 40
+5
+ 0
+CIRCLE
+ 8
+0
+ 10
+10
+ 20
+-10
+ 40
+5
+ 0
+POINT
+ 8
+0
+ 10
+0
+ 20
+0
+ 0
+POINT
+ 8
+0
+ 10
+10
+ 20
+10
+ 0
+POINT
+ 8
+0
+ 10
+10
+ 20
+-10
+ 0
+POINT
+ 8
+0
+ 10
+100
+ 20
+0
+ 0
+POINT
+ 8
+0
+ 10
+90
+ 20
+10
+ 0
+POINT
+ 8
+0
+ 10
+90
+ 20
+-10
+ 0
+ENDSEC
+ 0
+EOF

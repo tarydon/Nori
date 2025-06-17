@@ -37,7 +37,7 @@ public abstract class PNGCore {
       }
 
       uint crc = 0xFFFFFFFF;
-      foreach (var b in data) 
+      foreach (var b in data)
          crc = mCRCTable[(crc ^ b) & 0xFF] ^ (crc >> 8);
       return crc ^ 0xFFFFFFFF;
    }
@@ -45,14 +45,14 @@ public abstract class PNGCore {
 
    // Private data -------------------------------------------------------------
    // This 8 byte sequence is the signature found at the start of every PNG file
-   protected static readonly byte[] mSign = [137, 80, 78, 71, 13, 10, 26, 10]; 
+   protected static readonly byte[] mSign = [137, 80, 78, 71, 13, 10, 26, 10];
 }
 #endregion
 
 #region class PNGWriter ----------------------------------------------------------------------------
 /// <summary>PNGWriter can save a bitmap in PNG format</summary>
 /// This supports a few bitmap formats: RGB, RGBA and Greyscale (each with 8 bits per
-/// component). It does not use palletes. 
+/// component). It does not use palletes.
 public class PNGWriter : PNGCore {
    // Constructors -------------------------------------------------------------
    /// <summary>Construct a PNGWriter, given a DIBitmap to write</summary>
@@ -69,7 +69,7 @@ public class PNGWriter : PNGCore {
       mSign.ForEach (mStm.WriteByte);
       WriteIHDR ();
       WriteIDAT ();
-      WriteIEND ();      
+      WriteIEND ();
       return mStm.Data;
    }
 
@@ -95,10 +95,10 @@ public class PNGWriter : PNGCore {
    // For example a filter code of UP means that the values in the row are deltas relative to
    // the corresponding pixel one row above. On top of this, the whole IDAT chunk is
    // compressed using the Deflate algorithm.
-   // 
+   //
    // We use an adaptive algorithm that tries 3 different filters (NONE, SUB, UP) for each
-   // row and picks the best using a simple heuristic that tries to estimate which would 
-   // compress the best (without actually trying to compress each of the variants). 
+   // row and picks the best using a simple heuristic that tries to estimate which would
+   // compress the best (without actually trying to compress each of the variants).
    void WriteIDAT () {
       // We don't know the actual length (of the compressed data), so just write some
       // dummy value now - we'll come back and update this at the end of this function
@@ -119,8 +119,8 @@ public class PNGWriter : PNGCore {
             int idx = mBmp.Height - 1 - i;
             Array.Copy (mBmp.Data, idx * stride, current, 4, stride);
 
-            // For each row, we are going to compute a good filter type by computing all the 
-            // possible filter values, and evaluating which would be best. Since the 'best' 
+            // For each row, we are going to compute a good filter type by computing all the
+            // possible filter values, and evaluating which would be best. Since the 'best'
             // means the minimum data after compression, it is not easy to evaluate accurately
             // without actually compressing (which we don't want to do). As an approximation, we
             // are going to simply 'sum' the filtered values and pick the one with the minimum sum.
@@ -161,9 +161,9 @@ public class PNGWriter : PNGCore {
 
       // Now that we've finished writing the compressed data, we know the compressed
       // length so we can go back and update that in the chunk header, and we can also
-      // compute the checksum and write that out (note that the checksum is for the 
-      // 'compressed' bytes). 
-      int length = (int)mStm.Position - n - 4;  
+      // compute the checksum and write that out (note that the checksum is for the
+      // 'compressed' bytes).
+      int length = (int)mStm.Position - n - 4;
       U32 (ComputeCRC (mStm.WorkBuffer.AsSpan (n, length + 4)));
       mStm.Position = n - 4; I32 (length);
       mStm.Position = mStm.Length;

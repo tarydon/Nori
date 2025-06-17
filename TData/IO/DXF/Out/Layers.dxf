@@ -1,0 +1,284 @@
+ 0
+SECTION
+ 2
+HEADER
+ 0
+ENDSEC
+ 0
+SECTION
+ 2
+TABLES
+ 0
+TABLE
+ 2
+LAYER
+ 70
+10
+ 0
+LAYER
+ 70
+0
+ 2
+0
+ 62
+250
+ 6
+CONTINUOUS
+ 0
+LAYER
+ 70
+0
+ 2
+Layer1
+ 62
+174
+ 6
+DOT
+ 0
+LAYER
+ 70
+0
+ 2
+Layer2
+ 62
+204
+ 6
+DASH
+ 0
+LAYER
+ 70
+0
+ 2
+Layer3
+ 62
+100
+ 6
+DASHDOT
+ 0
+LAYER
+ 70
+0
+ 2
+Layer4
+ 62
+20
+ 6
+BORDER
+ 0
+LAYER
+ 70
+0
+ 2
+Layer5
+ 62
+14
+ 6
+CENTER
+ 0
+LAYER
+ 70
+0
+ 2
+Layer6
+ 62
+202
+ 6
+HIDDEN
+ 0
+LAYER
+ 70
+0
+ 2
+Layer7
+ 62
+122
+ 6
+DASH2
+ 0
+LAYER
+ 70
+0
+ 2
+Layer8
+ 62
+84
+ 6
+DASHDOTDOT
+ 0
+LAYER
+ 70
+0
+ 2
+Layer9
+ 62
+140
+ 6
+PHANTOM
+ 0
+ENDTAB
+ 0
+ENDSEC
+ 0
+SECTION
+ 2
+ENTITIES
+ 0
+POLYLINE
+ 8
+0
+ 66
+1
+ 10
+0
+ 20
+0
+ 70
+1
+ 0
+VERTEX
+ 8
+0
+ 10
+0
+ 20
+0
+ 0
+VERTEX
+ 8
+0
+ 10
+100
+ 20
+0
+ 0
+VERTEX
+ 8
+0
+ 10
+100
+ 20
+100
+ 0
+VERTEX
+ 8
+0
+ 10
+0
+ 20
+100
+ 0
+SEQEND
+ 8
+0
+ 0
+LINE
+ 8
+Layer9
+ 10
+90.002903
+ 20
+0
+ 11
+90.046275
+ 21
+100
+ 0
+LINE
+ 8
+Layer8
+ 10
+80.002902
+ 20
+0
+ 11
+80.046275
+ 21
+100
+ 0
+LINE
+ 8
+Layer7
+ 10
+70.002901
+ 20
+0
+ 11
+70.046274
+ 21
+100
+ 0
+LINE
+ 8
+Layer6
+ 10
+60.0029
+ 20
+0
+ 11
+60.046273
+ 21
+100
+ 0
+LINE
+ 8
+Layer5
+ 10
+50.002899
+ 20
+0
+ 11
+50.046272
+ 21
+100
+ 0
+LINE
+ 8
+Layer4
+ 10
+40.046271
+ 20
+100
+ 11
+40.002898
+ 21
+0
+ 0
+LINE
+ 8
+Layer3
+ 10
+30.002897
+ 20
+0
+ 11
+30.04627
+ 21
+100
+ 0
+LINE
+ 8
+Layer2
+ 10
+20.002897
+ 20
+0
+ 11
+20.046269
+ 21
+100
+ 0
+LINE
+ 8
+Layer1
+ 10
+10.002896
+ 20
+0
+ 11
+10.046268
+ 21
+100
+ 0
+ENDSEC
+ 0
+EOF

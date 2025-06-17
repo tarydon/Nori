@@ -76,6 +76,7 @@ class Matrix2Tests {
       m3 = Matrix2.Scaling (new (1, 2), 2, 3); m3.Is ("[2,0 | 0,3 | -1,-4]");
       (p1 * m3).Is ("(19,32)"); (v1 * m3).Is ("<6,15>");
       (new Point2 (1, 2) * m3).Is ("(1,2)");
+      m3.ScaleFactor.Is (2.0);
 
       var m4 = Matrix2.Rotation (45.D2R ()); m4.Is ("[0.707107,0.707107 | -0.707107,0.707107 | 0,0]");
       (p1 * m4).Is ("(-1.414214,15.556349)"); (v1 * m4).Is ("<-1.414214,5.656854>");
@@ -143,6 +144,7 @@ class Matrix3Tests {
       var m2 = Matrix3.Orthographic (new Bound3 (0, 0, 1, 10, 5, 5));
       m2.Is ("[0.2,0,0, 0,0.4,0, 0,0,-0.5, -1,-1,-1.5]");
       m2.HasMirroring.IsTrue ();
+      Matrix3.Scaling (0.75).ScaleFactor.Is (0.75);
 
       var p1 = P (1, 2, 3);
       var q1 = Quaternion.FromAxisRotations (0, 0, 0);
@@ -276,7 +278,7 @@ class GeoTests {
       Geo.LineSegXLineSeg (new (1, 0), new (10, 0), c, d).IsNil.IsTrue ();
    }
 
-   [Test (57, "Test of CircleXCircle")]
+   [Test (104, "Test of CircleXCircle")]
    void Test3 () {
       Span<Point2> buffer = stackalloc Point2[2];
       Point2 a = new (0, 0), b = new (10, 0), c = new (10, 5);
@@ -297,4 +299,113 @@ class GeoTests {
       Geo.CircleXCircle (a, dist * 0.49, c, dist * 0.49, buffer).Length.Is (0);
       Geo.CircleXCircle (a, 4.999, b, 4.999, buffer).Length.Is (0);
    }
+
+   [Test (57, "Geo.Get3PCircle")]
+   void Test4 () {
+      List<(Point2 A, Point2 B, Point2 C)> testCases = [
+         ((0, 0), (100, 0), (50, 86.6)),
+         ((200, 0), (250, 80), (300, 0)),
+         ((400, 0), (470, 60), (430, 90)),
+         ((0, 200), (0, 300), (80, 200)),
+         ((300, 150), (200, 150), (150, 236.6)),
+         ((400, 200), (460, 220), (430, 270))
+      ];
+
+      var dwg = new Dwg2 ();
+      foreach (var (a, b, c) in testCases) {
+         dwg.Add (Poly.Line (a, b)); dwg.Add (Poly.Line (b, c)); dwg.Add (Poly.Line (c, a));
+         var s = Geo.Get3PCircle (a, b, c);
+         double sa = s.DistTo (a), sb = s.DistTo (b), sc = s.DistTo (c);
+         dwg.Add (Poly.Circle (s, sa));
+         Assert.IsTrue (sa.EQ (sb) && sb.EQ (sc));
+      }
+      DXFWriter.SaveFile (dwg, NT.TmpDXF);
+      Assert.TextFilesEqual1 ("IO/DXF/Out/Get3PCircle.dxf", NT.TmpDXF);
+
+      List<(Point2 A, Point2 B, Point2 C)> collinearCases = [
+         ((1, 5), (3, 1), (5, -3)),
+         ((-3, 2), (0, 4), (3, 6)),
+      ];
+      foreach (var (a, b, c) in collinearCases)
+         Assert.IsTrue (Geo.Get3PCircle (a, b, c).IsNil);
+   }
+
+   [Test (102, "Geo.GetBisector")]
+   void Test5 () {
+      List<(Point2, Point2, Point2, Point2, Point2, Point2)> data = [
+         ((0, 0), (40, 20), (15, -5), (20, 30), (29, 14), (19, 23)),
+         ((50, 0), (90, 20), (65, -5), (70, 30), (79, 14), (65, 0)),
+         ((0, 50), (40, 70), (15, 45), (20, 80), (5, 53), (16, 48)),
+         ((50, 50), (90, 70), (65, 45), (70, 80), (57, 53), (69, 74)),
+      ];
+
+      var dwg = new Dwg2 ();
+      _ = dwg.CurrentLayer;      // Force layer 0 to be made
+      var layer2 = new Layer2 ("BISECT", Color4.Blue, ELineType.Dot);
+      dwg.Add (layer2);
+      foreach (var (a, b, c, d, pick1, pick2) in data) {
+         dwg.Add (Poly.Line (a, b)); dwg.Add (Poly.Line (c, d));
+         dwg.Add (new E2Point (dwg.CurrentLayer, pick1));
+         dwg.Add (new E2Point (dwg.CurrentLayer, pick2));
+         var (p, q) = Geo.GetBisector (a, b, c, d, pick1, pick2);
+         Assert.IsTrue (!p.IsNil && !q.IsNil);
+         dwg.Add (new E2Poly (layer2, Poly.Line (p, q)));
+      }
+      DXFWriter.SaveFile (dwg, NT.TmpDXF);
+      Assert.TextFilesEqual1 ("IO/DXF/Out/GetBisector.dxf", NT.TmpDXF);
+
+      List<(Point2 A, Point2 B, Point2 C, Point2 D, Point2 Pick1, Point2 Pick2)> nonIntersectingCases = [
+         ((0, 0), (1, 1), (0, 1), (1, 2), (0.5, 0.5), (0.5, 1.5)),
+         ((0, 0), (1, 0), (0, 1), (1, 1), (0.5, 0), (0.5, 1))
+      ];
+      foreach (var (a, b, c, d, pick1, pick2) in nonIntersectingCases) {
+         var (P, Q) = Geo.GetBisector (a, b, c, d, pick1, pick2);
+         Assert.IsTrue (P.IsNil && Q.IsNil);
+      }
+   }
+
+   [Test (103, "Geo.CircleTangentLLL")]
+   void Test6 () {
+      var dwg = new Dwg2 ();
+      _ = dwg.CurrentLayer;      // Force layer 0 to be made
+      var layer2 = new Layer2 ("BISECT", Color4.Blue, ELineType.Dot);
+      dwg.Add (layer2);
+
+      // testing with 3 intersecting lines
+      (Point2 a, Point2 b, Point2 c, Point2 d, Point2 e, Point2 f) = (/*AB*/(-3, -3), (6, 6), /*CD*/(0, 6), (9, -3), /*EF*/(-3, 0), (9, 0));
+      dwg.Add (Poly.Line (a, b)); dwg.Add (Poly.Line (c, d)); dwg.Add (Poly.Line (e, f));
+
+      List<(Point2 onAB, Point2 onCD, Point2 onEF)> testPoints = [
+         ((4, 4), (2, 4), (3, 0)), ((4, 4), (2, 4), (5, 0)),
+         ((1.5, 1.5), (2, 4), (1.5, 0)), ((1.5, 1.5), (2, 4), (8, 0)),
+         ((-1, -1), (7, -1), (-2, 0)), ((-1, -1), (7, -1), (-6, -5)),
+         ((-1, -1), (-1, -1), (-2, 0))
+        ];
+      foreach (var (pick1, pick2, pick3) in testPoints) DrawCircle (pick1, pick2, pick3);
+
+      // testing with 2 parallel lines
+      (a, b, c, d, e, f) = (/*AB*/(20, 0), (30, 0), /*CD*/(20, 10), (30, 10), /*EF*/(24, -2), (24, 12));
+      dwg.Add (Poly.Line (a, b)); dwg.Add (Poly.Line (c, d)); dwg.Add (Poly.Line (e, f));
+      DrawCircle ((26, 0), (27, 10), (24, 5));
+      DrawCircle ((18, 0), (26, 10), (24, 11));
+
+      // interchanging i/p order
+      (c, d, e, f) = ((24, -2), (24, 12), (20, 10), (32, 10));
+      DrawCircle ((26, 0), (24, 5), (26, 10));
+
+      // testing with 3 parallel lines
+      (a, b, c, d, e, f) = (/*AB*/(20, -3), (32, -3), /*CD*/(20, -6), (32, -6), /*EF*/(20, -9), (32, -9));
+      dwg.Add (Poly.Line (a, b)); dwg.Add (Poly.Line (c, d)); dwg.Add (Poly.Line (e, f));
+      DrawCircle ((25, -3), (25, -6), (25, -9));
+
+      DXFWriter.SaveFile (dwg, NT.TmpDXF);
+      Assert.TextFilesEqual1 ("IO/DXF/CircleTangentLLL.dxf", NT.TmpDXF);
+
+      // Helper
+      void DrawCircle (Point2 p1, Point2 p2, Point2 p3) {
+         var (center, r) = Geo.CircleTangentLLL (a, b, c, d, e, f, p1, p2, p3);
+         if (!center.IsNil) dwg.Add (new E2Poly (layer2, Poly.Circle (center, r)));
+      }
+   }
+
 }

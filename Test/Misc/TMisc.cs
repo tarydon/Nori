@@ -172,9 +172,9 @@ class TMisc {
       Lib.GetArcSteps (10, Lib.PI, 0.01).Is (36);
       int a = 3, b = 2; Lib.Sort (ref a, ref b);
       a.Is (2); b.Is (3);
-      Lib.ReadText ("wad:GL/Shader/arrowhead.frag").Length.Is (240);
-      Lib.ReadBytes ("wad:GL/Shader/arrowhead.frag").Length.Is (251);
-      Lib.ReadLines ("wad:GL/Shader/arrowhead.frag").Length.Is (12);
+      Lib.ReadText ("nori:GL/Shader/arrowhead.frag").Length.Is (240);
+      Lib.ReadBytes ("nori:GL/Shader/arrowhead.frag").Length.Is (251);
+      Lib.ReadLines ("nori:GL/Shader/arrowhead.frag").Length.Is (12);
 
       int n = 0; Lib.Set (ref n, 1).IsTrue (); Lib.Set (ref n, 1).IsFalse (); n.Is (1);
       float f = 0; Lib.Set (ref f, 1).IsTrue (); Lib.Set (ref f, 1).IsFalse (); f.Is (1f);
@@ -241,7 +241,7 @@ class TMisc {
       // CMesh IO test
       var part = CMesh.LoadTMesh ($"{NT.Data}/Geom/CMesh/part.tmesh");
       part.Save (NT.TmpTxt);
-      Assert.TextFilesEqual ($"{NT.Data}/Geom/CMesh/part-out.tmesh", NT.TmpTxt);
+      Assert.TextFilesEqual1 ("Geom/CMesh/part-out.tmesh", NT.TmpTxt);
 
       // CMeshBuilder test
       List<Point3> pts = [];
@@ -251,7 +251,7 @@ class TMisc {
       }
 
       new CMeshBuilder (pts.AsSpan ()).Build ().Save (NT.TmpTxt);
-      Assert.TextFilesEqual ($"{NT.Data}/Geom/CMesh/part-gen.tmesh", NT.TmpTxt);
+      Assert.TextFilesEqual1 ("Geom/CMesh/part-gen.tmesh", NT.TmpTxt);
    }
 
    [Test (38, "LineFont test")]
@@ -296,7 +296,7 @@ class TMisc {
       poly.ForEach (a => sb.AppendLine (a.ToString ()));
       pts.ForEach (a => sb.AppendLine ($"P{a.X},{a.Y}"));
       File.WriteAllText (NT.TmpTxt, sb.ToString ());
-      Assert.TextFilesEqual ($"{NT.Data}/Misc/LineFont.txt", NT.TmpTxt);
+      Assert.TextFilesEqual1 ("Misc/LineFont.txt", NT.TmpTxt);
 
       // Helpers ...............................................................
       void Out (double x, double y, ETextAlign align)
@@ -334,14 +334,14 @@ class TMisc {
          poly.Discretize (pts, 0.1);
          splits.Add (pts.Count);
       }
-      
+
       // Tessellate the polygon into triangles
       var tries = Tess2D.Process (pts, splits);
       var nodes = tries.Select (n => (Point3)pts[n]).ToList ();
 
       // Build and compare the mesh
       new CMeshBuilder (nodes.AsSpan ()).Build ().Save (NT.TmpTxt);
-      Assert.TextFilesEqual ($"{NT.Data}/Geom/Tess/gl2d.tmesh", NT.TmpTxt);
+      Assert.TextFilesEqual1 ("Geom/Tess/gl2d.tmesh", NT.TmpTxt);
    }
 
    class T1Type : IIndexed {

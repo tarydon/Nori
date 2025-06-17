@@ -197,7 +197,7 @@ class TAuSystem {
 
    void Check (object obj, string file, string? comment) {
       CurlWriter.ToFile (obj, NT.TmpCurl, comment);
-      Assert.TextFilesEqual ($"{NT.Data}/IO/{file}", NT.TmpCurl);
+      Assert.TextFilesEqual1 ($"IO/{file}", NT.TmpCurl);
    }
 }
 
