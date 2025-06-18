@@ -330,9 +330,6 @@ public partial class Poly {
    public bool TryCleanup (out Poly? result, double threshold = 1e-6) {
       if (IsCircle || mPts.Length < 2) { result = null; return false; }
 
-      if (!IsClosed && Pts[0].EQ (Pts[^1], threshold))
-         return this.Closed ().TryCleanup (out result, threshold);
-
       bool cleaned = TryCleanupZeroSegs (out result, threshold);
       if (cleaned && result!.Count == 0) return true; // Empty poly!
 
@@ -343,12 +340,12 @@ public partial class Poly {
    }
 
    bool TryCleanupZeroSegs (out Poly? result, double threshold = 1e-6) {
-      HashSet<int> skipIdxs = [];
+      HashSet<int> skipIdxs = []; // Using mark 'n sweep to cleanup zero-length segs
       for (int i = 0, limit = mPts.Length - 1; i < limit; i++) {
          if (mPts[i].EQ (mPts[i + 1], threshold))
             skipIdxs.Add (i);
       }
-      if (skipIdxs.Count == 0) { result = null; return false; }
+      if (skipIdxs.Count == 0) { result = null; return false; } // No zero-length segs found
 
       var pts = mPts.Select ((pt, idx) => (pt, idx)).Where (a => !skipIdxs.Contains (a.idx)).Select (a => a.pt);
       List<Extra> extra = [];
@@ -393,7 +390,13 @@ public partial class Poly {
       }
 
       result = mergedSegs ? new Poly ([.. pts], [.. extras], mFlags) : null;
-      return mergedSegs;
+      // Consider merging last and first segs
+      var poly = result ?? this;
+      if (poly.Count > 1) {
+         var (last, first) = (poly[^1], poly[0]);
+         _ = CanMerge (last, first, threshold) && poly.Roll (1).TryMergeAlignedSegs (out result, threshold);
+      }
+      return result != null;
 
       static bool CanMerge (Seg a, Seg b, double threshold) {
          // Note: Line segs mergeability uses DistToLineSeg (v/s DistToLine) to allow "slits".

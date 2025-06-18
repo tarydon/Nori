@@ -201,8 +201,8 @@ class PolyTests {
    [Test (75, "Poly.TryCleanup tests")]
    void Test8 () {
       // Zero-length segs
-      Poly.Parse ("M0,0L0,0").TryCleanup (out Poly? poly).Is (false);
-      Poly.Parse ("M0,0L0,0H0V0").TryCleanup (out poly); poly!.Is ("M0,0Z");
+      Poly.Parse ("M0,0L0,0").TryCleanup (out Poly? poly); poly!.Is ("");
+      Poly.Parse ("M0,0L0,0H0V0").TryCleanup (out poly); poly!.Is ("");
       Poly.Parse ("M0,0L0,0H10V10").TryCleanup (out poly); poly!.Is ("M0,0H10V10");
       Poly.Parse ("M0,0L0,0H10V10V10").TryCleanup (out poly); poly!.Is ("M0,0H10V10");
       Poly.Parse ("M0,0L0,0H10V10V10Z").TryCleanup (out poly); poly!.Is ("M0,0H10V10Z");
@@ -218,6 +218,7 @@ class PolyTests {
       Poly.Parse ("M0,0H10V10V15V20H0Z").TryCleanup (out poly); poly!.Is ("M0,0H10V20H0Z");
 
       // Mergeable last and first segs
-
+      Poly.Parse ("M10,0H20V5H0V0H10").Closed ().TryCleanup (out poly); poly!.Is ("M20,0V5H0V0Z");
+      Poly.Parse ("M0,0Q10,-10,1V10Q0,0,1").Closed ().TryCleanup (out poly); poly!.Is ("M10,-10V10Q10,-10,2Z");
    }
 }
