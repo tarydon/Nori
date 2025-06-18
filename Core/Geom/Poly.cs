@@ -392,7 +392,7 @@ public partial class Poly {
       result = mergedSegs ? new Poly ([.. pts], [.. extras], mFlags) : null;
       // Consider merging last and first segs
       var poly = result ?? this;
-      if (poly.Count > 1) {
+      if (poly.IsClosed && poly.Count > 1) {
          var (last, first) = (poly[^1], poly[0]);
          _ = CanMerge (last, first, threshold) && poly.Roll (1).TryMergeAlignedSegs (out result, threshold);
       }
