@@ -1,0 +1,220 @@
+	0
+SECTION
+	2
+HEADER
+	9
+$EXTMAX
+	10
+1165.738
+	20
+683.612
+	9
+$EXTMIN
+	10
+123.016
+	20
+156.725
+	9
+$LIMMAX
+	10
+1165.738
+	20
+683.612
+	9
+$LIMMIN
+	10
+123.016
+	20
+156.725
+	9
+$MEASUREMENT
+	70
+1
+	9
+$INSUNITS
+	70
+4
+	9
+$DIMALTF
+	40
+0.03937
+	0
+ENDSEC
+	0
+SECTION
+	2
+TABLES
+	0
+TABLE
+	2
+LTYPE
+	70
+1
+	0
+LTYPE
+	2
+CONTINUOUS
+	70
+64
+	3
+CONTINUOUS
+	72
+65
+	73
+0
+	40
+1.0
+	0
+ENDTAB
+	0
+TABLE
+	2
+LAYER
+	70
+1
+	0
+LAYER
+	70
+0
+	2
+0
+	62
+250
+	6
+CONTINUOUS
+	0
+ENDTAB
+	0
+ENDSEC
+	0
+SECTION
+	2
+BLOCKS
+	0
+ENDSEC
+	0
+SECTION
+	2
+ENTITIES
+	0
+POLYLINE
+	8
+0
+	66
+1
+	10
+0
+	20
+0
+	70
+1
+	0
+VERTEX
+	8
+0
+	10
+123.01591492
+	20
+156.72467041
+	0
+VERTEX
+	8
+0
+	10
+1165.73779297
+	20
+156.72467041
+	0
+VERTEX
+	8
+0
+	10
+1165.73779297
+	20
+683.61236572
+	0
+VERTEX
+	8
+0
+	10
+123.01591492
+	20
+683.61236572
+	0
+SEQEND
+	8
+0
+	0
+MTEXT
+	7
+0
+	10
+300
+	20
+300
+	40
+15
+	50
+0
+	1
+Line\PNext Line\PLast Line (%%C35.0%%P0.01)
+	0
+MTEXT
+	7
+0
+	10
+300
+	20
+500
+	40
+15
+	50
+0
+	1
+{\fRomans|b0|i0|c0|p34;Sample}\P{\fComplex|b0|i0|c0|p34;Text}
+	0
+MTEXT
+	7
+0
+	10
+700
+	20
+500
+	40
+15
+	50
+0
+	1
+\A1;\ftxt|b1|i0;\H10.5000;\lRM:\fmonotxt|b0|i0;\H12.5000;STEEL#10
+	0
+MTEXT
+	7
+0
+	10
+700
+	20
+300
+	40
+10
+	50
+90
+	1
+{\H1.3x;\S+0.8^+0.1;}\P\C7;\T0.972;\W1.333;\A1;C-C\P(S=1/2)
+	0
+MTEXT
+	7
+0
+	10
+900
+	20
+400
+	40
+25
+	50
+-45
+	1
+{\C1;\H0.5x;another\P\H0.75x;sample\Ptext}
+	0
+ENDSEC
+	0
+EOF

@@ -1,0 +1,14 @@
+(Dwg2){
+  Layers:[ { Name:0 Color:#FF333333 Linetype:Continuous Visible:True } ]
+  Ents:[
+    (E2Poly){ Layer:0 Poly:M0,0H100 }
+    (E2Poly){ Layer:0 Poly:C10,10,5 }
+    (E2Poly){ Layer:0 Poly:C10,-10,5 }
+    (E2Point){ Layer:0 Pt:0,0 }
+    (E2Point){ Layer:0 Pt:10,10 }
+    (E2Point){ Layer:0 Pt:10,-10 }
+    (E2Point){ Layer:0 Pt:100,0 }
+    (E2Point){ Layer:0 Pt:90,10 }
+    (E2Point){ Layer:0 Pt:90,-10 }
+  ]
+}
