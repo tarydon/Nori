@@ -3,8 +3,6 @@
 // ║║║║╬║╔╣║ Entry point into the Nori.Console program
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 namespace Nori.Con;
-
-using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using static System.Reflection.BindingFlags;
 
@@ -36,6 +34,7 @@ static class Program {
          NEXTID       - Gets the next available test Id
          OPTIMIZE 0/1 - Turns optimization on / off for all Nori projects
          XMLDOC 0/1   - Turns XML documentation on / off for all Nori projects
+         LFFtoLFONT   - Converts one or more .lff font definition files to .lfont format
          """);
       Environment.Exit (0);
    }
@@ -70,6 +69,41 @@ static class Program {
       if (!int.TryParse (args[2], out int n)) Help ();
       if (n is < 0 or > 1) Help ();
       SetXmlDoc.Run (n == 1);
+   }
+
+   // Converts one or more `.lff` font definition files to `.lfont` format using LFF2LFontConverter.
+   // Expects at least one file path passed as a command-line argument.
+   // Writes output files to a fixed directory: N:\Wad\DXF
+   [ConsoleCommand]
+   static void LFFtoLFONT () {
+      string[] args = Environment.GetCommandLineArgs ();
+      // args[0] = executable name, args[1] = "LFFtoLFONT", args[2] = font1.lff
+      if (args.Length != 3) {
+         Console.ForegroundColor = ConsoleColor.Yellow;
+         Console.WriteLine ("Usage: LFFtoLFONT <file.lff>");
+         Console.ResetColor ();
+         Environment.Exit (1);
+      }
+      string lffPath = args[2];
+      if (!File.Exists (lffPath)) {
+         Console.ForegroundColor = ConsoleColor.Red;
+         Console.WriteLine ($"File not found: {lffPath}");
+         Console.ResetColor ();
+         Environment.Exit (1);
+      }
+      try {
+         string outPath = $"{Lib.DevRoot}/Wad/DXF/{Path.GetFileNameWithoutExtension (lffPath)}.lfont";
+         // Perform the actual conversion
+         new LFF2LFontConverter (lffPath, outPath).BuildLFont ();
+         Console.ForegroundColor = ConsoleColor.Green;
+         Console.OutputEncoding = System.Text.Encoding.UTF8;
+         Console.WriteLine ($"Converted {Path.GetFileName (lffPath)} → {outPath}");
+         Console.ResetColor ();
+      } catch (Exception ex) {
+         Console.ForegroundColor = ConsoleColor.Red;
+         Console.WriteLine ($"Error converting {lffPath}:\n{ex.Message}");
+         Console.ResetColor ();
+      }
    }
 
    // Placeholder for putting in some test code and running it
