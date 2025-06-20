@@ -24,7 +24,7 @@ class PolyTests {
 
       var p2 = Poly.Arc (new (0, 1), 1, 180.D2R(), 0, false);
       p2.A.Is ("(-1,1)"); p2.B.Is ("(1,1)");
-      p2.Is ("M-1,1Q1,1,-2"); p2.HasArcs.IsTrue (); p2.IsOpen.IsTrue (); 
+      p2.Is ("M-1,1Q1,1,-2"); p2.HasArcs.IsTrue (); p2.IsOpen.IsTrue ();
       var p3 = Poly.Arc (new (0, 1), 1, 180.D2R (), 0, true);
       p3.Is ("M-1,1Q1,1,2"); p3.HasArcs.IsTrue (); p3.IsOpen.IsTrue ();
       var p4 = Poly.Arc (new (0, 0), 90.D2R (), new (10, 0));
