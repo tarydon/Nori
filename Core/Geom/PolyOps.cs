@@ -289,9 +289,8 @@ public partial class Poly {
       else {
          var extra = new List<Extra> (a.Count + b.Count);
          for (int i = 0; i < a.Count; i++)
-            extra.Add (i < a.mExtra.Length ? a.mExtra[i] : new Extra ());
-         for (int i = 0; i < b.mExtra.Length; i++)
-            extra.Add (b.mExtra[i]);
+            extra.Add (a.mExtra.SafeGet (i));
+         extra.AddRange (b.mExtra);
          result = new Poly (pts, [.. extra], flags | EFlags.HasArcs);
       }
       return true;
