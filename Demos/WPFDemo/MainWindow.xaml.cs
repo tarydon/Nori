@@ -12,6 +12,7 @@ public partial class MainWindow : Window {
       Lib.Init ();
       InitializeComponent ();
       mContent.Child = Lux.CreatePanel ();
+      CMesh.Load ("N:/Wad/FanucX/Model/B.mesh");
    }
 
    void LeafDemo (object sender, RoutedEventArgs e) => Lux.UIScene = new LeafDemoScene ();

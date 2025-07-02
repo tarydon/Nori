@@ -1,14 +1,17 @@
 // ────── ╔╗
 // ╔═╦╦═╦╦╬╣ Mesh.cs
-// ║║║║╬║╔╣║ Implements the CMesh class, a simple mesh format for rendering
+// ║║║║╬║╔╣║ Implements the Mesh3 class, a simple mesh format for rendering
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
+using System.IO.Compression;
+using System.Xml.Linq;
+
 namespace Nori;
 
 #region class CMesh --------------------------------------------------------------------------------
 /// <summary>This implements a super-simple mesh format for rendering</summary>
-/// This format is very close to the way the data has to be presented for rendering, 
-/// and is designed to be very simple to read / understand. 
-/// - The Vertex array contains a set of nodes, each defined with a position 
+/// This format is very close to the way the data has to be presented for rendering,
+/// and is designed to be very simple to read / understand.
+/// - The Vertex array contains a set of nodes, each defined with a position
 ///   (Vec3F) and normal (Vec3H)
 /// - The Triangle array (taken 3 at a time) defines the triangles as indices into
 ///   the Vertex array
@@ -28,7 +31,7 @@ public class CMesh (ImmutableArray<CMesh.Node> vertex, ImmutableArray<int> trian
    }
    Bound3 mBound = new ();
 
-   [StructLayout (LayoutKind.Sequential, Pack = 2, Size = 18)]
+   [StructLayout (LayoutKind.Sequential, Pack = 2, Size = 20)]
    public readonly struct Node (Vec3F pos, Vec3H vec) {
       public Vec3F Pos => pos;
       public Vec3H Vec => vec;
@@ -44,6 +47,52 @@ public class CMesh (ImmutableArray<CMesh.Node> vertex, ImmutableArray<int> trian
          nodes[i] = new Node ((Vec3F)(node.Pos + vec), node.Vec);
       }
       return new ([..nodes], Triangle, Wire);
+   }
+
+   public static CMesh? Load (string file) {
+      using var stm = File.OpenRead (file);
+      return Load (stm);
+   }
+
+   /// <summary>
+   /// Loads a Mesh from a .mesh file
+   /// </summary>
+   public static CMesh? Load (Stream stm) {
+      using DeflateStream dfs = new (stm, CompressionMode.Decompress, false);
+      using BinaryReader br = new BinaryReader (dfs); br.ReadInt32 ();
+      int sign = br.ReadInt32 (), version = br.ReadByte ();
+      if (sign != 0x1A48534D || version is < 1 or > 2)
+         throw new IOException ("Mesh file damaged");
+
+
+
+      return null;
+
+      //Byte
+
+      //ByteStm bs = new (dfs.ReadBytes (dfs.ReadInt32 ()));
+
+      //int sign = bs.ReadInt32 (), version = bs.ReadByte ();
+      //if (sign != 0x1A48534D || version is < 1 or > 2)
+      //   Except.IOException ("Mesh file {0} is damaged", filename);
+      //if (version >= 2) mName = bs.ReadString ();
+
+      //for (int i = 0, cMeshes = bs.ReadInt32 (); i < cMeshes; i++) {
+      //   // Read the marker to indicate if this is a 'small' mesh, and skip past the
+      //   // 'mesh format'
+      //   bool small = bs.ReadByte () == 2; bs.ReadByte ();
+      //   var nodes = new HMesh.Node[bs.ReadInt32 ()];
+      //   int triIndices = bs.ReadInt32 ();
+      //   uint[] idx32 = null; ushort[] idx16 = null;
+      //   if (small) idx16 = new ushort[bs.ReadInt32 ()];
+      //   else idx32 = new uint[bs.ReadInt32 ()];
+      //   fixed (void* p = nodes) bs.Read (p, nodes.Length * 18);
+      //   if (small)
+      //      fixed (void* p = idx16) bs.Read (p, idx16.Length * 2);
+      //   else
+      //      fixed (void* p = idx32) bs.Read (p, idx32.Length * 4);
+      //   mMeshes.Add (new HMesh (nodes, idx16, idx32, triIndices));
+      //}
    }
 
    /// <summary>Loads data from a TMesh file</summary>
@@ -86,11 +135,11 @@ public class CMesh (ImmutableArray<CMesh.Node> vertex, ImmutableArray<int> trian
    /// 1. HEADER: The header section contains file format signature and file version.
    /// 2. VERTICES: This section contains the vertex table where a vertex node is defined
    ///    by a vertex position and the normal.
-   /// 3. TRIANGLES: These are the triangles table where a row contains three vertex indices 
+   /// 3. TRIANGLES: These are the triangles table where a row contains three vertex indices
    ///    for a triangle corner each.
    /// 4. STENCILS: This section contains the stencil lines defined with a pair of vertex indeces.
    /// 5. The file is terminated with an EOF (end-of-file) marker.
-   /// 
+   ///
    /// The data sections (2, 3 and 4) start with the count followed by the one-per-line entries.
    /// A sample mesh file with two triangles forming a rectangular plane and a border:
    /// <code>
@@ -116,17 +165,17 @@ public class CMesh (ImmutableArray<CMesh.Node> vertex, ImmutableArray<int> trian
    public void Save (string filename) {
       // Version, Vertex count, vertices
       StringBuilder sb = new ($"TMESH\n1\n{Vertex.Length}\n");
-      foreach (var (pos, vec) in Vertex) 
+      foreach (var (pos, vec) in Vertex)
          sb.Append ($"{pos.X},{pos.Y},{pos.Z},  {vec.X},{vec.Y},{vec.Z}\n");
 
       // Triangle count, triangle indices
       sb.Append ($"{Triangle.Length / 3}\n");
-      for (int i = 0; i < Triangle.Length; i += 3) 
+      for (int i = 0; i < Triangle.Length; i += 3)
          sb.Append ($"{Triangle[i]} {Triangle[i + 1]} {Triangle[i + 2]}\n");
 
       // Stencil count, stencil indices
       sb.Append ($"{Wire.Length / 2}\n");
-      for (int i = 0; i < Wire.Length; i += 2) 
+      for (int i = 0; i < Wire.Length; i += 2)
          sb.Append ($"{Wire[i]} {Wire[i + 1]}\n");
 
       File.WriteAllText (filename, sb.Append ("EOF\n").ToString ());
@@ -136,11 +185,11 @@ public class CMesh (ImmutableArray<CMesh.Node> vertex, ImmutableArray<int> trian
 
 #region class CMeshBuilder -------------------------------------------------------------------------
 /// <summary>The CMeshBuilder class builds meshes with auto-smoothing and marking of sharp creases</summary>
-/// To construct a mesh, all this needs is a triangle mesh and with consistent winding. 
-/// This finds all the shared edges between faces and if the edge angle is 
+/// To construct a mesh, all this needs is a triangle mesh and with consistent winding.
+/// This finds all the shared edges between faces and if the edge angle is
 /// more than a given threshold, it marks the edge as sharp. The SmoothMeshBuilder works with a given mesh
-/// as the target and adds triangles into that mesh. Note that you never need to supply normals to this. 
-/// It computes normals based on which parts should be 'smooth' and which ones should be 'sharp'. 
+/// as the target and adds triangles into that mesh. Note that you never need to supply normals to this.
+/// It computes normals based on which parts should be 'smooth' and which ones should be 'sharp'.
 public class CMeshBuilder {
    /// <summary>Initialize a CMeshBuilder with a set of points </summary>
    /// These points, taken 3 at a time, define a set of triangles.
@@ -210,25 +259,25 @@ public class CMeshBuilder {
          foreach (var fd in mChains.Enum (v.FaceChain))
             if (fd.NFace == nFace) return fd.NGroup;
          throw new NotImplementedException ();
-      }      
+      }
    }
 
    /// <summary>Given a Vertex c, this assigns group codes to each face referencing this vertex</summary>
    /// Note that these group codes are local to this vertex - they are not a property of the face.
-   /// That is, AT this vertex, we set up group codes for all the faces touching it. For example, 
+   /// That is, AT this vertex, we set up group codes for all the faces touching it. For example,
    /// it's possible that 6 faces might touch a vertex. Looking top down on the vertex, let's say
    /// they form a hexagonal web at the vertex, and the faces are A, B, C, D, E, F (in that order).
    /// Suppose also that A,B,C have a group code 0 (at this vertex) and D,E,F have a group code 1.
    /// This means that the normals of A,B,C will be averaged to provide the normal on 'that side'
    /// of the sharp edge, while the normals of D,E,F will be averaged to provide the other normal.
-   /// The sharp edges here are the edges between C-D and the edge between F-A. 
-   /// 
+   /// The sharp edges here are the edges between C-D and the edge between F-A.
+   ///
    /// The GroupFaces method builds all the necessary data required to provide this averaged normal
-   /// and the 'sharp-edge' flag at the next stage. 
+   /// and the 'sharp-edge' flag at the next stage.
    void GroupFaces (ref Vertex c, ref CMesh.Node[] nodes, ref int cNodes) {
       int max = 0;
       // First, assign group codes to each face - any face that forms a small enough angle to any
-      // previous face uses that face's group code. Otherwise, it begins a new group. 
+      // previous face uses that face's group code. Otherwise, it begins a new group.
       mChains.GatherRawIndices (c.FaceChain, mVF);
       for (int i = 0; i < mVF.Count; i++) {
          ref FaceData fd1 = ref mChains.Data[mVF[i]];
@@ -241,9 +290,9 @@ public class CMeshBuilder {
       }
 
       // At this Point, max is the number of groups at this vertex (this is usually a small number,
-      // less than 6 to 10). We have to now compute the normal vectors for each of the groups, by 
+      // less than 6 to 10). We have to now compute the normal vectors for each of the groups, by
       // averaging the normals of all faces with that group code. We weight this average by the face
-      // area. 
+      // area.
       while (mAvgs.Count < max) { mAvgs.Add (Vector3.Zero); mVIDs.Add (0); }
       for (int i = 0; i < max; i++) mAvgs[i] = Vector3.Zero;
 
@@ -276,7 +325,7 @@ public class CMeshBuilder {
    /// <summary>This tells us if the edge from this vertex (c) to the next vertex (next) is 'sharp'</summary>
    bool IsStencil (Vertex c, int next) {
       if (Wireframe) return true;
-      // We have to find two faces that have 'next' in their corner list. Then, if they 
+      // We have to find two faces that have 'next' in their corner list. Then, if they
       // both have the same group code, there is no stencil. If we find only one face, or if their
       // group codes are different, there is a stencil.
       int cFound = 0, nGroup = 0;
@@ -285,7 +334,7 @@ public class CMeshBuilder {
          if (++cFound == 1) nGroup = fd.NGroup;    // Found 1 face
          else return nGroup != fd.NGroup;          // Found 2nd face, we can now figure out if this is a sharp edge
       }
-      // Note that we will not find 3 faces in any well-formed mesh. 
+      // Note that we will not find 3 faces in any well-formed mesh.
       return true;
    }
 
@@ -345,7 +394,7 @@ public class CMeshBuilder {
    }
 
    /// <summary>This maintains the data for a given vertex</summary>
-   /// This holds the list of faces this vertex is referenced by, and the actual 
+   /// This holds the list of faces this vertex is referenced by, and the actual
    /// geometric position of the vertex
    struct Vertex (in Point3 pos) {
       /// <summary>Position of 'this' vertex.</summary>

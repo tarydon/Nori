@@ -279,7 +279,7 @@ readonly record struct Attrib (int Dims, EDataType Type, int Size, bool Integral
    public static int GetSize (EVertexSpec spec)
       => spec switch {
          EVertexSpec.Vec2F => 8,
-         EVertexSpec.Vec3F_Vec3H => 18,
+         EVertexSpec.Vec3F_Vec3H => 20,
          EVertexSpec.Vec4S_Int => 12,
          EVertexSpec.Vec2F_Vec4S_Int => 20,
          _ => throw new BadCaseException (spec)
