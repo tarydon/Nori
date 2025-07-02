@@ -1,14 +1,14 @@
 // ────── ╔╗
-// ╔═╦╦═╦╦╬╣ DwgVN.cs
+// ╔═╦╦═╦╦╬╣ Dwg2VN.cs
 // ║║║║╬║╔╣║ Implements basic VNodes related to the Dwg2 class
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 namespace Nori;
 
-#region class DwgVN --------------------------------------------------------------------------------
+#region class Dwg2VN -------------------------------------------------------------------------------
 /// <summary>VNode that renders an entire drawing</summary>
-public class DwgVN : VNode {
+public class Dwg2VN : VNode {
    // Constructor --------------------------------------------------------------
-   public DwgVN (Dwg2 dwg) : base (dwg) { mDwg = dwg; ChildSource = mDwg.Ents; }
+   public Dwg2VN (Dwg2 dwg) : base (dwg) { mDwg = dwg; ChildSource = mDwg.Ents; }
    readonly Dwg2 mDwg;
 }
 #endregion
@@ -70,7 +70,7 @@ public class DwgFillVN : VNode {
 /// all reuse the same BlockVN. This code simply draws all the entities in the block. When
 /// it appears as the child VN of an E2InsertVN, that parent has already pushed a transform
 /// on the stack so that this drawing all happens at the correct location, orientation and scale.
-class BlockVN (Block2 block) : VNode (block) {
+class Block2VN (Block2 block) : VNode (block) {
    /// <summary>Gets the BlockVN corresponding to a given block</summary>
    /// What we do is a bit of 'dependency injection' here. The Block class does not know
    /// about BlockVN (and nor should it). However, it has an 'object VNode' pointer that we
@@ -81,9 +81,9 @@ class BlockVN (Block2 block) : VNode (block) {
    /// additional GPU memory.
    /// When all the inserts referencing a block are removed from the drawing, the 'parent count'
    /// of this BlockVN will run down to zero, and it will release its resources.
-   public static BlockVN Get (Block2 block) {
-      if (block.VNode is not BlockVN bvn)
-         block.VNode = bvn = new BlockVN (block);
+   public static Block2VN Get (Block2 block) {
+      if (block.VNode is not Block2VN bvn)
+         block.VNode = bvn = new Block2VN (block);
       return bvn;
    }
 

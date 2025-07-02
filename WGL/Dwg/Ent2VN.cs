@@ -68,7 +68,7 @@ class E2InsertVN (E2Insert e2i) : Ent2VN (e2i) {
    // The only child for the E2Insert is the BlockVN. Since we call BlockVN.For that
    // constructs a shared BlockVN that is used by all the inserts (only the transform distinguishes
    // them from each other)
-   public override VNode? GetChild (int n) => n == 0 ? BlockVN.Get (e2i.Block) : null;
+   public override VNode? GetChild (int n) => n == 0 ? Block2VN.Get (e2i.Block) : null;
 
    // The attribute we set pushes this Insert's Xfm on the draw stack.
    public override void SetAttributes () { base.SetAttributes (); Lux.Xfm = (Matrix3)e2i.Xfm; }
