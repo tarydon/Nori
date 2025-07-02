@@ -73,6 +73,7 @@ public static partial class Lux {
             while (!mReady) sHost.Dispatcher.Invoke (DispatcherPriority.Background, () => { });
          }
       }
+      VNode.RegisterAssembly (Assembly.GetExecutingAssembly ());
       mFPSReportTS = mLastFrameTS = DateTime.Now;
       return Panel.It;
    }
@@ -250,7 +251,7 @@ public static partial class Lux {
       mLineWidths.Clear (); mLineWidth = 4f;
       mPointSizes.Clear (); mPointSize = 7f;
       mLineTypes.Clear (); mLineType = ELineType.Continuous;
-      mLTScales.Clear (); mLTScale = 100f;
+      mLTScales.Clear (); mLTScale = 50f;
       mTypefaces.Clear (); mTypeface = null;
       mIDXfms.Clear (); mIDXfm = 0;
       mZLevels.Clear (); mZLevel = 0; 
