@@ -3,8 +3,6 @@
 // ║║║║╬║╔╣║ Implements the Mesh3 class, a simple mesh format for rendering
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 using System.IO.Compression;
-using System.Xml.Linq;
-
 namespace Nori;
 
 #region class CMesh --------------------------------------------------------------------------------
@@ -57,42 +55,41 @@ public class CMesh (ImmutableArray<CMesh.Node> vertex, ImmutableArray<int> trian
    /// <summary>
    /// Loads a Mesh from a .mesh file
    /// </summary>
-   public static CMesh? Load (Stream stm) {
+   public unsafe static CMesh? Load (Stream stm) {
       using DeflateStream dfs = new (stm, CompressionMode.Decompress, false);
-      using BinaryReader br = new BinaryReader (dfs); br.ReadInt32 ();
-      int sign = br.ReadInt32 (), version = br.ReadByte ();
+      ByteStm bs = new (dfs.ReadBytes (dfs.ReadInt32 ()));
+      int sign = bs.ReadInt32 (), version = bs.ReadByte ();
       if (sign != 0x1A48534D || version is < 1 or > 2)
-         throw new IOException ("Mesh file damaged");
+         throw new IOException ("Mesh file is damaged");
+      if (version >= 2) bs.ReadString ();    // Read and discard the name
 
+      CMesh[] meshes = new CMesh[bs.ReadInt32 ()];
+      for (int i = 0; i < meshes.Length; i++) {
+         // Read the marker to indicate if this is a 'small' mesh, and skip past the
+         // 'mesh format'
+         bool small = bs.ReadByte () == 2; bs.ReadByte ();
+         var nodes = new Node[bs.ReadInt32 ()];
+         int tris = bs.ReadInt32 (), all = bs.ReadInt32 (), wires = all - tris;
+         if (nodes.Length > 0)
+            fixed (Node* pnode = &nodes[0])
+               for (int j = 0; j < nodes.Length; j++) bs.Read (pnode + j, 18);
 
-
+         int[] tIdx, wIdx;
+         if (small) {
+            ushort[] stIdx = new ushort[tris], swIdx = new ushort[all - tris];
+            fixed (void* p = stIdx) bs.Read (p, tris * 2);
+            fixed (void* p = swIdx) bs.Read (p, wires * 2);
+            tIdx = [.. stIdx.Select (a => (int)a)];
+            wIdx = [.. swIdx.Select (a => (int)a)];
+         } else {
+            tIdx = new int[tris]; wIdx = new int[wires];
+            fixed (void* p = tIdx) bs.Read (p, tris * 4);
+            fixed (void* p = wIdx) bs.Read (p, wires * 4);
+         }
+         meshes[i] = new CMesh ([.. nodes], [.. tIdx], [.. wIdx]);
+         if (all > 0) return meshes[i];
+      }
       return null;
-
-      //Byte
-
-      //ByteStm bs = new (dfs.ReadBytes (dfs.ReadInt32 ()));
-
-      //int sign = bs.ReadInt32 (), version = bs.ReadByte ();
-      //if (sign != 0x1A48534D || version is < 1 or > 2)
-      //   Except.IOException ("Mesh file {0} is damaged", filename);
-      //if (version >= 2) mName = bs.ReadString ();
-
-      //for (int i = 0, cMeshes = bs.ReadInt32 (); i < cMeshes; i++) {
-      //   // Read the marker to indicate if this is a 'small' mesh, and skip past the
-      //   // 'mesh format'
-      //   bool small = bs.ReadByte () == 2; bs.ReadByte ();
-      //   var nodes = new HMesh.Node[bs.ReadInt32 ()];
-      //   int triIndices = bs.ReadInt32 ();
-      //   uint[] idx32 = null; ushort[] idx16 = null;
-      //   if (small) idx16 = new ushort[bs.ReadInt32 ()];
-      //   else idx32 = new uint[bs.ReadInt32 ()];
-      //   fixed (void* p = nodes) bs.Read (p, nodes.Length * 18);
-      //   if (small)
-      //      fixed (void* p = idx16) bs.Read (p, idx16.Length * 2);
-      //   else
-      //      fixed (void* p = idx32) bs.Read (p, idx32.Length * 4);
-      //   mMeshes.Add (new HMesh (nodes, idx16, idx32, triIndices));
-      //}
    }
 
    /// <summary>Loads data from a TMesh file</summary>

@@ -143,6 +143,20 @@ public static class Extensions {
    /// <summary>Returns a double rounded off to 6 decimal places</summary>
    public static double R6 (this double f) => Math.Round (f, 6);
 
+   /// <summary>
+   /// Reads n bytes from the stream and returns a byte-array
+   /// </summary>
+   public static byte[] ReadBytes (this Stream stm, int n) {
+      byte[] data = new byte[n]; stm.ReadExactly (data);
+      return data;
+   }
+
+   /// <summary>Reads an integer from the stream</summary>
+   public static unsafe int ReadInt32 (this Stream stm) {
+      int n; stm.ReadExactly (new Span<byte> (&n, 4));
+      return n;
+   }
+
    /// <summary>Removes the last element from a List (and returns it)</summary>
    public static T RemoveLast<T> (this List<T> list) {
       T elem = list[^1]; list.RemoveAt (list.Count - 1);
