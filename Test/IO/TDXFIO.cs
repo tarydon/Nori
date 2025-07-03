@@ -213,4 +213,10 @@ class DXFTests2 {
       File.WriteAllLines (NT.TmpTxt, shapes);
       Assert.TextFilesEqual1 ("IO/DXF/Shapes1.txt", NT.TmpTxt);
    }
+
+   [Test (105, "Extend DXFReader to read bend line information from DXF")]
+   void Test5 () {
+      var dwg = DXFReader.FromFile (NT.File ("IO/DXF/BasicBend.dxf"));
+      Assert.IsTrue (dwg.Ents.OfType<E2Bendline> ().Count () == 3);
+   }
 }
