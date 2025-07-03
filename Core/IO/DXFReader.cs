@@ -87,13 +87,12 @@ public partial class DXFReader {
             case "ELLIPSE": AddEllipse (Pt0, MajorAxis, AxisRatio, TRange); break;
             case "LINE":
                var line = Poly.Line (Pt0, Pt1);
-               if (mBendData.Count > 0) {
-                  var a = mBendData.GetValueOrDefault ("BEND_ANGLE").D2R ();
-                  var r = mBendData.GetValueOrDefault ("BEND_RADIUS");
-                  var k = mBendData.GetValueOrDefault ("K_FACTOR");
-                  Add (new E2Bendline (mDwg, line.Pts, a, r, k));
+               if (mBendData.TryGetValue ("BEND_ANGLE", out var a) &&
+                   mBendData.TryGetValue ("BEND_RADIUS", out var r) &&
+                   mBendData.TryGetValue ("K_FACTOR", out var k)) {
+                  Add (new E2Bendline (mDwg, line.Pts, a.D2R (), r, k));
+                  mBendData.Clear ();
                } else Add (line);
-               mBendData.Clear ();
                break;
 
             case "POINT": Add (new E2Point (Layer, Pt0) { Color = GetColor () }); break;
