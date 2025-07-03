@@ -21,6 +21,8 @@ public class CMesh (ImmutableArray<CMesh.Node> vertex, ImmutableArray<int> trian
    public readonly ImmutableArray<int> Triangle = triangle;
    public readonly ImmutableArray<int> Wire = wire;
 
+   public Bound3 GetBound (Matrix3 xfm) => new (Vertex.Select (a => (Point3)a.Pos * xfm));
+
    public Bound3 Bound {
       get {
          if (mBound.IsEmpty) mBound = new Bound3 (Vertex.Select (a => a.Pos));

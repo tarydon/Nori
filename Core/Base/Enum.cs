@@ -29,6 +29,10 @@ public enum EProp {
    Visibility,
    /// <summary>The selection state is changed</summary>
    Selected,
+   /// <summary>
+   /// The joint value of a mechanism
+   /// </summary>
+   JValue,
 
    Grid, FillInterior, CurrentLayer
 }

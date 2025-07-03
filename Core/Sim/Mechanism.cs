@@ -2,13 +2,13 @@
 // ╔═╦╦═╦╦╬╣ Mechanism.cs
 // ║║║║╬║╔╣║ <<TODO>>
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
-using System;
 using System.Collections.Concurrent;
 namespace Nori;
 
 #region class Mechanism ----------------------------------------------------------------------------
 /// <summary>Mechanism is used for various kinematic simulations</summary>
-public class Mechanism {
+[EPropClass]
+public partial class Mechanism {
    // Constructors -------------------------------------------------------------
    /// <summary>Loads a Mechanism from a curl file</summary>
    public static Mechanism Load (string curlFile) {
@@ -22,7 +22,7 @@ public class Mechanism {
    public Bound3 Bound {
       get {
          if (_bound.IsEmpty) {
-            if (Mesh != null) _bound += Mesh.Bound;
+            if (Mesh != null) _bound += Mesh.GetBound (Xfm);
             EnumTree ().Skip (1).ForEach (c => _bound += c.Bound);
          }
          return _bound;
@@ -57,7 +57,14 @@ public class Mechanism {
    public readonly double JAsDrawn;
 
    /// <summary>The current value for the joint</summary>
-   public double JValue { get => mJValue; set => mJValue = value; }
+   public double JValue {
+      get => mJValue;
+      set {
+         if (mJValue.EQ (value) || value.IsNaN ()) return;
+         mJValue = value; EnumTree ().ForEach (a => a._xfm = null);
+         Notify (EProp.JValue);
+      }
+   }
    double mJValue;
 
    /// <summary>The definition vector for the joint</summary>
@@ -116,6 +123,10 @@ public class Mechanism {
    public string RootDir => _rootDir ??= Parent?.RootDir ?? "";
    string? _rootDir;
 
+   /// <summary>Returns the transformation matrix for this piece of the mechanism</summary>
+   public Matrix3 Xfm => _xfm = Parent == null ? Matrix3.Identity : RelativeXfm * Parent.Xfm;
+   Matrix3? _xfm;
+
    // Methods ------------------------------------------------------------------
    /// <summary>
    /// Adds a child mechanism to this one
@@ -131,7 +142,6 @@ public class Mechanism {
 
    // Implementation -----------------------------------------------------------
    string FullName => Parent == null ? Name : $"{Parent.FullName}.{Name}";
-   Point3 _connectToPt;
 }
 #endregion
 

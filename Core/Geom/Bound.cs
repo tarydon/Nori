@@ -183,7 +183,10 @@ public readonly struct Bound3 : IEQuable<Bound3> {
       (X, Y, Z) = (new (), new (), new ());
       foreach (var p in pts) { X += p.X; Y += p.Y; Z += p.Z; }
    }
-
+   public Bound3 (IEnumerable<Point3> pts) {
+      (X, Y, Z) = (new (), new (), new ());
+      foreach (var p in pts) { X += p.X; Y += p.Y; Z += p.Z; }
+   }
    public static Bound3 Read (UTFReader r) {
       r.Match ('"').Read (out double x0).Match (',').Read (out double y0).Match (',').Read (out double z0)
          .Match (':').Read (out double x1).Match (',').Read (out double y1).Match (',').Read (out double z1).Match ('"');
@@ -220,7 +223,7 @@ public readonly struct Bound3 : IEQuable<Bound3> {
    /// <summary>Returns a Bound3 padded by a given linear margin on all sides</summary>
    public Bound3 InflatedL (double delta) => new (X.InflatedL (delta), Y.InflatedL (delta), Z.InflatedL (delta));
 
-   public void Write (UTFWriter w) 
+   public void Write (UTFWriter w)
       => w.Write ('"').Write (X.Min).Write (',').Write (Y.Min).Write (',').Write (Z.Min).Write (':')
          .Write (X.Max).Write (',').Write (Y.Max).Write (',').Write (Z.Max).Write ('"');
 
