@@ -241,8 +241,8 @@ public partial class DXFReader {
    int I0, I1, I2, I3;              // Integer value read from group 70 .. 73
    // A StringBuilder member used in various text compositions.
    readonly StringBuilder mSB = new ();
-
-   Dictionary<string, double> mBendData = new ();
+   // Stores bend info like angle, radius, and k-factor (from 1000 codes)
+   Dictionary<string, double> mBendData = [];
    // Aliases for the group codes (for better readability)
    int Flags => I0;
    double Bulge => D2Set.SafeGet (0);
