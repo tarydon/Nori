@@ -21,6 +21,7 @@
          <Button Click="TessDemo">Tessellation Demo</Button>
          <Button Click="BooleanDemo">Boolean Demo</Button>
          <Button Click="DwgDemo">Drawing Demo</Button>
+         <Button Click="RobotDemo">Robot Demo</Button>
       </StackPanel>
       <Border Name="mContent" />
    </DockPanel>

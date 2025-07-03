@@ -1,9 +1,11 @@
-﻿namespace Nori;
+// ────── ╔╗
+// ╔═╦╦═╦╦╬╣ ByteStm.cs
+// ║║║║╬║╔╣║ <<TODO>>
+// ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
+namespace Nori;
 
 #region class ByteStm ------------------------------------------------------------------------------
-/// <summary>
-/// A wrapper over a byte array that allows us to read it in a stream-like fashion
-/// </summary>
+/// <summary>A wrapper over a byte array that allows us to read it in a stream-like fashion</summary>
 public class ByteStm {
    // Constructors -------------------------------------------------------------
    /// <summary>Construct a ByteStm, given the raw array of bytes to work with</summary>

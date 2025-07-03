@@ -143,9 +143,7 @@ public static class Extensions {
    /// <summary>Returns a double rounded off to 6 decimal places</summary>
    public static double R6 (this double f) => Math.Round (f, 6);
 
-   /// <summary>
-   /// Reads n bytes from the stream and returns a byte-array
-   /// </summary>
+   /// <summary>Reads n bytes from the stream and returns a byte-array</summary>
    public static byte[] ReadBytes (this Stream stm, int n) {
       byte[] data = new byte[n]; stm.ReadExactly (data);
       return data;

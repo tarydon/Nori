@@ -29,12 +29,29 @@ public class CMesh (ImmutableArray<CMesh.Node> vertex, ImmutableArray<int> trian
    }
    Bound3 mBound = new ();
 
+   public static CMesh operator * (CMesh mesh, Matrix3 xfm) {
+      if (xfm.IsIdentity) return mesh;
+      ImmutableArray<Node> nodes = [.. mesh.Vertex.Select (a => a * xfm)];
+      return new (nodes, mesh.Triangle, mesh.Wire);
+   }
+
    [StructLayout (LayoutKind.Sequential, Pack = 2, Size = 20)]
    public readonly struct Node (Vec3F pos, Vec3H vec) {
       public Vec3F Pos => pos;
       public Vec3H Vec => vec;
+
       public void Deconstruct (out Vec3F p, out Vec3H v) => (p, v) = (Pos, Vec);
       public override string ToString () => $"{pos}, {vec}";
+      public static Node operator * (Node node, Matrix3 xfm) {
+         var pos = (Vec3F)(node.Pos * xfm);
+         var vec = node.Vec;
+         if (!xfm.IsTranslation) {
+            Vector3 v = new ((double)vec.X, (double)vec.Y, (double)vec.Z);
+            v *= xfm;
+            vec = new ((Half)v.X, (Half)v.Y, (Half)v.Z);
+         }
+         return new (pos, vec);
+      }
    }
 
    /// <summary>Returns a copy of the mesh shifted by the given vector</summary>
@@ -47,15 +64,13 @@ public class CMesh (ImmutableArray<CMesh.Node> vertex, ImmutableArray<int> trian
       return new ([..nodes], Triangle, Wire);
    }
 
-   public static CMesh? Load (string file) {
+   public static CMesh Load (string file) {
       using var stm = File.OpenRead (file);
       return Load (stm);
    }
 
-   /// <summary>
-   /// Loads a Mesh from a .mesh file
-   /// </summary>
-   public unsafe static CMesh? Load (Stream stm) {
+   /// <summary>Loads a Mesh from a .mesh file</summary>
+   public unsafe static CMesh Load (Stream stm) {
       using DeflateStream dfs = new (stm, CompressionMode.Decompress, false);
       ByteStm bs = new (dfs.ReadBytes (dfs.ReadInt32 ()));
       int sign = bs.ReadInt32 (), version = bs.ReadByte ();
@@ -74,22 +89,33 @@ public class CMesh (ImmutableArray<CMesh.Node> vertex, ImmutableArray<int> trian
             fixed (Node* pnode = &nodes[0])
                for (int j = 0; j < nodes.Length; j++) bs.Read (pnode + j, 18);
 
-         int[] tIdx, wIdx;
+         int[] tIdx;  List<int> wIdx = [];
          if (small) {
             ushort[] stIdx = new ushort[tris], swIdx = new ushort[all - tris];
             fixed (void* p = stIdx) bs.Read (p, tris * 2);
             fixed (void* p = swIdx) bs.Read (p, wires * 2);
             tIdx = [.. stIdx.Select (a => (int)a)];
-            wIdx = [.. swIdx.Select (a => (int)a)];
+            ushort prev = 0xffff;
+            for (int j = 0; j < swIdx.Length; j++) {
+               ushort n = swIdx[j];
+               if (prev != 0xffff && n != 0xffff) { wIdx.Add (prev); wIdx.Add (n); }
+               prev = n;
+            }
          } else {
-            tIdx = new int[tris]; wIdx = new int[wires];
+            tIdx = new int[tris]; uint[] wIdx0 = new uint[wires];
             fixed (void* p = tIdx) bs.Read (p, tris * 4);
-            fixed (void* p = wIdx) bs.Read (p, wires * 4);
+            fixed (void* p = wIdx0) bs.Read (p, wires * 4);
+            uint prev = 0xffffffff;
+            for (int j = 0; j < wIdx0.Length; i++) {
+               uint n = wIdx0[j];
+               if (prev != 0xffffffff && n != 0xffffffff) { wIdx.Add ((int)prev); wIdx.Add ((int)n); }
+               prev = n;
+            }
          }
          meshes[i] = new CMesh ([.. nodes], [.. tIdx], [.. wIdx]);
          if (all > 0) return meshes[i];
       }
-      return null;
+      throw new IOException ("Unable to load CMesh from file");
    }
 
    /// <summary>Loads data from a TMesh file</summary>

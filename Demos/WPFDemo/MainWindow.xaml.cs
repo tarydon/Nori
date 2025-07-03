@@ -12,7 +12,7 @@ public partial class MainWindow : Window {
       Lib.Init ();
       InitializeComponent ();
       mContent.Child = Lux.CreatePanel ();
-      CMesh.Load ("N:/Wad/FanucX/Model/B.mesh");
+      Lux.OnReady.Subscribe (a => new SceneManipulator ());
    }
 
    void LeafDemo (object sender, RoutedEventArgs e) => Lux.UIScene = new LeafDemoScene ();
@@ -22,4 +22,5 @@ public partial class MainWindow : Window {
    void TessDemo (object sender, RoutedEventArgs e) => Lux.UIScene = new MeshScene (true);
    void BooleanDemo (object sender, RoutedEventArgs e) => Lux.UIScene = new BooleanScene ();
    void DwgDemo (object sender, RoutedEventArgs e) => Lux.UIScene = new DwgScene ();
+   void RobotDemo (object sender, RoutedEventArgs e) => Lux.UIScene = new RobotScene ();
 }
