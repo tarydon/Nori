@@ -32,6 +32,7 @@ public class DXFWriter (Dwg2 dwg) {
             E2Solid es => OutSolid (es),
             E2Insert ei => OutEnt (ei),
             E2Dimension e2d => OutDimension (e2d),
+            E2Bendline e2b => OutBendLine (e2b),
             _ => throw new BadCaseException (ent.GetType ().Name)
          };
       }
@@ -41,7 +42,13 @@ public class DXFWriter (Dwg2 dwg) {
    int OutDimension (E2Dimension ed) => 0;
 
    void OutLayers () {
-      var layers = mDwg.Layers;
+      var layers = mDwg.Layers.ToList ();
+      if (mDwg.Ents.Any (a => a is E2Bendline)) {
+         mBend = layers.FirstOrDefault (a => a.Name.EqIC ("BEND"));
+         if (mMBend == null) layers.Add (mBend = new Layer2 ("BEND", Color4.Green, ELineType.Dot));
+         mMBend = layers.FirstOrDefault (a => a.Name.EqIC ("MBEND"));
+         if (mMBend == null) layers.Add (mMBend = new Layer2 ("MBEND", Color4.Green, ELineType.DashDotDot));
+      }
       Out ($" 0\nTABLE\n 2\nLAYER\n 70\n{layers.Count}\n");
       foreach (var layer in layers) {
          int flags = layer.IsVisible == true ? 0 : 1, color = ToACADColor (layer.Color);
@@ -185,6 +192,16 @@ public class DXFWriter (Dwg2 dwg) {
       }
       return 0;
    }
+
+   int OutBendLine (E2Bendline eb) {
+      Point2 pa = eb.Pts[0], pb = eb.Pts[^1];
+      var layer = eb.Angle < 0 ? mMBend : mBend;
+      Out ($"0\nLINE\n8\n{layer?.Name}\n10\n{pa.X}\n20\n{pa.Y}\n11\n{pb.X}\n21\n{pb.Y}\n");
+      Out ($"1000\nBEND_ANGLE:{eb.Angle.R2D ()}\n");
+      Out ($"1000\nBEND_RADIUS:{eb.Radius}\n");
+      return Out ($"1000\nK_FACTOR:{eb.KFactor} \n");
+   }
+   Layer2? mMBend, mBend;
 
    readonly Dwg2 mDwg = dwg;
    readonly StringBuilder S = new ();
