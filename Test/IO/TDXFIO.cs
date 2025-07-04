@@ -213,4 +213,11 @@ class DXFTests2 {
       File.WriteAllLines (NT.TmpTxt, shapes);
       Assert.TextFilesEqual1 ("IO/DXF/Shapes1.txt", NT.TmpTxt);
    }
+
+   [Test (99, "Issue.69: DXFReader doesn't recognize layers correctly")]
+   void Test5 () {
+      var dwg = DXFReader.FromFile (NT.File ("IO/DXF/Layer.dxf"));
+      DXFWriter.SaveFile (dwg, NT.TmpDXF);
+      Assert.TextFilesEqual1 ("IO/DXF/Out/Layer.dxf", NT.TmpDXF);
+   }
 }
