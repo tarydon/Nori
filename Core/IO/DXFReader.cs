@@ -27,7 +27,7 @@ public partial class DXFReader {
                if (mType == "SECTION") HandleSection (V);
                else S[G] = V;
                break;
-            case 8: if(!mIsPolyline) S[G] = V; break;
+            case 8: if (!mIsPolyline) S[G] = V; break;
             case > 0 and < 10: S[G] = V; break;
             case 10: X0Set.Add (Vf); break;
             case 20: Y0Set.Add (Vf); break;
