@@ -13,7 +13,7 @@ TABLE
  2
 LAYER
  70
-3
+4
  0
 LAYER
  70
@@ -30,6 +30,16 @@ LAYER
 0
  2
 Form
+ 62
+32
+ 6
+CONTINUOUS
+ 0
+LAYER
+ 70
+0
+ 2
+Footprint
  62
 32
  6
@@ -167,7 +177,7 @@ SEQEND
  0
 POLYLINE
  8
-0
+Footprint
  66
 1
  10
@@ -215,7 +225,7 @@ SEQEND
  0
 POLYLINE
  8
-0
+Footprint
  66
 1
  10
@@ -283,7 +293,7 @@ Mark
  0
 POLYLINE
  8
-0
+Footprint
  66
 1
  10
@@ -331,7 +341,7 @@ SEQEND
  0
 POLYLINE
  8
-0
+Footprint
  66
 1
  10

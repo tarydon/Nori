@@ -214,8 +214,15 @@ class DXFTests2 {
       Assert.TextFilesEqual1 ("IO/DXF/Shapes1.txt", NT.TmpTxt);
    }
 
-   [Test (105, "Extend DXFReader to read bend line information from DXF")]
+   [Test (99, "Issue.69: DXFReader doesn't recognize layers correctly")]
    void Test5 () {
+      var dwg = DXFReader.FromFile (NT.File ("IO/DXF/Layer.dxf"));
+      DXFWriter.SaveFile (dwg, NT.TmpDXF);
+      Assert.TextFilesEqual1 ("IO/DXF/Out/Layer.dxf", NT.TmpDXF);
+   }
+
+   [Test (105, "Extend DXFReader to read bend line information from DXF")]
+   void Test6 () {
       var dwg = DXFReader.FromFile (NT.File ("IO/DXF/BasicBend.dxf"));
       Assert.IsTrue (dwg.Ents.OfType<E2Bendline> ().Count () == 3);
    }
