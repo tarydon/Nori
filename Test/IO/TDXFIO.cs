@@ -175,6 +175,16 @@ class DXFTests {
       DXFWriter.SaveFile (dwg, NT.TmpDXF);
       Assert.TextFilesEqual1 ("IO/DXF/Out/TextAlign.dxf", NT.TmpDXF);
    }
+
+   [Test (106, "Test for BendLine")]
+   public void Test21 () {
+      var dwg = new Dwg2 ();
+      dwg.Add (Poly.Rectangle (0, 0, 60, 50));
+      dwg.Add (new E2Bendline (dwg, Point2.List (40, 0, 40, 50), Lib.HalfPI, 2, 0.42));
+      dwg.Add (new E2Bendline (dwg, Point2.List (20, 0, 20, 50), -Lib.HalfPI, 2, 0.42));
+      DXFWriter.SaveFile (dwg, NT.TmpDXF);
+      Assert.TextFilesEqual1 ("IO/DXF/Out/BendLine.dxf", NT.TmpDXF);
+   }
 }
 
 [Fixture (5, "Next set of DXF tests", "DXF")]
