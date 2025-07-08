@@ -87,9 +87,9 @@ public partial class DXFReader {
             if (mVertex[i].Bulge > 1e6 || mVertex[i].Bulge.IsZero ()) mPolyBuilder.Line (mVertex[i].Pt);
             else mPolyBuilder.Arc (mVertex[i].Pt, mVertex[i].Bulge);
          }
-         if (mIsClosed) mPolyBuilder.Close ();
+         if (mClosedPoly == true) mPolyBuilder.Close ();
          Add (mPolyBuilder.Build ());
-         mVertex.Clear ();
+         mVertex.Clear (); mClosedPoly = null;
       }
    }
 
