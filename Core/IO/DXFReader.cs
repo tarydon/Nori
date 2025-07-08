@@ -41,6 +41,12 @@ public partial class DXFReader {
             case 70: I0 = Vn; break; case 71: I1 = Vn; break;
             case 72: I2 = Vn; break; case 73: I3 = Vn; break;
             case 230: ZDir = Vf.EQ (-1) ? -1 : 1; break;
+            case 1000:
+               if (V.Contains (':')) {
+                  var parts = V.Split (':', 2);
+                  mBendData[parts[0]] = parts[1].ToDouble ();
+               }
+               break;
          }
       }
       mReader.Dispose ();
@@ -55,7 +61,7 @@ public partial class DXFReader {
    // For the HEADER section, this reads in all the important header variables.
    // For some of the sections like OBJECTS etc this just skips past the section.
    // For other sections like TABLES, BLOCKS, ENTITIES, this just returns without
-   // 'eating' the section so the section contines to be processed as normal
+   // 'eating' the section so the section continues to be processed as normal
    void HandleSection (string name) {
       if (!sSections.Contains (name)) {
          while (Next ()) { if (G == 0 && V == "ENDSEC") break; }
@@ -80,7 +86,16 @@ public partial class DXFReader {
             case "CIRCLE": Add (Poly.Circle (Center, Radius)); break;
             case "DIMENSION": Add (new E2Dimension (Layer, mDwg.GetBlock (Name)!.Ents)); break;
             case "ELLIPSE": AddEllipse (Pt0, MajorAxis, AxisRatio, TRange); break;
-            case "LINE": Add (Poly.Line (Pt0, Pt1)); break;
+            case "LINE":
+               var line = Poly.Line (Pt0, Pt1);
+               if (mBendData.TryGetValue ("BEND_ANGLE", out var a) &&
+                   mBendData.TryGetValue ("BEND_RADIUS", out var r) &&
+                   mBendData.TryGetValue ("K_FACTOR", out var k)) {
+                  Add (new E2Bendline (mDwg, line.Pts, a.D2R (), r, k));
+                  mBendData.Clear ();
+               } else Add (line);
+               break;
+
             case "POINT": Add (new E2Point (Layer, Pt0) { Color = GetColor () }); break;
             case "POLYLINE": mClosedPoly = (Flags & 1) > 0; break;
             case "SEQEND": AddPolyline (); break;
@@ -225,7 +240,8 @@ public partial class DXFReader {
    int I0, I1, I2, I3;              // Integer value read from group 70 .. 73
    // A StringBuilder member used in various text compositions.
    readonly StringBuilder mSB = new ();
-
+   // Stores bend info like angle, radius, and k-factor (from 1000 codes)
+   Dictionary<string, double> mBendData = [];
    // Aliases for the group codes (for better readability)
    int Flags => I0;
    double Bulge => D2Set.SafeGet (0);
