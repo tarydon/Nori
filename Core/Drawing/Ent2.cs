@@ -89,6 +89,33 @@ public class E2Dimension : Ent2 {
 }
 #endregion
 
+#region class E2Bendline ---------------------------------------------------------------------------
+/// <summary>Represents a Bendline in a drawing</summary>
+public class E2Bendline : Ent2 {
+   public E2Bendline (Dwg2 dwg, IEnumerable<Point2> pts, double angle, double radius, double kfactor)
+      => (Angle, KFactor, Pts, Radius, mDwg) = (angle, kfactor, [.. pts], radius, dwg);
+
+   /// <summary>The exterior angle (turn angle) in radians. A hem will have an angle of +PI or -PI.</summary>
+   public readonly double Angle;
+
+   /// <summary>The K-factor (neutral axis) of the bend, as a fraction from 0 (inner surface) to 1 (outer surface)</summary>
+   public readonly double KFactor;
+
+   /// <summary>Set of points defining the bendline. Every pair here defines a 'segment' of the bendline</summary>
+   public ImmutableArray<Point2> Pts;
+
+   /// <summary>Inner radius of the bend</summary>
+   public readonly double Radius;
+
+   // Overrides ----------------------------------------------------------------
+   public override Bound2 Bound => new (Pts);
+   public override Bound2 GetBound (Matrix2 xfm) => new (Pts.Select (a => a * xfm));
+
+   // Private data -------------------------------------------------------------
+   readonly Dwg2 mDwg;  // Drawing this belongs to (needed to obtain the thickness)
+}
+#endregion
+
 #region class E2Insert -----------------------------------------------------------------------------
 /// <summary>Represents an INSERT entity (an instance of a block placed in a drawing)</summary>
 public class E2Insert : Ent2 {

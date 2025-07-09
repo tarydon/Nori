@@ -19,6 +19,13 @@ public readonly struct Point2 : IEQuable<Point2> {
       return new (x, y);
    }
 
+   /// <summary>Creates an array of points given an array with alternating X, Y ordinates</summary>
+   public static Point2[] List (params double[] values) {
+      Point2[] array = new Point2[values.Length / 2];
+      for (int i = 0; i < array.Length; i++) array[i] = new (values[i * 2], values[i * 2 + 1]);
+      return array;
+   }
+
    // Properties ---------------------------------------------------------------
    /// <summary>X ordinate of the Point2</summary>
    public readonly double X;

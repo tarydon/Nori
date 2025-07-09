@@ -27,6 +27,7 @@ public partial class DXFReader {
                if (mType == "SECTION") HandleSection (V);
                else S[G] = V;
                break;
+            case 8: if (mClosedPoly == null) S[G] = V; break;     // Ignore layers when we are inside a POLYLINE read
             case > 0 and < 10: S[G] = V; break;
             case 10: X0Set.Add (Vf); break;
             case 20: Y0Set.Add (Vf); break;
@@ -81,7 +82,7 @@ public partial class DXFReader {
             case "ELLIPSE": AddEllipse (Pt0, MajorAxis, AxisRatio, TRange); break;
             case "LINE": Add (Poly.Line (Pt0, Pt1)); break;
             case "POINT": Add (new E2Point (Layer, Pt0) { Color = GetColor () }); break;
-            case "POLYLINE": mIsClosed = (Flags & 1) > 0; break;
+            case "POLYLINE": mClosedPoly = (Flags & 1) > 0; break;
             case "SEQEND": AddPolyline (); break;
             case "VERTEX": mVertex.Add (new (Pt0, Flags, Bulge)); break;
             case "BLOCK": (mBlockEnts, mBlockName, mBlockPt) = ([], Name, Pt0); break;
@@ -105,7 +106,7 @@ public partial class DXFReader {
                break;
 
             case "LWPOLYLINE":
-               mIsClosed = (Flags & 1) > 0;
+               mClosedPoly = (Flags & 1) > 0;
                for (int i = 0; i < X0Set.Count; i++)
                   mVertex.Add (new (new (X0Set[i], Y0Set[i]), 0, D2Set.SafeGet (i)));
                AddPolyline ();
@@ -213,8 +214,7 @@ public partial class DXFReader {
    List<Ent2>? mBlockEnts;
    string mBlockName = "*";         // Name of the block we're building
    Point2 mBlockPt;                 // Insertion point of the block
-
-   bool mIsClosed;                  // If set, the Poly read is closed
+   bool? mClosedPoly;               // NULL=not reading polyline, true=reading closed poly, false=reading open poly
 
    string? mType;                   // The _previous_ Type (0 group entity) that we saw
    readonly Dictionary<string, Layer2> mLayers = [];  // Dictionary mapping layer names to layer objects

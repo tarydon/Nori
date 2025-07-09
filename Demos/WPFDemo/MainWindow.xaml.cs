@@ -20,4 +20,5 @@ public partial class MainWindow : Window {
    void MeshDemo (object sender, RoutedEventArgs e) => Lux.UIScene = new MeshScene ();
    void TessDemo (object sender, RoutedEventArgs e) => Lux.UIScene = new MeshScene (true);
    void BooleanDemo (object sender, RoutedEventArgs e) => Lux.UIScene = new BooleanScene ();
+   void DwgDemo (object sender, RoutedEventArgs e) => Lux.UIScene = new DwgScene ();
 }
