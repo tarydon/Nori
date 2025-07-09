@@ -73,6 +73,7 @@ public static partial class Lux {
             while (!mReady) sHost.Dispatcher.Invoke (DispatcherPriority.Background, () => { });
          }
       }
+      VNode.RegisterAssembly (Assembly.GetExecutingAssembly ());
       mFPSReportTS = mLastFrameTS = DateTime.Now;
       return Panel.It;
    }

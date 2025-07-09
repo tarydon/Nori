@@ -1,0 +1,2608 @@
+(Dwg2){
+  Layers:[
+    { Name:0 Color:#FFFFFFFF Linetype:Continuous Visible:True }
+    { Name:3 Color:#FF00FF00 Linetype:Continuous Visible:True }
+    { Name:4 Color:#FF00FFFF Linetype:Continuous Visible:True }
+    { Name:5 Color:#FF00FFFF Linetype:Continuous Visible:True }
+    { Name:6 Color:#FF00FF00 Linetype:Dash Visible:True }
+    { Name:9 Color:#FF00FFFF Linetype:DashDot Visible:True }
+    { Name:DEFPOINTS Color:#FFFFFFFF Linetype:Continuous Visible:True }
+    { Name:7A Color:#FF00FFFF Linetype:Continuous Visible:True }
+    { Name:T_02 Color:#FFFFFF00 Linetype:Continuous Visible:True }
+    { Name:Tego_ram Color:#FFFFFFFF Linetype:Continuous Visible:True }
+    { Name:Tego_huvud Color:#FFFFFFFF Linetype:Continuous Visible:True }
+    { Name:Tego_styck Color:#FFFFFFFF Linetype:Continuous Visible:True }
+    { Name:Tego_artikel Color:#FFFFFFFF Linetype:Continuous Visible:True }
+    { Name:Tego_help Color:#FFFFFFFF Linetype:Continuous Visible:True }
+  ]
+  Styles:[
+    { Name:STANDARD Font:ISOCP.SHX XScale:1 }
+    { Name:Tego_01 Font:romans Height:0.2 XScale:0.7 }
+    { Name:ram015_2 Font:romans Height:4 XScale:0.7 }
+    { Name:ram015_3 Font:romans Height:4 XScale:0.7 }
+    { Name:Tego_25 Font:romans Height:5 XScale:0.7 }
+    { Name:Tego_40 Font:romans Height:8 XScale:0.7 }
+    { Name:Tego_15 Font:romans Height:3 XScale:0.7 }
+    { Name:Tego_20 Font:romans Height:4 XScale:0.7 }
+  ]
+  Blocks:[
+    {
+      Name:A$C27551C98
+      Base:0,0
+      Ents:[
+        (E2Poly){ Layer:3 Poly:M20.175082,21.697847V98.597847 }
+        (E2Poly){ Layer:3 Poly:M21.575082,20.297847H25.775082 }
+        (E2Poly){ Layer:3 Poly:M20.175082,21.697847Q21.575082,20.297847,1 }
+        (E2Poly){ Layer:3 Poly:M25.775082,20.297847Q27.175082,21.697847,1 }
+        (E2Poly){ Layer:3 Poly:M27.175082,21.697847V25.297847 }
+        (E2Poly){ Layer:3 Poly:M27.175082,25.297847H26.475082 }
+        (E2Poly){ Layer:3 Poly:M37.493459,85.097847H102.856705 }
+        (E2Poly){ Layer:3 Poly:M22.582189,99.304954L36.291377,85.595765 }
+        (E2Poly){ Layer:3 Poly:M23.077163,99.799928Q20.175082,98.597847,1.5 }
+        (E2Poly){ Layer:3 Poly:M120.175082,21.697847V98.597847 }
+        (E2Poly){ Layer:3 Poly:M118.775082,20.297847H114.575082 }
+        (E2Poly){ Layer:3 Poly:M118.775082,20.297847Q120.175082,21.697847,1 }
+        (E2Poly){ Layer:3 Poly:M113.175082,21.697847Q114.575082,20.297847,1 }
+        (E2Poly){ Layer:3 Poly:M113.175082,21.697847V25.297847 }
+        (E2Poly){ Layer:3 Poly:M113.175082,25.297847H113.875082 }
+        (E2Poly){ Layer:3 Poly:M118.775082,20.997847Q119.475082,21.697847,1 }
+        (E2Poly){ Layer:3 Poly:M118.775082,20.997847H114.575082 }
+        (E2Poly){ Layer:3 Poly:M113.875082,21.697847Q114.575082,20.997847,1 }
+        (E2Poly){ Layer:3 Poly:M113.875082,21.697847V25.297847 }
+        (E2Poly){ Layer:3 Poly:M117.767975,99.304954L104.058787,85.595765 }
+        (E2Poly){ Layer:3 Poly:M119.475082,98.597847V21.697847 }
+        (E2Poly){ Layer:3 Poly:M119.475082,98.597847Q117.767975,99.304954,1.5 }
+        (E2Poly){ Layer:3 Poly:M120.175082,98.597847Q117.273,99.799928,1.5 }
+        (E2Poly){ Layer:3 Poly:M36.291377,85.595765Q37.493459,85.097847,0.5 }
+        (E2Poly){ Layer:3 Poly:M102.856705,85.097847Q104.058787,85.595765,0.5 }
+        (E2Poly){
+          Layer:3
+          Poly:M117.273,99.799928L103.563812,86.09074Q102.856705,85.797847,-0.5H37.493459Q36.786352,86.09074,-0.5L23.077163,99.799928
+        }
+        (E2Poly){
+          Layer:3
+          Poly:M22.582189,99.304954Q20.875082,98.597847,1.5V21.697847Q21.575082,20.997847,1H25.775082Q26.475082,21.697847,1V25.297847
+        }
+        (E2Poly){ Layer:3 Poly:M21.167975,99.304954L22.423882,100.56086 }
+        (E2Poly){ Layer:3 Poly:M36.892418,85.346806L37.493459,86.797847 }
+        (E2Dimension){
+          Layer:5
+          Ents:[
+            (E2Poly){ Layer:0 Poly:M472.701081,280.282628L477.917508,285.499054 }
+            (E2Poly){ Layer:0 Poly:M487.387974,265.595734L492.604401,270.812161 }
+            (E2Poly){ Layer:0 Poly:M478.978168,283.02418L490.129527,271.872821 }
+            (E2Solid){
+              Layer:0
+              Pts:[
+                479.272796,283.318808
+                478.68354,282.729552
+                477.210401,284.791947
+                477.210401,284.791947
+              ]
+            }
+            (E2Solid){
+              Layer:0
+              Pts:[
+                490.424155,272.167449
+                489.834899,271.578193
+                491.897294,270.105054
+                491.897294,270.105054
+              ]
+            }
+            (E2Text){
+              Layer:0
+              Color:#FFFFFF00
+              Pt:486.852188,279.746841
+              Text:20.77
+              Style:STANDARD
+              Angle:-0.7853981633975292
+              Alignment:MidCenter
+              Height:3.5
+              XScale:1
+            }
+            (E2Point){ Layer:DEFPOINTS Color:#FF000000 Pt:471.993974,279.575521 }
+            (E2Point){ Layer:DEFPOINTS Color:#FF000000 Pt:486.680868,264.888628 }
+            (E2Point){ Layer:DEFPOINTS Color:#FF000000 Pt:491.897294,270.105054 }
+          ]
+        }
+        (E2Dimension){
+          Layer:5
+          Ents:[
+            (E2Poly){ Layer:0 Poly:M476.745174,204.312507H488.745174 }
+            (E2Poly){ Layer:0 Poly:M475.345174,199.312507H488.745174 }
+            (E2Poly){ Layer:0 Poly:M487.745174,206.812507V209.312507 }
+            (E2Poly){ Layer:0 Poly:M487.745174,196.812507V194.312507 }
+            (E2Poly){ Layer:0 Poly:M487.745174,204.312507V199.312507 }
+            (E2Solid){
+              Layer:0
+              Pts:[
+                487.328508,206.812507
+                488.161841,206.812507
+                487.745174,204.312507
+                487.745174,204.312507
+              ]
+            }
+            (E2Solid){
+              Layer:0
+              Pts:[
+                487.328508,196.812507
+                488.161841,196.812507
+                487.745174,199.312507
+                487.745174,199.312507
+              ]
+            }
+            (E2Text){
+              Layer:0
+              Color:#FFFFFF00
+              Pt:484.495174,201.812507
+              Text:5
+              Style:STANDARD
+              Angle:1.5707963267948966
+              Alignment:MidCenter
+              Height:3.5
+              XScale:1
+            }
+            (E2Point){ Layer:DEFPOINTS Color:#FF000000 Pt:475.745174,204.312507 }
+            (E2Point){ Layer:DEFPOINTS Color:#FF000000 Pt:474.345174,199.312507 }
+            (E2Point){ Layer:DEFPOINTS Color:#FF000000 Pt:487.745174,199.312507 }
+          ]
+        }
+        (E2Dimension){
+          Layer:5
+          Ents:[
+            (E2Poly){ Layer:0 Poly:M53.034203,74.372984V62.372984 }
+            (E2Poly){ Layer:0 Poly:M60.034203,74.372984V62.372984 }
+            (E2Poly){ Layer:0 Poly:M50.534203,63.372984H48.034203 }
+            (E2Poly){ Layer:0 Poly:M62.534203,63.372984H65.034203 }
+            (E2Poly){ Layer:0 Poly:M53.034203,63.372984H60.034203 }
+            (E2Solid){
+              Layer:0
+              Pts:[
+                50.534203,63.789651
+                50.534203,62.956317
+                53.034203,63.372984
+                53.034203,63.372984
+              ]
+            }
+            (E2Solid){
+              Layer:0
+              Pts:[
+                62.534203,63.789651
+                62.534203,62.956317
+                60.034203,63.372984
+                60.034203,63.372984
+              ]
+            }
+            (E2Text){
+              Layer:0
+              Color:#FFFFFF00
+              Pt:56.534203,66.622984
+              Text:7
+              Style:STANDARD
+              Alignment:MidCenter
+              Height:3.5
+              XScale:1
+            }
+            (E2Point){ Layer:DEFPOINTS Color:#FF000000 Pt:53.034203,75.372984 }
+            (E2Point){ Layer:DEFPOINTS Color:#FF000000 Pt:60.034203,75.372984 }
+            (E2Point){ Layer:DEFPOINTS Color:#FF000000 Pt:60.034203,63.372984 }
+          ]
+        }
+        (E2Dimension){
+          Layer:5
+          Ents:[
+            (E2Poly){ Layer:0 Poly:M470.445174,279.312507H453.39647 }
+            (E2Poly){ Layer:0 Poly:M470.445174,199.312507H453.39647 }
+            (E2Poly){ Layer:0 Poly:M454.39647,276.812507V201.812507 }
+            (E2Solid){
+              Layer:0
+              Pts:[
+                453.979804,276.812507
+                454.813137,276.812507
+                454.39647,279.312507
+                454.39647,279.312507
+              ]
+            }
+            (E2Solid){
+              Layer:0
+              Pts:[
+                453.979804,201.812507
+                454.813137,201.812507
+                454.39647,199.312507
+                454.39647,199.312507
+              ]
+            }
+            (E2Text){
+              Layer:0
+              Color:#FFFFFF00
+              Pt:451.14647,239.312507
+              Text:80
+              Style:STANDARD
+              Angle:1.5707963267948966
+              Alignment:MidCenter
+              Height:3.5
+              XScale:1
+            }
+            (E2Point){ Layer:DEFPOINTS Color:#FF000000 Pt:471.445174,279.312507 }
+            (E2Point){ Layer:DEFPOINTS Color:#FF000000 Pt:471.445174,199.312507 }
+            (E2Point){ Layer:DEFPOINTS Color:#FF000000 Pt:454.39647,199.312507 }
+          ]
+        }
+        (E2Poly){ Layer:3 Poly:M103.457746,85.346806L102.856705,86.797847 }
+        (E2Dimension){
+          Layer:5
+          Ents:[
+            (E2Poly){ Layer:0 Poly:M486.680868,263.888628V253.685764 }
+            (E2Poly){ Layer:0 Poly:M552.809481,263.888628V253.685764 }
+            (E2Poly){ Layer:0 Poly:M489.180868,254.685764H550.309481 }
+            (E2Solid){
+              Layer:0
+              Pts:[
+                489.180868,255.102431
+                489.180868,254.269097
+                486.680868,254.685764
+                486.680868,254.685764
+              ]
+            }
+            (E2Solid){
+              Layer:0
+              Pts:[
+                550.309481,255.102431
+                550.309481,254.269097
+                552.809481,254.685764
+                552.809481,254.685764
+              ]
+            }
+            (E2Text){
+              Layer:0
+              Color:#FFFFFF00
+              Pt:519.745174,257.935764
+              Text:66.13
+              Style:STANDARD
+              Alignment:MidCenter
+              Height:3.5
+              XScale:1
+            }
+            (E2Point){ Layer:DEFPOINTS Color:#FF000000 Pt:486.680868,264.888628 }
+            (E2Point){ Layer:DEFPOINTS Color:#FF000000 Pt:552.809481,264.888628 }
+            (E2Point){ Layer:DEFPOINTS Color:#FF000000 Pt:552.809481,254.685764 }
+          ]
+        }
+        (E2Dimension){
+          Layer:5
+          Ents:[
+            (E2Poly){ Layer:0 Poly:M53.034203,74.372984V53.675137 }
+            (E2Poly){ Layer:0 Poly:M153.034203,74.372984V53.675137 }
+            (E2Poly){ Layer:0 Poly:M55.534203,54.675137H150.534203 }
+            (E2Solid){
+              Layer:0
+              Pts:[
+                55.534203,55.091804
+                55.534203,54.25847
+                53.034203,54.675137
+                53.034203,54.675137
+              ]
+            }
+            (E2Solid){
+              Layer:0
+              Pts:[
+                150.534203,55.091804
+                150.534203,54.25847
+                153.034203,54.675137
+                153.034203,54.675137
+              ]
+            }
+            (E2Text){
+              Layer:0
+              Color:#FFFFFF00
+              Pt:103.034203,57.925137
+              Text:100
+              Style:STANDARD
+              Alignment:MidCenter
+              Height:3.5
+              XScale:1
+            }
+            (E2Point){ Layer:DEFPOINTS Color:#FF000000 Pt:53.034203,75.372984 }
+            (E2Point){ Layer:DEFPOINTS Color:#FF000000 Pt:153.034203,75.372984 }
+            (E2Point){ Layer:DEFPOINTS Color:#FF000000 Pt:153.034203,54.675137 }
+          ]
+        }
+      ]
+    }
+    {
+      Name:GEZOO16QI5SQ
+      Base:0,0
+      Ents:[
+        (E2Poly){ Layer:9 Poly:M-20.68304,1.839769H20.68304 }
+        (E2Poly){ Layer:7A Poly:M-9.762897,15.714769V7.964769 }
+        (E2Poly){ Layer:7A Poly:M-9.762897,1.839769V-6.796007 }
+        (E2Poly){ Layer:7A Poly:M-5.887897,-8.160231H-13.637897 }
+        (E2Poly){ Layer:4 Poly:C-9.762897,-8.160231,1.75 }
+        (E2Poly){ Layer:7A Poly:M-9.762897,-4.285231V-12.035231 }
+        (E2Poly){ Layer:4 Poly:M-12.512897,2.389769H-7.012897 }
+        (E2Poly){ Layer:4 Poly:M-12.512897,1.289769H-7.012897 }
+        (E2Poly){ Layer:7A Poly:M-9.762897,1.839769H-1.127121 }
+        (E2Poly){ Layer:7A Poly:M-5.887897,11.839769H-13.637897 }
+        (E2Poly){ Layer:4 Poly:M-12.512897,2.389769V1.289769 }
+        (E2Poly){ Layer:7A Poly:M-9.762897,1.839769H-18.398673 }
+        (E2Poly){ Layer:4 Poly:C-9.762897,11.839769,1.75 }
+        (E2Poly){ Layer:7A Poly:M-9.762897,1.839769V10.475545 }
+        (E2Poly){ Layer:4 Poly:M-7.012897,2.389769V1.289769 }
+      ]
+    }
+    { Name:GENPOS14 Base:0,0 Ents:[ ] }
+    {
+      Name:T_ram
+      Base:0,0
+      Ents:[
+        (E2Poly){ Layer:Tego_ram Color:#FFFF0000 Poly:M0,696V0 }
+        (E2Poly){ Layer:Tego_ram Color:#FFFF0000 Poly:M1128,696H0 }
+        (E2Poly){ Layer:Tego_ram Color:#FFFF0000 Poly:M1128,0V696 }
+        (E2Poly){ Layer:Tego_ram Color:#FFFF0000 Poly:M0,0H1128 }
+      ]
+    }
+    {
+      Name:T_huvud
+      Base:0,0
+      Ents:[
+        (E2Text){
+          Layer:Tego_huvud
+          Color:#FF00FF00
+          Pt:216,17
+          Text:Article
+          Style:ram015_3
+          Alignment:BaseLeft
+          Height:4
+          XScale:0.7
+        }
+        (E2Text){
+          Layer:Tego_huvud
+          Color:#FF00FF00
+          Pt:144,17
+          Text:Repl.
+          Style:ram015_3
+          Alignment:BaseLeft
+          Height:4
+          XScale:0.7
+        }
+        (E2Text){
+          Layer:Tego_huvud
+          Color:#FF00FF00
+          Pt:330,31
+          Text:Cont.
+          Style:ram015_3
+          Alignment:BaseLeft
+          Height:4
+          XScale:0.7
+        }
+        (E2Text){
+          Layer:Tego_huvud
+          Color:#FF00FF00
+          Pt:330,45
+          Text:Sheet
+          Style:ram015_3
+          Alignment:BaseLeft
+          Height:4
+          XScale:0.7
+        }
+        (E2Text){
+          Layer:Tego_huvud
+          Color:#FF00FF00
+          Pt:314,45
+          Text:Rev.
+          Style:ram015_3
+          Alignment:BaseLeft
+          Height:4
+          XScale:0.7
+        }
+        (E2Text){
+          Layer:Tego_huvud
+          Color:#FF00FF00
+          Pt:144,31
+          Text:Description
+          Style:ram015_3
+          Alignment:BaseLeft
+          Height:4
+          XScale:0.7
+        }
+        (E2Text){
+          Layer:Tego_huvud
+          Color:#FF00FF00
+          Pt:144,45
+          Text:Name
+          Style:ram015_3
+          Alignment:BaseLeft
+          Height:4
+          XScale:0.7
+        }
+        (E2Text){
+          Layer:Tego_huvud
+          Color:#FF00FF00
+          Pt:86,45
+          Text:Scale
+          Style:ram015_3
+          Alignment:BaseLeft
+          Height:4
+          XScale:0.7
+        }
+        (E2Text){
+          Layer:Tego_huvud
+          Color:#FF00FF00
+          Pt:44,45
+          Text:Date
+          Style:ram015_3
+          Alignment:BaseLeft
+          Height:4
+          XScale:0.7
+        }
+        (E2Text){
+          Layer:Tego_huvud
+          Color:#FF00FF00
+          Pt:4,45
+          Text:"Drawn by"
+          Style:ram015_3
+          Alignment:BaseLeft
+          Height:4
+          XScale:0.7
+        }
+        (E2Text){
+          Layer:Tego_huvud
+          Color:#FF00FF00
+          Pt:80,8
+          Text:"Telefon: +46 418 455800"
+          Style:ram015_2
+          Alignment:BaseLeft
+          Height:4
+          XScale:0.7
+        }
+        (E2Text){
+          Layer:Tego_huvud
+          Color:#FF00FF00
+          Pt:80,2
+          Text:"Telefax: +46 418 23136"
+          Style:ram015_2
+          Alignment:BaseLeft
+          Height:4
+          XScale:0.7
+        }
+        (E2Text){
+          Layer:Tego_huvud
+          Color:#FF00FF00
+          Pt:6,2
+          Text:"Box 43, SE-26122 Landskrona"
+          Style:ram015_2
+          Alignment:BaseLeft
+          Height:4
+          XScale:0.7
+        }
+        (E2Text){
+          Layer:Tego_huvud
+          Color:#FF00FF00
+          Pt:6,8
+          Text:"TEGO SYSTEM AB"
+          Style:ram015_2
+          Alignment:BaseLeft
+          Height:4
+          XScale:1.1
+        }
+        (E2Poly){ Layer:Tego_huvud Color:#FFFFFF00 Poly:M68.4,23Q56,23,-2Q68.4,23,-2Z }
+        (E2Poly){ Layer:Tego_huvud Color:#FFFFFF00 Poly:M48.6,23H54.4 }
+        (E2Poly){
+          Layer:Tego_huvud
+          Color:#FFFFFF00
+          Poly:M54.4,23Q42,23,-2Q53.569358,26.1,-1.666667
+        }
+        (E2Poly){ Layer:Tego_huvud Color:#FFFFFF00 Poly:M32,23H40.4 }
+        (E2Poly){ Layer:Tego_huvud Color:#FFFFFF00 Poly:M40.4,16.8H32V29.2H40.4 }
+        (E2Poly){ Layer:Tego_huvud Color:#FFFFFF00 Poly:M26.2,16.8V29.2 }
+        (E2Poly){ Layer:Tego_huvud Color:#FFFFFF00 Poly:M22,29.2H30.4 }
+        (E2Poly){ Layer:Tego_huvud Color:#FFFFFF00 Poly:M12.2,23L18.4,29.2 }
+        (E2Poly){ Layer:Tego_huvud Color:#FFFFFF00 Poly:M6,23H12.2V16.8 }
+        (E2Poly){ Layer:Tego_huvud Color:#FFFFFF00 Poly:M6,16.8H18.4V29.2H6Z }
+        (E2Poly){ Layer:Tego_huvud Color:#FF00FFFF Poly:C137,41,3.5 }
+        (E2Poly){ Layer:Tego_huvud Color:#FF00FFFF Poly:C137,41,2 }
+        (E2Poly){ Layer:Tego_huvud Color:#FF00FFFF Poly:M132,37.5L127.5,39 }
+        (E2Poly){ Layer:Tego_huvud Color:#FF00FFFF Poly:M132,44.5V37.5 }
+        (E2Poly){ Layer:Tego_huvud Color:#FF00FFFF Poly:M127.5,43L132,44.5 }
+        (E2Poly){ Layer:Tego_huvud Color:#FF00FFFF Poly:M127.5,39V43 }
+        (E2Poly){ Layer:Tego_huvud Color:#FFFFFF00 Poly:M0,50H360 }
+        (E2Poly){ Layer:Tego_huvud Color:#FFFFFF00 Poly:M326,36H360 }
+        (E2Poly){ Layer:Tego_huvud Color:#FFFFFF00 Poly:M142,22H214 }
+        (E2Poly){ Layer:Tego_huvud Color:#FFFFFF00 Poly:M0,32H142 }
+        (E2Poly){ Layer:Tego_huvud Color:#FFFFFF00 Poly:M6,14H136 }
+        (E2Poly){ Layer:Tego_huvud Color:#FFFFFF00 Poly:M0,0H214 }
+        (E2Poly){ Layer:Tego_huvud Color:#FFFFFF00 Poly:M360,22V50 }
+        (E2Poly){ Layer:Tego_huvud Color:#FFFFFF00 Poly:M326,22V50 }
+        (E2Poly){ Layer:Tego_huvud Color:#FFFFFF00 Poly:M310,22V50 }
+        (E2Poly){ Layer:Tego_huvud Color:#FFFFFF00 Poly:M142,0V50 }
+        (E2Poly){ Layer:Tego_huvud Color:#FFFFFF00 Poly:M126,32V50 }
+        (E2Poly){ Layer:Tego_huvud Color:#FFFFFF00 Poly:M84,32V50 }
+        (E2Poly){ Layer:Tego_huvud Color:#FFFFFF00 Poly:M42,32V50 }
+        (E2Poly){ Layer:Tego_huvud Color:#FFFFFF00 Poly:M0,0V50 }
+        (E2Poly){ Layer:Tego_huvud Color:#FFFF0000 Poly:M214,22H360 }
+        (E2Poly){ Layer:Tego_huvud Color:#FFFF0000 Poly:M214,0H360 }
+        (E2Poly){ Layer:Tego_huvud Color:#FFFF0000 Poly:M360,0V22 }
+        (E2Poly){ Layer:Tego_huvud Color:#FFFF0000 Poly:M214,0V22 }
+      ]
+    }
+    {
+      Name:T_styck
+      Base:0,0
+      Ents:[
+        (E2Text){
+          Layer:Tego_styck
+          Color:#FF00FFFF
+          Pt:306,54
+          Text:Dimension
+          Style:Tego_20
+          Alignment:BaseLeft
+          Height:4
+          XScale:0.7
+        }
+        (E2Text){
+          Layer:Tego_styck
+          Color:#FF00FFFF
+          Pt:250,54
+          Text:"Material, type etc."
+          Style:Tego_20
+          Alignment:BaseLeft
+          Height:4
+          XScale:0.7
+        }
+        (E2Text){
+          Layer:Tego_styck
+          Color:#FF00FFFF
+          Pt:144,54
+          Text:Name
+          Style:Tego_20
+          Alignment:BaseLeft
+          Height:4
+          XScale:0.7
+        }
+        (E2Text){
+          Layer:Tego_styck
+          Color:#FF00FFFF
+          Pt:66,54
+          Text:"Sub Article"
+          Style:Tego_20
+          Alignment:BaseLeft
+          Height:4
+          XScale:0.7
+        }
+        (E2Text){
+          Layer:Tego_styck
+          Color:#FF00FFFF
+          Pt:50,53
+          Text:no.
+          Style:Tego_15
+          Alignment:BaseLeft
+          Height:3
+          XScale:0.7
+        }
+        (E2Text){
+          Layer:Tego_styck
+          Color:#FF00FFFF
+          Pt:50,59
+          Text:Item
+          Style:Tego_15
+          Alignment:BaseLeft
+          Height:3
+          XScale:0.7
+        }
+        (E2Text){
+          Layer:Tego_styck
+          Color:#FF00FFFF
+          Pt:21.05,54
+          Text:Qty.
+          Style:Tego_15
+          Alignment:BaseLeft
+          Height:3
+          XScale:0.7
+        }
+        (E2Text){
+          Layer:Tego_styck
+          Color:#FF00FFFF
+          Pt:39.1,59.5
+          Text:V
+          Style:Tego_15
+          Alignment:BaseLeft
+          Height:3
+          XScale:0.7
+        }
+        (E2Text){
+          Layer:Tego_styck
+          Color:#FF00FFFF
+          Pt:23.1,59.5
+          Text:A
+          Style:Tego_15
+          Alignment:BaseLeft
+          Height:3
+          XScale:0.7
+        }
+        (E2Text){
+          Layer:Tego_styck
+          Color:#FF00FFFF
+          Pt:6.9,59.5
+          Text:B
+          Style:Tego_15
+          Alignment:BaseLeft
+          Height:3
+          XScale:0.7
+        }
+        (E2Poly){ Layer:Tego_styck Color:#FFFFFF00 Poly:M0,64H360 }
+        (E2Poly){ Layer:Tego_styck Color:#FFFFFF00 Poly:M0,58H48 }
+        (E2Poly){ Layer:Tego_styck Color:#FFFFFF00 Poly:M0,52H360 }
+        (E2Poly){ Layer:Tego_styck Color:#FFFFFF00 Poly:M360,50V64 }
+        (E2Poly){ Layer:Tego_styck Color:#FFFFFF00 Poly:M304,52V64 }
+        (E2Poly){ Layer:Tego_styck Color:#FFFFFF00 Poly:M248,52V64 }
+        (E2Poly){ Layer:Tego_styck Color:#FFFFFF00 Poly:M64,52V64 }
+        (E2Poly){ Layer:Tego_styck Color:#FFFFFF00 Poly:M48,52V64 }
+        (E2Poly){ Layer:Tego_styck Color:#FFFFFF00 Poly:M32,58V64 }
+        (E2Poly){ Layer:Tego_styck Color:#FFFFFF00 Poly:M16,58V64 }
+        (E2Poly){ Layer:Tego_styck Color:#FFFFFF00 Poly:M142,50V64 }
+        (E2Poly){ Layer:Tego_styck Color:#FFFFFF00 Poly:M0,50V64 }
+      ]
+    }
+    {
+      Name:T_styck_01
+      Base:0,0
+      Ents:[
+        (E2Poly){ Layer:Tego_help Color:#FFFFFF00 Poly:M0,74H360 }
+        (E2Poly){ Layer:Tego_help Color:#FFFFFF00 Poly:M360,64V74 }
+        (E2Poly){ Layer:Tego_help Color:#FFFFFF00 Poly:M304,64V74 }
+        (E2Poly){ Layer:Tego_help Color:#FFFFFF00 Poly:M248,64V74 }
+        (E2Poly){ Layer:Tego_help Color:#FFFFFF00 Poly:M142,64V74 }
+        (E2Poly){ Layer:Tego_help Color:#FFFFFF00 Poly:M64,64V74 }
+        (E2Poly){ Layer:Tego_help Color:#FFFFFF00 Poly:M48,64V74 }
+        (E2Poly){ Layer:Tego_help Color:#FFFFFF00 Poly:M32,64V74 }
+        (E2Poly){ Layer:Tego_help Color:#FFFFFF00 Poly:M16,64V74 }
+        (E2Poly){ Layer:Tego_help Color:#FFFFFF00 Poly:M0,64V74 }
+      ]
+    }
+  ]
+  Ents:[
+    (E2Poly){ Layer:4 Poly:M73.318207,611.561582V323.061582 }
+    (E2Poly){ Layer:4 Poly:M73.318207,323.061582H81.318207 }
+    (E2Poly){ Layer:4 Poly:M183.818207,328.561582V323.061582 }
+    (E2Poly){ Layer:4 Poly:M81.318207,328.561582V323.061582 }
+    (E2Poly){ Layer:4 Poly:M81.318207,328.561582H183.818207 }
+    (E2Poly){ Layer:4 Poly:M81.318207,606.061582H183.818207 }
+    (E2Poly){ Layer:4 Poly:M73.318207,611.561582H81.318207 }
+    (E2Poly){ Layer:4 Poly:M81.318207,606.061582V611.561582 }
+    (E2Poly){ Layer:4 Poly:M183.818207,606.061582V611.561582 }
+    (E2Poly){ Layer:4 Poly:M996.866273,611.561582V323.061582 }
+    (E2Poly){ Layer:4 Poly:M988.866273,328.561582H886.366273 }
+    (E2Poly){ Layer:4 Poly:M996.866273,323.061582H988.866273 }
+    (E2Poly){ Layer:4 Poly:M988.866273,328.561582V323.061582 }
+    (E2Poly){ Layer:4 Poly:M886.366273,328.561582V323.061582 }
+    (E2Poly){ Layer:4 Poly:M988.866273,606.061582H886.366273 }
+    (E2Poly){ Layer:4 Poly:M996.866273,611.561582H988.866273 }
+    (E2Poly){ Layer:4 Poly:M988.866273,606.061582V611.561582 }
+    (E2Poly){ Layer:4 Poly:M886.366273,606.061582V611.561582 }
+    (E2Poly){ Layer:4 Poly:M183.818207,611.561582H886.366273 }
+    (E2Poly){ Layer:4 Poly:M183.818207,323.061582H886.366273 }
+    (E2Poly){ Layer:4 Poly:M186.818207,490.311582V444.311582 }
+    (E2Poly){ Layer:4 Poly:M204.818207,490.311582V444.311582 }
+    (E2Poly){ Layer:4 Poly:M186.818207,490.311582H204.818207 }
+    (E2Poly){ Layer:4 Poly:M186.818207,444.311582H204.818207 }
+    (E2Poly){ Layer:4 Poly:M865.366273,490.311582V444.311582 }
+    (E2Poly){ Layer:4 Poly:M883.366273,490.311582V444.311582 }
+    (E2Poly){ Layer:4 Poly:M883.366273,444.311582H865.366273 }
+    (E2Poly){ Layer:4 Poly:M883.366273,490.311582H865.366273 }
+    (E2Poly){ Layer:4 Poly:C181.818207,467.311582,1.25 }
+    (E2Poly){ Layer:7A Poly:M181.818207,467.311582V473.684015 }
+    (E2Poly){ Layer:7A Poly:M181.818207,467.311582V460.939149 }
+    (E2Poly){ Layer:7A Poly:M181.818207,467.311582H188.190639 }
+    (E2Poly){ Layer:7A Poly:M181.818207,467.311582H175.445774 }
+    (E2Poly){ Layer:7A Poly:M888.366273,467.311582H894.738706 }
+    (E2Poly){ Layer:7A Poly:M888.366273,467.311582V473.684015 }
+    (E2Poly){ Layer:4 Poly:C888.366273,467.311582,1.25 }
+    (E2Poly){ Layer:7A Poly:M888.366273,467.311582V460.939149 }
+    (E2Poly){ Layer:7A Poly:M888.366273,467.311582H881.993841 }
+    (E2Poly){ Layer:9 Poly:M67.895253,467.311582H1000.68848 }
+    (E2Poly){ Layer:9 Poly:M73.318207,607.261582H76.488101 }
+    (E2Poly){ Layer:9 Poly:M183.818207,607.261582H886.366273 }
+    (E2Poly){ Layer:9 Poly:M183.818207,327.361582H886.366273 }
+    (E2Poly){ Layer:9 Poly:M78.275171,607.261582H81.318207 }
+    (E2Poly){ Layer:9 Poly:M73.318207,327.361582H76.488101 }
+    (E2Poly){ Layer:9 Poly:M78.275171,327.361582H81.318207 }
+    (E2Poly){ Layer:9 Poly:M991.909309,607.261582H988.866273 }
+    (E2Poly){ Layer:9 Poly:M996.866273,607.261582H993.696379 }
+    (E2Poly){ Layer:9 Poly:M996.866273,327.361582H993.696379 }
+    (E2Poly){ Layer:9 Poly:M991.909309,327.361582H988.866273 }
+    (E2Poly){ Layer:9 Poly:M73.318207,332.861582H996.866273 }
+    (E2Poly){ Layer:9 Poly:M73.318207,601.761582H996.866273 }
+    (E2Poly){ Layer:9 Poly:M73.318207,500.311582H996.866273 }
+    (E2Poly){ Layer:9 Poly:M73.318207,434.311582H996.866273 }
+    (E2Poly){ Layer:9 Poly:M73.318207,411.361582H996.866273 }
+    (E2Poly){ Layer:9 Poly:M73.318207,523.261582H996.866273 }
+    (E2Insert){ Layer:9 BlockName:A$C27551C98 Pt:115.251166,9.643584 XScale:2 YScale:2 }
+    (E2Poly){ Layer:3 Poly:M1030.49909,517.311582H1107.39909 }
+    (E2Poly){ Layer:3 Poly:M1029.09909,515.911582V511.711582 }
+    (E2Poly){ Layer:3 Poly:M1030.49909,517.311582Q1029.09909,515.911582,1 }
+    (E2Poly){ Layer:3 Poly:M1029.09909,511.711582Q1030.49909,510.311582,1 }
+    (E2Poly){ Layer:3 Poly:M1030.49909,510.311582H1034.09909 }
+    (E2Poly){ Layer:3 Poly:M1034.09909,510.311582V511.011582 }
+    (E2Poly){ Layer:3 Poly:M1093.89909,499.993205V434.629959 }
+    (E2Poly){ Layer:3 Poly:M1108.106197,514.904475L1094.397009,501.195287 }
+    (E2Poly){ Layer:3 Poly:M1108.601172,514.4095Q1107.39909,517.311582,1.5 }
+    (E2Poly){ Layer:3 Poly:M1030.49909,417.311582H1107.39909 }
+    (E2Poly){ Layer:3 Poly:M1029.09909,418.711582V422.911582 }
+    (E2Poly){ Layer:3 Poly:M1029.09909,418.711582Q1030.49909,417.311582,1 }
+    (E2Poly){ Layer:3 Poly:M1030.49909,424.311582Q1029.09909,422.911582,1 }
+    (E2Poly){ Layer:3 Poly:M1030.49909,424.311582H1034.09909 }
+    (E2Poly){ Layer:3 Poly:M1034.09909,424.311582V423.611582 }
+    (E2Poly){ Layer:3 Poly:M1029.79909,418.711582Q1030.49909,418.011582,1 }
+    (E2Poly){ Layer:3 Poly:M1029.79909,418.711582V422.911582 }
+    (E2Poly){ Layer:3 Poly:M1030.49909,423.611582Q1029.79909,422.911582,1 }
+    (E2Poly){ Layer:3 Poly:M1030.49909,423.611582H1034.09909 }
+    (E2Poly){ Layer:3 Poly:M1108.106197,419.718689L1094.397009,433.427877 }
+    (E2Poly){ Layer:3 Poly:M1107.39909,418.011582H1030.49909 }
+    (E2Poly){ Layer:3 Poly:M1107.39909,418.011582Q1108.106197,419.718689,1.5 }
+    (E2Poly){ Layer:3 Poly:M1107.39909,417.311582Q1108.601172,420.213664,1.5 }
+    (E2Poly){ Layer:3 Poly:M1094.397009,501.195287Q1093.89909,499.993205,0.5 }
+    (E2Poly){ Layer:3 Poly:M1093.89909,434.629959Q1094.397009,433.427877,0.5 }
+    (E2Poly){
+      Layer:3
+      Poly:M1108.601172,420.213664L1094.891983,433.922852Q1094.59909,434.629959,-0.5V499.993205Q1094.891983,500.700312,-0.5L1108.601172,514.4095
+    }
+    (E2Poly){
+      Layer:3
+      Poly:M1108.106197,514.904475Q1107.39909,516.611582,1.5H1030.49909Q1029.79909,515.911582,1V511.711582Q1030.49909,511.011582,1H1034.09909
+    }
+    (E2Poly){ Layer:3 Poly:M1108.106197,516.318689L1109.362104,515.062782 }
+    (E2Poly){ Layer:3 Poly:M1094.148049,500.594246L1095.59909,499.993205 }
+    (E2Poly){ Layer:3 Poly:M1094.148049,434.028918L1095.59909,434.629959 }
+    (E2Poly){ Layer:7A Poly:M250.818207,461.186582V453.436582 }
+    (E2Poly){ Layer:4 Poly:C250.818207,457.311582,1.75 }
+    (E2Poly){ Layer:7A Poly:M254.693207,457.311582H246.943207 }
+    (E2Poly){ Layer:7A Poly:M250.818207,467.311582V458.675806 }
+    (E2Poly){ Layer:7A Poly:M250.818207,467.311582V475.947358 }
+    (E2Poly){ Layer:7A Poly:M250.818207,481.186582V473.436582 }
+    (E2Poly){ Layer:7A Poly:M254.693207,477.311582H246.943207 }
+    (E2Poly){ Layer:4 Poly:C250.818207,477.311582,1.75 }
+    (E2Poly){ Layer:7A Poly:M250.818207,467.311582H242.182431 }
+    (E2Poly){ Layer:7A Poly:M250.818207,467.311582H259.453983 }
+    (E2Poly){ Layer:4 Poly:M253.568207,467.861582V466.761582 }
+    (E2Poly){ Layer:4 Poly:M248.068207,467.861582V466.761582 }
+    (E2Poly){ Layer:4 Poly:M248.068207,466.761582H253.568207 }
+    (E2Poly){ Layer:4 Poly:M248.068207,467.861582H253.568207 }
+    (E2Poly){ Layer:4 Poly:C250.890312,466.346827,20.764703 }
+    (E2Poly){ Layer:4 Poly:C499.840646,147.232104,41.529406 }
+    (E2Insert){ Layer:0 BlockName:GEZOO16QI5SQ Pt:508.512392,147.232104 XScale:2 YScale:2 }
+    (E2Text){
+      Layer:6
+      Color:#FFFFFFFF
+      Pt:508.512392,193.376476
+      Text:"X1:1"
+      Style:STANDARD
+      Alignment:BaseCenter
+      Height:10
+      XScale:1
+    }
+    (E2Poly){ Layer:4 Poly:M473.484381,180.102473L261.603418,449.679844 }
+    (E2Dimension){
+      Layer:5
+      Ents:[
+        (E2Poly){ Layer:5 Poly:M479.236597,170.911642H437.822978 }
+        (E2Poly){ Layer:5 Poly:M479.236597,130.911642H437.822978 }
+        (E2Poly){ Layer:5 Poly:M439.822978,165.911642V135.911642 }
+        (E2Solid){
+          Layer:5
+          Pts:[
+            438.989645,165.911642
+            440.656312,165.911642
+            439.822978,170.911642
+            439.822978,170.911642
+          ]
+        }
+        (E2Solid){
+          Layer:5
+          Pts:[
+            438.989645,135.911642
+            440.656312,135.911642
+            439.822978,130.911642
+            439.822978,130.911642
+          ]
+        }
+        (E2Text){
+          Layer:5
+          Color:#FFFFFF00
+          Pt:433.322289,150.911642
+          Text:20
+          Style:STANDARD
+          Angle:1.5707963267948966
+          Alignment:MidCenter
+          Height:7
+          XScale:1
+        }
+        (E2Point){ Layer:DEFPOINTS Color:#FF000000 Pt:481.236597,170.911642 }
+        (E2Point){ Layer:DEFPOINTS Color:#FF000000 Pt:481.236597,130.911642 }
+        (E2Point){ Layer:DEFPOINTS Color:#FF000000 Pt:439.822978,130.911642 }
+      ]
+    }
+    (E2Text){
+      Layer:6
+      Pt:539.027505,78.85035
+      Text:"∅3.5 (x2)"
+      Style:STANDARD
+      Alignment:MidLeft
+      Height:7
+      XScale:1
+    }
+    (E2Poly){
+      Layer:5
+      Poly:M491.800345,128.538487L494.30249,124.209599L520.520638,78.85035H531.027505H536.027505
+    }
+    (E2Poly){
+      Layer:5
+      Poly:M492.474043,151.65094L496.539967,154.560968L549.384025,192.382064H556.690037H561.690037
+    }
+    (E2Text){
+      Layer:6
+      Pt:564.690037,192.382064
+      Text:"1.1 x 5.5"
+      Style:STANDARD
+      Alignment:MidLeft
+      Height:7
+      XScale:1
+    }
+    (E2Dimension){
+      Layer:5
+      Ents:[
+        (E2Poly){ Layer:5 Poly:M71.318207,611.561582H26.502558 }
+        (E2Poly){ Layer:5 Poly:M71.318207,323.061582H26.502558 }
+        (E2Poly){ Layer:5 Poly:M28.502558,606.561582V328.061582 }
+        (E2Solid){
+          Layer:5
+          Pts:[
+            27.669224,606.561582
+            29.335891,606.561582
+            28.502558,611.561582
+            28.502558,611.561582
+          ]
+        }
+        (E2Solid){
+          Layer:5
+          Pts:[
+            27.669224,328.061582
+            29.335891,328.061582
+            28.502558,323.061582
+            28.502558,323.061582
+          ]
+        }
+        (E2Text){
+          Layer:5
+          Color:#FFFFFF00
+          Pt:22.001869,467.311582
+          Text:288.5
+          Style:STANDARD
+          Angle:1.5707963267948966
+          Alignment:MidCenter
+          Height:7
+          XScale:1
+        }
+        (E2Point){ Layer:DEFPOINTS Color:#FF000000 Pt:73.318207,611.561582 }
+        (E2Point){ Layer:DEFPOINTS Color:#FF000000 Pt:73.318207,323.061582 }
+        (E2Point){ Layer:DEFPOINTS Color:#FF000000 Pt:28.502558,323.061582 }
+      ]
+    }
+    (E2Dimension){
+      Layer:5
+      Ents:[
+        (E2Poly){ Layer:5 Poly:M181.818207,475.684015V544.253406 }
+        (E2Poly){ Layer:5 Poly:M186.818207,492.311582V544.253406 }
+        (E2Poly){ Layer:5 Poly:M176.818207,542.253406H171.818207 }
+        (E2Poly){ Layer:5 Poly:M191.818207,542.253406H196.818207 }
+        (E2Text){
+          Layer:5
+          Color:#FFFFFF00
+          Pt:184.318207,552.253406
+          Text:5
+          Style:STANDARD
+          Alignment:MidCenter
+          Height:7
+          XScale:1
+        }
+        (E2Poly){ Layer:5 Poly:M181.818207,542.253406H186.818207 }
+        (E2Solid){
+          Layer:5
+          Pts:[
+            176.818207,543.08674
+            176.818207,541.420073
+            181.818207,542.253406
+            181.818207,542.253406
+          ]
+        }
+        (E2Solid){
+          Layer:5
+          Pts:[
+            191.818207,543.08674
+            191.818207,541.420073
+            186.818207,542.253406
+            186.818207,542.253406
+          ]
+        }
+        (E2Point){ Layer:DEFPOINTS Color:#FF000000 Pt:181.818207,473.684015 }
+        (E2Point){ Layer:DEFPOINTS Color:#FF000000 Pt:186.818207,490.311582 }
+        (E2Point){ Layer:DEFPOINTS Color:#FF000000 Pt:186.818207,542.253406 }
+      ]
+    }
+    (E2Dimension){
+      Layer:5
+      Ents:[
+        (E2Poly){ Layer:5 Poly:M888.366273,475.684015V544.253406 }
+        (E2Poly){ Layer:5 Poly:M883.366273,492.311582V544.253406 }
+        (E2Poly){ Layer:5 Poly:M893.366273,542.253406H898.366273 }
+        (E2Poly){ Layer:5 Poly:M878.366273,542.253406H873.366273 }
+        (E2Text){
+          Layer:5
+          Color:#FFFFFF00
+          Pt:885.866273,552.253406
+          Text:5
+          Style:STANDARD
+          Alignment:MidCenter
+          Height:7
+          XScale:1
+        }
+        (E2Poly){ Layer:5 Poly:M888.366273,542.253406H883.366273 }
+        (E2Solid){
+          Layer:5
+          Pts:[
+            893.366273,543.08674
+            893.366273,541.420073
+            888.366273,542.253406
+            888.366273,542.253406
+          ]
+        }
+        (E2Solid){
+          Layer:5
+          Pts:[
+            878.366273,543.08674
+            878.366273,541.420073
+            883.366273,542.253406
+            883.366273,542.253406
+          ]
+        }
+        (E2Point){ Layer:DEFPOINTS Color:#FF000000 Pt:888.366273,473.684015 }
+        (E2Point){ Layer:DEFPOINTS Color:#FF000000 Pt:883.366273,490.311582 }
+        (E2Point){ Layer:DEFPOINTS Color:#FF000000 Pt:883.366273,542.253406 }
+      ]
+    }
+    (E2Dimension){
+      Layer:5
+      Ents:[
+        (E2Poly){ Layer:5 Poly:M186.818207,492.311582V565.327854 }
+        (E2Poly){ Layer:5 Poly:M204.818207,492.311582V565.327854 }
+        (E2Poly){ Layer:5 Poly:M191.818207,563.327854H199.818207 }
+        (E2Solid){
+          Layer:5
+          Pts:[
+            191.818207,564.161187
+            191.818207,562.49452
+            186.818207,563.327854
+            186.818207,563.327854
+          ]
+        }
+        (E2Solid){
+          Layer:5
+          Pts:[
+            199.818207,564.161187
+            199.818207,562.49452
+            204.818207,563.327854
+            204.818207,563.327854
+          ]
+        }
+        (E2Text){
+          Layer:5
+          Color:#FFFFFF00
+          Pt:195.818207,569.827854
+          Text:18
+          Style:STANDARD
+          Alignment:MidCenter
+          Height:7
+          XScale:1
+        }
+        (E2Point){ Layer:DEFPOINTS Color:#FF000000 Pt:186.818207,490.311582 }
+        (E2Point){ Layer:DEFPOINTS Color:#FF000000 Pt:204.818207,490.311582 }
+        (E2Point){ Layer:DEFPOINTS Color:#FF000000 Pt:204.818207,563.327854 }
+      ]
+    }
+    (E2Dimension){
+      Layer:5
+      Ents:[
+        (E2Poly){ Layer:5 Poly:M883.366273,492.311582V565.327854 }
+        (E2Poly){ Layer:5 Poly:M865.366273,492.311582V565.327854 }
+        (E2Poly){ Layer:5 Poly:M878.366273,563.327854H870.366273 }
+        (E2Solid){
+          Layer:5
+          Pts:[
+            878.366273,564.161187
+            878.366273,562.49452
+            883.366273,563.327854
+            883.366273,563.327854
+          ]
+        }
+        (E2Solid){
+          Layer:5
+          Pts:[
+            870.366273,564.161187
+            870.366273,562.49452
+            865.366273,563.327854
+            865.366273,563.327854
+          ]
+        }
+        (E2Text){
+          Layer:5
+          Color:#FFFFFF00
+          Pt:874.366273,569.827854
+          Text:18
+          Style:STANDARD
+          Alignment:MidCenter
+          Height:7
+          XScale:1
+        }
+        (E2Point){ Layer:DEFPOINTS Color:#FF000000 Pt:883.366273,490.311582 }
+        (E2Point){ Layer:DEFPOINTS Color:#FF000000 Pt:865.366273,490.311582 }
+        (E2Point){ Layer:DEFPOINTS Color:#FF000000 Pt:865.366273,563.327854 }
+      ]
+    }
+    (E2Dimension){
+      Layer:5
+      Ents:[
+        (E2Poly){ Layer:5 Poly:M184.818207,490.311582H160.818207 }
+        (E2Poly){ Layer:5 Poly:M184.818207,444.311582H160.818207 }
+        (E2Poly){ Layer:5 Poly:M162.818207,485.311582V449.311582 }
+        (E2Solid){
+          Layer:5
+          Pts:[
+            161.984873,485.311582
+            163.65154,485.311582
+            162.818207,490.311582
+            162.818207,490.311582
+          ]
+        }
+        (E2Solid){
+          Layer:5
+          Pts:[
+            161.984873,449.311582
+            163.65154,449.311582
+            162.818207,444.311582
+            162.818207,444.311582
+          ]
+        }
+        (E2Text){
+          Layer:5
+          Color:#FFFFFF00
+          Pt:156.318207,467.311582
+          Text:46
+          Style:STANDARD
+          Angle:1.5707963267948966
+          Alignment:MidCenter
+          Height:7
+          XScale:1
+        }
+        (E2Point){ Layer:DEFPOINTS Color:#FF000000 Pt:186.818207,490.311582 }
+        (E2Point){ Layer:DEFPOINTS Color:#FF000000 Pt:186.818207,444.311582 }
+        (E2Point){ Layer:DEFPOINTS Color:#FF000000 Pt:162.818207,444.311582 }
+      ]
+    }
+    (E2Dimension){
+      Layer:5
+      Ents:[
+        (E2Poly){ Layer:5 Poly:M79.318207,328.561582H61.364553 }
+        (E2Poly){ Layer:5 Poly:M71.318207,323.061582H61.364553 }
+        (E2Poly){ Layer:5 Poly:M63.364553,333.561582V338.561582 }
+        (E2Poly){ Layer:5 Poly:M63.364553,318.061582V313.061582 }
+        (E2Text){
+          Layer:5
+          Color:#FFFFFF00
+          Pt:53.364553,325.811582
+          Text:5.5
+          Style:STANDARD
+          Angle:1.5707963267948966
+          Alignment:MidCenter
+          Height:7
+          XScale:1
+        }
+        (E2Poly){ Layer:5 Poly:M63.364553,328.561582V323.061582 }
+        (E2Solid){
+          Layer:5
+          Pts:[
+            62.53122,333.561582
+            64.197887,333.561582
+            63.364553,328.561582
+            63.364553,328.561582
+          ]
+        }
+        (E2Solid){
+          Layer:5
+          Pts:[
+            62.53122,318.061582
+            64.197887,318.061582
+            63.364553,323.061582
+            63.364553,323.061582
+          ]
+        }
+        (E2Point){ Layer:DEFPOINTS Color:#FF000000 Pt:81.318207,328.561582 }
+        (E2Point){ Layer:DEFPOINTS Color:#FF000000 Pt:73.318207,323.061582 }
+        (E2Point){ Layer:DEFPOINTS Color:#FF000000 Pt:63.364553,323.061582 }
+      ]
+    }
+    (E2Dimension){
+      Layer:5
+      Ents:[
+        (E2Poly){ Layer:5 Poly:M79.318207,606.061582H61.364553 }
+        (E2Poly){ Layer:5 Poly:M71.318207,611.561582H61.364553 }
+        (E2Poly){ Layer:5 Poly:M63.364553,601.061582V596.061582 }
+        (E2Poly){ Layer:5 Poly:M63.364553,616.561582V621.561582 }
+        (E2Text){
+          Layer:5
+          Color:#FFFFFF00
+          Pt:53.364553,608.811582
+          Text:5.5
+          Style:STANDARD
+          Angle:1.5707963267948966
+          Alignment:MidCenter
+          Height:7
+          XScale:1
+        }
+        (E2Poly){ Layer:5 Poly:M63.364553,606.061582V611.561582 }
+        (E2Solid){
+          Layer:5
+          Pts:[
+            62.53122,601.061582
+            64.197887,601.061582
+            63.364553,606.061582
+            63.364553,606.061582
+          ]
+        }
+        (E2Solid){
+          Layer:5
+          Pts:[
+            62.53122,616.561582
+            64.197887,616.561582
+            63.364553,611.561582
+            63.364553,611.561582
+          ]
+        }
+        (E2Point){ Layer:DEFPOINTS Color:#FF000000 Pt:81.318207,606.061582 }
+        (E2Point){ Layer:DEFPOINTS Color:#FF000000 Pt:73.318207,611.561582 }
+        (E2Point){ Layer:DEFPOINTS Color:#FF000000 Pt:63.364553,611.561582 }
+      ]
+    }
+    (E2Dimension){
+      Layer:5
+      Ents:[
+        (E2Poly){ Layer:5 Poly:M65.895253,467.311582H43.799596 }
+        (E2Poly){ Layer:5 Poly:M71.318207,323.061582H43.799596 }
+        (E2Poly){ Layer:5 Poly:M45.799596,462.311582V328.061582 }
+        (E2Solid){
+          Layer:5
+          Pts:[
+            44.966262,462.311582
+            46.632929,462.311582
+            45.799596,467.311582
+            45.799596,467.311582
+          ]
+        }
+        (E2Solid){
+          Layer:5
+          Pts:[
+            44.966262,328.061582
+            46.632929,328.061582
+            45.799596,323.061582
+            45.799596,323.061582
+          ]
+        }
+        (E2Text){
+          Layer:5
+          Color:#FFFFFF00
+          Pt:39.298907,395.186582
+          Text:144.25
+          Style:STANDARD
+          Angle:1.5707963267948966
+          Alignment:MidCenter
+          Height:7
+          XScale:1
+        }
+        (E2Point){ Layer:DEFPOINTS Color:#FF000000 Pt:67.895253,467.311582 }
+        (E2Point){ Layer:DEFPOINTS Color:#FF000000 Pt:73.318207,323.061582 }
+        (E2Point){ Layer:DEFPOINTS Color:#FF000000 Pt:45.799596,323.061582 }
+      ]
+    }
+    (E2Text){
+      Layer:6
+      Pt:342.430299,423.286324
+      Text:"∅2.5 (x3)"
+      Style:STANDARD
+      Alignment:MidLeft
+      Height:7
+      XScale:1
+    }
+    (E2Text){
+      Layer:6
+      Pt:519.398526,448.689995
+      Text:"∅5 (x8)"
+      Style:STANDARD
+      Alignment:MidLeft
+      Height:7
+      XScale:1
+    }
+    (E2Poly){
+      Layer:5
+      Poly:M889.258741,468.286542L892.21416,472.319592L922.754479,513.981949H927.013634H932.013634
+    }
+    (E2Text){
+      Layer:6
+      Pt:935.013634,513.981949
+      Text:"∅2.5 (x2)"
+      Style:STANDARD
+      Alignment:MidLeft
+      Height:7
+      XScale:1
+    }
+    (E2Text){
+      Layer:6
+      Pt:1068.04178,425.048711
+      Text:"Hålens grader innåt."
+      Style:STANDARD
+      Angle:1.5707963267948966
+      Alignment:MidLeft
+      Height:7
+      XScale:1
+    }
+    (E2Dimension){
+      Layer:5
+      Ents:[
+        (E2Poly){ Layer:5 Poly:M478.818207,495.33592V637.576361 }
+        (E2Poly){ Layer:5 Poly:M571.818207,495.33592V637.576361 }
+        (E2Poly){ Layer:5 Poly:M483.818207,635.576361H566.818207 }
+        (E2Solid){
+          Layer:5
+          Pts:[
+            483.818207,636.409694
+            483.818207,634.743027
+            478.818207,635.576361
+            478.818207,635.576361
+          ]
+        }
+        (E2Solid){
+          Layer:5
+          Pts:[
+            566.818207,636.409694
+            566.818207,634.743027
+            571.818207,635.576361
+            571.818207,635.576361
+          ]
+        }
+        (E2Text){
+          Layer:5
+          Color:#FFFFFF00
+          Pt:525.318207,642.77705
+          Text:210
+          Style:STANDARD
+          Alignment:MidCenter
+          Height:7
+          XScale:1
+        }
+        (E2Point){ Layer:DEFPOINTS Color:#FF000000 Pt:478.818207,493.33592 }
+        (E2Point){ Layer:DEFPOINTS Color:#FF000000 Pt:571.818207,493.33592 }
+        (E2Point){ Layer:DEFPOINTS Color:#FF000000 Pt:571.818207,635.576361 }
+      ]
+    }
+    (E2Dimension){
+      Layer:5
+      Ents:[
+        (E2Poly){ Layer:5 Poly:M73.318207,603.761582V674.783078 }
+        (E2Poly){ Layer:5 Poly:M996.866273,613.561582V674.783078 }
+        (E2Poly){ Layer:5 Poly:M78.318207,672.783078H991.866273 }
+        (E2Solid){
+          Layer:5
+          Pts:[
+            78.318207,673.616412
+            78.318207,671.949745
+            73.318207,672.783078
+            73.318207,672.783078
+          ]
+        }
+        (E2Solid){
+          Layer:5
+          Pts:[
+            991.866273,673.616412
+            991.866273,671.949745
+            996.866273,672.783078
+            996.866273,672.783078
+          ]
+        }
+        (E2Text){
+          Layer:5
+          Color:#FFFFFF00
+          Pt:535.09224,682.783078
+          Text:"1698 0/ -0.4"
+          Style:STANDARD
+          Alignment:MidCenter
+          Height:7
+          XScale:1
+        }
+        (E2Point){ Layer:DEFPOINTS Color:#FF000000 Pt:73.318207,601.761582 }
+        (E2Point){ Layer:DEFPOINTS Color:#FF000000 Pt:996.866273,611.561582 }
+        (E2Point){ Layer:DEFPOINTS Color:#FF000000 Pt:996.866273,672.783078 }
+      ]
+    }
+    (E2Dimension){
+      Layer:5
+      Ents:[
+        (E2Poly){ Layer:5 Poly:M392.318207,495.33592V637.563929 }
+        (E2Poly){ Layer:5 Poly:M478.818207,495.33592V637.563929 }
+        (E2Poly){ Layer:5 Poly:M397.318207,635.563929H473.818207 }
+        (E2Solid){
+          Layer:5
+          Pts:[
+            397.318207,636.397263
+            397.318207,634.730596
+            392.318207,635.563929
+            392.318207,635.563929
+          ]
+        }
+        (E2Solid){
+          Layer:5
+          Pts:[
+            473.818207,636.397263
+            473.818207,634.730596
+            478.818207,635.563929
+            478.818207,635.563929
+          ]
+        }
+        (E2Text){
+          Layer:5
+          Color:#FFFFFF00
+          Pt:435.568207,642.763929
+          Text:180
+          Style:STANDARD
+          Alignment:MidCenter
+          Height:7
+          XScale:1
+        }
+        (E2Point){ Layer:DEFPOINTS Color:#FF000000 Pt:392.318207,493.33592 }
+        (E2Point){ Layer:DEFPOINTS Color:#FF000000 Pt:478.818207,493.33592 }
+        (E2Point){ Layer:DEFPOINTS Color:#FF000000 Pt:478.818207,635.563929 }
+      ]
+    }
+    (E2Dimension){
+      Layer:5
+      Ents:[
+        (E2Poly){ Layer:5 Poly:M757.818207,495.33592V637.576361 }
+        (E2Poly){ Layer:5 Poly:M850.818207,495.33592V637.576361 }
+        (E2Poly){ Layer:5 Poly:M762.818207,635.576361H845.818207 }
+        (E2Solid){
+          Layer:5
+          Pts:[
+            762.818207,636.409694
+            762.818207,634.743027
+            757.818207,635.576361
+            757.818207,635.576361
+          ]
+        }
+        (E2Solid){
+          Layer:5
+          Pts:[
+            845.818207,636.409694
+            845.818207,634.743027
+            850.818207,635.576361
+            850.818207,635.576361
+          ]
+        }
+        (E2Text){
+          Layer:5
+          Color:#FFFFFF00
+          Pt:804.318207,642.77705
+          Text:210
+          Style:STANDARD
+          Alignment:MidCenter
+          Height:7
+          XScale:1
+        }
+        (E2Point){ Layer:DEFPOINTS Color:#FF000000 Pt:757.818207,493.33592 }
+        (E2Point){ Layer:DEFPOINTS Color:#FF000000 Pt:850.818207,493.33592 }
+        (E2Point){ Layer:DEFPOINTS Color:#FF000000 Pt:850.818207,635.576361 }
+      ]
+    }
+    (E2Dimension){
+      Layer:5
+      Ents:[
+        (E2Poly){ Layer:5 Poly:M664.818207,495.33592V637.576361 }
+        (E2Poly){ Layer:5 Poly:M757.818207,495.33592V637.576361 }
+        (E2Poly){ Layer:5 Poly:M669.818207,635.576361H752.818207 }
+        (E2Solid){
+          Layer:5
+          Pts:[
+            669.818207,636.409694
+            669.818207,634.743027
+            664.818207,635.576361
+            664.818207,635.576361
+          ]
+        }
+        (E2Solid){
+          Layer:5
+          Pts:[
+            752.818207,636.409694
+            752.818207,634.743027
+            757.818207,635.576361
+            757.818207,635.576361
+          ]
+        }
+        (E2Text){
+          Layer:5
+          Color:#FFFFFF00
+          Pt:711.318207,642.77705
+          Text:210
+          Style:STANDARD
+          Alignment:MidCenter
+          Height:7
+          XScale:1
+        }
+        (E2Point){ Layer:DEFPOINTS Color:#FF000000 Pt:664.818207,493.33592 }
+        (E2Point){ Layer:DEFPOINTS Color:#FF000000 Pt:757.818207,493.33592 }
+        (E2Point){ Layer:DEFPOINTS Color:#FF000000 Pt:757.818207,635.576361 }
+      ]
+    }
+    (E2Dimension){
+      Layer:5
+      Ents:[
+        (E2Poly){ Layer:5 Poly:M571.818207,495.33592V637.576361 }
+        (E2Poly){ Layer:5 Poly:M664.818207,495.33592V637.576361 }
+        (E2Poly){ Layer:5 Poly:M576.818207,635.576361H659.818207 }
+        (E2Solid){
+          Layer:5
+          Pts:[
+            576.818207,636.409694
+            576.818207,634.743027
+            571.818207,635.576361
+            571.818207,635.576361
+          ]
+        }
+        (E2Solid){
+          Layer:5
+          Pts:[
+            659.818207,636.409694
+            659.818207,634.743027
+            664.818207,635.576361
+            664.818207,635.576361
+          ]
+        }
+        (E2Text){
+          Layer:5
+          Color:#FFFFFF00
+          Pt:618.318207,642.77705
+          Text:210
+          Style:STANDARD
+          Alignment:MidCenter
+          Height:7
+          XScale:1
+        }
+        (E2Point){ Layer:DEFPOINTS Color:#FF000000 Pt:571.818207,493.33592 }
+        (E2Point){ Layer:DEFPOINTS Color:#FF000000 Pt:664.818207,493.33592 }
+        (E2Point){ Layer:DEFPOINTS Color:#FF000000 Pt:664.818207,635.576361 }
+      ]
+    }
+    (E2Dimension){
+      Layer:5
+      Ents:[
+        (E2Poly){ Layer:5 Poly:M305.818207,495.33592V637.563929 }
+        (E2Poly){ Layer:5 Poly:M392.318207,495.33592V637.563929 }
+        (E2Poly){ Layer:5 Poly:M310.818207,635.563929H387.318207 }
+        (E2Solid){
+          Layer:5
+          Pts:[
+            310.818207,636.397263
+            310.818207,634.730596
+            305.818207,635.563929
+            305.818207,635.563929
+          ]
+        }
+        (E2Solid){
+          Layer:5
+          Pts:[
+            387.318207,636.397263
+            387.318207,634.730596
+            392.318207,635.563929
+            392.318207,635.563929
+          ]
+        }
+        (E2Text){
+          Layer:5
+          Color:#FFFFFF00
+          Pt:349.068207,642.763929
+          Text:180
+          Style:STANDARD
+          Alignment:MidCenter
+          Height:7
+          XScale:1
+        }
+        (E2Point){ Layer:DEFPOINTS Color:#FF000000 Pt:305.818207,493.33592 }
+        (E2Point){ Layer:DEFPOINTS Color:#FF000000 Pt:392.318207,493.33592 }
+        (E2Point){ Layer:DEFPOINTS Color:#FF000000 Pt:392.318207,635.563929 }
+      ]
+    }
+    (E2Dimension){
+      Layer:5
+      Ents:[
+        (E2Poly){ Layer:5 Poly:M219.318207,495.33592V637.563929 }
+        (E2Poly){ Layer:5 Poly:M305.818207,495.33592V637.563929 }
+        (E2Poly){ Layer:5 Poly:M224.318207,635.563929H300.818207 }
+        (E2Solid){
+          Layer:5
+          Pts:[
+            224.318207,636.397263
+            224.318207,634.730596
+            219.318207,635.563929
+            219.318207,635.563929
+          ]
+        }
+        (E2Solid){
+          Layer:5
+          Pts:[
+            300.818207,636.397263
+            300.818207,634.730596
+            305.818207,635.563929
+            305.818207,635.563929
+          ]
+        }
+        (E2Text){
+          Layer:5
+          Color:#FFFFFF00
+          Pt:262.568207,642.763929
+          Text:180
+          Style:STANDARD
+          Alignment:MidCenter
+          Height:7
+          XScale:1
+        }
+        (E2Point){ Layer:DEFPOINTS Color:#FF000000 Pt:219.318207,493.33592 }
+        (E2Point){ Layer:DEFPOINTS Color:#FF000000 Pt:305.818207,493.33592 }
+        (E2Point){ Layer:DEFPOINTS Color:#FF000000 Pt:305.818207,635.563929 }
+      ]
+    }
+    (E2Dimension){
+      Layer:5
+      Ents:[
+        (E2Poly){ Layer:5 Poly:M219.318207,495.33592V637.561582 }
+        (E2Poly){ Layer:5 Poly:M73.318207,613.561582V637.561582 }
+        (E2Poly){ Layer:5 Poly:M214.318207,635.561582H78.318207 }
+        (E2Solid){
+          Layer:5
+          Pts:[
+            214.318207,636.394915
+            214.318207,634.728249
+            219.318207,635.561582
+            219.318207,635.561582
+          ]
+        }
+        (E2Solid){
+          Layer:5
+          Pts:[
+            78.318207,636.394915
+            78.318207,634.728249
+            73.318207,635.561582
+            73.318207,635.561582
+          ]
+        }
+        (E2Text){
+          Layer:5
+          Color:#FFFFFF00
+          Pt:146.318207,642.761582
+          Text:159
+          Style:STANDARD
+          Alignment:MidCenter
+          Height:7
+          XScale:1
+        }
+        (E2Point){ Layer:DEFPOINTS Color:#FF000000 Pt:219.318207,493.33592 }
+        (E2Point){ Layer:DEFPOINTS Color:#FF000000 Pt:73.318207,611.561582 }
+        (E2Point){ Layer:DEFPOINTS Color:#FF000000 Pt:73.318207,635.561582 }
+      ]
+    }
+    (E2Poly){ Layer:7A Poly:M219.318207,487.311582V493.33592 }
+    (E2Poly){ Layer:4 Poly:C219.318207,487.311582,2.25 }
+    (E2Poly){ Layer:7A Poly:M219.318207,487.311582H213.293869 }
+    (E2Poly){ Layer:7A Poly:M219.318207,487.311582H225.342545 }
+    (E2Poly){ Layer:7A Poly:M219.318207,487.311582V481.287244 }
+    (E2Poly){ Layer:7A Poly:M305.818207,487.311582V493.33592 }
+    (E2Poly){ Layer:4 Poly:C305.818207,487.311582,2.25 }
+    (E2Poly){ Layer:7A Poly:M305.818207,487.311582H311.842545 }
+    (E2Poly){ Layer:7A Poly:M305.818207,487.311582V481.287244 }
+    (E2Poly){ Layer:7A Poly:M305.818207,487.311582H299.793869 }
+    (E2Dimension){
+      Layer:5
+      Ents:[
+        (E2Poly){ Layer:5 Poly:M313.842545,487.311582H351.857256 }
+        (E2Poly){ Layer:5 Poly:M313.842545,467.311582H351.857256 }
+        (E2Poly){ Layer:5 Poly:M349.857256,482.311582V472.311582 }
+        (E2Solid){
+          Layer:5
+          Pts:[
+            349.023923,482.311582
+            350.69059,482.311582
+            349.857256,487.311582
+            349.857256,487.311582
+          ]
+        }
+        (E2Solid){
+          Layer:5
+          Pts:[
+            349.023923,472.311582
+            350.69059,472.311582
+            349.857256,467.311582
+            349.857256,467.311582
+          ]
+        }
+        (E2Text){
+          Layer:5
+          Color:#FFFFFF00
+          Pt:343.356567,477.311582
+          Text:20
+          Style:STANDARD
+          Angle:1.5707963267948966
+          Alignment:MidCenter
+          Height:7
+          XScale:1
+        }
+        (E2Point){ Layer:DEFPOINTS Color:#FF000000 Pt:311.842545,487.311582 }
+        (E2Point){ Layer:DEFPOINTS Color:#FF000000 Pt:311.842545,467.311582 }
+        (E2Point){ Layer:DEFPOINTS Color:#FF000000 Pt:349.857256,467.311582 }
+      ]
+    }
+    (E2Poly){ Layer:4 Poly:C392.318207,487.311582,2.25 }
+    (E2Poly){ Layer:7A Poly:M392.318207,487.311582V493.33592 }
+    (E2Poly){ Layer:7A Poly:M392.318207,487.311582H386.293869 }
+    (E2Poly){ Layer:7A Poly:M392.318207,487.311582V481.287244 }
+    (E2Poly){ Layer:7A Poly:M392.318207,487.311582H398.342545 }
+    (E2Poly){ Layer:4 Poly:C478.818207,487.311582,2.25 }
+    (E2Poly){ Layer:7A Poly:M478.818207,487.311582V493.33592 }
+    (E2Poly){
+      Layer:5
+      Poly:M480.732619,484.557156L483.688038,480.524106L507.13937,448.521738H511.398526H516.398526
+    }
+    (E2Poly){ Layer:7A Poly:M478.818207,487.311582H484.842545 }
+    (E2Poly){ Layer:7A Poly:M478.818207,487.311582H472.793869 }
+    (E2Poly){ Layer:7A Poly:M478.818207,487.311582V481.287244 }
+    (E2Poly){ Layer:4 Poly:C571.818207,487.311582,2.25 }
+    (E2Poly){ Layer:7A Poly:M571.818207,487.311582V493.33592 }
+    (E2Poly){ Layer:7A Poly:M571.818207,487.311582H577.842545 }
+    (E2Poly){ Layer:7A Poly:M571.818207,487.311582V481.287244 }
+    (E2Poly){ Layer:7A Poly:M571.818207,487.311582H565.793869 }
+    (E2Poly){ Layer:4 Poly:C664.818207,487.311582,2.25 }
+    (E2Poly){ Layer:7A Poly:M664.818207,487.311582V493.33592 }
+    (E2Poly){ Layer:7A Poly:M664.818207,487.311582H670.842545 }
+    (E2Poly){ Layer:7A Poly:M664.818207,487.311582V481.287244 }
+    (E2Poly){ Layer:7A Poly:M664.818207,487.311582H658.793869 }
+    (E2Poly){ Layer:4 Poly:C757.818207,487.311582,2.25 }
+    (E2Poly){ Layer:7A Poly:M757.818207,487.311582V493.33592 }
+    (E2Poly){ Layer:7A Poly:M757.818207,487.311582H763.842545 }
+    (E2Poly){ Layer:7A Poly:M757.818207,487.311582V481.287244 }
+    (E2Poly){ Layer:7A Poly:M757.818207,487.311582H751.793869 }
+    (E2Poly){ Layer:4 Poly:C850.818207,487.311582,2.25 }
+    (E2Poly){ Layer:7A Poly:M850.818207,487.311582V493.33592 }
+    (E2Poly){ Layer:7A Poly:M850.818207,487.311582H856.842545 }
+    (E2Poly){ Layer:7A Poly:M850.818207,487.311582V481.287244 }
+    (E2Poly){ Layer:7A Poly:M850.818207,487.311582H844.793869 }
+    (E2Dimension){
+      Layer:5
+      Ents:[
+        (E2Poly){ Layer:5 Poly:M988.866273,321.061582V297.061582 }
+        (E2Poly){ Layer:5 Poly:M886.366273,321.061582V297.061582 }
+        (E2Poly){ Layer:5 Poly:M983.866273,299.061582H891.366273 }
+        (E2Solid){
+          Layer:5
+          Pts:[
+            983.866273,299.894915
+            983.866273,298.228249
+            988.866273,299.061582
+            988.866273,299.061582
+          ]
+        }
+        (E2Solid){
+          Layer:5
+          Pts:[
+            891.366273,299.894915
+            891.366273,298.228249
+            886.366273,299.061582
+            886.366273,299.061582
+          ]
+        }
+        (E2Text){
+          Layer:5
+          Color:#FFFFFF00
+          Pt:937.616273,305.562271
+          Text:102.5
+          Style:STANDARD
+          Alignment:MidCenter
+          Height:7
+          XScale:1
+        }
+        (E2Point){ Layer:DEFPOINTS Color:#FF000000 Pt:988.866273,323.061582 }
+        (E2Point){ Layer:DEFPOINTS Color:#FF000000 Pt:886.366273,323.061582 }
+        (E2Point){ Layer:DEFPOINTS Color:#FF000000 Pt:886.366273,299.061582 }
+      ]
+    }
+    (E2Dimension){
+      Layer:5
+      Ents:[
+        (E2Poly){ Layer:5 Poly:M996.866273,321.061582V275.30632 }
+        (E2Poly){ Layer:5 Poly:M883.366273,442.311582V275.30632 }
+        (E2Poly){ Layer:5 Poly:M991.866273,277.30632H888.366273 }
+        (E2Solid){
+          Layer:5
+          Pts:[
+            991.866273,278.139653
+            991.866273,276.472986
+            996.866273,277.30632
+            996.866273,277.30632
+          ]
+        }
+        (E2Solid){
+          Layer:5
+          Pts:[
+            888.366273,278.139653
+            888.366273,276.472986
+            883.366273,277.30632
+            883.366273,277.30632
+          ]
+        }
+        (E2Text){
+          Layer:5
+          Color:#FFFFFF00
+          Pt:940.116273,283.80632
+          Text:113.5
+          Style:STANDARD
+          Alignment:MidCenter
+          Height:7
+          XScale:1
+        }
+        (E2Point){ Layer:DEFPOINTS Color:#FF000000 Pt:996.866273,323.061582 }
+        (E2Point){ Layer:DEFPOINTS Color:#FF000000 Pt:883.366273,444.311582 }
+        (E2Point){ Layer:DEFPOINTS Color:#FF000000 Pt:883.366273,277.30632 }
+      ]
+    }
+    (E2Dimension){
+      Layer:5
+      Ents:[
+        (E2Poly){ Layer:5 Poly:M996.866273,321.061582V297.061582 }
+        (E2Poly){ Layer:5 Poly:M988.866273,321.061582V297.061582 }
+        (E2Poly){ Layer:5 Poly:M1001.866273,299.061582H1006.866273 }
+        (E2Poly){ Layer:5 Poly:M983.866273,299.061582H978.866273 }
+        (E2Text){
+          Layer:5
+          Color:#FFFFFF00
+          Pt:992.866273,282.061582
+          Text:8
+          Style:STANDARD
+          Alignment:MidCenter
+          Height:7
+          XScale:1
+        }
+        (E2Poly){ Layer:5 Poly:M996.866273,299.061582H988.866273 }
+        (E2Solid){
+          Layer:5
+          Pts:[
+            1001.866273,299.894915
+            1001.866273,298.228249
+            996.866273,299.061582
+            996.866273,299.061582
+          ]
+        }
+        (E2Solid){
+          Layer:5
+          Pts:[
+            983.866273,299.894915
+            983.866273,298.228249
+            988.866273,299.061582
+            988.866273,299.061582
+          ]
+        }
+        (E2Point){ Layer:DEFPOINTS Color:#FF000000 Pt:996.866273,323.061582 }
+        (E2Point){ Layer:DEFPOINTS Color:#FF000000 Pt:988.866273,323.061582 }
+        (E2Point){ Layer:DEFPOINTS Color:#FF000000 Pt:988.866273,299.061582 }
+      ]
+    }
+    (E2Dimension){
+      Layer:5
+      Ents:[
+        (E2Poly){ Layer:5 Poly:M81.318207,321.061582V297.061582 }
+        (E2Poly){ Layer:5 Poly:M183.818207,321.061582V297.061582 }
+        (E2Poly){ Layer:5 Poly:M86.318207,299.061582H178.818207 }
+        (E2Solid){
+          Layer:5
+          Pts:[
+            86.318207,299.894915
+            86.318207,298.228249
+            81.318207,299.061582
+            81.318207,299.061582
+          ]
+        }
+        (E2Solid){
+          Layer:5
+          Pts:[
+            178.818207,299.894915
+            178.818207,298.228249
+            183.818207,299.061582
+            183.818207,299.061582
+          ]
+        }
+        (E2Text){
+          Layer:5
+          Color:#FFFFFF00
+          Pt:132.568207,305.562271
+          Text:102.5
+          Style:STANDARD
+          Alignment:MidCenter
+          Height:7
+          XScale:1
+        }
+        (E2Point){ Layer:DEFPOINTS Color:#FF000000 Pt:81.318207,323.061582 }
+        (E2Point){ Layer:DEFPOINTS Color:#FF000000 Pt:183.818207,323.061582 }
+        (E2Point){ Layer:DEFPOINTS Color:#FF000000 Pt:183.818207,299.061582 }
+      ]
+    }
+    (E2Dimension){
+      Layer:5
+      Ents:[
+        (E2Poly){ Layer:5 Poly:M73.318207,321.061582V297.061582 }
+        (E2Poly){ Layer:5 Poly:M81.318207,321.061582V297.061582 }
+        (E2Poly){ Layer:5 Poly:M68.318207,299.061582H63.318207 }
+        (E2Poly){ Layer:5 Poly:M86.318207,299.061582H91.318207 }
+        (E2Text){
+          Layer:5
+          Color:#FFFFFF00
+          Pt:77.318207,282.061582
+          Text:8
+          Style:STANDARD
+          Alignment:MidCenter
+          Height:7
+          XScale:1
+        }
+        (E2Poly){ Layer:5 Poly:M73.318207,299.061582H81.318207 }
+        (E2Solid){
+          Layer:5
+          Pts:[
+            68.318207,299.894915
+            68.318207,298.228249
+            73.318207,299.061582
+            73.318207,299.061582
+          ]
+        }
+        (E2Solid){
+          Layer:5
+          Pts:[
+            86.318207,299.894915
+            86.318207,298.228249
+            81.318207,299.061582
+            81.318207,299.061582
+          ]
+        }
+        (E2Point){ Layer:DEFPOINTS Color:#FF000000 Pt:73.318207,323.061582 }
+        (E2Point){ Layer:DEFPOINTS Color:#FF000000 Pt:81.318207,323.061582 }
+        (E2Point){ Layer:DEFPOINTS Color:#FF000000 Pt:81.318207,299.061582 }
+      ]
+    }
+    (E2Dimension){
+      Layer:5
+      Ents:[
+        (E2Poly){ Layer:5 Poly:M73.318207,321.061582V275.30632 }
+        (E2Poly){ Layer:5 Poly:M186.818207,442.311582V275.30632 }
+        (E2Poly){ Layer:5 Poly:M78.318207,277.30632H181.818207 }
+        (E2Solid){
+          Layer:5
+          Pts:[
+            78.318207,278.139653
+            78.318207,276.472986
+            73.318207,277.30632
+            73.318207,277.30632
+          ]
+        }
+        (E2Solid){
+          Layer:5
+          Pts:[
+            181.818207,278.139653
+            181.818207,276.472986
+            186.818207,277.30632
+            186.818207,277.30632
+          ]
+        }
+        (E2Text){
+          Layer:5
+          Color:#FFFFFF00
+          Pt:130.068207,283.80632
+          Text:113.5
+          Style:STANDARD
+          Alignment:MidCenter
+          Height:7
+          XScale:1
+        }
+        (E2Point){ Layer:DEFPOINTS Color:#FF000000 Pt:73.318207,323.061582 }
+        (E2Point){ Layer:DEFPOINTS Color:#FF000000 Pt:186.818207,444.311582 }
+        (E2Point){ Layer:DEFPOINTS Color:#FF000000 Pt:186.818207,277.30632 }
+      ]
+    }
+    (E2Dimension){
+      Layer:5
+      Ents:[
+        (E2Poly){ Layer:5 Poly:M73.318207,321.061582V256.801899 }
+        (E2Poly){ Layer:5 Poly:M250.818207,451.436582V256.801899 }
+        (E2Poly){ Layer:5 Poly:M78.318207,258.801899H245.818207 }
+        (E2Solid){
+          Layer:5
+          Pts:[
+            78.318207,259.635232
+            78.318207,257.968566
+            73.318207,258.801899
+            73.318207,258.801899
+          ]
+        }
+        (E2Solid){
+          Layer:5
+          Pts:[
+            245.818207,259.635232
+            245.818207,257.968566
+            250.818207,258.801899
+            250.818207,258.801899
+          ]
+        }
+        (E2Text){
+          Layer:5
+          Color:#FFFFFF00
+          Pt:162.068207,266.002588
+          Text:245
+          Style:STANDARD
+          Alignment:MidCenter
+          Height:7
+          XScale:1
+        }
+        (E2Point){ Layer:DEFPOINTS Color:#FF000000 Pt:73.318207,323.061582 }
+        (E2Point){ Layer:DEFPOINTS Color:#FF000000 Pt:250.818207,453.436582 }
+        (E2Point){ Layer:DEFPOINTS Color:#FF000000 Pt:250.818207,258.801899 }
+      ]
+    }
+    (E2Dimension){
+      Layer:5
+      Ents:[
+        (E2Poly){ Layer:5 Poly:M250.818207,451.436582V256.795081 }
+        (E2Poly){ Layer:5 Poly:M295.818207,450.939149V256.795081 }
+        (E2Poly){ Layer:5 Poly:M255.818207,258.795081H290.818207 }
+        (E2Solid){
+          Layer:5
+          Pts:[
+            255.818207,259.628414
+            255.818207,257.961748
+            250.818207,258.795081
+            250.818207,258.795081
+          ]
+        }
+        (E2Solid){
+          Layer:5
+          Pts:[
+            290.818207,259.628414
+            290.818207,257.961748
+            295.818207,258.795081
+            295.818207,258.795081
+          ]
+        }
+        (E2Text){
+          Layer:5
+          Color:#FFFFFF00
+          Pt:273.318207,265.295081
+          Text:80
+          Style:STANDARD
+          Alignment:MidCenter
+          Height:7
+          XScale:1
+        }
+        (E2Point){ Layer:DEFPOINTS Color:#FF000000 Pt:250.818207,453.436582 }
+        (E2Point){ Layer:DEFPOINTS Color:#FF000000 Pt:295.818207,452.939149 }
+        (E2Point){ Layer:DEFPOINTS Color:#FF000000 Pt:295.818207,258.795081 }
+      ]
+    }
+    (E2Dimension){
+      Layer:5
+      Ents:[
+        (E2Poly){ Layer:5 Poly:M295.818207,450.939149V256.784336 }
+        (E2Poly){ Layer:5 Poly:M466.682837,450.939149V256.784336 }
+        (E2Poly){ Layer:5 Poly:M300.818207,258.784336H461.682837 }
+        (E2Solid){
+          Layer:5
+          Pts:[
+            300.818207,259.61767
+            300.818207,257.951003
+            295.818207,258.784336
+            295.818207,258.784336
+          ]
+        }
+        (E2Solid){
+          Layer:5
+          Pts:[
+            461.682837,259.61767
+            461.682837,257.951003
+            466.682837,258.784336
+            466.682837,258.784336
+          ]
+        }
+        (E2Text){
+          Layer:5
+          Color:#FFFFFF00
+          Pt:381.250522,265.984336
+          Text:350
+          Style:STANDARD
+          Alignment:MidCenter
+          Height:7
+          XScale:1
+        }
+        (E2Point){ Layer:DEFPOINTS Color:#FF000000 Pt:295.818207,452.939149 }
+        (E2Point){ Layer:DEFPOINTS Color:#FF000000 Pt:466.682837,452.939149 }
+        (E2Point){ Layer:DEFPOINTS Color:#FF000000 Pt:466.682837,258.784336 }
+      ]
+    }
+    (E2Poly){ Layer:7A Poly:M466.682837,459.311582V452.939149 }
+    (E2Poly){ Layer:7A Poly:M466.682837,459.311582H473.05527 }
+    (E2Poly){ Layer:7A Poly:M466.682837,465.684015V459.311582 }
+    (E2Poly){ Layer:7A Poly:M466.682837,459.311582H460.310405 }
+    (E2Poly){ Layer:4 Poly:C466.682837,459.311582,1.25 }
+    (E2Dimension){
+      Layer:5
+      Ents:[
+        (E2Poly){ Layer:5 Poly:M304.190639,459.311582H318.762308 }
+        (E2Poly){ Layer:5 Poly:M304.190639,467.311582H318.762308 }
+        (E2Poly){ Layer:5 Poly:M316.762308,454.311582V449.311582 }
+        (E2Poly){ Layer:5 Poly:M316.762308,472.311582V477.311582 }
+        (E2Text){
+          Layer:5
+          Color:#FFFFFF00
+          Pt:333.762308,463.311582
+          Text:8
+          Style:STANDARD
+          Angle:1.5707963267948966
+          Alignment:MidCenter
+          Height:7
+          XScale:1
+        }
+        (E2Poly){ Layer:5 Poly:M316.762308,459.311582V467.311582 }
+        (E2Solid){
+          Layer:5
+          Pts:[
+            315.928974,454.311582
+            317.595641,454.311582
+            316.762308,459.311582
+            316.762308,459.311582
+          ]
+        }
+        (E2Solid){
+          Layer:5
+          Pts:[
+            315.928974,472.311582
+            317.595641,472.311582
+            316.762308,467.311582
+            316.762308,467.311582
+          ]
+        }
+        (E2Point){ Layer:DEFPOINTS Color:#FF000000 Pt:302.190639,459.311582 }
+        (E2Point){ Layer:DEFPOINTS Color:#FF000000 Pt:302.190639,467.311582 }
+        (E2Point){ Layer:DEFPOINTS Color:#FF000000 Pt:316.762308,467.311582 }
+      ]
+    }
+    (E2Poly){
+      Layer:5
+      Poly:M296.764391,458.809432L299.71981,454.776381L323.171143,422.774013H334.430299H339.430299
+    }
+    (E2Poly){ Layer:7A Poly:M295.818207,459.311582V452.939149 }
+    (E2Poly){ Layer:7A Poly:M295.818207,459.311582H289.445774 }
+    (E2Poly){ Layer:4 Poly:C295.818207,459.311582,1.25 }
+    (E2Poly){ Layer:7A Poly:M295.818207,459.311582V465.684015 }
+    (E2Poly){ Layer:7A Poly:M295.818207,459.311582H302.190639 }
+    (E2Poly){
+      Layer:5
+      Poly:M525.771733,322.890979V317.890979V277.95634Q525.771733,247.95634,2Q525.771733,277.95634,2
+    }
+    (E2Insert){ Layer:6 BlockName:GENPOS14 Pt:524.771733,257.95634 XScale:2 YScale:2 }
+    (E2Text){
+      Layer:0
+      Color:#FF000000
+      Pt:525.771733,262.95634
+      Text:1
+      Style:STANDARD
+      Alignment:BaseCenter
+      Height:10
+      XScale:1
+    }
+    (E2Poly){ Layer:7A Poly:M421.682837,459.311582H428.05527 }
+    (E2Poly){ Layer:7A Poly:M421.682837,465.684015V459.311582 }
+    (E2Poly){ Layer:7A Poly:M421.682837,459.311582H415.310405 }
+    (E2Poly){ Layer:7A Poly:M421.682837,459.311582V452.939149 }
+    (E2Poly){ Layer:4 Poly:C421.682837,459.311582,1.25 }
+    (E2Dimension){
+      Layer:5
+      Ents:[
+        (E2Poly){ Layer:5 Poly:M295.818207,450.939149V288.883637 }
+        (E2Poly){ Layer:5 Poly:M421.682837,450.939149V288.883637 }
+        (E2Poly){ Layer:5 Poly:M300.818207,290.883637H416.682837 }
+        (E2Solid){
+          Layer:5
+          Pts:[
+            300.818207,291.71697
+            300.818207,290.050304
+            295.818207,290.883637
+            295.818207,290.883637
+          ]
+        }
+        (E2Solid){
+          Layer:5
+          Pts:[
+            416.682837,291.71697
+            416.682837,290.050304
+            421.682837,290.883637
+            421.682837,290.883637
+          ]
+        }
+        (E2Text){
+          Layer:5
+          Color:#FFFFFF00
+          Pt:358.750522,298.084326
+          Text:265
+          Style:STANDARD
+          Alignment:MidCenter
+          Height:7
+          XScale:1
+        }
+        (E2Point){ Layer:DEFPOINTS Color:#FF000000 Pt:295.818207,452.939149 }
+        (E2Point){ Layer:DEFPOINTS Color:#FF000000 Pt:421.682837,452.939149 }
+        (E2Point){ Layer:DEFPOINTS Color:#FF000000 Pt:421.682837,290.883637 }
+      ]
+    }
+    (E2Insert){ Layer:Tego_ram BlockName:T_ram Pt:0,0 XScale:1 YScale:1 }
+    (E2Text){
+      Layer:Tego_ram
+      Color:#FF00FF00
+      Pt:0,0
+      Text:2
+      Style:Tego_01
+      Angle:0.0017453292519943296
+      Alignment:BaseLeft
+      Height:0.2
+      XScale:0.6999999999999998
+    }
+    (E2Text){
+      Layer:Tego_ram
+      Color:#FF00FF00
+      Pt:0,0
+      Text:2
+      Style:Tego_01
+      Angle:0.0017453292519943296
+      Alignment:BaseLeft
+      Height:0.2
+      XScale:0.6999999999999998
+    }
+    (E2Text){
+      Layer:Tego_ram
+      Color:#FF00FF00
+      Pt:0,0
+      Text:2.000000000000000
+      Style:Tego_01
+      Angle:0.0017453292519943296
+      Alignment:BaseLeft
+      Height:0.2
+      XScale:0.6999999999999998
+    }
+    (E2Insert){ Layer:Tego_huvud BlockName:T_huvud Pt:768,0 XScale:1 YScale:1 }
+    (E2Text){
+      Layer:Tego_huvud
+      Color:#FFFFFF00
+      Pt:984,4
+      Text:0602-001
+      Style:Tego_40
+      Alignment:BaseLeft
+      Height:8
+      XScale:0.7
+    }
+    (E2Text){
+      Layer:Tego_huvud
+      Color:#FF00FF00
+      Pt:772,34
+      Text:TJ
+      Style:Tego_25
+      Alignment:BaseLeft
+      Height:5
+      XScale:0.7
+    }
+    (E2Text){
+      Layer:Tego_huvud
+      Color:#FF00FF00
+      Pt:812,34
+      Text:2008-04-07
+      Style:Tego_25
+      Alignment:BaseLeft
+      Height:5
+      XScale:0.7
+    }
+    (E2Text){
+      Layer:Tego_huvud
+      Color:#FF00FF00
+      Pt:854,34
+      Text:""
+      Style:Tego_25
+      Alignment:BaseLeft
+      Height:5
+      XScale:0.7
+    }
+    (E2Text){
+      Layer:Tego_huvud
+      Color:#FF00FF00
+      Pt:912,38
+      Text:"Svep TA2 l=1700"
+      Style:Tego_25
+      Alignment:BaseLeft
+      Height:5
+      XScale:0.7
+    }
+    (E2Text){
+      Layer:Tego_huvud
+      Color:#FF00FF00
+      Pt:912,24
+      Text:100-80/1800
+      Style:Tego_25
+      Alignment:BaseLeft
+      Height:5
+      XScale:0.7
+    }
+    (E2Text){
+      Layer:Tego_huvud
+      Color:#FF00FF00
+      Pt:1086,24
+      Text:D
+      Style:Tego_25
+      Alignment:BaseLeft
+      Height:5
+      XScale:0.7
+    }
+    (E2Text){
+      Layer:Tego_huvud
+      Color:#FF00FF00
+      Pt:1098,38
+      Text:""
+      Style:Tego_25
+      Alignment:BaseLeft
+      Height:5
+      XScale:0.7
+    }
+    (E2Text){
+      Layer:Tego_huvud
+      Color:#FF00FF00
+      Pt:1098,24
+      Text:""
+      Style:Tego_25
+      Alignment:BaseLeft
+      Height:5
+      XScale:0.7
+    }
+    (E2Text){
+      Layer:Tego_huvud
+      Color:#FF00FF00
+      Pt:912,4
+      Text:""
+      Style:Tego_25
+      Alignment:BaseLeft
+      Height:5
+      XScale:0.7
+    }
+    (E2Insert){ Layer:Tego_styck BlockName:T_styck Pt:768,0 XScale:1 YScale:1 }
+    (E2Text){
+      Layer:Tego_styck
+      Color:#FF00FF00
+      Pt:768,50
+      Text:2
+      Style:Tego_01
+      Alignment:BaseLeft
+      Height:0.2
+      XScale:0.6999999999999998
+    }
+    (E2Text){
+      Layer:Tego_styck
+      Color:#FF00FF00
+      Pt:768,50
+      Text:1
+      Style:Tego_01
+      Alignment:BaseLeft
+      Height:0.2
+      XScale:0.6999999999999998
+    }
+    (E2Insert){ Layer:Tego_artikel BlockName:T_styck_01 Pt:768,0 XScale:1 YScale:1 }
+    (E2Text){
+      Layer:Tego_help
+      Color:#FF00FF00
+      Pt:818,66
+      Text:1
+      Style:Tego_25
+      Alignment:BaseLeft
+      Height:5
+      XScale:0.7
+    }
+    (E2Text){
+      Layer:Tego_help
+      Color:#FF00FF00
+      Pt:834,66
+      Text:8975-C19
+      Style:Tego_25
+      Alignment:BaseLeft
+      Height:5
+      XScale:0.7
+    }
+    (E2Text){
+      Layer:Tego_help
+      Color:#FF00FF00
+      Pt:912,66
+      Text:"plåt fe coil 0.70 x 288.5"
+      Style:Tego_25
+      Alignment:BaseLeft
+      Height:5
+      XScale:0.7
+    }
+    (E2Text){
+      Layer:Tego_help
+      Color:#FF00FF00
+      Pt:1018,66
+      Text:""
+      Style:Tego_25
+      Alignment:BaseLeft
+      Height:5
+      XScale:0.7
+    }
+    (E2Text){
+      Layer:Tego_help
+      Color:#FF00FF00
+      Pt:1074,66
+      Text:0.7x288.5x1698
+      Style:Tego_25
+      Alignment:BaseLeft
+      Height:5
+      XScale:0.7
+    }
+    (E2Text){
+      Layer:Tego_help
+      Color:#FF00FF00
+      Pt:804,66
+      Text:""
+      Style:Tego_25
+      Alignment:BaseLeft
+      Height:5
+      XScale:0.7
+    }
+    (E2Text){
+      Layer:Tego_help
+      Color:#FF00FF00
+      Pt:788,66
+      Text:1
+      Style:Tego_25
+      Alignment:BaseLeft
+      Height:5
+      XScale:0.7
+    }
+    (E2Text){
+      Layer:Tego_help
+      Color:#FF00FF00
+      Pt:772,66
+      Text:""
+      Style:Tego_25
+      Alignment:BaseLeft
+      Height:5
+      XScale:0.7
+    }
+    (E2Text){
+      Layer:Tego_help
+      Color:#FF00FF00
+      Pt:756,66
+      Text:""
+      Style:Tego_25
+      Alignment:BaseLeft
+      Height:5
+      XScale:0.7
+    }
+    (E2Text){
+      Layer:Tego_help
+      Color:#FF00FF00
+      Pt:740,66
+      Text:""
+      Style:Tego_25
+      Alignment:BaseLeft
+      Height:5
+      XScale:0.7
+    }
+    (E2Text){
+      Layer:Tego_help
+      Color:#FF00FF00
+      Pt:724,66
+      Text:""
+      Style:Tego_25
+      Alignment:BaseLeft
+      Height:5
+      XScale:0.7
+    }
+    (E2Text){
+      Layer:Tego_help
+      Color:#FF00FF00
+      Pt:708,66
+      Text:""
+      Style:Tego_25
+      Alignment:BaseLeft
+      Height:5
+      XScale:0.7
+    }
+    (E2Text){
+      Layer:Tego_help
+      Color:#FF00FF00
+      Pt:692,66
+      Text:""
+      Style:Tego_25
+      Alignment:BaseLeft
+      Height:5
+      XScale:0.7
+    }
+    (E2Text){
+      Layer:Tego_help
+      Color:#FF00FF00
+      Pt:676,66
+      Text:""
+      Style:Tego_25
+      Alignment:BaseLeft
+      Height:5
+      XScale:0.7
+    }
+    (E2Text){
+      Layer:Tego_help
+      Color:#FF00FF00
+      Pt:660,66
+      Text:""
+      Style:Tego_25
+      Alignment:BaseLeft
+      Height:5
+      XScale:0.7
+    }
+    (E2Text){
+      Layer:Tego_help
+      Color:#FF00FF00
+      Pt:644,66
+      Text:""
+      Style:Tego_25
+      Alignment:BaseLeft
+      Height:5
+      XScale:0.7
+    }
+    (E2Text){
+      Layer:Tego_help
+      Color:#FF00FF00
+      Pt:628,66
+      Text:""
+      Style:Tego_25
+      Alignment:BaseLeft
+      Height:5
+      XScale:0.7
+    }
+    (E2Text){
+      Layer:Tego_help
+      Color:#FF00FF00
+      Pt:612,66
+      Text:""
+      Style:Tego_25
+      Alignment:BaseLeft
+      Height:5
+      XScale:0.7
+    }
+    (E2Text){
+      Layer:Tego_help
+      Color:#FF00FF00
+      Pt:596,66
+      Text:""
+      Style:Tego_25
+      Alignment:BaseLeft
+      Height:5
+      XScale:0.7
+    }
+    (E2Text){
+      Layer:T_02
+      Color:#FF00FF00
+      Pt:1028.086989,551.067695
+      Text:"∅3.3, 4x"
+      Style:STANDARD
+      Alignment:TopLeft
+      Height:6
+      XScale:1
+    }
+    (E2Poly){ Layer:T_02 Poly:C79.318207,482.311582,1.65 }
+    (E2Poly){ Layer:T_02 Poly:C990.866273,482.311582,1.65 }
+    (E2Poly){ Layer:T_02 Poly:C79.318207,452.311582,1.65 }
+    (E2Dimension){
+      Layer:T_02
+      Ents:[
+        (E2Poly){ Layer:T_02 Color:#FF00FFFF Poly:M79.318207,451.061582V439.880601 }
+        (E2Poly){ Layer:T_02 Color:#FF00FFFF Poly:M73.318207,451.061582V439.880601 }
+        (E2Poly){ Layer:T_02 Color:#FF00FFFF Poly:M85.318207,441.880601H91.318207 }
+        (E2Poly){ Layer:T_02 Color:#FF00FFFF Poly:M67.318207,441.880601H61.318207 }
+        (E2Text){
+          Layer:T_02
+          Color:#FF00FF00
+          Pt:76.318207,436.99112
+          Text:6
+          Style:STANDARD
+          Alignment:MidCenter
+          Height:6
+          XScale:1
+        }
+        (E2Poly){ Layer:T_02 Color:#FF00FFFF Poly:M79.318207,441.880601H73.318207 }
+        (E2Solid){
+          Layer:T_02
+          Color:#FF00FFFF
+          Pts:[
+            85.318207,442.880601
+            85.318207,440.880601
+            79.318207,441.880601
+            79.318207,441.880601
+          ]
+        }
+        (E2Solid){
+          Layer:T_02
+          Color:#FF00FFFF
+          Pts:[
+            67.318207,442.880601
+            67.318207,440.880601
+            73.318207,441.880601
+            73.318207,441.880601
+          ]
+        }
+        (E2Point){ Layer:DEFPOINTS Color:#FF000000 Pt:79.318207,452.311582 }
+        (E2Point){ Layer:DEFPOINTS Color:#FF000000 Pt:73.318207,452.311582 }
+        (E2Point){ Layer:DEFPOINTS Color:#FF000000 Pt:73.318207,441.880601 }
+      ]
+    }
+    (E2Poly){ Layer:T_02 Poly:C990.866273,452.311582,1.65 }
+    (E2Dimension){
+      Layer:T_02
+      Ents:[
+        (E2Poly){ Layer:T_02 Color:#FF00FFFF Poly:M990.866273,451.061582V441.720201 }
+        (E2Poly){ Layer:T_02 Color:#FF00FFFF Poly:M996.866273,451.061582V441.720201 }
+        (E2Poly){ Layer:T_02 Color:#FF00FFFF Poly:M984.866273,443.720201H978.866273 }
+        (E2Poly){ Layer:T_02 Color:#FF00FFFF Poly:M1002.866273,443.720201H1008.866273 }
+        (E2Text){
+          Layer:T_02
+          Color:#FF00FF00
+          Pt:993.866273,429.720201
+          Text:6
+          Style:STANDARD
+          Alignment:MidCenter
+          Height:6
+          XScale:1
+        }
+        (E2Poly){ Layer:T_02 Color:#FF00FFFF Poly:M990.866273,443.720201H996.866273 }
+        (E2Solid){
+          Layer:T_02
+          Color:#FF00FFFF
+          Pts:[
+            984.866273,444.720201
+            984.866273,442.720201
+            990.866273,443.720201
+            990.866273,443.720201
+          ]
+        }
+        (E2Solid){
+          Layer:T_02
+          Color:#FF00FFFF
+          Pts:[
+            1002.866273,444.720201
+            1002.866273,442.720201
+            996.866273,443.720201
+            996.866273,443.720201
+          ]
+        }
+        (E2Point){ Layer:DEFPOINTS Color:#FF000000 Pt:990.866273,452.311582 }
+        (E2Point){ Layer:DEFPOINTS Color:#FF000000 Pt:996.866273,452.311582 }
+        (E2Point){ Layer:DEFPOINTS Color:#FF000000 Pt:996.866273,443.720201 }
+      ]
+    }
+  ]
+}

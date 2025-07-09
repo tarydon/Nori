@@ -19,7 +19,7 @@ public static class Geo {
    /// centers without any trignometric functions, and is very performant. The algorithmn we
    /// use was taken from a stackoverflow response and is summarized in this image:
    /// file://N:/Doc/Img/CircleXCircle.png
-   /// 
+   ///
    /// To avoid allocating a short-lived array to hold the results, this routine takes in a
    /// Span that can hold at least 2 points. The simplest way to allocate that (while avoiding a
    /// heap allocation) is via stackalloc:
@@ -34,8 +34,8 @@ public static class Geo {
       if (R.IsZero ()) return buffer[0..0];     // Circles are concentric
       double R1Sq = r1 * r1, R2Sq = r2 * r2, RSq = R * R, Rp4 = RSq * RSq;
 
-      // The equation shown in the figure has 3 terms (each with an X and Y component in 
-      // tuple. We compute those 3 terms as v1, v2 and v3. 
+      // The equation shown in the figure has 3 terms (each with an X and Y component in
+      // tuple. We compute those 3 terms as v1, v2 and v3.
       Vector2 v1 = new ((c1.X + c2.X) / 2, (c1.Y + c2.Y) / 2);
 
       // Second term
@@ -52,7 +52,7 @@ public static class Geo {
       // point as v1 + v2 (the v3 component gets multiplied by zero)
       if (Abs (f3Sq) < 0.0000000001) { buffer[0] = (Point2)(v1 + v2); return buffer[0..1]; }
 
-      // If the square of the 3rd term multiplicand is negative, there are no solutions 
+      // If the square of the 3rd term multiplicand is negative, there are no solutions
       // (the circles don't intersect at all), and we return zero intersection points
       if (f3Sq < 0) return buffer[0..0];
 
@@ -65,13 +65,72 @@ public static class Geo {
       return buffer[0..2];
    }
 
+   /// <summary>Returns a tuple (center, radius) which forms a circle tangential to lines AB, CD, EF</summary>
+   /// <param name="pick1">Point on AB</param>
+   /// <param name="pick2">Point on CD</param>
+   /// <param name="pick3">Point on EF</param>
+   /// The pick points specify which bisectors (relative to intersection point of the lines)
+   /// to use to compute the centre. If pick points don't lie on the corresponding line,
+   /// the point is snapped to the nearest point on the corresponding line.
+   /// If input lines are invalid, or all 3 lines are parallel or,
+   /// bisectors are parallel (Nil, 0) is returned.
+   public static (Point2 Center, double Radius) CircleTangentLLL (Point2 a, Point2 b, Point2 c, Point2 d, Point2 e, Point2 f,
+                                                                  Point2 pick1, Point2 pick2, Point2 pick3) {
+      if (a.EQ (b) || c.EQ (d) || e.EQ (f)) return (Point2.Nil, 0);
+      (pick1, pick2, pick3) = (pick1.SnappedToLine (a, b), pick2.SnappedToLine (c, d), pick3.SnappedToLine (e, f));
+
+      var (P1, Q1) = GetBisector (a, b, c, d, pick1, pick2);
+      var (P2, Q2) = GetBisector (c, d, e, f, pick2, pick3);
+      // If any of the lines are parallel, we try to get an alternate bisector.
+      if (P1.IsNil) (P1, Q1) = GetBisector (a, b, e, f, pick1, pick3);
+      if (P2.IsNil) (P2, Q2) = GetBisector (a, b, e, f, pick1, pick3);
+
+      var center = Geo.LineXLine (P1, Q1, P2, Q2);
+      return (center, center.IsNil ? 0 : center.DistToLine (e, f));
+   }
+
+   /// <summary> Returns the center of the circle passing through three non-collinear points</summary>
+   /// If the points are collinear, this returns Point2.Nil
+   public static Point2 Get3PCircle (Point2 a, Point2 b, Point2 c) {
+      // Get the midpoints of the sides, and the perpendicular bisector
+      // vectors of the two sides
+      Point2 mid1 = a.Midpoint (b), mid2 = b.Midpoint (c);
+      Vector2 perp1 = (b - a).Perpendicular (), perp2 = (c - b).Perpendicular ();
+
+      // The center is the intersection of these two perpendicular bisectors
+      return Nori.Geo.LineXLine (mid1, mid1 + perp1, mid2, mid2 + perp2);
+   }
+
+   /// <summary>Returns the angle-bisector of the lines a-b and c-d</summary>
+   /// This returns a tuple (P,Q) where P is the intersection point of the two lines,
+   /// and Q is a point on the bisector leading out from that intersection. Since there are
+   /// 4 possible bisectors, the points pick1 and pick2 are used to disambiguate.
+   /// pick1 should be close to ab, while pick2 is close to cb. The positions of pick1
+   /// and pick2 (relative to P) specify which of the 4 bisectors is returned.
+   ///
+   /// If the lines ab and cd do not intersect, this returns the tuple (Nil, Nil)
+   public static (Point2 P, Point2 Q) GetBisector (Point2 a, Point2 b, Point2 c, Point2 d, Point2 pick1, Point2 pick2) {
+      Point2 P = Nori.Geo.LineXLine (a, b, c, d);
+      if (P.IsNil) return (P, Point2.Nil);// If lines don't intersect, return invalid result
+      // Build direction vectors. Note that these have to be normalized, since
+      // we are going to _average_ them below and that will work only if they are
+      // the same lengths
+      Vector2 v1 = (b - a).Normalized (), v2 = (d - c).Normalized ();
+      // Flip direction if pick is "behind" the intersection
+      if (P.GetLieOn (a, b) > pick1.GetLieOn (a, b)) v1 = -v1;
+      if (P.GetLieOn (c, d) > pick2.GetLieOn (c, d)) v2 = -v2;
+
+      // Returns base point P and a second point in the average direction of v1 and v2
+      return (P, P + (v1 + v2));
+   }
+
    /// <summary>Return the intersection Point2 of two lines A-B and C-D</summary>
    /// <param name="A">First Point2 on line 1</param>
    /// <param name="B">Second Point2 on line 1</param>
    /// <param name="C">First Point2 on line 2</param>
    /// <param name="D">Second Point2 on line 2</param>
    /// This treats the lines A-B and C-D as infinite lines, not as finite segments.
-   /// If the lines are parallel (do not intersect), this returns Point2.Nil. 
+   /// If the lines are parallel (do not intersect), this returns Point2.Nil.
    public static Point2 LineXLine (Point2 A, Point2 B, Point2 C, Point2 D) {
       // Line AB represented as a1x + b1y = c1
       double a1 = B.Y - A.Y, b1 = A.X - B.X, c1 = a1 * A.X + b1 * A.Y;
@@ -80,7 +139,7 @@ public static class Geo {
 
       // Use determinant to figure out if the lines are parallel, and return Nil if so
       double determinant = a1 * b2 - a2 * b1;
-      if (Abs (determinant) < 0.0000000001) return Point2.Nil;    
+      if (Abs (determinant) < 0.0000000001) return Point2.Nil;
       return new ((b2 * c1 - b1 * c2) / determinant, (a1 * c2 - a2 * c1) / determinant);
    }
 
@@ -90,7 +149,7 @@ public static class Geo {
    /// <param name="C">First Point2 on line 2</param>
    /// <param name="D">Second Point2 on line 2</param>
    /// This treats the lines A-B and C-D as finite segments, and not as infinite lines.
-   /// If the lines are parallel (do not intersect), this returns Point2.Nil. 
+   /// If the lines are parallel (do not intersect), this returns Point2.Nil.
    /// If the intersection point lies outside the span of either of the lines, this returns Point2.Nil
    public static Point2 LineSegXLineSeg (Point2 A, Point2 B, Point2 C, Point2 D) {
       var pt = LineXLine (A, B, C, D);

@@ -1,0 +1,184 @@
+	0
+SECTION
+	2
+HEADER
+	9
+$EXTMAX
+	10
+100
+	20
+15
+	9
+$EXTMIN
+	10
+0
+	20
+-15
+	9
+$LIMMAX
+	10
+100
+	20
+15
+	9
+$LIMMIN
+	10
+0
+	20
+-15
+	9
+$MEASUREMENT
+	70
+1
+	9
+$INSUNITS
+	70
+4
+	9
+$DIMALTF
+	40
+0.03937
+	0
+ENDSEC
+	0
+SECTION
+	2
+TABLES
+	0
+TABLE
+	2
+LTYPE
+	70
+1
+	0
+LTYPE
+	2
+CONTINUOUS
+	70
+64
+	3
+CONTINUOUS
+	72
+65
+	73
+0
+	40
+1.0
+	0
+ENDTAB
+	0
+TABLE
+	2
+LAYER
+	70
+1
+	0
+LAYER
+	70
+0
+	2
+0
+	62
+250
+	6
+CONTINUOUS
+	0
+ENDTAB
+	0
+ENDSEC
+	0
+SECTION
+	2
+BLOCKS
+	0
+ENDSEC
+	0
+SECTION
+	2
+ENTITIES
+	0
+LINE
+	8
+0
+	10
+0
+	20
+0
+	11
+100
+	21
+0
+	31
+0
+	0
+CIRCLE
+	8
+0
+	10
+10
+	20
+10
+	40
+5
+	0
+CIRCLE
+	8
+0
+	10
+10
+	20
+-10
+	40
+5
+	0
+POINT
+	8
+0
+	10
+0
+	20
+0
+	0
+POINT
+	8
+0
+	10
+10
+	20
+10
+	0
+POINT
+	8
+0
+	10
+10
+	20
+-10
+	0
+POINT
+	8
+0
+	10
+100
+	20
+0
+	0
+POINT
+	8
+0
+	10
+90
+	20
+10
+	0
+POINT
+	8
+0
+	10
+90
+	20
+-10
+	0
+ENDSEC
+	0
+EOF

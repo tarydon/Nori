@@ -45,7 +45,7 @@ class PolyTests {
       foreach (var s in p.Segs)
          sb.Append ($"{s}  |  {s.IsArc} {s.IsCCW} {s.IsCircle} {s.IsLast}\n");
       File.WriteAllText (NT.TmpTxt, sb.ToString ());
-      Assert.TextFilesEqual ($"{NT.Data}/Misc/poly.txt", NT.TmpTxt);
+      Assert.TextFilesEqual1 ("Misc/poly.txt", NT.TmpTxt);
 
       List<Point2> pts = [];
       p.Discretize (pts, 0.05);
@@ -53,7 +53,7 @@ class PolyTests {
       sb.Append ($"Discretization of {p}:\n");
       foreach (var pt in pts) sb.Append (pt.ToString () + "\n");
       File.WriteAllText (NT.TmpTxt, sb.ToString ());
-      Assert.TextFilesEqual ($"{NT.Data}/Misc/poly2.txt", NT.TmpTxt);
+      Assert.TextFilesEqual1 ("Misc/poly2.txt", NT.TmpTxt);
 
       pts.Clear ();
       Poly.Line (1, 2, 3, 4).Discretize (pts, 0.1);
@@ -137,7 +137,7 @@ class PolyTests {
       sb.Append ($"\n{p} to beziers:\n");
       foreach (var pt in bez) sb.Append ($"{pt}\n");
       File.WriteAllText (NT.TmpTxt, sb.ToString ());
-      Assert.TextFilesEqual ($"{NT.Data}/Misc/poly3.txt", NT.TmpTxt);
+      Assert.TextFilesEqual1 ("Misc/poly3.txt", NT.TmpTxt);
 
       seg = new Seg (new (0, 10), new (-10, 0), Point2.Zero, Poly.EFlags.CCW);
       seg.Contains (new (0, 10)).IsTrue (); seg.Contains (new (-10, 0)).IsTrue ();
