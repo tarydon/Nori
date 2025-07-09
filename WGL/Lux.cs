@@ -41,7 +41,7 @@ public static partial class Lux {
       get {
          if (mUIScene == null || mViewport.X == 0) return 1;
          var xfm = mUIScene.Xfms[0].InvXfm;
-         double dx = 2.0 / mViewport.X;   // 
+         double dx = 2.0 / mViewport.X;   //
          Point3 pa = Point3.Zero * xfm, pb = new Point3 (dx, 0, 0) * xfm;
          return pa.DistTo (pb);
       }
@@ -83,13 +83,13 @@ public static partial class Lux {
       if (size.X % 4 != 0) throw new ArgumentException ($"Lux.RenderToImage: image width must be a multiple of 4");
       var dib =  (DIBitmap)Render (scene, size, ETarget.Image, fmt)!;
       if (!keepAlive) scene.Detach ();
-      return dib; 
+      return dib;
    }
 
    /// <summary>Converts a pixel coordinate to world coordinates</summary>
    public static Point3 PixelToWorld (Vec2S pix) {
       if (mUIScene == null) return new (pix.X, pix.Y, 0);
-      // Convert pixel coordinate to OpenGL clip space coordinates. 
+      // Convert pixel coordinate to OpenGL clip space coordinates.
       Vec2S vp = mViewport;
       Point3 clip = new (2.0 * pix.X / vp.X - 1, 1.0 - 2.0 * pix.Y / vp.Y, 0);
       clip *= mUIScene.Xfms[0].InvXfm;
@@ -109,11 +109,11 @@ public static partial class Lux {
       Shader.StartFrame ();
       scene?.Render (viewport);
       object? obj = panel.EndRender (target, fmt);
-      
+
       // Various post-processing after frame render
       // Issue stats, and keep 'continuous render' loop going
       mInfo.OnNext (sStats);
-      var frameTS = DateTime.Now; 
+      var frameTS = DateTime.Now;
       mLastFrameTime = (DateTime.Now - frameTS).TotalSeconds;
       if (sRenderCompletes.Count > 0 && target == ETarget.Screen) {
          Lib.Post (NextFrame);
@@ -121,7 +121,7 @@ public static partial class Lux {
          if (elapsed >= 1.0) {
             // Every 1 second, issue an FPS (frames-per-second) report
             int fps = (int)(mcFPSFrames / elapsed + 0.5);
-            mFPS?.OnNext (fps); 
+            mFPS?.OnNext (fps);
             (mcFPSFrames, mFPSReportTS) = (0, frameTS);
          }
       }
@@ -148,13 +148,13 @@ public static partial class Lux {
    /// This function takes a 'callback' that will be invoked after each frame is rendered. Once
    /// this is started, Lux renders frames continuously, attempting to render at the monitor
    /// refresh rate (60 fps) if the hardware is fast enough. If Lux.VSync is turned off, then
-   /// it renders at the maximum possible rate (regardless of monitor refresh rate). 
-   /// 
-   /// The 'elapsed-time' since the last time the callback was called (in seconds) is passed as 
+   /// it renders at the maximum possible rate (regardless of monitor refresh rate).
+   ///
+   /// The 'elapsed-time' since the last time the callback was called (in seconds) is passed as
    /// a parameter to the callback, which can use this parameter to adjust the positions
    /// of objects in the scene. Thus, it is possible to create simulation where the simulation
-   /// speed is not dependent on the number of frames we render per second. 
-   /// 
+   /// speed is not dependent on the number of frames we render per second.
+   ///
    /// It is possible to call StartContinuousRender any number of times, attaching different
    /// callbacks. The continuous-render goes on as long as at least one such callback is attached,
    /// and after each frame is rendered, all these callbacks are invoked. Once all these callbacks
@@ -163,7 +163,7 @@ public static partial class Lux {
    public static void StartContinuousRender (Action<double> renderComplete) {
       sRenderCompletes.Add (renderComplete);
       if (sRenderCompletes.Count == 1) {
-         // If this is the first render-complete function, start the backup timer running. 
+         // If this is the first render-complete function, start the backup timer running.
          // We need this backup timer because the RenderComplete event is not always dependable.
          // Normally, if we are running at 60 fps, we should hit the render-complete each 16.66 ms,
          // and the timer would never fire.
@@ -183,7 +183,7 @@ public static partial class Lux {
 
    /// <summary>This detaches a callback from the continous-render loop</summary>
    /// This is the opposite of StartContinuousRender above. Once all the callbacks have
-   /// retired, we stop the loop. 
+   /// retired, we stop the loop.
    public static void StopContinuousRender (Action<double> renderComplete) {
       sRenderCompletes.Remove (renderComplete);
       if (sRenderCompletes.Count == 0 && sTimer != null)
@@ -238,7 +238,7 @@ public static partial class Lux {
    static bool Get (ELuxAttr flags, ELuxAttr bit) => (flags & bit) != 0;
    static bool Set (ELuxAttr attr) {
       if ((mChanged & attr) != 0) return false;
-      mChanged |= attr; return true; 
+      mChanged |= attr; return true;
    }
    static ELuxAttr mChanged;
 
@@ -251,10 +251,10 @@ public static partial class Lux {
       mLineWidths.Clear (); mLineWidth = 4f;
       mPointSizes.Clear (); mPointSize = 7f;
       mLineTypes.Clear (); mLineType = ELineType.Continuous;
-      mLTScales.Clear (); mLTScale = 50f;
+      mLTScales.Clear (); mLTScale = 100f;
       mTypefaces.Clear (); mTypeface = null;
       mIDXfms.Clear (); mIDXfm = 0;
-      mZLevels.Clear (); mZLevel = 0; 
+      mZLevels.Clear (); mZLevel = 0;
       mChanged = ELuxAttr.None;
       Rung++;
    }
