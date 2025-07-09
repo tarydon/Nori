@@ -208,13 +208,16 @@ public partial class Poly {
       // Use a PolyBuilder to build the fillet poly. The target node where
       // the fillet is to be added is 'node'
       PolyBuilder pb = new ();
+
+      // Find the tangent points for the fillet by shifting the common vertex along the slope of both lines
+      double len = 0;
       for (int i = 0; i < Count; i++) {
          Point2 pt = mPts[i];
          // If we are going to add the target node, shift it forward by radius
          // along the lead-out segment slope (this is the end of the fillet). See the code
          // below that would have already added the beginning of the fillet (the
          // i == node - 1 check)
-         if (i == node) pt = pt.Polar (radius, s2.Slope);
+         if (i == node) pt = pt.Polar (len, s2.Slope);
 
          // This code adds all the other nodes (they could be the starts of line or arc
          // segments, and we handle both by looking through the mExtra array). Note that
@@ -230,8 +233,14 @@ public partial class Poly {
          // If we are heading towards the target node, add an new node for the beginning
          // of the fillet, by moving backwards by radius along the lead-in segment slope
          if (i == node - 1) {
-            var start = s2.A.Polar (-radius, s1.Slope); var pt1 = start + (s2.A - start).Perpendicular ();
-            var end = s2.A.Polar (radius, s2.Slope); var pt2 = end + (end - s2.A).Perpendicular ();
+            Vector2 line1 = s1.B - s1.A, line2 = s2.A - s2.B;
+            double x1 = line1.X, x2 = line2.X, y1 = line1.Y, y2 = line2.Y;
+            var a = x1 * x2 + y1 * y2;
+            var b = Math.Sqrt (x1 * x1 + y1 * y1) * Math.Sqrt (x2 * x2 + y2 * y2);
+            var ang = Math.Acos (a / b);
+            len = radius / Math.Tan (ang / 2);
+            var start = s2.A.Polar (-len, s1.Slope); var pt1 = start + (s2.A - start).Perpendicular ();
+            var end = s2.A.Polar (len, s2.Slope); var pt2 = end + (end - s2.A).Perpendicular ();
             pb.Arc (start, Geo.LineXLine (start, pt1, end, pt2), EFlags.CCW);
          }
       }

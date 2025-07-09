@@ -48,8 +48,10 @@ class PolyOpsTests {
 
    [Test (72, "Poly fillet tests")]
    void Test4 () {
-      Poly rect = Poly.Rectangle (0, 0, 200, 100);
+      Poly tri = new ([new Point2 (0, 0), new Point2 (30, 0), new Point2 (15, 15)], [], Poly.EFlags.Closed);
       Poly? poly;
+      poly = tri.Fillet (2, 5); poly?.Is ("M0,0H30L18.535534,11.464466Q11.464466,11.464466,1Z");
+      Poly rect = Poly.Rectangle (0, 0, 200, 100);
       poly = rect.Fillet (0, 5); poly?.Is ("M200,0V100H0V5Q5,0,1Z");
       poly = rect.Fillet (3, 10); poly?.Is ("M0,0H200V100H10Q0,90,1Z");
    }
