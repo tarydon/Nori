@@ -115,9 +115,16 @@ public class CMesh (ImmutableArray<CMesh.Node> vertex, ImmutableArray<int> trian
             }
          }
          meshes[i] = new CMesh ([.. nodes], [.. tIdx], [.. wIdx]);
-         if (all > 0) return meshes[i];
       }
-      throw new IOException ("Unable to load CMesh from file");
+      List<Node> vertex = [];
+      List<int> ftris = [], fwires = [];
+      foreach (var mesh in meshes) {
+         int nBase = vertex.Count;
+         vertex.AddRange (mesh.Vertex);
+         ftris.AddRange (mesh.Triangle.Select (a => a + nBase));
+         fwires.AddRange (mesh.Wire.Select (a => a + nBase));
+      }
+      return new CMesh ([..vertex], [..ftris], [..fwires]);
    }
 
    /// <summary>Loads data from a TMesh file</summary>

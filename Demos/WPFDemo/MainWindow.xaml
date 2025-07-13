@@ -8,13 +8,13 @@
         Title="MainWindow" WindowState="Maximized" Background="Black">
    <Window.Resources>
       <Style TargetType="Button">
-         <Setter Property="Margin" Value="6,0,6,6" />
-         <Setter Property="Padding" Value="8,2,8,2" />
+         <Setter Property="Margin" Value="4,0,4,4" />
+         <Setter Property="Padding" Value="7,1,7,1" />
       </Style>
    </Window.Resources>
    <DockPanel>
       <StackPanel DockPanel.Dock="Left" Background="#888">
-         <Button Margin="6" Click="LeafDemo">Leaf Demo</Button>
+         <Button Margin="4" Click="LeafDemo">Leaf Demo</Button>
          <Button Click="LineFontDemo">LineFont Demo</Button>
          <Button Click="TrueTypeDemo">TrueType Demo</Button>
          <Button Click="MeshDemo">Mesh Demo</Button>
@@ -23,6 +23,7 @@
          <Button Click="DwgDemo">Drawing Demo</Button>
          <Button Click="RobotDemo">Robot Demo</Button>
       </StackPanel>
+      <StackPanel Name="mSettings" DockPanel.Dock="Right" Background="#888" />
       <Border Name="mContent" />
    </DockPanel>
 </Window>

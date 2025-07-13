@@ -3,29 +3,30 @@
     { Name:Base  Color:#909000  Sockets:[0,0,266.5]
       Geometry:(FileGeometry){ File:Model/Base.mesh }
       Children:[
-        { Name:AxisS  Color:#FFFF00  Sockets:[150,0,298.5]
-          Joint:Rotate  JVector:0,0,1  JMin:-360  JMax:360
+        { Name:S  Color:#FFFF00  Sockets:[150,0,298.5]
+          Joint:Rotate  JVector:0,0,1  JMin:-185  JMax:185
           Geometry:(FileGeometry){ File:Model/S.mesh }
           Children:[
-            { Name:AxisL  Color:#909000  Sockets:[0,0,770]
-              Joint:Rotate  JVector:0,1,0  JMin:-40  JMax:130
+            { Name:L  Color:#909000  Sockets:[0,0,770]
+              Joint:Rotate  JVector:0,1,0  JMin:-90  JMax:115
               Geometry:(FileGeometry){ File:Model/L.mesh }
               Children:[
-                { Name:AxisU  Color:#FFFF00  Sockets:[290.5,0,0]
-                  Joint:Rotate  JVector:0,1,0  JMin:-225  JMax:85
+                { Name:U  Color:#FFFF00  Sockets:[290.5,0,0]
+                  Joint:Rotate  JVector:0,1,0  JMin:-225  JMax:70
                   Geometry:(FileGeometry){ File:Model/U.mesh }
                   Children:[
-                    { Name:AxisR  Color:#909000  Sockets:[725.5,0,0]
-                      Joint:Rotate  JVector:1,0,0  JMin:-360  JMax:360
+                    { Name:R  Color:#909000  Sockets:[725.5,0,0]
+                      Joint:Rotate  JVector:1,0,0  JMin:-365  JMax:365
                       Geometry:(FileGeometry){ File:Model/R.mesh }
                       Children:[
-                        { Name:AxisB  Color:#FFFF00  Sockets:[0,0,-153]
-                          Joint:Rotate  JVector:0,1,0  JMin:-220  JMax:40
+                        { Name:B  Color:#FFFF00  Sockets:[0,0,-153]
+                          Joint:Rotate  JVector:0,1,0  JMin:-210  JMax:30
                           Geometry:(FileGeometry){ File:Model/B.mesh }
                           Children:[
-                            { Name:AxisT  Color:#909000  Sockets:[0,0,-21]
-                              Joint:Rotate  JVector:0,0,-1  JMin:-360  JMax:360
+                            { Name:T  Color:#909000  Sockets:[0,0,-42]
+                              Joint:Rotate  JVector:0,0,-1  JMin:-365  JMax:365
                               Geometry:(FileGeometry){ File:Model/T.mesh }
+                              Children:[ { Name:Tip } ]
                             }
                           ]
                         }
