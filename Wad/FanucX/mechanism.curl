@@ -23,7 +23,7 @@
                           Joint:Rotate  JVector:0,1,0  JMin:-210  JMax:30
                           Geometry:(FileGeometry){ File:Model/B.mesh }
                           Children:[
-                            { Name:T  Color:#909000  Sockets:[0,0,-42]
+                            { Name:T  Color:#909000  Sockets:[0,0,-21]
                               Joint:Rotate  JVector:0,0,-1  JMin:-365  JMax:365
                               Geometry:(FileGeometry){ File:Model/T.mesh }
                               Children:[ { Name:Tip } ]
