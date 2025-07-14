@@ -140,6 +140,9 @@ public partial class Mechanism {
          foreach (var grandchild in child.EnumTree ()) yield return grandchild;
    }
 
+   public Mechanism? FindChild (string name)
+      => EnumTree ().FirstOrDefault (a => a.Name == name);
+
    // Implementation -----------------------------------------------------------
    string FullName => Parent == null ? Name : $"{Parent.FullName}.{Name}";
 }

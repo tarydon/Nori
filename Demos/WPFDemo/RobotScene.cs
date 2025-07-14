@@ -1,7 +1,4 @@
 ﻿namespace WPFDemo;
-
-using System.Diagnostics;
-using System.Runtime.ExceptionServices;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
@@ -19,21 +16,78 @@ class RobotScene : Scene3 {
       TraceVN.TextColor = Color4.Yellow;
       mGripper.Xfm = mTip.Xfm;
       Lib.Tracer = TraceVN.Print;
-      Redo (true);
+      mJoints = [.. "SLURBT".Select (a => mMech.FindChild (a.ToString ())!)];
+      mCS = mHome;
    }
 
    public void CreateUI (UIElementCollection ui) {
       ui.Add (new TextBlock { Text = "Forward", FontSize = 14, FontWeight = FontWeights.Bold, Margin = new Thickness (8, 8, 0, 4) });
       foreach (var m in Mech.EnumTree ()) {
          if (m.Joint == EJoint.None) continue;
-         var sp = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness (4) }; ui.Add (sp);
-         var label = new TextBlock { Text = m.Name, HorizontalAlignment = HorizontalAlignment.Right, TextAlignment = TextAlignment.Center, Width = 15, VerticalAlignment = VerticalAlignment.Center }; sp.Children.Add (label);
-         var slider = new Slider { Minimum = m.JMin, MinWidth=150, Maximum = m.JMax, Value = m.JValue, Margin = new Thickness (4, 1, 4, 4) };
-         slider.ValueChanged += (s, e) => { m.JValue = e.NewValue; Redo (true); };
-         sp.Children.Add (slider);
+         AddSlider (m.Name, m.JMin, m.JMax, m.JValue, f => { m.JValue = f; Redo (true); });
       }
       ui.Add (new TextBlock { Text = "Inverse", FontSize = 14, FontWeight = FontWeights.Bold, Margin = new Thickness (8, 8, 0, 4) });
+      AddSlider ("X", -1000, 1000, mX, f => { mX = f; ComputeIK (); });
+      AddSlider ("Y", -1000, 1000, mY, f => { mY = f; ComputeIK (); });
+      AddSlider ("Z", -1000, 1000, mZ, f => { mZ = f; ComputeIK (); });
+      AddSlider ("Rx", -180, 180, mRx, f => { mRx = f; ComputeIK (); });
+      AddSlider ("Ry", -180, 180, mRy, f => { mRy = f; ComputeIK (); });
+      AddSlider ("Rz", -180, 180, mRz, f => { mRz = f; ComputeIK (); });
+      ui.Add (new TextBlock { Text = "Stances", FontSize = 14, FontWeight = FontWeights.Bold, Margin = new Thickness (8, 8, 0, 4) });
+
+      for (int i = 0; i < 8; i++) mStances.Items.Add ($"Stance {i + 1}");
+      mStances.SelectedIndex = 0;
+      ui.Add (mStances);
+      mStances.SelectionChanged += (s, e) => {
+         if (!mComputingIK) {
+            mSelStance = mStances.SelectedIndex; ComputeIK ();
+         }
+      };
+
+      // Helper ..................................
+      void AddSlider (string text, double min, double max, double value, Action<double> setter) {
+         var sp = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness (4) };
+         var label = new TextBlock { Text = text, HorizontalAlignment = HorizontalAlignment.Right, TextAlignment = TextAlignment.Center, Width = 15, VerticalAlignment = VerticalAlignment.Center };
+         var slider = new Slider { Minimum = min, MinWidth = 150, Maximum = max, Value = value, Margin = new Thickness (4, 1, 4, 4) };
+         slider.ValueChanged += (s, e) => setter (e.NewValue);
+         slider.IsSnapToTickEnabled = false;
+         sp.Children.Add (label); sp.Children.Add (slider); ui.Add (sp);
+         mSliders[text] = slider;
+      }
    }
+
+   ListBox mStances = new () { Margin = new Thickness (8, 0, 8, 4) };
+   Dictionary<string, Slider> mSliders = [];
+   double mX, mY, mZ, mRx, mRy, mRz;
+
+   void ComputeIK () {
+      mComputingIK = true;
+      var cs = CoordSystem.World;
+      cs *= Matrix3.Rotation (EAxis.X, mRx.D2R ());
+      cs *= Matrix3.Rotation (EAxis.Y, mRy.D2R ());
+      cs *= Matrix3.Rotation (EAxis.Z, mRz.D2R ());
+      mCS = cs * Matrix3.Translation ((Vector3)(mHome.Org + new Vector3 (mX, mY, mZ)));
+      var stances = mSolver.ComputeStances (mCS.Org, mCS.VecZ, mCS.VecX);
+      mStances.Items.Clear ();
+      for (int j = 0; j < 8; j++) {
+         bool ok = true;
+         for (int i = 0; i < 6; i++) {
+            double a = stances[j][i].R2D ();
+            if (i == 1) a += 90;
+            if (i == 4) a -= 90;
+            var m = mJoints[i];
+            if (a < m.JMin || a > m.JMax) ok = false;
+            if (j == mSelStance) m.JValue = a;
+         }
+         if (ok) mStances.Items.Add ($"Stance {j + 1}");
+         else mStances.Items.Add ($"----");
+      }
+      mGripper.Xfm = mTip.Xfm;
+      mComputingIK = false;
+   }
+   bool mComputingIK;
+   Mechanism[] mJoints;
+   int mSelStance;
 
    void Redo (bool forward) {
       mGripper.Xfm = mTip.Xfm;
@@ -59,7 +113,7 @@ class RobotScene : Scene3 {
    }
 
    public Mechanism Mech => mMech;
-   CoordSystem mCS = new (new (1166, 0, 1161 - 565), Vector3.XAxis, Vector3.YAxis);
+   CoordSystem mHome = new (new (1166, 0, 1161 - 565), Vector3.XAxis, Vector3.YAxis), mCS;
    RBRSolver mSolver = new (150, 770, 0, 0, 1016, 175);
    Mechanism mMech, mTip;
    XfmVN mGripper;
