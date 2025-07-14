@@ -80,7 +80,7 @@ public class RBRSolver {
       ComputeSinCos (1);
 
       set[0].SetTheta (1, theta1a); set[4].SetTheta (1, theta1b);
-      for (int i = 1; i < 3; i++) { set[i].CopyTheta (1, set[0]); set[i + 4].CopyTheta (1, set[4]); }
+      for (int i = 1; i <= 3; i++) { set[i].CopyTheta (1, set[0]); set[i + 4].CopyTheta (1, set[4]); }
 
       // ------------------------------------------------
       // 2. For each value of theta1, we can compute two values of theta3

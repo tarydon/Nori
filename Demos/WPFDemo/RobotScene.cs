@@ -19,11 +19,11 @@ class RobotScene : Scene3 {
       mJoints = [.. "SLURBT".Select (a => mMech.FindChild (a.ToString ())!)];
       for (int i = 0; i < 6; i++) {
          var m = mJoints[i];
-         double a = m.JMin, b = m.JMax, delta = i switch { 1 => -90, 4 => 90, _ => 0 };
+         double a = m.JMin, b = m.JMax, delta = i switch { 1 => 0, 4 => 0, _ => 0 };
          mMin[i] = a + delta; mMax[i] = b + delta;
       }
       mSolver = new (150, 770, 0, 0, 1016, 175, mMin, mMax);
-      mCS = mHome;
+      mCS = mHome; ComputeIK ();
    }
    double[] mMin = new double[6], mMax = new double[6];
 
@@ -76,7 +76,7 @@ class RobotScene : Scene3 {
       mCS = cs * Matrix3.Translation ((Vector3)(mHome.Org + new Vector3 (mX, mY, mZ)));
       bool newCode = true;
       if (newCode) {
-         mStances.Items.Clear (); 
+         mStances.Items.Clear ();
          mSolver.ComputeStances (mCS.Org, mCS.VecZ, mCS.VecX);
          for (int j = 0; j < 8; j++) {
             var a = mSolver.Solutions[j];
@@ -85,8 +85,8 @@ class RobotScene : Scene3 {
             if (j == mSelStance)
                for (int i = 0; i < 6; i++) {
                   double value = a.GetJointAngle (i);
-                  if (i == 1) value += 90;
-                  if (i == 4) value -= 90;
+                  // if (i == 1) value += 90;
+                  // if (i == 4) value -= 90;
                   mJoints[i].JValue = value;
                }
          }
@@ -97,8 +97,8 @@ class RobotScene : Scene3 {
             bool ok = true;
             for (int i = 0; i < 6; i++) {
                double a = stances[j][i].R2D ();
-               if (i == 1) a += 90;
-               if (i == 4) a -= 90;
+//               if (i == 1) a += 90;
+//               if (i == 4) a -= 90;
                var m = mJoints[i];
                if (a < m.JMin || a > m.JMax) ok = false;
                if (j == mSelStance) m.JValue = a;
