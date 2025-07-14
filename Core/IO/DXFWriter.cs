@@ -47,7 +47,7 @@ public class DXFWriter (Dwg2 dwg) {
          mBend = layers.FirstOrDefault (a => a.Name.EqIC ("BEND"));
          mMBend = layers.FirstOrDefault (a => a.Name.EqIC ("MBEND"));
          mDwg.Ents.OfType<E2Bendline> ().ForEach (a => {
-            if (mBend is null && a.Angle > 0) layers.Add (mBend = new Layer2 ("BEND", Color4.Green, ELineType.Dot));
+            if (mBend is null && a.Angle >= 0) layers.Add (mBend = new Layer2 ("BEND", Color4.Green, ELineType.Dot));
             else if (mMBend is null && a.Angle < 0) layers.Add (mMBend = new Layer2 ("MBEND", Color4.Green, ELineType.DashDotDot));
          });
       }
