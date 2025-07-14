@@ -7,10 +7,14 @@
 public class RBRSolver {
    // Constructors -------------------------------------------------------------
    /// <summary>Construct an RBRSolver, given the parameters defining the robot</summary>
-   public RBRSolver (double a12, double a23, double a34, double s2, double s4, double s6) {
+   public RBRSolver (double a12, double a23, double a34, double s2, double s4, double s6, double[] min, double[] max) {
       A12 = a12; A23 = a23; A34 = a34; S2 = s2; S4 = s4; S6 = s6;
+      for (int i = 0; i < 6; i++) { mMin[i + 1] = min[i].D2R (); mMax[i + 1] = max[i].D2R (); }
       for (int i = 0; i < 7; i++) { mLimits[i, 0] = double.MinValue; mLimits[i, 1] = double.MaxValue; }
+      for (int i = 0; i < 8; i++) mSolutions[i] = new Soln (mMin, mMax);
    }
+
+   public IReadOnlyList<Soln> Solutions => mSolutions;
 
    // Methods ------------------------------------------------------------------
    /// <summary>For a given end-effector orientation, this return all possible valid stances of the robot</summary>
@@ -22,6 +26,7 @@ public class RBRSolver {
    /// coordinates supplied are not reachable by the robot
    public List<double[]> ComputeStances (Point3 Fptool, Vector3 vecZ, Vector3 vecX) {
       mStances.Clear ();
+      var set = mSolutions;
       Vector3 vecY = vecX * vecZ;
       vecX = (vecZ * vecY).Normalized ();
 
@@ -68,11 +73,14 @@ public class RBRSolver {
       double Y7 = -(s71 * c67 + c71 * s67 * c7);
       double Z7 = c71 * c67 - s71 * s67 * c7;
       double A = S6 * Y7 - S7 * s71, B = S6 * X7 + a71, D = S2;
-
       SolveAngleEqn (A, B, D, out double theta1a, out double theta1b);
+
       for (int i = 0; i < 4; i++) { TH[1, i] = theta1a; OK[i] = AngleOK (1, theta1a); }
       for (int i = 4; i < 8; i++) { TH[1, i] = theta1b; OK[i] = AngleOK (1, theta1b); }
       ComputeSinCos (1);
+
+      set[0].SetTheta (1, theta1a); set[4].SetTheta (1, theta1b);
+      for (int i = 1; i < 3; i++) { set[i].CopyTheta (1, set[0]); set[i + 4].CopyTheta (1, set[4]); }
 
       // ------------------------------------------------
       // 2. For each value of theta1, we can compute two values of theta3
@@ -90,6 +98,20 @@ public class RBRSolver {
          TH[3, i + 2] = TH[3, i + 3] = theta3b; OK[i + 2] = OK[i + 3] = AngleOK (3, theta3b);
       }
       ComputeSinCos (3);
+
+      for (int i = 0; i < 8; i += 4) {
+         var a = set[i]; if (!a.OK) continue;
+         double c1 = a.COS[1], s1 = a.SIN[1];
+         double X1 = s71 * s1, Y1 = -(s12 * c71 + c12 * s71 * c1);
+         double X71 = X7 * c1 - Y7 * s1, Y71 = c12 * (X7 * s1 + Y7 * c1) - s12 * Z7;
+         double RHS1 = -S6 * X71 - S7 * X1 - a71 * c1 - A12;
+         double RHS2 = -S1 - S6 * Y71 - S7 * Y1;
+         A = 2 * A23 * A34; B = -2 * A23 * S4;
+         D = (A23 * A23) + (A34 * A34) + (S4 * S4) - (RHS1 * RHS1) - (RHS2 * RHS2);  // (11.25)
+         SolveAngleEqn (A, B, D, out double theta3a, out double theta3b);
+         a.SetTheta (3, theta3a); set[i + 1].CopyTheta (3, a);
+         set[i + 2].SetTheta (3, theta3b); set[i + 3].CopyTheta (3, set[i + 2]);
+      }
 
       // ------------------------------------------------
       // 3. Compute theta2 now
@@ -116,6 +138,23 @@ public class RBRSolver {
             KAPPA[i] = s3 * c2 + c3 * s2; LAMBDA[i] = c3 * c2 - s3 * s2;
          }
 
+      for (int i = 0; i < 8; i += 2) {
+         var a = set[i]; if (!a.OK) continue;
+         double c1 = a.COS[1], s1 = a.SIN[1], c3 = a.COS[3], s3 = a.SIN[3];
+         double X1 = s71 * s1, Y1 = -(s12 * c71 + c12 * s71 * c1);
+         double X71 = X7 * c1 - Y7 * s1, Y71 = c12 * (X7 * s1 + Y7 * c1) - s12 * Z7;
+         double RHS1 = -S6 * X71 - S7 * X1 - a71 * c1 - A12;
+         double RHS2 = -S1 - S6 * Y71 - S7 * Y1;
+         double Aa = A23 + A34 * c3 - S4 * s3, Ba = -A34 * s3 - S4 * c3, C = -RHS1;  // (11.26)
+         double Da = Ba, E = -Aa, F = -RHS2;
+         SolveLinearPair (Aa, Ba, C, Da, E, F, out double c2, out double s2);
+         if (c2.IsZero () && s2.IsZero ()) {
+            a.OK = set[i + 1].OK = false;
+            continue;
+         }
+         a.SetTheta (2, Math.Atan2 (s2, c2)); set[i + 1].CopyTheta (2, a);
+      }
+
       // ------------------------------------------------
       // 4. Now, to compute theta5. This is computable from the 3 angles we have already computed
       for (int i = 0; i < 8; i += 2) {
@@ -132,6 +171,18 @@ public class RBRSolver {
       }
       ComputeSinCos (5);
 
+      for (int i = 0; i < 8; i += 2) {
+         var a = set[i]; if (!a.OK) continue;
+         double c1 = a.COS[1], s1 = a.SIN[1];
+         double c5 = -a.KAPPA * (X7 * c1 - Y7 * s1) - a.LAMBDA * Z7;
+         if (c5 is < -1 - Lib.Epsilon or > 1 + Lib.Epsilon) {
+            a.OK = set[i + 1].OK = false;
+            continue;
+         }
+         a.SetTheta (5, ACos (c5));
+         set[i + 1].SetTheta (5, -a.TH[5]);
+      }
+
       // ------------------------------------------------
       // 5. Compute theta 4, based on the 4 angles we already computed
       for (int i = 0; i < 8; i++) {
@@ -143,6 +194,14 @@ public class RBRSolver {
          OK[i] = AngleOK (4, TH[4, i] = Math.Atan2 (s4, c4));
       }
       ComputeSinCos (4);
+
+      for (int i = 0; i < 8; i++) {
+         var a = set[i]; if (!a.OK) continue;
+         double c1 = a.COS[1], s1 = a.SIN[1], s5 = a.SIN[5];
+         double c4 = (-a.LAMBDA * (X7 * c1 - Y7 * s1) + a.KAPPA * Z7) / s5;
+         double s4 = -(X7 * s1 + Y7 * c1) / s5;
+         a.SetTheta (4, Math.Atan2 (s4, c4));
+      }
 
       // ------------------------------------------------
       // 6. Compute theta 6, based on the other 5 angles.
@@ -157,6 +216,18 @@ public class RBRSolver {
          OK[i] = AngleOK (6, TH[6, i] = Math.Atan2 (s6, c6));
       }
       for (int i = 0; i < 8; i++) TH[1, i] = Lib.NormalizeAngle (TH[1, i] - gamma1);
+
+      for (int i = 0; i < 8; i++) {
+         var a = set[i]; if (!a.OK) continue;
+         double c2 = a.COS[2], s2 = a.SIN[2], c3 = a.COS[3], s3 = a.SIN[3];
+         double c4 = a.COS[4], s4 = a.SIN[4], c1 = a.COS[1], s1 = a.SIN[1];
+         double Ad = c2 * c3 * s4 - s2 * s3 * s4;
+         double Bd = s2 * c3 * s4 + c2 * s3 * s4;
+         double s6 = -c7 * (c1 * Ad - s1 * c4) + s7 * (c71 * (Ad * s1 + c1 * c4) + s71 * Bd);
+         double c6 = s71 * (Ad * s1 + c1 * c4) - c71 * Bd;
+         a.SetTheta (6, Math.Atan2 (s6, c6));
+         a.TH[1] = Lib.NormalizeAngle (a.TH[1] - gamma1);
+      }
 
       // Return the list of possible stances
       for (int i = 0; i < 8; i++) {
@@ -250,5 +321,43 @@ public class RBRSolver {
    readonly List<double[]> mStances = new ();
    // These are the limits of the axes
    readonly double[,] mLimits = new double[7, 2];
+   double[] mMin = new double[7], mMax = new double[7];
+
+   public class Soln {
+      public Soln (double[] min, double[] max) { mMin = min; mMax = max; }
+      double[] mMin, mMax;
+
+      public bool OK { get => mOK; internal set => mOK = value; }
+      bool mOK = true;
+
+      public double GetJointAngle (int n) => TH[n + 1].R2D ();
+
+      // The 6 axis angles for this solution (we don't use TH[0] for consistency with the
+      // equations in the text)
+      internal readonly double[] TH = new double[7];
+      // Sin[A] and Cos[A] are the sin/cos of TH[A] (only indices 1..6 are used)
+      internal readonly double[] SIN = new double[7], COS = new double[7];
+      // Intermediate values KAPPA and LAMBDA used in the solution
+      internal double KAPPA, LAMBDA;
+
+      internal void SetTheta (int n, double f) {
+         TH[n] = f; (SIN[n], COS[n]) = Math.SinCos (f);
+         switch (n) {
+            case 2:
+               double c2 = COS[2], s2 = SIN[2], c3 = COS[3], s3 = SIN[3];
+               KAPPA = s3 * c2 + c3 * s2; LAMBDA = c3 * c2 - s3 * s2;
+               break;
+         }
+         if (n == 1) OK = true;
+         else OK &= f >= mMin[n] && f <= mMax[n];
+      }
+
+      internal void CopyTheta (int n, Soln b) {
+         TH[n] = b.TH[n]; SIN[n] = b.SIN[n]; COS[n] = b.COS[n]; OK = b.OK;
+         if (n == 2) { KAPPA = b.KAPPA; LAMBDA = b.LAMBDA; }
+      }
+   }
+
+   Soln[] mSolutions = new Soln[8];
 }
 #endregion

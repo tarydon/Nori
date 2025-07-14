@@ -17,8 +17,15 @@ class RobotScene : Scene3 {
       mGripper.Xfm = mTip.Xfm;
       Lib.Tracer = TraceVN.Print;
       mJoints = [.. "SLURBT".Select (a => mMech.FindChild (a.ToString ())!)];
+      for (int i = 0; i < 6; i++) {
+         var m = mJoints[i];
+         double a = m.JMin, b = m.JMax, delta = i switch { 1 => -90, 4 => 90, _ => 0 };
+         mMin[i] = a + delta; mMax[i] = b + delta;
+      }
+      mSolver = new (150, 770, 0, 0, 1016, 175, mMin, mMax);
       mCS = mHome;
    }
+   double[] mMin = new double[6], mMax = new double[6];
 
    public void CreateUI (UIElementCollection ui) {
       ui.Add (new TextBlock { Text = "Forward", FontSize = 14, FontWeight = FontWeights.Bold, Margin = new Thickness (8, 8, 0, 4) });
@@ -67,20 +74,38 @@ class RobotScene : Scene3 {
       cs *= Matrix3.Rotation (EAxis.Y, mRy.D2R ());
       cs *= Matrix3.Rotation (EAxis.Z, mRz.D2R ());
       mCS = cs * Matrix3.Translation ((Vector3)(mHome.Org + new Vector3 (mX, mY, mZ)));
-      var stances = mSolver.ComputeStances (mCS.Org, mCS.VecZ, mCS.VecX);
-      mStances.Items.Clear ();
-      for (int j = 0; j < 8; j++) {
-         bool ok = true;
-         for (int i = 0; i < 6; i++) {
-            double a = stances[j][i].R2D ();
-            if (i == 1) a += 90;
-            if (i == 4) a -= 90;
-            var m = mJoints[i];
-            if (a < m.JMin || a > m.JMax) ok = false;
-            if (j == mSelStance) m.JValue = a;
+      bool newCode = true;
+      if (newCode) {
+         mStances.Items.Clear (); 
+         mSolver.ComputeStances (mCS.Org, mCS.VecZ, mCS.VecX);
+         for (int j = 0; j < 8; j++) {
+            var a = mSolver.Solutions[j];
+            if (a.OK) mStances.Items.Add ($"Stance {j + 1}");
+            else mStances.Items.Add ("----");
+            if (j == mSelStance)
+               for (int i = 0; i < 6; i++) {
+                  double value = a.GetJointAngle (i);
+                  if (i == 1) value += 90;
+                  if (i == 4) value -= 90;
+                  mJoints[i].JValue = value;
+               }
          }
-         if (ok) mStances.Items.Add ($"Stance {j + 1}");
-         else mStances.Items.Add ($"----");
+      } else {
+         var stances = mSolver.ComputeStances (mCS.Org, mCS.VecZ, mCS.VecX);
+         mStances.Items.Clear ();
+         for (int j = 0; j < 8; j++) {
+            bool ok = true;
+            for (int i = 0; i < 6; i++) {
+               double a = stances[j][i].R2D ();
+               if (i == 1) a += 90;
+               if (i == 4) a -= 90;
+               var m = mJoints[i];
+               if (a < m.JMin || a > m.JMax) ok = false;
+               if (j == mSelStance) m.JValue = a;
+            }
+            if (ok) mStances.Items.Add ($"Stance {j + 1}");
+            else mStances.Items.Add ($"----");
+         }
       }
       mGripper.Xfm = mTip.Xfm;
       mComputingIK = false;
@@ -91,30 +116,11 @@ class RobotScene : Scene3 {
 
    void Redo (bool forward) {
       mGripper.Xfm = mTip.Xfm;
-      if (forward) { mCS = CoordSystem.World * mTip.Xfm; mCS = new (mCS.Org + new Vector3 (0, 0, -565), mCS.VecX, mCS.VecY); }
-      var stances = mSolver.ComputeStances (mCS.Org, mCS.VecZ, mCS.VecX);
-      Lib.Trace ("-------------------");
-      var sb = new StringBuilder ();
-      for (int j = 0; j < 8; j++) {
-         for (int i = 0; i < 6; i++) {
-            double a = stances[j][i].R2D ();
-            if (i == 1) a += 90;
-            if (i == 4) a -= 90;
-            sb.Append ($"{a.Round (0),6}");
-         }
-         Lib.Trace (sb); sb.Clear ();
-      }
-      Lib.Trace ("...");
-      foreach (var m in Mech.EnumTree ()) {
-         if (m.Joint == EJoint.None) continue;
-         sb.Append ($"{m.JValue.Round (0),6}");
-      }
-      Lib.Trace (sb); sb.Clear ();
    }
 
    public Mechanism Mech => mMech;
    CoordSystem mHome = new (new (1166, 0, 1161 - 565), Vector3.XAxis, Vector3.YAxis), mCS;
-   RBRSolver mSolver = new (150, 770, 0, 0, 1016, 175);
+   RBRSolver mSolver;
    Mechanism mMech, mTip;
    XfmVN mGripper;
 }
