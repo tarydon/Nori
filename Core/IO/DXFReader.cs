@@ -41,12 +41,7 @@ public partial class DXFReader {
             case 70: I0 = Vn; break; case 71: I1 = Vn; break;
             case 72: I2 = Vn; break; case 73: I3 = Vn; break;
             case 230: ZDir = Vf.EQ (-1) ? -1 : 1; break;
-            case 1000:
-               if (V.Contains (':')) {
-                  var parts = V.Split (':', 2);
-                  mBendData[parts[0]] = parts[1].ToDouble ();
-               }
-               break;
+            case 1000: mXData.Add (V); break;
          }
       }
       mReader.Dispose ();
@@ -88,11 +83,16 @@ public partial class DXFReader {
             case "ELLIPSE": AddEllipse (Pt0, MajorAxis, AxisRatio, TRange); break;
             case "LINE":
                var line = Poly.Line (Pt0, Pt1);
-               if (mBendData.TryGetValue ("BEND_ANGLE", out var a) &&
-                   mBendData.TryGetValue ("BEND_RADIUS", out var r) &&
-                   mBendData.TryGetValue ("K_FACTOR", out var k)) {
-                  Add (new E2Bendline (mDwg, line.Pts, a.D2R (), r, k));
-                  mBendData.Clear ();
+               // Try to find bend info among mXData entries
+               double ba = 0, radius = 0, kfactor = 0;
+               bool hasBend = false;
+               foreach (var s in mXData) {
+                  if (s.StartsWith ("BEND_ANGLE:")) { ba = s[11..].ToDouble ().D2R (); hasBend = true; } else if (s.StartsWith ("BEND_RADIUS:")) radius = s[12..].ToDouble ();
+                  else if (s.StartsWith ("K_FACTOR:")) kfactor = s[9..].ToDouble ();
+               }
+               if (hasBend) {
+                  Add (new E2Bendline (mDwg, line.Pts, ba, radius, kfactor));
+                  mXData.Clear ();
                } else Add (line);
                break;
 
@@ -240,8 +240,8 @@ public partial class DXFReader {
    int I0, I1, I2, I3;              // Integer value read from group 70 .. 73
    // A StringBuilder member used in various text compositions.
    readonly StringBuilder mSB = new ();
-   // Stores bend info like angle, radius, and k-factor (from 1000 codes)
-   Dictionary<string, double> mBendData = [];
+   // Raw 1000 group code strings from DXF (e.g., "BEND_ANGLE:90")
+   List<string> mXData = [];
    // Aliases for the group codes (for better readability)
    int Flags => I0;
    double Bulge => D2Set.SafeGet (0);
