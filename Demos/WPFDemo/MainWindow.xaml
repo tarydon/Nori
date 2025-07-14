@@ -23,7 +23,7 @@
          <Button Click="DwgDemo">Drawing Demo</Button>
          <Button Click="RobotDemo">Robot Demo</Button>
       </StackPanel>
-      <StackPanel Name="mSettings" DockPanel.Dock="Right" Background="#888" />
+      <StackPanel Name="mSettings" DockPanel.Dock="Right" Background="#AAA" />
       <Border Name="mContent" />
    </DockPanel>
 </Window>

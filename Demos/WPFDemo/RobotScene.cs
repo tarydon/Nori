@@ -2,6 +2,7 @@
 
 using System.Diagnostics;
 using System.Runtime.ExceptionServices;
+using System.Text;
 using System.Windows;
 using System.Windows.Controls;
 using Nori;
@@ -14,12 +15,15 @@ class RobotScene : Scene3 {
       Bound = new Bound3 (-1200, -1200, 0, 1200, 1200, 1500);
       var robot = new MechanismVN (mMech);
       var gripper = mGripper = new XfmVN (Matrix3.Identity, new RBRDebugVN ());
-      Root = new GroupVN ([robot, gripper]);
+      Root = new GroupVN ([robot, gripper, TraceVN.It]);
+      TraceVN.TextColor = Color4.Yellow;
       mGripper.Xfm = mTip.Xfm;
+      Lib.Tracer = TraceVN.Print;
       Redo (true);
    }
 
    public void CreateUI (UIElementCollection ui) {
+      ui.Add (new TextBlock { Text = "Forward", FontSize = 14, FontWeight = FontWeights.Bold, Margin = new Thickness (8, 8, 0, 4) });
       foreach (var m in Mech.EnumTree ()) {
          if (m.Joint == EJoint.None) continue;
          var sp = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness (4) }; ui.Add (sp);
@@ -28,28 +32,30 @@ class RobotScene : Scene3 {
          slider.ValueChanged += (s, e) => { m.JValue = e.NewValue; Redo (true); };
          sp.Children.Add (slider);
       }
+      ui.Add (new TextBlock { Text = "Inverse", FontSize = 14, FontWeight = FontWeights.Bold, Margin = new Thickness (8, 8, 0, 4) });
    }
 
    void Redo (bool forward) {
       mGripper.Xfm = mTip.Xfm;
       if (forward) { mCS = CoordSystem.World * mTip.Xfm; mCS = new (mCS.Org + new Vector3 (0, 0, -565), mCS.VecX, mCS.VecY); }
       var stances = mSolver.ComputeStances (mCS.Org, mCS.VecZ, mCS.VecX);
-      Debug.Write ("-------------------\n");
+      Lib.Trace ("-------------------");
+      var sb = new StringBuilder ();
       for (int j = 0; j < 8; j++) {
          for (int i = 0; i < 6; i++) {
             double a = stances[j][i].R2D ();
             if (i == 1) a += 90;
             if (i == 4) a -= 90;
-            Debug.Write ($"{a.Round (0),6}");
+            sb.Append ($"{a.Round (0),6}");
          }
-         Debug.Write("\n");
+         Lib.Trace (sb); sb.Clear ();
       }
-      Debug.Write ("...\n");
+      Lib.Trace ("...");
       foreach (var m in Mech.EnumTree ()) {
          if (m.Joint == EJoint.None) continue;
-         Debug.Write ($"{m.JValue.Round (0),6}");
+         sb.Append ($"{m.JValue.Round (0),6}");
       }
-      Debug.Write ("\n");
+      Lib.Trace (sb); sb.Clear ();
    }
 
    public Mechanism Mech => mMech;
