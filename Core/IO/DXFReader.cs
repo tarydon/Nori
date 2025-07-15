@@ -84,13 +84,13 @@ public partial class DXFReader {
             case "LINE":
                var line = Poly.Line (Pt0, Pt1);
                // Try to find bend info among mXData entries
-               double ba = 0, radius = 0, kfactor = 0;
-               bool hasBend = false;
+               var (ba, radius, kfactor) = (double.NaN, 0.0, 0.0);
                foreach (var s in mXData) {
-                  if (s.StartsWith ("BEND_ANGLE:")) { ba = s[11..].ToDouble ().D2R (); hasBend = true; } else if (s.StartsWith ("BEND_RADIUS:")) radius = s[12..].ToDouble ();
+                  if (s.StartsWith ("BEND_ANGLE:")) ba = s[11..].ToDouble ().D2R ();
+                  else if (s.StartsWith ("BEND_RADIUS:")) radius = s[12..].ToDouble ();
                   else if (s.StartsWith ("K_FACTOR:")) kfactor = s[9..].ToDouble ();
                }
-               if (hasBend) {
+               if (!ba.IsNaN ()) {
                   Add (new E2Bendline (mDwg, line.Pts, ba, radius, kfactor));
                   mXData.Clear ();
                } else Add (line);
