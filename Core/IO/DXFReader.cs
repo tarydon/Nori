@@ -44,6 +44,7 @@ public partial class DXFReader {
          }
       }
       mReader.Dispose ();
+      ProcessBendText ();
       return mDwg;
    }
 
@@ -164,6 +165,27 @@ public partial class DXFReader {
    static HashSet<string> mUnsupported = [];
    bool miMultiVertex;
 
+   // Convert the special text in the DXF to a bend line, unless is match with the sBend format
+   void ProcessBendText () {
+      var ents = mDwg.Ents;
+      List<Ent2> bend = [], rmv = [];
+      foreach (var e2t in ents.OfType<E2Text> ()) {
+         var match = sBend.Match (e2t.Text);
+         if (!match.Success) continue;
+         var e2p = ents.OfType<E2Poly> ().Where (a => a.Poly.IsOpen && a.Poly.Count == 1)
+                                         .MinBy (a => a.Poly.GetDistance (e2t.Pt).Dist);
+         if (e2p == null || e2p.Poly.GetDistance (e2t.Pt).Dist > 6) continue;
+         rmv.AddRange (e2t, e2p);
+         double angle = match.Groups[1].Value.ToDouble ().D2R ().Clamp (-Lib.PI, Lib.PI);
+         double radius = match.Groups[2].Value.ToDouble ();
+         double kfactor = match.Groups[3].Value.ToDouble ();
+         if (kfactor > 0.501) kfactor /= 2;
+         bend.Add (new E2Bendline (mDwg, e2p.Poly.Pts, angle, radius, kfactor));
+      }
+      foreach (var a in rmv) ents.Remove (a);
+      foreach (var b in bend) ents.Add (b);
+   }
+
    // DXF group value storage --------------------------------------------------
    // These variables store the values read in from the DXF groups
    string[] S = new string[10];
@@ -236,4 +258,7 @@ public partial class DXFReader {
          D2Set[0] = value;
       }
    }
+
+   static readonly Regex sBend = new (@"A([-+]?\d*\.?\d+)\s*R(\d*\.?\d+)\s*K(\d*\.?\d+)", RegexOptions.Compiled |
+                                      RegexOptions.IgnoreCase | RegexOptions.CultureInvariant | RegexOptions.ECMAScript);
 }
