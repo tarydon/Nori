@@ -18,12 +18,11 @@ public partial class Poly {
    /// dist1 is the distance from the corner along the lead-in segment, and dist2
    /// is the distance from the corner along the lead-out segment. 
    public Poly? Chamfer (int node, double dist1, double dist2) {
-      // Handle the special case where we are chamfering at node 0 of a 
+      if (IsCircle) return null;
+      // Handle the special case where we are chamfering at node 0 of a
       // closed Poly (by rolling the poly and making it a chamfer at N-1)
-      if (IsClosed && (node == 0 || node == Count)) {
-         var r = Roll (1);
-         return r.IsCircle ? null : r.Chamfer (Count - 1, dist1, dist2); //No chamfer for circles
-      }
+      if (IsClosed && (node == 0 || node == Count))
+         return Roll (1).Chamfer (Count - 1, dist1, dist2);
 
       // If this is not an interior node, or if one of the two segments attached
       // to the node is either an arc or too short, we return null
@@ -71,13 +70,11 @@ public partial class Poly {
    /// <param name="radius">In-fillet radius</param>
    /// <param name="left">Indicates how the in-fillet arc winds around target node</param>
    public Poly? InFillet (int node, double radius, bool left) {
-      if (radius.IsZero ()) return null;
-      // Handle the special case where we are in-filleting at node 0 of a 
+      if (radius.IsZero () || IsCircle) return null;
+      // Handle the special case where we are in-filleting at node 0 of a
       // closed Poly (by rolling the poly and making a in-fillet at N-1)
-      if (IsClosed && (node == 0 || node == Count)) {
-         var r = Roll (1);
-         return r.IsCircle ? null : r.InFillet (Count - 1, radius, left); // No Infillet for circles
-      }
+      if (IsClosed && (node == 0 || node == Count))
+         return Roll (1).InFillet (Count - 1, radius, left);
 
       // If this is not an interior node, or if one of the two segments attached
       // to the node is either an arc or too short, we return null
@@ -128,12 +125,11 @@ public partial class Poly {
    /// 'left' indicates how the step gets added w.r.t to the target node
    /// 'pos' indicates the reference position w.r.t the lead-in and lead-out segments
    public Poly? CornerStep (int node, double dist1, double dist2, ECornerOpFlags flags) {
-      // Handle the special case where we are in-filleting at node 0 of a 
+      if (IsCircle) return null;
+      // Handle the special case where we are in-filleting at node 0 of a
       // closed Poly (by rolling the poly and making a in-fillet at N-1)
-      if (IsClosed && (node == 0 || node == Count)) {
-         var r = Roll (1);
-         return r.IsCircle ? null : r.CornerStep (Count - 1, dist1, dist2, flags); // No corner step for circles
-      }
+      if (IsClosed && (node == 0 || node == Count))
+         return Roll (1).CornerStep (Count - 1, dist1, dist2, flags);
 
       // If this is not an interior node, or if one of the two segments attached
       // to the node is either an arc or too short, we return null
@@ -191,13 +187,11 @@ public partial class Poly {
    /// of those segments are curved, or too short to take a fillet, this returns null. 
    /// <param name="radius">Fillet radius</param>
    public Poly? Fillet (int node, double radius) {
-      if (radius.IsZero ()) return null;
-      // Handle the special case where we are filleting at node 0 of a 
+      if (radius.IsZero () || IsCircle) return null; // No Fillet for circles
+      // Handle the special case where we are filleting at node 0 of a
       // closed Poly (by rolling the poly and making a fillet at N-1)
-      if (IsClosed && (node == 0 | node == Count)) {
-         var r = Roll (1);
-         return r.IsCircle ? null : r.Fillet (Count - 1, radius); // No Fillet for circles
-      }
+      if (IsClosed && (node == 0 | node == Count))
+         return Roll (1).Fillet (Count - 1, radius);
 
       // If this is not an interior node, or if one of the two segments attached
       // to the node is either an arc or too short, we return null
