@@ -199,7 +199,7 @@ public class DXFWriter (Dwg2 dwg) {
       Point2 pa = eb.Pts[0], pb = eb.Pts[^1];
       if (Lib.Testing) (pa, pb) = (pa.R6 (), pb.R6 ());
       var layer = eb.Angle < 0 ? mMBend : mBend;
-      Out ($"0\nLINE\n8\n{layer?.Name}\n10\n{pa.X}\n20\n{pa.Y}\n11\n{pb.X}\n21\n{pb.Y}\n");
+      Out ($"0\nLINE\n8\n{layer!.Name}\n10\n{pa.X}\n20\n{pa.Y}\n11\n{pb.X}\n21\n{pb.Y}\n");
       Out ($"1000\nBEND_ANGLE:{eb.Angle.R2D ()}\n");
       Out ($"1000\nBEND_RADIUS:{eb.Radius}\n");
       return Out ($"1000\nK_FACTOR:{eb.KFactor} \n");
