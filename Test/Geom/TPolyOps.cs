@@ -18,6 +18,10 @@ class PolyOpsTests {
 
       poly = rect.InFillet (4, 25, left: true); poly!.Is ("M200,0V100H0V25Q25,0,-1Z");
       poly = rect.InFillet (4, 25, left: false); poly!.Is ("M200,0V100H0V25Q25,0,3Z");
+
+      Poly cir = Poly.Circle ((0, 0), 50);
+      poly = cir.InFillet (0, 10, true);
+      Assert.IsTrue (poly is null);
    }
 
    [Test (60, "Poly corner-step tests")]
