@@ -84,7 +84,7 @@ public partial class DXFReader {
             case "LINE":
                var line = Poly.Line (Pt0, Pt1);
                // Try to find bend info among mXData entries
-               var (ba, radius, kfactor) = (double.NaN, 0.0, 0.0);
+               var (ba, radius, kfactor) = (double.NaN, 0.0, 0.42);
                foreach (var s in mXData) {
                   if (s.StartsWith ("BEND_ANGLE:")) ba = s[11..].ToDouble ().D2R ();
                   else if (s.StartsWith ("BEND_RADIUS:")) radius = s[12..].ToDouble ();
