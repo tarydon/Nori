@@ -230,4 +230,10 @@ class DXFTests2 {
       DXFWriter.SaveFile (dwg, NT.TmpDXF);
       Assert.TextFilesEqual1 ("IO/DXF/Out/Layer.dxf", NT.TmpDXF);
    }
+
+   [Test (105, "Extend DXFReader to read bend line information from DXF")]
+   void Test6 () {
+      var dwg = DXFReader.FromFile (NT.File ("IO/DXF/BasicBend.dxf"));
+      Assert.IsTrue (dwg.Ents.OfType<E2Bendline> ().Count () == 3);
+   }
 }
