@@ -18,7 +18,7 @@ public partial class Poly {
    /// dist1 is the distance from the corner along the lead-in segment, and dist2
    /// is the distance from the corner along the lead-out segment. 
    public Poly? Chamfer (int node, double dist1, double dist2) {
-      // Handle the special case where we are chamfering at node 0 of a 
+      // Handle the special case where we are chamfering at node 0 of a
       // closed Poly (by rolling the poly and making it a chamfer at N-1)
       if (IsClosed && (node == 0 || node == Count)) {
          var r = Roll (1);
@@ -72,7 +72,7 @@ public partial class Poly {
    /// <param name="left">Indicates how the in-fillet arc winds around target node</param>
    public Poly? InFillet (int node, double radius, bool left) {
       if (radius.IsZero ()) return null;
-      // Handle the special case where we are in-filleting at node 0 of a 
+      // Handle the special case where we are in-filleting at node 0 of a
       // closed Poly (by rolling the poly and making a in-fillet at N-1)
       if (IsClosed && (node == 0 || node == Count)) {
          var r = Roll (1);
@@ -128,7 +128,7 @@ public partial class Poly {
    /// 'left' indicates how the step gets added w.r.t to the target node
    /// 'pos' indicates the reference position w.r.t the lead-in and lead-out segments
    public Poly? CornerStep (int node, double dist1, double dist2, ECornerOpFlags flags) {
-      // Handle the special case where we are in-filleting at node 0 of a 
+      // Handle the special case where we are in-filleting at node 0 of a
       // closed Poly (by rolling the poly and making a in-fillet at N-1)
       if (IsClosed && (node == 0 || node == Count)) {
          var r = Roll (1);
@@ -192,7 +192,7 @@ public partial class Poly {
    /// <param name="radius">Fillet radius</param>
    public Poly? Fillet (int node, double radius) {
       if (radius.IsZero ()) return null;
-      // Handle the special case where we are filleting at node 0 of a 
+      // Handle the special case where we are filleting at node 0 of a
       // closed Poly (by rolling the poly and making a fillet at N-1)
       if (IsClosed && (node == 0 | node == Count)) {
          var r = Roll (1);
