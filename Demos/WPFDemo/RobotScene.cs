@@ -1,5 +1,4 @@
 ﻿namespace WPFDemo;
-using System.Text;
 using System.Windows;
 using System.Windows.Controls;
 using Nori;
@@ -42,8 +41,6 @@ class RobotScene : Scene3 {
       AddSlider ("Rz", -180, 180, mRz, f => { mRz = f; ComputeIK (); });
       ui.Add (new TextBlock { Text = "Stances", FontSize = 14, FontWeight = FontWeights.Bold, Margin = new Thickness (8, 8, 0, 4) });
 
-      for (int i = 0; i < 8; i++) mStances.Items.Add ($"Stance {i + 1}");
-      mStances.SelectedIndex = 0;
       ui.Add (mStances);
       mStances.SelectionChanged += (s, e) => {
          if (!mComputingIK) {
