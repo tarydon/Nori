@@ -4,26 +4,25 @@
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 namespace Nori;
 
-// This file contains a number of 'operations' on Poly. 
+// This file contains a number of 'operations' on Poly.
 // All of them take a Poly and perform some operation on it, and return a modified
-// Poly (or set of Poly). 
+// Poly (or set of Poly).
 public partial class Poly {
-   // Operations ---------------------------------------------------------------   
+   // Operations ---------------------------------------------------------------
    /// <summary>Chamfers a Poly at a given node (returns null if not possible)</summary>
-   /// If the node number passed in the start or end node of an open pline, this 
+   /// If the node number passed in the start or end node of an open pline, this
    /// return null. Otherwise, this is an 'interior' node, and there are two segments
    /// touching at that node (a lead-in segment, and a lead-out segment). If either
-   /// of those segments are curved, or too short to take a chamfer, this returns 
-   /// null. 
+   /// of those segments are curved, or too short to take a chamfer, this returns
+   /// null.
    /// dist1 is the distance from the corner along the lead-in segment, and dist2
-   /// is the distance from the corner along the lead-out segment. 
+   /// is the distance from the corner along the lead-out segment.
    public Poly? Chamfer (int node, double dist1, double dist2) {
+      if (IsCircle) return null; // No chamfer for circles
       // Handle the special case where we are chamfering at node 0 of a
       // closed Poly (by rolling the poly and making it a chamfer at N-1)
-      if (IsClosed && (node == 0 || node == Count)) {
-         var r = Roll (1);
-         return r.IsCircle ? null : r.Chamfer (Count - 1, dist1, dist2); //No chamfer for circles
-      }
+      if (IsClosed && (node == 0 || node == Count))
+         return Roll (1).Chamfer (Count - 1, dist1, dist2);
 
       // If this is not an interior node, or if one of the two segments attached
       // to the node is either an arc or too short, we return null
@@ -50,12 +49,12 @@ public partial class Poly {
             var extra = mExtra[i];
             if ((extra.Flags & EFlags.Arc) != 0) pb.Arc (pt, extra.Center, extra.Flags);
             else pb.Line (pt);
-         } else 
+         } else
             pb.Line (pt);
 
          // If we are heading towards the target node, add an new node for the beginning
          // of the chamfer, by moving backwards by dist1 along the lead-in segment slope
-         if (i == node - 1) 
+         if (i == node - 1)
             pb.Line (s2.A.Polar (-dist1, s1.Slope));
       }
       // Done, close the poly if needed and return it
@@ -64,20 +63,18 @@ public partial class Poly {
    }
 
    /// <summary>In-fillets a Poly at a given node (returns null if not possible)</summary>
-   /// If the node number passed in the start or end node of an open pline, this 
+   /// If the node number passed in the start or end node of an open pline, this
    /// return null. Otherwise, this is an 'interior' node, and there are two segments
    /// touching at that node (a lead-in segment, and a lead-out segment). If either
-   /// of those segments are curved, or too short to take a in-fillet, this returns null. 
+   /// of those segments are curved, or too short to take a in-fillet, this returns null.
    /// <param name="radius">In-fillet radius</param>
    /// <param name="left">Indicates how the in-fillet arc winds around target node</param>
    public Poly? InFillet (int node, double radius, bool left) {
-      if (radius.IsZero ()) return null;
+      if (IsCircle || radius.IsZero ()) return null; // No Infillet for circles
       // Handle the special case where we are in-filleting at node 0 of a
       // closed Poly (by rolling the poly and making a in-fillet at N-1)
-      if (IsClosed && (node == 0 || node == Count)) {
-         var r = Roll (1);
-         return r.IsCircle ? null : r.InFillet (Count - 1, radius, left); // No Infillet for circles
-      }
+      if (IsClosed && (node == 0 || node == Count))
+         return Roll (1).InFillet (Count - 1, radius, left);
 
       // If this is not an interior node, or if one of the two segments attached
       // to the node is either an arc or too short, we return null
@@ -118,22 +115,21 @@ public partial class Poly {
    }
 
    /// <summary>Adds a step at a given node (returns null if not possible)</summary>
-   /// If the node number passed in the start or end node of an open pline, this 
+   /// If the node number passed in the start or end node of an open pline, this
    /// return null. Otherwise, this is an 'interior' node, and there are two segments
    /// touching at that node (a lead-in segment, and a lead-out segment). If either
-   /// of those segments are curved, or too short to make a step, this returns 
-   /// null. 
+   /// of those segments are curved, or too short to make a step, this returns
+   /// null.
    /// dist1 is the distance from the corner along the lead-in segment, and dist2
    /// is the distance from the corner along the lead-out segment.
    /// 'left' indicates how the step gets added w.r.t to the target node
    /// 'pos' indicates the reference position w.r.t the lead-in and lead-out segments
    public Poly? CornerStep (int node, double dist1, double dist2, ECornerOpFlags flags) {
+      if (IsCircle) return null; // No Corner-step for circles.
       // Handle the special case where we are in-filleting at node 0 of a
       // closed Poly (by rolling the poly and making a in-fillet at N-1)
-      if (IsClosed && (node == 0 || node == Count)) {
-         var r = Roll (1);
-         return r.IsCircle ? null : r.CornerStep (Count - 1, dist1, dist2, flags); // No corner step for circles
-      }
+      if (IsClosed && (node == 0 || node == Count))
+         return Roll (1).CornerStep (Count - 1, dist1, dist2, flags);
 
       // If this is not an interior node, or if one of the two segments attached
       // to the node is either an arc or too short, we return null
@@ -185,19 +181,17 @@ public partial class Poly {
    }
 
    /// <summary>Add a fillet at a given node (returns null if not possible)</summary>
-   /// If the node number passed in the start or end node of an open pline, this 
+   /// If the node number passed in the start or end node of an open pline, this
    /// return null. Otherwise, this is an 'interior' node, and there are two segments
    /// touching at that node (a lead-in segment, and a lead-out segment). If either
-   /// of those segments are curved, or too short to take a fillet, this returns null. 
+   /// of those segments are curved, or too short to take a fillet, this returns null.
    /// <param name="radius">Fillet radius</param>
    public Poly? Fillet (int node, double radius) {
-      if (radius.IsZero ()) return null;
+      if (IsCircle || radius.IsZero ()) return null; // No Fillet for circles
       // Handle the special case where we are filleting at node 0 of a
       // closed Poly (by rolling the poly and making a fillet at N-1)
-      if (IsClosed && (node == 0 | node == Count)) {
-         var r = Roll (1);
-         return r.IsCircle ? null : r.Fillet (Count - 1, radius); // No Fillet for circles
-      }
+      if (IsClosed && (node == 0 | node == Count))
+         return Roll (1).Fillet (Count - 1, radius);
 
       // If this is not an interior node, or if one of the two segments attached
       // to the node is either an arc or too short, we return null
@@ -255,12 +249,12 @@ public partial class Poly {
    }
 
    /// <summary>'Rolls' a closed Poly so that node N becomes the starting node</summary>
-   /// This returns a new Poly that looks identical, but whose start point is different. 
-   /// It is mainly used to simplify some routines (like Chamfer) so they never have to 
+   /// This returns a new Poly that looks identical, but whose start point is different.
+   /// It is mainly used to simplify some routines (like Chamfer) so they never have to
    /// deal with the case where the Chamfer takes places at node 0 (which is both the start
-   /// and end of the Poly). Instead of having to treat that as a special case, we just 
+   /// and end of the Poly). Instead of having to treat that as a special case, we just
    /// Roll the Poly and now the node for chamfering becomes an interior node, which simplifies
-   /// the logic. 
+   /// the logic.
    public Poly Roll (int n) {
       if (IsCircle) return this;
       if (!IsClosed) throw new InvalidOperationException ("Poly.Roll() works only with closed plines");

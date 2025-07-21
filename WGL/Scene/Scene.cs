@@ -148,7 +148,10 @@ public abstract class Scene3 : Scene {
    /// <summary>The rotation angle viewpoint</summary>
    public (double XRot, double ZRot) Viewpoint {
       get => mViewpoint;
-      set { mViewpoint = value; XfmChanged (); }
+      set {
+         mViewpoint = (Lib.NormalizeAngle (value.XRot.D2R ()).R2D (), Lib.NormalizeAngle (value.ZRot.D2R ()).R2D ());
+         XfmChanged ();
+      }
    }
    (double, double) mViewpoint = (-60, 135);
 
