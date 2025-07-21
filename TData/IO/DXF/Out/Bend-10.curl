@@ -1,0 +1,1402 @@
+(Dwg2){
+  Layers:[ { Name:0 Color:#FFFFFFFF Linetype:Continuous Visible:True } ]
+  Styles:[
+    { Name:Standard Font:txt XScale:1 }
+    { Name:SLDTEXTSTYLE0 Font:TXT XScale:0.75 }
+    { Name:SLDTEXTSTYLE1 Font:TXT XScale:0.6864493306 }
+    { Name:SLDTEXTSTYLE2 Font:TXT XScale:0.6875 }
+    { Name:SLDTEXTSTYLE3 Font:TXT XScale:0.65625 }
+  ]
+  Blocks:[
+    {
+      Name:SW_NOTE_0
+      Base:0,0
+      Ents:[
+        (E2Text){
+          Layer:0
+          Color:#FF000000
+          Pt:0,0.076126
+          Text:"UNLESS OTHERWISE SPECIFIED:"
+          Style:SLDTEXTSTYLE0
+          Alignment:TopLeft
+          Height:0.0590551181
+          XScale:0.75
+        }
+        (E2Text){
+          Layer:0
+          Color:#FF000000
+          Pt:0,-0.022299
+          Text:"DIMENSIONS ARE IN MILLIMETERS"
+          Style:SLDTEXTSTYLE0
+          Alignment:TopLeft
+          Height:0.0590551181
+          XScale:0.75
+        }
+        (E2Text){
+          Layer:0
+          Color:#FF000000
+          Pt:0,-0.120724
+          Text:"SURFACE FINISH:"
+          Style:SLDTEXTSTYLE0
+          Alignment:TopLeft
+          Height:0.0590551181
+          XScale:0.75
+        }
+        (E2Text){
+          Layer:0
+          Color:#FF000000
+          Pt:0,-0.21915
+          Text:"TOLERANCES:"
+          Style:SLDTEXTSTYLE0
+          Alignment:TopLeft
+          Height:0.0590551181
+          XScale:0.75
+        }
+        (E2Text){
+          Layer:0
+          Color:#FF000000
+          Pt:0.066437,-0.317575
+          Text:"LINEAR:"
+          Style:SLDTEXTSTYLE0
+          Alignment:TopLeft
+          Height:0.0590551181
+          XScale:0.75
+        }
+        (E2Text){
+          Layer:0
+          Color:#FF000000
+          Pt:0.066437,-0.416
+          Text:"ANGULAR:"
+          Style:SLDTEXTSTYLE0
+          Alignment:TopLeft
+          Height:0.0590551181
+          XScale:0.75
+        }
+      ]
+    }
+    {
+      Name:SW_NOTE_1
+      Base:0,0
+      Ents:[
+        (E2Text){
+          Layer:0
+          Color:#FF000000
+          Pt:0,0.076126
+          Text:"DEBURR AND"
+          Style:SLDTEXTSTYLE0
+          Alignment:TopLeft
+          Height:0.0590551181
+          XScale:0.75
+        }
+        (E2Text){
+          Layer:0
+          Color:#FF000000
+          Pt:0,-0.022299
+          Text:"BREAK SHARP"
+          Style:SLDTEXTSTYLE0
+          Alignment:TopLeft
+          Height:0.0590551181
+          XScale:0.75
+        }
+        (E2Text){
+          Layer:0
+          Color:#FF000000
+          Pt:0,-0.120724
+          Text:EDGES
+          Style:SLDTEXTSTYLE0
+          Alignment:TopLeft
+          Height:0.0590551181
+          XScale:0.75
+        }
+      ]
+    }
+    {
+      Name:SW_CENTERMARKSYMBOL_0
+      Base:0,0
+      Ents:[
+        (E2Poly){ Layer:0 Color:#FF000000 Poly:M0,0V0.19685 }
+        (E2Poly){ Layer:0 Color:#FF000000 Poly:M0,0H-0.19685 }
+        (E2Poly){ Layer:0 Color:#FF000000 Poly:M0,0V-0.19685 }
+        (E2Poly){ Layer:0 Color:#FF000000 Poly:M0,0H0.19685 }
+        (E2Poly){ Layer:0 Color:#FF000000 Poly:M0,0.393701V0.531496 }
+        (E2Poly){ Layer:0 Color:#FF000000 Poly:M-0.393701,0H-0.531496 }
+        (E2Poly){ Layer:0 Color:#FF000000 Poly:M0,-0.393701V-0.531496 }
+        (E2Poly){ Layer:0 Color:#FF000000 Poly:M0.393701,0H0.531496 }
+      ]
+    }
+    {
+      Name:SW_CENTERMARKSYMBOL_1
+      Base:0,0
+      Ents:[
+        (E2Poly){ Layer:0 Color:#FF000000 Poly:M0,0V0.19685 }
+        (E2Poly){ Layer:0 Color:#FF000000 Poly:M0,0H-0.19685 }
+        (E2Poly){ Layer:0 Color:#FF000000 Poly:M0,0V-0.19685 }
+        (E2Poly){ Layer:0 Color:#FF000000 Poly:M0,0H0.19685 }
+        (E2Poly){ Layer:0 Color:#FF000000 Poly:M0,0.393701V0.531496 }
+        (E2Poly){ Layer:0 Color:#FF000000 Poly:M-0.393701,0H-0.531496 }
+        (E2Poly){ Layer:0 Color:#FF000000 Poly:M0,-0.393701V-0.531496 }
+        (E2Poly){ Layer:0 Color:#FF000000 Poly:M0.393701,0H0.531496 }
+      ]
+    }
+    {
+      Name:SW_CENTERMARKSYMBOL_2
+      Base:0,0
+      Ents:[
+        (E2Poly){ Layer:0 Color:#FF000000 Poly:M0,0V0.19685 }
+        (E2Poly){ Layer:0 Color:#FF000000 Poly:M0,0H-0.19685 }
+        (E2Poly){ Layer:0 Color:#FF000000 Poly:M0,0V-0.19685 }
+        (E2Poly){ Layer:0 Color:#FF000000 Poly:M0,0H0.19685 }
+        (E2Poly){ Layer:0 Color:#FF000000 Poly:M0,0.393701V0.531496 }
+        (E2Poly){ Layer:0 Color:#FF000000 Poly:M-0.393701,0H-0.531496 }
+        (E2Poly){ Layer:0 Color:#FF000000 Poly:M0,-0.393701V-0.531496 }
+        (E2Poly){ Layer:0 Color:#FF000000 Poly:M0.393701,0H0.531496 }
+      ]
+    }
+    {
+      Name:SW_CENTERMARKSYMBOL_3
+      Base:0,0
+      Ents:[
+        (E2Poly){ Layer:0 Color:#FF000000 Poly:M0,0V0.19685 }
+        (E2Poly){ Layer:0 Color:#FF000000 Poly:M0,0H-0.19685 }
+        (E2Poly){ Layer:0 Color:#FF000000 Poly:M0,0V-0.19685 }
+        (E2Poly){ Layer:0 Color:#FF000000 Poly:M0,0H0.19685 }
+        (E2Poly){ Layer:0 Color:#FF000000 Poly:M0,0.393701V0.531496 }
+        (E2Poly){ Layer:0 Color:#FF000000 Poly:M-0.393701,0H-0.531496 }
+        (E2Poly){ Layer:0 Color:#FF000000 Poly:M0,-0.393701V-0.531496 }
+        (E2Poly){ Layer:0 Color:#FF000000 Poly:M0.393701,0H0.531496 }
+      ]
+    }
+  ]
+  Ents:[
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M39.330709,0.561024H46.417323 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M46.417323,1.899606H39.330709 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M39.330709,2.568898H46.417323 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M40.393345,1.899606V0.393701 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M43.220472,1.230315H39.330709 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M43.220472,1.397638H39.330709 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M43.220472,1.564961H39.330709 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M43.220472,1.732283H39.330709 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M41.480315,0.393701V1.899606 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M39.330709,2.568898V0.393701 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M39.637795,1.899606V0.393701 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M40.661417,1.899606V2.568898 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M41.078698,1.899606V0.393701 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M41.889764,1.230315V1.899606 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M41.480315,0.728346H39.330709 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M42.503937,2.568898V1.062992 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M41.480315,0.895666H39.330709 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M41.480315,1.062992H39.330709 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M41.480315,1.062992H46.417323 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M43.220472,2.568898V0.393701 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M44.96063,0.393701V0.561024 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M45.267717,2.317913V2.568898 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M45.905512,0.561024V1.062992 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M46.417323,2.317913H43.220472 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M46.417323,0.728346H45.905512 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M0.787402,0.393701V32.716535 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M0.787402,32.716535H46.417323 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M46.417323,32.716535V0.393701 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M46.417323,0.393701H0.787402 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M0.590551,0.19685V32.913386 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M0.590551,32.913386H46.614173 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M46.614173,32.913386V0.19685 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M46.614173,0.19685H0.590551 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M0.590551,16.555118H0.984252 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M23.602362,32.913386V32.519685 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M46.614173,16.555118H46.220472 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M23.602362,0.19685V0.590551 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M0.787402,2.775591H0.590551 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M46.417323,2.775591H46.614173 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M0.787402,4.744094H0.590551 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M46.417323,4.744094H46.614173 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M0.787402,6.712598H0.590551 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M46.417323,6.712598H46.614173 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M0.787402,8.681102H0.590551 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M46.417323,8.681102H46.614173 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M0.787402,10.649606H0.590551 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M46.417323,10.649606H46.614173 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M0.787402,12.61811H0.590551 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M46.417323,12.61811H46.614173 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M0.787402,14.586614H0.590551 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M46.417323,14.586614H46.614173 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M0.787402,16.555118H0.590551 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M46.417323,16.555118H46.614173 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M0.787402,18.523622H0.590551 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M46.417323,18.523622H46.614173 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M0.787402,20.492126H0.590551 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M46.417323,20.492126H46.614173 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M0.787402,22.46063H0.590551 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M46.417323,22.46063H46.614173 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M0.787402,24.429134H0.590551 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M46.417323,24.429134H46.614173 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M0.787402,26.397638H0.590551 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M46.417323,26.397638H46.614173 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M0.787402,28.366142H0.590551 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M46.417323,28.366142H46.614173 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M0.787402,30.334646H0.590551 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M46.417323,30.334646H46.614173 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M1.948819,32.716535V32.913386 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M1.948819,0.393701V0.19685 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M3.917323,32.716535V32.913386 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M3.917323,0.393701V0.19685 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M5.885827,32.716535V32.913386 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M5.885827,0.393701V0.19685 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M7.854331,32.716535V32.913386 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M7.854331,0.393701V0.19685 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M9.822835,32.716535V32.913386 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M9.822835,0.393701V0.19685 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M11.791339,32.716535V32.913386 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M11.791339,0.393701V0.19685 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M13.759843,32.716535V32.913386 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M13.759843,0.393701V0.19685 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M15.728346,32.716535V32.913386 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M15.728346,0.393701V0.19685 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M17.69685,32.716535V32.913386 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M17.69685,0.393701V0.19685 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M19.665354,32.716535V32.913386 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M19.665354,0.393701V0.19685 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M21.633858,32.716535V32.913386 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M21.633858,0.393701V0.19685 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M23.602362,32.716535V32.913386 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M23.602362,0.393701V0.19685 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M25.570866,32.716535V32.913386 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M25.570866,0.393701V0.19685 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M27.53937,32.716535V32.913386 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M27.53937,0.393701V0.19685 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M29.507874,32.716535V32.913386 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M29.507874,0.393701V0.19685 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M31.476378,32.716535V32.913386 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M31.476378,0.393701V0.19685 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M33.444882,32.716535V32.913386 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M33.444882,0.393701V0.19685 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M35.413386,32.716535V32.913386 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M35.413386,0.393701V0.19685 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M37.38189,32.716535V32.913386 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M37.38189,0.393701V0.19685 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M39.350394,32.716535V32.913386 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M39.350394,0.393701V0.19685 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M41.318898,32.716535V32.913386 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M41.318898,0.393701V0.19685 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M43.287402,32.716535V32.913386 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M43.287402,0.393701V0.19685 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M45.255906,32.716535V32.913386 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M45.255906,0.393701V0.19685 }
+    (E2Text){
+      Layer:0
+      Color:#FFFFFFFF
+      Pt:0.682665,1.683234
+      Text:A
+      Style:SLDTEXTSTYLE0
+      Alignment:TopCenter
+      Height:0.15625
+      XScale:0.75
+    }
+    (E2Text){
+      Layer:0
+      Color:#FFFFFFFF
+      Pt:46.509437,1.683234
+      Text:A
+      Style:SLDTEXTSTYLE0
+      Alignment:TopCenter
+      Height:0.15625
+      XScale:0.75
+    }
+    (E2Text){
+      Layer:0
+      Color:#FFFFFFFF
+      Pt:0.687819,3.855655
+      Text:B
+      Style:SLDTEXTSTYLE0
+      Alignment:TopCenter
+      Height:0.15625
+      XScale:0.75
+    }
+    (E2Text){
+      Layer:0
+      Color:#FFFFFFFF
+      Pt:46.514591,3.855655
+      Text:B
+      Style:SLDTEXTSTYLE0
+      Alignment:TopCenter
+      Height:0.15625
+      XScale:0.75
+    }
+    (E2Text){
+      Layer:0
+      Color:#FFFFFFFF
+      Pt:0.687349,5.826935
+      Text:C
+      Style:SLDTEXTSTYLE0
+      Alignment:TopCenter
+      Height:0.15625
+      XScale:0.75
+    }
+    (E2Text){
+      Layer:0
+      Color:#FFFFFFFF
+      Pt:46.51412,5.826935
+      Text:C
+      Style:SLDTEXTSTYLE0
+      Alignment:TopCenter
+      Height:0.15625
+      XScale:0.75
+    }
+    (E2Text){
+      Layer:0
+      Color:#FFFFFFFF
+      Pt:0.687114,7.792663
+      Text:D
+      Style:SLDTEXTSTYLE0
+      Alignment:TopCenter
+      Height:0.15625
+      XScale:0.75
+    }
+    (E2Text){
+      Layer:0
+      Color:#FFFFFFFF
+      Pt:46.513885,7.792663
+      Text:D
+      Style:SLDTEXTSTYLE0
+      Alignment:TopCenter
+      Height:0.15625
+      XScale:0.75
+    }
+    (E2Text){
+      Layer:0
+      Color:#FFFFFFFF
+      Pt:0.689284,9.763943
+      Text:E
+      Style:SLDTEXTSTYLE0
+      Alignment:TopCenter
+      Height:0.15625
+      XScale:0.75
+    }
+    (E2Text){
+      Layer:0
+      Color:#FFFFFFFF
+      Pt:46.516055,9.763943
+      Text:E
+      Style:SLDTEXTSTYLE0
+      Alignment:TopCenter
+      Height:0.15625
+      XScale:0.75
+    }
+    (E2Text){
+      Layer:0
+      Color:#FFFFFFFF
+      Pt:0.687313,11.72967
+      Text:F
+      Style:SLDTEXTSTYLE0
+      Alignment:TopCenter
+      Height:0.15625
+      XScale:0.75
+    }
+    (E2Text){
+      Layer:0
+      Color:#FFFFFFFF
+      Pt:46.514084,11.72967
+      Text:F
+      Style:SLDTEXTSTYLE0
+      Alignment:TopCenter
+      Height:0.15625
+      XScale:0.75
+    }
+    (E2Text){
+      Layer:0
+      Color:#FFFFFFFF
+      Pt:0.688452,13.700951
+      Text:G
+      Style:SLDTEXTSTYLE0
+      Alignment:TopCenter
+      Height:0.15625
+      XScale:0.75
+    }
+    (E2Text){
+      Layer:0
+      Color:#FFFFFFFF
+      Pt:46.515224,13.700951
+      Text:G
+      Style:SLDTEXTSTYLE0
+      Alignment:TopCenter
+      Height:0.15625
+      XScale:0.75
+    }
+    (E2Text){
+      Layer:0
+      Color:#FFFFFFFF
+      Pt:0.688597,15.666678
+      Text:H
+      Style:SLDTEXTSTYLE0
+      Alignment:TopCenter
+      Height:0.15625
+      XScale:0.75
+    }
+    (E2Text){
+      Layer:0
+      Color:#FFFFFFFF
+      Pt:46.515368,15.666678
+      Text:H
+      Style:SLDTEXTSTYLE0
+      Alignment:TopCenter
+      Height:0.15625
+      XScale:0.75
+    }
+    (E2Text){
+      Layer:0
+      Color:#FFFFFFFF
+      Pt:0.687602,17.637959
+      Text:J
+      Style:SLDTEXTSTYLE0
+      Alignment:TopCenter
+      Height:0.15625
+      XScale:0.75
+    }
+    (E2Text){
+      Layer:0
+      Color:#FFFFFFFF
+      Pt:46.514374,17.637959
+      Text:J
+      Style:SLDTEXTSTYLE0
+      Alignment:TopCenter
+      Height:0.15625
+      XScale:0.75
+    }
+    (E2Text){
+      Layer:0
+      Color:#FFFFFFFF
+      Pt:0.688524,19.603686
+      Text:K
+      Style:SLDTEXTSTYLE0
+      Alignment:TopCenter
+      Height:0.15625
+      XScale:0.75
+    }
+    (E2Text){
+      Layer:0
+      Color:#FFFFFFFF
+      Pt:46.515296,19.603686
+      Text:K
+      Style:SLDTEXTSTYLE0
+      Alignment:TopCenter
+      Height:0.15625
+      XScale:0.75
+    }
+    (E2Text){
+      Layer:0
+      Color:#FFFFFFFF
+      Pt:0.687186,21.574967
+      Text:L
+      Style:SLDTEXTSTYLE0
+      Alignment:TopCenter
+      Height:0.15625
+      XScale:0.75
+    }
+    (E2Text){
+      Layer:0
+      Color:#FFFFFFFF
+      Pt:46.513958,21.574967
+      Text:L
+      Style:SLDTEXTSTYLE0
+      Alignment:TopCenter
+      Height:0.15625
+      XScale:0.75
+    }
+    (E2Text){
+      Layer:0
+      Color:#FFFFFFFF
+      Pt:0.683533,23.540694
+      Text:M
+      Style:SLDTEXTSTYLE0
+      Alignment:TopCenter
+      Height:0.15625
+      XScale:0.75
+    }
+    (E2Text){
+      Layer:0
+      Color:#FFFFFFFF
+      Pt:46.510305,23.540694
+      Text:M
+      Style:SLDTEXTSTYLE0
+      Alignment:TopCenter
+      Height:0.15625
+      XScale:0.75
+    }
+    (E2Text){
+      Layer:0
+      Color:#FFFFFFFF
+      Pt:0.687548,25.511974
+      Text:N
+      Style:SLDTEXTSTYLE0
+      Alignment:TopCenter
+      Height:0.15625
+      XScale:0.75
+    }
+    (E2Text){
+      Layer:0
+      Color:#FFFFFFFF
+      Pt:46.514319,25.511974
+      Text:N
+      Style:SLDTEXTSTYLE0
+      Alignment:TopCenter
+      Height:0.15625
+      XScale:0.75
+    }
+    (E2Text){
+      Layer:0
+      Color:#FFFFFFFF
+      Pt:0.68838,27.477702
+      Text:P
+      Style:SLDTEXTSTYLE0
+      Alignment:TopCenter
+      Height:0.15625
+      XScale:0.75
+    }
+    (E2Text){
+      Layer:0
+      Color:#FFFFFFFF
+      Pt:46.515151,27.477702
+      Text:P
+      Style:SLDTEXTSTYLE0
+      Alignment:TopCenter
+      Height:0.15625
+      XScale:0.75
+    }
+    (E2Text){
+      Layer:0
+      Color:#FFFFFFFF
+      Pt:0.686788,29.448982
+      Text:R
+      Style:SLDTEXTSTYLE0
+      Alignment:TopCenter
+      Height:0.15625
+      XScale:0.75
+    }
+    (E2Text){
+      Layer:0
+      Color:#FFFFFFFF
+      Pt:46.51356,29.448982
+      Text:R
+      Style:SLDTEXTSTYLE0
+      Alignment:TopCenter
+      Height:0.15625
+      XScale:0.75
+    }
+    (E2Text){
+      Layer:0
+      Color:#FFFFFFFF
+      Pt:0.688506,31.624179
+      Text:T
+      Style:SLDTEXTSTYLE0
+      Alignment:TopCenter
+      Height:0.15625
+      XScale:0.75
+    }
+    (E2Text){
+      Layer:0
+      Color:#FFFFFFFF
+      Pt:46.515278,31.624179
+      Text:T
+      Style:SLDTEXTSTYLE0
+      Alignment:TopCenter
+      Height:0.15625
+      XScale:0.75
+    }
+    (E2Text){
+      Layer:0
+      Color:#FFFFFFFF
+      Pt:1.364964,0.391088
+      Text:24
+      Style:SLDTEXTSTYLE0
+      Alignment:TopCenter
+      Height:0.15625
+      XScale:0.75
+    }
+    (E2Text){
+      Layer:0
+      Color:#FFFFFFFF
+      Pt:1.364964,32.913549
+      Text:24
+      Style:SLDTEXTSTYLE0
+      Alignment:TopCenter
+      Height:0.15625
+      XScale:0.75
+    }
+    (E2Text){
+      Layer:0
+      Color:#FFFFFFFF
+      Pt:2.929924,0.391088
+      Text:23
+      Style:SLDTEXTSTYLE0
+      Alignment:TopCenter
+      Height:0.15625
+      XScale:0.75
+    }
+    (E2Text){
+      Layer:0
+      Color:#FFFFFFFF
+      Pt:2.929924,32.913549
+      Text:23
+      Style:SLDTEXTSTYLE0
+      Alignment:TopCenter
+      Height:0.15625
+      XScale:0.75
+    }
+    (E2Text){
+      Layer:0
+      Color:#FFFFFFFF
+      Pt:4.898428,0.391088
+      Text:22
+      Style:SLDTEXTSTYLE0
+      Alignment:TopCenter
+      Height:0.15625
+      XScale:0.75
+    }
+    (E2Text){
+      Layer:0
+      Color:#FFFFFFFF
+      Pt:4.898428,32.913549
+      Text:22
+      Style:SLDTEXTSTYLE0
+      Alignment:TopCenter
+      Height:0.15625
+      XScale:0.75
+    }
+    (E2Text){
+      Layer:0
+      Color:#FFFFFFFF
+      Pt:6.866932,0.391088
+      Text:21
+      Style:SLDTEXTSTYLE0
+      Alignment:TopCenter
+      Height:0.15625
+      XScale:0.75
+    }
+    (E2Text){
+      Layer:0
+      Color:#FFFFFFFF
+      Pt:6.866932,32.913549
+      Text:21
+      Style:SLDTEXTSTYLE0
+      Alignment:TopCenter
+      Height:0.15625
+      XScale:0.75
+    }
+    (E2Text){
+      Layer:0
+      Color:#FFFFFFFF
+      Pt:8.835436,0.391088
+      Text:20
+      Style:SLDTEXTSTYLE0
+      Alignment:TopCenter
+      Height:0.15625
+      XScale:0.75
+    }
+    (E2Text){
+      Layer:0
+      Color:#FFFFFFFF
+      Pt:8.835436,32.913549
+      Text:20
+      Style:SLDTEXTSTYLE0
+      Alignment:TopCenter
+      Height:0.15625
+      XScale:0.75
+    }
+    (E2Text){
+      Layer:0
+      Color:#FFFFFFFF
+      Pt:10.80394,0.391088
+      Text:19
+      Style:SLDTEXTSTYLE0
+      Alignment:TopCenter
+      Height:0.15625
+      XScale:0.75
+    }
+    (E2Text){
+      Layer:0
+      Color:#FFFFFFFF
+      Pt:10.80394,32.913549
+      Text:19
+      Style:SLDTEXTSTYLE0
+      Alignment:TopCenter
+      Height:0.15625
+      XScale:0.75
+    }
+    (E2Text){
+      Layer:0
+      Color:#FFFFFFFF
+      Pt:12.772444,0.391088
+      Text:18
+      Style:SLDTEXTSTYLE0
+      Alignment:TopCenter
+      Height:0.15625
+      XScale:0.75
+    }
+    (E2Text){
+      Layer:0
+      Color:#FFFFFFFF
+      Pt:12.772444,32.913549
+      Text:18
+      Style:SLDTEXTSTYLE0
+      Alignment:TopCenter
+      Height:0.15625
+      XScale:0.75
+    }
+    (E2Text){
+      Layer:0
+      Color:#FFFFFFFF
+      Pt:14.740948,0.391088
+      Text:17
+      Style:SLDTEXTSTYLE0
+      Alignment:TopCenter
+      Height:0.15625
+      XScale:0.75
+    }
+    (E2Text){
+      Layer:0
+      Color:#FFFFFFFF
+      Pt:14.740948,32.913549
+      Text:17
+      Style:SLDTEXTSTYLE0
+      Alignment:TopCenter
+      Height:0.15625
+      XScale:0.75
+    }
+    (E2Text){
+      Layer:0
+      Color:#FFFFFFFF
+      Pt:16.709452,0.391088
+      Text:16
+      Style:SLDTEXTSTYLE0
+      Alignment:TopCenter
+      Height:0.15625
+      XScale:0.75
+    }
+    (E2Text){
+      Layer:0
+      Color:#FFFFFFFF
+      Pt:16.709452,32.913549
+      Text:16
+      Style:SLDTEXTSTYLE0
+      Alignment:TopCenter
+      Height:0.15625
+      XScale:0.75
+    }
+    (E2Text){
+      Layer:0
+      Color:#FFFFFFFF
+      Pt:18.677956,0.391088
+      Text:15
+      Style:SLDTEXTSTYLE0
+      Alignment:TopCenter
+      Height:0.15625
+      XScale:0.75
+    }
+    (E2Text){
+      Layer:0
+      Color:#FFFFFFFF
+      Pt:18.677956,32.913549
+      Text:15
+      Style:SLDTEXTSTYLE0
+      Alignment:TopCenter
+      Height:0.15625
+      XScale:0.75
+    }
+    (E2Text){
+      Layer:0
+      Color:#FFFFFFFF
+      Pt:20.64646,0.391088
+      Text:14
+      Style:SLDTEXTSTYLE0
+      Alignment:TopCenter
+      Height:0.15625
+      XScale:0.75
+    }
+    (E2Text){
+      Layer:0
+      Color:#FFFFFFFF
+      Pt:20.64646,32.913549
+      Text:14
+      Style:SLDTEXTSTYLE0
+      Alignment:TopCenter
+      Height:0.15625
+      XScale:0.75
+    }
+    (E2Text){
+      Layer:0
+      Color:#FFFFFFFF
+      Pt:22.614964,0.391088
+      Text:13
+      Style:SLDTEXTSTYLE0
+      Alignment:TopCenter
+      Height:0.15625
+      XScale:0.75
+    }
+    (E2Text){
+      Layer:0
+      Color:#FFFFFFFF
+      Pt:22.614964,32.913549
+      Text:13
+      Style:SLDTEXTSTYLE0
+      Alignment:TopCenter
+      Height:0.15625
+      XScale:0.75
+    }
+    (E2Text){
+      Layer:0
+      Color:#FFFFFFFF
+      Pt:24.583467,0.391088
+      Text:12
+      Style:SLDTEXTSTYLE0
+      Alignment:TopCenter
+      Height:0.15625
+      XScale:0.75
+    }
+    (E2Text){
+      Layer:0
+      Color:#FFFFFFFF
+      Pt:24.583467,32.913549
+      Text:12
+      Style:SLDTEXTSTYLE0
+      Alignment:TopCenter
+      Height:0.15625
+      XScale:0.75
+    }
+    (E2Text){
+      Layer:0
+      Color:#FFFFFFFF
+      Pt:26.551971,0.391088
+      Text:11
+      Style:SLDTEXTSTYLE0
+      Alignment:TopCenter
+      Height:0.15625
+      XScale:0.75
+    }
+    (E2Text){
+      Layer:0
+      Color:#FFFFFFFF
+      Pt:26.551971,32.913549
+      Text:11
+      Style:SLDTEXTSTYLE0
+      Alignment:TopCenter
+      Height:0.15625
+      XScale:0.75
+    }
+    (E2Text){
+      Layer:0
+      Color:#FFFFFFFF
+      Pt:28.520475,0.391088
+      Text:10
+      Style:SLDTEXTSTYLE0
+      Alignment:TopCenter
+      Height:0.15625
+      XScale:0.75
+    }
+    (E2Text){
+      Layer:0
+      Color:#FFFFFFFF
+      Pt:28.520475,32.913549
+      Text:10
+      Style:SLDTEXTSTYLE0
+      Alignment:TopCenter
+      Height:0.15625
+      XScale:0.75
+    }
+    (E2Text){
+      Layer:0
+      Color:#FFFFFFFF
+      Pt:30.490553,0.391088
+      Text:9
+      Style:SLDTEXTSTYLE0
+      Alignment:TopCenter
+      Height:0.15625
+      XScale:0.75
+    }
+    (E2Text){
+      Layer:0
+      Color:#FFFFFFFF
+      Pt:30.490553,32.913549
+      Text:9
+      Style:SLDTEXTSTYLE0
+      Alignment:TopCenter
+      Height:0.15625
+      XScale:0.75
+    }
+    (E2Text){
+      Layer:0
+      Color:#FFFFFFFF
+      Pt:32.459057,0.391088
+      Text:8
+      Style:SLDTEXTSTYLE0
+      Alignment:TopCenter
+      Height:0.15625
+      XScale:0.75
+    }
+    (E2Text){
+      Layer:0
+      Color:#FFFFFFFF
+      Pt:32.459057,32.913549
+      Text:8
+      Style:SLDTEXTSTYLE0
+      Alignment:TopCenter
+      Height:0.15625
+      XScale:0.75
+    }
+    (E2Text){
+      Layer:0
+      Color:#FFFFFFFF
+      Pt:34.427561,0.391088
+      Text:7
+      Style:SLDTEXTSTYLE0
+      Alignment:TopCenter
+      Height:0.15625
+      XScale:0.75
+    }
+    (E2Text){
+      Layer:0
+      Color:#FFFFFFFF
+      Pt:34.427561,32.913549
+      Text:7
+      Style:SLDTEXTSTYLE0
+      Alignment:TopCenter
+      Height:0.15625
+      XScale:0.75
+    }
+    (E2Text){
+      Layer:0
+      Color:#FFFFFFFF
+      Pt:36.396064,0.391088
+      Text:6
+      Style:SLDTEXTSTYLE0
+      Alignment:TopCenter
+      Height:0.15625
+      XScale:0.75
+    }
+    (E2Text){
+      Layer:0
+      Color:#FFFFFFFF
+      Pt:36.396064,32.913549
+      Text:6
+      Style:SLDTEXTSTYLE0
+      Alignment:TopCenter
+      Height:0.15625
+      XScale:0.75
+    }
+    (E2Text){
+      Layer:0
+      Color:#FFFFFFFF
+      Pt:38.364568,0.391088
+      Text:5
+      Style:SLDTEXTSTYLE0
+      Alignment:TopCenter
+      Height:0.15625
+      XScale:0.75
+    }
+    (E2Text){
+      Layer:0
+      Color:#FFFFFFFF
+      Pt:38.364568,32.913549
+      Text:5
+      Style:SLDTEXTSTYLE0
+      Alignment:TopCenter
+      Height:0.15625
+      XScale:0.75
+    }
+    (E2Text){
+      Layer:0
+      Color:#FFFFFFFF
+      Pt:40.333072,0.391088
+      Text:4
+      Style:SLDTEXTSTYLE0
+      Alignment:TopCenter
+      Height:0.15625
+      XScale:0.75
+    }
+    (E2Text){
+      Layer:0
+      Color:#FFFFFFFF
+      Pt:40.333072,32.913549
+      Text:4
+      Style:SLDTEXTSTYLE0
+      Alignment:TopCenter
+      Height:0.15625
+      XScale:0.75
+    }
+    (E2Text){
+      Layer:0
+      Color:#FFFFFFFF
+      Pt:42.301576,0.391088
+      Text:3
+      Style:SLDTEXTSTYLE0
+      Alignment:TopCenter
+      Height:0.15625
+      XScale:0.75
+    }
+    (E2Text){
+      Layer:0
+      Color:#FFFFFFFF
+      Pt:42.301576,32.913549
+      Text:3
+      Style:SLDTEXTSTYLE0
+      Alignment:TopCenter
+      Height:0.15625
+      XScale:0.75
+    }
+    (E2Text){
+      Layer:0
+      Color:#FFFFFFFF
+      Pt:44.27008,0.391088
+      Text:2
+      Style:SLDTEXTSTYLE0
+      Alignment:TopCenter
+      Height:0.15625
+      XScale:0.75
+    }
+    (E2Text){
+      Layer:0
+      Color:#FFFFFFFF
+      Pt:44.27008,32.913549
+      Text:2
+      Style:SLDTEXTSTYLE0
+      Alignment:TopCenter
+      Height:0.15625
+      XScale:0.75
+    }
+    (E2Text){
+      Layer:0
+      Color:#FFFFFFFF
+      Pt:45.835041,0.391088
+      Text:1
+      Style:SLDTEXTSTYLE0
+      Alignment:TopCenter
+      Height:0.15625
+      XScale:0.75
+    }
+    (E2Text){
+      Layer:0
+      Color:#FFFFFFFF
+      Pt:45.835041,32.913549
+      Text:1
+      Style:SLDTEXTSTYLE0
+      Alignment:TopCenter
+      Height:0.15625
+      XScale:0.75
+    }
+    (E2Text){
+      Layer:0
+      Color:#FFFFFFFF
+      Pt:39.356038,1.668692
+      Text:DRAWN
+      Style:SLDTEXTSTYLE1
+      Alignment:TopLeft
+      Height:0.0590551181
+      XScale:0.6864493306
+    }
+    (E2Text){
+      Layer:0
+      Color:#FFFFFFFF
+      Pt:39.367686,1.502435
+      Text:"CHK'D"
+      Style:SLDTEXTSTYLE0
+      Alignment:TopLeft
+      Height:0.0590551181
+      XScale:0.75
+    }
+    (E2Text){
+      Layer:0
+      Color:#FFFFFFFF
+      Pt:39.346525,1.341176
+      Text:"APPV'D"
+      Style:SLDTEXTSTYLE0
+      Alignment:TopLeft
+      Height:0.0590551181
+      XScale:0.75
+    }
+    (E2Text){
+      Layer:0
+      Color:#FFFFFFFF
+      Pt:39.374961,1.169913
+      Text:MFG
+      Style:SLDTEXTSTYLE0
+      Alignment:TopLeft
+      Height:0.0590551181
+      XScale:0.75
+    }
+    (E2Text){
+      Layer:0
+      Color:#FFFFFFFF
+      Pt:39.39012,1.004121
+      Text:Q.A
+      Style:SLDTEXTSTYLE0
+      Alignment:TopLeft
+      Height:0.0590551181
+      XScale:0.75
+    }
+    (E2Insert){ Layer:0 BlockName:SW_NOTE_0 Pt:39.354081,2.440448 XScale:1 YScale:1 }
+    (E2Text){
+      Layer:0
+      Color:#FFFFFFFF
+      Pt:40.683909,2.516507
+      Text:"FINISH:"
+      Style:SLDTEXTSTYLE0
+      Alignment:TopLeft
+      Height:0.0590551181
+      XScale:0.75
+    }
+    (E2Insert){ Layer:0 BlockName:SW_NOTE_1 Pt:42.531859,2.443681 XScale:1 YScale:1 }
+    (E2Text){
+      Layer:0
+      Color:#FFFFFFFF
+      Pt:39.894576,1.830767
+      Text:NAME
+      Style:SLDTEXTSTYLE0
+      Alignment:TopLeft
+      Height:0.0590551181
+      XScale:0.75
+    }
+    (E2Text){
+      Layer:0
+      Color:#FFFFFFFF
+      Pt:40.513133,1.83314
+      Text:SIGNATURE
+      Style:SLDTEXTSTYLE0
+      Alignment:TopLeft
+      Height:0.0590551181
+      XScale:0.75
+    }
+    (E2Text){
+      Layer:0
+      Color:#FFFFFFFF
+      Pt:41.189555,1.833708
+      Text:DATE
+      Style:SLDTEXTSTYLE0
+      Alignment:TopLeft
+      Height:0.0590551181
+      XScale:0.75
+    }
+    (E2Text){
+      Layer:0
+      Color:#FFFFFFFF
+      Pt:41.521491,1.023073
+      Text:"MATERIAL:"
+      Style:SLDTEXTSTYLE0
+      Alignment:TopLeft
+      Height:0.0590551181
+      XScale:0.75
+    }
+    (E2Text){
+      Layer:0
+      Color:#FFFFFFFF
+      Pt:43.764356,2.461929
+      Text:"DO NOT SCALE DRAWING"
+      Style:SLDTEXTSTYLE0
+      Alignment:TopLeft
+      Height:0.0590551181
+      XScale:0.75
+    }
+    (E2Text){
+      Layer:0
+      Color:#FFFFFFFF
+      Pt:45.367228,2.45413
+      Text:REVISION
+      Style:SLDTEXTSTYLE0
+      Alignment:TopLeft
+      Height:0.0590551181
+      XScale:0.75
+    }
+    (E2Text){
+      Layer:0
+      Color:#FFFFFFFF
+      Pt:43.271266,1.833708
+      Text:"TITLE:"
+      Style:SLDTEXTSTYLE0
+      Alignment:TopLeft
+      Height:0.0590551181
+      XScale:0.75
+    }
+    (E2Text){
+      Layer:0
+      Color:#FFFFFFFF
+      Pt:43.265866,1.023073
+      Text:"DWG NO."
+      Style:SLDTEXTSTYLE0
+      Alignment:TopLeft
+      Height:0.0590551181
+      XScale:0.75
+    }
+    (E2Text){
+      Layer:0
+      Color:#FFFFFFFF
+      Pt:43.270629,0.507877
+      Text:"SCALE:2:1"
+      Style:SLDTEXTSTYLE0
+      Alignment:TopLeft
+      Height:0.0590551181
+      XScale:0.75
+    }
+    (E2Text){
+      Layer:0
+      Color:#FFFFFFFF
+      Pt:45.01883,0.507877
+      Text:"SHEET 1 OF 1"
+      Style:SLDTEXTSTYLE2
+      Alignment:TopLeft
+      Height:0.0590551181
+      XScale:0.6875
+    }
+    (E2Text){
+      Layer:0
+      Color:#FFFFFFFF
+      Pt:46.05792,0.960881
+      Text:A0
+      Style:SLDTEXTSTYLE0
+      Alignment:TopLeft
+      Height:0.1145833333
+      XScale:0.75
+    }
+    (E2Text){
+      Layer:0
+      Color:#FFFFFFFF
+      Pt:42.354571,0.845888
+      Text:"3.3535/EN AW-5754 (AlMg3)"
+      Style:SLDTEXTSTYLE0
+      Alignment:TopCenter
+      Height:0.09375
+      XScale:0.75
+    }
+    (E2Text){
+      Layer:0
+      Color:#FFFFFFFF
+      Pt:41.520386,0.509815
+      Text:"WEIGHT:"
+      Style:SLDTEXTSTYLE0
+      Alignment:TopLeft
+      Height:0.059
+      XScale:0.75
+    }
+    (E2Text){
+      Layer:0
+      Color:#FFFFFFFF
+      Pt:44.64052,0.929406
+      Text:Bend-10
+      Style:SLDTEXTSTYLE0
+      Alignment:TopCenter
+      Height:0.25
+      XScale:0.75
+    }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M19.055112,28.846283L18.020327,27.73247 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M18.020327,27.73247Q18.332338,27.442597,2 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M18.332338,27.442597L19.367122,28.556411 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M19.367122,28.556411Q19.055112,28.846283,2 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M17.256067,23.502439Q17.568078,23.792312,2 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M17.568078,23.792312L16.533293,24.906126 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M16.533293,24.906126Q16.221282,24.616253,2 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M12.637427,23.595683H15.222112 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M15.222112,23.595683V24.960834 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M15.222112,24.960834H12.637427 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M12.637427,24.960834V23.595683 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:C16.414344,9.008774,0.334646 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:C21.183271,9.008774,0.334646 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:C13.947972,10.770552,0.334646 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:C13.947972,14.520166,0.334646 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M21.347313,28.170191L21.138268,28.532267 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M21.138268,28.532267H20.720179 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M20.720179,28.532267L20.511135,28.170191 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M20.511135,28.170191L20.720179,27.808115 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M20.720179,27.808115H21.138268 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M21.138268,27.808115L21.347313,28.170191 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M24.019958,28.177156L23.810914,28.539231 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M23.810914,28.539231H23.392824 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M23.392824,28.539231L23.18378,28.177156 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M23.18378,28.177156L23.392824,27.81508 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M23.392824,27.81508H23.810914 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M23.810914,27.81508L24.019958,28.177156 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M15.803887,15.627041H16.1231 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M15.803887,15.386333V15.627041 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M15.805836,15.307829L15.803887,15.386333 }
+    (E2Poly){
+      Layer:0
+      Color:#FFFFFFFF
+      Poly:M15.922155,15.189732Q15.805836,15.307829,0.990343
+    }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M15.922155,10.307986V15.189732 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M21.985147,10.307986H15.922155 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M22.378848,9.914285L21.985147,10.307986 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M22.378848,8.103262V9.914285 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M21.985147,7.709561L22.378848,8.103262 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M15.292234,7.709561H21.985147 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M12.142627,10.859167Q15.292234,7.709561,1 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M12.142627,24.961529V10.859167 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M12.536328,25.35523L12.142627,24.961529 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M16.477273,25.35523H12.536328 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M18.052076,23.780427Q16.477273,25.35523,1 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M18.052076,23.229246V23.780427 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M15.646446,23.229246H18.052076 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M15.646446,22.870978V23.229246 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M16.154438,22.870978H15.646446 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M16.154438,22.989089V22.870978 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M19.626722,22.989089H16.154438 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M19.626722,22.71338V22.989089 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M19.945934,22.71338H19.626722 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M19.945934,23.268774V22.71338 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M19.827667,23.268774H19.945934 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M19.827667,26.930033V23.268774 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M19.945895,26.930033H19.827667 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M19.945895,27.087514V26.930033 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M17.540265,27.087514H19.945895 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M17.540265,27.717435V27.087514 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M24.788297,29.292238H19.115068 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M25.181997,28.898537L24.788297,29.292238 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M25.181997,27.441844V28.898537 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M24.788297,27.048144L25.181997,27.441844 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M23.213494,27.048144H24.788297 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M22.819793,26.654443L23.213494,27.048144 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M22.819793,20.233183V26.654443 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M19.626761,20.233183H22.819793 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M19.626761,20.075703V20.233183 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M27.268612,19.682002L26.874911,20.075703 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M27.268612,15.744994V19.682002 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M26.874911,15.351293L27.268612,15.744994 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M16.35932,15.351293H26.874911 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M16.1231,15.587514Q16.35932,15.351293,1 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M16.1231,15.627041V15.587514 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M26.874911,20.075703H19.626761 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M16.221282,24.616253L17.256067,23.502439 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M19.115068,29.292238Q17.540265,27.717435,1 }
+    (E2Insert){
+      Layer:0
+      BlockName:SW_CENTERMARKSYMBOL_0
+      Pt:16.414344,9.008774
+      XScale:1
+      YScale:1
+    }
+    (E2Insert){
+      Layer:0
+      BlockName:SW_CENTERMARKSYMBOL_1
+      Pt:21.183271,9.008774
+      XScale:1
+      YScale:1
+    }
+    (E2Insert){
+      Layer:0
+      BlockName:SW_CENTERMARKSYMBOL_2
+      Pt:13.947972,10.770552
+      XScale:1
+      YScale:1
+    }
+    (E2Insert){
+      Layer:0
+      BlockName:SW_CENTERMARKSYMBOL_3
+      Pt:13.947972,14.520166
+      XScale:1
+      YScale:1
+    }
+    (E2Bendline){ Angle:-1.5707963267948966 KFactor:0.12 Radius:0.04 }
+    (E2Bendline){ Angle:1.5707963267948966 KFactor:0.12 Radius:0.04 }
+    (E2Bendline){ Angle:1.5707963267948966 KFactor:0.12 Radius:0.04 }
+    (E2Bendline){ Angle:1.5707963267948966 KFactor:0.12 Radius:0.04 }
+    (E2Bendline){ Angle:1.5707963267948966 KFactor:0.12 Radius:0.04 }
+    (E2Bendline){ Angle:-1.5707963267948966 KFactor:0.12 Radius:0.04 }
+    (E2Bendline){ Angle:1.5707963267948966 KFactor:0.12 Radius:0.04 }
+    (E2Bendline){ Angle:1.5707963267948966 KFactor:0.12 Radius:0.04 }
+  ]
+}

@@ -172,9 +172,8 @@ public partial class DXFReader {
       foreach (var e2t in ents.OfType<E2Text> ()) {
          var match = sBend.Match (e2t.Text);
          if (!match.Success) continue;
-         var e2p = ents.OfType<E2Poly> ().Where (a => a.Poly.IsOpen && a.Poly.Count == 1)
-                                         .MinBy (a => a.Poly.GetDistance (e2t.Pt).Dist);
-         if (e2p == null || e2p.Poly.GetDistance (e2t.Pt).Dist > 6) continue;
+         var e2p = ents.OfType<E2Poly> ().Where (a => a.Poly.IsLine).MinBy (a => a.Poly.GetDistance (e2t.Pt).Dist);
+         if (e2p == null) continue;
          rmv.AddRange (e2t, e2p);
          double angle = match.Groups[1].Value.ToDouble ().D2R ().Clamp (-Lib.PI, Lib.PI);
          double radius = match.Groups[2].Value.ToDouble ();
