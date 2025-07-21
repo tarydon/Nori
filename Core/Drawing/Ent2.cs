@@ -192,8 +192,6 @@ public class E2Insert : Ent2 {
 
 #region class E2Point ------------------------------------------------------------------------------
 /// <summary>Represents a point in a drawing.</summary>
-/// <param name="layer">Entity layer</param>
-/// <param name="pos">Point position</param>
 public class E2Point : Ent2 {
    E2Point () { }
    public E2Point (Layer2 layer, Point2 pos) : base (layer) => mPt = pos;
@@ -219,8 +217,6 @@ public class E2Point : Ent2 {
 
 #region class E2Poly -------------------------------------------------------------------------------
 /// <summary>A polyline drawing entity.</summary>
-/// <param name="inLayer">Entity layer</param>
-/// <param name="inPoly">The poly object this entity holds.</param>
 public class E2Poly : Ent2 {
    // Constructors -------------------------------------------------------------
    E2Poly () => mPoly = null!;
@@ -258,8 +254,6 @@ public class E2Poly : Ent2 {
 
 #region class E2Solid ------------------------------------------------------------------------------
 /// <summary>A solid drawing entity.</summary>
-/// <param name="layer">Entity layer</param>
-/// <param name="pts">List of points</param>
 public class E2Solid : Ent2 {
    E2Solid () => mPts = [];
    public E2Solid (Layer2 layer, IEnumerable<Point2> pts) : base (layer) => mPts = [.. pts];
@@ -280,12 +274,6 @@ public class E2Solid : Ent2 {
 
 #region class E2Text -------------------------------------------------------------------------------
 /// <summary>A drawing text entity.</summary>
-/// <param name="layer">Entity layer</param>
-/// <param name="style">The text style (specifies the font)</param>
-/// <param name="text">The text value</param>
-/// <param name="pos">Poisition where the text is placed in the drawing.</param>
-/// <param name="height">The text height</param>
-/// <param name="angle">The text rotation angle in radians</param>
 public class E2Text : Ent2 {
    // Constructors -------------------------------------------------------------
    E2Text () => (Text, Style, XScale) = ("", Style2.Default, 1);

@@ -6,7 +6,7 @@
     <OutDir>..\Bin</OutDir>
     <AssemblyName>Nori.Core</AssemblyName>
 		<Optimize>false</Optimize>
-    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <DocumentationFile>..\Bin\Nori.Core.xml</DocumentationFile>
   </PropertyGroup>
 
