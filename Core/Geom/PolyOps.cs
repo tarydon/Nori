@@ -280,18 +280,18 @@ public partial class Poly {
       else if (A.EQ (other.B, threshold)) (a, b) = (other, this);
       else if (A.EQ (other.A, threshold)) (a, b) = (other.Reversed (), this);
       else return false;
-      ImmutableArray<Point2> pts = [.. a.mPts.SkipLast (1), .. b.mPts];
+      List<Point2> pts = [.. a.mPts.SkipLast (1), .. b.mPts];
       EFlags flags = 0;
       if (pts[0].EQ (pts[^1])) {
          flags |= EFlags.Closed; pts = [.. pts.SkipLast (1)];
       }
-      if (!a.HasArcs && !b.HasArcs) result = new Poly (pts, [], flags);
+      if (!a.HasArcs && !b.HasArcs) result = new Poly ([.. pts], [], flags);
       else {
          var extra = new List<Extra> (a.Count + b.Count);
          for (int i = 0; i < a.Count; i++)
             extra.Add (a.mExtra.SafeGet (i));
          extra.AddRange (b.mExtra);
-         result = new Poly (pts, [.. extra], flags | EFlags.HasArcs);
+         result = new Poly ([.. pts], [.. extra], flags | EFlags.HasArcs);
       }
       return true;
    }
