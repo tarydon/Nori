@@ -170,7 +170,7 @@ class Surface : System.Windows.Forms.UserControl {
             break;
          }
       }
-      Cursor = EmptyCursor;
+      // Cursor = EmptyCursor;
       Lux.mReady = true;
       Lux.mOnReady.OnNext (0);
    }
