@@ -54,7 +54,10 @@ class PolyOpsTests {
    void Test4 () {
       Poly tri = new ([new Point2 (0, 0), new Point2 (30, 0), new Point2 (15, 15)], [], Poly.EFlags.Closed);
       Poly? poly;
-      poly = tri.Fillet (2, 5); poly?.Is ("M0,0H30L18.535534,11.464466Q11.464466,11.464466,1Z");
+      poly = tri.Fillet (2, 5); poly?.Is ("M0,0H30L18.535534,11.464466Q11.464466,11.464466,1Z"); // 90 deg at node 2
+      poly = tri.Fillet (0, 5); poly?.Is ("M30,0L15,15L8.535534,8.535534Q12.071068,0,1.5Z"); // 45 deg at node 0
+      tri = new ([new Point2 (0, 0), new Point2 (50, 0), new Point2 (-25, 43.301)], [], Poly.EFlags.Closed);
+      poly = tri.Fillet (0, 5); poly?.Is ("M50,0L-25,43.301L-1.443378,2.499988Q2.886742,0,0.666665Z"); // 120 deg at node 0
       Poly rect = Poly.Rectangle (0, 0, 200, 100);
       poly = rect.Fillet (0, 5); poly?.Is ("M200,0V100H0V5Q5,0,1Z");
       poly = rect.Fillet (3, 10); poly?.Is ("M0,0H200V100H10Q0,90,1Z");

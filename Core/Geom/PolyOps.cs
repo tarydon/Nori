@@ -227,15 +227,13 @@ public partial class Poly {
          // If we are heading towards the target node, add an new node for the beginning
          // of the fillet, by moving backwards by radius along the lead-in segment slope
          if (i == node - 1) {
-            Vector2 line1 = s1.B - s1.A, line2 = s2.A - s2.B;
-            double x1 = line1.X, x2 = line2.X, y1 = line1.Y, y2 = line2.Y;
-            var a = x1 * x2 + y1 * y2;
-            var b = Math.Sqrt (x1 * x1 + y1 * y1) * Math.Sqrt (x2 * x2 + y2 * y2);
-            var ang = Math.Acos (a / b);
-            len = radius / Math.Tan (ang / 2);
+            var turnAngle = GetTurnAngle (node);
+            len = radius / Math.Tan ((Lib.PI - turnAngle) / 2);
+            if (s1.Length < len || s2.Length < len) return null;
             var start = s2.A.Polar (-len, s1.Slope); var pt1 = start + (s2.A - start).Perpendicular ();
             var end = s2.A.Polar (len, s2.Slope); var pt2 = end + (end - s2.A).Perpendicular ();
-            pb.Arc (start, Geo.LineXLine (start, pt1, end, pt2), EFlags.CCW);
+            var winding = turnAngle > 0 ? EFlags.CCW : EFlags.CW;
+            pb.Arc (start, Geo.LineXLine (start, pt1, end, pt2), winding);
          }
       }
       // Done, close the poly if needed and return it
