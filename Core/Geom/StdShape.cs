@@ -192,10 +192,9 @@ public static class ShapeRecognizer {
 
    static bool IsSingleD (Poly poly, ref ShapeDesc desc) {
       // Captures: F34.641016 L(59.999994) G20.000001,240.000011 L(59.999994) .
-      sSingleD ??= Make (@"^F[^ ]+ L([^ ]+) G[^ ]+ L([^ ]+) .$");
+      sSingleD ??= Make (@"^F[^ ]+ L([^ ]+) G[^ ]+ L\1 .$");
       var (n, code) = poly.GetLogoCode (6);
-      var m = sSingleD.Match (code);
-      if (!m.Success || m.Groups[1].Value != m.Groups[2].Value) return false;
+      if (!sSingleD.Match (code).Success) return false;
 
       var (seg, aseg) = (poly[n], poly[n + 1]);
       var arcMid = aseg.GetPointAt (0.5);
@@ -207,12 +206,9 @@ public static class ShapeRecognizer {
 
    static bool IsTrapezoid (Poly poly, ref ShapeDesc desc) {
       // Captures: F40 L(70) F(21.283555) L(70) F25.441191 L(110) F(21.283555) L(110) .
-      // Ensure: Capture(0) == Capture(2); Capture(1) == Capture(4); Capture(3) == Capture(5)
-      sTrapezoid ??= Make (@"^F[^ ]+ L([^ ]+) F([^ ]+) L([^ ]+) F[^ ]+ L([^ ]+) F([^ ]+) L([^ ]+) .$");
+      sTrapezoid ??= Make (@"^F[^ ]+ L([^ ]+) F([^ ]+) L\1 F[^ ]+ L([^ ]+) F\2 L\3 .$");
       var (n, code) = poly.GetLogoCode (6);
-      var m = sTrapezoid.Match (code);
-      if (!m.Success || m.Groups[1].Value != m.Groups[3].Value
-         || m.Groups[2].Value != m.Groups[5].Value || m.Groups[4].Value != m.Groups[6].Value) return false;
+      if (!sTrapezoid.Match (code).Success) return false;
 
       var seg = poly[n];
       var (pt, pt2) = (seg.GetPointAt (0.5), poly[n + 2].GetPointAt (0.5));
