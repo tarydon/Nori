@@ -258,6 +258,6 @@ public partial class DXFReader {
       }
    }
 
-   static readonly Regex sBend = new (@"A([-+]?\d*\.?\d+)\s*R(\d*\.?\d+)\s*K(\d*\.?\d+)", RegexOptions.Compiled |
-                                      RegexOptions.IgnoreCase | RegexOptions.CultureInvariant | RegexOptions.ECMAScript);
+   static readonly Regex sBend = new (@"A([-+]?[0-9]*\.?[0-9]+)\s*R([0-9]*\.?[0-9]+)\s*K([0-9]*\.?[0-9]+)",
+                                      RegexOptions.Compiled | RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
 }

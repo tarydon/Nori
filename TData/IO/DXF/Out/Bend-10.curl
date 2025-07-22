@@ -1390,13 +1390,53 @@
       XScale:1
       YScale:1
     }
-    (E2Bendline){ Angle:-1.5707963267948966 KFactor:0.12 Radius:0.04 }
-    (E2Bendline){ Angle:1.5707963267948966 KFactor:0.12 Radius:0.04 }
-    (E2Bendline){ Angle:1.5707963267948966 KFactor:0.12 Radius:0.04 }
-    (E2Bendline){ Angle:1.5707963267948966 KFactor:0.12 Radius:0.04 }
-    (E2Bendline){ Angle:1.5707963267948966 KFactor:0.12 Radius:0.04 }
-    (E2Bendline){ Angle:-1.5707963267948966 KFactor:0.12 Radius:0.04 }
-    (E2Bendline){ Angle:1.5707963267948966 KFactor:0.12 Radius:0.04 }
-    (E2Bendline){ Angle:1.5707963267948966 KFactor:0.12 Radius:0.04 }
+    (E2Bendline){
+      Angle:-1.5707963267948966
+      KFactor:0.12
+      Radius:0.04
+      Pts:[ 12.142627,15.467435 15.803887,15.467435 ]
+    }
+    (E2Bendline){
+      Angle:1.5707963267948966
+      KFactor:0.12
+      Radius:0.04
+      Pts:[ 19.945934,23.113104 22.819793,23.113104 ]
+    }
+    (E2Bendline){
+      Angle:1.5707963267948966
+      KFactor:0.12
+      Radius:0.04
+      Pts:[ 20.967431,20.075703 20.967431,15.351293 ]
+    }
+    (E2Bendline){
+      Angle:1.5707963267948966
+      KFactor:0.12
+      Radius:0.04
+      Pts:[ 19.786328,22.71338 19.786328,20.233183 ]
+    }
+    (E2Bendline){
+      Angle:1.5707963267948966
+      KFactor:0.12
+      Radius:0.04
+      Pts:[ 15.806013,25.35523 15.806013,23.229246 ]
+    }
+    (E2Bendline){
+      Angle:-1.5707963267948966
+      KFactor:0.12
+      Radius:0.04
+      Pts:[ 15.963494,22.870978 15.963494,15.627041 ]
+    }
+    (E2Bendline){
+      Angle:1.5707963267948966
+      KFactor:0.12
+      Radius:0.04
+      Pts:[ 12.142627,23.109167 15.646446,23.109167 ]
+    }
+    (E2Bendline){
+      Angle:1.5707963267948966
+      KFactor:0.12
+      Radius:0.04
+      Pts:[ 19.786328,27.087514 19.786328,29.292238 ]
+    }
   ]
 }
