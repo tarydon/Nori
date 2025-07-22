@@ -215,7 +215,7 @@ class MouseMovesWrap : EventWrapper<Vec2S> {
       else panel.MouseMove -= OnMouseMove;
    }
 
-   void OnMouseMove (object? sender, MouseEventArgs e)
+   void OnMouseMove (object? sender, MouseEventArgs e) 
       => Push (new (e.X, e.Y));
 }
 #endregion

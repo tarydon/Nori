@@ -5,6 +5,7 @@
 using System.Windows.Forms.Integration;
 using System.Windows.Threading;
 using static System.Windows.Forms.ControlStyles;
+using FCursor = System.Windows.Forms.Cursor;
 namespace Nori;
 
 #region class Panel --------------------------------------------------------------------------------
@@ -12,12 +13,12 @@ namespace Nori;
 class Panel : System.Windows.Controls.UserControl {
    // Interface ----------------------------------------------------------------
    // Called from Lux when we need to start rendering a frame.
-   // Note that a viewport size is passed in, since when we are rendering to an Image, we 
+   // Note that a viewport size is passed in, since when we are rendering to an Image, we
    // could be rendering a size that is different from the panel size. What we do here depends
    // on the render target, but in all cases, we have to make our display surface the 'current'
    // GL context
    public void BeginRender (Vec2S viewport, ETarget target) {
-      if (mSurface == null) return; 
+      if (mSurface == null) return;
       mSurface.BeginRender (viewport);
       if (target is ETarget.Image or ETarget.Pick) {
          mFBViewport = viewport;
@@ -42,13 +43,13 @@ class Panel : System.Windows.Controls.UserControl {
    }
 
    // Called when the scene is finished rendering, and we need to 'show' it.
-   // What this returns depends on the render target 
+   // What this returns depends on the render target
    public object? EndRender (ETarget target, DIBitmap.EFormat fmt) {
       switch (target) {
          case ETarget.Screen:
             mSurface?.EndRender ();
             break;
-         case ETarget.Image: 
+         case ETarget.Image:
             GL.Finish ();
             int x = mFBViewport.X, y = mFBViewport.Y, bpp = fmt.BytesPerPixel ();
             var pxfmt = fmt switch {
@@ -169,9 +170,21 @@ class Surface : System.Windows.Forms.UserControl {
             break;
          }
       }
+      // Cursor = EmptyCursor;
       Lux.mReady = true;
       Lux.mOnReady.OnNext (0);
    }
+
+   /// <summary>An 'empty' cursor</summary>
+   static FCursor EmptyCursor {
+      get {
+         if (mEmptyCursor == null)
+            using (var stm = Lib.OpenRead ("nori:Cursor/Empty.cur"))
+               mEmptyCursor = new FCursor (stm);
+         return mEmptyCursor;
+      }
+   }
+   static FCursor? mEmptyCursor;
 
    // Override OnPaint to call back to PX.Render, where our actual paint code resides
    protected override void OnPaint (PaintEventArgs e)
