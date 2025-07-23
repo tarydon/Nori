@@ -197,11 +197,12 @@ public partial class Poly {
       // to the node is either an arc or too short, we return null
       if (node <= 0 | node >= Count) return null;
       Seg s1 = this[node - 1], s2 = this[node];
+      if (s1.IsArc | s2.IsArc) return null;
       var turnAngle = GetTurnAngle (node);
 
       // Find the tangent points for the fillet by shifting the common vertex along the slope of each line
       double len = Math.Abs (radius / Math.Tan ((Lib.PI - turnAngle) / 2));
-      if (s1.IsArc | s2.IsArc | s1.Length <= len | s2.Length <= len) return null;
+      if (s1.Length <= len | s2.Length <= len) return null;
 
       // Use a PolyBuilder to build the fillet poly. The target node where
       // the fillet is to be added is 'node'
