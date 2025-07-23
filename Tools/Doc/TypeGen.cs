@@ -1,5 +1,4 @@
-﻿using System.Xml;
-namespace Nori.Doc;
+﻿namespace Nori.Doc;
 
 // TypeGen is used to generate a documentation page for a particular type
 class TypeGen : HTMLGen {
@@ -7,7 +6,6 @@ class TypeGen : HTMLGen {
       mT = t;
       var dict = project.Notes;
       string nicename = t.NiceName ();
-      if (nicename != "Nori.RBTree<TVal,TKey>") return;
 
       // Output the level 1 heading, and the class name and description
       HEAD ($"{project.Name}: {nicename}");
@@ -35,8 +33,8 @@ class TypeGen : HTMLGen {
       s = s[(n2 + 10)..].TrimStart (' ').TrimStart ('\n');
       var lines = s.Split ('\n').ToList ();
       while (lines.Count > 0 && lines[0].IsBlank ()) lines.RemoveAt (0);
-      while (lines[^1].IsBlank ()) lines.RemoveAt (lines.Count - 1);
       if (lines.Count == 0) return;
+      while (lines[^1].IsBlank ()) lines.RemoveAt (lines.Count - 1);
 
       // Further cleanup to ensure that the entire block is left-aligned at column 0
       int n = int.MaxValue;
@@ -52,30 +50,40 @@ class TypeGen : HTMLGen {
       // Now, we are ready to output the main documentation block. This stack tracks
       // all the 'open blocks' we have
       Stack<E> stack = [];
-      foreach (var line in lines) {
+      for (int i = 0; i < lines.Count; i++) {
          int level = 0;
+         string line = lines[i];
          if (!line.IsBlank ())
             level = (line.TakeWhile (a => a == ' ').Count () / 4) + 1;
-         PopStack (level);
+         PopStack (level);    // Pop off nesting until we reach target level
          if (level == 0) continue;
 
+         var sline = line.TrimStart ();
          switch (level - stack.Count) {
             case 0:        // Continuing at the same level
-               var type1 = stack.Peek ();
-               switch (type1) {
-                  case E.ol or E.ul: mS.Append ("</li><li>"); break;
-                  default: mS.Append ($"</{type1}><{type1}>"); break;
+               var t1 = stack.Peek ();
+               switch (t1) {
+                  case E.ol or E.ul:
+                     if ("-+*".Contains (sline[0])) {
+                        mS.Append ("</li><li>");
+                        line = sline[1..].TrimStart ();
+                     } 
+                     break;
+                  case E.p: line = sline; break;
                }
-               break;       // Continuing at the same level
-            case 1:
-               E type = line.TrimStart ()[0] switch {
-                  '-' or '*' => E.ul,
+               break;
+            case 1:        // Nesting one level deeper
+               E t2 = sline[0] switch {
+                  '-' or '*' => E.ul, 
                   '+' => E.ol,
                   _ => level == 1 ? E.p : E.pre
                };
-               mS.Append ($"<{type}>");
-               if (type is E.ul or E.ol) mS.Append ("<li>");
-               stack.Push (type);
+               mS.Append ($"<{t2}>");
+               if (t2 is E.ul or E.ol) {
+                  mS.Append ("<li>");
+                  line = sline[1..].TrimStart ();
+               }
+               stack.Push (t2);
                break;
             default:
                Program.Fatal ($"Invalid documentation nesting for {target}");
