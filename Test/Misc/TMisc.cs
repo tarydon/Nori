@@ -344,6 +344,15 @@ class TMisc {
       Assert.TextFilesEqual1 ("Geom/Tess/gl2d.tmesh", NT.TmpTxt);
    }
 
+   [Test (12, "Test for E2BendLine properties")]
+   void Test14 () {
+      var dwg = new Dwg2 ();
+      dwg.Add (Poly.Rectangle (0, 0, 100, 60));
+      dwg.Add (new E2Bendline (dwg, Point2.List (75, 0, 75, 60), Lib.HalfPI, 1, 0.38, 1));
+      var s = dwg.Ents.OfType<E2Bendline> ().First ();
+      Assert.IsTrue (Math.Round (s.FlatWidth, 3) == 2.168 && Math.Round (s.Deduction, 3) == 1.832);
+   }
+
    class T1Type : IIndexed {
       public override string ToString () => $"T{Idx}";
       public ushort Idx { get; set; }
