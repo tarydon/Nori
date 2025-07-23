@@ -92,9 +92,10 @@ public static class ShapeRecognizer {
 
    // Check if the given Poly is a rectangle
    static bool IsRect (Poly poly, ref ShapeDesc desc) {
-      sRect ??= Make (@"^(F[^ ]+ L F[^ ]+ L ){2}\.$");
+      // Captures: (F40 L F20 L )(F40 L F20 L ).
+      sRect ??= Make (@"^(F[^ ]+ L F[^ ]+ L )\1\.$");
       var (n, code) = poly.GetLogoCode (6);
-      if (!RepeatedPattern (sRect.Match (code))) return false;
+      if (!sRect.Match (code).Success) return false;
 
       // By the definition of GetLogoCode, seg is the longest segment, and that
       // becomes the 'length'. The next segment becomes the 'width'
@@ -108,9 +109,9 @@ public static class ShapeRecognizer {
 
    // Check if the given Poly is a rounded/filleted rectangle
    static bool IsRoundRect (Poly poly, ref ShapeDesc desc) {
-      sRoundRect ??= Make (@"^(F[^ ]+ R[^ ]+ G[^ ]+ R[^ ]+ F[^ ]+ R[^ ]+ G[^ ]+ R[^ ]+ ){2}\.$");
+      sRoundRect ??= Make (@"^(F[^ ]+ R[^ ]+ G[^ ]+ R[^ ]+ F[^ ]+ R[^ ]+ G[^ ]+ R[^ ]+ )\1\.$");
       var (n, code) = poly.GetLogoCode (6);
-      if (!RepeatedPattern (sRoundRect.Match (code))) return false;
+      if (!sRoundRect.Match (code).Success) return false;
 
       var seg = poly[n];
       var rad = poly[n + 1].Radius;
@@ -122,9 +123,9 @@ public static class ShapeRecognizer {
    static Regex? sRoundRect;
 
    static bool IsQuadInFillet (Poly poly, ref ShapeDesc desc) {
-      sQuadInFillet ??= Make (@"^(F[^ ]+ L[^ ]+ D[^ ]+ L[^ ]+ F[^ ]+ L[^ ]+ D[^ ]+ L[^ ]+ ){2}\.$");
+      sQuadInFillet ??= Make (@"^(F[^ ]+ L[^ ]+ D[^ ]+ L[^ ]+ F[^ ]+ L[^ ]+ D[^ ]+ L[^ ]+ )\1\.$");
       var (n, code) = poly.GetLogoCode (6);
-      if (!RepeatedPattern (sQuadInFillet.Match (code))) return false;
+      if (!sQuadInFillet.Match (code).Success) return false;
 
       var (seg, aseg) = (poly[n], poly[n - 1]);
       var rad = aseg.Radius;
@@ -136,9 +137,9 @@ public static class ShapeRecognizer {
    static Regex? sQuadInFillet;
 
    static bool IsChamferedRect (Poly poly, ref ShapeDesc desc) {
-      sChamferRect ??= Make (@"^(F[^ ]+ L45 F[^ ]+ L45 F[^ ]+ L45 F[^ ]+ L45 ){2}\.$");
+      sChamferRect ??= Make (@"^(F[^ ]+ L45 F[^ ]+ L45 F[^ ]+ L45 F[^ ]+ L45 )\1\.$");
       var (n, code) = poly.GetLogoCode (6);
-      if (!RepeatedPattern (sChamferRect.Match (code))) return false;
+      if (!sChamferRect.Match (code).Success) return false;
 
       var seg = poly[n];
       double chamfer = poly[n + 1].Length;
@@ -151,9 +152,9 @@ public static class ShapeRecognizer {
    static Regex? sChamferRect;
 
    static bool IsObround (Poly poly, ref ShapeDesc desc) {
-      sObround ??= Make (@"^(F[^ ]+ G[^ ]+ ){2}\.$");
+      sObround ??= Make (@"^(F[^ ]+ G[^ ]+ )\1\.$");
       var (n, code) = poly.GetLogoCode (6);
-      if (!RepeatedPattern (sObround.Match (code))) return false;
+      if (!sObround.Match (code).Success) return false;
 
       var seg = poly[n];
       var rad = poly[n + 1].Radius;
@@ -165,9 +166,9 @@ public static class ShapeRecognizer {
    static Regex? sObround;
 
    static bool IsDoubleD (Poly poly, ref ShapeDesc desc) {
-      sDoubleD ??= Make (@"^(F[^ ]+ L[^ ]+ G[^ ]+ L[^ ]+ ){2}\.$");
+      sDoubleD ??= Make (@"^(F[^ ]+ L[^ ]+ G[^ ]+ L[^ ]+ )\1\.$");
       var (n, code) = poly.GetLogoCode (6);
-      if (!RepeatedPattern (sDoubleD.Match (code))) return false;
+      if (!sDoubleD.Match (code).Success) return false;
 
       var (seg, aseg) = (poly[n], poly[n + 1]);
       var (rad, angle) = (aseg.Radius, seg.Slope);
@@ -178,9 +179,9 @@ public static class ShapeRecognizer {
    static Regex? sDoubleD;
 
    static bool IsParallelogram (Poly poly, ref ShapeDesc desc) {
-      sParallelogram ??= Make (@"^(F[^ ]+ L[^ ]+ F[^ ]+ L[^ ]+ ){2}\.$");
+      sParallelogram ??= Make (@"^(F[^ ]+ L[^ ]+ F[^ ]+ L[^ ]+ )\1\.$");
       var (n, code) = poly.GetLogoCode (6);
-      if (!RepeatedPattern (sParallelogram.Match (code))) return false;
+      if (!sParallelogram.Match (code).Success) return false;
 
       var (seg, seg2) = (poly[n], poly[n+2]);
       var (width, height) = (seg.Length, seg.A.DistToLine (seg2.A, seg2.B));
@@ -222,12 +223,5 @@ public static class ShapeRecognizer {
    // Helpers ------------------------------------------------------------------
    // Makes a compiled mode Regex
    static Regex Make (string s) => new (s, RegexOptions.Compiled);
-
-   // Tells if repeated matched patterns are actually identical.
-   static bool RepeatedPattern (Match m) {
-      if (!m.Success || m.Groups.Count != 2 || m.Groups[1].Captures.Count != 2) return false;
-      var captures = m.Groups[1].Captures;
-      return captures[0].Value == captures[1].Value;
-   }
 }
 #endregion
