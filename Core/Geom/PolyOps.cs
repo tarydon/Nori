@@ -197,17 +197,19 @@ public partial class Poly {
       // to the node is either an arc or too short, we return null
       if (node <= 0 | node >= Count) return null;
       Seg s1 = this[node - 1], s2 = this[node];
-      if (s1.IsArc | s2.IsArc | s1.Length <= radius | s2.Length <= radius) return null;
+      var turnAngle = GetTurnAngle (node);
+
+      // Find the tangent points for the fillet by shifting the common vertex along the slope of each line
+      double len = Math.Abs (radius / Math.Tan ((Lib.PI - turnAngle) / 2));
+      if (s1.IsArc | s2.IsArc | s1.Length <= len | s2.Length <= len) return null;
 
       // Use a PolyBuilder to build the fillet poly. The target node where
       // the fillet is to be added is 'node'
       PolyBuilder pb = new ();
 
-      // Find the tangent points for the fillet by shifting the common vertex along the slope of both lines
-      double len = 0;
       for (int i = 0; i < Count; i++) {
          Point2 pt = mPts[i];
-         // If we are going to add the target node, shift it forward by radius
+         // If we are going to add the target node, shift it forward by len
          // along the lead-out segment slope (this is the end of the fillet). See the code
          // below that would have already added the beginning of the fillet (the
          // i == node - 1 check)
@@ -225,11 +227,8 @@ public partial class Poly {
             pb.Line (pt);
 
          // If we are heading towards the target node, add an new node for the beginning
-         // of the fillet, by moving backwards by radius along the lead-in segment slope
+         // of the fillet, by moving backwards by len along the lead-in segment slope
          if (i == node - 1) {
-            var turnAngle = GetTurnAngle (node);
-            len = radius / Math.Tan ((Lib.PI - turnAngle) / 2);
-            if (s1.Length < len || s2.Length < len) return null;
             var start = s2.A.Polar (-len, s1.Slope); var pt1 = start + (s2.A - start).Perpendicular ();
             var end = s2.A.Polar (len, s2.Slope); var pt2 = end + (end - s2.A).Perpendicular ();
             var winding = turnAngle > 0 ? EFlags.CCW : EFlags.CW;
