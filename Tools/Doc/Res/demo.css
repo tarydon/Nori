@@ -1,0 +1,46 @@
+﻿/* Josh Comeau's CSS reset ----------------------------
+   https://www.joshwcomeau.com/css/custom-css-reset/ */
+
+*, *::before, *::after { box-sizing: border-box; }
+
+* { margin: 0; }
+
+@media (prefers-reduced-motion: no-preference) {
+    html { interpolate-size: allow-keywords; }
+}
+
+body { line-height: 1.35; }
+
+img, picture, video, canvas, svg { display: block; max-width: 100%; }
+
+input, button, textarea, select { font: inherit; }
+
+p, h1, h2, h3, h4, h5, h6 { overflow-wrap: break-word; }
+
+p { text-wrap: pretty; }
+
+h1, h2, h3, h4, h5, h6 { text-wrap: balance; }
+
+#root, #__next { isolation: isolate; }
+/* ---------------------------------------------------- */
+
+body {
+    font-family: "Segoe UI", sans-serif;
+    background-color: #eee;
+    color: #555;
+    padding: 1em;
+}
+
+h1 {
+    font-family: "Consolas", monospace;
+    color: black;
+    font-size: 2em;
+}
+
+p {
+    margin-top: 0.5em;
+}
+
+p.summary {
+    color: #000;
+}

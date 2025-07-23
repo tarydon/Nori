@@ -1,6 +1,7 @@
 ﻿namespace Nori.Doc;
 
 class Project {
+   // Constructor --------------------------------------------------------------
    public Project (string file) {
       foreach (var line in File.ReadAllLines (file).Select (a => a.Trim ())) {
          if (line.StartsWith ('#')) continue;
@@ -8,10 +9,10 @@ class Project {
          if (w.Length != 2) continue;
          string key = w[0].ToUpper ();
          switch (key) {
-            case "DOCUMENTPRIVATE": DocumentPrivate = GetBool (w[1]); break;
+            case "DOCUMENTPRIVATE": mDocumentPrivate = GetBool (w[1]); break;
             case "INPUT": mInput.Add (w[1]); break;
-            case "OUTPUTDIRECTORY": OutDir = w[1]; break;
-            case "PROJECT": Name = w[1]; break;
+            case "OUTPUTDIRECTORY": mOutDir = w[1]; break;
+            case "PROJECT": mName = w[1]; break;
             case "NAMESPACE": mNamespaces.Add (w[1]); break;
             default: Console.WriteLine ($"Unknown key {key} in {file}"); break;
          }
@@ -20,10 +21,30 @@ class Project {
          string s = mNamespaces[i]; if (!s.EndsWith ('.')) s += ".";
          mNamespaces[i] = s;
       }
-      mNamespaces = mNamespaces.OrderByDescending (a => a.Length).ToList ();
-      if (OutDir == "") Fatal ($"OUTPUTDIRECTORY setting missing in {file}");
+      mNamespaces = [.. mNamespaces.OrderByDescending (a => a.Length)];
+      if (mOutDir == "") Program.Fatal ($"OUTPUTDIRECTORY setting missing in {file}");
    }
 
+   // Properties ---------------------------------------------------------------
+   /// <summary>
+   /// Project title
+   /// </summary>
+   public string Name => mName;
+   readonly string mName = "Untitled";    // Project title
+
+   /// <summary>
+   /// List of 'known' namespaces
+   /// </summary>
+   public static IReadOnlyList<string> Namespaces => mNamespaces;
+   static List<string> mNamespaces = ["System", "System.Collections.Generic"];
+
+   /// <summary>
+   /// The documentation blocks for each type, method, property etc
+   /// </summary>
+   public IReadOnlyDictionary<string, string> Notes => mNotes;
+   Dictionary<string, string> mNotes = [];
+
+   // Methods ------------------------------------------------------------------
    public void Process () {
       // First, load all the input files (XML and DLL)
       foreach (var file in mInput) {
@@ -31,44 +52,26 @@ class Project {
          switch (ext) {
             case ".xml": LoadXML (file); break;
             case ".dll": LoadDLL (file); break;
-            default: Fatal ($"Unknown file type {file}"); break;
+            default: Program.Fatal ($"Unknown file type {file}"); break;
          }
       }
 
       // Create the output directory, and copy the resource files there
-      try { Directory.CreateDirectory (OutDir); } catch { Fatal ($"Could not create directory {OutDir}"); }
+      try { Directory.CreateDirectory (mOutDir); }
+      catch { Program.Fatal ($"Could not create directory {mOutDir}"); }
       CopyResources ();
 
       // Output one page for each type
       foreach (var t in mTypes)
-         new TypeGen (t, Name).Generate (OutDir);
+         new TypeGen (t, this).Generate (mOutDir);
    }
 
-   public readonly string Name = "Untitled";
-
-   public readonly string OutDir = "";
-
-   public readonly bool DocumentPrivate = false;
-
-   public IReadOnlyList<string> Input => mInput;
-   List<string> mInput = [];
-
-   public static IReadOnlyList<string> Namespaces => mNamespaces;
-   static List<string> mNamespaces = ["System", "System.Collections.Generic"];
-
-   // Private data -------------------------------------------------------------
+   // Implementation -----------------------------------------------------------
    void CopyResources () {
       Stream stm = Assembly.GetExecutingAssembly ().GetManifestResourceStream ("Nori.Doc.Res.std.css")!;
       byte[] data = new byte[(int)stm.Length];
       stm.ReadExactly (data);
-      File.WriteAllBytes ($"{OutDir}/std.css", data);
-   }
-
-   // Prints error and stops
-   [DoesNotReturn]
-   void Fatal (string s) {
-      Console.WriteLine (s);
-      Environment.Exit (-1);
+      File.WriteAllBytes ($"{mOutDir}/std.css", data);
    }
 
    bool GetBool (string s)
@@ -76,30 +79,29 @@ class Project {
 
    // Loads an XML file, and parses each 'member' element
    void LoadXML (string file) {
-      if (!File.Exists (file)) Fatal ($"File {file} missing");
-      Console.WriteLine (file);
+      if (!File.Exists (file)) Program.Fatal ($"File {file} missing");
+      Console.WriteLine ($"Parsing {file}");
       foreach (var member in XDocument.Load (file).Descendants ("member")) {
          string key = member.Attribute ("name")?.Value ?? "";
          var reader = member.CreateReader ();
          reader.MoveToContent ();
-         // Make sure each 'summary' is terminated by a period or a question mark
-         var value = reader.ReadInnerXml ().Replace ("</summary>", ".</summary>")
-                                           .Replace ("..</summary>", ".</summary>")
-                                           .Replace ("?.</summary>", "?</summary>");
-         mNotes.Add (key, value);
+         mNotes.Add (key, reader.ReadInnerXml ());
       }
    }
-   Dictionary<string, string> mNotes = [];
 
    // Loads a DLL file, and fetches all the types from that
    void LoadDLL (string file) {
+      Console.WriteLine ($"Parsing {file}");
       var assy = Assembly.LoadFrom (file);
-      int n = 0;
       foreach (var type in assy.GetTypes ()) {
-         if (TypeInfo.Skip (type, DocumentPrivate)) continue;
-         Console.WriteLine ($"{++n}. {type.FullName}");
+         if (TypeInfo.Skip (type, mDocumentPrivate)) continue;
          mTypes.Add (type);
       }
    }
    List<Type> mTypes = [];
+
+   // Private data -------------------------------------------------------------
+   readonly bool mDocumentPrivate;        // Should private methods be documented
+   readonly string mOutDir = "";          // Output folder
+   readonly List<string> mInput = [];     // Set of input files (XML, DLL)
 }

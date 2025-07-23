@@ -21,7 +21,7 @@ class HTMLGen {
          <!DOCTYPE html>
          <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
          <head><meta charset="utf-8" /><title>{title}</title></head>
-         <link rel="stylesheet" href="std.css">
+         <link rel="stylesheet" href="demo.css">
          <body>
 
          """);
@@ -31,6 +31,10 @@ class HTMLGen {
    /// <param name="content">The actual content for the H1</param>
    /// <param name="more">Attributes for the H1, in similar fashion to what BEGIN expects.</param>
    public void H1 (string content, params object[] more) => ELEM ("h1", content, more).NL ();
+
+   public void P (string content, params object[] more) => ELEM ("p", content, more).NL ();
+
+   public void PRE (string content, params object[] more) => ELEM ("pre", content, more).NL ();
 
    public void NL () => mS.Append ('\n');
 
