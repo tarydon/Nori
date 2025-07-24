@@ -190,19 +190,19 @@ public partial class Poly {
       if (IsCircle || radius.IsZero ()) return null; // No Fillet for circles
       // Handle the special case where we are filleting at node 0 of a
       // closed Poly (by rolling the poly and making a fillet at N-1)
-      if (IsClosed && (node == 0 | node == Count))
+      if (IsClosed && (node == 0 || node == Count))
          return Roll (1).Fillet (Count - 1, radius);
 
       // If this is not an interior node, or if one of the two segments attached
       // to the node is either an arc or too short, we return null
-      if (node <= 0 | node >= Count) return null;
+      if (node <= 0 || node >= Count) return null;
       Seg s1 = this[node - 1], s2 = this[node];
-      if (s1.IsArc | s2.IsArc) return null;
+      if (s1.IsArc || s2.IsArc) return null;
       var turnAngle = GetTurnAngle (node);
 
       // Find the tangent points for the fillet by shifting the common vertex along the slope of each line
       double len = Math.Abs (radius / Math.Tan ((Lib.PI - turnAngle) / 2));
-      if (s1.Length <= len | s2.Length <= len) return null;
+      if (s1.Length <= len || s2.Length <= len) return null;
 
       // Use a PolyBuilder to build the fillet poly. The target node where
       // the fillet is to be added is 'node'
@@ -227,7 +227,7 @@ public partial class Poly {
          } else
             pb.Line (pt);
 
-         // If we are heading towards the target node, add an new node for the beginning
+         // If we are heading towards the target node, add a new node for the beginning
          // of the fillet, by moving backwards by len along the lead-in segment slope
          if (i == node - 1) {
             var start = s2.A.Polar (-len, s1.Slope); var pt1 = start + (s2.A - start).Perpendicular ();
