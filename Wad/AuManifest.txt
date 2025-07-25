@@ -22,3 +22,5 @@ E2Insert
   -Block ^Dwg BlockName Pt Angle XScale YScale -Bound
 E2Dimension
   -Bound Ents
+E2Bendline
+  ^Dwg Angle KFactor Radius Pts

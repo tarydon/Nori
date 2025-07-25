@@ -230,4 +230,13 @@ class DXFTests2 {
       DXFWriter.SaveFile (dwg, NT.TmpDXF);
       Assert.TextFilesEqual1 ("IO/DXF/Out/Layer.dxf", NT.TmpDXF);
    }
+
+   [Test (105, "Issue.73: Extract bend information from the DXF special text entities")]
+   void Test6 () {
+      var dwg = DXFReader.FromFile (NT.File ("IO/DXF/Bend-10.dxf"));
+      CurlWriter.ToFile (dwg, NT.TmpCurl);
+      Assert.TextFilesEqual1 ("IO/DXF/Out/Bend-10.curl", NT.TmpCurl);
+      DXFWriter.SaveFile (dwg, NT.TmpDXF);
+      Assert.TextFilesEqual1 ("IO/DXF/Out/Bend-10.dxf", NT.TmpDXF);
+   }
 }
