@@ -92,9 +92,12 @@ public class E2Dimension : Ent2 {
 #region class E2Bendline ---------------------------------------------------------------------------
 /// <summary>Represents a Bendline in a drawing</summary>
 public class E2Bendline : Ent2 {
-   public E2Bendline (Dwg2 dwg, IEnumerable<Point2> pts, double angle, double radius, double kfactor, double thickness)
+   // Constructors -------------------------------------------------------------
+   E2Bendline () => mDwg = null!;
+   public E2Bendline (Dwg2 dwg, IEnumerable<Point2> pts, double angle, double radius, double kfactor, double thickness = 1)
       => (Angle, KFactor, Pts, Radius, mDwg, Thickness) = (angle, kfactor, [.. pts], radius, dwg, thickness);
 
+   // Properties ---------------------------------------------------------------
    /// <summary>The exterior angle (turn angle) in radians. A hem will have an angle of +PI or -PI.</summary>
    public readonly double Angle;
 

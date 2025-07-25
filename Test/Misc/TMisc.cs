@@ -351,6 +351,8 @@ class TMisc {
       dwg.Add (new E2Bendline (dwg, Point2.List (75, 0, 75, 60), Lib.HalfPI, 1, 0.38, 1));
       var s = dwg.Ents.OfType<E2Bendline> ().First ();
       Assert.IsTrue (Math.Round (s.FlatWidth, 3) == 2.168 && Math.Round (s.Deduction, 3) == 1.832);
+      s.Deduction = 1.5;
+      Assert.IsTrue (Math.Round (s.FlatWidth, 1) == 2.5 && Math.Round (s.KFactor, 3) == 0.592);
    }
 
    class T1Type : IIndexed {
