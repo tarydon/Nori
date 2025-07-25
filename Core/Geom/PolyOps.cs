@@ -264,6 +264,32 @@ public partial class Poly {
       return new ([.. mPts.Roll (n)], [.. knots.Roll (n)], mFlags);
    }
 
+   /// <summary>This tries to append the other poly to the current, only if their endpoints are within the threshold</summary>
+   public bool TryAppend (Poly other, [MaybeNullWhen (false)] out Poly result, double threshold = 1e-6) {
+      result = null;
+      if (IsClosed || other.IsClosed || ReferenceEquals (this, other)) return false;
+      Poly a, b;
+      if (B.EQ (other.A, threshold)) (a, b) = (this, other);
+      else if (B.EQ (other.B, threshold)) (a, b) = (this, other.Reversed ());
+      else if (A.EQ (other.B, threshold)) (a, b) = (other, this);
+      else if (A.EQ (other.A, threshold)) (a, b) = (other.Reversed (), this);
+      else return false;
+      List<Point2> pts = [.. a.mPts.SkipLast (1), .. b.mPts];
+      EFlags flags = 0;
+      if (pts[0].EQ (pts[^1])) {
+         flags |= EFlags.Closed; pts = [.. pts.SkipLast (1)];
+      }
+      if (!a.HasArcs && !b.HasArcs) result = new Poly ([.. pts], [], flags);
+      else {
+         var extra = new List<Extra> (a.Count + b.Count);
+         for (int i = 0; i < a.Count; i++)
+            extra.Add (a.mExtra.SafeGet (i));
+         extra.AddRange (b.mExtra);
+         result = new Poly ([.. pts], [.. extra], flags | EFlags.HasArcs);
+      }
+      return true;
+   }
+
    /// <summary>Flags to perform some corner operations like fillet, corner-step etc</summary>
    [Flags]
    public enum ECornerOpFlags : ushort {
