@@ -23,4 +23,4 @@ E2Insert
 E2Dimension
   -Bound Ents
 E2Bendline
-  ^Dwg Angle KFactor Radius Pts
+  ^Dwg Angle KFactor Radius Pts Thickness
