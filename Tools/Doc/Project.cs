@@ -9,17 +9,13 @@ class Project {
          if (w.Length != 2) continue;
          string key = w[0].ToUpper ();
          switch (key) {
-            case "DOCUMENTPRIVATE": mDocumentPrivate = GetBool (w[1]); break;
+            case "DOCUMENTPRIVATE": mDocPrivate = GetBool (w[1]); break;
             case "INPUT": mInput.Add (w[1]); break;
             case "OUTPUTDIRECTORY": mOutDir = w[1]; break;
             case "PROJECT": mName = w[1]; break;
             case "NAMESPACE": mNamespaces.Add (w[1]); break;
             default: Console.WriteLine ($"Unknown key {key} in {file}"); break;
          }
-      }
-      for (int i = 0; i < mNamespaces.Count; i++) {
-         string s = mNamespaces[i]; if (!s.EndsWith ('.')) s += ".";
-         mNamespaces[i] = s;
       }
       mNamespaces = [.. mNamespaces.OrderByDescending (a => a.Length)];
       if (mOutDir == "") Program.Fatal ($"OUTPUTDIRECTORY setting missing in {file}");
@@ -94,14 +90,16 @@ class Project {
       Console.WriteLine ($"Parsing {file}");
       var assy = Assembly.LoadFrom (file);
       foreach (var type in assy.GetTypes ()) {
-         if (TypeInfo.Skip (type, mDocumentPrivate)) continue;
+         if (TypeInfo.Skip (type, mDocPrivate)) continue;
          mTypes.Add (type);
       }
    }
    List<Type> mTypes = [];
 
    // Private data -------------------------------------------------------------
-   readonly bool mDocumentPrivate;        // Should private methods be documented
+   public bool DocPrivate => mDocPrivate;
+   readonly bool mDocPrivate;        // Should private methods be documented
+
    readonly string mOutDir = "";          // Output folder
    readonly List<string> mInput = [];     // Set of input files (XML, DLL)
 }

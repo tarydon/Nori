@@ -1,10 +1,12 @@
 ﻿namespace Nori.Doc;
+using static System.Reflection.BindingFlags;
 
 // TypeGen is used to generate a documentation page for a particular type
 class TypeGen : HTMLGen {
    public TypeGen (Type t, Project project) {
       mT = t;
       var dict = project.Notes;
+      var docPrivate = project.DocPrivate;
       string nicename = t.NiceName ();
 
       // Output the level 1 heading, and the class name and description
@@ -14,12 +16,46 @@ class TypeGen : HTMLGen {
       if (dict.TryGetValue (key, out var text)) {
          OutBlock (text, key);
       } else
-         Console.WriteLine ($"No documentation for type {t.FullName}");
+         Warn ($"No documentation for type {t.FullName}");
+
+      // Next, the documentation for the constructors
+      var bf = Instance | Public | NonPublic;
+      var cons = t.GetConstructors (bf).Where (a => docPrivate || a.IsPublic).ToList ();
+      if (cons.Count > 0) {
+         H2 ("Constructors");
+         cons.ForEach (OutConstructor);
+      }
 
       // Finish up
-      mS.AppendLine ("</body>\n</html>");
+      Out ("</body>\n</html>");
    }
    readonly Type mT;
+
+   void OutConstructor (ConstructorInfo cons) {
+      Out ($"<p class=\"declaration\">");
+      OutType (cons.DeclaringType!); 
+      OutParams (cons.GetParameters ());
+      Out ("</p>");
+
+      var target = cons.GetKey ();
+   }
+
+   void OutType (Type t) 
+      => Out ($"<span class=\"type\">{t.NiceName ().HTML ()}</span>");
+
+   void OutName (string name)
+      => Out ($"<span class=\"name\">{name}</span>");
+
+   void OutParams (ParameterInfo[] pars) {
+      Out (" (");
+      for (int i = 0; i < pars.Length; i++) {
+         var par = pars[i];
+         if (i > 0) Out (", ");
+         OutType (par.ParameterType); Out (" ");
+         OutName (par.Name!);
+      }
+      Out (")\n");
+   }
 
    void OutBlock (string s, string target) {
       // First, extract the summary block
@@ -67,14 +103,14 @@ class TypeGen : HTMLGen {
                      if ("-+*".Contains (sline[0])) {
                         mS.Append ("</li><li>");
                         line = sline[1..].TrimStart ();
-                     } 
+                     }
                      break;
                   case E.p: line = sline; break;
                }
                break;
             case 1:        // Nesting one level deeper
                E t2 = sline[0] switch {
-                  '-' or '*' => E.ul, 
+                  '-' or '*' => E.ul,
                   '+' => E.ol,
                   _ => level == 1 ? E.p : E.pre
                };
@@ -103,6 +139,11 @@ class TypeGen : HTMLGen {
    public void Generate (string outDir) {
       File.WriteAllText ($"{outDir}/type.{mT.FullName}.html", mS.ToString ().Replace ("\r\n", "\n"));
    }
+
+   void Warn (string s)
+      => Console.WriteLine (s);
+
+   void Out (string s) => mS.Append (s);
 
    enum E { p, ul, ol, pre };
 }

@@ -34,4 +34,13 @@ static class Extensions {
       sb.Append (t.Name);
       return sb.ToString ();
    }
+
+   public static string GetKey (this ConstructorInfo c) {
+      var sb = new StringBuilder ("M:");
+      sb.Append (c.DeclaringType!.FullName!.Replace ('+', '.'));
+      sb.Append (".#ctor(");
+      c.GetParameters ().Select (a => a.ParameterType.FullName!.Replace ('+', '.'));
+      sb.Append (")");
+      return sb.ToString ();
+   }
 }

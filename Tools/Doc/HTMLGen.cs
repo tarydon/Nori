@@ -35,6 +35,8 @@ class HTMLGen {
    /// <param name="more">Attributes for the H1, in similar fashion to what BEGIN expects.</param>
    public void H1 (string content, params object[] more) => ELEM ("h1", content, more).NL ();
 
+   public void H2 (string content, params object[] more) => ELEM ("h2", content, more).NL ();
+
    public void P (string content, params object[] more) => ELEM ("p", content, more).NL ();
 
    public void PRE (string content, params object[] more) => ELEM ("pre", content, more).NL ();
