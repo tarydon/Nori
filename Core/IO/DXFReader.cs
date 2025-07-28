@@ -41,6 +41,7 @@ public partial class DXFReader {
             case 70: I0 = Vn; break; case 71: I1 = Vn; break;
             case 72: I2 = Vn; break; case 73: I3 = Vn; break;
             case 230: ZDir = Vf.EQ (-1) ? -1 : 1; break;
+            case 1000: mXData.Add (V); break;
          }
       }
       mReader.Dispose ();
@@ -56,7 +57,7 @@ public partial class DXFReader {
    // For the HEADER section, this reads in all the important header variables.
    // For some of the sections like OBJECTS etc this just skips past the section.
    // For other sections like TABLES, BLOCKS, ENTITIES, this just returns without
-   // 'eating' the section so the section contines to be processed as normal
+   // 'eating' the section so the section continues to be processed as normal
    void HandleSection (string name) {
       if (!sSections.Contains (name)) {
          while (Next ()) { if (G == 0 && V == "ENDSEC") break; }
@@ -81,7 +82,21 @@ public partial class DXFReader {
             case "CIRCLE": Add (Poly.Circle (Center, Radius)); break;
             case "DIMENSION": Add (new E2Dimension (Layer, mDwg.GetBlock (Name)!.Ents)); break;
             case "ELLIPSE": AddEllipse (Pt0, MajorAxis, AxisRatio, TRange); break;
-            case "LINE": Add (Poly.Line (Pt0, Pt1)); break;
+            case "LINE":
+               var line = Poly.Line (Pt0, Pt1);
+               // Try to find bend info among mXData entries
+               var (ba, radius, kfactor) = (double.NaN, 0.0, 0.42);
+               foreach (var s in mXData) {
+                  if (s.StartsWith ("BEND_ANGLE:")) ba = s[11..].ToDouble ().D2R ();
+                  else if (s.StartsWith ("BEND_RADIUS:")) radius = s[12..].ToDouble ();
+                  else if (s.StartsWith ("K_FACTOR:")) kfactor = s[9..].ToDouble ();
+               }
+               if (!ba.IsNaN ()) {
+                  Add (new E2Bendline (mDwg, line.Pts, ba, radius, kfactor));
+                  mXData.Clear ();
+               } else Add (line);
+               break;
+
             case "POINT": Add (new E2Point (Layer, Pt0) { Color = GetColor () }); break;
             case "POLYLINE": mClosedPoly = (Flags & 1) > 0; break;
             case "SEQEND": AddPolyline (); break;
@@ -246,7 +261,8 @@ public partial class DXFReader {
    int I0, I1, I2, I3;              // Integer value read from group 70 .. 73
    // A StringBuilder member used in various text compositions.
    readonly StringBuilder mSB = new ();
-
+   // Raw 1000 group code strings from DXF (e.g., "BEND_ANGLE:90")
+   List<string> mXData = [];
    // Aliases for the group codes (for better readability)
    int Flags => I0;
    double Bulge => D2Set.SafeGet (0);
