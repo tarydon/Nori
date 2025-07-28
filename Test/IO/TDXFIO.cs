@@ -175,6 +175,16 @@ class DXFTests {
       DXFWriter.SaveFile (dwg, NT.TmpDXF);
       Assert.TextFilesEqual1 ("IO/DXF/Out/TextAlign.dxf", NT.TmpDXF);
    }
+
+   [Test (106, "Test for BendLine")]
+   public void Test21 () {
+      var dwg = new Dwg2 ();
+      dwg.Add (Poly.Rectangle (0, 0, 60, 50));
+      dwg.Add (new E2Bendline (dwg, Point2.List (40, 0, 40, 50), Lib.HalfPI, 2, 0.42, 1));
+      dwg.Add (new E2Bendline (dwg, Point2.List (20, 0, 20, 50), -Lib.HalfPI, 2, 0.42, 1));
+      DXFWriter.SaveFile (dwg, NT.TmpDXF);
+      Assert.TextFilesEqual1 ("IO/DXF/Out/BendLine.dxf", NT.TmpDXF);
+   }
 }
 
 [Fixture (5, "Next set of DXF tests", "DXF")]
@@ -221,9 +231,19 @@ class DXFTests2 {
       Assert.TextFilesEqual1 ("IO/DXF/Out/Layer.dxf", NT.TmpDXF);
    }
 
-   [Test (105, "Extend DXFReader to read bend line information from DXF")]
+   [Test (105, "Issue.73: Extract bend information from the DXF special text entities")]
    void Test6 () {
+      var dwg = DXFReader.FromFile (NT.File ("IO/DXF/Bend-10.dxf"));
+      CurlWriter.ToFile (dwg, NT.TmpCurl);
+      Assert.TextFilesEqual1 ("IO/DXF/Out/Bend-10.curl", NT.TmpCurl);
+      DXFWriter.SaveFile (dwg, NT.TmpDXF);
+      Assert.TextFilesEqual1 ("IO/DXF/Out/Bend-10.dxf", NT.TmpDXF);
+   }
+
+   [Test (107, "Extend DXFReader to read bend line information from DXF")]
+   void Test7 () {
       var dwg = DXFReader.FromFile (NT.File ("IO/DXF/BasicBend.dxf"));
-      Assert.IsTrue (dwg.Ents.OfType<E2Bendline> ().Count () == 3);
+      CurlWriter.ToFile (dwg, NT.TmpCurl);
+      Assert.TextFilesEqual1 ("IO/DXF/Out/BasicBend.curl", NT.TmpCurl);
    }
 }

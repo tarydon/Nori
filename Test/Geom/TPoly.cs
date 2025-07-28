@@ -197,4 +197,30 @@ class PolyTests {
       Poly.Parse ("M0,0H10").Closed ().Is ("M0,0H10Z");
       Poly.Parse ("M0,0H10V5H0Z").Closed ().Is ("M0,0H10V5H0Z");
    }
+
+   [Test (59, "Poly.Append tests")]
+   void Test8 () {
+      Poly p = Poly.Parse ("M0,50 V0 H100 V50Z"), other = Poly.Parse ("M0,50 H10");
+      p.TryAppend (other, out _).Is (false);             // Can't append to a closed pline
+      p = Poly.Parse ("M0,50 V0 H100 V50");
+      p.TryAppend (Poly.Parse ("M5,25 H30"), out Poly? p1).Is (false); // Can't append with different endpoints
+      Assert.IsTrue (p1 == null);
+      var tests = new (string Other, string Expected)[]
+      {
+        ("M100,50 H110",     "M0,50V0H100V50H110"),       // Normal append
+        ("M110,50 H100",     "M0,50V0H100V50H110"),       // Flip then append
+        ("M10,50 H0",        "M10,50H0V0H100V50"),        // Flip then prepend
+        ("M0,50 H10",        "M10,50H0V0H100V50"),        // Prepend seg
+        ("M0,50 H100",       "M0,50V0H100V50Z"),          // Result is closed
+        ("M96,50Q100,50,-2", "M0,50V0H100V50Q96,50,2"),   // Arc append (cw)
+        ("M0,50Q4,50,-2",    "M4,50Q0,50,2V0H100V50"),    // Arc prepend (cw)
+        ("M96,50Q100,50,2",  "M0,50V0H100V50Q96,50,-2"),  // Arc append (ccw)
+        ("M0,50Q4,50,2",     "M4,50Q0,50,-2V0H100V50"),   // Arc prepend (ccw)
+      };
+      foreach (var (otherPoly, expected) in tests) {
+         Poly others = Poly.Parse (otherPoly);
+         p.TryAppend (others, out Poly? result).Is (true);
+         result?.Is (expected);
+      }
+   }
 }
