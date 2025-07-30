@@ -5,20 +5,16 @@ using static System.Reflection.BindingFlags;
 class TypeGen : HTMLGen {
    public TypeGen (Type t, Project project) {
       mT = t;
-      var dict = project.Notes;
+      mDict = (mProject = project).Notes;
       var docPrivate = project.DocPrivate;
       string nicename = t.NiceName ();
 
       // Output the level 1 heading, and the class name and description
       HEAD ($"{project.Name}: {nicename}");
       H1 ($"{t.ClassPrefix ()} {nicename.HTML ()}");
-      string key = t.GetKey ();
-      if (dict.TryGetValue (key, out var text)) {
-         OutBlock (text, key);
-      } else
-         Warn ($"No documentation for type {t.FullName}");
+      OutBlock ($"T:{t.GetKey ()}");
 
-      // Next, the documentation for the constructors
+      // Document the constructors
       var bf = Instance | Public | NonPublic;
       var cons = t.GetConstructors (bf).Where (a => docPrivate || a.IsPublic).ToList ();
       if (cons.Count > 0) {
@@ -26,21 +22,68 @@ class TypeGen : HTMLGen {
          cons.ForEach (OutConstructor);
       }
 
+      // Document the properties and fields
+      bf = Instance | Static | Public | NonPublic;
+      List<MemberInfo> mi = [];
+      mi.AddRange (t.GetProperties (bf).Where (a => docPrivate || a.AnyPublic ()));
+      mi.AddRange (t.GetFields (bf).Where (a => docPrivate || a.IsPublic));
+      mi.Sort ((a, b) => a.Name.CompareTo (b.Name));
+      if (mi.Count > 0) {
+         H2 ("Properties");
+         mi.ForEach (OutProperty);
+      }
+
       // Finish up
       Out ("</body>\n</html>");
    }
+   readonly Project mProject;
+   readonly IReadOnlyDictionary<string, string> mDict;
    readonly Type mT;
 
    void OutConstructor (ConstructorInfo cons) {
       Out ($"<p class=\"declaration\">");
-      OutType (cons.DeclaringType!); 
+      Out ($"<span class=\"moniker\">");
+      OutType (cons.DeclaringType!);
+      Out ("</span>");
       OutParams (cons.GetParameters ());
-      Out ("</p>");
-
-      var target = cons.GetKey ();
+      Out ("</p>\n");
+      OutBlock (cons.GetKey ());
+      Out ("<br/><hr/>");
    }
 
-   void OutType (Type t) 
+   void OutProperty (MemberInfo mi) {
+      Out ($"<p class=\"declaration\">");
+      Type type; bool get = false, set = false;
+      string key;
+      switch (mi) {
+         case PropertyInfo pi:
+            type = pi.PropertyType;
+            if (pi.GetGetMethod () is MethodInfo mig)
+               if (mig.IsPublic || mProject.DocPrivate) get = true;
+            if (pi.GetSetMethod () is MethodInfo mis)
+               if (mis.IsPublic || mProject.DocPrivate) set = true;
+            key = pi.GetKey ();
+            break;
+         case FieldInfo fi:
+            type = fi.FieldType;
+            get = true; set = !fi.IsInitOnly;
+            key = fi.GetKey ();
+            break;
+         default:
+            throw new NotImplementedException ();
+      }
+
+      OutType (type); Out (" ");
+      Out ($"<span class=\"moniker\">{mi.Name}</span>");
+      Out (" {");
+      if (get) Out (" get;");
+      if (set) Out (" set;");
+      Out (" }</p\n>");
+      OutBlock (key);
+      Out ("<br/><hr/>");
+   }
+
+   void OutType (Type t)
       => Out ($"<span class=\"type\">{t.NiceName ().HTML ()}</span>");
 
    void OutName (string name)
@@ -57,7 +100,12 @@ class TypeGen : HTMLGen {
       Out (")\n");
    }
 
-   void OutBlock (string s, string target) {
+   void OutBlock (string target) {
+      if (!mDict.TryGetValue (target, out var s)) {
+//         Console.WriteLine ($"No documentation for {target}");
+         return;
+      }
+
       // First, extract the summary block
       int n1 = s.IndexOf ("<summary>"), n2 = s.IndexOf ("</summary>", n1 + 8);
       string summary = s[(n1 + 9)..n2].Trim ();

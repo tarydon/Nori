@@ -78,10 +78,25 @@ public readonly struct Bound1 : IEQuable<Bound1> {
 [AuPrimitive]
 public readonly struct Bound2 : IEQuable<Bound2> {
    // Constructors -------------------------------------------------------------
+   /// Constructs an empty Bound2
    public Bound2 () => (X, Y) = (new (), new ());
+   /// <summary>
+   /// Constructs a Bound2 that encompasses just a single point (min == max in X and Y)
+   /// </summary>
    public Bound2 (double x, double y) => (X, Y) = (new (x), new (y));
+   /// <summary>
+   /// Constructs a Bound2 that encompasses a single point (min == max in X and Y)
+   /// </summary>
    public Bound2 (Point2 pt) => (X, Y) = (new (pt.X), new (pt.Y));
-   public Bound2 (double xmin, double ymin, double xmax, double ymax) => (X, Y) = (new (xmin, xmax), new (ymin, ymax));
+   /// <summary>
+   /// Constructs a Bound2 that uses the two given points x1,y1 and x2,y2 as diagonals
+   /// </summary>
+   /// No particular ordering is required between x1 and x2 or between y1 and y2. For
+   /// example, x1 may be less than x2, while y1 may be more than y2.
+   public Bound2 (double x1, double y1, double x2, double y2) => (X, Y) = (new (x1, x2), new (y1, y2));
+   /// <summary>
+   /// Constructs a Bound2 from two Bound1 structs (one in X and one in Y)
+   /// </summary>
    public Bound2 (Bound1 x, Bound1 y) => (X, Y) = (x, y);
 
    public static Bound2 Update (ref Bound2 bound, Func<Bound2> computer) {
@@ -89,6 +104,9 @@ public readonly struct Bound2 : IEQuable<Bound2> {
       return bound;
    }
 
+   /// <summary>
+   /// Construct a Bound2 that encompasses all the given points
+   /// </summary>
    public Bound2 (IEnumerable<Point2> pts) {
       (X, Y) = (new (), new ());
       foreach (var p in pts) { X += p.X; Y += p.Y; }
@@ -109,7 +127,7 @@ public readonly struct Bound2 : IEQuable<Bound2> {
    public readonly Bound1 X, Y;
    /// <summary>Width is the X-span of the Bound2</summary>
    public double Width => X.Length;
-   /// <summary>Height is the Y-span of the Bound2</summary>
+   /// Height is the Y-span of the Bound2
    public double Height => Y.Length;
    public bool IsEmpty => X.IsEmpty || Y.IsEmpty;
    public Point2 Midpoint => new (X.Mid, Y.Mid);
@@ -220,7 +238,7 @@ public readonly struct Bound3 : IEQuable<Bound3> {
    /// <summary>Returns a Bound3 padded by a given linear margin on all sides</summary>
    public Bound3 InflatedL (double delta) => new (X.InflatedL (delta), Y.InflatedL (delta), Z.InflatedL (delta));
 
-   public void Write (UTFWriter w) 
+   public void Write (UTFWriter w)
       => w.Write ('"').Write (X.Min).Write (',').Write (Y.Min).Write (',').Write (Z.Min).Write (':')
          .Write (X.Max).Write (',').Write (Y.Max).Write (',').Write (Z.Max).Write ('"');
 

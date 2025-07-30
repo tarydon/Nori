@@ -1,7 +1,12 @@
 ﻿namespace Nori.Doc;
 
 static class Extensions {
+   public static bool AnyPublic (this PropertyInfo pi)
+      => pi.GetGetMethod ()?.IsPublic == true || pi.GetSetMethod ()?.IsPublic == true;
+
    public static string ClassPrefix (this Type t) {
+      if (t.IsInterface) return "interface";
+      if (t.IsValueType) return "struct";
       return "class";
    }
 
@@ -21,26 +26,36 @@ static class Extensions {
          sb.Append ('>');
       } else
          sb.Append (t.Name);
-      return sb.ToString ();
+      var s = sb.ToString ();
+      return sNiceNames.GetValueOrDefault (s, s);
    }
+   static Dictionary<string, string> sNiceNames = new() {
+      ["Double"] = "double", ["Single"] = "float", ["Int32"] = "int", ["UInt32"] = "uint",
+      ["Int16"] = "short", ["UInt16"] = "ushort", ["Int64"] = "long", ["UInt64"] = "ulong",
+      ["Byte"] = "byte", ["SByte"] = "sbyte", ["Boolean"] = "bool"
+   };
 
    /// <summary>
    /// Returns the key for this type (used to index into the XML documentation)
    /// </summary>
-   public static string GetKey (this Type t) {
-      var sb = new StringBuilder ("T:");
-      if (t.DeclaringType != null) sb.Append ($"{GetKey (t.DeclaringType)}.");
-      else if (t.Namespace != null) sb.Append ($"{t.Namespace}.");
-      sb.Append (t.Name);
-      return sb.ToString ();
-   }
+   public static string GetKey (this Type t)
+      => (t.FullName ?? t.Name).Replace ('+', '.');
 
    public static string GetKey (this ConstructorInfo c) {
       var sb = new StringBuilder ("M:");
-      sb.Append (c.DeclaringType!.FullName!.Replace ('+', '.'));
-      sb.Append (".#ctor(");
-      c.GetParameters ().Select (a => a.ParameterType.FullName!.Replace ('+', '.'));
-      sb.Append (")");
+      sb.Append (c.DeclaringType!.GetKey ());
+      sb.Append (".#ctor");
+      if (c.GetParameters ().Length != 0) {
+         sb.Append ('(');
+         sb.Append (string.Join (',', c.GetParameters ().Select (a => a.ParameterType.GetKey ())));
+         sb.Append (')');
+      }
       return sb.ToString ();
    }
+
+   public static string GetKey (this PropertyInfo p)
+      => $"P:{p.DeclaringType!.GetKey ()}.{p.Name}";
+
+   public static string GetKey (this FieldInfo f)
+      => $"F:{f.DeclaringType!.GetKey ()}.{f.Name}";
 }
