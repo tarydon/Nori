@@ -92,8 +92,8 @@ public static class ShapeRecognizer {
 
    // Check if the given Poly is a rectangle
    static bool IsRect (Poly poly, ref ShapeDesc desc) {
-      // Captures: (F40 L F20 L )(F40 L F20 L ).
-      sRect ??= Make (@"^(F[^ ]+ L F[^ ]+ L )\1\.$");
+      // F40 L F20 L F40 L F20 L .
+      sRect ??= Make (@"^(F[^ ]+) ([L|R]) (F[^ ]+) \2 \1 \2 \3 \2 .$");
       var (n, code) = poly.GetLogoCode (6);
       if (!sRect.Match (code).Success) return false;
 
@@ -109,7 +109,8 @@ public static class ShapeRecognizer {
 
    // Check if the given Poly is a rounded/filleted rectangle
    static bool IsRoundRect (Poly poly, ref ShapeDesc desc) {
-      sRoundRect ??= Make (@"^(F[^ ]+ R[^ ]+ G[^ ]+ R[^ ]+ F[^ ]+ R[^ ]+ G[^ ]+ R[^ ]+ )\1\.$");
+      // F30 G5,90 F10 G5,90 F30 G5,90 F10 G5,90 .
+      sRoundRect ??= Make (@"^(F[^ ]+) ([G|D][^ ]+) (F[^ ]+) \2 \1 \2 \3 \2 .$");
       var (n, code) = poly.GetLogoCode (6);
       if (!sRoundRect.Match (code).Success) return false;
 
@@ -123,7 +124,8 @@ public static class ShapeRecognizer {
    static Regex? sRoundRect;
 
    static bool IsQuadInFillet (Poly poly, ref ShapeDesc desc) {
-      sQuadInFillet ??= Make (@"^(F[^ ]+ L[^ ]+ D[^ ]+ L[^ ]+ F[^ ]+ L[^ ]+ D[^ ]+ L[^ ]+ )\1\.$");
+      // F30 L D5,90 L F10 L D5,90 L F30 L D5,90 L F10 L D5,90 L .
+      sQuadInFillet ??= Make (@"^(F[^ ]+) ([L|R]) ([D|G][^ ]+) \2 (F[^ ]+) \2 \3 \2 \1 \2 \3 \2 \4 \2 \3 \2 .$");
       var (n, code) = poly.GetLogoCode (6);
       if (!sQuadInFillet.Match (code).Success) return false;
 
@@ -137,7 +139,8 @@ public static class ShapeRecognizer {
    static Regex? sQuadInFillet;
 
    static bool IsChamferedRect (Poly poly, ref ShapeDesc desc) {
-      sChamferRect ??= Make (@"^(F[^ ]+ L45 F[^ ]+ L45 F[^ ]+ L45 F[^ ]+ L45 )\1\.$");
+      // F30 L45 F7.071068 L45 F10 L45 F7.071068 L45 F30 L45 F7.071068 L45 F10 L45 F7.071068 L45 .
+      sChamferRect ??= Make (@"^(F[^ ]+) ([L|R]45) (F[^ ]+) \2 (F[^ ]+) \2 \3 \2 \1 \2 \3 \2 \4 \2 \3 \2 .$");
       var (n, code) = poly.GetLogoCode (6);
       if (!sChamferRect.Match (code).Success) return false;
 
@@ -152,7 +155,8 @@ public static class ShapeRecognizer {
    static Regex? sChamferRect;
 
    static bool IsObround (Poly poly, ref ShapeDesc desc) {
-      sObround ??= Make (@"^(F[^ ]+ G[^ ]+ )\1\.$");
+      // F20 G10,180 F20 G10,180 .
+      sObround ??= Make (@"^(F[^ ]+) ([G|D][^,]+,180) \1 \2 .$");
       var (n, code) = poly.GetLogoCode (6);
       if (!sObround.Match (code).Success) return false;
 
@@ -166,7 +170,8 @@ public static class ShapeRecognizer {
    static Regex? sObround;
 
    static bool IsDoubleD (Poly poly, ref ShapeDesc desc) {
-      sDoubleD ??= Make (@"^(F[^ ]+ L[^ ]+ G[^ ]+ L[^ ]+ )\1\.$");
+      // F34.641016 L60.000021 G20.000012,59.999959 L60.000021 F34.641016 L60.000021 G20.000012,59.999959 L60.000021 .
+      sDoubleD ??= Make (@"^(F[^ ]+) ([L|R][^ ]+) ([G|D][^ ]+) \2 \1 \2 \3 \2 .$");
       var (n, code) = poly.GetLogoCode (6);
       if (!sDoubleD.Match (code).Success) return false;
 
@@ -179,7 +184,8 @@ public static class ShapeRecognizer {
    static Regex? sDoubleD;
 
    static bool IsParallelogram (Poly poly, ref ShapeDesc desc) {
-      sParallelogram ??= Make (@"^(F[^ ]+ L[^ ]+ F[^ ]+ L[^ ]+ )\1\.$");
+      // F40 L70 F21.283555 L110 F40 L70 F21.283555 L110 .
+      sParallelogram ??= Make (@"^(F[^ ]+) ([L|R])([^ ]+) (F[^ ]+) \2([^ ]+) \1 \2\3 \4 \2\5 .$");
       var (n, code) = poly.GetLogoCode (6);
       if (!sParallelogram.Match (code).Success) return false;
 
@@ -192,8 +198,8 @@ public static class ShapeRecognizer {
    static Regex? sParallelogram;
 
    static bool IsSingleD (Poly poly, ref ShapeDesc desc) {
-      // Captures: F34.641016 L(59.999994) G20.000001,240.000011 L(59.999994) .
-      sSingleD ??= Make (@"^F[^ ]+ L([^ ]+) G[^ ]+ L\1 .$");
+      // F34.641016 L59.999994 G20.000001,240.000011 L59.999994 .
+      sSingleD ??= Make (@"^F[^ ]+ ([L|R][^ ]+) [G|D][^ ]+ \1 .$");
       var (n, code) = poly.GetLogoCode (6);
       if (!sSingleD.Match (code).Success) return false;
 
@@ -206,8 +212,8 @@ public static class ShapeRecognizer {
    static Regex? sSingleD;
 
    static bool IsTrapezoid (Poly poly, ref ShapeDesc desc) {
-      // Captures: F40 L(70) F(21.283555) L(70) F25.441191 L(110) F(21.283555) L(110) .
-      sTrapezoid ??= Make (@"^F[^ ]+ L([^ ]+) F([^ ]+) L\1 F[^ ]+ L([^ ]+) F\2 L\3 .$");
+      // F40 L70 F21.283555 L70 F25.441191 L110 F21.283555 L110 .
+      sTrapezoid ??= Make (@"^(F[^ ]+) ([L|R])([^ ]+) (F[^ ]+) \2\3 F[^ ]+ \2([^ ]+) \4 \2\5 .$");
       var (n, code) = poly.GetLogoCode (6);
       if (!sTrapezoid.Match (code).Success) return false;
 
