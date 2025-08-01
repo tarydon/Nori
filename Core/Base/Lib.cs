@@ -20,6 +20,8 @@ public static class Lib {
    public const double HalfPI = Math.PI / 2;
    /// <summary>QuarterPI = 45 degrees, in radians</summary>
    public const double QuarterPI = Math.PI / 4;
+   /// <summary>The constant square-root-of-2</summary>
+   public const double Root2 = 1.4142135623730950488016887242097;
 
    // Properties ---------------------------------------------------------------
    /// <summary>The list of known assemblies</summary>

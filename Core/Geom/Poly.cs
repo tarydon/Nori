@@ -263,11 +263,11 @@ public partial class Poly {
 
          // Now compute the turn angle at the corner, if this is not a tangential corner.
          // For a 90 degree turn, we don't output the angle.
-         double turn = GetTurnAngle (i + 1).R2D ().Round (decimals);
+         double turn = GetTurnAngle (i + 1);
          if (!turn.IsZero ()) {
             if (turn >= 0) sb.Append ('L'); else sb.Append ('R');
             turn = Abs (turn);
-            if (!turn.EQ (90)) sb.Append (turn);
+            if (!turn.EQ (HalfPI)) sb.Append (turn.R2D ().Round (decimals));
             sb.Append (' ');
          }
       }
