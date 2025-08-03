@@ -22,5 +22,10 @@ E2Insert
   -Block ^Dwg BlockName Pt Angle XScale YScale -Bound
 E2Dimension
   -Bound Ents
+Mechanism
+  Name Color Joint JMin JMax -JValue JVector JAsDrawn Sockets ConnectTo Children ^Parent -RootDir Geometry
+GeometrySource
+FileGeometry
+  File Shift -Rotate
 E2Bendline
   ^Dwg Angle KFactor Radius Pts Thickness

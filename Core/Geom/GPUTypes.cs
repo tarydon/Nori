@@ -32,6 +32,7 @@ public readonly record struct Vec3F (float X, float Y, float Z) : IEQuable<Vec3F
    public static explicit operator Vec3F (Point3 pt) => new ((float)pt.X, (float)pt.Y, (float)pt.Z);
    public static explicit operator Vec3F (Vector3 vec) => new ((float)vec.X, (float)vec.Y, (float)vec.Z);
    public static implicit operator Vector3 (Vec3F vec) => new (vec.X, vec.Y, vec.Z);
+   public static explicit operator Point3 (Vec3F vec) => new (vec.X, vec.Y, vec.Z);
    public static readonly Vec3F Zero = new (0, 0, 0);
    public bool EQ (Vec3F b) => X.EQ (b.X) && Y.EQ (b.Y) && Z.EQ (b.Z);
    public override string ToString () => $"<{X.R5 ()},{Y.R5 ()},{Z.R5 ()}>";

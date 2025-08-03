@@ -20,6 +20,7 @@ class AuType {
    AuType (Type type) {
       mType = type;
       Kind = Classify (type);
+      mDict[mType] = this;
       const BindingFlags bfInstance = Instance | Public | NonPublic | DeclaredOnly;
       switch (Kind) {
          // Constructing a Struct or Class AuType requires us to build AuField wrappers
@@ -109,11 +110,11 @@ class AuType {
             Type? type = assy.GetType ($"{ns}{sname}");
             if (type != null) {
                mByName.Add (sname, aut = new AuType (type));
-               mDict.Add (type, aut);
                return aut;
             }
          }
-      throw new AuException ($"Type {sname} not found");
+      if (!Lib.Assemblies.Any ()) throw new AuException ("Nori.Lib.init() not called");
+      throw new AuException ($"No metadata for '{sname}'");
    }
    static SymTable<AuType> mByName = new ();
 
@@ -123,7 +124,7 @@ class AuType {
    public static AuType Get (Type type) {
       AuType? aut = mDict.GetValueOrDefault (type);
       if (aut == null) {
-         aut = new AuType (type); mDict.Add (type, aut);
+         aut = new AuType (type); 
          mByName.Add (Lib.NiceName (type), aut);
       }
       return aut;

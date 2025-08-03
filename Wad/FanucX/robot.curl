@@ -1,0 +1,4 @@
+(RobotRBR){
+  Name:FanucX  AxisNames:SLURBT
+  H:565  A12:150  A23:770  A34:0  S4:1016  S6:175
+}
