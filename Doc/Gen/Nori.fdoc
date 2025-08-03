@@ -25,7 +25,7 @@ OUTPUTDIRECTORY    = c:\out
 
 # Set this to YES to document private classes, and private members of
 # classes. Set to NO to document only public classes, and public methods.
-DOCUMENTPRIVATE    = YES
+DOCUMENTPRIVATE    = NO
 
 # Set the names of the 'default' namespaces here. When a type belongs to
 # one of these namespaces, the namespace prefix is omitted from the documentation

@@ -12,7 +12,6 @@ class TypeGen : HTMLGen {
       mDict = (mProject = project).Notes;
       var docPrivate = project.DocPrivate;
       string nicename = t.NiceName ();
-      if (nicename != "Bound2") return;
 
       // Output the level 1 heading, and the class name and description
       HEAD ($"{project.Name}: {nicename}");
@@ -91,12 +90,23 @@ class TypeGen : HTMLGen {
    void OutOperator (MethodInfo mi) {
       Out ($"<p class=\"declaration\">");
       OutType (mi.ReturnType);
-      Out ($" <span class=\"moniker\">{mi.Name}</span>");
+      string name = sOperators.GetValueOrDefault (mi.Name, mi.Name);
+      Out ($" <span class=\"moniker\">operator {name.HTML ()}</span>");
       OutParams (mi.GetParameters ());
       Out ("</p>\n");
       OutBlock (mi.GetKey ());
       Out ("<br/><hr/>");
    }
+   static Dictionary<string, string> sOperators = new Dictionary<string, string> () {
+      ["op_UnaryPlus"] = "+", ["op_UnaryNegation"] = "-", ["op_LogicalNot"] = "!",
+      ["op_OnesComplement"] = "~", ["op_Increment"] = "++", ["op_Decrement"] = "--",
+      ["op_True"] = "true", ["op_False"] = "false", ["op_Addition"] = "+",
+      ["op_Subtraction"] = "-", ["op_Multiply"] = "*", ["op_Division"] = "/",
+      ["op_Modulus"] = "%", ["op_BitwiseAnd"] = "&", ["op_BitwiseOr"] = "|",
+      ["op_ExclusiveOr"] = "^", ["op_LeftShift"] = "<<", ["op_RightShift"] = ">>",
+      ["op_Equality"] = "==", ["op_Inequality"] = "!=", ["op_LessThan"] = "<",
+      ["op_LessThanOrEqual"] = "<=", ["op_GreaterThan"] = ">", ["op_GreaterThanOrEqual"] = ">="
+   };
 
    void OutProperty (MemberInfo mi) {
       Out ($"<p class=\"declaration\">");
@@ -215,9 +225,6 @@ class TypeGen : HTMLGen {
                   line = sline[1..].TrimStart ();
                }
                stack.Push (t2);
-               break;
-            default:
-               Program.Fatal ($"Invalid documentation nesting for {target}");
                break;
          }
          mS.AppendLine (line);
