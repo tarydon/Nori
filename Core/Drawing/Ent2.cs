@@ -92,20 +92,45 @@ public class E2Dimension : Ent2 {
 #region class E2Bendline ---------------------------------------------------------------------------
 /// <summary>Represents a Bendline in a drawing</summary>
 public class E2Bendline : Ent2 {
-   public E2Bendline (Dwg2 dwg, IEnumerable<Point2> pts, double angle, double radius, double kfactor)
-      => (Angle, KFactor, Pts, Radius, mDwg) = (angle, kfactor, [.. pts], radius, dwg);
+   // Constructors -------------------------------------------------------------
+   E2Bendline () => mDwg = null!;
+   public E2Bendline (Dwg2 dwg, IEnumerable<Point2> pts, double angle, double radius, double kfactor, double thickness = 1)
+      => (Angle, KFactor, Pts, Radius, mDwg, Thickness) = (angle, kfactor, [.. pts], radius, dwg, thickness);
 
+   // Properties ---------------------------------------------------------------
    /// <summary>The exterior angle (turn angle) in radians. A hem will have an angle of +PI or -PI.</summary>
    public readonly double Angle;
 
    /// <summary>The K-factor (neutral axis) of the bend, as a fraction from 0 (inner surface) to 1 (outer surface)</summary>
-   public readonly double KFactor;
+   public double KFactor;
 
    /// <summary>Set of points defining the bendline. Every pair here defines a 'segment' of the bendline</summary>
    public ImmutableArray<Point2> Pts;
 
    /// <summary>Inner radius of the bend</summary>
    public readonly double Radius;
+
+   /// <summary>Thickness of the part which hold the drawing</summary>
+   public readonly double Thickness;
+
+   /// <summary>Flat width of the bendline</summary>
+   public double FlatWidth {
+      get => Math.Abs (Angle) * (Radius + KFactor * Thickness);
+      set => KFactor = (value / Math.Abs (Angle) - Radius) / Thickness;
+   }
+
+   /// <summary>Bend decuction value for this bendline</summary>
+   public double Deduction {
+      get {
+         double angle = Math.Abs (Angle);
+         double length = 2 * ((angle <= Math.PI / 2 ? Math.Tan (angle / 2) : 1) * (Radius + Thickness));
+         return length - FlatWidth;
+      }
+      set {
+         double length = 2 * ((Angle <= (Math.PI / 2) ? Math.Tan (Angle / 2) : 1) * (Radius + Thickness));
+         FlatWidth = length - value;
+      }
+   }
 
    // Overrides ----------------------------------------------------------------
    public override Bound2 Bound => new (Pts);

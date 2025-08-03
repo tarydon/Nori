@@ -34,8 +34,8 @@ class DwgScene : Scene2 {
       dwg.Add (new E2Solid (layer, Point2.List (30, 30, 40, 30, 40, 35, 30, 35)));
       dwg.Add (new E2Text (layer, s1, "Hello, World!", new Point2 (50, 20), 5, 0, 0, 1, ETextAlign.BaseLeft));
 
-      dwg.Add (new E2Bendline (dwg, Point2.List (200, 75, 125, 0), Lib.HalfPI, 2, 0.42));
-      dwg.Add (new E2Bendline (dwg, Point2.List (200, 55, 145, 0), -Lib.HalfPI, 2, 0.42));
+      dwg.Add (new E2Bendline (dwg, Point2.List (200, 75, 125, 0), Lib.HalfPI, 2, 0.42, 1));
+      dwg.Add (new E2Bendline (dwg, Point2.List (200, 55, 145, 0), -Lib.HalfPI, 2, 0.42, 1));
       return dwg;
    }
 }
