@@ -239,4 +239,11 @@ class DXFTests2 {
       DXFWriter.SaveFile (dwg, NT.TmpDXF);
       Assert.TextFilesEqual1 ("IO/DXF/Out/Bend-10.dxf", NT.TmpDXF);
    }
+
+   [Test (107, "Extend DXFReader to read bend line information from DXF")]
+   void Test7 () {
+      var dwg = DXFReader.FromFile (NT.File ("IO/DXF/BasicBend.dxf"));
+      CurlWriter.ToFile (dwg, NT.TmpCurl);
+      Assert.TextFilesEqual1 ("IO/DXF/Out/BasicBend.curl", NT.TmpCurl);
+   }
 }
