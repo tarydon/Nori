@@ -27,5 +27,5 @@ Mechanism
 GeometrySource
 FileGeometry
   File Shift -Rotate
-
-
+E2Bendline
+  ^Dwg Angle KFactor Radius Pts Thickness

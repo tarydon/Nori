@@ -240,6 +240,12 @@ public static class Extensions {
 
    /// <summary>Wrap an integer to a range within 0..max-1</summary>
    public static int Wrap (this int n, int max) => (n + max) % max;
+
+   /// <summary>Rounds the double to be a multiple of the given least count</summary>
+   /// For example, <tt>13.532.Round(0.2)</tt> will return 13.6, since that is the closest multiple
+   /// of 0.2 near 13.532.
+   public static double Round (this double a, double leastcount) => leastcount * Math.Round (a / leastcount);
+
 }
 #endregion
 
