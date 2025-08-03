@@ -8,6 +8,7 @@
 		<Optimize>false</Optimize>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <DocumentationFile>..\Bin\Nori.Core.xml</DocumentationFile>
+		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
   <ItemGroup>

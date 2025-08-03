@@ -27,6 +27,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AuTest", "Demos\AuTest\AuTe
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nori.Doc", "Tools\Doc\Nori.Doc.csproj", "{076C8B7D-3EA4-4AD0-929C-BC9DDACE3C9D}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConDemo", "Demos\ConDemo\ConDemo.csproj", "{96A1A1DA-615A-48E5-A6C7-0D26488554C8}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -69,6 +71,10 @@ Global
 		{076C8B7D-3EA4-4AD0-929C-BC9DDACE3C9D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{076C8B7D-3EA4-4AD0-929C-BC9DDACE3C9D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{076C8B7D-3EA4-4AD0-929C-BC9DDACE3C9D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{96A1A1DA-615A-48E5-A6C7-0D26488554C8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{96A1A1DA-615A-48E5-A6C7-0D26488554C8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{96A1A1DA-615A-48E5-A6C7-0D26488554C8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{96A1A1DA-615A-48E5-A6C7-0D26488554C8}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -81,6 +87,7 @@ Global
 		{94945620-A3F1-40DC-8C31-AE329E0F1A34} = {F03CAFEB-AE20-4D17-A6C4-43C95C0AF071}
 		{EBAEAB79-FB95-42E1-A0A5-D54D5C4C7513} = {6E506A96-E329-4ACA-8B24-11CE8537A28A}
 		{076C8B7D-3EA4-4AD0-929C-BC9DDACE3C9D} = {F03CAFEB-AE20-4D17-A6C4-43C95C0AF071}
+		{96A1A1DA-615A-48E5-A6C7-0D26488554C8} = {6E506A96-E329-4ACA-8B24-11CE8537A28A}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {4F1DDE23-1A06-4684-9597-815592E80399}

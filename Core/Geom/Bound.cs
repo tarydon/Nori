@@ -238,7 +238,10 @@ public readonly struct Bound3 : IEQuable<Bound3> {
       (X, Y, Z) = (new (), new (), new ());
       foreach (var p in pts) { X += p.X; Y += p.Y; Z += p.Z; }
    }
-
+   public Bound3 (IEnumerable<Point3> pts) {
+      (X, Y, Z) = (new (), new (), new ());
+      foreach (var p in pts) { X += p.X; Y += p.Y; Z += p.Z; }
+   }
    public static Bound3 Read (UTFReader r) {
       r.Match ('"').Read (out double x0).Match (',').Read (out double y0).Match (',').Read (out double z0)
          .Match (':').Read (out double x1).Match (',').Read (out double y1).Match (',').Read (out double z1).Match ('"');
