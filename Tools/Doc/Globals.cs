@@ -1,4 +1,8 @@
-﻿global using System;
+// ────── ╔╗
+// ╔═╦╦═╦╦╬╣ Globals.cs
+// ║║║║╬║╔╣║ <<TODO>>
+// ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
+global using System;
 global using System.IO;
 global using System.Linq;
 global using System.Collections.Generic;

@@ -1,4 +1,8 @@
-﻿namespace Nori.Doc;
+// ────── ╔╗
+// ╔═╦╦═╦╦╬╣ HTMLGen.cs
+// ║║║║╬║╔╣║ <<TODO>>
+// ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
+namespace Nori.Doc;
 
 class HTMLGen {
    protected readonly StringBuilder mS = new ();

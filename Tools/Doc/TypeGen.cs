@@ -1,4 +1,8 @@
-﻿namespace Nori.Doc;
+// ────── ╔╗
+// ╔═╦╦═╦╦╬╣ TypeGen.cs
+// ║║║║╬║╔╣║ <<TODO>>
+// ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
+namespace Nori.Doc;
 using static System.Reflection.BindingFlags;
 
 // TypeGen is used to generate a documentation page for a particular type
@@ -8,6 +12,7 @@ class TypeGen : HTMLGen {
       mDict = (mProject = project).Notes;
       var docPrivate = project.DocPrivate;
       string nicename = t.NiceName ();
+      if (nicename != "Bound2") return;
 
       // Output the level 1 heading, and the class name and description
       HEAD ($"{project.Name}: {nicename}");
@@ -15,22 +20,38 @@ class TypeGen : HTMLGen {
       OutBlock ($"T:{t.GetKey ()}");
 
       // Document the constructors
-      var bf = Instance | Public | NonPublic;
-      var cons = t.GetConstructors (bf).Where (a => docPrivate || a.IsPublic).ToList ();
+      var bf = Instance | Public | DeclaredOnly | (docPrivate ? NonPublic : 0);
+      var cons = t.GetConstructors (bf).ToList ();
       if (cons.Count > 0) {
          H2 ("Constructors");
          cons.ForEach (OutConstructor);
       }
 
       // Document the properties and fields
-      bf = Instance | Static | Public | NonPublic;
       List<MemberInfo> mi = [];
-      mi.AddRange (t.GetProperties (bf).Where (a => docPrivate || a.AnyPublic ()));
-      mi.AddRange (t.GetFields (bf).Where (a => docPrivate || a.IsPublic));
+      bf = Instance | Static | Public | DeclaredOnly | (docPrivate ? NonPublic : 0);
+      mi.AddRange (t.GetProperties (bf));
+      mi.AddRange (t.GetFields (bf));
       mi.Sort ((a, b) => a.Name.CompareTo (b.Name));
       if (mi.Count > 0) {
          H2 ("Properties");
          mi.ForEach (OutProperty);
+      }
+
+      // Document the methods
+      bf = Instance | Static | Public | DeclaredOnly |  (docPrivate ? NonPublic : 0);
+      var methods = t.GetMethods (bf).Where (Included).OrderBy (a => a.Name).ToList ();
+      if (methods.Count > 0) {
+         H2 ("Methods");
+         methods.ForEach (OutMethod);
+      }
+
+      // Document the operators
+      bf = Static | Public | DeclaredOnly;
+      var operators = t.GetMethods (bf).Where (a => a.IsSpecialName && a.Name.StartsWith ("op_")).ToList ();
+      if (operators.Count > 0) {
+         H2 ("Operators");
+         operators.ForEach (OutOperator);
       }
 
       // Finish up
@@ -40,6 +61,12 @@ class TypeGen : HTMLGen {
    readonly IReadOnlyDictionary<string, string> mDict;
    readonly Type mT;
 
+   bool Included (MethodInfo mi) {
+      if (mi.IsSpecialName) return false;
+      if (mi.Name == "ToString" && mi.GetParameters ().Length == 0 && !mDict.ContainsKey (mi.GetKey ())) return false;
+      return true;
+   }
+
    void OutConstructor (ConstructorInfo cons) {
       Out ($"<p class=\"declaration\">");
       Out ($"<span class=\"moniker\">");
@@ -48,6 +75,26 @@ class TypeGen : HTMLGen {
       OutParams (cons.GetParameters ());
       Out ("</p>\n");
       OutBlock (cons.GetKey ());
+      Out ("<br/><hr/>");
+   }
+
+   void OutMethod (MethodInfo mi) {
+      Out ($"<p class=\"declaration\">{mi.MemberPrefix ()}");
+      OutType (mi.ReturnType);
+      Out ($" <span class=\"moniker\">{mi.Name}</span>");
+      OutParams (mi.GetParameters ());
+      Out ("</p>\n");
+      OutBlock (mi.GetKey ());
+      Out ("<br/><hr/>");
+   }
+
+   void OutOperator (MethodInfo mi) {
+      Out ($"<p class=\"declaration\">");
+      OutType (mi.ReturnType);
+      Out ($" <span class=\"moniker\">{mi.Name}</span>");
+      OutParams (mi.GetParameters ());
+      Out ("</p>\n");
+      OutBlock (mi.GetKey ());
       Out ("<br/><hr/>");
    }
 

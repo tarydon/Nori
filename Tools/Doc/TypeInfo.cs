@@ -1,4 +1,8 @@
-﻿namespace Nori.Doc;
+// ────── ╔╗
+// ╔═╦╦═╦╦╬╣ TypeInfo.cs
+// ║║║║╬║╔╣║ <<TODO>>
+// ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
+namespace Nori.Doc;
 
 class TypeInfo {
    // Should this type be skipped during documentation generation?

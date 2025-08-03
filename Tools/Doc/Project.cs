@@ -1,4 +1,8 @@
-﻿namespace Nori.Doc;
+// ────── ╔╗
+// ╔═╦╦═╦╦╬╣ Project.cs
+// ║║║║╬║╔╣║ <<TODO>>
+// ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
+namespace Nori.Doc;
 
 class Project {
    // Constructor --------------------------------------------------------------
@@ -22,21 +26,15 @@ class Project {
    }
 
    // Properties ---------------------------------------------------------------
-   /// <summary>
-   /// Project title
-   /// </summary>
+   /// <summary>Project title</summary>
    public string Name => mName;
    readonly string mName = "Untitled";    // Project title
 
-   /// <summary>
-   /// List of 'known' namespaces
-   /// </summary>
+   /// <summary>List of 'known' namespaces</summary>
    public static IReadOnlyList<string> Namespaces => mNamespaces;
    static List<string> mNamespaces = ["System", "System.Collections.Generic"];
 
-   /// <summary>
-   /// The documentation blocks for each type, method, property etc
-   /// </summary>
+   /// <summary>The documentation blocks for each type, method, property etc</summary>
    public IReadOnlyDictionary<string, string> Notes => mNotes;
    Dictionary<string, string> mNotes = [];
 
