@@ -386,6 +386,15 @@ public class PolyBuilder {
       PopBulge (a); mPts.Add (a); mBulge = bulge;
       return this;
    }
+
+   /// <summary>Adds an arc given start, end and centre points</summary>
+   public PolyBuilder Arc (Point2 start, Point2 end, Point2 cen, bool iccw) {
+      while (mExtra.Count < mPts.Count) mExtra.Add (new ());
+      mPts.Add (start); mPts.Add (end);
+      mExtra.Add (new (cen, iccw ? Poly.EFlags.CCW : Poly.EFlags.CW | Poly.EFlags.HasArcs));
+      return this;
+   }
+
    /// <summary>Adds an arc given the starting point and DXF-style bulge</summary>
    public PolyBuilder Arc (double x, double y, double bulge)
       => Arc (new (x, y), bulge);
@@ -493,6 +502,10 @@ public class PolyBuilder {
    void Reset () {
       mPts.Clear (); mExtra.Clear (); mClosed = false; mBulge = double.NaN;
    }
+
+   // Property -----------------------------------------------------------------
+   /// <summary>Returns true if no Poly is built</summary>
+   public bool IsNull => mPts.Count == 0;
 
    // Private data -------------------------------------------------------------
    readonly List<Point2> mPts = [];

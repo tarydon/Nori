@@ -46,7 +46,7 @@ class E2BendlineVN (E2Bendline e2b) : Ent2VN (e2b) {
 
    // Helper used to draw the bend angle annotation
    void DrawText () {
-      string text = mBend.Angle.R2D ().S6 ();
+      string text = mBend.Angle.R2D ().S1 ();
       text = mBend.Angle > 0 ? $"+{text}\u00b0" : $"{text}\u00b0";
       for (int i = 0; i < mBend.Pts.Length; i += 2) {
          Point2 pt = mBend.Pts[i].Midpoint (mBend.Pts[i + 1]);
