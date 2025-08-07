@@ -17,38 +17,60 @@ public partial class STEPReader {
          else if (MemoryExtensions.Equals (S.AsSpan (N, 7), endsec, StringComparison.Ordinal)) break;
          else Fatal ($"Unexpected end of file");
       }
-      var manifold = D.OfType<Manifold> ().Single ();
-      Check (manifold);
-      Console.WriteLine ();
+      if (D.OfType<Manifold> ().FirstOrDefault () is Manifold m) Check (m);
+      else if (D.OfType<ShellBasedSurfaceModel> ().FirstOrDefault () is ShellBasedSurfaceModel sb) Check (sb);
+      else Console.WriteLine ("No top level entity found");
    }
 
    // Entity switch ------------------------------------------------------------
    void REntity () {
       Id = RInt (); RMatch ('=');
       if (RTryMatch ('(')) {
+         RComplex ();
       } else {
          string kw = RName (); RMatch ('(');
          Entity? ent = kw switch {
             "ADVANCED_FACE" => RAdvancedFace (),
+            "ADVANCED_BREP_SHAPE_REPRESENTATION" => RAdvancedBRepShapeRepr (),
             "AXIS2_PLACEMENT_3D" => RCoordSys (),
+            "AXIS2_PLACEMENT_2D" => RCoordSys2 (),
+            "B_SPLINE_CURVE_WITH_KNOTS" => RBSplineCurveWithKnots (),
+            "B_SPLINE_SURFACE_WITH_KNOTS" => RBSplineSurfaceWithKnots (),
             "CARTESIAN_POINT" => RCartesian (),
             "CIRCLE" => RCircle (),
-            "CLOSED_SHELL" => RClosedShell (),
+            "CLOSED_SHELL" or "OPEN_SHELL" => RShell (),
+            "COMPOSITE_CURVE" => RCompositeCurve (),
+            "CONICAL_SURFACE" => RConicalSurface (),
             "CYLINDRICAL_SURFACE" => RCylinder (),
-            "DIRECTION" => RDirection (), 
+            "DEFINITIONAL_REPRESENTATION" => RDefinitionalRepr (),
+            "DIRECTION" => RDirection (),
             "EDGE_CURVE" => REdgeCurve (),
             "EDGE_LOOP" => REdgeLoop (),
-            "FACE_BOUND" => RFaceBound (), 
+            "ELLIPSE" => REllipse (),
+            "FACE_BOUND" => RFaceBound (),
             "FACE_OUTER_BOUND" => RFaceOuterBound (),
+            "ITEM_DEFINED_TRANSFORMATION" => RItemDefinedXfm (),
             "LINE" => RLine (),
             "MANIFOLD_SOLID_BREP" => RManifold (),
+            "MANIFOLD_SURFACE_SHAPE_REPRESENTATION" => RManifoldSurfaceShapeRepr (),
             "ORIENTED_EDGE" => ROriengedEdge (),
+            "PCURVE" => RPCurve (),
             "PLANE" => RPlane (),
+            "POLYLINE" => RPolyline (),
+            "SHELL_BASED_SURFACE_MODEL" => RShellBasedSurfaceModel (),
+            "SPHERICAL_SURFACE" => RSphere (),
+            "SURFACE_CURVE" => RSurfaceCurve (),
+            "SURFACE_OF_LINEAR_EXTRUSION" => RExtrudedSurface (),
+            "SHAPE_REPRESENTATION" => RShapeRepr (),
+            "SHAPE_REPRESENTATION_RELATIONSHIP" => RRepRelationship (),
+            "TOROIDAL_SURFACE" => RToroid (),
             "VECTOR" => RVector (),
             "VERTEX_POINT" => RVertexPoint (),
             _ => null,
          };
          if (ent == null) {
+            if (mUnsupported.Add (kw) && !Ignore.Contains (kw))
+               throw new Exception ($"Unsupported: {kw}");
             Unread[Id] = kw;
          } else {
             while (D.Count <= Id) D.Add (null);
@@ -58,15 +80,19 @@ public partial class STEPReader {
       RSkip (';');
    }
    List<Entity?> D = [];
+   HashSet<string> mUnsupported = [];
    Dictionary<int, string> Unread = [];
    int Id;
+
+   static HashSet<string> Ignore => sIgnore ??= [.. Lib.ReadLines ("nori:Core/STEPIgnore.txt")];
+   static HashSet<string>? sIgnore;
 
    // Low level read rountines -------------------------------------------------
    // Reads a 'bool' of the form .T. or .F. (after skipping past a leading comma)
    bool RBool () {
       RMatch (','); RMatch ('.');
-      char ch = S[N++]; bool value = false;
-      if (ch == 'T') value = true; else if (ch != 'F') Fatal ("Incorrect bool");
+      char ch = S[N++]; bool value = true;
+      if (ch is 'F' or 'U') value = false; else if (ch != 'T') Fatal ("Incorrect bool");
       RMatch ('.');
       return value;
    }
@@ -88,6 +114,17 @@ public partial class STEPReader {
       return int.Parse (S.AsSpan (start, N - start));
    }
 
+   // Reads an array of references delimited by ()
+   int[] RInts () {
+      mInts.Clear ();
+      RTryMatch (','); RMatch ('(');
+      for (; ; ) {
+         if (RTryMatch (')')) break;
+         mInts.Add (RInt ());
+      }
+      return [.. mInts];
+   }
+
    // Matches a particular character (after possibly skipping whitespace)
    // If the given character is not found, this throws an exception
    void RMatch (char ch) {
@@ -99,7 +136,7 @@ public partial class STEPReader {
       foreach (var ch in s) if (S[N++] != ch) Fatal ($"Expecting {s}");
    }
 
-   // Reads an identifier from the current position 
+   // Reads an identifier from the current position
    string RName () {
       RSpace ();
       int start = N;
@@ -120,6 +157,18 @@ public partial class STEPReader {
       return new (x, y, z);
    }
 
+   // Reads an array of double delimited by ()
+   double[] RDoubles () {
+      mDoubles.Clear ();
+      RTryMatch (','); RMatch ('(');
+      for (; ; ) {
+         if (RTryMatch (')')) break;
+         mDoubles.Add (RDouble ());
+      }
+      return [.. mDoubles];
+   }
+   List<double> mDoubles = [];
+
    // Reads a 'reference' (an integer prefixed with a hash), after skipping past a leading comma
    int RRef () {
       RTryMatch (',');
@@ -138,6 +187,18 @@ public partial class STEPReader {
       return [.. mInts];
    }
    List<int> mInts = [];
+
+   // Reads a two-dimensionsl array of references
+   int[][] RRefsList () {
+      mRefsList.Clear ();
+      RTryMatch (','); RMatch ('(');
+      for (; ; ) {
+         if (RTryMatch (')')) break;
+         mRefsList.Add (RRefs ());
+      }
+      return [.. mRefsList];
+   }
+   List<int[]> mRefsList = [];
 
    // Search forward until the given character is found (this steps past any strings.
    // The given character is consumed, and N points to the next character after that
@@ -158,6 +219,13 @@ public partial class STEPReader {
       while (S[N++] != '\'') { }
    }
 
+   string REnum () {
+      RTryMatch (','); RMatch ('.');
+      int start = N - 1;
+      while (S[N++] != '.') { }
+      return S[start..N];
+   }
+
    // Skip past whitespace
    void RSpace () { while (char.IsWhiteSpace (S[N])) N++; }
 
@@ -172,22 +240,58 @@ public partial class STEPReader {
 
    // Entity readers -----------------------------------------------------------
    AdvancedFace RAdvancedFace () { RString (); return new (RRefs (), RRef (), RBool ()); }
+   AdvancedBRepShapeRepr RAdvancedBRepShapeRepr () { RString (); return new (RRefs (), RRef ()); }
+   BSplineCurveWithKnots RBSplineCurveWithKnots () { RString (); return new (RInt(), RRefs(), REnum (), RBool(), RBool(), RInts(), RDoubles(), REnum ()); }
+   BSplineSurfaceWithKnots RBSplineSurfaceWithKnots () { RString (); return new BSplineSurfaceWithKnots (RInt (), RInt (), RRefsList (), REnum (), RBool (), RBool (), RBool (), RInts (), RInts (), RDoubles (), RDoubles (), REnum ()); }
+   CompositeCurve RCompositeCurve () { RString (); return new (RRefs (), RBool ()); }
    Cartesian RCartesian () { RString (); return new (RPoint3 ()); }
-   ClosedShell RClosedShell () { RString (); return new (RRefs ()); }
    Circle RCircle () { RString (); return new (RRef (), RDouble ()); }
+   Cone RConicalSurface () { RString (); return new Cone (RRef (), RDouble (), RDouble ()); }
    CoordSys RCoordSys () { RString (); return new (RRef (), RRef (), RRef ()); }
+   CoordSys2 RCoordSys2 () { RString (); return new (RRef (), RRef ()); }
    Cylinder RCylinder () { RString (); return new (RRef (), RDouble ()); }
+   DefinitionalRepr RDefinitionalRepr () { RString (); return new (RRefs (), RRef ()); }
    Direction RDirection () { RString (); return new (RVector3 ()); }
    EdgeCurve REdgeCurve () { RString (); return new (RRef (), RRef (), RRef (), RBool ()); }
    EdgeLoop REdgeLoop () { RString (); return new (RRefs ()); }
+   Ellipse REllipse () { RString (); return new (RRef (), RDouble (), RDouble ()); }
+   ExtrudedSurface RExtrudedSurface () { RString (); return new (RRef(), RRef()); }
    FaceOuterBound RFaceOuterBound () { RString (); return new (RRef (), RBool ()); }
    FaceBound RFaceBound () { RString (); return new (RRef (), RBool ()); }
+   ItemDefinedXfm RItemDefinedXfm () { RString (); RString (); return new ItemDefinedXfm (RRef (), RRef ()); }
    Line RLine () { RString (); return new (RRef (), RRef ()); }
    Manifold RManifold () { RString (); return new (RRef ()); }
-   OrientedEdge ROriengedEdge () { RString (); RMatch (",*,*"); return new (RRef (), RBool ()); }
+   ManifoldSurfaceShapeRepr RManifoldSurfaceShapeRepr () { RString (); return new (RRefs (), RRef ()); }
+   OrientedEdge ROriengedEdge () { RString (); RMatch (','); RMatch ('*'); RMatch (','); RMatch ('*'); return new (RRef (), RBool ()); }
    Plane RPlane () { RString (); return new (RRef ()); }
+   PCurve RPCurve () { RString (); return new (RRef (), RRef ()); }
+   Polyline RPolyline () { RString (); return new (RRefs ()); }
+   ShapeRepRelationship RRepRelationship () { RString (); RString (); return new (RRef (), RRef ()); }
+   ShapeRepr RShapeRepr () { RString (); return new (RRefs (), RRef ()); }
+   Shell RShell () { RString (); return new (RRefs ()); }
+   ShellBasedSurfaceModel RShellBasedSurfaceModel () { RString (); return new (RRefs ()); }
+   Sphere RSphere () { RString (); return new (RRef (), RDouble ()); }
+   SurfaceCurve RSurfaceCurve () { RString (); return new (RRef (), RRefs (), REnum ()); }
+   Toroid RToroid () { RString (); return new Toroid (RRef (), RDouble (), RDouble ()); }
    Vector RVector () { RString (); return new (RRef (), RDouble ()); }
    VertexPoint RVertexPoint () { RString (); return new (RRef ()); }
+
+   void RComplex () {
+      int n = N - 1;
+      while (S[N++] != ';') { }
+      var sub = S[n..N];
+      if (sub.Contains ("SOLID_ANGLE_UNIT") || sub.Contains ("MASS_UNIT")) return;
+      if (sub.Contains ("PLANE_ANGLE_UNIT") || sub.Contains ("LENGTH_UNIT")) return;
+      if (sub.Contains ("GEOMETRIC_REPRESENTATION_CONTEXT")) return;
+      if (sub.Contains ("REPRESENTATION_RELATIONSHIP_WITH_TRANSFORM")) return;
+      //      if (sub.Contains ("BOUNDED_SURFACE") || sub.Contains ("BOUNDED_CURVE")) return;
+      if (sub.Contains ("RATIONAL_B_SPLINE_SURFACE") || sub.Contains ("RATIONAL_B_SPLINE_CURVE")) return;
+      if (sub.Contains ("ANNOTATION_CURVE_OCCURRENCE") || sub.Contains ("ANNOTATION_OCCURRENCE")) return;
+      sub = sub.Replace ('\n', ' ').Replace ('\r', ' ');
+      Console.WriteLine ($"#{Id}");
+      Console.WriteLine (sub);
+      Console.ReadLine ();
+   }
 
    // Helpers ------------------------------------------------------------------
    partial void Assert (bool condition);

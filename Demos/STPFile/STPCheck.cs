@@ -1,4 +1,5 @@
-﻿using Nori.STEP;
+﻿using System.Security.Cryptography;
+using Nori.STEP;
 namespace Nori;
 
 partial class STEPReader {
@@ -11,8 +12,9 @@ partial class STEPReader {
          }
       }
       switch (D[a.Face]) {
-         case Plane p: Check (p); break;
-         case Cylinder c: Check (c); break;
+         case ElementarySurface e: Check (e); break;
+         case BSplineSurfaceWithKnots b: Check (b); break;
+         case ExtrudedSurface e: Check (e); break;
          default: Check (a.Face); break;
       }
    }
@@ -21,27 +23,30 @@ partial class STEPReader {
 
    void Check (Circle c) { Check ((CoordSys)D[c.CoordSys]!); }
 
-   void Check (CoordSys cs) { 
-      Check ((Cartesian)D[cs.Origin]!); 
-      Check ((Direction)D[cs.XAxis]!); 
-      Check ((Direction)D[cs.YAxis]!); 
+   void Check (CoordSys cs) {
+      Check ((Cartesian)D[cs.Origin]!);
+      Check ((Direction)D[cs.XAxis]!);
+      Check ((Direction)D[cs.YAxis]!);
    }
 
-   void Check (ClosedShell a) {
-      foreach (var n in a.Faces) 
+   void Check (Shell a) {
+      foreach (var n in a.Faces)
          Check ((AdvancedFace)D[n]!);
    }
 
-   void Check (Cylinder c) { Check ((CoordSys)D[c.CoordSys]!); }
-
    void Check (Direction d) { }
 
+   void Check (Ellipse e) { Check ((CoordSys)D[e.CoordSys]!); }
+
    void Check (EdgeCurve a) {
-      Check ((VertexPoint)D[a.Start]!); 
+      Check ((VertexPoint)D[a.Start]!);
       Check ((VertexPoint)D[a.End]!);
       switch (D[a.Basis]!) {
          case Line l: Check (l); break;
          case Circle c: Check (c); break;
+         case Ellipse e: Check (e); break;
+         case BSplineCurveWithKnots b: Check (b); break;
+         case SurfaceCurve s: Check (s); break;
          default: Check (a.Basis); break;
       }
    }
@@ -54,23 +59,49 @@ partial class STEPReader {
    void Check (FaceOuterBound a) { Check ((EdgeLoop)D[a.EdgeLoop]!); }
    void Check (FaceBound a) { Check ((EdgeLoop)D[a.EdgeLoop]!); }
 
-   void Check (Line a) { 
+   void Check (Line a) {
       Check ((Cartesian)D[a.Start]!);
-      Check ((Vector)D[a.Ray]!); 
+      Check ((Vector)D[a.Ray]!);
    }
 
-   void Check (Manifold a) { Check ((ClosedShell)D[a.Outer]!); }
+   void Check (BSplineCurveWithKnots b) {
+      foreach (var n in b.Pts) Check ((Cartesian)D[n]!);
+   }
+
+   void Check (BSplineSurfaceWithKnots b) {
+      foreach (var al in b.Pts)
+         foreach (var n in al) Check ((Cartesian)D[n]!);
+   }
+
+   void Check (ExtrudedSurface e) {
+      Check ((EdgeCurve)D[e.Curve]!);
+      Check ((Direction)D[e.Vector]!);
+   }
+
+   void Check (Manifold a) { Check ((Shell)D[a.Outer]!); }
+
+   void Check (ShellBasedSurfaceModel s) {
+      foreach (var n in s.Shells)
+         Check ((Shell)D[n]!);
+   }
 
    void Check (OrientedEdge a) { Check ((EdgeCurve)D[a.Edge]!); }
 
-   void Check (Plane p) { Check ((CoordSys)D[p.CoordSys]!); }
+   void Check (ElementarySurface s) { Check ((CoordSys)D[s.CoordSys]!); }
+
+   void Check (SurfaceCurve s) {
+      // TODO
+   } 
 
    void Check (Vector v) { Check ((Direction)D[v.Direction]!); }
 
    void Check (VertexPoint v) { Check ((Cartesian)D[v.Cartesian]!); }
 
    void Check (int n) {
-      if (n >= D.Count || D[n] == null) Console.WriteLine ($"Unread: {Unread[n]}");
-      else Console.WriteLine ($"Implement check for {D[n]!.GetType ().Name}");
+      if (n >= D.Count || D[n] == null) {
+         if (mReported.Add (Unread[n])) throw new Exception ($"Unread: {Unread[n]}");
+      } else
+         throw new Exception ($"Implement check for {D[n]!.GetType ().Name}");
    }
+   HashSet<string> mReported = [];
 }
