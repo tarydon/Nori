@@ -190,13 +190,6 @@ public static class Extensions {
    public static T? SafeGet<T> (this IReadOnlyList<T> list, int n)
       => n >= 0 && n < list.Count ? list[n] : default;
 
-   /// <summary>Convert a double to a string, rounded to 1 decimal place (no trailing zeroes)</summary>
-   /// This has special handling to avoid the annoying "-0"
-   public static string S1 (this double f) {
-      string s = Round (f, 1).ToString (CultureInfo.InvariantCulture);
-      return s == "-0" ? "0" : s;
-   }
-
    /// <summary>Convert a double to a string, rounded to 6 decimal places (no trailing zeroes)</summary>
    /// This has special handling to avoid the annoying "-0"
    public static string S6 (this double f) {
