@@ -13,8 +13,7 @@ internal class Program {
             Console.ForegroundColor = ConsoleColor.Yellow;
             Console.WriteLine (e);
             Console.ResetColor ();
-            // File.Move (file, "C:\\Step\\Bad\\" + Path.GetFileName (file));
-            return;
+            File.Move (file, "C:\\Step\\Bad\\" + Path.GetFileName (file));
          }
       }
    }
