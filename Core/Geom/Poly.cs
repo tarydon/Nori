@@ -387,14 +387,6 @@ public class PolyBuilder {
       return this;
    }
 
-   /// <summary>Adds an arc given start, end and centre points</summary>
-   public PolyBuilder Arc (Point2 start, Point2 end, Point2 cen, bool iccw) {
-      while (mExtra.Count < mPts.Count) mExtra.Add (new ());
-      mPts.Add (start); mPts.Add (end);
-      mExtra.Add (new (cen, iccw ? Poly.EFlags.CCW : Poly.EFlags.CW | Poly.EFlags.HasArcs));
-      return this;
-   }
-
    /// <summary>Adds an arc given the starting point and DXF-style bulge</summary>
    public PolyBuilder Arc (double x, double y, double bulge)
       => Arc (new (x, y), bulge);
