@@ -386,7 +386,6 @@ public class PolyBuilder {
       PopBulge (a); mPts.Add (a); mBulge = bulge;
       return this;
    }
-
    /// <summary>Adds an arc given the starting point and DXF-style bulge</summary>
    public PolyBuilder Arc (double x, double y, double bulge)
       => Arc (new (x, y), bulge);
