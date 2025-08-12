@@ -494,6 +494,10 @@ public class PolyBuilder {
       mPts.Clear (); mExtra.Clear (); mClosed = false; mBulge = double.NaN;
    }
 
+   // Property -----------------------------------------------------------------
+   /// <summary>Returns true if no Poly is built</summary>
+   public bool IsNull => mPts.Count == 0;
+
    // Private data -------------------------------------------------------------
    readonly List<Point2> mPts = [];
    readonly List<Poly.Extra> mExtra = [];
