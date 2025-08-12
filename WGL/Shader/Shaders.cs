@@ -110,9 +110,7 @@ partial class Line2DShader () : Seg2DShader (ShaderImp.Line2D) { }
 #endregion
 
 #region class Line3DShader -------------------------------------------------------------------------
-/// <summary>
-/// Draw lines in 3D space
-/// </summary>
+/// <summary>Draw lines in 3D space</summary>
 [Singleton]
 partial class Line3DShader : Shader<Vec3F, Seg2DShader.Settings> {
    Line3DShader () : base (ShaderImp.Line3D) => Bind ();

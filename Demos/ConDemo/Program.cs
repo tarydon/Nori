@@ -1,4 +1,4 @@
-﻿namespace ConDemo;
+namespace ConDemo;
 using Nori;
 
 class Program {
