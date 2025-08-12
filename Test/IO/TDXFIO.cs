@@ -224,7 +224,7 @@ class DXFTests2 {
       Assert.TextFilesEqual1 ("IO/DXF/Shapes1.txt", NT.TmpTxt);
    }
 
-   [Test (99, "Issue.69: DXFReader doesn't recognize layers correctly")]
+   [Test (108, "Issue.69: DXFReader doesn't recognize layers correctly")]
    void Test5 () {
       var dwg = DXFReader.FromFile (NT.File ("IO/DXF/Layer.dxf"));
       DXFWriter.SaveFile (dwg, NT.TmpDXF);
@@ -245,5 +245,16 @@ class DXFTests2 {
       var dwg = DXFReader.FromFile (NT.File ("IO/DXF/BasicBend.dxf"));
       CurlWriter.ToFile (dwg, NT.TmpCurl);
       Assert.TextFilesEqual1 ("IO/DXF/Out/BasicBend.curl", NT.TmpCurl);
+   }
+
+   [Test (109, "Write out a BendLine with multiple segments")]
+   void Test8 () {
+      var dwg = new Dwg2 ();
+      var layer = dwg.CurrentLayer;
+      dwg.Add (new E2Poly (layer, Poly.Rectangle (0, 0, 100, 50)));
+      dwg.Add (new E2Poly (layer, Poly.Rectangle (10, 10, 90, 40)));
+      dwg.Add (new E2Bendline (dwg, [new (0, 30), new (10, 30), new (90, 30), new (100, 30)], Lib.HalfPI, 2.5, 0.42, 2.5));
+      DXFWriter.SaveFile (dwg, NT.TmpDXF);
+      Assert.TextFilesEqual1 ("IO/DXF/Out/BendSeg.dxf", NT.TmpDXF);
    }
 }

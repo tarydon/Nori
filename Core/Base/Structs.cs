@@ -180,9 +180,7 @@ public readonly struct CoordSystem {
    public static CoordSystem operator + (CoordSystem cs, Vector3 vec)
       => new (cs.Org + vec, cs.VecX, cs.VecY);
 
-   /// <summary>
-   /// Multiply a CoordSystem by a transformation matrix
-   /// </summary>
+   /// <summary>Multiply a CoordSystem by a transformation matrix</summary>
    public static CoordSystem operator * (CoordSystem cs, Matrix3 xfm)
       => new (cs.Org * xfm, cs.VecX * xfm, cs.VecY * xfm);
 

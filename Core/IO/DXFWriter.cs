@@ -4,7 +4,35 @@
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 namespace Nori;
 
-public class DXFWriter (Dwg2 dwg) {
+#region class DXFWriter ----------------------------------------------------------------------------
+/// <summary>DXFWriter writes out Dwg2 files to DXF</summary>
+public class DXFWriter {
+   // Constructors -------------------------------------------------------------
+   /// <summary>Construct a DXFWriter, given the Dwg2 to work with</summary>
+   public DXFWriter (Dwg2 dwg) => D = dwg;
+
+   // Properties ---------------------------------------------------------------
+   /// <summary>If this is set, then no POLYLINE or LWPOLYLINE entities are output - only LINE and ARC</summary>
+   public bool NoPolyline { get; set; }
+
+   #region Methods -------------------------------------------------------------
+   /// <summary>Utility helper to save a Dwg to DXF file</summary>
+   public static void SaveFile (Dwg2 dwg, string file)
+      => File.WriteAllText (file, new DXFWriter (dwg).Write ());
+
+   /// <summary>Maps Color4 to nearest ACAD color by comparing RGB values</summary>
+   public static int ToACADColor (Color4 color) {
+      return DXFReader.ACADColors.MinIndexBy (a => Error (a, color));
+
+      // Helper method
+      // Returns square dist between two Colors (RGB comparison only)
+      static double Error (Color4 a, Color4 b) {
+         int dr = b.R - a.R, dg = b.G - a.G, db = b.B - a.B;
+         return dr * dr + dg * dg + db * db;
+      }
+   }
+
+   /// <summary>Writes the Dwg2 to a string (that can then be saved to a file to make a DXF)</summary>
    public string Write () {
       S.Clear ();
       Out (" 0\nSECTION\n 2\nHEADER\n 0\nENDSEC\n 0\nSECTION\n 2\nTABLES\n");
@@ -12,25 +40,38 @@ public class DXFWriter (Dwg2 dwg) {
       OutStyles ();
       OutBlocks ();
       Out (" 0\nENDSEC\n 0\nSECTION\n 2\nENTITIES\n");
-      OutEntities (mDwg.Ents);
+      OutEntities (D.Ents);
       Out (" 0\nENDSEC\n 0\nEOF\n");
       return S.ToString ();
    }
+   #endregion
 
-   public static void SaveFile (Dwg2 dwg, string file)
-      => File.WriteAllText (file, new DXFWriter (dwg).Write ());
-
+   // Implementation -----------------------------------------------------------
+   // Basic function to append a string
    int Out (string s) { S.Append (s); return 0; }
+
+   // Writes out the BLOCKS table with the list of blocks
+   void OutBlocks () {
+      var blocks = D.Blocks; if (blocks.Count == 0) return;
+      Out ($" 0\nTABLE\n 2\nBLOCKS\n 70\n{blocks.Count}\n");
+      foreach (var block in blocks) {
+         var pt = block.Base;
+         Out ($" 0\nBLOCK\n 70\n65\n 2\n{block.Name}\n 10\n{pt.X}\n 20\n{pt.Y}\n");
+         OutEntities (block.Ents);
+         Out (" 0\nENDBLK\n");
+      }
+      Out (" 0\nENDTAB\n");
+   }
 
    // Output the entities (could be the ents in the drawing, or within a block)
    void OutEntities (IEnumerable<Ent2> ents) {
       foreach (var ent in ents) {
          _ = ent switch {
-            E2Poly ep => OutEnt (ep),
-            E2Point ep => OutEnt (ep),
-            E2Text et => OutEnt (et),
+            E2Poly ep => OutPoly (ep),
+            E2Point ep => OutPoint (ep),
+            E2Text et => OutText (et),
             E2Solid es => OutSolid (es),
-            E2Insert ei => OutEnt (ei),
+            E2Insert ei => OutInsert (ei),
             E2Dimension e2d => OutDimension (e2d),
             E2Bendline e2b => OutBendLine (e2b),
             _ => throw new BadCaseException (ent.GetType ().Name)
@@ -38,15 +79,23 @@ public class DXFWriter (Dwg2 dwg) {
       }
    }
 
-   // This is a placeholder, we don't write dimensions out yet
-   int OutDimension (E2Dimension ed) => 0;
+   // Given an entity, writes out the 8 group with the layer and possibly the
+   // 62 group with the color (if the color is not BYLAYER)
+   void OutEntPrologue (Ent2 ent, string type) {
+      Out ($" 0\n{type}\n 8\n{ent.Layer.Name}\n");
+      if (!ent.Color.IsNil) Out ($" 62\n{ToACADColor (ent.Color)}\n");
+   }
 
+   // Writes the LAYER table.
+   // Bend lines in the drawing are converted into lines in the BEND and MBEND
+   // layers. If these layers do not exist in the drawing, they are added to the LAYER
+   // table (but not to the drawing itself).
    void OutLayers () {
-      var layers = mDwg.Layers.ToList ();
-      if (mDwg.Ents.Any (a => a is E2Bendline)) {
+      var layers = D.Layers.ToList ();
+      if (D.Ents.Any (a => a is E2Bendline)) {
          mBend = layers.FirstOrDefault (a => a.Name.EqIC ("BEND"));
          mMBend = layers.FirstOrDefault (a => a.Name.EqIC ("MBEND"));
-         mDwg.Ents.OfType<E2Bendline> ().ForEach (a => {
+         D.Ents.OfType<E2Bendline> ().ForEach (a => {
             if (mBend is null && a.Angle >= 0) layers.Add (mBend = new Layer2 ("BEND", Color4.Green, ELineType.Dot));
             else if (mMBend is null && a.Angle < 0) layers.Add (mMBend = new Layer2 ("MBEND", Color4.Green, ELineType.DashDotDot));
          });
@@ -60,8 +109,9 @@ public class DXFWriter (Dwg2 dwg) {
       Out (" 0\nENDTAB\n");
    }
 
+   // Writes out the STYLE table with a list of text styles
    void OutStyles () {
-      var styles = mDwg.Styles; if (styles.Count == 0) return;
+      var styles = D.Styles; if (styles.Count == 0) return;
       Out ($" 0\nTABLE\n 2\nSTYLE\n 70\n{styles.Count}\n");
       foreach (var s in styles) {
          Out ($" 0\nSTYLE\n 2\n{s.Name}\n 70\n0\n 40\n{s.Height}\n 41\n{s.XScale}\n");
@@ -70,25 +120,81 @@ public class DXFWriter (Dwg2 dwg) {
       Out (" 0\nENDTAB\n");
    }
 
-   void OutBlocks () {
-      var blocks = mDwg.Blocks; if (blocks.Count == 0) return;
-      Out ($" 0\nTABLE\n 2\nBLOCKS\n 70\n{blocks.Count}\n");
-      foreach (var block in blocks) {
-         var pt = block.Base;
-         Out ($" 0\nBLOCK\n 70\n65\n 2\n{block.Name}\n 10\n{pt.X}\n 20\n{pt.Y}\n");
-         OutEntities (block.Ents);
-         Out (" 0\nENDBLK\n");
+   // Helper used by OutPoly, writes out a segment from a Poly as a LINE, ARC
+   // or CIRCLE entity
+   int OutSeg (Ent2 ent, Seg seg) {
+      if (seg.IsLine) {
+         OutEntPrologue (ent, "LINE");
+         var (p1, p2) = (seg.A, seg.B);
+         if (Lib.Testing) (p1, p2) = (p1.R6 (), p2.R6 ());
+         return Out ($" 10\n{p1.X}\n 20\n{p1.Y}\n 11\n{p2.X}\n 21\n{p2.Y}\n");
+      } else {
+         var (c, r) = (seg.Center, seg.Radius);
+         if (Lib.Testing) (c, r) = (c.R6 (), r.R6 ());
+         if (seg.IsCircle) {
+            OutEntPrologue (ent, "CIRCLE");
+            return Out ($" 10\n{c.X}\n 20\n{c.Y}\n 40\n{r}\n");
+         } else {
+            OutEntPrologue (ent, "ARC");
+            var (a1, a2) = seg.GetStartAndEndAngles ();
+            var (sa, ea) = (a1.R2D (), a2.R2D ());
+            if (!seg.IsCCW) (sa, ea) = (ea, sa); // Swap the angles to handle CW arc
+            if (Lib.Testing) (sa, ea) = (sa.R6 (), ea.R6 ());
+            return Out ($" 10\n{c.X}\n 20\n{c.Y}\n 40\n{r}\n 50\n{sa}\n 51\n{ea}\n");
+         }
       }
-      Out (" 0\nENDTAB\n");
    }
 
-   int OutEnt (E2Poly e2p) {
+   // Entity writers -----------------------------------------------------------
+   // Outputs an E2Bendline entity.
+   // Since bend lines are not directly supported in DXF, this outputs a LINE entity,
+   // in the BEND or MBEND layers. The entity has 1000 group codes that contain bend
+   // information in the form of key value pairs like this:
+   // * BEND_ANGLE:90
+   // * BEND_RADIUS:2.5
+   // * K_FACTOR:0.42
+   int OutBendLine (E2Bendline eb) {
+      for (int i = 0; i < eb.Pts.Length; i += 2) {
+         Point2 pa = eb.Pts[i], pb = eb.Pts[i + 1];
+         if (Lib.Testing) (pa, pb) = (pa.R6 (), pb.R6 ());
+         var (a, r, k) = (eb.Angle.R2D (), eb.Radius, eb.KFactor);
+         if (Lib.Testing) (a, r, k) = (a.R6 (), r.R6 (), k.R6 ());
+         var layer = eb.Angle < 0 ? mMBend : mBend;
+         Out ($" 0\nLINE\n 8\n{layer!.Name}\n 10\n{pa.X}\n 20\n{pa.Y}\n 11\n{pb.X}\n 21\n{pb.Y}\n");
+         Out ($" 1000\nBEND_ANGLE:{a}\n 1000\nBEND_RADIUS:{r}\n 1000\nK_FACTOR:{k} \n");
+      }
+      return 0;
+   }
+   Layer2? mMBend, mBend;
+
+   // This is a placeholder, we don't write dimensions out yet
+   int OutDimension (E2Dimension ed) => 0;
+
+   // Writes out the E2Insert entities
+   int OutInsert (E2Insert e) {
+      Out ($" 0\nINSERT\n 8\n{e.Layer.Name}\n 2\n{e.BlockName}\n 10\n{e.Pt.X}\n 20\n{e.Pt.Y}\n");
+      Out ($" 41\n{e.XScale}\n 42\n{e.YScale}\n 50\n{e.Angle.R2D ().R6 ()}\n");
+      return 0;
+   }
+
+   // Writes out an E2Point entity
+   int OutPoint (E2Point e2p) {
+      var (a, b) = (e2p.Pt.X, e2p.Pt.Y);
+      OutEntPrologue (e2p, "POINT");
+      return Out ($" 10\n{a}\n 20\n{b}\n");
+   }
+
+   // Writes out an E2Poly entity
+   // If the poly contains only one segment, or if the NoPolyline flag is set, then the
+   // segment(s) are written out as LINE and ARC entities. Otherwise, the complete polyline
+   // is written out as a POLYLINE entity
+   int OutPoly (E2Poly e2p) {
       var poly = e2p.Poly;
-      if (poly.IsCircle) { OutCircle (e2p); return 0; }
-      if (poly.Count == 1) {
-         if (poly.IsLine) OutLine (e2p); else OutArc (e2p);
+      if (poly.Count == 1 || NoPolyline) {
+         foreach (var seg in poly.Segs) OutSeg (e2p, seg);
+         return 0;
       } else {
-         OutColor (e2p, "POLYLINE");
+         OutEntPrologue (e2p, "POLYLINE");
          Out ($" 66\n1\n 10\n0\n 20\n0\n 70\n{(poly.IsClosed ? 1 : 0)}\n");
          foreach (var seg in poly.Segs) {
             var pt = Lib.Testing ? seg.A.R6 () : seg.A;
@@ -114,23 +220,21 @@ public class DXFWriter (Dwg2 dwg) {
       return 0;
    }
 
-   int OutEnt (E2Insert e) {
-      Out ($" 0\nINSERT\n 8\n{e.Layer.Name}\n 2\n{e.BlockName}\n 10\n{e.Pt.X}\n 20\n{e.Pt.Y}\n");
-      Out ($" 41\n{e.XScale}\n 42\n{e.YScale}\n 50\n{e.Angle.R2D ().R6 ()}\n");
+   // Output an E2Solid entity
+   int OutSolid (E2Solid es) {
+      OutEntPrologue (es, "SOLID");
+      for (int i = 0; i < es.Pts.Count; i++) {
+         var pt = Lib.Testing ? es.Pts[i].R6 () : es.Pts[i];
+         Out ($" {10 + i}\n{pt.X}\n {20 + i}\n{pt.Y}\n");
+      }
       return 0;
    }
 
-   int OutEnt (E2Point e2p) {
-      var (a, b) = (e2p.Pt.X, e2p.Pt.Y);
-      OutColor (e2p, "POINT");
-      return Out ($" 10\n{a}\n 20\n{b}\n");
-   }
-
    // Output text entity
-   int OutEnt (E2Text e) {
+   int OutText (E2Text e) {
       var (pt, height, angle) = (e.Pt, e.Height, e.Angle.R2D ().R6 ());
       if (Lib.Testing) (pt, height) = (pt.R6 (), height.R6 ());
-      OutColor (e, "TEXT");
+      OutEntPrologue (e, "TEXT");
       int align = (int)e.Alignment - 1, horz = align % 3, vert = 3 - align / 3;
       Out ($" 10\n{pt.X}\n 20\n{pt.Y}\n 40\n{height}\n 1\n{e.Text}\n");
       if (e.Alignment != ETextAlign.BaseLeft) Out ($" 11\n{pt.X}\n 21\n{pt.Y}\n");
@@ -143,69 +247,8 @@ public class DXFWriter (Dwg2 dwg) {
       return 0;
    }
 
-   void OutColor (Ent2 ent, string type) {
-      Out ($" 0\n{type}\n 8\n{ent.Layer.Name}\n");
-      if (!ent.Color.IsNil) Out ($" 62\n{ToACADColor (ent.Color)}\n");
-   }
-
-   int OutLine (E2Poly e2p) {
-      OutColor (e2p, "LINE");
-      var s = e2p.Poly[0];
-      var (p1, p2) = (s.A, s.B);
-      if (Lib.Testing) (p1, p2) = (p1.R6 (), p2.R6 ());
-      return Out ($" 10\n{p1.X}\n 20\n{p1.Y}\n 11\n{p2.X}\n 21\n{p2.Y}\n");
-   }
-
-   int OutArc (E2Poly e2p) {
-      OutColor (e2p, "ARC");
-      var s = e2p.Poly[0];
-      var (a1, a2) = s.GetStartAndEndAngles ();
-      var (c, r, sa, ea) = (s.Center, s.Radius, a1.R2D (), a2.R2D ());
-      if (!s.IsCCW) (sa, ea) = (ea, sa); // Swap the angles to handle CW arc
-      if (Lib.Testing) (c, r, sa, ea) = (c.R6 (), r.R6 (), sa.R6 (), ea.R6 ());
-      return Out ($" 10\n{c.X}\n 20\n{c.Y}\n 40\n{r}\n 50\n{sa}\n 51\n{ea}\n");
-   }
-
-   int OutCircle (E2Poly e2p) {
-      OutColor (e2p, "CIRCLE");
-      var seg = e2p.Poly.Segs.First ();
-      var (c, r) = (seg.Center, seg.Radius);
-      if (Lib.Testing) (c, r) = (c.R6 (), r.R6 ());
-      return Out ($" 10\n{c.X}\n 20\n{c.Y}\n 40\n{r}\n");
-   }
-
-   /// <summary>Maps Color4 to nearest ACAD color by comparing RGB values (Not visually accurate).</summary>
-   public static int ToACADColor (Color4 color) {
-      return DXFReader.ACADColors.MinIndexBy (a => Error (a, color));
-
-      // Helper method
-      // Returns square dist between two Colors (RGB comparison only)
-      static double Error (Color4 a, Color4 b) {
-         int dr = b.R - a.R, dg = b.G - a.G, db = b.B - a.B;
-         return dr * dr + dg * dg + db * db;
-      }
-   }
-
-   int OutSolid (E2Solid es) {
-      OutColor (es, "SOLID");
-      for (int i = 0; i < es.Pts.Count; i++) {
-         var pt = Lib.Testing ? es.Pts[i].R6 () : es.Pts[i];
-         Out ($" {10 + i}\n{pt.X}\n {20 + i}\n{pt.Y}\n");
-      }
-      return 0;
-   }
-
-   int OutBendLine (E2Bendline eb) {
-      Point2 pa = eb.Pts[0], pb = eb.Pts[^1];
-      if (Lib.Testing) (pa, pb) = (pa.R6 (), pb.R6 ());
-      var layer = eb.Angle < 0 ? mMBend : mBend;
-      Out ($"0\nLINE\n8\n{layer!.Name}\n10\n{pa.X}\n20\n{pa.Y}\n11\n{pb.X}\n21\n{pb.Y}\n");
-      Out ($"1000\nBEND_ANGLE:{eb.Angle.R2D ()}\n");
-      Out ($"1000\nBEND_RADIUS:{eb.Radius}\n");
-      return Out ($"1000\nK_FACTOR:{eb.KFactor} \n");
-   }
-   Layer2? mMBend, mBend;
-
-   readonly Dwg2 mDwg = dwg;
-   readonly StringBuilder S = new ();
+   // Private data -------------------------------------------------------------
+   readonly Dwg2 D;  // The drawing we're writing out
+   readonly StringBuilder S = new ();  // The stringbuilder used to compose the output
 }
+#endregion
