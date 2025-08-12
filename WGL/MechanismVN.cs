@@ -1,4 +1,8 @@
-﻿namespace Nori;
+// ────── ╔╗
+// ╔═╦╦═╦╦╬╣ MechanismVN.cs
+// ║║║║╬║╔╣║ MechanismVN is used to render mechanisms (one VN for each joint)
+// ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
+namespace Nori;
 
 public class MechanismVN : VNode {
    public MechanismVN (Mechanism mech) : base (mech) => mMech = mech;

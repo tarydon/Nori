@@ -1,6 +1,6 @@
 // ────── ╔╗
 // ╔═╦╦═╦╦╬╣ Mechanism.cs
-// ║║║║╬║╔╣║ <<TODO>>
+// ║║║║╬║╔╣║ Implements the Mechanism type (used to represent different types of kinematic chains)
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 using System.Collections.Concurrent;
 namespace Nori;
@@ -40,9 +40,7 @@ public partial class Mechanism {
    /// <summary>Which socket (on the parent) is this connected to</summary>
    public readonly int ConnectTo;
 
-   /// <summary>
-   /// Where do we fetch our geometry from (could be null)
-   /// </summary>
+   /// <summary>Where do we fetch our geometry from (could be null)</summary>
    public readonly GeometrySource? Geometry;
 
    /// <summary>What kind of joint does this mechanism have?</summary>
@@ -51,9 +49,7 @@ public partial class Mechanism {
    /// <summary>Range of movement for the axis (for rotary axes, these are in degrees)</summary>
    public readonly double JMin, JMax;
 
-   /// <summary>
-   /// The mechanism is modeled with the J value at this position:
-   /// </summary>
+   /// <summary>The mechanism is modeled with the J value at this position:</summary>
    public readonly double JAsDrawn;
 
    /// <summary>The current value for the joint</summary>
@@ -73,9 +69,7 @@ public partial class Mechanism {
    ///   axis passes through the connection point on the parent
    public readonly Vector3 JVector;
 
-   /// <summary>
-   /// The mesh used to render this Mechanism (could be null)
-   /// </summary>
+   /// <summary>The mesh used to render this Mechanism (could be null)</summary>
    public CMesh? Mesh {
       get {
          if (_mesh == null) {
@@ -128,9 +122,7 @@ public partial class Mechanism {
    Matrix3? _xfm;
 
    // Methods ------------------------------------------------------------------
-   /// <summary>
-   /// Adds a child mechanism to this one
-   /// </summary>
+   /// <summary>Adds a child mechanism to this one</summary>
    public void AddChild (Mechanism child) => (mChildren ??= []).Add (child);
 
    /// <summary>Enumerates the subtree of mechanisms under this one</summary>

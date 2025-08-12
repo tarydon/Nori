@@ -1,9 +1,11 @@
-﻿namespace Nori;
+// ────── ╔╗
+// ╔═╦╦═╦╦╬╣ RBRSolver.cs
+// ║║║║╬║╔╣║ RBRSolver: inverse kinematics for most common 6-axis robots
+// ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
+namespace Nori;
 
 #region class RBRSolver ----------------------------------------------------------------------------
-/// <summary>
-/// Implements an inverse-kinemeatics solver for an R-B-R type robot (roll-bend-roll)
-/// </summary>
+/// <summary>Implements an inverse-kinemeatics solver for an R-B-R type robot (roll-bend-roll)</summary>
 public class RBRSolver {
    // Constructors -------------------------------------------------------------
    /// <summary>Construct an RBRSolver, given the parameters defining the robot</summary>
