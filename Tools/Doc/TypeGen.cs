@@ -12,11 +12,13 @@ class TypeGen : HTMLGen {
       mDict = (mProject = project).Notes;
       var docPrivate = project.DocPrivate;
       string nicename = t.NiceName ();
+      if (nicename != "Block2") return;
 
       // Output the level 1 heading, and the class name and description
       HEAD ($"{project.Name}: {nicename}");
       H1 ($"{t.ClassPrefix ()} {nicename.HTML ()}");
       OutBlock ($"T:{t.GetKey ()}");
+      Out ("<hr/>\n");
 
       // Document the constructors
       var bf = Instance | Public | DeclaredOnly | (docPrivate ? NonPublic : 0);
@@ -74,7 +76,7 @@ class TypeGen : HTMLGen {
       OutParams (cons.GetParameters ());
       Out ("</p>\n");
       OutBlock (cons.GetKey ());
-      Out ("<br/><hr/>");
+      Out ("<hr/>");
    }
 
    void OutMethod (MethodInfo mi) {
@@ -84,7 +86,7 @@ class TypeGen : HTMLGen {
       OutParams (mi.GetParameters ());
       Out ("</p>\n");
       OutBlock (mi.GetKey ());
-      Out ("<br/><hr/>");
+      Out ("<hr/>");
    }
 
    void OutOperator (MethodInfo mi) {
@@ -95,7 +97,7 @@ class TypeGen : HTMLGen {
       OutParams (mi.GetParameters ());
       Out ("</p>\n");
       OutBlock (mi.GetKey ());
-      Out ("<br/><hr/>");
+      Out ("<hr/>");
    }
    static Dictionary<string, string> sOperators = new Dictionary<string, string> () {
       ["op_UnaryPlus"] = "+", ["op_UnaryNegation"] = "-", ["op_LogicalNot"] = "!",
@@ -135,16 +137,16 @@ class TypeGen : HTMLGen {
       Out (" {");
       if (get) Out (" get;");
       if (set) Out (" set;");
-      Out (" }</p\n>");
+      Out (" }</p>\n>");
       OutBlock (key);
-      Out ("<br/><hr/>");
+      Out ("<hr/>\n\n");
    }
 
    void OutType (Type t)
-      => Out ($"<span class=\"type\">{t.NiceName ().HTML ()}</span>");
+      => Out (t.NiceName ().HTML ());
 
    void OutName (string name)
-      => Out ($"<span class=\"name\">{name}</span>");
+      => Out (name);
 
    void OutParams (ParameterInfo[] pars) {
       Out (" (");

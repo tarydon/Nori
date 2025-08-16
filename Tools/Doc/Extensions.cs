@@ -42,7 +42,7 @@ static class Extensions {
       ["Double"] = "double", ["Single"] = "float", ["Int32"] = "int", ["UInt32"] = "uint",
       ["Int16"] = "short", ["UInt16"] = "ushort", ["Int64"] = "long", ["UInt64"] = "ulong",
       ["Byte"] = "byte", ["SByte"] = "sbyte", ["Boolean"] = "bool", ["Void"] = "void",
-      ["String"] = "string"
+      ["String"] = "string", ["Object"] = "object"
    };
 
    /// <summary>Returns the key for this type (used to index into the XML documentation)</summary>
