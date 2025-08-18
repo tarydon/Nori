@@ -27,16 +27,13 @@ class HTMLGen {
          <head>
          <meta charset="utf-8" />
          <title>{title}</title>
-         <link rel="stylesheet" href="demo.css">
+         <link rel="stylesheet" href="doc.css">
          </head>
          <body>
 
          """);
    }
 
-   /// <summary>Special case for generating a "H1" element</summary>
-   /// <param name="content">The actual content for the H1</param>
-   /// <param name="more">Attributes for the H1, in similar fashion to what BEGIN expects.</param>
    public void H1 (string content, params object[] more) => ELEM ("h1", content, more).NL ();
 
    public void H2 (string content, params object[] more) => ELEM ("h2", content, more).NL ();

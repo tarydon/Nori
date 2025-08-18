@@ -2,22 +2,27 @@
 // ╔═╦╦═╦╦╬╣ Project.cs
 // ║║║║╬║╔╣║ <<TODO>>
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
+using System.Text.RegularExpressions;
+
 namespace Nori.Doc;
 
 class Project {
    // Constructor --------------------------------------------------------------
    public Project (string file) {
+      string lastKey = "";
       foreach (var line in File.ReadAllLines (file).Select (a => a.Trim ())) {
          if (line.StartsWith ('#')) continue;
          string[] w = line.Split (['='], 2, StringSplitOptions.TrimEntries);
          if (w.Length != 2) continue;
          string key = w[0].ToUpper ();
+         if (key == "") key = lastKey; else lastKey = key;
          switch (key) {
             case "DOCUMENTPRIVATE": mDocPrivate = GetBool (w[1]); break;
             case "INPUT": mInput.Add (w[1]); break;
             case "OUTPUTDIRECTORY": mOutDir = w[1]; break;
             case "PROJECT": mName = w[1]; break;
             case "NAMESPACE": mNamespaces.Add (w[1]); break;
+            case "EXCLUDE": mExclude.Add (new Regex (w[1], RegexOptions.Compiled)); break;
             default: Console.WriteLine ($"Unknown key {key} in {file}"); break;
          }
       }
@@ -37,6 +42,12 @@ class Project {
    /// <summary>The documentation blocks for each type, method, property etc</summary>
    public IReadOnlyDictionary<string, string> Notes => mNotes;
    Dictionary<string, string> mNotes = [];
+
+   /// <summary>
+   /// Exclude documentation for elements whose keys match these
+   /// </summary>
+   public IReadOnlyList<Regex> Exclude => mExclude;
+   static List<Regex> mExclude = [];
 
    // Methods ------------------------------------------------------------------
    public void Process () {
@@ -62,10 +73,10 @@ class Project {
 
    // Implementation -----------------------------------------------------------
    void CopyResources () {
-      Stream stm = Assembly.GetExecutingAssembly ().GetManifestResourceStream ("Nori.Doc.Res.std.css")!;
+      Stream stm = Assembly.GetExecutingAssembly ().GetManifestResourceStream ("Nori.Doc.Res.doc.css")!;
       byte[] data = new byte[(int)stm.Length];
       stm.ReadExactly (data);
-      File.WriteAllBytes ($"{mOutDir}/std.css", data);
+      // File.WriteAllBytes ($"{mOutDir}/doc.css", data);
    }
 
    bool GetBool (string s)

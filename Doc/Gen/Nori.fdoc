@@ -33,3 +33,15 @@ DOCUMENTPRIVATE    = NO
 # you include the "Atom" namespace, for example, the type "Atom.FileIterator"
 # will be referred to as simply "FileIterator" in your documentation.
 NAMESPACE          = Nori
+
+EXCLUDE = P:.*`1\.IsFixedSize
+        = P:.*`1\.IsReadOnly
+        = P:.*`1\.IsSynchronized
+        = P:.*`1\.SyncRoot
+        = M:.*`1\.Insert\(System.Int32,System.Object\)
+        = M:.*`1\.Add\(System.Object\)
+        = M:.*`1\.Contains\(System.Object\)
+        = M:.*`1\.IndexOf\(System.Object\)
+        = M:.*`1\.Remove\(System.Object\)
+        = M:.*`1\.CopyTo\(System.Array,System.Int32\)
+

@@ -8,11 +8,11 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="Res\std.css" />
+    <None Remove="Res\doc.css" />
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="Res\std.css" />
+    <EmbeddedResource Include="Res\doc.css" />
   </ItemGroup>
 
 </Project>

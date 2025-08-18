@@ -12,31 +12,32 @@ class TypeGen : HTMLGen {
       mDict = (mProject = project).Notes;
       var docPrivate = project.DocPrivate;
       string nicename = t.NiceName ();
-      if (nicename != "Block2") return;
+      if (nicename != "AList<T>") return; 
 
       // Output the level 1 heading, and the class name and description
       HEAD ($"{project.Name}: {nicename}");
       H1 ($"{t.ClassPrefix ()} {nicename.HTML ()}");
-      OutBlock ($"T:{t.GetKey ()}");
-      Out ("<hr/>\n");
+      OutBlock ($"T:{t.GetKey ()}"); 
 
       // Document the constructors
       var bf = Instance | Public | DeclaredOnly | (docPrivate ? NonPublic : 0);
-      var cons = t.GetConstructors (bf).ToList ();
+      var cons = t.GetConstructors (bf).Where (Included).ToList ();
       if (cons.Count > 0) {
          H2 ("Constructors");
-         cons.ForEach (OutConstructor);
+         for (int i = 0; i < cons.Count; i++)
+            OutConstructor (cons[i], i == cons.Count - 1);
       }
 
       // Document the properties and fields
       List<MemberInfo> mi = [];
       bf = Instance | Static | Public | DeclaredOnly | (docPrivate ? NonPublic : 0);
-      mi.AddRange (t.GetProperties (bf));
+      mi.AddRange (t.GetProperties (bf).Where (Included));
       mi.AddRange (t.GetFields (bf));
       mi.Sort ((a, b) => a.Name.CompareTo (b.Name));
       if (mi.Count > 0) {
          H2 ("Properties");
-         mi.ForEach (OutProperty);
+         for (int i = 0; i < mi.Count; i++)
+            OutProperty (mi[i], i == mi.Count - 1);
       }
 
       // Document the methods
@@ -44,7 +45,8 @@ class TypeGen : HTMLGen {
       var methods = t.GetMethods (bf).Where (Included).OrderBy (a => a.Name).ToList ();
       if (methods.Count > 0) {
          H2 ("Methods");
-         methods.ForEach (OutMethod);
+         for (int i = 0; i < methods.Count; i++) 
+            OutMethod (methods[i], i == methods.Count - 1);
       }
 
       // Document the operators
@@ -52,23 +54,42 @@ class TypeGen : HTMLGen {
       var operators = t.GetMethods (bf).Where (a => a.IsSpecialName && a.Name.StartsWith ("op_")).ToList ();
       if (operators.Count > 0) {
          H2 ("Operators");
-         operators.ForEach (OutOperator);
+         for (int i = 0; i < operators.Count; i++)
+            OutOperator (operators[i], i == operators.Count - 1);
       }
 
       // Finish up
-      Out ("</body>\n</html>");
+      Out ("</body>\n</html>\n");
    }
    readonly Project mProject;
    readonly IReadOnlyDictionary<string, string> mDict;
    readonly Type mT;
 
+   // Is this constructor to be included? 
+   // We avoid adding notes for undocumented, paramterless constructors
+   bool Included (ConstructorInfo ci) {
+      if (ci.GetParameters ().Length > 0) return true;
+      if (mDict.ContainsKey (ci.GetKey ())) return true;
+      return false;
+   }
+
    bool Included (MethodInfo mi) {
       if (mi.IsSpecialName) return false;
-      if (mi.Name == "ToString" && mi.GetParameters ().Length == 0 && !mDict.ContainsKey (mi.GetKey ())) return false;
+      string key = mi.GetKey ();
+      if (mDict.ContainsKey (key)) return true;
+      if (mi.Name == "ToString" && mi.GetParameters ().Length == 0) return false;
+      if (mProject.Exclude.Any (a => a.Match (key).Success)) return false;
       return true;
    }
 
-   void OutConstructor (ConstructorInfo cons) {
+   bool Included (PropertyInfo pi) {
+      var key = pi.GetKey ();
+      if (mDict.ContainsKey (key)) return true;
+      if (mProject.Exclude.Any (a => a.Match (key).Success)) return false;
+      return true; 
+   }
+
+   void OutConstructor (ConstructorInfo cons, bool last) {
       Out ($"<p class=\"declaration\">");
       Out ($"<span class=\"moniker\">");
       OutType (cons.DeclaringType!);
@@ -76,28 +97,36 @@ class TypeGen : HTMLGen {
       OutParams (cons.GetParameters ());
       Out ("</p>\n");
       OutBlock (cons.GetKey ());
-      Out ("<hr/>");
+      if (!last) Out ("<hr/>");
    }
 
-   void OutMethod (MethodInfo mi) {
+   void OutMethod (MethodInfo mi, bool last) {
       Out ($"<p class=\"declaration\">{mi.MemberPrefix ()}");
       OutType (mi.ReturnType);
       Out ($" <span class=\"moniker\">{mi.Name}</span>");
       OutParams (mi.GetParameters ());
       Out ("</p>\n");
       OutBlock (mi.GetKey ());
-      Out ("<hr/>");
+      if (!last) Out ("<hr/>");
+      Out ("\n\n");
    }
 
-   void OutOperator (MethodInfo mi) {
+   void OutOperator (MethodInfo mi, bool last) {
       Out ($"<p class=\"declaration\">");
-      OutType (mi.ReturnType);
-      string name = sOperators.GetValueOrDefault (mi.Name, mi.Name);
-      Out ($" <span class=\"moniker\">operator {name.HTML ()}</span>");
+      if (mi.Name is "op_Implicit" or "op_Explicit") {
+         Out ($"{mi.Name[3..].ToLower ()} operator <span class=\"moniker\">");
+         OutType (mi.ReturnType);
+         Out ("</span>");
+      } else {
+         OutType (mi.ReturnType);
+         string name = sOperators.GetValueOrDefault (mi.Name, mi.Name);
+         Out ($" <span class=\"moniker\">operator {name.HTML ()}</span>");
+      }
       OutParams (mi.GetParameters ());
       Out ("</p>\n");
       OutBlock (mi.GetKey ());
-      Out ("<hr/>");
+      if (!last) Out ("<hr/>");
+      Out ("\n\n");
    }
    static Dictionary<string, string> sOperators = new Dictionary<string, string> () {
       ["op_UnaryPlus"] = "+", ["op_UnaryNegation"] = "-", ["op_LogicalNot"] = "!",
@@ -110,7 +139,7 @@ class TypeGen : HTMLGen {
       ["op_LessThanOrEqual"] = "<=", ["op_GreaterThan"] = ">", ["op_GreaterThanOrEqual"] = ">="
    };
 
-   void OutProperty (MemberInfo mi) {
+   void OutProperty (MemberInfo mi, bool last) {
       Out ($"<p class=\"declaration\">");
       Type type; bool get = false, set = false;
       string key;
@@ -137,9 +166,10 @@ class TypeGen : HTMLGen {
       Out (" {");
       if (get) Out (" get;");
       if (set) Out (" set;");
-      Out (" }</p>\n>");
+      Out (" }</p>\n");
       OutBlock (key);
-      Out ("<hr/>\n\n");
+      if (!last) Out ("<hr/>");
+      Out ("\n\n");
    }
 
    void OutType (Type t)
@@ -161,7 +191,7 @@ class TypeGen : HTMLGen {
 
    void OutBlock (string target) {
       if (!mDict.TryGetValue (target, out var s)) {
-//         Console.WriteLine ($"No documentation for {target}");
+         P (target, "class", "missing");
          return;
       }
 

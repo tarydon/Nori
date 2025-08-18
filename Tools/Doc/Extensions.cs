@@ -26,6 +26,7 @@ static class Extensions {
       => string.IsNullOrWhiteSpace (s);
 
    public static string NiceName (this Type t) {
+      if (t.IsGenericParameter) return t.Name;
       var sb = new StringBuilder ();
       if (t.DeclaringType != null) sb.Append ($"{NiceName (t.DeclaringType)}.");
       else if (t.Namespace != null && !Project.Namespaces.Contains (t.Namespace)) sb.Append ($"{t.Namespace}.");
@@ -47,7 +48,8 @@ static class Extensions {
 
    /// <summary>Returns the key for this type (used to index into the XML documentation)</summary>
    public static string GetKey (this Type t) {
-      if (t.IsGenericType) {
+      if (t.IsGenericParameter) return $"`{t.GenericParameterPosition}";
+      if (t.IsConstructedGenericType) {
          var sb = new StringBuilder (t.GetGenericTypeDefinition ().FullName ?? "ABC");
          sb.Remove (sb.Length - 2, 2); sb.Append ('{');
          for (int i = 0; i < t.GetGenericArguments ().Length; i++) {
