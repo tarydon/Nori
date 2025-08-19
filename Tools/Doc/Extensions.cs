@@ -48,9 +48,28 @@ static class Extensions {
 
    /// <summary>Returns the key for this type (used to index into the XML documentation)</summary>
    public static string GetKey (this Type t) {
-      if (t.IsGenericParameter) return $"`{t.GenericParameterPosition}";
+      if (t.IsArray) {
+         // If this is an array, but the element type is a generic parameter (for example, 
+         // like the first parameter to AList<T>.CopyTo(T[] array, ...) then we should return
+         // a typename like "`0[]"
+         var et = t.GetElementType ()!;
+         if (et.IsGenericParameter) {
+            var s = $"`{et.GenericParameterPosition}[";
+            for (int i = 1; i < t.GetArrayRank (); i++) s += ',';
+            return s + ']';
+         }
+      }
+      if (t.IsGenericParameter) {
+         // If this is a generic parameter type (like the parameter to AList<T>.Add(T), then
+         // we should returna string like `0 (where 0 is the generic parameter position)
+         return $"`{t.GenericParameterPosition}";
+      }
       if (t.IsConstructedGenericType) {
-         var sb = new StringBuilder (t.GetGenericTypeDefinition ().FullName ?? "ABC");
+         // If this is a fully constructed generic type (like AList<int>) then we should
+         // return a string like Nori.AList{System.Int32} - this substitution is done since
+         // we cannot use angle brackets as the key (that would mess up the XML documentation
+         // file)
+         var sb = new StringBuilder (t.GetGenericTypeDefinition ().FullName ?? "");
          sb.Remove (sb.Length - 2, 2); sb.Append ('{');
          for (int i = 0; i < t.GetGenericArguments ().Length; i++) {
             if (i > 0) sb.Append (',');
@@ -86,8 +105,14 @@ static class Extensions {
       }
    }
 
-   public static string GetKey (this PropertyInfo p)
-      => $"P:{p.DeclaringType!.GetKey ()}.{p.Name}";
+   public static string GetKey (this PropertyInfo p) {
+      var sb = new StringBuilder ("P:");
+      sb.Append (p.DeclaringType!.GetKey ());
+      sb.Append ('.'); sb.Append (p.Name);
+      if (p.GetGetMethod () is MethodInfo mi)
+         AppendParams (sb, mi.GetParameters ());
+      return sb.ToString ();
+   }
 
    public static string GetKey (this FieldInfo f)
       => $"F:{f.DeclaringType!.GetKey ()}.{f.Name}";

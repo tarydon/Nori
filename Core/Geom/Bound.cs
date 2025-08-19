@@ -9,16 +9,52 @@ namespace Nori;
 /// <summary>Represents a bound in 1 dimension (simply a Min .. Max value, stored as floats)</summary>
 public readonly struct Bound1 : IEQuable<Bound1> {
    // Constructors -------------------------------------------------------------
+   /// <summary>
+   /// Constructs an empty Bound1
+   /// </summary>
+   /// Note that the default for Bound1 (if new is never called to invoke the constructor)
+   /// is a Bound1 that is initialized with all zeroes - which is *not* an empty bound,
+   /// but a valid bound extending from 0 .. 0.
    public Bound1 () => (Min, Max) = (float.MaxValue, float.MinValue);
+
+   /// <summary>
+   /// Constructs a non-empty bound that encompasses a single value (Min = Max = v)
+   /// </summary>
    public Bound1 (double v) => Min = Max = (float)v;
+
+   /// <summary>
+   /// Constructs a bound that encompasses a and b (a and b need not be ordered)
+   /// </summary>
    public Bound1 (double a, double b) => (Min, Max) = ((float)Min (a, b), (float)Max (a, b));
+
+   /// <summary>
+   /// Deconstruct a Bound1 into min and max values
+   /// </summary>
    public void Deconstruct (out float min, out float max) => (min, max) = (Min, Max);
+
    public override string ToString () => IsEmpty ? "Empty" : $"{Min.S5 ()}~{Max.S5 ()}";
 
    // Properties ---------------------------------------------------------------
-   public readonly float Min, Max;
+   /// <summary>
+   /// The minimum value of the bound (inclusive)
+   /// </summary>
+   public readonly float Min;
+   /// <summary>
+   /// The maximum value of the bound (inclusive)
+   /// </summary>
+   /// If Max is _less than_ min, that is an empty bound
+   public readonly float Max;
+   /// <summary>
+   /// Length of the bound (Min .. Max)
+   /// </summary>
    public double Length => Max - Min;
+   /// <summary>
+   /// Is this an empty bound?
+   /// </summary>
    public bool IsEmpty => Min > Max;
+   /// <summary>
+   /// Midpoint value of the Bound1
+   /// </summary>
    public double Mid => (Min + Max) / 2;
 
    // Methods ------------------------------------------------------------------

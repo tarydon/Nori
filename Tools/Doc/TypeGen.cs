@@ -12,7 +12,6 @@ class TypeGen : HTMLGen {
       mDict = (mProject = project).Notes;
       var docPrivate = project.DocPrivate;
       string nicename = t.NiceName ();
-      if (nicename != "AList<T>") return; 
 
       // Output the level 1 heading, and the class name and description
       HEAD ($"{project.Name}: {nicename}");
@@ -143,11 +142,15 @@ class TypeGen : HTMLGen {
       Out ($"<p class=\"declaration\">");
       Type type; bool get = false, set = false;
       string key;
+      ParameterInfo[]? pars = null;
       switch (mi) {
          case PropertyInfo pi:
             type = pi.PropertyType;
-            if (pi.GetGetMethod () is MethodInfo mig)
+            if (pi.GetGetMethod () is MethodInfo mig) {
+               pars = mig.GetParameters ();
+               if (pars.Length == 0) pars = null;
                if (mig.IsPublic || mProject.DocPrivate) get = true;
+            }
             if (pi.GetSetMethod () is MethodInfo mis)
                if (mis.IsPublic || mProject.DocPrivate) set = true;
             key = pi.GetKey ();
@@ -162,7 +165,9 @@ class TypeGen : HTMLGen {
       }
 
       OutType (type); Out (" ");
-      Out ($"<span class=\"moniker\">{mi.Name}</span>");
+      Out ($"<span class=\"moniker\">");
+      if (pars != null) { Out ("this</span>"); OutParams (pars, true); } 
+      else Out ($"{mi.Name}</span>"); 
       Out (" {");
       if (get) Out (" get;");
       if (set) Out (" set;");
@@ -178,15 +183,15 @@ class TypeGen : HTMLGen {
    void OutName (string name)
       => Out (name);
 
-   void OutParams (ParameterInfo[] pars) {
-      Out (" (");
+   void OutParams (ParameterInfo[] pars, bool square = false) {
+      Out (square ? " [" : " (");
       for (int i = 0; i < pars.Length; i++) {
          var par = pars[i];
          if (i > 0) Out (", ");
          OutType (par.ParameterType); Out (" ");
          OutName (par.Name!);
       }
-      Out (")\n");
+      Out (square ? "]\n" : ")\n");
    }
 
    void OutBlock (string target) {
