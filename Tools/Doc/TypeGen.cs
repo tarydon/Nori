@@ -3,6 +3,8 @@
 // ║║║║╬║╔╣║ <<TODO>>
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 namespace Nori.Doc;
+
+using System.Runtime.CompilerServices;
 using static System.Reflection.BindingFlags;
 
 // TypeGen is used to generate a documentation page for a particular type
@@ -188,8 +190,9 @@ class TypeGen : HTMLGen {
       for (int i = 0; i < pars.Length; i++) {
          var par = pars[i];
          if (i > 0) Out (", ");
-         OutType (par.ParameterType); Out (" ");
-         OutName (par.Name!);
+         var tupleNames = par.GetCustomAttribute<TupleElementNamesAttribute> ();
+         Out (par.ParameterType.NiceName (par.IsOut, tupleNames).HTML ());
+         OutName ($" {par.Name}");
       }
       Out (square ? "]\n" : ")\n");
    }

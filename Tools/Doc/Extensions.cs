@@ -2,6 +2,8 @@
 // ╔═╦╦═╦╦╬╣ Extensions.cs
 // ║║║║╬║╔╣║ <<TODO>>
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
+using System.Runtime.CompilerServices;
+
 namespace Nori.Doc;
 
 static class Extensions {
@@ -25,18 +27,35 @@ static class Extensions {
    public static bool IsBlank (this string? s)
       => string.IsNullOrWhiteSpace (s);
 
-   public static string NiceName (this Type t) {
+   public static string NiceName (this Type t, bool outParam = false, TupleElementNamesAttribute? names = null) {
       if (t.IsGenericParameter) return t.Name;
       var sb = new StringBuilder ();
       if (t.DeclaringType != null) sb.Append ($"{NiceName (t.DeclaringType)}.");
       else if (t.Namespace != null && !Project.Namespaces.Contains (t.Namespace)) sb.Append ($"{t.Namespace}.");
       if (t.IsGenericType) {
-         sb.Append ($"{t.Name.Split ('`')[0]}<");
-         sb.Append (string.Join (',', t.GetGenericArguments ().Select (a => a.Name)));
-         sb.Append ('>');
+         if (t.Name.StartsWith ("ValueTuple`2")) {
+            sb.Append ('(');
+            var args = t.GetGenericArguments ();
+            for (int i = 0; i < args.Length; i++) {
+               if (i > 0) sb.Append (", ");
+               sb.Append (NiceName (args[i]));
+               if (names != null && names.TransformNames[i] != null)
+                  sb.Append ($" {names.TransformNames[i]}");
+            }
+            sb.Append (')');
+         } else {
+            sb.Append ($"{t.Name.Split ('`')[0]}<");
+            sb.Append (string.Join (',', t.GetGenericArguments ().Select (a => a.Name)));
+            sb.Append ('>');
+         }
       } else
          sb.Append (t.Name);
       var s = sb.ToString ();
+      if (s.EndsWith ('&')) {
+         s = s[..^1];
+         s = sNiceNames.GetValueOrDefault (s, s);
+         return (outParam ? "out " : "ref ") + s;
+      }
       return sNiceNames.GetValueOrDefault (s, s);
    }
    static Dictionary<string, string> sNiceNames = new() {
@@ -78,7 +97,7 @@ static class Extensions {
          sb.Append ('}');
          return sb.ToString ();
       }
-      return (t.FullName ?? t.Name).Replace ('+', '.');
+      return (t.FullName ?? t.Name).Replace ('+', '.').Replace ('&', '@');
    }
 
    public static string GetKey (this ConstructorInfo c) {
@@ -94,6 +113,8 @@ static class Extensions {
       sb.Append (m.DeclaringType!.GetKey ());
       sb.Append ('.'); sb.Append (m.Name);
       AppendParams (sb, m.GetParameters ());
+      if (m.Name is "op_Implicit" or "op_Explicit") 
+         sb.Append ('~').Append (m.ReturnType.GetKey ());
       return sb.ToString ();
    }
 

@@ -91,6 +91,11 @@ public readonly struct Bound1 : IEQuable<Bound1> {
    }
 
    // Operators ----------------------------------------------------------------
+   /// <summary>
+   /// Implicit conversion from a tuple of two double to a Bound1
+   /// </summary>
+   /// This makes it much simpler to construct Bound1 objects on the fly where needed by 
+   /// just enclosing a pair of numbers in parentheses.
    public static implicit operator Bound1 ((double Min, double Max) value) => new (value.Min, value.Max);
 
    /// <summary>Returns a Bound1 expanded to include the given value</summary>
