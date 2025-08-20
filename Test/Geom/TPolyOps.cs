@@ -120,3 +120,18 @@ class BooleanOpsTests {
       }
    }
 }
+
+[Fixture (25, "Poly edge mangler tests", "Geom")]
+class PolyEdgeTests {
+   [Test (110, "Poly edge-recess")]
+   void Test1 () {
+      Poly rect = Poly.Rectangle (0, 0, 100, 50);
+      Poly? poly;
+      poly = rect.EdgeRecess (0, left: true, 15, 20, 10); poly!.Is ("M0,0H5V10H25V0H100V50H0Z");
+      poly = rect.EdgeRecess (0, left: false, 15, 20, 10); poly!.Is ("M0,0H5V-10H25V0H100V50H0Z");
+
+      Poly line = Poly.Line (0, 0, 100, 0);
+      poly = line.EdgeRecess (0, left: true, 15, 20, 10); poly!.Is ("M0,0H5V10H25V0H100");
+      poly = line.EdgeRecess (0, left: false, 15, 20, 10); poly!.Is ("M0,0H5V-10H25V0H100");
+   }
+}
