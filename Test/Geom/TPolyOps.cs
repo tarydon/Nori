@@ -133,5 +133,10 @@ class PolyEdgeTests {
       Poly line = Poly.Line (0, 0, 100, 0);
       poly = line.EdgeRecess (0, left: true, 15, 20, 10); poly!.Is ("M0,0H5V10H25V0H100");
       poly = line.EdgeRecess (0, left: false, 15, 20, 10); poly!.Is ("M0,0H5V-10H25V0H100");
+
+      // Rect with rounded corner.
+      Poly rounded = Poly.Rectangle (0, 0, 100, 50)!.Fillet (0, 5)!;
+      poly = rounded.EdgeRecess (0, left: true, 15, 20, 10); poly!.Is ("M100,0V5H90V25H100V50H0V5Q5,0,1Z");
+      poly = rounded.EdgeRecess (0, left: false, 15, 20, 10); poly!.Is ("M100,0V5H110V25H100V50H0V5Q5,0,1Z");
    }
 }
