@@ -139,13 +139,13 @@ class PolyTests {
       File.WriteAllText (NT.TmpTxt, sb.ToString ());
       Assert.TextFilesEqual1 ("Misc/poly3.txt", NT.TmpTxt);
 
-      seg = new Seg (new (0, 10), new (-10, 0), Point2.Zero, Poly.EFlags.CCW);
+      p = Poly.Parse ("M0,10 Q-10,0,1"); seg = p[0];
       seg.Contains (new (0, 10)).IsTrue (); seg.Contains (new (-10, 0)).IsTrue ();
       seg.Contains (Point2.Zero.Polar (10, 135.D2R ())).IsTrue ();
       seg.Contains (new (0, -10)).IsFalse ();
       seg.Contains (new (10, 0)).IsFalse ();
 
-      seg = new Seg (new (0, 10), new (-10, 0), Point2.Zero, Poly.EFlags.CW);
+      p = Poly.Parse ("M0,10 Q-10,0,-3"); seg = p[0];
       seg.Contains (new (0, 10)).IsTrue (); seg.Contains (new (-10, 0)).IsTrue ();
       seg.Contains (Point2.Zero.Polar (10, 135.D2R ())).IsFalse ();
       seg.Contains (new (0, -10)).IsTrue ();
