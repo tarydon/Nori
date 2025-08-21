@@ -264,16 +264,17 @@ public partial class Poly {
          // performance
          if (HasArcs && i < mExtra.Length) {
             var extra = mExtra[i];
-            if ((extra.Flags & EFlags.Arc) != 0) pb.Arc (pt, extra.Center, extra.Flags);
-            else pb.Line (pt);
-         } else {
-            pb.Line (pt);
-            if (i == seg) {
-               if (!offset.IsZero ()) pb.Line (pt = pt.Polar (offset, slope));
-               pb.Line (pt = pt.Polar (depth, slope2));
-               pb.Line (pt = pt.Polar (width, slope));
-               if (!offset2.IsZero ()) pb.Line (pt.Polar (-depth, slope2));
+            if ((extra.Flags & EFlags.Arc) != 0) {
+               pb.Arc (pt, extra.Center, extra.Flags);
+               continue;
             }
+         }
+         pb.Line (pt);
+         if (i == seg) {
+            if (!offset.IsZero ()) pb.Line (pt = pt.Polar (offset, slope));
+            pb.Line (pt = pt.Polar (depth, slope2));
+            pb.Line (pt = pt.Polar (width, slope));
+            if (!offset2.IsZero ()) pb.Line (pt.Polar (-depth, slope2));
          }
       }
       // Done, close the poly if needed and return it
