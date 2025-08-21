@@ -24,22 +24,30 @@ h1, h2, h3, h4, h5, h6 { text-wrap: balance; }
 #root, #__next { isolation: isolate; }
 /* ---------------------------------------------------- */
 
+:root {
+    --decltext: #5050b0;
+    --text: #000000;
+    --bgrd: #eee;
+    --invbgrd: #606070;
+    --invtext: #f0f0f0;
+}
+
 body {
     font-family: "Segoe UI", sans-serif;
-    background-color: #eee;
-    color: #555;
+    background-color: var(--bgrd);
+    color: var(--text);
     padding: 1em;
 }
 
 h1 {
     font-family: "Consolas", monospace;
-    color: black;
     font-size: 1.8em;
+    color: var(--decltext);
 }
 
 h2 {
-    background-color: #606070;
-    color: #f0f0f0;
+    background-color: var(--invbgrd);
+    color: var(--invtext);
     font-size: 1.2em;
     margin-top: 1em;
     padding-left: 0.2em;
@@ -52,13 +60,13 @@ p {
 }
 
 p.summary {
-    color: #000;
     margin-top: 0;
 }
 
 p.declaration {
     font-family:'Monaspace Krypton Frozen', Consolas, monospace;
     margin-left: 0;
+    color: var(--decltext);
 }
 
 span.moniker {
@@ -68,3 +76,5 @@ span.moniker {
 hr {
     margin-top: 0.5em; margin-bottom:0.5em;
 }
+
+p.missing { color: red; }
