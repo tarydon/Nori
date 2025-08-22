@@ -43,9 +43,7 @@ class Project {
    public IReadOnlyDictionary<string, string> Notes => mNotes;
    Dictionary<string, string> mNotes = [];
 
-   /// <summary>
-   /// Exclude documentation for elements whose keys match these
-   /// </summary>
+   /// <summary>Exclude documentation for elements whose keys match these</summary>
    public IReadOnlyList<Regex> Exclude => mExclude;
    static List<Regex> mExclude = [];
 

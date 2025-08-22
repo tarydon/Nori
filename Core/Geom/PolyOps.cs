@@ -68,8 +68,6 @@ public partial class Poly {
    /// touching at that node (a lead-in segment, and a lead-out segment). If either
    /// of those segments are curved, or too short to take a in-fillet, this returns null.
    /// of those segments are curved, or too short to take a in-fillet, this returns null.
-   /// <param name="radius">In-fillet radius</param>
-   /// <param name="left">Indicates how the in-fillet arc winds around target node</param>
    public Poly? InFillet (int node, double radius, bool left) {
       if (IsCircle || radius.IsZero ()) return null; // No Infillet for circles
       // Handle the special case where we are in-filleting at node 0 of a
