@@ -48,7 +48,7 @@ public readonly struct Seg {
             double r = cen.DistTo (a);
             bool ccw = (flags & Poly.EFlags.CCW) > 0;
             double sa = cen.AngleTo (a), ea = cen.AngleTo (b);
-            for (int i = 0; i <= 4; i++) {
+            for (int i = 0; i < 4; i++) {
                double ang = i * Lib.HalfPI;
                bool include;
                if (ccw) {
@@ -272,7 +272,8 @@ public readonly struct Seg {
    // Get the start and end angles of an arc (this ensures that end > start if
    // CCW, and end < start if CW)
    (double S, double E) GetStartAndEndAngles (Point2 cen, Poly.EFlags flags) {
-      if ((flags & Poly.EFlags.Circle) != 0) return (0, Lib.TwoPI);
+      if ((flags & Poly.EFlags.Circle) != 0)
+         return (0, (flags & Poly.EFlags.CCW) != 0 ? Lib.TwoPI : -Lib.TwoPI); 
       double s = cen.AngleTo (A), e = cen.AngleTo (B);
       if ((flags & Poly.EFlags.CCW) > 0) {
          if (e < s) e += Lib.TwoPI;
