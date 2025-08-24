@@ -10,7 +10,7 @@ class DwgScene : Scene2 {
    }
    readonly Dwg2 mDwg;
 
-   Dwg2 MakeDwg () {
+   Dwg2 MakeDwg1 () {
       var dwg = new Dwg2 ();
       var layer = dwg.CurrentLayer;
 
@@ -32,6 +32,32 @@ class DwgScene : Scene2 {
 
       dwg.Add (new E2Bendline (dwg, Point2.List (200, 75, 125, 0), Lib.HalfPI, 2, 0.42, 1));
       dwg.Add (new E2Bendline (dwg, Point2.List (200, 55, 145, 0), -Lib.HalfPI, 2, 0.42, 1));
+      return dwg;
+   }
+
+   Dwg2 MakeDwg () {
+      var dwg = DXFReader.FromFile ("c:\\etc\\segint.dxf");
+      var segs = dwg.Polys.SelectMany (a => a.Segs).ToList ();
+      Span<Point2> buffer = stackalloc Point2[2];
+      for (int i = 0; i < segs.Count; i++) {
+         var s1 = segs[i];
+         for (int j = 0; j < i; j++) {
+            var s2 = segs[j];
+            var pts = s1.Intersect (s2, buffer, false);
+            foreach (var pt in pts)
+               if (Close (pt))
+                  dwg.Add (Poly.Circle (pt, 2));
+
+            bool Close (Point2 pt) {
+               double d1 = Math.Min (pt.DistTo (s1.A), pt.DistTo (s1.B));
+               if (d1 > 15) return false;
+               d1 = Math.Min (pt.DistTo (s2.A), pt.DistTo (s2.B));
+               if (d1 > 15) return false;
+               return true;
+            }
+         }
+      }
+      DXFWriter.SaveFile (dwg, "c:/etc/test1.dxf");
       return dwg;
    }
 }

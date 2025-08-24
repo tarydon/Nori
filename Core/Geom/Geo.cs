@@ -65,6 +65,43 @@ public static class Geo {
       return buffer[0..2];
    }
 
+   /// <summary>Returns the intersections between a circle and a line (0, 1, or 2 points)</summary>
+   /// <param name="cen">Center point of circle</param>
+   /// <param name="rad">Radius of the circle</param>
+   /// <param name="p1">First point on the line</param>
+   /// <param name="p2">Second point on the line</param>
+   /// <param name="buffer">A buffer with space for at least 2 points</param>
+   /// <returns>A slice of the same buffer containing 0, 1 or 2 points</returns>
+   /// This routine uses a non-trignometric (analytical geometry) method to compute the two
+   /// centers without any trignometric functions, and is very performant. To avoid allocating
+   /// short-lived arrays to hold the results, this routine takes a Span and returns a subset
+   /// of that span (see CircleXCircle for more details on this).
+   public static ReadOnlySpan<Point2> CircleXLine (Point2 cen, double rad, Point2 p1, Point2 p2, Span<Point2> buffer) {
+      // Try to frame this as a quadratic that has 0, 1 or 2 unique solutions
+      double dx = p2.X - p1.X, dy = p2.Y - p1.Y, A = dx * dx + dy * dy;
+      if (A.IsZero ()) return [];
+      double vx = p1.X - cen.X, vy = p1.Y - cen.Y;
+      double B = 2 * (dx * vx + dy * vy);
+      double C = vx * vx + vy * vy - rad * rad;
+      double det = B * B - 4 * A * C;
+
+      // Handle the cases for 1, 2 and 0 solutions below:
+      if (det.IsZero ()) {
+         double t = -B / (2 * A);
+         buffer[0] = new (p1.X + t * dx, p1.Y + t * dy);
+         return buffer[0..1];
+      } else if (det > 0) {
+         A *= 2;
+         double sdet = Sqrt (det);
+         double t = (-B + sdet) / A;
+         buffer[0] = new (p1.X + t * dx, p1.Y + t * dy);
+         t = (-B - sdet) / A;
+         buffer[1] = new (p1.X + t * dx, p1.Y + t * dy);
+         return buffer[0..2];
+      } else
+         return [];
+   }
+
    /// <summary>Returns a tuple (center, radius) which forms a circle tangential to lines AB, CD, EF</summary>
    /// The pick points specify which bisectors (relative to intersection point of the lines)
    /// to use to compute the centre. If pick points don't lie on the corresponding line,

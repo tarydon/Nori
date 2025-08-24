@@ -9,7 +9,7 @@
 		<OutDir>..\Bin</OutDir>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 		<Optimize>false</Optimize>
-		<GenerateDocumentationFile>true</GenerateDocumentationFile>
+		<GenerateDocumentationFile>false</GenerateDocumentationFile>
 		<DocumentationFile>..\Bin\Nori.WGL.xml</DocumentationFile>
 	</PropertyGroup>
 
