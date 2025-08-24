@@ -10,6 +10,8 @@ namespace Nori;
 #region class Lib ----------------------------------------------------------------------------------
 public static class Lib {
    // Constants ----------------------------------------------------------------
+   /// <summary>Delta = 1e-6</summary>
+   public const double Delta = 1e-3;
    /// <summary>Epsilon = 1e-6</summary>
    public const double Epsilon = 1e-6;
    /// <summary>PI = 180 degrees, in radians</summary>

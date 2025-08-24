@@ -44,10 +44,10 @@ class BoundTests {
       b1.IsEmpty.Is (true); b1.ToString ().Is ("Empty");
       b2.Is ("(10~20,100~200,1000~2000)"); b3.Is ("(1~10,1~10,1~10)");
       b2.Width.Is (10); b2.Height.Is (100); b2.Depth.Is (1000); b2.Midpoint.Is ("(15,150,1500)");
-      b2.Contains (new (11, 110, 1100)).Is (true);
-      b2.Contains (new (11, 210, 1100)).Is (false);
-      b2.Contains (new (21, 110, 1100)).Is (false);
-      b2.Contains (new (11, 110, 2100)).Is (false);
+      b2.Contains (new Point3 (11, 110, 1100)).Is (true);
+      b2.Contains (new Point3 (11, 210, 1100)).Is (false);
+      b2.Contains (new Point3 (21, 110, 1100)).Is (false);
+      b2.Contains (new Point3 (11, 110, 2100)).Is (false);
       b2.InflatedF (1.2).Is ("(9~21,90~210,900~2100)");
       b2.InflatedL (5).Is ("(5~25,95~205,995~2005)");
       (b2 + new Point3 (5, 205, 3000) + new Point3 (21, 99, 875)).Is ("(5~21,99~205,875~3000)");

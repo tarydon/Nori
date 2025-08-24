@@ -1,7 +1,7 @@
 ﻿using Nori;
 
 internal class Program {
-   static void Main (string[] args) {
+   static void Main1 (string[] args) {
       Lib.Init ();
       var files = Directory.GetFiles ("C:\\Step", "*.step", SearchOption.TopDirectoryOnly);
       foreach (var file in files) {
@@ -16,5 +16,11 @@ internal class Program {
             File.Move (file, "C:\\Step\\Bad\\" + Path.GetFileName (file));
          }
       }
+   }
+
+   static void Main () {
+      Lib.Init ();
+      var sr = new STEPReader ("c:/etc/boot.step");
+      sr.Parse ();
    }
 }
