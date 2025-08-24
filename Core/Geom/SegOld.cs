@@ -5,7 +5,7 @@
 using static System.Math;
 namespace Nori;
 
-#if !NEWSEG
+#if OLDSEG
 #region struct Seg ---------------------------------------------------------------------------------
 /// <summary>Represents a single Segment of a Poly (can be a single line or an arc)</summary>
 public readonly struct Seg (Point2 a, Point2 b, Point2 center, Poly.EFlags flags) {

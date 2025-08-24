@@ -173,9 +173,7 @@ public partial class Poly {
    /// segment).
    public Seg this[int i] {
       get {
-#if NEWSEG
-         return new (this, i);
-#else
+#if OLDSEG
          int n = Count; i = i.Wrap (n);
          EFlags flags = (i == n - 1) ? EFlags.Last : 0;
          Point2 a = mPts[i], b = mPts[(i + 1) % mPts.Length];
@@ -184,6 +182,8 @@ public partial class Poly {
             return new (a, b, extra.Center, extra.Flags | flags);
          }
          return new (a, b, Point2.Zero, flags);
+#else
+         return new (this, i);
 #endif
       }
    }
