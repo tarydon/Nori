@@ -45,8 +45,8 @@ public partial class Poly {
          // segments, and we handle both by looking through the mExtra array). Note that
          // we directly read the mExtra array rather than use Seg objects for better
          // performance
-         if (HasArcs && i < mExtra.Length) {
-            var extra = mExtra[i];
+         if (HasArcs && i < Extra.Length) {
+            var extra = Extra[i];
             if ((extra.Flags & EFlags.Arc) != 0) pb.Arc (pt, extra.Center, extra.Flags);
             else pb.Line (pt);
          } else
@@ -96,8 +96,8 @@ public partial class Poly {
          // segments, and we handle both by looking through the mExtra array). Note that
          // we directly read the mExtra array rather than use Seg objects for better
          // performance
-         if (HasArcs && i < mExtra.Length) {
-            var extra = mExtra[i];
+         if (HasArcs && i < Extra.Length) {
+            var extra = Extra[i];
             if ((extra.Flags & EFlags.Arc) != 0) pb.Arc (pt, extra.Center, extra.Flags);
             else pb.Line (pt);
          } else
@@ -159,8 +159,8 @@ public partial class Poly {
          // segments, and we handle both by looking through the mExtra array). Note that
          // we directly read the mExtra array rather than use Seg objects for better
          // performance
-         if (HasArcs && i < mExtra.Length) {
-            var extra = mExtra[i];
+         if (HasArcs && i < Extra.Length) {
+            var extra = Extra[i];
             if ((extra.Flags & EFlags.Arc) != 0) pb.Arc (pt, extra.Center, extra.Flags);
             else pb.Line (pt);
          } else
@@ -220,8 +220,8 @@ public partial class Poly {
          // segments, and we handle both by looking through the mExtra array). Note that
          // we directly read the mExtra array rather than use Seg objects for better
          // performance
-         if (HasArcs && i < mExtra.Length) {
-            var extra = mExtra[i];
+         if (HasArcs && i < Extra.Length) {
+            var extra = Extra[i];
             if ((extra.Flags & EFlags.Arc) != 0) pb.Arc (pt, extra.Center, extra.Flags);
             else pb.Line (pt);
          } else
@@ -266,7 +266,7 @@ public partial class Poly {
       if (IsCircle) return this;
       if (!IsClosed) throw new InvalidOperationException ("Poly.Roll() works only with closed plines");
       if (!HasArcs) return new ([.. mPts.Roll (n)], [], mFlags);
-      var knots = mExtra.ToList ();
+      var knots = Extra.ToList ();
       while (knots.Count < mPts.Length) knots.Add (new (Point2.Nil, 0));
       return new ([.. mPts.Roll (n)], [.. knots.Roll (n)], mFlags);
    }
@@ -288,10 +288,10 @@ public partial class Poly {
       }
       if (!a.HasArcs && !b.HasArcs) result = new Poly ([.. pts], [], flags);
       else {
-         var extra = new List<Extra> (a.Count + b.Count);
+         var extra = new List<ArcInfo> (a.Count + b.Count);
          for (int i = 0; i < a.Count; i++)
-            extra.Add (a.mExtra.SafeGet (i));
-         extra.AddRange (b.mExtra);
+            extra.Add (a.Extra.SafeGet (i));
+         extra.AddRange (b.Extra);
          result = new Poly ([.. pts], [.. extra], flags | EFlags.HasArcs);
       }
       return true;

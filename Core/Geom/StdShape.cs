@@ -203,7 +203,7 @@ public static class ShapeRecognizer {
       var (n, code) = poly.GetLogoCode (6);
       if (!sSingleD.Match (code).Success) return false;
 
-      var (seg, aseg) = (poly[n], poly[n + 1]);
+      var (seg, aseg) = (poly[n], poly[(n + 1) % 2]);
       var arcMid = aseg.GetPointAt (0.5);
       double angle = Lib.NormalizeAngle (aseg.Center.AngleTo (arcMid) + Lib.TwoPI);
       desc = new ShapeDesc (EShape.SingleD, aseg.Center, angle, [aseg.Radius * 2, seg.GetPointAt (0.5).DistTo (arcMid)]);
@@ -218,9 +218,9 @@ public static class ShapeRecognizer {
       if (!sTrapezoid.Match (code).Success) return false;
 
       var seg = poly[n];
-      var (pt, pt2) = (seg.GetPointAt (0.5), poly[n + 2].GetPointAt (0.5));
+      var (pt, pt2) = (seg.GetPointAt (0.5), poly[(n + 2) % 4].GetPointAt (0.5));
       double l = seg.Length, h = pt.DistTo (pt2);
-      var ex = (l - poly[n + 2].Length) / 2;
+      var ex = (l - poly[(n + 2) % 4].Length) / 2;
       desc = new ShapeDesc (EShape.Trapezoid, pt.Midpoint (pt2), seg.Slope, [l, h, Math.Atan2 (ex, h)]);
       return true;
    }
