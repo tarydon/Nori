@@ -66,9 +66,6 @@ public static class Geo {
    }
 
    /// <summary>Returns a tuple (center, radius) which forms a circle tangential to lines AB, CD, EF</summary>
-   /// <param name="pick1">Point on AB</param>
-   /// <param name="pick2">Point on CD</param>
-   /// <param name="pick3">Point on EF</param>
    /// The pick points specify which bisectors (relative to intersection point of the lines)
    /// to use to compute the centre. If pick points don't lie on the corresponding line,
    /// the point is snapped to the nearest point on the corresponding line.
