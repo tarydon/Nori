@@ -22,5 +22,6 @@ internal class Program {
       Lib.Init ();
       var sr = new STEPReader ("c:/etc/boot.step");
       sr.Parse ();
+      sr.Build ();
    }
 }

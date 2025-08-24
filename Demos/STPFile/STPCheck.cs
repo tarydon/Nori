@@ -1,5 +1,4 @@
-﻿using System.Security.Cryptography;
-using Nori.STEP;
+﻿using Nori.STEP;
 namespace Nori;
 
 partial class STEPReader {
