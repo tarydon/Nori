@@ -66,8 +66,8 @@ class PolyOpsTests {
       poly = rect.Fillet (3, 10); poly?.Is ("M0,0H200V100H10Q0,90,1Z");
    }
 
-   [Test (108, "Perpendicular line tests")]
-   void TestMakePerpendicularAtSegment () {
+   [Test (112, "Perpendicular line tests")]
+   void Test5 () {
       Poly poly = Poly.Rectangle (0, 0, 50, 50);   // simple square
       Poly? result;
       // Perpendicular on first segment (index 0) near (25, 0), length=0 dynamic, not centered
