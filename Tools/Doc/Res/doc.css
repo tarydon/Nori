@@ -1,0 +1,80 @@
+﻿/* Josh Comeau's CSS reset ----------------------------
+   https://www.joshwcomeau.com/css/custom-css-reset/ */
+
+*, *::before, *::after { box-sizing: border-box; }
+
+* { margin: 0; }
+
+@media (prefers-reduced-motion: no-preference) {
+    html { interpolate-size: allow-keywords; }
+}
+
+body { line-height: 1.35; max-width: 800px; margin:auto; }
+
+img, picture, video, canvas, svg { display: block; max-width: 100%; }
+
+input, button, textarea, select { font: inherit; }
+
+p, h1, h2, h3, h4, h5, h6 { overflow-wrap: break-word; }
+
+p { text-wrap: pretty; }
+
+h1, h2, h3, h4, h5, h6 { text-wrap: balance; }
+
+#root, #__next { isolation: isolate; }
+/* ---------------------------------------------------- */
+
+:root {
+    --decltext: #5050b0;
+    --text: #000000;
+    --bgrd: #eee;
+    --invbgrd: #606070;
+    --invtext: #f0f0f0;
+}
+
+body {
+    font-family: "Segoe UI", sans-serif;
+    background-color: var(--bgrd);
+    color: var(--text);
+    padding: 1em;
+}
+
+h1 {
+    font-family: "Consolas", monospace;
+    font-size: 1.8em;
+    color: var(--decltext);
+}
+
+h2 {
+    background-color: var(--invbgrd);
+    color: var(--invtext);
+    font-size: 1.2em;
+    margin-top: 1em;
+    padding-left: 0.2em;
+    padding-bottom: 0.1em;
+}
+
+p {
+    margin-top: 0.25em;
+    margin-left: 2em;
+}
+
+p.summary {
+    margin-top: 0;
+}
+
+p.declaration {
+    font-family:'Monaspace Krypton Frozen', Consolas, monospace;
+    margin-left: 0;
+    color: var(--decltext);
+}
+
+span.moniker {
+    font-weight: bold;
+}
+
+hr {
+    margin-top: 0.5em; margin-bottom:0.5em;
+}
+
+p.missing { color: red; }

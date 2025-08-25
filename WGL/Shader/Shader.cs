@@ -41,7 +41,7 @@ abstract class Shader {
    // Overrrideables -----------------------------------------------------------
    /// <summary>Override this to apply a particular UBlock into the shader program</summary>
    /// During the rendering cycle (for each frame), we capture uniforms into the uniform array
-   /// that each shader maintains: 
+   /// that each shader maintains:
    ///    List(UBlock) mUniforms = [];
    /// Finally, after all the data is captured, during rendering, we 'apply' one of these sets
    /// of uniforms by calling ApplyUniforms(int). That actually applies the data from the typed
@@ -57,20 +57,20 @@ abstract class Shader {
    /// <summary>Copy indexed vertex data to the specified RBuffer</summary>
    /// This is similar to the routine above, but the drawing in this case is done using indices.
    /// That is, if we want to draw N vertices, we don't actually submit N vertices, but submit only
-   /// M (where M < N) and then use a separate _index_ array (that contains only integers). This index
+   /// M (where M .lt. N) and then use a separate _index_ array (that contains only integers). This index
    /// array contains N elements, which act as indices into the vertex array. For example, if we are
    /// drawing a square using 4 vertices, we might pass in a vertex array like this:
    ///    [(0, 0, 0), (100, 0, 0), (100, 100, 0), (100, 100, 0)]
    /// Then, that could be drawn using 2 triangle calls using these above vertices (numbered 0..3)
    /// thus:
-   ///   [0, 1, 2,   0, 2, 3] 
-   /// Each set of 3 integers, treated as indices into the array above, provides the vertices for 
-   /// a triangle, which together make up the square. The point of this indirection is that we 
+   ///   [0, 1, 2,   0, 2, 3]
+   /// Each set of 3 integers, treated as indices into the array above, provides the vertices for
+   /// a triangle, which together make up the square. The point of this indirection is that we
    /// don't have to actually pass in 6 'Point3' vertices (which would cost us more memory). Instead,
-   /// we pass in just the 4 unique vertices and reuse them by specifying some indices (like 0, 2) 
+   /// we pass in just the 4 unique vertices and reuse them by specifying some indices (like 0, 2)
    /// more than once. In OpenGL terminology, this is the difference between the simpler glDrawArrays,
    /// and the more complex glDrawElements (this CopyVertices maps to a glDrawElements call, the
-   /// earlier one to a glDrawArrays call). 
+   /// earlier one to a glDrawArrays call).
    public abstract (int, int) CopyVertices (RBuffer buffer, int start, int count, int istart, int icount);
 
    /// <summary>This is called after each frame to cleanup any frame-specific artifacts / data</summary>
@@ -83,8 +83,8 @@ abstract class Shader {
 
    /// <summary>This is used to order two UBlock objects, given their indices</summary>
    /// This is used to sort batches by order of issuance (for example, we want to issue
-   /// batches by increasing ZLevel). Also, if this compare returns 0, it means that the 
-   /// unforms of two batches are exactly the same, and these batches could be merged. 
+   /// batches by increasing ZLevel). Also, if this compare returns 0, it means that the
+   /// unforms of two batches are exactly the same, and these batches could be merged.
    public abstract int OrderUniforms (int id1, int id2);
 
    /// <summary>Override this to set the 'constant uniforms' that don't vary at all during the entire frame</summary>
@@ -94,10 +94,10 @@ abstract class Shader {
 
    /// <summary>This is called to 'capture' the current uniforms into a UBlock structure</summary>
    /// This is overridden in each of the shaders to capture the relevant globals
-   /// like Lux.DrawColor, Lux.LineWidth into the UBlock of that shader. Since each 
-   /// shader uses a different set of uniforms, this has to be a virtual function. 
+   /// like Lux.DrawColor, Lux.LineWidth into the UBlock of that shader. Since each
+   /// shader uses a different set of uniforms, this has to be a virtual function.
    /// This returns the index of the UBlock with that shader's Uniforms list. Later,
-   /// that can be applied into a shader program by calling ApplyUniforms(int). 
+   /// that can be applied into a shader program by calling ApplyUniforms(int).
    public abstract ushort SnapUniforms ();
 
    // Private data -------------------------------------------------------------
@@ -110,28 +110,28 @@ abstract class Shader {
 /// <summary>The Shader(TVertex,TUniform) class 'manages' batched calls to a particular shader</summary>
 /// <typeparam name="TVertex">The type of vertex data for this (this is the sum of all 'in' parameters to the vertex shader)</typeparam>
 /// <typeparam name="TUniform">The set of uniforms for this (the sum of all 'uniform xxx' declarations for all the stages in the pipeline)</typeparam>
-/// 
-/// When a Shader is created, it first 'binds' to the shader by enumerating all the uniforms and 
+///
+/// When a Shader is created, it first 'binds' to the shader by enumerating all the uniforms and
 /// getting their addresses. These are stored in the fields with names like muVPScale (where VPScale is
-/// the internal name of the uniform). Thus, for each uniform ABC that the shader has, we need to have a 
-/// corresponding muABC field in the Shader. 
-/// 
+/// the internal name of the uniform). Thus, for each uniform ABC that the shader has, we need to have a
+/// corresponding muABC field in the Shader.
+///
 /// Then, when Draw calls are made, this Shader gathers the actual vertex data into the
-/// mData list, and the corresponding batch calls (that provide all the uniforms for that batch) 
+/// mData list, and the corresponding batch calls (that provide all the uniforms for that batch)
 /// into the RBatch.All heap. If the uniforms have not changed, we keep 'extending' the previous batch,
 /// rather than incrementally create small batches. The idea of batching, therefore, is to create several
-/// larger batches (with the same uniforms) rather than multiple individual batches. Then, during 
-/// dispatch, each larger batch is issued with a single DrawElements call. 
-/// 
+/// larger batches (with the same uniforms) rather than multiple individual batches. Then, during
+/// dispatch, each larger batch is issued with a single DrawElements call.
+///
 /// The first level of this batching is when these draw calls are made with the same Uniforms as the
 /// last time - the previous batch keeps getting extended. A further level of optimization happens
 /// in RBatch.IssueAll() - that further 'sorts' all the available batches we have, and
 /// chunks together successive batches that have the same uniforms before issuing. See RBatch.Sort
 /// for more details on this
-///  
-/// Even within the uniforms, we try to arrange the sorting by most expensive uniform first (thus, we 
+///
+/// Even within the uniforms, we try to arrange the sorting by most expensive uniform first (thus, we
 /// sort first by things like Mat4F, then by things like Vec4F and finally by float uniforms (descending
-/// order of cost). 
+/// order of cost).
 abstract class Shader<TVertex, TUniform> : Shader, IComparer<TUniform> where TVertex : unmanaged {
    // Constructor --------------------------------------------------------------
    protected Shader (ShaderImp shader) : base (shader) { }
@@ -152,10 +152,10 @@ abstract class Shader<TVertex, TUniform> : Shader, IComparer<TUniform> where TVe
       }
       mData.AddRange (data);
 
-      // Helper fuction to see if we can just extend the last batch we added to 
+      // Helper fuction to see if we can just extend the last batch we added to
       // include these vertices as well. For this to work:
       // - The previous batch should be for the same VNode (since we are going to store
-      //   this batch in the mBatch list of that VNode. 
+      //   this batch in the mBatch list of that VNode.
       // - The previous batch should use the same shader (this)
       // - The previous batch should be using the same set of uniforms
       bool ExtendBatch (int delta) {
@@ -163,7 +163,7 @@ abstract class Shader<TVertex, TUniform> : Shader, IComparer<TUniform> where TVe
          if (rb.IDVNode != vnode.Id) return false;
          if (rb.NShader != Idx || rb.NUniform != nUniform || rb.NBuffer != 0) return false;
          rb.Extend (delta);
-         return true; 
+         return true;
       }
    }
 
@@ -203,13 +203,13 @@ abstract class Shader<TVertex, TUniform> : Shader, IComparer<TUniform> where TVe
 
    /// <summary>Variant that copies not only vertices but also indices</summary>
    /// The vertices are copied from our local mData storage into the given RBuffer (this will
-   /// copy 'count * CBVertex' bytes of data. Indices are copied from our local mIndex array 
-   /// into the RBuffer's private index array (this will copy '4 * icount' bytes of data, 
+   /// copy 'count * CBVertex' bytes of data. Indices are copied from our local mIndex array
+   /// into the RBuffer's private index array (this will copy '4 * icount' bytes of data,
    /// since the indices are always integers). This returns a tuple: (dataOffset, indexOffset)
    /// where dataOffset is the _byte_ offset within the RBuffer where the vertex data has been
    /// copied. And indexOffset is the index (not byte-offset) into the RBuffer's index buffer
-   /// where the indices have been copied. Both of these are used later as arguments for 
-   /// a DrawElementsBaseVertex call. 
+   /// where the indices have been copied. Both of these are used later as arguments for
+   /// a DrawElementsBaseVertex call.
    public unsafe override (int, int) CopyVertices (RBuffer buffer, int offset, int count, int ioffset, int icount) {
       int dataOffset = CopyVertices (buffer, offset, count);
       var span = CollectionsMarshal.AsSpan (mIndex);
@@ -253,7 +253,7 @@ abstract class Shader<TVertex, TUniform> : Shader, IComparer<TUniform> where TVe
    abstract protected void SetConstantsImp ();
 
    // Implementation -----------------------------------------------------------
-   // Called internally to bind internal uniform-address fields like muVPScale, muDrawColor etc to 
+   // Called internally to bind internal uniform-address fields like muVPScale, muDrawColor etc to
    // the corresponding uniform IDs - these are then used in functions like SetConstants and SetUniforms
    protected void Bind () {
       Type? type = GetType ();
@@ -292,7 +292,7 @@ abstract class Shader<TVertex, TUniform> : Shader, IComparer<TUniform> where TVe
       // just reuse the last one. Note that this comparison will never return true when
       // mUniforms is empty because we bump up Lux.Rung at the start of each frame, and our
       // own internal mRung value will never match for the first time this shader is used
-      // in that frame. 
+      // in that frame.
       if (!Lib.Set (ref mRung1, Lux.Rung)) return (ushort)(mUniforms.Count - 1);      // Fast happy path
 
       // Otherwise, we capture a new set of uniforms (from the Lux state like Lux.DrawColor,

@@ -1,4 +1,4 @@
-﻿namespace WPFDemo;
+namespace WPFDemo;
 using System.Windows;
 using System.Windows.Controls;
 using Nori;

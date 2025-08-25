@@ -190,7 +190,7 @@ static class SrcClean {
          }
          string name = $"  {Path.GetFileNameWithoutExtension (file)}";
          if (Console.CursorLeft + name.Length >= Console.WindowWidth) Console.WriteLine ();
-         bool cleaned = Clean (file, addHeader);
+         bool cleaned = Clean (file, addHeader && !ExcludeHeader (file));
          if (cleaned) nCleaned++;
          Lib.Print (name, cleaned ? ConsoleColor.Yellow : ConsoleColor.DarkGray);
       }
@@ -205,6 +205,12 @@ static class SrcClean {
       if (file.Contains ("/obj/")) return true;
       if (file.Contains ("GeneratedFile")) return true;
       if (file.StartsWith ($"{Lib.DevRoot}/Scratch/")) return true;
+      return false;
+   }
+
+   static bool ExcludeHeader (string file) {
+      file = file.Replace ('\\', '/');
+      if (file.Contains ("/Demos/")) return true;
       return false;
    }
 

@@ -190,9 +190,7 @@ public static partial class Lux {
       else DashLine2DShader.It.Draw (pts);
    }
 
-   /// <summary>
-   /// Draws 3D lines
-   /// </summary>
+   /// <summary>Draws 3D lines</summary>
    /// The following Lux properties are used:
    /// - Xfm: current transformation matrix
    /// - LineWidth: the width of the line

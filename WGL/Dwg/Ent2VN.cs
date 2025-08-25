@@ -2,6 +2,7 @@
 // ╔═╦╦═╦╦╬╣ EntVN.cs
 // ║║║║╬║╔╣║ Implements VNodes for various types of entities
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
+using System.Globalization;
 namespace Nori;
 
 #region class Ent2VN -------------------------------------------------------------------------------
@@ -46,7 +47,8 @@ class E2BendlineVN (E2Bendline e2b) : Ent2VN (e2b) {
 
    // Helper used to draw the bend angle annotation
    void DrawText () {
-      string text = mBend.Angle.R2D ().S6 ();
+      string text = Math.Round (mBend.Angle.R2D (), 2).ToString (CultureInfo.InvariantCulture);
+      if (text == "-0") text = "0";
       text = mBend.Angle > 0 ? $"+{text}\u00b0" : $"{text}\u00b0";
       for (int i = 0; i < mBend.Pts.Length; i += 2) {
          Point2 pt = mBend.Pts[i].Midpoint (mBend.Pts[i + 1]);

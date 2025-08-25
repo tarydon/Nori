@@ -4,6 +4,7 @@
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 namespace Nori;
 
+/// <summary>DXFReader is used to read a DXF file into a Dwg2</summary>
 public partial class DXFReader {
    // Constructors -------------------------------------------------------------
    /// <summary>Construct a DXFReader, given a filename</summary>

@@ -45,8 +45,8 @@ public partial class Poly {
          // segments, and we handle both by looking through the mExtra array). Note that
          // we directly read the mExtra array rather than use Seg objects for better
          // performance
-         if (HasArcs && i < mExtra.Length) {
-            var extra = mExtra[i];
+         if (HasArcs && i < Extra.Length) {
+            var extra = Extra[i];
             if ((extra.Flags & EFlags.Arc) != 0) pb.Arc (pt, extra.Center, extra.Flags);
             else pb.Line (pt);
          } else
@@ -67,8 +67,7 @@ public partial class Poly {
    /// return null. Otherwise, this is an 'interior' node, and there are two segments
    /// touching at that node (a lead-in segment, and a lead-out segment). If either
    /// of those segments are curved, or too short to take a in-fillet, this returns null.
-   /// <param name="radius">In-fillet radius</param>
-   /// <param name="left">Indicates how the in-fillet arc winds around target node</param>
+   /// of those segments are curved, or too short to take a in-fillet, this returns null.
    public Poly? InFillet (int node, double radius, bool left) {
       if (IsCircle || radius.IsZero ()) return null; // No Infillet for circles
       // Handle the special case where we are in-filleting at node 0 of a
@@ -97,8 +96,8 @@ public partial class Poly {
          // segments, and we handle both by looking through the mExtra array). Note that
          // we directly read the mExtra array rather than use Seg objects for better
          // performance
-         if (HasArcs && i < mExtra.Length) {
-            var extra = mExtra[i];
+         if (HasArcs && i < Extra.Length) {
+            var extra = Extra[i];
             if ((extra.Flags & EFlags.Arc) != 0) pb.Arc (pt, extra.Center, extra.Flags);
             else pb.Line (pt);
          } else
@@ -160,8 +159,8 @@ public partial class Poly {
          // segments, and we handle both by looking through the mExtra array). Note that
          // we directly read the mExtra array rather than use Seg objects for better
          // performance
-         if (HasArcs && i < mExtra.Length) {
-            var extra = mExtra[i];
+         if (HasArcs && i < Extra.Length) {
+            var extra = Extra[i];
             if ((extra.Flags & EFlags.Arc) != 0) pb.Arc (pt, extra.Center, extra.Flags);
             else pb.Line (pt);
          } else
@@ -185,6 +184,7 @@ public partial class Poly {
    /// return null. Otherwise, this is an 'interior' node, and there are two segments
    /// touching at that node (a lead-in segment, and a lead-out segment). If either
    /// of those segments are curved, or too short to take a fillet, this returns null.
+   /// <param name="node">The node to apply the fillet at</param>
    /// <param name="radius">Fillet radius</param>
    public Poly? Fillet (int node, double radius) {
       if (IsCircle || radius.IsZero ()) return null; // No Fillet for circles
@@ -220,8 +220,8 @@ public partial class Poly {
          // segments, and we handle both by looking through the mExtra array). Note that
          // we directly read the mExtra array rather than use Seg objects for better
          // performance
-         if (HasArcs && i < mExtra.Length) {
-            var extra = mExtra[i];
+         if (HasArcs && i < Extra.Length) {
+            var extra = Extra[i];
             if ((extra.Flags & EFlags.Arc) != 0) pb.Arc (pt, extra.Center, extra.Flags);
             else pb.Line (pt);
          } else
@@ -266,7 +266,7 @@ public partial class Poly {
       if (IsCircle) return this;
       if (!IsClosed) throw new InvalidOperationException ("Poly.Roll() works only with closed plines");
       if (!HasArcs) return new ([.. mPts.Roll (n)], [], mFlags);
-      var knots = mExtra.ToList ();
+      var knots = Extra.ToList ();
       while (knots.Count < mPts.Length) knots.Add (new (Point2.Nil, 0));
       return new ([.. mPts.Roll (n)], [.. knots.Roll (n)], mFlags);
    }
@@ -288,10 +288,10 @@ public partial class Poly {
       }
       if (!a.HasArcs && !b.HasArcs) result = new Poly ([.. pts], [], flags);
       else {
-         var extra = new List<Extra> (a.Count + b.Count);
+         var extra = new List<ArcInfo> (a.Count + b.Count);
          for (int i = 0; i < a.Count; i++)
-            extra.Add (a.mExtra.SafeGet (i));
-         extra.AddRange (b.mExtra);
+            extra.Add (a.Extra.SafeGet (i));
+         extra.AddRange (b.Extra);
          result = new Poly ([.. pts], [.. extra], flags | EFlags.HasArcs);
       }
       return true;
