@@ -107,7 +107,7 @@ class EdgeCurve (int start, int end, int basis, bool dir) : Entity {
    public readonly int Start = start;
    public readonly int End = end;
    public readonly int Basis = basis;
-   public readonly bool Dir = dir;
+   public readonly bool SameSense = dir;
 }
 
 class FaceOuterBound (int edgeloop, bool dir) : Entity {

@@ -9,24 +9,35 @@ partial class STEPReader {
    }
    Model3 mModel = new ();
 
-   // Implementation -----------------------------------------------------------               
+   // Implementation -----------------------------------------------------------
+   // Given a vertex point object, fetches the underlying point
+   Point3 GetPoint (int nVertexPoint) {
+      var vp = (VertexPoint)D[nVertexPoint]!;
+      var cp = (Cartesian)D[vp.Cartesian]!;
+      return cp.Pt;
+   }
+
    Contour3 MakeContour (int edgeLoop, bool dir, bool outer) {
+      mEdges.Clear ();
       EdgeLoop el = (EdgeLoop)D[edgeLoop]!;
       foreach (var n in el.Edges) {
          OrientedEdge oe = (OrientedEdge)D[n]!;
          EdgeCurve ec = (EdgeCurve)D[oe.Edge]!;
-         Console.Write ($"{D[ec.Basis]!.GetType ().Name} ");
+         Point3 start = GetPoint (ec.Start), end = GetPoint (ec.End);
+         if (!oe.Dir) (start, end) = (end, start);
+         Edge3 edge = D[ec.Basis] switch {
+            Line line => new Line3 (start, end),
+            _ => throw new BadCaseException (ec.Basis)
+         };
       }
-      Console.WriteLine ();
-      Console.ResetColor ();
-      return new ();
+      return new Contour3 ([..mEdges]);
    }
-   
+   List<Edge3> mEdges = [];
+
    void Process (Manifold m) => Process ((Shell)D[m.Outer]!);
    void Process (Shell s) => s.Faces.ForEach (f => Process ((AdvancedFace)D[f]!));
 
    void Process (AdvancedFace a) {
-      if (D[a.Face]!.GetType ().Name == "Plane") return;
       Debug.Assert (a.Contours.Length > 0);
       Debug.Assert (D[a.Contours[0]]!.GetType ().Name == "FaceOuterBound");
 
