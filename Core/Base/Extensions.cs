@@ -141,7 +141,7 @@ public static class Extensions {
    /// <summary>Returns a float rounded off to 5 decimal places</summary>
    public static float R5 (this float f) => (float)Math.Round (f, 5);
    /// <summary>Returns a double rounded off to 6 decimal places</summary>
-   public static double R6 (this double f) => Math.Round (f, 6);
+   public static double R6 (this double f) => Math.Round (f, 0); // REMOVETHIS
 
    /// <summary>Reads n bytes from the stream and returns a byte-array</summary>
    public static byte[] ReadBytes (this Stream stm, int n) {

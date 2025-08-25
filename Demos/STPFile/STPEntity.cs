@@ -80,8 +80,8 @@ class Cone (int coordsys, double radius, double halfAngle) : ElementarySurface (
 
 class CoordSys (int origin, int xaxis, int yaxis) : Entity {
    public readonly int Origin = origin;
-   public readonly int XAxis = xaxis;
-   public readonly int YAxis = yaxis;
+   public readonly int ZAxis = xaxis;
+   public readonly int XAxis = yaxis;
 }
 
 class CoordSys2 (int origin, int xaxis) : Entity {
@@ -138,7 +138,7 @@ class ManifoldSurfaceShapeRepr (int[] items, int context) : ShapeRepr (items, co
 
 class OrientedEdge (int edge, bool dir) : Entity {
    public readonly int Edge = edge;
-   public readonly bool Dir = dir;
+   public readonly bool Dir = dir;     // If false, the OrientedEdge is the flip of the underlying Edge
 }
 
 class Plane (int coordsys) : ElementarySurface (coordsys) { }

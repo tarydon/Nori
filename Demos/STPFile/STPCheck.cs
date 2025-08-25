@@ -24,8 +24,8 @@ partial class STEPReader {
 
    void Check (CoordSys cs) {
       Check ((Cartesian)D[cs.Origin]!);
+      Check ((Direction)D[cs.ZAxis]!);
       Check ((Direction)D[cs.XAxis]!);
-      Check ((Direction)D[cs.YAxis]!);
    }
 
    void Check (Shell a) {

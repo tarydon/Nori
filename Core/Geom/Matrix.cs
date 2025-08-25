@@ -200,6 +200,17 @@ public class Matrix3 {
    // Methods ------------------------------------------------------------------
    public Matrix3 ExtractRotation () => new (M11, M12, M13, M21, M22, M23, M31, M32, M33, 0, 0, 0);
 
+   /// <summary>
+   /// Composes a matrix to go FROM the given coordinate system to the World
+   /// </summary>
+   public static Matrix3 From (in CoordSystem cs) {
+      GetRotations (cs.VecX, cs.VecY, out double xRot, out double yRot, out double zRot);
+      return Translation (-(Vector3)cs.Org)
+           * Rotation (Vector3.YAxis, yRot) 
+           * Rotation (Vector3.ZAxis, zRot) 
+           * Rotation (Vector3.XAxis, xRot);
+   }
+
    /// <summary>Returns the inverse of this matrix</summary>
    public Matrix3 GetInverse () {
       // Trivial cases first
@@ -225,11 +236,11 @@ public class Matrix3 {
       return new (m11 * a, m12 * a, m13 * a, m21 * a, m22 * a, m23 * a, m31 * a, m32 * a, m33 * a, dx * a, dy * a, dz * a, Flags);
    }
 
-   /// <summary>Composes a matrix to go TO the given coordinate-system</summary>
+   /// <summary>Composes a matrix to go TO the given coordinate-system from the World</summary>
    public static Matrix3 To (in CoordSystem cs) {
       GetRotations (cs.VecX, cs.VecY, out double xRot, out double yRot, out double zRot);
-      return Rotation (Vector3.XAxis, -xRot)
-           * Rotation (Vector3.ZAxis, -zRot)
+      return Rotation (Vector3.XAxis, -xRot) 
+           * Rotation (Vector3.ZAxis, -zRot) 
            * Rotation (Vector3.YAxis, -yRot)
            * Translation ((Vector3)cs.Org);
    }
