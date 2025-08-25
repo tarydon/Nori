@@ -65,6 +65,36 @@ class PolyOpsTests {
       poly = rect.Fillet (0, 5); poly?.Is ("M200,0V100H0V5Q5,0,1Z");
       poly = rect.Fillet (3, 10); poly?.Is ("M0,0H200V100H10Q0,90,1Z");
    }
+
+   [Test (108, "Perpendicular line tests")]
+   void TestMakePerpendicularAtSegment () {
+      Poly poly = Poly.Rectangle (0, 0, 50, 50);   // simple square
+      Poly? result;
+      // Perpendicular on first segment (index 0) near (25, 0), length=0 dynamic, not centered
+      result = poly.MakePerpendicular (0, new Point2 (25, 0));
+      result?.Is ("M25,0V0");
+      // length = 20, centered = false
+      result = poly.MakePerpendicular (0, new Point2 (25, 0), 20, false);
+      result?.Is ("M25,0V-20");
+      // length = 20, centered = true
+      result = poly.MakePerpendicular (0, new Point2 (25, 0), 20, true);
+      result?.Is ("M25,20V-20");
+      // Perpendicular on second segment (index 1) near (50, 25), length=0 dynamic
+      result = poly.MakePerpendicular (1, new Point2 (50, 25));
+      result?.Is ("M50,25V25");
+
+      // Circle tests
+      var circle = Poly.Circle (new Point2 (0, 0), 100);
+      // Perpendicular at segment 0 (full circle as arc)
+      result = circle.MakePerpendicular (0, new Point2 (100, 0));
+      result?.Is ("M100,0V0");
+      // Length 50 centered on that point
+      result = circle.MakePerpendicular (0, new Point2 (100, 0), 50, true);
+      result?.Is ("M50,0H150");
+      // Perpendicular from top of circle
+      result = circle.MakePerpendicular (0, new Point2 (0, 100));
+      result?.Is ("M0,100V100");
+   }
 }
 
 [Fixture (21, "Polygon boolean operations tests", "Geom")]
