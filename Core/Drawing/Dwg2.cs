@@ -155,6 +155,15 @@ public partial class Dwg2 {
       return this;
    }
 
+   /// <summary>
+   /// Selects the given entity (and optionally deselects the others that are selected)
+   /// </summary>
+   public void Select (Ent2? ent, bool deselectOthers) {
+      if (deselectOthers) 
+         mEnts.Where (a => a.IsSelected).ForEach (a => a.IsSelected = false);
+      if (ent != null) ent.IsSelected = true;
+   }
+
    // Implementation -----------------------------------------------------------
    // Handles changes in the Ents list, and keeps the Bound up-to-date
    void OnEntsChanged (ListChange ch) {

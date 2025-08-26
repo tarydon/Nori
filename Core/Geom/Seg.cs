@@ -49,24 +49,20 @@ public readonly struct Seg {
             if ((flags & Poly.EFlags.Circle) != 0) 
                return new (cen.X - r, cen.Y - r, cen.X + r, cen.Y + r);
             bool ccw = (flags & Poly.EFlags.CCW) > 0;
-            double sa = cen.AngleTo (a), ea = cen.AngleTo (b);
-            for (int i = 0; i < 4; i++) {
-               double ang = i * Lib.HalfPI;
-               bool include;
-               if (ccw) {
-                  // For a CCW segment, we have -180 < sa <= 180, and we have
-                  // ea > sa. So first adjust ang so that it is more than sa.
-                  if (ang < sa) ang += Lib.TwoPI;
-                  include = ang < ea;
-               } else {
-                  // For a CW segment, ea < sa, so we adjust ang so that it is less
-                  // than ea and then check if it lies within range
-                  if (ang > sa) ang -= Lib.TwoPI;
-                  include = ang > ea;
-               }
-               if (include)
-                  bound += cen.CardinalMoved (r, (EDir)i);
-            }
+
+            // Compute the start ang end angles in terms of quarter turns, 
+            // starting from east
+            double sa = cen.AngleTo (a) / Lib.HalfPI;
+            double ea = cen.AngleTo (b) / Lib.HalfPI;
+            if (!ccw) (sa, ea) = (ea, sa);
+            if (sa < 0) sa += 4;
+            while (ea < sa) ea += 4;
+
+            // The quadrant points lying within the circle can be enumerated from
+            // ceiling(sa) .. floor(ea). 
+            int isa = (int)Ceiling (sa), iea = (int)Floor (ea);
+            for (int i = isa; i <= iea; i++) 
+               bound += cen.CardinalMoved (r, (EDir)(i % 4));
          }
          return bound;
       }
