@@ -85,6 +85,12 @@ public static class HW {
    public static IObservable<int> MouseLost => mLost ??= new ();
    static CaptureLostWrap? mLost;
 
+   /// <summary>
+   /// Subscribe to this to be notified when the mouse leaves the client area
+   /// </summary>
+   public static IObservable<int> MouseLeave => mLeave ??= new ();
+   static MouseLeaveWrap? mLeave;
+
    /// <summary>Subscribe to this to watch key-press and key-release events</summary>
    public static IObservable<KeyInfo> Keys => mKeys ??= new ();
    static KeysWrap? mKeys;
@@ -121,6 +127,22 @@ class CaptureLostWrap : EventWrapper<int> {
    }
 
    void OnCaptureLost (object? sender, EventArgs e)
+      => Push (0);
+}
+#endregion
+
+#region MouseLeaveWrap -----------------------------------------------------------------------------
+/// <summary>
+/// EventWrapper implementation to handle the mouse-leave event
+/// </summary>
+class MouseLeaveWrap : EventWrapper<int> {
+   protected override void Connect (bool connect) {
+      var panel = HW.Panel; if (panel == null) return;
+      if (connect) panel.MouseLeave += OnMouseLeave;
+      else panel.MouseLeave -= OnMouseLeave;
+   }
+
+   void OnMouseLeave (object? sender, EventArgs e)
       => Push (0);
 }
 #endregion
@@ -215,7 +237,7 @@ class MouseMovesWrap : EventWrapper<Vec2S> {
       else panel.MouseMove -= OnMouseMove;
    }
 
-   void OnMouseMove (object? sender, MouseEventArgs e) 
+   void OnMouseMove (object? sender, MouseEventArgs e)
       => Push (new (e.X, e.Y));
 }
 #endregion
