@@ -46,6 +46,8 @@ public readonly struct Seg {
          Bound2 bound = new (a.X, a.Y, b.X, b.Y);
          if (IsArc2 (out var cen, out var flags)) {
             double r = cen.DistTo (a);
+            if ((flags & Poly.EFlags.Circle) != 0) 
+               return new (cen.X - r, cen.Y - r, cen.X + r, cen.Y + r);
             bool ccw = (flags & Poly.EFlags.CCW) > 0;
             double sa = cen.AngleTo (a), ea = cen.AngleTo (b);
             for (int i = 0; i < 4; i++) {
