@@ -2,6 +2,8 @@
 // ╔═╦╦═╦╦╬╣ TPoly.cs
 // ║║║║╬║╔╣║ Tests for the Poly class
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
+using System.Security.Cryptography;
+
 namespace Nori.Testing;
 
 [Fixture (15, "Poly class tests", "Geom")]
@@ -139,13 +141,13 @@ class PolyTests {
       File.WriteAllText (NT.TmpTxt, sb.ToString ());
       Assert.TextFilesEqual1 ("Misc/poly3.txt", NT.TmpTxt);
 
-      seg = new Seg (new (0, 10), new (-10, 0), Point2.Zero, Poly.EFlags.CCW);
+      p = Poly.Parse ("M0,10 Q-10,0,1"); seg = p[0];
       seg.Contains (new (0, 10)).IsTrue (); seg.Contains (new (-10, 0)).IsTrue ();
       seg.Contains (Point2.Zero.Polar (10, 135.D2R ())).IsTrue ();
       seg.Contains (new (0, -10)).IsFalse ();
       seg.Contains (new (10, 0)).IsFalse ();
 
-      seg = new Seg (new (0, 10), new (-10, 0), Point2.Zero, Poly.EFlags.CW);
+      p = Poly.Parse ("M0,10 Q-10,0,-3"); seg = p[0];
       seg.Contains (new (0, 10)).IsTrue (); seg.Contains (new (-10, 0)).IsTrue ();
       seg.Contains (Point2.Zero.Polar (10, 135.D2R ())).IsFalse ();
       seg.Contains (new (0, -10)).IsTrue ();
@@ -222,5 +224,46 @@ class PolyTests {
          p.TryAppend (others, out Poly? result).Is (true);
          result?.Is (expected);
       }
+   }
+
+   [Test (110, "Seg-Seg intersection tests (finite)")]
+   void Test9 () {
+      var dwg = DXFReader.FromFile (NT.File ("Geom/Poly/SegInt.dxf"));
+      var segs = dwg.Polys.SelectMany (a => a.Segs).ToList ();
+      Span<Point2> buffer = stackalloc Point2[2];
+      for (int i = 0; i < segs.Count; i++) {
+         for (int j = 0; j < i; j++) {
+            var pts = segs[i].Intersect (segs[j], buffer, true);
+            foreach (var pt in pts) dwg.Add (Poly.Circle (pt, 2));
+         }
+      }
+      DXFWriter.SaveFile (dwg, NT.TmpDXF);
+      Assert.TextFilesEqual1 ("Geom/Poly/Out/SegInt1.dxf", NT.TmpDXF);
+   }
+
+   [Test (111, "Seg-Seg intersection tests (extrapolated)")]
+   void Test10 () {
+      var dwg = DXFReader.FromFile (NT.File ("Geom/Poly/SegInt.dxf"));
+      var segs = dwg.Polys.SelectMany (a => a.Segs).ToList ();
+      Span<Point2> buffer = stackalloc Point2[2];
+      for (int i = 0; i < segs.Count; i++) {
+         var s1 = segs[i];
+         for (int j = 0; j < i; j++) {
+            var s2 = segs[j];
+            var pts = s1.Intersect (s2, buffer, false);
+            foreach (var pt in pts)
+               if (Close (pt)) dwg.Add (Poly.Circle (pt, 2));
+
+            bool Close (Point2 pt) {
+               double d1 = Math.Min (pt.DistTo (s1.A), pt.DistTo (s1.B));
+               if (d1 > 15) return false;
+               d1 = Math.Min (pt.DistTo (s2.A), pt.DistTo (s2.B));
+               if (d1 > 15) return false;
+               return true;
+            }
+         }
+      }
+      DXFWriter.SaveFile (dwg, NT.TmpDXF);
+      Assert.TextFilesEqual1 ("Geom/Poly/Out/SegInt2.dxf", NT.TmpDXF);
    }
 }

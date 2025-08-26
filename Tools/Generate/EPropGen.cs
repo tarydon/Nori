@@ -9,29 +9,29 @@ namespace Nori.Gen;
 #region class EPropGenerator -----------------------------------------------------------------------
 /// <summary>EPropClass implements something similar to an INotifyPropertyChanged, for EProps</summary>
 /// You can implement IObservable(EProp) by adding the [EPropClass] attribute on top of
-/// a class. Then, each field tagged with the [EPropField] attrribute within that class 
+/// a class. Then, each field tagged with the [EPropField] attrribute within that class
 /// becomes an 'active field' and the source generator will create a corresponding property
-/// that wraps around that field. When the property is written to, it will raise the 
+/// that wraps around that field. When the property is written to, it will raise the
 /// notification (through the enclosing class's IObservable interface). So you just write
 /// something like this:
-/// 
+///
 ///   [EPropField (EProp.Xfm)] Vector2 mPos;
-///   
+///
 /// and the source generator will auto-generate a property like this:
-/// 
+///
 ///   public Vector2 Pos {
 ///      get => mPos;
 ///      set { mPos = value; mSubject?.OnNext (EProp.Xfm); }
 ///   }
-///   
+///
 /// This code is simplified - it uses Lib.Set to check if the property has actually been
-/// changed before raising the notification. 
+/// changed before raising the notification.
 [Generator]
 class EPropClassGenerator : IIncrementalGenerator {
    /// <summary>Implement the IIncrementalGenerator interface</summary>
    public void Initialize (IncrementalGeneratorInitializationContext context) {
       // We search for class decorated with the [EPropClass] attribute, using the
-      // highly performant ForAttributeWithMetadataname method. For more on this, 
+      // highly performant ForAttributeWithMetadataname method. For more on this,
       // see the series on Source Generators in .Net by Pawel Gerr:
       // https://www.thinktecture.com/net/roslyn-source-generators-introduction/
       IncrementalValuesProvider<string?> className = context.SyntaxProvider
@@ -51,14 +51,14 @@ class EPropClassGenerator : IIncrementalGenerator {
       // Here, we're going to go through all the fields of this type decorated with the
       // [EPropField] attribute. For example, we may have a field like this:
       //    [EPropField (EProp.Xfm)] Vector2 mPosition;
-      // For this, we will write a corresponding "Position" property, which when written 
+      // For this, we will write a corresponding "Position" property, which when written
       // to will send a notification to observers with the EProp.Xfm tag. To make all this
       // possible, we will create here a multi-line string whose first line is the class name
       // decorated with [EPropClass] and whose subsequent lines each correspond to a field,
-      // in the format "Nori.Vector2 mPosition Nori.EProp.Xfm". 
-      // That is, each line is a tuple with 3 components - the data type of the property, 
+      // in the format "Nori.Vector2 mPosition Nori.EProp.Xfm".
+      // That is, each line is a tuple with 3 components - the data type of the property,
       // the name of the underlying field, and the EProp enum that must be raised when this
-      // property is changed. 
+      // property is changed.
       var sb = new StringBuilder (sym.ToString ());
       foreach (var m in sym.GetMembers ().OfType<IFieldSymbol> ()) {
          string? eprop = null;
@@ -74,14 +74,14 @@ class EPropClassGenerator : IIncrementalGenerator {
       return sb.ToString ();
    }
 
-   // Given a class name (extracted above), this generates a code fragment that implements the 
+   // Given a class name (extracted above), this generates a code fragment that implements the
    // singleton pattern
    static void GenerateSource (SourceProductionContext context, string? words) {
       if (words == null) return;
       var lines = words.Split (['\n']);
       string fullTypeName = lines[0];
       // Split the className into namespace and type name
-      int n = fullTypeName.LastIndexOf ('.'); 
+      int n = fullTypeName.LastIndexOf ('.');
       string nsName = fullTypeName.Substring (0, n);
       string typeName = fullTypeName.Substring (n + 1);
 
@@ -111,6 +111,7 @@ class EPropClassGenerator : IIncrementalGenerator {
          partial class {{typeName}} : IObservable<EProp> {
          {{sb}}
             void Notify (EProp prop) => mSubject?.OnNext (prop);
+            /// <summary>Notifies the provider that an observer is to receive notifications.</summary>
             public IDisposable Subscribe (IObserver<EProp> observer) => (mSubject ??= new ()).Subscribe (observer);
             Subject<EProp>? mSubject;
          };
