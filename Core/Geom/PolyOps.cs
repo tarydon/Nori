@@ -262,8 +262,8 @@ public partial class Poly {
          // segments, and we handle both by looking through the mExtra array). Note that
          // we directly read the mExtra array rather than use Seg objects for better
          // performance
-         if (HasArcs && i < mExtra.Length) {
-            var extra = mExtra[i];
+         if (HasArcs && i < Extra.Length) {
+            var extra = Extra[i];
             if ((extra.Flags & EFlags.Arc) != 0) {
                pb.Arc (pt, extra.Center, extra.Flags);
                continue;
