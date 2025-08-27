@@ -40,37 +40,7 @@ public readonly struct Seg {
    public Point2 B => Poly.Pts[(N + 1) % Poly.Pts.Length];
 
    /// <summary>The Bound of the segment</summary>
-   public Bound2 Bound {
-      get {
-         Point2 a = A, b = B;
-         Bound2 bound = new (a.X, a.Y, b.X, b.Y);
-         if (IsArc2 (out var cen, out var flags)) {
-            double r = cen.DistTo (a);
-            if ((flags & Poly.EFlags.Circle) != 0) 
-               return new (cen.X - r, cen.Y - r, cen.X + r, cen.Y + r);
-            bool ccw = (flags & Poly.EFlags.CCW) > 0;
-            double sa = cen.AngleTo (a), ea = cen.AngleTo (b);
-            for (int i = 0; i < 4; i++) {
-               double ang = i * Lib.HalfPI;
-               bool include;
-               if (ccw) {
-                  // For a CCW segment, we have -180 < sa <= 180, and we have
-                  // ea > sa. So first adjust ang so that it is more than sa.
-                  if (ang < sa) ang += Lib.TwoPI;
-                  include = ang < ea;
-               } else {
-                  // For a CW segment, ea < sa, so we adjust ang so that it is less
-                  // than ea and then check if it lies within range
-                  if (ang > sa) ang -= Lib.TwoPI;
-                  include = ang > ea;
-               }
-               if (include)
-                  bound += cen.CardinalMoved (r, (EDir)i);
-            }
-         }
-         return bound;
-      }
-   }
+   public Bound2 Bound => GetBound (Matrix2.Identity);
 
    /// <summary>Center point of a curved segment</summary>
    /// For a linear segment, this returns Point2.Nil
@@ -155,25 +125,21 @@ public readonly struct Seg {
          // of the Bound code - we don't want to keep that routine as tight as possible
          cen *= xfm;
          double r = cen.DistTo (a);
-         bool ccw = (flags & Poly.EFlags.CCW) > 0;
+         if ((flags & Poly.EFlags.Circle) != 0)
+            return new (cen.X - r, cen.Y - r, cen.X + r, cen.Y + r);
+         bool ccw = (flags & Poly.EFlags.CCW) != 0;
          double dAngle = (Vector2.XAxis * xfm).Heading;
          double sa = cen.AngleTo (a) + dAngle, ea = cen.AngleTo (b) + dAngle;
-         for (int i = 0; i <= 4; i++) {
+         if (ccw) { // Handle the arc crossing over 180/-180
+            if (ea < sa) ea += Lib.TwoPI;
+         } else {
+            if (ea > sa) ea -= Lib.TwoPI;
+         }
+         if (!ccw) (sa, ea) = (ea, sa); // Reduce CW to CCW case
+         for (int i = -2; i < 2; i++) { // 4 quadrant probe angles (-180, -90, 0, 90)
             double ang = i * Lib.HalfPI;
-            bool include;
-            if (ccw) {
-               // For a CCW segment, we have -180 < sa <= 180, and we have
-               // ea > sa. So first adjust ang so that it is more than sa.
-               if (ang < sa) ang += Lib.TwoPI;
-               include = ang < ea;
-            } else {
-               // For a CW segment, ea < sa, so we adjust ang so that it is less
-               // than ea and then check if it lies within range
-               if (ang > sa) ang -= Lib.TwoPI;
-               include = ang > ea;
-            }
-            if (include)
-               bound += cen.CardinalMoved (r, (EDir)i);
+            if (ang < sa) ang += Lib.TwoPI;
+            if (ang < ea) bound += cen.CardinalMoved (r, (EDir)((i + 4) % 4));
          }
       }
       return bound;
