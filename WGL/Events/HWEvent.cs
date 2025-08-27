@@ -85,9 +85,7 @@ public static class HW {
    public static IObservable<int> MouseLost => mLost ??= new ();
    static CaptureLostWrap? mLost;
 
-   /// <summary>
-   /// Subscribe to this to be notified when the mouse leaves the client area
-   /// </summary>
+   /// <summary>Subscribe to this to be notified when the mouse leaves the client area</summary>
    public static IObservable<int> MouseLeave => mLeave ??= new ();
    static MouseLeaveWrap? mLeave;
 
@@ -132,9 +130,7 @@ class CaptureLostWrap : EventWrapper<int> {
 #endregion
 
 #region MouseLeaveWrap -----------------------------------------------------------------------------
-/// <summary>
-/// EventWrapper implementation to handle the mouse-leave event
-/// </summary>
+/// <summary>EventWrapper implementation to handle the mouse-leave event</summary>
 class MouseLeaveWrap : EventWrapper<int> {
    protected override void Connect (bool connect) {
       var panel = HW.Panel; if (panel == null) return;
