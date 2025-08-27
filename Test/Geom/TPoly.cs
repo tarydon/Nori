@@ -269,7 +269,7 @@ class PolyTests {
 
    [Test (114, "Poly with arcs bound tests")]
    void Test11 () {
-      var polys = DXFReader.FromFile (NT.File ("Geom/Poly/ArcBound.dxf")).Polys.ToList ();
+      var polys = DXFReader.FromFile (NT.File ("Geom/Poly/ArcBound2.dxf")).Polys.ToList ();
       // Compute the bound for the given poly, and reversed version of given Poly
       // and insert the poly bound rects in "bound"layers.
       Dwg2 dwg = new ();
