@@ -136,10 +136,11 @@ public readonly struct Seg {
             if (ea > sa) ea -= Lib.TwoPI;
             (sa, ea) = (ea, sa); // Reduce CW to CCW case
          }
-         for (int i = -2; i < 2; i++) { // 4 quadrant probe angles (-180, -90, 0, 90)
-            double ang = i * Lib.HalfPI;
-            if (ang < sa) ang += Lib.TwoPI;
-            if (ang < ea) bound += cen.CardinalMoved (r, (EDir)((i + 4) % 4));
+         int n = (int)((sa + 1e-3) / Lib.HalfPI);
+         int n2 = (int)((ea - 1e-3) / Lib.HalfPI);
+         for (int i = n; i <= n2; i++) {
+            var ang = i * Lib.HalfPI;
+            if (ang > sa && ang < ea) bound += cen.CardinalMoved (r, (EDir)((i + 8) % 4));
          }
       }
       return bound;

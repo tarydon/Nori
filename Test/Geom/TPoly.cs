@@ -226,7 +226,7 @@ class PolyTests {
       }
    }
 
-   [Test (110, "Seg-Seg intersection tests (finite)")]
+   [Test (113, "Seg-Seg intersection tests (finite)")]
    void Test9 () {
       var dwg = DXFReader.FromFile (NT.File ("Geom/Poly/SegInt.dxf"));
       var segs = dwg.Polys.SelectMany (a => a.Segs).ToList ();
@@ -265,5 +265,25 @@ class PolyTests {
       }
       DXFWriter.SaveFile (dwg, NT.TmpDXF);
       Assert.TextFilesEqual1 ("Geom/Poly/Out/SegInt2.dxf", NT.TmpDXF);
+   }
+
+   [Test (114, "Poly with arcs bound tests")]
+   void Test11 () {
+      var polys = DXFReader.FromFile (NT.File ("Geom/Poly/ArcBound.dxf")).Polys.ToList ();
+      // Compute the bound for the given poly, and reversed version of given Poly
+      // and insert the poly bound rects in "bound"layers.
+      Dwg2 dwg = new ();
+      polys.ForEach (dwg.Add);
+      var l = new Layer2 ("bound", Color4.Blue, ELineType.Continuous);
+      dwg.Add (l); dwg.CurrentLayer = l;
+      var bounds = polys.Select (_ => _.GetBound ()).ToList ();
+      bounds.Select (Poly.Rectangle).ForEach (dwg.Add);
+      // Check with "reversed" polys
+      l = new Layer2 ("rbound", Color4.Green, ELineType.Continuous);
+      dwg.Add (l); dwg.CurrentLayer = l;
+      var reversed = polys.Select (_ => _.Reversed ()).ToList ();
+      reversed.Select (_ => _.GetBound ().InflatedF (1.005)).Select (Poly.Rectangle).ForEach (dwg.Add);
+      CurlWriter.ToFile (dwg, NT.TmpCurl);
+      Assert.TextFilesEqual1 ("Geom/Poly/Out/ArcBound.curl", NT.TmpCurl);
    }
 }
