@@ -134,8 +134,8 @@ public readonly struct Seg {
             if (ea < sa) ea += Lib.TwoPI;
          } else {
             if (ea > sa) ea -= Lib.TwoPI;
+            (sa, ea) = (ea, sa); // Reduce CW to CCW case
          }
-         if (!ccw) (sa, ea) = (ea, sa); // Reduce CW to CCW case
          for (int i = -2; i < 2; i++) { // 4 quadrant probe angles (-180, -90, 0, 90)
             double ang = i * Lib.HalfPI;
             if (ang < sa) ang += Lib.TwoPI;
