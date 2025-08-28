@@ -94,6 +94,16 @@ class PolyOpsTests {
       // Perpendicular from top of circle
       result = circle.MakePerpendicular (0, new Point2 (0, 100));
       result?.Is ("M0,100V100");
+
+      // Slanting line tests
+      var line = Poly.Line ((0, 0), (100, 100));
+      // Perpendicular at midpoint, dynamic length
+      result = line.MakePerpendicular (0, new Point2 (50, 50));
+      result?.Is ("M50,50V50"); 
+      // Perpendicular at midpoint, fixed length 40, centered
+      result = line.MakePerpendicular (0, new Point2 (50, 50), 40, true);
+      result?.Is ("M21.715729,78.284271L78.284271,21.715729");
+
    }
 }
 

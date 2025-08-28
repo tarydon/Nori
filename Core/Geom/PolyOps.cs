@@ -340,29 +340,28 @@ public partial class Poly {
 
    /// <summary>Creates a perpendicular line at a specified segment and reference point on the polyline</summary>
    /// <param name="segIndex">Index of the segment on the polyline where the perpendicular is to be created</param>
-   /// <param name="refPt">The reference point used to calculate the position and direction of the perpendicular line</param>
+   /// <param name="refPt">To define the direction and length of the perpendicular line</param>
    /// <param name="length">Length of the perpendicular line</param>
    /// If set to zero (default), the length is dynamically set to the distance from the base point to the reference point.
    /// <param name="centered">If true, the perpendicular line is centered on the base point,extending equally in both directions</param>
-   /// <returns>A poly representing the perpendicular line.Returns null if the segment index is invalid</returns>
+   /// <returns>A poly representing the perpendicular line</returns>
    public Poly? MakePerpendicular (int segIndex, Point2 refPt, double length = 0, bool centered = false) {
-      if (segIndex < 0 || segIndex >= Count) return null;
       Seg seg = this[segIndex];
       double lie = seg.GetLie (refPt);
       bool isArc = seg.IsArc;
 
       // Calculate base point on segment: for arcs, get exact point at lie;
       // otherwise, snap the reference point to the segment line.
-      Point2 basePt = isArc ? seg.GetPointAt (lie) : refPt.SnappedToLine (seg.A, seg.B), rawPt = refPt;
+      Point2 basePt = isArc ? seg.GetPointAt (lie) : refPt.SnappedToLine (seg.A, seg.B);
       double slope = seg.GetSlopeAt (lie);
       // Adjust slope by 90 degrees for perpendicular direction.
       // For arcs, factor in counter-clockwise direction and position relative to center.
       if (isArc)
-         slope += rawPt.DistTo (seg.Center) < seg.Radius == seg.IsCCW ? Lib.HalfPI : -Lib.HalfPI;
+         slope += refPt.DistTo (seg.Center) < seg.Radius == seg.IsCCW ? Lib.HalfPI : -Lib.HalfPI;
       else
-         slope += rawPt.LeftOf (seg.A, seg.B) ? Lib.HalfPI : -Lib.HalfPI;
+         slope += refPt.LeftOf (seg.A, seg.B) ? Lib.HalfPI : -Lib.HalfPI;
       // Determine perpendicular length: use distance if length is zero.
-      double d = length.IsZero () ? basePt.DistTo (rawPt) : length;
+      double d = length.IsZero () ? basePt.DistTo (refPt) : length;
       // Create the perpendicular line either centered on basePt or extending from it.
       return Line (centered ? basePt.Polar (-d, slope) : basePt, basePt.Polar (d, slope));
    }
