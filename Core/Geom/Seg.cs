@@ -46,11 +46,11 @@ public readonly struct Seg {
          Bound2 bound = new (a.X, a.Y, b.X, b.Y);
          if (IsArc2 (out var cen, out var flags)) {
             double r = cen.DistTo (a);
-            if ((flags & Poly.EFlags.Circle) != 0) 
+            if ((flags & Poly.EFlags.Circle) != 0)
                return new (cen.X - r, cen.Y - r, cen.X + r, cen.Y + r);
             bool ccw = (flags & Poly.EFlags.CCW) > 0;
 
-            // Compute the start ang end angles in terms of quarter turns, 
+            // Compute the start ang end angles in terms of quarter turns,
             // starting from east
             double sa = cen.AngleTo (a) / Lib.HalfPI;
             double ea = cen.AngleTo (b) / Lib.HalfPI;
@@ -59,9 +59,9 @@ public readonly struct Seg {
             while (ea < sa) ea += 4;
 
             // The quadrant points lying within the circle can be enumerated from
-            // ceiling(sa) .. floor(ea). 
+            // ceiling(sa) .. floor(ea).
             int isa = (int)Ceiling (sa), iea = (int)Floor (ea);
-            for (int i = isa; i <= iea; i++) 
+            for (int i = isa; i <= iea; i++)
                bound += cen.CardinalMoved (r, (EDir)(i % 4));
          }
          return bound;
@@ -106,6 +106,9 @@ public readonly struct Seg {
          return A.DistTo (B);
       }
    }
+
+   /// <summary>The midpoint of this segment</summary>
+   public Point2 Midpoint => GetPointAt (0.5);
 
    /// <summary>Index of this seg within the Poly</summary>
    public readonly int N;

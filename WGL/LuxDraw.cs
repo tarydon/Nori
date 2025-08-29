@@ -27,6 +27,10 @@ public static partial class Lux {
    static Color4 mColor;
    static Stack<Color4> mColors = [];
 
+   /// <summary>The DPI scaling (how many pixels to one logical pixel)</summary>
+   public static float DPIScale { get => mDPIScale; set => mDPIScale = value; }
+   static float mDPIScale = 1;
+
    /// <summary>The current line-width, in device-independent pixels</summary>
    public static float LineWidth {
       get => mLineWidth;
@@ -51,7 +55,7 @@ public static partial class Lux {
    static ELineType mLineType;
    static Stack<ELineType> mLineTypes = [];
 
-   /// <summary>The current line-type scaling</summary>
+   /// <summary>The current line-type scaling (this is in device-independent pixels)</summary>
    public static float LTScale {
       get => mLTScale;
       set {
@@ -60,7 +64,7 @@ public static partial class Lux {
          mLTScale = value; Rung++;
       }
    }
-   static float mLTScale = 100;
+   static float mLTScale;
    static Stack<float> mLTScales = [];
 
    /// <summary>The diameter of a point, in device-independent pixels</summary>
@@ -278,13 +282,13 @@ public static partial class Lux {
    /// - Xfm       : current transformation matrix
    /// - DrawColor : color of the text being drawn
    /// - TypeFace  : font, style, size of the text being drawn
-   public static void Text2D (ReadOnlySpan<char> text, Vec2F pos, ETextAlign align) {
+   public static void Text2D (ReadOnlySpan<char> text, Vec2F pos, ETextAlign align, Vec2S offset) {
       if (text.IsWhiteSpace ()) return;
       // First, get the basic cells as we would for a TextPx shader, assuming the text
       // is starting at a position of (0,0)
       var face = TypeFace ?? TypeFace.Default;
       Span<TextPxShader.Args> cells = stackalloc TextPxShader.Args[text.Length];
-      int x = GetTextCells (text, new (0, 0), cells);
+      int x = GetTextCells (text, offset, cells);
 
       // If we are going to draw the text with a 'BaseLeft' alignment, then the cells
       // we obtained are already correct (since the transformed coordinates of the _pos_
