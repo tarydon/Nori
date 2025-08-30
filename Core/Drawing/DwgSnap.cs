@@ -93,13 +93,17 @@ public class DwgSnap {
       get {
          if (mSnap != ESnap.None)
             yield return (mSnap.ToString ().ToLower (), mPtSnap, false);
+         yield return ("align:h", new (600, 600), true);
+         yield return ("align:45\u00b0", new (400, 400), true);
+         yield return ("align:30.3\u00b0", new (800, 500), true);
       }
    }
 
    public IEnumerable<(Point2 Pt, double Angle)> Lines {
       get {
          yield return (new (600, 600), 0);
-         yield return (new (600, 600), Lib.QuarterPI);
+         yield return (new (400, 400), Lib.QuarterPI);
+         yield return (new (800, 500), 30.3.D2R ());
       }
    }
 }

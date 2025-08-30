@@ -1,6 +1,6 @@
 // ────── ╔╗
 // ╔═╦╦═╦╦╬╣ AssemblyInfo.cs
-// ║║║║╬║╔╣║ <<TODO>>
+// ║║║║╬║╔╣║ Assembly information for Nori.Core
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 [assembly: AssemblyTitle ("Nori.Core")]
 [assembly: AssemblyProduct ("Nori")]
