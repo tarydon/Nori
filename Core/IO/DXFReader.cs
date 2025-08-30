@@ -4,6 +4,7 @@
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 namespace Nori;
 
+/// <summary>DXFReader is used to read a DXF file into a Dwg2</summary>
 public partial class DXFReader {
    // Constructors -------------------------------------------------------------
    /// <summary>Construct a DXFReader, given a filename</summary>
@@ -27,6 +28,7 @@ public partial class DXFReader {
                if (mType == "SECTION") HandleSection (V);
                else S[G] = V;
                break;
+            case 8: if (mClosedPoly == null) S[G] = V; break;     // Ignore layers when we are inside a POLYLINE read
             case > 0 and < 10: S[G] = V; break;
             case 10: X0Set.Add (Vf); break;
             case 20: Y0Set.Add (Vf); break;
@@ -40,9 +42,11 @@ public partial class DXFReader {
             case 70: I0 = Vn; break; case 71: I1 = Vn; break;
             case 72: I2 = Vn; break; case 73: I3 = Vn; break;
             case 230: ZDir = Vf.EQ (-1) ? -1 : 1; break;
+            case 1000: mXData.Add (V); break;
          }
       }
       mReader.Dispose ();
+      ProcessBendText ();
       return mDwg;
    }
 
@@ -54,7 +58,7 @@ public partial class DXFReader {
    // For the HEADER section, this reads in all the important header variables.
    // For some of the sections like OBJECTS etc this just skips past the section.
    // For other sections like TABLES, BLOCKS, ENTITIES, this just returns without
-   // 'eating' the section so the section contines to be processed as normal
+   // 'eating' the section so the section continues to be processed as normal
    void HandleSection (string name) {
       if (!sSections.Contains (name)) {
          while (Next ()) { if (G == 0 && V == "ENDSEC") break; }
@@ -79,9 +83,23 @@ public partial class DXFReader {
             case "CIRCLE": Add (Poly.Circle (Center, Radius)); break;
             case "DIMENSION": Add (new E2Dimension (Layer, mDwg.GetBlock (Name)!.Ents)); break;
             case "ELLIPSE": AddEllipse (Pt0, MajorAxis, AxisRatio, TRange); break;
-            case "LINE": Add (Poly.Line (Pt0, Pt1)); break;
+            case "LINE":
+               var line = Poly.Line (Pt0, Pt1);
+               // Try to find bend info among mXData entries
+               var (ba, radius, kfactor) = (double.NaN, 0.0, 0.42);
+               foreach (var s in mXData) {
+                  if (s.StartsWith ("BEND_ANGLE:")) ba = s[11..].ToDouble ().D2R ();
+                  else if (s.StartsWith ("BEND_RADIUS:")) radius = s[12..].ToDouble ();
+                  else if (s.StartsWith ("K_FACTOR:")) kfactor = s[9..].ToDouble ();
+               }
+               if (!ba.IsNaN ()) {
+                  Add (new E2Bendline (mDwg, line.Pts, ba, radius, kfactor));
+                  mXData.Clear ();
+               } else Add (line);
+               break;
+
             case "POINT": Add (new E2Point (Layer, Pt0) { Color = GetColor () }); break;
-            case "POLYLINE": mIsClosed = (Flags & 1) > 0; break;
+            case "POLYLINE": mClosedPoly = (Flags & 1) > 0; break;
             case "SEQEND": AddPolyline (); break;
             case "VERTEX": mVertex.Add (new (Pt0, Flags, Bulge)); break;
             case "BLOCK": (mBlockEnts, mBlockName, mBlockPt) = ([], Name, Pt0); break;
@@ -105,7 +123,7 @@ public partial class DXFReader {
                break;
 
             case "LWPOLYLINE":
-               mIsClosed = (Flags & 1) > 0;
+               mClosedPoly = (Flags & 1) > 0;
                for (int i = 0; i < X0Set.Count; i++)
                   mVertex.Add (new (new (X0Set[i], Y0Set[i]), 0, D2Set.SafeGet (i)));
                AddPolyline ();
@@ -163,6 +181,26 @@ public partial class DXFReader {
    static HashSet<string> mUnsupported = [];
    bool miMultiVertex;
 
+   // Convert the special text in the DXF to a bend line, unless is match with the sBend format
+   void ProcessBendText () {
+      var ents = mDwg.Ents;
+      List<Ent2> bend = [], rmv = [];
+      foreach (var e2t in ents.OfType<E2Text> ()) {
+         var match = sBend.Match (e2t.Text);
+         if (!match.Success) continue;
+         var e2p = ents.OfType<E2Poly> ().Where (a => a.Poly.IsLine).MinBy (a => a.Poly.GetDistance (e2t.Pt).Dist);
+         if (e2p == null) continue;
+         rmv.AddRange (e2t, e2p);
+         double angle = match.Groups[1].Value.ToDouble ().D2R ().Clamp (-Lib.PI, Lib.PI);
+         double radius = match.Groups[2].Value.ToDouble ();
+         double kfactor = match.Groups[3].Value.ToDouble ();
+         if (kfactor > 0.501) kfactor /= 2;
+         bend.Add (new E2Bendline (mDwg, e2p.Poly.Pts, angle, radius, kfactor));
+      }
+      foreach (var a in rmv) ents.Remove (a);
+      foreach (var b in bend) ents.Add (b);
+   }
+
    // DXF group value storage --------------------------------------------------
    // These variables store the values read in from the DXF groups
    string[] S = new string[10];
@@ -213,8 +251,7 @@ public partial class DXFReader {
    List<Ent2>? mBlockEnts;
    string mBlockName = "*";         // Name of the block we're building
    Point2 mBlockPt;                 // Insertion point of the block
-
-   bool mIsClosed;                  // If set, the Poly read is closed
+   bool? mClosedPoly;               // NULL=not reading polyline, true=reading closed poly, false=reading open poly
 
    string? mType;                   // The _previous_ Type (0 group entity) that we saw
    readonly Dictionary<string, Layer2> mLayers = [];  // Dictionary mapping layer names to layer objects
@@ -225,7 +262,8 @@ public partial class DXFReader {
    int I0, I1, I2, I3;              // Integer value read from group 70 .. 73
    // A StringBuilder member used in various text compositions.
    readonly StringBuilder mSB = new ();
-
+   // Raw 1000 group code strings from DXF (e.g., "BEND_ANGLE:90")
+   List<string> mXData = [];
    // Aliases for the group codes (for better readability)
    int Flags => I0;
    double Bulge => D2Set.SafeGet (0);
@@ -236,4 +274,7 @@ public partial class DXFReader {
          D2Set[0] = value;
       }
    }
+
+   static readonly Regex sBend = new (@"A([-+]?[0-9]*\.?[0-9]+)\s*R([0-9]*\.?[0-9]+)\s*K([0-9]*\.?[0-9]+)",
+                                      RegexOptions.Compiled | RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
 }

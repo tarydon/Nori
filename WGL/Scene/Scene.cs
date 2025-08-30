@@ -13,13 +13,13 @@ public abstract partial class Scene {
    // Properties ---------------------------------------------------------------
    /// <summary>Background color (clear color) for this scene</summary>
    public Color4 BgrdColor { get => mBgrdColor; set { mBgrdColor = value; Lux.Redraw (); } }
-   Color4 mBgrdColor = Color4.Gray (128); 
+   Color4 mBgrdColor = Color4.Gray (128);
 
    /// <summary>The pan-vector (0,0) means centered</summary>
-   /// This is in OpenGL clip-space coordinates 
+   /// This is in OpenGL clip-space coordinates
    public Vector2 PanVector {
       get => mPanVector;
-      set { if (Lib.Set (ref mPanVector, value)) XfmChanged (); } 
+      set { if (Lib.Set (ref mPanVector, value)) XfmChanged (); }
    }
    Vector2 mPanVector = Vector2.Zero;
 
@@ -28,11 +28,11 @@ public abstract partial class Scene {
    Matrix3 mProjectionXfm = Matrix3.Identity;
 
    /// <summary>The root VNode of this Scene</summary>
-   public VNode? Root { 
+   public VNode? Root {
       get => mRoot;
       set {
          Debug.Assert (mRoot == null);
-         (mRoot = value)?.Register (); 
+         (mRoot = value)?.Register ();
       }
    }
    VNode? mRoot;
@@ -87,14 +87,14 @@ public abstract partial class Scene {
    protected double mZoomFactor = 1;
 
    // Called when the root transform is changed
-   protected void XfmChanged () { 
+   protected void XfmChanged () {
       mXfms.Clear (); mWorldXfm = null;
-      Lux.mViewBound.OnNext (0); Lux.Redraw (); 
+      Lux.mViewBound.OnNext (0); Lux.Redraw ();
    }
 
-   public virtual void ZoomExtents () { 
+   public virtual void ZoomExtents () {
       mZoomFactor = 1; mPanVector = Vector2.Zero;
-      XfmChanged ();  
+      XfmChanged ();
    }
 
    // Overrides ----------------------------------------------------------------
@@ -148,14 +148,17 @@ public abstract class Scene3 : Scene {
    /// <summary>The rotation angle viewpoint</summary>
    public (double XRot, double ZRot) Viewpoint {
       get => mViewpoint;
-      set { mViewpoint = value; XfmChanged (); }
+      set {
+         mViewpoint = (Lib.NormalizeAngle (value.XRot.D2R ()).R2D (), Lib.NormalizeAngle (value.ZRot.D2R ()).R2D ());
+         XfmChanged ();
+      }
    }
-   (double, double) mViewpoint = (-60, 135);
+   (double, double) mViewpoint = (-60, 45);
 
    // Implementation -----------------------------------------------------------
    // Compute the transform (based on the model Bound and the Viewpoint of rotation)
    protected override (Matrix3 World, Matrix3 Projection) ComputeXfms () {
-      // The worldXfm maps the bounding cuboid of the model to the origin, and 
+      // The worldXfm maps the bounding cuboid of the model to the origin, and
       // then rotates the model by applying the rotation viewpoint (a quaternion with X and
       // Z rotations, implementing a simple turntable rotation model)
       var (x, z) = Viewpoint;
@@ -180,7 +183,7 @@ public abstract class Scene3 : Scene {
 
 #region class XfmEntry -----------------------------------------------------------------------------
 /// <summary>XfmEntry is used to build the stack of transforms</summary>
-/// Each XfmEntry points to a parent, and has an incremental transform from that. 
+/// Each XfmEntry points to a parent, and has an incremental transform from that.
 /// The XfmEntry then computes the overall transform (Xfm) and the associated
 /// NormalXfm for lighting computations (for 3D scenes)
 class XfmEntry {

@@ -89,6 +89,58 @@ public class E2Dimension : Ent2 {
 }
 #endregion
 
+#region class E2Bendline ---------------------------------------------------------------------------
+/// <summary>Represents a Bendline in a drawing</summary>
+public class E2Bendline : Ent2 {
+   // Constructors -------------------------------------------------------------
+   E2Bendline () => mDwg = null!;
+   public E2Bendline (Dwg2 dwg, IEnumerable<Point2> pts, double angle, double radius, double kfactor, double thickness = 1)
+      => (Angle, KFactor, Pts, Radius, mDwg, Thickness) = (angle, kfactor, [.. pts], radius, dwg, thickness);
+
+   // Properties ---------------------------------------------------------------
+   /// <summary>The exterior angle (turn angle) in radians. A hem will have an angle of +PI or -PI.</summary>
+   public readonly double Angle;
+
+   /// <summary>The K-factor (neutral axis) of the bend, as a fraction from 0 (inner surface) to 1 (outer surface)</summary>
+   public double KFactor;
+
+   /// <summary>Set of points defining the bendline. Every pair here defines a 'segment' of the bendline</summary>
+   public ImmutableArray<Point2> Pts;
+
+   /// <summary>Inner radius of the bend</summary>
+   public readonly double Radius;
+
+   /// <summary>Thickness of the part which hold the drawing</summary>
+   public readonly double Thickness;
+
+   /// <summary>Flat width of the bendline</summary>
+   public double FlatWidth {
+      get => Math.Abs (Angle) * (Radius + KFactor * Thickness);
+      set => KFactor = (value / Math.Abs (Angle) - Radius) / Thickness;
+   }
+
+   /// <summary>Bend decuction value for this bendline</summary>
+   public double Deduction {
+      get {
+         double angle = Math.Abs (Angle);
+         double length = 2 * ((angle <= Math.PI / 2 ? Math.Tan (angle / 2) : 1) * (Radius + Thickness));
+         return length - FlatWidth;
+      }
+      set {
+         double length = 2 * ((Angle <= (Math.PI / 2) ? Math.Tan (Angle / 2) : 1) * (Radius + Thickness));
+         FlatWidth = length - value;
+      }
+   }
+
+   // Overrides ----------------------------------------------------------------
+   public override Bound2 Bound => new (Pts);
+   public override Bound2 GetBound (Matrix2 xfm) => new (Pts.Select (a => a * xfm));
+
+   // Private data -------------------------------------------------------------
+   readonly Dwg2 mDwg;  // Drawing this belongs to (needed to obtain the thickness)
+}
+#endregion
+
 #region class E2Insert -----------------------------------------------------------------------------
 /// <summary>Represents an INSERT entity (an instance of a block placed in a drawing)</summary>
 public class E2Insert : Ent2 {
@@ -165,8 +217,6 @@ public class E2Insert : Ent2 {
 
 #region class E2Point ------------------------------------------------------------------------------
 /// <summary>Represents a point in a drawing.</summary>
-/// <param name="layer">Entity layer</param>
-/// <param name="pos">Point position</param>
 public class E2Point : Ent2 {
    E2Point () { }
    public E2Point (Layer2 layer, Point2 pos) : base (layer) => mPt = pos;
@@ -192,8 +242,6 @@ public class E2Point : Ent2 {
 
 #region class E2Poly -------------------------------------------------------------------------------
 /// <summary>A polyline drawing entity.</summary>
-/// <param name="inLayer">Entity layer</param>
-/// <param name="inPoly">The poly object this entity holds.</param>
 public class E2Poly : Ent2 {
    // Constructors -------------------------------------------------------------
    E2Poly () => mPoly = null!;
@@ -231,8 +279,6 @@ public class E2Poly : Ent2 {
 
 #region class E2Solid ------------------------------------------------------------------------------
 /// <summary>A solid drawing entity.</summary>
-/// <param name="layer">Entity layer</param>
-/// <param name="pts">List of points</param>
 public class E2Solid : Ent2 {
    E2Solid () => mPts = [];
    public E2Solid (Layer2 layer, IEnumerable<Point2> pts) : base (layer) => mPts = [.. pts];
@@ -253,12 +299,6 @@ public class E2Solid : Ent2 {
 
 #region class E2Text -------------------------------------------------------------------------------
 /// <summary>A drawing text entity.</summary>
-/// <param name="layer">Entity layer</param>
-/// <param name="style">The text style (specifies the font)</param>
-/// <param name="text">The text value</param>
-/// <param name="pos">Poisition where the text is placed in the drawing.</param>
-/// <param name="height">The text height</param>
-/// <param name="angle">The text rotation angle in radians</param>
 public class E2Text : Ent2 {
    // Constructors -------------------------------------------------------------
    E2Text () => (Text, Style, XScale) = ("", Style2.Default, 1);

@@ -148,7 +148,7 @@ public readonly struct TPolyPick (E2Poly ent, int seg, int node, Poly.ECornerOpF
    /// <summary>Which node (on that closest seg) is closer to the pick point</summary>
    /// Node = Seg or Node = Seg+1 always
    public readonly short Node = (short)node;
-   /// <summary>Flags to perform some corner operations like fillet, corner-step etc</summary
+   /// <summary>Flags to perform some corner operations like fillet, corner-step etc</summary>
    /// These operations depend on the position of this pick point w.r.t the nearest node
    public readonly Poly.ECornerOpFlags Flags = flags;
 }

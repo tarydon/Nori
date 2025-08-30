@@ -14,7 +14,7 @@ class TLux {
       static void Draw () {
          Lux.Color = Color4.White;
          Lux.PointSize = 14f;
-         Lux.Lines ([new (0, 0), new (100, 0), new (100, 0), new (70, 100)]);
+         Lux.Lines ([new Vec2F (0, 0), new (100, 0), new (100, 0), new (70, 100)]);
          Lux.Beziers ([new (0, 0), new (0, 80), new (20, 100), new (70, 100),
                        new (100, 0), new (50, 25), new (25, 50), new (70, 100)]);
          Lux.Points ([new (10, 10), new (30, 10), new (30, 30), new (10, 30)]);
@@ -31,7 +31,7 @@ class TLux {
          Lux.LineWidth = 10f;
          Lux.TypeFace = mFace;
          Lux.TextPx ("Chapter", new (10, 114));
-         Lux.Lines ([new (0, 65), new (100, 65)]);
+         Lux.Lines ([new Vec2F (0, 65), new (100, 65)]);
          Lux.TypeFace = TypeFace.Default;
          Lux.TextPx ("An example", new (10, 65));
          Lux.TextPx ("of TrueType", new (10, 40));
@@ -49,7 +49,7 @@ class TLux {
       TestPNG (scene, new (420, 280), DIBitmap.EFormat.Gray8, "Text2D.png");
 
       static void SetAttributes1 () { Lux.Color = Color4.Gray (160); Lux.ZLevel = -1;  }
-      static void Draw1 () => Lux.Lines ([new (10, 5), new (36, 5), new (10, 10), new (36, 10),
+      static void Draw1 () => Lux.Lines ([new Vec2F (10, 5), new (36, 5), new (10, 10), new (36, 10),
          new (10, 15), new (36, 15), new (10, 20), new (36, 20), new (10, 5), new (10, 20),
          new (23, 5), new (23, 20), new (36, 5), new (36, 20)]);
 

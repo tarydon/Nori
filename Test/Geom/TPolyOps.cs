@@ -18,6 +18,10 @@ class PolyOpsTests {
 
       poly = rect.InFillet (4, 25, left: true); poly!.Is ("M200,0V100H0V25Q25,0,-1Z");
       poly = rect.InFillet (4, 25, left: false); poly!.Is ("M200,0V100H0V25Q25,0,3Z");
+
+      Poly cir = Poly.Circle ((0, 0), 50);
+      poly = cir.InFillet (0, 10, true);
+      Assert.IsTrue (poly is null);
    }
 
    [Test (60, "Poly corner-step tests")]
@@ -48,8 +52,16 @@ class PolyOpsTests {
 
    [Test (72, "Poly fillet tests")]
    void Test4 () {
-      Poly rect = Poly.Rectangle (0, 0, 200, 100);
+      Poly tri = new ([new Point2 (0, 0), new Point2 (30, 0), new Point2 (15, 15)], [], Poly.EFlags.Closed);
       Poly? poly;
+      poly = tri.Fillet (2, 5); poly?.Is ("M0,0H30L18.535534,11.464466Q11.464466,11.464466,1Z"); // 90 deg at node 2
+      poly = tri.Fillet (0, 5); poly?.Is ("M30,0L15,15L8.535534,8.535534Q12.071068,0,1.5Z"); // 45 deg at node 0
+      tri = new ([new Point2 (0, 0), new Point2 (50, 0), new Point2 (-25, 43.301)], [], Poly.EFlags.Closed);
+      poly = tri.Fillet (0, 5); poly?.Is ("M50,0L-25,43.301L-1.443378,2.499988Q2.886742,0,0.666665Z"); // 120 deg at node 0
+      // Reordered the points to verify the winding direction is changed
+      tri = new ([new Point2 (0, 0), new Point2 (-25, 43.301), new Point2 (50, 0)], [], Poly.EFlags.Closed);
+      poly = tri.Fillet (0, 5); poly?.Is ("M-25,43.301L50,0H2.886742Q-1.443378,2.499988,-0.666665Z"); // 120 deg at node 0
+      Poly rect = Poly.Rectangle (0, 0, 200, 100);
       poly = rect.Fillet (0, 5); poly?.Is ("M200,0V100H0V5Q5,0,1Z");
       poly = rect.Fillet (3, 10); poly?.Is ("M0,0H200V100H10Q0,90,1Z");
    }
@@ -106,5 +118,25 @@ class BooleanOpsTests {
          File.WriteAllText (NT.TmpTxt, sb.ToString ());
          Assert.TextFilesEqual1 ($"Geom/Poly/Boolean/basic-{ops[i]}.txt", NT.TmpTxt);
       }
+   }
+}
+
+[Fixture (25, "Poly edge mangler tests", "Geom")]
+class PolyEdgeTests {
+   [Test (110, "Poly edge-recess")]
+   void Test1 () {
+      Poly rect = Poly.Rectangle (0, 0, 100, 50);
+      Poly? poly;
+      poly = rect.EdgeRecess (0, left: true, 15, 20, 10); poly!.Is ("M0,0H5V10H25V0H100V50H0Z");
+      poly = rect.EdgeRecess (0, left: false, 15, 20, 10); poly!.Is ("M0,0H5V-10H25V0H100V50H0Z");
+
+      Poly line = Poly.Line (0, 0, 100, 0);
+      poly = line.EdgeRecess (0, left: true, 15, 20, 10); poly!.Is ("M0,0H5V10H25V0H100");
+      poly = line.EdgeRecess (0, left: false, 15, 20, 10); poly!.Is ("M0,0H5V-10H25V0H100");
+
+      // Rect with rounded corner.
+      Poly rounded = Poly.Rectangle (0, 0, 100, 50)!.Fillet (0, 5)!;
+      poly = rounded.EdgeRecess (0, left: true, 15, 20, 10); poly!.Is ("M100,0V5H90V25H100V50H0V5Q5,0,1Z");
+      poly = rounded.EdgeRecess (0, left: false, 15, 20, 10); poly!.Is ("M100,0V5H110V25H100V50H0V5Q5,0,1Z");
    }
 }

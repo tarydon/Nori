@@ -71,7 +71,7 @@ class BooleanRootVN (List<List<Poly>> polys, Bound2 bound) : VNode {
       var bound = ViewBound;
       var mid = bound.Midpoint;
       // Draw quadrant lines to divide the screen in four sections.
-      Lux.Lines ([new (mid.X, bound.Y.Min - vec.Y), new (mid.X, bound.Y.Max + vec.Y),
+      Lux.Lines ([new Vec2F (mid.X, bound.Y.Min - vec.Y), new (mid.X, bound.Y.Max + vec.Y),
          new (bound.X.Min - vec.X, mid.Y), new (bound.X.Max + vec.X, mid.Y)]);
 
       Lux.Text2D ("Polys", new (mid.X - 10, mid.Y - 10), ETextAlign.TopRight);

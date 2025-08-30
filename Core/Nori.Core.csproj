@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
@@ -8,6 +8,7 @@
 		<Optimize>false</Optimize>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
     <DocumentationFile>..\Bin\Nori.Core.xml</DocumentationFile>
+		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
   <ItemGroup>

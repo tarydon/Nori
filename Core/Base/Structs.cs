@@ -74,6 +74,7 @@ public readonly struct Color4 : IEQuable<Color4> {
    public static readonly Color4 Black = new (0, 0, 0);
    public static readonly Color4 Red = new (255, 0, 0);
    public static readonly Color4 Green = new (0, 255, 0);
+   public static readonly Color4 DarkGreen = new (0, 128, 0);
    public static readonly Color4 Blue = new (0, 0, 255);
    public static readonly Color4 Yellow = new (255, 255, 0);
    public static readonly Color4 Magenta = new (255, 0, 255);
@@ -178,6 +179,10 @@ public readonly struct CoordSystem {
    /// <summary>Shift a coordinate system by a given amount without rotating it</summary>
    public static CoordSystem operator + (CoordSystem cs, Vector3 vec)
       => new (cs.Org + vec, cs.VecX, cs.VecY);
+
+   /// <summary>Multiply a CoordSystem by a transformation matrix</summary>
+   public static CoordSystem operator * (CoordSystem cs, Matrix3 xfm)
+      => new (cs.Org * xfm, cs.VecX * xfm, cs.VecY * xfm);
 
    public override string ToString ()
       => $"CoordSystem:{Org.R6 ()},{VecX.R6 ()},{VecY.R6 ()}";

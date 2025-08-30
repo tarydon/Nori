@@ -143,6 +143,18 @@ public static class Extensions {
    /// <summary>Returns a double rounded off to 6 decimal places</summary>
    public static double R6 (this double f) => Math.Round (f, 6);
 
+   /// <summary>Reads n bytes from the stream and returns a byte-array</summary>
+   public static byte[] ReadBytes (this Stream stm, int n) {
+      byte[] data = new byte[n]; stm.ReadExactly (data);
+      return data;
+   }
+
+   /// <summary>Reads an integer from the stream</summary>
+   public static unsafe int ReadInt32 (this Stream stm) {
+      int n; stm.ReadExactly (new Span<byte> (&n, 4));
+      return n;
+   }
+
    /// <summary>Removes the last element from a List (and returns it)</summary>
    public static T RemoveLast<T> (this List<T> list) {
       T elem = list[^1]; list.RemoveAt (list.Count - 1);
@@ -228,6 +240,12 @@ public static class Extensions {
 
    /// <summary>Wrap an integer to a range within 0..max-1</summary>
    public static int Wrap (this int n, int max) => (n + max) % max;
+
+   /// <summary>Rounds the double to be a multiple of the given least count</summary>
+   /// For example, <tt>13.532.Round(0.2)</tt> will return 13.6, since that is the closest multiple
+   /// of 0.2 near 13.532.
+   public static double Round (this double a, double leastcount) => leastcount * Math.Round (a / leastcount);
+
 }
 #endregion
 

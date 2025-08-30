@@ -287,7 +287,6 @@ public class Matrix3 {
       double z = p.X * m.M13 + p.Y * m.M23 + p.Z * m.M33 + m.DZ;
       return new (x, y, z);
    }
-
    /// <summary>Multiply a Vector3 by a Matrix</summary>
    public static Vector3 operator * (Vector3 v, Matrix3 m) {
       if (m.IsIdentity || m.IsTranslation) return v;

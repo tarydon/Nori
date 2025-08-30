@@ -15,7 +15,7 @@ class MeshScene : Scene3 {
    readonly bool TessDemo = false;
 
    CMesh MakeMesh () {
-      if (!TessDemo) return CMesh.LoadTMesh ($"{Lib.DevRoot}/TData/Geom/CMesh/part.tmesh");
+      if (!TessDemo) return CMesh.Load ($"{Lib.DevRoot}/Wad/FanucX/Model/R.mesh")!;
       // Tessellation demo makes a 'thick plane' from a Poly with holes.
       const double thk = 10;     // Plane thickness
       // 1. Create a flat with an outer contour and inner holes.

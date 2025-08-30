@@ -1,6 +1,7 @@
 Name           Mode         VSpec            Blend  Depth  POffset  Stencil  Programs
 ----------------------------------------------------------------------------------------------------
 Line2D         Lines        Vec2F            1      0      0        None     World2D.vert|Line2D.geom|Line.frag
+Line3D         Lines        Vec3F            1      1      0        None     World3D.vert|Line3D.geom|Line.frag
 Bezier2D       Patches      Vec2F            1      0      0        None     World2D.vert|Bezier.tctrl|Bezier.teval|Line2D.geom|Line.frag
 Point2D        Points       Vec2F            1      0      0        None     World2D.vert|Point2D.geom|Point.frag
 Triangle2D     Triangles    Vec2F            0      0      0        None     World2D.vert|Flat.frag

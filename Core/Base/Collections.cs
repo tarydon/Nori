@@ -83,7 +83,12 @@ public class AList<T> : IReadOnlyList<T>, IList<T>, IAList {
    IEnumerator IEnumerable.GetEnumerator () => mList.GetEnumerator ();
 
    // IList<T> implementation --------------------------------------------------
+   /// <summary>Copies the contents of this AList into the given array, starting at the given index</summary>
+   /// If the array is not large enough to hold the elements, this throws an exception.
    public void CopyTo (T[] array, int arrayIndex) => mList.CopyTo (array, arrayIndex);
+
+   /// <summary>Creates an enumerator that can be used to walk through the elements in the AList</summary>
+   /// This is used when the AList is used as the target for a foreach expression
    public IEnumerator<T> GetEnumerator () => mList.GetEnumerator ();
 
    // Implementation -----------------------------------------------------------

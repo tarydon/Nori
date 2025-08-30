@@ -35,7 +35,7 @@ partial class DashLine2DShader : Shader<Vec2F, DashLine2DShader.Settings> {
       int n = a.IDXfm.CompareTo (b.IDXfm); if (n != 0) return n;
       n = a.LineType.CompareTo (b.LineType); if (n != 0) return n;
       n = (int)(a.Color.Value - b.Color.Value); if (n != 0) return n;
-      return a.LineWidth.CompareTo (b.LineWidth); 
+      return a.LineWidth.CompareTo (b.LineWidth);
    }
 
    protected override void SetConstantsImp () {
@@ -107,6 +107,29 @@ partial class GouradShader () : FacetShader (ShaderImp.Gourad) { }
 /// <summary>A specialization of Seg2DShader, used to draw linear segs</summary>
 [Singleton]
 partial class Line2DShader () : Seg2DShader (ShaderImp.Line2D) { }
+#endregion
+
+#region class Line3DShader -------------------------------------------------------------------------
+/// <summary>Draw lines in 3D space</summary>
+[Singleton]
+partial class Line3DShader : Shader<Vec3F, Seg2DShader.Settings> {
+   Line3DShader () : base (ShaderImp.Line3D) => Bind ();
+   int muVPScale = 0, muXfm = 0, muLineWidth = 0, muDrawColor = 0;
+
+   protected override void ApplyUniformsImp (ref readonly Seg2DShader.Settings a) {
+      Pgm.Set (muXfm, ref Lux.Scene!.Xfms[a.IDXfm].Xfm);
+      Pgm.Set (muLineWidth, a.LineWidth).Set (muDrawColor, a.Color);
+   }
+
+   protected override int OrderUniformsImp (ref readonly Seg2DShader.Settings a, ref readonly Seg2DShader.Settings b) {
+      int n = a.IDXfm - b.IDXfm; if (n != 0) return n;
+      n = a.LineWidth.CompareTo (b.LineWidth); if (n != 0) return n;
+      return (int)(a.Color.Value - b.Color.Value);
+   }
+
+   protected override void SetConstantsImp () => Pgm.Set (muVPScale, Lux.VPScale);
+   protected override Seg2DShader.Settings SnapUniformsImp () => new (Lux.IDXfm, Lux.LineWidth, Lux.Color);
+}
 #endregion
 
 #region class PhongShader --------------------------------------------------------------------------
@@ -274,26 +297,26 @@ partial class Triangle2DShader () : TriQuad2DShader (ShaderImp.Triangle2D) { }
 /// This is a simple algorithm that uses the stencil buffer to fill the interior of a set of
 /// closed paths. The paths are defined as contours, each consisting of a number of line segments.
 /// The orientation (winding) of these contours is not important, nor are there any constraints on
-/// whether the can self-intersect or cross each other. 
-/// 
+/// whether the can self-intersect or cross each other.
+///
 /// This animation https://www.ekioh.com/devblog/gpu-filling-vector-paths/ shows very clearly
 /// how this algorithm works. basically we pick an arbitrary point on the scene and draw a triangle
 /// from that point using each 'segment' on the path as a base. For all the pixels lying within
 /// that triangle, we invert bit 0 of the stencil buffer. When we are finished, all the points lying
 /// within a contour (that is, an odd number of 'crossings' from the arbitrary point) will have
-/// their stencil bit 0 set, and the rest will not. 
-/// 
+/// their stencil bit 0 set, and the rest will not.
+///
 /// This is done by the TriFanStencilShader. It requires as input a triangle fan, and uses
-/// indexed drawing to minimize the amount of data transfered. For example, suppose the path to 
+/// indexed drawing to minimize the amount of data transfered. For example, suppose the path to
 /// be filled is one quad (with indices [1,2,3,4]) and one triangle (with indices [5,6,7]). We
 /// use a convention that Pts[0] is the 'arbitray point' on the screen. Then, the Indices input
 /// to this shader will look like this. Remember we are drawing triangle fans, and that -1 is the
 /// 'start new primitive' marker: [0,1,2,3,4,1,-1, 0,5,6,7,5,-1]. As you can see, that will draw
-/// two triangle fans, one with 4 triangles and one with 3. Every triangle drawn has Pts[0] as 
+/// two triangle fans, one with 4 triangles and one with 3. Every triangle drawn has Pts[0] as
 /// the tip vertex. The caller must prepare the data in this format, and we use this so that the
 /// entire stencil can be drawn with a single draw call.
-/// 
-/// During the running of this shader, we set the StencilFunc to GL_NEVER to avoid updating 
+///
+/// During the running of this shader, we set the StencilFunc to GL_NEVER to avoid updating
 /// any of the color-buffer pixels - we are only drawing into the stencil buffer at this point.
 /// Subsequently, the TriFanCoverShader uses this stencil to fill in the pixels where stencil
 /// bit 0 is set
@@ -307,7 +330,7 @@ partial class TriFanStencilShader () : TriQuad2DShader (ShaderImp.TriFanStencil)
 /// bit 0 of the stencil buffer, and wherever that is set, it simply applies the Lux.Color to that
 /// pixel. For this to work, the shader needs as input a triangle fan that fully covers the
 /// paths in question. The implementation in Lux.FillPoly uses the bounding box of the set of
-/// paths and creates a triangle fan with 2 triangles that apply paint into this bounding box. 
+/// paths and creates a triangle fan with 2 triangles that apply paint into this bounding box.
 [Singleton]
 partial class TriFanCoverShader () : TriQuad2DShader (ShaderImp.TriFanCover) { }
 #endregion

@@ -109,7 +109,7 @@ class TAuSystem {
       message = Crasher (() => CurlWriter.ToFile (holder, NT.TmpCurl));
 
       message = Crasher (() => CurlReader.FromFile ($"{NT.Data}/IO/T007.curl"));
-      message.Is ("AuException: Type Leopard not found");
+      message.Is ("AuException: No metadata for 'Leopard'");
    }
 
    [Test (63, "Test of Uplink, ByName, ById")]
