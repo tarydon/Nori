@@ -352,12 +352,12 @@ public partial class Poly {
       if (skipIdxs.Count == 0) { result = null; return false; } // No zero-length segs found
 
       var pts = mPts.Select ((pt, idx) => (pt, idx)).Where (a => !skipIdxs.Contains (a.idx)).Select (a => a.pt);
-      List<Extra> extra = [];
+      List<ArcInfo> extra = [];
       if (HasArcs) {
-         foreach (var idx in Enumerable.Range (0, mExtra.Length)) {
-            if (idx >= mExtra.Length) break;
+         foreach (var idx in Enumerable.Range (0, Extra.Length)) {
+            if (idx >= Extra.Length) break;
             if (skipIdxs.Contains (idx)) continue;
-            extra.Add (mExtra[idx]);
+            extra.Add (Extra[idx]);
          }
       }
       var flags = mFlags;
@@ -369,7 +369,7 @@ public partial class Poly {
    bool TryMergeAlignedSegs (out Poly? result, double threshold = 1e-6) {
       if (Count < 2) { result = null; return false; }
       (Seg prev, int baseSegIdx) = (this[0], 0);
-      (List<Point2> pts, List<Extra> extras) = ([], []);
+      (List<Point2> pts, List<ArcInfo> extras) = ([], []);
       bool mergedSegs = false;
       for (int i = 1; ; i++) {
          Seg curr = this[i];
@@ -379,8 +379,8 @@ public partial class Poly {
             continue; // Continue gathering mergeable segs, as long as mergeability condition is satisfied.
 
          pts.Add (prev.A);
-         if (HasArcs && baseSegIdx < mExtra.Length)
-            extras.Add (mExtra[baseSegIdx]);
+         if (HasArcs && baseSegIdx < Extra.Length)
+            extras.Add (Extra[baseSegIdx]);
 
          if (curr.IsLast) {
             if (!canMerge)

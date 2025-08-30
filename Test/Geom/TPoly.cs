@@ -198,7 +198,7 @@ class PolyTests {
       Poly.Parse ("M0,0H10V5H0Z").Closed ().Is ("M0,0H10V5H0Z");
    }
 
-   [Test (105, "Poly.TryCleanup tests")]
+   [Test (112, "Poly.TryCleanup tests")]
    void Test12 () {
       // Zero-length segs
       Poly.Parse ("M0,0L0,0").TryCleanup (out Poly? poly); poly!.Is ("");
