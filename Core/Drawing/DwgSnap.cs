@@ -38,73 +38,198 @@ public class DwgSnap {
    public ESnap ESnap => mSnap;
    ESnap mSnap;
 
+   /// <summary>The set of labels we need to draw to represent the current snap situation</summary>
+   public IEnumerable<(string text, Point2 Pt, bool above)> Labels {
+      get {
+         if (mSnap != ESnap.None)
+            yield return (mSnap.ToString ().ToLower (), mPtSnap, false);
+         foreach (var con in mVisible) {
+            string text = "";
+            if (con.Slope.IsZero ()) text = "horz";
+            else if (con.Slope.EQ (Lib.HalfPI)) text = "vert";
+            else text = $"align:{Math.Round (con.Slope.R2D (), 1)}\u00b0";
+            yield return (text, con.Anchor, true);
+         }
+      }
+   }
+
+   /// <summary>The set of construction lines to be drawn (these are active construction lines the mouse is close to)</summary>
+   public IEnumerable<(Point2 Pt, double Angle)> Lines {
+      get {
+         foreach (var con in mVisible)
+            yield return (con.Anchor, con.Slope);
+      }
+   }
+
    /// <summary>The recent snap point that we computed</summary>
    public Point2 PtSnap => mPtSnap;
    Point2 mPtSnap;
 
    // Methods ------------------------------------------------------------------
    public Point2 Snap (Point2 ptRaw, double aperture) {
-      double minDistSq = aperture * aperture;
-      Point2 ptSnap = Point2.Nil;
-      ESnap eSnap = ESnap.None;
+      // Prepare for the snapping
+      (mptRaw, mAperture) = (ptRaw, aperture);
+      (mPtSnap, mSnap, mMinDistSq, mTangent) = (ptRaw, ESnap.None, aperture * aperture, double.NaN);
+      mSegs.Clear (); mActive.Clear (); mVisible.Clear ();
 
+      // There are 5 classes of snaps, in descending order of priority:
+      // 1. Hard snaps like endpoint, midpoint, center, quadrant etc directly on Poly segs,
+      //    and snaps like insert point of block, base point of text, etc. These hard snaps,
+      //    if issued, will lead to the creation of new construction lines anchored at that
+      //    point
+      // 2. Intersections between construction lines and actual segments in the drawing geometry
+      // 3. Intersections between pairs of construction lines
+      // 4. ON snaps along the segments of polys
+      // 5. ON snaps along construction lines
+      // Let's check all these 5 classes in sequence (note that we are depending on the short-circuiting
+      // behavior of the || operator for this).
+      if (HardSnaps () || ConsSegIntersections () || ConsConsIntersections () || OnCons () || OnSeg ()) return mPtSnap;
+      return ptRaw;
+   }
+   Point2 mptRaw;
+   double mAperture;
+
+   // Implementation -----------------------------------------------------------
+   void AddConsLine (Point2 pt, IEnumerable<double> angles) {
+      foreach (var ang in angles) {
+         // If this same infinite line does not exist already, add it
+         var angle = Lib.NormalizeAngle (ang);
+         if (angle < -Lib.Epsilon) angle += Lib.PI;
+         if (angle.EQ (Lib.PI)) angle = 0; 
+         if (mCons.Any (a => a.EQ (pt, angle))) continue;
+         mCons.Add (new (pt, angle));
+         Lib.Trace (pt);
+         // We don't want to have more than 3 points in the drawing from which construction
+         // lines are radiating, or more than 12 construction lines in all
+         if (mCons.Count > 12 || mCons.Select (a => a.Anchor.R6 ()).Distinct ().Count () > 3)
+            mCons.RemoveAt (0);
+      }
+   }
+   List<ConsLine> mCons = [];    // List of all construction lines
+
+   bool Check (Point2 pt, ESnap snap, double tangent = double.NaN) {
+      if (pt.IsNil) return false;
+      double distSq = pt.DistToSq (mptRaw);
+      if (distSq.EQ (mMinDistSq) && snap <= mSnap) return false;
+      if (distSq > mMinDistSq + Lib.Epsilon) return false;
+      (mPtSnap, mMinDistSq, mSnap, mTangent) = (pt, distSq, snap, tangent);
+      return true;
+   }
+   double mMinDistSq;            // Distance to closest snap point (so far)
+   double mTangent;              // Tangent angle at that snap point (used to make construction lines)
+
+   // This checks for hard snaps (like endpoint, midpoint, center, quadrant) etc.
+   // Segments of Polys are checked, and also nodes of inserts, dimensions, text etc are checked.
+   // This routine also updates some members as a side effect
+   // - mSegs is populated with the list of segments that are close to the mouse point
+   // - mCons is updated with one or more additional construction lines (if we found a snap, that
+   //   snap point is used as an anchor for additional construction lines)
+   bool HardSnaps () {
+      mSegs.Clear ();
+      var (ptRaw, aperture) = (mptRaw, mAperture);
       foreach (var ent in mDwg.Ents) {
-         if (!ent.Bound.Contains (ptRaw, aperture)) continue;
+         if (!ent.Bound.Contains (mptRaw, mAperture)) continue;
          switch (ent) {
             case E2Poly e2p:
-               foreach (var pt in e2p.Poly.Pts) Check (ESnap.Endpoint, pt);
                foreach (var seg in e2p.Poly.Segs) {
                   if (seg.IsArc) {
                      var center = seg.Center;
-                     Check (ESnap.Center, center);
+                     Check (center, ESnap.Center, 0);
                      if (seg.Bound.Contains (ptRaw, aperture)) {
                         var radius = seg.Radius;
-                        Check (ESnap.Midpoint, seg.Midpoint);
+                        Check (seg.Midpoint, ESnap.Midpoint, 0);
                         for (EDir dir = EDir.E; dir <= EDir.S; dir++) {
                            var pt = center.CardinalMoved (radius, dir);
-                           Check (ESnap.Quadrant, pt);
+                           Check (pt, ESnap.Quadrant, 0);
                         }
+                        if (!seg.IsCircle) {
+                           Check (seg.A, ESnap.Endpoint, seg.GetSlopeAt (0));
+                           Check (seg.B, ESnap.Endpoint, seg.GetSlopeAt (1));
+                        }
+                        if (seg.GetDist (ptRaw, aperture) <= aperture) mSegs.Add (seg);
                      }
-                  } else
-                     Check (ESnap.Midpoint, seg.Midpoint);
+                  } else {
+                     Check (seg.A, ESnap.Endpoint, seg.Slope);
+                     Check (seg.Midpoint, ESnap.Midpoint, 0);
+                     Check (seg.B, ESnap.Endpoint, seg.Slope);
+                     if (seg.GetDist (ptRaw, aperture) <= aperture) mSegs.Add (seg);
+                  }
                }
                break;
             case E2Solid e2s:
-               foreach (var pt in e2s.Pts) Check (ESnap.Endpoint, pt);
+               foreach (var pt in e2s.Pts) Check (pt, ESnap.Endpoint, 0);
                break;
-            case E2Text e2t: Check (ESnap.Node, e2t.Pt); break;
-            case E2Insert e2i: Check (ESnap.Node, e2i.Pt); break;
-            case E2Point e2e: Check (ESnap.Node, e2e.Pt); break;
+            case E2Text e2t: Check (e2t.Pt, ESnap.Node, 0); break;
+            case E2Insert e2i: Check (e2i.Pt, ESnap.Node, 0); break;
+            case E2Point e2e: Check (e2e.Pt, ESnap.Node, 0); break;
          }
       }
-      if ((mSnap = eSnap) == ESnap.None) return mPtSnap = ptRaw;
-      return mPtSnap = ptSnap;
 
-      // Helper ............................................
-      void Check (ESnap snap, Point2 pt) {
-         double distSq = pt.DistToSq (ptRaw);
-         if (distSq.EQ (minDistSq) && snap <= eSnap) return;
-         if (distSq > minDistSq + Lib.Epsilon) return;
-         minDistSq = distSq; ptSnap = pt; eSnap = snap;
+      // Check the intersections of segments we're close to
+      Span<Point2> buffer = stackalloc Point2[2];
+      for (int i = 1; i < mSegs.Count; i++) {
+         Seg s1 = mSegs[i];
+         for (int j = 0; j < i; j++) {
+            Seg s2 = mSegs[j];
+            var pts = s1.Intersect (s2, buffer, true);
+            for (int k = 0; k < pts.Length; k++) Check (pts[k], ESnap.Intersection, 0);
+         }
       }
+
+      // If we found a snap point, add construction lines using this point a the anchor
+      if (mSnap != ESnap.None) {
+         AddConsLine (mPtSnap, [mTangent, mTangent + Lib.HalfPI, 0, Lib.HalfPI]);
+         return true;
+      } else
+         return false;
+   }
+   List<Seg> mSegs = [];         // List of segs we're close to
+
+   bool ConsSegIntersections () {
+      mActive.Clear ();
+      mActive.AddRange (mCons.Where (a => a.DistTo (mptRaw) < mAperture));
+      return false;
+   }
+   List<ConsLine> mActive = [];  // List of construction lines we're close to
+   List<ConsLine> mVisible = []; // List of construction lines that are visible
+
+   bool ConsConsIntersections () {
+      return false;
    }
 
-   public IEnumerable<(string text, Point2 Pt, bool above)> Labels {
-      get {
-         if (mSnap != ESnap.None)
-            yield return (mSnap.ToString ().ToLower (), mPtSnap, false);
-         yield return ("align:h", new (600, 600), true);
-         yield return ("align:45\u00b0", new (400, 400), true);
-         yield return ("align:30.3\u00b0", new (800, 500), true);
+   bool OnCons () {
+      mVisible.Clear ();
+      for (int i = 0; i < mActive.Count; i++) {
+         var cons = mActive[i];
+         Point2 pt = mptRaw.SnappedToLine (cons.Anchor, cons.Anchor.Polar (10, cons.Slope));
+         if (Check (pt, ESnap.On)) { mVisible.Clear (); mVisible.Add (cons); }
       }
+      return mSnap != ESnap.None;
    }
 
-   public IEnumerable<(Point2 Pt, double Angle)> Lines {
-      get {
-         yield return (new (600, 600), 0);
-         yield return (new (400, 400), Lib.QuarterPI);
-         yield return (new (800, 500), 30.3.D2R ());
+   bool OnSeg () {
+      return false;
+   }
+
+   // Nested types -------------------------------------------------------------
+   // This represents a construction line (with an anchor point and an infinite ray
+   // passing through that point with a given slope)
+   readonly struct ConsLine {
+      public ConsLine (Point2 a, double s) => (Anchor, Slope) = (a, s);
+
+      public double DistTo (Point2 pt)
+         => pt.DistToLine (Anchor, Anchor.Polar (10, Slope));
+
+      public bool EQ (Point2 pt, double ang) {
+         if (!ang.EQ (Slope, 0.001)) return false;
+         return pt.DistToLine (Anchor, Anchor.Polar (10, Slope)).IsZero (0.001);
       }
+
+      public Point2 GetIntersection (ConsLine other)
+         => Geo.LineXLine (Anchor, Anchor.Polar (10, Slope), other.Anchor, other.Anchor.Polar (10, other.Slope));
+
+      public readonly Point2 Anchor;
+      public readonly double Slope;
    }
 }
 #endregion
@@ -113,6 +238,7 @@ public class DwgSnap {
 /// <summary>The possible snap values</summary>
 public enum ESnap {
    None,
+   On,
    /// <summary>Intersection</summary>
    Intersection,
    /// <summary>Quadrant of a segment</summary>

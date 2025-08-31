@@ -102,6 +102,20 @@ public static class Geo {
          return [];
    }
 
+   /// <summary>Returns the intersection between a circle and line that is closest to the given point</summary>
+   /// If the circle does not intersect the line at all, this returns Point2.Nil. Otherwise, it
+   /// returns the closer of the two intersection points between the circle and the line (to the
+   /// given reference point 'close')
+   public static Point2 CircleXLineClosest (Point2 cen, double rad, Point2 p1, Point2 p2, Point2 close) {
+      Span<Point2> buffer = stackalloc Point2[2];
+      var pts = CircleXLine (cen, rad, p1, p2, buffer);
+      return pts.Length switch {
+         0 => Point2.Nil,
+         1 => pts[0],
+         _ => pts[0].DistToSq (close) < pts[1].DistToSq (close) ? pts[0] : pts[1],
+      };
+   }
+
    /// <summary>Returns a tuple (center, radius) which forms a circle tangential to lines AB, CD, EF</summary>
    /// The pick points specify which bisectors (relative to intersection point of the lines)
    /// to use to compute the centre. If pick points don't lie on the corresponding line,
