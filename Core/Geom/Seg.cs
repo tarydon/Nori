@@ -2,6 +2,7 @@
 // ╔═╦╦═╦╦╬╣ Seg.cs
 // ║║║║╬║╔╣║ Implements the Seg struct (one segment of a Poly)
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
+using System.Threading;
 using static System.Math;
 namespace Nori;
 
@@ -113,8 +114,31 @@ public readonly struct Seg {
    /// <summary>Index of this seg within the Poly</summary>
    public readonly int N;
 
+   /// <summary>The next segment on this same Poly</summary>
+   /// If this is the last seg in the Poly, this returns:
+   /// - null if this is an open Poly
+   /// - the first seg if this is a closed Poly
+   public Seg? Next {
+      get {
+         int n = (N + 1) % Poly.Count;
+         if (n == 0 && Poly.IsOpen) return null;
+         return new (Poly, n);
+      }
+   }
    /// <summary>The Poly this seg belongs to</summary>
    public readonly Poly Poly;
+
+   /// <summary>The previous segment on this same Poly</summary>
+   /// If this is the first seg in this Poly, this rturns:
+   /// - null if this is a closed Poly
+   /// - the last seg if this is a closed Poly
+   public Seg? Prev {
+      get {
+         int n = (N - 1).Wrap (Poly.Count);
+         if (N == 0 && Poly.IsOpen) return null;
+         return new (Poly, n);
+      }
+   }
 
    /// <summary>Returns the slope of this segment (for an arc, the slope at the midpoint)</summary>
    public double Slope => GetSlopeAt (0.5);
@@ -176,6 +200,15 @@ public readonly struct Seg {
          }
       }
       return bound;
+   }
+
+   /// <summary>Returns the closest point to the given point on the given segment</summary>
+   public Point2 GetClosestPoint (Point2 pt) {
+      if (IsArc2 (out var cen, out var flags)) {
+         Point2 pt2 = cen.Polar (cen.DistTo (A), cen.AngleTo (pt));
+         return GetPointAt (GetLie (pt2).Clamp ());
+      } else
+         return pt.SnappedToLineSeg (A, B);
    }
 
    /// <summary>Returns the closest distance of the given point pt to this seg</summary>
@@ -250,14 +283,46 @@ public readonly struct Seg {
       return (0, 0);
    }
 
+   /// <summary>Coputes the intersection between this segment and an infinite line</summary>
+   /// <param name="a">Start point of the infinite line</param>
+   /// <param name="b">End point of the infinite line</param>
+   /// <param name="buffer">Buffer that the caller should allocate (should contain at least 2 elements)</param>
+   /// <param name="finite">If set, returns only the intersections that lie within the span of the segment,
+   /// otherwise checks for the extrapolations of the segments as well</param>
+   /// <returns>A slice of the input buffer that contains 0, 1 or 2 points</returns>
+   public ReadOnlySpan<Point2> Intersect (Point2 a, Point2 b, Span<Point2> buffer, bool finite) {
+      ReadOnlySpan<Point2> pts;
+      if (IsArc2 (out var cen, out _)) {
+         pts = Geo.CircleXLine (cen, cen.DistTo (A), a, b, buffer);
+         if (!finite) return pts;
+
+         // Limit the set to the points that lie within this span
+         int n = 0;
+         if (pts.Length > 0 && Contains (pts[0])) n |= 1;
+         if (pts.Length > 1 && Contains (pts[1])) n |= 2;
+         return n switch {
+            0 => [],             // Neither of the points are contained
+            1 => pts[0..1],      // Only first point is contained
+            2 => pts,            // Both points are contained
+            _ => pts[1..2]       // Only second point is contained
+         };
+      } else {
+         buffer[0] = Geo.LineXLine (A, B, a, b);
+         if (buffer[0].IsNil) return [];
+         if (finite && !Contains (buffer[0])) return [];
+         return buffer[0..1];
+      }
+   }
+
    /// <summary>Computes the intersection between this segment and another</summary>
    /// <param name="other">The other segment to intersect</param>
    /// <param name="buffer">Buffer that the caller should allocate (should contain at least 2 elements)</param>
    /// <param name="finite">If set, returns only intersections that lie within the span of the segment,
    /// otherwise checks for the extrapolations of the segments as well</param>
+   /// <returns>A slice of the input buffer that contains 0, 1 or 2 points</returns>
    public ReadOnlySpan<Point2> Intersect (Seg s2, Span<Point2> buffer, bool finite) {
       if (IsArc2 (out var cen1, out _)) {
-         double rad1 = Radius;
+         double rad1 = cen1.DistTo (A);
          ReadOnlySpan<Point2> pts;
          if (s2.IsArc2 (out var cen2, out _)) {
             // Case: ARC x ARC
@@ -273,13 +338,12 @@ public readonly struct Seg {
          int n = 0;
          if (pts.Length > 0 && Contains (pts[0]) && s2.Contains (pts[0])) n |= 1;
          if (pts.Length > 1 && Contains (pts[1]) && s2.Contains (pts[1])) n |= 2;
-         switch (n) {
-            case 0: return [];                           // Neither of the points are contained
-            case 1: return pts[0..1];                    // Only first point is contained
-            case 3: return pts;                          // Both points are contained
-            default:                                     // Only second point is contained
-               buffer[0] = buffer[1]; return buffer[0..1];
-         }
+         return n switch {
+            0 => [],             // Neither of the points are contained
+            1 => pts[0..1],      // Only first point is contained
+            2 => pts,            // Both points are contained
+            _ => pts[1..2]       // Only second point is contained
+         };
       } else {
          if (s2.IsArc) {
             // Case: LINE x ARC
