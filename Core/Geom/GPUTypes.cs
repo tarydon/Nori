@@ -23,6 +23,7 @@ public readonly record struct Vec2S (short X, short Y) : IEQuable<Vec2S> {
    public Vec2S (int x, int y) : this ((short)x, (short)y) { }
    public bool EQ (Vec2S b) => X == b.X && Y == b.Y;
    public override string ToString () => $"<{X},{Y}>";
+   public static readonly Vec2S Zero = new (0, 0);
 }
 
 /// <summary>3D vector of floats (used for passing data to OpenGL)</summary>

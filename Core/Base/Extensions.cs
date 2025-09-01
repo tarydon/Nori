@@ -93,6 +93,8 @@ public static class Extensions {
 
    /// <summary>Checks if a given double is zero to within 1e-6</summary>
    public static bool IsZero (this double a) => Abs (a) < 1e-6;
+   /// <summary>Checks if a given double is zero (to within the given threshold)</summary>
+   public static bool IsZero (this double a, double threshold) => Abs (a) < threshold;
    /// <summary>Checks if a given float is zero to within 1e-5</summary>
    public static bool IsZero (this float a) => Abs (a) < 1e-5;
 
