@@ -14,6 +14,7 @@ class TLux {
       static void Draw () {
          Lux.Color = Color4.White;
          Lux.PointSize = 14f;
+         Lux.LineWidth = 4;
          Lux.Lines ([new Vec2F (0, 0), new (100, 0), new (100, 0), new (70, 100)]);
          Lux.Beziers ([new (0, 0), new (0, 80), new (20, 100), new (70, 100),
                        new (100, 0), new (50, 25), new (25, 50), new (70, 100)]);
@@ -27,12 +28,13 @@ class TLux {
       TestPNG (scene, new (160, 160), DIBitmap.EFormat.Gray8, "TrueType.png");
 
       void Draw () {
+         Lux.LTScale = 100;
          Lux.LineType = ELineType.Dot;
          Lux.LineWidth = 10;
          Lux.TypeFace = mFace;
          Lux.TextPx ("Chapter", new (10, 114));
          Lux.Lines ([new Vec2F (0, 65), new (100, 65)]);
-         Lux.TypeFace = TypeFace.Default;
+         Lux.TypeFace = mFace2;
          Lux.TextPx ("An example", new (10, 65));
          Lux.TextPx ("of TrueType", new (10, 40));
          Lux.TextPx ("text.", new (10, 15));
@@ -48,7 +50,7 @@ class TLux {
       var scene = new Scene2 (Color4.Gray (240), new (8, 3, 38, 22), gvn);
       TestPNG (scene, new (420, 280), DIBitmap.EFormat.Gray8, "Text2D.png");
 
-      static void SetAttributes1 () { Lux.Color = Color4.Gray (160); Lux.ZLevel = -1;  }
+      static void SetAttributes1 () { Lux.Color = Color4.Gray (160); Lux.LineWidth = 4; Lux.ZLevel = -1;  }
       static void Draw1 () => Lux.Lines ([new Vec2F (10, 5), new (36, 5), new (10, 10), new (36, 10),
          new (10, 15), new (36, 15), new (10, 20), new (36, 20), new (10, 5), new (10, 20),
          new (23, 5), new (23, 20), new (36, 5), new (36, 20)]);
@@ -80,7 +82,7 @@ class TLux {
       var scene = new Scene2 (Color4.Gray (240), new (-2, -2, 42, 22), gvn);
       TestPNG (scene, new (264, 144), DIBitmap.EFormat.Gray8, "ZLevel.png");
 
-      void SetAttributes1 () => Lux.Color = Color4.Gray (160);
+      void SetAttributes1 () { Lux.Color = Color4.Gray (160); Lux.LineWidth = 4; }
       void Draw1 () => Lux.Quads ([new (20, 0), new (40, 0), new (20, 20), new (0, 20)]);
 
       void SetAttributes2 () { Lux.Color = Color4.Black; Lux.TypeFace = mFace; Lux.ZLevel = -1; }
@@ -97,4 +99,5 @@ class TLux {
    }
 
    TypeFace mFace = new (Lib.ReadBytes ("nori:GL/Fonts/Roboto-Regular.ttf"), 28);
+   TypeFace mFace2 = new (Lib.ReadBytes ("nori:GL/Fonts/Roboto-Regular.ttf"), 18);
 }

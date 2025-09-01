@@ -293,18 +293,20 @@ public readonly struct Seg {
    public ReadOnlySpan<Point2> Intersect (Point2 a, Point2 b, Span<Point2> buffer, bool finite) {
       ReadOnlySpan<Point2> pts;
       if (IsArc2 (out var cen, out _)) {
-         pts = Geo.CircleXLine (cen, cen.DistTo (A), a, b, buffer);
+         pts = Geo.CircleXLine (cen, cen.DistTo (A), a, b, buffer);  // Returns 0, 1 or 2 points
          if (!finite) return pts;
 
-         // Limit the set to the points that lie within this span
+         // Limit the set to the points that lie within this span.
+         // Note how each of the 4 possibilities just means a different 'slice' of the
+         // buffer to return - no fresh allocations or copying is happening here.
          int n = 0;
          if (pts.Length > 0 && Contains (pts[0])) n |= 1;
          if (pts.Length > 1 && Contains (pts[1])) n |= 2;
          return n switch {
             0 => [],             // Neither of the points are contained
             1 => pts[0..1],      // Only first point is contained
-            2 => pts,            // Both points are contained
-            _ => pts[1..2]       // Only second point is contained
+            2 => pts[1..2],      // Only second point is contained
+            _ => pts             // Both points are contained
          };
       } else {
          buffer[0] = Geo.LineXLine (A, B, a, b);
@@ -341,8 +343,8 @@ public readonly struct Seg {
          return n switch {
             0 => [],             // Neither of the points are contained
             1 => pts[0..1],      // Only first point is contained
-            2 => pts,            // Both points are contained
-            _ => pts[1..2]       // Only second point is contained
+            2 => pts[1..2],      // Only second point is contained
+            _ => pts             // Both points are contained
          };
       } else {
          if (s2.IsArc) {

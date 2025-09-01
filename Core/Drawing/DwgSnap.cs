@@ -1,11 +1,11 @@
 // ────── ╔╗
 // ╔═╦╦═╦╦╬╣ DwgSnap.cs
-// ║║║║╬║╔╣║ <<TODO>>
+// ║║║║╬║╔╣║ Implements the DwgSnap class, ESnap enumeration
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 namespace Nori;
 
 #region class DwgSnap ------------------------------------------------------------------------------
-/// <summary>DwgSnap provides 'snap' logic to features in a drawing</summary>
+/// <summary>DwgSnap provides *snap* logic to features in a drawing</summary>
 /// The core method takes a point (and a snap aperture in drawing units) and returns a
 /// 'snapped' point. If the input point is close to a feature like an endpoint, midpoint,
 /// center point, quadrant etc then it 'snaps' to that (favoring the closest of such snap
@@ -27,6 +27,19 @@ namespace Nori;
 /// The DwgSnap class also maintains all the state required to draw the actual snap marker text
 /// (like on / endpoint / midpoint etc) as well as to draw the construction lines themselves as
 /// dotted lines.
+///
+/// The basic workflow for snapping is this:
+/// - Call `Snap(ptRaw, aperture)` to snap a raw point and return a snapped point (if there
+///   are no snaps nearby, this returns ptRaw)
+/// - After this PtSnap holds the snapped point (this is also the return value from the Snap
+///   method), and ESnap holds the type of snap that was applied (or ESnap.None)
+/// - Read the Labels and Lines properties to get the annotations to draw to indicate the snap.
+///   This includes the snap indicator square and accompanying text (like "endpoint"), as well
+///   as the dotted construction lines and the anchor indicators (like "horz" or "align:35").
+///
+/// Thus, the DwgSnap class here implements all the actual logic of snapping in a UI independent
+/// fashion, and a VNode can be trivially written to read the Labels and Lines property and draw
+/// the snap indicators.
 public class DwgSnap {
    // Constructors -------------------------------------------------------------
    /// <summary>Construct a DwgSnap object given the drawing to work with</summary>
@@ -69,6 +82,12 @@ public class DwgSnap {
    Point2 mPtSnap;
 
    // Methods ------------------------------------------------------------------
+   /// <summary>Snaps a given point (ptRaw) to the closest feature in the drawing</summary>
+   /// <param name="ptRaw">The raw point to snap</param>
+   /// <param name="aperture">The snap aperture in world coordinates. Only features closer than this
+   /// value to ptRaw are considered for snapping. This value is typically set to a fixed number of
+   /// device-independent pixels, so you have to scale it by the current pixel-to-world scaling
+   /// for consistency.</param>
    public Point2 Snap (Point2 ptRaw, double aperture) {
       // Prepare for the snapping
       (mptRaw, mAperture) = (ptRaw, aperture);
@@ -254,7 +273,7 @@ public class DwgSnap {
 
    // Check if the given input point is ON any of the segs
    bool OnSeg () {
-      foreach (var seg in mSegs) 
+      foreach (var seg in mSegs)
          Check (seg.GetClosestPoint (mptRaw), ESnap.On);
       return mSnap != ESnap.None;
    }
@@ -287,8 +306,9 @@ public class DwgSnap {
 /// <summary>The possible snap values</summary>
 public enum ESnap {
    None,
+   /// <summary>On a segment or a construction line</summary>
    On,
-   /// <summary>Intersection</summary>
+   /// <summary>Intersection between segments (or construction lines)</summary>
    Intersection,
    /// <summary>Quadrant of a segment</summary>
    Quadrant,
@@ -298,7 +318,7 @@ public enum ESnap {
    Center,
    /// <summary>Endpoint of a segment</summary>
    Endpoint,
-   /// <summary>Point, Block-Insert-Point</summary>
+   /// <summary>Point, Block-Insert-Point, Text-Base-Point</summary>
    Node,
 }
 #endregion
