@@ -123,7 +123,7 @@ class BooleanOpsTests {
 
 [Fixture (25, "Poly edge mangler tests", "Geom")]
 class PolyEdgeTests {
-   [Test (110, "Poly edge-recess")]
+   [Test (113, "Poly edge-recess")]
    void Test1 () {
       Poly rect = Poly.Rectangle (0, 0, 100, 50);
       Poly? poly;
