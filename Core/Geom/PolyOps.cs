@@ -286,8 +286,8 @@ public partial class Poly {
    /// <param name="nSeg">The segment to extend</param>
    /// <param name="lie">Indicates the direction to extend</param>
    /// <param name="dist">If not 0, specifies the extension limit</param>
-   /// <param name="polys">Set of polys to extend against</param>
-   public IEnumerable<Poly> ExtendedSeg (int nSeg, double lie, double dist, IEnumerable<Poly> polys) {
+   /// <param name="polySoup">Set of polys to extend against</param>
+   public IEnumerable<Poly> ExtendedSeg (int nSeg, double lie, double dist, IEnumerable<Poly> polySoup) {
       // Find all the "extended" intersections along the given segment with the rest of the segments.
       // Note: When a seg is extended, it may also fragment the poly into multiple polys!
       // Open poly fragments unless the end segs grow outwards. Closed poly converts into an open poly.
@@ -296,13 +296,13 @@ public partial class Poly {
       if (lie < 0.5) {
          int seg2 = Count - nSeg - 1;
          if (IsClosed) seg2 = (nSeg == Count - 1) ? seg2 = nSeg : Count - nSeg - 2;
-         foreach (var p in Reversed ().ExtendedSeg (seg2, 1 - lie, dist, polys))
+         foreach (var p in Reversed ().ExtendedSeg (seg2, 1 - lie, dist, polySoup))
             yield return p;
          yield break;
       }
 
       bool limitDist = !dist.IsZero ();
-      if (!CanExtendFwd (seg, polys, out double extendLie) && !limitDist) yield break;
+      if (!CanExtendFwd (seg, polySoup, out double extendLie) && !limitDist) yield break;
       if (limitDist && seg.IsLine) extendLie = 1 + dist / seg.Length;
       Point2 pt = seg.GetPointAt (extendLie);
 
@@ -314,7 +314,7 @@ public partial class Poly {
          yield break;
       }
 
-      // Unless last seg in this open poly is being extended, we get two new polys.
+      // Unless last seg in this "open" poly is being extended, we get two new polys.
       if (seg.IsLast) {
          List<Point2> pts = [.. Pts[0..^1]];
          pts.Add (pt);
@@ -329,11 +329,11 @@ public partial class Poly {
          yield return new Poly ([.. pts], Extra[max..], mFlags);
       }
 
-      static bool CanExtendFwd (Seg seg, IEnumerable<Poly> polys, out double extendLie) {
+      static bool CanExtendFwd (Seg seg, IEnumerable<Poly> polySoup, out double extendLie) {
          Span<Point2> buffer = stackalloc Point2[2];
          extendLie = 1000;
          double cutOff = 1 + Lib.Epsilon;
-         foreach (var s in polys.SelectMany (p => Enumerable.Range (0, p.Count).Select (i => p[i]))) {
+         foreach (var s in polySoup.SelectMany (p => p.Segs)) {
             var pts = seg.Intersect (s, buffer, finite: false);
             if (pts.Length == 0) continue;
             foreach (var pt in pts) {
@@ -342,6 +342,77 @@ public partial class Poly {
             }
          }
          return Math.Abs (extendLie) != 1000;
+      }
+   }
+
+   public IEnumerable<Poly> TrimmedSeg (int nSeg, double lie, IEnumerable<Poly> polySoup) {
+      // Find all the "contained" intersections along the given segment with the rest of the segments.
+      var seg = this[nSeg];
+      (double fromLie, double toLie) = TrimExtents (seg, lie, polySoup);
+      (bool hFrag, bool tFrag) = (fromLie != 0, toLie != 1);
+      if (Count == 1 && !hFrag && !tFrag) yield break; // Single seg poly (incl. circle) is fully consumed
+      ArcInfo segExtra = nSeg < Extra.Length ? Extra[nSeg] : new (Point2.Nil, 0);
+      if (IsCircle) yield break;
+      List<Point2> pts = []; List<ArcInfo> extra = [];
+      if (IsClosed) {
+         var poly = Roll (nSeg + 1);
+         if (tFrag) {
+            pts.Add (seg.GetPointAt (toLie));
+            if (HasArcs) extra.Add (segExtra);
+         }
+         pts.AddRange (poly.Pts); extra.AddRange (poly.Extra);
+         if (extra.Count == pts.Count) extra.RemoveLast ();
+         if (hFrag) {
+            pts.Add (seg.GetPointAt (fromLie));
+            if ((segExtra.Flags & EFlags.Arc) != 0) {
+               while (extra.Count < pts.Count - 1)
+                  extra.Add (new (Point2.Nil, 0));
+               extra.Add (segExtra);
+            }
+         }
+         yield return new Poly ([.. pts], [.. extra], poly.mFlags & ~EFlags.Closed);
+         yield break;
+      }
+
+      // Open poly... which splits into two polys
+      pts.AddRange (Pts[0..(nSeg + 1)]);
+      int cExtra = Math.Min (pts.Count - 1, extra.Count);
+      extra.AddRange (Extra[0..cExtra]);
+      if (hFrag) {
+         pts.Add (seg.GetPointAt (fromLie));
+         if ((segExtra.Flags & EFlags.Arc) != 0) {
+            while (extra.Count < pts.Count - 1)
+               extra.Add (new (Point2.Nil, 0));
+            extra.Add (segExtra);
+         }
+      }
+      if (pts.Count > 1)
+         yield return new Poly ([.. pts], [.. extra], extra.Count == 0 ? mFlags & ~EFlags.HasArcs : mFlags);
+
+      pts.Clear (); extra.Clear ();
+      if (tFrag) {
+         pts.Add (seg.GetPointAt (toLie));
+         if ((segExtra.Flags & EFlags.Arc) != 0)
+            extra.Add (segExtra);
+      }
+      pts.AddRange (Pts[(nSeg + 1)..]);
+      if (Extra.Length > nSeg + 1) extra.AddRange (Extra[(nSeg + 1)..]);
+      if (pts.Count > 1)
+         yield return new Poly ([.. pts], [.. extra], extra.Count == 0 ? mFlags & ~EFlags.HasArcs : mFlags);
+
+      static (double fromLie, double toLie) TrimExtents (Seg seg, double refLie, IEnumerable<Poly> polySoup) {
+         (double fromLie, double toLie) = (0, 1);
+         Span<Point2> buffer = stackalloc Point2 [2];
+         foreach (var s in polySoup.SelectMany (p => p.Segs)) {
+            var pts = seg.Intersect (s, buffer, finite: true);
+            if (pts.Length == 0) continue;
+            foreach (var pt in pts) {
+               double lie = seg.GetLie (pt);
+               if (lie > refLie) toLie = Math.Min (toLie, lie);
+               else fromLie = Math.Max (fromLie, lie);
+            }
+         }
+         return (fromLie.IsZero () ? 0 : fromLie, toLie.EQ (1) ? 1 : toLie);
       }
    }
 
