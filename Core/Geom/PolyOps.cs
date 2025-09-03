@@ -241,12 +241,13 @@ public partial class Poly {
       return pb.Build ();
    }
 
-   /// <summary>Inserts edge recess (rect notch) on the specified seg (returns null if not possible)</summary>
+   /// <summary>Inserts edge notches (Rect notch, U-notch, V-notch) on the specified seg (returns null if not possible)</summary>
    /// <param name="left">Side of the seg, where the notch unfurls</param>
    /// <param name="centerOffset">Offset of the notch-center, from start of the seg</param>
-   /// <param name="width">Width of rect notch</param>
-   /// <param name="depth">Depth of rect notch</param>
-   public Poly? EdgeRecess (int seg, bool left, double centerOffset, double width, double depth) {
+   /// <param name="width">Width of notch</param>
+   /// <param name="depth">Depth of notch</param>
+   /// <param name="Rad">Radius of the U-notch</param>
+   public Poly? EdgeNotch (int seg, bool left, double centerOffset, double width, double depth, double Rad = 0) {
       Seg s = this[seg];
       if (!s.IsLine || centerOffset < width / 2 || s.Length < (centerOffset + width / 2)) return null; // Check: Notch fits the given seg length.
 
@@ -272,9 +273,17 @@ public partial class Poly {
          pb.Line (pt);
          if (i == seg) {
             if (!offset.IsZero ()) pb.Line (pt = pt.Polar (offset, slope));
-            pb.Line (pt = pt.Polar (depth, slope2));
-            pb.Line (pt = pt.Polar (width, slope));
-            if (!offset2.IsZero ()) pb.Line (pt.Polar (-depth, slope2));
+            if (Rad > 0) {
+               if (((Rad - width / 2) > Lib.Epsilon) || ((Rad - depth) > Lib.Epsilon)) Rad = Math.Min (depth, width / 2);
+               pb.Arc (pt = pt.Polar (depth - Rad, slope2), pt = pt.Polar (Rad, slope), left ? EFlags.CW : EFlags.CCW);
+               pb.Line (pt = pt.Polar (Rad, slope2));
+               pb.Arc (pt = pt.Polar (width - (2 * Rad), slope), pt = pt.Polar (-Rad, slope2), left ? EFlags.CW : EFlags.CCW);
+               pb.Line (pt = pt.Polar (Rad, slope)).Line (pt.Polar (-(depth - Rad), slope2));
+            } else {
+               pb.Line (pt = pt.Polar (depth, slope2));
+               pb.Line (pt = pt.Polar (width, slope));
+               if (!offset2.IsZero ()) pb.Line (pt.Polar (-depth, slope2));
+            }
          }
       }
       // Done, close the poly if needed and return it
