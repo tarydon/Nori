@@ -345,28 +345,41 @@ public partial class Poly {
       }
    }
 
-   public IEnumerable<Poly> TrimmedSeg (int nSeg, double lie, IEnumerable<Poly> polySoup) {
+   // Note: Returns the left-over poly/s. [For single seg polys which get fully trimmed-out, there is nothing to return!]
+   public IEnumerable<Poly> TrimmedSeg (int segIdx, double lie, IEnumerable<Poly> polySoup) {
       // Find all the "contained" intersections along the given segment with the rest of the segments.
-      var seg = this[nSeg];
-      (double fromLie, double toLie) = TrimExtents (seg, lie, polySoup);
-      (bool hFrag, bool tFrag) = (fromLie != 0, toLie != 1);
+      // The given segment gets removed - either fully, or some section on the segment.
+      //    This is determined by fromLie, toLie delimiters. (Default: fromLie == 0, toLie == 1, along the given segment)
+      // "Closed poly" become open poly, accommodating any left-over fragments of the trimmed segment
+      // "Open poly" breaks into one or two open polys, accommodating any left-over fragments of the trimmed segment
+      var seg = this[segIdx];
+      (double fromLie, double toLie) = TrimExtents (seg, lie.Clamp (), polySoup);
+      (bool hFrag, bool tFrag) = (fromLie != 0, toLie != 1); // Indicates any left-over head frag and/or tail frag
       if (Count == 1 && !hFrag && !tFrag) yield break; // Single seg poly (incl. circle) is fully consumed
-      ArcInfo segExtra = nSeg < Extra.Length ? Extra[nSeg] : new (Point2.Nil, 0);
-      if (IsCircle) yield break;
+      if (IsCircle) {
+         if (fromLie == toLie) yield break; // Fully consumed
+
+         yield break;
+      }
       List<Point2> pts = []; List<ArcInfo> extra = [];
+      ArcInfo segExtra = segIdx < Extra.Length ? Extra[segIdx] : ArcInfo.Nil;
       if (IsClosed) {
-         var poly = Roll (nSeg + 1);
+         var poly = Roll (segIdx + 1);
          if (tFrag) {
             pts.Add (seg.GetPointAt (toLie));
-            if (HasArcs) extra.Add (segExtra);
+            if ((segExtra.Flags & EFlags.Arc) != 0)
+               extra.Add (segExtra);
+            else if (HasArcs) extra.Add (ArcInfo.Nil);
          }
          pts.AddRange (poly.Pts); extra.AddRange (poly.Extra);
          if (extra.Count == pts.Count) extra.RemoveLast ();
          if (hFrag) {
             pts.Add (seg.GetPointAt (fromLie));
             if ((segExtra.Flags & EFlags.Arc) != 0) {
-               while (extra.Count < pts.Count - 1)
-                  extra.Add (new (Point2.Nil, 0));
+               // Pad "empty" extras
+               int cPadExtra = pts.Count - extra.Count - 2; // Note: We are going to add an "extra".
+               for (int i = 0; i < cPadExtra; i++)
+                  extra.Add (ArcInfo.Nil);
                extra.Add (segExtra);
             }
          }
@@ -374,35 +387,39 @@ public partial class Poly {
          yield break;
       }
 
-      // Open poly... which splits into two polys
-      pts.AddRange (Pts[0..(nSeg + 1)]);
-      int cExtra = Math.Min (pts.Count - 1, extra.Count);
-      extra.AddRange (Extra[0..cExtra]);
+      // Open poly...
+      // First fragmented poly
+      pts.AddRange (Pts[0..(segIdx + 1)]);
+      extra.AddRange (Extra[0..(Math.Min (segIdx, Extra.Length))]);
       if (hFrag) {
          pts.Add (seg.GetPointAt (fromLie));
          if ((segExtra.Flags & EFlags.Arc) != 0) {
-            while (extra.Count < pts.Count - 1)
-               extra.Add (new (Point2.Nil, 0));
+            // Pad "empty" extras
+            int cPadExtra = pts.Count - extra.Count - 2; // Note: We are going to add an "extra".
+            for (int i = 0; i < cPadExtra; i++)
+               extra.Add (ArcInfo.Nil);
             extra.Add (segExtra);
          }
       }
       if (pts.Count > 1)
          yield return new Poly ([.. pts], [.. extra], extra.Count == 0 ? mFlags & ~EFlags.HasArcs : mFlags);
 
+      // Second fragmented poly
       pts.Clear (); extra.Clear ();
       if (tFrag) {
          pts.Add (seg.GetPointAt (toLie));
          if ((segExtra.Flags & EFlags.Arc) != 0)
             extra.Add (segExtra);
+         else if (HasArcs) extra.Add (ArcInfo.Nil);
       }
-      pts.AddRange (Pts[(nSeg + 1)..]);
-      if (Extra.Length > nSeg + 1) extra.AddRange (Extra[(nSeg + 1)..]);
+      pts.AddRange (Pts[(segIdx + 1)..]);
+      if (Extra.Length > segIdx + 1) extra.AddRange (Extra[(segIdx + 1)..]);
       if (pts.Count > 1)
          yield return new Poly ([.. pts], [.. extra], extra.Count == 0 ? mFlags & ~EFlags.HasArcs : mFlags);
 
       static (double fromLie, double toLie) TrimExtents (Seg seg, double refLie, IEnumerable<Poly> polySoup) {
          (double fromLie, double toLie) = (0, 1);
-         Span<Point2> buffer = stackalloc Point2 [2];
+         Span<Point2> buffer = stackalloc Point2[2];
          foreach (var s in polySoup.SelectMany (p => p.Segs)) {
             var pts = seg.Intersect (s, buffer, finite: true);
             if (pts.Length == 0) continue;
