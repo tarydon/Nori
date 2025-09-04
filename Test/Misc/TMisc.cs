@@ -2,13 +2,15 @@
 // ╔═╦╦═╦╦╬╣ TMisc.cs
 // ║║║║╬║╔╣║ Miscellaneous tests
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
+using System.Collections;
+using System.Collections.Immutable;
 namespace Nori.Testing;
 
 [Fixture (3, "Miscellaneous tests", "Misc")]
 class TMisc {
    // Test of various extension methods
    [Test (29, "Extensions test")]
-   void Test3 () {
+   unsafe void Test1 () {
       // Clamp
       1.5.Clamp (1, 2).Is (1.5); 0.5.Clamp (1, 2).Is (1); 2.5.Clamp (1, 2).Is (2);
       2.0.Clamp ().Is (1);
@@ -23,6 +25,7 @@ class TMisc {
       // D2R, R2D
       30.D2R ().Is (Lib.PI / 6); 45.0.D2R ().Is (Lib.PI / 4); Lib.PI.R2D ().Is (180);
       "45".ToInt ().Is (45); " 46a".ToInt ().Is (46); "X".ToInt ().Is (0);
+      float f90 = (float)Lib.HalfPI; f90.R2D ().Is (90);
 
       // EQ variants
       1.000001.EQ (1.000002).IsFalse (); 1.0000001.EQ (1.0000002).IsTrue ();
@@ -34,6 +37,7 @@ class TMisc {
       string? s = null; s.IsBlank ().IsTrue (); "".IsBlank ().IsTrue ();
       "  \t\r\n".IsBlank ().IsTrue (); ".".IsBlank ().IsFalse ();
       0.0000011.IsZero ().IsFalse (); 0.0000001.IsZero ().IsTrue ();
+      0.001.IsZero (0.01).IsTrue (); 0.001.IsZero (0.0001).IsFalse ();
       if (new Random ().NextBool ()) 1.1.EQ (1.2).IsFalse ();
 
       // HasAttribute
@@ -52,6 +56,7 @@ class TMisc {
       Half aa = (Half)1.234567; aa.R3 ().Is (1.234);
       1.2345678f.R5 ().Is ("1.23457");
       1.2345678.R6 ().Is ("1.234568");
+      13.532.Round (0.2).Is (13.6);
 
       Dictionary<int, int> squares = [];
       squares.Get (5, n => n * n).Is (25);
@@ -62,15 +67,34 @@ class TMisc {
       22.RoundUp (10).Is (30);
       "1.5".ToDouble ().Is (1.5);
       "abc".ToDouble ().Is (0);
+      squares.SafeGet (10, 981).Is (981);
 
       int[] ints = [1, 2, 3, 4, 5];
       ints.Roll (2).ToCSV ().Is ("3,4,5,1,2");
       ints.Roll (-1).ToCSV ().Is ("5,1,2,3,4");
       ints.Roll (0).ToCSV ().Is ("1,2,3,4,5");
+      var aints = ints.ToImmutableArray (); aints.Sum ().Is (15);
+      var ints2 = aints.ToArray (); ints2.Sum ().Is (15);
+      int[] empty = []; empty.MinIndex ().Is (-1);
+      string[] strs = ["one", "t,wo", "\'three\'"];
+      strs.ToCSV ().Is ("one,'t,wo',three");
+      "".ToInt ().Is (0);
+
+      byte[] bin = [65, 66, 67, 0];
+      fixed (byte* ptr = bin) {
+         string ss = ((nint)ptr).ToUTF8 ();
+         ss.Is ("ABC");
+      }
+      using (var stm = Lib.OpenRead ("nori:DXF/color.txt")) {
+         byte[] bar = new byte[4]; stm.ReadExactly (bar);
+         bar.Select (a => (int)a).Sum ().Is (48 * 4);
+      }
+      using (var stm = Lib.OpenRead ("nori:DXF/color.txt"))
+         stm.ReadInt32 ().Is (0x30303030);
    }
 
    [Test (30, "AList<T> tests")]
-   void Test4 () {
+   void Test2 () {
       AList<int> set = [];
       List<ListChange> changes = [];
       set.Subscribe (changes.Add);
@@ -97,7 +121,7 @@ class TMisc {
    }
 
    [Test (31, "Basic test of RBTree")]
-   void Test5 () {
+   void Test3 () {
       // Values in this tree are 4-character strings of the form "[12]", and the key
       // for that string is just the 2-digit integer in the middle (as shown in the key-extractor
       // function below)
@@ -127,7 +151,7 @@ class TMisc {
    }
 
    [Test (32, "Stress test of RBTree")]
-   void Test6 () {
+   void Test4 () {
       Random r = new (1);
       RBTree<int, int> tree = new (a => a);
       SortedSet<int> set = [];
@@ -155,10 +179,10 @@ class TMisc {
    }
 
    [Test (33, "Tests of the Nori.Core.Lib class")]
-   void Test7 () {
+   void Test5 () {
       Lib.Testing.IsTrue ();
       Lib.Acos (-2).R2D ().Is (180);
-      // Lib.GetLocalFile ("Demo").Is ($"{Lib.DevRoot}\\Bin\\Demo");
+      Lib.GetLocalFile ("Demo").Replace ('\\', '/').EndsWith ("Bin/Demo");
       Lib.AddNamespace ("Nori");
       Lib.NiceName (typeof (System.Boolean)).Is ("bool");
       Lib.NiceName (typeof (Vector2)).Is ("Vector2");
@@ -175,6 +199,8 @@ class TMisc {
       Lib.ReadText ("nori:GL/Shader/arrowhead.frag").Length.Is (240);
       Lib.ReadBytes ("nori:GL/Shader/arrowhead.frag").Length.Is (251);
       Lib.ReadLines ("nori:GL/Shader/arrowhead.frag").Length.Is (12);
+      double aa = 1.5; Lib.Set (ref aa, 1.5).IsFalse ();
+      Lib.Set (ref aa, 2.5).IsTrue (); aa.Is (2.5);
 
       int n = 0; Lib.Set (ref n, 1).IsTrue (); Lib.Set (ref n, 1).IsFalse (); n.Is (1);
       float f = 0; Lib.Set (ref f, 1).IsTrue (); Lib.Set (ref f, 1).IsFalse (); f.Is (1f);
@@ -182,16 +208,25 @@ class TMisc {
       Color4 clr = Color4.Yellow; Lib.Set (ref clr, Color4.Blue).IsTrue (); Lib.Set (ref clr, Color4.Blue).IsFalse (); clr.Is (Color4.Blue);
       object o1 = new (), o2 = new (); Lib.SetR (ref o1, o2).IsTrue (); Lib.SetR (ref o1, o2).IsFalse (); o1.Equals (o2).IsTrue ();
       EDir e = EDir.N; Lib.SetE (ref e, EDir.S).IsTrue (); Lib.SetE (ref e, EDir.S).IsFalse (); e.Is (EDir.S);
+
+      string s = "";
+      Lib.Check (true, "This is true").IsTrue ();
+      try { Lib.Check (false, "Crash1"); } catch (Exception e2) { s = e2.Message; }
+      s.Is ("Crash1");
    }
 
    [Test (34, "Throwing various exceptions")]
-   void Test8 () {
-      new BadCaseException (12).Message.Is ($"Unhandled case '12' in {nameof(Test8)}");
+   void Test6 () {
+      new BadCaseException (12).Message.Is ($"Unhandled case '12' in {nameof(Test6)}");
       new ParseException ("13e", typeof (double)).Message.Is ("Cannot convert '13e' to double");
+      // Except
+      string s = "";
+      try { Except.Incomplete ("Some"); } catch (Exception e) { s = e.Message; }
+      s.Is ("Incomplete code: Some");
    }
 
    [Test (35, "Test of IdxList")]
-   void Test9 () {
+   void Test7 () {
       IdxHeap<T1Type> list = new ();
       T1Type a = list.Alloc (), b = list.Alloc (); a.Is ("T1"); b.Is ("T2");
       list.Count.Is (2);
@@ -206,7 +241,7 @@ class TMisc {
    }
 
    [Test (36, "Chains (a linked-list collection) test")]
-   void Test10 () {
+   void Test8 () {
       Chains<int> chains = new ();
       int ones = 0, twos = 0;
       // Create two chains in parallel
@@ -224,6 +259,8 @@ class TMisc {
       // Release a chain
       chains.ReleaseChain (ref twos); twos.Is (0);
       // Remove and add a few items
+      int zero = 0;
+      chains.Remove (ref zero, 0);   // Should be a no-op
       chains.Remove (ref ones, 11);
       chains.Remove (ref ones, 111);
       chains.Add (ref ones, 1111);
@@ -237,7 +274,7 @@ class TMisc {
    }
 
    [Test (37, "class CMesh, CMeshBuilder test")]
-   void Test11 () {
+   void Test9 () {
       // CMesh IO test
       var part = CMesh.LoadTMesh ($"{NT.Data}/Geom/CMesh/part.tmesh");
       part.Save (NT.TmpTxt);
@@ -255,7 +292,7 @@ class TMisc {
    }
 
    [Test (38, "LineFont test")]
-   void Test12 () {
+   void Test10 () {
       List<Poly> poly = [];
       List<Point2> pts = [];
       pts.AddRange ([(0, 0), (0, 5), (0, 10), (0, 15)]);
@@ -310,7 +347,7 @@ class TMisc {
    }
 
    [Test (68, "2D tessellation tests")]
-   void Test13 () {
+   void Test11 () {
       // Create poly with holes
       PolyBuilder outer = new ();
       outer.Line (0, 0).Line (500, 0).Arc (500, 200, 500, 300, Poly.EFlags.CW)
@@ -345,7 +382,7 @@ class TMisc {
    }
 
    [Test (12, "Test for E2BendLine properties")]
-   void Test14 () {
+   void Test12 () {
       var dwg = new Dwg2 ();
       dwg.Add (Poly.Rectangle (0, 0, 100, 60));
       dwg.Add (new E2Bendline (dwg, Point2.List (75, 0, 75, 60), Lib.HalfPI, 1, 0.38, 1));
@@ -355,8 +392,29 @@ class TMisc {
       Assert.IsTrue (Math.Round (s.FlatWidth, 1) == 2.5 && Math.Round (s.KFactor, 3) == 0.592);
    }
 
+   [Test (114, "Miscellany: DIBitmap, MultiDispose, AList")]
+   void Test13 () {
+      // DIBitmap
+      var dib = new DIBitmap (20, 10, DIBitmap.EFormat.Gray8, new byte[200]);
+      dib.Is ("DIBitmap: 20x10, Gray8");
+      // MultiDispose
+      int[] arr = new int[10];
+      T2Disp d1 = new (arr, 1, 10), d2 = new (arr, 2, 20);
+      using (var md = new MultiDispose (d1, d2)) { }
+      arr[1].Is (10); arr[2].Is (20);
+      // AList
+      AList<int> set = [1, 2, 3];
+      (set.SyncRoot is List<int>).IsTrue ();
+      IList il = set;
+      il[2] = 20; int n = (int)il[2]!; n.Is (20);
+   }
+
    class T1Type : IIndexed {
       public override string ToString () => $"T{Idx}";
       public ushort Idx { get; set; }
+   }
+
+   class T2Disp (int[] Array, int Index, int Value) : IDisposable {
+      public void Dispose () => Array[Index] = Value;
    }
 }

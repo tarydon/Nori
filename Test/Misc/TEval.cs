@@ -39,4 +39,12 @@ class EvalTest {
       e.TryEvaluate ("sqr (sqrt 4)", out v).IsTrue (); v.Is (4);
       e.TryEvaluate ("abs (sin -90)", out v).IsTrue (); v.Is (1);
    }
+
+   [Test (115, "Exceptions during expression evaluation")]
+   void Test3 () {
+      Eval e = new ();
+      e.TryEvaluate ("1 + 2 +", out double v).IsFalse ();
+      e.TryEvaluate ("1 + 2 3", out v).IsFalse ();
+      e.TryEvaluate ("1 * (2 + 3", out v).IsFalse ();
+   }
 }

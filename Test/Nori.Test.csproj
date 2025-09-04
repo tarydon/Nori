@@ -6,6 +6,7 @@
     <Nullable>enable</Nullable>
     <OutDir>..\Bin</OutDir>
 		<Optimize>false</Optimize>
+		<AllowUnsafeBlocks>True</AllowUnsafeBlocks>
   </PropertyGroup>
 
   <ItemGroup>

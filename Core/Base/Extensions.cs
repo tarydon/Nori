@@ -215,8 +215,8 @@ public static class Extensions {
       StringBuilder sb = new ();
       foreach (var obj in collection) {
          if (!iFirst) sb.Append (','); iFirst = false;
-         string s = (obj?.ToString () ?? "").Replace ("\'", "");
-         if (s.Contains ('\'')) s = $"'{s}'";
+         string s = (obj?.ToString () ?? "").Replace (quote, "");
+         if (s.Contains (separator)) s = $"{quote}{s}{quote}";
          sb.Append (s);
       }
       return sb.ToString ();
