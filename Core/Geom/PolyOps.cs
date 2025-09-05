@@ -345,7 +345,11 @@ public partial class Poly {
       }
    }
 
-   // Note: Returns the left-over poly/s. [For single seg polys which get fully trimmed-out, there is nothing to return!]
+   /// <summary>Trims the specified seg about given lie, and returns any left-over poly/s</summary>
+   /// <param name="segIdx">Segment to trim</param>
+   /// <param name="lie">Indicates section of segment to trim</param>
+   /// <param name="polySoup">Set of polys to trim against</param>
+   /// <returns>Any left-over poly/s</returns>
    public IEnumerable<Poly> TrimmedSeg (int segIdx, double lie, IEnumerable<Poly> polySoup) {
       // Find all the "contained" intersections along the given segment with the rest of the segments.
       // The given segment gets removed - either fully, or some section on the segment.
@@ -353,16 +357,19 @@ public partial class Poly {
       // "Closed poly" become open poly, accommodating any left-over fragments of the trimmed segment
       // "Open poly" breaks into one or two open polys, accommodating any left-over fragments of the trimmed segment
       var seg = this[segIdx];
+      ArcInfo segExtra = segIdx < Extra.Length ? Extra[segIdx] : ArcInfo.Nil;
+      if (IsCircle) {
+         (double lieA, double lieB) = CircleTrimExtents (seg, lie.Clamp (), polySoup);
+         if (lieA == 0 && lieB == 1) yield break; // Fully trimmed out
+         bool iCCW = (mFlags & EFlags.CCW) != 0;
+         yield return Arc (segExtra.Center, this[0].Radius, lieA * Lib.TwoPI, lieB * Lib.TwoPI, iCCW);
+         yield break;
+      }
+
       (double fromLie, double toLie) = TrimExtents (seg, lie.Clamp (), polySoup);
       (bool hFrag, bool tFrag) = (fromLie != 0, toLie != 1); // Indicates any left-over head frag and/or tail frag
       if (Count == 1 && !hFrag && !tFrag) yield break; // Single seg poly (incl. circle) is fully consumed
-      if (IsCircle) {
-         if (fromLie == toLie) yield break; // Fully consumed
-
-         yield break;
-      }
       List<Point2> pts = []; List<ArcInfo> extra = [];
-      ArcInfo segExtra = segIdx < Extra.Length ? Extra[segIdx] : ArcInfo.Nil;
       if (IsClosed) {
          var poly = Roll (segIdx + 1);
          if (tFrag) {
@@ -429,6 +436,27 @@ public partial class Poly {
                else fromLie = Math.Max (fromLie, lie);
             }
          }
+         return (fromLie.IsZero () ? 0 : fromLie, toLie.EQ (1) ? 1 : toLie);
+      }
+
+      static (double fromLie, double toLie) CircleTrimExtents (Seg seg, double refLie, IEnumerable<Poly> polySoup) {
+         if (!seg.IsCircle) throw new Exception ("Expected Circle seg");
+         // Issue: If the trim section passes through the circle's only node point, then standard TrimExtents cannot be used
+         (double fromLie, double toLie) = (0, 1);
+         (double minLie, double maxLie) = (1, 0);
+         Span<Point2> buffer = stackalloc Point2[2];
+         foreach (var s in polySoup.SelectMany (p => p.Segs)) {
+            var pts = seg.Intersect (s, buffer, finite: true);
+            if (pts.Length == 0) continue;
+            foreach (var pt in pts) {
+               double lie = seg.GetLie (pt);
+               if (lie > refLie) toLie = Math.Min (toLie, lie);
+               else fromLie = Math.Max (fromLie, lie);
+               maxLie = Math.Max (maxLie, lie);
+               minLie = Math.Min (minLie, lie);
+            }
+         }
+         if (refLie > maxLie || refLie < minLie) return (maxLie, minLie);
          return (fromLie.IsZero () ? 0 : fromLie, toLie.EQ (1) ? 1 : toLie);
       }
    }
