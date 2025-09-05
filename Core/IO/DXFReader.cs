@@ -37,7 +37,7 @@ public partial class DXFReader {
             case 40: D0Set.Add (D[40] = Vf); break;
             case 41: D1Set.Add (D[41] = Vf); break;
             case 42:
-               while (D2Set.Count < X0Set.Count - 1) D2Set.Add (0); 
+               while (D2Set.Count < X0Set.Count - 1) D2Set.Add (0);
                D2Set.Add (D[42] = Vf);
                break;
             case > 10 and < 53: D[G] = Vf; break;
@@ -151,8 +151,8 @@ public partial class DXFReader {
                   var pts = X0Set.Zip (Y0Set).Select (a => new Point2 (a.First, a.Second)).ToImmutableArray ();
                   var knots = D0Set.ToImmutableArray ();
                   var weights = D1Set.Count > 0 ? D1Set.ToImmutableArray () : [];
-                  Add (new E2Spline (Layer, pts, knots, weights));
-                  Lib.Trace ("X");
+                  var spline = new Spline2 (pts, knots, weights);
+                  Add (new E2Spline (Layer, spline));
                }
                break;
 

@@ -199,9 +199,9 @@ public static partial class Lux {
    /// <summary>
    /// Draws a 2D line-strip (an open polyline made up of the given set of points)
    /// </summary>
-   public static void LineStrip (ReadOnlySpan<Point2> pts) {
+   public static void LineStrip (IReadOnlyList<Point2> pts) {
       mBuf.Clear (); mBuf.Add (pts[0]);
-      for (int i = 1; i < pts.Length - 1; i++) { mBuf.Add (pts[i]); mBuf.Add (pts[i]); }
+      for (int i = 1; i < pts.Count- 1; i++) { mBuf.Add (pts[i]); mBuf.Add (pts[i]); }
       mBuf.Add (pts[^1]);
       Lines (mBuf.AsSpan ());
    }

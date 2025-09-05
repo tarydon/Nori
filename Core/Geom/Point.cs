@@ -65,6 +65,10 @@ public readonly struct Point2 : IEQuable<Point2> {
    public double DistTo (Point2 b) => Sqrt (DistToSq (b));
    /// <summary>Returns the perpendicular distance between this point and the inifinite line a..b</summary>
    public double DistToLine (Point2 a, Point2 b) => DistTo (SnappedToLine (a, b));
+   /// <summary>
+   /// Returns the square of the perpendicular distance between this point and the infinite line a..b
+   /// </summary>
+   public double DistToLineSq (Point2 a, Point2 b) => DistToSq (SnappedToLine (a, b));
    /// <summary>Returns the closest distance between this point and the finite line segment a..b</summary>
    public double DistToLineSeg (Point2 a, Point2 b) => DistTo (SnappedToLineSeg (a, b));
    /// <summary>Square of the distance between this point and another</summary>

@@ -302,13 +302,12 @@ public class E2Solid : Ent2 {
 /// Represents a 2D spline (rational splines also supported)
 /// </summary>
 public class E2Spline : Ent2 {
-   public E2Spline (Layer2 layer, Spline2 spline) : base (layer) => mSpline = spline;
+   public E2Spline (Layer2 layer, Spline2 spline) : base (layer) => Spline = spline;
 
-   public List<Point2> Pts {
+   public IReadOnlyList<Point2> Pts {
       get {
          if (mPts.Count == 0) {
-
-
+            mPts.AddRange (Spline.Ctrl);
          }
          return mPts;
       }
@@ -317,10 +316,9 @@ public class E2Spline : Ent2 {
 
    public override Bound2 Bound => new (Pts);
 
-   public override Bound2 GetBound (Matrix2 xfm) =>
-      new (Pts.Select (a => a * xfm));
+   public override Bound2 GetBound (Matrix2 xfm) => new (Pts.Select (a => a * xfm));
 
-   readonly Spline2 mSpline;
+   public readonly Spline2 Spline;
 }
 #endregion
 
