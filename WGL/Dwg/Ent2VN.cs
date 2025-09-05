@@ -97,6 +97,21 @@ class E2PolyVN (E2Poly e2p) : Ent2VN (e2p) {
 }
 #endregion
 
+#region class E2SplineVN ---------------------------------------------------------------------------
+class E2SplineVN (E2Spline e2s) : Ent2VN (e2s) {
+   public override void Draw () => Lux.LineStrip (Pts.AsSpan ());
+
+   List<Vec2F> Pts {
+      get {
+         if (mPts.Count == 0) mPts.AddRange (mSpline.Pts.Select (a => (Vec2F)a));
+         return mPts;
+      }
+   }
+   readonly E2Spline mSpline = e2s;
+   List<Vec2F> mPts = [];
+}
+#endregion
+
 #region class E2TextVN -----------------------------------------------------------------------------
 /// <summary>VNode to render an E2Text entity</summary>
 class E2TextVN (E2Text e2t) : Ent2VN (e2t) {

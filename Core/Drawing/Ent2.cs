@@ -297,6 +297,33 @@ public class E2Solid : Ent2 {
 }
 #endregion
 
+#region class E2Spline -----------------------------------------------------------------------------
+/// <summary>
+/// Represents a 2D spline (rational splines also supported)
+/// </summary>
+public class E2Spline : Ent2 {
+   public E2Spline (Layer2 layer, Spline2 spline) : base (layer) => mSpline = spline;
+
+   public List<Point2> Pts {
+      get {
+         if (mPts.Count == 0) {
+
+
+         }
+         return mPts;
+      }
+   }
+   List<Point2> mPts = [];
+
+   public override Bound2 Bound => new (Pts);
+
+   public override Bound2 GetBound (Matrix2 xfm) =>
+      new (Pts.Select (a => a * xfm));
+
+   readonly Spline2 mSpline;
+}
+#endregion
+
 #region class E2Text -------------------------------------------------------------------------------
 /// <summary>A drawing text entity.</summary>
 public class E2Text : Ent2 {

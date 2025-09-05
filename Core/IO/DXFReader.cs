@@ -2,6 +2,8 @@
 // ╔═╦╦═╦╦╬╣ DXFReader.cs
 // ║║║║╬║╔╣║ Implements DXFReader: reads in a Dwg2 from a DXF file
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
+using System.Diagnostics;
+
 namespace Nori;
 
 /// <summary>DXFReader is used to read a DXF file into a Dwg2</summary>
@@ -32,9 +34,11 @@ public partial class DXFReader {
             case > 0 and < 10: S[G] = V; break;
             case 10: X0Set.Add (Vf); break;
             case 20: Y0Set.Add (Vf); break;
+            case 40: D0Set.Add (D[40] = Vf); break;
+            case 41: D1Set.Add (D[41] = Vf); break;
             case 42:
-               D[42] = Vf;
-               while (D2Set.Count < X0Set.Count - 1) D2Set.Add (0); D2Set.Add (Vf);
+               while (D2Set.Count < X0Set.Count - 1) D2Set.Add (0); 
+               D2Set.Add (D[42] = Vf);
                break;
             case > 10 and < 53: D[G] = Vf; break;
             case 60: Invisible = Vn == 1; break;
@@ -142,6 +146,16 @@ public partial class DXFReader {
                Add (AddMText (Layer, Style, Text, Pt0, Height, angle, align));
                break;
 
+            case "SPLINE":
+               if (X0Set.Count > 0 && D0Set.Count > 0) {
+                  var pts = X0Set.Zip (Y0Set).Select (a => new Point2 (a.First, a.Second)).ToImmutableArray ();
+                  var knots = D0Set.ToImmutableArray ();
+                  var weights = D1Set.Count > 0 ? D1Set.ToImmutableArray () : [];
+                  Add (new E2Spline (Layer, pts, knots, weights));
+                  Lib.Trace ("X");
+               }
+               break;
+
             case "TEXT":
                int h = HAlign > 2 ? 0 : HAlign.Clamp (0, 2), v = 3 - VAlign.Clamp (0, 3);
                align = (ETextAlign)(v * 3 + h + 1);
@@ -175,7 +189,8 @@ public partial class DXFReader {
          if (mType is not ("VERTEX" or "SEQEND")) ColorNo = 256;
          D[11] = D[21] = D[50] = D[51] = D[41] = D[42] = 0; Invisible = false;
          S[2] = S[3] = S[7] = "";
-         X0Set.Clear (); Y0Set.Clear (); D2Set.Clear ();
+         X0Set.Clear (); Y0Set.Clear ();
+         D0Set.Clear (); D1Set.Clear (); D2Set.Clear ();
       }
    }
    static HashSet<string> mUnsupported = [];
@@ -205,7 +220,8 @@ public partial class DXFReader {
    // These variables store the values read in from the DXF groups
    string[] S = new string[10];
    double[] D = new double[53];
-   List<double> X0Set = [], Y0Set = [], D2Set = [];
+   List<double> X0Set = [], Y0Set = [];
+   List<double> D0Set = [], D1Set = [], D2Set = [];
    bool Invisible;
    int ColorNo;                        // Group 62 value
 
