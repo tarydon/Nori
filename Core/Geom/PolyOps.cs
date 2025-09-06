@@ -283,65 +283,71 @@ public partial class Poly {
    }
 
    /// <summary>Extends the specified seg about given lie, and returns resultant polys, if any.</summary>
-   /// <param name="nSeg">The segment to extend</param>
+   /// <param name="segIdx">The segment to extend</param>
    /// <param name="lie">Indicates the direction to extend</param>
    /// <param name="dist">If not 0, specifies the extension limit</param>
    /// <param name="polySoup">Set of polys to extend against</param>
-   public IEnumerable<Poly> ExtendedSeg (int nSeg, double lie, double dist, IEnumerable<Poly> polySoup) {
+   public IEnumerable<Poly> ExtendedSeg (int segIdx, double lie, double dist, IEnumerable<Poly> polySoup) {
       // Find all the "extended" intersections along the given segment with the rest of the segments.
       // Note: When a seg is extended, it may also fragment the poly into multiple polys!
       // Open poly fragments unless the end segs grow outwards. Closed poly converts into an open poly.
-      Seg seg = this[nSeg];
-      if (seg.IsCircle) yield break;
-      if (lie < 0.5) {
-         int seg2 = Count - nSeg - 1;
-         if (IsClosed) seg2 = (nSeg == Count - 1) ? seg2 = nSeg : Count - nSeg - 2;
-         foreach (var p in Reversed ().ExtendedSeg (seg2, 1 - lie, dist, polySoup))
-            yield return p;
-         yield break;
-      }
-
+      if (IsCircle) yield break; // Circle cannot extend
+      Seg seg = this[segIdx];
+      bool fwd = lie > 0.5; // Extend forward/backward
       bool limitDist = !dist.IsZero ();
-      if (!CanExtendFwd (seg, polySoup, out double extendLie) && !limitDist) yield break;
-      if (limitDist && seg.IsLine) extendLie = 1 + dist / seg.Length;
-      Point2 pt = seg.GetPointAt (extendLie);
+      if (!CanExtend (seg, fwd, polySoup, out double extendLie)) {
+         if (seg.IsArc) { // Nothing stops it from becoming a full circle
+            yield return Circle (seg.Center, seg.Radius);
+
+            // The poly also splits!!! Into two fragments...
+
+            yield break;
+         } else if (!limitDist) yield break;
+      }
+      if (limitDist && seg.IsLine) extendLie = 1 + (dist / seg.Length);
+      Point2 ptExt = seg.GetPointAt (extendLie);
 
       if (IsClosed) {
-         var poly = Roll (nSeg + 1);
+         var poly = Roll (fwd ? segIdx + 1 : segIdx);
          List<Point2> pts = [.. poly.Pts];
-         pts.Add (pt);
+         if (fwd) pts.Add (ptExt);
+         else { pts.Add (pts[0]); pts[0] = ptExt; }
          yield return new Poly ([.. pts], poly.Extra, poly.mFlags & ~EFlags.Closed);
          yield break;
       }
 
-      // Unless last seg in this "open" poly is being extended, we get two new polys.
-      if (seg.IsLast) {
-         List<Point2> pts = [.. Pts[0..^1]];
-         pts.Add (pt);
-         yield return new Poly ([.. pts], Extra, mFlags);
-      } else {
-         List<Point2> pts = [.. Pts[0..(nSeg + 1)]];
-         pts.Add (pt);
-         int max = Math.Min (nSeg + 1, Extra.Length);
-         yield return new Poly ([.. pts], Extra[0..max], mFlags);
-
-         pts = [.. Pts[(nSeg + 1)..]];
-         yield return new Poly ([.. pts], Extra[max..], mFlags);
+      // Open poly - may split into two open polys, one of which is extended
+      int nextIdx = fwd ? segIdx + 1 : segIdx; // Next poly begin!
+      int cExtra = Math.Min (Extra.Length, nextIdx);
+      if (nextIdx > 0) {
+         List<Point2> pts = [.. Pts[..(nextIdx + 1)]]; // First split section
+         if (fwd) pts[^1] = ptExt;
+         yield return new Poly ([.. pts], Extra[..cExtra], mFlags);
+      }
+      if (Count - nextIdx + 1 > 1) {
+         List<Point2> pts = [.. Pts[(nextIdx)..]]; // Second split section
+         if (!fwd) pts[0] = ptExt;
+         yield return new Poly ([.. pts], Extra[cExtra..], mFlags);
       }
 
-      static bool CanExtendFwd (Seg seg, IEnumerable<Poly> polySoup, out double extendLie) {
+      static bool CanExtend (Seg seg, bool fwd, IEnumerable<Poly> polySoup, out double extendLie) {
          Span<Point2> buffer = stackalloc Point2[2];
-         extendLie = 1000;
-         double cutOff = 1 + Lib.Epsilon;
+         (double fwdCutoff, double revCutoff) = (1 + Lib.Epsilon, 0 - Lib.Epsilon);
+         (double fwdExt, double revExt) = (1000, -1000);
          foreach (var s in polySoup.SelectMany (p => p.Segs)) {
             var pts = seg.Intersect (s, buffer, finite: false);
             if (pts.Length == 0) continue;
             foreach (var pt in pts) {
                double lie = seg.GetLie (pt);
-               if (lie > cutOff && lie < extendLie) extendLie = lie;
+               if (fwd) {
+                  if (lie > fwdCutoff) fwdExt = Math.Min (fwdExt, lie);
+               } else {
+                  if (lie < revCutoff) revExt = Math.Max (revExt, lie);
+               }
             }
          }
-         return Math.Abs (extendLie) != 1000;
+         extendLie = fwd ? fwdExt : revExt;
+         return fwd ? fwdExt != 1000 : revExt != -1000;
       }
    }
 
