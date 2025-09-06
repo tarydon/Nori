@@ -298,16 +298,14 @@ public class E2Solid : Ent2 {
 #endregion
 
 #region class E2Spline -----------------------------------------------------------------------------
-/// <summary>
-/// Represents a 2D spline (rational splines also supported)
-/// </summary>
+/// <summary>Represents a 2D spline (rational splines also supported)</summary>
 public class E2Spline : Ent2 {
    public E2Spline (Layer2 layer, Spline2 spline) : base (layer) => Spline = spline;
 
    public IReadOnlyList<Point2> Pts {
       get {
          if (mPts.Count == 0) {
-            mPts.AddRange (Spline.Ctrl);
+            Spline.Discretize (mPts, 0.1);
          }
          return mPts;
       }

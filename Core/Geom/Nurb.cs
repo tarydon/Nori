@@ -1,140 +1,183 @@
-﻿namespace Nori;
+// ────── ╔╗
+// ╔═╦╦═╦╦╬╣ Nurb.cs
+// ║║║║╬║╔╣║ <<TODO>>
+// ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
+namespace Nori;
 
-public abstract class Spline<T> {
-   public Spline (ImmutableArray<T> ctrl, ImmutableArray<double> knot, ImmutableArray<double> weight, T zero, Func<T, double, T> mult, Func<T, T, T> add, Func<T, T, T, double> distLineSq) {
-      (Ctrl, Knot, Weight) = (ctrl, knot, weight);
-      Rational = weight.IsEmpty || weight.All (a => a.EQ (1));
+#region class Spline -------------------------------------------------------------------------------
+/// <summary>Spline is the abstract base class for Spline2 (2-D) and Spline3 (3-D)</summary>
+/// It implements the code common to 2D and 3D splines - evaluating the NURB basis
+/// functions at a given value of the paramter t.
+public abstract class Spline {
+   public Spline (int cCtrl, ImmutableArray<double> knot, ImmutableArray<double> weight) {
+      (mnCtrl, Knot, Weight) = (cCtrl, knot, weight);
+      Rational = !(weight.IsEmpty || weight.All (a => a.EQ (1)));
       if (!Rational) Weight = [];
-      _N = new double[Degree + 1];
-      _left = new double[_N.Length]; _right = new double[_N.Length];
-      (mZero, mAdd, mMult, mDistLineSq) = (zero, add, mult, distLineSq);
+      int n = (Degree = knot.Length - cCtrl - 1) + 1;
+      _val = new double[n]; _left = new double[n]; _right = new double[n];
    }
 
-   /// <summary>
-   /// Returns the degree of this curve
-   /// </summary>
-   /// Note that the ORDER of the curve is DEGREE + 1
-   public int Degree => Knot.Length - Ctrl.Length - 1;
+   // Properties ---------------------------------------------------------------
+   /// <summary>The degree of teh spline</summary>
+   /// Note that the ORDER of the spline is DEGREE + 1
+   public readonly int Degree;
 
+   /// <summary>The knot vector for this spline</summary>
+   public readonly ImmutableArray<double> Knot;
+
+   /// <summary>Is this a rational spline (not all weights are set to 1)</summary>
    public readonly bool Rational;
 
-   public readonly ImmutableArray<T> Ctrl;
-   public readonly ImmutableArray<double> Knot;
+   /// <summary>Weights attached to the control points</summary>
+   /// If this array is empty, then this is a non-rational spline (all weights are 1)
    public readonly ImmutableArray<double> Weight;
 
-   // Implementation -----------------------------------------------------------
-   // Given a knot value (t), this computes the span of interest and computes the
-   // basis functions. This is from Algorithm A2.2 in "The Nurbs Book"
-   public int ComputeBasis (double t) {
-      if (t == _tCache) return _nCache;
-
-      // Find the span of interest using a binary search
-      int n = Ctrl.Length - 1, mid;
-      if (t >= Knot[n + 1]) {
-         mid = n;
-      } else {
-         int low = Degree, high = n + 1; mid = (low + high) / 2;
-         while (t < Knot[mid] || t >= Knot[mid + 1]) {
-            if (t < Knot[mid]) high = mid;
-            else low = mid;
-            mid = (high + low) / 2;
+   // Methods ------------------------------------------------------------------
+   // Computes the basis functions for a given knot value t.
+   //
+   // For a given value t, there is only a subset of control points that actually
+   // contribute - this is known as the span of interest (see Algorithm A2.1 from
+   // the "Nurbs Book'). That is the return value from this function.
+   //
+   // For the span of interest, this function computes the factors that must be used
+   // to multiply each control point by and stores those in the _val array. (Since these
+   // are basis functions, the sum of those weights adds up to 1.0). This computation
+   // of the basis functions is detailed in Algorithm A2.2 from the "NURBS Book"
+   protected int ComputeBasis (double t) {
+      // First find the span of interest in which this knot lies
+      int n = mnCtrl - 1, span = n;
+      if (t < Knot[n + 1]) {
+         int low = Degree, high = n + 1; span = (low + high) / 2;
+         for (; ; ) {
+            if (t < Knot[span]) high = span;
+            else if (t >= Knot[span + 1]) low = span;
+            else break;
+            span = (high + low) / 2;
             if (high == low) break;
          }
       }
 
       // Now, compute the basis functions for this span
-      _N[0] = 1.0;
-      int p = Degree, span = mid;
+      _val[0] = 1.0;
+      int p = Degree;
       for (int j = 1; j <= p; j++) {
          _left[j] = t - Knot[span + 1 - j];
          _right[j] = Knot[span + j] - t;
          double saved = 0.0;
          for (int r = 0; r < j; r++) {
-            double temp = _N[r] / (_right[r + 1] + _left[j - r]);
-            _N[r] = saved + _right[r + 1] * temp;
+            double temp = _val[r] / (_right[r + 1] + _left[j - r]);
+            _val[r] = saved + _right[r + 1] * temp;
             saved = _left[j - r] * temp;
          }
-         _N[j] = saved;
+         _val[j] = saved;
       }
-      _tCache = t; _nCache = mid;
-      return mid;
-   }
-   // The cached value of t (from the previous ComputeBasis call)
-   double _tCache = double.NaN;
-   // The cached value of the span from that previous call
-   int _nCache;
-   double[] _N, _left, _right;
-
-   struct Eval {
-      public Eval (double a, T pt) => (A, Pt) = (a, pt);
-      public readonly double A;
-      public readonly T Pt;
+      return span;
    }
 
-   public void Discretize (List<T> pts, double error) {
+   // Private data -------------------------------------------------------------
+   double[] _left, _right;
+   protected double[] _val;
+   int mnCtrl;
+}
+#endregion
+
+#region class Spline2
+/// <summary>Implements a 2 dimensional spline</summary>
+public class Spline2 : Spline {
+   public Spline2 (ImmutableArray<Point2> ctrl, ImmutableArray<double> knot, ImmutableArray<double> weight) : base (ctrl.Length, knot, weight)
+      => Ctrl = ctrl;
+
+   // Properties ---------------------------------------------------------------
+   /// <summary>The set of control points for this Spline</summary>
+   public readonly ImmutableArray<Point2> Ctrl;
+
+   // Methods ------------------------------------------------------------------
+   /// <summary>This discretizes the spline into a set of points (piecewise-linear approximation)</summary>
+   /// The discetization is adaptive - it ensures that at no point does the error between
+   /// the PWL approximation and the original spline curve exceed the given error threshold
+   /// 'error'
+   public void Discretize (List<Point2> pts, double error) {
       pts.Clear ();
-      Stack<Eval> eval = [];
+
+      // Set up for adaptive evaluation. We create a rough linear approximation by evaluating
+      // the spline at an set of equidistant spaced t values (we use Ctrl.Length + 1 values),
+      // and push these values of t (along with their evaluated points) into a stack of Nodes.
+      Stack<Node> eval = [];
       double start = Knot[0], end = Knot[^1], errSq = error * error;
       for (int i = Ctrl.Length; i >= 0; i--) {
          double a = ((double)i / Ctrl.Length).Along (start, end);
-         eval.Push (new Eval (a, Evaluate (a)));
+         eval.Push (new Node { A = a, Pt = Evaluate (a), Level = 0 });
       }
 
-      double[] lies = [0.25, 0.5, 0.75];
-      T[] ptLies = new T[lies.Length];
-      int maxLevel = 6, level = maxLevel; // Max times a span can be divided
+      // Now the recursive evaluation part - at each iteration of this loop, we pop off two
+      // nodes from this stack to see if that linear span needs to be further subdivided.
+      int maxLevel = 5;
       while (eval.Count > 1) {
-         Eval e1 = eval.Pop (), e2 = eval.Peek ();
-         for (int i = 0; i < lies.Length; i++) ptLies[i] = Evaluate (lies[i]);
-         if (level == 0 || ptLies.All (p => mDistLineSq (p, e1.Pt, e2.Pt) < errSq)) {
-            pts.Add (e1.Pt);
-            level = (level + 1).Clamp (0, maxLevel);
-         } else {
-            eval.Push (new Eval { A = 0.5.Along (e1.A, e2.A), Pt = ptLies[1] });
-            eval.Push (e1);
-            level--;
+         Node e1 = eval.Pop (), e2 = eval.Peek ();
+
+         // We want to see if the span between e1 and e2 needs to be further subdivided
+         if (e1.Level < maxLevel) {
+            double a = e1.A, b = e2.A, amid = (a + b) / 2;
+            Point2 pmid = Evaluate (amid);
+            // We evaluate points at 0.25, 0.5 and 0.75 of the knot values between e1 and e2.
+            // If any of these evaluate points deviates from the straight line connecting e1 and e2
+            // by more than the error threshold, then we need to further subdivide this segment into
+            // two.
+            bool subdivide = pmid.DistToLineSq (e1.Pt, e2.Pt) > errSq
+               || Evaluate (0.25.Along (a, b)).DistToLineSq (e1.Pt, e2.Pt) > errSq
+               || Evaluate (0.75.Along (a, b)).DistToLineSq (e1.Pt, e2.Pt) > errSq;
+            if (subdivide) {
+               // If we want to subdivide, we break down the span e1..e2 into two spans:
+               // e1..emid and emid..e2 and push these on to the stack (note that we push emid first
+               // since this is a 'stack'). Note that we are bumping up the level in these newly
+               // pushed spans to avoid recursing too deep
+               eval.Push (new Node { A = amid, Pt = pmid, Level = e1.Level + 1 });
+               eval.Push (new Node { A = a, Pt = e1.Pt, Level = e1.Level + 1 });
+               continue;
+            }
          }
+
+         // If we get to this point, we decided not to subdivide the segment e1..e2 so we
+         // can just output the point p1
+         pts.Add (e1.Pt);
       }
+      // Finally, add the last point (endpoint) that still remains on the stack
       pts.Add (eval.Pop ().Pt);
    }
 
-   public T Evaluate (double t) {
+   /// <summary>Evaluates the spline at a given knot value t</summary>
+   public Point2 Evaluate (double t) {
       if (t <= Knot[0]) return Ctrl[0];
       if (t >= Knot[^1]) return Ctrl[^1];
       int span = ComputeBasis (t), p = Degree;
 
-      T sum = mZero;
+      double x = 0, y = 0;
       if (Rational) {
          double wsum = 0;
          for (int j = 0; j <= p; j++) {
             int n = span - p + j;
-            double weight = _N[j] * Weight[n];
-            sum = mAdd (sum, mMult (Ctrl[n], weight));
+            double weight = _val[j] * Weight[n];
+            Point2 ctrl = Ctrl[n];
+            x += ctrl.X * weight; y += ctrl.Y * weight;
             wsum += weight;
          }
-         return mMult (sum, 1 / wsum);
+         return new (x / wsum, y / wsum);
       } else {
          for (int j = 0; j <= p; j++) {
-            int n = span - p + j;
-            double weight = _N[j];
-            sum = mAdd (sum, mMult (Ctrl[n], weight));
+            double weight = _val[j];
+            Point2 ctrl = Ctrl[span - p + j];
+            x += ctrl.X * weight; y += ctrl.Y * weight;
          }
-         return sum;
+         return new (x, y);
       }
    }
 
-   // Private data -------------------------------------------------------------
-   T mZero;                   // The zero value for T (Point2 or Point3)
-   Func<T, T, T> mAdd;        // The function to add two T types (Point2+Point2 or Point3+Point3)
-   Func<T, double, T> mMult;  // The function to multiply a T by a scalar
-   Func<T, T, T, double> mDistLineSq;  // Function to compute square of point-to-line distance
+   // Nested types -------------------------------------------------------------
+   // Node is an internal struct used during discretization of a spline
+   struct Node {
+      public double A;
+      public Point2 Pt;
+      public int Level;
+   }
 }
-
-public class Spline2 : Spline<Point2> {
-   public Spline2 (ImmutableArray<Point2> ctrl, ImmutableArray<double> knot, ImmutableArray<double> weight)
-      : base (ctrl, knot, weight, Point2.Zero, Mult, Add, DistLineSq) { }
-
-   static Point2 Mult (Point2 a, double f) => new (a.X * f, a.Y * f);
-   static Point2 Add (Point2 a, Point2 b) => new (a.X + b.X, a.Y + b.Y);
-   static double DistLineSq (Point2 p, Point2 a, Point2 b) => p.DistToLineSq (a, b);
-}
+#endregion
