@@ -298,9 +298,17 @@ public partial class Poly {
       if (!CanExtend (seg, fwd, polySoup, out double extendLie)) {
          if (seg.IsArc) { // Nothing stops it from becoming a full circle
             yield return Circle (seg.Center, seg.Radius);
-
-            // The poly also splits!!! Into two fragments...
-
+            // Once "arc" seg is detached, the poly fragments into two more fragments.
+            if (segIdx > 0) {
+               List<Point2> pts = [.. Pts[..(segIdx + 1)]]; // First split section
+               int cExtra2 = Math.Min (Extra.Length, segIdx);
+               yield return new Poly ([.. pts], Extra[..cExtra2], mFlags);
+            }
+            if (Count - segIdx + 1 > 1) {
+               List<Point2> pts = [.. Pts[(segIdx + 1)..]]; // Second split section
+               int cExtra2 = Math.Min (Extra.Length, segIdx + 1);
+               yield return new Poly ([.. pts], Extra[cExtra2..], mFlags);
+            }
             yield break;
          } else if (!limitDist) yield break;
       }
