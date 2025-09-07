@@ -300,23 +300,38 @@ public class E2Solid : Ent2 {
 #region class E2Spline -----------------------------------------------------------------------------
 /// <summary>Represents a 2D spline (rational splines also supported)</summary>
 public class E2Spline : Ent2 {
-   public E2Spline (Layer2 layer, Spline2 spline) : base (layer) => Spline = spline;
+   public E2Spline (Layer2 layer, Spline2 spline) : base (layer) => mSpline = spline;
+
+   public override bool IsCloser (Point2 pt, ref double threshold) {
+      if (!Bound.Contains (pt, threshold)) return false;
+
+      Point2 a = mPts[0];
+      double min = threshold, minSq = min * min;
+      for (int i = 1; i < mPts.Count; i++) {
+         Point2 b = mPts[i];
+         if (pt.DistToLineSq (a, b) > minSq) continue;
+         double dist = pt.DistToLine (a, b);
+         if (dist < min) { min = dist; minSq = min * min; }
+      }
+      if (min < threshold) { threshold = min; return true; }
+      return false;
+   }
 
    public IReadOnlyList<Point2> Pts {
       get {
-         if (mPts.Count == 0) {
-            Spline.Discretize (mPts, 0.1);
-         }
+         if (mPts.Count == 0) Spline.Discretize (mPts, 0.05);
          return mPts;
       }
    }
    List<Point2> mPts = [];
 
-   public override Bound2 Bound => new (Pts);
+   public override Bound2 Bound => Bound2.Update (ref mBound, () => new (Pts));
+   Bound2 mBound = new ();
 
    public override Bound2 GetBound (Matrix2 xfm) => new (Pts.Select (a => a * xfm));
 
-   public readonly Spline2 Spline;
+   public Spline2 Spline => mSpline;
+   readonly Spline2 mSpline;
 }
 #endregion
 

@@ -102,7 +102,10 @@ class E2PolyVN (E2Poly e2p) : Ent2VN (e2p) {
 class E2SplineVN (E2Spline e2s) : Ent2VN (e2s) {
    public override void Draw () {
       Lux.LineStrip (e2s.Pts);
-      Lux.Points (e2s.Pts.Select (a => (Vec2F)a).ToArray ());
+      foreach (var (n, knot) in e2s.Spline.Knot.Numbered ()) {
+         Lib.Trace ($"{n} = {knot}");
+      }
+      Lux.Points (e2s.Pts.Select (a => (Vec2F)a).ToArray ()); 
    }
 }
 #endregion

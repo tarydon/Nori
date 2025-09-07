@@ -104,10 +104,20 @@ public class Spline2 : Spline {
       // and push these values of t (along with their evaluated points) into a stack of Nodes.
       Stack<Node> eval = [];
       double start = Knot[0], end = Knot[^1], errSq = error * error;
-      for (int i = Ctrl.Length; i >= 0; i--) {
-         double a = ((double)i / Ctrl.Length).Along (start, end);
-         eval.Push (new Node { A = a, Pt = Evaluate (a), Level = 0 });
+
+      double done = -1;
+      for (int i = 0; i < Knot.Length; i++) {
+         var knot = Knot[i]; if (knot == done) continue;
+         int aa = ComputeBasis (knot);
+         eval.Push (new Node { A = knot, Pt = Evaluate (knot), Level = 0 });
+         done = knot;
+         Lib.Trace ($"i = {i}, basis = {aa}");
       }
+
+      //for (int i = Ctrl.Length; i >= 0; i--) {
+      //   double a = ((double)i / Ctrl.Length).Along (start, end);
+      //   eval.Push (new Node { A = a, Pt = Evaluate (a), Level = 0 });
+      //}
 
       // Now the recursive evaluation part - at each iteration of this loop, we pop off two
       // nodes from this stack to see if that linear span needs to be further subdivided.
