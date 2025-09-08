@@ -273,7 +273,7 @@ public partial class Poly {
          pb.Line (pt);
          if (i == seg) {
             if (!offset.IsZero ()) pb.Line (pt = pt.Polar (offset, slope));
-            if (Rad > 0) {
+            if (Rad > 0) { // U Notch
                if (((Rad - width / 2) > Lib.Epsilon) || ((Rad - depth) > Lib.Epsilon)) Rad = Math.Min (depth, width / 2);
                pb.Arc (pt = pt.Polar (depth - Rad, slope2), pt = pt.Polar (Rad, slope), left ? EFlags.CW : EFlags.CCW);
                pb.Line (pt = pt.Polar (Rad, slope2));
