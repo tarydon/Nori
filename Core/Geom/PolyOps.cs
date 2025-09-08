@@ -312,7 +312,7 @@ public partial class Poly {
             yield break;
          } else if (!limitDist) yield break;
       }
-      if (limitDist && seg.IsLine) extendLie = 1 + (dist / seg.Length);
+      if (limitDist && seg.IsLine) extendLie = fwd ? 1 + (dist / seg.Length) : -(dist / seg.Length);
       Point2 ptExt = seg.GetPointAt (extendLie);
 
       if (IsClosed) {
