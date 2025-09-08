@@ -22,6 +22,12 @@ public static partial class Lux {
    public static IObservable<int> OnReady => mOnReady;
    internal static Subject<int> mOnReady = new ();
 
+   /// Sets whether the cursor is visible or not when it is over the panel
+   /// </summary>
+   /// If this is set to false, then the current scene must 'paint' a cursor that follows
+   /// the mouse movement
+   public static bool CursorVisible { set => Panel.CursorVisible = value; }
+
    /// <summary>Read this property to know if Lux is ready (panel created, GL surface initialized)</summary>
    public static bool Ready => mReady;
    internal static bool mReady;
@@ -32,6 +38,7 @@ public static partial class Lux {
       set {
          mUIScene?.Detach ();
          mUIScene = value; mViewBound.OnNext (0); Redraw ();
+         Panel.CursorVisible = mUIScene?.CursorVisible ?? true;
       }
    }
    static Scene? mUIScene;
@@ -248,10 +255,10 @@ public static partial class Lux {
       mViewport = viewport;
       VPScale = new Vec2F (2.0 / viewport.X, 2.0 / viewport.Y);
       mColors.Clear (); mColor = Color4.White;
-      mLineWidths.Clear (); mLineWidth = 4f;
-      mPointSizes.Clear (); mPointSize = 7f;
+      mLineWidths.Clear (); mLineWidth = 2;     // Multiplied by DPIScale before it is used
+      mPointSizes.Clear (); mPointSize = 4;     // Multiplied by DPIScale before it is used
       mLineTypes.Clear (); mLineType = ELineType.Continuous;
-      mLTScales.Clear (); mLTScale = 100f;
+      mLTScales.Clear (); mLTScale = 30f;
       mTypefaces.Clear (); mTypeface = null;
       mIDXfms.Clear (); mIDXfm = 0;
       mZLevels.Clear (); mZLevel = 0;
