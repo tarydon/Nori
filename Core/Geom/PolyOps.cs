@@ -247,7 +247,7 @@ public partial class Poly {
    /// <param name="width">Width of notch</param>
    /// <param name="depth">Depth of notch</param>
    /// <param name="Rad">Radius of the U-notch</param>
-   public Poly? EdgeNotch (int seg, bool left, double centerOffset, double width, double depth, double Rad = 0) {
+   public Poly? EdgeNotch (EEdgeNotch mode, int seg, bool left, double centerOffset, double width, double depth, double Rad = 0) {
       Seg s = this[seg];
       if (!s.IsLine || centerOffset < width / 2 || s.Length < (centerOffset + width / 2)) return null; // Check: Notch fits the given seg length.
 
@@ -273,13 +273,14 @@ public partial class Poly {
          pb.Line (pt);
          if (i == seg) {
             if (!offset.IsZero ()) pb.Line (pt = pt.Polar (offset, slope));
-            if (Rad > 0) { // U Notch
-               if (((Rad - width / 2) > Lib.Epsilon) || ((Rad - depth) > Lib.Epsilon)) Rad = Math.Min (depth, width / 2);
+            if (mode is EEdgeNotch.EdgeU) {
+               if (Rad.IsZero () || ((Rad - width / 2) > Lib.Epsilon) || ((Rad - depth) > Lib.Epsilon)) Rad = Math.Min (depth, width / 2);
                pb.Arc (pt = pt.Polar (depth - Rad, slope2), pt = pt.Polar (Rad, slope), left ? EFlags.CW : EFlags.CCW);
                pb.Line (pt = pt.Polar (Rad, slope2));
                pb.Arc (pt = pt.Polar (width - (2 * Rad), slope), pt = pt.Polar (-Rad, slope2), left ? EFlags.CW : EFlags.CCW);
                pb.Line (pt = pt.Polar (Rad, slope)).Line (pt.Polar (-(depth - Rad), slope2));
-            } else {
+            }
+            if (mode is EEdgeNotch.EdgeRecess) {
                pb.Line (pt = pt.Polar (depth, slope2));
                pb.Line (pt = pt.Polar (width, slope));
                if (!offset2.IsZero ()) pb.Line (pt.Polar (-depth, slope2));
@@ -360,4 +361,6 @@ public partial class Poly {
       /// <summary>The closest seg closer to horizontal than vertical</summary>
       Horz = 8
    }
+
+   public enum EEdgeNotch { EdgeRecess, EdgeU, EdgeV }
 }
