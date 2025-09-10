@@ -250,7 +250,7 @@ public partial class Poly {
       return EdgeNotch (seg, left, centerOffset, width, depth, Rad);
    }
 
-   /// <summary>Inserts edge notches (Rect notch, U-notch, V-notch) on the specified seg (returns null if not possible)</summary>
+   /// <summary>Inserts edge notches (Rect notch and U-notch) on the specified seg (returns null if not possible)</summary>
    /// <param name="left">Side of the seg, where the notch unfurls</param>
    /// <param name="centerOffset">Offset of the notch-center, from start of the seg</param>
    /// <param name="width">Width of notch</param>
@@ -284,7 +284,6 @@ public partial class Poly {
          if (i == seg) {
             if (!offset.IsZero ()) pb.Line (pt = pt.Polar (offset, slope));
             if (Rad > 0) {
-               if (Rad.IsZero () || ((Rad - width / 2) > Lib.Epsilon) || ((Rad - depth) > Lib.Epsilon)) Rad = Math.Min (depth, width / 2);
                pb.Arc (pt = pt.Polar (depth - Rad, slope2), pt = pt.Polar (Rad, slope), left ? EFlags.CW : EFlags.CCW);
                pb.Line (pt = pt.Polar (Rad, slope2));
                pb.Arc (pt = pt.Polar (width - (2 * Rad), slope), pt = pt.Polar (-Rad, slope2), left ? EFlags.CW : EFlags.CCW);
