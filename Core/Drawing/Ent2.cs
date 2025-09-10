@@ -53,6 +53,10 @@ public abstract partial class Ent2 {
    /// - Set threshold to the minimum distance
    public virtual bool IsCloser (Point2 pt, ref double threshold) => false;
 
+   /// <summary>Transforms the entity by a given matrix and returns the self</summary>
+   /// This method is useful for exploding the entities inside a block entity.
+   public abstract void XForm (Matrix2 m);
+
    // Protected ----------------------------------------------------------------
    // Bitflags for this entity
    protected E2Flags mFlags;
@@ -81,6 +85,8 @@ public class E2Dimension : Ent2 {
    public override Bound2 GetBound (Matrix2 xfm)
       => new (mEnts.Select (a => a.GetBound (xfm)));
 
+   public override void XForm (Matrix2 m) => mEnts.ForEach (a => a.XForm (m));
+
    // The entities making up the dimension (in DXF, this is stored in a block, but since that
    // block is used exactly once, it makes more sense to just store the entities here and create
    // the block on the fly when the dimension is saved)
@@ -105,7 +111,7 @@ public class E2Bendline : Ent2 {
    public double KFactor;
 
    /// <summary>Set of points defining the bendline. Every pair here defines a 'segment' of the bendline</summary>
-   public ImmutableArray<Point2> Pts;
+   public ImmutableArray<Point2> Pts { get; private set; }
 
    /// <summary>Inner radius of the bend</summary>
    public readonly double Radius;
@@ -136,6 +142,7 @@ public class E2Bendline : Ent2 {
    public override Bound2 Bound => new (Pts);
    public override Bound2 GetBound (Matrix2 xfm) => new (Pts.Select (a => a * xfm));
 
+   public override void XForm (Matrix2 m) => Pts = [.. Pts.Select (a => a * m)];
    // Private data -------------------------------------------------------------
    readonly Dwg2 mDwg;  // Drawing this belongs to (needed to obtain the thickness)
 }
@@ -164,7 +171,8 @@ public class E2Insert : Ent2 {
    string mBlockName;
 
    /// <summary>X and Y scaling factors for the block</summary>
-   public readonly double XScale, YScale;
+   public double XScale { get; private set; }
+   public double YScale { get; private set; }
 
    /// <summary>Insertion position of the block</summary>
    public Point2 Pt => mPt;
@@ -198,6 +206,12 @@ public class E2Insert : Ent2 {
       return new (Block.Ents.Select (a => a.GetBound (final)));
    }
 
+   public override void XForm (Matrix2 m) {
+      mAngle += (Vector2.XAxis * m).Heading;
+      XScale *= m.ScaleFactor; YScale *= m.ScaleFactor; 
+      mPt *= m;
+   }
+
    // Methods ------------------------------------------------------------------
    public override bool IsCloser (Point2 worldPt, ref double threshold) {
       var xfmInv = Xfm.GetInverse ();
@@ -224,7 +238,7 @@ public class E2Point : Ent2 {
    // Properties ---------------------------------------------------------------
    /// <summary>The actual point</summary>
    public Point2 Pt => mPt;
-   readonly Point2 mPt;
+   Point2 mPt;
 
    /// <summary>Bound of the point</summary>
    public override Bound2 Bound => new (mPt.X, mPt.Y);
@@ -237,6 +251,8 @@ public class E2Point : Ent2 {
       if (dist < threshold) { threshold = dist; return true; }
       return false;
    }
+
+   public override void XForm (Matrix2 m) => mPt *= m;
 }
 #endregion
 
@@ -254,7 +270,7 @@ public class E2Poly : Ent2 {
 
    /// <summary>The Poly object that defines this entity's actual shape.</summary>
    public Poly Poly => mPoly;
-   public readonly Poly mPoly;
+   Poly mPoly;
 
    // Methods ------------------------------------------------------------------
    public override bool IsCloser (Point2 pt, ref double threshold) {
@@ -270,6 +286,8 @@ public class E2Poly : Ent2 {
 
    /// <summary>Compute the Bound of the E2Poly under a rotation</summary>
    public override Bound2 GetBound (Matrix2 xfm) => mPoly.GetBound (xfm);
+
+   public override void XForm (Matrix2 m) => mPoly *= m;
 
    /// <summary>Makes a clone of this E2Poly, but just with a different polyline</summary>
    /// This copies the layer, color and flags from the existing poly
@@ -290,9 +308,11 @@ public class E2Solid : Ent2 {
    public override Bound2 GetBound (Matrix2 xfm)
       => new (mPts.Select (a => a * xfm));
 
+   public override void XForm (Matrix2 m) => mPts = [.. mPts.Select (a => a * m)];
+
    /// <summary>The list of points in this solid</summary>
    public IReadOnlyList<Point2> Pts => mPts;
-   readonly Point2[] mPts;
+   Point2[] mPts;
    #endregion
 }
 #endregion
@@ -307,13 +327,13 @@ public class E2Text : Ent2 {
 
    // Properties ---------------------------------------------------------------
    /// <summary>The text rotation angle in radians</summary>
-   public readonly double Angle;
+   public double Angle { get; private set; }
 
    /// <summary>The alignment of the text (specifies which corner is located at Pt)</summary>
    public readonly ETextAlign Alignment;
 
    /// <summary>The text height</summary>
-   public readonly double Height;
+   public double Height { get; private set; }
 
    /// <summary>Spacing between lines for multiline text</summary>
    public double DYLine { get { Render (); return _DYLine; } }
@@ -323,7 +343,7 @@ public class E2Text : Ent2 {
    public readonly double Oblique;
 
    /// <summary>Position of the text in the drawing - Alignment specifies which corner is aligned to this point</summary>
-   public readonly Point2 Pt;
+   public Point2 Pt { get; private set; }
 
    /// <summary>Text Style to use (specifies font, height override etc)</summary>
    public readonly Style2 Style;
@@ -332,7 +352,7 @@ public class E2Text : Ent2 {
    public readonly string Text;
 
    /// <summary>The X-stretch factor for the text (1=normal)</summary>
-   public readonly double XScale;
+   public double XScale { get; private set; }
 
    // Overrides ----------------------------------------------------------------
    /// <summary>The text bounding rectangle.</summary>
@@ -352,6 +372,13 @@ public class E2Text : Ent2 {
          best = Math.Min (best, seg.GetDist (pt, best));
       if (best < threshold) { threshold = best; return true; }
       return false;
+   }
+
+   public override void XForm (Matrix2 m) {
+      Pt *= m;
+      Angle += (Vector2.XAxis * m).Heading;
+      Height *= m.ScaleFactor;
+      XScale *= m.ScaleFactor;
    }
 
    #region Implementation and Private stuff --------------------------
