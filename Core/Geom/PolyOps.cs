@@ -245,7 +245,7 @@ public partial class Poly {
    /// <param name="left">Side of the seg, where the notch unfurls</param>
    /// <param name="centerOffset">Offset of the notch-center, from start of the seg</param>
    /// <param name="width">Width of V notch</param>
-   /// <param name="angle">angle of V notch</param>
+   /// <param name="angle">Angle of V notch</param>
    public Poly? EdgeVRecess (int seg, bool left, double centerOffset, double width, double angle) {
       Seg s = this[seg];
       if (!s.IsLine || centerOffset < width / 2 || s.Length < (centerOffset + width / 2)) return null; // Check: Notch fits the given seg length.
