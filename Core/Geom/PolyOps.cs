@@ -241,20 +241,54 @@ public partial class Poly {
       return pb.Build ();
    }
 
-   /// <summary>Wrapper method to insert edgeV recess (V-notch) on the specified seg</summary>
-   public Poly? EdgeVRecess (int seg, bool left, double centerOffset, double width, double angle) {
-      // If angle is not specified or is 0, default the angle to 90 degrees.
-      if (angle.IsZero ()) angle = Lib.HalfPI.R2D ();
-      return EdgeRecess (seg, left, centerOffset, width, angle: angle);
-   }
-
-   /// <summary>Inserts edge recess (rect notch, edgeV notch) on the specified seg (returns null if not possible)</summary>
+   /// <summary>Inserts V notch on the specified seg (returns null if not possible)</summary>
    /// <param name="left">Side of the seg, where the notch unfurls</param>
    /// <param name="centerOffset">Offset of the notch-center, from start of the seg</param>
-   /// <param name="width">Width of notch</param>
-   /// <param name="depth">Depth of notch</param>
-   /// <param name="angle">Angle of notch</param>
-   public Poly? EdgeRecess (int seg, bool left, double centerOffset, double width, double depth = 0, double angle = 0) {
+   /// <param name="width">Width of V notch</param>
+   /// <param name="angle">angle of V notch</param>
+   public Poly? EdgeVRecess (int seg, bool left, double centerOffset, double width, double angle) {
+      Seg s = this[seg];
+      if (!s.IsLine || centerOffset < width / 2 || s.Length < (centerOffset + width / 2)) return null; // Check: Notch fits the given seg length.
+
+      PolyBuilder pb = new ();
+      // Precompute values now, and keep the loop below clean.
+      if (angle.IsZero ()) angle = Lib.HalfPI.R2D (); // If angle is not specified or is 0, default the angle to 90 degrees.
+      var angle2 = Lib.HalfPI - (angle / 2).D2R (); // Angle between the seg and the notch sides
+      (double slope, double slope2) = (s.Slope, s.Slope + (left ? 1 : -1) * angle2);
+      double offset = centerOffset - (width / 2); // Portion of seg leading upto notch
+
+      for (int i = 0; i < Count; i++) {
+         Point2 pt = mPts[i];
+         // This code adds all the other nodes (they could be the starts of line or arc
+         // segments, and we handle both by looking through the mExtra array). Note that
+         // we directly read the mExtra array rather than use Seg objects for better
+         // performance
+         if (HasArcs && i < Extra.Length) {
+            var extra = Extra[i];
+            if ((extra.Flags & EFlags.Arc) != 0) {
+               pb.Arc (pt, extra.Center, extra.Flags);
+               continue;
+            }
+         }
+         pb.Line (pt);
+         if (i == seg) {
+            if (!offset.IsZero ()) pb.Line (pt = pt.Polar (offset, slope));
+            var vDepth = (width / 2) / Math.Cos (angle2);
+            pb.Line (pt.Polar (vDepth, slope2));
+            pb.Line (pt.Polar (width, slope));
+         }
+      }
+      // Done, close the poly if needed and return it
+      if (IsClosed) return pb.Close ().Build ();
+      return pb.End (mPts[^1]);
+   }
+
+   /// <summary>Inserts edge recess (rect notch) on the specified seg (returns null if not possible)</summary>
+   /// <param name="left">Side of the seg, where the notch unfurls</param>
+   /// <param name="centerOffset">Offset of the notch-center, from start of the seg</param>
+   /// <param name="width">Width of rect notch</param>
+   /// <param name="depth">Depth of rect notch</param>
+   public Poly? EdgeRecess (int seg, bool left, double centerOffset, double width, double depth) {
       Seg s = this[seg];
       if (!s.IsLine || centerOffset < width / 2 || s.Length < (centerOffset + width / 2)) return null; // Check: Notch fits the given seg length.
 
@@ -280,16 +314,9 @@ public partial class Poly {
          pb.Line (pt);
          if (i == seg) {
             if (!offset.IsZero ()) pb.Line (pt = pt.Polar (offset, slope));
-            if (!depth.IsZero ()) pb.Line (pt = pt.Polar (depth, slope2));
-            // As of now, only angle is considered for the calculation of edgeV recess.
-            if (!angle.IsZero ()) {
-               var angle2 = Lib.HalfPI - (angle / 2).D2R ();
-               slope2 = s.Slope + (left ? 1 : -1) * angle2;
-               var vDepth = (width / 2) / Math.Cos (angle2);
-               pb.Line (pt.Polar (vDepth, slope2));
-            }
+            pb.Line (pt = pt.Polar (depth, slope2));
             pb.Line (pt = pt.Polar (width, slope));
-            if (!depth.IsZero () && !offset2.IsZero ()) pb.Line (pt.Polar (-depth, slope2));
+            if (!offset2.IsZero ()) pb.Line (pt.Polar (-depth, slope2));
          }
       }
       // Done, close the poly if needed and return it

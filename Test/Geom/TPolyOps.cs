@@ -146,6 +146,7 @@ class PolyEdgeTests {
       Poly? poly;
       poly = rect.EdgeVRecess (0, left: true, 15, 20, 90); poly!.Is ("M0,0H5L15,10L25,0H100V50H0Z");
       poly = rect.EdgeVRecess (0, left: false, 15, 20, 90); poly!.Is ("M0,0H5L15,-10L25,0H100V50H0Z");
+      poly = rect.EdgeVRecess (0, left: true, 15, 20, 0); poly!.Is ("M0,0H5L15,10L25,0H100V50H0Z");
 
       Poly line = Poly.Line (0, 0, 100, 0);
       poly = line.EdgeVRecess (0, left: true, 15, 20, 45); poly!.Is ("M0,0H5L15,24.142136L25,0H100");
