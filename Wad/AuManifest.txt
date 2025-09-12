@@ -10,7 +10,7 @@ E2Point
   Pt
 E2Poly
   Poly -Bound
-E2Textk
+E2Text
   Pt Text Style.Name Angle Alignment -Bound Height Oblique XScale
 Block2
   Name Base Ents
