@@ -10,17 +10,17 @@ namespace Nori;
 /// functions at a given value of the paramter t.
 public abstract class Spline {
    public Spline (int cCtrl, ImmutableArray<double> knot, ImmutableArray<double> weight) {
-      (mnCtrl, Knot, Weight) = (cCtrl, knot, weight);
+      (mNodes, Knot, Weight) = (cCtrl, knot, weight);
       Rational = !(weight.IsEmpty || weight.All (a => a.EQ (1)));
       if (!Rational) Weight = [];
-      int n = (Degree = knot.Length - cCtrl - 1) + 1;
+      int n = Degree + 1;
       _val = new double[n]; _left = new double[n]; _right = new double[n];
    }
 
    // Properties ---------------------------------------------------------------
    /// <summary>The degree of teh spline</summary>
    /// Note that the ORDER of the spline is DEGREE + 1
-   public readonly int Degree;
+   public int Degree => Knot.Length - mNodes - 1;
 
    /// <summary>The knot vector for this spline</summary>
    public readonly ImmutableArray<double> Knot;
@@ -45,7 +45,7 @@ public abstract class Spline {
    // of the basis functions is detailed in Algorithm A2.2 from the "NURBS Book"
    protected int ComputeBasis (double t) {
       // First find the span of interest in which this knot lies
-      int n = mnCtrl - 1, span = n;
+      int n = mNodes - 1, span = n;
       if (t < Knot[n + 1]) {
          int low = Degree, high = n + 1; span = (low + high) / 2;
          for (; ; ) {
@@ -77,7 +77,7 @@ public abstract class Spline {
    // Private data -------------------------------------------------------------
    double[] _left, _right;
    protected double[] _val;
-   int mnCtrl;
+   int mNodes;
 }
 #endregion
 
@@ -111,10 +111,9 @@ public class Spline2 : Spline {
          int aa = ComputeBasis (knot);
          eval.Push (new Node { A = knot, Pt = Evaluate (knot), Level = 0 });
          done = knot;
-         Lib.Trace ($"i = {i}, basis = {aa}");
       }
 
-      //for (int i = Ctrl.Length; i >= 0; i--) {
+      //for (int i = Ctrl.Length; i >= 0; i--) { // REMOVETHIS
       //   double a = ((double)i / Ctrl.Length).Along (start, end);
       //   eval.Push (new Node { A = a, Pt = Evaluate (a), Level = 0 });
       //}

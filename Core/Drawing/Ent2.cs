@@ -23,6 +23,9 @@ public abstract partial class Ent2 {
    public Color4 Color { get => mColor; set => mColor = value; }
    Color4 mColor = Color4.Nil;
 
+   /// <summary>Flags value for this entity</summary>
+   public E2Flags Flags => mFlags;
+
    /// <summary>The layer on which this Ent2 exists</summary>
    public Layer2 Layer => mLayer;
    Layer2 mLayer;
@@ -300,7 +303,9 @@ public class E2Solid : Ent2 {
 #region class E2Spline -----------------------------------------------------------------------------
 /// <summary>Represents a 2D spline (rational splines also supported)</summary>
 public class E2Spline : Ent2 {
-   public E2Spline (Layer2 layer, Spline2 spline) : base (layer) => mSpline = spline;
+   public E2Spline (Layer2 layer, Spline2 spline, E2Flags flags) : base (layer) {
+      mSpline = spline; mFlags |= flags;
+   }
 
    public override bool IsCloser (Point2 pt, ref double threshold) {
       if (!Bound.Contains (pt, threshold)) return false;

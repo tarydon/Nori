@@ -10,7 +10,7 @@ E2Point
   Pt
 E2Poly
   Poly -Bound
-E2Text
+E2Textk
   Pt Text Style.Name Angle Alignment -Bound Height Oblique XScale
 Block2
   Name Base Ents
@@ -22,6 +22,8 @@ E2Insert
   -Block ^Dwg BlockName Pt Angle XScale YScale -Bound
 E2Dimension
   -Bound Ents
+E2Spline
+  -Bound Spline -Pts
 Mechanism
   Name Color Joint JMin JMax -JValue JVector JAsDrawn Sockets ConnectTo Children ^Parent -RootDir Geometry
 GeometrySource
@@ -29,3 +31,7 @@ FileGeometry
   File Shift -Rotate
 E2Bendline
   ^Dwg Angle KFactor Radius Pts Thickness
+Spline
+  Nodes Rational Knot Weight
+Spline2
+  Ctrl
