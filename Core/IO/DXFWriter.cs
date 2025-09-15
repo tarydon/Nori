@@ -74,6 +74,7 @@ public class DXFWriter {
             E2Insert ei => OutInsert (ei),
             E2Dimension e2d => OutDimension (e2d),
             E2Bendline e2b => OutBendLine (e2b),
+            E2Spline e2s => OutSpline (e2s),
             _ => throw new BadCaseException (ent.GetType ().Name)
          };
       }
@@ -228,6 +229,25 @@ public class DXFWriter {
          Out ($" {10 + i}\n{pt.X}\n {20 + i}\n{pt.Y}\n");
       }
       return 0;
+   }
+
+   // Outputs a SPLINE curve
+   int OutSpline (E2Spline es) {
+      OutEntPrologue (es, "SPLINE");
+      var (spline, flags) = (es.Spline, 8);     // PLANAR
+      if ((es.Flags & E2Flags.Closed) != 0) flags |= 1;  // CLOSED
+      if ((es.Flags & E2Flags.Periodic) != 0) flags |= 2;   // PERIODIC
+      if (spline.Rational) flags |= 4; // RATIONAL
+      var (knots, weights, ctrl) = (spline.Knot, spline.Weight, spline.Ctrl);
+      Out ($" 70\n{flags}\n 71\n{spline.Degree}\n 72\n{knots.Length}\n 73\n{ctrl.Length}\n");
+      foreach (var knot in knots) Out ($" 40\n{knot}\n");
+      foreach (var pt0 in ctrl) {
+         var pt = Lib.Testing ? pt0.R6 () : pt0;
+         Out ($" {10}\n{pt.X}\n 20\n{pt.Y}\n 30\n0\n");
+      }
+      if (spline.Rational)
+         foreach (var wt in weights) Out ($" 41\n{wt}\n");
+      return 0; 
    }
 
    // Output text entity
