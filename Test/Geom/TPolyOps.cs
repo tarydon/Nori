@@ -127,29 +127,29 @@ class PolyEdgeTests {
    void Test1 () {
       Poly rect = Poly.Rectangle (0, 0, 100, 50);
       Poly? poly;
-      poly = rect.EdgeNotch (0, left: true, 15, 20, 10); poly!.Is ("M0,0H5V10H25V0H100V50H0Z");
-      poly = rect.EdgeNotch (0, left: false, 15, 20, 10); poly!.Is ("M0,0H5V-10H25V0H100V50H0Z");
+      poly = rect.RectNotch (0, 15, 20, 10); poly!.Is ("M0,0H5V10H25V0H100V50H0Z");
+      poly = rect.RectNotch (0, 15, 20, -10); poly!.Is ("M0,0H5V-10H25V0H100V50H0Z");
 
       Poly line = Poly.Line (0, 0, 100, 0);
-      poly = line.EdgeNotch (0, left: true, 15, 20, 10); poly!.Is ("M0,0H5V10H25V0H100");
-      poly = line.EdgeNotch (0, left: false, 15, 20, 10); poly!.Is ("M0,0H5V-10H25V0H100");
+      poly = line.RectNotch (0, 15, 20, 10); poly!.Is ("M0,0H5V10H25V0H100");
+      poly = line.RectNotch (0, 15, 20, -10); poly!.Is ("M0,0H5V-10H25V0H100");
 
       // Rect with rounded corner.
       Poly rounded = Poly.Rectangle (0, 0, 100, 50)!.Fillet (0, 5)!;
-      poly = rounded.EdgeNotch (0, left: true, 15, 20, 10); poly!.Is ("M100,0V5H90V25H100V50H0V5Q5,0,1Z");
-      poly = rounded.EdgeNotch (0, left: false, 15, 20, 10); poly!.Is ("M100,0V5H110V25H100V50H0V5Q5,0,1Z");
+      poly = rounded.RectNotch (0, 15, 20, 10); poly!.Is ("M100,0V5H90V25H100V50H0V5Q5,0,1Z");
+      poly = rounded.RectNotch (0, 15, 20, -10); poly!.Is ("M100,0V5H110V25H100V50H0V5Q5,0,1Z");
    }
 
-   [Test (114, "Poly Edge-U Notch")]
+   [Test (114, "Poly Edge U-Notch")]
    void Test2 () {
       Poly rect = Poly.Rectangle (0, 0, 60, 50);
       Poly? poly;
-      poly = rect.EdgeUNotch (0, left: true, 10, 10, 10, 2); poly!.Is ("M0,0H5V8Q7,10,-1H13Q15,8,-1V0H60V50H0Z");
-      poly = rect.EdgeUNotch (0, left: false, 10, 10, 10, 2); poly!.Is ("M0,0H5V-8Q7,-10,1H13Q15,-8,1V0H60V50H0Z");
-      poly = rect.EdgeUNotch (0, left: false, 10, 10, 10, 0); poly!.Is ("M0,0H5V-5Q10,-10,1V-10Q15,-5,1V0H60V50H0Z");
+      poly = rect.UNotch (0, 10, 10, 10, 2); poly!.Is ("M0,0H5V8Q7,10,-1H13Q15,8,-1V0H60V50H0Z");
+      poly = rect.UNotch (0, 10, 10, -10, 2); poly!.Is ("M0,0H5V-8Q7,-10,1H13Q15,-8,1V0H60V50H0Z");
+      poly = rect.UNotch (0, 10, 10, 10, 0); poly!.Is ("M0,0H5V5Q10,10,-1V10Q15,5,-1V0H60V50H0Z");
 
       Poly line = Poly.Line (0, 0, 50, 0);
-      poly = line.EdgeUNotch (0, left: true, 5, 10, 10, 2); poly!.Is ("M0,0V8Q2,10,-1H8Q10,8,-1V0H50");
-      poly = line.EdgeUNotch (0, left: false, 5, 10, 10, 2); poly!.Is ("M0,0V-8Q2,-10,1H8Q10,-8,1V0H50");
+      poly = line.UNotch (0, 5, 10, 10, 2); poly!.Is ("M0,0V8Q2,10,-1H8Q10,8,-1V0H50");
+      poly = line.UNotch (0, 5, 10, -10, 2); poly!.Is ("M0,0V-8Q2,-10,1H8Q10,-8,1V0H50");
    }
 }
