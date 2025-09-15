@@ -53,7 +53,7 @@ public abstract partial class Ent2 {
    /// - Set threshold to the minimum distance
    public virtual bool IsCloser (Point2 pt, ref double threshold) => false;
 
-   /// <summary>Transforms the entity by a given matrix and returns the self</summary>
+   /// <summary>Returns a copy of the entity transformed by given matrix.</summary>
    /// This method is useful for exploding the entities inside a block entity.
    public abstract Ent2 XFormed (Matrix2 m);
 
