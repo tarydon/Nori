@@ -172,11 +172,13 @@ public partial class DXFReader {
 
    // Reads the next group into mGroup and the value into mValue
    bool Next () {
+      mnLine += 2;
       var line1 = mReader.ReadLine (); if (line1 == null) return false;
       var line2 = mReader.ReadLine (); if (line2 == null) return false;
       G = int.Parse (line1); V = line2;
       return V != "EOF";
    }
+   int mnLine = -1;
 
    // Nested types -------------------------------------------------------------
    // A structure read in from a 'VERTEX' entity

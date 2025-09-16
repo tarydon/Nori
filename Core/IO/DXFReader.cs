@@ -29,12 +29,15 @@ public partial class DXFReader {
                else S[G] = V;
                break;
             case 8: if (mClosedPoly == null) S[G] = V; break;     // Ignore layers when we are inside a POLYLINE read
+            case 9: var key = V; Next (); HeaderVar (key); break;
             case > 0 and < 10: S[G] = V; break;
             case 10: X0Set.Add (Vf); break;
             case 20: Y0Set.Add (Vf); break;
+            case 40: D0Set.Add (D[40] = Vf); break;
+            case 41: D1Set.Add (D[41] = Vf); break;
             case 42:
-               D[42] = Vf;
-               while (D2Set.Count < X0Set.Count - 1) D2Set.Add (0); D2Set.Add (Vf);
+               while (D2Set.Count < X0Set.Count - 1) D2Set.Add (0);
+               D2Set.Add (D[42] = Vf);
                break;
             case > 10 and < 53: D[G] = Vf; break;
             case 60: Invisible = Vn == 1; break;
@@ -66,7 +69,14 @@ public partial class DXFReader {
          S[G] = name;
       return;
    }
-   static HashSet<string> sSections = ["TABLES", "BLOCKS", "ENTITIES"];
+   static HashSet<string> sSections = ["TABLES", "HEADER", "BLOCKS", "ENTITIES"];
+
+   /// <summary>Used to process a header variable</summary>
+   void HeaderVar (string key) {
+      switch (key) {
+         case "$MEASUREMENT": Scale = Vn == 0 ? 25.4 : 1; break;
+      }
+   }
 
    // This is written to each time we see a 0 group, and effectively this ends up
    // 'making' a new object of some type. In some sense, writes to the Type property are
@@ -89,7 +99,7 @@ public partial class DXFReader {
                var (ba, radius, kfactor) = (double.NaN, 0.0, 0.42);
                foreach (var s in mXData) {
                   if (s.StartsWith ("BEND_ANGLE:")) ba = s[11..].ToDouble ().D2R ();
-                  else if (s.StartsWith ("BEND_RADIUS:")) radius = s[12..].ToDouble ();
+                  else if (s.StartsWith ("BEND_RADIUS:")) radius = s[12..].ToDouble () * Scale;
                   else if (s.StartsWith ("K_FACTOR:")) kfactor = s[9..].ToDouble ();
                }
                if (!ba.IsNaN ()) {
@@ -125,7 +135,7 @@ public partial class DXFReader {
             case "LWPOLYLINE":
                mClosedPoly = (Flags & 1) > 0;
                for (int i = 0; i < X0Set.Count; i++)
-                  mVertex.Add (new (new (X0Set[i], Y0Set[i]), 0, D2Set.SafeGet (i)));
+                  mVertex.Add (new (new (X0Set[i] * Scale, Y0Set[i] * Scale), 0, D2Set.SafeGet (i)));
                AddPolyline ();
                break;
 
@@ -140,6 +150,19 @@ public partial class DXFReader {
                double angle = Angle;
                if (!(D[11].IsZero () && D[21].IsZero ())) angle = Math.Atan2 (D[21], D[11]);
                Add (AddMText (Layer, Style, Text, Pt0, Height, angle, align));
+               break;
+
+            case "SPLINE":
+               if (X0Set.Count > 0 && D0Set.Count > 0) {
+                  var pts = X0Set.Zip (Y0Set).Select (a => new Point2 (a.First * Scale, a.Second * Scale)).ToImmutableArray ();
+                  var knots = D0Set.ToImmutableArray ();
+                  var weights = D1Set.Count > 0 ? D1Set.ToImmutableArray () : [];
+                  var spline = new Spline2 (pts, knots, weights);
+                  E2Flags flags = 0;
+                  if ((Flags & 1) > 0) flags |= E2Flags.Closed;
+                  if ((Flags & 2) > 0) flags |= E2Flags.Periodic;
+                  Add (new E2Spline (Layer, spline, flags));
+               }
                break;
 
             case "TEXT":
@@ -175,7 +198,8 @@ public partial class DXFReader {
          if (mType is not ("VERTEX" or "SEQEND")) ColorNo = 256;
          D[11] = D[21] = D[50] = D[51] = D[41] = D[42] = 0; Invisible = false;
          S[2] = S[3] = S[7] = "";
-         X0Set.Clear (); Y0Set.Clear (); D2Set.Clear ();
+         X0Set.Clear (); Y0Set.Clear ();
+         D0Set.Clear (); D1Set.Clear (); D2Set.Clear ();
       }
    }
    static HashSet<string> mUnsupported = [];
@@ -205,7 +229,8 @@ public partial class DXFReader {
    // These variables store the values read in from the DXF groups
    string[] S = new string[10];
    double[] D = new double[53];
-   List<double> X0Set = [], Y0Set = [], D2Set = [];
+   List<double> X0Set = [], Y0Set = [];
+   List<double> D0Set = [], D1Set = [], D2Set = [];
    bool Invisible;
    int ColorNo;                        // Group 62 value
 
@@ -216,25 +241,26 @@ public partial class DXFReader {
    string LTypeName => S[6] ?? "CONTINUOUS";
    string LayerName => S[8];
 
-   double X1 => D[11]; double Y1 => D[21]; Point2 Pt1 => new (X1, Y1);
-   double X2 => D[12]; double Y2 => D[22]; Point2 Pt2 => new (X2, Y2);
-   double X3 => D[13]; double Y3 => D[23]; Point2 Pt3 => new (X3, Y3);
+   double X1 => D[11]; double Y1 => D[21]; Point2 Pt1 => new (X1 * Scale, Y1 * Scale);
+   double X2 => D[12]; double Y2 => D[22]; Point2 Pt2 => new (X2 * Scale, Y2 * Scale);
+   double X3 => D[13]; double Y3 => D[23]; Point2 Pt3 => new (X3 * Scale, Y3 * Scale);
    double X4 => D[14]; double Y4 => D[24];
-   Point2 Pt0 => new (X0Set.SafeGet (0), Y0Set.SafeGet (0)); // Group values 10,20 converted to a Point2
+   Point2 Pt0 => new (X0Set.SafeGet (0) * Scale, Y0Set.SafeGet (0) * Scale); // Group values 10,20 converted to a Point2
    Point2 Center => Pt0;               // ARC, CIRCLE
-   double Radius => D[40];             // ARC, CIRCLE
+   double Radius => D[40] * Scale;      // ARC, CIRCLE
    double StartAng => D[50].D2R ();    // ARC
    double EndAng => D[51].D2R ();      // ARC
    double Oblique => D[51].D2R ();     // TEXT
-   Vector2 MajorAxis => new (X1, Y1);  // ELLIPSE
+   Vector2 MajorAxis => new (X1 * Scale, Y1 * Scale);  // ELLIPSE
    double AxisRatio => D[40];          // ELLIPSE
    (double, double) TRange => (D[41], D[42]);   // ELLIPSE
-   double Height => D[40];             // MTEXT
+   double Height => D[40] * Scale;             // MTEXT
    double Angle => D[50].D2R ();       // MTEXT
    double XScale => D[41] == 0 ? 1 : D[41];  // INSERT
    double YScale => D[42] == 0 ? 1 : D[42];  // INSERT
    int HAlign => I2;                   // TEXT
    int VAlign => I3;                   // TEXT
+   double Scale = 1;
 
    // Helpers ------------------------------------------------------------------
    int Vn => V.ToInt ();            // Group value, converted to integer
