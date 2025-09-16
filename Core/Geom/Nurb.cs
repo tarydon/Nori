@@ -181,6 +181,11 @@ public class Spline2 : Spline {
       }
    }
 
+   // Operators ----------------------------------------------------------------
+   /// <summary>Creates a new Spline2 by applying the transformation matrix</summary>
+   public static Spline2 operator * (Spline2 s, Matrix2 xfm)
+      => new ([.. s.Ctrl.Select (a => a * xfm)], s.Knot, s.Weight);
+
    // Nested types -------------------------------------------------------------
    // Node is an internal struct used during discretization of a spline
    struct Node {

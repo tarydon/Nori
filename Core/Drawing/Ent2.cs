@@ -352,6 +352,8 @@ public class E2Spline : Ent2 {
 
    public override Bound2 GetBound (Matrix2 xfm) => new (Pts.Select (a => a * xfm));
 
+   public override E2Spline XFormed (Matrix2 m) => new (Layer, mSpline * m, mFlags);
+
    public Spline2 Spline => mSpline;
    readonly Spline2 mSpline;
 }
