@@ -241,24 +241,18 @@ public partial class Poly {
       return pb.Build ();
    }
 
-   /// <summary>Wrapper around UNotch, creates a rect-notch</summary>
-   public Poly? RectNotch (int seg, double centerOffset, double width, double depth)
-      => UNotch (seg, centerOffset, width, depth, radius: double.NaN);
-
-   /// <summary>Inserts edge notches (Rect notch and U-notch) on the specified seg (returns null if not possible)</summary>
+   /// <summary>Inserts edge recess (rect notch) on the specified seg (returns null if not possible)</summary>
    /// <param name="left">Side of the seg, where the notch unfurls</param>
    /// <param name="centerOffset">Offset of the notch-center, from start of the seg</param>
-   /// <param name="width">Width of notch</param>
-   /// <param name="depth">Depth of notch</param>
-   /// <param name="radius">Radius of the U-notch</param>
-   public Poly? UNotch (int seg, double centerOffset, double width, double depth, double radius) {
+   /// <param name="width">Width of rect notch</param>
+   /// <param name="depth">Depth of rect notch</param>
+   public Poly? EdgeRecess (int seg, bool left, double centerOffset, double width, double depth) {
       Seg s = this[seg];
-      (centerOffset, width, radius, double pDepth) = (Math.Abs (centerOffset), Math.Abs (width), Math.Abs (radius), Math.Abs (depth));
       if (!s.IsLine || centerOffset < width / 2 || s.Length < (centerOffset + width / 2)) return null; // Check: Notch fits the given seg length.
 
       PolyBuilder pb = new ();
       // Precompute values now, and keep the loop below clean.
-      (double slope, double slope2) = (s.Slope, s.Slope + (depth > 0 ? Lib.HalfPI : -Lib.HalfPI));
+      (double slope, double slope2) = (s.Slope, s.Slope + (left ? Lib.HalfPI : -Lib.HalfPI));
       double offset = centerOffset - (width / 2); // Portion of seg leading upto notch
       double offset2 = s.Length - (offset + width); // Portion of seg remaining after the notch
 
@@ -278,18 +272,52 @@ public partial class Poly {
          pb.Line (pt);
          if (i == seg) {
             if (!offset.IsZero ()) pb.Line (pt = pt.Polar (offset, slope));
-            if (radius is double.NaN) {
-               pb.Line (pt = pt.Polar (pDepth, slope2));
-               pb.Line (pt = pt.Polar (width, slope));
-               if (!offset2.IsZero ()) pb.Line (pt.Polar (-pDepth, slope2));
-            } else {
-               if (radius.IsZero () || (radius - (width / 2) > Lib.Epsilon) || ((radius - pDepth) > Lib.Epsilon))
-                  radius = Math.Min (pDepth, width / 2);
-               pb.Arc (pt = pt.Polar (pDepth - radius, slope2), pt = pt.Polar (radius, slope), depth > 0 ? EFlags.CW : EFlags.CCW);
-               pb.Line (pt = pt.Polar (radius, slope2));
-               pb.Arc (pt = pt.Polar (width - (2 * radius), slope), pt = pt.Polar (-radius, slope2), depth > 0 ? EFlags.CW : EFlags.CCW);
-               pb.Line (pt = pt.Polar (radius, slope)).Line (pt.Polar (-(pDepth - radius), slope2));
+            pb.Line (pt = pt.Polar (depth, slope2));
+            pb.Line (pt = pt.Polar (width, slope));
+            if (!offset2.IsZero ()) pb.Line (pt.Polar (-depth, slope2));
+         }
+      }
+      // Done, close the poly if needed and return it
+      if (IsClosed) return pb.Close ().Build ();
+      return pb.End (mPts[^1]);
+   }
+
+   /// <summary>Inserts U-notch on the specified seg</summary>
+   /// <param name="centerOffset">Offset of the notch-center, from start of the seg</param>
+   /// <param name="width">Width of U-notch</param>
+   /// <param name="depth">Depth of U-notch</param>
+   /// <param name="radius">Radius of U-notch</param>
+   public Poly? UNotch (int seg, double centerOffset, double width, double depth, double radius) {
+      Seg s = this[seg];
+      (centerOffset, width, radius, double pDepth) = (Math.Abs (centerOffset), Math.Abs (width), Math.Abs (radius), Math.Abs (depth));
+      if (!s.IsLine || centerOffset < width / 2 || s.Length < (centerOffset + width / 2)) return null; // Check: Notch fits the given seg length.
+
+      PolyBuilder pb = new ();
+      // Precompute values now, and keep the loop below clean.
+      (double slope, double slope2) = (s.Slope, s.Slope + (depth > 0 ? Lib.HalfPI : -Lib.HalfPI));
+      double offset = centerOffset - (width / 2); // Portion of seg leading upto notch
+
+      for (int i = 0; i < Count; i++) {
+         Point2 pt = mPts[i];
+         // This code adds all the other nodes (they could be the starts of line or arc
+         // segments, and we handle both by looking through the mExtra array). Note that
+         // we directly read the mExtra array rather than use Seg objects for better
+         // performance
+         if (HasArcs && i < Extra.Length) {
+            var extra = Extra[i];
+            if ((extra.Flags & EFlags.Arc) != 0) {
+               pb.Arc (pt, extra.Center, extra.Flags);
+               continue;
             }
+         }
+         pb.Line (pt);
+         if (i == seg) {
+            if (!offset.IsZero ()) pb.Line (pt = pt.Polar (offset, slope));
+            if (radius.IsZero () || radius > (width / 2) || radius > pDepth) radius = Math.Min (pDepth, width / 2);
+            pb.Arc (pt = pt.Polar (pDepth - radius, slope2), pt = pt.Polar (radius, slope), depth > 0 ? EFlags.CW : EFlags.CCW);
+            pb.Line (pt = pt.Polar (radius, slope2));
+            pb.Arc (pt = pt.Polar (width - (2 * radius), slope), pt = pt.Polar (-radius, slope2), depth > 0 ? EFlags.CW : EFlags.CCW);
+            pb.Line (pt = pt.Polar (radius, slope)).Line (pt.Polar (-(pDepth - radius), slope2));
          }
       }
       // Done, close the poly if needed and return it
