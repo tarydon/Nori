@@ -144,12 +144,12 @@ class PolyEdgeTests {
    void Test2 () {
       Poly rect = Poly.Rectangle (0, 0, 100, 50);
       Poly? poly;
-      poly = rect.EdgeVRecess (0, left: true, 15, 20, 90); poly!.Is ("M0,0H5L15,10L25,0H100V50H0Z");
-      poly = rect.EdgeVRecess (0, left: false, 15, 20, 90); poly!.Is ("M0,0H5L15,-10L25,0H100V50H0Z");
-      poly = rect.EdgeVRecess (0, left: true, 15, 20, 0); poly!.Is ("M0,0H5L15,10L25,0H100V50H0Z");
+      poly = rect.VNotch (0, 15, 20, 10); poly!.Is ("M0,0H5L15,10L25,0H100V50H0Z");
+      poly = rect.VNotch (0, 15, 20, -10); poly!.Is ("M0,0H5L15,-10L25,0H100V50H0Z");
+      poly = rect.VNotch (0, 15, 20, 0); Assert.IsTrue (poly is null);
 
       Poly line = Poly.Line (0, 0, 100, 0);
-      poly = line.EdgeVRecess (0, left: true, 15, 20, 45); poly!.Is ("M0,0H5L15,24.142136L25,0H100");
-      poly = line.EdgeVRecess (0, left: false, 15, 20, 45); poly!.Is ("M0,0H5L15,-24.142136L25,0H100");
+      poly = line.VNotch (0, 15, 20, 10); poly!.Is ("M0,0H5L15,10L25,0H100");
+      poly = line.VNotch (0, 15, 20, -10); poly!.Is ("M0,0H5L15,-10L25,0H100");
    }
 }

@@ -245,16 +245,14 @@ public partial class Poly {
    /// <param name="left">Side of the seg, where the notch unfurls</param>
    /// <param name="centerOffset">Offset of the notch-center, from start of the seg</param>
    /// <param name="width">Width of V notch</param>
-   /// <param name="angle">Angle of V notch</param>
-   public Poly? EdgeVRecess (int seg, bool left, double centerOffset, double width, double angle) {
+   /// <param name="depth">Depth of V notch</param>
+   public Poly? VNotch (int seg, double centerOffset, double width, double depth) {
       Seg s = this[seg];
-      if (!s.IsLine || centerOffset < width / 2 || s.Length < (centerOffset + width / 2)) return null; // Check: Notch fits the given seg length.
+      if (!s.IsLine || centerOffset < width / 2 || s.Length < (centerOffset + width / 2) || depth.IsZero ()) return null; // Check: Notch fits the given seg length.
 
       PolyBuilder pb = new ();
       // Precompute values now, and keep the loop below clean.
-      if (angle.IsZero ()) angle = Lib.HalfPI.R2D (); // If angle is not specified or is 0, default the angle to 90 degrees.
-      var angle2 = Lib.HalfPI - (angle / 2).D2R (); // Angle between the seg and the notch sides
-      (double slope, double slope2) = (s.Slope, s.Slope + (left ? 1 : -1) * angle2);
+      (double slope, double slope2) = (s.Slope, s.Slope + (depth > 0 ? Lib.HalfPI : -Lib.HalfPI));
       double offset = centerOffset - (width / 2); // Portion of seg leading upto notch
 
       for (int i = 0; i < Count; i++) {
@@ -273,8 +271,7 @@ public partial class Poly {
          pb.Line (pt);
          if (i == seg) {
             if (!offset.IsZero ()) pb.Line (pt = pt.Polar (offset, slope));
-            var vDepth = (width / 2) / Math.Cos (angle2);
-            pb.Line (pt.Polar (vDepth, slope2));
+            pb.Line (pt.Polar (width / 2, slope).Polar (Math.Abs (depth), slope2));
             pb.Line (pt.Polar (width, slope));
          }
       }
