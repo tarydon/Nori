@@ -38,7 +38,6 @@ public class Eval {
       }
 
       while (mOperators.Count > 0) ApplyOperator (mOperators.Pop ());
-      if (mOperators.Count > 0) throw new EvalException ("Too many operators");
       if (mOperands.Count > 1) throw new EvalException ("Too many operands");
       if (mBasePrecedence != 0) throw new EvalException ("Mismatched parenthesis");
       return mOperands.Pop ();

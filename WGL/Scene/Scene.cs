@@ -100,6 +100,13 @@ public abstract partial class Scene {
    // Overrides ----------------------------------------------------------------
    // Helper used internally by the Xfm property
    protected abstract (Matrix3 World, Matrix3 Projection) ComputeXfms ();
+
+   /// <summary>When this is scene is used as the UIScene, should the cursor be visible?</summary>
+   /// If a scene overrides this and sets it to false, then either no cursor is
+   /// required, or the scene takes over displaying a virtual cursor that tracks
+   /// the mouse position (like the DwgScene in Lux for example)
+   public virtual bool CursorVisible => true;
+
    /// <summary>Returns where the 'midpoint' of the drawing / model is</summary>
    protected abstract Point3 Midpoint { get; }
 }

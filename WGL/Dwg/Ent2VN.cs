@@ -13,7 +13,7 @@ abstract class Ent2VN (Ent2 ent) : VNode (ent) {
       if (!ent.InBlock) {
          var layer = ent.Layer;
          Lux.Color = ent.IsSelected ? Color4.Blue : (ent.Color.IsNil ? layer.Color : ent.Color);
-         if (ent.IsSelected) { Lux.LineWidth = 6f; Lux.PointSize = 11f; }
+         if (ent.IsSelected) { Lux.LineWidth = 3; Lux.PointSize = 6; }
          if (ent is not E2Text) Lux.LineType = layer.Linetype;
       }
    }
@@ -52,7 +52,7 @@ class E2BendlineVN (E2Bendline e2b) : Ent2VN (e2b) {
       text = mBend.Angle > 0 ? $"+{text}\u00b0" : $"{text}\u00b0";
       for (int i = 0; i < mBend.Pts.Length; i += 2) {
          Point2 pt = mBend.Pts[i].Midpoint (mBend.Pts[i + 1]);
-         Lux.Text2D (text, (Vec2F)pt, ETextAlign.MidCenter);
+         Lux.Text2D (text, (Vec2F)pt, ETextAlign.MidCenter, Vec2S.Zero);
       }
    }
 }
@@ -94,6 +94,13 @@ class E2DimensionVN (E2Dimension e2d) : Ent2VN (e2d) {
 /// <summary>VNode to render an E2Poly entity</summary>
 class E2PolyVN (E2Poly e2p) : Ent2VN (e2p) {
    public override void Draw () => Lux.Poly (e2p.Poly);
+}
+#endregion
+
+#region class E2SplineVN ---------------------------------------------------------------------------
+/// <summary>VNode to render an E2Spline entity</summary>
+class E2SplineVN (E2Spline e2s) : Ent2VN (e2s) {
+   public override void Draw () => Lux.LineStrip (e2s.Pts);
 }
 #endregion
 

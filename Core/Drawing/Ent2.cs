@@ -23,6 +23,9 @@ public abstract partial class Ent2 {
    public Color4 Color { get => mColor; set => mColor = value; }
    Color4 mColor = Color4.Nil;
 
+   /// <summary>Flags value for this entity</summary>
+   public E2Flags Flags => mFlags;
+
    /// <summary>The layer on which this Ent2 exists</summary>
    public Layer2 Layer => mLayer;
    Layer2 mLayer;
@@ -294,6 +297,46 @@ public class E2Solid : Ent2 {
    public IReadOnlyList<Point2> Pts => mPts;
    readonly Point2[] mPts;
    #endregion
+}
+#endregion
+
+#region class E2Spline -----------------------------------------------------------------------------
+/// <summary>Represents a 2D spline (rational splines also supported)</summary>
+public class E2Spline : Ent2 {
+   public E2Spline (Layer2 layer, Spline2 spline, E2Flags flags) : base (layer) {
+      mSpline = spline; mFlags |= flags;
+   }
+
+   public override bool IsCloser (Point2 pt, ref double threshold) {
+      if (!Bound.Contains (pt, threshold)) return false;
+
+      Point2 a = mPts[0];
+      double min = threshold, minSq = min * min;
+      for (int i = 1; i < mPts.Count; i++) {
+         Point2 b = mPts[i];
+         if (pt.DistToLineSq (a, b) > minSq) continue;
+         double dist = pt.DistToLine (a, b);
+         if (dist < min) { min = dist; minSq = min * min; }
+      }
+      if (min < threshold) { threshold = min; return true; }
+      return false;
+   }
+
+   public IReadOnlyList<Point2> Pts {
+      get {
+         if (mPts.Count == 0) Spline.Discretize (mPts, 0.05);
+         return mPts;
+      }
+   }
+   List<Point2> mPts = [];
+
+   public override Bound2 Bound => Bound2.Update (ref mBound, () => new (Pts));
+   Bound2 mBound = new ();
+
+   public override Bound2 GetBound (Matrix2 xfm) => new (Pts.Select (a => a * xfm));
+
+   public Spline2 Spline => mSpline;
+   readonly Spline2 mSpline;
 }
 #endregion
 

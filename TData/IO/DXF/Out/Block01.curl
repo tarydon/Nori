@@ -6,20 +6,16 @@
       Name:Blimp
       Base:0,0
       Ents:[
-        (E2Poly){ Layer:0 Color:#FF000000 Poly:C0,0,0.393701 }
-        (E2Poly){
-          Layer:0
-          Color:#FF000000
-          Poly:M-0.19685,-0.19685V0.19685H1.377953Q1.574803,0,-1.000001V-0.19685Z
-        }
+        (E2Poly){ Layer:0 Color:#FF000000 Poly:C0,0,10 }
+        (E2Poly){ Layer:0 Color:#FF000000 Poly:M-5,-5V5H35Q40,0,-1.000001V-5Z }
         (E2Text){
           Layer:0
           Color:#FF000000
-          Pt:0.472441,-0.098425
+          Pt:12,-2.5
           Text:Blimp
           Style:STANDARD
           Alignment:BaseLeft
-          Height:0.19685039
+          Height:4.999999905999999
           XScale:1
         }
       ]
@@ -31,23 +27,23 @@
         (E2Poly){
           Layer:0
           Color:#FF000000
-          Poly:M0.11811,-0.11811H0.393701V0.11811H0.11811V0.393701H-0.11811V0.314961Q-0.314961,0.11811,-1.000001H-0.393701V-0.11811H-0.11811V-0.393701H0.11811Z
+          Poly:M3,-3H10V3H3V10H-3V8Q-8,3,-1.000001H-10V-3H-3V-10H3Z
         }
-        (E2Poly){ Layer:0 Color:#FF000000 Poly:M0,0L-0.393701,0.393701 }
+        (E2Poly){ Layer:0 Color:#FF000000 Poly:M0,0L-10,10 }
       ]
     }
   ]
   Ents:[
-    (E2Poly){ Layer:0 Poly:M0,0V120H200V0Z }
-    (E2Insert){ Layer:0 BlockName:Blimp Pt:20,20 XScale:20 YScale:40 }
+    (E2Poly){ Layer:0 Poly:M0,0V3048H5080V0Z }
+    (E2Insert){ Layer:0 BlockName:Blimp Pt:508,508 XScale:20 YScale:40 }
     (E2Insert){
       Layer:0
       BlockName:Blimp
-      Pt:100,60
+      Pt:2540,1524
       Angle:0.5235987755982988
       XScale:50.8
       YScale:50.8
     }
-    (E2Insert){ Layer:0 BlockName:Cross Pt:40,80 XScale:63.5 YScale:63.5 }
+    (E2Insert){ Layer:0 BlockName:Cross Pt:1016,2032 XScale:63.5 YScale:63.5 }
   ]
 }

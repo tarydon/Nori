@@ -74,10 +74,10 @@ class BooleanRootVN (List<List<Poly>> polys, Bound2 bound) : VNode {
       Lux.Lines ([new Vec2F (mid.X, bound.Y.Min - vec.Y), new (mid.X, bound.Y.Max + vec.Y),
          new (bound.X.Min - vec.X, mid.Y), new (bound.X.Max + vec.X, mid.Y)]);
 
-      Lux.Text2D ("Polys", new (mid.X - 10, mid.Y - 10), ETextAlign.TopRight);
-      Lux.Text2D ("Union", new (mid.X + 10, mid.Y - 10), ETextAlign.TopLeft);
-      Lux.Text2D ("Intersection", new (mid.X - 10, mid.Y + 10), ETextAlign.BotRight);
-      Lux.Text2D ("Subtraction", new (mid.X + 10, mid.Y + 10), ETextAlign.BotLeft);
+      Lux.Text2D ("Polys", new (mid.X - 10, mid.Y - 10), ETextAlign.TopRight, Vec2S.Zero);
+      Lux.Text2D ("Union", new (mid.X + 10, mid.Y - 10), ETextAlign.TopLeft, Vec2S.Zero);
+      Lux.Text2D ("Intersection", new (mid.X - 10, mid.Y + 10), ETextAlign.BotRight, Vec2S.Zero);
+      Lux.Text2D ("Subtraction", new (mid.X + 10, mid.Y + 10), ETextAlign.BotLeft, Vec2S.Zero);
    }
 
    static Vector2 GetOffset (EPane pane, Bound2 bound) {
