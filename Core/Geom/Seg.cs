@@ -405,6 +405,26 @@ public readonly struct Seg {
       cen = Point2.Nil; flags = 0;
       return false;
    }
+
+   /// <summary>Obtains a poly parallel to this segment</summary>
+   /// <param name="dist">The distance between the parallels.</param>
+   public Poly MakeParallel (double dist, double delta1, double delta2, double lie) {
+      if (IsArc) {
+         bool iCCW = IsCCW;
+         if (iCCW) dist = -dist;
+         double radius = Radius + dist; if (radius < 0) iCCW = !iCCW;
+         (var sa, var ea) = GetStartAndEndAngles ();
+         return IsCircle ? Poly.Circle (Center, radius) : Poly.Arc (Center, radius, sa, ea, iCCW);
+      }
+      double angle = Slope + Math.PI / 2;
+      (var a, var b) = (A.Polar (dist, angle), B.Polar (dist, angle));
+      // Apply the delta values to straight segments
+      if (delta1 != 0 || delta2 != 0) {
+         a = a.Polar (lie < 0.5 ? delta1 : delta2, Slope + Math.PI);
+         b = b.Polar (lie < 0.5 ? delta2 : delta1, Slope);
+      }
+      return new Poly ([.. (Point2[])[a, b]], [], Flags);
+   }
 }
 #endregion
 #endif

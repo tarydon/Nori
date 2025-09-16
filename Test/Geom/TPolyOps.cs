@@ -65,6 +65,61 @@ class PolyOpsTests {
       poly = rect.Fillet (0, 5); poly?.Is ("M200,0V100H0V5Q5,0,1Z");
       poly = rect.Fillet (3, 10); poly?.Is ("M0,0H200V100H10Q0,90,1Z");
    }
+
+   [Test (118, "Parallel Poly tests")]
+   void Test5 () {
+      Poly line = Poly.Line (new Point2 (10, 10), new Point2 (45.355339, 45.355339));
+      var lineseg = new Seg (line, 0);
+      Poly result = lineseg.MakeParallel (10, 0, 0, 0);
+      result.Is ("M2.928932,17.071068L38.284271,52.426407");
+      result = lineseg.MakeParallel (-10, 0, 0, 0);
+      result.Is ("M17.071068,2.928932L52.426407,38.284271");
+      result = lineseg.MakeParallel (15, 10, 5, 0.3);
+      result.Is ("M-7.67767,13.535534L38.284271,59.497475");
+      result = lineseg.MakeParallel (-15, 10, 5, 0.8);
+      result.Is ("M17.071068,-4.142136L63.033009,41.819805");
+      Poly arc = Poly.Arc (new Point2 (120, 35), 25, -2.4980915447965089, -0.64350110879328437, true);
+      var arcseg = new Seg (arc, 0);
+      result = arcseg.MakeParallel (-10, 0, 0, 0);
+      result.Is ("M92,14Q148,14,1.180669");
+      result = arcseg.MakeParallel (10, 0, 0, 0);
+      result.Is ("M108,26Q132,26,1.180669");
+      result = arcseg.MakeParallel (30, 0, 0, 0);
+      result.Is ("M124,38Q116,38,-2.819331");
+      Poly circle = Poly.Circle (new Point2 (40, 150), 50);
+      var circleseg = new Seg (circle, 0);
+      result = circleseg.MakeParallel (30, 0, 0, 0);
+      result.Is ("C40,150,20");
+      result = circleseg.MakeParallel (-10, 0, 0, 0);
+      result.Is ("C40,150,60");
+      result = circleseg.MakeParallel (55, 0, 0, 0);
+      result.Is ("C40,150,5");
+      Poly rect = Poly.Rectangle (150, 100, 230, 150);
+      rect = rect.Fillet (2, 5)!;
+      rect = rect.Chamfer (4, 5, 5)!;
+      rect = rect.InFillet (0, 5, true)!;
+      rect = rect.CornerStep (0, 5, 5,Poly.ECornerOpFlags.SameSideOfBothSegments)!;
+      result = rect[4].MakeParallel (5, 0, 0, 0);
+      result.Is ("M150,110Q160,100,-1");
+      result = rect[7].MakeParallel (5, 0, 0, 0);
+      result.Is ("M225,110H230");
+      result = rect[0].MakeParallel (-5, 0, 0, 0);
+      result.Is ("M235,145Q225,155,1");
+      result = rect[1].MakeParallel (-5, 0, 0, 0);
+      result.Is ("M225,155H155");
+      result = rect[2].MakeParallel (-5, 0, 0, 0);
+      result.Is ("M151.464466,153.535534L146.464466,148.535534");
+      Poly poly = Poly.Polygon (new Point2 (240, 40), 20, 6, 45);
+      poly = poly.Fillet (0, -5)!;
+      poly = poly.Chamfer (1, 5, 5)!;
+      poly = poly.InFillet (4, 5, true)!;
+      result = poly[7].MakeParallel (-5, 0, 0, 0);
+      result.Is ("M223.152193,56.277431Q217.898973,47.768396,0.666667");
+      result = poly[1].MakeParallel (-5, 0, 0, 0);
+      result.Is ("M235.008222,17.637483L243.664709,17.382089");
+      result = poly[4].MakeParallel (2, 0, 0, 0);
+      result.Is ("M257.401446,42.487906Q251.651554,53.162115,-1.333333");
+   }
 }
 
 [Fixture (21, "Polygon boolean operations tests", "Geom")]
