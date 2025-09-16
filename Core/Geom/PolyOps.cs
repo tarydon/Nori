@@ -291,6 +291,7 @@ public partial class Poly {
       Seg s = this[seg];
       (centerOffset, width, radius, double pDepth) = (Math.Abs (centerOffset), Math.Abs (width), Math.Abs (radius), Math.Abs (depth));
       if (!s.IsLine || centerOffset < width / 2 || s.Length < (centerOffset + width / 2)) return null; // Check: Notch fits the given seg length.
+      if (radius.IsZero () || radius > (width / 2) || radius > pDepth) radius = Math.Min (pDepth, width / 2);
 
       PolyBuilder pb = new ();
       // Precompute values now, and keep the loop below clean.
@@ -313,7 +314,6 @@ public partial class Poly {
          pb.Line (pt);
          if (i == seg) {
             if (!offset.IsZero ()) pb.Line (pt = pt.Polar (offset, slope));
-            if (radius.IsZero () || radius > (width / 2) || radius > pDepth) radius = Math.Min (pDepth, width / 2);
             pb.Arc (pt = pt.Polar (pDepth - radius, slope2), pt = pt.Polar (radius, slope), depth > 0 ? EFlags.CW : EFlags.CCW);
             pb.Line (pt = pt.Polar (radius, slope2));
             pb.Arc (pt = pt.Polar (width - (2 * radius), slope), pt = pt.Polar (-radius, slope2), depth > 0 ? EFlags.CW : EFlags.CCW);
