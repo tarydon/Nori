@@ -295,26 +295,40 @@ public partial class Poly {
       Seg seg = this[segIdx];
       bool fwd = lie > 0.5; // Extend forward/backward
       bool limitDist = !dist.IsZero ();
-      if (!CanExtend (seg, fwd, polySoup, out double extendLie)) {
-         if (seg.IsArc) { // Nothing stops it from becoming a full circle
-            yield return Circle (seg.Center, seg.Radius);
-            // Once "arc" seg is detached, the poly fragments into two more fragments.
-            if (segIdx > 0) {
-               List<Point2> pts = [.. Pts[..(segIdx + 1)]]; // First split section
-               int cExtra2 = Math.Min (Extra.Length, segIdx);
-               yield return new Poly ([.. pts], Extra[..cExtra2], mFlags);
-            }
-            if (Count - segIdx + 1 > 1) {
-               List<Point2> pts = [.. Pts[(segIdx + 1)..]]; // Second split section
-               int cExtra2 = Math.Min (Extra.Length, segIdx + 1);
-               yield return new Poly ([.. pts], Extra[cExtra2..], mFlags);
+      double extendLie = double.NaN;
+      if (seg.IsLine) {
+         if (limitDist) extendLie = fwd ? 1 + (dist / seg.Length) : -(dist / seg.Length);
+         else if (!CanExtend (seg, fwd, polySoup, out extendLie))
+            yield break;
+      } else {
+         if (!CanExtendArc (seg, fwd, polySoup, out extendLie)) {
+            if (seg.IsArc) { // Nothing stops it from becoming a full circle
+               yield return Circle (seg.Center, seg.Radius);
+               // Is this single arc, or part of open or closed poly!!!
+               if (Count == 1) yield break;
+               if (IsClosed) {
+                  var poly = Roll (segIdx + 1); // And remove the last seg
+                  var extra = poly.Extra.Length == poly.Count ? poly.Extra[..^1] : poly.Extra;
+                  yield return new Poly (poly.Pts, extra, mFlags & ~EFlags.Closed);
+                  yield break;
+               }
+               // Open poly: Once "arc" seg is detached, the poly fragments into two more fragments.
+               if (segIdx > 0) {
+                  List<Point2> pts = [.. Pts[..(segIdx + 1)]]; // First split section
+                  int cExtra2 = Math.Min (Extra.Length, segIdx);
+                  yield return new Poly ([.. pts], Extra[..cExtra2], mFlags & ~EFlags.Closed);
+               }
+               if (Count - segIdx - 1 > 0) {
+                  List<Point2> pts = [.. Pts[(segIdx + 1)..]]; // Second split section
+                  int cExtra2 = Math.Min (Extra.Length, segIdx + 1);
+                  yield return new Poly ([.. pts], Extra[cExtra2..], mFlags & ~EFlags.Closed);
+               }
             }
             yield break;
-         } else if (!limitDist) yield break;
+         }
       }
-      if (limitDist && seg.IsLine) extendLie = fwd ? 1 + (dist / seg.Length) : -(dist / seg.Length);
-      Point2 ptExt = seg.GetPointAt (extendLie);
 
+      Point2 ptExt = seg.GetPointAt (extendLie);
       if (IsClosed) {
          var poly = Roll (fwd ? segIdx + 1 : segIdx);
          List<Point2> pts = [.. poly.Pts];
@@ -347,6 +361,41 @@ public partial class Poly {
             if (pts.Length == 0) continue;
             foreach (var pt in pts) {
                double lie = seg.GetLie (pt);
+               if (fwd) {
+                  if (lie > fwdCutoff) fwdExt = Math.Min (fwdExt, lie);
+               } else {
+                  if (lie < revCutoff) revExt = Math.Max (revExt, lie);
+               }
+            }
+         }
+         extendLie = fwd ? fwdExt : revExt;
+         return fwd ? fwdExt != 1000 : revExt != -1000;
+      }
+
+      static bool CanExtendArc (Seg seg, bool fwd, IEnumerable<Poly> polySoup, out double extendLie) {
+         Span<Point2> buffer = stackalloc Point2[2];
+         (double fwdCutoff, double revCutoff) = (1 + Lib.Epsilon, 0 - Lib.Epsilon);
+         (double fwdExt, double revExt) = (1000, -1000);
+         // Need lies to either be (+) or (-) along the arc extension path, based on "fwd" parameter.
+         (double s, double e) = seg.GetStartAndEndAngles ();
+         if (seg.IsCCW) {
+            if (e < s) e += Lib.TwoPI;
+         } else {
+            if (e > s) e -= Lib.TwoPI;
+         }
+         double span = e - s;
+         foreach (var oseg in polySoup.SelectMany (p => p.Segs)) {
+            var pts = seg.Intersect (oseg, buffer, finite: false);
+            if (pts.Length == 0) continue;
+            foreach (var pt in pts) {
+               double ang = seg.Center.AngleTo (pt);
+               if (seg.IsCCW) {
+                  if (ang < s) ang += Lib.TwoPI;
+               } else {
+                  if (ang > s) ang -= Lib.TwoPI;
+               }
+               double lie = (ang - s) / span;
+               lie = fwd ? lie : -lie + 1;
                if (fwd) {
                   if (lie > fwdCutoff) fwdExt = Math.Min (fwdExt, lie);
                } else {
