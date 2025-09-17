@@ -242,7 +242,6 @@ public partial class Poly {
    }
 
    /// <summary>Inserts V notch on the specified seg (returns null if not possible)</summary>
-   /// <param name="left">Side of the seg, where the notch unfurls</param>
    /// <param name="centerOffset">Offset of the notch-center, from start of the seg</param>
    /// <param name="width">Width of V notch</param>
    /// <param name="depth">Depth of V notch</param>
