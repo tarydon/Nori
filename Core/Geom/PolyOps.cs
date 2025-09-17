@@ -282,15 +282,18 @@ public partial class Poly {
       return pb.End (mPts[^1]);
    }
 
-   /// <summary>Inserts U-notch on the specified seg</summary>
+   /// <summary>Inserts U-notch on the specified seg (returns null if not possible)</summary>
+   /// By default, the notch is created on the left of the given segment.
+   /// To create a notch on the right of the seg, negative depth is passed.
    /// <param name="centerOffset">Offset of the notch-center, from start of the seg</param>
    /// <param name="width">Width of U-notch</param>
    /// <param name="depth">Depth of U-notch</param>
-   /// <param name="radius">Radius of U-notch</param>
+   /// <param name="radius">Corner radius of U-notch</param>
    public Poly? UNotch (int seg, double centerOffset, double width, double depth, double radius) {
       Seg s = this[seg];
       (centerOffset, width, radius, double pDepth) = (Math.Abs (centerOffset), Math.Abs (width), Math.Abs (radius), Math.Abs (depth));
       if (!s.IsLine || centerOffset < width / 2 || s.Length < (centerOffset + width / 2)) return null; // Check: Notch fits the given seg length.
+      // Clamps radius to min (depth, width/2) if zero or exceeds limits
       if (radius.IsZero () || radius > (width / 2) || radius > pDepth) radius = Math.Min (pDepth, width / 2);
 
       PolyBuilder pb = new ();
