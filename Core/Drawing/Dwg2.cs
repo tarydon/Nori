@@ -18,6 +18,7 @@ public partial class Dwg2 {
          if (mBound.IsEmpty) {
             if (mEnts.Count == 0) mBound = new (0, 0, 100, 50);
             else mBound = new (mEnts.Select (a => a.Bound));
+            Lib.Trace ($"Bound: {mBound.Width.Round (0)}x{mBound.Height.Round (0)}");
          }
          return mBound;
       }

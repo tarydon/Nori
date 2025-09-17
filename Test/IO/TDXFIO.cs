@@ -257,4 +257,24 @@ class DXFTests2 {
       DXFWriter.SaveFile (dwg, NT.TmpDXF);
       Assert.TextFilesEqual1 ("IO/DXF/Out/BendSeg.dxf", NT.TmpDXF);
    }
+
+   [Test (116, "Read SPLINE entity from DXF")]
+   void Test9 () {
+      var dwg = DXFReader.FromFile (NT.File ("IO/DXF/D17616.dxf"));
+      CurlWriter.ToFile (dwg, NT.TmpCurl);
+      Assert.TextFilesEqual1 ("IO/DXF/Out/D17616.curl", NT.TmpCurl);
+      dwg = DXFReader.FromFile (NT.File ("IO/DXF/D17666.dxf"));
+      CurlWriter.ToFile (dwg, NT.TmpCurl);
+      Assert.TextFilesEqual1 ("IO/DXF/Out/D17666.curl", NT.TmpCurl);
+   }
+
+   [Test (117, "Write SPLINE entity to DXF")]
+   void Test10 () {
+      var dwg = DXFReader.FromFile (NT.File ("IO/DXF/D17666.dxf"));
+      DXFWriter.SaveFile (dwg, NT.TmpDXF);
+      Assert.TextFilesEqual1 ("IO/DXF/Out/D17666.dxf", NT.TmpDXF);
+      dwg = DXFReader.FromFile (NT.File ("IO/DXF/D17292.dxf"));
+      DXFWriter.SaveFile (dwg, NT.TmpDXF);
+      Assert.TextFilesEqual1 ("IO/DXF/Out/D17292.dxf", NT.TmpDXF);
+   }
 }
