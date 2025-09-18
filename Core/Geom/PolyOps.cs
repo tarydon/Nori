@@ -512,9 +512,7 @@ public partial class Poly {
          (double minLie, double maxLie) = (1, 0);
          Span<Point2> buffer = stackalloc Point2[2];
          foreach (var s in polySoup.SelectMany (p => p.Segs)) {
-            var pts = seg.Intersect (s, buffer, finite: true);
-            if (pts.Length == 0) continue;
-            foreach (var pt in pts) {
+            foreach (var pt in seg.Intersect (s, buffer, finite: true)) {
                double lie = seg.GetLie (pt);
                if (lie > refLie) toLie = Math.Min (toLie, lie);
                else fromLie = Math.Max (fromLie, lie);
@@ -522,7 +520,8 @@ public partial class Poly {
                minLie = Math.Min (minLie, lie);
             }
          }
-         if (refLie > maxLie || refLie < minLie) return (maxLie, minLie);
+         if (maxLie.EQ (minLie)) return (0, 1);
+         if (refLie > maxLie || refLie < minLie) return (maxLie, minLie); // Section passing through the circle's node point
          return (fromLie.IsZero () ? 0 : fromLie, toLie.EQ (1) ? 1 : toLie);
       }
    }

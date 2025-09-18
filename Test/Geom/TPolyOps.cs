@@ -157,15 +157,18 @@ class PolyTrimExtendTests {
       resPolys.Count.Is (0);
    }
 
-   [Test (117, "Trim circle", Skip = true)]
+   [Test (117, "Trim circle")]
    void Test2 () {
       Poly c = Poly.Circle (0, 0, 40);
       List<Poly> polySoup = [c];
-      List<Poly> resPolys = [.. c.TrimmedSeg (0, 1, polySoup)];
+      List<Poly> resPolys = [.. c.TrimmedSeg (0, lie: 0, polySoup)]; // Left-over arc segment, if any.
+      resPolys.Count.Is (0);
+      resPolys = [.. c.TrimmedSeg (0, lie: 1, polySoup)];
+      resPolys.Count.Is (0);
+      resPolys = [.. c.TrimmedSeg (0, lie: 0.5, polySoup)];
       resPolys.Count.Is (0);
 
       Poly line0 = Poly.Line (0, 0, 50, 0), line180 = Poly.Line (0, 0, -50, 0);
-
 
       polySoup = [c, line0]; // Line cutting circle at 0
       resPolys = [.. c.TrimmedSeg (0, 0.2, polySoup)];
@@ -177,9 +180,17 @@ class PolyTrimExtendTests {
 
       polySoup = [c, line0, line180];  // Line cutting circle at 0 and 180
       resPolys = [.. c.TrimmedSeg (0, 0.2, polySoup)];
-      resPolys.Count.Is (1); resPolys[0].Is ("");
+      resPolys.Count.Is (1); resPolys[0].Is ("M40,0Q-40,0,-2");
       resPolys = [.. c.TrimmedSeg (0, 0.8, polySoup)];
-      resPolys.Count.Is (1); resPolys[0].Is ("");
+      resPolys.Count.Is (1); resPolys[0].Is ("M-40,0Q40,0,-2");
+
+      polySoup = [c, Poly.Line (0, 0, 0, 50), Poly.Line (0, 0, 0, -50)];  // Line cutting circle at 90 and -90
+      resPolys = [.. c.TrimmedSeg (0, 0.2, polySoup)];
+      resPolys.Count.Is (1); resPolys[0].Is ("M-0,-40Q0,40,-2");
+      resPolys = [.. c.TrimmedSeg (0, 0.8, polySoup)];
+      resPolys.Count.Is (1); resPolys[0].Is ("M-0,-40Q0,40,-2");
+      resPolys = [.. c.TrimmedSeg (0, 0.5, polySoup)];
+      resPolys.Count.Is (1); resPolys[0].Is ("M0,40Q-0,-40,-2");
    }
 
    [Test (118, "Trim arc seg")]
