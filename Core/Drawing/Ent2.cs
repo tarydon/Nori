@@ -88,7 +88,8 @@ public class E2Dimension : Ent2 {
    public override Bound2 GetBound (Matrix2 xfm)
       => new (mEnts.Select (a => a.GetBound (xfm)));
 
-   public override E2Dimension XFormed (Matrix2 m) => new (Layer, mEnts.Select (a => a.XFormed (m)));
+   public override E2Dimension XFormed (Matrix2 m)
+      => new (Layer, mEnts.Select (a => a.XFormed (m))) { Color = Color };
 
    // The entities making up the dimension (in DXF, this is stored in a block, but since that
    // block is used exactly once, it makes more sense to just store the entities here and create
@@ -145,7 +146,8 @@ public class E2Bendline : Ent2 {
    public override Bound2 Bound => new (Pts);
    public override Bound2 GetBound (Matrix2 xfm) => new (Pts.Select (a => a * xfm));
 
-   public override E2Bendline XFormed (Matrix2 m) => new (mDwg, Pts.Select (a => a * m), Angle, Radius, KFactor, Thickness);
+   public override E2Bendline XFormed (Matrix2 m) 
+      => new (mDwg, Pts.Select (a => a * m), Angle, Radius, KFactor, Thickness);
 
    // Private data -------------------------------------------------------------
    readonly Dwg2 mDwg;  // Drawing this belongs to (needed to obtain the thickness)
@@ -210,7 +212,7 @@ public class E2Insert : Ent2 {
    }
 
    public override E2Insert XFormed (Matrix2 m)
-     => new (mDwg, Layer, BlockName, Pt * m, Angle + (Vector2.XAxis * m).Heading, XScale * m.ScaleFactor, YScale * m.ScaleFactor);
+     => new (mDwg, Layer, BlockName, Pt * m, Angle + (Vector2.XAxis * m).Heading, XScale * m.ScaleFactor, YScale * m.ScaleFactor) { Color = Color };
 
    // Methods ------------------------------------------------------------------
    public override bool IsCloser (Point2 worldPt, ref double threshold) {
@@ -252,7 +254,7 @@ public class E2Point : Ent2 {
       return false;
    }
 
-   public override E2Point XFormed (Matrix2 m) => new (Layer, mPt * m);
+   public override E2Point XFormed (Matrix2 m) => new (Layer, mPt * m) { Color = Color };
 }
 #endregion
 
@@ -287,7 +289,7 @@ public class E2Poly : Ent2 {
    /// <summary>Compute the Bound of the E2Poly under a rotation</summary>
    public override Bound2 GetBound (Matrix2 xfm) => mPoly.GetBound (xfm);
 
-   public override E2Poly XFormed (Matrix2 m) => new (Layer, mPoly * m);
+   public override E2Poly XFormed (Matrix2 m) => new (Layer, mPoly * m) { Color = Color };
 
    /// <summary>Makes a clone of this E2Poly, but just with a different polyline</summary>
    /// This copies the layer, color and flags from the existing poly
@@ -308,7 +310,7 @@ public class E2Solid : Ent2 {
    public override Bound2 GetBound (Matrix2 xfm)
       => new (mPts.Select (a => a * xfm));
 
-   public override E2Solid XFormed (Matrix2 m) => new (Layer, mPts.Select (a => a * m));
+   public override E2Solid XFormed (Matrix2 m) => new (Layer, mPts.Select (a => a * m)) { Color = Color };
 
    /// <summary>The list of points in this solid</summary>
    public IReadOnlyList<Point2> Pts => mPts;
@@ -352,7 +354,7 @@ public class E2Spline : Ent2 {
 
    public override Bound2 GetBound (Matrix2 xfm) => new (Pts.Select (a => a * xfm));
 
-   public override E2Spline XFormed (Matrix2 m) => new (Layer, mSpline * m, mFlags);
+   public override E2Spline XFormed (Matrix2 m) => new (Layer, mSpline * m, mFlags) { Color = Color };
 
    public Spline2 Spline => mSpline;
    readonly Spline2 mSpline;
@@ -416,9 +418,8 @@ public class E2Text : Ent2 {
       return false;
    }
 
-   public override E2Text XFormed (Matrix2 m) {
-      return new (Layer, Style, Text, Pt * m, Height * m.ScaleFactor, Angle + (Vector2.XAxis * m).Heading, Oblique, XScale, Alignment);
-   }
+   public override E2Text XFormed (Matrix2 m)
+      => new (Layer, Style, Text, Pt * m, Height * m.ScaleFactor, Angle + (Vector2.XAxis * m).Heading, Oblique, XScale, Alignment) { Color = Color };
 
    #region Implementation and Private stuff --------------------------
    public ImmutableArray<Poly> Polys => Render ();
