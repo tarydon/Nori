@@ -322,6 +322,8 @@ public class E2Solid : Ent2 {
 #region class E2Spline -----------------------------------------------------------------------------
 /// <summary>Represents a 2D spline (rational splines also supported)</summary>
 public class E2Spline : Ent2 {
+   E2Spline () => mSpline = null!;
+
    public E2Spline (Layer2 layer, Spline2 spline, E2Flags flags) : base (layer) {
       mSpline = spline; mFlags |= flags;
    }
