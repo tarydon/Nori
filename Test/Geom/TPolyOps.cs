@@ -278,12 +278,21 @@ class PolyTrimExtendTests {
       resPoly.Count.Is (2);
       resPoly[0].Is ("C80,25,25");
       resPoly[1].Is ("M80,50H0Q0,0,2V0H80");
+      resPoly = [.. p.ExtendedSeg (1, 0.8, dist: 0, polySoup)];
+      resPoly.Count.Is (2); // Observe this result is identical to 0.2 case!
+      resPoly[0].Is ("C80,25,25");
+      resPoly[1].Is ("M80,50H0Q0,0,2V0H80");
 
       // Unobstructed arc seg extension - open poly
       p = Poly.Parse ("M0,0 H80 Q80,50,2 H0"); // Obround-like, with left arc missing
       polySoup = [p];
-      resPoly = [.. p.ExtendedSeg (1, 0.8, dist: 0, polySoup)];
+      resPoly = [.. p.ExtendedSeg (1, 0.2, dist: 0, polySoup)];
       resPoly.Count.Is (3);
+      resPoly[0].Is ("C80,25,25");
+      resPoly[1].Is ("M0,0H80");
+      resPoly[2].Is ("M80,50H0");
+      resPoly = [.. p.ExtendedSeg (1, 0.8, dist: 0, polySoup)];
+      resPoly.Count.Is (3); // Observe this result is identical to 0.2 case!
       resPoly[0].Is ("C80,25,25");
       resPoly[1].Is ("M0,0H80");
       resPoly[2].Is ("M80,50H0");

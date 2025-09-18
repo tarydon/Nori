@@ -357,9 +357,7 @@ public partial class Poly {
          (double fwdCutoff, double revCutoff) = (1 + Lib.Epsilon, 0 - Lib.Epsilon);
          (double fwdExt, double revExt) = (1000, -1000);
          foreach (var s in polySoup.SelectMany (p => p.Segs)) {
-            var pts = seg.Intersect (s, buffer, finite: false);
-            if (pts.Length == 0) continue;
-            foreach (var pt in pts) {
+            foreach (var pt in seg.Intersect (s, buffer, finite: false)) {
                double lie = seg.GetLie (pt);
                if (fwd) {
                   if (lie > fwdCutoff) fwdExt = Math.Min (fwdExt, lie);
@@ -378,33 +376,38 @@ public partial class Poly {
          (double fwdExt, double revExt) = (1000, -1000);
          // Need lies to either be (+) or (-) along the arc extension path, based on "fwd" parameter.
          (double s, double e) = seg.GetStartAndEndAngles ();
-         if (seg.IsCCW) {
-            if (e < s) e += Lib.TwoPI;
-         } else {
-            if (e > s) e -= Lib.TwoPI;
-         }
          double span = e - s;
+         double circumSpans = Lib.TwoPI / Math.Abs (span); // How many spans span the full circle?
          foreach (var oseg in polySoup.SelectMany (p => p.Segs)) {
-            var pts = seg.Intersect (oseg, buffer, finite: false);
-            if (pts.Length == 0) continue;
-            foreach (var pt in pts) {
+            foreach (var pt in seg.Intersect (oseg, buffer, finite: false)) {
                double ang = seg.Center.AngleTo (pt);
                if (seg.IsCCW) {
                   if (ang < s) ang += Lib.TwoPI;
                } else {
                   if (ang > s) ang -= Lib.TwoPI;
                }
-               double lie = (ang - s) / span;
-               lie = fwd ? lie : -lie + 1;
+               double lie = (ang - s) / span; // Forward lie
                if (fwd) {
                   if (lie > fwdCutoff) fwdExt = Math.Min (fwdExt, lie);
                } else {
+                  lie -= circumSpans; // Converted to reverse lie
                   if (lie < revCutoff) revExt = Math.Max (revExt, lie);
                }
             }
          }
          extendLie = fwd ? fwdExt : revExt;
-         return fwd ? fwdExt != 1000 : revExt != -1000;
+         if (fwd ? fwdExt != 1000 : revExt != -1000) { // Got extended lie
+            // Boundary case: Extended arc would have become a circle, if no extended lie was found.
+            //    But, if the captured extended lie is located at end points of given seg, then ignore it
+            //    Note: Technically, the extended lie would have resulted in a circle, but downstream handling is tricky, so ignore this lie itself.
+            if (fwd) {
+               if (seg.GetPointAt (extendLie).EQ (seg.A)) return false;
+            } else {
+               if (seg.GetPointAt (extendLie).EQ (seg.B)) return false;
+            }
+            return true;
+         }
+         return false;
       }
    }
 
