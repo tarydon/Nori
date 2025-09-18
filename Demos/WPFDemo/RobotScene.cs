@@ -1,11 +1,13 @@
 namespace WPFDemo;
+
+using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
 using Nori;
 
 class RobotScene : Scene3 {
    public RobotScene () {
-      mMech = Mechanism.Load ("N:/Wad/FanucX/mechanism.curl");
+      mMech = Mechanism.Load ("N:/Wad/Fanuc10/mechanism.curl");
       mTip = mMech.FindChild ("Tip")!;
       var robot = new MechanismVN (mMech);
       var gripper = mGripper = new XfmVN (Matrix3.Identity, new RBRDebugVN ());
@@ -15,7 +17,7 @@ class RobotScene : Scene3 {
          double a = m.JMin, b = m.JMax, delta = i switch { 1 => 0, 4 => 0, _ => 0 };
          mMin[i] = a + delta; mMax[i] = b + delta;
       }
-      mSolver = new (150, 770, 0, 0, 1016, 175, mMin, mMax);
+      mSolver = new (25, 560, 35, 0, 515, 114.5, mMin, mMax);
       mCS = mHome; ComputeIK ();
 
       Lib.Tracer = TraceVN.Print;
@@ -43,9 +45,16 @@ class RobotScene : Scene3 {
       ui.Add (mStances);
       mStances.SelectionChanged += (s, e) => {
          if (!mComputingIK) {
-            mSelStance = mStances.SelectedIndex; ComputeIK ();
+            mSelStance = mStances.SelectedIndex; ComputeIK (mCS);
          }
       };
+      if (System.IO.File.Exists ("poses.txt")) {
+         ui.Add (mPoses);
+         foreach (var line in System.IO.File.ReadAllLines ("poses.txt"))
+            mPoses.Items.Add (line);
+      }
+
+      mPoses.SelectionChanged += OnPosesSelectionChanged;
 
       // Helper ..................................
       void AddLabel (string text)
@@ -61,19 +70,51 @@ class RobotScene : Scene3 {
          mSliders[text] = slider;
       }
    }
+
+   void OnPosesSelectionChanged (object sender, SelectionChangedEventArgs e) {
+      var selectedItem = mPoses.SelectedItem;
+      if (selectedItem == null) return;
+      var str = selectedItem.ToString ();
+      if (string.IsNullOrWhiteSpace (str)) return;
+      var regex = new Regex (@"O:\((?<Org>[0-9-.]+,[0-9-.]+,[0-9-.]+)\), X:<(?<XVec>[0-9-.]+,[0-9-.]+,[0-9-.]+)>, Y:<(?<YVec>[0-9-.]+,[0-9-.]+,[0-9-.]+)>, Z:<(?<ZVec>[0-9-.]+,[0-9-.]+,[0-9-.]+)>");
+      foreach (Match match in regex.Matches (str)) {
+         var org = ToP (match.Groups["Org"].Value);
+         var vecX = ToV (match.Groups["XVec"].Value);
+         var vecY = ToV (match.Groups["YVec"].Value);
+         ComputeIK (new CoordSystem (org, vecX, vecY));
+         break;
+      }
+
+      static Point3 ToP (string str) {
+         var split = str.Split (',');
+         return new Point3 (split[0].ToDouble (), split[1].ToDouble (), split[2].ToDouble ());
+      }
+
+      static Vector3 ToV (string str) {
+         var split = str.Split (',');
+         return new Vector3 (split[0].ToDouble (), split[1].ToDouble (), split[2].ToDouble ());
+      }
+   }
+
    ListBox mStances = new () { Margin = new Thickness (8, 0, 8, 4) };
+   ListBox mPoses = new () { Margin = new Thickness (8, 0, 8, 4) };
    Dictionary<string, Slider> mSliders = [];
    double mX, mY, mZ, mRx, mRy, mRz;
 
    void ComputeIK () {
-      mComputingIK = true;
       var cs = CoordSystem.World;
       cs *= Matrix3.Rotation (EAxis.X, mRx.D2R ());
       cs *= Matrix3.Rotation (EAxis.Y, mRy.D2R ());
       cs *= Matrix3.Rotation (EAxis.Z, mRz.D2R ());
-      mCS = cs * Matrix3.Translation ((Vector3)(mHome.Org + new Vector3 (mX, mY, mZ)));
+      cs *= Matrix3.Translation (new Vector3 (mX, mY, mZ));
+      ComputeIK (cs);
+   }
+
+   void ComputeIK (CoordSystem cs) {
+      mCS = cs;
+      mComputingIK = true;
       mStances.Items.Clear ();
-      mSolver.ComputeStances (mCS.Org, mCS.VecZ, mCS.VecX);
+      mSolver.ComputeStances (mHome.Org + (Vector3)mCS.Org, -mCS.VecZ.Normalized (), mCS.VecX.Normalized ());
       for (int j = 0; j < 8; j++) {
          var a = mSolver.Solutions[j];
          if (a.OK) mStances.Items.Add ($"Stance {j + 1}");
@@ -94,7 +135,7 @@ class RobotScene : Scene3 {
    }
 
    public Mechanism Mech => mMech;
-   CoordSystem mHome = new (new (1166, 0, 1161 - 565), Vector3.XAxis, Vector3.YAxis), mCS;
+   CoordSystem mHome = new (new (0, 0, -400), Vector3.XAxis, Vector3.YAxis), mCS;
    double[] mMin = new double[6], mMax = new double[6];
    RBRSolver mSolver;
    Mechanism mMech, mTip;

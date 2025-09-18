@@ -1,0 +1,46 @@
+(Mechanism){
+  Name:LR10IA_10  Children:[
+    { Name:Base  Color:#B0B000  Sockets:[0,0,202.5]
+      Geometry:(FileGeometry){ File:Model/Base.mesh }      
+      Children:[
+        { Name:S  Color:#FFFF00  Sockets:[25,0,197.5]
+          Joint:Rotate  JVector:0,0,1  JMin:-185  JMax:185  JAsDrawn:-90
+          Geometry:(FileGeometry){ File:Model/S.mesh }
+          Children:[
+            { Name:L  Color:#B0B000  Sockets:[0,0,560]
+              Joint:Rotate  JVector:0,1,0  JMin:-190  JAsDrawn:-90  JMax:45
+              Geometry:(FileGeometry){ File:Model/L.mesh }
+              Children:[
+                { Name:U  Color:#FFFF00  Sockets:[97,0,35]
+                  Joint:Rotate  JVector:0,1,0  JMin:-210  JMax:70
+                  Geometry:(FileGeometry){ File:Model/U.mesh }
+                  Children:[
+                    { Name:R  Color:#B0B000  Sockets:[418,0,0]
+                      Joint:Rotate  JVector:1,0,0  JMin:-190  JMax:190
+                      Geometry:(FileGeometry){ File:Model/R.mesh }
+                      Children:[
+                        { Name:B  Color:#FFFF00  Sockets:[0,0,-70]
+                          Joint:Rotate  JVector:0,1,0  JMin:-125  JAsDrawn:90  JMax:125
+                          Geometry:(FileGeometry){ File:Model/B.mesh }
+                          Children:[
+                            { Name:T  Color:#B0B000  Sockets:[0,0,-10]
+                              Joint:Rotate  JVector:0,0,-1  JMin:-360  JMax:360
+                              Geometry:(FileGeometry){ File:Model/T.mesh }
+                              Children:[
+                                { Name:Tip }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }  
+                  ]
+                }
+              ]
+            }  
+          ]
+        }
+      ]
+    }
+  ]
+}
