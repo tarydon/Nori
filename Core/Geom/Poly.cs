@@ -337,10 +337,16 @@ public partial class Poly {
    // Operators ----------------------------------------------------------------
    /// <summary>Create a new Poly by applying the transformation matrix</summary>
    public static Poly operator * (Poly p, Matrix2 xfm) {
-      var pts = p.Pts.Select (a => a * xfm).ToImmutableArray ();
-      var extra = ImmutableArray<ArcInfo>.Empty;
-      if (p.HasArcs) extra = [..p.Extra.Select (a => a * xfm)];
-      return new Poly (pts, extra, p.mFlags);
+      if (p.IsCircle) {
+         var cen = p.Extra[0].Center;
+         double radius = cen.DistTo (p.A) * xfm.ScaleFactor;
+         return Poly.Circle (cen * xfm, radius);
+      } else {
+         var pts = p.Pts.Select (a => a * xfm).ToImmutableArray ();
+         ImmutableArray<ArcInfo> extra = [];
+         if (p.HasArcs) extra = [.. p.Extra.Select (a => a * xfm)];
+         return new Poly (pts, extra, p.mFlags);
+      }
    }
 
    // Nested types -------------------------------------------------------------

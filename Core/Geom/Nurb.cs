@@ -9,6 +9,8 @@ namespace Nori;
 /// It implements the code common to 2D and 3D splines - evaluating the NURB basis
 /// functions at a given value of the paramter t.
 public abstract class Spline {
+   protected Spline () => (_val, _left, _right) = (null!, null!, null!);
+
    public Spline (int cCtrl, ImmutableArray<double> knot, ImmutableArray<double> weight) {
       (mNodes, Knot, Weight) = (cCtrl, knot, weight);
       Rational = !(weight.IsEmpty || weight.All (a => a.EQ (1)));
@@ -44,6 +46,7 @@ public abstract class Spline {
    // are basis functions, the sum of those weights adds up to 1.0). This computation
    // of the basis functions is detailed in Algorithm A2.2 from the "NURBS Book"
    protected int ComputeBasis (double t) {
+      _val ??= new double[Degree + 1]; _left ??= new double[Degree + 1]; _right ??= new double[Degree + 1];
       // First find the span of interest in which this knot lies
       int n = mNodes - 1, span = n;
       if (t < Knot[n + 1]) {
@@ -84,6 +87,8 @@ public abstract class Spline {
 #region class Spline2
 /// <summary>Implements a 2 dimensional spline</summary>
 public class Spline2 : Spline {
+   Spline2 () { }
+
    public Spline2 (ImmutableArray<Point2> ctrl, ImmutableArray<double> knot, ImmutableArray<double> weight) : base (ctrl.Length, knot, weight)
       => Ctrl = ctrl;
 
@@ -180,6 +185,11 @@ public class Spline2 : Spline {
          return new (x, y);
       }
    }
+
+   // Operators ----------------------------------------------------------------
+   /// <summary>Creates a new Spline2 by applying the transformation matrix</summary>
+   public static Spline2 operator * (Spline2 s, Matrix2 xfm)
+      => new ([.. s.Ctrl.Select (a => a * xfm)], s.Knot, s.Weight);
 
    // Nested types -------------------------------------------------------------
    // Node is an internal struct used during discretization of a spline
