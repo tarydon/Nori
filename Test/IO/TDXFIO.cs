@@ -283,7 +283,7 @@ class DXFTests2 {
       var dwg = DXFReader.FromFile (NT.File ("IO/DXF/AllEnts.dxf"));
       CurlWriter.ToFile (dwg, NT.TmpCurl);
       Assert.TextFilesEqual1 ("IO/DXF/Out/AllEnts1.curl", NT.TmpCurl);
-      var xfm = Matrix2.Rotation (45.D2R ());
+      var xfm = Matrix2.Rotation (45.D2R ()) * Matrix2.Scaling (2);
       for (int i = 0; i < dwg.Ents.Count; i++)
          dwg.Ents[i] = dwg.Ents[i].XFormed (xfm);
       CurlWriter.ToFile (dwg, NT.TmpCurl);
