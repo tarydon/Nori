@@ -404,6 +404,7 @@ public class PolyBuilder {
    public Poly Build () {
       PopBulge (mPts[0]);
       Poly.EFlags flags = mClosed ? Poly.EFlags.Closed : 0;
+      if (mClosed && mPts.Count > 1 && mPts[0].EQ (mPts[^1])) mPts.RemoveLast ();
       var extra = ImmutableArray<Poly.ArcInfo>.Empty;
       if (mExtra.Count > 0) {
          extra = [..mExtra];
