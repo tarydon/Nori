@@ -35,32 +35,42 @@ public class RBRSolver {
       // ------------------------------------------------
       // Start the IK analysis
       Vector3 FS6 = -vecZ, Fa67 = vecX;
-      Vector3 FS1 = Vector3.ZAxis;                                // (5.5)
+      Vector3 FS1 = Vector3.ZAxis;                               // (5.5)
       Vector3 FS7 = (Fa67 * FS6).Normalized ();
-      Vector3 Fa71 = FS7 * FS1;                                   // (5.10)
-      if (Fa71.LengthSq.EQ (0, Lib.Epsilon * Lib.Epsilon))
-         return;
+      Vector3 Fa71 = FS7 * FS1;                                  // (5.10)
 
       // ------------------------------------------------
       // First, perform the loop closure
-      Fa71 = Fa71.Normalized ();                                  // (5.11)
+      Point3 FP6orig = Fptool;                                   // (5.3)
+      Vector3 vFP6orig = (Vector3)FP6orig;
+      double Fa71LenSq = Fa71.LengthSq;
+      Fa71 = Fa71.Normalized ();                                 // (5.11)
+      double s71, S7, a71, S1;
+      // Special case when S1 and S7 are parallel                // (5.6.1)
+      if (Fa71LenSq.EQ (0, Lib.Epsilon * Lib.Epsilon)) {
+         S7 = 0;
+         S1 = -vFP6orig.Dot (FS1);                               // (5.25)
+         Vector3 vFa71 = -(vFP6orig + new Vector3 (0, 0, S1));
+         a71 = vFa71.Length;                                     // (5.27)
+         Fa71 = vFa71 / a71;
+         s71 = (FS7 * FS1).Dot (Fa71);                           // (5.12)
+      } else {
+         s71 = (FS7 * FS1).Dot (Fa71);                           // (5.12)
+         S7 = (FS1 * vFP6orig).Dot (Fa71) / s71;                 // (5.21)
+         a71 = (vFP6orig * FS1).Dot (FS7) / s71;                 // (5.22)
+         S1 = (vFP6orig * FS7).Dot (Fa71) / s71;                 // (5.23)
+      }
+
       double c71 = FS7.Dot (FS1);
-      double s71 = (FS7 * FS1).Dot (Fa71);                        // (5.12)
       double alpha71 = Math.Atan2 (s71, c71);
 
-      double c7 = Fa67.Dot (Fa71);                                // (5.13)
-      double s7 = (Fa67 * Fa71).Dot (FS7);                        // (5.14)
+      double c7 = Fa67.Dot (Fa71);                               // (5.13)
+      double s7 = (Fa67 * Fa71).Dot (FS7);                       // (5.14)
       double theta7 = Math.Atan2 (s7, c7);
 
-      double cgamma = Fa71.X;                                     // (5.15)
-      double sgamma = (Fa71 * Vector3.XAxis).Dot (FS1);           // (5.16)
+      double cgamma = Fa71.X;                                    // (5.15)
+      double sgamma = (Fa71 * Vector3.XAxis).Dot (FS1);          // (5.16)
       double gamma1 = Math.Atan2 (sgamma, cgamma);
-
-      Point3 FP6orig = Fptool;                                    // (5.3)
-      Vector3 vFP6orig = (Vector3)FP6orig;
-      double S7 = (FS1 * vFP6orig).Dot (Fa71) / s71;              // (5.21)
-      double a71 = (vFP6orig * FS1).Dot (FS7) / s71;              // (5.22)
-      double S1 = (vFP6orig * FS7).Dot (Fa71) / s71;              // (5.23)
 
       // ------------------------------------------------
       // Having performed the loop closure, we can now proceed to the inverse analysis.
