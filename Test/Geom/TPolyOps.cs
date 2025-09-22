@@ -143,12 +143,12 @@ class PolyTrimExtendTests {
       p = Poly.Parse ("M0,0 H80 Q80,50,2 H0 Q0,0,2 Z"); // Obround 120 x 50
       polySoup = [p];
       resPolys = [.. p.TrimmedSeg (0, 0.5, polySoup)];
-      resPolys.Count.Is (1); resPolys[0].Is ("M80,0Q80,50,2H0Q0,0,2V0");
+      resPolys.Count.Is (1); resPolys[0].Is ("M80,0Q80,50,2H0Q0,0,2");
 
       polySoup.Add (Poly.Line (20, 0, 20, 50)); // Chop the obround at X == 20
       polySoup.Add (Poly.Line (60, 0, 60, 50)); // Chop the obround at X == 60
       resPolys = [.. p.TrimmedSeg (0, 0.5, polySoup)];
-      resPolys.Count.Is (1); resPolys[0].Is ("M60,0H80Q80,50,2H0Q0,0,2V0H20");
+      resPolys.Count.Is (1); resPolys[0].Is ("M60,0H80Q80,50,2H0Q0,0,2H20");
 
       // Single line seg poly
       p = Poly.Line (0, 0, 100, 0);
@@ -210,13 +210,13 @@ class PolyTrimExtendTests {
       p = Poly.Parse ("M0,0 H80 Q80,50,2 H0 Q0,0,2 Z"); // Obround 120 x 50
       polySoup = [p];
       resPolys = [.. p.TrimmedSeg (1, 0.2, polySoup)];
-      resPolys.Count.Is (1); resPolys[0].Is ("M80,50H0Q0,0,2V0H80");
+      resPolys.Count.Is (1); resPolys[0].Is ("M80,50H0Q0,0,2H80");
 
       polySoup.Add (Poly.Line (-25, 10, 145, 10));
       resPolys = [.. p.TrimmedSeg (1, 0.2, polySoup)];
-      resPolys.Count.Is (1); resPolys[0].Is ("M100,10Q80,50,1.409666H0Q0,0,2V0H80");
+      resPolys.Count.Is (1); resPolys[0].Is ("M100,10Q80,50,1.409666H0Q0,0,2H80");
       resPolys = [.. p.TrimmedSeg (1, 0.8, polySoup)];
-      resPolys.Count.Is (1); resPolys[0].Is ("M80,50H0Q0,0,2V0H80Q100,10,0.590334");
+      resPolys.Count.Is (1); resPolys[0].Is ("M80,50H0Q0,0,2H80Q100,10,0.590334");
 
       // Arc seg in open poly
       p = Poly.Parse ("M0,0 H80 Q80,50,2 H0"); // Obround-like, with left arc missing
@@ -247,13 +247,13 @@ class PolyTrimExtendTests {
       p = Poly.Parse ("M0,0 H80 Q80,50,2 H0 Q0,0,2 Z"); // Obround 120 x 50
       polySoup = [p];
       resPolys = [.. p.ExtendedSeg (0, 0.2, dist: 10, polySoup)];
-      resPolys.Count.Is (1); resPolys[0].Is ("M-10,0H80Q80,50,2H0Q0,0,2V0");
+      resPolys.Count.Is (1); resPolys[0].Is ("M-10,0H80Q80,50,2H0Q0,0,2");
       resPolys = [.. p.ExtendedSeg (0, 0.8, dist: 10, polySoup)];
-      resPolys.Count.Is (1); resPolys[0].Is ("M80,0Q80,50,2H0Q0,0,2V0H90");
+      resPolys.Count.Is (1); resPolys[0].Is ("M80,0Q80,50,2H0Q0,0,2H90");
       resPolys = [.. p.ExtendedSeg (2, 0.2, dist: 10, polySoup)];
-      resPolys.Count.Is (1); resPolys[0].Is ("M90,50H0Q0,0,2V0H80Q80,50,2");
+      resPolys.Count.Is (1); resPolys[0].Is ("M90,50H0Q0,0,2H80Q80,50,2");
       resPolys = [.. p.ExtendedSeg (2, 0.8, dist: 10, polySoup)];
-      resPolys.Count.Is (1); resPolys[0].Is ("M0,50Q0,0,2V0H80Q80,50,2H-10");
+      resPolys.Count.Is (1); resPolys[0].Is ("M0,50Q0,0,2H80Q80,50,2H-10");
 
       // Open poly
       p = Poly.Parse ("M0,0 H80 Q80,50,2 H0"); // Obround-like, with left arc missing
@@ -288,11 +288,11 @@ class PolyTrimExtendTests {
       resPoly = [.. p.ExtendedSeg (1, 0.2, dist: 0, polySoup)];
       resPoly.Count.Is (2);
       resPoly[0].Is ("C80,25,25");
-      resPoly[1].Is ("M80,50H0Q0,0,2V0H80");
+      resPoly[1].Is ("M80,50H0Q0,0,2H80");
       resPoly = [.. p.ExtendedSeg (1, 0.8, dist: 0, polySoup)];
       resPoly.Count.Is (2); // Observe this result is identical to 0.2 case!
       resPoly[0].Is ("C80,25,25");
-      resPoly[1].Is ("M80,50H0Q0,0,2V0H80");
+      resPoly[1].Is ("M80,50H0Q0,0,2H80");
 
       // Unobstructed arc seg extension - open poly
       p = Poly.Parse ("M0,0 H80 Q80,50,2 H0"); // Obround-like, with left arc missing
@@ -313,10 +313,10 @@ class PolyTrimExtendTests {
       polySoup = [p, Poly.Line (0, 10, 80, 10), Poly.Line (0, 40, 80, 40)];
       resPoly = [.. p.ExtendedSeg (1, 0.2, dist: 0, polySoup)];
       resPoly.Count.Is (1);
-      resPoly[0].Is ("M60,10Q80,50,2.590334H0Q0,0,2V0H80");
+      resPoly[0].Is ("M60,10Q80,50,2.590334H0Q0,0,2H80");
       resPoly = [.. p.ExtendedSeg (1, 0.8, dist: 0, polySoup)];
       resPoly.Count.Is (1);
-      resPoly[0].Is ("M80,50H0Q0,0,2V0H80Q60,40,2.590334");
+      resPoly[0].Is ("M80,50H0Q0,0,2H80Q60,40,2.590334");
 
       // Obstructed arc seg extension - open poly
       p = Poly.Parse ("M0,0 H80 Q80,50,2 H0"); // Obround-like, with left arc missing
