@@ -139,22 +139,6 @@ class PolyEdgeTests {
       poly = rounded.EdgeRecess (0, left: true, 15, 20, 10); poly!.Is ("M100,0V5H90V25H100V50H0V5Q5,0,1Z");
       poly = rounded.EdgeRecess (0, left: false, 15, 20, 10); poly!.Is ("M100,0V5H110V25H100V50H0V5Q5,0,1Z");
    }
-<<<<<<< HEAD
-
-   [Test (114, "Poly Edge U-Notch")]
-   void Test2 () {
-      Poly rect = Poly.Rectangle (0, 0, 60, 50);
-      Poly? poly;
-      poly = rect.UNotch (0, 10, 10, 10, 2); poly!.Is ("M0,0H5V8Q7,10,-1H13Q15,8,-1V0H60V50H0Z");
-      poly = rect.UNotch (0, 10, 10, -10, 2); poly!.Is ("M0,0H5V-8Q7,-10,1H13Q15,-8,1V0H60V50H0Z");
-      poly = rect.UNotch (0, 10, 10, 10, 0); poly!.Is ("M0,0H5V5Q10,10,-1V10Q15,5,-1V0H60V50H0Z");
-
-      Poly line = Poly.Line (0, 0, 50, 0);
-      poly = line.UNotch (0, 5, 10, 10, 2); poly!.Is ("M0,0V8Q2,10,-1H8Q10,8,-1V0H50");
-      poly = line.UNotch (0, 5, 10, -10, 2); poly!.Is ("M0,0V-8Q2,-10,1H8Q10,-8,1V0H50");
-   }
-||||||| 8aaf7b9
-=======
 
    [Test (114, "Poly Edge-V")]
    void Test2 () {
@@ -168,5 +152,19 @@ class PolyEdgeTests {
       poly = line.VNotch (0, 15, 20, 10); poly!.Is ("M0,0H5L15,10L25,0H100");
       poly = line.VNotch (0, 15, 20, -10); poly!.Is ("M0,0H5L15,-10L25,0H100");
    }
->>>>>>> main
+
+   [Test (115, "Poly Edge U-Notch")]
+   void Test3 () {
+      Poly rect = Poly.Rectangle (0, 0, 60, 50);
+      Poly? poly;
+      poly = rect.UNotch (0, 10, 10, 10, 2); poly!.Is ("M0,0H5V8Q7,10,-1H13Q15,8,-1V0H60V50H0Z");
+      poly = rect.UNotch (0, 10, 10, -10, 2); poly!.Is ("M0,0H5V-8Q7,-10,1H13Q15,-8,1V0H60V50H0Z");
+      poly = rect.UNotch (0, 10, 10, 10, 0); poly!.Is ("M0,0H5V5Q10,10,-1V10Q15,5,-1V0H60V50H0Z");
+      poly = rect.UNotch (0, 30, 70, 10, 10); Assert.IsTrue (poly is null); // Notch doesn't fit in the seg
+      poly = rect.UNotch (0, 10, 10, 0, 2); Assert.IsTrue (poly is null); // Depth is zero
+
+      Poly line = Poly.Line (0, 0, 50, 0);
+      poly = line.UNotch (0, 5, 10, 10, 2); poly!.Is ("M0,0V8Q2,10,-1H8Q10,8,-1V0H50");
+      poly = line.UNotch (0, 5, 10, -10, 2); poly!.Is ("M0,0V-8Q2,-10,1H8Q10,-8,1V0H50");
+   }
 }

@@ -330,7 +330,7 @@ public partial class Poly {
    public Poly? UNotch (int seg, double centerOffset, double width, double depth, double radius) {
       Seg s = this[seg];
       (centerOffset, width, radius, double pDepth) = (Math.Abs (centerOffset), Math.Abs (width), Math.Abs (radius), Math.Abs (depth));
-      if (!s.IsLine || centerOffset < width / 2 || s.Length < (centerOffset + width / 2)) return null; // Check: Notch fits the given seg length.
+      if (!s.IsLine || centerOffset < width / 2 || s.Length < (centerOffset + width / 2) || depth.IsZero ()) return null; // Check: Notch fits the given seg length.
       // Clamps radius to min (depth, width/2) if zero or exceeds limits
       if (radius.IsZero () || radius > (width / 2) || radius > pDepth) radius = Math.Min (pDepth, width / 2);
 
