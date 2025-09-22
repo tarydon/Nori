@@ -350,4 +350,17 @@ class PolyEdgeTests {
       poly = rounded.EdgeRecess (0, left: true, 15, 20, 10); poly!.Is ("M100,0V5H90V25H100V50H0V5Q5,0,1Z");
       poly = rounded.EdgeRecess (0, left: false, 15, 20, 10); poly!.Is ("M100,0V5H110V25H100V50H0V5Q5,0,1Z");
    }
+
+   [Test (114, "Poly Edge-V")]
+   void Test2 () {
+      Poly rect = Poly.Rectangle (0, 0, 100, 50);
+      Poly? poly;
+      poly = rect.VNotch (0, 15, 20, 10); poly!.Is ("M0,0H5L15,10L25,0H100V50H0Z");
+      poly = rect.VNotch (0, 15, 20, -10); poly!.Is ("M0,0H5L15,-10L25,0H100V50H0Z");
+      poly = rect.VNotch (0, 15, 20, 0); Assert.IsTrue (poly is null);
+
+      Poly line = Poly.Line (0, 0, 100, 0);
+      poly = line.VNotch (0, 15, 20, 10); poly!.Is ("M0,0H5L15,10L25,0H100");
+      poly = line.VNotch (0, 15, 20, -10); poly!.Is ("M0,0H5L15,-10L25,0H100");
+   }
 }
