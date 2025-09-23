@@ -70,6 +70,15 @@ class Panel : System.Windows.Controls.UserControl {
    public static Panel It => mIt ??= new ();
    internal static Panel? mIt;
 
+   // Sets the cursor to be visible or hidden
+   // (this is just the implementation of the Lux.Panel.CursorVisible property)
+   public static bool CursorVisible {
+      set {
+         if (mIt?.mSurface is not { } surface) return;
+         surface.Cursor = value ? null : Surface.EmptyCursor;
+      }
+   }
+
    // Force-issue a WM_PAINT message (redraw)
    public void Redraw ()
       => mSurface?.Invalidate ();
@@ -114,7 +123,7 @@ class Panel : System.Windows.Controls.UserControl {
 
 #region class Surface ------------------------------------------------------------------------------
 /// <summary>Windows.Forms control that provides the HWND and HDC needed to create an OpenGL rendering context</summary>
-class Surface : System.Windows.Forms.UserControl {
+class Surface : UserControl {
    // Interface ----------------------------------------------------------------
    public Surface () {
       // Set up some style bits for this Surface to ensure OpenGL works correctly
@@ -175,7 +184,7 @@ class Surface : System.Windows.Forms.UserControl {
    }
 
    /// <summary>An 'empty' cursor</summary>
-   static FCursor EmptyCursor {
+   static internal FCursor EmptyCursor {
       get {
          if (mEmptyCursor == null)
             using (var stm = Lib.OpenRead ("nori:Cursor/Empty.cur"))

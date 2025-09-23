@@ -288,4 +288,19 @@ class PolyTests {
       DXFWriter.SaveFile (dwg, NT.TmpDXF);
       Assert.TextFilesEqual1 ("Geom/Poly/Out/SegInt2.dxf", NT.TmpDXF);
    }
+
+   [Test (112, "Seg Bound tests")]
+   void Test11 () {
+      Check ("ArcBound1");
+      Check ("ArcBound2");
+
+      static void Check (string file) {
+         var sb = new StringBuilder ();
+         var dwg = DXFReader.FromFile (NT.File ($"Geom/Poly/{file}.dxf"));
+         foreach (var seg in dwg.Polys.SelectMany (a => a.Segs).Where (a => a.IsArc))
+            sb.AppendFormat ($"{seg.Bound}\n");
+         File.WriteAllText (NT.TmpTxt, sb.ToString ());
+         Assert.TextFilesEqual1 ($"Geom/Poly/{file}.txt", NT.TmpTxt);
+      }
+   }
 }

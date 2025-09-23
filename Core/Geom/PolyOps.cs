@@ -241,6 +241,44 @@ public partial class Poly {
       return pb.Build ();
    }
 
+   /// <summary>Inserts V notch on the specified seg (returns null if not possible)</summary>
+   /// <param name="centerOffset">Offset of the notch-center, from start of the seg</param>
+   /// <param name="width">Width of V notch</param>
+   /// <param name="depth">Depth of V notch</param>
+   public Poly? VNotch (int seg, double centerOffset, double width, double depth) {
+      Seg s = this[seg];
+      if (!s.IsLine || centerOffset < width / 2 || s.Length < (centerOffset + width / 2) || depth.IsZero ()) return null; // Check: Notch fits the given seg length.
+
+      PolyBuilder pb = new ();
+      // Precompute values now, and keep the loop below clean.
+      (double slope, double slope2) = (s.Slope, s.Slope + (depth > 0 ? Lib.HalfPI : -Lib.HalfPI));
+      double offset = centerOffset - (width / 2); // Portion of seg leading upto notch
+
+      for (int i = 0; i < Count; i++) {
+         Point2 pt = mPts[i];
+         // This code adds all the other nodes (they could be the starts of line or arc
+         // segments, and we handle both by looking through the mExtra array). Note that
+         // we directly read the mExtra array rather than use Seg objects for better
+         // performance
+         if (HasArcs && i < Extra.Length) {
+            var extra = Extra[i];
+            if ((extra.Flags & EFlags.Arc) != 0) {
+               pb.Arc (pt, extra.Center, extra.Flags);
+               continue;
+            }
+         }
+         pb.Line (pt);
+         if (i == seg) {
+            if (!offset.IsZero ()) pb.Line (pt = pt.Polar (offset, slope));
+            pb.Line (pt.Polar (width / 2, slope).Polar (Math.Abs (depth), slope2));
+            pb.Line (pt.Polar (width, slope));
+         }
+      }
+      // Done, close the poly if needed and return it
+      if (IsClosed) return pb.Close ().Build ();
+      return pb.End (mPts[^1]);
+   }
+
    /// <summary>Inserts edge recess (rect notch) on the specified seg (returns null if not possible)</summary>
    /// <param name="left">Side of the seg, where the notch unfurls</param>
    /// <param name="centerOffset">Offset of the notch-center, from start of the seg</param>

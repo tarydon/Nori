@@ -1,0 +1,143 @@
+(Dwg2){
+  Layers:[
+    { Name:0 Color:#FFFFFFFF Linetype:Continuous Visible:True }
+    { Name:Defpoints Color:#FFFFFFFF Linetype:Continuous Visible:True }
+  ]
+  Styles:[
+    { Name:Standard Font:simplex XScale:1 }
+    { Name:Annotative Font:arial.ttf XScale:1 }
+  ]
+  Blocks:[
+    {
+      Name:*D2
+      Base:0,0
+      Ents:[
+        (E2Poly){ Layer:0 Color:#FF000000 Poly:M0,50.625V57.456424 }
+        (E2Poly){ Layer:0 Color:#FF000000 Poly:M90,50.625V57.456424 }
+        (E2Poly){ Layer:0 Color:#FF000000 Poly:M2.5,56.206424H87.5 }
+        (E2Solid){
+          Layer:0
+          Color:#FF000000
+          Pts:[ 2.5,56.623091 2.5,55.789758 0,56.206424 0,56.206424 ]
+        }
+        (E2Solid){
+          Layer:0
+          Color:#FF000000
+          Pts:[ 87.5,56.623091 87.5,55.789758 90,56.206424 90,56.206424 ]
+        }
+        (E2Text){
+          Layer:0
+          Color:#FF000000
+          Pt:45,58.081424
+          Text:90
+          Style:Standard
+          Alignment:MidCenter
+          Height:2.5
+          XScale:1
+        }
+        (E2Point){ Layer:Defpoints Color:#FF000000 Pt:0,50 }
+        (E2Point){ Layer:Defpoints Color:#FF000000 Pt:90,50 }
+        (E2Point){ Layer:Defpoints Color:#FF000000 Pt:90,56.206424 }
+      ]
+    }
+    {
+      Name:Marker1
+      Base:0,0
+      Ents:[
+        (E2Poly){ Layer:0 Poly:M-0,-10Q-10,0,3 }
+        (E2Poly){ Layer:0 Poly:C0,0,8 }
+        (E2Poly){ Layer:0 Poly:M-0,-8V-10 }
+        (E2Poly){ Layer:0 Poly:M-8,0H-10 }
+        (E2Point){ Layer:0 Pt:-0,-10 }
+      ]
+    }
+  ]
+  Ents:[
+    (E2Poly){ Layer:0 Poly:M0,0H100V40Q90,50,1H0Z }
+    (E2Poly){ Layer:0 Poly:C90,40,8 }
+    (E2Point){ Layer:0 Pt:90,40 }
+    (E2Text){
+      Layer:0
+      Pt:5,5
+      Text:"Hello, World!"
+      Style:Standard
+      Alignment:BaseLeft
+      Height:2.5
+      XScale:1
+    }
+    (E2Dimension){
+      Layer:0
+      Ents:[
+        (E2Poly){ Layer:0 Color:#FF000000 Poly:M0,50.625V57.456424 }
+        (E2Poly){ Layer:0 Color:#FF000000 Poly:M90,50.625V57.456424 }
+        (E2Poly){ Layer:0 Color:#FF000000 Poly:M2.5,56.206424H87.5 }
+        (E2Solid){
+          Layer:0
+          Color:#FF000000
+          Pts:[ 2.5,56.623091 2.5,55.789758 0,56.206424 0,56.206424 ]
+        }
+        (E2Solid){
+          Layer:0
+          Color:#FF000000
+          Pts:[ 87.5,56.623091 87.5,55.789758 90,56.206424 90,56.206424 ]
+        }
+        (E2Text){
+          Layer:0
+          Color:#FF000000
+          Pt:45,58.081424
+          Text:90
+          Style:Standard
+          Alignment:MidCenter
+          Height:2.5
+          XScale:1
+        }
+        (E2Point){ Layer:Defpoints Color:#FF000000 Pt:0,50 }
+        (E2Point){ Layer:Defpoints Color:#FF000000 Pt:90,50 }
+        (E2Point){ Layer:Defpoints Color:#FF000000 Pt:90,56.206424 }
+      ]
+    }
+    (E2Insert){
+      Layer:0
+      BlockName:Marker1
+      Pt:25,25
+      Angle:0.7853981633974483
+      XScale:0.5
+      YScale:0.5
+    }
+    (E2Spline){
+      Layer:0
+      Spline:{
+        Nodes:6
+        Knot:[
+          0
+          0
+          0
+          0
+          20
+          34.14213562373095
+          54.14213562373095
+          54.14213562373095
+          54.14213562373095
+          54.14213562373095
+        ]
+        Weight:[ ]
+        Ctrl:[
+          40,40
+          38.258641,29.12932
+          35.285955,10.57191
+          54.714045,39.42809
+          51.741359,20.87068
+          50,10
+        ]
+      }
+    }
+    (E2Solid){ Layer:0 Pts:[ 60,10 70,10 60,15 70,20 ] }
+    (E2Bendline){
+      Angle:0.7853981633974483
+      KFactor:0.42
+      Radius:2.5
+      Pts:[ 0,30 40,50 ]
+      Thickness:1
+    }
+  ]
+}

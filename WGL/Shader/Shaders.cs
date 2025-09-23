@@ -27,14 +27,15 @@ partial class DashLine2DShader : Shader<Vec2F, DashLine2DShader.Settings> {
    protected override void ApplyUniformsImp (ref readonly Settings a) {
       Pgm.Set (muXfm, ref Lux.Scene!.Xfms[a.IDXfm].Xfm);
       float fLType = ((int)a.LineType + 0.5f) / 10.0f;
-      Pgm.Set (muLineWidth, a.LineWidth).Set (muLineType, fLType);
-      Pgm.Set (muDrawColor, a.Color).Set (muLTScale, Lux.LTScale);
+      Pgm.Set (muLineWidth, a.LineWidth * Lux.DPIScale).Set (muLineType, fLType);
+      Pgm.Set (muDrawColor, a.Color).Set (muLTScale, a.LTScale * Lux.DPIScale);
    }
 
    protected override int OrderUniformsImp (ref readonly Settings a, ref readonly Settings b) {
       int n = a.IDXfm.CompareTo (b.IDXfm); if (n != 0) return n;
       n = a.LineType.CompareTo (b.LineType); if (n != 0) return n;
       n = (int)(a.Color.Value - b.Color.Value); if (n != 0) return n;
+      n = a.LTScale.CompareTo (b.LTScale); if (n != 0) return n;
       return a.LineWidth.CompareTo (b.LineWidth);
    }
 
@@ -43,9 +44,9 @@ partial class DashLine2DShader : Shader<Vec2F, DashLine2DShader.Settings> {
    }
 
    protected override Settings SnapUniformsImp ()
-      => new (Lux.IDXfm, Lux.LineWidth, Lux.LineType, Lux.Color);
+      => new (Lux.IDXfm, Lux.LineWidth, Lux.LineType, Lux.LTScale, Lux.Color);
 
-   public readonly record struct Settings (int IDXfm, float LineWidth, ELineType LineType, Color4 Color);
+   public readonly record struct Settings (int IDXfm, float LineWidth, ELineType LineType, float LTScale, Color4 Color);
 }
 #endregion
 
@@ -118,7 +119,7 @@ partial class Line3DShader : Shader<Vec3F, Seg2DShader.Settings> {
 
    protected override void ApplyUniformsImp (ref readonly Seg2DShader.Settings a) {
       Pgm.Set (muXfm, ref Lux.Scene!.Xfms[a.IDXfm].Xfm);
-      Pgm.Set (muLineWidth, a.LineWidth).Set (muDrawColor, a.Color);
+      Pgm.Set (muLineWidth, a.LineWidth * Lux.DPIScale).Set (muDrawColor, a.Color);
    }
 
    protected override int OrderUniformsImp (ref readonly Seg2DShader.Settings a, ref readonly Seg2DShader.Settings b) {
@@ -149,7 +150,7 @@ partial class Point2DShader : Shader<Vec2F, Point2DShader.Settings> {
    // Overrides ----------------------------------------------------------------
    protected override void ApplyUniformsImp (ref readonly Settings a) {
       Pgm.Set (muXfm, ref Lux.Scene!.Xfms[a.IDXfm].Xfm);
-      Pgm.Set (muPointSize, a.PointSize).Set (muDrawColor, a.Color);
+      Pgm.Set (muPointSize, a.PointSize * Lux.DPIScale).Set (muDrawColor, a.Color);
    }
 
    protected override int OrderUniformsImp (ref readonly Settings a, ref readonly Settings b) {
@@ -182,7 +183,7 @@ class Seg2DShader : Shader<Vec2F, Seg2DShader.Settings> {
    // Overrides ----------------------------------------------------------------
    protected unsafe override void ApplyUniformsImp (ref readonly Settings a) {
       Pgm.Set (muXfm, ref Lux.Scene!.Xfms[a.IDXfm].Xfm);
-      Pgm.Set (muLineWidth, a.LineWidth).Set (muDrawColor, a.Color);
+      Pgm.Set (muLineWidth, a.LineWidth * Lux.DPIScale).Set (muDrawColor, a.Color);
    }
 
    protected override int OrderUniformsImp (ref readonly Settings a, ref readonly Settings b) {
@@ -209,7 +210,7 @@ abstract class StencilLineShader : Shader<CMesh.Node, StencilLineShader.Settings
    // Overrides ----------------------------------------------------------------
    protected override void ApplyUniformsImp (ref readonly Settings a) {
       Pgm.Set (muXfm, ref Lux.Scene!.Xfms[a.IDXfm].Xfm);
-      Pgm.Set (muLineWidth, a.LineWidth).Set (muDrawColor, a.Color);
+      Pgm.Set (muLineWidth, a.LineWidth * Lux.DPIScale).Set (muDrawColor, a.Color);
    }
 
    protected override int OrderUniformsImp (ref readonly Settings a, ref readonly Settings b) {

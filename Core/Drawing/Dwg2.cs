@@ -18,6 +18,7 @@ public partial class Dwg2 {
          if (mBound.IsEmpty) {
             if (mEnts.Count == 0) mBound = new (0, 0, 100, 50);
             else mBound = new (mEnts.Select (a => a.Bound));
+            Lib.Trace ($"Bound: {mBound.Width.Round (0)}x{mBound.Height.Round (0)}");
          }
          return mBound;
       }
@@ -153,6 +154,13 @@ public partial class Dwg2 {
       mBlocks?.RemoveAll (a => !blocks.Contains (a));
       mLayers.RemoveAll (a => !layers.Contains (a));
       return this;
+   }
+
+   /// <summary>Selects the given entity (and optionally deselects the others that are selected)</summary>
+   public void Select (Ent2? ent, bool deselectOthers) {
+      if (deselectOthers) 
+         mEnts.Where (a => a.IsSelected).ForEach (a => a.IsSelected = false);
+      if (ent != null) ent.IsSelected = true;
    }
 
    // Implementation -----------------------------------------------------------

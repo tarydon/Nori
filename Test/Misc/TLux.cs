@@ -14,6 +14,7 @@ class TLux {
       static void Draw () {
          Lux.Color = Color4.White;
          Lux.PointSize = 14f;
+         Lux.LineWidth = 4;
          Lux.Lines ([new Vec2F (0, 0), new (100, 0), new (100, 0), new (70, 100)]);
          Lux.Beziers ([new (0, 0), new (0, 80), new (20, 100), new (70, 100),
                        new (100, 0), new (50, 25), new (25, 50), new (70, 100)]);
@@ -27,12 +28,13 @@ class TLux {
       TestPNG (scene, new (160, 160), DIBitmap.EFormat.Gray8, "TrueType.png");
 
       void Draw () {
+         Lux.LTScale = 100;
          Lux.LineType = ELineType.Dot;
-         Lux.LineWidth = 10f;
+         Lux.LineWidth = 10;
          Lux.TypeFace = mFace;
          Lux.TextPx ("Chapter", new (10, 114));
          Lux.Lines ([new Vec2F (0, 65), new (100, 65)]);
-         Lux.TypeFace = TypeFace.Default;
+         Lux.TypeFace = mFace2;
          Lux.TextPx ("An example", new (10, 65));
          Lux.TextPx ("of TrueType", new (10, 40));
          Lux.TextPx ("text.", new (10, 15));
@@ -48,25 +50,25 @@ class TLux {
       var scene = new Scene2 (Color4.Gray (240), new (8, 3, 38, 22), gvn);
       TestPNG (scene, new (420, 280), DIBitmap.EFormat.Gray8, "Text2D.png");
 
-      static void SetAttributes1 () { Lux.Color = Color4.Gray (160); Lux.ZLevel = -1;  }
+      static void SetAttributes1 () { Lux.Color = Color4.Gray (160); Lux.LineWidth = 4; Lux.ZLevel = -1;  }
       static void Draw1 () => Lux.Lines ([new Vec2F (10, 5), new (36, 5), new (10, 10), new (36, 10),
          new (10, 15), new (36, 15), new (10, 20), new (36, 20), new (10, 5), new (10, 20),
          new (23, 5), new (23, 20), new (36, 5), new (36, 20)]);
 
       void SetAttributes2 () { Lux.Color = Color4.Black; Lux.TypeFace = mFace; }
       static void Draw2 () {
-         Lux.Text2D ("BsL{}", new (10, 10), ETextAlign.BaseLeft);
-         Lux.Text2D ("BsC{}", new (23, 10), ETextAlign.BaseCenter);
-         Lux.Text2D ("BsR{}", new (36, 10), ETextAlign.BaseRight);
-         Lux.Text2D ("MdL{}", new (10, 15), ETextAlign.MidLeft);
-         Lux.Text2D ("MdC{}", new (23, 15), ETextAlign.MidCenter);
-         Lux.Text2D ("MdR{}", new (36, 15), ETextAlign.MidRight);
-         Lux.Text2D ("TpL{}", new (10, 20), ETextAlign.TopLeft);
-         Lux.Text2D ("TpC{}", new (23, 20), ETextAlign.TopCenter);
-         Lux.Text2D ("TpR{}", new (36, 20), ETextAlign.TopRight);
-         Lux.Text2D ("BtL{}", new (10, 5), ETextAlign.BotLeft);
-         Lux.Text2D ("BtC{}", new (23, 5), ETextAlign.BotCenter);
-         Lux.Text2D ("BtR{}", new (36, 5), ETextAlign.BotRight);
+         Lux.Text2D ("BsL{}", new (10, 10), ETextAlign.BaseLeft, Vec2S.Zero);
+         Lux.Text2D ("BsC{}", new (23, 10), ETextAlign.BaseCenter, Vec2S.Zero);
+         Lux.Text2D ("BsR{}", new (36, 10), ETextAlign.BaseRight, Vec2S.Zero);
+         Lux.Text2D ("MdL{}", new (10, 15), ETextAlign.MidLeft, Vec2S.Zero);
+         Lux.Text2D ("MdC{}", new (23, 15), ETextAlign.MidCenter, Vec2S.Zero);
+         Lux.Text2D ("MdR{}", new (36, 15), ETextAlign.MidRight, Vec2S.Zero);
+         Lux.Text2D ("TpL{}", new (10, 20), ETextAlign.TopLeft, Vec2S.Zero);
+         Lux.Text2D ("TpC{}", new (23, 20), ETextAlign.TopCenter, Vec2S.Zero);
+         Lux.Text2D ("TpR{}", new (36, 20), ETextAlign.TopRight, Vec2S.Zero);
+         Lux.Text2D ("BtL{}", new (10, 5), ETextAlign.BotLeft, Vec2S.Zero);
+         Lux.Text2D ("BtC{}", new (23, 5), ETextAlign.BotCenter, Vec2S.Zero);
+         Lux.Text2D ("BtR{}", new (36, 5), ETextAlign.BotRight, Vec2S.Zero);
       }
    }
 
@@ -80,16 +82,15 @@ class TLux {
       var scene = new Scene2 (Color4.Gray (240), new (-2, -2, 42, 22), gvn);
       TestPNG (scene, new (264, 144), DIBitmap.EFormat.Gray8, "ZLevel.png");
 
-      void SetAttributes1 () => Lux.Color = Color4.Gray (160);
+      void SetAttributes1 () { Lux.Color = Color4.Gray (160); Lux.LineWidth = 4; }
       void Draw1 () => Lux.Quads ([new (20, 0), new (40, 0), new (20, 20), new (0, 20)]);
 
       void SetAttributes2 () { Lux.Color = Color4.Black; Lux.TypeFace = mFace; Lux.ZLevel = -1; }
-      void Draw2 () => Lux.Text2D ("Hello, World!", new (0, 5), ETextAlign.MidLeft);
+      void Draw2 () => Lux.Text2D ("Hello, World!", new (0, 5), ETextAlign.MidLeft, Vec2S.Zero);
 
       void SetAttributes3 () { Lux.Color = Color4.Black; Lux.TypeFace = mFace; Lux.ZLevel = +1; }
-      void Draw3 () => Lux.Text2D ("Hello, World!", new (0, 15), ETextAlign.MidLeft);
+      void Draw3 () => Lux.Text2D ("Hello, World!", new (0, 15), ETextAlign.MidLeft, Vec2S.Zero);
    }
-
 
    void TestPNG (Scene scene, Vec2S size, DIBitmap.EFormat format, string file) {
       var dib = Lux.RenderToImage (scene, size, format);
@@ -98,4 +99,5 @@ class TLux {
    }
 
    TypeFace mFace = new (Lib.ReadBytes ("nori:GL/Fonts/Roboto-Regular.ttf"), 28);
+   TypeFace mFace2 = new (Lib.ReadBytes ("nori:GL/Fonts/Roboto-Regular.ttf"), 18);
 }

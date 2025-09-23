@@ -74,6 +74,7 @@ public class DXFWriter {
             E2Insert ei => OutInsert (ei),
             E2Dimension e2d => OutDimension (e2d),
             E2Bendline e2b => OutBendLine (e2b),
+            E2Spline e2s => OutSpline (e2s),
             _ => throw new BadCaseException (ent.GetType ().Name)
          };
       }
@@ -205,9 +206,8 @@ public class DXFWriter {
                   double bulge = seg.IsCCW ? 1 : -1;
                   Out ($" 42\n{bulge}\n 0\nVERTEX\n 8\n0\n 10\n{pt.X}\n 20\n{pt.Y}\n 42\n{bulge}\n");
                } else {
-                  double a1 = seg.Center.AngleTo (seg.A), a2 = seg.Center.AngleTo (seg.B);
-                  a2 += seg.IsCCW ? (a2 < a1 ? Lib.TwoPI : 0) : (a2 > a1 ? -Lib.TwoPI : 0);
-                  Out ($" 42\n{Math.Tan ((a2 - a1) / 4).R6 ()}\n");
+                  var bulge = Math.Tan (seg.AngSpan / 4); if (Lib.Testing) bulge = bulge.R6 ();
+                  Out ($" 42\n{bulge}\n");
                }
             }
             if (!poly.IsClosed && seg.IsLast) {
@@ -228,6 +228,25 @@ public class DXFWriter {
          Out ($" {10 + i}\n{pt.X}\n {20 + i}\n{pt.Y}\n");
       }
       return 0;
+   }
+
+   // Outputs a SPLINE curve
+   int OutSpline (E2Spline es) {
+      OutEntPrologue (es, "SPLINE");
+      var (spline, flags) = (es.Spline, 8);     // PLANAR
+      if ((es.Flags & E2Flags.Closed) != 0) flags |= 1;  // CLOSED
+      if ((es.Flags & E2Flags.Periodic) != 0) flags |= 2;   // PERIODIC
+      if (spline.Rational) flags |= 4; // RATIONAL
+      var (knots, weights, ctrl) = (spline.Knot, spline.Weight, spline.Ctrl);
+      Out ($" 70\n{flags}\n 71\n{spline.Degree}\n 72\n{knots.Length}\n 73\n{ctrl.Length}\n");
+      foreach (var knot in knots) Out ($" 40\n{knot}\n");
+      foreach (var pt0 in ctrl) {
+         var pt = Lib.Testing ? pt0.R6 () : pt0;
+         Out ($" {10}\n{pt.X}\n 20\n{pt.Y}\n 30\n0\n");
+      }
+      if (spline.Rational)
+         foreach (var wt in weights) Out ($" 41\n{wt}\n");
+      return 0; 
    }
 
    // Output text entity
