@@ -207,19 +207,19 @@ class PolyTests {
       Poly.Parse ("M0,0L0,0H10V10V10").TryCleanup (out poly); poly!.Is ("M0,0H10V10");
       Poly.Parse ("M0,0L0,0H10V10V10Z").TryCleanup (out poly); poly!.Is ("M0,0H10V10Z");
 
-      // Overlapping segs
-      Poly.Parse ("M0,0H5H10").TryCleanup (out poly); poly!.Is ("M0,0H10");
-      Poly.Parse ("M0,0Q10,10,1Q0,20,1").TryCleanup (out poly); poly!.Is ("M0,0Q0,20,2");
-      Poly.Parse ("M0,0H10H5").TryCleanup (out poly).Is (false); // Folds back on itself; Essentially a "slit".
+      // Segment folds back on itself
+      Poly.Parse ("M0,0H10H5").TryCleanup (out poly); poly!.Is ("M0,0H5");
+      Poly.Parse ("M0,0H10H0").TryCleanup (out poly).Is (false); // Slit is not processed
       Poly.Parse ("M0,0Q0,20,2Q10,10,-1").TryCleanup (out poly); poly!.Is ("M0,0Q10,10,1"); // Folds back on itself; Gets truncated.
 
-      // Multiple overlapping segs (w/o fold-back/slits)
+      // Multiple split segs (instead of one single seg) (w/o fold-back)
       Poly.Parse ("M0,0H10V10V15V20H0").TryCleanup (out poly); poly!.Is ("M0,0H10V20H0");
       Poly.Parse ("M0,0H10V10V15V20H0Z").TryCleanup (out poly); poly!.Is ("M0,0H10V20H0Z");
+      Poly.Parse ("M0,0Q10,10,1Q0,20,1").TryCleanup (out poly); poly!.Is ("M0,0Q0,20,2");
 
       // Mergeable last and first segs
-      Poly.Parse ("M10,0H20V5H0V0H10").Closed ().TryCleanup (out poly); poly!.Is ("M20,0V5H0V0Z");
-      Poly.Parse ("M0,0Q10,-10,1V10Q0,0,1").Closed ().TryCleanup (out poly); poly!.Is ("M10,-10V10Q10,-10,2Z");
+      Poly.Parse ("M10,0H20V5H0V0H10Z").TryCleanup (out poly); poly!.Is ("M20,0V5H0V0Z");
+      Poly.Parse ("M0,0Q10,-10,1V10Q0,0,1Z").TryCleanup (out poly); poly!.Is ("M10,-10V10Q10,-10,2Z");
    }
 
    [Test (59, "Poly.Append tests")]

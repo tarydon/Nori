@@ -331,29 +331,31 @@ public partial class Poly {
       return true;
    }
 
-   public bool TryCleanup (out Poly? result, double threshold = 1e-6) {
+   public bool TryCleanup ([NotNullWhen (true)] out Poly? result, double threshold = 1e-6) {
       if (IsCircle || mPts.Length < 2) { result = null; return false; }
-
-      bool cleaned = TryCleanupZeroSegs (out result, threshold);
-      if (cleaned && result!.Count == 0) return true; // Empty poly!
-
-      if ((result ?? this).TryMergeAlignedSegs (out Poly? result2, threshold))
+      if (TryCleanupZeroSegs (out result, threshold) && result.Count == 0) return true; // Empty poly!
+      if ((result ?? this).TryMergeConsecutiveSegs (out Poly? result2, threshold))
          result = result2;
-
       return result != null;
    }
 
-   bool TryCleanupZeroSegs (out Poly? result, double threshold = 1e-6) {
+   /// <summary>Attempts to cleanup given poly of any zero-length segs</summary>
+   bool TryCleanupZeroSegs ([NotNullWhen (true)] out Poly? result, double threshold = 1e-6) {
+      // Quick check
+      bool gotZero = false;
+      for (int i = 0, limit = mPts.Length - 1; i < limit; i++)
+         if (mPts[i].EQ (mPts[i + 1], threshold)) { gotZero = true; break; }
+      if (!gotZero) { result = null; return false; } // No zero-length segs found
+
       HashSet<int> skipIdxs = []; // Using mark 'n sweep to cleanup zero-length segs
       for (int i = 0, limit = mPts.Length - 1; i < limit; i++) {
          if (mPts[i].EQ (mPts[i + 1], threshold))
             skipIdxs.Add (i);
       }
-      if (skipIdxs.Count == 0) { result = null; return false; } // No zero-length segs found
 
-      var pts = mPts.Select ((pt, idx) => (pt, idx)).Where (a => !skipIdxs.Contains (a.idx)).Select (a => a.pt);
+      // Cleanup zero-length segs
       List<ArcInfo> extra = [];
-      if (HasArcs) {
+      if (HasArcs) { // Cleanup the zero-length seg's extras
          foreach (var idx in Enumerable.Range (0, Extra.Length)) {
             if (idx >= Extra.Length) break;
             if (skipIdxs.Contains (idx)) continue;
@@ -361,13 +363,17 @@ public partial class Poly {
          }
       }
       var flags = mFlags;
-      if (extra.Count == 0) flags &= ~EFlags.HasArcs;
+      if (extra.Count == 0 || extra.Any (_ => (_.Flags & EFlags.Arc) != 0))
+         flags &= ~EFlags.HasArcs;
+      // Remove dup points
+      var pts = mPts.Select ((pt, idx) => (pt, idx)).Where (a => !skipIdxs.Contains (a.idx)).Select (a => a.pt);
       result = new ([.. pts], [.. extra], flags);
       return true;
    }
 
-   bool TryMergeAlignedSegs (out Poly? result, double threshold = 1e-6) {
-      if (Count < 2) { result = null; return false; }
+   /// <summary>Attempts to cleanup given poly of collinear/concentric line/arc segments appearing sequentially</summary>
+   bool TryMergeConsecutiveSegs ([NotNullWhen (true)] out Poly? result, double threshold = 1e-6) {
+      if (Count < 2 || !NeedMerge (this, threshold)) { result = null; return false; }
       (Seg prev, int baseSegIdx) = (this[0], 0);
       (List<Point2> pts, List<ArcInfo> extras) = ([], []);
       bool mergedSegs = false;
@@ -398,15 +404,28 @@ public partial class Poly {
       var poly = result ?? this;
       if (poly.IsClosed && poly.Count > 1) {
          var (last, first) = (poly[^1], poly[0]);
-         _ = CanMerge (last, first, threshold) && poly.Roll (1).TryMergeAlignedSegs (out result, threshold);
+         _ = CanMerge (last, first, threshold) && poly.Roll (1).TryMergeConsecutiveSegs (out result, threshold);
       }
       return result != null;
 
       static bool CanMerge (Seg a, Seg b, double threshold) {
-         // Note: Line segs mergeability uses DistToLineSeg (v/s DistToLine) to allow "slits".
-         return a.IsArc == b.IsArc
-            && ((!a.IsArc && a.B.DistToLineSeg (a.A, b.B) < threshold) // Line segs mergeability check
-            || (a.IsArc && a.Center.EQ (b.Center, threshold) && a.Radius.EQ (b.Radius, threshold))); // Arc segs mergeability check
+         if (a.IsArc != b.IsArc) return false; // Both must be either arcs or lines
+         if (a.IsArc) {
+            if (!a.Center.EQ (b.Center, threshold) || !a.Radius.EQ (b.Radius, threshold)) return false; // Concentric check
+         } else {
+            if (a.B.DistToLine (a.A, b.B) > threshold) return false; // Collinearity check
+         }
+         return true;
+      }
+
+      static bool NeedMerge (Poly p, double threshold) {
+         Seg prev = p[0];
+         for (int i = 1; i < p.Count; i++) {
+            Seg curr = p[i];
+            if (CanMerge (prev, curr, threshold)) return true;
+            prev = curr;
+         }
+         return p.IsClosed && CanMerge (p[^1], p[0], threshold);
       }
    }
 
