@@ -114,7 +114,9 @@ public partial class Dwg2 {
    Dictionary<string, Style2>? _styleMap;
 
    /// <summary>Picks the closest E2Poly and returns some rich information about the pick</summary>
-   public bool PickPoly (Point2 pt, double aperture, out TPolyPick pick) {
+   /// <param name="pt">Snapped point</param>
+   /// <param name="rawPt">Raw/actual (unsnapped) point</param>
+   public bool PickPoly (Point2 pt, Point2 rawPt, double aperture, out TPolyPick pick) {
       E2Poly? e2p = null; int nSeg = 0; double minDist = aperture;
       foreach (var ent in mEnts.OfType<E2Poly> ()) {
          if (!ent.Bound.InflatedL (aperture).Contains (pt)) continue;
@@ -126,7 +128,7 @@ public partial class Dwg2 {
       int nNode = (seg.GetLie (pt) > 0.5 ? 1 : 0) + nSeg;
 
       Poly.ECornerOpFlags flags = Poly.ECornerOpFlags.None;
-      bool left = seg.IsPointOnLeft (pt);
+      bool left = seg.IsPointOnLeft (rawPt);
       if (nNode == nSeg) flags |= Poly.ECornerOpFlags.NearLeadOut;
       if (left) flags |= Poly.ECornerOpFlags.Left;
       var vec = seg.B - seg.A;
@@ -134,7 +136,7 @@ public partial class Dwg2 {
       int nC = e2p.Poly.Count;
       if (e2p.Poly.IsClosed || (nNode > 0 && nNode < nC)) {
          Seg other = e2p.Poly[(nSeg == nNode) ? (nSeg - 1 + nC) % nC : (nSeg + 1) % nC];
-         if (left == other.IsPointOnLeft (pt)) flags |= Poly.ECornerOpFlags.SameSideOfBothSegments;
+         if (left == other.IsPointOnLeft (rawPt)) flags |= Poly.ECornerOpFlags.SameSideOfBothSegments;
       }
       pick = new (e2p, nSeg, nNode, flags);
       return true;
