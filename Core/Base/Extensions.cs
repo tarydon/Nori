@@ -84,7 +84,7 @@ public static class Extensions {
    public static bool HasAttribute<T> (this MemberInfo mi) where T : Attribute => mi.GetCustomAttribute<T> () != null;
 
    /// <summary>Returns true if a string is null, empty or whitespace</summary>
-   public static bool IsBlank (this string? s) => string.IsNullOrWhiteSpace (s);
+   public static bool IsBlank ([NotNullWhen (false)] this string? s) => string.IsNullOrWhiteSpace (s);
 
    /// <summary>Checks if a double is NaN</summary>
    public static bool IsNaN (this double a) => double.IsNaN (a);
