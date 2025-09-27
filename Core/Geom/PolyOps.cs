@@ -320,6 +320,83 @@ public partial class Poly {
       return pb.End (mPts[^1]);
    }
 
+   /// <summary>Inserts key slot on the specific angle (returns null if not possible)</summary>
+   /// <param name="seg">Current segment index on the poly</param>
+   /// <param name="width">Width of the key slot</param>
+   /// <param name="depth">Depth of the key slot</param>
+   /// <param name="angle">Orientation of the key slot</param>
+   public Poly? KeySlot (int seg, double width, double depth, double angle) {
+      // Key slot is only applicable for a circle or an arc entity, otherwise we return null.
+      var arcSeg = this[seg];
+      if (!arcSeg.IsArc || width.IsZero () || depth.IsZero ()) return null; // Check: Slot fits the given seg length.
+
+      double radius = arcSeg.Radius;
+      // If width of the slot is more than circle diameter, then we return null.
+      if (width >= 2 * radius) return null;
+
+      // Indicates whether the key slot is present inside or outside the poly (circle or arc).
+      bool isLeft = depth > 0;
+      depth = Math.Abs (depth);
+      Point2 cen = arcSeg.Center;
+
+      // Compute the corner points (slotTopLeft, slotBotLeft, slotBotRight and slotTopRight).
+      Point2 slotTopMid = cen.Polar (radius, angle);
+      var slope = cen.AngleTo (slotTopMid);
+      Point2 slotBotMid = isLeft ? slotTopMid.Polar (-depth, slope) : slotTopMid.Polar (depth, slope),
+             tempPt = slotBotMid.Polar (width / 2, slope);
+      Point2 slotBotRight = slotBotMid + (slotBotMid - tempPt).Perpendicular (),
+             slotBotLeft = slotBotMid + (tempPt - slotBotMid).Perpendicular ();
+      var pt = Geo.CircleXLineClosest (cen, radius, slotBotLeft, slotBotLeft.Polar (depth, angle), slotBotLeft);
+      if (pt.IsNil) return null; // No point is insert on the poly, so we return null.
+      Point2 slotTopLeft = pt;
+      pt = Geo.CircleXLineClosest (cen, radius, slotBotRight, slotBotRight.Polar (depth, angle), slotBotRight);
+      if (pt.IsNil) return null; // No point is insert on the poly, so we return null.
+      Point2 slotTopRight = pt;
+
+      // Check if slot top left (or) slot right point is present within the poly.
+      double isLeftOutside = this[seg].GetLie (slotTopLeft), isRightOutside = this[seg].GetLie (slotTopRight);
+      if (isLeftOutside >= 1 || isLeftOutside <= 0 || isRightOutside >= 1 || isRightOutside <= 0) return null;
+
+      PolyBuilder pb = new ();
+      int index = seg + 1;
+      List<Point2> points = [];
+      EFlags flags = (arcSeg.Flags & EFlags.CCW) > 0 ? EFlags.CCW : EFlags.CW;
+      if (IsClosed) {
+         points = IsCircle ? [.. CKeySlotPts ()] : [.. mPts];
+         if (!IsCircle) points.InsertRange (index, CKeySlotPts ());
+         for (int i = 0; i < points.Count; i += 4) CreateKeySlot (points, i, flags);
+         pb.Close ();
+      } else {
+         points = [.. mPts];
+         points.InsertRange (index, AKeySlotPts (flags));
+         for (int i = 0; i < points.Count - 1; i += 4) {
+            if (i == 0) {
+               pb.Arc (points[0], cen, flags);
+               CreateKeySlot (points, 1, flags); i = 1;
+            } else CreateKeySlot (points, i, flags);
+         }
+         pb.Line (points[^1]);
+      }
+      return pb.Build ();
+
+      // Helper methods
+
+      // Generate key slot points for a circle entity
+      IEnumerable<Point2> CKeySlotPts ()
+         => [slotTopRight, slotBotRight, slotBotLeft, slotTopLeft];
+
+      // Generate key slot points for an arc entity
+      IEnumerable<Point2> AKeySlotPts (EFlags flags) {
+         if ((flags & EFlags.CCW) > 0) {
+            return CKeySlotPts ();
+         }
+         return [slotTopLeft, slotBotLeft, slotBotRight, slotTopRight];
+      }
+
+      void CreateKeySlot (List<Point2> pts, int idx, EFlags flags) =>
+         pb.Line (pts[idx]).Line (pts[idx + 1]).Line (pts[idx + 2]).Arc (pts[idx + 3], cen, flags);
+   }
+
    /// <summary>Creates and returns a new reversed Poly of 'this'</summary>
    public Poly Reversed () {
       if (!HasArcs) return new ([.. mPts.Reverse ()], [], mFlags);
