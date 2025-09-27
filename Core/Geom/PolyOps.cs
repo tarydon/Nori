@@ -320,6 +320,250 @@ public partial class Poly {
       return pb.End (mPts[^1]);
    }
 
+   /// <summary>Extends the specified seg about given lie, and returns resultant polys, if any.</summary>
+   /// <param name="segIdx">The segment to extend</param>
+   /// <param name="lie">Indicates the direction to extend</param>
+   /// <param name="dist">If not 0, specifies the extension limit</param>
+   /// <param name="polySoup">Set of polys to extend against</param>
+   public IEnumerable<Poly> ExtendedSeg (int segIdx, double lie, double dist, IEnumerable<Poly> polySoup) {
+      // Find all the "extended" intersections along the given segment with the rest of the segments.
+      // Note: When a seg is extended, it may also fragment the poly into multiple polys!
+      // Open poly fragments unless the end segs grow outwards. Closed poly converts into an open poly.
+      if (IsCircle) yield break; // Circle cannot extend
+      Seg seg = this[segIdx];
+      bool fwd = lie > 0.5; // Extend forward/backward
+      bool limitDist = !dist.IsZero ();
+      double extendLie = double.NaN;
+      if (seg.IsLine) {
+         if (limitDist) extendLie = fwd ? 1 + (dist / seg.Length) : -(dist / seg.Length);
+         else if (!CanExtend (seg, fwd, polySoup, out extendLie))
+            yield break;
+      } else {
+         if (!CanExtendArc (seg, fwd, polySoup, out extendLie)) {
+            if (seg.IsArc) { // Nothing stops it from becoming a full circle
+               yield return Circle (seg.Center, seg.Radius);
+               // Is this single arc, or part of open or closed poly!!!
+               if (Count == 1) yield break;
+               if (IsClosed) {
+                  var poly = Roll (segIdx + 1); // And remove the last seg
+                  var extra = poly.Extra.Length == poly.Count ? poly.Extra[..^1] : poly.Extra;
+                  yield return new Poly (poly.Pts, extra, mFlags & ~EFlags.Closed);
+                  yield break;
+               }
+               // Open poly: Once "arc" seg is detached, the poly fragments into two more fragments.
+               if (segIdx > 0) {
+                  List<Point2> pts = [.. Pts[..(segIdx + 1)]]; // First split section
+                  int cExtra2 = Math.Min (Extra.Length, segIdx);
+                  yield return new Poly ([.. pts], Extra[..cExtra2], mFlags & ~EFlags.Closed);
+               }
+               if (Count - segIdx - 1 > 0) {
+                  List<Point2> pts = [.. Pts[(segIdx + 1)..]]; // Second split section
+                  int cExtra2 = Math.Min (Extra.Length, segIdx + 1);
+                  yield return new Poly ([.. pts], Extra[cExtra2..], mFlags & ~EFlags.Closed);
+               }
+            }
+            yield break;
+         }
+      }
+
+      Point2 ptExt = seg.GetPointAt (extendLie);
+      if (IsClosed) {
+         var poly = Roll (fwd ? segIdx + 1 : segIdx);
+         List<Point2> pts = [.. poly.Pts];
+         if (fwd) pts.Add (ptExt);
+         else { pts.Add (pts[0]); pts[0] = ptExt; }
+         yield return new Poly ([.. pts], poly.Extra, poly.mFlags & ~EFlags.Closed);
+         yield break;
+      }
+
+      // Open poly - may split into two open polys, one of which is extended
+      int nextIdx = fwd ? segIdx + 1 : segIdx; // Next poly begin!
+      int cExtra = Math.Min (Extra.Length, nextIdx);
+      if (nextIdx > 0) {
+         List<Point2> pts = [.. Pts[..(nextIdx + 1)]]; // First split section
+         if (fwd) pts[^1] = ptExt;
+         yield return new Poly ([.. pts], Extra[..cExtra], mFlags);
+      }
+      if (Count - nextIdx + 1 > 1) {
+         List<Point2> pts = [.. Pts[(nextIdx)..]]; // Second split section
+         if (!fwd) pts[0] = ptExt;
+         yield return new Poly ([.. pts], Extra[cExtra..], mFlags);
+      }
+
+      static bool CanExtend (Seg seg, bool fwd, IEnumerable<Poly> polySoup, out double extendLie) {
+         Span<Point2> buffer = stackalloc Point2[2];
+         (double fwdCutoff, double revCutoff) = (1 + Lib.Epsilon, 0 - Lib.Epsilon);
+         (double fwdExt, double revExt) = (1000, -1000);
+         foreach (var s in polySoup.SelectMany (p => p.Segs)) {
+            foreach (var pt in seg.Intersect (s, buffer, finite: false)) {
+               double lie = seg.GetLie (pt);
+               if (fwd) {
+                  if (lie > fwdCutoff) fwdExt = Math.Min (fwdExt, lie);
+               } else {
+                  if (lie < revCutoff) revExt = Math.Max (revExt, lie);
+               }
+            }
+         }
+         extendLie = fwd ? fwdExt : revExt;
+         return fwd ? fwdExt != 1000 : revExt != -1000;
+      }
+
+      static bool CanExtendArc (Seg seg, bool fwd, IEnumerable<Poly> polySoup, out double extendLie) {
+         Span<Point2> buffer = stackalloc Point2[2];
+         (double fwdCutoff, double revCutoff) = (1 + Lib.Epsilon, 0 - Lib.Epsilon);
+         (double fwdExt, double revExt) = (1000, -1000);
+         // Need lies to either be (+) or (-) along the arc extension path, based on "fwd" parameter.
+         (double s, double e) = seg.GetStartAndEndAngles ();
+         double span = e - s;
+         double circumSpans = Lib.TwoPI / Math.Abs (span); // How many spans span the full circle?
+         foreach (var oseg in polySoup.SelectMany (p => p.Segs)) {
+            foreach (var pt in seg.Intersect (oseg, buffer, finite: false)) {
+               double ang = seg.Center.AngleTo (pt);
+               if (seg.IsCCW) {
+                  if (ang < s) ang += Lib.TwoPI;
+               } else {
+                  if (ang > s) ang -= Lib.TwoPI;
+               }
+               double lie = (ang - s) / span; // Forward lie
+               if (fwd) {
+                  if (lie > fwdCutoff) fwdExt = Math.Min (fwdExt, lie);
+               } else {
+                  lie -= circumSpans; // Converted to reverse lie
+                  if (lie < revCutoff) revExt = Math.Max (revExt, lie);
+               }
+            }
+         }
+         extendLie = fwd ? fwdExt : revExt;
+         if (fwd ? fwdExt != 1000 : revExt != -1000) { // Got extended lie
+            // Boundary case: Extended arc would have become a circle, if no extended lie was found.
+            //    But, if the captured extended lie is located at end points of given seg, then ignore it
+            //    Note: Technically, the extended lie would have resulted in a circle, but downstream handling is tricky, so ignore this lie itself.
+            if (fwd) {
+               if (seg.GetPointAt (extendLie).EQ (seg.A)) return false;
+            } else {
+               if (seg.GetPointAt (extendLie).EQ (seg.B)) return false;
+            }
+            return true;
+         }
+         return false;
+      }
+   }
+
+   /// <summary>Trims the specified seg about given lie, and returns any left-over poly/s</summary>
+   /// <param name="segIdx">Segment to trim</param>
+   /// <param name="lie">Indicates section of segment to trim</param>
+   /// <param name="polySoup">Set of polys to trim against</param>
+   /// <returns>Any left-over poly/s</returns>
+   public IEnumerable<Poly> TrimmedSeg (int segIdx, double lie, IEnumerable<Poly> polySoup) {
+      // Find all the "contained" intersections along the given segment with the rest of the segments.
+      // The given segment gets removed - either fully, or some section on the segment.
+      //    This is determined by fromLie, toLie delimiters. (Default: fromLie == 0, toLie == 1, along the given segment)
+      // "Closed poly" become open poly, accommodating any left-over fragments of the trimmed segment
+      // "Open poly" breaks into one or two open polys, accommodating any left-over fragments of the trimmed segment
+      var seg = this[segIdx];
+      ArcInfo segExtra = segIdx < Extra.Length ? Extra[segIdx] : ArcInfo.Nil;
+      if (IsCircle) {
+         (double lieA, double lieB) = CircleTrimExtents (seg, lie.Clamp (), polySoup);
+         if (lieA == 0 && lieB == 1) yield break; // Fully trimmed out
+         bool iCCW = (mFlags & EFlags.CCW) != 0;
+         yield return Arc (segExtra.Center, this[0].Radius, lieA * Lib.TwoPI, lieB * Lib.TwoPI, iCCW);
+         yield break;
+      }
+
+      (double fromLie, double toLie) = TrimExtents (seg, lie.Clamp (), polySoup);
+      (bool hFrag, bool tFrag) = (fromLie != 0, toLie != 1); // Indicates any left-over head frag and/or tail frag
+      if (Count == 1 && !hFrag && !tFrag) yield break; // Single seg poly (incl. circle) is fully consumed
+      List<Point2> pts = []; List<ArcInfo> extra = [];
+      if (IsClosed) {
+         var poly = Roll (segIdx + 1);
+         if (tFrag) {
+            pts.Add (seg.GetPointAt (toLie));
+            if ((segExtra.Flags & EFlags.Arc) != 0)
+               extra.Add (segExtra);
+            else if (HasArcs) extra.Add (ArcInfo.Nil);
+         }
+         pts.AddRange (poly.Pts); extra.AddRange (poly.Extra);
+         if (extra.Count == pts.Count) extra.RemoveLast ();
+         if (hFrag) {
+            pts.Add (seg.GetPointAt (fromLie));
+            if ((segExtra.Flags & EFlags.Arc) != 0) {
+               // Pad "empty" extras
+               int cPadExtra = pts.Count - extra.Count - 2; // Note: We are going to add an "extra".
+               for (int i = 0; i < cPadExtra; i++)
+                  extra.Add (ArcInfo.Nil);
+               extra.Add (segExtra);
+            }
+         }
+         yield return new Poly ([.. pts], [.. extra], poly.mFlags & ~EFlags.Closed);
+         yield break;
+      }
+
+      // Open poly...
+      // First fragmented poly
+      pts.AddRange (Pts[0..(segIdx + 1)]);
+      extra.AddRange (Extra[0..(Math.Min (segIdx, Extra.Length))]);
+      if (hFrag) {
+         pts.Add (seg.GetPointAt (fromLie));
+         if ((segExtra.Flags & EFlags.Arc) != 0) {
+            // Pad "empty" extras
+            int cPadExtra = pts.Count - extra.Count - 2; // Note: We are going to add an "extra".
+            for (int i = 0; i < cPadExtra; i++)
+               extra.Add (ArcInfo.Nil);
+            extra.Add (segExtra);
+         }
+      }
+      if (pts.Count > 1)
+         yield return new Poly ([.. pts], [.. extra], extra.Count == 0 ? mFlags & ~EFlags.HasArcs : mFlags);
+
+      // Second fragmented poly
+      pts.Clear (); extra.Clear ();
+      if (tFrag) {
+         pts.Add (seg.GetPointAt (toLie));
+         if ((segExtra.Flags & EFlags.Arc) != 0)
+            extra.Add (segExtra);
+         else if (HasArcs) extra.Add (ArcInfo.Nil);
+      }
+      pts.AddRange (Pts[(segIdx + 1)..]);
+      if (Extra.Length > segIdx + 1) extra.AddRange (Extra[(segIdx + 1)..]);
+      if (pts.Count > 1)
+         yield return new Poly ([.. pts], [.. extra], extra.Count == 0 ? mFlags & ~EFlags.HasArcs : mFlags);
+
+      static (double fromLie, double toLie) TrimExtents (Seg seg, double refLie, IEnumerable<Poly> polySoup) {
+         (double fromLie, double toLie) = (0, 1);
+         Span<Point2> buffer = stackalloc Point2[2];
+         foreach (var s in polySoup.SelectMany (p => p.Segs)) {
+            var pts = seg.Intersect (s, buffer, finite: true);
+            if (pts.Length == 0) continue;
+            foreach (var pt in pts) {
+               double lie = seg.GetLie (pt);
+               if (lie > refLie) toLie = Math.Min (toLie, lie);
+               else fromLie = Math.Max (fromLie, lie);
+            }
+         }
+         return (fromLie.IsZero () ? 0 : fromLie, toLie.EQ (1) ? 1 : toLie);
+      }
+
+      static (double fromLie, double toLie) CircleTrimExtents (Seg seg, double refLie, IEnumerable<Poly> polySoup) {
+         if (!seg.IsCircle) throw new Exception ("Expected Circle seg");
+         // Issue: If the trim section passes through the circle's only node point, then standard TrimExtents cannot be used
+         (double fromLie, double toLie) = (0, 1);
+         (double minLie, double maxLie) = (1, 0);
+         Span<Point2> buffer = stackalloc Point2[2];
+         foreach (var s in polySoup.SelectMany (p => p.Segs)) {
+            foreach (var pt in seg.Intersect (s, buffer, finite: true)) {
+               double lie = seg.GetLie (pt);
+               if (lie > refLie) toLie = Math.Min (toLie, lie);
+               else fromLie = Math.Max (fromLie, lie);
+               maxLie = Math.Max (maxLie, lie);
+               minLie = Math.Min (minLie, lie);
+            }
+         }
+         if (maxLie.EQ (minLie)) return (0, 1);
+         if (refLie > maxLie || refLie < minLie) return (maxLie, minLie); // Section passing through the circle's node point
+         return (fromLie.IsZero () ? 0 : fromLie, toLie.EQ (1) ? 1 : toLie);
+      }
+   }
+
    /// <summary>Inserts U-notch on the specified seg (returns null if not possible)</summary>
    /// By default, the notch is created on the left of the given segment.
    /// To create a notch on the right of the seg, negative depth is passed.
