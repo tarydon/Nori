@@ -467,6 +467,8 @@ public partial class Poly {
       public readonly Point2 Center = center;
       public readonly EFlags Flags = flags;
 
+      public static readonly ArcInfo Nil = new (Point2.Nil, 0);
+
       public static ArcInfo operator * (ArcInfo e, Matrix2 xfm) => new (e.Center * xfm, e.Flags);
    }
    /// <summary>This array is populated only if the Poly has any arcs</summary>

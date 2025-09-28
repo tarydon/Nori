@@ -29,7 +29,16 @@ public static class Lib {
    static HashSet<Assembly> mAssemblies = [];
 
    /// <summary>The root of Nori projects on developer machines</summary>
-   public const string DevRoot = "N:";
+   public static string DevRoot {
+      get {
+         if (mDevRoot == null) {
+            mDevRoot = Environment.GetEnvironmentVariable ("NORIROOT");
+            if (mDevRoot.IsBlank ()) mDevRoot = "N:";
+         }
+         return mDevRoot;
+      }
+   }
+   static string? mDevRoot;
 
    /// <summary>The list of 'well-known' namespaces</summary>
    /// When writing types out, or getting the friendly names of types (using
