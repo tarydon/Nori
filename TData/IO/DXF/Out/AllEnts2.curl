@@ -1,0 +1,166 @@
+(Dwg2){
+  Layers:[
+    { Name:0 Color:#FFFFFFFF Linetype:Continuous Visible:True }
+    { Name:Defpoints Color:#FFFFFFFF Linetype:Continuous Visible:True }
+  ]
+  Styles:[
+    { Name:Standard Font:simplex XScale:1 }
+    { Name:Annotative Font:arial.ttf XScale:1 }
+  ]
+  Blocks:[
+    {
+      Name:*D2
+      Base:0,0
+      Ents:[
+        (E2Poly){ Layer:0 Color:#FF000000 Poly:M0,50.625V57.456424 }
+        (E2Poly){ Layer:0 Color:#FF000000 Poly:M90,50.625V57.456424 }
+        (E2Poly){ Layer:0 Color:#FF000000 Poly:M2.5,56.206424H87.5 }
+        (E2Solid){
+          Layer:0
+          Color:#FF000000
+          Pts:[ 2.5,56.623091 2.5,55.789758 0,56.206424 0,56.206424 ]
+        }
+        (E2Solid){
+          Layer:0
+          Color:#FF000000
+          Pts:[ 87.5,56.623091 87.5,55.789758 90,56.206424 90,56.206424 ]
+        }
+        (E2Text){
+          Layer:0
+          Color:#FF000000
+          Pt:45,58.081424
+          Text:90
+          Style:Standard
+          Alignment:MidCenter
+          Height:2.5
+          XScale:1
+        }
+        (E2Point){ Layer:Defpoints Color:#FF000000 Pt:0,50 }
+        (E2Point){ Layer:Defpoints Color:#FF000000 Pt:90,50 }
+        (E2Point){ Layer:Defpoints Color:#FF000000 Pt:90,56.206424 }
+      ]
+    }
+    {
+      Name:Marker1
+      Base:0,0
+      Ents:[
+        (E2Poly){ Layer:0 Poly:M-0,-10Q-10,0,3 }
+        (E2Poly){ Layer:0 Poly:C0,0,8 }
+        (E2Poly){ Layer:0 Poly:M-0,-8V-10 }
+        (E2Poly){ Layer:0 Poly:M-8,0H-10 }
+        (E2Point){ Layer:0 Pt:-0,-10 }
+      ]
+    }
+  ]
+  Ents:[
+    (E2Poly){
+      Layer:0
+      Poly:M0,0L141.421356,141.421356L84.852814,197.989899Q56.568542,197.989899,1L-70.710678,70.710678Z
+    }
+    (E2Poly){ Layer:0 Poly:C70.710678,183.847763,16 }
+    (E2Point){ Layer:0 Pt:70.710678,183.847763 }
+    (E2Text){
+      Layer:0
+      Pt:0,14.142136
+      Text:"Hello, World!"
+      Style:Standard
+      Angle:0.7853981633974483
+      Alignment:BaseLeft
+      Height:5
+      XScale:1
+    }
+    (E2Dimension){
+      Layer:0
+      Ents:[
+        (E2Poly){ Layer:0 Color:#FF000000 Poly:M-71.594562,71.594562L-81.255654,81.255654 }
+        (E2Poly){ Layer:0 Color:#FF000000 Poly:M55.684659,198.873782L46.023566,208.534875 }
+        (E2Poly){ Layer:0 Color:#FF000000 Poly:M-75.952353,83.023421L44.255799,203.231574 }
+        (E2Solid){
+          Layer:0
+          Color:#FF000000
+          Pts:[
+            -76.541609,83.612677
+            -75.363098,82.434166
+            -79.487887,79.487887
+            -79.487887,79.487887
+          ]
+        }
+        (E2Solid){
+          Layer:0
+          Color:#FF000000
+          Pts:[
+            43.666544,203.82083
+            44.845055,202.642318
+            47.791333,206.767108
+            47.791333,206.767108
+          ]
+        }
+        (E2Text){
+          Layer:0
+          Color:#FF000000
+          Pt:-18.499928,145.779148
+          Text:90
+          Style:Standard
+          Angle:0.7853981633974483
+          Alignment:MidCenter
+          Height:5
+          XScale:1
+        }
+        (E2Point){ Layer:Defpoints Color:#FF000000 Pt:-70.710678,70.710678 }
+        (E2Point){ Layer:Defpoints Color:#FF000000 Pt:56.568542,197.989899 }
+        (E2Point){ Layer:Defpoints Color:#FF000000 Pt:47.791333,206.767108 }
+      ]
+    }
+    (E2Insert){
+      Layer:0
+      BlockName:Marker1
+      Pt:0,70.710678
+      Angle:1.5707963267948966
+      XScale:1
+      YScale:1
+    }
+    (E2Spline){
+      Layer:0
+      Spline:{
+        Nodes:6
+        Knot:[
+          0
+          0
+          0
+          0
+          20
+          34.14213562373095
+          54.14213562373095
+          54.14213562373095
+          54.14213562373095
+          54.14213562373095
+        ]
+        Weight:[ ]
+        Ctrl:[
+          0,113.137085
+          12.910809,95.300969
+          34.950938,64.852814
+          21.617605,133.137085
+          43.657734,102.68893
+          56.568542,84.852814
+        ]
+      }
+    }
+    (E2Solid){
+      Layer:0
+      Pts:[
+        70.710678,98.994949
+        84.852814,113.137085
+        63.63961,106.066017
+        70.710678,127.279221
+      ]
+    }
+    (E2Bendline){
+      Angle:0.7853981633974483
+      KFactor:0.42
+      Radius:2.5
+      Pts:[ -42.426407,42.426407 -14.142136,127.279221 ]
+      Thickness:1
+    }
+  ]
+}

@@ -206,9 +206,8 @@ public class DXFWriter {
                   double bulge = seg.IsCCW ? 1 : -1;
                   Out ($" 42\n{bulge}\n 0\nVERTEX\n 8\n0\n 10\n{pt.X}\n 20\n{pt.Y}\n 42\n{bulge}\n");
                } else {
-                  double a1 = seg.Center.AngleTo (seg.A), a2 = seg.Center.AngleTo (seg.B);
-                  a2 += seg.IsCCW ? (a2 < a1 ? Lib.TwoPI : 0) : (a2 > a1 ? -Lib.TwoPI : 0);
-                  Out ($" 42\n{Math.Tan ((a2 - a1) / 4).R6 ()}\n");
+                  var bulge = Math.Tan (seg.AngSpan / 4); if (Lib.Testing) bulge = bulge.R6 ();
+                  Out ($" 42\n{bulge}\n");
                }
             }
             if (!poly.IsClosed && seg.IsLast) {

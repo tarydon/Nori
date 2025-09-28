@@ -337,10 +337,16 @@ public partial class Poly {
    // Operators ----------------------------------------------------------------
    /// <summary>Create a new Poly by applying the transformation matrix</summary>
    public static Poly operator * (Poly p, Matrix2 xfm) {
-      var pts = p.Pts.Select (a => a * xfm).ToImmutableArray ();
-      var extra = ImmutableArray<ArcInfo>.Empty;
-      if (p.HasArcs) extra = [..p.Extra.Select (a => a * xfm)];
-      return new Poly (pts, extra, p.mFlags);
+      if (p.IsCircle) {
+         var cen = p.Extra[0].Center;
+         double radius = cen.DistTo (p.A) * xfm.ScaleFactor;
+         return Poly.Circle (cen * xfm, radius);
+      } else {
+         var pts = p.Pts.Select (a => a * xfm).ToImmutableArray ();
+         ImmutableArray<ArcInfo> extra = [];
+         if (p.HasArcs) extra = [.. p.Extra.Select (a => a * xfm)];
+         return new Poly (pts, extra, p.mFlags);
+      }
    }
 
    // Nested types -------------------------------------------------------------
@@ -362,6 +368,8 @@ public partial class Poly {
    internal readonly struct ArcInfo (Point2 center, EFlags flags) {
       public readonly Point2 Center = center;
       public readonly EFlags Flags = flags;
+
+      public static readonly ArcInfo Nil = new (Point2.Nil, 0);
 
       public static ArcInfo operator * (ArcInfo e, Matrix2 xfm) => new (e.Center * xfm, e.Flags);
    }
@@ -398,6 +406,7 @@ public class PolyBuilder {
    public Poly Build () {
       PopBulge (mPts[0]);
       Poly.EFlags flags = mClosed ? Poly.EFlags.Closed : 0;
+      if (mClosed && mPts.Count > 1 && mPts[0].EQ (mPts[^1])) mPts.RemoveLast ();
       var extra = ImmutableArray<Poly.ArcInfo>.Empty;
       if (mExtra.Count > 0) {
          extra = [..mExtra];

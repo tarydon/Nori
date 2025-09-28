@@ -120,8 +120,12 @@ class E2PointVN (E2Point e2p) : Ent2VN (e2p) {
 
 #region class E2SolidVN ----------------------------------------------------------------------------
 /// <summary>VNode to render an E2Solid entity</summary>
-class E2SolidVN (E2Solid e2p) : Ent2VN (e2p) {
-   Vec2F[] mPoints = [.. e2p.Pts.Select (pt => (Vec2F)pt)];
+class E2SolidVN : Ent2VN {
+   public E2SolidVN (E2Solid e2p) : base (e2p) {
+      mPoints = [.. e2p.Pts.Select (pt => (Vec2F)pt)];
+      (mPoints[2], mPoints[3]) = (mPoints[3], mPoints[2]);
+   }
+   readonly Vec2F[] mPoints;
    public override void Draw () => Lux.Quads (mPoints);
 }
 #endregion
