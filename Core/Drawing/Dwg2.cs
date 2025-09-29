@@ -82,8 +82,17 @@ public partial class Dwg2 {
    /// <summary>Add a set of entities into the drawing</summary>
    public void Add (IEnumerable<Ent2> ents) => ents.ForEach (Add);
 
-   /// <summary>Add a layer into the drawing</summary>
-   public void Add (Layer2 layer) => mLayers.Add (layer);
+   /// <summary>Add e layer into the drawing</summary>
+   /// If the drawing already has e layer with the same name, the old layer will
+   /// be replaced with new one. And corresponding layers of entities are updated.
+   public void Add (Layer2 layer) {
+      if (mLayers.FirstOrDefault (a => a.Name == layer.Name) is var old && old != null) {
+         foreach (var ent in Ents.Where (e => e.Layer == old)) ent.Layer = layer;
+         mLayers.Remove (old);
+      }
+      mLayers.Add (layer);
+   }
+
    /// <summary>Adds a Block2 to the list of blocks in the drawing</summary>
    public void Add (Block2 block) { (mBlocks ??= []).Add (block); _blockMap = null; }
 
