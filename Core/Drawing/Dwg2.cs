@@ -124,15 +124,10 @@ public partial class Dwg2 {
 
    /// <summary>Picks the closest E2Poly and returns some rich information about the pick</summary>
    public bool PickPoly (Point2 pt, double aperture, out TPolyPick pick) {
-      E2Poly? e2p = null; int nSeg = 0; double minDist = aperture;
-      foreach (var ent in mEnts.OfType<E2Poly> ()) {
-         if (!ent.Bound.InflatedL (aperture).Contains (pt)) continue;
-         var (dist, nseg) = ent.Poly.GetDistance (pt);
-         if (dist < minDist) (e2p, nSeg, minDist) = (ent, nseg, dist);
-      }
+      E2Poly? e2p = PickPoly (pt, aperture, out int nSeg, out double lie);
       if (e2p == null) { pick = new (); return false; }
       Seg seg = e2p.Poly[nSeg];
-      int nNode = (seg.GetLie (pt) > 0.5 ? 1 : 0) + nSeg;
+      int nNode = (lie > 0.5 ? 1 : 0) + nSeg;
 
       Poly.ECornerOpFlags flags = Poly.ECornerOpFlags.None;
       bool left = seg.IsPointOnLeft (pt);
@@ -147,6 +142,18 @@ public partial class Dwg2 {
       }
       pick = new (e2p, nSeg, nNode, flags);
       return true;
+   }
+
+   /// <summary>Picks the closest E2Poly, and returns the poly and clicked seg's index</summary>
+   public E2Poly? PickPoly (Point2 pt, double aperture, out int nSeg, out double lie) {
+      E2Poly? e2p = null; nSeg = 0;
+      foreach (var ent in mEnts.OfType<E2Poly> ()) {
+         if (!ent.Bound.InflatedL (aperture).Contains (pt)) continue;
+         var (dist, nseg) = ent.Poly.GetDistance (pt);
+         if (dist < aperture) (e2p, nSeg, aperture) = (ent, nseg, dist);
+      }
+      lie = e2p != null ? e2p.Poly[nSeg].GetLie (pt) : 0;
+      return e2p;
    }
 
    /// <summary>Purges layers, blocks, styles that are unused</summary>
