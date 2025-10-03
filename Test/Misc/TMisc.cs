@@ -217,7 +217,7 @@ class TMisc {
 
    [Test (34, "Throwing various exceptions")]
    void Test6 () {
-      new BadCaseException (12).Message.Is ($"Unhandled case '12' in {nameof(Test6)}");
+      new BadCaseException (12).Message.Is ($"Unhandled case '12' in {nameof (Test6)}");
       new ParseException ("13e", typeof (double)).Message.Is ("Cannot convert '13e' to double");
       // Except
       string s = "";
@@ -416,7 +416,7 @@ class TMisc {
       SetLayer (new Layer2 ("Circle", Color4.Black, ELineType.Continuous));
       dwg.Add (Poly.Circle (0, 0, 25)); dwg.Add (Poly.Circle (50, 50, 50));
       SetLayer (new Layer2 ("Rect", Color4.Red, ELineType.Continuous));
-      dwg.Add (Poly.Rectangle (5, 5, 20, 20)); dwg.Add (Poly.Rectangle (40, 60, 80, 100)); 
+      dwg.Add (Poly.Rectangle (5, 5, 20, 20)); dwg.Add (Poly.Rectangle (40, 60, 80, 100));
       SetLayer (new Layer2 ("Line", Color4.Blue, ELineType.Continuous));
       dwg.Add (Poly.Line (0, 0, 50, 50)); dwg.Add (Poly.Line (50, 50, 100, 100));
 
@@ -430,14 +430,13 @@ class TMisc {
 
       void SetLayer (Layer2 layer) { dwg.Add (layer); dwg.CurrentLayer = layer; }
    }
-}
 
-class T1Type : IIndexed {
-   public override string ToString () => $"T{Idx}";
-   public ushort Idx { get; set; }
-}
+   class T1Type : IIndexed {
+      public override string ToString () => $"T{Idx}";
+      public ushort Idx { get; set; }
+   }
 
-class T2Disp (int[] Array, int Index, int Value) : IDisposable {
-   public void Dispose () => Array[Index] = Value;
+   class T2Disp (int[] Array, int Index, int Value) : IDisposable {
+      public void Dispose () => Array[Index] = Value;
+   }
 }
-
