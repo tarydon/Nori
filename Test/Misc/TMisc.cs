@@ -409,12 +409,35 @@ class TMisc {
       il[2] = 20; int n = (int)il[2]!; n.Is (20);
    }
 
-   class T1Type : IIndexed {
-      public override string ToString () => $"T{Idx}";
-      public ushort Idx { get; set; }
-   }
+   [Test (121, "Test to handle duplicate layers")]
+   void Test14 () {
+      var dwg = new Dwg2 ();
+      // Add poly entities in different layers.
+      SetLayer (new Layer2 ("Circle", Color4.Black, ELineType.Continuous));
+      dwg.Add (Poly.Circle (0, 0, 25)); dwg.Add (Poly.Circle (50, 50, 50));
+      SetLayer (new Layer2 ("Rect", Color4.Red, ELineType.Continuous));
+      dwg.Add (Poly.Rectangle (5, 5, 20, 20)); dwg.Add (Poly.Rectangle (40, 60, 80, 100)); 
+      SetLayer (new Layer2 ("Line", Color4.Blue, ELineType.Continuous));
+      dwg.Add (Poly.Line (0, 0, 50, 50)); dwg.Add (Poly.Line (50, 50, 100, 100));
 
-   class T2Disp (int[] Array, int Index, int Value) : IDisposable {
-      public void Dispose () => Array[Index] = Value;
+      // Add new layers with their names matching existing layers
+      dwg.Add (new Layer2 ("Circle", Color4.White, ELineType.Dash));
+      dwg.Add (new Layer2 ("Rect", Color4.Yellow, ELineType.Dot));
+      dwg.Add (new Layer2 ("Line", Color4.Green, ELineType.DashDot));
+      Assert.IsTrue (dwg.Layers.Count == 3);
+      CurlWriter.ToFile (dwg, NT.TmpCurl);
+      Assert.TextFilesEqual1 ("Misc/Layers.curl", NT.TmpCurl);
+
+      void SetLayer (Layer2 layer) { dwg.Add (layer); dwg.CurrentLayer = layer; }
    }
 }
+
+class T1Type : IIndexed {
+   public override string ToString () => $"T{Idx}";
+   public ushort Idx { get; set; }
+}
+
+class T2Disp (int[] Array, int Index, int Value) : IDisposable {
+   public void Dispose () => Array[Index] = Value;
+}
+
