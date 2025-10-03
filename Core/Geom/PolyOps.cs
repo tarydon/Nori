@@ -647,8 +647,8 @@ public partial class Poly {
       Point2 slotTopRight = points.Length == 1 ? points[0] : PickNearestPt (slotBotRight, points[0], points[1]);
 
       // Check if slot top left (or) slot right point is present within the poly.
-      double isLeftOutside = this[seg].GetLie (slotTopLeft), isRightOutside = this[seg].GetLie (slotTopRight);
-      if (isLeftOutside >= 1 || isLeftOutside <= 0 || isRightOutside >= 1 || isRightOutside <= 0) return null;
+      double leftOutside = arcSeg.GetLie (slotTopLeft), rightOutside = arcSeg.GetLie (slotTopRight);
+      if (leftOutside >= 1 || leftOutside <= 0 || rightOutside >= 1 || rightOutside <= 0) return null;
 
       PolyBuilder pb = new ();
       for (int i = 0, ptsLen = mPts.Length, segsCount = Segs.Count (); i < ptsLen; i++) {
