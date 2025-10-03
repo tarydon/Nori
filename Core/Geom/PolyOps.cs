@@ -634,39 +634,40 @@ public partial class Poly {
       var slope = cen.AngleTo (slotTopMid);
       Point2 slotBotMid = isLeft ? slotTopMid.Polar (-depth, slope) : slotTopMid.Polar (depth, slope),
              tempPt = slotBotMid.Polar (width / 2, slope);
-      Point2 slotBotRight = slotBotMid + (slotBotMid - tempPt).Perpendicular (),
-             slotBotLeft = slotBotMid + (tempPt - slotBotMid).Perpendicular ();
-      var pt = Geo.CircleXLineClosest (cen, radius, slotBotLeft, slotBotLeft.Polar (depth, angle), slotBotLeft);
-      if (pt.IsNil) return null; // No point is insert on the poly, so we return null.
-      Point2 slotTopLeft = pt;
-      pt = Geo.CircleXLineClosest (cen, radius, slotBotRight, slotBotRight.Polar (depth, angle), slotBotRight);
-      if (pt.IsNil) return null; // No point is insert on the poly, so we return null.
-      Point2 slotTopRight = pt;
+      Point2 slotBotRight = slotBotMid + (slotBotMid - tempPt).Perpendicular ();
+      if (isLeft && cen.DistTo (slotBotRight) >= radius) return null; // If the point exceeds the radius, then we return null
+      Point2 slotBotLeft = slotBotMid + (tempPt - slotBotMid).Perpendicular ();
+      if (isLeft && cen.DistTo (slotBotLeft) >= radius) return null; // If the point exceeds the radius, then we return null
+      Span<Point2> buffer = stackalloc Point2[2];
+      var points = Geo.CircleXLine (cen, radius, slotBotLeft, slotBotLeft.Polar (depth, angle), buffer);
+      if (points.Length == 0) return null; // No point is insert on the poly, so we return null.
+      Point2 slotTopLeft = points.Length == 1 ? points[0] : PickNearestPt (slotBotLeft, points[0], points[1]);
+      points = Geo.CircleXLine (cen, radius, slotBotRight, slotBotRight.Polar (depth, angle), buffer);
+      if (points.Length == 0) return null; // No point is insert on the poly, so we return null.
+      Point2 slotTopRight = points.Length == 1 ? points[0] : PickNearestPt (slotBotRight, points[0], points[1]);
 
       // Check if slot top left (or) slot right point is present within the poly.
       double isLeftOutside = this[seg].GetLie (slotTopLeft), isRightOutside = this[seg].GetLie (slotTopRight);
       if (isLeftOutside >= 1 || isLeftOutside <= 0 || isRightOutside >= 1 || isRightOutside <= 0) return null;
 
       PolyBuilder pb = new ();
-      int index = seg + 1;
-      List<Point2> points = [];
-      EFlags flags = (arcSeg.Flags & EFlags.CCW) > 0 ? EFlags.CCW : EFlags.CW;
-      if (IsClosed) {
-         points = IsCircle ? [.. CKeySlotPts ()] : [.. mPts];
-         if (!IsCircle) points.InsertRange (index, CKeySlotPts ());
-         for (int i = 0; i < points.Count; i += 4) CreateKeySlot (points, i, flags);
-         pb.Close ();
-      } else {
-         points = [.. mPts];
-         points.InsertRange (index, AKeySlotPts (flags));
-         for (int i = 0; i < points.Count - 1; i += 4) {
-            if (i == 0) {
-               pb.Arc (points[0], cen, flags);
-               CreateKeySlot (points, 1, flags); i = 1;
-            } else CreateKeySlot (points, i, flags);
-         }
-         pb.Line (points[^1]);
+      for (int i = 0, ptsLen = mPts.Length, segsCount = Segs.Count (); i < ptsLen; i++) {
+         var point = mPts[i];
+         // This code adds all the other nodes (they could be the starts of line or arc
+         // segments, and we handle both by looking through the mExtra array). Note that
+         // we directly read the mExtra array rather than use Seg objects for better
+         // performance
+         if (i < segsCount && this[i].IsArc && i < Extra.Length) {
+            var extra = Extra[i]; var flags = (extra.Flags & EFlags.CCW) > 0 ? EFlags.CCW : EFlags.CW;
+            if (i == seg) {
+               if (ptsLen > 1) pb.Arc (point, extra.Center, flags);
+               var pts = IsCircle ? CKeySlotPts () : AKeySlotPts (flags);
+               CreateKeySlot ([.. pts], flags);
+            } else pb.Arc (point, extra.Center, flags);
+         } else pb.Line (point);
       }
+      // Done, close the poly if needed and return it
+      if (IsClosed) pb.Close ();
       return pb.Build ();
 
       // Helper methods
@@ -683,8 +684,16 @@ public partial class Poly {
          return [slotTopLeft, slotBotLeft, slotBotRight, slotTopRight];
       }
 
-      void CreateKeySlot (List<Point2> pts, int idx, EFlags flags) =>
-         pb.Line (pts[idx]).Line (pts[idx + 1]).Line (pts[idx + 2]).Arc (pts[idx + 3], cen, flags);
+      void CreateKeySlot (List<Point2> pts, EFlags flags) =>
+         pb.Line (pts[0]).Line (pts[1]).Line (pts[2]).Arc (pts[3], cen, flags);
+
+      Point2 PickNearestPt (Point2 origin, Point2 a, Point2 b) {
+         double dist1 = origin.DistTo (a), dist2 = origin.DistTo (b);
+         if (dist1 < dist2) return a;
+         else if (dist2 > dist1) return b;
+         //Special case, If dist1 and dist2 are equal then move the origin to that distance (dist1 or dist2).
+         return origin.Polar (dist1, angle);
+      }
    }
 
    /// <summary>Creates and returns a new reversed Poly of 'this'</summary>
