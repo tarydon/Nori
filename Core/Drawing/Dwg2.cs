@@ -167,7 +167,7 @@ public partial class Dwg2 {
    public void Select (Ent2? ent, bool deselectOthers) {
       if (deselectOthers) 
          mEnts.Where (a => a.IsSelected).ForEach (a => a.IsSelected = false);
-      if (ent != null) ent.IsSelected ^= true;
+      if (ent != null) ent.IsSelected ^= true; // Toggle selection
    }
 
    // Implementation -----------------------------------------------------------
