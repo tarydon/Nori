@@ -12,14 +12,14 @@ class DwgStitcher {
       // entities into the 'done' list (we don't need to process them at all)
       var ents = mDwg.Ents.OfType<E2Poly> ()
                      .Where (a => a.Poly.IsOpen)
-                     .OrderBy (a => a.Layer)
+                     .OrderBy (a => a.Layer.Name)
                      .ToList ();
       mDone.AddRange (mDwg.Ents.Except (ents));
 
       Layer2? layer = null;
       for (int i = 0; i < ents.Count; i++) {
          var ent = ents[i];
-         if (ent.Layer != layer) { layer = ent.Layer; mEnds.Clear (); }
+         if (ent.Layer != layer) { AddRemaining (); layer = ent.Layer; }
 
          // If the poly can already be closed here, just close it and continue
          Poly poly = ent.Poly;
@@ -37,27 +37,36 @@ class DwgStitcher {
                if (final.TryAppend (other.Poly, out var tmp, mThreshold)) {
                   // If so, remove this endpoint from the list of free-floating ends, and
                   // if the newly joined result is now self-closing, we are done.
-                  mEnds.Remove (pt);
-                  if (TryClose (ent, final = tmp)) break;
+                  RemoveEnds (other);
+                  if (TryClose (ent, final = tmp)) goto Done;
                } else
                   throw new Exception ("DwgStitcher: Coding error");
             }
-
-            // If we reach this point, we couldn't self-close ent ent we started with.
-            // There are 2 sub cases:
-            if (final == poly) AddEnds (ent);   // A: We couldn't add any fragment to this ent at all
-            else AddEnds (ent.With (final));    // B: We added some fragments to this, but it remains open
          }
+
+         // If we reach this point, we couldn't self-close ent ent we started with.
+         // There are 2 sub cases:
+         if (final == poly) AddEnds (ent);   // A: We couldn't add any fragment to this ent at all
+         else if (final.IsOpen) AddEnds (ent.With (final));
+         Done: { }
       }
       // Add the remaining entities (unclosed ones)
-      mDone.AddRange (mEnds.Values.Distinct ());
+      AddRemaining ();
       mDwg.Ents.Clear (); mDwg.Add (mDone);
    }
 
    // Implementation -----------------------------------------------------------
    void AddEnds (E2Poly ent) {
-      mEnds.Add (ent.Poly.A, ent);
-      mEnds.Add (ent.Poly.B, ent);
+      mEnds[ent.Poly.A] = ent; mEnds[ent.Poly.B] = ent;
+   }
+
+   void AddRemaining () {
+      mDone.AddRange (mEnds.Values.Distinct ());
+      mEnds.Clear ();
+   }
+
+   void RemoveEnds (E2Poly ent) {
+      mEnds.Remove (ent.Poly.A); mEnds.Remove (ent.Poly.B);
    }
 
    bool TryClose (E2Poly template , Poly poly) {

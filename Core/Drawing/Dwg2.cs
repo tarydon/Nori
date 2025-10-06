@@ -93,6 +93,14 @@ public partial class Dwg2 {
       (mStyles ??= []).Add (style); _styleMap = null;
    }
 
+   /// <summary>
+   /// Deletes all selected entities
+   /// </summary>
+   public void DeleteSelected () {
+      for (int i = mEnts.Count - 1; i >= 0; i--) 
+         if (mEnts[i].IsSelected) mEnts.RemoveAt (i);
+   }
+
    /// <summary>Gets a block given the name (could return null if the name does not exist)</summary>
    public Block2? GetBlock (string name)
       => (_blockMap ??= Blocks.ToDictionary (a => a.Name, StringComparer.OrdinalIgnoreCase)).GetValueOrDefault (name);

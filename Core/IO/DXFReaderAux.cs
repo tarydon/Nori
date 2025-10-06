@@ -13,6 +13,15 @@ public partial class DXFReader {
    /// </summary>
    public bool DarkenColors;
 
+   /// <summary>
+   /// If set above zero, then polylines that touch are stitched together
+   /// </summary>
+   /// Two open polylines whose endpoints are closer than this threshold are
+   /// joined together (as long as they are on the same layer). If there are open
+   /// polylines whose start and end are within this threshold of each other they
+   /// are closed. 
+   public double StitchThreshold;
+
    /// <summary>The Standard 256 ACAD Colors</summary>
    public static Color4[] ACADColors {
       get {

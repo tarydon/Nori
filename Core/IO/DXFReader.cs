@@ -8,7 +8,8 @@ namespace Nori;
 public partial class DXFReader {
    // Constructors -------------------------------------------------------------
    /// <summary>Construct a DXFReader, given a filename</summary>
-   public DXFReader (string file) => mReader = new StreamReader (new FileStream (mFile = file, FileMode.Open, FileAccess.Read, FileShare.ReadWrite));
+   public DXFReader (string file) 
+      => mReader = new StreamReader (new FileStream (mFile = file, FileMode.Open, FileAccess.Read, FileShare.ReadWrite));
 
    // Methods ------------------------------------------------------------------
    /// <summary>Parse the file, Build the DXF and return it</summary>
@@ -50,6 +51,7 @@ public partial class DXFReader {
       }
       mReader.Dispose ();
       ProcessBendText ();
+      StitchDrawing ();
       return mDwg;
    }
 
@@ -223,6 +225,12 @@ public partial class DXFReader {
       }
       foreach (var a in rmv) ents.Remove (a);
       foreach (var b in bend) ents.Add (b);
+   }
+
+   void StitchDrawing () {
+      if (StitchThreshold <= 0) return;
+      // if (StitchThreshold > 0.009) new DwgStitcher (mDwg, 0.0001).Process ();
+      new DwgStitcher (mDwg, StitchThreshold).Process ();
    }
 
    // DXF group value storage --------------------------------------------------
