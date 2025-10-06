@@ -250,7 +250,7 @@ class PolyTests {
 
    [Test (110, "Seg-Seg intersection tests (finite)")]
    void Test9 () {
-      var dwg = DXFReader.FromFile (NT.File ("Geom/Poly/SegInt.dxf"));
+      var dwg = DXFReader.Load (NT.File ("Geom/Poly/SegInt.dxf"));
       var segs = dwg.Polys.SelectMany (a => a.Segs).ToList ();
       Span<Point2> buffer = stackalloc Point2[2];
       for (int i = 0; i < segs.Count; i++) {
@@ -265,7 +265,7 @@ class PolyTests {
 
    [Test (111, "Seg-Seg intersection tests (extrapolated)")]
    void Test10 () {
-      var dwg = DXFReader.FromFile (NT.File ("Geom/Poly/SegInt.dxf"));
+      var dwg = DXFReader.Load (NT.File ("Geom/Poly/SegInt.dxf"));
       var segs = dwg.Polys.SelectMany (a => a.Segs).ToList ();
       Span<Point2> buffer = stackalloc Point2[2];
       for (int i = 0; i < segs.Count; i++) {
@@ -296,7 +296,7 @@ class PolyTests {
 
       static void Check (string file) {
          var sb = new StringBuilder ();
-         var dwg = DXFReader.FromFile (NT.File ($"Geom/Poly/{file}.dxf"));
+         var dwg = DXFReader.Load (NT.File ($"Geom/Poly/{file}.dxf"));
          foreach (var seg in dwg.Polys.SelectMany (a => a.Segs).Where (a => a.IsArc))
             sb.AppendFormat ($"{seg.Bound}\n");
          File.WriteAllText (NT.TmpTxt, sb.ToString ());

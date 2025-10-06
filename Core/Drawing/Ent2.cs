@@ -146,7 +146,7 @@ public class E2Bendline : Ent2 {
    public override Bound2 Bound => new (Pts);
    public override Bound2 GetBound (Matrix2 xfm) => new (Pts.Select (a => a * xfm));
 
-   public override E2Bendline XFormed (Matrix2 m) 
+   public override E2Bendline XFormed (Matrix2 m)
       => new (mDwg, Pts.Select (a => a * m), Angle, Radius, KFactor, Thickness);
 
    // Private data -------------------------------------------------------------

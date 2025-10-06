@@ -7,8 +7,11 @@ namespace Nori;
 
 public partial class DXFReader {
    /// <summary>Convert white entities to black on import</summary>
-   public static bool WhiteToBlack = true;
-   public static bool DarkenColors = true;
+   public bool WhiteToBlack;
+   /// <summary>
+   /// Darken all layer colors (to have a luminance of no more than 160)
+   /// </summary>
+   public bool DarkenColors;
 
    /// <summary>The Standard 256 ACAD Colors</summary>
    public static Color4[] ACADColors {
@@ -24,7 +27,7 @@ public partial class DXFReader {
    static Color4[]? sACADColors;
 
    /// <summary>Convert an AutoCAD color to a Color4</summary>
-   public static Color4 GetColor (int index) {
+   public Color4 GetColor (int index) {
       if (index == 256) return Color4.Nil;
       var color = ACADColors[index.Clamp (0, 255)];
       if (WhiteToBlack && color.EQ (Color4.White)) color = Color4.Black;

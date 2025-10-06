@@ -54,7 +54,7 @@ public partial class DXFReader {
    }
 
    /// <summary>Helper to load a DXF file, given the filename</summary>
-   public static Dwg2 FromFile (string name) => new DXFReader (name).Build ();
+   public static Dwg2 Load (string name) => new DXFReader (name).Build ();
 
    // Implementation -----------------------------------------------------------
    // Called at the start of each section.

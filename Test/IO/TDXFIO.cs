@@ -8,27 +8,27 @@ namespace Nori.Testing;
 class DXFTests {
    [Test (75, "Basic DXF load test")]
    void Test1 () {
-      var dwg = DXFReader.FromFile (NT.File ("IO/DXF/Basic.dxf"));
+      var dwg = DXFReader.Load (NT.File ("IO/DXF/Basic.dxf"));
       dwg.Ents.Count.Is (57);
    }
 
    [Test (76, "DXF round-trip test")]
    void Test2 () {
-      var dwg = DXFReader.FromFile (NT.File ("IO/DXF/Basic.dxf"));
+      var dwg = DXFReader.Load (NT.File ("IO/DXF/Basic.dxf"));
       DXFWriter.SaveFile (dwg.Purge (), NT.TmpDXF);
       Assert.TextFilesEqual1 ("IO/DXF/Out/Basic.dxf", NT.TmpDXF);
    }
 
    [Test (77, "DXF round-trip test for point")]
    void Test3 () {
-      var dwg = DXFReader.FromFile (NT.File ("IO/DXF/Point.dxf"));
+      var dwg = DXFReader.Load (NT.File ("IO/DXF/Point.dxf"));
       DXFWriter.SaveFile (dwg.Purge (), NT.TmpDXF);
       Assert.TextFilesEqual1 ("IO/DXF/Out/Point.dxf", NT.TmpDXF);
    }
 
    [Test (78, "DXF Reader test for POLYLINE entity")]
    void Test4 () {
-      var dwg = DXFReader.FromFile (NT.File ("IO/DXF/Poly.dxf"));
+      var dwg = DXFReader.Load (NT.File ("IO/DXF/Poly.dxf"));
       var firstPoly = dwg.Ents.First () as E2Poly;
       var secondPoly = dwg.Ents.Last () as E2Poly;
       dwg.Ents.Count.Is (2);
@@ -37,21 +37,21 @@ class DXFTests {
 
    [Test (79, "DXF round-trip test for ellipse")]
    void Test5 () {
-      var dwg = DXFReader.FromFile (NT.File ("IO/DXF/Ellipse.dxf"));
+      var dwg = DXFReader.Load (NT.File ("IO/DXF/Ellipse.dxf"));
       DXFWriter.SaveFile (dwg, NT.TmpDXF);
       Assert.TextFilesEqual1 ("IO/DXF/Out/Ellipse.dxf", NT.TmpDXF);
    }
 
    [Test (80, "DXF Writer test for POLYLINE entity")]
    void Test6 () {
-      var dwg = DXFReader.FromFile (NT.File ("IO/DXF/Poly.dxf"));
+      var dwg = DXFReader.Load (NT.File ("IO/DXF/Poly.dxf"));
       DXFWriter.SaveFile (dwg, NT.TmpDXF);
       Assert.TextFilesEqual1 ("IO/DXF/Out/Poly.dxf", NT.TmpDXF);
    }
 
    [Test (81, "DXF round-trip test for TEXT")]
    void Test7 () {
-      var dwg = DXFReader.FromFile (NT.File ("IO/DXF/Text.dxf"));
+      var dwg = DXFReader.Load (NT.File ("IO/DXF/Text.dxf"));
       DXFWriter.SaveFile (dwg, NT.TmpDXF);
       Assert.TextFilesEqual1 ("IO/DXF/Out/Text.dxf", NT.TmpDXF);
    }
@@ -59,19 +59,20 @@ class DXFTests {
    [Test (82, "DXF color to Pix color conversion test")]
    void Test8 () {
       // Check for the colors at the boundaries
-      Assert.IsTrue (DXFReader.GetColor (0).EQ (Color4.Black));
-      Assert.IsTrue (DXFReader.GetColor (255).EQ (Color4.White));
+      var dr = new DXFReader (NT.File ("IO/DXF/Text.dxf"));
+      Assert.IsTrue (dr.GetColor (0).EQ (Color4.Black));
+      Assert.IsTrue (dr.GetColor (255).EQ (Color4.White));
       // Check for any number in the range
-      Assert.IsTrue (DXFReader.GetColor (128).EQ (new Color4 (255, 0, 79, 59)));
+      Assert.IsTrue (dr.GetColor (128).EQ (new Color4 (255, 0, 79, 59)));
       // Check for cases when the given number is outside the range
-      Assert.IsTrue (DXFReader.GetColor (256).EQ (Color4.Nil));
-      Assert.IsTrue (DXFReader.GetColor (-5).EQ (Color4.Black));
-      Assert.IsTrue (DXFReader.GetColor (260).EQ (Color4.White));
+      Assert.IsTrue (dr.GetColor (256).EQ (Color4.Nil));
+      Assert.IsTrue (dr.GetColor (-5).EQ (Color4.Black));
+      Assert.IsTrue (dr.GetColor (260).EQ (Color4.White));
    }
 
    [Test (83, "DXF Reader test for LWPOLYLINE entity")]
    void Test9 () {
-      var dwg = DXFReader.FromFile (NT.File ("IO/DXF/LWPolyline.dxf"));
+      var dwg = DXFReader.Load (NT.File ("IO/DXF/LWPolyline.dxf"));
       var firstPoly = dwg.Ents.First () as E2Poly;
       var secondPoly = dwg.Ents.Last () as E2Poly;
       dwg.Ents.Count.Is (2);
@@ -80,14 +81,14 @@ class DXFTests {
 
    [Test (84, "DXF test for MTEXT")]
    void Test10 () {
-      var dwg = DXFReader.FromFile (NT.File ("IO/DXF/MText.dxf"));
+      var dwg = DXFReader.Load (NT.File ("IO/DXF/MText.dxf"));
       DXFWriter.SaveFile (dwg, NT.TmpDXF);
       Assert.TextFilesEqual1 ("IO/DXF/Out/MText.dxf", NT.TmpDXF);
    }
 
    [Test (85, "Issue.36 POLYLINE entity is not rendered correctly")]
    void Test11 () {
-      var dwg = DXFReader.FromFile (NT.File ("IO/DXF/PolyErr.dxf"));
+      var dwg = DXFReader.Load (NT.File ("IO/DXF/PolyErr.dxf"));
       dwg.Purge ();
       DXFWriter.SaveFile (dwg, NT.TmpDXF);
       Assert.TextFilesEqual1 ("IO/DXF/Out/PolyErr.dxf", NT.TmpDXF);
@@ -95,7 +96,7 @@ class DXFTests {
 
    [Test (86, "DXF round-trip test for layers")]
    void Test12 () {
-      var dwg = DXFReader.FromFile (NT.File ("IO/DXF/Layers.dxf"));
+      var dwg = DXFReader.Load (NT.File ("IO/DXF/Layers.dxf"));
       DXFWriter.SaveFile (dwg, NT.TmpDXF);
       Assert.TextFilesEqual1 ("IO/DXF/Out/Layers.dxf", NT.TmpDXF);
    }
@@ -103,17 +104,18 @@ class DXFTests {
    [Test (87, "Pix color to DXF Color conversion test")]
    void Test13 () {
       // Standard values
+      var dr = new DXFReader (NT.File ("IO/DXF/Text.dxf"));
       var colors = new Color4[] { Color4.White, Color4.Black, Color4.Yellow };
-      colors.ForEach (c => Assert.IsTrue (DXFReader.GetColor (DXFWriter.ToACADColor (c)).EQ (c)));
+      colors.ForEach (c => Assert.IsTrue (dr.GetColor (DXFWriter.ToACADColor (c)).EQ (c)));
       // Random values
       var random = new Color4 (255, 0, 0, 2);
-      Assert.IsTrue (DXFReader.GetColor (DXFWriter.ToACADColor (random)).EQ (Color4.Black));
+      Assert.IsTrue (dr.GetColor (DXFWriter.ToACADColor (random)).EQ (Color4.Black));
       random = Color4.Transparent;
-      Assert.IsTrue (DXFReader.GetColor (DXFWriter.ToACADColor (random)).EQ (Color4.White));
+      Assert.IsTrue (dr.GetColor (DXFWriter.ToACADColor (random)).EQ (Color4.White));
       random = Color4.Nil;
-      Assert.IsTrue (DXFReader.GetColor (DXFWriter.ToACADColor (random)).EQ (Color4.Black));
+      Assert.IsTrue (dr.GetColor (DXFWriter.ToACADColor (random)).EQ (Color4.Black));
       random = new (260, 247, -1);
-      Assert.IsTrue (DXFReader.GetColor (DXFWriter.ToACADColor (random)).EQ (Color4.Cyan));
+      Assert.IsTrue (dr.GetColor (DXFWriter.ToACADColor (random)).EQ (Color4.Cyan));
    }
 
    [Test (88, "Test for converting encoded texts to special characters")]
@@ -126,7 +128,7 @@ class DXFTests {
 
    [Test (89, "Font selection doesn't seem to work for the attached MTEXT file")]
    void Test15 () {
-      var dwg = DXFReader.FromFile (NT.File ("IO/DXF/3Horns.dxf"));
+      var dwg = DXFReader.Load (NT.File ("IO/DXF/3Horns.dxf"));
       var mText = dwg.Ents.OfType<E2Text> ();
       var sb = new StringBuilder ();
       foreach (var txt in mText)
@@ -139,7 +141,7 @@ class DXFTests {
 
    [Test (90, "DXF round-trip test for solid")]
    void Test16 () {
-      var dwg = DXFReader.FromFile (NT.File ("IO/DXF/Solid.dxf"));
+      var dwg = DXFReader.Load (NT.File ("IO/DXF/Solid.dxf"));
       dwg.Purge ();
       DXFWriter.SaveFile (dwg, NT.TmpDXF);
       Assert.TextFilesEqual1 ("IO/DXF/Out/Solid.dxf", NT.TmpDXF);
@@ -147,14 +149,14 @@ class DXFTests {
 
    [Test (91, "Color selection based on their priority ")]
    void Test17 () {
-      var dwg = DXFReader.FromFile (NT.File ("IO/DXF/Color1.dxf"));
+      var dwg = DXFReader.Load (NT.File ("IO/DXF/Color1.dxf"));
       DXFWriter.SaveFile (dwg.Purge (), NT.TmpDXF);
       Assert.TextFilesEqual1 ("IO/DXF/Out/Color1.dxf", NT.TmpDXF);
    }
 
    [Test (92, "DXF round-trip test for INSERT")]
    void Test18 () {
-      var dwg = DXFReader.FromFile (NT.File ("IO/DXF/Block01.dxf"));
+      var dwg = DXFReader.Load (NT.File ("IO/DXF/Block01.dxf"));
       DXFWriter.SaveFile (dwg, NT.TmpDXF);
       Assert.TextFilesEqual1 ("IO/DXF/Out/Block01.dxf", NT.TmpDXF);
    }
@@ -163,7 +165,7 @@ class DXFTests {
    void Test19 () {
       var files = new[] { "C36249_B", "47458206_B", "47616434", "48142366_A","AX0974", "337228A2" };
       foreach (var name in files) {
-         var dwg = DXFReader.FromFile (NT.File ($"IO/DXF/{name}.dxf"));
+         var dwg = DXFReader.Load (NT.File ($"IO/DXF/{name}.dxf"));
          DXFWriter.SaveFile (dwg.Purge (), NT.TmpDXF);
          Assert.TextFilesEqual1 ($"IO/DXF/Out/{name}.dxf", NT.TmpDXF);
       }
@@ -171,7 +173,7 @@ class DXFTests {
 
    [Test (94, "Text alignment flags")]
    void Test20 () {
-      var dwg = DXFReader.FromFile (NT.File ("IO/DXF/TextAlign.dxf"));
+      var dwg = DXFReader.Load (NT.File ("IO/DXF/TextAlign.dxf"));
       DXFWriter.SaveFile (dwg, NT.TmpDXF);
       Assert.TextFilesEqual1 ("IO/DXF/Out/TextAlign.dxf", NT.TmpDXF);
    }
@@ -191,14 +193,14 @@ class DXFTests {
 class DXFTests2 {
    [Test (95, "Reading ATTRIB entities")]
    void Test1 () {
-      var dwg = DXFReader.FromFile (NT.File ("IO/DXF/D00537.dxf"));
+      var dwg = DXFReader.Load (NT.File ("IO/DXF/D00537.dxf"));
       CurlWriter.ToFile (dwg.Purge (), NT.TmpCurl);
       Assert.TextFilesEqual1 ("IO/DXF/Out/D00537.curl", NT.TmpCurl);
    }
 
    [Test (96, "Reading attributes of MTEXT")]
    void Test2 () {
-      var dwg = DXFReader.FromFile (NT.File ("IO/DXF/D01273.dxf"));
+      var dwg = DXFReader.Load (NT.File ("IO/DXF/D01273.dxf"));
       CurlWriter.ToFile (dwg.Purge (), NT.TmpCurl);
       Assert.TextFilesEqual1 ("IO/DXF/Out/D01273.curl", NT.TmpCurl);
       DXFWriter.SaveFile (dwg, NT.TmpDXF);
@@ -207,7 +209,7 @@ class DXFTests2 {
 
    [Test (97, "Test for Codepage 1252")]
    void Test3 () {
-      var dwg = DXFReader.FromFile (NT.File ("IO/DXF/D58839.dxf"));
+      var dwg = DXFReader.Load (NT.File ("IO/DXF/D58839.dxf"));
       CurlWriter.ToFile (dwg.Purge (), NT.TmpCurl);
       Assert.TextFilesEqual1 ("IO/DXF/Out/D58839.curl", NT.TmpCurl);
    }
@@ -215,7 +217,7 @@ class DXFTests2 {
    [Test (98, "Test for ShapeRecognizer")]
    void Test4 () {
       List<string> shapes = [];
-      var dwg = DXFReader.FromFile (NT.File ("IO/DXF/Shapes1.dxf"));
+      var dwg = DXFReader.Load (NT.File ("IO/DXF/Shapes1.dxf"));
       foreach (var poly in dwg.Polys) {
          var sd = ShapeRecognizer.Recognize (poly);
          if (sd.Shape != EShape.None) shapes.Add (sd.ToString ());
@@ -226,14 +228,14 @@ class DXFTests2 {
 
    [Test (108, "Issue.69: DXFReader doesn't recognize layers correctly")]
    void Test5 () {
-      var dwg = DXFReader.FromFile (NT.File ("IO/DXF/Layer.dxf"));
+      var dwg = DXFReader.Load (NT.File ("IO/DXF/Layer.dxf"));
       DXFWriter.SaveFile (dwg, NT.TmpDXF);
       Assert.TextFilesEqual1 ("IO/DXF/Out/Layer.dxf", NT.TmpDXF);
    }
 
    [Test (105, "Issue.73: Extract bend information from the DXF special text entities")]
    void Test6 () {
-      var dwg = DXFReader.FromFile (NT.File ("IO/DXF/Bend-10.dxf"));
+      var dwg = DXFReader.Load (NT.File ("IO/DXF/Bend-10.dxf"));
       CurlWriter.ToFile (dwg, NT.TmpCurl);
       Assert.TextFilesEqual1 ("IO/DXF/Out/Bend-10.curl", NT.TmpCurl);
       DXFWriter.SaveFile (dwg, NT.TmpDXF);
@@ -242,7 +244,7 @@ class DXFTests2 {
 
    [Test (107, "Extend DXFReader to read bend line information from DXF")]
    void Test7 () {
-      var dwg = DXFReader.FromFile (NT.File ("IO/DXF/BasicBend.dxf"));
+      var dwg = DXFReader.Load (NT.File ("IO/DXF/BasicBend.dxf"));
       CurlWriter.ToFile (dwg, NT.TmpCurl);
       Assert.TextFilesEqual1 ("IO/DXF/Out/BasicBend.curl", NT.TmpCurl);
    }
@@ -260,27 +262,27 @@ class DXFTests2 {
 
    [Test (116, "Read SPLINE entity from DXF")]
    void Test9 () {
-      var dwg = DXFReader.FromFile (NT.File ("IO/DXF/D17616.dxf"));
+      var dwg = DXFReader.Load (NT.File ("IO/DXF/D17616.dxf"));
       CurlWriter.ToFile (dwg, NT.TmpCurl);
       Assert.TextFilesEqual1 ("IO/DXF/Out/D17616.curl", NT.TmpCurl);
-      dwg = DXFReader.FromFile (NT.File ("IO/DXF/D17666.dxf"));
+      dwg = DXFReader.Load (NT.File ("IO/DXF/D17666.dxf"));
       CurlWriter.ToFile (dwg, NT.TmpCurl);
       Assert.TextFilesEqual1 ("IO/DXF/Out/D17666.curl", NT.TmpCurl);
    }
 
    [Test (117, "Write SPLINE entity to DXF")]
    void Test10 () {
-      var dwg = DXFReader.FromFile (NT.File ("IO/DXF/D17666.dxf"));
+      var dwg = DXFReader.Load (NT.File ("IO/DXF/D17666.dxf"));
       DXFWriter.SaveFile (dwg, NT.TmpDXF);
       Assert.TextFilesEqual1 ("IO/DXF/Out/D17666.dxf", NT.TmpDXF);
-      dwg = DXFReader.FromFile (NT.File ("IO/DXF/D17292.dxf"));
+      dwg = DXFReader.Load (NT.File ("IO/DXF/D17292.dxf"));
       DXFWriter.SaveFile (dwg, NT.TmpDXF);
       Assert.TextFilesEqual1 ("IO/DXF/Out/D17292.dxf", NT.TmpDXF);
    }
 
    [Test (118, "Test of Ent2.XFormed")]
    void Test11 () {
-      var dwg = DXFReader.FromFile (NT.File ("IO/DXF/AllEnts.dxf"));
+      var dwg = DXFReader.Load (NT.File ("IO/DXF/AllEnts.dxf"));
       CurlWriter.ToFile (dwg, NT.TmpCurl);
       Assert.TextFilesEqual1 ("IO/DXF/Out/AllEnts1.curl", NT.TmpCurl);
       var xfm = Matrix2.Rotation (45.D2R ()) * Matrix2.Scaling (2);
