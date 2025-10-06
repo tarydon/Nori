@@ -86,7 +86,7 @@ public partial class Dwg2 {
    /// If a layer with the same name exists, replace it and update the associated entities.
    public void Add (Layer2 layer) {
       if (mLayers.FindIndex (a => a.Name == layer.Name) is int idx && idx >= 0) {
-         foreach (var ent in Ents.Where (e => e.Layer == mLayers[idx])) ent.Layer = layer;
+         Ents.Where (e => e.Layer == mLayers[idx]).ForEach (a => a.Layer = layer);
          mLayers.RemoveAt (idx); mLayers.Insert (idx, layer);
       } else mLayers.Add (layer);
    }
