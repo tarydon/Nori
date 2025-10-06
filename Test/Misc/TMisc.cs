@@ -421,9 +421,9 @@ class TMisc {
       dwg.Add (Poly.Line (0, 0, 50, 50)); dwg.Add (Poly.Line (50, 50, 100, 100));
 
       // Add new layers with their names matching existing layers
-      dwg.Add (new Layer2 ("Circle", Color4.White, ELineType.Dash));
       dwg.Add (new Layer2 ("Rect", Color4.Yellow, ELineType.Dot));
       dwg.Add (new Layer2 ("Line", Color4.Green, ELineType.DashDot));
+      dwg.Add (new Layer2 ("Circle", Color4.White, ELineType.Dash));
       Assert.IsTrue (dwg.Layers.Count == 3);
       CurlWriter.ToFile (dwg, NT.TmpCurl);
       Assert.TextFilesEqual1 ("Misc/Layers.curl", NT.TmpCurl);
