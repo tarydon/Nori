@@ -72,20 +72,20 @@ class TAuSystem {
 
    [Test (62, "Various Au errors")]
    void Test2 () {
-      string message = Crasher (() => CurlWriter.ToFile (new Bad1 (), NT.TmpCurl));
+      string message = Crasher (() => CurlWriter.Save (new Bad1 (), NT.TmpCurl));
       message.Is ("AuException: No metadata for Nori.Testing.Bad1");
 
-      message = Crasher (() => CurlWriter.ToFile (new Bad2 (), NT.TmpCurl));
+      message = Crasher (() => CurlWriter.Save (new Bad2 (), NT.TmpCurl));
       message.Is ("AuException: Tactic missing for Nori.Testing.Bad2.Age");
 
-      message = Crasher (() => CurlReader.Load (CurlWriter.ToByteArray (new Bad3 ("Hello"))));
+      message = Crasher (() => CurlReader.Load (CurlWriter.SaveToByteArray (new Bad3 ("Hello"))));
       message.Is ("AuException: No parameterless constructor found for Nori.Testing.Bad3");
 
       message = Crasher (() => {
          Drawing dwg = new ("Temp");
          dwg.Add (new Layer ("Std", Color4.Black, ELineType.Continuous));
          dwg.Add (new Circle (dwg, dwg.Layers[0], (1, 2), 3));
-         byte[] data = CurlWriter.ToByteArray (dwg.Shapes[0]);
+         byte[] data = CurlWriter.SaveToByteArray (dwg.Shapes[0]);
          CurlReader.Load (data);
       });
       message.Is ("AuException: Nori.Testing.Circle.Dwg cannot be set to null");
@@ -102,11 +102,11 @@ class TAuSystem {
       message.Is ("AuException: Missing Nori.Testing.Prim0.Read(UTFReader)");
 
       holder = new Holder () { Prim1 = new Prim1 () };
-      message = Crasher (() => CurlWriter.ToFile (holder, NT.TmpCurl));
+      message = Crasher (() => CurlWriter.Save (holder, NT.TmpCurl));
       message.Is ("AuException: Missing Nori.Testing.Prim1.Write(UTFWriter)");
 
       holder = new Holder () { Prim1 = new Prim1 () };
-      message = Crasher (() => CurlWriter.ToFile (holder, NT.TmpCurl));
+      message = Crasher (() => CurlWriter.Save (holder, NT.TmpCurl));
 
       message = Crasher (() => CurlReader.Load ($"{NT.Data}/IO/T007.curl"));
       message.Is ("AuException: No metadata for 'Leopard'");
@@ -167,7 +167,7 @@ class TAuSystem {
       var ct1b = (CType1)CurlReader.Load (NT.TmpCurl);
       Check (ct1b, "T008.curl", "T008");
 
-      message = Crasher (() => CurlWriter.ToFile (new CType2 (), NT.TmpCurl));
+      message = Crasher (() => CurlWriter.Save (new CType2 (), NT.TmpCurl));
       message.Is ("AuException: 64-bit enums are not supported");
    }
 
@@ -196,8 +196,8 @@ class TAuSystem {
    }
 
    void Check (object obj, string file, string? comment) {
-      CurlWriter.ToFile (obj, NT.TmpCurl, comment);
-      Assert.TextFilesEqual1 ($"IO/{file}", NT.TmpCurl);
+      CurlWriter.Save (obj, NT.TmpCurl, comment);
+      Assert.TextFilesEqual ($"IO/{file}", NT.TmpCurl);
    }
 }
 

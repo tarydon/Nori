@@ -1,4 +1,8 @@
-﻿namespace Nori;
+// ────── ╔╗
+// ╔═╦╦═╦╦╬╣ DwgStitch.cs
+// ║║║║╬║╔╣║ <<TODO>>
+// ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
+namespace Nori;
 
 class DwgStitcher {
    public DwgStitcher (Dwg2 dwg, double threshold = 1e-3) {

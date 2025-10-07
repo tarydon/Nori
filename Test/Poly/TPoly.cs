@@ -4,7 +4,7 @@
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 namespace Nori.Testing;
 
-[Fixture (15, "Poly class tests", "Geom")]
+[Fixture (15, "Poly class tests", "Geom.Poly")]
 class PolyTests {
    [Test (24, "Basic constructors")]
    void Test1 () {
@@ -45,7 +45,7 @@ class PolyTests {
       foreach (var s in p.Segs)
          sb.Append ($"{s}  |  {s.IsArc} {s.IsCCW} {s.IsCircle} {s.IsLast}\n");
       File.WriteAllText (NT.TmpTxt, sb.ToString ());
-      Assert.TextFilesEqual1 ("Misc/poly.txt", NT.TmpTxt);
+      Assert.TextFilesEqual ("Misc/poly.txt", NT.TmpTxt);
 
       List<Point2> pts = [];
       p.Discretize (pts, 0.05);
@@ -53,7 +53,7 @@ class PolyTests {
       sb.Append ($"Discretization of {p}:\n");
       foreach (var pt in pts) sb.Append (pt.ToString () + "\n");
       File.WriteAllText (NT.TmpTxt, sb.ToString ());
-      Assert.TextFilesEqual1 ("Misc/poly2.txt", NT.TmpTxt);
+      Assert.TextFilesEqual ("Misc/poly2.txt", NT.TmpTxt);
 
       pts.Clear ();
       Poly.Line (1, 2, 3, 4).Discretize (pts, 0.1);
@@ -137,7 +137,7 @@ class PolyTests {
       sb.Append ($"\n{p} to beziers:\n");
       foreach (var pt in bez) sb.Append ($"{pt}\n");
       File.WriteAllText (NT.TmpTxt, sb.ToString ());
-      Assert.TextFilesEqual1 ("Misc/poly3.txt", NT.TmpTxt);
+      Assert.TextFilesEqual ("Misc/poly3.txt", NT.TmpTxt);
 
       p = Poly.Parse ("M0,10 Q-10,0,1"); seg = p[0];
       seg.Contains (new (0, 10)).IsTrue (); seg.Contains (new (-10, 0)).IsTrue ();
@@ -250,7 +250,7 @@ class PolyTests {
 
    [Test (110, "Seg-Seg intersection tests (finite)")]
    void Test9 () {
-      var dwg = DXFReader.Load (NT.File ("Geom/Poly/SegInt.dxf"));
+      var dwg = DXFReader.Load (NT.File ("Poly/SegInt.dxf"));
       var segs = dwg.Polys.SelectMany (a => a.Segs).ToList ();
       Span<Point2> buffer = stackalloc Point2[2];
       for (int i = 0; i < segs.Count; i++) {
@@ -259,13 +259,13 @@ class PolyTests {
             foreach (var pt in pts) dwg.Add (Poly.Circle (pt, 2));
          }
       }
-      DXFWriter.SaveFile (dwg, NT.TmpDXF);
-      Assert.TextFilesEqual1 ("Geom/Poly/Out/SegInt1.dxf", NT.TmpDXF);
+      DXFWriter.Save (dwg, NT.TmpDXF);
+      Assert.TextFilesEqual ("Poly/Out/SegInt1.dxf", NT.TmpDXF);
    }
 
    [Test (111, "Seg-Seg intersection tests (extrapolated)")]
    void Test10 () {
-      var dwg = DXFReader.Load (NT.File ("Geom/Poly/SegInt.dxf"));
+      var dwg = DXFReader.Load (NT.File ("Poly/SegInt.dxf"));
       var segs = dwg.Polys.SelectMany (a => a.Segs).ToList ();
       Span<Point2> buffer = stackalloc Point2[2];
       for (int i = 0; i < segs.Count; i++) {
@@ -285,22 +285,22 @@ class PolyTests {
             }
          }
       }
-      DXFWriter.SaveFile (dwg, NT.TmpDXF);
-      Assert.TextFilesEqual1 ("Geom/Poly/Out/SegInt2.dxf", NT.TmpDXF);
+      DXFWriter.Save (dwg, NT.TmpDXF);
+      Assert.TextFilesEqual ("Poly/Out/SegInt2.dxf", NT.TmpDXF);
    }
 
-   [Test (112, "Seg Bound tests")]
+   [Test (125, "Seg Bound tests")]
    void Test11 () {
       Check ("ArcBound1");
       Check ("ArcBound2");
 
       static void Check (string file) {
          var sb = new StringBuilder ();
-         var dwg = DXFReader.Load (NT.File ($"Geom/Poly/{file}.dxf"));
+         var dwg = DXFReader.Load (NT.File ($"Poly/{file}.dxf"));
          foreach (var seg in dwg.Polys.SelectMany (a => a.Segs).Where (a => a.IsArc))
             sb.AppendFormat ($"{seg.Bound}\n");
          File.WriteAllText (NT.TmpTxt, sb.ToString ());
-         Assert.TextFilesEqual1 ($"Geom/Poly/{file}.txt", NT.TmpTxt);
+         Assert.TextFilesEqual ($"Poly/{file}.txt", NT.TmpTxt);
       }
    }
 }

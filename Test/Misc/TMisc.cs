@@ -278,7 +278,7 @@ class TMisc {
       // CMesh IO test
       var part = CMesh.LoadTMesh ($"{NT.Data}/Geom/CMesh/part.tmesh");
       part.Save (NT.TmpTxt);
-      Assert.TextFilesEqual1 ("Geom/CMesh/part-out.tmesh", NT.TmpTxt);
+      Assert.TextFilesEqual ("Geom/CMesh/part-out.tmesh", NT.TmpTxt);
 
       // CMeshBuilder test
       List<Point3> pts = [];
@@ -288,7 +288,7 @@ class TMisc {
       }
 
       new CMeshBuilder (pts.AsSpan ()).Build ().Save (NT.TmpTxt);
-      Assert.TextFilesEqual1 ("Geom/CMesh/part-gen.tmesh", NT.TmpTxt);
+      Assert.TextFilesEqual ("Geom/CMesh/part-gen.tmesh", NT.TmpTxt);
    }
 
    [Test (38, "LineFont test")]
@@ -333,7 +333,7 @@ class TMisc {
       poly.ForEach (a => sb.AppendLine (a.ToString ()));
       pts.ForEach (a => sb.AppendLine ($"P{a.X},{a.Y}"));
       File.WriteAllText (NT.TmpTxt, sb.ToString ());
-      Assert.TextFilesEqual1 ("Misc/LineFont.txt", NT.TmpTxt);
+      Assert.TextFilesEqual ("Misc/LineFont.txt", NT.TmpTxt);
 
       // Helpers ...............................................................
       void Out (double x, double y, ETextAlign align)
@@ -378,7 +378,7 @@ class TMisc {
 
       // Build and compare the mesh
       new CMeshBuilder (nodes.AsSpan ()).Build ().Save (NT.TmpTxt);
-      Assert.TextFilesEqual1 ("Geom/Tess/gl2d.tmesh", NT.TmpTxt);
+      Assert.TextFilesEqual ("Geom/Tess/gl2d.tmesh", NT.TmpTxt);
    }
 
    [Test (12, "Test for E2BendLine properties")]

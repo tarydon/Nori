@@ -93,9 +93,7 @@ public partial class Dwg2 {
       (mStyles ??= []).Add (style); _styleMap = null;
    }
 
-   /// <summary>
-   /// Deletes all selected entities
-   /// </summary>
+   /// <summary>Deletes all selected entities</summary>
    public void DeleteSelected () {
       for (int i = mEnts.Count - 1; i >= 0; i--) 
          if (mEnts[i].IsSelected) mEnts.RemoveAt (i);

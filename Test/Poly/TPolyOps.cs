@@ -4,7 +4,7 @@
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 namespace Nori.Testing;
 
-[Fixture (19, "Poly node mangler tests", "Geom")]
+[Fixture (19, "Poly node mangler tests", "Geom.Poly")]
 class PolyOpsTests {
    [Test (58, "Poly in-fillet tests")]
    void Test1 () {
@@ -67,7 +67,7 @@ class PolyOpsTests {
    }
 }
 
-[Fixture (21, "Polygon boolean operations tests", "Geom")]
+[Fixture (21, "Polygon boolean operations tests", "Geom.Poly")]
 class BooleanOpsTests {
    [Test (69, "Basic boolean operations")]
    void Test1 () {
@@ -116,14 +116,14 @@ class BooleanOpsTests {
          }
          output.ForEach (poly => sb.AppendLine (poly.ToString ()));
          File.WriteAllText (NT.TmpTxt, sb.ToString ());
-         Assert.TextFilesEqual1 ($"Geom/Poly/Boolean/basic-{ops[i]}.txt", NT.TmpTxt);
+         Assert.TextFilesEqual ($"Poly/Boolean/basic-{ops[i]}.txt", NT.TmpTxt);
       }
    }
 }
 
-[Fixture (26, "Poly trim and extend tests", "Geom")]
+[Fixture (26, "Poly trim and extend tests", "Geom.Poly")]
 class PolyTrimExtendTests {
-   [Test (116, "Trim line seg")]
+   [Test (122, "Trim line seg")]
    void Test1 () {
       // Line seg in closed poly containing only lines
       Poly p = Poly.Rectangle (0, 0, 100, 50);
@@ -157,7 +157,7 @@ class PolyTrimExtendTests {
       resPolys.Count.Is (0);
    }
 
-   [Test (117, "Trim circle")]
+   [Test (123, "Trim circle")]
    void Test2 () {
       Poly c = Poly.Circle (0, 0, 40);
       List<Poly> polySoup = [c];
@@ -193,7 +193,7 @@ class PolyTrimExtendTests {
       resPolys.Count.Is (1); resPolys[0].Is ("M0,40Q-0,-40,-2");
    }
 
-   [Test (118, "Trim arc seg")]
+   [Test (124, "Trim arc seg")]
    void Test3 () {
       // Single arc seg poly
       Poly p = Poly.Arc (new Point2 (20, 0), Lib.HalfPI, new Point2 (0, 20));
@@ -332,7 +332,7 @@ class PolyTrimExtendTests {
    }
 }
 
-[Fixture (25, "Poly edge mangler tests", "Geom")]
+[Fixture (25, "Poly edge mangler tests", "Geom.Poly")]
 class PolyEdgeTests {
    [Test (113, "Poly edge-recess")]
    void Test1 () {
@@ -351,7 +351,7 @@ class PolyEdgeTests {
       poly = rounded.EdgeRecess (0, left: false, 15, 20, 10); poly!.Is ("M100,0V5H110V25H100V50H0V5Q5,0,1Z");
    }
 
-   [Test (114, "Poly Edge-V")]
+   [Test (121, "Poly Edge-V")]
    void Test2 () {
       Poly rect = Poly.Rectangle (0, 0, 100, 50);
       Poly? poly;
@@ -364,7 +364,7 @@ class PolyEdgeTests {
       poly = line.VNotch (0, 15, 20, -10); poly!.Is ("M0,0H5L15,-10L25,0H100");
    }
 
-   [Test (115, "Poly Edge U-Notch")]
+   [Test (126, "Poly Edge U-Notch")]
    void Test3 () {
       Poly rect = Poly.Rectangle (0, 0, 60, 50);
       Poly? poly;

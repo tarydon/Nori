@@ -62,8 +62,8 @@ class LineFontScene : Scene2 {
 class LinesAndPointsNode (List<Poly> polys, List<Vec2F> points) : VNode {
    public override void SetAttributes () {
       Lux.Color = Color4.Black;
-      Lux.PointSize = 11f;
-      Lux.LineWidth = 5f;
+      Lux.PointSize = 4f;
+      Lux.LineWidth = 2f;
    }
 
    public override void Draw () {
