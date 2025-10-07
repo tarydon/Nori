@@ -91,8 +91,9 @@ public partial class DXFReader {
          switch (mType) {
             case "ARC": Add (Poly.Arc (Center, Radius, StartAng, EndAng, true)); break;
             case "CIRCLE": Add (Poly.Circle (Center, Radius)); break;
-            case "DIMENSION": Block2 d = mDwg.GetBlock (Name)!; 
-               Add (new E2Dimension (Layer, d != null ? d.Ents : [])); break;
+            case "DIMENSION":
+               Block2 d = mDwg.GetBlock (Name)!;
+               if (d != null) Add (new E2Dimension (Layer, d.Ents)); break;
             case "ELLIPSE": AddEllipse (Pt0, MajorAxis, AxisRatio, TRange); break;
             case "LINE":
                var line = Poly.Line (Pt0, Pt1);
