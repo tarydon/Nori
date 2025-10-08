@@ -169,7 +169,7 @@ class PolyTests {
       var p3r = p3.Reversed (); var s2 = p3r[0];
       p3r.IsCircle.IsTrue (); p3r.IsClosed.IsTrue ();
       s2.IsCCW.IsFalse (); s2.Center.Is (cen); s2.Radius.Is (rad);
-      // A closed poly with lines and arcs.
+      // A Close poly with lines and arcs.
       var p4 = Poly.Parse ("M0,0H500V200Q400,300,-1H100Q0,200,1Z");
       p4.Reversed ().Is ("M0,0V200Q100,300,-1H400Q500,200,1V0Z");
    }
@@ -189,13 +189,13 @@ class PolyTests {
    [Test (74, "Poly.Close tests")]
    void Test7 () {
       var poly = Poly.Circle (Point2.Zero, 5);
-      poly.Closed ().Is ("C0,0,5");
-      Poly.Parse ("M0,0 Q10,0,1 Q0,0,0.9").Closed ().Is ("M0,0Q10,0,1Q0,0,0.9Z");
-      Poly.Parse ("M0,0H10V5H0V0").Closed ().Is ("M0,0H10V5H0Z");
-      Poly.Parse ("M0,0H9Q10,1,1V5H0V0").Closed ().Is ("M0,0H9Q10,1,1V5H0Z");
-      Poly.Parse ("M0,0H10V5H0").Closed ().Is ("M0,0H10V5H0Z");
-      Poly.Parse ("M0,0H10").Closed ().Is ("M0,0H10Z");
-      Poly.Parse ("M0,0H10V5H0Z").Closed ().Is ("M0,0H10V5H0Z");
+      poly.Close ().Is ("C0,0,5");
+      Poly.Parse ("M0,0 Q10,0,1 Q0,0,0.9").Close ().Is ("M0,0Q10,0,1Q0,0,0.9Z");
+      Poly.Parse ("M0,0H10V5H0V0").Close ().Is ("M0,0H10V5H0Z");
+      Poly.Parse ("M0,0H9Q10,1,1V5H0V0").Close ().Is ("M0,0H9Q10,1,1V5H0Z");
+      Poly.Parse ("M0,0H10V5H0").Close ().Is ("M0,0H10V5H0Z");
+      Poly.Parse ("M0,0H10").Close ().Is ("M0,0H10Z");
+      Poly.Parse ("M0,0H10V5H0Z").Close ().Is ("M0,0H10V5H0Z");
    }
 
    [Test (112, "Poly.TryCleanup tests")]
@@ -225,7 +225,7 @@ class PolyTests {
    [Test (59, "Poly.Append tests")]
    void Test8 () {
       Poly p = Poly.Parse ("M0,50 V0 H100 V50Z"), other = Poly.Parse ("M0,50 H10");
-      p.TryAppend (other, out _).Is (false);             // Can't append to a closed pline
+      p.TryAppend (other, out _).Is (false);             // Can't append to a Close pline
       p = Poly.Parse ("M0,50 V0 H100 V50");
       p.TryAppend (Poly.Parse ("M5,25 H30"), out Poly? p1).Is (false); // Can't append with different endpoints
       Assert.IsTrue (p1 == null);
@@ -235,7 +235,7 @@ class PolyTests {
         ("M110,50 H100",     "M0,50V0H100V50H110"),       // Flip then append
         ("M10,50 H0",        "M10,50H0V0H100V50"),        // Flip then prepend
         ("M0,50 H10",        "M10,50H0V0H100V50"),        // Prepend seg
-        ("M0,50 H100",       "M0,50V0H100V50Z"),          // Result is closed
+        ("M0,50 H100",       "M0,50V0H100V50Z"),          // Result is Close
         ("M96,50Q100,50,-2", "M0,50V0H100V50Q96,50,2"),   // Arc append (cw)
         ("M0,50Q4,50,-2",    "M4,50Q0,50,2V0H100V50"),    // Arc prepend (cw)
         ("M96,50Q100,50,2",  "M0,50V0H100V50Q96,50,-2"),  // Arc append (ccw)

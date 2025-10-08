@@ -420,7 +420,7 @@ public partial class DXFReader {
 
    void StitchDrawing () {
       if (StitchThreshold <= 0) return;
-      // if (StitchThreshold > 0.009) new DwgStitcher (mDwg, 0.0001).Process ();
+      // if (StitchThreshold > 0.009) new DwgStitcher (mDwg, 0.0001).Process (); REMOVETHIS
       new DwgStitcher (mDwg, StitchThreshold).Process ();
    }
 

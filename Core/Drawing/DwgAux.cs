@@ -47,6 +47,9 @@ public class Grid2 {
    public Grid2 (double pitch, int subdivs, bool visible, bool snap, Point2 origin, double rotation)
       => (Pitch, Subdivs, Visible, Snap, Origin, Rotation) = (pitch, subdivs, visible, snap, origin, rotation);
 
+   public Grid2 (double pitch, int subdivs, bool visible) 
+      : this (pitch, subdivs, visible, false, Point2.Zero, 0) { }
+
    // Properties ---------------------------------------------------------------
    /// <summary>Is the snap grid visible?</summary>
    public readonly bool Visible;

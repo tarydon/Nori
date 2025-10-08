@@ -189,11 +189,14 @@ public partial class Poly {
    }
 
    // Methods ------------------------------------------------------------------
+   public Poly Clean ()
+      => TryCleanup (out var tmp) ? tmp : this;
+
    /// <summary>Returns a 'closed' version of this Poly</summary>
    /// If the start and end points are touching (within 1e-6), the end point is 'merged' with
    /// the start point. Otherwise, a line segment is drawn from the end point to the start point
    /// closing the Poly (regardless of their gap)
-   public Poly Closed () {
+   public Poly Close () {
       if (IsClosed || mPts.Length < 2) return this;
       var flags = mFlags | EFlags.Closed;
       if (mPts[0].EQ (mPts[^1])) {

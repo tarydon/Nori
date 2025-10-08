@@ -13,12 +13,16 @@ class DwgStitcher {
 
    public void Process () {
       // Get the list of open polylines, sorted by layer, and move all the other
-      // entities into the 'done' list (we don't need to process them at all)
-      var ents = mDwg.Ents.OfType<E2Poly> ()
-                     .Where (a => a.Poly.IsOpen)
-                     .OrderBy (a => a.Layer.Name)
-                     .ToList ();
-      mDone.AddRange (mDwg.Ents.Except (ents));
+      // entities into the 'done' list (we don't need to process them at all
+      List<E2Poly> ents = [];
+      foreach (var ent in mDwg.Ents.OrderBy (a => a.Layer.Name)) {
+         if (ent is E2Poly e2p) {
+            if (e2p.Poly.TryCleanup (out var tmp)) e2p = e2p.With (tmp);
+            if (e2p.Poly.IsOpen) ents.Add (e2p);
+            else mDone.Add (ent);
+         } else 
+            mDone.Add (ent);
+      }
 
       Layer2? layer = null;
       for (int i = 0; i < ents.Count; i++) {
@@ -42,7 +46,7 @@ class DwgStitcher {
                   // If so, remove this endpoint from the list of free-floating ends, and
                   // if the newly joined result is now self-closing, we are done.
                   RemoveEnds (other);
-                  if (TryClose (ent, final = tmp)) goto Done;
+                  if (TryClose (ent, final = tmp.Clean ())) goto Done;
                } else
                   throw new Exception ("DwgStitcher: Coding error");
             }
@@ -75,7 +79,7 @@ class DwgStitcher {
 
    bool TryClose (E2Poly template , Poly poly) {
       if (mComp.Equals (poly.A, poly.B)) {
-         mDone.Add (template.With (poly.Closed ()));
+         mDone.Add (template.With (poly.Close ().Clean ()));
          return true;
       }
       return false;

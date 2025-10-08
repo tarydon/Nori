@@ -15,10 +15,13 @@ class PolyJoinTests {
    [Test (129, "Stitch JOIN3 (Triangle with 2 gaps) with 0.21")]
    void Test3 () => Test ("Join3", 0.21);
 
-   void Test (string file, double threshold) {
+   [Test (130, "Stitch JOIN4 (Gaps, Overlaps of 0.1) with 0.21")]
+   void Test4 () => Test ("Join4", 0.21, 5);
+
+   void Test (string file, double threshold, double grid = 0) {
       var dr = new DXFReader (NT.File ($"Poly/Join/{file}.dxf")) { StitchThreshold = threshold };
       var dwg = dr.Load ();
-      DXFWriter.Save (dwg, "c:/etc/output.dxf");
+      if (grid > 0) dwg.Grid = new (5, 1, true);
       CurlWriter.Save (dwg, NT.TmpCurl);
       Assert.TextFilesEqual (NT.File ($"Poly/Join/{file}.curl"), NT.TmpCurl);
    }
