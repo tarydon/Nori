@@ -43,11 +43,9 @@ public class RBRSolver {
       // First, perform the loop closure
       Point3 FP6orig = Fptool;                                   // (5.3)
       Vector3 vFP6orig = (Vector3)FP6orig;
-      double Fa71LenSq = Fa71.LengthSq;
-      Fa71 = Fa71.Normalized ();                                 // (5.11)
       double s71, S7, a71, S1;
       // Special case when S1 and S7 are parallel                // (5.6.1)
-      if (Fa71LenSq.EQ (0, Lib.Epsilon * Lib.Epsilon)) {
+      if (Fa71.LengthSq.EQ (0, Lib.Epsilon * Lib.Epsilon)) {
          S7 = 0;
          S1 = -vFP6orig.Dot (FS1);                               // (5.25)
          Vector3 vFa71 = -(vFP6orig + new Vector3 (0, 0, S1));
@@ -55,6 +53,7 @@ public class RBRSolver {
          Fa71 = vFa71 / a71;
          s71 = (FS7 * FS1).Dot (Fa71);                           // (5.12)
       } else {
+         Fa71 = Fa71.Normalized ();                              // (5.11)
          s71 = (FS7 * FS1).Dot (Fa71);                           // (5.12)
          S7 = (FS1 * vFP6orig).Dot (Fa71) / s71;                 // (5.21)
          a71 = (vFP6orig * FS1).Dot (FS7) / s71;                 // (5.22)
