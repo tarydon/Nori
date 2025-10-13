@@ -8,7 +8,10 @@ namespace Nori;
 public partial class DXFReader {
    // Constructors -------------------------------------------------------------
    /// <summary>Construct a DXFReader, given a filename</summary>
-   public DXFReader (string file) => mReader = new StreamReader (new FileStream (mFile = file, FileMode.Open, FileAccess.Read, FileShare.ReadWrite));
+   public DXFReader (string file) {
+      Encoding.RegisterProvider (CodePagesEncodingProvider.Instance);
+      mReader = new StreamReader (new FileStream (mFile = file, FileMode.Open, FileAccess.Read, FileShare.ReadWrite), Encoding.GetEncoding (1252));
+   }
 
    // Methods ------------------------------------------------------------------
    /// <summary>Parse the file, Build the DXF and return it</summary>
