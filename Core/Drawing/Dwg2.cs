@@ -93,6 +93,12 @@ public partial class Dwg2 {
       (mStyles ??= []).Add (style); _styleMap = null;
    }
 
+   /// <summary>Removes an "existing" entity from the drawing</summary>
+   public void Remove (Ent2 ent) => Lib.Check (mEnts.Remove (ent), "Coding Error");
+
+   /// <summary>Removes set of "existing" entities from the drawing</summary>
+   public void Remove (IEnumerable<Ent2> ents) => ents.ForEach (Remove);
+
    /// <summary>Gets a block given the name (could return null if the name does not exist)</summary>
    public Block2? GetBlock (string name)
       => (_blockMap ??= Blocks.ToDictionary (a => a.Name, StringComparer.OrdinalIgnoreCase)).GetValueOrDefault (name);
