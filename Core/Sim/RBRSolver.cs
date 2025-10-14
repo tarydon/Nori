@@ -50,6 +50,8 @@ public class RBRSolver {
          S1 = -vFP6orig.Dot (FS1);                               // (5.25)
          Vector3 vFa71 = -(vFP6orig + new Vector3 (0, 0, S1));
          a71 = vFa71.Length;                                     // (5.27)
+         // Note: If a71 is 0, then S7 and S1 are collinear
+         // We have to handle special case as mentioned in 5.6.2
          Fa71 = vFa71 / a71;
          s71 = (FS7 * FS1).Dot (Fa71);                           // (5.12)
       } else {
