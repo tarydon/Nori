@@ -48,10 +48,11 @@ public partial class DXFReader {
    };
 
    // Add drawing --------------------------------------------------------------
-   void Add (Poly poly) => Add (new E2Poly (Layer, poly) { Color = GetColor () });
-   void Add (IEnumerable<Ent2> ents) => ents.ForEach (Add);
-   void Add (Ent2 ent) {
+   void Add (Poly poly, bool iAlreadyMirrored = false) => Add (new E2Poly (Layer, poly) { Color = GetColor () }, iAlreadyMirrored);
+   void Add (IEnumerable<Ent2> ents) => ents.ForEach (ent => Add (ent));
+   void Add (Ent2 ent, bool iAlreadyMirrored = false) {
       if (Invisible) return;
+      if (!iAlreadyMirrored && ZDir.EQ (-1)) ent = ent.XFormed (Matrix2.HMirror);
       if (mBlockEnts != null) { ent.InBlock = true; mBlockEnts.Add (ent); }
       else mDwg.Add (ent);
    }
@@ -74,7 +75,7 @@ public partial class DXFReader {
          mPolyBuilder.Line (node.Moved (cen.X, cen.Y));
       }
       if (closed) mPolyBuilder.Close ();
-      Add (mPolyBuilder.Build ());
+      Add (mPolyBuilder.Build (), true);
    }
 
    // Make a Polyline

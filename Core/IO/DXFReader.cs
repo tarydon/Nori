@@ -103,9 +103,9 @@ public partial class DXFReader {
                   else if (s.StartsWith ("K_FACTOR:")) kfactor = s[9..].ToDouble ();
                }
                if (!ba.IsNaN ()) {
-                  Add (new E2Bendline (mDwg, line.Pts, ba, radius, kfactor));
+                  Add (new E2Bendline (mDwg, line.Pts, ba, radius, kfactor), true);
                   mXData.Clear ();
-               } else Add (line);
+               } else Add (line, true);
                break;
 
             case "POINT": Add (new E2Point (Layer, Pt0) { Color = GetColor () }); break;
