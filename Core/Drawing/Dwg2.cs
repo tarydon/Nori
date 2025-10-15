@@ -87,7 +87,7 @@ public partial class Dwg2 {
    public void Add (Layer2 layer) {
       if (mLayers.FindIndex (a => a.Name == layer.Name) is int idx && idx >= 0) {
          Ents.Where (e => e.Layer == mLayers[idx]).ForEach (a => a.Layer = layer);
-         mLayers.RemoveAt (idx); mLayers.Insert (idx, layer);
+         mLayers[idx] = layer;
       } else mLayers.Add (layer);
    }
 
