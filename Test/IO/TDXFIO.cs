@@ -292,8 +292,8 @@ class DXFTests2 {
 
    [Test (119, "Test for entity mirroring")]
    void Test12 () {
-      var dwg = DXFReader.FromFile (NT.File ("IO/DXF/645 guideF1 L - 3mm ss x1.dxf"));
+      var dwg = DXFReader.FromFile (NT.File ("IO/DXF/Circle.dxf"));
       DXFWriter.SaveFile (dwg, NT.TmpDXF);
-      Assert.TextFilesEqual1 ("IO/DXF/Out/645 guideF1 L - 3mm ss x1.dxf", NT.TmpDXF);
+      Assert.TextFilesEqual1 ("IO/DXF/Out/Circle.dxf", NT.TmpDXF);
    }
 }
