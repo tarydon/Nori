@@ -290,10 +290,11 @@ class DXFTests2 {
       Assert.TextFilesEqual1 ("IO/DXF/Out/AllEnts2.curl", NT.TmpCurl);
    }
 
-   [Test (119, "Test for entity mirroring")]
+   [Test (119, "Test for DXF import of CCW and CW circles (group code 230)")]
    void Test12 () {
       var dwg = DXFReader.FromFile (NT.File ("IO/DXF/Circle.dxf"));
       DXFWriter.SaveFile (dwg, NT.TmpDXF);
       Assert.TextFilesEqual1 ("IO/DXF/Out/Circle.dxf", NT.TmpDXF);
    }
 }
+
