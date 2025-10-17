@@ -610,6 +610,81 @@ public partial class Poly {
       return pb.End (mPts[^1]);
    }
 
+   /// <summary>Inserts key slot on the specific angle (returns null if not possible)</summary>
+   /// <param name="seg">Current segment index on the poly</param>
+   /// <param name="width">Width of the key slot</param>
+   /// <param name="depth">Depth of the key slot</param>
+   /// <param name="angle">Orientation of the key slot</param>
+   public Poly? KeySlot (int seg, double width, double depth, double angle) {
+      // Key slot is only applicable for a circle or an arc entity, otherwise we return null.
+      var arcSeg = this[seg];
+      if (!arcSeg.IsArc || width.IsZero () || depth.IsZero ()) return null; // Check: Slot fits the given seg length.
+
+      double radius = arcSeg.Radius, tolerance = 6 * Lib.Epsilon; // 6 is a magic number
+      // If width of the slot is more than circle diameter, then we return null.
+      if (width >= (2 * radius) - tolerance) return null;
+
+      // Indicates whether the key slot is present inside or outside the poly (circle or arc).
+      bool isInward = depth > 0;
+      depth = Math.Abs (depth);
+      Point2 cen = arcSeg.Center;
+
+      // Compute the corner points (slotTopLeft, slotBotLeft, slotBotRight and slotTopRight).
+      Point2 slotTopMid = cen.Polar (radius, angle);
+      Point2 slotBotMid = isInward ? slotTopMid.Polar (-depth, angle) : slotTopMid.Polar (depth, angle),
+             tempPt = slotBotMid.Polar (width / 2, angle);
+      Point2 slotBotRight = slotBotMid + (slotBotMid - tempPt).Perpendicular ();
+      if (isInward && cen.DistTo (slotBotRight) >= radius) return null; // If the point exceeds the radius, then we return null
+      Point2 slotBotLeft = slotBotMid + (tempPt - slotBotMid).Perpendicular ();
+      if (isInward && cen.DistTo (slotBotLeft) >= radius) return null; // If the point exceeds the radius, then we return null
+      var point = Geo.CircleXLineClosest (cen, radius, slotBotLeft, slotBotLeft.Polar (depth, angle), slotTopMid);
+      if (point.IsNil) return null; // No point is insert on the poly, so we return null.
+      Point2 slotTopLeft = point;
+      point = Geo.CircleXLineClosest (cen, radius, slotBotRight, slotBotRight.Polar (depth, angle), slotTopMid);
+      if (point.IsNil) return null; // No point is insert on the poly, so we return null.
+      Point2 slotTopRight = point;
+
+      // Check if slot top left (or) slot right point is present within the poly.
+      double leftOutside = arcSeg.GetLie (slotTopLeft), rightOutside = arcSeg.GetLie (slotTopRight);
+      if (leftOutside >= 1 || leftOutside <= 0 || rightOutside >= 1 || rightOutside <= 0) return null;
+
+      PolyBuilder pb = new ();
+      for (int i = 0, ptsLen = mPts.Length, segsCount = Segs.Count (); i < ptsLen; i++) {
+         var pt = mPts[i];
+         // This code adds all the other nodes (they could be the starts of line or arc
+         // segments, and we handle both by looking through the mExtra array). Note that
+         // we directly read the mExtra array rather than use Seg objects for better performance.
+         if (i < segsCount && this[i].IsArc && i < Extra.Length) {
+            var extra = Extra[i]; var flags = extra.Flags & (EFlags.CCW | EFlags.CW);
+            if (i == seg) {
+               if (ptsLen > 1) pb.Arc (pt, extra.Center, flags);
+               var pts = IsCircle ? CKeySlotPts () : AKeySlotPts (flags);
+               CreateKeySlot ([.. pts], flags);
+            } else pb.Arc (pt, extra.Center, flags);
+         } else pb.Line (pt);
+      }
+      // Done, close the poly if needed and return it
+      if (IsClosed) pb.Close ();
+      return pb.Build ();
+
+      // Helper methods
+
+      // Generate key slot points for a circle entity
+      IEnumerable<Point2> CKeySlotPts ()
+         => [slotTopRight, slotBotRight, slotBotLeft, slotTopLeft];
+
+      // Generate key slot points for an arc entity
+      IEnumerable<Point2> AKeySlotPts (EFlags flags) {
+         if ((flags & EFlags.CCW) > 0) {
+            return CKeySlotPts ();
+         }
+         return [slotTopLeft, slotBotLeft, slotBotRight, slotTopRight];
+      }
+
+      void CreateKeySlot (List<Point2> pts, EFlags flags) =>
+         pb.Line (pts[0]).Line (pts[1]).Line (pts[2]).Arc (pts[3], cen, flags);
+   }
+
    /// <summary>Creates and returns a new reversed Poly of 'this'</summary>
    public Poly Reversed () {
       if (!HasArcs) return new ([.. mPts.Reverse ()], [], mFlags);
