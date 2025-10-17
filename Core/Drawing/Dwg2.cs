@@ -83,7 +83,14 @@ public partial class Dwg2 {
    public void Add (IEnumerable<Ent2> ents) => ents.ForEach (Add);
 
    /// <summary>Add a layer into the drawing</summary>
-   public void Add (Layer2 layer) => mLayers.Add (layer);
+   /// If a layer with the same name exists, replace it and update the associated entities.
+   public void Add (Layer2 layer) {
+      if (mLayers.FindIndex (a => a.Name == layer.Name) is int idx && idx >= 0) {
+         Ents.Where (e => e.Layer == mLayers[idx]).ForEach (a => a.Layer = layer);
+         mLayers[idx] = layer;
+      } else mLayers.Add (layer);
+   }
+
    /// <summary>Adds a Block2 to the list of blocks in the drawing</summary>
    public void Add (Block2 block) { (mBlocks ??= []).Add (block); _blockMap = null; }
 

@@ -27,7 +27,7 @@ public abstract partial class Ent2 {
    public E2Flags Flags => mFlags;
 
    /// <summary>The layer on which this Ent2 exists</summary>
-   public Layer2 Layer => mLayer;
+   public Layer2 Layer { get => mLayer; set => mLayer = value; }
    Layer2 mLayer;
 
    /// <summary>Is this entity selected?</summary>
