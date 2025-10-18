@@ -207,7 +207,6 @@ public class DwgSnap {
                      Check (center, ESnap.Center, 0);
                      if (seg.Bound.Contains (ptRaw, aperture)) {
                         var radius = seg.Radius;
-                        Check (seg.Midpoint, ESnap.Midpoint, 0);
                         for (EDir dir = EDir.E; dir <= EDir.S; dir++) {
                            var pt = center.CardinalMoved (radius, dir);
                            Check (pt, ESnap.Quadrant, 0);
@@ -215,6 +214,7 @@ public class DwgSnap {
                         if (!seg.IsCircle) {
                            Check (seg.A, ESnap.Endpoint, seg.GetSlopeAt (0));
                            Check (seg.B, ESnap.Endpoint, seg.GetSlopeAt (1));
+                           Check (seg.Midpoint, ESnap.Midpoint, 0);
                         }
                         if (seg.GetDist (ptRaw, aperture) <= aperture) mSegs.Add (seg);
                      }
