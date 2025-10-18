@@ -296,5 +296,11 @@ class DXFTests2 {
       DXFWriter.SaveFile (dwg, NT.TmpDXF);
       Assert.TextFilesEqual1 ("IO/DXF/Out/Circle.dxf", NT.TmpDXF);
    }
-}
 
+   [Test (122, "Dimension loaded before corresponding Block")]
+   void Test13 () {
+      var dwg = DXFReader.FromFile (NT.File ("IO/DXF/WC-RL2B-2502.dxf"));
+      CurlWriter.ToFile (dwg, NT.TmpCurl);
+      Assert.TextFilesEqual1 ("IO/DXF/Out/WL-RL2B-2502.curl", NT.TmpCurl);
+   }
+}

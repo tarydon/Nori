@@ -1,0 +1,1507 @@
+(Dwg2){
+  Layers:[
+    { Name:0 Color:#FFFFFFFF Linetype:Continuous Visible:True }
+    { Name:Dimensions Color:#FFFFFFFF Linetype:Continuous Visible:True }
+    { Name:$CONSTRUCTION Color:#FF4F0000 Linetype:Continuous Visible:True }
+    { Name:PDF_Hatching Color:#FFFFFFFF Linetype:Continuous Visible:True }
+    { Name:PDF_Brickwall Color:#FFFFFFFF Linetype:Continuous Visible:True }
+    { Name:PDF_Htching Color:#FFFFFFFF Linetype:Continuous Visible:True }
+    { Name:"PDF_Steel Angle" Color:#FFFFFFFF Linetype:Continuous Visible:True }
+    { Name:PDF_Text Color:#FFFFFFFF Linetype:Continuous Visible:True }
+    { Name:ASHADE Color:#FFFFFFFF Linetype:Continuous Visible:True }
+    { Name:Defpoints Color:#FFFFFFFF Linetype:Continuous Visible:True }
+  ]
+  Styles:[
+    { Name:Standard Font:arial.ttf XScale:1 }
+    { Name:"PDF Arial-Black" Font:arial.ttf XScale:1 }
+    { Name:ASHADE Font:simplex Height:0.2 XScale:1 }
+  ]
+  Blocks:[
+    {
+      Name:*Paper_Space2
+      Base:0,0
+      Ents:[
+        (E2Text){
+          Layer:0
+          Color:#FFFFFFFF
+          Pt:476.645404,-34.00458
+          Text:0
+          Style:Standard
+          Alignment:BotRight
+          Height:5.910987599690755
+          XScale:1.008
+        }
+        (E2Poly){
+          Layer:0
+          Color:#FFFFFFFF
+          Poly:M504.182948,144.486854H484.302982L494.242965,138.794521V150.179186L484.302982,144.486854
+        }
+        (E2Poly){
+          Layer:0
+          Color:#FFFFFFFF
+          Poly:M-86.252059,144.486854H-66.372092L-76.312076,150.179186V138.794521L-66.372092,144.486854
+        }
+        (E2Poly){
+          Layer:0
+          Color:#FFFFFFFF
+          Poly:M208.965445,-62.560883V-42.842051L203.226597,-52.701467H214.704293L208.965445,-42.842051
+        }
+        (E2Poly){
+          Layer:0
+          Color:#FFFFFFFF
+          Poly:M208.965445,351.534591V331.815759L214.704293,341.675175H203.226597L208.965445,331.815759
+        }
+        (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M484.302982,-42.842051V-34.900359 }
+        (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M484.302982,-34.900359V-21.664206 }
+        (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M484.302982,-21.664206V4.8081 }
+        (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M484.302982,4.8081V28.633176 }
+        (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M265.62335,-42.842051V28.633176 }
+        (E2Poly){ Layer:0 Poly:M166.223517,-42.842051V28.633176 }
+        (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M166.223517,-42.842051H265.62335 }
+        (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M265.62335,-42.842051H484.302982 }
+        (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M166.223517,28.633176H484.302982 }
+        (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M265.62335,4.8081H484.302982 }
+        (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M265.62335,-21.664206H484.302982 }
+        (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M265.62335,-34.900359H484.302982 }
+        (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M394.843132,-42.842051V-34.900359 }
+        (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M325.263249,-42.842051V-34.900359 }
+        (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M464.423015,-34.900359V-21.664206 }
+        (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M345.143216,-34.900359V-21.664206 }
+        (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M295.443299,-34.900359V-21.664206 }
+        (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M166.223517,-34.900359H265.62335 }
+        (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M166.223517,-26.958667H265.62335 }
+        (E2Text){
+          Layer:0
+          Color:#FFFFFFFF
+          Pt:275.671869,-39.102838
+          Text:" SCALE"
+          Style:Standard
+          Alignment:BotCenter
+          Height:2.708264170752631
+          XScale:1.501
+        }
+        (E2Text){
+          Layer:0
+          Color:#FFFFFFFF
+          Pt:272.686993,-25.866684
+          Text:" SIZE"
+          Style:Standard
+          Alignment:BotCenter
+          Height:2.708263248867459
+          XScale:1.501
+        }
+        (E2Text){
+          Layer:0
+          Color:#FFFFFFFF
+          Pt:313.180321,-25.866684
+          Text:" CAGE CODE"
+          Style:Standard
+          Alignment:BotCenter
+          Height:2.708263248867459
+          XScale:1.501
+        }
+        (E2Text){
+          Layer:0
+          Color:#FFFFFFFF
+          Pt:357.853885,-25.866684
+          Text:" DWG NO"
+          Style:Standard
+          Alignment:BotCenter
+          Height:2.708263248867459
+          XScale:1.501
+        }
+        (E2Text){
+          Layer:0
+          Color:#FFFFFFFF
+          Pt:405.046176,-39.102838
+          Text:" SHEET"
+          Style:Standard
+          Alignment:BotCenter
+          Height:2.708264170752631
+          XScale:1.501
+        }
+        (E2Text){
+          Layer:0
+          Color:#FFFFFFFF
+          Pt:471.016263,-25.866684
+          Text:" REV"
+          Style:Standard
+          Alignment:BotCenter
+          Height:2.708263248867459
+          XScale:1.501
+        }
+        (E2Text){
+          Layer:0
+          Color:#FFFFFFFF
+          Pt:274.099424,0.605623
+          Text:" TITLE"
+          Style:Standard
+          Alignment:BotCenter
+          Height:2.708263248867459
+          XScale:1.501
+        }
+        (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M-66.372092,331.815759V-42.842051 }
+        (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M484.302982,331.815759H-66.372092 }
+        (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M484.302982,-42.842051V331.815759 }
+        (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M-66.372092,-42.842051H484.302982 }
+        (E2Text){
+          Layer:0
+          Color:#FFFFFFFF
+          Pt:168.224731,24.868956
+          Text:"DATE:"
+          Style:Standard
+          Alignment:TopLeft
+          Height:4.270144769880507
+          XScale:1
+        }
+        (E2Text){
+          Layer:0
+          Color:#FFFFFFFF
+          Pt:282.574859,-0.719595
+          Text:"C.T.M. BALLITO KZN"
+          Style:Standard
+          Alignment:TopLeft
+          Height:4.270144769880507
+          XScale:1
+        }
+        (E2Text){
+          Layer:0
+          Color:#FFFFFFFF
+          Pt:282.574859,-7.816575
+          Text:"TYPICAL BALUSTRADE ANGLE"
+          Style:Standard
+          Alignment:TopLeft
+          Height:4.270144769880507
+          XScale:1
+        }
+        (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M265.62335,28.633176H484.302982 }
+      ]
+    }
+    {
+      Name:*Paper_Space3
+      Base:0,0
+      Ents:[
+        (E2Text){
+          Layer:0
+          Color:#FFFFFFFF
+          Pt:403.537635,-127.265678
+          Text:0
+          Style:Standard
+          Alignment:MidCenter
+          Height:4.092221238878039
+          XScale:1
+        }
+        (E2Poly){
+          Layer:0
+          Color:#FFFFFFFF
+          Poly:M420,148.5H410L415,145.613251V151.386749L410,148.5
+        }
+        (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M0,148.5H10L5,151.386749V145.613251L10,148.5 }
+        (E2Poly){
+          Layer:0
+          Color:#FFFFFFFF
+          Poly:M210,-147.274953V-137.274953L207.113251,-142.274953H212.886749L210,-137.274953
+        }
+        (E2Poly){
+          Layer:0
+          Color:#FFFFFFFF
+          Poly:M210,435.891588V425.891588L212.886749,430.891588H207.113251L210,425.891588
+        }
+        (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M410,-137.274953V-131.274953 }
+        (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M410,-131.274953V-121.274953 }
+        (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M410,-121.274953V-101.274953 }
+        (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M410,-101.274953V-83.274953 }
+        (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M272.5,-137.274953V-83.274953 }
+        (E2Poly){ Layer:0 Poly:M210,-137.274953V-83.274953 }
+        (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M210,-137.274953H272.5 }
+        (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M272.5,-137.274953H410 }
+        (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M210,-83.274953H410 }
+        (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M272.5,-101.274953H410 }
+        (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M272.5,-121.274953H410 }
+        (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M272.5,-131.274953H410 }
+        (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M353.75,-137.274953V-131.274953 }
+        (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M310,-137.274953V-131.274953 }
+        (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M397.5,-131.274953V-121.274953 }
+        (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M322.5,-131.274953V-121.274953 }
+        (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M291.25,-131.274953V-121.274953 }
+        (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M210,-131.274953H272.5 }
+        (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M210,-125.274953H272.5 }
+        (E2Text){
+          Layer:0
+          Color:#FFFFFFFF
+          Pt:278.818245,-134.449953
+          Text:" SCALE"
+          Style:Standard
+          Alignment:BotCenter
+          Height:2.046111234029134
+          XScale:1.25
+        }
+        (E2Text){
+          Layer:0
+          Color:#FFFFFFFF
+          Pt:276.941414,-124.449952
+          Text:" SIZE"
+          Style:Standard
+          Alignment:BotCenter
+          Height:2.046110619439019
+          XScale:1.25
+        }
+        (E2Text){
+          Layer:0
+          Color:#FFFFFFFF
+          Pt:302.402573,-124.449952
+          Text:" CAGE CODE"
+          Style:Standard
+          Alignment:BotCenter
+          Height:2.046110619439019
+          XScale:1.25
+        }
+        (E2Text){
+          Layer:0
+          Color:#FFFFFFFF
+          Pt:330.492134,-124.449952
+          Text:" DWG NO"
+          Style:Standard
+          Alignment:BotCenter
+          Height:2.046110619439019
+          XScale:1.25
+        }
+        (E2Text){
+          Layer:0
+          Color:#FFFFFFFF
+          Pt:360.165405,-134.449953
+          Text:" SHEET"
+          Style:Standard
+          Alignment:BotCenter
+          Height:2.046111234029134
+          XScale:1.25
+        }
+        (E2Text){
+          Layer:0
+          Color:#FFFFFFFF
+          Pt:401.64566,-124.449952
+          Text:" REV"
+          Style:Standard
+          Alignment:BotCenter
+          Height:2.046110619439019
+          XScale:1.25
+        }
+        (E2Text){
+          Layer:0
+          Color:#FFFFFFFF
+          Pt:277.829552,-104.449952
+          Text:" TITLE"
+          Style:Standard
+          Alignment:BotCenter
+          Height:2.046110619439019
+          XScale:1.25
+        }
+        (E2Poly){
+          Layer:0
+          Color:#FFFFFFFF
+          Poly:M10,425.891588V285.099953V144.308318V3.516682V-137.274953
+        }
+        (E2Poly){
+          Layer:0
+          Color:#FFFFFFFF
+          Poly:M410,425.891588H343.333344H276.666656H210H143.333328H76.666664H10
+        }
+        (E2Poly){
+          Layer:0
+          Color:#FFFFFFFF
+          Poly:M410,-137.274953V3.516682V144.308318V285.099953V425.891588
+        }
+        (E2Poly){
+          Layer:0
+          Color:#FFFFFFFF
+          Poly:M10,-137.274953H76.666664H143.333328H210H276.666656H343.333344H410
+        }
+        (E2Poly){
+          Layer:0
+          Color:#FFFFFFFF
+          Poly:M11.115165,-83.274953H70.275668V-64.896701H11.115165Z
+        }
+        (E2Text){
+          Layer:0
+          Color:#FFFFFFFF
+          Pt:18.202361,-90.238256
+          Text:"NOTES:"
+          Style:Standard
+          Alignment:TopLeft
+          Height:5.788418663872613
+          XScale:1
+        }
+        (E2Text){
+          Layer:0
+          Color:#FFFFFFFF
+          Pt:18.202361,-99.858608
+          Text:"5 OFF RIGHT REQUIRED"
+          Style:Standard
+          Alignment:TopLeft
+          Height:5.788418663872613
+          XScale:1
+        }
+        (E2Text){
+          Layer:0
+          Color:#FFFFFFFF
+          Pt:18.202361,-109.47896
+          Text:"5 OFF LEFT REQUIRED"
+          Style:Standard
+          Alignment:TopLeft
+          Height:5.788418663872613
+          XScale:1
+        }
+        (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M272.5,-83.274953H410 }
+        (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M210,-83.274953H69.160503 }
+        (E2Text){
+          Layer:0
+          Color:#FFFFFFFF
+          Pt:290.228079,-132.404107
+          Text:NTS
+          Style:Standard
+          Alignment:TopLeft
+          Height:3.182839594946967
+          XScale:1
+        }
+        (E2Text){
+          Layer:0
+          Color:#FFFFFFFF
+          Pt:310.40759,-132.27559
+          Text:"DRAWN: "
+          Style:Standard
+          Alignment:TopLeft
+          Height:2.728148004743788
+          XScale:1
+        }
+        (E2Text){
+          Layer:0
+          Color:#FFFFFFFF
+          Pt:211.350737,-105.768272
+          Text:GALV
+          Style:Standard
+          Alignment:TopLeft
+          Height:3.182839594946967
+          XScale:1
+        }
+        (E2Text){
+          Layer:0
+          Color:#FFFFFFFF
+          Pt:281.01339,-127.310301
+          Text:A3
+          Style:Standard
+          Alignment:TopLeft
+          Height:3.182839594946967
+          XScale:1
+        }
+        (E2Text){
+          Layer:0
+          Color:#FFFFFFFF
+          Pt:279.172038,-108.816032
+          Text:"Lift closure WSHOP pg1 "
+          Style:Standard
+          Alignment:TopLeft
+          Height:3.182839594946967
+          XScale:1
+        }
+        (E2Text){
+          Layer:0
+          Color:#FFFFFFFF
+          Pt:38.931981,260.810567
+          Text:"50x25 rhs ms tube end cut to form channel"
+          Style:Standard
+          Angle:-0.04874185130991151
+          Alignment:BaseLeft
+          Height:3.183555592430963
+          XScale:1
+        }
+        (E2Text){
+          Layer:0
+          Color:#FFFFFFFF
+          Pt:88.664684,81.6409
+          Text:"spot weld channels together"
+          Style:Standard
+          Angle:0.06442683942556682
+          Alignment:BaseLeft
+          Height:3.183555592430963
+          XScale:1
+        }
+        (E2Text){
+          Layer:0
+          Color:#FFFFFFFF
+          Pt:17.702969,219.570504
+          Text:"50x50x6 ms lug with m12 bolt"
+          Style:Standard
+          Angle:0.07485984771076261
+          Alignment:BaseLeft
+          Height:3.183555592430963
+          XScale:1
+        }
+        (E2Dimension){
+          Layer:Dimensions
+          Ents:[
+            (E2Poly){ Layer:Dimensions Color:#FF000000 Poly:M257.941546,400.015098H216.67402 }
+            (E2Poly){ Layer:Dimensions Color:#FF000000 Poly:M257.941546,-61.044043H216.67402 }
+            (E2Poly){ Layer:Dimensions Color:#FF000000 Poly:M219.67402,396.015098V180.039559 }
+            (E2Poly){ Layer:Dimensions Color:#FF000000 Poly:M219.67402,-57.044043V158.931495 }
+            (E2Solid){
+              Layer:Dimensions
+              Color:#FF000000
+              Pts:[
+                220.340686,396.015098
+                219.007353,396.015098
+                219.67402,400.015098
+                219.67402,400.015098
+              ]
+            }
+            (E2Solid){
+              Layer:Dimensions
+              Color:#FF000000
+              Pts:[
+                219.007353,-57.044043
+                220.340686,-57.044043
+                219.67402,-61.044043
+                219.67402,-61.044043
+              ]
+            }
+            (E2Text){
+              Layer:Dimensions
+              Color:#FF000000
+              Pt:219.67402,169.485527
+              Text:"2400 mm"
+              Style:Standard
+              Angle:1.5707963267948966
+              Alignment:MidCenter
+              Height:3.183555555555556
+              XScale:1
+            }
+            (E2Point){ Layer:Defpoints Color:#FF000000 Pt:259.441546,400.015098 }
+            (E2Point){ Layer:Defpoints Color:#FF000000 Pt:259.441546,-61.044043 }
+            (E2Point){ Layer:Defpoints Color:#FF000000 Pt:219.67402,-61.044043 }
+          ]
+        }
+        (E2Dimension){
+          Layer:Dimensions
+          Ents:[
+            (E2Poly){ Layer:Dimensions Color:#FF000000 Poly:M258.325762,-61.044043H222.686451 }
+            (E2Poly){ Layer:Dimensions Color:#FF000000 Poly:M246.415068,-41.833246H222.686451 }
+            (E2Poly){ Layer:Dimensions Color:#FF000000 Poly:M225.686451,-65.044043V-69.044043 }
+            (E2Poly){ Layer:Dimensions Color:#FF000000 Poly:M225.686451,-37.833246V-33.833246 }
+            (E2Solid){
+              Layer:Dimensions
+              Color:#FF000000
+              Pts:[
+                226.353118,-65.044043
+                225.019784,-65.044043
+                225.686451,-61.044043
+                225.686451,-61.044043
+              ]
+            }
+            (E2Solid){
+              Layer:Dimensions
+              Color:#FF000000
+              Pts:[
+                225.019784,-37.833246
+                226.353118,-37.833246
+                225.686451,-41.833246
+                225.686451,-41.833246
+              ]
+            }
+            (E2Text){
+              Layer:Dimensions
+              Color:#FF000000
+              Pt:225.686451,-51.438645
+              Text:"100 mm"
+              Style:Standard
+              Angle:1.5707963267948966
+              Alignment:MidCenter
+              Height:3.183555555555556
+              XScale:1
+            }
+            (E2Point){ Layer:Defpoints Color:#FF000000 Pt:259.825762,-61.044043 }
+            (E2Point){ Layer:Defpoints Color:#FF000000 Pt:247.915068,-41.833246 }
+            (E2Point){ Layer:Defpoints Color:#FF000000 Pt:225.686451,-41.833246 }
+          ]
+        }
+        (E2Dimension){
+          Layer:Dimensions
+          Ents:[
+            (E2Poly){ Layer:Dimensions Color:#FF000000 Poly:M246.415068,-41.833246H234.310485 }
+            (E2Poly){ Layer:Dimensions Color:#FF000000 Poly:M246.415068,35.009944H234.310485 }
+            (E2Poly){ Layer:Dimensions Color:#FF000000 Poly:M237.310485,-37.833246V-12.767074 }
+            (E2Poly){ Layer:Dimensions Color:#FF000000 Poly:M237.310485,31.009944V5.943773 }
+            (E2Solid){
+              Layer:Dimensions
+              Color:#FF000000
+              Pts:[
+                236.643818,-37.833246
+                237.977152,-37.833246
+                237.310485,-41.833246
+                237.310485,-41.833246
+              ]
+            }
+            (E2Solid){
+              Layer:Dimensions
+              Color:#FF000000
+              Pts:[
+                237.977152,31.009944
+                236.643818,31.009944
+                237.310485,35.009944
+                237.310485,35.009944
+              ]
+            }
+            (E2Text){
+              Layer:Dimensions
+              Color:#FF000000
+              Pt:237.310485,-3.411651
+              Text:"400 mm"
+              Style:Standard
+              Angle:1.570796326794853
+              Alignment:MidCenter
+              Height:3.183555555555556
+              XScale:1
+            }
+            (E2Point){ Layer:Defpoints Color:#FF000000 Pt:247.915068,-41.833246 }
+            (E2Point){ Layer:Defpoints Color:#FF000000 Pt:247.915068,35.009944 }
+            (E2Point){ Layer:Defpoints Color:#FF000000 Pt:237.310485,35.009944 }
+          ]
+        }
+        (E2Dimension){
+          Layer:Dimensions
+          Ents:[
+            (E2Poly){ Layer:Dimensions Color:#FF000000 Poly:M246.415068,35.009944H231.554787 }
+            (E2Poly){ Layer:Dimensions Color:#FF000000 Poly:M246.415068,150.27473H231.554787 }
+            (E2Poly){ Layer:Dimensions Color:#FF000000 Poly:M234.554787,39.009944V83.341034 }
+            (E2Poly){ Layer:Dimensions Color:#FF000000 Poly:M234.554787,146.27473V101.94364 }
+            (E2Solid){
+              Layer:Dimensions
+              Color:#FF000000
+              Pts:[
+                233.888121,39.009944
+                235.221454,39.009944
+                234.554787,35.009944
+                234.554787,35.009944
+              ]
+            }
+            (E2Solid){
+              Layer:Dimensions
+              Color:#FF000000
+              Pts:[
+                235.221454,146.27473
+                233.888121,146.27473
+                234.554787,150.27473
+                234.554787,150.27473
+              ]
+            }
+            (E2Text){
+              Layer:Dimensions
+              Color:#FF000000
+              Pt:234.554787,92.642337
+              Text:"600 mm"
+              Style:Standard
+              Angle:1.5707963267948513
+              Alignment:MidCenter
+              Height:3.183555555555556
+              XScale:1
+            }
+            (E2Point){ Layer:Defpoints Color:#FF000000 Pt:247.915068,35.009944 }
+            (E2Point){ Layer:Defpoints Color:#FF000000 Pt:247.915068,150.27473 }
+            (E2Point){ Layer:Defpoints Color:#FF000000 Pt:234.554787,150.27473 }
+          ]
+        }
+        (E2Dimension){
+          Layer:Dimensions
+          Ents:[
+            (E2Poly){ Layer:Dimensions Color:#FF000000 Poly:M246.415068,150.27473H236.665354 }
+            (E2Poly){ Layer:Dimensions Color:#FF000000 Poly:M246.415068,265.539515H236.665354 }
+            (E2Poly){ Layer:Dimensions Color:#FF000000 Poly:M239.665354,154.27473V198.605819 }
+            (E2Poly){ Layer:Dimensions Color:#FF000000 Poly:M239.665354,261.539515V217.208425 }
+            (E2Solid){
+              Layer:Dimensions
+              Color:#FF000000
+              Pts:[
+                238.998687,154.27473
+                240.332021,154.27473
+                239.665354,150.27473
+                239.665354,150.27473
+              ]
+            }
+            (E2Solid){
+              Layer:Dimensions
+              Color:#FF000000
+              Pts:[
+                240.332021,261.539515
+                238.998687,261.539515
+                239.665354,265.539515
+                239.665354,265.539515
+              ]
+            }
+            (E2Text){
+              Layer:Dimensions
+              Color:#FF000000
+              Pt:239.665354,207.907122
+              Text:"600 mm"
+              Style:Standard
+              Angle:1.5707963267948513
+              Alignment:MidCenter
+              Height:3.183555555555556
+              XScale:1
+            }
+            (E2Point){ Layer:Defpoints Color:#FF000000 Pt:247.915068,150.27473 }
+            (E2Point){ Layer:Defpoints Color:#FF000000 Pt:247.915068,265.539515 }
+            (E2Point){ Layer:Defpoints Color:#FF000000 Pt:239.665354,265.539515 }
+          ]
+        }
+        (E2Dimension){
+          Layer:Dimensions
+          Ents:[
+            (E2Poly){ Layer:Dimensions Color:#FF000000 Poly:M246.415068,265.539515H225.817926 }
+            (E2Poly){ Layer:Dimensions Color:#FF000000 Poly:M246.415068,380.8043H225.817926 }
+            (E2Poly){ Layer:Dimensions Color:#FF000000 Poly:M228.817926,269.539515V313.870605 }
+            (E2Poly){ Layer:Dimensions Color:#FF000000 Poly:M228.817926,376.8043V332.47321 }
+            (E2Solid){
+              Layer:Dimensions
+              Color:#FF000000
+              Pts:[
+                228.151259,269.539515
+                229.484592,269.539515
+                228.817926,265.539515
+                228.817926,265.539515
+              ]
+            }
+            (E2Solid){
+              Layer:Dimensions
+              Color:#FF000000
+              Pts:[
+                229.484592,376.8043
+                228.151259,376.8043
+                228.817926,380.8043
+                228.817926,380.8043
+              ]
+            }
+            (E2Text){
+              Layer:Dimensions
+              Color:#FF000000
+              Pt:228.817926,323.171908
+              Text:"600 mm"
+              Style:Standard
+              Angle:1.5707963267948508
+              Alignment:MidCenter
+              Height:3.183555555555556
+              XScale:1
+            }
+            (E2Point){ Layer:Defpoints Color:#FF000000 Pt:247.915068,265.539515 }
+            (E2Point){ Layer:Defpoints Color:#FF000000 Pt:247.915068,380.8043 }
+            (E2Point){ Layer:Defpoints Color:#FF000000 Pt:228.817926,380.8043 }
+          ]
+        }
+        (E2Dimension){
+          Layer:Dimensions
+          Ents:[
+            (E2Poly){ Layer:Dimensions Color:#FF000000 Poly:M246.415068,380.8043H230.126835 }
+            (E2Poly){ Layer:Dimensions Color:#FF000000 Poly:M258.325762,400.015098H230.126835 }
+            (E2Poly){ Layer:Dimensions Color:#FF000000 Poly:M233.126835,376.8043V372.8043 }
+            (E2Poly){ Layer:Dimensions Color:#FF000000 Poly:M233.126835,404.015098V408.015098 }
+            (E2Solid){
+              Layer:Dimensions
+              Color:#FF000000
+              Pts:[
+                233.793501,376.8043
+                232.460168,376.8043
+                233.126835,380.8043
+                233.126835,380.8043
+              ]
+            }
+            (E2Solid){
+              Layer:Dimensions
+              Color:#FF000000
+              Pts:[
+                232.460168,404.015098
+                233.793501,404.015098
+                233.126835,400.015098
+                233.126835,400.015098
+              ]
+            }
+            (E2Text){
+              Layer:Dimensions
+              Color:#FF000000
+              Pt:233.126835,390.409699
+              Text:"100 mm"
+              Style:Standard
+              Angle:1.5707963267948966
+              Alignment:MidCenter
+              Height:3.183555555555556
+              XScale:1
+            }
+            (E2Point){ Layer:Defpoints Color:#FF000000 Pt:247.915068,380.8043 }
+            (E2Point){ Layer:Defpoints Color:#FF000000 Pt:259.825762,400.015098 }
+            (E2Point){ Layer:Defpoints Color:#FF000000 Pt:233.126835,400.015098 }
+          ]
+        }
+        (E2Dimension){
+          Layer:Dimensions
+          Ents:[
+            (E2Poly){ Layer:Dimensions Color:#FF000000 Poly:M269.046945,401.515098V408.814704 }
+            (E2Poly){ Layer:Dimensions Color:#FF000000 Poly:M259.441546,401.515098V408.814704 }
+            (E2Poly){ Layer:Dimensions Color:#FF000000 Poly:M255.441546,405.814704H251.441546 }
+            (E2Poly){ Layer:Dimensions Color:#FF000000 Poly:M273.046945,405.814704H277.046945 }
+            (E2Solid){
+              Layer:Dimensions
+              Color:#FF000000
+              Pts:[
+                273.046945,406.48137
+                273.046945,405.148037
+                269.046945,405.814704
+                269.046945,405.814704
+              ]
+            }
+            (E2Solid){
+              Layer:Dimensions
+              Color:#FF000000
+              Pts:[
+                255.441546,405.148037
+                255.441546,406.48137
+                259.441546,405.814704
+                259.441546,405.814704
+              ]
+            }
+            (E2Text){
+              Layer:Dimensions
+              Color:#FF000000
+              Pt:243.385014,405.814704
+              Text:"50 mm"
+              Style:Standard
+              Alignment:MidCenter
+              Height:3.183555555555556
+              XScale:1
+            }
+            (E2Point){ Layer:Defpoints Color:#FF000000 Pt:269.046945,400.015098 }
+            (E2Point){ Layer:Defpoints Color:#FF000000 Pt:259.441546,400.015098 }
+            (E2Point){ Layer:Defpoints Color:#FF000000 Pt:259.441546,405.814704 }
+          ]
+        }
+        (E2Text){
+          Layer:0
+          Color:#FFFFFFFF
+          Pt:212.346369,-85.762418
+          Text:"Date: 23/04/2025"
+          Style:Standard
+          Alignment:TopLeft
+          Height:3.182839594946967
+          XScale:1
+        }
+        (E2Text){
+          Layer:0
+          Color:#FFFFFFFF
+          Pt:212.346369,-91.052298
+          Text:"Comp: 03/05/2025"
+          Style:Standard
+          Alignment:TopLeft
+          Height:3.182839594946967
+          XScale:1
+        }
+        (E2Text){
+          Layer:0
+          Color:#FFFFFFFF
+          Pt:382.723642,-89.378604
+          Text:GALV
+          Style:Standard
+          Alignment:TopLeft
+          Height:5.166237131754557
+          XScale:1
+        }
+      ]
+    }
+    {
+      Name:"Large Title Metric"
+      Base:0,0
+      Ents:[
+        (E2Text){
+          Layer:0
+          Color:#FFFFFFFF
+          Pt:-30.736359,11.824997
+          Text:" TITLE"
+          Style:Standard
+          Alignment:BotCenter
+          Height:2.046108161078559
+          XScale:1
+        }
+        (E2Text){
+          Layer:0
+          Color:#FFFFFFFF
+          Pt:16.393723,-16.175003
+          Text:" DWG NO"
+          Style:Standard
+          Alignment:BotCenter
+          Height:2.046108161078559
+          XScale:1
+        }
+        (E2Text){
+          Layer:0
+          Color:#FFFFFFFF
+          Pt:-31.446838,-16.175003
+          Text:" SIZE"
+          Style:Standard
+          Alignment:BotCenter
+          Height:2.046108161078559
+          XScale:1
+        }
+        (E2Text){
+          Layer:0
+          Color:#FFFFFFFF
+          Pt:88.316559,-16.175003
+          Text:" REV"
+          Style:Standard
+          Alignment:BotCenter
+          Height:2.046108161078559
+          XScale:1
+        }
+        (E2Text){
+          Layer:0
+          Color:#FFFFFFFF
+          Pt:60.132324,-30.175003
+          Text:" SHEET"
+          Style:Standard
+          Alignment:BotCenter
+          Height:2.046108161078559
+          XScale:1
+        }
+        (E2Text){
+          Layer:0
+          Color:#FFFFFFFF
+          Pt:-29.945389,-30.175003
+          Text:" SCALE"
+          Style:Standard
+          Alignment:BotCenter
+          Height:2.046108161078559
+          XScale:1
+        }
+        (E2Text){
+          Layer:0
+          Color:#FFFFFFFF
+          Pt:-13.077927,-16.175003
+          Text:" CAGE CODE"
+          Style:Standard
+          Alignment:BotCenter
+          Height:2.046108161078559
+          XScale:1
+        }
+        (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M-99.999985,-33.000008H-34.999985 }
+        (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M100,-33.000008V-27.000008 }
+        (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M100,-27.000008V-13.000008 }
+        (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M100,-13.000008V14.999992 }
+        (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M100,14.999992V33 }
+        (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M-99.999985,-33.000008V33 }
+        (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M-99.999985,33H100 }
+        (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M-34.999985,-33.000008V33 }
+        (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M-34.999985,14.999992H100 }
+        (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M-34.999985,-13.000008H100 }
+        (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M-34.999985,-27.000008H100 }
+        (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M-34.999985,-33.000008H100 }
+        (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M55.000015,-33.000008V-27.000008 }
+        (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M10.000015,-33.000008V-27.000008 }
+        (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M85,-27.000008V-13.000008 }
+        (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M10.000015,-27.000008V-13.000008 }
+        (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M-99.999985,-27.000008H-34.999985 }
+        (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M-99.999985,-21.000008H-34.999985 }
+        (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M-21.999985,-27.000008V-13.000008 }
+      ]
+    }
+    {
+      Name:Block_0
+      Base:0,0
+      Ents:[
+        (E2Text){
+          Layer:0
+          Color:#FFFFFFFF
+          Pt:-30.736359,11.824997
+          Text:" TITLE"
+          Style:Standard
+          Alignment:BotCenter
+          Height:2.046108161078559
+          XScale:1
+        }
+        (E2Text){
+          Layer:0
+          Color:#FFFFFFFF
+          Pt:16.393723,-16.175003
+          Text:" DWG NO"
+          Style:Standard
+          Alignment:BotCenter
+          Height:2.046108161078559
+          XScale:1
+        }
+        (E2Text){
+          Layer:0
+          Color:#FFFFFFFF
+          Pt:-31.446838,-16.175003
+          Text:" SIZE"
+          Style:Standard
+          Alignment:BotCenter
+          Height:2.046108161078559
+          XScale:1
+        }
+        (E2Text){
+          Layer:0
+          Color:#FFFFFFFF
+          Pt:88.316559,-16.175003
+          Text:" REV"
+          Style:Standard
+          Alignment:BotCenter
+          Height:2.046108161078559
+          XScale:1
+        }
+        (E2Text){
+          Layer:0
+          Color:#FFFFFFFF
+          Pt:60.132324,-30.175003
+          Text:" SHEET"
+          Style:Standard
+          Alignment:BotCenter
+          Height:2.046108161078559
+          XScale:1
+        }
+        (E2Text){
+          Layer:0
+          Color:#FFFFFFFF
+          Pt:-29.945389,-30.175003
+          Text:" SCALE"
+          Style:Standard
+          Alignment:BotCenter
+          Height:2.046108161078559
+          XScale:1
+        }
+        (E2Text){
+          Layer:0
+          Color:#FFFFFFFF
+          Pt:-13.077927,-16.175003
+          Text:" CAGE CODE"
+          Style:Standard
+          Alignment:BotCenter
+          Height:2.046108161078559
+          XScale:1
+        }
+        (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M-99.999985,-33.000008H-34.999985 }
+        (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M100,-33.000008V-27.000008 }
+        (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M100,-27.000008V-13.000008 }
+        (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M100,-13.000008V14.999992 }
+        (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M100,14.999992V33 }
+        (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M-99.999985,-33.000008V33 }
+        (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M-99.999985,33H100 }
+        (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M-34.999985,-33.000008V33 }
+        (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M-34.999985,14.999992H100 }
+        (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M-34.999985,-13.000008H100 }
+        (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M-34.999985,-27.000008H100 }
+        (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M-34.999985,-33.000008H100 }
+        (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M55.000015,-33.000008V-27.000008 }
+        (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M10.000015,-33.000008V-27.000008 }
+        (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M85,-27.000008V-13.000008 }
+        (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M10.000015,-27.000008V-13.000008 }
+        (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M-99.999985,-27.000008H-34.999985 }
+        (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M-99.999985,-21.000008H-34.999985 }
+        (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M-21.999985,-27.000008V-13.000008 }
+      ]
+    }
+    {
+      Name:OVERHEAD
+      Base:0,0
+      Ents:[
+        (E2Poly){ Layer:ASHADE Color:#FFFFFFFF Poly:M-0.27037,-0.13Q0.27037,-0.13,1.429349 }
+        (E2Poly){ Layer:ASHADE Color:#FFFFFFFF Poly:M0.27037,0.13Q-0.27037,0.13,1.429349 }
+        (E2Poly){ Layer:ASHADE Color:#FFFFFFFF Poly:M-0.27037,-0.13L-0.315432,-0.151667 }
+        (E2Poly){ Layer:ASHADE Color:#FFFFFFFF Poly:M-0.204141,-0.219832L-0.272188,-0.29311 }
+        (E2Poly){ Layer:ASHADE Color:#FFFFFFFF Poly:M-0.109659,-0.27924L-0.127936,-0.32578 }
+        (E2Poly){ Layer:ASHADE Color:#FFFFFFFF Poly:M0,-0.3V-0.4 }
+        (E2Poly){ Layer:ASHADE Color:#FFFFFFFF Poly:M0.109659,-0.27924L0.127936,-0.32578 }
+        (E2Poly){ Layer:ASHADE Color:#FFFFFFFF Poly:M0.204141,-0.219832L0.272188,-0.29311 }
+        (E2Poly){ Layer:ASHADE Color:#FFFFFFFF Poly:M0.27037,-0.13L0.315432,-0.151667 }
+        (E2Poly){ Layer:ASHADE Color:#FFFFFFFF Poly:M-0.109659,0.27924L-0.127936,0.32578 }
+        (E2Poly){ Layer:ASHADE Color:#FFFFFFFF Poly:M-0.204141,0.219832L-0.272188,0.29311 }
+        (E2Poly){ Layer:ASHADE Color:#FFFFFFFF Poly:M-0.27037,0.13L-0.315432,0.151667 }
+        (E2Poly){ Layer:ASHADE Color:#FFFFFFFF Poly:M0.27037,0.13L0.315432,0.151667 }
+        (E2Poly){ Layer:ASHADE Color:#FFFFFFFF Poly:M0.204141,0.219832L0.272188,0.29311 }
+        (E2Poly){ Layer:ASHADE Color:#FFFFFFFF Poly:M0.109659,0.27924L0.127936,0.32578 }
+        (E2Poly){ Layer:ASHADE Color:#FFFFFFFF Poly:M0,0.3V0.4 }
+      ]
+    }
+    {
+      Name:DIRECT
+      Base:0,0
+      Ents:[
+        (E2Poly){ Layer:ASHADE Color:#FFFFFFFF Poly:M-0.27037,-0.13Q0.27037,-0.13,1.429349 }
+        (E2Poly){ Layer:ASHADE Color:#FFFFFFFF Poly:M0.27037,0.13Q-0.27037,0.13,1.429349 }
+        (E2Poly){ Layer:ASHADE Color:#FFFFFFFF Poly:M0.21,0.214243V0.5 }
+        (E2Poly){ Layer:ASHADE Color:#FFFFFFFF Poly:M0.11,0.279106V0.5 }
+        (E2Poly){ Layer:ASHADE Color:#FFFFFFFF Poly:M0,0.3V0.5 }
+        (E2Poly){ Layer:ASHADE Color:#FFFFFFFF Poly:M-0.11,0.279106V0.5 }
+        (E2Poly){ Layer:ASHADE Color:#FFFFFFFF Poly:M-0.21,0.214243V0.5 }
+      ]
+    }
+  ]
+  Ents:[
+    (E2Text){
+      Layer:ASHADE
+      Color:#FFFF0000
+      Pt:0,-0.1
+      Text:LIGHT_0
+      Style:ASHADE
+      Alignment:BaseCenter
+      Height:0.2
+      XScale:1
+    }
+    (E2Text){
+      Layer:ASHADE
+      Color:#FFFF0000
+      Pt:0,-0.1
+      Text:LIGHT_1
+      Style:ASHADE
+      Alignment:BaseCenter
+      Height:0.2
+      XScale:1
+    }
+    (E2Text){
+      Layer:ASHADE
+      Color:#FFFF0000
+      Pt:-11982.887035,4537.495565
+      Text:LIGHT_2
+      Style:ASHADE
+      Alignment:BaseCenter
+      Height:0.2
+      XScale:1
+    }
+    (E2Text){
+      Layer:0
+      Color:#FFFFFFFF
+      Pt:403.537635,-127.265678
+      Text:0
+      Style:Standard
+      Alignment:MidCenter
+      Height:4.092221238878039
+      XScale:1
+    }
+    (E2Poly){
+      Layer:0
+      Color:#FFFFFFFF
+      Poly:M420,148.5H410L415,145.613251V151.386749L410,148.5
+    }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M0,148.5H10L5,151.386749V145.613251L10,148.5 }
+    (E2Poly){
+      Layer:0
+      Color:#FFFFFFFF
+      Poly:M210,-147.274953V-137.274953L207.113251,-142.274953H212.886749L210,-137.274953
+    }
+    (E2Poly){
+      Layer:0
+      Color:#FFFFFFFF
+      Poly:M210,435.891588V425.891588L212.886749,430.891588H207.113251L210,425.891588
+    }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M410,-137.274953V-131.274953 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M410,-131.274953V-121.274953 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M410,-121.274953V-101.274953 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M410,-101.274953V-83.274953 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M272.5,-137.274953V-83.274953 }
+    (E2Poly){ Layer:0 Poly:M210,-137.274953V-83.274953 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M210,-137.274953H272.5 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M272.5,-137.274953H410 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M210,-83.274953H410 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M272.5,-101.274953H410 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M272.5,-121.274953H410 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M272.5,-131.274953H410 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M353.75,-137.274953V-131.274953 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M310,-137.274953V-131.274953 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M397.5,-131.274953V-121.274953 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M322.5,-131.274953V-121.274953 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M291.25,-131.274953V-121.274953 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M210,-131.274953H272.5 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M210,-125.274953H272.5 }
+    (E2Text){
+      Layer:0
+      Color:#FFFFFFFF
+      Pt:278.818245,-134.449953
+      Text:" SCALE"
+      Style:Standard
+      Alignment:BotCenter
+      Height:2.046111234029134
+      XScale:1.25
+    }
+    (E2Text){
+      Layer:0
+      Color:#FFFFFFFF
+      Pt:276.941414,-124.449952
+      Text:" SIZE"
+      Style:Standard
+      Alignment:BotCenter
+      Height:2.046110619439019
+      XScale:1.25
+    }
+    (E2Text){
+      Layer:0
+      Color:#FFFFFFFF
+      Pt:302.402573,-124.449952
+      Text:" CAGE CODE"
+      Style:Standard
+      Alignment:BotCenter
+      Height:2.046110619439019
+      XScale:1.25
+    }
+    (E2Text){
+      Layer:0
+      Color:#FFFFFFFF
+      Pt:330.492134,-124.449952
+      Text:" DWG NO"
+      Style:Standard
+      Alignment:BotCenter
+      Height:2.046110619439019
+      XScale:1.25
+    }
+    (E2Text){
+      Layer:0
+      Color:#FFFFFFFF
+      Pt:360.165405,-134.449953
+      Text:" SHEET"
+      Style:Standard
+      Alignment:BotCenter
+      Height:2.046111234029134
+      XScale:1.25
+    }
+    (E2Text){
+      Layer:0
+      Color:#FFFFFFFF
+      Pt:401.64566,-124.449952
+      Text:" REV"
+      Style:Standard
+      Alignment:BotCenter
+      Height:2.046110619439019
+      XScale:1.25
+    }
+    (E2Text){
+      Layer:0
+      Color:#FFFFFFFF
+      Pt:277.829552,-104.449952
+      Text:" TITLE"
+      Style:Standard
+      Alignment:BotCenter
+      Height:2.046110619439019
+      XScale:1.25
+    }
+    (E2Poly){
+      Layer:0
+      Color:#FFFFFFFF
+      Poly:M10,425.891588V285.099953V144.308318V3.516682V-137.274953
+    }
+    (E2Poly){
+      Layer:0
+      Color:#FFFFFFFF
+      Poly:M410,425.891588H343.333344H276.666656H210H143.333328H76.666664H10
+    }
+    (E2Poly){
+      Layer:0
+      Color:#FFFFFFFF
+      Poly:M410,-137.274953V3.516682V144.308318V285.099953V425.891588
+    }
+    (E2Poly){
+      Layer:0
+      Color:#FFFFFFFF
+      Poly:M10,-137.274953H76.666664H143.333328H210H276.666656H343.333344H410
+    }
+    (E2Poly){
+      Layer:0
+      Color:#FFFFFFFF
+      Poly:M11.115165,-83.274953H70.275668V-64.896701H11.115165Z
+    }
+    (E2Text){
+      Layer:0
+      Color:#FFFFFFFF
+      Pt:18.202361,-89.472575
+      Text:"NOTES:"
+      Style:Standard
+      Alignment:TopLeft
+      Height:4.270144769880507
+      XScale:1
+    }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M272.5,-83.274953H410 }
+    (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M210,-83.274953H69.160503 }
+    (E2Text){
+      Layer:0
+      Color:#FFFFFFFF
+      Pt:290.228079,-132.404107
+      Text:NTS
+      Style:Standard
+      Alignment:TopLeft
+      Height:3.182839594946967
+      XScale:1
+    }
+    (E2Text){
+      Layer:0
+      Color:#FFFFFFFF
+      Pt:310.40759,-132.27559
+      Text:"DRAWN: "
+      Style:Standard
+      Alignment:TopLeft
+      Height:2.728148004743788
+      XScale:1
+    }
+    (E2Text){
+      Layer:0
+      Color:#FFFFFFFF
+      Pt:211.350737,-105.768272
+      Text:"FINISH: BY OTHERS SPEC."
+      Style:Standard
+      Alignment:TopLeft
+      Height:3.182839594946967
+      XScale:1
+    }
+    (E2Text){
+      Layer:0
+      Color:#FFFFFFFF
+      Pt:281.01339,-127.310301
+      Text:A3
+      Style:Standard
+      Alignment:TopLeft
+      Height:3.182839594946967
+      XScale:1
+    }
+    (E2Text){
+      Layer:0
+      Color:#FFFFFFFF
+      Pt:276.842221,-110.569657
+      Text:wc-rl2b-2502
+      Style:Standard
+      Alignment:TopLeft
+      Height:3.182839594946967
+      XScale:1
+    }
+    (E2Dimension){
+      Layer:Dimensions
+      Ents:[
+        (E2Poly){ Layer:Dimensions Color:#FF000000 Poly:M301.699159,413.416531H268.230618 }
+        (E2Poly){ Layer:Dimensions Color:#FF000000 Poly:M301.699159,28.421047H268.230618 }
+        (E2Poly){ Layer:Dimensions Color:#FF000000 Poly:M271.230618,409.416531V231.472821 }
+        (E2Poly){ Layer:Dimensions Color:#FF000000 Poly:M271.230618,32.421047V210.364757 }
+        (E2Solid){
+          Layer:Dimensions
+          Color:#FF000000
+          Pts:[
+            271.897285,409.416531
+            270.563952,409.416531
+            271.230618,413.416531
+            271.230618,413.416531
+          ]
+        }
+        (E2Solid){
+          Layer:Dimensions
+          Color:#FF000000
+          Pts:[
+            270.563952,32.421047
+            271.897285,32.421047
+            271.230618,28.421047
+            271.230618,28.421047
+          ]
+        }
+        (E2Text){
+          Layer:Dimensions
+          Color:#FF000000
+          Pt:271.230618,220.918789
+          Text:"2400 mm"
+          Style:Standard
+          Angle:1.5707963267948966
+          Alignment:MidCenter
+          Height:3.183555555555556
+          XScale:1
+        }
+        (E2Point){ Layer:Defpoints Color:#FF000000 Pt:303.199159,413.416531 }
+        (E2Point){ Layer:Defpoints Color:#FF000000 Pt:303.199159,28.421047 }
+        (E2Point){ Layer:Defpoints Color:#FF000000 Pt:271.230618,28.421047 }
+      ]
+    }
+    (E2Text){
+      Layer:0
+      Color:#FFFFFFFF
+      Pt:134.063204,386.951673
+      Text:"1.6mm bent ms channel"
+      Style:Standard
+      Alignment:BaseLeft
+      Height:3.183555592430963
+      XScale:1
+    }
+    (E2Text){
+      Layer:0
+      Color:#FFFFFFFF
+      Pt:33.739581,-109.224638
+      Text:"76 off required"
+      Style:Standard
+      Alignment:TopLeft
+      Height:12.14065738254123
+      XScale:1
+    }
+    (E2Dimension){
+      Layer:Dimensions
+      Ents:[
+        (E2Poly){ Layer:Dimensions Color:#FF000000 Poly:M249.852321,7.930863V13.848069 }
+        (E2Poly){ Layer:Dimensions Color:#FF000000 Poly:M169.61901,7.930863V13.848069 }
+        (E2Poly){ Layer:Dimensions Color:#FF000000 Poly:M245.852321,10.848069H217.792198 }
+        (E2Poly){ Layer:Dimensions Color:#FF000000 Poly:M173.61901,10.848069H201.679133 }
+        (E2Solid){
+          Layer:Dimensions
+          Color:#FF000000
+          Pts:[
+            245.852321,10.181403
+            245.852321,11.514736
+            249.852321,10.848069
+            249.852321,10.848069
+          ]
+        }
+        (E2Solid){
+          Layer:Dimensions
+          Color:#FF000000
+          Pts:[
+            173.61901,11.514736
+            173.61901,10.181403
+            169.61901,10.848069
+            169.61901,10.848069
+          ]
+        }
+        (E2Text){
+          Layer:Dimensions
+          Color:#FF000000
+          Pt:209.735665,10.848069
+          Text:"50 mm"
+          Style:Standard
+          Alignment:MidCenter
+          Height:3.183555555555556
+          XScale:1
+        }
+        (E2Point){ Layer:Defpoints Color:#FF000000 Pt:249.852321,6.430863 }
+        (E2Point){ Layer:Defpoints Color:#FF000000 Pt:169.61901,6.430863 }
+        (E2Point){ Layer:Defpoints Color:#FF000000 Pt:169.61901,10.848069 }
+      ]
+    }
+    (E2Dimension){
+      Layer:Dimensions
+      Ents:[
+        (E2Poly){ Layer:Dimensions Color:#FF000000 Poly:M168.11901,6.430863H136.207647 }
+        (E2Poly){ Layer:Dimensions Color:#FF000000 Poly:M168.11901,-73.802448H136.207647 }
+        (E2Poly){ Layer:Dimensions Color:#FF000000 Poly:M139.207647,2.430863V-25.62926 }
+        (E2Poly){ Layer:Dimensions Color:#FF000000 Poly:M139.207647,-69.802448V-41.742325 }
+        (E2Solid){
+          Layer:Dimensions
+          Color:#FF000000
+          Pts:[
+            139.874314,2.430863
+            138.540981,2.430863
+            139.207647,6.430863
+            139.207647,6.430863
+          ]
+        }
+        (E2Solid){
+          Layer:Dimensions
+          Color:#FF000000
+          Pts:[
+            138.540981,-69.802448
+            139.874314,-69.802448
+            139.207647,-73.802448
+            139.207647,-73.802448
+          ]
+        }
+        (E2Text){
+          Layer:Dimensions
+          Color:#FF000000
+          Pt:139.207647,-33.685793
+          Text:"50 mm"
+          Style:Standard
+          Angle:1.5707963267948966
+          Alignment:MidCenter
+          Height:3.183555555555556
+          XScale:1
+        }
+        (E2Point){ Layer:Defpoints Color:#FF000000 Pt:169.61901,6.430863 }
+        (E2Point){ Layer:Defpoints Color:#FF000000 Pt:169.61901,-73.802448 }
+        (E2Point){ Layer:Defpoints Color:#FF000000 Pt:139.207647,-73.802448 }
+      ]
+    }
+    (E2Dimension){
+      Layer:Dimensions
+      Ents:[
+        (E2Poly){ Layer:Dimensions Color:#FF000000 Poly:M169.61901,-75.302448V-79.933428 }
+        (E2Poly){ Layer:Dimensions Color:#FF000000 Poly:M249.852321,-75.302448V-79.933428 }
+        (E2Poly){ Layer:Dimensions Color:#FF000000 Poly:M173.61901,-76.933428H201.679133 }
+        (E2Poly){ Layer:Dimensions Color:#FF000000 Poly:M245.852321,-76.933428H217.792198 }
+        (E2Solid){
+          Layer:Dimensions
+          Color:#FF000000
+          Pts:[
+            173.61901,-76.266761
+            173.61901,-77.600095
+            169.61901,-76.933428
+            169.61901,-76.933428
+          ]
+        }
+        (E2Solid){
+          Layer:Dimensions
+          Color:#FF000000
+          Pts:[
+            245.852321,-77.600095
+            245.852321,-76.266761
+            249.852321,-76.933428
+            249.852321,-76.933428
+          ]
+        }
+        (E2Text){
+          Layer:Dimensions
+          Color:#FF000000
+          Pt:209.735665,-76.933428
+          Text:"50 mm"
+          Style:Standard
+          Alignment:MidCenter
+          Height:3.183555555555556
+          XScale:1
+        }
+        (E2Point){ Layer:Defpoints Color:#FF000000 Pt:169.61901,-73.802448 }
+        (E2Point){ Layer:Defpoints Color:#FF000000 Pt:249.852321,-73.802448 }
+        (E2Point){ Layer:Defpoints Color:#FF000000 Pt:249.852321,-76.933428 }
+      ]
+    }
+    (E2Dimension){
+      Layer:Dimensions
+      Ents:[
+        (E2Poly){ Layer:Dimensions Color:#FF000000 Poly:M251.352321,-70.593116H271.023988 }
+        (E2Poly){ Layer:Dimensions Color:#FF000000 Poly:M251.352321,3.221531H271.023988 }
+        (E2Poly){ Layer:Dimensions Color:#FF000000 Poly:M268.023988,-66.593116V-41.805996 }
+        (E2Poly){ Layer:Dimensions Color:#FF000000 Poly:M268.023988,-0.778469V-25.565589 }
+        (E2Solid){
+          Layer:Dimensions
+          Color:#FF000000
+          Pts:[
+            267.357322,-66.593116
+            268.690655,-66.593116
+            268.023988,-70.593116
+            268.023988,-70.593116
+          ]
+        }
+        (E2Solid){
+          Layer:Dimensions
+          Color:#FF000000
+          Pts:[
+            268.690655,-0.778469
+            267.357322,-0.778469
+            268.023988,3.221531
+            268.023988,3.221531
+          ]
+        }
+        (E2Text){
+          Layer:Dimensions
+          Color:#FF000000
+          Pt:268.023988,-33.685793
+          Text:"46 mm"
+          Style:Standard
+          Angle:1.5707963267948966
+          Alignment:MidCenter
+          Height:3.183555555555556
+          XScale:1
+        }
+        (E2Point){ Layer:Defpoints Color:#FF000000 Pt:249.852321,-70.593116 }
+        (E2Point){ Layer:Defpoints Color:#FF000000 Pt:249.852321,3.221531 }
+        (E2Point){ Layer:Defpoints Color:#FF000000 Pt:268.023988,3.221531 }
+      ]
+    }
+  ]
+}
