@@ -1059,16 +1059,6 @@
       XScale:1
     }
     (E2Text){
-      Layer:ASHADE
-      Color:#FFFF0000
-      Pt:-11982.887035,4537.495565
-      Text:LIGHT_2
-      Style:ASHADE
-      Alignment:BaseCenter
-      Height:0.2
-      XScale:1
-    }
-    (E2Text){
       Layer:0
       Color:#FFFFFFFF
       Pt:403.537635,-127.265678
