@@ -62,6 +62,11 @@ public partial class Dwg2 {
    public IReadOnlyList<Block2> Blocks => mBlocks ?? [];
    List<Block2>? mBlocks;
 
+   /// <summary>
+   /// The list of dimensions in this drawing
+   /// </summary>
+   public IEnumerable<E2Dimension> Dimensions => mEnts.OfType<E2Dimension> ();
+
    /// <summary>List of styles in the drawing</summary>
    /// New blocks are added by calling Add(Style2)
    public IReadOnlyList<Style2> Styles => mStyles ?? [];
@@ -160,6 +165,9 @@ public partial class Dwg2 {
       return e2p;
    }
 
+   public void RemoveBlocks (IEnumerable<Block2> blocks)
+      => blocks.ForEach (b => mBlocks?.Remove (b));
+
    /// <summary>Purges layers, blocks, styles that are unused</summary>
    public Dwg2 Purge () {
       HashSet<Style2> styles = [];
@@ -178,7 +186,7 @@ public partial class Dwg2 {
 
    /// <summary>Selects the given entity (and optionally deselects the others that are selected)</summary>
    public void Select (Ent2? ent, bool deselectOthers) {
-      if (deselectOthers) 
+      if (deselectOthers)
          mEnts.Where (a => a.IsSelected).ForEach (a => a.IsSelected = false);
       if (ent != null) ent.IsSelected ^= true; // Toggle selection
    }
@@ -205,6 +213,8 @@ public partial class Dwg2 {
 
    /// <summary>Enumerate all entities in the drawing, as well as entities in all the blocks</summary>
    IEnumerable<Ent2> DeepEnumEnts ()
-      => Blocks.SelectMany (a => a.Ents).Concat (mEnts);
+      => Blocks.SelectMany (a => a.Ents)
+         .Concat (Dimensions.SelectMany (a => a.Ents))
+         .Concat (mEnts);
 }
 #endregion
