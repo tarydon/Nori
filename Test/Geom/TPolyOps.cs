@@ -406,7 +406,6 @@ class PolyEdgeTests {
       poly = arcCW.KeySlot (0, width, -depth, rad270);
       poly?.Is ("M22.981333,-19.283628Q10,-28.284271,-0.339209V-40H-10V-28.284271Q28.190779,-10.260604,-3.005875");
 
-      // Check fail scenario
       poly = circle.KeySlot (0, 3 * width, depth, 0); Assert.IsTrue (poly is null); // Notch doesn't fit in the seg
       poly = circle.KeySlot (0, width, 0, 0); Assert.IsTrue (poly is null); // depth is zero
       poly = arcCW.KeySlot (0, width, depth, startAng); Assert.IsTrue (poly is null); // Notch doesn't fit in the seg
