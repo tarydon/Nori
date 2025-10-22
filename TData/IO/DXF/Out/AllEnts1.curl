@@ -9,38 +9,6 @@
   ]
   Blocks:[
     {
-      Name:*D2
-      Base:0,0
-      Ents:[
-        (E2Poly){ Layer:0 Color:#FF000000 Poly:M0,50.625V57.456424 }
-        (E2Poly){ Layer:0 Color:#FF000000 Poly:M90,50.625V57.456424 }
-        (E2Poly){ Layer:0 Color:#FF000000 Poly:M2.5,56.206424H87.5 }
-        (E2Solid){
-          Layer:0
-          Color:#FF000000
-          Pts:[ 2.5,56.623091 2.5,55.789758 0,56.206424 0,56.206424 ]
-        }
-        (E2Solid){
-          Layer:0
-          Color:#FF000000
-          Pts:[ 87.5,56.623091 87.5,55.789758 90,56.206424 90,56.206424 ]
-        }
-        (E2Text){
-          Layer:0
-          Color:#FF000000
-          Pt:45,58.081424
-          Text:90
-          Style:Standard
-          Alignment:MidCenter
-          Height:2.5
-          XScale:1
-        }
-        (E2Point){ Layer:Defpoints Color:#FF000000 Pt:0,50 }
-        (E2Point){ Layer:Defpoints Color:#FF000000 Pt:90,50 }
-        (E2Point){ Layer:Defpoints Color:#FF000000 Pt:90,56.206424 }
-      ]
-    }
-    {
       Name:Marker1
       Base:0,0
       Ents:[
