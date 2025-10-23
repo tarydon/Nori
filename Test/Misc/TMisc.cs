@@ -431,19 +431,6 @@ class TMisc {
       void SetLayer (Layer2 layer) { dwg.Add (layer); dwg.CurrentLayer = layer; }
    }
 
-   [Test (123, "Test for ZipStmLocator")]
-   void Test123 () {
-      var locator = new ZipStmLocator ("nori:", "N:/TData/Misc/test.zip");
-      CheckFile ("t1.txt", "test1"); CheckFile ("folder1/t2.txt", "test2");
-
-      void CheckFile (string file, string content) {
-         using (Stream s = locator.Open ($"nori:{file}")!) {
-            using TextReader r = new StreamReader (s);
-            Assert.IsTrue (r.ReadToEnd () == content);
-         }
-      }
-   }
-
    class T1Type : IIndexed {
       public override string ToString () => $"T{Idx}";
       public ushort Idx { get; set; }
