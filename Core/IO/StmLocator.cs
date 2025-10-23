@@ -28,7 +28,7 @@ public class ZipStmLocator (string prefix, string zipFile) : IStmLocator {
    public Stream? Open (string name) {
       if (!name.StartsWith (prefix)) return null;
       mArchive ??= new ZipArchive (File.OpenRead (zipFile));
-      return mArchive.GetEntry (name[prefix.Length..])!.Open ();
+      return mArchive.GetEntry (name[prefix.Length..].Replace ('\\', '/'))!.Open ();
    }
 
    ZipArchive? mArchive;
