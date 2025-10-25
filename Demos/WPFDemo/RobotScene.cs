@@ -56,6 +56,7 @@ class RobotScene : Scene3 {
          var label = new TextBlock { Text = text, HorizontalAlignment = HorizontalAlignment.Right, TextAlignment = TextAlignment.Center, Width = 15, VerticalAlignment = VerticalAlignment.Center };
          var slider = new Slider { Minimum = min, MinWidth = 150, Maximum = max, Value = value, Margin = new Thickness (4, 1, 4, 4) };
          slider.ValueChanged += (s, e) => setter (e.NewValue);
+         if (text.EqIC ("Rx")) slider.Value = -90;
          slider.IsSnapToTickEnabled = false;
          sp.Children.Add (label); sp.Children.Add (slider); ui.Add (sp);
          mSliders[text] = slider;

@@ -62,6 +62,11 @@ public partial class Dwg2 {
    public IReadOnlyList<Block2> Blocks => mBlocks ?? [];
    List<Block2>? mBlocks;
 
+   /// <summary>
+   /// The list of dimensions in this drawing
+   /// </summary>
+   public IEnumerable<E2Dimension> Dimensions => mEnts.OfType<E2Dimension> ();
+
    /// <summary>List of styles in the drawing</summary>
    /// New blocks are added by calling Add(Style2)
    public IReadOnlyList<Style2> Styles => mStyles ?? [];
@@ -83,7 +88,14 @@ public partial class Dwg2 {
    public void Add (IEnumerable<Ent2> ents) => ents.ForEach (Add);
 
    /// <summary>Add a layer into the drawing</summary>
-   public void Add (Layer2 layer) => mLayers.Add (layer);
+   /// If a layer with the same name exists, replace it and update the associated entities.
+   public void Add (Layer2 layer) {
+      if (mLayers.FindIndex (a => a.Name == layer.Name) is int idx && idx >= 0) {
+         Ents.Where (e => e.Layer == mLayers[idx]).ForEach (a => a.Layer = layer);
+         mLayers[idx] = layer;
+      } else mLayers.Add (layer);
+   }
+
    /// <summary>Adds a Block2 to the list of blocks in the drawing</summary>
    public void Add (Block2 block) { (mBlocks ??= []).Add (block); _blockMap = null; }
 
@@ -92,6 +104,12 @@ public partial class Dwg2 {
       if (style.Name.IsBlank ()) return;
       (mStyles ??= []).Add (style); _styleMap = null;
    }
+
+   /// <summary>Removes an "existing" entity from the drawing</summary>
+   public void Remove (Ent2 ent) => Lib.Check (mEnts.Remove (ent), "Coding Error");
+
+   /// <summary>Removes set of "existing" entities from the drawing</summary>
+   public void Remove (IEnumerable<Ent2> ents) => ents.ForEach (Remove);
 
    /// <summary>Gets a block given the name (could return null if the name does not exist)</summary>
    public Block2? GetBlock (string name)
@@ -147,6 +165,9 @@ public partial class Dwg2 {
       return e2p;
    }
 
+   public void RemoveBlocks (IEnumerable<Block2> blocks)
+      => blocks.ForEach (b => mBlocks?.Remove (b));
+
    /// <summary>Purges layers, blocks, styles that are unused</summary>
    public Dwg2 Purge () {
       HashSet<Style2> styles = [];
@@ -165,9 +186,9 @@ public partial class Dwg2 {
 
    /// <summary>Selects the given entity (and optionally deselects the others that are selected)</summary>
    public void Select (Ent2? ent, bool deselectOthers) {
-      if (deselectOthers) 
+      if (deselectOthers)
          mEnts.Where (a => a.IsSelected).ForEach (a => a.IsSelected = false);
-      if (ent != null) ent.IsSelected = true;
+      if (ent != null) ent.IsSelected ^= true; // Toggle selection
    }
 
    // Implementation -----------------------------------------------------------
@@ -192,6 +213,8 @@ public partial class Dwg2 {
 
    /// <summary>Enumerate all entities in the drawing, as well as entities in all the blocks</summary>
    IEnumerable<Ent2> DeepEnumEnts ()
-      => Blocks.SelectMany (a => a.Ents).Concat (mEnts);
+      => Blocks.SelectMany (a => a.Ents)
+         .Concat (Dimensions.SelectMany (a => a.Ents))
+         .Concat (mEnts);
 }
 #endregion
