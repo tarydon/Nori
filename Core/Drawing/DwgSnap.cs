@@ -12,12 +12,12 @@ namespace Nori;
 /// points, and also weighting some types of snaps like 'endpoint' over other types like 'on').
 ///
 /// This also maintains some state - whenever we have provided a snap like 'endpoint',
-/// 'midpoint' or 'interesection', that point is remembered as an 'anchor'. (We maintain
+/// 'midpoint' or 'intersection', that point is remembered as an 'anchor'. (We maintain
 /// a few anchors, and discard the oldest ones).
 ///
 /// From each anchor, horizontal and vertical construction lines are implied and whenever
 /// the mouse is close to them they are drawn, and can be used for an 'on' snap. Intersections
-/// betweeen construction lines, or between construction lines and geometry are also snap points
+/// between construction lines, or between construction lines and geometry are also snap points
 /// that are generated.
 ///
 /// When we are at the 'endpoint' of a line or arc, then there is also an implied construction
@@ -76,6 +76,8 @@ public class DwgSnap {
             yield return (con.Anchor, con.Slope);
       }
    }
+
+   public Point2 LastClickedPt = Point2.Nil;
 
    /// <summary>The recent snap point that we computed</summary>
    public Point2 PtSnap => mPtSnap;
@@ -251,12 +253,16 @@ public class DwgSnap {
          }
       }
 
+      // While the entity creation is in progress, if the mouse position aligns with horizontal
+      // or vertical direction w.r.t last clicked point, then draw a construction line.
+      if (!LastClickedPt.IsNil && !LastClickedPt.EQ (mptRaw, Lib.Epsilon))
+         AddConsLine (LastClickedPt, [0, Lib.HalfPI]);
+
       // If we found a snap point, add construction lines using this point a the anchor
       if (mSnap != ESnap.None) {
          AddConsLine (mPtSnap, [mTangent, mTangent + Lib.HalfPI, 0, Lib.HalfPI, mTangent2, mTangent2 + Lib.HalfPI]);
          return true;
-      } else
-         return false;
+      } else return false;
    }
    List<Seg> mSegs = [];         // List of segs we're close to
 
