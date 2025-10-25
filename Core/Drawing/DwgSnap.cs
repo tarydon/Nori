@@ -253,6 +253,11 @@ public class DwgSnap {
          }
       }
 
+      // While the entity creation is in progress, if the mouse position aligns with horizontal
+      // or vertical direction w.r.t last clicked point, then draw a construction line.
+      if (!LastClickedPt.IsNil && !LastClickedPt.EQ (mptRaw, Lib.Epsilon))
+         AddConsLine (LastClickedPt, [0, Lib.HalfPI]);
+
       // If we found a snap point, add construction lines using this point a the anchor
       if (mSnap != ESnap.None) {
          AddConsLine (mPtSnap, [mTangent, mTangent + Lib.HalfPI, 0, Lib.HalfPI, mTangent2, mTangent2 + Lib.HalfPI]);
@@ -263,15 +268,6 @@ public class DwgSnap {
 
    // Check if the given input point is ON any of the construction lines
    bool OnCons () {
-      // While the entity creation is in progress, draw a construction line
-      // if the mouse position aligns with horizontal or vertical direction
-      if (!(LastClickedPt.IsNil || LastClickedPt.EQ (mptRaw, Lib.Epsilon))) {
-         double actualAng = LastClickedPt.AngleTo (mptRaw);
-         double snapAng = Math.Round (actualAng / Lib.HalfPI) * Lib.HalfPI; // 0, 90, 180 or -90
-         if (actualAng.EQ (snapAng, 5.D2R ())) // Allow tolerance of 5 degree
-            mActive.Add (new ConsLine (LastClickedPt, snapAng, false));
-      }
-      // Now do the check
       mVisible.Clear ();
       for (int i = 0; i < mActive.Count; i++) {
          var cons = mActive[i];
