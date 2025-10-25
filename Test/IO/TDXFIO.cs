@@ -258,7 +258,7 @@ class DXFTests2 {
       Assert.TextFilesEqual1 ("IO/DXF/Out/BendSeg.dxf", NT.TmpDXF);
    }
 
-   [Test (116, "Read SPLINE entity from DXF")]
+   [Test (124, "Read SPLINE entity from DXF")]
    void Test9 () {
       var dwg = DXFReader.FromFile (NT.File ("IO/DXF/D17616.dxf"));
       CurlWriter.ToFile (dwg, NT.TmpCurl);
@@ -268,7 +268,7 @@ class DXFTests2 {
       Assert.TextFilesEqual1 ("IO/DXF/Out/D17666.curl", NT.TmpCurl);
    }
 
-   [Test (117, "Write SPLINE entity to DXF")]
+   [Test (125, "Write SPLINE entity to DXF")]
    void Test10 () {
       var dwg = DXFReader.FromFile (NT.File ("IO/DXF/D17666.dxf"));
       DXFWriter.SaveFile (dwg, NT.TmpDXF);
@@ -278,7 +278,7 @@ class DXFTests2 {
       Assert.TextFilesEqual1 ("IO/DXF/Out/D17292.dxf", NT.TmpDXF);
    }
 
-   [Test (118, "Test of Ent2.XFormed")]
+   [Test (126, "Test of Ent2.XFormed")]
    void Test11 () {
       var dwg = DXFReader.FromFile (NT.File ("IO/DXF/AllEnts.dxf"));
       CurlWriter.ToFile (dwg, NT.TmpCurl);
@@ -290,7 +290,7 @@ class DXFTests2 {
       Assert.TextFilesEqual1 ("IO/DXF/Out/AllEnts2.curl", NT.TmpCurl);
    }
 
-   [Test (119, "Test for DXF import of CCW and CW circles (group code 230)")]
+   [Test (127, "Test for DXF import of CCW and CW circles (group code 230)")]
    void Test12 () {
       var dwg = DXFReader.FromFile (NT.File ("IO/DXF/Circle.dxf"));
       DXFWriter.SaveFile (dwg, NT.TmpDXF);
@@ -302,5 +302,12 @@ class DXFTests2 {
       var dwg = DXFReader.FromFile (NT.File ("IO/DXF/WC-RL2B-2502.dxf"));
       CurlWriter.ToFile (dwg, NT.TmpCurl);
       Assert.TextFilesEqual1 ("IO/DXF/Out/WL-RL2B-2502.curl", NT.TmpCurl);
+   }
+
+   [Test (130, "Dimension entity not getting serialized into DXF")]
+   void Test14 () {
+      var dwg = DXFReader.FromFile (NT.File ("IO/DXF/Dimension.dxf"));
+      DXFWriter.SaveFile (dwg, NT.TmpDXF);
+      Assert.TextFilesEqual1 ("IO/DXF/Out/Dimension.dxf", NT.TmpDXF);
    }
 }

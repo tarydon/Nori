@@ -392,7 +392,7 @@ class TMisc {
       Assert.IsTrue (Math.Round (s.FlatWidth, 1) == 2.5 && Math.Round (s.KFactor, 3) == 0.592);
    }
 
-   [Test (114, "Miscellany: DIBitmap, MultiDispose, AList")]
+   [Test (123, "Miscellany: DIBitmap, MultiDispose, AList")]
    void Test13 () {
       // DIBitmap
       var dib = new DIBitmap (20, 10, DIBitmap.EFormat.Gray8, new byte[200]);
