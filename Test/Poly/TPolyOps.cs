@@ -186,11 +186,11 @@ class PolyTrimExtendTests {
 
       polySoup = [c, Poly.Line (0, 0, 0, 50), Poly.Line (0, 0, 0, -50)];  // Line cutting circle at 90 and -90
       resPolys = [.. c.TrimmedSeg (0, 0.2, polySoup)];
-      resPolys.Count.Is (1); resPolys[0].Is ("M-0,-40Q0,40,-2");
+      resPolys.Count.Is (1); resPolys[0].Is ("M0,-40Q0,40,-2");
       resPolys = [.. c.TrimmedSeg (0, 0.8, polySoup)];
-      resPolys.Count.Is (1); resPolys[0].Is ("M-0,-40Q0,40,-2");
+      resPolys.Count.Is (1); resPolys[0].Is ("M0,-40Q0,40,-2");
       resPolys = [.. c.TrimmedSeg (0, 0.5, polySoup)];
-      resPolys.Count.Is (1); resPolys[0].Is ("M0,40Q-0,-40,-2");
+      resPolys.Count.Is (1); resPolys[0].Is ("M0,40Q0,-40,-2");
    }
 
    [Test (124, "Trim arc seg")]
@@ -278,9 +278,9 @@ class PolyTrimExtendTests {
       Poly p = Poly.Arc (new Point2 (50, 0), Lib.HalfPI, new Point2 (0, 50));
       List<Poly> polySoup = [p];
       List<Poly> resPoly = [.. p.ExtendedSeg (0, 0.2, dist: 0, polySoup)];
-      resPoly.Count.Is (1); resPoly[0].Is ("C-0,0,50");
+      resPoly.Count.Is (1); resPoly[0].Is ("C0,0,50");
       resPoly = [.. p.ExtendedSeg (0, 0.8, dist: 0, polySoup)];
-      resPoly.Count.Is (1); resPoly[0].Is ("C-0,0,50");
+      resPoly.Count.Is (1); resPoly[0].Is ("C0,0,50");
 
       // Unobstructed arc seg extension - closed poly
       p = Poly.Parse ("M0,0 H80 Q80,50,2 H0 Q0,0,2 Z"); // Obround 120 x 50

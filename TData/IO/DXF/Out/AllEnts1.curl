@@ -12,14 +12,15 @@
       Name:Marker1
       Base:0,0
       Ents:[
-        (E2Poly){ Layer:0 Poly:M-0,-10Q-10,0,3 }
+        (E2Poly){ Layer:0 Poly:M0,-10Q-10,0,3 }
         (E2Poly){ Layer:0 Poly:C0,0,8 }
-        (E2Poly){ Layer:0 Poly:M-0,-8V-10 }
+        (E2Poly){ Layer:0 Poly:M0,-8V-10 }
         (E2Poly){ Layer:0 Poly:M-8,0H-10 }
-        (E2Point){ Layer:0 Pt:-0,-10 }
+        (E2Point){ Layer:0 Pt:0,-10 }
       ]
     }
   ]
+  CurrentLayer:0
   Ents:[
     (E2Poly){ Layer:0 Poly:M0,0H100V40Q90,50,1H0Z }
     (E2Poly){ Layer:0 Poly:C90,40,8 }
@@ -101,6 +102,7 @@
     }
     (E2Solid){ Layer:0 Pts:[ 60,10 70,10 60,15 70,20 ] }
     (E2Bendline){
+      Layer:0
       Angle:0.7853981633974483
       KFactor:0.42
       Radius:2.5
