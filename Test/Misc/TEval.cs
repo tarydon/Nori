@@ -40,7 +40,7 @@ class EvalTest {
       e.TryEvaluate ("abs (sin -90)", out v).IsTrue (); v.Is (1);
    }
 
-   [Test (115, "Exceptions during expression evaluation")]
+   [Test (129, "Exceptions during expression evaluation")]
    void Test3 () {
       Eval e = new ();
       e.TryEvaluate ("1 + 2 +", out double v).IsFalse ();

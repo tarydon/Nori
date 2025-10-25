@@ -169,7 +169,10 @@ public class DXFWriter {
    Layer2? mMBend, mBend;
 
    // This is a placeholder, we don't write dimensions out yet
-   int OutDimension (E2Dimension ed) => 0;
+   int OutDimension (E2Dimension ed) {
+      if (ed.Ents.Any ()) OutEntities (ed.Ents);
+      return 0;
+   }
 
    // Writes out the E2Insert entities
    int OutInsert (E2Insert e) {
