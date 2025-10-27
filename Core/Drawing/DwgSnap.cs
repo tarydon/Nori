@@ -197,6 +197,11 @@ public class DwgSnap {
    // - mCons is updated with one or more additional construction lines (if we found a snap, that
    //   snap point is used as an anchor for additional construction lines)
    bool HardSnaps () {
+      // Firstly, consider the last clicked point as a hard snap. So that, when the mouse position
+      // aligns horizontally or vertically w.r.t to this point, construction line will be formed
+      // even when the entity is under creation.
+      if (!LastClickedPt.EQ (mptRaw, Lib.Epsilon)) Check (LastClickedPt, ESnap.On);
+
       mSegs.Clear ();
       var (ptRaw, aperture) = (mptRaw, mAperture);
       foreach (var ent in mDwg.Ents) {
@@ -252,11 +257,6 @@ public class DwgSnap {
                Check (pts[k], ESnap.Intersection, 0);
          }
       }
-
-      // While the entity creation is in progress, if the mouse position aligns with horizontal
-      // or vertical direction w.r.t last clicked point, then draw a construction line.
-      if (!LastClickedPt.IsNil && !LastClickedPt.EQ (mptRaw, Lib.Epsilon))
-         AddConsLine (LastClickedPt, [0, Lib.HalfPI]);
 
       // If we found a snap point, add construction lines using this point a the anchor
       if (mSnap != ESnap.None) {
