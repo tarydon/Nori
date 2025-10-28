@@ -200,7 +200,7 @@ public class DwgSnap {
       // Firstly, consider the last clicked point as a hard snap. So that, when the mouse position
       // aligns horizontally or vertically w.r.t to this point, construction line will be formed
       // even when the entity is under creation.
-      if (!LastClickedPt.EQ (mptRaw, Lib.Epsilon)) Check (LastClickedPt, ESnap.On);
+      Check (LastClickedPt, ESnap.On);
 
       mSegs.Clear ();
       var (ptRaw, aperture) = (mptRaw, mAperture);
