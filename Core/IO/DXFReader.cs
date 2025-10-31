@@ -49,6 +49,7 @@ public partial class DXFReader {
          }
       }
       mReader.Dispose ();
+      LinkDimensions ();
       ProcessBendText ();
       return mDwg;
    }
@@ -90,9 +91,38 @@ public partial class DXFReader {
       set {
          switch (mType) {
             case "ARC": Add (Poly.Arc (Center, Radius, StartAng, EndAng, true)); break;
-            case "CIRCLE": Add (Poly.Circle (Center, Radius)); break;
-            case "DIMENSION": Add (new E2Dimension (Layer, mDwg.GetBlock (Name)!.Ents)); break;
+            case "CIRCLE": Add (Poly.Circle (Center.X * ZDir, Center.Y, Radius)); break;
             case "ELLIPSE": AddEllipse (Pt0, MajorAxis, AxisRatio, TRange); break;
+            case "POINT": Add (new E2Point (Layer, Pt0) { Color = GetColor () }); break;
+            case "POLYLINE": mClosedPoly = (Flags & 1) > 0; break;
+            case "SEQEND": AddPolyline (); break;
+            case "VERTEX": mVertex.Add (new (Pt0, Flags, Bulge)); break;
+            case "BLOCK": (mBlockEnts, mBlockName, mBlockPt) = ([], Name, Pt0); break;
+            case "STYLE": mDwg.Add (new Style2 (Name, Font, Height, XScale, Angle)); break;
+            case "TRACE" or "SOLID": Add (new E2Solid (Layer, [Pt0, Pt1, Pt2, Pt3]) { Color = GetColor () }); break;
+
+            case "ATTRIB":
+               if ((Flags & 1) != 0) break;
+               goto case "TEXT";
+
+            case "DIMENSION":
+               var dim = new E2Dimension (Layer);
+               mDimBlocks.Add (dim, Name);
+               Add (dim);
+               break;
+
+            case "ENDBLK":
+               // Safe to add this to mDwg since blocks cannot contain nested blocks
+               if (!sSkipBlocks.Contains (mBlockName))
+                  mDwg.Add (new Block2 (mBlockName, mBlockPt, mBlockEnts ?? []));
+               mBlockEnts = null;
+               break;
+
+            case "INSERT":
+               if (!sSkipBlocks.Contains (Name))
+                  Add (new E2Insert (mDwg, Layer, Name, Pt0, Angle, XScale, YScale));
+               break;
+
             case "LINE":
                var line = Poly.Line (Pt0, Pt1);
                // Try to find bend info among mXData entries
@@ -106,30 +136,6 @@ public partial class DXFReader {
                   Add (new E2Bendline (mDwg, line.Pts, ba, radius, kfactor));
                   mXData.Clear ();
                } else Add (line);
-               break;
-
-            case "POINT": Add (new E2Point (Layer, Pt0) { Color = GetColor () }); break;
-            case "POLYLINE": mClosedPoly = (Flags & 1) > 0; break;
-            case "SEQEND": AddPolyline (); break;
-            case "VERTEX": mVertex.Add (new (Pt0, Flags, Bulge)); break;
-            case "BLOCK": (mBlockEnts, mBlockName, mBlockPt) = ([], Name, Pt0); break;
-            case "STYLE": mDwg.Add (new Style2 (Name, Font, Height, XScale, Angle)); break;
-            case "TRACE" or "SOLID": Add (new E2Solid (Layer, [Pt0, Pt1, Pt2, Pt3]) { Color = GetColor () }); break;
-
-            case "ATTRIB":
-               if ((Flags & 1) != 0) break;
-               goto case "TEXT";
-
-            case "ENDBLK":
-               // Safe to add this to mDwg since blocks cannot contain nested blocks
-               if (!sSkipBlocks.Contains (mBlockName))
-                  mDwg.Add (new Block2 (mBlockName, mBlockPt, mBlockEnts ?? []));
-               mBlockEnts = null;
-               break;
-
-            case "INSERT":
-               if (!sSkipBlocks.Contains (Name))
-                  Add (new E2Insert (mDwg, Layer, Name, Pt0, Angle, XScale, YScale));
                break;
 
             case "LWPOLYLINE":
@@ -202,8 +208,17 @@ public partial class DXFReader {
          D0Set.Clear (); D1Set.Clear (); D2Set.Clear ();
       }
    }
+   Dictionary<E2Dimension, string> mDimBlocks = [];
    static HashSet<string> mUnsupported = [];
    bool miMultiVertex;
+
+   // Load the dimensions
+   void LinkDimensions () {
+      List<Block2> blocks = [];
+      foreach (var (dim, name) in mDimBlocks)
+         if (dim.LoadEnts (mDwg, name) is { } block) blocks.Add (block);
+      mDwg.RemoveBlocks (blocks);
+   }
 
    // Convert the special text in the DXF to a bend line, unless is match with the sBend format
    void ProcessBendText () {

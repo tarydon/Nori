@@ -27,7 +27,7 @@ public abstract partial class Ent2 {
    public E2Flags Flags => mFlags;
 
    /// <summary>The layer on which this Ent2 exists</summary>
-   public Layer2 Layer => mLayer;
+   public Layer2 Layer { get => mLayer; set => mLayer = value; }
    Layer2 mLayer;
 
    /// <summary>Is this entity selected?</summary>
@@ -77,8 +77,15 @@ public abstract partial class Ent2 {
 #region class E2Dimension --------------------------------------------------------------------------
 /// <summary>Represents a dimension entity</summary>
 public class E2Dimension : Ent2 {
-   E2Dimension () => mEnts = [];
-   public E2Dimension (Layer2 layer, IEnumerable<Ent2> ents) : base (layer) => mEnts = [.. ents];
+   E2Dimension () { }
+   public E2Dimension (Layer2 layer) : base (layer) { }
+
+   // Properties ---------------------------------------------------------------
+   // The entities making up the dimension (in DXF, this is stored in a block, but since that
+   // block is used exactly once, it makes more sense to just store the entities here and create
+   // the block on the fly when the dimension is saved)
+   public IReadOnlyList<Ent2> Ents => mEnts;
+   Ent2[] mEnts = [];
 
    // Overrides ----------------------------------------------------------------
    public override Bound2 Bound
@@ -89,13 +96,16 @@ public class E2Dimension : Ent2 {
       => new (mEnts.Select (a => a.GetBound (xfm)));
 
    public override E2Dimension XFormed (Matrix2 m)
-      => new (Layer, mEnts.Select (a => a.XFormed (m))) { Color = Color };
+      => new (Layer) { mEnts = [.. mEnts.Select (a => a.XFormed (m))], Color = Color };
 
-   // The entities making up the dimension (in DXF, this is stored in a block, but since that
-   // block is used exactly once, it makes more sense to just store the entities here and create
-   // the block on the fly when the dimension is saved)
-   public IReadOnlyList<Ent2> Ents => mEnts;
-   Ent2[] mEnts;
+   // Methods ------------------------------------------------------------------
+   public Block2? LoadEnts (Dwg2 dwg, string blockName) {
+      if (dwg.Blocks.FirstOrDefault (a => a.Name == blockName) is { } block) {
+         mEnts = [.. block.Ents];
+         return block;
+      }
+      return null;
+   }
 }
 #endregion
 
@@ -146,7 +156,7 @@ public class E2Bendline : Ent2 {
    public override Bound2 Bound => new (Pts);
    public override Bound2 GetBound (Matrix2 xfm) => new (Pts.Select (a => a * xfm));
 
-   public override E2Bendline XFormed (Matrix2 m) 
+   public override E2Bendline XFormed (Matrix2 m)
       => new (mDwg, Pts.Select (a => a * m), Angle, Radius, KFactor, Thickness);
 
    // Private data -------------------------------------------------------------
