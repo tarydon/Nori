@@ -409,7 +409,7 @@ class TMisc {
       il[2] = 20; int n = (int)il[2]!; n.Is (20);
    }
 
-   [Test (121, "Test to handle duplicate layers")]
+   [Test (131, "Test to handle duplicate layers")]
    void Test14 () {
       var dwg = new Dwg2 ();
       // Add poly entities in different layers.

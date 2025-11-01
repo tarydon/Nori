@@ -292,14 +292,14 @@ class DXFTests2 {
       Assert.TextFilesEqual ("IO/DXF/Out/AllEnts2.curl", NT.TmpCurl);
    }
 
-   [Test (119, "Test for DXF import of CCW and CW circles (group code 230)")]
+   [Test (132, "Test for DXF import of CCW and CW circles (group code 230)")]
    void Test12 () {
       var dwg = DXFReader.Load (NT.File ("IO/DXF/Circle.dxf"));
       DXFWriter.Save (dwg, NT.TmpDXF);
       Assert.TextFilesEqual ("IO/DXF/Out/Circle.dxf", NT.TmpDXF);
    }
 
-   [Test (122, "Dimension loaded before corresponding Block")]
+   [Test (133, "Dimension loaded before corresponding Block")]
    void Test13 () {
       var dwg = DXFReader.Load (NT.File ("IO/DXF/WC-RL2B-2502.dxf"));
       CurlWriter.Save (dwg, NT.TmpCurl);
