@@ -196,14 +196,21 @@ public partial class Poly {
    /// If the start and end points are touching (within 1e-6), the end point is 'merged' with
    /// the start point. Otherwise, a line segment is drawn from the end point to the start point
    /// closing the Poly (regardless of their gap)
-   public Poly Close () {
+   public Poly Close (double threshold) {
       if (IsClosed || mPts.Length < 2) return this;
       var flags = mFlags | EFlags.Closed;
-      if (mPts[0].EQ (mPts[^1])) {
-         ImmutableArray<Point2> pts = [.. mPts.Take (mPts.Length - 1)];
-         if (!HasArcs) return new (pts, [], flags);
-         ImmutableArray<ArcInfo> extra = [.. Extra.Take (pts.Length)];
-         return new (pts, extra, flags);
+      if (mPts[0].EQ (mPts[^1], threshold)) {
+         if (mPts.Length == 2 && HasArcs) {
+            var seg = this[0];
+            return Circle (seg.Center, seg.Radius);
+         }
+         Point2 pt = GetTipIntersection (this, this, threshold);
+         if (!pt.IsNil) {
+            ImmutableArray<Point2> pts = [.. mPts.Skip (1).Take (mPts.Length - 2), pt];
+            if (!HasArcs) return new (pts, [], flags);
+            ImmutableArray<ArcInfo> extra = [.. Extra.Skip (1).Take (pts.Length)];
+            return new (pts, extra, flags);
+         }
       }
       return new (mPts, Extra, flags);
    }
@@ -398,11 +405,14 @@ public partial class Poly {
                pts.Add (curr.B);
             break;
          }
-         
+
          (prev, baseSegIdx) = (curr, i);
       }
 
-      result = mergedSegs ? new Poly ([.. pts], [.. extras], mFlags) : null;
+      if (IsClosed && pts.Count == 1)
+         result = Circle (extras[0].Center, extras[0].Center.DistTo (pts[0]));
+      else
+         result = mergedSegs ? new Poly ([.. pts], [.. extras], mFlags) : null;
       // Consider merging last and first segs
       var poly = result ?? this;
       if (poly.IsClosed && poly.Count > 1) {

@@ -126,6 +126,12 @@ public static class Extensions {
    /// <summary>Returns a random bool</summary>
    public static bool NextBool (this Random r) => r.Next (10000) < 5000;
 
+   /// <summary>Returns the non-null elements from a sequence</summary>
+   public static IEnumerable<T> NonNull<T> (this IEnumerable<T?> seq) where T: class {
+      foreach (var elem in seq)
+         if (elem != null) yield return elem;
+   }
+
    /// <summary>Given a sequence, returns a 'numbered' version where each item is tagged with an ordinal (starting from 0)</summary>
    public static IEnumerable<(int No, T Data)> Numbered<T> (this IEnumerable<T> seq) {
       int c = 0;

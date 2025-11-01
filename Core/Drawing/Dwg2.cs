@@ -62,9 +62,7 @@ public partial class Dwg2 {
    public IReadOnlyList<Block2> Blocks => mBlocks ?? [];
    List<Block2>? mBlocks;
 
-   /// <summary>
-   /// The list of dimensions in this drawing
-   /// </summary>
+   /// <summary>The list of dimensions in this drawing</summary>
    public IEnumerable<E2Dimension> Dimensions => mEnts.OfType<E2Dimension> ();
 
    /// <summary>List of styles in the drawing</summary>

@@ -8,9 +8,7 @@ class DwgStitcher {
    public DwgStitcher (Dwg2 dwg, double threshold = 1e-3) {
       mDwg = dwg;
       mComp1 = new (mThreshold = threshold, 0);
-      mComp2 = new (threshold, threshold / 3);
-      mComp3 = new (threshold, threshold * 2 / 3);
-      mEnds1 = new (mComp1); mEnds2 = new (mComp2); mEnds3 = new (mComp3);
+      mEnds1 = new (mComp1);
    }
 
    public void Process () {
@@ -43,7 +41,7 @@ class DwgStitcher {
             // Pick each endpoint of 'final' and see if there is an (already seen) fragment
             // that can attach to it
             var pt = end == 0 ? poly.A : poly.B;
-            if (mEnds1.TryGetValue (pt, out E2Poly? other) || mEnds2.TryGetValue (pt, out other) || mEnds3.TryGetValue (pt, out other)) {
+            if (mEnds1.TryGetValue (pt, out E2Poly? other)) {
                if (final.TryAppend (other.Poly, out var tmp, mThreshold)) {
                   // If so, remove this endpoint from the list of free-floating ends, and
                   // if the newly joined result is now self-closing, we are done.
@@ -68,24 +66,35 @@ class DwgStitcher {
    // Implementation -----------------------------------------------------------
    void AddEnds (E2Poly ent) {
       mEnds1[ent.Poly.A] = ent; mEnds1[ent.Poly.B] = ent;
-      mEnds2[ent.Poly.A] = ent; mEnds2[ent.Poly.B] = ent;
-      mEnds3[ent.Poly.A] = ent; mEnds3[ent.Poly.B] = ent;
    }
 
    void AddRemaining () {
-      mDone.AddRange (mEnds1.Values.Distinct ());
-      mEnds1.Clear (); mEnds2.Clear (); mEnds3.Clear ();
+      List<E2Poly?> set = [.. mEnds1.Values.Distinct ()];
+      for (int i = 1; i < set.Count; i++) {
+         var pi = set[i]; if (pi == null) continue;
+         for (int j = 0; j < i; j++) {
+            var pj = set[j]; if (pj == null) continue;
+            if (pi.Poly.TryAppend (pj.Poly, out var pres, mThreshold)) {
+               set[i] = set[j] = null;
+               if (pres.A.EQ (pres.B, mThreshold))
+                  mDone.Add (pi.With (pres.Close (mThreshold).Clean ()));
+               else
+                  set.Add (pi.With (pres));
+               break;
+            }
+         }
+      }
+      mDone.AddRange (set.NonNull ());
+      mEnds1.Clear ();
    }
 
    void RemoveEnds (E2Poly ent) {
       mEnds1.Remove (ent.Poly.A); mEnds1.Remove (ent.Poly.B);
-      mEnds2.Remove (ent.Poly.A); mEnds2.Remove (ent.Poly.B);
-      mEnds3.Remove (ent.Poly.A); mEnds3.Remove (ent.Poly.B);
    }
 
    bool TryClose (E2Poly template , Poly poly) {
-      if (mComp1.Equals (poly.A, poly.B) || mComp2.Equals (poly.A, poly.B) || mComp3.Equals (poly.A, poly.B)) {
-         mDone.Add (template.With (poly.Close ().Clean ()));
+      if (poly.A.EQ (poly.B, mThreshold)) {
+         mDone.Add (template.With (poly.Close (mThreshold).Clean ()));
          return true;
       }
       return false;
@@ -94,8 +103,8 @@ class DwgStitcher {
    // Private data -------------------------------------------------------------
    readonly Dwg2 mDwg;
    readonly double mThreshold;
-   readonly Dictionary<Point2, E2Poly> mEnds1, mEnds2, mEnds3;
-   readonly PointComparer mComp1, mComp2, mComp3;
+   readonly Dictionary<Point2, E2Poly> mEnds1;
+   readonly PointComparer mComp1;
    readonly List<Ent2> mDone = [];
 }
 

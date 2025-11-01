@@ -654,7 +654,8 @@ public partial class Poly {
       else return false;
 
       List<Point2> pts = [.. a.mPts]; pts.RemoveLast ();
-      Point2 ptInter = GetIntersection (a, b);
+      Point2 ptInter = GetTipIntersection (a, b, threshold);
+      if (ptInter.IsNil) ptInter = b.A;
       pts.Add (ptInter);
       pts.AddRange (b.mPts.Skip (1));
 
@@ -671,18 +672,23 @@ public partial class Poly {
          result = new Poly ([.. pts], [.. extra], flags | EFlags.HasArcs);
       }
       return true;
+   }
 
-      // Returns the intersection between the last segment of Poly a and the
-      // first segment of Poly b
-      Point2 GetIntersection (Poly a, Poly b) {
-         Span<Point2> buffer = stackalloc Point2[2];
-         Seg sa = a[^1], sb = b[0];
-         var pts = sa.Intersect (sb, buffer, false);
-         foreach (var pt in pts) 
-            if (sa.B.DistTo (pt) < threshold && sb.A.DistTo (pt) < threshold)
-               return pt;
-         return sb.A;
-      }
+   // Returns the intersection between the last segment of Poly a and the
+   // first segment of Poly b, if this intersection lies within the given threshold
+   // to both the end of a and the start of b. If the intersection does not exist, or
+   // is more than the given threshold to the closest ends, this returns Point2.Nil
+   Point2 GetTipIntersection (Poly a, Poly b, double threshold) {
+      Span<Point2> buffer = stackalloc Point2[2];
+      Seg sa = a[^1], sb = b[0];
+      var pts = sa.Intersect (sb, buffer, false);
+      foreach (var pt in pts)
+         if (sa.B.DistTo (pt) < threshold && sb.A.DistTo (pt) < threshold)
+            return pt;
+      // Special case: if both are collinear circles, return one of the points
+      if (sa.IsArc && sb.IsArc && sa.Center.EQ (sb.Center) && sa.Radius.EQ (sb.Radius))
+         return sa.B;
+      return Point2.Nil;
    }
 
    /// <summary>Flags to perform some corner operations like fillet, corner-step etc</summary>
