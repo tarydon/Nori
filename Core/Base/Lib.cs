@@ -103,7 +103,8 @@ public static class Lib {
    public static void Init () {
       if (!sInited) {
          sInited = true;
-         Register (new FileStmLocator ("nori:", $"{DevRoot}/Wad/"));
+         var file = GetLocalFile ("Nori.wad");
+         Register (File.Exists (file) ? new ZipStmLocator ("nori:", file) : new FileStmLocator ("nori:", $"{DevRoot}/Wad/"));
          AddAssembly (Assembly.GetExecutingAssembly ());
          AddNamespace ("Nori"); AddNamespace ("System"); AddNamespace ("System.Collections.Generic");
       }
