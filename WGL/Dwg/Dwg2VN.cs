@@ -92,5 +92,11 @@ class Block2VN (Block2 block) : VNode (block) {
       var ent = block.Ents.SafeGet (n);
       return ent == null ? null : MakeFor (ent);
    }
+
+   // Overrides  --------------------------------------------------------------
+   public override void OnDetach () {
+      base.OnDetach ();
+      block.VNode = null; // reset the cached visual node
+   }
 }
 #endregion
