@@ -18,6 +18,13 @@ class PolyJoinTests {
    [Test (130, "Stitch JOIN4 (Gaps, Overlaps of 0.1) with 0.21")]
    void Test4 () => Test ("Join4", 0.21, 5);
 
+   [Test (131, "Stitch JOIN5 (Huge drawing) with 0.0001")]
+   void Test5 () {
+      var dr = new DXFReader (NT.File ("Poly/Join/JOIN5.dxf")) { StitchThreshold = 0.0001 };
+      var dwg = dr.Load ();
+      dwg.Ents.Count.Is (15001);
+   }
+
    void Test (string file, double threshold, double grid = 0) {
       var dr = new DXFReader (NT.File ($"Poly/Join/{file}.dxf")) { StitchThreshold = threshold };
       var dwg = dr.Load ();

@@ -7,8 +7,8 @@ namespace Nori;
 class DwgStitcher {
    public DwgStitcher (Dwg2 dwg, double threshold = 1e-3) {
       mDwg = dwg;
-      mComp1 = new (mThreshold = threshold, 0);
-      mEnds1 = new (mComp1);
+      mComp = new (mThreshold = threshold, 0);
+      mEnds = new (mComp);
    }
 
    public void Process () {
@@ -41,7 +41,7 @@ class DwgStitcher {
             // Pick each endpoint of 'final' and see if there is an (already seen) fragment
             // that can attach to it
             var pt = end == 0 ? poly.A : poly.B;
-            if (mEnds1.TryGetValue (pt, out E2Poly? other)) {
+            if (mEnds.TryGetValue (pt, out E2Poly? other)) {
                if (final.TryAppend (other.Poly, out var tmp, mThreshold)) {
                   // If so, remove this endpoint from the list of free-floating ends, and
                   // if the newly joined result is now self-closing, we are done.
@@ -65,11 +65,11 @@ class DwgStitcher {
 
    // Implementation -----------------------------------------------------------
    void AddEnds (E2Poly ent) {
-      mEnds1[ent.Poly.A] = ent; mEnds1[ent.Poly.B] = ent;
+      mEnds[ent.Poly.A] = ent; mEnds[ent.Poly.B] = ent;
    }
 
    void AddRemaining () {
-      List<E2Poly?> set = [.. mEnds1.Values.Distinct ()];
+      List<E2Poly?> set = [.. mEnds.Values.Distinct ()];
       for (int i = 1; i < set.Count; i++) {
          var pi = set[i]; if (pi == null) continue;
          for (int j = 0; j < i; j++) {
@@ -85,11 +85,11 @@ class DwgStitcher {
          }
       }
       mDone.AddRange (set.NonNull ());
-      mEnds1.Clear ();
+      mEnds.Clear ();
    }
 
    void RemoveEnds (E2Poly ent) {
-      mEnds1.Remove (ent.Poly.A); mEnds1.Remove (ent.Poly.B);
+      mEnds.Remove (ent.Poly.A); mEnds.Remove (ent.Poly.B);
    }
 
    bool TryClose (E2Poly template , Poly poly) {
@@ -103,8 +103,8 @@ class DwgStitcher {
    // Private data -------------------------------------------------------------
    readonly Dwg2 mDwg;
    readonly double mThreshold;
-   readonly Dictionary<Point2, E2Poly> mEnds1;
-   readonly PointComparer mComp1;
+   readonly Dictionary<Point2, E2Poly> mEnds;
+   readonly PointComparer mComp;
    readonly List<Ent2> mDone = [];
 }
 

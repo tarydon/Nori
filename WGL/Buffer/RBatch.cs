@@ -18,7 +18,7 @@ namespace Nori;
 struct RBatch : IIndexed {
    // Properties ---------------------------------------------------------------
    /// <summary>Implement IIndexed</summary>
-   public ushort Idx { get; set; }
+   public int Idx1 { get; set; }
 
    /// <summary>The VNode to which this batch belongs</summary>
    /// We need this to avoid merging batches belonging to different VNodes
@@ -30,16 +30,16 @@ struct RBatch : IIndexed {
    /// <summary>Index of the RBuffer this points to</summary>
    /// Initially, the data pointed to by this RBatch is stored in the private
    /// mData area of the Shader, and at that time, the NBuffer is set to 0.
-   /// Later, during the RBatch.Sort phase, the vertex data is moved 
+   /// Later, during the RBatch.Sort phase, the vertex data is moved
    /// from the local storage in the Shader into RBuffer that we allocate at that
-   /// point, and this then is the index of that RBuffer 
-   public ushort NBuffer;
+   /// point, and this then is the index of that RBuffer
+   public int NBuffer;
    /// <summary>Index of the uniform block (within that Shader)</summary>
    /// This is transient storage, used only until this batch is stored in the Batches
    /// list of a VNode. That's because the same RBatch might be used multiple times
    /// in a SceneGraph (instancing of the same VNode multiple times in the graph),
    /// each time with typically different transforms (and thus a different set of
-   /// uniforms). 
+   /// uniforms).
    public ushort NUniform;
 
    /// <summary>'ZLevel' is like a sort order for RBatch (they are drawn from min..max order)</summary>
@@ -48,7 +48,7 @@ struct RBatch : IIndexed {
    /// <summary>Start position, in bytes, of this RBatch within the RBuffer</summary>
    /// In the initial phase (when we have not yet shifted the data into a RBuffer),
    /// this offset points into the mData maintained by that shader, and at that point,
-   /// it is an INDEX. After the data has moved into a RBuffer, the Offset points 
+   /// it is an INDEX. After the data has moved into a RBuffer, the Offset points
    /// into that RBuffer, and at that point it is a BYTE-OFFSET
    public int Offset;
    /// <summary>Count of _vertices_ used by this batch</summary>
@@ -63,10 +63,10 @@ struct RBatch : IIndexed {
    /// <summary>Staging area to collect all the batches from all the VNodes (during each frame)</summary>
    /// See VNode.Render() for a full explanation. In short, during EACH FRAME, we flush this
    /// list, and ask all visible vnodes to add their draw batches into this. Then this list
-   /// is sorted (to minimize state changes) and drawn (see RBatch.IssueAll for that). 
+   /// is sorted (to minimize state changes) and drawn (see RBatch.IssueAll for that).
    /// NOTE: This list contains a list of batches, each associated with a set of attributes
    /// (as stored in the Uniform value). This uniform is the index of a Uniforms struct peculiar
-   /// to that shader, and stored in that Shader's Uniforms[] list. 
+   /// to that shader, and stored in that Shader's Uniforms[] list.
    public static List<(int Batch, ushort Uniform)> Staging = [];
 
    // Methods ------------------------------------------------------------------
@@ -105,12 +105,12 @@ struct RBatch : IIndexed {
    public static ref RBatch Recent () => ref mAll.Recent;
 
    /// <summary>Called when this RBatch is no longer in use, reduces our ref-count on the RBuffer</summary>
-   /// Each RBuffer has a number of RBatch objects referring to it. As these RBatch objects go out 
+   /// Each RBuffer has a number of RBatch objects referring to it. As these RBatch objects go out
    /// of use, they decrement the reference count on the RBuffer, and it eventually gets deleted
    public readonly void Release () {
       if (NBuffer != 0)
          RBuffer.All[NBuffer].References--;
-      mAll.Release (Idx);
+      mAll.Release (Idx1);
    }
 
    /// <summary>This is called when we are starting a new frame</summary>
@@ -123,21 +123,21 @@ struct RBatch : IIndexed {
    }
 
    // Implementation -----------------------------------------------------------
-   // This checks if this batch can be merged with another RBatch rb1. 
+   // This checks if this batch can be merged with another RBatch rb1.
    // We are going to draw this batch with Uniforms[uni0], and the batch rb1
-   // with Uniforms[un1]. Note that since this is done during the IssueAll phase, and 
+   // with Uniforms[un1]. Note that since this is done during the IssueAll phase, and
    // not when gathering the batches for storage within the VNode, we don't care if these
-   // two RBatch belong to different VNodes. 
+   // two RBatch belong to different VNodes.
    readonly bool CanMerge (ref RBatch rb1, int count, ushort uni0, ushort uni1) {
       if (NShader != rb1.NShader || NBuffer != rb1.NBuffer || ZLevel != rb1.ZLevel) return false;
       // Don't merge two RBatch that use indexed drawing
       if (ICount > 0 || rb1.ICount > 0) return false;
-      // If both are not using the same uniforms, we can't merge. We can't 
+      // If both are not using the same uniforms, we can't merge. We can't
       // just compare the uniform indices here, we have to ask the shader to compare
       // if these two sets of uniforms are actually identical
       var shader = Shader.Get (NShader);
       int n = shader.OrderUniforms (uni0, uni1); if (n != 0) return false;
-      // Finally, the two batches storage should be back to back so that 
+      // Finally, the two batches storage should be back to back so that
       // rb1's storage followed immediately after this one
       if (NBuffer == 0) return Offset + count == rb1.Offset;
       else return Offset + count * shader.CBVertex == rb1.Offset;
@@ -165,13 +165,13 @@ struct RBatch : IIndexed {
          // in, and use this.ICount as the number of elements to draw
          buffer.Draw (shader.Pgm.Mode, Offset, IOffset, ICount);
       } else {
-         // If ICount = 0: we are using simple DrawArrays. 
+         // If ICount = 0: we are using simple DrawArrays.
          // We have to draw 'count' vertices starting at this batch's vertex
          // offset (byte offset within that buffer). Note that we are not using
          // this RBatch's count, but the count is passed in from outside. This
          // is because IssueAll() sees if this batch and the subsequent one(s)
          // all use the same shader, VAO and uniforms and thus can be merged into
-         // a larger single draw. 
+         // a larger single draw.
          buffer.Draw (shader.Pgm.Mode, Offset, count);
          mVertsDrawn += count;
       }
@@ -191,14 +191,14 @@ struct RBatch : IIndexed {
    // for example.
    static void Sort () {
       // Sort the Staging array - since the sorting is just an optimization to minimize
-      // state changes, we don't want to spend too much time sorting. If the number of 
+      // state changes, we don't want to spend too much time sorting. If the number of
       // batches in the Staging array is very large (tens of thousands), then the Sort
       // itself will take too much time (since it is O(n log n)). To avoid this, we don't
       // sort the entire array, but sort only 'batch-sized' sections of it.
       // Some experimentation shows that a batch size of between 200 to 600 seems to work
       // the best. For now, this is 256. As the batch size increases, sort time will increase.
       // As the batch size decreases, OpenGL state-transition time will increase (we'll spend
-      // more time swapping between shaders, uniforms etc). 
+      // more time swapping between shaders, uniforms etc).
       int batch = 256;
       int n = (Staging.Count + batch - 1) / batch;
       for (int i = 0; i < n; i++) {
@@ -206,8 +206,8 @@ struct RBatch : IIndexed {
          Staging.Sort (a, b, RBatchCompare.It);
       }
 
-      // If any of these batches point to data that has not yet been loaded into an 
-      // RBuffer, we will do that here. 
+      // If any of these batches point to data that has not yet been loaded into an
+      // RBuffer, we will do that here.
       foreach (var (b, _) in Staging) {
          ref RBatch rb = ref mAll[b];
          if (rb.NBuffer == 0) {
@@ -215,7 +215,7 @@ struct RBatch : IIndexed {
             // allocate a RB,,uffer and copy the data there
             var shader = Shader.Get (rb.NShader);
             var buf = RBuffer.Get (shader.Pgm.VSpec);
-            rb.NBuffer = buf.Idx;
+            rb.NBuffer = buf.Idx1;
             if (rb.ICount > 0)
                (rb.Offset, rb.IOffset) = shader.CopyVertices (buf, rb.Offset, rb.Count, rb.IOffset, rb.ICount);
             else

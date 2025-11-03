@@ -231,7 +231,7 @@ class TMisc {
       T1Type a = list.Alloc (), b = list.Alloc (); a.Is ("T1"); b.Is ("T2");
       list.Count.Is (2);
       list.Alloc ().Is ("T3");
-      list.Release (b.Idx);
+      list.Release (b.Idx1);
       list.Count.Is (2);
       T1Type c = list.Alloc (); c.Is ("T2");
 
@@ -432,8 +432,8 @@ class TMisc {
    }
 
    class T1Type : IIndexed {
-      public override string ToString () => $"T{Idx}";
-      public ushort Idx { get; set; }
+      public override string ToString () => $"T{Idx1}";
+      public int Idx1 { get; set; }
    }
 
    class T2Disp (int[] Array, int Index, int Value) : IDisposable {

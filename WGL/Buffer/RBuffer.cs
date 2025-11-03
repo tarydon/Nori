@@ -8,7 +8,7 @@ using Ptr = nint;
 #region class RBuffer ------------------------------------------------------------------------------
 /// <summary>A wrapper around a VertexArrayObject (VAO), used for 'retained mode' drawing</summary>
 /// We can store vertex data in a RBuffer, if we intend to keep that data constant and
-/// reuse it over multiple frames. The other alternative is StreamBuffer, that is used to 
+/// reuse it over multiple frames. The other alternative is StreamBuffer, that is used to
 /// send data to the GPU that is only going to be used for drawing once. Both have broadly
 /// equivalent functionality, and it is more an optimization issue of which one you use over
 /// the other
@@ -18,7 +18,7 @@ class RBuffer : IIndexed {
    public static IdxHeap<RBuffer> All = new ();
 
    /// <summary>IIndexed implementation of Idx</summary>
-   public ushort Idx { get; set; }
+   public int Idx1 { get; set; }
 
    /// <summary>The reference count for this RBuffer (how many RBatch objects are pointing to it)</summary>
    public int References {
@@ -36,9 +36,9 @@ class RBuffer : IIndexed {
    HVertexArray mHVAO;
 
    /// <summary>The vertex specification for this RBuffer (layout of each vertex in it)</summary>
-   public EVertexSpec VSpec { 
+   public EVertexSpec VSpec {
       get => mSpec;
-      set => mcbVertex = Attrib.GetSize (mSpec = value); 
+      set => mcbVertex = Attrib.GetSize (mSpec = value);
    }
    int mcbVertex;
    EVertexSpec mSpec;
@@ -98,13 +98,13 @@ class RBuffer : IIndexed {
       if (GLState.VAO == mHVAO) GLState.VAO = 0;
       GL.DeleteBuffer (mHVertex); GL.DeleteBuffer (mHIndex); GL.DeleteVertexArray (mHVAO);
       mHVertex = mHIndex = HBuffer.Zero; mHVAO = HVertexArray.Zero;
-      All.Release (Idx);
+      All.Release (Idx1);
    }
 
    // Called to transmit the data to the GPU.
    // The first time this is called, it allocates a VAO (vertex-array-object), copies
    // the data into that and transmits it to the GPU. Subsequent calls simply bind the
-   // VAO object as the current one to use 
+   // VAO object as the current one to use
    unsafe void PushToGPU () {
       if (mHVAO != 0) { GLState.VAO = mHVAO; return; }
       GLState.VAO = mHVAO = GL.GenVertexArray ();
