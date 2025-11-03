@@ -1,0 +1,7 @@
+(Dwg2){
+  Layers:[ { Name:0 Color:#FF333333 Linetype:Continuous Visible:True } ]
+  Ents:[
+    (E2Poly){ Layer:0 Poly:M10,0H0V10 }
+    (E2Poly){ Layer:0 Poly:M8.660254,5L0,0L5,8.660254 }
+  ]
+}

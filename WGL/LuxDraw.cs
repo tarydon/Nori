@@ -261,7 +261,14 @@ public static partial class Lux {
       }
       Lines (mLines.AsSpan ());
       Beziers (mBeziers.AsSpan ());
+
+      /*
+      mPoints.Clear ();
+      foreach (var p in polys)
+         mPoints.AddRange (p.Pts.Select (a => (Vec2F)a));
+      Points (mPoints.AsSpan ()); */
    }
+   static List<Vec2F> mPoints = [];
 
    /// <summary>Draws 2D quads in world coordinates, with Z = 0</summary>
    /// The quads are drawn with smoothed (anti-aliased) edges.

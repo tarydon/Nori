@@ -19,7 +19,7 @@ class MeshScene : Scene3 {
       // Tessellation demo makes a 'thick plane' from a Poly with holes.
       const double thk = 10;     // Plane thickness
       // 1. Create a flat with an outer contour and inner holes.
-      List<Poly> polys = [ 
+      List<Poly> polys = [
          // 1.a. Make outer contour
          Poly.Parse ("M0,0H500V200Q400,300,-1H100Q0,200,1Z"),
          // 1.b. Add inner contours
@@ -37,7 +37,7 @@ class MeshScene : Scene3 {
       // 2. Make tessellation inputs
       List<Point2> pts = []; List<int> splits = [0];
       foreach (var poly in polys) {
-         poly.Discretize (pts, 0.1); 
+         poly.Discretize (pts, 0.1);
          splits.Add (pts.Count);
       }
 
@@ -67,6 +67,6 @@ class MeshScene : Scene3 {
 }
 
 class MeshVN (CMesh mesh) : VNode {
-   public override void SetAttributes () => Lux.Color = new Color4 (255, 255, 128);
+   public override void SetAttributes () { Lux.Color = new Color4 (255, 255, 128); Lux.LineWidth = 2f; }
    public override void Draw () => Lux.Mesh (mesh, EShadeMode.Phong);
 }

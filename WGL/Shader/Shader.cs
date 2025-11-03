@@ -148,7 +148,7 @@ abstract class Shader<TVertex, TUniform> : Shader, IComparer<TUniform> where TVe
          rb.ZLevel = (short)Lux.ZLevel;
          rb.NShader = Idx; rb.NUniform = nUniform; rb.NBuffer = 0;
          rb.Offset = mData.Count; rb.Count = data.Length;
-         vnode.Batches.Add ((rb.Idx, rb.NUniform));
+         vnode.Batches.Add ((rb.Idx1, rb.NUniform));
       }
       mData.AddRange (data);
 
@@ -179,7 +179,7 @@ abstract class Shader<TVertex, TUniform> : Shader, IComparer<TUniform> where TVe
       rb.NShader = Idx; rb.NUniform = SnapUniforms (); rb.NBuffer = 0;
       rb.Offset = mData.Count; rb.Count = data.Length;
       rb.IOffset = mIndex.Count; rb.ICount = indices.Length;
-      Lux.VNode!.Batches.Add ((rb.Idx, rb.NUniform));
+      Lux.VNode!.Batches.Add ((rb.Idx1, rb.NUniform));
 
       mData.AddRange (data);
       // Note that these indices are all zero-relative (as in the original mesh data). Later, when

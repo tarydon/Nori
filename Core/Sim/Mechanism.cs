@@ -12,7 +12,7 @@ public partial class Mechanism {
    // Constructors -------------------------------------------------------------
    /// <summary>Loads a Mechanism from a curl file</summary>
    public static Mechanism Load (string curlFile) {
-      var mech = (Mechanism)CurlReader.FromFile (curlFile);
+      var mech = (Mechanism)CurlReader.Load (curlFile);
       mech._rootDir = Path.GetDirectoryName (curlFile)!;
       return mech;
    }

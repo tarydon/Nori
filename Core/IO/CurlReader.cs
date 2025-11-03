@@ -11,14 +11,14 @@ namespace Nori;
 public class CurlReader {
    // Methods ------------------------------------------------------------------
    /// <summary>Load an object from an array of bytes</summary>
-   public static object FromByteArray (byte[] bytes) {
+   public static object Load (byte[] bytes) {
       CurlReader r = new (new (bytes));
       return r.ReadClass (AuType.Get (typeof (object)));
    }
 
    /// <summary>Load an object from a file</summary>
-   public static object FromFile (string file)
-      => FromByteArray (File.ReadAllBytes (file));
+   public static object Load (string file)
+      => Load (File.ReadAllBytes (file));
 
    // Properties ---------------------------------------------------------------
    /// <summary>These are the characters that stop parsing an identifier</summary>
