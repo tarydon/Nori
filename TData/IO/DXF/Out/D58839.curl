@@ -364,7 +364,7 @@
         }
         (E2Poly){ Layer:0 Poly:M0,20H-165 }
         (E2Poly){ Layer:AM_BOR Color:#FFFF0000 Poly:M0,12H-62 }
-        (E2Poly){ Layer:0 Poly:M0,-0H-165 }
+        (E2Poly){ Layer:0 Poly:M0,0H-165 }
         (E2Poly){ Layer:AM_BOR Color:#FFFF0000 Poly:M-62,12H-165 }
         (E2Poly){ Layer:AM_BOR Color:#FFFF0000 Poly:M-116.857694,20V12 }
         (E2Text){
@@ -414,7 +414,7 @@
           XScale:1
         }
         (E2Poly){ Layer:AM_BOR Color:#FFFF0000 Poly:M-31.121248,20V12 }
-        (E2Poly){ Layer:0 Poly:M0,-0V20 }
+        (E2Poly){ Layer:0 Poly:M0,0V20 }
       ]
     }
   ]

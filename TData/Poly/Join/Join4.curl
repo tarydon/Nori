@@ -1,0 +1,13 @@
+(Dwg2){
+  Layers:[ { Name:0 Color:#FF333333 Linetype:Continuous Visible:True } ]
+  Ents:[
+    (E2Poly){ Layer:0 Poly:M0,21V11H20V21Z }
+    (E2Poly){ Layer:0 Poly:C4,4,3 }
+    (E2Poly){ Layer:0 Poly:C16,4,3 }
+    (E2Poly){ Layer:0 Poly:M19,15L16,18L13,15L16,12Z }
+    (E2Poly){ Layer:0 Poly:M20,6Q16,10,-1H4Q0,6,-1V4Q4,0,1H16Q20,4,1Z }
+    (E2Poly){ Layer:0 Poly:M4,12V15H1 }
+    (E2Poly){ Layer:0 Poly:M7,15H4V18 }
+  ]
+  Grid:{ Pitch:5 Subdivs:1 Visible:True Origin:0,0 }
+}

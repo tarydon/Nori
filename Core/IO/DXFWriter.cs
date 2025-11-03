@@ -17,7 +17,7 @@ public class DXFWriter {
 
    #region Methods -------------------------------------------------------------
    /// <summary>Utility helper to save a Dwg to DXF file</summary>
-   public static void SaveFile (Dwg2 dwg, string file)
+   public static void Save (Dwg2 dwg, string file)
       => File.WriteAllText (file, new DXFWriter (dwg).Write ());
 
    /// <summary>Maps Color4 to nearest ACAD color by comparing RGB values</summary>

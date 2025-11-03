@@ -114,7 +114,7 @@ public class E2Dimension : Ent2 {
 public class E2Bendline : Ent2 {
    // Constructors -------------------------------------------------------------
    E2Bendline () => mDwg = null!;
-   public E2Bendline (Dwg2 dwg, IEnumerable<Point2> pts, double angle, double radius, double kfactor, double thickness = 1)
+   public E2Bendline (Dwg2 dwg, IEnumerable<Point2> pts, double angle, double radius, double kfactor, double thickness = 1) : base (dwg.CurrentLayer)
       => (Angle, KFactor, Pts, Radius, mDwg, Thickness) = (angle, kfactor, [.. pts], radius, dwg, thickness);
 
    // Properties ---------------------------------------------------------------

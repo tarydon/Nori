@@ -15,8 +15,8 @@ class Program {
       var lines = File.ReadAllLines ("N:/Demos/AuTest/bmlist.txt");
       using (var bt = new BlockTimer (lines.Length, "Timing")) {
          foreach (var line in lines) {
-            var obj = CurlReader.FromFile ($"X:/Data/Archive/Machines/{line}/machine.curl");
-            CurlWriter.ToFile (obj, $"c:/etc/BMDump/{line}.curl");
+            var obj = CurlReader.Load ($"X:/Data/Archive/Machines/{line}/machine.curl");
+            CurlWriter.Save (obj, $"c:/etc/BMDump/{line}.curl");
             n++;
          }
       }
