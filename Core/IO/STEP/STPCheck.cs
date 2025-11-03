@@ -1,4 +1,8 @@
-﻿using Nori.STEP;
+// ────── ╔╗
+// ╔═╦╦═╦╦╬╣ STPCheck.cs
+// ║║║║╬║╔╣║ <<TODO>>
+// ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
+using Nori.STEP;
 namespace Nori;
 
 partial class STEPReader {

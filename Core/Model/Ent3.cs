@@ -33,12 +33,41 @@ public class E3Plane : Ent3 {
    public IReadOnlyList<Poly> Trims => mTrims;
    readonly List<Poly> mTrims = [];
 
+   public Mesh3 Mesh {
+      get {
+         if (mMesh == null) {
+            List<Point2> pts = [];
+            List<int> splits = [0], wires = [];
+            foreach (var poly in mTrims) {
+               int a = pts.Count;
+               poly.Discretize (pts, Lib.Delta);
+               int b = pts.Count; splits.Add (b);
+               wires.Add (b - 1); 
+               for (int i = a; i < b; i++) { wires.Add (i); wires.Add (i); }
+               wires.RemoveLast ();
+            }
+
+            var xfm = ToXfm;
+            var normal = (Vec3H)mCS.VecZ;
+            var tries = Lib.Tessellate (pts, splits);
+            List<Mesh3.Node> nodes = [];
+            foreach (var pt in pts) {
+               Point3 pt3 = (Point3)pt * xfm;
+               nodes.Add (new Mesh3.Node (new Vec3F (pt3.X, pt3.Y, pt3.Z), normal));
+            }
+            mMesh = new ([.. nodes], [.. tries], [.. wires]);
+         }
+         return mMesh;
+      }
+   }
+   Mesh3? mMesh;
+
    // Implementation -----------------------------------------------------------
    // Helper to compute the bound of the Plane3
    Bound3 ComputeBound () {
       var xfm = ToXfm;
       List<Point2> pts = [];
-      mTrims[0].Discretize (pts, Lib.Delta);
+      mTrims[0].Discretize (pts, 0.1);
       return new (pts.Select (a => (Point3)a * xfm));
    }
 

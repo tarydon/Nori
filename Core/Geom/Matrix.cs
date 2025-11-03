@@ -200,9 +200,7 @@ public class Matrix3 {
    // Methods ------------------------------------------------------------------
    public Matrix3 ExtractRotation () => new (M11, M12, M13, M21, M22, M23, M31, M32, M33, 0, 0, 0);
 
-   /// <summary>
-   /// Composes a matrix to go FROM the given coordinate system to the World
-   /// </summary>
+   /// <summary>Composes a matrix to go FROM the given coordinate system to the World</summary>
    public static Matrix3 From (in CoordSystem cs) {
       GetRotations (cs.VecX, cs.VecY, out double xRot, out double yRot, out double zRot);
       return Translation (-(Vector3)cs.Org)

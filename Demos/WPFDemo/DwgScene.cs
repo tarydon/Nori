@@ -25,7 +25,7 @@ class DwgScene : Scene2 {
       dwg.Add (s1);
 
       dwg.Add (Poly.Parse ("M0,0 H200 V100 Q150,150,1 H0Z"));
-      dwg.Add (Poly.Circle (150, 100, 20));
+      dwg.Add (Poly.Circle (new (150, 100), 20));
       dwg.Add (new E2Insert (dwg, layer, "Cross", new Point2 (15, 15), 45.D2R (), 4, 3));
       dwg.Add (new E2Solid (layer, Point2.List (30, 30, 40, 30, 40, 35, 30, 35)));
       dwg.Add (new E2Text (layer, s1, "Hello, World!", new Point2 (50, 20), 5, 0, 0, 1, ETextAlign.BaseLeft));

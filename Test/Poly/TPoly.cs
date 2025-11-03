@@ -9,7 +9,6 @@ class PolyTests {
    [Test (24, "Basic constructors")]
    void Test1 () {
       Poly.Circle (new (10, 5), 3).Is ("C10,5,3");
-      Poly.Circle (10, 5, 3).Is ("C10,5,3");
       Poly.Rectangle (new Bound2 (1, 2, 3, 4)).Is ("M1,2H3V4H1Z");
       Poly.Rectangle (3,4,1,2).Is ("M1,2H3V4H1Z");
       var p1 = Poly.Line (new (1, 2), new (3, 4));
@@ -114,7 +113,7 @@ class PolyTests {
       p[4].GetSlopeAt (0.5).Is (-135.D2R ());
       seg.GetLie (new (4, 0)).Is (0.4);
 
-      p = Poly.Circle (0, 0, 5);
+      p = Poly.Circle (Point2.Zero, 5);
       seg = p[0]; seg.IsCircle.IsTrue ();
       seg.IsLast.IsTrue ();
       var (s, e) = seg.GetStartAndEndAngles ();

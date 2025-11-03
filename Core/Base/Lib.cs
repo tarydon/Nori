@@ -228,6 +228,9 @@ public static class Lib {
    /// <summary>Outputs a string representation of the object to our tracer</summary>
    public static void Trace (object obj) => Tracer.Invoke ($"{obj}");
 
+   /// <summary>Tessellate in 2D</summary>
+   public static Func<List<Point2>, IReadOnlyList<int>, List<int>> Tessellate = (pts, splits) => [];
+
    /// <summary>Set this to point to your own trace handler</summary>
    /// By default, this just outputs to Debug.Write, but you could set this to
    /// something like Console.Write or TraceVN.Print

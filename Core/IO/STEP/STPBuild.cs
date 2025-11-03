@@ -1,4 +1,8 @@
-﻿using System.Diagnostics;
+// ────── ╔╗
+// ╔═╦╦═╦╦╬╣ STPBuild.cs
+// ║║║║╬║╔╣║ <<TODO>>
+// ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
+using System.Diagnostics;
 using Nori.STEP;
 namespace Nori;
 
@@ -72,7 +76,7 @@ partial class STEPReader {
          };
          mEdges.Add (edge);
       }
-      for (int i = 0; i < mEdges.Count; i++) 
+      for (int i = 0; i < mEdges.Count; i++)
          Debug.Assert (mEdges[i].End.EQ (mEdges[(i + 1) % mEdges.Count].Start));
       return new Contour3 ([..mEdges]);
    }
@@ -80,14 +84,22 @@ partial class STEPReader {
 
    Ent3? MakePlane (Plane plane, List<Contour3> contours) {
       var cs = GetCoordSys (plane.CoordSys);
-      foreach (var con in contours) {
+
+      foreach (var con in contours) {  // REMOVETHIS
          foreach (var edge in con.Edges) {
             Console.WriteLine ($"{edge.GetType ().Name}  {edge.Start.R6 ()}  {edge.End.R6 ()}");
          }
          Console.WriteLine ("---");
       }
-      return null;
+      Console.WriteLine ("======");
+      var dwg = new Dwg2 ();
+      foreach (var con in contours)
+         dwg.Add (con.Flatten (cs));
+      DXFWriter.Save (dwg, $"C:/Etc/Dump/{++n}.dxf");
+
+      return new E3Plane (cs, contours.Select (a => a.Flatten (cs)));
    }
+   static int n = 0;
 
    Ent3? MakeCylinder (Cylinder cylinder, List<Contour3> contours) {
       return null;

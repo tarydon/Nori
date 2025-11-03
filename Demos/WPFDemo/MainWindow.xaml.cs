@@ -29,6 +29,7 @@ public partial class MainWindow : Window {
    void BooleanDemo (object sender, RoutedEventArgs e) => Display (new BooleanScene ());
    void DwgDemo (object sender, RoutedEventArgs e) => Display (new DwgScene ());
    void RobotDemo (object sender, RoutedEventArgs e) => Display (new RobotScene ());
+   void STPDemo (object sender, RoutedEventArgs e) => Display (new STPScene ());
 
    void Display (Scene scene) {
       mSettings.Children.Clear ();

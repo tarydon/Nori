@@ -50,9 +50,6 @@ public partial class Poly {
       Point2 a = pt + new Vector2 (radius, 0);
       return new Poly ([a], [new ArcInfo (pt, EFlags.CCW | EFlags.Circle)], EFlags.Closed | EFlags.HasArcs | EFlags.Circle);
    }
-   /// <summary>Make a full-circle Poly</summary>
-   public static Poly Circle (double x, double y, double radius)
-      => Circle (new (x, y), radius);
 
    /// <summary>Make a single-line Poly</summary>
    public static Poly Line (Point2 pt, Point2 pt2)
@@ -636,6 +633,10 @@ public class PolyBuilder {
    // Property -----------------------------------------------------------------
    /// <summary>Returns true if no Poly is built</summary>
    public bool IsNull => mPts.Count == 0;
+
+   public static PolyBuilder It => sIt ??= new ();
+   [ThreadStatic]
+   static PolyBuilder? sIt;
 
    // Private data -------------------------------------------------------------
    readonly List<Point2> mPts = [];
