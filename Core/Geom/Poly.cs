@@ -196,13 +196,28 @@ public partial class Poly {
    /// If the start and end points are touching (within 1e-6), the end point is 'merged' with
    /// the start point. Otherwise, a line segment is drawn from the end point to the start point
    /// closing the Poly (regardless of their gap)
-   public Poly Close (double threshold) {
+   public Poly Close (double threshold = 1e-6) {
       if (IsClosed || mPts.Length < 2) return this;
       var flags = mFlags | EFlags.Closed;
       if (mPts[0].EQ (mPts[^1], threshold)) {
-         if (mPts.Length == 2 && HasArcs) {
-            var seg = this[0];
-            return Circle (seg.Center, seg.Radius);
+         if (HasArcs && mPts.Length <= 3) {
+            var seg0 = this[0];
+            switch (mPts.Length) {
+               case 2:
+                  if (seg0.Length < threshold * 2) return this;
+                  return Circle (seg0.Center, seg0.Radius);
+               case 3:
+                  var seg1 = this[1];
+                  if (seg1.Center.EQ (seg0.Center) && seg1.Radius.EQ (seg0.Radius))
+                     return Circle (seg0.Center, seg0.Radius);
+                  break;
+            }
+         }
+         if (mPts[0].EQ (mPts[^1])) {
+            ImmutableArray<Point2> pts = [.. mPts.Take (mPts.Length - 1)];
+            if (!HasArcs) return new (pts, [], flags);
+            ImmutableArray<ArcInfo> extra = [.. Extra.Take (pts.Length)];
+            return new (pts, extra, flags);
          }
          Point2 pt = GetTipIntersection (this, this, threshold);
          if (!pt.IsNil) {

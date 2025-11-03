@@ -1,22 +1,13 @@
 (Dwg2){
   Layers:[ { Name:0 Color:#FF333333 Linetype:Continuous Visible:True } ]
   Ents:[
-    (E2Poly){ Layer:0 Poly:M16.1,10H4.1 }
-    (E2Poly){ Layer:0 Poly:M20.1,21L0,20.9L-0.1,11L20,10.9V21.1 }
-    (E2Poly){ Layer:0 Poly:M16.00125,10.099992Q20,6,1.015916V3.9 }
-    (E2Poly){ Layer:0 Poly:M0,4.1L-0.099992,6.00125Q3.99875,9.900008,1 }
-    (E2Poly){ Layer:0 Poly:M0.00125,3.900008Q4.099992,0.00125,1 }
-    (E2Poly){ Layer:0 Poly:M16.1,0H4 }
-    (E2Poly){ Layer:0 Poly:M16,0Q19.99875,4.099992,1.015916 }
-    (E2Poly){ Layer:0 Poly:M18.998333,4.099986Q13.001667,4.099986,1.957557 }
-    (E2Poly){ Layer:0 Poly:M13.001667,3.900014Q18.998333,3.900014,1.957557 }
-    (E2Poly){ Layer:0 Poly:M4.099986,1.001667Q3.900014,1.001667,3.957557 }
-    (E2Poly){ Layer:0 Poly:M4,12L3.9,15H1 }
-    (E2Poly){ Layer:0 Poly:M7,15H4.1 }
-    (E2Poly){ Layer:0 Poly:M4,15.1V18 }
-    (E2Poly){ Layer:0 Poly:M18.929289,15.070711L16.070711,17.929289 }
-    (E2Poly){ Layer:0 Poly:M15.929289,11.929289L19,15 }
-    (E2Poly){ Layer:0 Poly:M15.929289,17.929289L13,15L16.070711,11.929289 }
+    (E2Poly){ Layer:0 Poly:M0,21V11H20V21Z }
+    (E2Poly){ Layer:0 Poly:C4,4,3 }
+    (E2Poly){ Layer:0 Poly:C16,4,3 }
+    (E2Poly){ Layer:0 Poly:M19,15L16,18L13,15L16,12Z }
+    (E2Poly){ Layer:0 Poly:M20,6Q16,10,-1H4Q0,6,-1V4Q4,0,1H16Q20,4,1Z }
+    (E2Poly){ Layer:0 Poly:M4,12V15H1 }
+    (E2Poly){ Layer:0 Poly:M7,15H4V18 }
   ]
-  Grid:{ Pitch:1 Subdivs:1 Visible:True Origin:0,0 }
+  Grid:{ Pitch:5 Subdivs:1 Visible:True Origin:0,0 }
 }
