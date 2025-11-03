@@ -189,18 +189,43 @@ public partial class Poly {
    }
 
    // Methods ------------------------------------------------------------------
+   public Poly Clean ()
+      => TryCleanup (out var tmp) ? tmp : this;
+
    /// <summary>Returns a 'closed' version of this Poly</summary>
    /// If the start and end points are touching (within 1e-6), the end point is 'merged' with
    /// the start point. Otherwise, a line segment is drawn from the end point to the start point
    /// closing the Poly (regardless of their gap)
-   public Poly Closed () {
+   public Poly Close (double threshold = 1e-6) {
       if (IsClosed || mPts.Length < 2) return this;
       var flags = mFlags | EFlags.Closed;
-      if (mPts[0].EQ (mPts[^1])) {
-         ImmutableArray<Point2> pts = [.. mPts.Take (mPts.Length - 1)];
-         if (!HasArcs) return new (pts, [], flags);
-         ImmutableArray<ArcInfo> extra = [.. Extra.Take (pts.Length)];
-         return new (pts, extra, flags);
+      if (mPts[0].EQ (mPts[^1], threshold)) {
+         if (HasArcs && mPts.Length <= 3) {
+            var seg0 = this[0];
+            switch (mPts.Length) {
+               case 2:
+                  if (seg0.Length < threshold * 2) return this;
+                  return Circle (seg0.Center, seg0.Radius);
+               case 3:
+                  var seg1 = this[1];
+                  if (seg1.Center.EQ (seg0.Center) && seg1.Radius.EQ (seg0.Radius))
+                     return Circle (seg0.Center, seg0.Radius);
+                  break;
+            }
+         }
+         if (mPts[0].EQ (mPts[^1])) {
+            ImmutableArray<Point2> pts = [.. mPts.Take (mPts.Length - 1)];
+            if (!HasArcs) return new (pts, [], flags);
+            ImmutableArray<ArcInfo> extra = [.. Extra.Take (pts.Length)];
+            return new (pts, extra, flags);
+         }
+         Point2 pt = GetTipIntersection (this, this, threshold);
+         if (!pt.IsNil) {
+            ImmutableArray<Point2> pts = [.. mPts.Skip (1).Take (mPts.Length - 2), pt];
+            if (!HasArcs) return new (pts, [], flags);
+            ImmutableArray<ArcInfo> extra = [.. Extra.Skip (1).Take (pts.Length)];
+            return new (pts, extra, flags);
+         }
       }
       return new (mPts, Extra, flags);
    }
@@ -395,11 +420,14 @@ public partial class Poly {
                pts.Add (curr.B);
             break;
          }
-         
+
          (prev, baseSegIdx) = (curr, i);
       }
 
-      result = mergedSegs ? new Poly ([.. pts], [.. extras], mFlags) : null;
+      if (IsClosed && pts.Count == 1)
+         result = Circle (extras[0].Center, extras[0].Center.DistTo (pts[0]));
+      else
+         result = mergedSegs ? new Poly ([.. pts], [.. extras], mFlags) : null;
       // Consider merging last and first segs
       var poly = result ?? this;
       if (poly.IsClosed && poly.Count > 1) {

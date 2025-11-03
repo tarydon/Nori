@@ -62,9 +62,7 @@ public partial class Dwg2 {
    public IReadOnlyList<Block2> Blocks => mBlocks ?? [];
    List<Block2>? mBlocks;
 
-   /// <summary>
-   /// The list of dimensions in this drawing
-   /// </summary>
+   /// <summary>The list of dimensions in this drawing</summary>
    public IEnumerable<E2Dimension> Dimensions => mEnts.OfType<E2Dimension> ();
 
    /// <summary>List of styles in the drawing</summary>
@@ -109,7 +107,22 @@ public partial class Dwg2 {
    public void Remove (Ent2 ent) => Lib.Check (mEnts.Remove (ent), "Coding Error");
 
    /// <summary>Removes set of "existing" entities from the drawing</summary>
-   public void Remove (IEnumerable<Ent2> ents) => ents.ForEach (Remove);
+   /// The entities are supposed to be 'ordered' in the same ordering as in the mEnts array.
+   /// This makes it possible for the removal of all entities to happen in O(n) time, rather
+   /// than the O(n^2) that a set of repeated searches would require. If any of the entities
+   /// in the input set do not belong in the drawing, or the input set is not in the same
+   /// ordering as the mEnts array, this throws an exception in debug mode.
+   public void RemoveOrdered (IList<Ent2> set) {
+      int idx = set.Count - 1; if (idx < 0) return;
+      Ent2 next = set[idx];
+      for (int i = mEnts.Count - 1; i >= 0; i--) {
+         if (ReferenceEquals (mEnts[i], next)) {
+            mEnts.RemoveAt (i); if (--idx < 0) return;
+            next = set[idx];
+         }
+      }
+      Lib.Check (false, "Coding error");
+   }
 
    /// <summary>Gets a block given the name (could return null if the name does not exist)</summary>
    public Block2? GetBlock (string name)

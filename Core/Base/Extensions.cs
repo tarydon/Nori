@@ -126,6 +126,12 @@ public static class Extensions {
    /// <summary>Returns a random bool</summary>
    public static bool NextBool (this Random r) => r.Next (10000) < 5000;
 
+   /// <summary>Returns the non-null elements from a sequence</summary>
+   public static IEnumerable<T> NonNull<T> (this IEnumerable<T?> seq) where T: class {
+      foreach (var elem in seq)
+         if (elem != null) yield return elem;
+   }
+
    /// <summary>Given a sequence, returns a 'numbered' version where each item is tagged with an ordinal (starting from 0)</summary>
    public static IEnumerable<(int No, T Data)> Numbered<T> (this IEnumerable<T> seq) {
       int c = 0;
@@ -143,7 +149,8 @@ public static class Extensions {
    /// <summary>Returns a float rounded off to 5 decimal places</summary>
    public static float R5 (this float f) => (float)Math.Round (f, 5);
    /// <summary>Returns a double rounded off to 6 decimal places</summary>
-   public static double R6 (this double f) => Math.Round (f, 0); // REMOVETHIS
+   /// This has special handling to avoid -0 from appearing
+   public static double R6 (this double f) { f = Math.Round (f, 6); return f == -0 ? 0 : f; }
 
    /// <summary>Reads n bytes from the stream and returns a byte-array</summary>
    public static byte[] ReadBytes (this Stream stm, int n) {

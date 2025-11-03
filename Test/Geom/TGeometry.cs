@@ -319,8 +319,8 @@ class GeoTests {
          dwg.Add (Poly.Circle (s, sa));
          Assert.IsTrue (sa.EQ (sb) && sb.EQ (sc));
       }
-      DXFWriter.SaveFile (dwg, NT.TmpDXF);
-      Assert.TextFilesEqual1 ("IO/DXF/Out/Get3PCircle.dxf", NT.TmpDXF);
+      DXFWriter.Save (dwg, NT.TmpDXF);
+      Assert.TextFilesEqual ("IO/DXF/Out/Get3PCircle.dxf", NT.TmpDXF);
 
       List<(Point2 A, Point2 B, Point2 C)> collinearCases = [
          ((1, 5), (3, 1), (5, -3)),
@@ -351,8 +351,8 @@ class GeoTests {
          Assert.IsTrue (!p.IsNil && !q.IsNil);
          dwg.Add (new E2Poly (layer2, Poly.Line (p, q)));
       }
-      DXFWriter.SaveFile (dwg, NT.TmpDXF);
-      Assert.TextFilesEqual1 ("IO/DXF/Out/GetBisector.dxf", NT.TmpDXF);
+      DXFWriter.Save (dwg, NT.TmpDXF);
+      Assert.TextFilesEqual ("IO/DXF/Out/GetBisector.dxf", NT.TmpDXF);
 
       List<(Point2 A, Point2 B, Point2 C, Point2 D, Point2 Pick1, Point2 Pick2)> nonIntersectingCases = [
          ((0, 0), (1, 1), (0, 1), (1, 2), (0.5, 0.5), (0.5, 1.5)),
@@ -398,8 +398,8 @@ class GeoTests {
       dwg.Add (Poly.Line (a, b)); dwg.Add (Poly.Line (c, d)); dwg.Add (Poly.Line (e, f));
       DrawCircle ((25, -3), (25, -6), (25, -9));
 
-      DXFWriter.SaveFile (dwg, NT.TmpDXF);
-      Assert.TextFilesEqual1 ("IO/DXF/CircleTangentLLL.dxf", NT.TmpDXF);
+      DXFWriter.Save (dwg, NT.TmpDXF);
+      Assert.TextFilesEqual ("IO/DXF/CircleTangentLLL.dxf", NT.TmpDXF);
 
       // Helper
       void DrawCircle (Point2 p1, Point2 p2, Point2 p3) {

@@ -45,7 +45,7 @@ class BooleanRootVN (List<List<Poly>> polys, Bound2 bound) : VNode {
    readonly List<List<Poly>> mPolys = polys;
 
    public override void SetAttributes () {
-      Lux.LineWidth = 6;
+      Lux.LineWidth = 2f;
       Lux.Color = Color4.Gray (150);
       Lux.LineType = ELineType.Continuous;
    }
@@ -109,7 +109,7 @@ class BooleanRootVN (List<List<Poly>> polys, Bound2 bound) : VNode {
       readonly EPane mPane = pane;
 
       public override void SetAttributes () {
-         Lux.LineWidth = 5;
+         Lux.LineWidth = 2f;
          Lux.Color = mPane > 0 ? new (96, 96, 192) : Color4.Gray (96);
          Lux.LineType = ELineType.Continuous;
       }

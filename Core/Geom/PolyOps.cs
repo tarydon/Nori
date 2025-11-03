@@ -2,6 +2,8 @@
 // ╔═╦╦═╦╦╬╣ PolyOps.cs
 // ║║║║╬║╔╣║ Continuation of the Poly class, implements various operations
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
+using System.ComponentModel.DataAnnotations;
+
 namespace Nori;
 
 // This file contains a number of 'operations' on Poly.
@@ -650,7 +652,13 @@ public partial class Poly {
       else if (A.EQ (other.B, threshold)) (a, b) = (other, this);
       else if (A.EQ (other.A, threshold)) (a, b) = (other.Reversed (), this);
       else return false;
-      List<Point2> pts = [.. a.mPts.SkipLast (1), .. b.mPts];
+
+      List<Point2> pts = [.. a.mPts]; pts.RemoveLast ();
+      Point2 ptInter = GetTipIntersection (a, b, threshold);
+      if (ptInter.IsNil) ptInter = b.A;
+      pts.Add (ptInter);
+      pts.AddRange (b.mPts.Skip (1));
+
       EFlags flags = 0;
       if (pts[0].EQ (pts[^1])) {
          flags |= EFlags.Closed; pts = [.. pts.SkipLast (1)];
@@ -664,6 +672,23 @@ public partial class Poly {
          result = new Poly ([.. pts], [.. extra], flags | EFlags.HasArcs);
       }
       return true;
+   }
+
+   // Returns the intersection between the last segment of Poly a and the
+   // first segment of Poly b, if this intersection lies within the given threshold
+   // to both the end of a and the start of b. If the intersection does not exist, or
+   // is more than the given threshold to the closest ends, this returns Point2.Nil
+   Point2 GetTipIntersection (Poly a, Poly b, double threshold) {
+      Span<Point2> buffer = stackalloc Point2[2];
+      Seg sa = a[^1], sb = b[0];
+      var pts = sa.Intersect (sb, buffer, false);
+      foreach (var pt in pts)
+         if (sa.B.DistTo (pt) < threshold && sb.A.DistTo (pt) < threshold)
+            return pt;
+      // Special case: if both are collinear circles, return one of the points
+      if (sa.IsArc && sb.IsArc && sa.Center.EQ (sb.Center) && sa.Radius.EQ (sb.Radius))
+         return sa.B;
+      return Point2.Nil;
    }
 
    /// <summary>Flags to perform some corner operations like fillet, corner-step etc</summary>

@@ -220,7 +220,7 @@ abstract class StencilLineShader : Shader<CMesh.Node, StencilLineShader.Settings
    }
 
    protected override void SetConstantsImp () => Pgm.Set (muVPScale, Lux.VPScale);
-   protected override Settings SnapUniformsImp () => new (Lux.IDXfm, 3, Color4.Black);
+   protected override Settings SnapUniformsImp () => new (Lux.IDXfm, Lux.LineWidth, Color4.Black);
 
    // Nested types -------------------------------------------------------------
    public readonly record struct Settings (int IDXfm, float LineWidth, Color4 Color);

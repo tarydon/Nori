@@ -12,7 +12,7 @@ namespace Nori;
 public class CurlWriter {
    // Methods ------------------------------------------------------------------
    /// <summary>Write an object (with a possible leading comment) to a byte[]</summary>
-   public static byte[] ToByteArray (object obj, string? comment = null) {
+   public static byte[] SaveToByteArray (object obj, string? comment = null) {
       var w = new CurlWriter ();
       if (comment != null) w.B.Write ("; "u8).Write (comment).Write ('\n');
       w.Write (obj, AuType.Get (typeof (object)));
@@ -20,8 +20,8 @@ public class CurlWriter {
    }
 
    /// <summary>Write an object (with a possible header comment) to a file</summary>
-   public static void ToFile (object obj, string file, string? comment = null)
-      => File.WriteAllBytes (file, ToByteArray (obj, comment));
+   public static void Save (object obj, string file, string? comment = null)
+      => File.WriteAllBytes (file, SaveToByteArray (obj, comment));
 
    // Implementation -----------------------------------------------------------
    // Recursive routine that writes out any object
