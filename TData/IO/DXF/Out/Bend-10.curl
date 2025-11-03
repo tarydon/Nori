@@ -167,6 +167,7 @@
       ]
     }
   ]
+  CurrentLayer:0
   Ents:[
     (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M999,14.25H1179 }
     (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M1179,48.25H999 }
@@ -1391,6 +1392,7 @@
       YScale:1
     }
     (E2Bendline){
+      Layer:0
       Angle:-1.5707963267948966
       KFactor:0.12
       Radius:0.04
@@ -1398,6 +1400,7 @@
       Thickness:1
     }
     (E2Bendline){
+      Layer:0
       Angle:1.5707963267948966
       KFactor:0.12
       Radius:0.04
@@ -1405,6 +1408,7 @@
       Thickness:1
     }
     (E2Bendline){
+      Layer:0
       Angle:1.5707963267948966
       KFactor:0.12
       Radius:0.04
@@ -1412,6 +1416,7 @@
       Thickness:1
     }
     (E2Bendline){
+      Layer:0
       Angle:1.5707963267948966
       KFactor:0.12
       Radius:0.04
@@ -1419,6 +1424,7 @@
       Thickness:1
     }
     (E2Bendline){
+      Layer:0
       Angle:1.5707963267948966
       KFactor:0.12
       Radius:0.04
@@ -1426,6 +1432,7 @@
       Thickness:1
     }
     (E2Bendline){
+      Layer:0
       Angle:-1.5707963267948966
       KFactor:0.12
       Radius:0.04
@@ -1433,6 +1440,7 @@
       Thickness:1
     }
     (E2Bendline){
+      Layer:0
       Angle:1.5707963267948966
       KFactor:0.12
       Radius:0.04
@@ -1440,6 +1448,7 @@
       Thickness:1
     }
     (E2Bendline){
+      Layer:0
       Angle:1.5707963267948966
       KFactor:0.12
       Radius:0.04

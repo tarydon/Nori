@@ -231,7 +231,7 @@ class TMisc {
       T1Type a = list.Alloc (), b = list.Alloc (); a.Is ("T1"); b.Is ("T2");
       list.Count.Is (2);
       list.Alloc ().Is ("T3");
-      list.Release (b.Idx);
+      list.Release (b.Idx1);
       list.Count.Is (2);
       T1Type c = list.Alloc (); c.Is ("T2");
 
@@ -278,7 +278,7 @@ class TMisc {
       // CMesh IO test
       var part = CMesh.LoadTMesh ($"{NT.Data}/Geom/CMesh/part.tmesh");
       part.Save (NT.TmpTxt);
-      Assert.TextFilesEqual1 ("Geom/CMesh/part-out.tmesh", NT.TmpTxt);
+      Assert.TextFilesEqual ("Geom/CMesh/part-out.tmesh", NT.TmpTxt);
 
       // CMeshBuilder test
       List<Point3> pts = [];
@@ -288,7 +288,7 @@ class TMisc {
       }
 
       new CMeshBuilder (pts.AsSpan ()).Build ().Save (NT.TmpTxt);
-      Assert.TextFilesEqual1 ("Geom/CMesh/part-gen.tmesh", NT.TmpTxt);
+      Assert.TextFilesEqual ("Geom/CMesh/part-gen.tmesh", NT.TmpTxt);
    }
 
    [Test (38, "LineFont test")]
@@ -333,7 +333,7 @@ class TMisc {
       poly.ForEach (a => sb.AppendLine (a.ToString ()));
       pts.ForEach (a => sb.AppendLine ($"P{a.X},{a.Y}"));
       File.WriteAllText (NT.TmpTxt, sb.ToString ());
-      Assert.TextFilesEqual1 ("Misc/LineFont.txt", NT.TmpTxt);
+      Assert.TextFilesEqual ("Misc/LineFont.txt", NT.TmpTxt);
 
       // Helpers ...............................................................
       void Out (double x, double y, ETextAlign align)
@@ -378,7 +378,7 @@ class TMisc {
 
       // Build and compare the mesh
       new CMeshBuilder (nodes.AsSpan ()).Build ().Save (NT.TmpTxt);
-      Assert.TextFilesEqual1 ("Geom/Tess/gl2d.tmesh", NT.TmpTxt);
+      Assert.TextFilesEqual ("Geom/Tess/gl2d.tmesh", NT.TmpTxt);
    }
 
    [Test (12, "Test for E2BendLine properties")]
@@ -409,7 +409,7 @@ class TMisc {
       il[2] = 20; int n = (int)il[2]!; n.Is (20);
    }
 
-   [Test (121, "Test to handle duplicate layers")]
+   [Test (131, "Test to handle duplicate layers")]
    void Test14 () {
       var dwg = new Dwg2 ();
       // Add poly entities in different layers.
@@ -425,15 +425,15 @@ class TMisc {
       dwg.Add (new Layer2 ("Line", Color4.Green, ELineType.DashDot));
       dwg.Add (new Layer2 ("Circle", Color4.White, ELineType.Dash));
       Assert.IsTrue (dwg.Layers.Count == 3);
-      CurlWriter.ToFile (dwg, NT.TmpCurl);
-      Assert.TextFilesEqual1 ("Misc/Layers.curl", NT.TmpCurl);
+      CurlWriter.Save (dwg, NT.TmpCurl);
+      Assert.TextFilesEqual ("Misc/Layers.curl", NT.TmpCurl);
 
       void SetLayer (Layer2 layer) { dwg.Add (layer); dwg.CurrentLayer = layer; }
    }
 
    class T1Type : IIndexed {
-      public override string ToString () => $"T{Idx}";
-      public ushort Idx { get; set; }
+      public override string ToString () => $"T{Idx1}";
+      public int Idx1 { get; set; }
    }
 
    class T2Disp (int[] Array, int Index, int Value) : IDisposable {

@@ -3,7 +3,6 @@
 // ║║║║╬║╔╣║ Main window of WPF demo application (various scenes implemented)
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 using System.Windows;
-using System.Windows.Controls;
 using Nori;
 namespace WPFDemo;
 
@@ -13,7 +12,13 @@ public partial class MainWindow : Window {
       Lib.Init ();
       InitializeComponent ();
       mContent.Child = Lux.CreatePanel ();
-      Lux.OnReady.Subscribe (a => new SceneManipulator ());
+      Lux.OnReady.Subscribe (OnLuxReady);
+   }
+
+   void OnLuxReady (int _) {
+      var source = PresentationSource.FromVisual (this);
+      if (source != null) Lux.DPIScale = (float)source.CompositionTarget.TransformToDevice.M11;
+      new SceneManipulator ();
    }
 
    void LeafDemo (object sender, RoutedEventArgs e) => Display (new LeafDemoScene ());
