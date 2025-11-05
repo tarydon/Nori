@@ -150,9 +150,14 @@ struct RBatch : IIndexed {
    // <summary>This is called to 'issue' this batch (the actual DrawArrays or DrawElements)</summary>
    readonly void Issue (ushort nUniform, int count) {
       var shader = Shader.Get (NShader);
+      Shader altShader = shader;
+      if (Lux.IsPicking || true) {
+         var pickShader = shader.PickShader; if (pickShader == null) return;
+         altShader = pickShader;
+      }
       // Select this program for use (if the program is already selected,
       // this is a no-op)
-      GLState.Program = shader.Pgm;
+      GLState.Program = altShader.Pgm;
       // Set the shader 'constants' - this is stuff like VPScale that does
       // not change during the frame rendering, and this actually does some
       // setting only once per frame, per shader

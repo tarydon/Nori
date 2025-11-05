@@ -83,13 +83,17 @@ abstract class FacetShader : Shader<CMesh.Node, FacetShader.Settings> {
 #region class FlatFacetShader ----------------------------------------------------------------------
 /// <summary>3D shader using flat shading (no interpolation)</summary>
 [Singleton]
-partial class FlatFacetShader () : FacetShader (ShaderImp.FlatFacet) { }
+partial class FlatFacetShader : FacetShader {
+   public FlatFacetShader () : base (ShaderImp.FlatFacet) => PickShader = this;
+}
 #endregion
 
 #region class GlassShader --------------------------------------------------------------------------
 /// <summary>3D shader that simulates translucency using stippling</summary>
 [Singleton]
-partial class GlassShader () : FacetShader (ShaderImp.Glass) { }
+partial class GlassShader : FacetShader {
+   public GlassShader () : base (ShaderImp.Glass) => PickShader = FlatFacetShader.It;
+}
 #endregion
 
 #region class GlassLineShader ----------------------------------------------------------------------
@@ -101,7 +105,9 @@ partial class GlassLineShader () : StencilLineShader (ShaderImp.GlassLine) { }
 #region class GouradShader -------------------------------------------------------------------------
 /// <summary>3D shader using the Gourad shader model (color interpolation)</summary>
 [Singleton]
-partial class GouradShader () : FacetShader (ShaderImp.Gourad) { }
+partial class GouradShader : FacetShader {
+   public GouradShader () : base (ShaderImp.Gourad) => PickShader = FlatFacetShader.It;
+}
 #endregion
 
 #region class Line2DShader -------------------------------------------------------------------------
@@ -136,7 +142,9 @@ partial class Line3DShader : Shader<Vec3F, Seg2DShader.Settings> {
 #region class PhongShader --------------------------------------------------------------------------
 /// <summary>3D shader using the Phong shading model (normal vector interpolation)</summary>
 [Singleton]
-partial class PhongShader () : FacetShader (ShaderImp.Phong) { }
+partial class PhongShader : FacetShader {
+   public PhongShader () : base (ShaderImp.Phong) => PickShader = FlatFacetShader.It;
+}
 #endregion
 
 #region class Point2DShader ------------------------------------------------------------------------

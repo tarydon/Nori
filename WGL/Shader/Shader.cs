@@ -27,6 +27,12 @@ abstract class Shader {
    /// <summary>The underlying shader program this wraps around</summary>
    public readonly ShaderImp Pgm;
 
+   /// <summary>
+   /// The shader that should be used when rendering this batch in 'pick mode'
+   /// </summary>
+   /// This could be null, which means this shader is not run in pick mode
+   public Shader? PickShader = null;
+
    // Methods ------------------------------------------------------------------
    /// <summary>Gets a shader, given its index</summary>
    public static Shader Get (int index) => mAll[index];
