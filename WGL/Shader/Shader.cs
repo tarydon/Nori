@@ -27,11 +27,6 @@ abstract class Shader {
    /// <summary>The underlying shader program this wraps around</summary>
    public readonly ShaderImp Pgm;
 
-   /// <summary>
-   /// Should this shader program be run during picking?
-   /// </summary>
-   public bool ForPicking;
-
    // Methods ------------------------------------------------------------------
    /// <summary>Gets a shader, given its index</summary>
    public static Shader Get (int index) => mAll[index];
@@ -227,9 +222,7 @@ abstract class Shader<TVertex, TUniform> : Shader, IComparer<TUniform> where TVe
    public override string DescribeUniforms (int id)
       => mUniforms[id]?.ToString () ?? "";
 
-   /// <summary>
-   /// Returns the Nth set of uniforms
-   /// </summary>
+   /// <summary>Returns the Nth set of uniforms</summary>
    public TUniform GetUniforms (int nUniform) => mUniforms[nUniform];
 
    /// <summary>Override this to compare the 'uniform data' of two batches</summary>

@@ -28,11 +28,6 @@ public class VNode {
    /// objects.
    public VNode (object obj) => Obj = obj;
 
-   /// <summary>Get the VNode, given an ID</summary>
-   public static VNode Get (int id) => mNodes[id]!;
-
-   public static VNode? SafeGet (int id) => mNodes.SafeGet (id);
-
    // Properties ---------------------------------------------------------------
    /// <summary>The set of render-batches for this VNode, along with the corresponding uniforms</summary>
    /// This is a list of tuples - the NBatch value of each tuple is the index of a RBatch
@@ -95,6 +90,9 @@ public class VNode {
    public void DisposeOnDetach (IDisposable disp) => (mDisposer ??= new ()).Add (disp);
    MultiDispose? mDisposer;
 
+   /// <summary>Get the VNode, given an ID</summary>
+   public static VNode Get (int id) => mNodes[id]!;
+
    /// <summary>'Virtual constructor' to make a VNode for a given object type</summary>
    /// An assembly that implements various types of VNode (like CircleVN, CubeVN etc) can
    /// be _Registered_ to the VNode system by calling VNode.RegisterAssembly(...). That builds
@@ -152,6 +150,9 @@ public class VNode {
    static Dictionary<Type, ConstructorInfo> mBuilders = [];
    // These are the assemblies we have already searched to find VNode-derived types
    static HashSet<Assembly> mAssemblies = [];
+
+   /// <summary>Tries to get a VNode, given an ID (if the ID is out of range, returns null)</summary>
+   public static VNode? SafeGet (int id) => mNodes.SafeGet (id);
 
    // Overrides ----------------------------------------------------------------
    /// <summary>Specifies which attributes are inherited by children of this VNode</summary>

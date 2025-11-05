@@ -151,27 +151,34 @@ struct RBatch : IIndexed {
    readonly void Issue (ushort nUniform, int count) {
       var shader = Shader.Get (NShader);
       if (!Lux.IsPicking) {
-         // Select this program for use (if the program is already selected,
-         // this is a no-op)
+         // Select the program used by this batch. If this same program has already
+         // been selected, this is a no-op. Because we have already sorted the batches by
+         // program, these expensive changes to the current pipeline are quite rare
          GLState.Program = shader.Pgm;
+         // Set the shader 'constants' - this is stuff like VPScale that does
+         // not change during the frame rendering, and this actually does some
+         // setting only once per frame, per shader
+         shader.SetConstants ();
+         // Ask the shader to apply the uniforms for this batch
+         shader.ApplyUniforms (nUniform);
       } else {
-         // In pick mode, everything except facet shaders can be ignored
+         // In pick mode, everything except meshes drawn by the facet shaders can be
+         // ignored (we may relax this later)
          if (shader is not FacetShader fsh) return;
-         GLState.Program = PickShader.It.Pgm;
-         var set = fsh.GetUniforms (nUniform);
+         // In pick mode, we switch to using the PickShader (which draws the triangles
+         // using a 'false-color' which is basically just the VNode Id
+         var (picker, uniforms) = (PickShader.It, fsh.GetUniforms (nUniform));
          Color4 color = Color4.White;
          if (VNode.SafeGet (IDVNode) is { } vnode) { 
+            // Compute the false color based on the VNode Id. Note that we are not using
+            // the lowest two bits of R, G, B in this (to work correctly even with display
+            // modes that use restricted colors with just 6 bits per color component). 
             int r = (vnode.Id & 63) << 2, g = (vnode.Id >> 4) & 252, b = (vnode.Id >> 10) & 252;
             color = new (r, g, b);
          }
-         PickShader.It.ApplyUniforms (set.IDXfm, color);
+         GLState.Program = picker.Pgm;
+         PickShader.It.ApplyUniforms (uniforms.IDXfm, color);
       }
-      // Set the shader 'constants' - this is stuff like VPScale that does
-      // not change during the frame rendering, and this actually does some
-      // setting only once per frame, per shader
-      shader.SetConstants ();
-      // Ask the shader to apply the uniforms for this batch
-      shader.ApplyUniforms (nUniform);
       // Select the VAO this batch uses as the current VAO. If this VAO
       // is already selected, this is a no-op
       var buffer = RBuffer.All[NBuffer];

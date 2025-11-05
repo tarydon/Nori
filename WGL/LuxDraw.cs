@@ -20,9 +20,6 @@ public static partial class Lux {
    /// <summary>The current drawing color (default = white)</summary>
    public static Color4 Color {
       get => mColor;
-
-      // TODO: Return VNodeId if we are in pick mode
-
       set {
          if (mColor.EQ (value)) return;
          if (Set (ELuxAttr.Color)) mColors.Push (mColor);
