@@ -155,7 +155,7 @@ abstract class Shader<TVertex, TUniform> : Shader, IComparer<TUniform> where TVe
       // Helper fuction to see if we can just extend the last batch we added to
       // include these vertices as well. For this to work:
       // - The previous batch should be for the same VNode (since we are going to store
-      //   this batch in the mBatch list of that VNode.
+      //   this batch in the mBatch list of that VNode).
       // - The previous batch should use the same shader (this)
       // - The previous batch should be using the same set of uniforms
       bool ExtendBatch (int delta) {

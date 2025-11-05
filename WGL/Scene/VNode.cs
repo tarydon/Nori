@@ -31,6 +31,8 @@ public class VNode {
    /// <summary>Get the VNode, given an ID</summary>
    public static VNode Get (int id) => mNodes[id]!;
 
+   public static VNode? SafeGet (int id) => mNodes.SafeGet (id);
+
    // Properties ---------------------------------------------------------------
    /// <summary>The set of render-batches for this VNode, along with the corresponding uniforms</summary>
    /// This is a list of tuples - the NBatch value of each tuple is the index of a RBatch
@@ -107,7 +109,7 @@ public class VNode {
    }
 
    /// <summary>Called when geometry has changed and complete redraw of this VNode is needed</summary>
-   public void Redraw () { mGeometryDirty = true; Lux.Redraw ();  }
+   public void Redraw () { mGeometryDirty = true; Lux.FlushPickBuffer (); Lux.Redraw ();  }
 
    /// <summary>Register an assembly as containing potential VNode types</summary>
    /// This is used in conjunction with the VNode.Makefor(...) above to construct a VNode
@@ -222,6 +224,7 @@ public class VNode {
          ref RBatch rb = ref RBatch.Get (n);
          rb.Release ();
       }
+      Lux.FlushPickBuffer ();
       Batches.Clear ();
    }
 
@@ -250,6 +253,7 @@ public class VNode {
          if (mGeometryDirty) {
             Draw ();
             mGeometryDirty = false;
+            Lux.FlushPickBuffer ();
          } else {
             // But if the geometry is not dirty, we don't need to create new batches at all,
             // but instead can just update the existing batches we have with freshly captured

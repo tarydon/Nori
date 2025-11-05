@@ -20,6 +20,9 @@ public static partial class Lux {
    /// <summary>The current drawing color (default = white)</summary>
    public static Color4 Color {
       get => mColor;
+
+      // TODO: Return VNodeId if we are in pick mode
+
       set {
          if (mColor.EQ (value)) return;
          if (Set (ELuxAttr.Color)) mColors.Push (mColor);
@@ -220,8 +223,8 @@ public static partial class Lux {
    ///   2 - Phong shading
    /// (This is primarily for learning purposes. Later we will remove the other shade
    /// modes, and use only Phong shading)
-   public static void Mesh (CMesh mesh, EShadeMode shadeMode) {
-      CMesh.Node[] nodes = mesh.Vertex.AsArray ();
+   public static void Mesh (Mesh3 mesh, EShadeMode shadeMode) {
+      Mesh3.Node[] nodes = mesh.Vertex.AsArray ();
       int[] tris = mesh.Triangle.AsArray (), wires = mesh.Wire.AsArray ();
       switch (shadeMode) {
          case EShadeMode.Flat: FlatFacetShader.It.Draw (nodes, tris); break;

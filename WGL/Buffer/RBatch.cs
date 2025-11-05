@@ -130,6 +130,10 @@ struct RBatch : IIndexed {
    // two RBatch belong to different VNodes.
    readonly bool CanMerge (ref RBatch rb1, int count, ushort uni0, ushort uni1) {
       if (NShader != rb1.NShader || NBuffer != rb1.NBuffer || ZLevel != rb1.ZLevel) return false;
+      // In Pick mode, don't merge two batches that belong to different VNodes (we are going
+      // to draw this batch with a false-color that effectively encodes the VNode ID so we don't
+      // want them getting mixed up
+      if (Lux.IsPicking && IDVNode != rb1.IDVNode) return false;
       // Don't merge two RBatch that use indexed drawing
       if (ICount > 0 || rb1.ICount > 0) return false;
       // If both are not using the same uniforms, we can't merge. We can't

@@ -9,8 +9,8 @@ namespace Nori;
 public abstract class MouseDragger {
    // Constructor --------------------------------------------------------------
    /// <summary>MouseDragger constructor</summary>
-   /// Create a MouseDragger when you notice a mouse-down event. 
-   /// - At that point, the Start() method is called. 
+   /// Create a MouseDragger when you notice a mouse-down event.
+   /// - At that point, the Start() method is called.
    /// - Then, for every drag of the mouse, Move() is called.
    /// - Finally, if the mouse button is released, End() is called (completion!).
    /// - If the ESC key is pressed, or capture is lost, Cancel() is called (cancellation!).
@@ -85,16 +85,19 @@ public class SceneManipulator {
    }
 
    // Start rotating when the left mouse button is clicked (if the current scene is 3D)
-   // Start panning when the middle mouse button is clicked 
+   // Start panning when the middle mouse button is clicked
    void OnMouseClick (MouseClickInfo mi) {
       if (Lux.UIScene is Scene sc) {
-         if (mi.Button == EMouseButton.Left && sc is Scene3 sc3) new SceneRotator (sc3, mi.Position);
+         if (mi.Button == EMouseButton.Left && sc is Scene3 sc3) {
+            var pick = Lux.Pick (mi.Position);
+            new SceneRotator (sc3, mi.Position);
+         }
          if (mi.Button == EMouseButton.Middle) new ScenePanner (sc, mi.Position);
       }
    }
 
    // Zoom in/out when the mouse wheel is rotated
-   void OnMouseWheel (MouseWheelInfo mw) 
+   void OnMouseWheel (MouseWheelInfo mw)
       => Lux.UIScene?.Zoom (mw.Position, mw.Delta < 0 ? 0.95 : (1 / 0.95));
 }
 #endregion
