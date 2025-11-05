@@ -78,7 +78,7 @@ public partial class STEPReader {
             Unread[Id] = kw;
          } else {
             while (D.Count <= Id) D.Add (null);
-            D[Id] = ent;
+            ent.Id = Id; D[Id] = ent;
          }
       }
       RSkip (';');

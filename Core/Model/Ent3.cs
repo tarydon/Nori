@@ -7,7 +7,10 @@ namespace Nori;
 #region class Ent3 ---------------------------------------------------------------------------------
 /// <summary>The base class for all Ent3</summary>
 public abstract class Ent3 {
+   public Ent3 (int id) => Id = id;
    public abstract Bound3 Bound { get; }
+
+   public readonly int Id;
 }
 #endregion
 
@@ -17,7 +20,7 @@ public abstract class Ent3 {
 /// XY plane, which are then lofted into the CoordSystem CS of the E3Plane
 public class E3Plane : Ent3 {
    /// <summary>Create an E3Plane given the coordinate system to loft to and the set of 2D trims</summary>
-   public E3Plane (CoordSystem cs, IEnumerable<Poly> trims) {
+   public E3Plane (int id, CoordSystem cs, IEnumerable<Poly> trims) : base (id) {
       mCS = cs; mTrims.AddRange (trims);
    }
 

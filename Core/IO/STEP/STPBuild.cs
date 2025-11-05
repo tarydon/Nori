@@ -71,7 +71,7 @@ partial class STEPReader {
          if (!oe.Dir) (start, end) = (end, start);
          Edge3 edge = D[ec.Basis] switch {
             Line line => new Line3 (start, end),
-            Circle circle => MakeCircle (circle, start, end, ec.SameSense),
+            Circle circle => MakeCircle (circle, start, end, ec.SameSense ^ oe.Dir),
             _ => throw new BadCaseException (ec.Basis)
          };
          mEdges.Add (edge);
@@ -82,7 +82,7 @@ partial class STEPReader {
    }
    List<Edge3> mEdges = [];
 
-   Ent3? MakePlane (Plane plane, List<Contour3> contours) {
+   Ent3? MakePlane (int id, Plane plane, List<Contour3> contours) {
       var cs = GetCoordSys (plane.CoordSys);
 
       foreach (var con in contours) {  // REMOVETHIS
@@ -95,11 +95,10 @@ partial class STEPReader {
       var dwg = new Dwg2 ();
       foreach (var con in contours)
          dwg.Add (con.Flatten (cs));
-      DXFWriter.Save (dwg, $"C:/Etc/Dump/{++n}.dxf");
+      DXFWriter.Save (dwg, $"C:/Etc/Dump/{id}.dxf");
 
-      return new E3Plane (cs, contours.Select (a => a.Flatten (cs)));
+      return new E3Plane (id, cs, contours.Select (a => a.Flatten (cs)));
    }
-   static int n = 0;
 
    Ent3? MakeCylinder (Cylinder cylinder, List<Contour3> contours) {
       return null;
@@ -125,7 +124,7 @@ partial class STEPReader {
          contours.Add (c);
       }
       Ent3? ent = D[a.Face] switch {
-         Plane plane => MakePlane (plane, contours),
+         Plane plane => MakePlane (a.Id, plane, contours),
          Cylinder cylinder => MakeCylinder (cylinder, contours),
          _ => throw new BadCaseException (a.Face)
       };

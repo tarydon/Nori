@@ -4,7 +4,9 @@
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 namespace Nori.STEP;
 
-class Entity { }
+class Entity {
+   public int Id;
+}
 
 class AdvancedFace (int[] contours, int face, bool dir) : Entity {
    public readonly int[] Contours = contours;
