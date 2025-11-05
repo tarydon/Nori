@@ -17,6 +17,8 @@ public partial class Mechanism {
       return mech;
    }
 
+   public override string ToString () => $"Mechanism \"{Name}\"";
+
    // Properties --------------------------------------------------------------
    /// <summary>Returns the bound of this mechanism</summary>
    public Bound3 Bound {
