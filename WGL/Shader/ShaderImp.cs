@@ -133,9 +133,10 @@ class ShaderImp {
    public static ShaderImp GlassLine => mGlassLine ??= Load ();
    public static ShaderImp Gourad => mGourad ??= Load ();
    public static ShaderImp Phong => mPhong ??= Load ();
+   public static ShaderImp Pick => mPick ??= Load ();
    public static ShaderImp Glass => mGlass ??= Load ();
    public static ShaderImp FlatFacet => mFlatFacet ??= Load ();
-   static ShaderImp? mBlackLine, mGlassLine, mGourad, mPhong, mFlatFacet, mGlass;
+   static ShaderImp? mBlackLine, mGlassLine, mGourad, mPhong, mPick, mFlatFacet, mGlass;
 
    public static ShaderImp TriFanStencil => mTriFanStencil ??= Load ();
    public static ShaderImp TriFanCover => mTriFanCover ??= Load ();

@@ -146,7 +146,8 @@ public static partial class Lux {
       mRendering = true;
       panel.BeginRender (viewport, target);
       StartFrame (viewport);
-      GLState.StartFrame (viewport, scene?.BgrdColor ?? Color4.Gray (96));
+      Color4 bgrdColor = mIsPicking ? Color4.White : (scene?.BgrdColor ?? Color4.Gray (96));
+      GLState.StartFrame (viewport, bgrdColor);
       RBatch.StartFrame ();
       Shader.StartFrame ();
       scene?.Render (viewport);

@@ -74,7 +74,7 @@ abstract class FacetShader : Shader<CMesh.Node, FacetShader.Settings> {
    protected override Settings SnapUniformsImp () => new (Lux.IDXfm, Lux.Color);
 
    // Private data -------------------------------------------------------------
-   int muXfm = 0, muNormalXfm = 0, muDrawColor = 0;
+   protected int muXfm = 0, muNormalXfm = 0, muDrawColor = 0;
 
    public readonly record struct Settings (int IDXfm, Color4 Color);
 }
@@ -84,7 +84,7 @@ abstract class FacetShader : Shader<CMesh.Node, FacetShader.Settings> {
 /// <summary>3D shader using flat shading (no interpolation)</summary>
 [Singleton]
 partial class FlatFacetShader : FacetShader {
-   public FlatFacetShader () : base (ShaderImp.FlatFacet) => PickShader = this;
+   public FlatFacetShader () : base (ShaderImp.FlatFacet) => ForPicking = true;
 }
 #endregion
 
@@ -92,7 +92,7 @@ partial class FlatFacetShader : FacetShader {
 /// <summary>3D shader that simulates translucency using stippling</summary>
 [Singleton]
 partial class GlassShader : FacetShader {
-   public GlassShader () : base (ShaderImp.Glass) => PickShader = FlatFacetShader.It;
+   public GlassShader () : base (ShaderImp.Glass) => ForPicking = true;
 }
 #endregion
 
@@ -106,7 +106,7 @@ partial class GlassLineShader () : StencilLineShader (ShaderImp.GlassLine) { }
 /// <summary>3D shader using the Gourad shader model (color interpolation)</summary>
 [Singleton]
 partial class GouradShader : FacetShader {
-   public GouradShader () : base (ShaderImp.Gourad) => PickShader = FlatFacetShader.It;
+   public GouradShader () : base (ShaderImp.Gourad) => ForPicking = true;
 }
 #endregion
 
@@ -143,7 +143,21 @@ partial class Line3DShader : Shader<Vec3F, Seg2DShader.Settings> {
 /// <summary>3D shader using the Phong shading model (normal vector interpolation)</summary>
 [Singleton]
 partial class PhongShader : FacetShader {
-   public PhongShader () : base (ShaderImp.Phong) => PickShader = FlatFacetShader.It;
+   public PhongShader () : base (ShaderImp.Phong) => ForPicking = true;
+}
+#endregion
+
+#region class PickShader ---------------------------------------------------------------------------
+/// <summary>
+/// 3D shader used during picking - replaces actual colors with VNode Ids
+/// </summary>
+[Singleton]
+partial class PickShader () : FacetShader (ShaderImp.Pick) {
+   public void ApplyUniforms (int idXfm, Color4 color) {
+      Pgm.Set (muXfm, ref Lux.Scene!.Xfms[idXfm].Xfm);
+      Pgm.Set (muNormalXfm, ref Lux.Scene!.Xfms[idXfm].NormalXfm);
+      Pgm.Set (muDrawColor, color);
+   }
 }
 #endregion
 

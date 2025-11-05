@@ -28,10 +28,9 @@ abstract class Shader {
    public readonly ShaderImp Pgm;
 
    /// <summary>
-   /// The shader that should be used when rendering this batch in 'pick mode'
+   /// Should this shader program be run during picking?
    /// </summary>
-   /// This could be null, which means this shader is not run in pick mode
-   public Shader? PickShader = null;
+   public bool ForPicking;
 
    // Methods ------------------------------------------------------------------
    /// <summary>Gets a shader, given its index</summary>
@@ -227,6 +226,11 @@ abstract class Shader<TVertex, TUniform> : Shader, IComparer<TUniform> where TVe
    /// This description forms part of an RBatch.ToString() description
    public override string DescribeUniforms (int id)
       => mUniforms[id]?.ToString () ?? "";
+
+   /// <summary>
+   /// Returns the Nth set of uniforms
+   /// </summary>
+   public TUniform GetUniforms (int nUniform) => mUniforms[nUniform];
 
    /// <summary>Override this to compare the 'uniform data' of two batches</summary>
    /// This must provide a definitive ordering, to ensure that all batches with similar

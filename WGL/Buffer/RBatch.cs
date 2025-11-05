@@ -150,14 +150,22 @@ struct RBatch : IIndexed {
    // <summary>This is called to 'issue' this batch (the actual DrawArrays or DrawElements)</summary>
    readonly void Issue (ushort nUniform, int count) {
       var shader = Shader.Get (NShader);
-      Shader altShader = shader;
-      if (Lux.IsPicking || true) {
-         var pickShader = shader.PickShader; if (pickShader == null) return;
-         altShader = pickShader;
+      if (!Lux.IsPicking) {
+         // Select this program for use (if the program is already selected,
+         // this is a no-op)
+         GLState.Program = shader.Pgm;
+      } else {
+         // In pick mode, everything except facet shaders can be ignored
+         if (shader is not FacetShader fsh) return;
+         GLState.Program = PickShader.It.Pgm;
+         var set = fsh.GetUniforms (nUniform);
+         Color4 color = Color4.White;
+         if (VNode.SafeGet (IDVNode) is { } vnode) { 
+            int r = (vnode.Id & 63) << 2, g = (vnode.Id >> 4) & 252, b = (vnode.Id >> 10) & 252;
+            color = new (r, g, b);
+         }
+         PickShader.It.ApplyUniforms (set.IDXfm, color);
       }
-      // Select this program for use (if the program is already selected,
-      // this is a no-op)
-      GLState.Program = altShader.Pgm;
       // Set the shader 'constants' - this is stuff like VPScale that does
       // not change during the frame rendering, and this actually does some
       // setting only once per frame, per shader
