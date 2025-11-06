@@ -137,6 +137,7 @@ public partial class Mechanism {
 
    // Implementation -----------------------------------------------------------
    string FullName => Parent == null ? Name : $"{Parent.FullName}.{Name}";
+   public override string ToString () => $"Mechanism:{Name}";
 }
 #endregion
 
