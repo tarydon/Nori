@@ -130,6 +130,10 @@ struct RBatch : IIndexed {
    // two RBatch belong to different VNodes.
    readonly bool CanMerge (ref RBatch rb1, int count, ushort uni0, ushort uni1) {
       if (NShader != rb1.NShader || NBuffer != rb1.NBuffer || ZLevel != rb1.ZLevel) return false;
+      // In Pick mode, don't merge two batches that belong to different VNodes (we are going
+      // to draw this batch with a false-color that effectively encodes the VNode ID so we don't
+      // want them getting mixed up
+      if (Lux.IsPicking && IDVNode != rb1.IDVNode) return false;
       // Don't merge two RBatch that use indexed drawing
       if (ICount > 0 || rb1.ICount > 0) return false;
       // If both are not using the same uniforms, we can't merge. We can't
@@ -146,15 +150,35 @@ struct RBatch : IIndexed {
    // <summary>This is called to 'issue' this batch (the actual DrawArrays or DrawElements)</summary>
    readonly void Issue (ushort nUniform, int count) {
       var shader = Shader.Get (NShader);
-      // Select this program for use (if the program is already selected,
-      // this is a no-op)
-      GLState.Program = shader.Pgm;
-      // Set the shader 'constants' - this is stuff like VPScale that does
-      // not change during the frame rendering, and this actually does some
-      // setting only once per frame, per shader
-      shader.SetConstants ();
-      // Ask the shader to apply the uniforms for this batch
-      shader.ApplyUniforms (nUniform);
+      if (!Lux.IsPicking) {
+         // Select the program used by this batch. If this same program has already
+         // been selected, this is a no-op. Because we have already sorted the batches by
+         // program, these expensive changes to the current pipeline are quite rare
+         GLState.Program = shader.Pgm;
+         // Set the shader 'constants' - this is stuff like VPScale that does
+         // not change during the frame rendering, and this actually does some
+         // setting only once per frame, per shader
+         shader.SetConstants ();
+         // Ask the shader to apply the uniforms for this batch
+         shader.ApplyUniforms (nUniform);
+      } else {
+         // In pick mode, everything except meshes drawn by the facet shaders can be
+         // ignored (we may relax this later)
+         if (shader is not FacetShader fsh) return;
+         // In pick mode, we switch to using the PickShader (which draws the triangles
+         // using a 'false-color' which is basically just the VNode Id
+         var (picker, uniforms) = (PickShader.It, fsh.GetUniforms (nUniform));
+         Color4 color = Color4.White;
+         if (VNode.SafeGet (IDVNode) is { } vnode) { 
+            // Compute the false color based on the VNode Id. Note that we are not using
+            // the lowest two bits of R, G, B in this (to work correctly even with display
+            // modes that use restricted colors with just 6 bits per color component). 
+            int r = (vnode.Id & 63) << 2, g = (vnode.Id >> 4) & 252, b = (vnode.Id >> 10) & 252;
+            color = new (r, g, b);
+         }
+         GLState.Program = picker.Pgm;
+         PickShader.It.ApplyUniforms (uniforms.IDXfm, color);
+      }
       // Select the VAO this batch uses as the current VAO. If this VAO
       // is already selected, this is a no-op
       var buffer = RBuffer.All[NBuffer];

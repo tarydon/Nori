@@ -3,6 +3,7 @@
 // ║║║║╬║╔╣║ The Lux class: public interface to the Lux rendering engine
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 using System.Reactive.Subjects;
+using System.Windows.Controls.Ribbon.Primitives;
 using System.Windows.Threading;
 namespace Nori;
 
@@ -17,6 +18,10 @@ public static partial class Lux {
    /// <summary>Subscribe to this to get statistics after each frame is rendered</summary>
    public static IObservable<Stats> Info => mInfo;
    static Subject<Stats> mInfo = new ();
+
+   /// <summary>If set, we are redering a frame for 'picking'</summary>
+   public static bool IsPicking => mIsPicking;
+   static bool mIsPicking;
 
    /// <summary>Subscribe to this to know when Lux is ready (event raised only once)</summary>
    public static IObservable<int> OnReady => mOnReady;
@@ -86,12 +91,47 @@ public static partial class Lux {
    }
    static Window? sHost;
 
+   /// <summary>Called when entities are redrawn, or when the transform changes</summary>
+   /// At these times, the pick buffer must be flushed so we don't pick on a stale
+   /// pick buffer
+   public static void FlushPickBuffer () => mPickBufferValid = false;
+   static bool mPickBufferValid;
+
+   /// <summary>Render a Scene to an image (for example, to generate a thumbnail)</summary>
+   /// The 'keepAlive' parameter controls whether the scene you pass in is disposed of
+   /// after rendering the image, or continues to remain connected to the Lux engine
+   /// for continued rendering. For example, if you are rendering the UIScene to a
+   /// thumbnail, you will keep it alive. In most other case, you will ask for the scene
+   /// to be 'detached' after use. 
    public static DIBitmap RenderToImage (Scene scene, Vec2S size, DIBitmap.EFormat fmt, bool keepAlive = false) {
       if (size.X % 4 != 0) throw new ArgumentException ($"Lux.RenderToImage: image width must be a multiple of 4");
       var dib =  (DIBitmap)Render (scene, size, ETarget.Image, fmt)!;
       if (!keepAlive) scene.Detach ();
       return dib;
    }
+
+   /// <summary>This does a 'pick' operation on the current UIScene</summary>
+   /// This effectively returns the VNode that lies underneat the current mouse position.
+   public static VNode? Pick (Vec2S pos) {
+      // If we're doign any simulation, return null
+      if (sRenderCompletes.Count > 0 || mRendering || !mReady || mUIScene == null) return null;
+      if (!mPickBufferValid) {
+         mPickBufferValid = true;
+         var tup = ((byte[], float[]))Render (mUIScene, mViewport, ETarget.Pick, DIBitmap.EFormat.Unknown)!;
+         mPickPixel = tup.Item1; mPickDepth = tup.Item2;
+      }
+      int index = (mViewport.Y - pos.Y - 1) * mViewport.X + pos.X;
+      if (index < 0 || index >= mPickDepth.Length) return null;
+
+      // Now, abandon the LSB 2 bits of r, g and b leaving only 6 bits each (this is to
+      // avoid round off errors in low-bit depth color buffers
+      index *= 4;
+      int b = mPickPixel[index] >> 2, g = mPickPixel[index + 1] >> 2, r = mPickPixel[index + 2] >> 2;
+      int vnodeId = r + (g << 6) + (b << 12);
+      return VNode.SafeGet (vnodeId);
+   }
+   static byte[] mPickPixel = [];
+   static float[] mPickDepth = [];
 
    /// <summary>Converts a pixel coordinate to world coordinates</summary>
    public static Point3 PixelToWorld (Vec2S pix) {
@@ -109,9 +149,12 @@ public static partial class Lux {
    internal static object? Render (Scene? scene, Vec2S viewport, ETarget target, DIBitmap.EFormat fmt) {
       mcFrames++; mcFPSFrames++;
       var panel = Panel.It;
+      mIsPicking = target == ETarget.Pick;
+      mRendering = true;
       panel.BeginRender (viewport, target);
       StartFrame (viewport);
-      GLState.StartFrame (viewport, scene?.BgrdColor ?? Color4.Gray (96));
+      Color4 bgrdColor = mIsPicking ? Color4.White : (scene?.BgrdColor ?? Color4.Gray (96));
+      GLState.StartFrame (viewport, bgrdColor);
       RBatch.StartFrame ();
       Shader.StartFrame ();
       scene?.Render (viewport);
@@ -133,6 +176,7 @@ public static partial class Lux {
          }
       }
       mLastFrameTS = frameTS;
+      mRendering = mIsPicking = false;
       return obj;
 
       // Helpers ...........................................
@@ -147,6 +191,7 @@ public static partial class Lux {
    static DateTime mLastFrameTS;    // What was the timestamp at which we rendered the last frame
    static DateTime mFPSReportTS;    // When did we last issue an FPS report
    static int mcFPSFrames;          // Frames rendered since that time
+   static bool mRendering;          // Currently rendering a frame
 
    /// <summary>Prompts the Lux system to redraw the screen (asynchronous)</summary>
    public static void Redraw () => Panel.mIt?.Redraw ();
