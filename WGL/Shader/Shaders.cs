@@ -74,7 +74,7 @@ abstract class FacetShader : Shader<CMesh.Node, FacetShader.Settings> {
    protected override Settings SnapUniformsImp () => new (Lux.IDXfm, Lux.Color);
 
    // Private data -------------------------------------------------------------
-   int muXfm = 0, muNormalXfm = 0, muDrawColor = 0;
+   protected int muXfm = 0, muNormalXfm = 0, muDrawColor = 0;
 
    public readonly record struct Settings (int IDXfm, Color4 Color);
 }
@@ -137,6 +137,18 @@ partial class Line3DShader : Shader<Vec3F, Seg2DShader.Settings> {
 /// <summary>3D shader using the Phong shading model (normal vector interpolation)</summary>
 [Singleton]
 partial class PhongShader () : FacetShader (ShaderImp.Phong) { }
+#endregion
+
+#region class PickShader ---------------------------------------------------------------------------
+/// <summary>3D shader used during picking - replaces actual colors with VNode Ids</summary>
+[Singleton]
+partial class PickShader () : FacetShader (ShaderImp.Pick) {
+   public void ApplyUniforms (int idXfm, Color4 color) {
+      Pgm.Set (muXfm, ref Lux.Scene!.Xfms[idXfm].Xfm);
+      Pgm.Set (muNormalXfm, ref Lux.Scene!.Xfms[idXfm].NormalXfm);
+      Pgm.Set (muDrawColor, color);
+   }
+}
 #endregion
 
 #region class Point2DShader ------------------------------------------------------------------------
