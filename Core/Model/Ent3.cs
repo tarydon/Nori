@@ -11,6 +11,8 @@ public abstract class Ent3 {
    public abstract Bound3 Bound { get; }
 
    public readonly int Id;
+
+   public override string ToString () => $"{GetType ().Name} #{Id}";
 }
 #endregion
 
@@ -43,7 +45,7 @@ public class E3Plane : Ent3 {
             List<int> splits = [0], wires = [];
             foreach (var poly in mTrims) {
                int a = pts.Count;
-               poly.Discretize (pts, Lib.Delta);
+               poly.Discretize (pts, Lib.TessError);
                int b = pts.Count; splits.Add (b);
                wires.Add (b - 1); 
                for (int i = a; i < b; i++) { wires.Add (i); wires.Add (i); }

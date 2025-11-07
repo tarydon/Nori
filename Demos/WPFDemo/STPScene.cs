@@ -1,9 +1,14 @@
 ﻿namespace WPFDemo;
+
+using System.Windows.Media;
+using System.IO;
+using System.Windows.Controls;
 using Nori;
 
 class STPScene : Scene3 {
-   public STPScene () {
-      var sr = new STEPReader ("N:/TData/STEP/Boot.step");
+   public STPScene (string file = "N:/TData/Step/Boot.step") {
+      mFile = file;
+      var sr = new STEPReader (file);
       sr.Parse ();
       var model = sr.Build ();
 
@@ -12,5 +17,16 @@ class STPScene : Scene3 {
       Bound = model.Bound;
       Root = new GroupVN ([new Model3VN (model), TraceVN.It]);
       TraceVN.TextColor = Color4.Yellow;
+   }
+   string mFile;
+
+   public void CreateUI (UIElementCollection ui) {
+      ui.Clear ();
+      var files = Directory.GetFiles ("W:/Samples/STEP", "*.step")
+                           .Select (a => Path.GetFileNameWithoutExtension (a))
+                           .ToList ();
+      var lb = new ListBox () { 
+         ItemsSource = files, ClipToBounds = true, MaxHeight = 900 };
+      ui.Add (lb);
    }
 }

@@ -24,7 +24,7 @@
          <Button Click="RobotDemo">Robot Demo</Button>
          <Button Click="STPDemo">STEP Demo</Button>
       </StackPanel>
-      <StackPanel Name="mSettings" DockPanel.Dock="Right" Background="#AAA" />
+         <StackPanel Name="mSettings" DockPanel.Dock="Right" Background="#AAA" />
       <Border Name="mContent" />
    </DockPanel>
 </Window>

@@ -16,6 +16,10 @@ public static class Lib {
    public const double Epsilon = 1e-6;
    /// <summary>PI = 180 degrees, in radians</summary>
    public const double PI = Math.PI;
+   /// <summary>
+   /// Tessellation error
+   /// </summary>
+   public const double TessError = 0.1;
    /// <summary>TwoPI = 360 degrees, in radians</summary>
    public const double TwoPI = 2 * Math.PI;
    /// <summary>HalfPI = 90 degrees, in radians</summary>

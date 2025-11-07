@@ -5,7 +5,7 @@
 namespace Nori;
 
 abstract class Ent3VN (Ent3 ent) : VNode (ent) {
-   public override void SetAttributes () => Lux.Color = Color4.Yellow;
+   public override void SetAttributes () => Lux.Color = Color4.White;
 }
 
 class E3PlaneVN : Ent3VN {
