@@ -82,21 +82,8 @@ partial class STEPReader {
    }
    List<Edge3> mEdges = [];
 
-   Ent3? MakePlane (int id, Plane plane, List<Contour3> contours) {
+   E3Plane MakePlane (int id, Plane plane, List<Contour3> contours) {
       var cs = GetCoordSys (plane.CoordSys);
-
-      foreach (var con in contours) {  // REMOVETHIS
-         foreach (var edge in con.Edges) {
-            Console.WriteLine ($"{edge.GetType ().Name}  {edge.Start.R6 ()}  {edge.End.R6 ()}");
-         }
-         Console.WriteLine ("---");
-      }
-      Console.WriteLine ("======");
-      var dwg = new Dwg2 ();
-      foreach (var con in contours)
-         dwg.Add (con.Flatten (cs));
-      DXFWriter.Save (dwg, $"C:/Etc/Dump/{id}.dxf");
-
       return new E3Plane (id, cs, contours.Select (a => a.Flatten (cs)));
    }
 

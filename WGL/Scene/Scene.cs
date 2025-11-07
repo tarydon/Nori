@@ -31,7 +31,7 @@ public abstract partial class Scene {
    public VNode? Root {
       get => mRoot;
       set {
-         Debug.Assert (mRoot == null);
+         mRoot?.Deregister ();
          (mRoot = value)?.Register ();
       }
    }

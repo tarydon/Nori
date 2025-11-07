@@ -73,6 +73,10 @@ public class Arc3 : Edge3 {
 public class Contour3 {
    public Contour3 (ImmutableArray<Edge3> edges) => mEdges = edges;
 
+   public IEnumerable<Point3> Discretize (double threshold) {
+
+   }
+
    public Poly Flatten (CoordSystem cs) {
       var pb = PolyBuilder.It;
       var xfm = Matrix3.From (cs);

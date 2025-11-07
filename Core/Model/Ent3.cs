@@ -7,6 +7,7 @@ namespace Nori;
 #region class Ent3 ---------------------------------------------------------------------------------
 /// <summary>The base class for all Ent3</summary>
 public abstract class Ent3 {
+   protected Ent3 () { }
    public Ent3 (int id) => Id = id;
    public abstract Bound3 Bound { get; }
 
@@ -15,6 +16,17 @@ public abstract class Ent3 {
    public override string ToString () => $"{GetType ().Name} #{Id}";
 }
 #endregion
+
+public class E3Surface : Ent3 {
+   protected E3Surface () { }
+   public E3Surface (int id, IEnumerable<Contour3> trims) : base (id) => mTrims = [.. trims];
+   
+   public override Bound3 Bound => Bound3.Update (ref mBound, () => new Bound3 (mTrims[0].Bound));
+   Bound3 mBound;
+
+   public IReadOnlyList<Contour3> Trims => mTrims;
+   Contour3[] mTrims = [];
+}
 
 #region class E3Plane ------------------------------------------------------------------------------
 /// <summary>Represents a planar surface</summary>
@@ -47,7 +59,7 @@ public class E3Plane : Ent3 {
                int a = pts.Count;
                poly.Discretize (pts, Lib.TessError);
                int b = pts.Count; splits.Add (b);
-               wires.Add (b - 1); 
+               wires.Add (b - 1);
                for (int i = a; i < b; i++) { wires.Add (i); wires.Add (i); }
                wires.RemoveLast ();
             }
