@@ -34,24 +34,20 @@ public class Matrix2 (double m11, double m12, double m21, double m22, double x, 
 
    /// <summary>Creates a mirror matrix about the line specified by the two points</summary>
    public static Matrix2 Mirror (Point2 p1, Point2 p2) {
-      // Get the slope denominator and if the its zero then the mirror line is parallel to Y-Axis.
-      double denom = p2.X - p1.X;
-      if (denom.IsZero ()) {
-         // In this case the mirror line is parallel to the Y-Axis.
-         // Translate the mirror line such that its colinear to the Y-Axis. Then apply the horizontal
-         // mirror matrix. Finally translate it back to get the correct placement.
-         if (p1.X.IsZero ()) return HMirror;
-         Matrix2 trans = Translation (-p1.X, 0);
-         return trans * HMirror * trans.GetInverse ();
-      }
+      double dx = p2.X - p1.X;
+      if (dx.IsZero ()) // Arbitrary vertical line
+         return Translation (-p1.X, 0) * HMirror * Translation (p1.X, 0);
+
+      double dy = p2.Y - p1.Y;
+      if (dy.IsZero ()) // Arbitrary horizontal line
+         return Translation (0, -p1.Y) * VMirror * Translation (0, p1.Y);
+
       // First translate the mirror line such that it goes through the origin.
       // Then rotate the line by -ve slope such that its colinear to X-Axis. Then apply
       // the vertical mirror matrix. Now use the inverse of the above 2 matrices (rotation and translation)
       // in the same order to bring the mirrored entity to the correct position. 
-      double m = (p2.Y - p1.Y) / denom, c = p1.Y - m * p1.X, fAng = Atan (m);
-      Matrix2 mat = c.IsZero () ? Identity : Translation (0, -c),
-               mat2 = fAng.IsZero () ? Identity : Rotation (-fAng);
-      mat *= mat2;
+      double m = dy / dx, c = p1.Y - m * p1.X, fAng = Atan (m); // Note: fAng != 0
+      Matrix2 mat = c.IsZero () ? Rotation (-fAng) : Translation (0, -c) * Rotation (-fAng);
       return mat * VMirror * mat.GetInverse ();
    }
 
