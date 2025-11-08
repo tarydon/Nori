@@ -287,7 +287,7 @@ class TMisc {
          pts.Add ((Point3)(pos.X, pos.Y, pos.Z));
       }
 
-      new CMeshBuilder (pts.AsSpan ()).Build ().Save (NT.TmpTxt);
+      new Mesh3Builder (pts.AsSpan ()).Build ().Save (NT.TmpTxt);
       Assert.TextFilesEqual ("Geom/CMesh/part-gen.tmesh", NT.TmpTxt);
    }
 
@@ -377,7 +377,7 @@ class TMisc {
       var nodes = tries.Select (n => (Point3)pts[n]).ToList ();
 
       // Build and compare the mesh
-      new CMeshBuilder (nodes.AsSpan ()).Build ().Save (NT.TmpTxt);
+      new Mesh3Builder (nodes.AsSpan ()).Build ().Save (NT.TmpTxt);
       Assert.TextFilesEqual ("Geom/Tess/gl2d.tmesh", NT.TmpTxt);
    }
 

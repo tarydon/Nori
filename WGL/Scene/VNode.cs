@@ -101,8 +101,16 @@ public class VNode {
    /// and construct the VNode for that. See RegisterAssembly for more details.
    public static VNode MakeFor (object obj) {
       ArgumentNullException.ThrowIfNull (obj);
-      if (!mBuilders.TryGetValue (obj.GetType (), out var ci))
-         throw new Exception ($"No VNode found for {obj.GetType ().FullName}");
+      var type = obj.GetType ();
+      if (!mBuilders.TryGetValue (type, out var ci)) {
+         foreach (var kvp in mBuilders)
+            if (kvp.Key.IsAssignableFrom (type)) {
+               ci = mBuilders[type] = kvp.Value;
+               break;
+            }
+         if (ci == null)
+            throw new Exception ($"No VNode found for {obj.GetType ().FullName}");
+      }
       return (VNode)ci.Invoke ([obj]);
    }
 

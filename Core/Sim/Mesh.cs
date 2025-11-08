@@ -222,11 +222,11 @@ public class Mesh3 (ImmutableArray<Mesh3.Node> vertex, ImmutableArray<int> trian
 /// more than a given threshold, it marks the edge as sharp. The SmoothMeshBuilder works with a given mesh
 /// as the target and adds triangles into that mesh. Note that you never need to supply normals to this.
 /// It computes normals based on which parts should be 'smooth' and which ones should be 'sharp'.
-public class CMeshBuilder {
+public class Mesh3Builder {
    /// <summary>Initialize a CMeshBuilder with a set of points </summary>
    /// These points, taken 3 at a time, define a set of triangles.
    /// <param name="pts">Triangle points.</param>
-   public CMeshBuilder (ReadOnlySpan<Point3> pts) {
+   public Mesh3Builder (ReadOnlySpan<Point3> pts) {
       Dictionary<Point3, int> verts = [];
       foreach (var pt in pts) {
          if (!verts.TryGetValue (pt, out int id)) {

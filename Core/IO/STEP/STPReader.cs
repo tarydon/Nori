@@ -283,7 +283,7 @@ public partial class STEPReader {
    void RComplex () {
       int n = N - 1;
       while (S[N++] != ';') { }
-      var sub = S[n..N];
+      var sub = S[n..--N];
       if (sub.Contains ("SOLID_ANGLE_UNIT") || sub.Contains ("MASS_UNIT")) return;
       if (sub.Contains ("PLANE_ANGLE_UNIT") || sub.Contains ("LENGTH_UNIT")) return;
       if (sub.Contains ("GEOMETRIC_REPRESENTATION_CONTEXT")) return;

@@ -19,7 +19,8 @@ public static class Lib {
    /// <summary>
    /// Tessellation error
    /// </summary>
-   public const double TessError = 0.1;
+   public const double FineTess = 0.01;
+   public const double CoarseTess = 0.2;
    /// <summary>TwoPI = 360 degrees, in radians</summary>
    public const double TwoPI = 2 * Math.PI;
    /// <summary>HalfPI = 90 degrees, in radians</summary>

@@ -82,14 +82,11 @@ partial class STEPReader {
    }
    List<Edge3> mEdges = [];
 
-   E3Plane MakePlane (int id, Plane plane, List<Contour3> contours) {
-      var cs = GetCoordSys (plane.CoordSys);
-      return new E3Plane (id, cs, contours.Select (a => a.Flatten (cs)));
-   }
+   E3Plane MakePlane (int id, Plane plane, List<Contour3> contours) 
+      => new E3Plane (id, contours, GetCoordSys (plane.CoordSys));
 
-   Ent3? MakeCylinder (Cylinder cylinder, List<Contour3> contours) {
-      return null;
-   }
+   E3Cylinder MakeCylinder (int id, Cylinder cylinder, List<Contour3> contours)
+      => new E3Cylinder (id, contours, GetCoordSys (cylinder.CoordSys), cylinder.Radius);
 
    void Process (Manifold m)
       => Process ((Shell)D[m.Outer]!);
@@ -112,9 +109,9 @@ partial class STEPReader {
       }
       Ent3? ent = D[a.Face] switch {
          Plane plane => MakePlane (a.Id, plane, contours),
-         Cylinder cylinder => MakeCylinder (cylinder, contours),
+         Cylinder cylinder => MakeCylinder (a.Id, cylinder, contours),
          _ => throw new BadCaseException (a.Face)
       };
-      if (ent != null) mModel.Ents.Add (ent);
+      if (ent != null && ent.Id == 1047) mModel.Ents.Add (ent);
    }
 }

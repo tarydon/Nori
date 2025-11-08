@@ -61,7 +61,7 @@ class MeshScene : Scene3 {
       }
 
       // 5. Now build the mesh.
-      return new CMeshBuilder (nodes.AsSpan ()).Build ();
+      return new Mesh3Builder (nodes.AsSpan ()).Build ();
    }
    Mesh3 mMesh;
 }

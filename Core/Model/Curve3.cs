@@ -7,6 +7,13 @@ namespace Nori;
 public abstract class Edge3 {
    public abstract Point3 Start { get; }
    public abstract Point3 End { get; }
+   /// <summary>
+   /// Returns a PiecewiseLinear approximation of this curve 
+   /// </summary>
+   /// 1. The curve is approximated with the given error threshold
+   /// 2. The End point of the curve is not included (it is effectively the start
+   ///    point of the next Edge in the sequence
+   public abstract void Discretize (List<Point3> pts, double tolerance);
 }
 
 #region class Line3 --------------------------------------------------------------------------------
@@ -22,6 +29,9 @@ public class Line3 : Edge3 {
    /// <summary>End point of the line</summary>
    public override Point3 End => mEnd;
    readonly Point3 mEnd;
+
+   // Methods ------------------------------------------------------------------
+   public override void Discretize (List<Point3> pts, double tolerance) => pts.Add (Start);
 }
 #endregion
 
@@ -58,6 +68,11 @@ public class Arc3 : Edge3 {
    public override Point3 Start => new Point3 (Radius, 0, 0) * ToXfm;
 
    // Methods ------------------------------------------------------------------
+   public override void Discretize (List<Point3> pts, double tolerance) {
+      int n = Lib.GetArcSteps (Radius, AngSpan, tolerance);
+      for (int i = 0; i < n; i++) pts.Add (GetPointAt ((double)i / n));
+   }
+
    /// <summary>Returns the point at a given lie</summary>
    public Point3 GetPointAt (double lie) {
       var (sin, cos) = Math.SinCos (AngSpan * lie);
@@ -73,9 +88,8 @@ public class Arc3 : Edge3 {
 public class Contour3 {
    public Contour3 (ImmutableArray<Edge3> edges) => mEdges = edges;
 
-   public IEnumerable<Point3> Discretize (double threshold) {
-
-   }
+   public void Discretize (List<Point3> pts, double tolerance) 
+      => mEdges.ForEach (e => e.Discretize (pts, tolerance));
 
    public Poly Flatten (CoordSystem cs) {
       var pb = PolyBuilder.It;
