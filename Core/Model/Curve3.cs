@@ -7,6 +7,9 @@ namespace Nori;
 public abstract class Edge3 {
    public abstract Point3 Start { get; }
    public abstract Point3 End { get; }
+
+   public abstract Point3 GetPointAt (double lie);
+
    /// <summary>
    /// Returns a PiecewiseLinear approximation of this curve 
    /// </summary>
@@ -32,6 +35,8 @@ public class Line3 : Edge3 {
 
    // Methods ------------------------------------------------------------------
    public override void Discretize (List<Point3> pts, double tolerance) => pts.Add (Start);
+
+   public override Point3 GetPointAt (double lie) => lie.Along (mStart, mEnd);
 }
 #endregion
 
@@ -74,7 +79,7 @@ public class Arc3 : Edge3 {
    }
 
    /// <summary>Returns the point at a given lie</summary>
-   public Point3 GetPointAt (double lie) {
+   override public Point3 GetPointAt (double lie) {
       var (sin, cos) = Math.SinCos (AngSpan * lie);
       return new Point3 (cos * Radius, sin * Radius, 0) * ToXfm;
    }

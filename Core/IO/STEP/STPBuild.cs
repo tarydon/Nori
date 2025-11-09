@@ -71,7 +71,7 @@ partial class STEPReader {
          if (!oe.Dir) (start, end) = (end, start);
          Edge3 edge = D[ec.Basis] switch {
             Line line => new Line3 (start, end),
-            Circle circle => MakeCircle (circle, start, end, ec.SameSense ^ oe.Dir),
+            Circle circle => MakeCircle (circle, start, end, !(!ec.SameSense ^ !oe.Dir)),
             _ => throw new BadCaseException (ec.Basis)
          };
          mEdges.Add (edge);
@@ -86,7 +86,7 @@ partial class STEPReader {
       => new E3Plane (id, contours, GetCoordSys (plane.CoordSys));
 
    E3Cylinder MakeCylinder (int id, Cylinder cylinder, List<Contour3> contours)
-      => new E3Cylinder (id, contours, GetCoordSys (cylinder.CoordSys), cylinder.Radius);
+      => E3Cylinder.Build (id, contours, GetCoordSys (cylinder.CoordSys), cylinder.Radius);
 
    void Process (Manifold m)
       => Process ((Shell)D[m.Outer]!);
@@ -112,6 +112,6 @@ partial class STEPReader {
          Cylinder cylinder => MakeCylinder (a.Id, cylinder, contours),
          _ => throw new BadCaseException (a.Face)
       };
-      if (ent != null && ent.Id == 1047) mModel.Ents.Add (ent);
+      if (ent != null) mModel.Ents.Add (ent);
    }
 }

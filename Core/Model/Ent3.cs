@@ -7,6 +7,39 @@ public sealed class E3Cylinder : E3CSSurface {
    public E3Cylinder (int id, IEnumerable<Contour3> trims, CoordSystem cs, double radius) 
       : base (id, trims, cs) => Radius = radius;
 
+   public static E3Cylinder Build (int id, IEnumerable<Contour3> trims, CoordSystem cs, double radius) {
+      // We want to possibly rotate the given CoordSystem about its local Z axis so that the
+      // cut line 
+      Bound1 angSpan = new ();
+      var xfm = Matrix3.From (cs);
+      foreach (var edge in trims.First ().Edges) {
+         Adjust (edge.Start); Adjust (edge.GetPointAt (0.5));
+      }
+      if (angSpan.Length > Lib.TwoPI - Lib.Epsilon) {
+         Lib.Trace ("Not working");
+         return new (id, trims, cs, radius);
+      } else {
+         cs *= Matrix3.Rotation (EAxis.Z, -angSpan.Min);
+      }
+      return new E3Cylinder (id, trims, cs, radius);
+
+      void Adjust (Point3 pt) {
+         pt *= xfm;
+         double ang = Math.Atan2 (pt.Y, pt.X);
+         if (angSpan.IsEmpty) angSpan += ang;
+         else if (!angSpan.Contains (ang)) {
+            if (ang < angSpan.Min) {
+               double altAng = ang + Lib.TwoPI;
+               if (altAng - angSpan.Max < angSpan.Min - ang) ang = altAng;
+            } else {
+               double altAng = ang - Lib.TwoPI;
+               if (ang - angSpan.Max > angSpan.Min - altAng) ang = altAng;
+            }
+            angSpan += ang;
+         }
+      }
+   }
+
    // Properties ---------------------------------------------------------------
    /// <summary>
    /// Radius of the cylinder
