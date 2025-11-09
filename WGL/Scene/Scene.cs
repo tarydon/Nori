@@ -99,6 +99,8 @@ public abstract partial class Scene {
    }
 
    // Overrides ----------------------------------------------------------------
+   public virtual void Picked (object obj) => Lib.Trace ($"Picked: {obj}");
+
    // Helper used internally by the Xfm property
    protected abstract (Matrix3 World, Matrix3 Projection) ComputeXfms ();
 

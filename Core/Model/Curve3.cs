@@ -5,8 +5,12 @@
 namespace Nori;
 
 public abstract class Edge3 {
+   protected Edge3 () { }
+   protected Edge3 (int pairId) => PairId = pairId;
    public abstract Point3 Start { get; }
    public abstract Point3 End { get; }
+
+   public readonly int PairId;
 
    public abstract Point3 GetPointAt (double lie);
 
@@ -19,8 +23,8 @@ public abstract class Edge3 {
 
 #region class Line3 --------------------------------------------------------------------------------
 public class Line3 : Edge3 {
-   public Line3 (Point3 start, Point3 end) => (mStart, mEnd) = (start, end);
    Line3 () { }
+   public Line3 (int pairId, Point3 start, Point3 end) : base (pairId) => (mStart, mEnd) = (start, end);
 
    public override string ToString () => $"Line3 Len={Start.DistTo (End).Round (2)}";
 
@@ -45,9 +49,9 @@ public class Line3 : Edge3 {
 #region class Arc3 ---------------------------------------------------------------------------------
 public class Arc3 : Edge3 {
    // Constructors -------------------------------------------------------------
-   public Arc3 (CoordSystem cs, double radius, double angSpan)
-      => (CS, Radius, AngSpan) = (cs, radius, angSpan);
    Arc3 () { }
+   public Arc3 (int pairId, CoordSystem cs, double radius, double angSpan) : base (pairId)
+      => (CS, Radius, AngSpan) = (cs, radius, angSpan);
 
    public override string ToString ()
       => $"Arc3 R={Radius.Round (2)} Span={AngSpan.R2D ().Round (1)}\u00b0";

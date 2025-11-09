@@ -32,7 +32,7 @@ partial class STEPReader {
    Vector3 GetVector (int nVector)
       => ((Direction)D[nVector]!).Vec;
 
-   Arc3 MakeCircle (Circle circle, Point3 start, Point3 end, bool ccw) {
+   Arc3 MakeArc (int pairId, Circle circle, Point3 start, Point3 end, bool ccw) {
       CoordSystem cs = GetCoordSys (circle.CoordSys);
       Debug.Assert (cs.Org.DistTo (start).EQ (circle.Radius));
       Debug.Assert (cs.Org.DistTo (end).EQ (circle.Radius));
@@ -56,7 +56,7 @@ partial class STEPReader {
          angSpan = Lib.Acos (csFinal.VecX.CosineToAlreadyNormalized (endV));
          if (endV.Opposing (csFinal.VecY)) angSpan = Lib.TwoPI - angSpan;
       }
-      var a3 = new Arc3 (csFinal, circle.Radius, angSpan);
+      var a3 = new Arc3 (pairId, csFinal, circle.Radius, angSpan);
       Debug.Assert (a3.Start.EQ (start));
       Debug.Assert (a3.End.EQ (end));
       return a3;
@@ -71,8 +71,8 @@ partial class STEPReader {
          Point3 start = GetPoint (ec.Start), end = GetPoint (ec.End);
          if (!oe.Dir) (start, end) = (end, start);
          Edge3 edge = D[ec.Basis] switch {
-            Line line => new Line3 (start, end),
-            Circle circle => MakeCircle (circle, start, end, !(!ec.SameSense ^ !oe.Dir)),
+            Line line => new Line3 (oe.Edge, start, end),
+            Circle circle => MakeArc (oe.Edge, circle, start, end, !(!ec.SameSense ^ !oe.Dir)),
             _ => throw new BadCaseException (ec.Basis)
          };
          mEdges.Add (edge);
@@ -101,7 +101,6 @@ partial class STEPReader {
    void Process (AdvancedFace a) {
       Debug.Assert (a.Contours.Length > 0);
       Debug.Assert (D[a.Contours[0]]!.GetType ().Name == "FaceOuterBound");
-//      if (a.Id != 795) return;
 
       List<Contour3> contours = [];
       foreach (var n in a.Contours) {

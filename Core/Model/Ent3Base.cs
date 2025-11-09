@@ -34,7 +34,8 @@ namespace Nori;
 ///	  E3PrismSurface    - Surface defined by sweeping a generatrix curve along a line
 ///     E3SpunSurface     - Surface defined by spinning a generatrix curve about an axis
 ///   E3Plane             - Plane defined by a set of Poly lofted into space
-public abstract class Ent3 {
+[EPropClass]
+public abstract partial class Ent3 {
    protected Ent3 () { }
    public Ent3 (int id) => Id = id;
 
@@ -43,8 +44,33 @@ public abstract class Ent3 {
    public readonly int Id;
 
    public override string ToString () => $"{GetType ().Name} #{Id}";
+
+   /// <summary>Is this entity selected?</summary>
+   public bool IsSelected {
+      get => Get (E3Flags.Selected);
+      set { if (Set (E3Flags.Selected, value)) Notify (EProp.Selected); }
+   }
+
+   public E3Flags Flags => mFlags;
+
+   // Protected ----------------------------------------------------------------
+   // Bitflags for this entity
+   protected E3Flags mFlags;
+   // Returns true if the specified bit is set
+   protected bool Get (E3Flags bit) => (mFlags & bit) != 0;
+   // Sets/resets one bit from the flags, returns true if state changed
+   protected bool Set (E3Flags bits, bool value) {
+      var old = mFlags;
+      if (value) mFlags |= bits; else mFlags &= ~bits;
+      return mFlags != old;
+   }
 }
 #endregion
+
+[Flags]
+public enum E3Flags {
+   Selected = 0x1,
+}
 
 #region class E3Surface ----------------------------------------------------------------------------
 public abstract class E3Surface : Ent3 {

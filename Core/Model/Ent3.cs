@@ -2,8 +2,6 @@
 // ╔═╦╦═╦╦╬╣ Ent3.cs
 // ║║║║╬║╔╣║ <<TODO>>
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
-using Microsoft.VisualBasic;
-
 namespace Nori;
 
 #region class E3Cylinder ---------------------------------------------------------------------------
@@ -79,10 +77,19 @@ public sealed class E3Cylinder : E3CSSurface {
    }
 
    Mesh3? BuildPartCylinderMesh (double tolerance) {
-      if (mTrims.Length != 1 || mTrims[0].Edges.Length != 4) return null;
-      var arcs = mTrims[0].Edges.OfType<Arc3> ().ToList ();
+      if (mTrims.Length != 1 || mTrims[0].Edges.Length < 4) return null;
+      var arcs = mTrims[0].Edges.OfType<Arc3> ().ToList (); if (arcs.Count != 2) return null;
       var lines = mTrims[0].Edges.OfType<Line3> ().ToList ();
-      if (arcs.Count != 2 || lines.Count != 2) return null;
+      for (int i = lines.Count - 1; i >= 1; i--) {
+         Line3 line0 = lines[i - 1], line1 = lines[i];
+         Vector3 vec0 = (line0.End - line0.Start).Normalized ();
+         Vector3 vec1 = (line1.End - line1.Start).Normalized ();
+         if (vec0.EQ (vec1) && line0.End.EQ (line1.Start)) {
+            lines[i - 1] = new (line0.PairId, line0.Start, line1.End);
+            lines.RemoveAt (i);
+         }
+      }
+      if (lines.Count != 2) return null;
       if (!arcs[0].AngSpan.EQ (arcs[1].AngSpan, 0.001)) return null;
       if (!lines[0].Length.EQ (lines[1].Length, 0.01)) return null;
 

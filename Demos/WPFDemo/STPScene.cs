@@ -8,15 +8,22 @@ class STPScene : Scene3 {
       mFile = file;
       var sr = new STEPReader (file);
       sr.Parse ();
-      var model = sr.Build ();
+      mModel = sr.Build ();
 
       Lib.Tracer = TraceVN.Print;
       BgrdColor = Color4.Gray (96);
-      Bound = model.Bound;
-      Root = new GroupVN ([new Model3VN (model), TraceVN.It]);
+      Bound = mModel.Bound;
+      Root = new GroupVN ([new Model3VN (mModel), TraceVN.It]);
       TraceVN.TextColor = Color4.Yellow;
    }
    string mFile;
+
+   public override void Picked (object obj) {
+      if (!HW.IsShiftDown) 
+         mModel.Ents.ForEach (a => a.IsSelected = false);
+      if (obj is Ent3 ent) ent.IsSelected = true;
+   }
+   Model3 mModel;
 
    public void CreateUI (UIElementCollection ui) {
       ui.Clear ();
