@@ -29,6 +29,8 @@ public class Line3 : Edge3 {
    public override Point3 Start => mStart;
    readonly Point3 mStart;
 
+   public double Length => Start.DistTo (End);
+
    /// <summary>End point of the line</summary>
    public override Point3 End => mEnd;
    readonly Point3 mEnd;
@@ -114,7 +116,7 @@ public class Contour3 {
                if (arc.AngSpan.EQ (Lib.TwoPI)) {
                   pb.Arc (start, center, flags);
                   pb.Arc (center + (center - start), center, flags);
-               } else 
+               } else
                   pb.Arc (start, center, flags);
                break;
             default:

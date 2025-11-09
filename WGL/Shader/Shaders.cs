@@ -139,6 +139,12 @@ partial class Line3DShader : Shader<Vec3F, Seg2DShader.Settings> {
 partial class PhongShader () : FacetShader (ShaderImp.Phong) { }
 #endregion
 
+#region class PhongPinkShader ----------------------------------------------------------------------
+/// <summary>Phong shader that colors back-faces in Pink (useful for debugging)</summary>
+[Singleton]
+partial class PhongPinkShader () : FacetShader (ShaderImp.PhongPink) { }
+#endregion
+
 #region class PickShader ---------------------------------------------------------------------------
 /// <summary>3D shader used during picking - replaces actual colors with VNode Ids</summary>
 [Singleton]

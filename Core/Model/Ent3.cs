@@ -2,6 +2,8 @@
 // ╔═╦╦═╦╦╬╣ Ent3.cs
 // ║║║║╬║╔╣║ <<TODO>>
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
+using Microsoft.VisualBasic;
+
 namespace Nori;
 
 #region class E3Cylinder ---------------------------------------------------------------------------
@@ -41,7 +43,9 @@ public sealed class E3Cylinder : E3CSSurface {
    }
 
    protected override Mesh3 BuildMesh (double tolerance)
-      => BuildFullCylinderMesh (tolerance) ?? base.BuildMesh (tolerance);
+      => BuildFullCylinderMesh (tolerance) ??
+         BuildPartCylinderMesh (tolerance) ??
+         base.BuildMesh (tolerance);
 
    Mesh3? BuildFullCylinderMesh (double tolerance) {
       if (mTrims.Length != 2 || mTrims.Any (a => a.Edges.Length != 1)) return null;
@@ -71,6 +75,38 @@ public sealed class E3Cylinder : E3CSSurface {
          tris.Add (j); tris.Add (i + n); tris.Add (j + n);
       }
       if (InFacing) tris.Reverse ();
+      return new ([.. nodes], [.. tris], [.. wires]);
+   }
+
+   Mesh3? BuildPartCylinderMesh (double tolerance) {
+      if (mTrims.Length != 1 || mTrims[0].Edges.Length != 4) return null;
+      var arcs = mTrims[0].Edges.OfType<Arc3> ().ToList ();
+      var lines = mTrims[0].Edges.OfType<Line3> ().ToList ();
+      if (arcs.Count != 2 || lines.Count != 2) return null;
+      if (!arcs[0].AngSpan.EQ (arcs[1].AngSpan, 0.001)) return null;
+      if (!lines[0].Length.EQ (lines[1].Length, 0.01)) return null;
+
+      Point3 cen0 = arcs[0].Center;
+      Vector3 vecZ0 = arcs[1].Center - cen0;
+      Point3 cenLift = cen0 + vecZ0.Normalized ();
+      List<Point3> pts = [];
+      arcs[0].Discretize (pts, tolerance); pts.Add (arcs[0].End); int n = pts.Count;
+      pts.Reverse ();
+      arcs[1].Discretize (pts, tolerance); pts.Add (arcs[1].End);
+      List<Mesh3.Node> nodes = [];
+      foreach (var pt in pts) {
+         Vector3 vec = (pt.SnappedToUnitLine (cen0, cenLift) - pt).Normalized ();
+         if (!InFacing) vec = -vec;
+         nodes.Add (new (pt, vec));
+      }
+      List<int> tris = [], wires = [0, n, n - 1, 2 * n - 1];
+      for (int i = 0; i < n - 1; i++) {
+         int j = i + 1;
+         wires.Add (i); wires.Add (i + 1);
+         wires.Add (i + n + 1); wires.Add (i + n);
+         tris.Add (i); tris.Add (i + n); tris.Add (j);
+         tris.Add (j); tris.Add (i + n); tris.Add (j + n);
+      }
       return new ([.. nodes], [.. tris], [.. wires]);
    }
 

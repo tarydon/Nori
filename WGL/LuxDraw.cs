@@ -227,7 +227,10 @@ public static partial class Lux {
          case EShadeMode.Flat: FlatFacetShader.It.Draw (nodes, tris); break;
          case EShadeMode.Gourad: GouradShader.It.Draw (nodes, tris); break;
          case EShadeMode.Glass: GlassShader.It.Draw (nodes, tris); break;
-         default: PhongShader.It.Draw (nodes, tris); break;
+         default:
+            if (BackFacesPink) PhongPinkShader.It.Draw (nodes, tris);
+            else PhongShader.It.Draw (nodes, tris); 
+            break;
       }
       switch (shadeMode) {
          case EShadeMode.Glass: GlassLineShader.It.Draw (nodes, wires); break;

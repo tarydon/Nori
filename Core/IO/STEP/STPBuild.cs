@@ -101,7 +101,7 @@ partial class STEPReader {
    void Process (AdvancedFace a) {
       Debug.Assert (a.Contours.Length > 0);
       Debug.Assert (D[a.Contours[0]]!.GetType ().Name == "FaceOuterBound");
-      //if (a.Id != 95) return;
+//      if (a.Id != 795) return;
 
       List<Contour3> contours = [];
       foreach (var n in a.Contours) {

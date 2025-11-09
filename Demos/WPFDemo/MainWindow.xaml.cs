@@ -33,8 +33,8 @@ public partial class MainWindow : Window {
 
    void Display (Scene scene) {
       mSettings.Children.Clear ();
-      if (scene is RobotScene rs) rs.CreateUI (mSettings.Children);
-      if (scene is STPScene ss) ss.CreateUI (mSettings.Children);
       Lux.UIScene = scene;
+      if (scene is RobotScene rs) rs.CreateUI (mSettings.Children);
+      if (scene is STPScene ss) { ss.CreateUI (mSettings.Children); Lux.BackFacesPink = true; }
    }
 }
