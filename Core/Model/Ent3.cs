@@ -1,27 +1,27 @@
-﻿namespace Nori;
+// ────── ╔╗
+// ╔═╦╦═╦╦╬╣ Ent3.cs
+// ║║║║╬║╔╣║ <<TODO>>
+// ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
+namespace Nori;
 
 #region class E3Cylinder ---------------------------------------------------------------------------
 public sealed class E3Cylinder : E3CSSurface {
    // Constructors -------------------------------------------------------------
    E3Cylinder () { }
-   public E3Cylinder (int id, IEnumerable<Contour3> trims, CoordSystem cs, double radius) 
-      : base (id, trims, cs) => Radius = radius;
+   public E3Cylinder (int id, IEnumerable<Contour3> trims, CoordSystem cs, double radius, bool infacing)
+      : base (id, trims, cs) => (Radius, InFacing) = (radius, infacing);
 
-   public static E3Cylinder Build (int id, IEnumerable<Contour3> trims, CoordSystem cs, double radius) {
+   public static E3Cylinder Build (int id, IReadOnlyList<Contour3> trims, CoordSystem cs, double radius, bool infacing) {
       // We want to possibly rotate the given CoordSystem about its local Z axis so that the
-      // cut line 
+      // cut line
       Bound1 angSpan = new ();
       var xfm = Matrix3.From (cs);
       foreach (var edge in trims.First ().Edges) {
          Adjust (edge.Start); Adjust (edge.GetPointAt (0.5));
       }
-      if (angSpan.Length > Lib.TwoPI - Lib.Epsilon) {
-         Lib.Trace ("Not working");
-         return new (id, trims, cs, radius);
-      } else {
-         cs *= Matrix3.Rotation (EAxis.Z, -angSpan.Min);
-      }
-      return new E3Cylinder (id, trims, cs, radius);
+      if (angSpan.Length < Lib.TwoPI - Lib.Epsilon)
+         cs *= Matrix3.Rotation (cs.Org, cs.Org + cs.VecZ, -(angSpan.Mid + Lib.PI));
+      return new (id, trims, cs, radius, infacing);
 
       void Adjust (Point3 pt) {
          pt *= xfm;
@@ -40,11 +40,46 @@ public sealed class E3Cylinder : E3CSSurface {
       }
    }
 
+   protected override Mesh3 BuildMesh (double tolerance)
+      => BuildFullCylinderMesh (tolerance) ?? base.BuildMesh (tolerance);
+
+   Mesh3? BuildFullCylinderMesh (double tolerance) {
+      if (mTrims.Length != 2 || mTrims.Any (a => a.Edges.Length != 1)) return null;
+      var arcs = mTrims.Select (a => a.Edges[0]).OfType<Arc3> ().ToList ();
+      if (arcs.Count != 2) return null;
+      double cos = arcs[0].CS.VecZ.CosineToAlreadyNormalized (arcs[1].CS.VecZ);
+      if (!Math.Abs (cos).EQ (1)) return null;
+      Point3 cen0 = arcs[0].Center;
+      Vector3 vecZ0 = arcs[1].Center - cen0, vecZ1 = arcs[1].Start - arcs[0].Start;
+      if (!vecZ0.EQ (vecZ1)) return null;
+      Point3 cenLift = cen0 + vecZ0.Normalized ();
+
+      List<Point3> pts = [];
+      List<Mesh3.Node> nodes = [];
+      List<int> wires = [], tris = [];
+      arcs[0].Discretize (pts, tolerance); int n = pts.Count;
+      foreach (var pt in pts) {
+         Vector3 vec = (pt.SnappedToUnitLine (cen0, cenLift) - pt).Normalized ();
+         if (!InFacing) vec = -vec;
+         nodes.Add (new (pt, vec));
+      }
+      for (int i = 0; i < n; i++) {
+         int j = (i + 1) % n;
+         nodes.Add (new ((Vec3F)(pts[i] + vecZ0), nodes[i].Vec));
+         wires.Add (i); wires.Add (j); wires.Add (i + n); wires.Add (j + n);
+         tris.Add (i); tris.Add (i + n); tris.Add (j);
+         tris.Add (j); tris.Add (i + n); tris.Add (j + n);
+      }
+      if (InFacing) tris.Reverse ();
+      return new ([.. nodes], [.. tris], [.. wires]);
+   }
+
    // Properties ---------------------------------------------------------------
-   /// <summary>
-   /// Radius of the cylinder
-   /// </summary>
+   /// <summary>Radius of the cylinder</summary>
    public readonly double Radius;
+
+   /// <summary>If set, the normals are facing towards the center</summary>
+   public readonly bool InFacing;
 
    // Overrides ----------------------------------------------------------------
    // In the canonical definition, the cylinder is defined with the base center at
@@ -76,7 +111,7 @@ public sealed class E3Plane : E3Surface {
    public E3Plane (int id, IEnumerable<Contour3> trims, CoordSystem cs) : base (id, trims) => mCS = cs;
    CoordSystem mCS;
 
-   protected override Mesh3 ComputeMesh (double tolerance) {
+   protected override Mesh3 BuildMesh (double tolerance) {
       List<Point2> pts = [];
 
       List<int> splits = [0], wires = [];

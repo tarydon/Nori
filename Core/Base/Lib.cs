@@ -16,9 +16,7 @@ public static class Lib {
    public const double Epsilon = 1e-6;
    /// <summary>PI = 180 degrees, in radians</summary>
    public const double PI = Math.PI;
-   /// <summary>
-   /// Tessellation error
-   /// </summary>
+   /// <summary>Tessellation error</summary>
    public const double FineTess = 0.01;
    public const double CoarseTess = 0.2;
    /// <summary>TwoPI = 360 degrees, in radians</summary>

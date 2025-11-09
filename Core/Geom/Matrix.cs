@@ -153,6 +153,14 @@ public class Matrix3 {
       );
    }
 
+   /// <summary>Matrix of rotation about an arbitary axis (not necessarily passing through the origin)</summary>
+   public static Matrix3 Rotation (Point3 a, Point3 b, double angle) {
+      if (angle.IsZero ()) return Identity;
+      return Translation (-a.X, -a.Y, -a.Z) *
+             Rotation (b - a, angle) *
+             Translation (a.X, a.Y, a.Z);
+   }
+
    /// <summary>Construct a rotation matrix corresponding to the given Quaternion</summary>
    public static Matrix3 Rotation (Quaternion q) {
       if (q.Angle.IsZero ()) return Identity;
@@ -204,8 +212,8 @@ public class Matrix3 {
    public static Matrix3 From (in CoordSystem cs) {
       GetRotations (cs.VecX, cs.VecY, out double xRot, out double yRot, out double zRot);
       return Translation (-(Vector3)cs.Org)
-           * Rotation (Vector3.YAxis, yRot) 
-           * Rotation (Vector3.ZAxis, zRot) 
+           * Rotation (Vector3.YAxis, yRot)
+           * Rotation (Vector3.ZAxis, zRot)
            * Rotation (Vector3.XAxis, xRot);
    }
 
@@ -237,8 +245,8 @@ public class Matrix3 {
    /// <summary>Composes a matrix to go TO the given coordinate-system from the World</summary>
    public static Matrix3 To (in CoordSystem cs) {
       GetRotations (cs.VecX, cs.VecY, out double xRot, out double yRot, out double zRot);
-      return Rotation (Vector3.XAxis, -xRot) 
-           * Rotation (Vector3.ZAxis, -zRot) 
+      return Rotation (Vector3.XAxis, -xRot)
+           * Rotation (Vector3.ZAxis, -zRot)
            * Rotation (Vector3.YAxis, -yRot)
            * Translation ((Vector3)cs.Org);
    }

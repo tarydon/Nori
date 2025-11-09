@@ -3,6 +3,7 @@
 // ║║║║╬║╔╣║ <<TODO>>
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 using System.Diagnostics;
+using System.Xml;
 using Nori.STEP;
 namespace Nori;
 
@@ -82,11 +83,14 @@ partial class STEPReader {
    }
    List<Edge3> mEdges = [];
 
-   E3Plane MakePlane (int id, Plane plane, List<Contour3> contours) 
-      => new E3Plane (id, contours, GetCoordSys (plane.CoordSys));
+   E3Plane MakePlane (int id, Plane plane, List<Contour3> contours, bool aligned) {
+      var cs = GetCoordSys (plane.CoordSys);
+      if (!aligned) cs = new (cs.Org, cs.VecX, -cs.VecY);
+      return new E3Plane (id, contours, cs);
+   }
 
-   E3Cylinder MakeCylinder (int id, Cylinder cylinder, List<Contour3> contours)
-      => E3Cylinder.Build (id, contours, GetCoordSys (cylinder.CoordSys), cylinder.Radius);
+   E3Cylinder MakeCylinder (int id, Cylinder cylinder, List<Contour3> contours, bool aligned)
+      => E3Cylinder.Build (id, contours, GetCoordSys (cylinder.CoordSys), cylinder.Radius, !aligned);
 
    void Process (Manifold m)
       => Process ((Shell)D[m.Outer]!);
@@ -97,6 +101,7 @@ partial class STEPReader {
    void Process (AdvancedFace a) {
       Debug.Assert (a.Contours.Length > 0);
       Debug.Assert (D[a.Contours[0]]!.GetType ().Name == "FaceOuterBound");
+      //if (a.Id != 95) return;
 
       List<Contour3> contours = [];
       foreach (var n in a.Contours) {
@@ -108,8 +113,8 @@ partial class STEPReader {
          contours.Add (c);
       }
       Ent3? ent = D[a.Face] switch {
-         Plane plane => MakePlane (a.Id, plane, contours),
-         Cylinder cylinder => MakeCylinder (a.Id, cylinder, contours),
+         Plane plane => MakePlane (a.Id, plane, contours, a.Dir),
+         Cylinder cylinder => MakeCylinder (a.Id, cylinder, contours, a.Dir),
          _ => throw new BadCaseException (a.Face)
       };
       if (ent != null) mModel.Ents.Add (ent);

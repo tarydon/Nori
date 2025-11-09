@@ -39,6 +39,8 @@ public class Mesh3 (ImmutableArray<Mesh3.Node> vertex, ImmutableArray<int> trian
 
    [StructLayout (LayoutKind.Sequential, Pack = 2, Size = 20)]
    public readonly struct Node (Vec3F pos, Vec3H vec) {
+      public Node (Point3 pos, Vector3 vec) : this ((Vec3F)pos, (Vec3H)vec) { }
+
       public Vec3F Pos => pos;
       public Vec3H Vec => vec;
 

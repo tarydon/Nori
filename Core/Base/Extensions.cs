@@ -91,6 +91,9 @@ public static class Extensions {
    /// <summary>Checks if a float is NaN</summary>
    public static bool IsNaN (this float a) => float.IsNaN (a);
 
+   /// <summary>Is this an odd integer</summary>
+   public static bool IsOdd (this int n) => (n % 2) != 0;
+
    /// <summary>Checks if a given double is zero to within 1e-6</summary>
    public static bool IsZero (this double a) => Abs (a) < 1e-6;
    /// <summary>Checks if a given double is zero (to within the given threshold)</summary>

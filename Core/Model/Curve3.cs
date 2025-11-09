@@ -10,9 +10,7 @@ public abstract class Edge3 {
 
    public abstract Point3 GetPointAt (double lie);
 
-   /// <summary>
-   /// Returns a PiecewiseLinear approximation of this curve 
-   /// </summary>
+   /// <summary>Returns a PiecewiseLinear approximation of this curve</summary>
    /// 1. The curve is approximated with the given error threshold
    /// 2. The End point of the curve is not included (it is effectively the start
    ///    point of the next Edge in the sequence
@@ -23,6 +21,8 @@ public abstract class Edge3 {
 public class Line3 : Edge3 {
    public Line3 (Point3 start, Point3 end) => (mStart, mEnd) = (start, end);
    Line3 () { }
+
+   public override string ToString () => $"Line3 Len={Start.DistTo (End).Round (2)}";
 
    // Properties ---------------------------------------------------------------
    /// <summary>Start point of the line</summary>
@@ -46,6 +46,9 @@ public class Arc3 : Edge3 {
    public Arc3 (CoordSystem cs, double radius, double angSpan)
       => (CS, Radius, AngSpan) = (cs, radius, angSpan);
    Arc3 () { }
+
+   public override string ToString ()
+      => $"Arc3 R={Radius.Round (2)} Span={AngSpan.R2D ().Round (1)}\u00b0";
 
    // Properties ---------------------------------------------------------------
    /// <summary>Angular span of the arc (in radians)</summary>
@@ -75,6 +78,7 @@ public class Arc3 : Edge3 {
    // Methods ------------------------------------------------------------------
    public override void Discretize (List<Point3> pts, double tolerance) {
       int n = Lib.GetArcSteps (Radius, AngSpan, tolerance);
+      if (AngSpan.EQ (Lib.TwoPI) && n.IsOdd ()) n++;
       for (int i = 0; i < n; i++) pts.Add (GetPointAt ((double)i / n));
    }
 
@@ -93,7 +97,7 @@ public class Arc3 : Edge3 {
 public class Contour3 {
    public Contour3 (ImmutableArray<Edge3> edges) => mEdges = edges;
 
-   public void Discretize (List<Point3> pts, double tolerance) 
+   public void Discretize (List<Point3> pts, double tolerance)
       => mEdges.ForEach (e => e.Discretize (pts, tolerance));
 
    public Poly Flatten (CoordSystem cs) {
@@ -105,10 +109,13 @@ public class Contour3 {
                pb.Line (Xfm (line.Start));
                break;
             case Arc3 arc:
-               var (center, radius) = (Xfm (arc.Center), arc.Radius);
-               if (arc.AngSpan.EQ (Lib.TwoPI)) return Poly.Circle (center, radius);
-               bool ccw = (arc.CS.VecZ * xfm).Z < 0;
-               pb.Arc (Xfm (arc.Start), center, ccw ? Poly.EFlags.CCW : Poly.EFlags.CW);
+               var (center, start, radius) = (Xfm (arc.Center), Xfm (arc.Start), arc.Radius);
+               var flags = (arc.CS.VecZ * xfm).Z > 0 ? Poly.EFlags.CCW : Poly.EFlags.CW;
+               if (arc.AngSpan.EQ (Lib.TwoPI)) {
+                  pb.Arc (start, center, flags);
+                  pb.Arc (center + (center - start), center, flags);
+               } else 
+                  pb.Arc (start, center, flags);
                break;
             default:
                throw new BadCaseException (edge);

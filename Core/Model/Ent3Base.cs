@@ -11,12 +11,12 @@ namespace Nori;
 /// The hiearchy below shows the different classes derived from Ent3. When we import a STEP file,
 /// all the surfaces from the BREP become objects of types derived from E3Surface (that is the level
 /// at which we maintain connectivity information). When we do a sheet-metalization of that model,
-/// we create entities derived from E3Thick (this is now a developable sheet-metal model). 
+/// we create entities derived from E3Thick (this is now a developable sheet-metal model).
 /// Note that one could argue the E3Plane should be an E3CSSurface, but we derive it directly from
 /// E3Surface for reasons of efficiency (also based on the observation that 90% of all entities we
 /// will import will be E3Plane and we want to keep that as lightweight as possible). It is important
-/// that E3Plane is an E3Surface mainly because of connectivity information considerations. 
-/// 
+/// that E3Plane is an E3Surface mainly because of connectivity information considerations.
+///
 /// E3Mesh                - Wrapper around a Mesh
 /// E3Thick               - Base for all sheet-metal models (entities with thickness)
 ///   E3Sheet             - Thick planar surface (equivalent of Flux E3Plane)
@@ -54,11 +54,11 @@ public abstract class E3Surface : Ent3 {
    public override Bound3 Bound => Bound3.Update (ref mBound, ComputeBound);
    Bound3 mBound = new ();
 
-   public Mesh3 Mesh => _mesh ??= ComputeMesh (Lib.FineTess); 
+   public Mesh3 Mesh => _mesh ??= BuildMesh (0.1);
    Mesh3? _mesh;
 
    public IReadOnlyList<Contour3> Trims => mTrims;
-   Contour3[] mTrims = [];
+   protected Contour3[] mTrims = [];
 
    // Implementation -----------------------------------------------------------
    Bound3 ComputeBound () {
@@ -67,7 +67,7 @@ public abstract class E3Surface : Ent3 {
       return new (pts);
    }
 
-   protected abstract Mesh3 ComputeMesh (double tolerance);
+   protected abstract Mesh3 BuildMesh (double tolerance);
 }
 #endregion
 
@@ -79,15 +79,15 @@ public abstract class E3ParaSurface : E3Surface {
    protected abstract Vector3 EvalNormal (Point2 pt);
    protected abstract Point2 Flatten (Point3 pt);
 
-   protected override Mesh3 ComputeMesh (double tolerance) {
-      // First, we flatten each trimming curve into the UV space, and compute a 
+   protected override Mesh3 BuildMesh (double tolerance) {
+      // First, we flatten each trimming curve into the UV space, and compute a
       // 2D triangular tessellation in the UV space. At this point, we compute the
       // following set of data:
       List<Point3> pts = [];  // Discretization of all the trimming curves of the surface
       List<int> splits = [0]; // Split points that divide pts into individual contours
       List<int> wires = [];   // Elements taken as pairs that defined the silhouette wires
       foreach (var contour in Trims) {
-         int a = pts.Count; 
+         int a = pts.Count;
          contour.Discretize (pts, tolerance);
          int b = pts.Count; splits.Add (b);
          wires.Add (b - 1);
@@ -110,16 +110,16 @@ public abstract class E3ParaSurface : E3Surface {
          nodes.Add (new (uv, (Vec3F)pts[i], (Vec3H)EvalNormal (uv)));
       }
       Dictionary<Point2, int> cache = new (new PointComparer (1e-6));
-      for (int i = 0; i < tris.Count; i += 3) 
+      for (int i = 0; i < tris.Count; i += 3)
          AddTriangle (tris[i], tris[i + 1], tris[i + 2]);
 
       // The AddTriangle calls above are all potentially recursive, subdividing the input
       // fed in into smaller and smaller triangles until each one is sufficiently flat
       // (to within the tessellation error we specify). As additional nodes are added in,
       // the nodes array gets expanded and the final set of triangles is stored in 'triangles'.
-      // Note that the wires[] array is still valid into this expanded set of nodes, since 
+      // Note that the wires[] array is still valid into this expanded set of nodes, since
       // that is made up of the original boundary edges only (and not one of the interior
-      // nodes we added as a part of curvature subdivision). 
+      // nodes we added as a part of curvature subdivision).
       var mnodes = nodes.Select (a => new Mesh3.Node (a.Pos, a.Normal)).ToImmutableArray ();
       return new Mesh3 (mnodes, [.. triangles], [.. wires]);
 
@@ -182,6 +182,7 @@ public abstract class E3CSSurface : E3ParaSurface {
    public Matrix3 ToXfm => _toXfm ??= Matrix3.To (mCS);
    Matrix3? _toXfm;
 
+   /// <summary>Matrix to go from the entity's private CS to the world Coordinate System</summary>
    public Matrix3 FromXfm => _fromXfm ??= Matrix3.From (mCS);
    Matrix3? _fromXfm;
 
