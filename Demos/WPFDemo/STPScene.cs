@@ -21,7 +21,11 @@ class STPScene : Scene3 {
    public override void Picked (object obj) {
       if (!HW.IsShiftDown) 
          mModel.Ents.ForEach (a => a.IsSelected = false);
-      if (obj is Ent3 ent) ent.IsSelected = true;
+      if (obj is E3Surface ent) {
+         ent.IsSelected = true;
+         if (HW.IsCtrlDown)
+            foreach (var ent2 in mModel.GetNeighbors (ent)) ent2.IsSelected = true;
+      }
    }
    Model3 mModel;
 

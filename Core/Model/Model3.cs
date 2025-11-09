@@ -19,6 +19,27 @@ public class Model3 {
    public AList<Ent3> Ents => mEnts;
    readonly AList<Ent3> mEnts = [];
 
+   public IReadOnlyList<E3Surface> GetNeighbors (E3Surface ent) {
+      if (mNeighbors == null) {
+         mNeighbors = [];
+         Dictionary<int, E3Surface> unpaired = [];
+         foreach (var ent1 in Ents.OfType<E3Surface> ()) {
+            foreach (var edge in ent1.Contours.SelectMany (a => a.Edges)) {
+               if (unpaired.TryGetValue (edge.PairId, out var ent2)) {
+                  if (!mNeighbors.TryGetValue (ent1, out var list1)) mNeighbors[ent1] = list1 = [];
+                  list1.Add (ent2);
+                  if (!mNeighbors.TryGetValue (ent2, out var list2)) mNeighbors[ent2] = list2 = [];
+                  list2.Add (ent1);
+               } else
+                  unpaired.Add (edge.PairId, ent1);
+            }
+         }
+      }
+      if (mNeighbors.TryGetValue (ent, out var list)) return list;
+      return [];
+   }
+   Dictionary<E3Surface, List<E3Surface>>? mNeighbors;
+
    // Implementation -----------------------------------------------------------
    // Handles changes in the Ents list, and keeps the Bound up-to-date
    void OnEntsChanged (ListChange ch) {

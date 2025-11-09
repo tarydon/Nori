@@ -83,7 +83,7 @@ public abstract class E3Surface : Ent3 {
    public Mesh3 Mesh => _mesh ??= BuildMesh (0.1);
    Mesh3? _mesh;
 
-   public IReadOnlyList<Contour3> Trims => mTrims;
+   public IReadOnlyList<Contour3> Contours => mTrims;
    protected Contour3[] mTrims = [];
 
    // Implementation -----------------------------------------------------------
@@ -112,7 +112,7 @@ public abstract class E3ParaSurface : E3Surface {
       List<Point3> pts = [];  // Discretization of all the trimming curves of the surface
       List<int> splits = [0]; // Split points that divide pts into individual contours
       List<int> wires = [];   // Elements taken as pairs that defined the silhouette wires
-      foreach (var contour in Trims) {
+      foreach (var contour in Contours) {
          int a = pts.Count;
          contour.Discretize (pts, tolerance);
          int b = pts.Count; splits.Add (b);
