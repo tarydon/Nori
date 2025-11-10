@@ -34,20 +34,17 @@ public class Matrix2 (double m11, double m12, double m21, double m22, double x, 
 
    /// <summary>Creates a mirror matrix about the line specified by the two points</summary>
    public static Matrix2 Mirror (Point2 p1, Point2 p2) {
+      // Note: Simplified impl. Not considering mirror axis passing through origin! (Rare alignment)
       double dx = p2.X - p1.X;
-      if (dx.IsZero ()) // Arbitrary vertical line
+      if (dx.IsZero ()) // Arbitrary vertical axis
          return Translation (-p1.X, 0) * HMirror * Translation (p1.X, 0);
 
       double dy = p2.Y - p1.Y;
-      if (dy.IsZero ()) // Arbitrary horizontal line
+      if (dy.IsZero ()) // Arbitrary horizontal axis
          return Translation (0, -p1.Y) * VMirror * Translation (0, p1.Y);
 
-      // First translate the mirror line such that it goes through the origin.
-      // Then rotate the line by -ve slope such that its colinear to X-Axis. Then apply
-      // the vertical mirror matrix. Now use the inverse of the above 2 matrices (rotation and translation)
-      // in the same order to bring the mirrored entity to the correct position. 
-      double m = dy / dx, c = p1.Y - m * p1.X, fAng = Atan (m); // Note: fAng != 0
-      Matrix2 mat = c.IsZero () ? Rotation (-fAng) : Translation (0, -c) * Rotation (-fAng);
+      double fAng = Atan2 (dy, dx); // Note: fAng != 0 (by design)
+      Matrix2 mat = Translation (-p1.X, -p1.Y) * Rotation (-fAng);
       return mat * VMirror * mat.GetInverse ();
    }
 
