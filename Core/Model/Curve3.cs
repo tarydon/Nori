@@ -18,7 +18,7 @@ public abstract class Edge3 {
    /// 1. The curve is approximated with the given error threshold
    /// 2. The End point of the curve is not included (it is effectively the start
    ///    point of the next Edge in the sequence
-   public abstract void Discretize (List<Point3> pts, double tolerance);
+   public abstract void Discretize (List<Point3> pts, double tolerance, double maxAngStep);
 }
 
 #region class Line3 --------------------------------------------------------------------------------
@@ -40,7 +40,7 @@ public class Line3 : Edge3 {
    readonly Point3 mEnd;
 
    // Methods ------------------------------------------------------------------
-   public override void Discretize (List<Point3> pts, double tolerance) => pts.Add (Start);
+   public override void Discretize (List<Point3> pts, double tolerance, double maxAngStep) => pts.Add (Start);
 
    public override Point3 GetPointAt (double lie) => lie.Along (mStart, mEnd);
 }
@@ -82,8 +82,8 @@ public class Arc3 : Edge3 {
    public override Point3 Start => new Point3 (Radius, 0, 0) * ToXfm;
 
    // Methods ------------------------------------------------------------------
-   public override void Discretize (List<Point3> pts, double tolerance) {
-      int n = Lib.GetArcSteps (Radius, AngSpan, tolerance);
+   public override void Discretize (List<Point3> pts, double tolerance, double maxAngStep) {
+      int n = Lib.GetArcSteps (Radius, AngSpan, tolerance, maxAngStep);
       if (AngSpan.EQ (Lib.TwoPI) && n.IsOdd ()) n++;
       for (int i = 0; i < n; i++) pts.Add (GetPointAt ((double)i / n));
    }
@@ -103,8 +103,8 @@ public class Arc3 : Edge3 {
 public class Contour3 {
    public Contour3 (ImmutableArray<Edge3> edges) => mEdges = edges;
 
-   public void Discretize (List<Point3> pts, double tolerance)
-      => mEdges.ForEach (e => e.Discretize (pts, tolerance));
+   public void Discretize (List<Point3> pts, double tolerance, double maxAngStep)
+      => mEdges.ForEach (e => e.Discretize (pts, tolerance, maxAngStep));
 
    public Poly Flatten (CoordSystem cs) {
       var pb = PolyBuilder.It;

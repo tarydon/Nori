@@ -59,7 +59,7 @@ public sealed class E3Cylinder : E3CSSurface {
       List<Point3> pts = [];
       List<Mesh3.Node> nodes = [];
       List<int> wires = [], tris = [];
-      arcs[0].Discretize (pts, tolerance); int n = pts.Count;
+      arcs[0].Discretize (pts, tolerance, 0.5410); int n = pts.Count;
       foreach (var pt in pts) {
          Vector3 vec = (pt.SnappedToUnitLine (cen0, cenLift) - pt).Normalized ();
          if (!InFacing) vec = -vec;
@@ -97,9 +97,9 @@ public sealed class E3Cylinder : E3CSSurface {
       Vector3 vecZ0 = arcs[1].Center - cen0;
       Point3 cenLift = cen0 + vecZ0.Normalized ();
       List<Point3> pts = [];
-      arcs[0].Discretize (pts, tolerance); pts.Add (arcs[0].End); int n = pts.Count;
+      arcs[0].Discretize (pts, tolerance, 0.5410); pts.Add (arcs[0].End); int n = pts.Count;
       pts.Reverse ();
-      arcs[1].Discretize (pts, tolerance); pts.Add (arcs[1].End);
+      arcs[1].Discretize (pts, tolerance, 0.5410); pts.Add (arcs[1].End);
       List<Mesh3.Node> nodes = [];
       foreach (var pt in pts) {
          Vector3 vec = (pt.SnappedToUnitLine (cen0, cenLift) - pt).Normalized ();
@@ -114,6 +114,11 @@ public sealed class E3Cylinder : E3CSSurface {
          tris.Add (i); tris.Add (i + n); tris.Add (j);
          tris.Add (j); tris.Add (i + n); tris.Add (j + n);
       }
+      Mesh3.Node n0 = nodes[tris[0]], n1 = nodes[tris[1]], n2 = nodes[tris[2]];
+      Point3 p0 = (Point3)n0.Pos, p1 = (Point3)n1.Pos, p2 = (Point3)n2.Pos;
+      Vector3 v0 = (Vector3)n0.Vec, v1 = (Vector3)n1.Vec, v2 = (Vector3)n2.Vec;
+      Vector3 norma = (p1 - p0) * (p2 - p0), normb = v0 + v1 + v2;
+      if (norma.Opposing (normb)) tris.Reverse ();
       return new ([.. nodes], [.. tris], [.. wires]);
    }
 

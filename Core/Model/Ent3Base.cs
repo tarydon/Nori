@@ -2,8 +2,6 @@
 // ╔═╦╦═╦╦╬╣ Ent3Base.cs
 // ║║║║╬║╔╣║ Defines some the Ent3 hierarchy of classes (the abstract base classes)
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
-using System.Data.Common;
-
 namespace Nori;
 
 #region class Ent3 ---------------------------------------------------------------------------------
@@ -80,7 +78,7 @@ public abstract class E3Surface : Ent3 {
    public override Bound3 Bound => Bound3.Update (ref mBound, ComputeBound);
    Bound3 mBound = new ();
 
-   public Mesh3 Mesh => _mesh ??= BuildMesh (0.1);
+   public Mesh3 Mesh => _mesh ??= BuildMesh (Lib.CoarseTess);
    Mesh3? _mesh;
 
    public IReadOnlyList<Contour3> Contours => mTrims;
@@ -89,7 +87,7 @@ public abstract class E3Surface : Ent3 {
    // Implementation -----------------------------------------------------------
    Bound3 ComputeBound () {
       List<Point3> pts = [];
-      mTrims[0].Discretize (pts, Lib.CoarseTess);
+      mTrims[0].Discretize (pts, Lib.CoarseTess, 0.5410);
       return new (pts);
    }
 
@@ -114,7 +112,7 @@ public abstract class E3ParaSurface : E3Surface {
       List<int> wires = [];   // Elements taken as pairs that defined the silhouette wires
       foreach (var contour in Contours) {
          int a = pts.Count;
-         contour.Discretize (pts, tolerance);
+         contour.Discretize (pts, tolerance, 0.5410);
          int b = pts.Count; splits.Add (b);
          wires.Add (b - 1);
          for (int i = a; i < b; i++) { wires.Add (i); wires.Add (i); }

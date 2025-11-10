@@ -82,9 +82,10 @@ public static class Lib {
    /// <param name="radius">The radius of the arc</param>
    /// <param name="angSpan">The angular span of the arc (can be +ve or -ve)</param>
    /// <param name="tolerance">The error tolerance (chordal deviation)</param>
-   public static int GetArcSteps (double radius, double angSpan, double tolerance) {
+   /// <param name="maxAngSpan">The maximum angular span for one step</param>
+   public static int GetArcSteps (double radius, double angSpan, double tolerance, double maxAngSpan) {
       tolerance = tolerance.Clamp (radius * 0.0001, radius * 0.9999);
-      double angStep = 2 * Acos ((radius - tolerance) / radius);
+      double angStep = Min (2 * Acos ((radius - tolerance) / radius), maxAngSpan);
       return Max ((int)Ceiling (Abs (angSpan) / angStep), 1);
    }
 

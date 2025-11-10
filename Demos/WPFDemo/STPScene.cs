@@ -1,10 +1,14 @@
 ﻿namespace WPFDemo;
 using System.IO;
+using System.Reactive.Linq;
 using System.Windows.Controls;
 using Nori;
 
 class STPScene : Scene3 {
-   public STPScene (string file = "N:/TData/Step/Boot.step") {
+   public STPScene (string file = "N:/TData/Step/S00178.stp") {
+      // file = "C:/Etc/S00676.stp";
+      if (mFiles.Count == 0) mFiles = Directory.GetFiles ("W:/STEP/Good").ToList ();
+      file = mFiles[0]; mFiles.RemoveAt (0);
       mFile = file;
       var sr = new STEPReader (file);
       sr.Parse ();
@@ -15,13 +19,24 @@ class STPScene : Scene3 {
       Bound = mModel.Bound;
       Root = new GroupVN ([new Model3VN (mModel), TraceVN.It]);
       TraceVN.TextColor = Color4.Yellow;
+      Lib.Trace ($"{mFile} {Bound.Diagonal.Round (1)}");
+      mKeys = HW.Keys.Where (a => a.IsPress () && a.Key == EKey.P).Subscribe (a => OnProblem ());
    }
    string mFile;
+   IDisposable mKeys;
+
+   static List<string> mFiles = [];
+
+   void OnProblem () {
+      File.Move (mFile, "W:/STEP/Problem/" + Path.GetFileName (mFile));
+      Lib.Trace ($"File {mFile} moved");
+   }
 
    public override void Picked (object obj) {
-      if (!HW.IsShiftDown) 
+      if (!HW.IsShiftDown)
          mModel.Ents.ForEach (a => a.IsSelected = false);
       if (obj is E3Surface ent) {
+         Lib.Trace ($"Picked: {ent.GetType ().Name} #{ent.Id}");
          ent.IsSelected = true;
          if (HW.IsCtrlDown)
             foreach (var ent2 in mModel.GetNeighbors (ent)) ent2.IsSelected = true;

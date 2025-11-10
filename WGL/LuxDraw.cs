@@ -2,8 +2,6 @@
 // ╔═╦╦═╦╦╬╣ LuxDraw.cs
 // ║║║║╬║╔╣║ Draw-related properties and methods of the Lux class
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
-using System.Security.Cryptography;
-
 namespace Nori;
 
 [Flags]

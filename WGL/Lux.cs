@@ -3,7 +3,6 @@
 // ║║║║╬║╔╣║ The Lux class: public interface to the Lux rendering engine
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 using System.Reactive.Subjects;
-using System.Windows.Controls.Ribbon.Primitives;
 using System.Windows.Threading;
 namespace Nori;
 

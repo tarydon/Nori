@@ -232,7 +232,7 @@ public partial class Poly {
       if (!HasArcs) pts.AddRange (mPts);
       else {
          pts.Add (A);
-         foreach (var seg in Segs) seg.Discretize (pts, threshold);
+         foreach (var seg in Segs) seg.Discretize (pts, threshold, 0.5410);
          if (IsClosed) pts.RemoveLast ();
       }
    }

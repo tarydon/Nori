@@ -43,6 +43,7 @@ public readonly record struct Vec3F (float X, float Y, float Z) : IEQuable<Vec3F
 [StructLayout (LayoutKind.Sequential, Pack = 2, Size = 6)]
 public readonly record struct Vec3H (Half X, Half Y, Half Z) : IEQuable<Vec3H> {
    public static explicit operator Vec3H (Vector3 vec) => new ((Half)vec.X, (Half)vec.Y, (Half)vec.Z);
+   public static explicit operator Vector3 (Vec3H vec) => new ((double)vec.X, (double)vec.Y, (double)vec.Z);
    public bool EQ (Vec3H v) => X.EQ (v.X) && Y.EQ (v.Y) && Z.EQ (v.Z);
    public override string ToString () => $"<{X.R3 ()},{Y.R3 ()},{Z.R3 ()}>";
 }

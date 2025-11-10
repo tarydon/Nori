@@ -67,7 +67,7 @@ public abstract partial class Scene {
    protected Vec2S mViewport;
 
    /// <summary>Called when the scene is detached from the Lux renderer</summary>
-   public void Detach () => mRoot?.Deregister ();
+   public void Detach () { Detached (); mRoot?.Deregister (); }
 
    /// <summary>Override this to zoom in or out about the given position (in pixels)</summary>
    public void Zoom (Vec2S pos, double factor) {
@@ -99,8 +99,6 @@ public abstract partial class Scene {
    }
 
    // Overrides ----------------------------------------------------------------
-   public virtual void Picked (object obj) => Lib.Trace ($"Picked: {obj}");
-
    // Helper used internally by the Xfm property
    protected abstract (Matrix3 World, Matrix3 Projection) ComputeXfms ();
 
@@ -110,8 +108,14 @@ public abstract partial class Scene {
    /// the mouse position (like the DwgScene in Lux for example)
    public virtual bool CursorVisible => true;
 
+   /// <summary>Called when this scene is detached</summary>
+   public virtual void Detached () { }
+
    /// <summary>Returns where the 'midpoint' of the drawing / model is</summary>
    protected abstract Point3 Midpoint { get; }
+
+   /// <summary>Called when an object is picked</summary>
+   public virtual void Picked (object obj) => Lib.Trace ($"Picked: {obj}");
 }
 #endregion
 

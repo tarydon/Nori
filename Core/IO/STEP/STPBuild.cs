@@ -2,8 +2,6 @@
 // ╔═╦╦═╦╦╬╣ STPBuild.cs
 // ║║║║╬║╔╣║ <<TODO>>
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
-using System.Diagnostics;
-using System.Xml;
 using Nori.STEP;
 namespace Nori;
 
@@ -34,8 +32,8 @@ partial class STEPReader {
 
    Arc3 MakeArc (int pairId, Circle circle, Point3 start, Point3 end, bool ccw) {
       CoordSystem cs = GetCoordSys (circle.CoordSys);
-      Debug.Assert (cs.Org.DistTo (start).EQ (circle.Radius));
-      Debug.Assert (cs.Org.DistTo (end).EQ (circle.Radius));
+      Lib.Check (cs.Org.DistTo (start).EQ (circle.Radius), "MakeArc.1");
+      Lib.Check (cs.Org.DistTo (end).EQ (circle.Radius), "MakeArc.2");
 
       // Try to compose a local coordinate system for this Arc3
       // 1. The center is just cs.Org (the original center of the underlying circle)
@@ -57,8 +55,8 @@ partial class STEPReader {
          if (endV.Opposing (csFinal.VecY)) angSpan = Lib.TwoPI - angSpan;
       }
       var a3 = new Arc3 (pairId, csFinal, circle.Radius, angSpan);
-      Debug.Assert (a3.Start.EQ (start));
-      Debug.Assert (a3.End.EQ (end));
+      Lib.Check (a3.Start.EQ (start), "MakeArc.3");
+      Lib.Check (a3.End.EQ (end), "MakeArc.4");
       return a3;
    }
 
@@ -78,7 +76,7 @@ partial class STEPReader {
          mEdges.Add (edge);
       }
       for (int i = 0; i < mEdges.Count; i++)
-         Debug.Assert (mEdges[i].End.EQ (mEdges[(i + 1) % mEdges.Count].Start));
+         Lib.Check (mEdges[i].End.EQ (mEdges[(i + 1) % mEdges.Count].Start), "MakeContour");
       return new Contour3 ([..mEdges]);
    }
    List<Edge3> mEdges = [];
@@ -99,8 +97,8 @@ partial class STEPReader {
       => s.Faces.ForEach (f => Process ((AdvancedFace)D[f]!));
 
    void Process (AdvancedFace a) {
-      Debug.Assert (a.Contours.Length > 0);
-      Debug.Assert (D[a.Contours[0]]!.GetType ().Name == "FaceOuterBound");
+      Lib.Check (a.Contours.Length > 0, "Contours.Length > 0");
+      Lib.Check (D[a.Contours[0]]!.GetType ().Name == "FaceOuterBound", "First contour is FaceOuterBound");
 
       List<Contour3> contours = [];
       foreach (var n in a.Contours) {
