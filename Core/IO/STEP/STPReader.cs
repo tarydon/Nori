@@ -12,7 +12,6 @@ public partial class STEPReader {
    int N;
 
    public void Parse () {
-      Console.WriteLine ($"Reading {mFile}");
       N = S.IndexOf ("DATA;") + 5; Assert (N > 10);
       // The following loop loads all the entities one by one
       ReadOnlySpan<char> endsec = "ENDSEC;";

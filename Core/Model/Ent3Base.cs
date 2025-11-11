@@ -73,7 +73,7 @@ public enum E3Flags {
 #region class E3Surface ----------------------------------------------------------------------------
 public abstract class E3Surface : Ent3 {
    protected E3Surface () { }
-   public E3Surface (int id, IEnumerable<Contour3> trims) : base (id) => mTrims = [.. trims];
+   public E3Surface (int id, IEnumerable<Contour3> trims) : base (id) => mContours = [.. trims];
 
    public override Bound3 Bound => Bound3.Update (ref mBound, ComputeBound);
    Bound3 mBound = new ();
@@ -81,13 +81,13 @@ public abstract class E3Surface : Ent3 {
    public Mesh3 Mesh => _mesh ??= BuildMesh (Lib.CoarseTess);
    Mesh3? _mesh;
 
-   public IReadOnlyList<Contour3> Contours => mTrims;
-   protected Contour3[] mTrims = [];
+   public IReadOnlyList<Contour3> Contours => mContours;
+   protected Contour3[] mContours = [];
 
    // Implementation -----------------------------------------------------------
    Bound3 ComputeBound () {
       List<Point3> pts = [];
-      mTrims[0].Discretize (pts, Lib.CoarseTess, 0.5410);
+      mContours[0].Discretize (pts, Lib.CoarseTess, 0.5410);
       return new (pts);
    }
 

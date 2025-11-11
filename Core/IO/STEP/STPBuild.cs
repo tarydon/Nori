@@ -99,6 +99,7 @@ partial class STEPReader {
    void Process (AdvancedFace a) {
       Lib.Check (a.Contours.Length > 0, "Contours.Length > 0");
       Lib.Check (D[a.Contours[0]]!.GetType ().Name == "FaceOuterBound", "First contour is FaceOuterBound");
+      if (a.Id != 235) return;
 
       List<Contour3> contours = [];
       foreach (var n in a.Contours) {

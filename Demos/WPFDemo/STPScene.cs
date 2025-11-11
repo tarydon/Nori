@@ -7,8 +7,8 @@ using Nori;
 class STPScene : Scene3 {
    public STPScene (string file = "N:/TData/Step/S00178.stp") {
       // file = "C:/Etc/S00676.stp";
-      if (mFiles.Count == 0) mFiles = Directory.GetFiles ("W:/STEP/Good").ToList ();
-      file = mFiles[0]; mFiles.RemoveAt (0);
+      //if (mFiles.Count == 0) mFiles = Directory.GetFiles ("W:/STEP/Good").ToList ();
+      //file = mFiles[0]; mFiles.RemoveAt (0);
       mFile = file;
       var sr = new STEPReader (file);
       sr.Parse ();

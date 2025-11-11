@@ -25,11 +25,11 @@ public class Mesh3 (ImmutableArray<Mesh3.Node> vertex, ImmutableArray<int> trian
 
    public Bound3 Bound {
       get {
-         if (mBound.IsEmpty) mBound = new Bound3 (Vertex.Select (a => a.Pos));
-         return mBound;
+         if (_bound.IsEmpty) _bound = new Bound3 (Vertex.Select (a => a.Pos));
+         return _bound;
       }
    }
-   Bound3 mBound = new ();
+   Bound3 _bound = new ();
 
    public static Mesh3 operator * (Mesh3 mesh, Matrix3 xfm) {
       if (xfm.IsIdentity) return mesh;
@@ -196,7 +196,7 @@ public class Mesh3 (ImmutableArray<Mesh3.Node> vertex, ImmutableArray<int> trian
    /// EOF
    /// ]]>
    /// </code>
-   public void Save (string filename) {
+   public string ToTMesh () {
       // Version, Vertex count, vertices
       StringBuilder sb = new ($"TMESH\n1\n{Vertex.Length}\n");
       foreach (var (pos, vec) in Vertex)
@@ -211,8 +211,7 @@ public class Mesh3 (ImmutableArray<Mesh3.Node> vertex, ImmutableArray<int> trian
       sb.Append ($"{Wire.Length / 2}\n");
       for (int i = 0; i < Wire.Length; i += 2)
          sb.Append ($"{Wire[i]} {Wire[i + 1]}\n");
-
-      File.WriteAllText (filename, sb.Append ("EOF\n").ToString ());
+      return sb.ToString ();
    }
 }
 #endregion

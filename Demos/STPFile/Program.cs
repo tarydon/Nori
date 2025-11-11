@@ -1,7 +1,8 @@
-﻿using Nori;
+﻿using System.Text;
+using Nori;
 
 internal class Program {
-   static void Main (string[] args) {
+   static void Main1 (string[] args) {
       Lib.Init ();
       var files = Directory.GetFiles ("W:\\Step", "*.stp", SearchOption.TopDirectoryOnly);
       foreach (var file in files) {
@@ -21,10 +22,24 @@ internal class Program {
       }
    }
 
-   static void Main1 () {
+   static void Main () {
       Lib.Init ();
-      var sr = new STEPReader ("c:/etc/boot.step");
+      Lib.Testing = true;
+      var sr = new STEPReader ("N:/TData/STEP/S00178.stp");
       sr.Parse ();
-      sr.Build ();
+      var model = sr.Build ();
+      var b = model.Bound;
+      CurlWriter.Save (model, "c:/etc/test.curl", "S00178.stp");
+
+      var meshes = model.Ents.OfType<E3Surface> ().Select (a => a.Mesh).ToList ();
+      var sb = new StringBuilder ();
+      foreach (var ent in model.Ents.OfType<E3Surface> ()) {
+         var mesh = ent.Mesh;
+         if (mesh.Triangle.Length == 0) {
+            Console.Write ("X");
+         }
+         sb.Append (mesh.ToTMesh ()); sb.AppendLine ("--------------------"); 
+      }
+      File.WriteAllText ("c:/etc/test1.txt", sb.ToString ());
    }
 }

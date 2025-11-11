@@ -46,8 +46,8 @@ public sealed class E3Cylinder : E3CSSurface {
          base.BuildMesh (tolerance);
 
    Mesh3? BuildFullCylinderMesh (double tolerance) {
-      if (mTrims.Length != 2 || mTrims.Any (a => a.Edges.Length != 1)) return null;
-      var arcs = mTrims.Select (a => a.Edges[0]).OfType<Arc3> ().ToList ();
+      if (mContours.Length != 2 || mContours.Any (a => a.Edges.Length != 1)) return null;
+      var arcs = mContours.Select (a => a.Edges[0]).OfType<Arc3> ().ToList ();
       if (arcs.Count != 2) return null;
       double cos = arcs[0].CS.VecZ.CosineToAlreadyNormalized (arcs[1].CS.VecZ);
       if (!Math.Abs (cos).EQ (1)) return null;
@@ -77,9 +77,9 @@ public sealed class E3Cylinder : E3CSSurface {
    }
 
    Mesh3? BuildPartCylinderMesh (double tolerance) {
-      if (mTrims.Length != 1 || mTrims[0].Edges.Length < 4) return null;
-      var arcs = mTrims[0].Edges.OfType<Arc3> ().ToList (); if (arcs.Count != 2) return null;
-      var lines = mTrims[0].Edges.OfType<Line3> ().ToList ();
+      if (mContours.Length != 1 || mContours[0].Edges.Length < 4) return null;
+      var arcs = mContours[0].Edges.OfType<Arc3> ().ToList (); if (arcs.Count != 2) return null;
+      var lines = mContours[0].Edges.OfType<Line3> ().ToList ();
       for (int i = lines.Count - 1; i >= 1; i--) {
          Line3 line0 = lines[i - 1], line1 = lines[i];
          Vector3 vec0 = (line0.End - line0.Start).Normalized ();
