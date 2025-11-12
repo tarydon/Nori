@@ -60,6 +60,7 @@ public class Arc3 : Edge3 {
    /// <summary>Angular span of the arc (in radians)</summary>
    /// The arc always starts at the point (Radius, 0, 0) in its local
    /// coordinate system, so just the angular span is enough to specify the extent
+   [Angle]
    public readonly double AngSpan;
 
    /// <summary>The coordinate system in which the Arc3 is defined</summary>

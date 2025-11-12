@@ -1,3 +1,7 @@
+﻿// ────── ╔╗                                                                                WPFDEMO
+// ╔═╦╦═╦╦╬╣ DwgScene.cs
+// ║║║║╬║╔╣║ Demo scene to demonstrate various types of drawing entities
+// ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 using Nori;
 namespace WPFDemo;
 

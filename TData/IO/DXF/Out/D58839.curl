@@ -428,7 +428,7 @@
       Text:"STB 1000-00.03 Back panel-sheet2"
       Style:STANDARD
       Alignment:BaseLeft
-      Height:2.399999999999999
+      Height:2.4
       XScale:0.9
     }
     (E2Text){
@@ -934,7 +934,7 @@
           Text:275
           Style:STANDARD
           Alignment:MidCenter
-          Height:2.400000000000003
+          Height:2.4
           XScale:1
         }
         (E2Point){ Layer:Defpoints Color:#FF000000 Pt:60.596546,133.841505 }
@@ -973,7 +973,7 @@
           Text:268.2
           Style:STANDARD
           Alignment:MidCenter
-          Height:2.400000000000003
+          Height:2.4
           XScale:1
         }
         (E2Point){ Layer:Defpoints Color:#FF000000 Pt:63.996546,108.241505 }
@@ -1011,9 +1011,9 @@
           Pt:355.537224,105.850886
           Text:"(56)"
           Style:STANDARD
-          Angle:1.5707963267948966
+          Angle:90
           Alignment:MidCenter
-          Height:2.400000000000003
+          Height:2.4
           XScale:1
         }
         (E2Point){ Layer:Defpoints Color:#FF000000 Pt:335.596546,77.860266 }
@@ -1052,9 +1052,9 @@
           Pt:342.071783,69.046988
           Text:"(9.9)"
           Style:STANDARD
-          Angle:1.5707963267948966
+          Angle:90
           Alignment:MidCenter
-          Height:2.400000000000003
+          Height:2.4
           XScale:1
         }
         (E2Point){ Layer:Defpoints Color:#FF000000 Pt:335.596546,77.860266 }
@@ -1092,9 +1092,9 @@
           Pt:341.183302,121.041505
           Text:"(25.6)"
           Style:STANDARD
-          Angle:1.5707963267948966
+          Angle:90
           Alignment:MidCenter
-          Height:2.400000000000003
+          Height:2.4
           XScale:1
         }
         (E2Point){ Layer:Defpoints Color:#FF000000 Pt:335.596546,133.841505 }
@@ -1132,9 +1132,9 @@
           Pt:347.642567,118.654005
           Text:"(30.4)"
           Style:STANDARD
-          Angle:1.5707963267948966
+          Angle:90
           Alignment:MidCenter
-          Height:2.400000000000003
+          Height:2.4
           XScale:1
         }
         (E2Point){ Layer:Defpoints Color:#FF000000 Pt:335.596546,133.841505 }
@@ -1174,9 +1174,9 @@
           Pt:307.810435,69.460266
           Text:4.4
           Style:STANDARD
-          Angle:1.5707963267948966
+          Angle:90
           Alignment:MidCenter
-          Height:2.400000000000003
+          Height:2.4
           XScale:1
         }
         (E2Point){ Layer:Defpoints Color:#FF000000 Pt:300.596546,82.260266 }
@@ -1214,9 +1214,9 @@
           Pt:68.817641,118.841505
           Text:19
           Style:STANDARD
-          Angle:1.5707963267948966
+          Angle:90
           Alignment:MidCenter
-          Height:2.400000000000003
+          Height:2.4
           XScale:1
         }
         (E2Point){ Layer:Defpoints Color:#FF000000 Pt:76.596546,109.341505 }
@@ -1256,9 +1256,9 @@
           Pt:68.817641,142.241505
           Text:5.5
           Style:STANDARD
-          Angle:1.5707963267948966
+          Angle:90
           Alignment:MidCenter
-          Height:2.400000000000003
+          Height:2.4
           XScale:1
         }
         (E2Point){ Layer:Defpoints Color:#FF000000 Pt:76.596546,128.341505 }
@@ -1298,9 +1298,9 @@
           Pt:203.385655,141.841505
           Text:4.1
           Style:STANDARD
-          Angle:1.5707963267948966
+          Angle:90
           Alignment:MidCenter
-          Height:2.400000000000003
+          Height:2.4
           XScale:1
         }
         (E2Point){ Layer:Defpoints Color:#FF000000 Pt:198.096546,129.741505 }
@@ -1338,9 +1338,9 @@
           Pt:100.381639,128.991505
           Text:9.7
           Style:STANDARD
-          Angle:1.5707963267948966
+          Angle:90
           Alignment:MidCenter
-          Height:2.400000000000003
+          Height:2.4
           XScale:1
         }
         (E2Point){ Layer:Defpoints Color:#FF000000 Pt:109.68025,133.841505 }
@@ -1380,9 +1380,9 @@
           Pt:94.829821,110.541505
           Text:5.2
           Style:STANDARD
-          Angle:1.5707963267948966
+          Angle:90
           Alignment:MidCenter
-          Height:2.400000000000003
+          Height:2.4
           XScale:1
         }
         (E2Point){ Layer:Defpoints Color:#FF000000 Pt:108.08025,124.141505 }
@@ -1420,9 +1420,9 @@
           Pt:123.422351,125.441505
           Text:16.8
           Style:STANDARD
-          Angle:1.5707963267948966
+          Angle:90
           Alignment:MidCenter
-          Height:2.400000000000003
+          Height:2.4
           XScale:1
         }
         (E2Point){ Layer:Defpoints Color:#FF000000 Pt:117.18025,133.841505 }
@@ -1461,7 +1461,7 @@
           Text:18.6
           Style:STANDARD
           Alignment:MidCenter
-          Height:2.400000000000003
+          Height:2.4
           XScale:1
         }
         (E2Point){ Layer:Defpoints Color:#FF000000 Pt:335.596546,77.860266 }
@@ -1500,7 +1500,7 @@
           Text:"205�0.1"
           Style:STANDARD
           Alignment:MidCenter
-          Height:2.400000000000003
+          Height:2.4
           XScale:1
         }
         (E2Point){ Layer:Defpoints Color:#FF000000 Pt:95.596546,82.260266 }
@@ -1539,7 +1539,7 @@
           Text:50
           Style:STANDARD
           Alignment:MidCenter
-          Height:2.400000000000003
+          Height:2.4
           XScale:1
         }
         (E2Point){ Layer:Defpoints Color:#FF000000 Pt:317.016546,111.729 }
@@ -1578,7 +1578,7 @@
           Text:22
           Style:STANDARD
           Alignment:MidCenter
-          Height:2.400000000000003
+          Height:2.4
           XScale:1
         }
         (E2Point){ Layer:Defpoints Color:#FF000000 Pt:267.016546,111.729 }
@@ -1617,7 +1617,7 @@
           Text:16
           Style:STANDARD
           Alignment:MidCenter
-          Height:2.400000000000003
+          Height:2.4
           XScale:1
         }
         (E2Point){ Layer:Defpoints Color:#FF000000 Pt:76.596546,109.341505 }
@@ -1656,7 +1656,7 @@
           Text:13.1
           Style:STANDARD
           Alignment:MidCenter
-          Height:2.400000000000003
+          Height:2.4
           XScale:1
         }
         (E2Point){ Layer:Defpoints Color:#FF000000 Pt:76.596546,109.341505 }
@@ -1695,7 +1695,7 @@
           Text:78.7
           Style:STANDARD
           Alignment:MidCenter
-          Height:2.400000000000003
+          Height:2.4
           XScale:1
         }
         (E2Point){ Layer:Defpoints Color:#FF000000 Pt:60.596546,87.750886 }
@@ -1734,7 +1734,7 @@
           Text:36.4
           Style:STANDARD
           Alignment:MidCenter
-          Height:2.400000000000003
+          Height:2.4
           XScale:1
         }
         (E2Point){ Layer:Defpoints Color:#FF000000 Pt:139.296546,102.191505 }
@@ -1773,9 +1773,9 @@
           Pt:142.911121,69.310266
           Text:"(19.3)"
           Style:STANDARD
-          Angle:1.5707963267948966
+          Angle:90
           Alignment:MidCenter
-          Height:2.400000000000003
+          Height:2.4
           XScale:1
         }
         (E2Point){ Layer:Defpoints Color:#FF000000 Pt:145.446546,97.191505 }
@@ -1814,9 +1814,9 @@
           Pt:166.595091,69.310266
           Text:"(17.7)"
           Style:STANDARD
-          Angle:1.5707963267948966
+          Angle:90
           Alignment:MidCenter
-          Height:2.400000000000003
+          Height:2.4
           XScale:1
         }
         (E2Point){ Layer:Defpoints Color:#FF000000 Pt:179.396546,95.591505 }
@@ -1835,9 +1835,9 @@
           Pt:284.915207,99.550014
           Text:"3x∅10.5"
           Style:STANDARD
-          Angle:-0.36332078479420815
+          Angle:-20.816748
           Alignment:MidCenter
-          Height:2.400000000000003
+          Height:2.4
           XScale:1
         }
         (E2Poly){ Layer:dimension Poly:M262.109257,105.332251L271.923836,101.600759 }
@@ -1874,9 +1874,9 @@
           Pt:285.085048,83.208267
           Text:"4x∅3.5"
           Style:STANDARD
-          Angle:0.11358633299781017
+          Angle:6.508017
           Alignment:MidCenter
-          Height:2.400000000000003
+          Height:2.4
           XScale:1
         }
         (E2Poly){ Layer:dimension Poly:M302.335269,82.458615L298.857823,82.061917 }
@@ -1913,9 +1913,9 @@
           Pt:187.106851,127.6826
           Text:"∅2.5"
           Style:STANDARD
-          Angle:0.4290958564934229
+          Angle:24.585382
           Alignment:MidCenter
-          Height:2.400000000000003
+          Height:2.4
           XScale:1
         }
         (E2Poly){ Layer:dimension Poly:M199.233224,130.261566L196.959868,129.221444 }
@@ -1972,7 +1972,7 @@
           Text:49.1
           Style:STANDARD
           Alignment:MidCenter
-          Height:2.400000000000003
+          Height:2.4
           XScale:1
         }
         (E2Point){ Layer:Defpoints Color:#FF000000 Pt:109.68025,117.041505 }
@@ -2013,7 +2013,7 @@
           Text:7.5
           Style:STANDARD
           Alignment:MidCenter
-          Height:2.400000000000003
+          Height:2.4
           XScale:1
         }
         (E2Point){ Layer:Defpoints Color:#FF000000 Pt:109.68025,133.841505 }
@@ -2054,7 +2054,7 @@
           Text:1.8
           Style:STANDARD
           Alignment:MidCenter
-          Height:2.400000000000003
+          Height:2.4
           XScale:1
         }
         (E2Point){ Layer:Defpoints Color:#FF000000 Pt:115.399011,120.541505 }
@@ -2094,7 +2094,7 @@
           Text:"(8.7)"
           Style:STANDARD
           Alignment:MidCenter
-          Height:2.400000000000003
+          Height:2.4
           XScale:1
         }
         (E2Point){ Layer:Defpoints Color:#FF000000 Pt:117.78963,121.541505 }
@@ -2109,7 +2109,7 @@
       Pt:111.216235,125.206777
       Text:"1.5x45�"
       Style:ACISOTS
-      Angle:1.5707963267948966
+      Angle:90
       Alignment:TopLeft
       Height:2.5
       XScale:1

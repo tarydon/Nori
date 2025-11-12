@@ -211,6 +211,7 @@ public class Mesh3 (ImmutableArray<Mesh3.Node> vertex, ImmutableArray<int> trian
       sb.Append ($"{Wire.Length / 2}\n");
       for (int i = 0; i < Wire.Length; i += 2)
          sb.Append ($"{Wire[i]} {Wire[i + 1]}\n");
+      sb.Append ("EOF\n");
       return sb.ToString ();
    }
 }

@@ -24,6 +24,11 @@ public class CurlWriter {
       => File.WriteAllBytes (file, SaveToByteArray (obj, comment));
 
    // Implementation -----------------------------------------------------------
+   void WritePrimitive (object? obj, AuField field) {
+      if (field.IsAngle) obj = ((double)obj!).R2D ();
+      field.FieldType.WritePrimitive (B, obj!);
+   }
+
    // Recursive routine that writes out any object
    void Write (object? obj, AuType nominal) {
       if (obj == null) return;
@@ -44,7 +49,10 @@ public class CurlWriter {
                af.WriteLabel (B);
                switch (af.Tactic) {
                   case ECurlTactic.ByName: af.WriteByName (B, value); break;
-                  default: Write (value, af.FieldType); break;
+                  default:
+                     if (af.FieldType.Kind == EAuTypeKind.Primitive) WritePrimitive (value, af);
+                     else Write (value, af.FieldType);
+                     break;
                }
                B.NewLine ();
             }
@@ -94,8 +102,8 @@ public class CurlWriter {
          // appropriate methods in the underlying AuType. Those methods use reflection to pick
          // up the corresponding write methods (which are cached) and then invoke them
          case EAuTypeKind.AuPrimitive: at.WriteAuPrimitive (B, obj); break;
-         case EAuTypeKind.Primitive: at.WritePrimitive (B, obj); break;
          case EAuTypeKind.Enum: at.WriteEnum (B, obj); break;
+         case EAuTypeKind.Primitive: at.WritePrimitive (B, obj); break;
          default: throw new NotImplementedException ();
       }
    }

@@ -320,9 +320,14 @@ public readonly struct Bound3 : IEQuable<Bound3> {
       return bound;
    }
 
-   public void Write (UTFWriter w)
-      => w.Write ('"').Write (X.Min).Write (',').Write (Y.Min).Write (',').Write (Z.Min).Write (':')
+   public void Write (UTFWriter w) {
+      if (Lib.Testing)
+         w.Write ('"').Write (X.Min.R5 ()).Write (',').Write (Y.Min.R5 ()).Write (',').Write (Z.Min.R5 ()).Write (':')
+         .Write (X.Max.R5 ()).Write (',').Write (Y.Max.R5 ()).Write (',').Write (Z.Max.R5 ()).Write ('"');
+      else
+         w.Write ('"').Write (X.Min).Write (',').Write (Y.Min).Write (',').Write (Z.Min).Write (':')
          .Write (X.Max).Write (',').Write (Y.Max).Write (',').Write (Z.Max).Write ('"');
+   }
 
    // Operators ----------------------------------------------------------------
    /// <summary>Returns a Bound3 expanded to include the given Point3</summary>

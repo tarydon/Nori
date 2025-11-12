@@ -1,4 +1,4 @@
-// ────── ╔╗
+// ────── ╔╗                                                                                WPFDEMO
 // ╔═╦╦═╦╦╬╣ MainWindow.xaml.cs
 // ║║║║╬║╔╣║ Main window of WPF demo application (various scenes implemented)
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
@@ -35,6 +35,6 @@ public partial class MainWindow : Window {
       mSettings.Children.Clear ();
       Lux.UIScene = scene;
       if (scene is RobotScene rs) rs.CreateUI (mSettings.Children);
-      if (scene is STPScene ss) { ss.CreateUI (mSettings.Children); Lux.BackFacesPink = true; }
+      if (scene is STPScene ss) Lux.BackFacesPink = true; 
    }
 }
