@@ -3,7 +3,6 @@
 // ║║║║╬║╔╣║ The Lux class: public interface to the Lux rendering engine
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 using System.Reactive.Subjects;
-using System.Windows.Controls.Ribbon.Primitives;
 using System.Windows.Threading;
 namespace Nori;
 
@@ -11,6 +10,9 @@ namespace Nori;
 /// <summary>The public interface to the Lux renderer</summary>
 public static partial class Lux {
    // Properties ---------------------------------------------------------------
+   /// <summary>If set, back faces are colored pink (useful for debugging) when using the Phong shader</summary>
+   public static bool BackFacesPink;
+
    /// <summary>Subscribe to this to get a FPS (frames-per-second) report each second</summary>
    public static IObservable<int> FPS => mFPS;
    static Subject<int> mFPS = new ();
@@ -42,6 +44,7 @@ public static partial class Lux {
       get => mUIScene;
       set {
          mUIScene?.Detach ();
+         BackFacesPink = false;
          mUIScene = value; mViewBound.OnNext (0); Redraw ();
          Panel.CursorVisible = mUIScene?.CursorVisible ?? true;
       }
@@ -102,7 +105,7 @@ public static partial class Lux {
    /// after rendering the image, or continues to remain connected to the Lux engine
    /// for continued rendering. For example, if you are rendering the UIScene to a
    /// thumbnail, you will keep it alive. In most other case, you will ask for the scene
-   /// to be 'detached' after use. 
+   /// to be 'detached' after use.
    public static DIBitmap RenderToImage (Scene scene, Vec2S size, DIBitmap.EFormat fmt, bool keepAlive = false) {
       if (size.X % 4 != 0) throw new ArgumentException ($"Lux.RenderToImage: image width must be a multiple of 4");
       var dib =  (DIBitmap)Render (scene, size, ETarget.Image, fmt)!;

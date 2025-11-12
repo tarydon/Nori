@@ -79,7 +79,10 @@ public class CurlReader {
                R.Read (out string str);
                value = field.FieldType.ReadByName (mStack, str);
                break;
-            default: value = Read (field.FieldType); break;
+            default:
+               value = Read (field.FieldType);
+               if (field.IsAngle) value = ((double)value!).D2R ();
+               break;
          }
          field.SetValue (owner, value);
       }

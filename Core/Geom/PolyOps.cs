@@ -2,8 +2,6 @@
 // ╔═╦╦═╦╦╬╣ PolyOps.cs
 // ║║║║╬║╔╣║ Continuation of the Poly class, implements various operations
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
-using System.ComponentModel.DataAnnotations;
-
 namespace Nori;
 
 // This file contains a number of 'operations' on Poly.

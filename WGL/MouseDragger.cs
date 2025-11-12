@@ -90,8 +90,8 @@ public class SceneManipulator {
       if (Lux.UIScene is Scene sc) {
          if (mi.Button == EMouseButton.Left && sc is Scene3 sc3) {
             if (Lux.Pick (mi.Position) is { } vnode) {
-               Lib.Trace ($"Clicked on {vnode.Obj}");
-            } else 
+               if (vnode.Obj != null) sc.Picked (vnode.Obj);
+            } else
                new SceneRotator (sc3, mi.Position);
          }
          if (mi.Button == EMouseButton.Middle) new ScenePanner (sc, mi.Position);

@@ -10,6 +10,7 @@ BlackLine      Lines        Vec3F_Vec3H      1      1      0        None     Wor
 GlassLine      Lines        Vec3F_Vec3H      1      1      0        None     World3D.vert|Line3D.geom|GlassLine.frag
 Gourad         Triangles    Vec3F_Vec3H      0      1      1        None     Gourad.vert|Gourad.frag
 Phong          Triangles    Vec3F_Vec3H      0      1      1        None     Phong.vert|Phong.frag
+PhongPink      Triangles    Vec3F_Vec3H      0      1      1        None     Phong.vert|PhongPink.frag
 Pick           Triangles    Vec3F_Vec3H      0      1      1        None     FlatFacet.vert|Flat.frag
 Glass          Triangles    Vec3F_Vec3H      0      1      1        None     Gourad.vert|Glass.frag
 FlatFacet      Triangles    Vec3F_Vec3H      0      1      1        None     FlatFacet.vert|FlatFacet.frag

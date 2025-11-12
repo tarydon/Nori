@@ -196,6 +196,7 @@ class Surface : UserControl {
          }
       }
       Lux.mReady = true;
+      Lib.Tessellate = Tess2D.Process;
       Lux.mOnReady.OnNext (0);
    }
 

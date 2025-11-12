@@ -29,7 +29,7 @@ public class DwgFillVN : VNode {
       mIdx.Clear (); mVec.Clear (); mVec.Add (bound.Midpoint);
       var polys = mDwg.Polys.Where (a => a.IsClosed).ToList ();
       foreach (var poly in polys) {
-         mPts.Clear (); poly.Discretize (mPts, 0.05);
+         mPts.Clear (); poly.Discretize (mPts, 0.05, 0.5411);  // 0.5411 ~ 30 degrees of arc
          mIdx.Add (0); int idx0 = mVec.Count;
          mVec.AddRange (mPts.Select (a => (Vec2F)a));
          for (int i = 0; i < mPts.Count; i++) mIdx.Add (idx0 + i);

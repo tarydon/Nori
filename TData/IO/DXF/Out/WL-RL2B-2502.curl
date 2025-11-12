@@ -28,7 +28,7 @@
           Text:0
           Style:Standard
           Alignment:BotRight
-          Height:5.910987599690755
+          Height:5.910988
           XScale:1.008
         }
         (E2Poly){
@@ -77,7 +77,7 @@
           Text:" SCALE"
           Style:Standard
           Alignment:BotCenter
-          Height:2.708264170752631
+          Height:2.708264
           XScale:1.501
         }
         (E2Text){
@@ -87,7 +87,7 @@
           Text:" SIZE"
           Style:Standard
           Alignment:BotCenter
-          Height:2.708263248867459
+          Height:2.708263
           XScale:1.501
         }
         (E2Text){
@@ -97,7 +97,7 @@
           Text:" CAGE CODE"
           Style:Standard
           Alignment:BotCenter
-          Height:2.708263248867459
+          Height:2.708263
           XScale:1.501
         }
         (E2Text){
@@ -107,7 +107,7 @@
           Text:" DWG NO"
           Style:Standard
           Alignment:BotCenter
-          Height:2.708263248867459
+          Height:2.708263
           XScale:1.501
         }
         (E2Text){
@@ -117,7 +117,7 @@
           Text:" SHEET"
           Style:Standard
           Alignment:BotCenter
-          Height:2.708264170752631
+          Height:2.708264
           XScale:1.501
         }
         (E2Text){
@@ -127,7 +127,7 @@
           Text:" REV"
           Style:Standard
           Alignment:BotCenter
-          Height:2.708263248867459
+          Height:2.708263
           XScale:1.501
         }
         (E2Text){
@@ -137,7 +137,7 @@
           Text:" TITLE"
           Style:Standard
           Alignment:BotCenter
-          Height:2.708263248867459
+          Height:2.708263
           XScale:1.501
         }
         (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M-66.372092,331.815759V-42.842051 }
@@ -151,7 +151,7 @@
           Text:"DATE:"
           Style:Standard
           Alignment:TopLeft
-          Height:4.270144769880507
+          Height:4.270145
           XScale:1
         }
         (E2Text){
@@ -161,7 +161,7 @@
           Text:"C.T.M. BALLITO KZN"
           Style:Standard
           Alignment:TopLeft
-          Height:4.270144769880507
+          Height:4.270145
           XScale:1
         }
         (E2Text){
@@ -171,7 +171,7 @@
           Text:"TYPICAL BALUSTRADE ANGLE"
           Style:Standard
           Alignment:TopLeft
-          Height:4.270144769880507
+          Height:4.270145
           XScale:1
         }
         (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M265.62335,28.633176H484.302982 }
@@ -188,7 +188,7 @@
           Text:0
           Style:Standard
           Alignment:MidCenter
-          Height:4.092221238878039
+          Height:4.092221
           XScale:1
         }
         (E2Poly){
@@ -233,7 +233,7 @@
           Text:" SCALE"
           Style:Standard
           Alignment:BotCenter
-          Height:2.046111234029134
+          Height:2.046111
           XScale:1.25
         }
         (E2Text){
@@ -243,7 +243,7 @@
           Text:" SIZE"
           Style:Standard
           Alignment:BotCenter
-          Height:2.046110619439019
+          Height:2.046111
           XScale:1.25
         }
         (E2Text){
@@ -253,7 +253,7 @@
           Text:" CAGE CODE"
           Style:Standard
           Alignment:BotCenter
-          Height:2.046110619439019
+          Height:2.046111
           XScale:1.25
         }
         (E2Text){
@@ -263,7 +263,7 @@
           Text:" DWG NO"
           Style:Standard
           Alignment:BotCenter
-          Height:2.046110619439019
+          Height:2.046111
           XScale:1.25
         }
         (E2Text){
@@ -273,7 +273,7 @@
           Text:" SHEET"
           Style:Standard
           Alignment:BotCenter
-          Height:2.046111234029134
+          Height:2.046111
           XScale:1.25
         }
         (E2Text){
@@ -283,7 +283,7 @@
           Text:" REV"
           Style:Standard
           Alignment:BotCenter
-          Height:2.046110619439019
+          Height:2.046111
           XScale:1.25
         }
         (E2Text){
@@ -293,7 +293,7 @@
           Text:" TITLE"
           Style:Standard
           Alignment:BotCenter
-          Height:2.046110619439019
+          Height:2.046111
           XScale:1.25
         }
         (E2Poly){
@@ -328,7 +328,7 @@
           Text:"NOTES:"
           Style:Standard
           Alignment:TopLeft
-          Height:5.788418663872613
+          Height:5.788419
           XScale:1
         }
         (E2Text){
@@ -338,7 +338,7 @@
           Text:"5 OFF RIGHT REQUIRED"
           Style:Standard
           Alignment:TopLeft
-          Height:5.788418663872613
+          Height:5.788419
           XScale:1
         }
         (E2Text){
@@ -348,7 +348,7 @@
           Text:"5 OFF LEFT REQUIRED"
           Style:Standard
           Alignment:TopLeft
-          Height:5.788418663872613
+          Height:5.788419
           XScale:1
         }
         (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M272.5,-83.274953H410 }
@@ -360,7 +360,7 @@
           Text:NTS
           Style:Standard
           Alignment:TopLeft
-          Height:3.182839594946967
+          Height:3.18284
           XScale:1
         }
         (E2Text){
@@ -370,7 +370,7 @@
           Text:"DRAWN: "
           Style:Standard
           Alignment:TopLeft
-          Height:2.728148004743788
+          Height:2.728148
           XScale:1
         }
         (E2Text){
@@ -380,7 +380,7 @@
           Text:GALV
           Style:Standard
           Alignment:TopLeft
-          Height:3.182839594946967
+          Height:3.18284
           XScale:1
         }
         (E2Text){
@@ -390,7 +390,7 @@
           Text:A3
           Style:Standard
           Alignment:TopLeft
-          Height:3.182839594946967
+          Height:3.18284
           XScale:1
         }
         (E2Text){
@@ -400,7 +400,7 @@
           Text:"Lift closure WSHOP pg1 "
           Style:Standard
           Alignment:TopLeft
-          Height:3.182839594946967
+          Height:3.18284
           XScale:1
         }
         (E2Text){
@@ -409,9 +409,9 @@
           Pt:38.931981,260.810567
           Text:"50x25 rhs ms tube end cut to form channel"
           Style:Standard
-          Angle:-0.04874185130991151
+          Angle:-2.792702
           Alignment:BaseLeft
-          Height:3.183555592430963
+          Height:3.183556
           XScale:1
         }
         (E2Text){
@@ -420,9 +420,9 @@
           Pt:88.664684,81.6409
           Text:"spot weld channels together"
           Style:Standard
-          Angle:0.06442683942556682
+          Angle:3.691386
           Alignment:BaseLeft
-          Height:3.183555592430963
+          Height:3.183556
           XScale:1
         }
         (E2Text){
@@ -431,9 +431,9 @@
           Pt:17.702969,219.570504
           Text:"50x50x6 ms lug with m12 bolt"
           Style:Standard
-          Angle:0.07485984771076261
+          Angle:4.289153
           Alignment:BaseLeft
-          Height:3.183555592430963
+          Height:3.183556
           XScale:1
         }
         (E2Dimension){
@@ -469,9 +469,9 @@
               Pt:219.67402,169.485527
               Text:"2400 mm"
               Style:Standard
-              Angle:1.5707963267948966
+              Angle:90
               Alignment:MidCenter
-              Height:3.183555555555556
+              Height:3.183556
               XScale:1
             }
             (E2Point){ Layer:Defpoints Color:#FF000000 Pt:259.441546,400.015098 }
@@ -512,9 +512,9 @@
               Pt:225.686451,-51.438645
               Text:"100 mm"
               Style:Standard
-              Angle:1.5707963267948966
+              Angle:90
               Alignment:MidCenter
-              Height:3.183555555555556
+              Height:3.183556
               XScale:1
             }
             (E2Point){ Layer:Defpoints Color:#FF000000 Pt:259.825762,-61.044043 }
@@ -555,9 +555,9 @@
               Pt:237.310485,-3.411651
               Text:"400 mm"
               Style:Standard
-              Angle:1.570796326794853
+              Angle:90
               Alignment:MidCenter
-              Height:3.183555555555556
+              Height:3.183556
               XScale:1
             }
             (E2Point){ Layer:Defpoints Color:#FF000000 Pt:247.915068,-41.833246 }
@@ -598,9 +598,9 @@
               Pt:234.554787,92.642337
               Text:"600 mm"
               Style:Standard
-              Angle:1.5707963267948513
+              Angle:90
               Alignment:MidCenter
-              Height:3.183555555555556
+              Height:3.183556
               XScale:1
             }
             (E2Point){ Layer:Defpoints Color:#FF000000 Pt:247.915068,35.009944 }
@@ -641,9 +641,9 @@
               Pt:239.665354,207.907122
               Text:"600 mm"
               Style:Standard
-              Angle:1.5707963267948513
+              Angle:90
               Alignment:MidCenter
-              Height:3.183555555555556
+              Height:3.183556
               XScale:1
             }
             (E2Point){ Layer:Defpoints Color:#FF000000 Pt:247.915068,150.27473 }
@@ -684,9 +684,9 @@
               Pt:228.817926,323.171908
               Text:"600 mm"
               Style:Standard
-              Angle:1.5707963267948508
+              Angle:90
               Alignment:MidCenter
-              Height:3.183555555555556
+              Height:3.183556
               XScale:1
             }
             (E2Point){ Layer:Defpoints Color:#FF000000 Pt:247.915068,265.539515 }
@@ -727,9 +727,9 @@
               Pt:233.126835,390.409699
               Text:"100 mm"
               Style:Standard
-              Angle:1.5707963267948966
+              Angle:90
               Alignment:MidCenter
-              Height:3.183555555555556
+              Height:3.183556
               XScale:1
             }
             (E2Point){ Layer:Defpoints Color:#FF000000 Pt:247.915068,380.8043 }
@@ -771,7 +771,7 @@
               Text:"50 mm"
               Style:Standard
               Alignment:MidCenter
-              Height:3.183555555555556
+              Height:3.183556
               XScale:1
             }
             (E2Point){ Layer:Defpoints Color:#FF000000 Pt:269.046945,400.015098 }
@@ -786,7 +786,7 @@
           Text:"Date: 23/04/2025"
           Style:Standard
           Alignment:TopLeft
-          Height:3.182839594946967
+          Height:3.18284
           XScale:1
         }
         (E2Text){
@@ -796,7 +796,7 @@
           Text:"Comp: 03/05/2025"
           Style:Standard
           Alignment:TopLeft
-          Height:3.182839594946967
+          Height:3.18284
           XScale:1
         }
         (E2Text){
@@ -806,7 +806,7 @@
           Text:GALV
           Style:Standard
           Alignment:TopLeft
-          Height:5.166237131754557
+          Height:5.166237
           XScale:1
         }
       ]
@@ -822,7 +822,7 @@
           Text:" TITLE"
           Style:Standard
           Alignment:BotCenter
-          Height:2.046108161078559
+          Height:2.046108
           XScale:1
         }
         (E2Text){
@@ -832,7 +832,7 @@
           Text:" DWG NO"
           Style:Standard
           Alignment:BotCenter
-          Height:2.046108161078559
+          Height:2.046108
           XScale:1
         }
         (E2Text){
@@ -842,7 +842,7 @@
           Text:" SIZE"
           Style:Standard
           Alignment:BotCenter
-          Height:2.046108161078559
+          Height:2.046108
           XScale:1
         }
         (E2Text){
@@ -852,7 +852,7 @@
           Text:" REV"
           Style:Standard
           Alignment:BotCenter
-          Height:2.046108161078559
+          Height:2.046108
           XScale:1
         }
         (E2Text){
@@ -862,7 +862,7 @@
           Text:" SHEET"
           Style:Standard
           Alignment:BotCenter
-          Height:2.046108161078559
+          Height:2.046108
           XScale:1
         }
         (E2Text){
@@ -872,7 +872,7 @@
           Text:" SCALE"
           Style:Standard
           Alignment:BotCenter
-          Height:2.046108161078559
+          Height:2.046108
           XScale:1
         }
         (E2Text){
@@ -882,7 +882,7 @@
           Text:" CAGE CODE"
           Style:Standard
           Alignment:BotCenter
-          Height:2.046108161078559
+          Height:2.046108
           XScale:1
         }
         (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M-99.999985,-33.000008H-34.999985 }
@@ -917,7 +917,7 @@
           Text:" TITLE"
           Style:Standard
           Alignment:BotCenter
-          Height:2.046108161078559
+          Height:2.046108
           XScale:1
         }
         (E2Text){
@@ -927,7 +927,7 @@
           Text:" DWG NO"
           Style:Standard
           Alignment:BotCenter
-          Height:2.046108161078559
+          Height:2.046108
           XScale:1
         }
         (E2Text){
@@ -937,7 +937,7 @@
           Text:" SIZE"
           Style:Standard
           Alignment:BotCenter
-          Height:2.046108161078559
+          Height:2.046108
           XScale:1
         }
         (E2Text){
@@ -947,7 +947,7 @@
           Text:" REV"
           Style:Standard
           Alignment:BotCenter
-          Height:2.046108161078559
+          Height:2.046108
           XScale:1
         }
         (E2Text){
@@ -957,7 +957,7 @@
           Text:" SHEET"
           Style:Standard
           Alignment:BotCenter
-          Height:2.046108161078559
+          Height:2.046108
           XScale:1
         }
         (E2Text){
@@ -967,7 +967,7 @@
           Text:" SCALE"
           Style:Standard
           Alignment:BotCenter
-          Height:2.046108161078559
+          Height:2.046108
           XScale:1
         }
         (E2Text){
@@ -977,7 +977,7 @@
           Text:" CAGE CODE"
           Style:Standard
           Alignment:BotCenter
-          Height:2.046108161078559
+          Height:2.046108
           XScale:1
         }
         (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M-99.999985,-33.000008H-34.999985 }
@@ -1065,7 +1065,7 @@
       Text:0
       Style:Standard
       Alignment:MidCenter
-      Height:4.092221238878039
+      Height:4.092221
       XScale:1
     }
     (E2Poly){
@@ -1110,7 +1110,7 @@
       Text:" SCALE"
       Style:Standard
       Alignment:BotCenter
-      Height:2.046111234029134
+      Height:2.046111
       XScale:1.25
     }
     (E2Text){
@@ -1120,7 +1120,7 @@
       Text:" SIZE"
       Style:Standard
       Alignment:BotCenter
-      Height:2.046110619439019
+      Height:2.046111
       XScale:1.25
     }
     (E2Text){
@@ -1130,7 +1130,7 @@
       Text:" CAGE CODE"
       Style:Standard
       Alignment:BotCenter
-      Height:2.046110619439019
+      Height:2.046111
       XScale:1.25
     }
     (E2Text){
@@ -1140,7 +1140,7 @@
       Text:" DWG NO"
       Style:Standard
       Alignment:BotCenter
-      Height:2.046110619439019
+      Height:2.046111
       XScale:1.25
     }
     (E2Text){
@@ -1150,7 +1150,7 @@
       Text:" SHEET"
       Style:Standard
       Alignment:BotCenter
-      Height:2.046111234029134
+      Height:2.046111
       XScale:1.25
     }
     (E2Text){
@@ -1160,7 +1160,7 @@
       Text:" REV"
       Style:Standard
       Alignment:BotCenter
-      Height:2.046110619439019
+      Height:2.046111
       XScale:1.25
     }
     (E2Text){
@@ -1170,7 +1170,7 @@
       Text:" TITLE"
       Style:Standard
       Alignment:BotCenter
-      Height:2.046110619439019
+      Height:2.046111
       XScale:1.25
     }
     (E2Poly){
@@ -1205,7 +1205,7 @@
       Text:"NOTES:"
       Style:Standard
       Alignment:TopLeft
-      Height:4.270144769880507
+      Height:4.270145
       XScale:1
     }
     (E2Poly){ Layer:0 Color:#FFFFFFFF Poly:M272.5,-83.274953H410 }
@@ -1217,7 +1217,7 @@
       Text:NTS
       Style:Standard
       Alignment:TopLeft
-      Height:3.182839594946967
+      Height:3.18284
       XScale:1
     }
     (E2Text){
@@ -1227,7 +1227,7 @@
       Text:"DRAWN: "
       Style:Standard
       Alignment:TopLeft
-      Height:2.728148004743788
+      Height:2.728148
       XScale:1
     }
     (E2Text){
@@ -1237,7 +1237,7 @@
       Text:"FINISH: BY OTHERS SPEC."
       Style:Standard
       Alignment:TopLeft
-      Height:3.182839594946967
+      Height:3.18284
       XScale:1
     }
     (E2Text){
@@ -1247,7 +1247,7 @@
       Text:A3
       Style:Standard
       Alignment:TopLeft
-      Height:3.182839594946967
+      Height:3.18284
       XScale:1
     }
     (E2Text){
@@ -1257,7 +1257,7 @@
       Text:wc-rl2b-2502
       Style:Standard
       Alignment:TopLeft
-      Height:3.182839594946967
+      Height:3.18284
       XScale:1
     }
     (E2Dimension){
@@ -1293,9 +1293,9 @@
           Pt:271.230618,220.918789
           Text:"2400 mm"
           Style:Standard
-          Angle:1.5707963267948966
+          Angle:90
           Alignment:MidCenter
-          Height:3.183555555555556
+          Height:3.183556
           XScale:1
         }
         (E2Point){ Layer:Defpoints Color:#FF000000 Pt:303.199159,413.416531 }
@@ -1310,7 +1310,7 @@
       Text:"1.6mm bent ms channel"
       Style:Standard
       Alignment:BaseLeft
-      Height:3.183555592430963
+      Height:3.183556
       XScale:1
     }
     (E2Text){
@@ -1320,7 +1320,7 @@
       Text:"76 off required"
       Style:Standard
       Alignment:TopLeft
-      Height:12.14065738254123
+      Height:12.140657
       XScale:1
     }
     (E2Dimension){
@@ -1357,7 +1357,7 @@
           Text:"50 mm"
           Style:Standard
           Alignment:MidCenter
-          Height:3.183555555555556
+          Height:3.183556
           XScale:1
         }
         (E2Point){ Layer:Defpoints Color:#FF000000 Pt:249.852321,6.430863 }
@@ -1398,9 +1398,9 @@
           Pt:139.207647,-33.685793
           Text:"50 mm"
           Style:Standard
-          Angle:1.5707963267948966
+          Angle:90
           Alignment:MidCenter
-          Height:3.183555555555556
+          Height:3.183556
           XScale:1
         }
         (E2Point){ Layer:Defpoints Color:#FF000000 Pt:169.61901,6.430863 }
@@ -1442,7 +1442,7 @@
           Text:"50 mm"
           Style:Standard
           Alignment:MidCenter
-          Height:3.183555555555556
+          Height:3.183556
           XScale:1
         }
         (E2Point){ Layer:Defpoints Color:#FF000000 Pt:169.61901,-73.802448 }
@@ -1483,9 +1483,9 @@
           Pt:268.023988,-33.685793
           Text:"46 mm"
           Style:Standard
-          Angle:1.5707963267948966
+          Angle:90
           Alignment:MidCenter
-          Height:3.183555555555556
+          Height:3.183556
           XScale:1
         }
         (E2Point){ Layer:Defpoints Color:#FF000000 Pt:249.852321,-70.593116 }

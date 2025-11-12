@@ -1,4 +1,4 @@
-// ────── ╔╗
+// ────── ╔╗                                                                                WPFDEMO
 // ╔═╦╦═╦╦╬╣ LineFontDemo.cs
 // ║║║║╬║╔╣║ Demo showing various options to LineFont.Render (alignment, oblique, x-stretch etc)
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────

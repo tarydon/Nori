@@ -284,7 +284,7 @@ public partial class DXFReader {
       set {
          switch (mType) {
             case "ARC": Add (Poly.Arc (Center, Radius, StartAng, EndAng, true)); break;
-            case "CIRCLE": Add (Poly.Circle (Center.X * ZDir, Center.Y, Radius)); break;
+            case "CIRCLE": Add (Poly.Circle (new (Center.X * ZDir, Center.Y), Radius)); break;
             case "ELLIPSE": AddEllipse (Pt0, MajorAxis, AxisRatio, TRange); break;
             case "POINT": Add (new E2Point (Layer, Pt0) { Color = GetColor () }); break;
             case "POLYLINE": mClosedPoly = (Flags & 1) > 0; break;

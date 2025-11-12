@@ -1,4 +1,8 @@
-﻿using Nori;
+// ────── ╔╗
+// ╔═╦╦═╦╦╬╣ STPReader.cs
+// ║║║║╬║╔╣║ <<TODO>>
+// ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
+using Nori;
 using Nori.STEP;
 namespace Nori;
 
@@ -8,7 +12,6 @@ public partial class STEPReader {
    int N;
 
    public void Parse () {
-      Console.WriteLine ($"Reading {mFile}");
       N = S.IndexOf ("DATA;") + 5; Assert (N > 10);
       // The following loop loads all the entities one by one
       ReadOnlySpan<char> endsec = "ENDSEC;";
@@ -74,7 +77,7 @@ public partial class STEPReader {
             Unread[Id] = kw;
          } else {
             while (D.Count <= Id) D.Add (null);
-            D[Id] = ent;
+            ent.Id = Id; D[Id] = ent;
          }
       }
       RSkip (';');
@@ -279,7 +282,7 @@ public partial class STEPReader {
    void RComplex () {
       int n = N - 1;
       while (S[N++] != ';') { }
-      var sub = S[n..N];
+      var sub = S[n..--N];
       if (sub.Contains ("SOLID_ANGLE_UNIT") || sub.Contains ("MASS_UNIT")) return;
       if (sub.Contains ("PLANE_ANGLE_UNIT") || sub.Contains ("LENGTH_UNIT")) return;
       if (sub.Contains ("GEOMETRIC_REPRESENTATION_CONTEXT")) return;
