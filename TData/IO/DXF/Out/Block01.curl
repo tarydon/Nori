@@ -15,7 +15,7 @@
           Text:Blimp
           Style:STANDARD
           Alignment:BaseLeft
-          Height:4.999999905999999
+          Height:5
           XScale:1
         }
       ]
@@ -36,14 +36,7 @@
   Ents:[
     (E2Poly){ Layer:0 Poly:M0,0V3048H5080V0Z }
     (E2Insert){ Layer:0 BlockName:Blimp Pt:508,508 XScale:20 YScale:40 }
-    (E2Insert){
-      Layer:0
-      BlockName:Blimp
-      Pt:2540,1524
-      Angle:0.5235987755982988
-      XScale:50.8
-      YScale:50.8
-    }
+    (E2Insert){ Layer:0 BlockName:Blimp Pt:2540,1524 Angle:30 XScale:50.8 YScale:50.8 }
     (E2Insert){ Layer:0 BlockName:Cross Pt:1016,2032 XScale:63.5 YScale:63.5 }
   ]
 }

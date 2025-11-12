@@ -159,7 +159,7 @@ class PolyTrimExtendTests {
 
    [Test (123, "Trim circle")]
    void Test2 () {
-      Poly c = Poly.Circle (0, 0, 40);
+      Poly c = Poly.Circle (new (0, 0), 40);
       List<Poly> polySoup = [c];
       List<Poly> resPolys = [.. c.TrimmedSeg (0, lie: 0, polySoup)]; // Left-over arc segment, if any.
       resPolys.Count.Is (0);

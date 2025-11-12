@@ -74,7 +74,7 @@ public readonly struct Bound1 : IEQuable<Bound1> {
 
    // Operators ----------------------------------------------------------------
    /// <summary>Implicit conversion from a tuple of two double to a Bound1</summary>
-   /// This makes it much simpler to construct Bound1 objects on the fly where needed by 
+   /// This makes it much simpler to construct Bound1 objects on the fly where needed by
    /// just enclosing a pair of numbers in parentheses.
    public static implicit operator Bound1 ((double Min, double Max) value) => new (value.Min, value.Max);
 
@@ -263,6 +263,12 @@ public readonly struct Bound3 : IEQuable<Bound3> {
       (X, Y, Z) = (new (), new (), new ());
       foreach (var p in pts) { X += p.X; Y += p.Y; Z += p.Z; }
    }
+   /// <summary>Construct a Bound3  that encompasses all the given Bound3 (union)</summary>
+   public Bound3 (IEnumerable<Bound3> bounds) {
+      (X, Y, Z) = (new (), new (), new ());
+      foreach (var b in bounds) { X += b.X; Y += b.Y; Z += b.Z; }
+   }
+
    public static Bound3 Read (UTFReader r) {
       r.Match ('"').Read (out double x0).Match (',').Read (out double y0).Match (',').Read (out double z0)
          .Match (':').Read (out double x1).Match (',').Read (out double y1).Match (',').Read (out double z1).Match ('"');
@@ -291,6 +297,9 @@ public readonly struct Bound3 : IEQuable<Bound3> {
    /// <summary>Check if a Bound3 contains a given 3D point</summary>
    public bool Contains (Point3 pt) => X.Contains (pt.X) && Y.Contains (pt.Y) && Z.Contains (pt.Z);
 
+   /// <summary>Checks if a Bound3 contains another bound (exact overlap is treated as containment)</summary>
+   public bool Contains (Bound3 bound) => X.Contains (bound.X) && Y.Contains (bound.Y) && Z.Contains (bound.Z);
+
    /// <summary>Compares two Bound3 for equality</summary>
    public bool EQ (Bound3 other) => X.EQ (other.X) && Y.EQ (other.Y) && Z.EQ (other.Z);
 
@@ -299,9 +308,30 @@ public readonly struct Bound3 : IEQuable<Bound3> {
    /// <summary>Returns a Bound3 padded by a given linear margin on all sides</summary>
    public Bound3 InflatedL (double delta) => new (X.InflatedL (delta), Y.InflatedL (delta), Z.InflatedL (delta));
 
-   public void Write (UTFWriter w)
-      => w.Write ('"').Write (X.Min).Write (',').Write (Y.Min).Write (',').Write (Z.Min).Write (':')
+   /// <summary>Computes a Bound3 (by calling the given delegate) if it is not already computed</summary>
+   /// If the given Bound3 is empty, then the provided computer function is c alled
+   /// to compute the bound. This is a convenience function that makes it easy to
+   /// implement a `Bound` property with code like this:
+   ///   public Bound3 Bound
+   ///     => Bound3.Update (ref mBound, () => new (mPts));
+   ///   Bound3 mBound = new ();
+   public static Bound3 Update (ref Bound3 bound, Func<Bound3> computer) {
+      if (bound.IsEmpty) bound = computer ();
+      return bound;
+   }
+
+   /// <summary>
+   /// Write the Bound3 to UTF8, in a format like "1,2,3:4,5,6"
+   /// </summary>
+   /// Here, (1,2,3) is the X,Y,Z lower min point and (4,5,6) is upper max point
+   public void Write (UTFWriter w) {
+      if (Lib.Testing)
+         w.Write ('"').Write (X.Min.R5 ()).Write (',').Write (Y.Min.R5 ()).Write (',').Write (Z.Min.R5 ()).Write (':')
+         .Write (X.Max.R5 ()).Write (',').Write (Y.Max.R5 ()).Write (',').Write (Z.Max.R5 ()).Write ('"');
+      else
+         w.Write ('"').Write (X.Min).Write (',').Write (Y.Min).Write (',').Write (Z.Min).Write (':')
          .Write (X.Max).Write (',').Write (Y.Max).Write (',').Write (Z.Max).Write ('"');
+   }
 
    // Operators ----------------------------------------------------------------
    /// <summary>Returns a Bound3 expanded to include the given Point3</summary>

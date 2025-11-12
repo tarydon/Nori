@@ -1,6 +1,12 @@
-﻿namespace Nori.STEP;
+// ────── ╔╗
+// ╔═╦╦═╦╦╬╣ STPEntity.cs
+// ║║║║╬║╔╣║ <<TODO>>
+// ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
+namespace Nori.STEP;
 
-class Entity { }
+class Entity {
+   public int Id;
+}
 
 class AdvancedFace (int[] contours, int face, bool dir) : Entity {
    public readonly int[] Contours = contours;
@@ -80,8 +86,8 @@ class Cone (int coordsys, double radius, double halfAngle) : ElementarySurface (
 
 class CoordSys (int origin, int xaxis, int yaxis) : Entity {
    public readonly int Origin = origin;
-   public readonly int XAxis = xaxis;
-   public readonly int YAxis = yaxis;
+   public readonly int ZAxis = xaxis;
+   public readonly int XAxis = yaxis;
 }
 
 class CoordSys2 (int origin, int xaxis) : Entity {
@@ -107,7 +113,7 @@ class EdgeCurve (int start, int end, int basis, bool dir) : Entity {
    public readonly int Start = start;
    public readonly int End = end;
    public readonly int Basis = basis;
-   public readonly bool Dir = dir;
+   public readonly bool SameSense = dir;
 }
 
 class FaceOuterBound (int edgeloop, bool dir) : Entity {
@@ -138,7 +144,7 @@ class ManifoldSurfaceShapeRepr (int[] items, int context) : ShapeRepr (items, co
 
 class OrientedEdge (int edge, bool dir) : Entity {
    public readonly int Edge = edge;
-   public readonly bool Dir = dir;
+   public readonly bool Dir = dir;     // If false, the OrientedEdge is the flip of the underlying Edge
 }
 
 class Plane (int coordsys) : ElementarySurface (coordsys) { }

@@ -2,8 +2,6 @@
 // ╔═╦╦═╦╦╬╣ LuxDraw.cs
 // ║║║║╬║╔╣║ Draw-related properties and methods of the Lux class
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
-using System.Security.Cryptography;
-
 namespace Nori;
 
 [Flags]
@@ -220,14 +218,17 @@ public static partial class Lux {
    ///   2 - Phong shading
    /// (This is primarily for learning purposes. Later we will remove the other shade
    /// modes, and use only Phong shading)
-   public static void Mesh (CMesh mesh, EShadeMode shadeMode) {
-      CMesh.Node[] nodes = mesh.Vertex.AsArray ();
+   public static void Mesh (Mesh3 mesh, EShadeMode shadeMode) {
+      Mesh3.Node[] nodes = mesh.Vertex.AsArray ();
       int[] tris = mesh.Triangle.AsArray (), wires = mesh.Wire.AsArray ();
       switch (shadeMode) {
          case EShadeMode.Flat: FlatFacetShader.It.Draw (nodes, tris); break;
          case EShadeMode.Gourad: GouradShader.It.Draw (nodes, tris); break;
          case EShadeMode.Glass: GlassShader.It.Draw (nodes, tris); break;
-         default: PhongShader.It.Draw (nodes, tris); break;
+         default:
+            if (BackFacesPink) PhongPinkShader.It.Draw (nodes, tris);
+            else PhongShader.It.Draw (nodes, tris); 
+            break;
       }
       switch (shadeMode) {
          case EShadeMode.Glass: GlassLineShader.It.Draw (nodes, wires); break;

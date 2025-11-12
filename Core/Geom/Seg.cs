@@ -2,7 +2,6 @@
 // ╔═╦╦═╦╦╬╣ Seg.cs
 // ║║║║╬║╔╣║ Implements the Seg struct (one segment of a Poly)
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
-using System.Threading;
 using static System.Math;
 namespace Nori;
 
@@ -157,11 +156,11 @@ public readonly struct Seg {
    /// This does NOT add the start point into the list - if this is a line, it adds just
    /// one endpoint. If this is an arc, it adds as many points as needed to keep the error between
    /// the theoretical arc and the 'chords' to within the given error threshold
-   public void Discretize (List<Point2> pts, double threshold) {
+   public void Discretize (List<Point2> pts, double threshold, double maxAngSpan) {
       if (IsArc2 (out var cen, out var flags)) {
          var (sa, ea) = GetStartAndEndAngles (cen, flags);
          var radius = cen.DistTo (A);
-         int cSteps = Lib.GetArcSteps (radius, Abs (ea - sa), threshold);
+         int cSteps = Lib.GetArcSteps (radius, Abs (ea - sa), threshold, maxAngSpan);
          double angstep = (ea - sa) / cSteps;
          for (int j = 1; j <= cSteps; j++)
             pts.Add (cen.Polar (radius, sa += angstep));
