@@ -83,6 +83,19 @@ class Matrix2Tests {
       var m5 = Matrix2.Rotation (new (1, 2), 90.D2R ());
       (p1 * m5).Is ("(-9,11)"); (v1 * m5).Is ("<-5,3>");
 
+      var m10 = Matrix2.HMirror; // About Y axis
+      (p1 * m10).Is ("(-10,12)"); (v1 * m10).Is ("<-3,5>");
+
+      var m11 = Matrix2.VMirror; // About X axis
+      (p1 * m11).Is ("(10,-12)"); (v1 * m11).Is ("<3,-5>");
+
+      var m7 = Matrix2.Mirror ((2, 1), (3, 2)); // Arbitrary axis (45 degree)
+      (p1 * m7).Is ("(13,9)"); (v1 * m7).Is ("<5,3>");
+      var m8 = Matrix2.Mirror ((1, 1), (2, 1)); // Arbitrary horizontal axis (Shifted vertical mirror)
+      (p1 * m8).Is ("(10,-10)"); (v1 * m8).Is ("<3,-5>");
+      var m9 = Matrix2.Mirror ((1, 1), (1, 2)); // Arbitrary vertical axis (Shifted horizontal mirror)
+      (p1 * m9).Is ("(-8,12)"); (v1 * m9).Is ("<-3,5>");
+
       var m6 = (Matrix3)Matrix2.Translation (1, 2);
       m6.Is ("[1,0,0, 0,1,0, 0,0,1, 1,2,0]");
    }

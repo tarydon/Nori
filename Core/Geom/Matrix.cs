@@ -32,6 +32,22 @@ public class Matrix2 (double m11, double m12, double m21, double m22, double x, 
       return new (c, s, -s, c, dx, dy);
    }
 
+   /// <summary>Creates a mirror matrix about the line specified by the two points</summary>
+   public static Matrix2 Mirror (Point2 p1, Point2 p2) {
+      // Note: Simplified impl. Not considering mirror axis passing through origin! (Rare alignment)
+      double dx = p2.X - p1.X;
+      if (dx.IsZero ()) // Arbitrary vertical axis
+         return Translation (-p1.X, 0) * HMirror * Translation (p1.X, 0);
+
+      double dy = p2.Y - p1.Y;
+      if (dy.IsZero ()) // Arbitrary horizontal axis
+         return Translation (0, -p1.Y) * VMirror * Translation (0, p1.Y);
+
+      double fAng = Atan2 (dy, dx); // Note: fAng != 0 (by design)
+      Matrix2 mat = Translation (-p1.X, -p1.Y) * Rotation (-fAng);
+      return mat * VMirror * mat.GetInverse ();
+   }
+
    public override string ToString () => $"[{M11.R6 ()},{M12.R6 ()} | {M21.R6 ()},{M22.R6 ()} | {DX.R6 ()},{DY.R6 ()}]";
 
    // Properties ---------------------------------------------------------------
