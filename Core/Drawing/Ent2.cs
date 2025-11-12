@@ -119,7 +119,7 @@ public class E2Bendline : Ent2 {
 
    // Properties ---------------------------------------------------------------
    /// <summary>The exterior angle (turn angle) in radians. A hem will have an angle of +PI or -PI.</summary>
-   [Angle]
+   [Radian]
    public readonly double Angle;
 
    /// <summary>The K-factor (neutral axis) of the bend, as a fraction from 0 (inner surface) to 1 (outer surface)</summary>
@@ -176,7 +176,7 @@ public class E2Insert : Ent2 {
    // Properties ---------------------------------------------------------------
    /// <summary>Rotation angle of the block, in radians</summary>
    public double Angle => mAngle;
-   [Angle] double mAngle;
+   [Radian] double mAngle;
 
    /// <summary>The Block this E2Insert is referencing</summary>
    public Block2 Block => mBlock ??= mDwg.GetBlock (mBlockName) ?? throw new Exception ($"Block {mBlockName} not found");
@@ -384,7 +384,7 @@ public class E2Text : Ent2 {
 
    // Properties ---------------------------------------------------------------
    /// <summary>The text rotation angle in radians</summary>
-   [Angle]
+   [Radian]
    public readonly double Angle;
 
    /// <summary>The alignment of the text (specifies which corner is located at Pt)</summary>

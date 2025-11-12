@@ -441,7 +441,7 @@ class AuField {
       if (Name.StartsWith ('m')) Name = Name[1..];
       mFieldType = AuType.Get (mFI.FieldType);
       IsNullable = mFI.HasAttribute<NullableAttribute> ();
-      IsAngle = mFI.HasAttribute<AngleAttribute> ();
+      IsAngle = mFI.HasAttribute<RadianAttribute> ();
    }
    readonly AuType mOwner;
 

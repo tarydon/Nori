@@ -5,12 +5,6 @@
 using JetBrains.Annotations;
 namespace Nori;
 
-#region [Angle] attribute --------------------------------------------------------------------------
-/// <summary>[Angle] is used to tag a field / property as an angle in radians</summary>
-[AttributeUsage (AttributeTargets.Field | AttributeTargets.Property)]
-public sealed class AngleAttribute : Attribute;
-#endregion
-
 #region [AuPrimitive] attribute --------------------------------------------------------------------
 /// <summary>[AuPrimitive] tells the Au system that a type behaves like a 'Primitive'</summary>
 /// This means that the type knows how to read or write itself into Curl or AuBinary
@@ -50,6 +44,12 @@ public sealed class EPropClassAttribute : Attribute;
 public class EPropFieldAttribute (EProp prop) : Attribute {
    public readonly EProp Prop = prop;
 }
+#endregion
+
+#region [Radian] attribute -------------------------------------------------------------------------
+/// <summary>[Radian] is used to tag a field / property as an angle in radians</summary>
+[AttributeUsage (AttributeTargets.Field | AttributeTargets.Property)]
+public sealed class RadianAttribute : Attribute;
 #endregion
 
 #region [RedrawOnZoom] attribute -------------------------------------------------------------------
