@@ -263,7 +263,7 @@ public readonly struct Bound3 : IEQuable<Bound3> {
       (X, Y, Z) = (new (), new (), new ());
       foreach (var p in pts) { X += p.X; Y += p.Y; Z += p.Z; }
    }
-   /// <summary>Construct a Bound2  that encompasses all the given Bound2 (union)</summary>
+   /// <summary>Construct a Bound3  that encompasses all the given Bound3 (union)</summary>
    public Bound3 (IEnumerable<Bound3> bounds) {
       (X, Y, Z) = (new (), new (), new ());
       foreach (var b in bounds) { X += b.X; Y += b.Y; Z += b.Z; }
@@ -320,6 +320,10 @@ public readonly struct Bound3 : IEQuable<Bound3> {
       return bound;
    }
 
+   /// <summary>
+   /// Write the Bound3 to UTF8, in a format like "1,2,3:4,5,6"
+   /// </summary>
+   /// Here, (1,2,3) is the X,Y,Z lower min point and (4,5,6) is upper max point
    public void Write (UTFWriter w) {
       if (Lib.Testing)
          w.Write ('"').Write (X.Min.R5 ()).Write (',').Write (Y.Min.R5 ()).Write (',').Write (Z.Min.R5 ()).Write (':')

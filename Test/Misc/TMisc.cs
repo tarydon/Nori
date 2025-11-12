@@ -193,6 +193,7 @@ class TMisc {
       x.Is (1.5); y.Is (2.2);
       Lib.SolveLinearPair (3, 4, -13.3, 30, 40, -133, out _, out _).IsFalse ();
       Lib.GetArcSteps (10, Lib.PI, 0.1, 1.05).Is (12);
+      Lib.GetArcSteps (10, Lib.PI, 0.1, 10.01.D2R ()).Is (18);
       Lib.GetArcSteps (10, Lib.PI, 0.01, 1.05).Is (36);
       int a = 3, b = 2; Lib.Sort (ref a, ref b);
       a.Is (2); b.Is (3);
@@ -368,7 +369,7 @@ class TMisc {
       // Make tessellation inputs
       List<Point2> pts = []; List<int> splits = [0];
       foreach (var poly in polys) {
-         poly.Discretize (pts, 0.1);
+         poly.Discretize (pts, 0.1, 0.5411);
          splits.Add (pts.Count);
       }
 

@@ -165,7 +165,7 @@ public sealed class E3Plane : E3Surface {
       List<int> splits = [0], wires = [];
       foreach (var poly in Contours.Select (a => a.Flatten (mCS))) {
          int a = pts.Count;
-         poly.Discretize (pts, tolerance);
+         poly.Discretize (pts, tolerance, 0.5411);    // 0.5411 ~ 30 degrees
          int b = pts.Count; splits.Add (b);
          wires.Add (b - 1);
          for (int i = a; i < b; i++) { wires.Add (i); wires.Add (i); }

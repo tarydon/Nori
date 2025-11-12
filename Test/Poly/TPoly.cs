@@ -47,7 +47,7 @@ class PolyTests {
       Assert.TextFilesEqual ("Misc/poly.txt", NT.TmpTxt);
 
       List<Point2> pts = [];
-      p.Discretize (pts, 0.05);
+      p.Discretize (pts, 0.05, 0.5411);
       sb.Clear ();
       sb.Append ($"Discretization of {p}:\n");
       foreach (var pt in pts) sb.Append (pt.ToString () + "\n");
@@ -55,7 +55,7 @@ class PolyTests {
       Assert.TextFilesEqual ("Misc/poly2.txt", NT.TmpTxt);
 
       pts.Clear ();
-      Poly.Line (1, 2, 3, 4).Discretize (pts, 0.1);
+      Poly.Line (1, 2, 3, 4).Discretize (pts, 0.1, 0.5411);
       pts.Count.Is (2);
 
       Poly p1 = p * Matrix2.Translation (2, 1); p1.Is ("M2,1H12V4Q10,6,1H4Q2,4,-1Z");

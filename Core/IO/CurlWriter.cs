@@ -24,11 +24,6 @@ public class CurlWriter {
       => File.WriteAllBytes (file, SaveToByteArray (obj, comment));
 
    // Implementation -----------------------------------------------------------
-   void WritePrimitive (object? obj, AuField field) {
-      if (field.IsAngle) obj = ((double)obj!).R2D ();
-      field.FieldType.WritePrimitive (B, obj!);
-   }
-
    // Recursive routine that writes out any object
    void Write (object? obj, AuType nominal) {
       if (obj == null) return;
@@ -50,8 +45,11 @@ public class CurlWriter {
                switch (af.Tactic) {
                   case ECurlTactic.ByName: af.WriteByName (B, value); break;
                   default:
-                     if (af.FieldType.Kind == EAuTypeKind.Primitive) WritePrimitive (value, af);
-                     else Write (value, af.FieldType);
+                     if (af.FieldType.Kind == EAuTypeKind.Primitive) {
+                        if (af.IsAngle) value = ((double)value!).R2D ();
+                        af.FieldType.WritePrimitive (B, value!);
+                     } else
+                        Write (value, af.FieldType);
                      break;
                }
                B.NewLine ();

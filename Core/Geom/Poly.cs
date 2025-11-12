@@ -228,11 +228,18 @@ public partial class Poly {
    }
 
    /// <summary>Discretizes the pline with a given error threshold into the given set of points</summary>
-   public void Discretize (List<Point2> pts, double threshold) {
+   /// <param name="pts">The output is added to this list of points (existing points here are not disturbed)</param>
+   /// <param name="threshold">Maximum lateral deviation between the chord approximation and the arc</param>
+   /// <param name="angleLimit">Maximum turn angle between successive chord segments in an arc</param>
+   /// The number of segments each arc is discretized into depends on both the threshold (linear deviation
+   /// between the chord and the original arc) and the angleLimit (turn angle between successive chords
+   /// approximating the arc) - the tighter of those two constraints will eventually determine the number
+   /// of segments each arc gets divided into.
+   public void Discretize (List<Point2> pts, double threshold, double angleLimit) {
       if (!HasArcs) pts.AddRange (mPts);
       else {
          pts.Add (A);
-         foreach (var seg in Segs) seg.Discretize (pts, threshold, 0.5410);
+         foreach (var seg in Segs) seg.Discretize (pts, threshold, angleLimit);
          if (IsClosed) pts.RemoveLast ();
       }
    }

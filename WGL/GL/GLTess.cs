@@ -116,7 +116,7 @@ public class Tess2D (List<Point2> pts, IReadOnlyList<int> splits) {
    };
    // Called when a new vertex needs to be generated at an intersection point.
    // The paramter coords contains the location of the new point to be added to the list
-   // of points. We must return the index of the newly added point into *pout. 
+   // of points. We must return the index of the newly added point into *pout.
    unsafe GLUtessCombineProc TessCombine => (double* coords, void** d2, float* d3, int* pout) => {
       *pout = NewVertex (coords[0], coords[1], coords[2]);
 
@@ -162,7 +162,7 @@ public static class BooleanOps {
    /// <summary>This performs a union of two given poly objects</summary>
    public static List<Poly> Union (this Poly a, Poly b) => Union ([a, b]);
    /// <summary>This performs a union of a number of polys</summary>
-   public static List<Poly> Union (this ReadOnlySpan<Poly> input) 
+   public static List<Poly> Union (this ReadOnlySpan<Poly> input)
       => new Boolean (input).Process ();
 
    /// <summary>Computes the intersection of two polys</summary>
@@ -193,7 +193,7 @@ public static class BooleanOps {
    /// operation. If the input polys are already reversed, call Union to do the subtraction instead.
    public static List<Poly> Subtract (this ReadOnlySpan<Poly> positive, ReadOnlySpan<Poly> negative) {
       List<Poly> input = [.. positive];
-      for (int i = 0; i < negative.Length; i++) 
+      for (int i = 0; i < negative.Length; i++)
          input.Add (negative [i].Reversed ());
       return Union (input.AsSpan ());
    }
@@ -208,7 +208,7 @@ public static class BooleanOps {
             // Snap the polys to a micron grid.
             if (poly.HasArcs) {
                pts.Clear ();
-               poly.Discretize (pts, 0.05);
+               poly.Discretize (pts, 0.05, 0.5411);   // 0.5411 ~ 30 degrees
                mPts.AddRange (pts.Select (p => p.R6 ()));
             } else mPts.AddRange (poly.Pts.Select (x => x.R6 ()));
             mSplit.Add (mPts.Count);
@@ -261,7 +261,7 @@ public static class BooleanOps {
       unsafe GLUtessCombineProc TessCombine => (double* coords, void** d2, float* d3, int* pout) => {
          *pout = NewVertex (coords[0], coords[1]);
 
-         // Generates a new vertex or returns an existing (added in a previous Combine call) and 
+         // Generates a new vertex or returns an existing (added in a previous Combine call) and
          // returns the vertex index.
          int NewVertex (double x, double y) {
             Point2 pt = new (x, y);

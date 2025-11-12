@@ -78,7 +78,7 @@ public abstract class E3Surface : Ent3 {
    public override Bound3 Bound => Bound3.Update (ref mBound, ComputeBound);
    Bound3 mBound = new ();
 
-   public Mesh3 Mesh => _mesh ??= BuildMesh (Lib.CoarseTess);
+   public Mesh3 Mesh => _mesh ??= BuildMesh (Lib.FineTess);
    Mesh3? _mesh;
 
    public IReadOnlyList<Contour3> Contours => mContours;

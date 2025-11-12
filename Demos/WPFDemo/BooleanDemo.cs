@@ -137,7 +137,7 @@ class BooleanRootVN (List<List<Poly>> polys, Bound2 bound) : VNode {
          List<Vec2F> path = [bound.Midpoint];
          mPolys.ForEach (x => {
             pts.Clear ();
-            x.Discretize (pts, 0.1);
+            x.Discretize (pts, 0.1, 0.5411);
             var idx0 = path.Count;
             indices.Add (0);
             path.AddRange (pts.Select (p => (Vec2F)p));

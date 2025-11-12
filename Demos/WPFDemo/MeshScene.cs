@@ -37,7 +37,7 @@ class MeshScene : Scene3 {
       // 2. Make tessellation inputs
       List<Point2> pts = []; List<int> splits = [0];
       foreach (var poly in polys) {
-         poly.Discretize (pts, 0.1);
+         poly.Discretize (pts, 0.1, 0.5411);
          splits.Add (pts.Count);
       }
 

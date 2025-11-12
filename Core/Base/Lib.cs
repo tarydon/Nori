@@ -10,6 +10,8 @@ namespace Nori;
 #region class Lib ----------------------------------------------------------------------------------
 public static class Lib {
    // Constants ----------------------------------------------------------------
+   /// <summary>Coarse tessellation threshold</summary>
+   public const double CoarseTess = 0.2;
    /// <summary>Delta = 1e-6</summary>
    public const double Delta = 1e-3;
    /// <summary>Epsilon = 1e-6</summary>
@@ -17,8 +19,7 @@ public static class Lib {
    /// <summary>PI = 180 degrees, in radians</summary>
    public const double PI = Math.PI;
    /// <summary>Tessellation error</summary>
-   public const double FineTess = 0.01;
-   public const double CoarseTess = 0.2;
+   public static double FineTess = 0.01;
    /// <summary>TwoPI = 360 degrees, in radians</summary>
    public const double TwoPI = 2 * Math.PI;
    /// <summary>HalfPI = 90 degrees, in radians</summary>
@@ -233,7 +234,8 @@ public static class Lib {
    public static void Trace (object obj) => Tracer.Invoke ($"{obj}");
 
    /// <summary>Tessellate in 2D</summary>
-   public static Func<List<Point2>, IReadOnlyList<int>, List<int>> Tessellate = (pts, splits) => [];
+   public static Func<List<Point2>, IReadOnlyList<int>, List<int>> Tessellate = (pts, splits)
+      => throw new InvalidOperationException ("2-D Tessellator not installed");
 
    /// <summary>Set this to point to your own trace handler</summary>
    /// By default, this just outputs to Debug.Write, but you could set this to
