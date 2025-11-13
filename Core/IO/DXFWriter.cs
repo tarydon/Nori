@@ -237,8 +237,8 @@ public class DXFWriter {
       if ((es.Flags & E2Flags.Closed) != 0) flags |= 1;  // CLOSED
       if ((es.Flags & E2Flags.Periodic) != 0) flags |= 2;   // PERIODIC
       if (spline.Rational) flags |= 4; // RATIONAL
-      var (knots, weights, ctrl) = (spline.Knot, spline.Weight, spline.Ctrl);
-      Out ($" 70\n{flags}\n 71\n{spline.Degree}\n 72\n{knots.Length}\n 73\n{ctrl.Length}\n");
+      var (knots, weights, ctrl) = (spline.Basis.Knot, spline.Weight, spline.Ctrl);
+      Out ($" 70\n{flags}\n 71\n{spline.Basis.Degree}\n 72\n{knots.Length}\n 73\n{ctrl.Length}\n");
       foreach (var knot in knots) Out ($" 40\n{knot}\n");
       foreach (var pt0 in ctrl) {
          var pt = Lib.Testing ? pt0.R6 () : pt0;

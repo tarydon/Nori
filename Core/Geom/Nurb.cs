@@ -2,53 +2,52 @@
 // ╔═╦╦═╦╦╬╣ Nurb.cs
 // ║║║║╬║╔╣║ <<TODO>>
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
+using System.Threading;
+
 namespace Nori;
 
-#region class Spline -------------------------------------------------------------------------------
-/// <summary>Spline is the abstract base class for Spline2 (2-D) and Spline3 (3-D)</summary>
-/// It implements the code common to 2D and 3D splines - evaluating the NURB basis
-/// functions at a given value of the paramter t.
-public abstract class Spline {
-   protected Spline () => (_val, _left, _right) = (null!, null!, null!);
-
-   public Spline (int cCtrl, ImmutableArray<double> knot, ImmutableArray<double> weight) {
-      (mNodes, Knot, Weight) = (cCtrl, knot, weight);
-      Rational = !(weight.IsEmpty || weight.All (a => a.EQ (1)));
-      if (!Rational) Weight = [];
-      int n = Degree + 1;
-      _val = new double[n]; _left = new double[n]; _right = new double[n];
+#region record SplineBasis --------------------------------------------------------------------------
+/// <summary>Captures the Basis function of any Spline (2D or 3D)</summary>
+/// - This is the building block for Splines and NURBS surfaces. Provides the foundational ComputeBasis () function
+///   which comes in handy for Spline curves as well as NURBS surfaces.
+/// - This implementation is thread safe.
+public class SplineBasis {
+   /// <summary>Creates a basis function</summary>
+   /// <param name="nodeCount">Number of nodes (control points)</param>
+   /// <param name="knots">The knot vector</param>
+   public SplineBasis (int nodeCount, ImmutableArray<double> knots) {
+      (NodeCount, Knot) = (nodeCount, knots);
    }
 
-   // Properties ---------------------------------------------------------------
-   /// <summary>The degree of teh spline</summary>
-   /// Note that the ORDER of the spline is DEGREE + 1
-   public int Degree => Knot.Length - mNodes - 1;
-
-   /// <summary>The knot vector for this spline</summary>
+   /// <summary>The number of nodes (control points)</summary>
+   public readonly int NodeCount;
+   /// <summary>The knot vector</summary>
    public readonly ImmutableArray<double> Knot;
+   /// <summary>The degree of the spline</summary>
+   public int Degree => Knot.Length - NodeCount - 1;
+   /// <summary>The order of the spline</summary>
+   public int Order => Degree + 1;
 
-   /// <summary>Is this a rational spline (not all weights are set to 1)</summary>
-   public readonly bool Rational;
-
-   /// <summary>Weights attached to the control points</summary>
-   /// If this array is empty, then this is a non-rational spline (all weights are 1)
-   public readonly ImmutableArray<double> Weight;
-
-   // Methods ------------------------------------------------------------------
-   // Computes the basis functions for a given knot value t.
-   //
+   /// <summary>Computes the basis functions for a given knot value t.</summary>
    // For a given value t, there is only a subset of control points that actually
    // contribute - this is known as the span of interest (see Algorithm A2.1 from
    // the "Nurbs Book'). That is the return value from this function.
    //
    // For the span of interest, this function computes the factors that must be used
-   // to multiply each control point by and stores those in the _val array. (Since these
+   // to multiply each control point by and stores those in the passed in val array. (Since these
    // are basis functions, the sum of those weights adds up to 1.0). This computation
-   // of the basis functions is detailed in Algorithm A2.2 from the "NURBS Book"
-   protected int ComputeBasis (double t) {
-      _val ??= new double[Degree + 1]; _left ??= new double[Degree + 1]; _right ??= new double[Degree + 1];
+   // of the basis functions is detailed in Algorithm A2.2 from the "NURBS Book". The length
+   // of this val array must be Order (Degree + 1).
+   public int ComputeBasis (double t, double[] val) {
+      if (val.Length != Order) throw new ArgumentException ("val length must be equal to Degree + 1");
+      lock (this) {
+         _tlLeft ??= new ThreadLocal<double[]> (() => new double[Order]);
+         _tlRight ??= new ThreadLocal<double[]> (() => new double[Order]);
+      }
+
+      double[] left = _tlLeft.Value!, right = _tlRight.Value!;
       // First find the span of interest in which this knot lies
-      int n = mNodes - 1, span = n;
+      int n = NodeCount - 1, span = n;
       if (t < Knot[n + 1]) {
          int low = Degree, high = n + 1; span = (low + high) / 2;
          for (; ; ) {
@@ -61,26 +60,47 @@ public abstract class Spline {
       }
 
       // Now, compute the basis functions for this span
-      _val[0] = 1.0;
+      val[0] = 1.0;
       int p = Degree;
       for (int j = 1; j <= p; j++) {
-         _left[j] = t - Knot[span + 1 - j];
-         _right[j] = Knot[span + j] - t;
+         left[j] = t - Knot[span + 1 - j];
+         right[j] = Knot[span + j] - t;
          double saved = 0.0;
          for (int r = 0; r < j; r++) {
-            double temp = _val[r] / (_right[r + 1] + _left[j - r]);
-            _val[r] = saved + _right[r + 1] * temp;
-            saved = _left[j - r] * temp;
+            double temp = val[r] / (right[r + 1] + left[j - r]);
+            val[r] = saved + right[r + 1] * temp;
+            saved = left[j - r] * temp;
          }
-         _val[j] = saved;
+         val[j] = saved;
       }
       return span;
    }
+   ThreadLocal<double[]>? _tlLeft, _tlRight;
+}
+#endregion
 
-   // Private data -------------------------------------------------------------
-   double[] _left, _right;
-   protected double[] _val;
-   int mNodes;
+#region class Spline -------------------------------------------------------------------------------
+/// <summary>Spline is the abstract base class for Spline2 (2-D) and Spline3 (3-D)</summary>
+/// It implements the code common to 2D and 3D splines - evaluating the NURB basis
+/// functions at a given value of the paramter t.
+public abstract class Spline {
+   protected Spline () => Basis = null!;
+
+   public Spline (SplineBasis basis, ImmutableArray<double> weight) {
+      (Basis, Weight) = (basis, weight);
+      if (!weight.IsDefaultOrEmpty && weight.All (a => a.EQ (1))) Weight = [];
+      Rational = !Weight.IsDefaultOrEmpty;
+   }
+
+   // Properties ---------------------------------------------------------------
+   public readonly SplineBasis Basis;
+
+   /// <summary>Is this a rational spline (not all weights are set to 1)</summary>
+   public readonly bool Rational;
+
+   /// <summary>Weights attached to the control points</summary>
+   /// If this array is empty, then this is a non-rational spline (all weights are 1)
+   public readonly ImmutableArray<double> Weight;
 }
 #endregion
 
@@ -89,7 +109,10 @@ public abstract class Spline {
 public class Spline2 : Spline {
    Spline2 () { }
 
-   public Spline2 (ImmutableArray<Point2> ctrl, ImmutableArray<double> knot, ImmutableArray<double> weight) : base (ctrl.Length, knot, weight)
+   public Spline2 (ImmutableArray<Point2> ctrl, ImmutableArray<double> knot, ImmutableArray<double> weight) : base (new SplineBasis (ctrl.Length, knot), weight)
+      => Ctrl = ctrl;
+
+   public Spline2 (SplineBasis basis, ImmutableArray<Point2> ctrl, ImmutableArray<double> weight) : base (basis, weight)
       => Ctrl = ctrl;
 
    // Properties ---------------------------------------------------------------
@@ -108,12 +131,12 @@ public class Spline2 : Spline {
       // the spline at an set of equidistant spaced t values (we use Ctrl.Length + 1 values),
       // and push these values of t (along with their evaluated points) into a stack of Nodes.
       Stack<Node> eval = [];
-      double start = Knot[0], end = Knot[^1], errSq = error * error;
+      double start = Basis.Knot[0], end = Basis.Knot[^1], errSq = error * error;
 
-      double done = -1;
-      for (int i = 0; i < Knot.Length; i++) {
-         var knot = Knot[i]; if (knot == done) continue;
-         int aa = ComputeBasis (knot);
+      double done = -1; double[] val = new double[Basis.Order];
+      for (int i = 0; i < Basis.Knot.Length; i++) {
+         var knot = Basis.Knot[i]; if (knot == done) continue;
+         int aa = Basis.ComputeBasis (knot, val);
          eval.Push (new Node { A = knot, Pt = Evaluate (knot), Level = 0 });
          done = knot;
       }
@@ -161,16 +184,21 @@ public class Spline2 : Spline {
 
    /// <summary>Evaluates the spline at a given knot value t</summary>
    public Point2 Evaluate (double t) {
-      if (t <= Knot[0]) return Ctrl[0];
-      if (t >= Knot[^1]) return Ctrl[^1];
-      int span = ComputeBasis (t), p = Degree;
+      if (t <= Basis.Knot[0]) return Ctrl[0];
+      if (t >= Basis.Knot[^1]) return Ctrl[^1];
+
+      lock (this) {
+         _valTL ??= new ThreadLocal<double[]> (() => new double[Basis.Order]);
+      }
+      double[] val = _valTL.Value!;
+      int span = Basis.ComputeBasis (t, val), p = Basis.Degree;
 
       double x = 0, y = 0;
       if (Rational) {
          double wsum = 0;
          for (int j = 0; j <= p; j++) {
             int n = span - p + j;
-            double weight = _val[j] * Weight[n];
+            double weight = val[j] * Weight[n];
             Point2 ctrl = Ctrl[n];
             x += ctrl.X * weight; y += ctrl.Y * weight;
             wsum += weight;
@@ -178,18 +206,19 @@ public class Spline2 : Spline {
          return new (x / wsum, y / wsum);
       } else {
          for (int j = 0; j <= p; j++) {
-            double weight = _val[j];
+            double weight = val[j];
             Point2 ctrl = Ctrl[span - p + j];
             x += ctrl.X * weight; y += ctrl.Y * weight;
          }
          return new (x, y);
       }
    }
+   ThreadLocal<double[]>? _valTL = null;
 
    // Operators ----------------------------------------------------------------
    /// <summary>Creates a new Spline2 by applying the transformation matrix</summary>
    public static Spline2 operator * (Spline2 s, Matrix2 xfm)
-      => new ([.. s.Ctrl.Select (a => a * xfm)], s.Knot, s.Weight);
+      => new (s.Basis, [.. s.Ctrl.Select (a => a * xfm)], s.Weight);
 
    // Nested types -------------------------------------------------------------
    // Node is an internal struct used during discretization of a spline
