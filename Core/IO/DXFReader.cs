@@ -8,6 +8,8 @@ namespace Nori;
 /// <summary>DXFReader is used to read a DXF file into a Dwg2</summary>
 public partial class DXFReader {
    // Constructors -------------------------------------------------------------
+   static DXFReader () => Encoding.RegisterProvider (CodePagesEncodingProvider.Instance);
+
    /// <summary>Construct a DXFReader, given a filename</summary>
    public DXFReader (string file)
       => mReader = new StreamReader (new FileStream (mFile = file, FileMode.Open, FileAccess.Read, FileShare.ReadWrite));
