@@ -95,7 +95,7 @@
               Pt:486.852188,279.746841
               Text:20.77
               Style:STANDARD
-              Angle:-0.7853981633975292
+              Angle:-45
               Alignment:MidCenter
               Height:3.5
               XScale:1
@@ -137,7 +137,7 @@
               Pt:484.495174,201.812507
               Text:5
               Style:STANDARD
-              Angle:1.5707963267948966
+              Angle:90
               Alignment:MidCenter
               Height:3.5
               XScale:1
@@ -218,7 +218,7 @@
               Pt:451.14647,239.312507
               Text:80
               Style:STANDARD
-              Angle:1.5707963267948966
+              Angle:90
               Alignment:MidCenter
               Height:3.5
               XScale:1
@@ -811,7 +811,7 @@
           Pt:433.322289,150.911642
           Text:20
           Style:STANDARD
-          Angle:1.5707963267948966
+          Angle:90
           Alignment:MidCenter
           Height:7
           XScale:1
@@ -877,7 +877,7 @@
           Pt:22.001869,467.311582
           Text:288.5
           Style:STANDARD
-          Angle:1.5707963267948966
+          Angle:90
           Alignment:MidCenter
           Height:7
           XScale:1
@@ -1077,7 +1077,7 @@
           Pt:156.318207,467.311582
           Text:46
           Style:STANDARD
-          Angle:1.5707963267948966
+          Angle:90
           Alignment:MidCenter
           Height:7
           XScale:1
@@ -1100,7 +1100,7 @@
           Pt:53.364553,325.811582
           Text:5.5
           Style:STANDARD
-          Angle:1.5707963267948966
+          Angle:90
           Alignment:MidCenter
           Height:7
           XScale:1
@@ -1142,7 +1142,7 @@
           Pt:53.364553,608.811582
           Text:5.5
           Style:STANDARD
-          Angle:1.5707963267948966
+          Angle:90
           Alignment:MidCenter
           Height:7
           XScale:1
@@ -1201,7 +1201,7 @@
           Pt:39.298907,395.186582
           Text:144.25
           Style:STANDARD
-          Angle:1.5707963267948966
+          Angle:90
           Alignment:MidCenter
           Height:7
           XScale:1
@@ -1247,7 +1247,7 @@
       Pt:1068.04178,425.048711
       Text:"Hålens grader innåt."
       Style:STANDARD
-      Angle:1.5707963267948966
+      Angle:90
       Alignment:MidLeft
       Height:7
       XScale:1
@@ -1643,7 +1643,7 @@
           Pt:343.356567,477.311582
           Text:20
           Style:STANDARD
-          Angle:1.5707963267948966
+          Angle:90
           Alignment:MidCenter
           Height:7
           XScale:1
@@ -2060,7 +2060,7 @@
           Pt:333.762308,463.311582
           Text:8
           Style:STANDARD
-          Angle:1.5707963267948966
+          Angle:90
           Alignment:MidCenter
           Height:7
           XScale:1
@@ -2164,10 +2164,10 @@
       Pt:0,0
       Text:2
       Style:Tego_01
-      Angle:0.0017453292519943296
+      Angle:0.1
       Alignment:BaseLeft
       Height:0.2
-      XScale:0.6999999999999998
+      XScale:0.7
     }
     (E2Text){
       Layer:Tego_ram
@@ -2175,10 +2175,10 @@
       Pt:0,0
       Text:2
       Style:Tego_01
-      Angle:0.0017453292519943296
+      Angle:0.1
       Alignment:BaseLeft
       Height:0.2
-      XScale:0.6999999999999998
+      XScale:0.7
     }
     (E2Text){
       Layer:Tego_ram
@@ -2186,10 +2186,10 @@
       Pt:0,0
       Text:2.000000000000000
       Style:Tego_01
-      Angle:0.0017453292519943296
+      Angle:0.1
       Alignment:BaseLeft
       Height:0.2
-      XScale:0.6999999999999998
+      XScale:0.7
     }
     (E2Insert){ Layer:Tego_huvud BlockName:T_huvud Pt:768,0 XScale:1 YScale:1 }
     (E2Text){
@@ -2301,7 +2301,7 @@
       Style:Tego_01
       Alignment:BaseLeft
       Height:0.2
-      XScale:0.6999999999999998
+      XScale:0.7
     }
     (E2Text){
       Layer:Tego_styck
@@ -2311,7 +2311,7 @@
       Style:Tego_01
       Alignment:BaseLeft
       Height:0.2
-      XScale:0.6999999999999998
+      XScale:0.7
     }
     (E2Insert){ Layer:Tego_artikel BlockName:T_styck_01 Pt:768,0 XScale:1 YScale:1 }
     (E2Text){

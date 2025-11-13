@@ -1,3 +1,7 @@
+﻿// ────── ╔╗                                                                                WPFDEMO
+// ╔═╦╦═╦╦╬╣ RobotScene.cs
+// ║║║║╬║╔╣║ Demonstrates Robot Forward & Inverse kinematics, simulation
+// ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 namespace WPFDemo;
 using System.Windows;
 using System.Windows.Controls;

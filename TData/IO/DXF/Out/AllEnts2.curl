@@ -33,7 +33,7 @@
       Pt:0,14.142136
       Text:"Hello, World!"
       Style:Standard
-      Angle:0.7853981633974483
+      Angle:45
       Alignment:BaseLeft
       Height:5
       XScale:1
@@ -70,7 +70,7 @@
           Pt:-18.499928,145.779148
           Text:90
           Style:Standard
-          Angle:0.7853981633974483
+          Angle:45
           Alignment:MidCenter
           Height:5
           XScale:1
@@ -80,31 +80,13 @@
         (E2Point){ Layer:Defpoints Color:#FF000000 Pt:47.791333,206.767108 }
       ]
     }
-    (E2Insert){
-      Layer:0
-      BlockName:Marker1
-      Pt:0,70.710678
-      Angle:1.5707963267948966
-      XScale:1
-      YScale:1
-    }
+    (E2Insert){ Layer:0 BlockName:Marker1 Pt:0,70.710678 Angle:90 XScale:1 YScale:1 }
     (E2Spline){
       Layer:0
       Spline:{
         Basis:{
           NodeCount:6
-          Knot:[
-            0
-            0
-            0
-            0
-            20
-            34.14213562373095
-            54.14213562373095
-            54.14213562373095
-            54.14213562373095
-            54.14213562373095
-          ]
+          Knot:[ 0 0 0 0 20 34.142136 54.142136 54.142136 54.142136 54.142136 ]
         }
         Weight:[ ]
         Ctrl:[
@@ -128,7 +110,7 @@
     }
     (E2Bendline){
       Layer:0
-      Angle:0.7853981633974483
+      Angle:45
       KFactor:0.42
       Radius:2.5
       Pts:[ -42.426407,42.426407 -14.142136,127.279221 ]

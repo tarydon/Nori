@@ -44,10 +44,10 @@ class BoundTests {
       b1.IsEmpty.Is (true); b1.ToString ().Is ("Empty");
       b2.Is ("(10~20,100~200,1000~2000)"); b3.Is ("(1~10,1~10,1~10)");
       b2.Width.Is (10); b2.Height.Is (100); b2.Depth.Is (1000); b2.Midpoint.Is ("(15,150,1500)");
-      b2.Contains (new (11, 110, 1100)).Is (true);
-      b2.Contains (new (11, 210, 1100)).Is (false);
-      b2.Contains (new (21, 110, 1100)).Is (false);
-      b2.Contains (new (11, 110, 2100)).Is (false);
+      b2.Contains (new Point3 (11, 110, 1100)).Is (true);
+      b2.Contains (new Point3 (11, 210, 1100)).Is (false);
+      b2.Contains (new Point3 (21, 110, 1100)).Is (false);
+      b2.Contains (new Point3 (11, 110, 2100)).Is (false);
       b2.InflatedF (1.2).Is ("(9~21,90~210,900~2100)");
       b2.InflatedL (5).Is ("(5~25,95~205,995~2005)");
       (b2 + new Point3 (5, 205, 3000) + new Point3 (21, 99, 875)).Is ("(5~21,99~205,875~3000)");
@@ -82,6 +82,19 @@ class Matrix2Tests {
       (p1 * m4).Is ("(-1.414214,15.556349)"); (v1 * m4).Is ("<-1.414214,5.656854>");
       var m5 = Matrix2.Rotation (new (1, 2), 90.D2R ());
       (p1 * m5).Is ("(-9,11)"); (v1 * m5).Is ("<-5,3>");
+
+      var m10 = Matrix2.HMirror; // About Y axis
+      (p1 * m10).Is ("(-10,12)"); (v1 * m10).Is ("<-3,5>");
+
+      var m11 = Matrix2.VMirror; // About X axis
+      (p1 * m11).Is ("(10,-12)"); (v1 * m11).Is ("<3,-5>");
+
+      var m7 = Matrix2.Mirror ((2, 1), (3, 2)); // Arbitrary axis (45 degree)
+      (p1 * m7).Is ("(13,9)"); (v1 * m7).Is ("<5,3>");
+      var m8 = Matrix2.Mirror ((1, 1), (2, 1)); // Arbitrary horizontal axis (Shifted vertical mirror)
+      (p1 * m8).Is ("(10,-10)"); (v1 * m8).Is ("<3,-5>");
+      var m9 = Matrix2.Mirror ((1, 1), (1, 2)); // Arbitrary vertical axis (Shifted horizontal mirror)
+      (p1 * m9).Is ("(-8,12)"); (v1 * m9).Is ("<-3,5>");
 
       var m6 = (Matrix3)Matrix2.Translation (1, 2);
       m6.Is ("[1,0,0, 0,1,0, 0,0,1, 1,2,0]");

@@ -10,10 +10,16 @@ namespace Nori;
 #region class Lib ----------------------------------------------------------------------------------
 public static class Lib {
    // Constants ----------------------------------------------------------------
+   /// <summary>Coarse tessellation threshold</summary>
+   public const double CoarseTess = 0.2;
+   /// <summary>Delta = 1e-6</summary>
+   public const double Delta = 1e-3;
    /// <summary>Epsilon = 1e-6</summary>
    public const double Epsilon = 1e-6;
    /// <summary>PI = 180 degrees, in radians</summary>
    public const double PI = Math.PI;
+   /// <summary>Tessellation error</summary>
+   public static double FineTess = 0.01;
    /// <summary>TwoPI = 360 degrees, in radians</summary>
    public const double TwoPI = 2 * Math.PI;
    /// <summary>HalfPI = 90 degrees, in radians</summary>
@@ -77,9 +83,10 @@ public static class Lib {
    /// <param name="radius">The radius of the arc</param>
    /// <param name="angSpan">The angular span of the arc (can be +ve or -ve)</param>
    /// <param name="tolerance">The error tolerance (chordal deviation)</param>
-   public static int GetArcSteps (double radius, double angSpan, double tolerance) {
+   /// <param name="maxAngSpan">The maximum angular span for one step</param>
+   public static int GetArcSteps (double radius, double angSpan, double tolerance, double maxAngSpan) {
       tolerance = tolerance.Clamp (radius * 0.0001, radius * 0.9999);
-      double angStep = 2 * Acos ((radius - tolerance) / radius);
+      double angStep = Min (2 * Acos ((radius - tolerance) / radius), maxAngSpan);
       return Max ((int)Ceiling (Abs (angSpan) / angStep), 1);
    }
 
@@ -225,6 +232,10 @@ public static class Lib {
 
    /// <summary>Outputs a string representation of the object to our tracer</summary>
    public static void Trace (object obj) => Tracer.Invoke ($"{obj}");
+
+   /// <summary>Tessellate in 2D</summary>
+   public static Func<List<Point2>, IReadOnlyList<int>, List<int>> Tessellate = (pts, splits)
+      => throw new InvalidOperationException ("2-D Tessellator not installed");
 
    /// <summary>Set this to point to your own trace handler</summary>
    /// By default, this just outputs to Debug.Write, but you could set this to

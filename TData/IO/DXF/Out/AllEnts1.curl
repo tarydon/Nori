@@ -65,31 +65,13 @@
         (E2Point){ Layer:Defpoints Color:#FF000000 Pt:90,56.206424 }
       ]
     }
-    (E2Insert){
-      Layer:0
-      BlockName:Marker1
-      Pt:25,25
-      Angle:0.7853981633974483
-      XScale:0.5
-      YScale:0.5
-    }
+    (E2Insert){ Layer:0 BlockName:Marker1 Pt:25,25 Angle:45 XScale:0.5 YScale:0.5 }
     (E2Spline){
       Layer:0
       Spline:{
         Basis:{
           NodeCount:6
-          Knot:[
-            0
-            0
-            0
-            0
-            20
-            34.14213562373095
-            54.14213562373095
-            54.14213562373095
-            54.14213562373095
-            54.14213562373095
-          ]
+          Knot:[ 0 0 0 0 20 34.142136 54.142136 54.142136 54.142136 54.142136 ]
         }
         Weight:[ ]
         Ctrl:[
@@ -103,13 +85,6 @@
       }
     }
     (E2Solid){ Layer:0 Pts:[ 60,10 70,10 60,15 70,20 ] }
-    (E2Bendline){
-      Layer:0
-      Angle:0.7853981633974483
-      KFactor:0.42
-      Radius:2.5
-      Pts:[ 0,30 40,50 ]
-      Thickness:1
-    }
+    (E2Bendline){ Layer:0 Angle:45 KFactor:0.42 Radius:2.5 Pts:[ 0,30 40,50 ] Thickness:1 }
   ]
 }

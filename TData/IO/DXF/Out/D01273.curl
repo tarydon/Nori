@@ -10,7 +10,7 @@
     { Name:SLDTEXTSTYLE0 Font:TXT XScale:0.605 }
     { Name:SLDTEXTSTYLE1 Font:TXT XScale:0.75 }
     { Name:SLDTEXTSTYLE2 Font:TXT XScale:0.7 }
-    { Name:SLDTEXTSTYLE3 Font:TXT XScale:0.6818181818 }
+    { Name:SLDTEXTSTYLE3 Font:TXT XScale:0.681818 }
   ]
   Blocks:[
     {
@@ -30,7 +30,7 @@
           Pt:-1.933602,0
           Text:"Deze tekening is eigendom van Ulamo Metaal BV welke daarop auteursrechten heeft."
           Style:SLDTEXTSTYLE0
-          Angle:1.5707963267949
+          Angle:90
           Alignment:TopLeft
           Height:1.5
           XScale:0.605
@@ -41,7 +41,7 @@
           Pt:0.566398,0
           Text:"Zij mag noch gekopieerd, noch aan derden ter kopiëring of namaken getoond worden, zonder toestemming."
           Style:SLDTEXTSTYLE0
-          Angle:1.5707963267949
+          Angle:90
           Alignment:TopLeft
           Height:1.5
           XScale:0.605
@@ -58,7 +58,7 @@
           Pt:-1.933602,0
           Text:"Deze tekening is eigendom van Ulamo Metaal BV welke daarop auteursrechten heeft."
           Style:SLDTEXTSTYLE0
-          Angle:1.5707963267949
+          Angle:90
           Alignment:TopLeft
           Height:1.5
           XScale:0.605
@@ -69,7 +69,7 @@
           Pt:0.566398,0
           Text:"Zij mag noch gekopieerd, noch aan derden ter kopiëring of namaken getoond worden, zonder toestemming."
           Style:SLDTEXTSTYLE0
-          Angle:1.5707963267949
+          Angle:90
           Alignment:TopLeft
           Height:1.5
           XScale:0.605
@@ -528,7 +528,7 @@
           Text:01
           Style:SLDTEXTSTYLE1
           Alignment:TopLeft
-          Height:2.1166666667
+          Height:2.116667
           XScale:0.75
         }
         (E2Text){
@@ -538,7 +538,7 @@
           Text:"Positionering gaten gewijzigd"
           Style:SLDTEXTSTYLE1
           Alignment:TopLeft
-          Height:2.1166666667
+          Height:2.116667
           XScale:0.75
         }
         (E2Text){
@@ -548,7 +548,7 @@
           Text:04-07-2012
           Style:SLDTEXTSTYLE1
           Alignment:TopLeft
-          Height:2.1166666667
+          Height:2.116667
           XScale:0.75
         }
         (E2Text){
@@ -558,7 +558,7 @@
           Text:DtH
           Style:SLDTEXTSTYLE1
           Alignment:TopLeft
-          Height:2.1166666667
+          Height:2.116667
           XScale:0.75
         }
       ]
@@ -620,7 +620,7 @@
           Style:SLDTEXTSTYLE3
           Alignment:TopCenter
           Height:3
-          XScale:0.6818181818
+          XScale:0.681818
         }
       ]
     }
@@ -977,7 +977,7 @@
           Pt:148.967587,111.396771
           Text:H
           Style:SLDTEXTSTYLE1
-          Angle:1.5707963267948966
+          Angle:90
           Alignment:TopLeft
           Height:3.5
           XScale:0.75
@@ -1246,7 +1246,7 @@
           Pt:205.028782,235.97725
           Text:"172,2°"
           Style:SLDTEXTSTYLE1
-          Angle:-1.5025319322882156
+          Angle:-86.088738
           Alignment:TopLeft
           Height:3.5
           XScale:0.75
@@ -1282,7 +1282,7 @@
           Pt:233.504042,220.902203
           Text:119
           Style:SLDTEXTSTYLE1
-          Angle:1.5707963267948966
+          Angle:90
           Alignment:TopLeft
           Height:3.5
           XScale:0.75
@@ -1292,7 +1292,7 @@
           Pt:233.557515,228.660536
           Text:"±"
           Style:SLDTEXTSTYLE1
-          Angle:1.5707963267948966
+          Angle:90
           Alignment:TopLeft
           Height:3.5
           XScale:0.75
@@ -1302,7 +1302,7 @@
           Pt:233.504042,231.994286
           Text:2
           Style:SLDTEXTSTYLE1
-          Angle:1.5707963267948966
+          Angle:90
           Alignment:TopLeft
           Height:3.5
           XScale:0.75
@@ -1328,7 +1328,7 @@
           Pt:222.216282,263.984854
           Text:R59,1
           Style:SLDTEXTSTYLE1
-          Angle:0.7012320952923645
+          Angle:40.17764
           Alignment:TopLeft
           Height:3.5
           XScale:0.75
@@ -1366,7 +1366,7 @@
           Pt:175.032893,186.10907
           Text:10
           Style:SLDTEXTSTYLE1
-          Angle:0.1365287890133797
+          Angle:7.822523
           Alignment:TopLeft
           Height:3.5
           XScale:0.75

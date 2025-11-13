@@ -1,4 +1,4 @@
-// ────── ╔╗
+// ────── ╔╗                                                                                WPFDEMO
 // ╔═╦╦═╦╦╬╣ LeafDemo.cs
 // ║║║║╬║╔╣║ Demo that uses the Stencil & Cover technique to fill a complex contour (Lux.FillPath)
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
