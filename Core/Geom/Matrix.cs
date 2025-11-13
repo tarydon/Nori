@@ -95,7 +95,7 @@ public class Matrix2 (double m11, double m12, double m21, double m22, double x, 
 
 #region class Matrix3 ------------------------------------------------------------------------------
 /// <summary>Matrix working in 3 dimensions</summary>
-public class Matrix3 {
+public class Matrix3 : IEQuable<Matrix3> {
    // Constructors -------------------------------------------------------------
    /// <summary>Construct a Matrix3 given the 12 components</summary>
    /// Since we use this only to support affine matrices, some of the 4x4 components are
@@ -224,13 +224,25 @@ public class Matrix3 {
    // Methods ------------------------------------------------------------------
    public Matrix3 ExtractRotation () => new (M11, M12, M13, M21, M22, M23, M31, M32, M33, 0, 0, 0);
 
+   public bool EQ (Matrix3 b) 
+      => M11.EQ (b.M11) && M12.EQ (b.M12) && M13.EQ (b.M13) 
+      && M21.EQ (b.M21) && M22.EQ (b.M22) && M23.EQ (b.M23) 
+      && M31.EQ (b.M31) && M32.EQ (b.M32) && M33.EQ (b.M33) 
+      && DX.EQ (b.DX) && DY.EQ (b.DY) && DZ.EQ (b.DZ);
+
    /// <summary>Composes a matrix to go FROM the given coordinate system to the World</summary>
    public static Matrix3 From (in CoordSystem cs) {
-      GetRotations (cs.VecX, cs.VecY, out double xRot, out double yRot, out double zRot);
-      return Translation (-(Vector3)cs.Org)
-           * Rotation (Vector3.YAxis, yRot)
-           * Rotation (Vector3.ZAxis, zRot)
-           * Rotation (Vector3.XAxis, xRot);
+      Vector3 x = cs.VecX, y = cs.VecY, z = cs.VecZ;
+      // Compute translation part (negative dot products)
+      var tx = -(x.X * cs.Org.X + x.Y * cs.Org.Y + x.Z * cs.Org.Z);
+      var ty = -(y.X * cs.Org.X + y.Y * cs.Org.Y + y.Z * cs.Org.Z);
+      var tz = -(z.X * cs.Org.X + z.Y * cs.Org.Y + z.Z * cs.Org.Z);
+      return new Matrix3 (
+         x.X, y.X, z.X,
+         x.Y, y.Y, z.Y,
+         x.Z, y.Z, z.Z,
+         tx, ty, tz
+      );
    }
 
    /// <summary>Returns the inverse of this matrix</summary>
@@ -260,11 +272,13 @@ public class Matrix3 {
 
    /// <summary>Composes a matrix to go TO the given coordinate-system from the World</summary>
    public static Matrix3 To (in CoordSystem cs) {
-      GetRotations (cs.VecX, cs.VecY, out double xRot, out double yRot, out double zRot);
-      return Rotation (Vector3.XAxis, -xRot)
-           * Rotation (Vector3.ZAxis, -zRot)
-           * Rotation (Vector3.YAxis, -yRot)
-           * Translation ((Vector3)cs.Org);
+      Vector3 x = cs.VecX, y = cs.VecY, z = cs.VecZ;
+      return new Matrix3 (
+         x.X, x.Y, x.Z,
+         y.X, y.Y, y.Z,
+         z.X, z.Y, z.Z,
+         cs.Org.X, cs.Org.Y, cs.Org.Z
+      );
    }
 
    // Operators ----------------------------------------------------------------
