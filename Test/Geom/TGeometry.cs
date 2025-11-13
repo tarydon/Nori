@@ -216,8 +216,12 @@ class Matrix3Tests {
 
    [Test (136, "Test Matrix3.To/From Coordsystem")]
    void Test4 () {
-      Matrix3 xfmTo = Matrix3.Identity * Matrix3.Rotation (EAxis.Z, Lib.PI / 3.0) * Matrix3.Rotation (EAxis.Y, Lib.PI / 3.0) * Matrix3.Translation (10, 10, 10),
-        xfmFrom = xfmTo.GetInverse ();
+      Matrix3 xfmTo = Matrix3.Identity
+         * Matrix3.Rotation (EAxis.Z, Lib.PI / 3.0)
+         * Matrix3.Rotation (EAxis.Y, Lib.PI / 4.0)
+         * Matrix3.Rotation (EAxis.X, Lib.PI / 5.0)
+         * Matrix3.Translation (10, 20, 30);
+      Matrix3 xfmFrom = xfmTo.GetInverse ();
 
       var cosys = new CoordSystem (Point3.Zero * xfmTo, Vector3.XAxis * xfmTo, Vector3.YAxis * xfmTo);
       Matrix3.To (cosys).EQ (xfmTo).IsTrue ();

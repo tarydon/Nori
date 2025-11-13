@@ -224,10 +224,10 @@ public class Matrix3 : IEQuable<Matrix3> {
    // Methods ------------------------------------------------------------------
    public Matrix3 ExtractRotation () => new (M11, M12, M13, M21, M22, M23, M31, M32, M33, 0, 0, 0);
 
-   public bool EQ (Matrix3 b) 
-      => M11.EQ (b.M11) && M12.EQ (b.M12) && M13.EQ (b.M13) 
-      && M21.EQ (b.M21) && M22.EQ (b.M22) && M23.EQ (b.M23) 
-      && M31.EQ (b.M31) && M32.EQ (b.M32) && M33.EQ (b.M33) 
+   public bool EQ (Matrix3 b)
+      => M11.EQ (b.M11) && M12.EQ (b.M12) && M13.EQ (b.M13)
+      && M21.EQ (b.M21) && M22.EQ (b.M22) && M23.EQ (b.M23)
+      && M31.EQ (b.M31) && M32.EQ (b.M32) && M33.EQ (b.M33)
       && DX.EQ (b.DX) && DY.EQ (b.DY) && DZ.EQ (b.DZ);
 
    /// <summary>Composes a matrix to go FROM the given coordinate system to the World</summary>
@@ -366,28 +366,6 @@ public class Matrix3 : IEQuable<Matrix3> {
       double m31, double m32, double m33, double dx, double dy, double dz, EFlag flags) {
       M11 = m11; M12 = m12; M13 = m13; M21 = m21; M22 = m22; M23 = m23;
       M31 = m31; M32 = m32; M33 = m33; DX = dx; DY = dy; DZ = dz; Flags = flags;
-   }
-
-   /// <summary>Given an arbitrary vector vx and another one vy, computes rotations to align them to a coordinate system</summary>
-   /// This computes the xRot, yRot, zRot which must be applied in Y-Z-X order to align the
-   /// given vectors with the reference system; vx goes to X vector, vy goes to the +ve XY plane.
-   /// If vx and vy were mutually perpendicular to start with, vy will then go to the Y vector
-   static void GetRotations (Vector3 vx, Vector3 vy, out double xRot, out double yRot, out double zRot) {
-      xRot = yRot = zRot = 0;
-      // Rotate about Y to bring pb into the XY plane (pb.Z = 0)
-      if (Abs (vx.Z) > 1e-12 || Abs (vx.X) > 1e-12) {
-         yRot = Lib.HalfPI - Atan2 (vx.X, vx.Z);
-         vx = vx.Rotated (EAxis.Y, yRot); vy = vy.Rotated (EAxis.Y, yRot);
-      }
-      // Next, rotate about Z to align pb with the positive X axis (pb.Y = 0)
-      if (Abs (vx.Y) > 1e-12 || Abs (vx.X) > 1e-12) {
-         zRot = -Atan2 (vx.Y, vx.X);
-         vy = vy.Rotated (EAxis.Z, zRot);
-      }
-      // Next, rotate about X to align p3 with the +ve Y plane
-      if (Abs (vy.Z) > 1e-12 || Abs (vy.Y) > 1e-12) {
-         xRot = -Atan2 (vy.Z, vy.Y);
-      }
    }
 
    // Helper used to compute the flags
