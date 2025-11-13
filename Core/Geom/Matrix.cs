@@ -32,6 +32,22 @@ public class Matrix2 (double m11, double m12, double m21, double m22, double x, 
       return new (c, s, -s, c, dx, dy);
    }
 
+   /// <summary>Creates a mirror matrix about the line specified by the two points</summary>
+   public static Matrix2 Mirror (Point2 p1, Point2 p2) {
+      // Note: Simplified impl. Not considering mirror axis passing through origin! (Rare alignment)
+      double dx = p2.X - p1.X;
+      if (dx.IsZero ()) // Arbitrary vertical axis
+         return Translation (-p1.X, 0) * HMirror * Translation (p1.X, 0);
+
+      double dy = p2.Y - p1.Y;
+      if (dy.IsZero ()) // Arbitrary horizontal axis
+         return Translation (0, -p1.Y) * VMirror * Translation (0, p1.Y);
+
+      double fAng = Atan2 (dy, dx); // Note: fAng != 0 (by design)
+      Matrix2 mat = Translation (-p1.X, -p1.Y) * Rotation (-fAng);
+      return mat * VMirror * mat.GetInverse ();
+   }
+
    public override string ToString () => $"[{M11.R6 ()},{M12.R6 ()} | {M21.R6 ()},{M22.R6 ()} | {DX.R6 ()},{DY.R6 ()}]";
 
    // Properties ---------------------------------------------------------------
@@ -153,6 +169,14 @@ public class Matrix3 {
       );
    }
 
+   /// <summary>Matrix of rotation about an arbitary axis (not necessarily passing through the origin)</summary>
+   public static Matrix3 Rotation (Point3 a, Point3 b, double angle) {
+      if (angle.IsZero ()) return Identity;
+      return Translation (-a.X, -a.Y, -a.Z) *
+             Rotation (b - a, angle) *
+             Translation (a.X, a.Y, a.Z);
+   }
+
    /// <summary>Construct a rotation matrix corresponding to the given Quaternion</summary>
    public static Matrix3 Rotation (Quaternion q) {
       if (q.Angle.IsZero ()) return Identity;
@@ -200,6 +224,15 @@ public class Matrix3 {
    // Methods ------------------------------------------------------------------
    public Matrix3 ExtractRotation () => new (M11, M12, M13, M21, M22, M23, M31, M32, M33, 0, 0, 0);
 
+   /// <summary>Composes a matrix to go FROM the given coordinate system to the World</summary>
+   public static Matrix3 From (in CoordSystem cs) {
+      GetRotations (cs.VecX, cs.VecY, out double xRot, out double yRot, out double zRot);
+      return Translation (-(Vector3)cs.Org)
+           * Rotation (Vector3.YAxis, yRot)
+           * Rotation (Vector3.ZAxis, zRot)
+           * Rotation (Vector3.XAxis, xRot);
+   }
+
    /// <summary>Returns the inverse of this matrix</summary>
    public Matrix3 GetInverse () {
       // Trivial cases first
@@ -223,6 +256,15 @@ public class Matrix3 {
       double a5 = M11 * DY - DX * M12, a3 = M21 * DY - DX * M22, a2 = M31 * DY - DX * M32;
       double dx = M33 * a3 - DZ * m31 - M23 * a2, dy = M13 * a2 - M33 * a5 - DZ * m32, dz = M23 * a5 - DZ * m33 - M13 * a3;
       return new (m11 * a, m12 * a, m13 * a, m21 * a, m22 * a, m23 * a, m31 * a, m32 * a, m33 * a, dx * a, dy * a, dz * a, Flags);
+   }
+
+   /// <summary>Composes a matrix to go TO the given coordinate-system from the World</summary>
+   public static Matrix3 To (in CoordSystem cs) {
+      GetRotations (cs.VecX, cs.VecY, out double xRot, out double yRot, out double zRot);
+      return Rotation (Vector3.XAxis, -xRot)
+           * Rotation (Vector3.ZAxis, -zRot)
+           * Rotation (Vector3.YAxis, -yRot)
+           * Translation ((Vector3)cs.Org);
    }
 
    // Operators ----------------------------------------------------------------
@@ -310,6 +352,28 @@ public class Matrix3 {
       double m31, double m32, double m33, double dx, double dy, double dz, EFlag flags) {
       M11 = m11; M12 = m12; M13 = m13; M21 = m21; M22 = m22; M23 = m23;
       M31 = m31; M32 = m32; M33 = m33; DX = dx; DY = dy; DZ = dz; Flags = flags;
+   }
+
+   /// <summary>Given an arbitrary vector vx and another one vy, computes rotations to align them to a coordinate system</summary>
+   /// This computes the xRot, yRot, zRot which must be applied in Y-Z-X order to align the
+   /// given vectors with the reference system; vx goes to X vector, vy goes to the +ve XY plane.
+   /// If vx and vy were mutually perpendicular to start with, vy will then go to the Y vector
+   static void GetRotations (Vector3 vx, Vector3 vy, out double xRot, out double yRot, out double zRot) {
+      xRot = yRot = zRot = 0;
+      // Rotate about Y to bring pb into the XY plane (pb.Z = 0)
+      if (Abs (vx.Z) > 1e-12 || Abs (vx.X) > 1e-12) {
+         yRot = Lib.HalfPI - Atan2 (vx.X, vx.Z);
+         vx = vx.Rotated (EAxis.Y, yRot); vy = vy.Rotated (EAxis.Y, yRot);
+      }
+      // Next, rotate about Z to align pb with the positive X axis (pb.Y = 0)
+      if (Abs (vx.Y) > 1e-12 || Abs (vx.X) > 1e-12) {
+         zRot = -Atan2 (vx.Y, vx.X);
+         vy = vy.Rotated (EAxis.Z, zRot);
+      }
+      // Next, rotate about X to align p3 with the +ve Y plane
+      if (Abs (vy.Z) > 1e-12 || Abs (vy.Y) > 1e-12) {
+         xRot = -Atan2 (vy.Z, vy.Y);
+      }
    }
 
    // Helper used to compute the flags

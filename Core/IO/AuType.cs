@@ -124,7 +124,7 @@ class AuType {
    public static AuType Get (Type type) {
       AuType? aut = mDict.GetValueOrDefault (type);
       if (aut == null) {
-         aut = new AuType (type); 
+         aut = new AuType (type);
          mByName.Add (Lib.NiceName (type), aut);
       }
       return aut;
@@ -307,7 +307,10 @@ class AuType {
          case TypeCode.Int32: stm.Write ((int)value); break;
          case TypeCode.Int64: stm.Write ((long)value); break;
          case TypeCode.String: stm.Write ((string)value); break;
-         case TypeCode.Double: stm.Write ((double)value); break;
+         case TypeCode.Double:
+            double f = (double)value; if (Lib.Testing) f = f.Round (6);
+            stm.Write (f);
+            break;
          case TypeCode.Single: stm.Write ((float)value); break;
          case TypeCode.UInt16: stm.Write ((ushort)value); break;
          case TypeCode.UInt32: stm.Write ((uint)value); break;
@@ -438,10 +441,14 @@ class AuField {
       if (Name.StartsWith ('m')) Name = Name[1..];
       mFieldType = AuType.Get (mFI.FieldType);
       IsNullable = mFI.HasAttribute<NullableAttribute> ();
+      IsAngle = mFI.HasAttribute<RadianAttribute> ();
    }
    readonly AuType mOwner;
 
    // properties ---------------------------------------------------------------
+   /// <summary>Is this field an angle in radians?</summary>
+   public readonly bool IsAngle;
+
    /// <summary>The AuType wrapper for the underlying type of this field</summary>
    public AuType FieldType => mFieldType;
    readonly AuType mFieldType;

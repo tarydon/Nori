@@ -52,7 +52,7 @@ partial class DashLine2DShader : Shader<Vec2F, DashLine2DShader.Settings> {
 
 #region class FacetShader --------------------------------------------------------------------------
 /// <summary>Base class for various types of 3D shader (Flat / Gourad / Phong)</summary>
-abstract class FacetShader : Shader<CMesh.Node, FacetShader.Settings> {
+abstract class FacetShader : Shader<Mesh3.Node, FacetShader.Settings> {
    // Constructors -------------------------------------------------------------
    protected FacetShader (ShaderImp imp) : base (imp) => Bind ();
 
@@ -139,6 +139,12 @@ partial class Line3DShader : Shader<Vec3F, Seg2DShader.Settings> {
 partial class PhongShader () : FacetShader (ShaderImp.Phong) { }
 #endregion
 
+#region class PhongPinkShader ----------------------------------------------------------------------
+/// <summary>Phong shader that colors back-faces in Pink (useful for debugging)</summary>
+[Singleton]
+partial class PhongPinkShader () : FacetShader (ShaderImp.PhongPink) { }
+#endregion
+
 #region class PickShader ---------------------------------------------------------------------------
 /// <summary>3D shader used during picking - replaces actual colors with VNode Ids</summary>
 [Singleton]
@@ -214,7 +220,7 @@ class Seg2DShader : Shader<Vec2F, Seg2DShader.Settings> {
 
 #region class StencilLineShader --------------------------------------------------------------------
 /// <summary>Shader used to draw the black stencil lines for a mesh</summary>
-abstract class StencilLineShader : Shader<CMesh.Node, StencilLineShader.Settings> {
+abstract class StencilLineShader : Shader<Mesh3.Node, StencilLineShader.Settings> {
    // Constructor --------------------------------------------------------------
    public StencilLineShader (ShaderImp imp) : base (imp) => Bind ();
    int muXfm = 0, muVPScale = 0, muLineWidth = 0, muDrawColor = 0;

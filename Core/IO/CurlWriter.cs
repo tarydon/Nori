@@ -44,7 +44,13 @@ public class CurlWriter {
                af.WriteLabel (B);
                switch (af.Tactic) {
                   case ECurlTactic.ByName: af.WriteByName (B, value); break;
-                  default: Write (value, af.FieldType); break;
+                  default:
+                     if (af.FieldType.Kind == EAuTypeKind.Primitive) {
+                        if (af.IsAngle) value = ((double)value!).R2D ();
+                        af.FieldType.WritePrimitive (B, value!);
+                     } else
+                        Write (value, af.FieldType);
+                     break;
                }
                B.NewLine ();
             }
@@ -94,8 +100,8 @@ public class CurlWriter {
          // appropriate methods in the underlying AuType. Those methods use reflection to pick
          // up the corresponding write methods (which are cached) and then invoke them
          case EAuTypeKind.AuPrimitive: at.WriteAuPrimitive (B, obj); break;
-         case EAuTypeKind.Primitive: at.WritePrimitive (B, obj); break;
          case EAuTypeKind.Enum: at.WriteEnum (B, obj); break;
+         case EAuTypeKind.Primitive: at.WritePrimitive (B, obj); break;
          default: throw new NotImplementedException ();
       }
    }
