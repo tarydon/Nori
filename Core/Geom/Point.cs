@@ -2,13 +2,27 @@
 // ╔═╦╦═╦╦╬╣ Point.cs
 // ║║║║╬║╔╣║ Various point classes (in 2D and 3D)
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
+using System.Numerics;
 using static System.Math;
 namespace Nori;
+
+public interface IPoint<TSelf> : IEQuable<TSelf>, IMultiplyOperators<TSelf, double, TSelf> where TSelf : IPoint<TSelf> {
+   TSelf Add (TSelf b);
+   double DistToSq (TSelf b);
+   double DistTo (TSelf b) => Sqrt (DistToSq (b));
+   double DistToLine (TSelf a, TSelf b) => Sqrt (DistToSq (SnappedToLine (a, b)));
+   double DistToLineSq (TSelf a, TSelf b) => DistToSq (SnappedToLine (a, b));
+   double DistToLineSeg (TSelf a, TSelf b) => Sqrt (DistToSq (SnappedToLineSeg (a, b)));
+   double GetLieOn (TSelf a, TSelf b);
+   TSelf Midpoint (TSelf b);
+   TSelf SnappedToLine (TSelf a, TSelf b);
+   TSelf SnappedToLineSeg (TSelf a, TSelf b);
+}
 
 #region struct Point2 ------------------------------------------------------------------------------
 /// <summary>Point in 2 dimensions, 64-bit double components</summary>
 [AuPrimitive]
-public readonly struct Point2 : IEQuable<Point2> {
+public readonly struct Point2 : IPoint<Point2> {
    // Constructors -------------------------------------------------------------
    /// <summary>Construct a Point2 given the X and Y ordinates</summary>
    public Point2 (double x, double y) => (X, Y) = (x, y);
@@ -41,6 +55,8 @@ public readonly struct Point2 : IEQuable<Point2> {
    public bool IsNil => double.IsNaN (X) || double.IsNaN (Y);
 
    // Methods ------------------------------------------------------------------
+   /// <summary>Adds the respective coordinates of this point with the given point and returns a new point.</summary>
+   public Point2 Add (Point2 p) => new Point2 (X + p.X, Y + p.Y);
    /// <summary>Returns the heading between this point and the given point pt</summary>
    /// The heading is like the compass heading so 0 is EAST, 90 is NORTH etc.
    /// So a point lying exactly to the right of this given point wil have a heading
@@ -188,7 +204,7 @@ public readonly struct Point2 : IEQuable<Point2> {
 #region struct Point3 ------------------------------------------------------------------------------
 /// <summary>Point in 2 dimensions, 64-bit double components</summary>
 [AuPrimitive]
-public readonly struct Point3 : IEquatable<Point3> {
+public readonly struct Point3 : IPoint<Point3> {
    // Constructors -------------------------------------------------------------
    /// <summary>Construct a Point3 given the X, Y, Z, ordinates</summary>
    public Point3 (double x, double y, double z) => (X, Y, Z) = (x, y, z);
@@ -215,6 +231,8 @@ public readonly struct Point3 : IEquatable<Point3> {
    public bool IsNil => double.IsNaN (X);
 
    // Methods ------------------------------------------------------------------
+   /// <summary>Adds the respective coordinates of this point with the given point and returns a new point.</summary>
+   public Point3 Add (Point3 p) => new Point3 (X + p.X, Y + p.Y, Z + p.Z);
    /// <summary>Distance between this point and another</summary>
    public double DistTo (Point3 b) => Sqrt (DistToSq (b));
    /// <summary>Returns the perpendicular distance between this point and the inifinite line a..b</summary>
