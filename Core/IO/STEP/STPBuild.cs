@@ -6,7 +6,7 @@ using Nori.STEP;
 namespace Nori;
 
 partial class STEPReader {
-   public Model3 Build () {
+   public Model3 Build () {       
       foreach (var m in D.OfType<Manifold> ()) Process (m);
       return mModel;
    }

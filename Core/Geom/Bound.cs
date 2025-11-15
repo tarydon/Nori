@@ -320,9 +320,7 @@ public readonly struct Bound3 : IEQuable<Bound3> {
       return bound;
    }
 
-   /// <summary>
-   /// Write the Bound3 to UTF8, in a format like "1,2,3:4,5,6"
-   /// </summary>
+   /// <summary>Write the Bound3 to UTF8, in a format like "1,2,3:4,5,6"</summary>
    /// Here, (1,2,3) is the X,Y,Z lower min point and (4,5,6) is upper max point
    public void Write (UTFWriter w) {
       if (Lib.Testing)
