@@ -4,17 +4,12 @@
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 namespace Nori;
 
-abstract class Ent3VN (Ent3 ent) : VNode (ent) {
+abstract class Ent3VN (Ent3 mEnt) : VNode (mEnt) {
    public override void SetAttributes () {
-      Lux.Color = ent.IsSelected ? new Color4 (128, 192, 255) : Color4.White;
+      Lux.Color = mEnt.IsSelected ? new Color4 (128, 192, 255) : Color4.White;
    }
 }
 
-class E3SurfaceVN : Ent3VN {
-   public E3SurfaceVN (E3Surface surface) : base (surface) => mSurface = surface;
-   readonly E3Surface mSurface;
-
-   public override void Draw () {
-      Lux.Mesh (mSurface.Mesh, EShadeMode.Phong);
-   }
+class E3SurfaceVN (E3Surface mSurface) : Ent3VN (mSurface) {
+   public override void Draw () => Lux.Mesh (mSurface.Mesh, EShadeMode.Phong);
 }

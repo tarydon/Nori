@@ -103,7 +103,7 @@ public class DXFWriter {
       }
       Out ($" 0\nTABLE\n 2\nLAYER\n 70\n{layers.Count}\n");
       foreach (var layer in layers) {
-         int flags = layer.IsVisible == true ? 0 : 1, color = ToACADColor (layer.Color);
+         int flags = layer.IsVisible ? 0 : 1, color = ToACADColor (layer.Color);
          string name = layer.Name, ltype = layer.Linetype.ToString ().ToUpper ();
          Out ($" 0\nLAYER\n 70\n{flags}\n 2\n{name}\n 62\n{color}\n 6\n{ltype}\n");
       }
@@ -123,25 +123,25 @@ public class DXFWriter {
 
    // Helper used by OutPoly, writes out a segment from a Poly as a LINE, ARC
    // or CIRCLE entity
-   int OutSeg (Ent2 ent, Seg seg) {
+   void OutSeg (Ent2 ent, Seg seg) {
       if (seg.IsLine) {
          OutEntPrologue (ent, "LINE");
          var (p1, p2) = (seg.A, seg.B);
          if (Lib.Testing) (p1, p2) = (p1.R6 (), p2.R6 ());
-         return Out ($" 10\n{p1.X}\n 20\n{p1.Y}\n 11\n{p2.X}\n 21\n{p2.Y}\n");
+         Out ($" 10\n{p1.X}\n 20\n{p1.Y}\n 11\n{p2.X}\n 21\n{p2.Y}\n");
       } else {
          var (c, r) = (seg.Center, seg.Radius);
          if (Lib.Testing) (c, r) = (c.R6 (), r.R6 ());
          if (seg.IsCircle) {
             OutEntPrologue (ent, "CIRCLE");
-            return Out ($" 10\n{c.X}\n 20\n{c.Y}\n 40\n{r}\n");
+            Out ($" 10\n{c.X}\n 20\n{c.Y}\n 40\n{r}\n");
          } else {
             OutEntPrologue (ent, "ARC");
             var (a1, a2) = seg.GetStartAndEndAngles ();
             var (sa, ea) = (a1.R2D (), a2.R2D ());
             if (!seg.IsCCW) (sa, ea) = (ea, sa); // Swap the angles to handle CW arc
             if (Lib.Testing) (sa, ea) = (sa.R6 (), ea.R6 ());
-            return Out ($" 10\n{c.X}\n 20\n{c.Y}\n 40\n{r}\n 50\n{sa}\n 51\n{ea}\n");
+            Out ($" 10\n{c.X}\n 20\n{c.Y}\n 40\n{r}\n 50\n{sa}\n 51\n{ea}\n");
          }
       }
    }
@@ -169,7 +169,7 @@ public class DXFWriter {
    Layer2? mMBend, mBend;
 
    // This is a placeholder, we don't write dimensions out yet
-   int OutDimension (E2Dimension ed) => 0;
+   static int OutDimension (E2Dimension _) => 0;
 
    // Writes out the E2Insert entities
    int OutInsert (E2Insert e) {
@@ -193,7 +193,6 @@ public class DXFWriter {
       var poly = e2p.Poly;
       if (poly.Count == 1 || NoPolyline) {
          foreach (var seg in poly.Segs) OutSeg (e2p, seg);
-         return 0;
       } else {
          OutEntPrologue (e2p, "POLYLINE");
          Out ($" 66\n1\n 10\n0\n 20\n0\n 70\n{(poly.IsClosed ? 1 : 0)}\n");
@@ -215,7 +214,7 @@ public class DXFWriter {
                Out ($" 0\nVERTEX\n 8\n0\n 10\n{pt.X}\n 20\n{pt.Y} \n");
             }
          }
-         Out ($" 0\nSEQEND\n 8\n0\n");
+         Out (" 0\nSEQEND\n 8\n0\n");
       }
       return 0;
    }

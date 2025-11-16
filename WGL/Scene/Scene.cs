@@ -9,7 +9,7 @@ namespace Nori;
 /// This exposes some basic properties like BgrdColor and Xfm which are common across all
 /// types of scenes, and the important Draw() method that will be overridden in derived types
 /// to draw the content
-public abstract partial class Scene {
+public abstract class Scene {
    // Properties ---------------------------------------------------------------
    /// <summary>Background color (clear color) for this scene</summary>
    public Color4 BgrdColor { get => mBgrdColor; set { mBgrdColor = value; Lux.Redraw (); } }
@@ -53,7 +53,7 @@ public abstract partial class Scene {
          return mXfms;
       }
    }
-   List<XfmEntry> mXfms = [];
+   readonly List<XfmEntry> mXfms = [];
 
    // Methods ------------------------------------------------------------------
    public void Render (Vec2S viewport) {

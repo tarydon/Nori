@@ -242,6 +242,7 @@ public partial class Poly {
    }
 
    /// <summary>Inserts V notch on the specified seg (returns null if not possible)</summary>
+   /// <param name="seg">Segment on which the notch is created</param>
    /// <param name="centerOffset">Offset of the notch-center, from start of the seg</param>
    /// <param name="width">Width of V notch</param>
    /// <param name="depth">Depth of V notch</param>
@@ -280,6 +281,7 @@ public partial class Poly {
    }
 
    /// <summary>Inserts edge recess (rect notch) on the specified seg (returns null if not possible)</summary>
+   /// <param name="seg">The segment on which the recess is created</param>
    /// <param name="left">Side of the seg, where the notch unfurls</param>
    /// <param name="centerOffset">Offset of the notch-center, from start of the seg</param>
    /// <param name="width">Width of rect notch</param>
@@ -333,7 +335,7 @@ public partial class Poly {
       Seg seg = this[segIdx];
       bool fwd = lie > 0.5; // Extend forward/backward
       bool limitDist = !dist.IsZero ();
-      double extendLie = double.NaN;
+      double extendLie;
       if (seg.IsLine) {
          if (limitDist) extendLie = fwd ? 1 + (dist / seg.Length) : -(dist / seg.Length);
          else if (!CanExtend (seg, fwd, polySoup, out extendLie))
@@ -390,6 +392,7 @@ public partial class Poly {
          yield return new Poly ([.. pts], Extra[cExtra..], mFlags);
       }
 
+      // Helpers ...........................................
       static bool CanExtend (Seg seg, bool fwd, IEnumerable<Poly> polySoup, out double extendLie) {
          Span<Point2> buffer = stackalloc Point2[2];
          (double fwdCutoff, double revCutoff) = (1 + Lib.Epsilon, 0 - Lib.Epsilon);
@@ -464,14 +467,14 @@ public partial class Poly {
       ArcInfo segExtra = segIdx < Extra.Length ? Extra[segIdx] : ArcInfo.Nil;
       if (IsCircle) {
          (double lieA, double lieB) = CircleTrimExtents (seg, lie.Clamp (), polySoup);
-         if (lieA == 0 && lieB == 1) yield break; // Fully trimmed out
+         if (lieA.IsZero () && lieB.EQ (1)) yield break; // Fully trimmed out
          bool iCCW = (mFlags & EFlags.CCW) != 0;
          yield return Arc (segExtra.Center, this[0].Radius, lieA * Lib.TwoPI, lieB * Lib.TwoPI, iCCW);
          yield break;
       }
 
       (double fromLie, double toLie) = TrimExtents (seg, lie.Clamp (), polySoup);
-      (bool hFrag, bool tFrag) = (fromLie != 0, toLie != 1); // Indicates any left-over head frag and/or tail frag
+      (bool hFrag, bool tFrag) = (!fromLie.IsZero (), !toLie.EQ (1)); // Indicates any left-over head frag and/or tail frag
       if (Count == 1 && !hFrag && !tFrag) yield break; // Single seg poly (incl. circle) is fully consumed
       List<Point2> pts = []; List<ArcInfo> extra = [];
       if (IsClosed) {
@@ -500,8 +503,8 @@ public partial class Poly {
 
       // Open poly...
       // First fragmented poly
-      pts.AddRange (Pts[0..(segIdx + 1)]);
-      extra.AddRange (Extra[0..(Math.Min (segIdx, Extra.Length))]);
+      pts.AddRange (Pts[..(segIdx + 1)]);
+      extra.AddRange (Extra[..(Math.Min (segIdx, Extra.Length))]);
       if (hFrag) {
          pts.Add (seg.GetPointAt (fromLie));
          if ((segExtra.Flags & EFlags.Arc) != 0) {
@@ -528,6 +531,7 @@ public partial class Poly {
       if (pts.Count > 1)
          yield return new Poly ([.. pts], [.. extra], extra.Count == 0 ? mFlags & ~EFlags.HasArcs : mFlags);
 
+      // Helpers ...........................................
       static (double fromLie, double toLie) TrimExtents (Seg seg, double refLie, IEnumerable<Poly> polySoup) {
          (double fromLie, double toLie) = (0, 1);
          Span<Point2> buffer = stackalloc Point2[2];
@@ -567,6 +571,7 @@ public partial class Poly {
    /// <summary>Inserts U-notch on the specified seg (returns null if not possible)</summary>
    /// By default, the notch is created on the left of the given segment.
    /// To create a notch on the right of the seg, negative depth is passed.
+   /// <param name="seg">Segment on which the U-notch is created</param>
    /// <param name="centerOffset">Offset of the notch-center, from start of the seg</param>
    /// <param name="width">Width of U-notch</param>
    /// <param name="depth">Depth of U-notch</param>
@@ -676,7 +681,7 @@ public partial class Poly {
    // first segment of Poly b, if this intersection lies within the given threshold
    // to both the end of a and the start of b. If the intersection does not exist, or
    // is more than the given threshold to the closest ends, this returns Point2.Nil
-   Point2 GetTipIntersection (Poly a, Poly b, double threshold) {
+   static Point2 GetTipIntersection (Poly a, Poly b, double threshold) {
       Span<Point2> buffer = stackalloc Point2[2];
       Seg sa = a[^1], sb = b[0];
       var pts = sa.Intersect (sb, buffer, false);

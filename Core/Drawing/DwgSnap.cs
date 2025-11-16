@@ -57,7 +57,7 @@ public class DwgSnap {
          if (mSnap != ESnap.None)
             yield return (mSnap.ToString ().ToLower (), mPtSnap, false);
          foreach (var con in mVisible) {
-            string text = "";
+            string text;
             if (con.Slope.IsZero ()) text = "horz";
             else if (con.Slope.EQ (Lib.HalfPI)) text = "vert";
             else {
@@ -70,12 +70,8 @@ public class DwgSnap {
    }
 
    /// <summary>The set of construction lines to be drawn (these are active construction lines the mouse is close to)</summary>
-   public IEnumerable<(Point2 Pt, double Angle)> Lines {
-      get {
-         foreach (var con in mVisible)
-            yield return (con.Anchor, con.Slope);
-      }
-   }
+   public IEnumerable<(Point2 Pt, double Angle)> Lines 
+      => mVisible.Select(con => (con.Anchor, con.Slope));
 
    /// <summary>The recent snap point that we computed</summary>
    public Point2 PtSnap => mPtSnap;
@@ -132,7 +128,7 @@ public class DwgSnap {
          mCons.Add (new (pt, angle, i is 1 or 5));
          // We don't want to have more than 3 points in the drawing from which construction
          // lines are radiating, or more than 12 construction lines in all
-         if (mCons.Count > 12 || mCons.Select (a => a.Anchor.R6 ()).Distinct ().Count () > 3)
+         if (mCons.Count > 12 || mCons.Select (a => a.Anchor).Distinct (PointComparer.Epsilon).Count () > 3)
             mCons.RemoveAt (0);
       }
    }
@@ -177,8 +173,8 @@ public class DwgSnap {
          Point2 a = cons.Anchor, b = a.Polar (10, cons.Slope);
          foreach (var seg in mSegs) {
             var pts = seg.Intersect (a, b, buffer, true);
-            for (int k = 0; k < pts.Length; k++)
-               if (Check (pts[k], ESnap.Intersection, 0)) {
+            foreach (var pt in pts)
+               if (Check (pt, ESnap.Intersection, 0)) {
                   mVisible.Clear (); mVisible.Add (cons);
                }
          }
@@ -222,10 +218,10 @@ public class DwgSnap {
                      if (seg.GetDist (ptRaw, aperture) <= aperture) {
                         mSegs.Add (seg);
                         if (Check (seg.A, ESnap.Endpoint, seg.Slope))
-                           if (seg.Prev is Seg seg2) mTangent2 = seg2.GetSlopeAt (1);
+                           if (seg.Prev is { } seg2) mTangent2 = seg2.GetSlopeAt (1);
                         Check (seg.Midpoint, ESnap.Midpoint, 0);
                         if (Check (seg.B, ESnap.Endpoint, seg.Slope))
-                           if (seg.Next is Seg seg2) mTangent2 = seg2.GetSlopeAt (0);
+                           if (seg.Next is { } seg2) mTangent2 = seg2.GetSlopeAt (0);
                      }
                   }
                }
@@ -246,8 +242,8 @@ public class DwgSnap {
          for (int j = 0; j < i; j++) {
             Seg s2 = mSegs[j];
             var pts = s1.Intersect (s2, buffer, true);
-            for (int k = 0; k < pts.Length; k++)
-               Check (pts[k], ESnap.Intersection, 0);
+            foreach (var pt in pts)
+               Check (pt, ESnap.Intersection, 0);
          }
       }
 
@@ -263,8 +259,7 @@ public class DwgSnap {
    // Check if the given input point is ON any of the construction lines
    bool OnCons () {
       mVisible.Clear ();
-      for (int i = 0; i < mActive.Count; i++) {
-         var cons = mActive[i];
+      foreach (var cons in mActive) {
          Point2 pt = mptRaw.SnappedToLine (cons.Anchor, cons.Anchor.Polar (10, cons.Slope));
          if (Check (pt, ESnap.On)) { mVisible.Clear (); mVisible.Add (cons); }
       }
@@ -319,6 +314,6 @@ public enum ESnap {
    /// <summary>Endpoint of a segment</summary>
    Endpoint,
    /// <summary>Point, Block-Insert-Point, Text-Base-Point</summary>
-   Node,
+   Node
 }
 #endregion

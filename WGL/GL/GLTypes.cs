@@ -21,18 +21,18 @@ enum EBlendFactor : uint { Zero = 0, One = 1, SrcAlpha = 770, OneMinusSrcAlpha =
 enum ECap : uint { 
    Blend = 0xBE2, DepthTest = 0xB71, PolygonOffsetFill = 0x8037, ScissorTest = 0xC11,
    CullFace = 0xB44, StencilTest = 0xB90, PrimitiveRestart = 0x8F9D
-};
+}
 
 // Various data types for storing in vertex array buffers
 enum EDataType : uint {
    Byte = 0x1400, UByte = 0x1401, Short = 0x1402, UShort = 0x1403, Int = 0x1404, UInt = 0x1405,
    Half = 0x140B, Float = 0x1406, Double = 0x140A, Vec2f = 0x8B50, Vec3f = 0x8B51, Vec4f = 0x8B52,
    Mat2f = 0x8B5A, Mat3f = 0x8B5B, Mat4f = 0x8B5C, IVec4 = 0x8B55, IVec2 = 0x8B53,
-   Sampler2DRect = 0x8B63, Sampler2D = 0x8B5E,
+   Sampler2DRect = 0x8B63, Sampler2D = 0x8B5E
 }
 
 // Binding targets for a FrameBuffer
-enum EFrameBufferTarget : uint { Draw = 0x8CA9, Read = 0x8CA8, DrawAndRead = 0x8D40 };
+enum EFrameBufferTarget : uint { Draw = 0x8CA9, Read = 0x8CA8, DrawAndRead = 0x8D40 }
 
 // Defines a frame-buffer attachment point
 enum EFrameBufferAttachment { Depth = 0x8D00, Color0 = 0x8CE0, Color1 = 0x8CE1, DepthStencil = 0x821A }
@@ -44,16 +44,16 @@ enum EFrameBufferStatus { Complete = 0x8CD5 }
 enum EIndexType : uint { UByte = 5121, UShort = 5123, UInt = 5125 }
 
 // Values to pass to GL.StencilOpSeparate, GL.StencilFuncSeparate
-enum EFace : uint { Front = 0x404, Back = 0x405, FrontAndBack = 0x408 };
+enum EFace : uint { Front = 0x404, Back = 0x405, FrontAndBack = 0x408 }
 
 // Various modes that can be passed to glBegin
 enum EMode : uint { 
    Points = 0, Lines = 1, LineLoop = 2, LineStrip = 3, Triangles = 4, TriangleFan = 6,
    TriangleStrip = 5, Quads = 7, Patches = 14 
-};
+}
 
 /// <summary>Various shading modes to pass to Lux.Mesh(...)</summary>
-public enum EShadeMode { Flat, Gourad, Phong, Glass };
+public enum EShadeMode { Flat, Gourad, Phong, Glass }
 
 // Pixel storage formats
 enum EPixelFormat : uint { 
@@ -77,7 +77,7 @@ enum EPrimitive { Triangles = 0x0004, TriangleStrip = 0x0005, TriangleFan = 0x00
 enum EPatchParam : uint { PatchVertices = 36466 }
 
 // Binding targets for a RenderBuffer
-enum ERenderBufferTarget : uint { RenderBuffer = 0x8D41 };
+enum ERenderBufferTarget : uint { RenderBuffer = 0x8D41 }
 
 // Storage formats in render buffer
 enum ERenderBufferFormat : uint  { RGBA8 = 0x8058, Depth32 = 0x81A7, Depth16 = 0x81A5, Depth24Stencil8 = 0x88F0 }
@@ -85,7 +85,7 @@ enum ERenderBufferFormat : uint  { RGBA8 = 0x8058, Depth32 = 0x81A7, Depth16 = 0
 // The various types of OpenGL shaders
 enum EShader : uint {
    Vertex = 0x8B31, Fragment = 0x8B30, Geometry = 0x8DD9, TessControl = 0x8E88, TessEvaluation = 0x8E87,
-   Vert = Vertex, Frag = Fragment, Geom = Geometry, TCtrl = TessControl, TEval = TessEvaluation,
+   Vert = Vertex, Frag = Fragment, Geom = Geometry, TCtrl = TessControl, TEval = TessEvaluation
 }
 
 // Parameters passed to GL.GetShader
@@ -101,10 +101,10 @@ enum EStencilOp : uint { Keep = 0x1e00, Zero = 0, Replace = 0x1e01, Incr = 0x1e0
 
 // Texture related enums
 enum ETexUnit : uint { Tex0 = 33984, Tex1 = 33985, Tex2 = 33986, Tex3 = 33987 }
-enum ETexTarget : uint { Texture1D = 3552, Texture2D = 3553, TexRectangle = 0x84F5 };
+enum ETexTarget : uint { Texture1D = 3552, Texture2D = 3553, TexRectangle = 0x84F5 }
 enum EPixelInternalFormat : uint { Red = 6403 }
 enum ETexParam : uint { MagFilter = 0x2800, MinFilter = 0x2801, WrapS = 0x2802, WrapT = 0x2803 }
-enum ETexFilter { Nearest = 9728, Linear = 9729 };
+enum ETexFilter { Nearest = 9728, Linear = 9729 }
 enum ETexWrap { Clamp = 10496, Repeat = 10497 }
 // Enumeration for the winding-rule to be used in polygon tessellation and boolean operations
 public enum EWindingRule { Odd = 100130, NonZero = 100131, Positive = 100132, AbsGeqTwo = 100134 }
@@ -115,11 +115,11 @@ public enum EWindingRule { Odd = 100130, NonZero = 100131, Positive = 100132, Ab
 // Window GDI device context handle
 enum HDC : ulong { Zero }
 // OpenGL rendering-context handle
-enum HGLRC : ulong { Zero };
+enum HGLRC : ulong { Zero }
 // Win32 windows handle
-enum HWindow : ulong { Zero };
+enum HWindow : ulong { Zero }
 // A complete OpenGL shader pipeline
-enum HProgram : ulong { Zero };
+enum HProgram : ulong { Zero }
 // An OpenGL shader (part of a pipeline)
 enum HShader : ulong { Zero }
 
@@ -155,7 +155,7 @@ struct PixelFormatDescriptor {
          PixelFormatDescriptor pfd = new () {
             Size = 40, Version = 1,
             Flags = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER,
-            ColorBits = 32, DepthBits = 32, StencilBits = 8,
+            ColorBits = 32, DepthBits = 32, StencilBits = 8
          };
          if (40 != Marshal.SizeOf<PixelFormatDescriptor> ())
             throw new Exception ("Unexpected size for PixelFormatDescriptor");

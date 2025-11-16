@@ -65,7 +65,7 @@ static class GLState {
       }
    }
    static ShaderImp? mProgram;
-   static internal int mPgmChanges;    // Number of program changes in this frame
+   internal static int mPgmChanges;    // Number of program changes in this frame
 
    /// <summary>The 'stencil behavior' of the current program</summary>
    /// See the TriFanStencil shader for a more detailed example of this algorithm (this is used
@@ -115,7 +115,7 @@ static class GLState {
          }
       }
    }
-   static int mTypeFaceId = 0;
+   static int mTypeFaceId;
 
    /// <summary>The current vertex-array-object being used</summary>
    public static HVertexArray VAO {
@@ -127,7 +127,7 @@ static class GLState {
       }
    }
    static HVertexArray mHVAO;
-   static internal int mVAOChanges;    // Number of VAO changes in this frame
+   internal static int mVAOChanges;    // Number of VAO changes in this frame
 
    // Methods ------------------------------------------------------------------
    /// <summary>Resets everything to a known state (at the start of every frame)</summary>

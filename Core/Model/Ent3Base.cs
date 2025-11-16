@@ -35,7 +35,7 @@ namespace Nori;
 [EPropClass]
 public abstract partial class Ent3 {
    protected Ent3 () { }
-   public Ent3 (int id) => Id = id;
+   protected Ent3 (int id) => Id = id;
 
    public abstract Bound3 Bound { get; }
 
@@ -67,13 +67,13 @@ public abstract partial class Ent3 {
 
 [Flags]
 public enum E3Flags {
-   Selected = 0x1,
+   Selected = 0x1
 }
 
 #region class E3Surface ----------------------------------------------------------------------------
 public abstract class E3Surface : Ent3 {
    protected E3Surface () { }
-   public E3Surface (int id, IEnumerable<Contour3> trims) : base (id) => mContours = [.. trims];
+   protected E3Surface (int id, IEnumerable<Contour3> trims) : base (id) => mContours = [.. trims];
 
    public override Bound3 Bound => Bound3.Update (ref mBound, ComputeBound);
    Bound3 mBound = new ();
@@ -98,7 +98,7 @@ public abstract class E3Surface : Ent3 {
 #region class E3ParaSurface ------------------------------------------------------------------------
 public abstract class E3ParaSurface : E3Surface {
    protected E3ParaSurface () { }
-   public E3ParaSurface (int id, IEnumerable<Contour3> trims) : base (id, trims) { }
+   protected E3ParaSurface (int id, IEnumerable<Contour3> trims) : base (id, trims) { }
    protected abstract Point3 Evaluate (Point2 pt);
    protected abstract Vector3 EvalNormal (Point2 pt);
    protected abstract Point2 Flatten (Point3 pt);
@@ -149,12 +149,12 @@ public abstract class E3ParaSurface : E3Surface {
 
       // Helpers ...........................................
       void AddTriangle (int a, int b, int c) {
-         // Take each of the midpoints and see which one has the worst deviation,
-         // that will be where we split
-         Node na = nodes[a], nb = nodes[b], nc = nodes[c];
-         Point2 p2ab = na.UV.Midpoint (nb.UV), p2bc = nb.UV.Midpoint (nc.UV), p2ca = nc.UV.Midpoint (na.UV);
-         Point3 p3ab = Evaluate (p2ab), p3bc = Evaluate (p2bc), p3ca = Evaluate (p2ca);
-         double dab = Dist (p3ab, na.Pos, nb.Pos), dbc = Dist (p3bc, nb.Pos, nc.Pos), dca = Dist (p3ca, nc.Pos, na.Pos);
+            // Take each of the midpoints and see which one has the worst deviation,
+            // that will be where we split
+            Node na = nodes[a], nb = nodes[b], nc = nodes[c];
+            Point2 p2ab = na.UV.Midpoint (nb.UV), p2bc = nb.UV.Midpoint (nc.UV), p2ca = nc.UV.Midpoint (na.UV);
+            Point3 p3ab = Evaluate (p2ab), p3bc = Evaluate (p2bc), p3ca = Evaluate (p2ca);
+            double dab = Dist (p3ab, na.Pos, nb.Pos), dbc = Dist (p3bc, nb.Pos, nc.Pos), dca = Dist (p3ca, nc.Pos, na.Pos);
 
          if (dab > tolerance && dbc > tolerance && dca > tolerance) {   // Split into 4 triangles
             int ab = AddNode (p2ab, p3ab), bc = AddNode (p2bc, p3bc), ca = AddNode (p2ca, p3ca);
@@ -181,15 +181,14 @@ public abstract class E3ParaSurface : E3Surface {
          return n;
       }
 
-      double Dist (Point3 pt, Vec3F a, Vec3F b)
+      static double Dist (Point3 pt, Vec3F a, Vec3F b)
          => pt.DistToLine ((Point3)a, (Point3)b);
    }
 
-   struct Node {
-      public Node (Point2 uv, Vec3F pos, Vec3H normal) { UV = uv; Pos = pos; Normal = normal; }
-      public Point2 UV;
-      public Vec3F Pos;
-      public Vec3H Normal;
+   struct Node (Point2 uv, Vec3F pos, Vec3H normal) {
+      public readonly Point2 UV = uv;
+      public readonly Vec3F Pos = pos;
+      public readonly Vec3H Normal = normal;
    }
 }
 #endregion
@@ -197,7 +196,7 @@ public abstract class E3ParaSurface : E3Surface {
 #region class E3CSSurface --------------------------------------------------------------------------
 public abstract class E3CSSurface : E3ParaSurface {
    protected E3CSSurface () { }
-   public E3CSSurface (int id, IEnumerable<Contour3> trims, CoordSystem cs) : base (id, trims) => mCS = cs;
+   protected E3CSSurface (int id, IEnumerable<Contour3> trims, CoordSystem cs) : base (id, trims) => mCS = cs;
 
    public CoordSystem CS => mCS;
    readonly CoordSystem mCS;

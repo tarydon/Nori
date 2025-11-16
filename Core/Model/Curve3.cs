@@ -90,7 +90,7 @@ public class Arc3 : Edge3 {
    }
 
    /// <summary>Returns the point at a given lie</summary>
-   override public Point3 GetPointAt (double lie) {
+   public override Point3 GetPointAt (double lie) {
       var (sin, cos) = Math.SinCos (AngSpan * lie);
       return new Point3 (cos * Radius, sin * Radius, 0) * ToXfm;
    }
@@ -116,7 +116,7 @@ public class Contour3 {
                pb.Line (Xfm (line.Start));
                break;
             case Arc3 arc:
-               var (center, start, radius) = (Xfm (arc.Center), Xfm (arc.Start), arc.Radius);
+               var (center, start, _) = (Xfm (arc.Center), Xfm (arc.Start), arc.Radius);
                var flags = (arc.CS.VecZ * xfm).Z > 0 ? Poly.EFlags.CCW : Poly.EFlags.CW;
                if (arc.AngSpan.EQ (Lib.TwoPI)) {
                   pb.Arc (start, center, flags);

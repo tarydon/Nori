@@ -84,8 +84,8 @@ class AuType {
 
    public MethodInfo IArrayFromArray =>
       mFromArray ??= typeof (ImmutableArray).GetMethods ()
-      .Where (a => a.GetParameters ().Length == 1 && a.GetParameters ()[0].ParameterType.IsArray)
-      .Single ().MakeGenericMethod (mType.GetGenericArguments ()[0]);
+      .Single( a => a.GetParameters ().Length == 1 && a.GetParameters ()[0].ParameterType.IsArray)
+      .MakeGenericMethod (mType.GetGenericArguments ()[0]);
    MethodInfo? mFromArray;
 
    public AuType[] GenericArgs {
@@ -246,7 +246,7 @@ class AuType {
             TypeCode.Int32 => Enum.ToObject (mType, (int)v), // Default backing type
             TypeCode.UInt32 => Enum.ToObject (mType, (uint)v),
             TypeCode.Int64 => Enum.ToObject (mType, (long)v),
-            TypeCode.UInt64 => Enum.ToObject (mType, (ulong)v),
+            TypeCode.UInt64 => Enum.ToObject (mType, v),
             TypeCode.Int16 => Enum.ToObject (mType, (short)v),
             TypeCode.UInt16 => Enum.ToObject (mType, (ushort)v),
             TypeCode.Byte => Enum.ToObject (mType, (byte)v),
@@ -261,12 +261,12 @@ class AuType {
    static ulong NormalizedEnumInteger (Type enumType, object o) {
       return Type.GetTypeCode (enumType) switch { // Note: Unboxing needs exact cast
          TypeCode.Int32 => (ulong)(int)o, // Default backing type
-         TypeCode.UInt32 => (ulong)(uint)o,
+         TypeCode.UInt32 => (uint)o,
          TypeCode.Int64 => (ulong)(long)o,
          TypeCode.UInt64 => (ulong)o,
          TypeCode.Int16 => (ulong)(short)o,
-         TypeCode.UInt16 => (ulong)(ushort)o,
-         TypeCode.Byte => (ulong)(byte)o,
+         TypeCode.UInt16 => (ushort)o,
+         TypeCode.Byte => (byte)o,
          TypeCode.SByte => (ulong)(sbyte)o,
          _ => throw new BadCaseException (enumType.FullName!)
       };
@@ -412,8 +412,8 @@ class AuType {
          if (line.IsBlank ()) continue;
          if (line.StartsWith (' ')) {
             string[] words = line.Split (' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-            for (int i = 0; i < words.Length; i++) {
-               var (w, tactic) = (words[i], ECurlTactic.Std);
+            foreach (var word in words) {
+               var (w, tactic) = (word, ECurlTactic.Std);
                if (w[0] == '-') (w, tactic) = (w[1..], ECurlTactic.Skip);
                else if (w[0] == '^') (w, tactic) = (w[1..], ECurlTactic.Uplink);
                else if (w.EndsWith (".Name")) (w, tactic) = (w[..^5], ECurlTactic.ByName);
@@ -519,7 +519,7 @@ class AuField {
 
 #region enum EAuTypeKind ---------------------------------------------------------------------------
 /// <summary>What 'Kind' of type is represented by a given AuType (primitive / list / enum / dict / class etc)</summary>
-enum EAuTypeKind { Unknown, Object, Primitive, AuPrimitive, Enum, List, Dictionary, Struct, Class };
+enum EAuTypeKind { Unknown, Object, Primitive, AuPrimitive, Enum, List, Dictionary, Struct, Class }
 #endregion
 
 #region enum ECurlTactic ---------------------------------------------------------------------------

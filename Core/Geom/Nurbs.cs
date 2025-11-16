@@ -131,15 +131,15 @@ public class Spline2 {
       var (knots, errSq, eval) = (Imp.Knot, error * error, new Stack<Node> ());
 
       double done = -1;
-      for (int i = 0; i < knots.Length; i++) {
-         var knot = knots[i]; if (knot == done) continue;
+      foreach (var knot in knots) {
+         if (knot == done) continue;
          eval.Push (new Node { A = knot, Pt = Evaluate (knot), Level = 0 });
          done = knot;
       }
 
       // Now the recursive evaluation part - at each iteration of this loop, we pop off two
       // nodes from this stack to see if that linear span needs to be further subdivided.
-      int maxLevel = 5;
+      const int maxLevel = 5;
       while (eval.Count > 1) {
          Node e1 = eval.Pop (), e2 = eval.Peek ();
 

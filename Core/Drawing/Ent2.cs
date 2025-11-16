@@ -144,11 +144,11 @@ public class E2Bendline : Ent2 {
    public double Deduction {
       get {
          double angle = Math.Abs (Angle);
-         double length = 2 * ((angle <= Math.PI / 2 ? Math.Tan (angle / 2) : 1) * (Radius + Thickness));
+         double length = 2 * ((angle <= Lib.HalfPI ? Math.Tan (angle / 2) : 1) * (Radius + Thickness));
          return length - FlatWidth;
       }
       set {
-         double length = 2 * ((Angle <= (Math.PI / 2) ? Math.Tan (Angle / 2) : 1) * (Radius + Thickness));
+         double length = 2 * ((Angle <= Lib.HalfPI ? Math.Tan (Angle / 2) : 1) * (Radius + Thickness));
          FlatWidth = length - value;
       }
    }

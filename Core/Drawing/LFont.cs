@@ -124,7 +124,7 @@ public class LineFont {
          posChar = posPark + down * VAdvance;
       }
 
-      // Helpers .................................
+      // Helpers ...........................................
       // Gets the width of a line of text, when rendered at size = 1, xscale = 1
       double GetWidth (string line) {
          double x = 0;

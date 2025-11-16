@@ -25,7 +25,7 @@ class ShaderImp {
       int cUniforms = GL.GetProgram (Handle, EProgramParam.ActiveUniforms);
       mUniforms = new UniformInfo[cUniforms];
       for (int i = 0; i < cUniforms; i++) {
-         GL.GetActiveUniform (Handle, i, out int size, out var type, out string uname, out int location);
+         GL.GetActiveUniform (Handle, i, out int _, out var type, out string uname, out int location);
          object value = type switch {
             EDataType.Int or EDataType.Sampler2D or EDataType.Sampler2DRect => 0,
             EDataType.Vec2f => new Vec2F (0, 0),
@@ -40,7 +40,7 @@ class ShaderImp {
       }
    }
    // A cache of already compiled individual shaders
-   static Dictionary<string, HShader> sCache = [];
+   static readonly Dictionary<string, HShader> sCache = [];
 
    // Properties ---------------------------------------------------------------
    /// <summary>Enable blending when this program is used</summary>
@@ -65,10 +65,7 @@ class ShaderImp {
 
    // Methods ------------------------------------------------------------------
    /// <summary>Gets the Id of a uniform value</summary>
-   public int GetUniformId (string name) {
-      if (mUniformMap.TryGetValue (name, out int id)) return id;
-      return -1;
-   }
+   public int GetUniformId (string name) => mUniformMap.GetValueOrDefault(name, -1);
 
    /// <summary>Sets a Uniform variable of type Color4 (we pass these as Vec4F)</summary>
    public ShaderImp Set (int index, Color4 color)
@@ -149,17 +146,15 @@ class ShaderImp {
 
    // Nested types ------------------------------------------------------------
    /// <summary>Provides information about a Uniform</summary>
-   public class UniformInfo {
-      public UniformInfo (string name, EDataType type, int location, object value)
-         => (Name, Type, Location, Value) = (name, type, location, value);
+   public class UniformInfo (string name, EDataType type, int location, object value) {
       /// <summary>Name of this uniform</summary>
-      public readonly string Name;
+      public readonly string Name = name;
       /// <summary>Data-type of this uniform</summary>
-      public readonly EDataType Type;
+      public readonly EDataType Type = type;
       /// <summary>Shader location for this uniform</summary>
-      public readonly int Location;
+      public readonly int Location = location;
       /// <summary>Last-set value for this uniform</summary>
-      public object Value;
+      public object Value = value;
 
       public override string ToString ()
          => $"Uniform({Location}) {Type} {Name}";
@@ -168,7 +163,7 @@ class ShaderImp {
    // Implementation -----------------------------------------------------------
    // Compiles an individual shader, given the source file (this reuses already compiled
    // shaders where possible, since some shaders are part of multiple pipelines)
-   HShader CompileShader (string file) {
+   static HShader CompileShader (string file) {
       var text = Lib.ReadText ($"nori:GL/Shader/{file}");
       var eShader = Enum.Parse<EShader> (Path.GetExtension (file)[1..], true);
       var shader = GL.CreateShader (eShader);
@@ -195,7 +190,7 @@ class ShaderImp {
             var vspec = Enum.Parse<EVertexSpec> (w[2], true);
             bool blending = w[3] == "1", depthtest = w[4] == "1", offset = w[5] == "1";
             var stencil = Enum.Parse<EStencilBehavior> (w[6], true);
-            var programs = w[7].Split ('|').ToArray ();
+            var programs = w[7].Split ('|');
             return new (name, mode, vspec, programs, blending, depthtest, offset, stencil);
          }
       }
@@ -241,7 +236,7 @@ class ShaderImp {
       "Center      xxxxxxxxxx......xxxx......xxxxxxxxxxxxxx......xxxx......xxxx",
       "Border      xxxxxxxxxxxxxxxxx.....xxxxxxxxxxxxxxxxxx........xxxx........",
       "DashDot     xxxxxxxxxxxxxxxxxxxx....xx....xxxxxxxxxxxxxxxxxxxx....xx....",
-      "Continuous  xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "Continuous  xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
    ];
 
    public override string ToString () {
@@ -252,9 +247,9 @@ class ShaderImp {
    }
 
    // Private data -------------------------------------------------------------
-   UniformInfo[] mUniforms;         // Set of uniforms for this program
+   readonly UniformInfo[] mUniforms;         // Set of uniforms for this program
    // Dictionary mapping uniform names to uniform locations
-   Dictionary<string, int> mUniformMap = new (StringComparer.OrdinalIgnoreCase);
+   readonly Dictionary<string, int> mUniformMap = new (StringComparer.OrdinalIgnoreCase);
 }
 #endregion
 
@@ -270,8 +265,8 @@ readonly record struct Attrib (int Dims, EDataType Type, int Size, bool Integral
    public static Attrib AVec3h = new (3, EDataType.Half, 6, false);
    public static Attrib AVec4s = new (4, EDataType.Short, 8, true);
 
-   public static Attrib[] GetFor (EVertexSpec spec)
-      => spec switch {
+   public static Attrib[] GetFor (EVertexSpec spec) => 
+      spec switch {
          EVertexSpec.Vec2F => [AVec2f],
          EVertexSpec.Vec3F => [AVec3f],
          EVertexSpec.Vec3F_Vec3H => [AVec3f, AVec3h],
@@ -280,8 +275,8 @@ readonly record struct Attrib (int Dims, EDataType Type, int Size, bool Integral
          _ => throw new BadCaseException (spec)
       };
 
-   public static int GetSize (EVertexSpec spec)
-      => spec switch {
+   public static int GetSize (EVertexSpec spec) => 
+      spec switch {
          EVertexSpec.Vec2F => 8,
          EVertexSpec.Vec3F => 12,
          EVertexSpec.Vec3F_Vec3H => 20,
@@ -294,11 +289,11 @@ readonly record struct Attrib (int Dims, EDataType Type, int Size, bool Integral
 
 #region enum EVertexSpec ---------------------------------------------------------------------------
 // The various Vertex specifications used by OpenGL shaders
-enum EVertexSpec { Vec2F, Vec3F, Vec3F_Vec3H, Vec4S_Int, Vec2F_Vec4S_Int, _Last };
+enum EVertexSpec { Vec2F, Vec3F, Vec3F_Vec3H, Vec4S_Int, Vec2F_Vec4S_Int, _Last }
 #endregion
 
 #region enum EStencilBehavior ----------------------------------------------------------------------
 /// <summary>Does this shader have any special behavior related to the stencil-buffer?</summary>
 /// See the TriFanStencil and TriFanCover shaders for more details on this
-enum EStencilBehavior { None, Stencil, Cover };
+enum EStencilBehavior { None, Stencil, Cover }
 #endregion

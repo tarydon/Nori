@@ -8,7 +8,7 @@ namespace Nori;
 public enum ELuxAttr {
    None = 0,
    Color = 1 << 0, LineWidth = 1 << 1, LineType = 1 << 2, LTScale = 1 << 3,
-   Xfm = 1 << 4, PointSize = 1 << 5, TypeFace = 1 << 6, ZLevel = 1 << 7,
+   Xfm = 1 << 4, PointSize = 1 << 5, TypeFace = 1 << 6, ZLevel = 1 << 7
 }
 
 #region class Lux ----------------------------------------------------------------------------------
@@ -25,7 +25,7 @@ public static partial class Lux {
       }
    }
    static Color4 mColor;
-   static Stack<Color4> mColors = [];
+   static readonly Stack<Color4> mColors = [];
 
    /// <summary>The DPI scaling (how many pixels to one logical pixel)</summary>
    public static float DPIScale { get => mDPIScale; set => mDPIScale = value; }
@@ -41,7 +41,7 @@ public static partial class Lux {
       }
    }
    static float mLineWidth;
-   static Stack<float> mLineWidths = [];
+   static readonly Stack<float> mLineWidths = [];
 
    /// <summary>The current line-type</summary>
    public static ELineType LineType {
@@ -53,7 +53,7 @@ public static partial class Lux {
       }
    }
    static ELineType mLineType;
-   static Stack<ELineType> mLineTypes = [];
+   static readonly Stack<ELineType> mLineTypes = [];
 
    /// <summary>The current line-type scaling (this is in device-independent pixels)</summary>
    public static float LTScale {
@@ -65,7 +65,7 @@ public static partial class Lux {
       }
    }
    static float mLTScale;
-   static Stack<float> mLTScales = [];
+   static readonly Stack<float> mLTScales = [];
 
    /// <summary>The diameter of a point, in device-independent pixels</summary>
    public static float PointSize {
@@ -77,7 +77,7 @@ public static partial class Lux {
       }
    }
    static float mPointSize;
-   static Stack<float> mPointSizes = [];
+   static readonly Stack<float> mPointSizes = [];
 
    /// <summary>The typeface to use for drawing</summary>
    public static TypeFace? TypeFace {
@@ -89,7 +89,7 @@ public static partial class Lux {
       }
    }
    static TypeFace? mTypeface;
-   static Stack<TypeFace?> mTypefaces = [];
+   static readonly Stack<TypeFace?> mTypefaces = [];
 
    /// <summary>Viewport scale (convert viewport pixels to GL clip coordinates -1 .. +1)</summary>
    public static Vec2F VPScale {
@@ -112,7 +112,7 @@ public static partial class Lux {
       }
    }
    static int mIDXfm;
-   static Stack<int> mIDXfms = [];
+   static readonly Stack<int> mIDXfms = [];
 
    public static Matrix3 Xfm {
       set {
@@ -133,7 +133,7 @@ public static partial class Lux {
       }
    }
    static int mZLevel;
-   static Stack<int> mZLevels = [];
+   static readonly Stack<int> mZLevels = [];
 
    // Methods ------------------------------------------------------------------
    /// <summary>Draws beziers in world coordinates, with Z = 0</summary>
@@ -182,7 +182,7 @@ public static partial class Lux {
       TriFanCoverShader.It.Draw ([new (x0, y0), new (x1, y0), new (x1, y1), new (x0, y1)]);
    }
    // This gets reset to 0 at the start of every frame
-   static int mcFillPaths = 0;
+   static int mcFillPaths;
 
    /// <summary>Draws 2D lines in world coordinates, with Z = 0</summary>
    /// Every pair of Vec2F in the list creates one line, so with n points,
@@ -201,7 +201,7 @@ public static partial class Lux {
       mBuf.Add (pts[^1]);
       Lines (mBuf.AsSpan ());
    }
-   static List<Vec2F> mBuf = [];
+   static readonly List<Vec2F> mBuf = [];
 
    /// <summary>Draws 3D lines</summary>
    /// The following Lux properties are used:
@@ -248,8 +248,8 @@ public static partial class Lux {
       mPolys.Clear (); mPolys.Add (p);
       Polys (mPolys.AsSpan ());
    }
-   static List<Poly> mPolys = [];
-   static List<Vec2F> mLines = [], mBeziers = [];
+   static readonly List<Poly> mPolys = [];
+   static readonly List<Vec2F> mLines = [], mBeziers = [];
 
    /// <summary>Draw multiple Polys in world coordinates, with Z = 0</summary>
    public static void Polys (ReadOnlySpan<Poly> polys) {
@@ -269,7 +269,7 @@ public static partial class Lux {
          mPoints.AddRange (p.Pts.Select (a => (Vec2F)a));
       Points (mPoints.AsSpan ()); */
    }
-   static List<Vec2F> mPoints = [];
+   // static List<Vec2F> mPoints = [];
 
    /// <summary>Draws 2D quads in world coordinates, with Z = 0</summary>
    /// The quads are drawn with smoothed (anti-aliased) edges.
