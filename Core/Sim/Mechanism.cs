@@ -118,7 +118,7 @@ public partial class Mechanism {
    string? _rootDir;
 
    /// <summary>Returns the transformation matrix for this piece of the mechanism</summary>
-   public Matrix3 Xfm => _xfm = Parent == null ? Matrix3.Identity : RelativeXfm * Parent.Xfm;
+   public Matrix3 Xfm => _xfm ??= Parent == null ? Matrix3.Identity : RelativeXfm * Parent.Xfm;
    Matrix3? _xfm;
 
    // Methods ------------------------------------------------------------------

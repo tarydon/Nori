@@ -35,8 +35,7 @@ public class Model3 {
             }
          }
       }
-      if (_neighbors.TryGetValue (ent, out var list)) return list;
-      return [];
+      return _neighbors.TryGetValue (ent, out var list) ? list : [];
    }
    Dictionary<E3Surface, List<E3Surface>>? _neighbors;
 

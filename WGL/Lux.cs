@@ -29,8 +29,7 @@ public static partial class Lux {
    public static IObservable<int> OnReady => mOnReady;
    internal static Subject<int> mOnReady = new ();
 
-   /// Sets whether the cursor is visible or not when it is over the panel
-   /// </summary>
+   /// <summary>Sets whether the cursor is visible or not when it is over the panel</summary>
    /// If this is set to false, then the current scene must 'paint' a cursor that follows
    /// the mouse movement
    public static bool CursorVisible { set => Panel.CursorVisible = value; }

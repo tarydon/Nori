@@ -22,7 +22,7 @@ partial class STEPReader {
       }
    }
 
-   void Check (Cartesian c) { }
+   static void Check (Cartesian _) { }
 
    void Check (Circle c) { Check ((CoordSys)D[c.CoordSys]!); }
 
@@ -37,7 +37,7 @@ partial class STEPReader {
          Check ((AdvancedFace)D[n]!);
    }
 
-   void Check (Direction d) { }
+   static void Check (Direction _) { }
 
    void Check (Ellipse e) { Check ((CoordSys)D[e.CoordSys]!); }
 
@@ -92,7 +92,7 @@ partial class STEPReader {
 
    void Check (ElementarySurface s) { Check ((CoordSys)D[s.CoordSys]!); }
 
-   void Check (SurfaceCurve s) {
+   static void Check (SurfaceCurve _) {
       // TODO
    } 
 

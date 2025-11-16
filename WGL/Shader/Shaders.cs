@@ -222,7 +222,7 @@ class Seg2DShader : Shader<Vec2F, Seg2DShader.Settings> {
 /// <summary>Shader used to draw the black stencil lines for a mesh</summary>
 abstract class StencilLineShader : Shader<Mesh3.Node, StencilLineShader.Settings> {
    // Constructor --------------------------------------------------------------
-   public StencilLineShader (ShaderImp imp) : base (imp) => Bind ();
+   protected StencilLineShader (ShaderImp imp) : base (imp) => Bind ();
    int muXfm = 0, muVPScale = 0, muLineWidth = 0, muDrawColor = 0;
 
    // Overrides ----------------------------------------------------------------

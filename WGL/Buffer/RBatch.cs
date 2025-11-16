@@ -271,7 +271,7 @@ struct RBatch : IIndexed {
          if (n != 0) return n;
          return ra.Offset - rb.Offset;
       }
-      internal static RBatchCompare It = new ();
+      internal static readonly RBatchCompare It = new ();
    }
 }
 #endregion

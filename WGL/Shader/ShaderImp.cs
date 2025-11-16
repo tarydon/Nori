@@ -65,10 +65,7 @@ class ShaderImp {
 
    // Methods ------------------------------------------------------------------
    /// <summary>Gets the Id of a uniform value</summary>
-   public int GetUniformId (string name) {
-      if (mUniformMap.TryGetValue (name, out int id)) return id;
-      return -1;
-   }
+   public int GetUniformId (string name) => mUniformMap.GetValueOrDefault(name, -1);
 
    /// <summary>Sets a Uniform variable of type Color4 (we pass these as Vec4F)</summary>
    public ShaderImp Set (int index, Color4 color)
@@ -168,7 +165,7 @@ class ShaderImp {
    // Implementation -----------------------------------------------------------
    // Compiles an individual shader, given the source file (this reuses already compiled
    // shaders where possible, since some shaders are part of multiple pipelines)
-   HShader CompileShader (string file) {
+   static HShader CompileShader (string file) {
       var text = Lib.ReadText ($"nori:GL/Shader/{file}");
       var eShader = Enum.Parse<EShader> (Path.GetExtension (file)[1..], true);
       var shader = GL.CreateShader (eShader);
@@ -270,8 +267,8 @@ readonly record struct Attrib (int Dims, EDataType Type, int Size, bool Integral
    public static Attrib AVec3h = new (3, EDataType.Half, 6, false);
    public static Attrib AVec4s = new (4, EDataType.Short, 8, true);
 
-   public static Attrib[] GetFor (EVertexSpec spec)
-      => spec switch {
+   public static Attrib[] GetFor (EVertexSpec spec) => 
+      spec switch {
          EVertexSpec.Vec2F => [AVec2f],
          EVertexSpec.Vec3F => [AVec3f],
          EVertexSpec.Vec3F_Vec3H => [AVec3f, AVec3h],
@@ -280,8 +277,8 @@ readonly record struct Attrib (int Dims, EDataType Type, int Size, bool Integral
          _ => throw new BadCaseException (spec)
       };
 
-   public static int GetSize (EVertexSpec spec)
-      => spec switch {
+   public static int GetSize (EVertexSpec spec) => 
+      spec switch {
          EVertexSpec.Vec2F => 8,
          EVertexSpec.Vec3F => 12,
          EVertexSpec.Vec3F_Vec3H => 20,

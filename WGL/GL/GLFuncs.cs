@@ -65,7 +65,7 @@ unsafe static class GL {
 
    // Creates an OpenGL context in Windows .....................................
    public static HGLRC CreateContextAttribsARB (HDC dc, HGLRC share, int major, int minor, bool debug, bool core) {
-      var retvalue = HGLRC.Zero;
+      HGLRC retvalue;
       int[] pn = new int[8];
       pCreateContextAttribsARB ??= Load<wglCreateContextAttribsARB> ();
       const int MAJOR_VERSION = 0x2091, MINOR_VERSION = 0x2092, PROFILE_MASK = 0x9126, CONTEXT_FLAGS = 0x2094;
@@ -215,10 +215,10 @@ unsafe static class GL {
       int length = GetProgram (program, EProgramParam.InfoLogLength);
       if (length == 0) return "";
       StringBuilder sb = new (length + 2);
-      pGetProgramInfoLog (program, sb.Capacity, (nint)(&length), sb);
+      pGetProgramInfoLog (program, sb.Capacity, (Ptr)(&length), sb);
       return sb.ToString ();
    }
-   delegate void glGetProgramInfoLog (HProgram program, int bufSize, nint length, StringBuilder infoLog);
+   delegate void glGetProgramInfoLog (HProgram program, int bufSize, Ptr length, StringBuilder infoLog);
    static glGetProgramInfoLog? pGetProgramInfoLog;
 
    // Gets some information from a shader ......................................
@@ -235,10 +235,10 @@ unsafe static class GL {
       int length = GetShader (shader, EShaderParam.InfoLogLength);
       if (length == 0) return "";
       StringBuilder sb = new (length + 2);
-      pGetShaderInfoLog (shader, sb.Capacity, (nint)(&length), sb);
+      pGetShaderInfoLog (shader, sb.Capacity, (Ptr)(&length), sb);
       return sb.ToString ();
    }
-   delegate void glGetShaderInfoLog (HShader shader, int bufSize, nint length, StringBuilder infoLog);
+   delegate void glGetShaderInfoLog (HShader shader, int bufSize, Ptr length, StringBuilder infoLog);
    static glGetShaderInfoLog? pGetShaderInfoLog;
 
    // Gets the location (slot) of a uniform variable ...........................
@@ -368,7 +368,7 @@ unsafe static class GL {
    [DllImport (OPENGL32, EntryPoint = "glFinish")] public static extern void Finish ();
    [DllImport (OPENGL32, EntryPoint = "glGenTextures")] public static extern void GenTextures (int n, HTexture* pTex);
    [DllImport (OPENGL32, EntryPoint = "glReadPixels")] public static extern void ReadPixels (int x, int y, int width, int height, EPixelFormat format, EPixelType type, Ptr pixels);
-   [DllImport (OPENGL32, EntryPoint = "wglGetProcAddress")] public static extern nint GetProcAddress (string name);
+   [DllImport (OPENGL32, EntryPoint = "wglGetProcAddress")] public static extern Ptr GetProcAddress (string name);
    [DllImport (OPENGL32, EntryPoint = "wglMakeCurrent")] public static extern int MakeCurrent (HDC hdc, HGLRC hrc);
    [DllImport (OPENGL32, EntryPoint = "glPixelStorei")] static internal extern void PixelStore (EPixelStoreParam pname, int param);
    [DllImport (OPENGL32, EntryPoint = "glPolygonOffset")] static internal extern void PolygonOffset (float factor, float units);
@@ -391,7 +391,7 @@ unsafe static class GL {
    // raw Delegate that can be cast to the appropriate function signature
    static T Load<T> () where T : Delegate {
       Type type = typeof (T);
-      nint proc = GetProcAddress (type.Name);
+      Ptr proc = GetProcAddress (type.Name);
       if (proc == 0) throw new Exception ($"OpenGL function '{type.Name}' not found.");
       Delegate del = Marshal.GetDelegateForFunctionPointer (proc, type);
       return (T)del;

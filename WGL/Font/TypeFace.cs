@@ -292,8 +292,7 @@ public class TypeFace {
          mNotes ??= new Metrics[max + 1];
          byte[] texData = new byte[131072];
          int texOffset = 0;
-         for (int i = 0; i < glyphIndices.Count; i++) {
-            var index = glyphIndices[i];
+         foreach (var index in glyphIndices) {
             if (mNotes[index].TexOffset > 0) continue;
             var g = GetGlyph (index);
             mNotes[index] = new Metrics (g, texOffset);

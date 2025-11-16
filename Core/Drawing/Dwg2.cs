@@ -88,10 +88,12 @@ public partial class Dwg2 {
    /// <summary>Add a layer into the drawing</summary>
    /// If a layer with the same name exists, replace it and update the associated entities.
    public void Add (Layer2 layer) {
-      if (mLayers.FindIndex (a => a.Name == layer.Name) is int idx && idx >= 0) {
+      int idx = mLayers.FindIndex (a => a.Name == layer.Name);
+      if (idx == -1) mLayers.Add (layer);
+      else { 
          Ents.Where (e => e.Layer == mLayers[idx]).ForEach (a => a.Layer = layer);
          mLayers[idx] = layer;
-      } else mLayers.Add (layer);
+      } 
    }
 
    /// <summary>Adds a Block2 to the list of blocks in the drawing</summary>

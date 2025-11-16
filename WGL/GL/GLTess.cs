@@ -193,8 +193,7 @@ public static class BooleanOps {
    /// operation. If the input polys are already reversed, call Union to do the subtraction instead.
    public static List<Poly> Subtract (this ReadOnlySpan<Poly> positive, ReadOnlySpan<Poly> negative) {
       List<Poly> input = [.. positive];
-      for (int i = 0; i < negative.Length; i++)
-         input.Add (negative [i].Reversed ());
+      foreach (var poly in negative) input.Add (poly.Reversed ());
       return Union (input.AsSpan ());
    }
 
@@ -277,7 +276,7 @@ public static class BooleanOps {
          if (poly.Count > 2 || poly.GetBound ().Area > 0.1) mOutput.Add (poly);
       };
       // Callback used to report errors during tesselation (this is very very rare)
-      GLUtessErrorProc TessError => error => Console.WriteLine ("TessError {0}", error);
+      static GLUtessErrorProc TessError => error => Console.WriteLine ("TessError {0}", error);
       // Called to output a new vertex; we handle all cases of triangle, triangle-strip and triangle-fan
       GLUtessVertexDataProc TessVertex => (data, _) => mBuilder.Line (mPts[(int)data]);
 

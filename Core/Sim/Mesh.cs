@@ -74,7 +74,7 @@ public class Mesh3 (ImmutableArray<Mesh3.Node> vertex, ImmutableArray<int> trian
    }
 
    /// <summary>Loads a Mesh from a .mesh file</summary>
-   public unsafe static Mesh3 Load (Stream stm) {
+   public static unsafe Mesh3 Load (Stream stm) {
       using DeflateStream dfs = new (stm, CompressionMode.Decompress, false);
       ByteStm bs = new (dfs.ReadBytes (dfs.ReadInt32 ()));
       int sign = bs.ReadInt32 (), version = bs.ReadByte ();
@@ -100,8 +100,7 @@ public class Mesh3 (ImmutableArray<Mesh3.Node> vertex, ImmutableArray<int> trian
             fixed (void* p = swIdx) bs.Read (p, wires * 2);
             tIdx = [.. stIdx.Select (a => (int)a)];
             ushort prev = 0xffff;
-            for (int j = 0; j < swIdx.Length; j++) {
-               ushort n = swIdx[j];
+            foreach (var n in swIdx) {
                if (prev != 0xffff && n != 0xffff) { wIdx.Add (prev); wIdx.Add (n); }
                prev = n;
             }
@@ -138,7 +137,7 @@ public class Mesh3 (ImmutableArray<Mesh3.Node> vertex, ImmutableArray<int> trian
 
       // Load the array of PointVec
       var nodes = new Node[int.Parse (Line ())];
-      var options = StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries;
+      const StringSplitOptions options = StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries;
       for (int i = 0; i < nodes.Length; i++) {
          double[] a = Line ().Split (',', options).Select (double.Parse).ToArray ();
          nodes[i] = new Node (new (a[0], a[1], a[2]), new Vec3H ((Half)a[3], (Half)a[4], (Half)a[5]));
@@ -160,8 +159,9 @@ public class Mesh3 (ImmutableArray<Mesh3.Node> vertex, ImmutableArray<int> trian
       if (Line () != "EOF") Fatal ();
       return new (nodes.AsIArray (), triangle.AsIArray (), wire.AsIArray ());
 
-      void Fatal () => throw new Exception ("Invalid TMESH file");
+      // Helpers ...........................................
       string Line () => lines[n++];
+      static void Fatal () => throw new Exception ("Invalid TMESH file");
    }
 
    /// <summary>Saves the mesh to a TMesh file.</summary>

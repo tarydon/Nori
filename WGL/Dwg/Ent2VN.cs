@@ -24,13 +24,12 @@ abstract class Ent2VN (Ent2 ent) : VNode (ent) {
 /// <summary>VNode to render a bendline</summary>
 /// A bendline is drawn as a green line using either the Dash2 linetype (+ve bends) or the
 /// DashDotDot linetype (-ve bends)
-class E2BendlineVN (E2Bendline e2b) : Ent2VN (e2b) {
+class E2BendlineVN (E2Bendline mBend) : Ent2VN (mBend) {
    // Draw the actual lines
    public override void Draw () {
       var pts = mBend.Pts.Select (a => (Vec2F)a).ToList ();
       Lux.Lines (pts.AsSpan ());
    }
-   readonly E2Bendline mBend = e2b;
 
    // The child of this node is used to draw the actual bend angle annotation
    public override VNode? GetChild (int n) {

@@ -126,7 +126,7 @@ static class FreeType {
    internal static extern Error NewFace (HLibrary library, string filepathname, int face_index, out HFace aface);
 
    [DllImport (DLL, EntryPoint = "FT_New_Memory_Face", CallingConvention = Cdecl)]
-   internal static extern Error NewFace (HLibrary library, nint file_base, int file_size, int face_index, out HFace aface);
+   internal static extern Error NewFace (HLibrary library, Ptr file_base, int file_size, int face_index, out HFace aface);
 
    [DllImport (DLL, EntryPoint = "FT_Render_Glyph", CallingConvention = Cdecl)]
    internal static extern Error RenderGlyph (IntPtr slot, int render_mode);
@@ -165,7 +165,7 @@ struct Bitmap {
 // Represents a char-map (maps character codes in some encoding to glyph indices)
 [StructLayout (LayoutKind.Sequential)]
 readonly struct CharMap {
-   readonly nint Face;
+   readonly Ptr Face;
    public readonly FTEncoding Encoding;
    readonly ushort PlatformId;
    readonly ushort EncodingId;
@@ -274,7 +274,7 @@ readonly struct Vector26_6 {
 #region class Glyph --------------------------------------------------------------------------------
 /// <summary>Represents a single glyph from a freetype font</summary>
 class Glyph {
-   internal void Update (nint ptrGlyphSlot) {
+   internal void Update (Ptr ptrGlyphSlot) {
       CGlyphSlot data = Marshal.PtrToStructure<CGlyphSlot> (ptrGlyphSlot);
       Bitmap bmp = data.Bitmap;
       GlyphMetrics metrics = data.Metrics;

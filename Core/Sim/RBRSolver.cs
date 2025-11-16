@@ -100,7 +100,7 @@ public class RBRSolver {
          double RHS1 = -mS6 * X71 - S7 * X1 - a71 * c1 - mA12;
          double RHS2 = -S1 - mS6 * Y71 - S7 * Y1;
          A = 2 * mA23 * mA34; B = -2 * mA23 * mS4;
-         D = (mA23 * mA23) + (mA34 * mA34) + (mS4 * mS4) - (RHS1 * RHS1) - (RHS2 * RHS2);  // (11.25)
+         D = mA23 * mA23 + mA34 * mA34 + mS4 * mS4 - RHS1 * RHS1 - RHS2 * RHS2;  // (11.25)
          if (SolveAngleEqn (A, B, D, out double theta3a, out double theta3b)) {
             a.SetTheta (3, theta3a); set[i + 1].CopyTheta (3, a);
          } else
@@ -118,8 +118,8 @@ public class RBRSolver {
          double RHS1 = -mS6 * X71 - S7 * X1 - a71 * c1 - mA12;
          double RHS2 = -S1 - mS6 * Y71 - S7 * Y1;
          double Aa = mA23 + mA34 * c3 - mS4 * s3, Ba = -mA34 * s3 - mS4 * c3, C = -RHS1;  // (11.26)
-         double Da = Ba, E = -Aa, F = -RHS2;
-         if (!Lib.SolveLinearPair (Aa, Ba, C, Da, E, F, out double c2, out double s2)) {
+         double E = -Aa, F = -RHS2;
+         if (!Lib.SolveLinearPair (Aa, Ba, C, Ba, E, F, out double c2, out double s2)) {
             a.OK = set[i + 1].OK = false;
             continue;
          }
@@ -165,11 +165,8 @@ public class RBRSolver {
       }
    }
 
-   static double ACos (double f) {
-      if (f <= -1) return Lib.PI;
-      if (f >= 1) return 0;
-      return Math.Acos (f);
-   }
+   static double ACos (double f) 
+      => f switch { <= -1 => Lib.PI, >= 1 => 0, _ => Math.Acos (f) };
 
    // Solves an angle equation of the form Ac + Bs + D = 0, where c = cos(t) and s = sin(t)
    // See Equations starting (6.194)
