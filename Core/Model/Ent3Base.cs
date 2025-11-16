@@ -149,7 +149,6 @@ public abstract class E3ParaSurface : E3Surface {
 
       // Helpers ...........................................
       void AddTriangle (int a, int b, int c) {
-         while (true) {
             // Take each of the midpoints and see which one has the worst deviation,
             // that will be where we split
             Node na = nodes[a], nb = nodes[b], nc = nodes[c];
@@ -157,34 +156,21 @@ public abstract class E3ParaSurface : E3Surface {
             Point3 p3ab = Evaluate (p2ab), p3bc = Evaluate (p2bc), p3ca = Evaluate (p2ca);
             double dab = Dist (p3ab, na.Pos, nb.Pos), dbc = Dist (p3bc, nb.Pos, nc.Pos), dca = Dist (p3ca, nc.Pos, na.Pos);
 
-            if (dab > tolerance && dbc > tolerance && dca > tolerance) {
-               // Split into 4 triangles
-               int ab = AddNode (p2ab, p3ab), bc = AddNode (p2bc, p3bc), ca = AddNode (p2ca, p3ca);
-               AddTriangle (a, ab, ca); AddTriangle (b, bc, ab); AddTriangle (c, ca, bc);
-               a = ab; b = bc; c = ca;
-               continue;
-            }
-            if (dab >= dbc && dab >= dca && dab > tolerance) {
-               // Try splitting ab
-               int n = AddNode (p2ab, p3ab); AddTriangle (a, n, c);
-               a = n;
-               continue;
-            } 
-            if (dbc >= dab && dbc >= dca && dbc > tolerance) {
-               // Try splitting bc
-               int n = AddNode (p2bc, p3bc); AddTriangle (a, b, n);
-               var a1 = a; a = n; b = c; c = a1;
-               continue;
-            } 
-            if (dca >= dab && dca >= dbc && dca > tolerance) {
-               // Try splitting ca
-               int n = AddNode (p2ca, p3ca); AddTriangle (a, b, n);
-               a = n;
-               continue;
-            }
-            // No splitting required, triangle is flat enough to add
+         if (dab > tolerance && dbc > tolerance && dca > tolerance) {   // Split into 4 triangles
+            int ab = AddNode (p2ab, p3ab), bc = AddNode (p2bc, p3bc), ca = AddNode (p2ca, p3ca);
+            AddTriangle (a, ab, ca); AddTriangle (b, bc, ab); AddTriangle (c, ca, bc);
+            AddTriangle (ab, bc, ca);
+         } else if (dab >= dbc && dab >= dca && dab > tolerance) {   // Try splitting ab
+            int n = AddNode (p2ab, p3ab);
+            AddTriangle (a, n, c); AddTriangle (n, b, c);
+         } else if (dbc >= dab && dbc >= dca && dbc > tolerance) {    // Try splitting bc
+            int n = AddNode (p2bc, p3bc);
+            AddTriangle (a, b, n); AddTriangle (n, c, a);
+         } else if (dca >= dab && dca >= dbc && dca > tolerance) {    // Try splitting ca
+            int n = AddNode (p2ca, p3ca);
+            AddTriangle (a, b, n); AddTriangle (n, b, c);
+         } else {       // No splitting required, triangle is flat enough to add
             triangles.Add (a); triangles.Add (b); triangles.Add (c);
-            break;
          }
       }
 
@@ -199,11 +185,10 @@ public abstract class E3ParaSurface : E3Surface {
          => pt.DistToLine ((Point3)a, (Point3)b);
    }
 
-   struct Node {
-      public Node (Point2 uv, Vec3F pos, Vec3H normal) { UV = uv; Pos = pos; Normal = normal; }
-      public readonly Point2 UV;
-      public readonly Vec3F Pos;
-      public readonly Vec3H Normal;
+   struct Node (Point2 uv, Vec3F pos, Vec3H normal) {
+      public readonly Point2 UV = uv;
+      public readonly Vec3F Pos = pos;
+      public readonly Vec3H Normal = normal;
    }
 }
 #endregion
