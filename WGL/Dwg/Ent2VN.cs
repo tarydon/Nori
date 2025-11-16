@@ -24,6 +24,7 @@ abstract class Ent2VN (Ent2 ent) : VNode (ent) {
 /// <summary>VNode to render a bendline</summary>
 /// A bendline is drawn as a green line using either the Dash2 linetype (+ve bends) or the
 /// DashDotDot linetype (-ve bends)
+[Used]
 class E2BendlineVN (E2Bendline mBend) : Ent2VN (mBend) {
    // Draw the actual lines
    public override void Draw () {
@@ -51,7 +52,7 @@ class E2BendlineVN (E2Bendline mBend) : Ent2VN (mBend) {
       text = mBend.Angle > 0 ? $"+{text}\u00b0" : $"{text}\u00b0";
       for (int i = 0; i < mBend.Pts.Length; i += 2) {
          Point2 pt = mBend.Pts[i].Midpoint (mBend.Pts[i + 1]);
-         Lux.Text2D (text, (Vec2F)pt, ETextAlign.MidCenter, Vec2S.Zero);
+         Lux.Text2D (text, pt, ETextAlign.MidCenter, Vec2S.Zero);
       }
    }
 }
@@ -65,6 +66,7 @@ class E2BendlineVN (E2Bendline mBend) : Ent2VN (mBend) {
 /// - Translation to insertion point
 /// It is important to note that the translation will map the _reference point_ of the block
 /// (which is not necessarily 0,0) to the insertion point of the E2Insert.
+[Used]
 class E2InsertVN (E2Insert e2i) : Ent2VN (e2i) {
    // The only child for the E2Insert is the BlockVN. Since we call BlockVN.For that
    // constructs a shared BlockVN that is used by all the inserts (only the transform distinguishes
@@ -81,6 +83,7 @@ class E2InsertVN (E2Insert e2i) : Ent2VN (e2i) {
 /// Regardless of the type of dimension, it gets 'rendered' into the set of entities called
 /// Ents (those entities will typically contain text, lines, arcs, arrow-heads etc). So all dimension
 /// rendering can be done by this base class
+[Used]
 class E2DimensionVN (E2Dimension e2d) : Ent2VN (e2d) {
    public override VNode? GetChild (int n) {
       Ent2? ent = e2d.Ents.SafeGet (n);
@@ -91,6 +94,7 @@ class E2DimensionVN (E2Dimension e2d) : Ent2VN (e2d) {
 
 #region class E2PolyVN -----------------------------------------------------------------------------
 /// <summary>VNode to render an E2Poly entity</summary>
+[Used]
 class E2PolyVN (E2Poly e2p) : Ent2VN (e2p) {
    public override void Draw () => Lux.Poly (e2p.Poly);
 }
@@ -98,6 +102,7 @@ class E2PolyVN (E2Poly e2p) : Ent2VN (e2p) {
 
 #region class E2SplineVN ---------------------------------------------------------------------------
 /// <summary>VNode to render an E2Spline entity</summary>
+[Used]
 class E2SplineVN (E2Spline e2s) : Ent2VN (e2s) {
    public override void Draw () => Lux.LineStrip (e2s.Pts);
 }
@@ -105,6 +110,7 @@ class E2SplineVN (E2Spline e2s) : Ent2VN (e2s) {
 
 #region class E2TextVN -----------------------------------------------------------------------------
 /// <summary>VNode to render an E2Text entity</summary>
+[Used]
 class E2TextVN (E2Text e2t) : Ent2VN (e2t) {
    public override void Draw () => Lux.Polys (e2t.Polys.AsSpan ());
 }
@@ -112,6 +118,7 @@ class E2TextVN (E2Text e2t) : Ent2VN (e2t) {
 
 #region class E2PointVN ----------------------------------------------------------------------------
 /// <summary>VNode to render an E2Point entity</summary>
+[Used]
 class E2PointVN (E2Point e2p) : Ent2VN (e2p) {
    public override void Draw () => Lux.Points ([e2p.Pt]);
 }
@@ -119,6 +126,7 @@ class E2PointVN (E2Point e2p) : Ent2VN (e2p) {
 
 #region class E2SolidVN ----------------------------------------------------------------------------
 /// <summary>VNode to render an E2Solid entity</summary>
+[Used]
 class E2SolidVN : Ent2VN {
    public E2SolidVN (E2Solid e2p) : base (e2p) {
       mPoints = [.. e2p.Pts.Select (pt => (Vec2F)pt)];

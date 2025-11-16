@@ -3,7 +3,7 @@
 // ║║║║╬║╔╣║ Defines the FreeType class, with P-Invokes into the freetype.dll library
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 namespace Nori.FreeType;
-using static System.Runtime.InteropServices.CallingConvention;
+using static CallingConvention;
 using Ptr = nint;
 
 #region class FreeType -----------------------------------------------------------------------------
@@ -239,11 +239,10 @@ struct CGlyphSlot {
 
 // Represents a 'fixed-point' number (26 bits for integer part, 6 bits for fraction)
 [StructLayout (LayoutKind.Sequential)]
-readonly struct Fix26_6 {
-   public Fix26_6 (double f) => Raw = (int)(f * 64 + 0.5);
-   public readonly double Value => Raw / 64.0;
+readonly struct Fix26_6 (double f) {
+   public double Value => Raw / 64.0;
    public override string ToString () => $"[{Value}]";
-   readonly int Raw;
+   readonly int Raw = (int)(f * 64 + 0.5);
 }
 
 // Represents a set of polylines making up a glyph
@@ -295,9 +294,9 @@ class Glyph {
 
 #region Enumerations -------------------------------------------------------------------------------
 // Handle to the entire freetype library 
-enum HLibrary : ulong { Zero };
+enum HLibrary : ulong { Zero }
 // Handle for a typeface loaded through the library
-enum HFace : ulong { Zero };
+enum HFace : ulong { Zero }
 
 // The various encodings possible for a CharMap
 enum FTEncoding : uint {
@@ -313,6 +312,6 @@ enum FTEncoding : uint {
    AdobeExpert = ('A' << 24 | 'D' << 16 | 'B' << 8 | 'E'),
    AdobeCustom = ('A' << 24 | 'D' << 16 | 'B' << 8 | 'C'),
    AdobeLatin1 = ('l' << 24 | 'a' << 16 | 't' << 8 | '1'),
-   AppleRoman = ('a' << 24 | 'r' << 16 | 'm' << 8 | 'n'),
+   AppleRoman = ('a' << 24 | 'r' << 16 | 'm' << 8 | 'n')
 }
 #endregion

@@ -46,7 +46,7 @@ public abstract class MouseDragger {
    // Properties ---------------------------------------------------------------
    /// <summary>The anchor point is where the mouse was originally clicked (starting the drag)</summary>
    public Vec2S Anchor => mAnchor;
-   Vec2S mAnchor;
+   readonly Vec2S mAnchor;
 
    /// <summary>The location of the previous Move event</summary>
    public Vec2S LastPt => mLast;
@@ -57,8 +57,7 @@ public abstract class MouseDragger {
       if (completed) End (); else Cancel ();
       mObservers?.Dispose ();
    }
-
-   MultiDispose? mObservers;
+   static MultiDispose? mObservers;
 }
 #endregion
 

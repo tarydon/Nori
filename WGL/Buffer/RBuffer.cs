@@ -59,7 +59,7 @@ class RBuffer : IIndexed {
    }
 
    /// <summary>Adds element indices into the Buffer, if we are using indexed-mode drawing</summary>
-   public unsafe int AddIndices (ReadOnlySpan<int> seq) {
+   public int AddIndices (ReadOnlySpan<int> seq) {
       int n = mIndexUsed, c = seq.Length;
       if (mIndexUsed + c > mIndex.Length)
          Array.Resize (ref mIndex, Math.Max (mIndexUsed + c, mIndex.Length * 2));
@@ -88,7 +88,7 @@ class RBuffer : IIndexed {
       if (rb == null) (rb = mBySpec[(int)spec] = All.Alloc ()).VSpec = spec;
       return rb;
    }
-   static RBuffer?[] mBySpec = new RBuffer?[(int)EVertexSpec._Last];
+   static readonly RBuffer?[] mBySpec = new RBuffer?[(int)EVertexSpec._Last];
 
    // Implementation -----------------------------------------------------------
    // Release the VAO after use.

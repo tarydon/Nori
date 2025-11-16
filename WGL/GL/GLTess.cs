@@ -73,11 +73,11 @@ public class Tess2D (List<Point2> pts, IReadOnlyList<int> splits) {
    // Called whenever a new triangle primitive begins
    GLUtessBeginProc TessBegin => type => (mPrimType, mnVerts) = (type, mnTriangles = 0);
    // Called to set the edge flag before outputting a vertex
-   GLUtessEdgeFlagProc TessEdgeFlag => (byte flag) => miNextEdge = flag != 0;
+   GLUtessEdgeFlagProc TessEdgeFlag => flag => miNextEdge = flag != 0;
    // Callback used to report errors during tessellation (this is very very rare)
-   GLUtessErrorProc TessError => (int error) => mError = $"Tesselation error: {error}";
+   GLUtessErrorProc TessError => error => mError = $"Tesselation error: {error}";
    // Called to record triangle indices
-   GLUtessVertexDataProc TessVertex => (nint data, nint another) => {
+   GLUtessVertexDataProc TessVertex => (data, _) => {
       miEdge[mnVerts] = miNextEdge ? EdgeBit : 0;
       mIdx[mnVerts] = (int)data;
       if (++mnVerts == 3) {
@@ -117,7 +117,7 @@ public class Tess2D (List<Point2> pts, IReadOnlyList<int> splits) {
    // Called when a new vertex needs to be generated at an intersection point.
    // The paramter coords contains the location of the new point to be added to the list
    // of points. We must return the index of the newly added point into *pout.
-   unsafe GLUtessCombineProc TessCombine => (double* coords, void** d2, float* d3, int* pout) => {
+   unsafe GLUtessCombineProc TessCombine => (coords, _, _, pout) => {
       *pout = NewVertex (coords[0], coords[1], coords[2]);
 
       // This is called by the combine-callback when it needs to generate new points
@@ -257,7 +257,7 @@ public static class BooleanOps {
       // Called when a new vertex needs to be generated at an intersection point.
       // The paramter coords contains the location of the new point to be added to the list
       // of points. We must return the index of the newly added point into *pout.
-      unsafe GLUtessCombineProc TessCombine => (double* coords, void** d2, float* d3, int* pout) => {
+      unsafe GLUtessCombineProc TessCombine => (coords, _, _, pout) => {
          *pout = NewVertex (coords[0], coords[1]);
 
          // Generates a new vertex or returns an existing (added in a previous Combine call) and

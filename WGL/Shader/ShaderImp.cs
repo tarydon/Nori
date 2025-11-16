@@ -25,7 +25,7 @@ class ShaderImp {
       int cUniforms = GL.GetProgram (Handle, EProgramParam.ActiveUniforms);
       mUniforms = new UniformInfo[cUniforms];
       for (int i = 0; i < cUniforms; i++) {
-         GL.GetActiveUniform (Handle, i, out int size, out var type, out string uname, out int location);
+         GL.GetActiveUniform (Handle, i, out int _, out var type, out string uname, out int location);
          object value = type switch {
             EDataType.Int or EDataType.Sampler2D or EDataType.Sampler2DRect => 0,
             EDataType.Vec2f => new Vec2F (0, 0),
@@ -40,7 +40,7 @@ class ShaderImp {
       }
    }
    // A cache of already compiled individual shaders
-   static Dictionary<string, HShader> sCache = [];
+   static readonly Dictionary<string, HShader> sCache = [];
 
    // Properties ---------------------------------------------------------------
    /// <summary>Enable blending when this program is used</summary>
@@ -146,17 +146,15 @@ class ShaderImp {
 
    // Nested types ------------------------------------------------------------
    /// <summary>Provides information about a Uniform</summary>
-   public class UniformInfo {
-      public UniformInfo (string name, EDataType type, int location, object value)
-         => (Name, Type, Location, Value) = (name, type, location, value);
+   public class UniformInfo (string name, EDataType type, int location, object value) {
       /// <summary>Name of this uniform</summary>
-      public readonly string Name;
+      public readonly string Name = name;
       /// <summary>Data-type of this uniform</summary>
-      public readonly EDataType Type;
+      public readonly EDataType Type = type;
       /// <summary>Shader location for this uniform</summary>
-      public readonly int Location;
+      public readonly int Location = location;
       /// <summary>Last-set value for this uniform</summary>
-      public object Value;
+      public object Value = value;
 
       public override string ToString ()
          => $"Uniform({Location}) {Type} {Name}";
@@ -192,7 +190,7 @@ class ShaderImp {
             var vspec = Enum.Parse<EVertexSpec> (w[2], true);
             bool blending = w[3] == "1", depthtest = w[4] == "1", offset = w[5] == "1";
             var stencil = Enum.Parse<EStencilBehavior> (w[6], true);
-            var programs = w[7].Split ('|').ToArray ();
+            var programs = w[7].Split ('|');
             return new (name, mode, vspec, programs, blending, depthtest, offset, stencil);
          }
       }
@@ -238,7 +236,7 @@ class ShaderImp {
       "Center      xxxxxxxxxx......xxxx......xxxxxxxxxxxxxx......xxxx......xxxx",
       "Border      xxxxxxxxxxxxxxxxx.....xxxxxxxxxxxxxxxxxx........xxxx........",
       "DashDot     xxxxxxxxxxxxxxxxxxxx....xx....xxxxxxxxxxxxxxxxxxxx....xx....",
-      "Continuous  xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "Continuous  xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
    ];
 
    public override string ToString () {
@@ -249,9 +247,9 @@ class ShaderImp {
    }
 
    // Private data -------------------------------------------------------------
-   UniformInfo[] mUniforms;         // Set of uniforms for this program
+   readonly UniformInfo[] mUniforms;         // Set of uniforms for this program
    // Dictionary mapping uniform names to uniform locations
-   Dictionary<string, int> mUniformMap = new (StringComparer.OrdinalIgnoreCase);
+   readonly Dictionary<string, int> mUniformMap = new (StringComparer.OrdinalIgnoreCase);
 }
 #endregion
 
@@ -291,11 +289,11 @@ readonly record struct Attrib (int Dims, EDataType Type, int Size, bool Integral
 
 #region enum EVertexSpec ---------------------------------------------------------------------------
 // The various Vertex specifications used by OpenGL shaders
-enum EVertexSpec { Vec2F, Vec3F, Vec3F_Vec3H, Vec4S_Int, Vec2F_Vec4S_Int, _Last };
+enum EVertexSpec { Vec2F, Vec3F, Vec3F_Vec3H, Vec4S_Int, Vec2F_Vec4S_Int, _Last }
 #endregion
 
 #region enum EStencilBehavior ----------------------------------------------------------------------
 /// <summary>Does this shader have any special behavior related to the stencil-buffer?</summary>
 /// See the TriFanStencil and TriFanCover shaders for more details on this
-enum EStencilBehavior { None, Stencil, Cover };
+enum EStencilBehavior { None, Stencil, Cover }
 #endregion
