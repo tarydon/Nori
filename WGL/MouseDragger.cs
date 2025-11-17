@@ -14,7 +14,7 @@ public abstract class MouseDragger {
    /// - Then, for every drag of the mouse, Move() is called.
    /// - Finally, if the mouse button is released, End() is called (completion!).
    /// - If the ESC key is pressed, or capture is lost, Cancel() is called (cancellation!).
-   public MouseDragger (Vec2S anchor) {
+   protected MouseDragger (Vec2S anchor) {
       mAnchor = mLast = mPt = anchor;
       // If we can't capture the mouse, we're done (no overrides like Start/End etc will be fired)
       if (!HW.CaptureMouse (true)) return;
@@ -46,7 +46,7 @@ public abstract class MouseDragger {
    // Properties ---------------------------------------------------------------
    /// <summary>The anchor point is where the mouse was originally clicked (starting the drag)</summary>
    public Vec2S Anchor => mAnchor;
-   Vec2S mAnchor;
+   readonly Vec2S mAnchor;
 
    /// <summary>The location of the previous Move event</summary>
    public Vec2S LastPt => mLast;
@@ -57,8 +57,7 @@ public abstract class MouseDragger {
       if (completed) End (); else Cancel ();
       mObservers?.Dispose ();
    }
-
-   MultiDispose? mObservers;
+   static MultiDispose? mObservers;
 }
 #endregion
 
@@ -87,14 +86,15 @@ public class SceneManipulator {
    // Start rotating when the left mouse button is clicked (if the current scene is 3D)
    // Start panning when the middle mouse button is clicked
    void OnMouseClick (MouseClickInfo mi) {
-      if (Lux.UIScene is Scene sc) {
+      if (Lux.UIScene is { } sc) {
          if (mi.Button == EMouseButton.Left && sc is Scene3 sc3) {
             if (Lux.Pick (mi.Position) is { } vnode) {
                if (vnode.Obj != null) sc.Picked (vnode.Obj);
             } else
                new SceneRotator (sc3, mi.Position);
          }
-         if (mi.Button == EMouseButton.Middle) new ScenePanner (sc, mi.Position);
+         if (mi.Button == EMouseButton.Middle) 
+            new ScenePanner (sc, mi.Position);
       }
    }
 
@@ -105,12 +105,11 @@ public class SceneManipulator {
 #endregion
 
 #region class SceneRotator -------------------------------------------------------------------------
-/// <summary>MouseDragger widget used to rotate a 3D scene</summary>
-class SceneRotator (Scene3 scene, Vec2S anchor) : MouseDragger (anchor) {
+/// <summary>MouseDragger widget used to rotate a 3D mScene</summary>
+class SceneRotator (Scene3 mScene, Vec2S anchor) : MouseDragger (anchor) {
    // Overrides ----------------------------------------------------------------
    // At start, capture the initial viewpoint of the Scene
    protected override void Start () => (mx0, mz0) = mScene.Viewpoint;
-   readonly Scene3 mScene = scene;
    double mx0, mz0;
 
    // Subsequently, adjust the viewpoint based on the vector from AnchorPt to
@@ -127,12 +126,11 @@ class SceneRotator (Scene3 scene, Vec2S anchor) : MouseDragger (anchor) {
 #endregion
 
 #region class ScenePanner --------------------------------------------------------------------------
-/// <summary>MouseDragger widget used to pan the scene</summary>
-class ScenePanner (Scene scene, Vec2S anchor) : MouseDragger (anchor) {
+/// <summary>MouseDragger widget used to pan the mScene</summary>
+class ScenePanner (Scene mScene, Vec2S anchor) : MouseDragger (anchor) {
    // Overrides ----------------------------------------------------------------
-   // At start, capture the initial pan-vector of the scene
+   // At start, capture the initial pan-vector of the mScene
    protected override void Start () => mPan0 = mScene.PanVector;
-   readonly Scene mScene = scene;
    Vector2 mPan0;
 
    // Subsequently, on Move, adjust the pan vector in OpenGL clip space coordinates

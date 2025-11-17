@@ -4,10 +4,7 @@
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 namespace Nori;
 
-public class MechanismVN : VNode {
-   public MechanismVN (Mechanism mech) : base (mech) => mMech = mech;
-   Mechanism mMech;
-
+public class MechanismVN (Mechanism mMech) : VNode (mMech) {
    public override VNode? GetChild (int n)
       => n < mMech.Children.Count ? new MechanismVN (mMech.Children[n]) : null;
 

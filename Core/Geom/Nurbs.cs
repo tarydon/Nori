@@ -1,38 +1,33 @@
 // ────── ╔╗
-// ╔═╦╦═╦╦╬╣ Nurb.cs
-// ║║║║╬║╔╣║ <<TODO>>
+// ╔═╦╦═╦╦╬╣ Nurbs.cs
+// ║║║║╬║╔╣║ Implements NURBS curves and surfaces
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
+using System.Threading;
 namespace Nori;
 
-#region class Spline -------------------------------------------------------------------------------
-/// <summary>Spline is the abstract base class for Spline2 (2-D) and Spline3 (3-D)</summary>
-/// It implements the code common to 2D and 3D splines - evaluating the NURB basis
-/// functions at a given value of the paramter t.
-public abstract class Spline {
-   protected Spline () => (_val, _left, _right) = (null!, null!, null!);
-
-   public Spline (int cCtrl, ImmutableArray<double> knot, ImmutableArray<double> weight) {
-      (mNodes, Knot, Weight) = (cCtrl, knot, weight);
-      Rational = !(weight.IsEmpty || weight.All (a => a.EQ (1)));
-      if (!Rational) Weight = [];
-      int n = Degree + 1;
-      _val = new double[n]; _left = new double[n]; _right = new double[n];
-   }
+#region class SplineImp-----------------------------------------------------------------------------
+/// <summary>Helper that does basis-function evaluation for spline curves and surfaces</summary>
+/// A NURBS curve contains an embedded SplineImp that holds onto the knot vector and can then 
+/// evaluate the basis functions at a given value of t. A NURBS surface contains two SplineImp,
+/// one along U and one along V - these are used to evalaute the point at a given value of u 
+/// and v
+public class SplineImp {
+   // Constructors -------------------------------------------------------------
+   /// <summary>Construct a SplineImp, given the number of control points and the knot vector</summary>
+   public SplineImp (int cCtrl, ImmutableArray<double> knot) 
+      => (Knot, mNodes) = (knot, cCtrl);
+   SplineImp () => Knot = [];
 
    // Properties ---------------------------------------------------------------
-   /// <summary>The degree of teh spline</summary>
-   /// Note that the ORDER of the spline is DEGREE + 1
+   /// <summary>The degree of the NURBS curve</summary>
    public int Degree => Knot.Length - mNodes - 1;
+   readonly int mNodes;
 
-   /// <summary>The knot vector for this spline</summary>
+   /// <summary>The knot vector</summary>
    public readonly ImmutableArray<double> Knot;
 
-   /// <summary>Is this a rational spline (not all weights are set to 1)</summary>
-   public readonly bool Rational;
-
-   /// <summary>Weights attached to the control points</summary>
-   /// If this array is empty, then this is a non-rational spline (all weights are 1)
-   public readonly ImmutableArray<double> Weight;
+   /// <summary>The order of the NURBS curve</summary>
+   public int Order => Knot.Length - mNodes;
 
    // Methods ------------------------------------------------------------------
    // Computes the basis functions for a given knot value t.
@@ -45,56 +40,82 @@ public abstract class Spline {
    // to multiply each control point by and stores those in the _val array. (Since these
    // are basis functions, the sum of those weights adds up to 1.0). This computation
    // of the basis functions is detailed in Algorithm A2.2 from the "NURBS Book"
-   protected int ComputeBasis (double t) {
-      _val ??= new double[Degree + 1]; _left ??= new double[Degree + 1]; _right ??= new double[Degree + 1];
+   public int ComputeBasis (double t, double[] result, int span = -1) {
+      int order = Knot.Length - mNodes;
+      if (result.Length < order)
+         throw new Exception ($"Result buffer must have length >= {order}");
+      while (mBuffer.Value!.Length < 2 * order) 
+         mBuffer.Value = new double[mBuffer.Value!.Length * 2];
+      Span<double> left = mBuffer.Value.AsSpan (0, order), right = mBuffer.Value.AsSpan (order, order);
+
       // First find the span of interest in which this knot lies
-      int n = mNodes - 1, span = n;
-      if (t < Knot[n + 1]) {
-         int low = Degree, high = n + 1; span = (low + high) / 2;
-         for (; ; ) {
-            if (t < Knot[span]) high = span;
-            else if (t >= Knot[span + 1]) low = span;
-            else break;
-            span = (high + low) / 2;
-            if (high == low) break;
+      if (span == -1) {
+         int n = span = mNodes - 1; 
+         if (t < Knot[n + 1]) {
+            int low = Degree, high = n + 1; span = (low + high) / 2;
+            for (; ; ) {
+               if (t < Knot[span]) high = span;
+               else if (t >= Knot[span + 1]) low = span;
+               else break;
+               span = (high + low) / 2;
+               if (high == low) break;
+            }
          }
       }
 
       // Now, compute the basis functions for this span
-      _val[0] = 1.0;
+      result[0] = 1.0;
       int p = Degree;
       for (int j = 1; j <= p; j++) {
-         _left[j] = t - Knot[span + 1 - j];
-         _right[j] = Knot[span + j] - t;
+         left[j] = t - Knot[span + 1 - j];
+         right[j] = Knot[span + j] - t;
          double saved = 0.0;
          for (int r = 0; r < j; r++) {
-            double temp = _val[r] / (_right[r + 1] + _left[j - r]);
-            _val[r] = saved + _right[r + 1] * temp;
-            saved = _left[j - r] * temp;
+            double temp = result[r] / (right[r + 1] + left[j - r]);
+            result[r] = saved + right[r + 1] * temp;
+            saved = left[j - r] * temp;
          }
-         _val[j] = saved;
+         result[j] = saved;
       }
       return span;
    }
-
-   // Private data -------------------------------------------------------------
-   double[] _left, _right;
-   protected double[] _val;
-   int mNodes;
+   // This buffer is used to maintain the 'left' and 'right' vectors used to compute
+   // the basis functions. Both of these vectors are packed successively into this
+   // mBuffer.
+   // 1. This is a thread-static buffer so we don't allocate a new buffer for each
+   //    evaluate, while retaining thread safety
+   // 2. Placing both the left and right into the same array improves locality of
+   //    reference, and also keeps the number of TLS slots we use as small as possible
+   static readonly ThreadLocal<double[]> mBuffer = new (() => new double[8]);
 }
 #endregion
 
-#region class Spline2
+#region class Spline2 ------------------------------------------------------------------------------
 /// <summary>Implements a 2 dimensional spline</summary>
-public class Spline2 : Spline {
-   Spline2 () { }
-
-   public Spline2 (ImmutableArray<Point2> ctrl, ImmutableArray<double> knot, ImmutableArray<double> weight) : base (ctrl.Length, knot, weight)
-      => Ctrl = ctrl;
+/// This is a generalized spline - any order, rational or irrational
+public class Spline2 {
+   /// <summary>Construct a 2D spline given the control points, knot vector and the weights</summary>
+   public Spline2 (ImmutableArray<Point2> ctrl, ImmutableArray<double> knot, ImmutableArray<double> weight) {
+      Imp = new SplineImp (ctrl.Length, knot);
+      Ctrl = ctrl; Weight = weight;
+      Rational = !(weight.IsEmpty || weight.All (a => a.EQ (1)));
+      if (!Rational) Weight = [];
+   }
+   Spline2 () => Imp = null!;
 
    // Properties ---------------------------------------------------------------
    /// <summary>The set of control points for this Spline</summary>
    public readonly ImmutableArray<Point2> Ctrl;
+
+   /// <summary>The basis-function computer for this Spline</summary>
+   public readonly SplineImp Imp;
+
+   /// <summary>Is this a rational spline (not all weights are set to 1)</summary>
+   public readonly bool Rational;
+
+   /// <summary>Weights attached to the control points</summary>
+   /// If this array is empty, then this is a non-rational spline (all weights are 1)
+   public readonly ImmutableArray<double> Weight;
 
    // Methods ------------------------------------------------------------------
    /// <summary>This discretizes the spline into a set of points (piecewise-linear approximation)</summary>
@@ -105,27 +126,20 @@ public class Spline2 : Spline {
       pts.Clear ();
 
       // Set up for adaptive evaluation. We create a rough linear approximation by evaluating
-      // the spline at an set of equidistant spaced t values (we use Ctrl.Length + 1 values),
-      // and push these values of t (along with their evaluated points) into a stack of Nodes.
-      Stack<Node> eval = [];
-      double start = Knot[0], end = Knot[^1], errSq = error * error;
+      // the spline at each of the unique knot values, and we push these values of t (along with
+      // their evaluated points) into a stack of Nodes
+      var (knots, errSq, eval) = (Imp.Knot, error * error, new Stack<Node> ());
 
       double done = -1;
-      for (int i = 0; i < Knot.Length; i++) {
-         var knot = Knot[i]; if (knot == done) continue;
-         int aa = ComputeBasis (knot);
+      foreach (var knot in knots) {
+         if (knot == done) continue;
          eval.Push (new Node { A = knot, Pt = Evaluate (knot), Level = 0 });
          done = knot;
       }
 
-      //for (int i = Ctrl.Length; i >= 0; i--) { // REMOVETHIS
-      //   double a = ((double)i / Ctrl.Length).Along (start, end);
-      //   eval.Push (new Node { A = a, Pt = Evaluate (a), Level = 0 });
-      //}
-
       // Now the recursive evaluation part - at each iteration of this loop, we pop off two
       // nodes from this stack to see if that linear span needs to be further subdivided.
-      int maxLevel = 5;
+      const int maxLevel = 5;
       while (eval.Count > 1) {
          Node e1 = eval.Pop (), e2 = eval.Peek ();
 
@@ -161,16 +175,19 @@ public class Spline2 : Spline {
 
    /// <summary>Evaluates the spline at a given knot value t</summary>
    public Point2 Evaluate (double t) {
-      if (t <= Knot[0]) return Ctrl[0];
-      if (t >= Knot[^1]) return Ctrl[^1];
-      int span = ComputeBasis (t), p = Degree;
+      if (t <= Imp.Knot[0]) return Ctrl[0];
+      if (t >= Imp.Knot[^1]) return Ctrl[^1];
+      while (mFactor.Value!.Length < Imp.Order) 
+         mFactor.Value = new double[mFactor.Value.Length * 2];
 
+      double[] factor = mFactor.Value;
+      int span = Imp.ComputeBasis (t, factor), p = Imp.Degree;
       double x = 0, y = 0;
       if (Rational) {
          double wsum = 0;
          for (int j = 0; j <= p; j++) {
             int n = span - p + j;
-            double weight = _val[j] * Weight[n];
+            double weight = factor[j] * Weight[n];
             Point2 ctrl = Ctrl[n];
             x += ctrl.X * weight; y += ctrl.Y * weight;
             wsum += weight;
@@ -178,24 +195,29 @@ public class Spline2 : Spline {
          return new (x / wsum, y / wsum);
       } else {
          for (int j = 0; j <= p; j++) {
-            double weight = _val[j];
+            double weight = factor[j];
             Point2 ctrl = Ctrl[span - p + j];
             x += ctrl.X * weight; y += ctrl.Y * weight;
          }
          return new (x, y);
       }
    }
+   // This buffer is used to store the results of the SplineImp.ComputeBasis call.
+   // To avoid allocating a buffer on each Evaluate call, we make this static. 
+   // To then make it thread safe, we mark it as ThreadLocal (we grow this as the 
+   // order of the Spline we're evalauting increases, and never shrink this buffer)
+   static readonly ThreadLocal<double[]> mFactor = new (() => new double[8]);
 
    // Operators ----------------------------------------------------------------
    /// <summary>Creates a new Spline2 by applying the transformation matrix</summary>
    public static Spline2 operator * (Spline2 s, Matrix2 xfm)
-      => new ([.. s.Ctrl.Select (a => a * xfm)], s.Knot, s.Weight);
+      => new ([.. s.Ctrl.Select (a => a * xfm)], s.Imp.Knot, s.Weight);
 
    // Nested types -------------------------------------------------------------
    // Node is an internal struct used during discretization of a spline
    struct Node {
-      public double A;
       public Point2 Pt;
+      public double A;
       public int Level;
    }
 }

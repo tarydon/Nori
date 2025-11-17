@@ -15,11 +15,11 @@ public static partial class Lux {
 
    /// <summary>Subscribe to this to get a FPS (frames-per-second) report each second</summary>
    public static IObservable<int> FPS => mFPS;
-   static Subject<int> mFPS = new ();
+   static readonly Subject<int> mFPS = new ();
 
    /// <summary>Subscribe to this to get statistics after each frame is rendered</summary>
    public static IObservable<Stats> Info => mInfo;
-   static Subject<Stats> mInfo = new ();
+   static readonly Subject<Stats> mInfo = new ();
 
    /// <summary>If set, we are redering a frame for 'picking'</summary>
    public static bool IsPicking => mIsPicking;
@@ -29,8 +29,7 @@ public static partial class Lux {
    public static IObservable<int> OnReady => mOnReady;
    internal static Subject<int> mOnReady = new ();
 
-   /// Sets whether the cursor is visible or not when it is over the panel
-   /// </summary>
+   /// <summary>Sets whether the cursor is visible or not when it is over the panel</summary>
    /// If this is set to false, then the current scene must 'paint' a cursor that follows
    /// the mouse movement
    public static bool CursorVisible { set => Panel.CursorVisible = value; }
@@ -63,7 +62,7 @@ public static partial class Lux {
    }
 
    /// <summary>Subscribe to this to know when the 'View-Bound' changes (view is zoomed, panned or rotated)</summary>
-   static public IObservable<int> ViewBound => mViewBound;
+   public static IObservable<int> ViewBound => mViewBound;
    internal static Subject<int> mViewBound = new ();
 
    /// <summary>The viewport size (in pixels) of the Lux rendering panel</summary>
@@ -107,7 +106,7 @@ public static partial class Lux {
    /// thumbnail, you will keep it alive. In most other case, you will ask for the scene
    /// to be 'detached' after use.
    public static DIBitmap RenderToImage (Scene scene, Vec2S size, DIBitmap.EFormat fmt, bool keepAlive = false) {
-      if (size.X % 4 != 0) throw new ArgumentException ($"Lux.RenderToImage: image width must be a multiple of 4");
+      if (size.X % 4 != 0) throw new ArgumentException ("Lux.RenderToImage: image width must be a multiple of 4");
       var dib =  (DIBitmap)Render (scene, size, ETarget.Image, fmt)!;
       if (!keepAlive) scene.Detach ();
       return dib;
@@ -143,7 +142,7 @@ public static partial class Lux {
       Vec2S vp = mViewport;
       Point3 clip = new (2.0 * pix.X / vp.X - 1, 1.0 - 2.0 * pix.Y / vp.Y, 0);
       clip *= mUIScene.Xfms[0].InvXfm;
-      int d = Lux.PixelScale switch { > 1 => 0, > 0.1 => 1, > 0.01 => 2, > 0.001 => 3, _ => 4 };
+      int d = PixelScale switch { > 1 => 0, > 0.1 => 1, > 0.01 => 2, > 0.001 => 3, _ => 4 };
       clip = new (Math.Round (clip.X, d), Math.Round (clip.Y, d), Math.Round (clip.Z, d));
       return clip;
    }
@@ -174,7 +173,7 @@ public static partial class Lux {
          if (elapsed >= 1.0) {
             // Every 1 second, issue an FPS (frames-per-second) report
             int fps = (int)(mcFPSFrames / elapsed + 0.5);
-            mFPS?.OnNext (fps);
+            mFPS.OnNext (fps);
             (mcFPSFrames, mFPSReportTS) = (0, frameTS);
          }
       }
@@ -224,7 +223,7 @@ public static partial class Lux {
          // and the timer would never fire.
          if (sTimer == null) {
             sTimer = new () { Interval = TimeSpan.FromMilliseconds (40), IsEnabled = true };
-            sTimer.Tick += (s, e) => Redraw ();
+            sTimer.Tick += (_, _) => Redraw ();
          }
          // Issue one redraw to prime things off
          sTimer.Start ();
@@ -261,7 +260,7 @@ public static partial class Lux {
       mNodeStack.Push ((mVNode, mChanged));
       (mVNode, mChanged) = (node, ELuxAttr.None);
    }
-   static Stack<(VNode?, ELuxAttr)> mNodeStack = [];
+   static readonly Stack<(VNode?, ELuxAttr)> mNodeStack = [];
 
    /// <summary>Called when a node is finished drawing</summary>
    internal static void EndNode () {
@@ -330,6 +329,6 @@ public static partial class Lux {
       /// <summary>Number of vertices drawn</summary>
       public int VertsDrawn => RBatch.mVertsDrawn;
    }
-   static Stats sStats = new ();
+   static readonly Stats sStats = new ();
 }
 #endregion

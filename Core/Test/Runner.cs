@@ -197,6 +197,7 @@ public static class TestRunner {
       var files = c.Files.Where (Passes).ToList ();
       c.SetFilesOfInterest (files);
 
+      // Helpers ...........................................
       static bool Passes (string file) {
          if (file.EndsWith (".g.cs")) return false;
          file = file.Replace ('\\', '/');

@@ -46,8 +46,8 @@ public class CurlWriter {
                   case ECurlTactic.ByName: af.WriteByName (B, value); break;
                   default:
                      if (af.FieldType.Kind == EAuTypeKind.Primitive) {
-                        if (af.IsAngle) value = ((double)value!).R2D ();
-                        af.FieldType.WritePrimitive (B, value!);
+                        if (af.IsAngle) value = ((double)value).R2D ();
+                        af.FieldType.WritePrimitive (B, value);
                      } else
                         Write (value, af.FieldType);
                      break;

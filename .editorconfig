@@ -90,7 +90,7 @@ dotnet_diagnostic.CA1401.severity = None      # P/Invoke method should not be vi
 dotnet_diagnostic.CA1816.severity = None      # Add GC.SuppressFinalize in a non-sealed class implementing IDisposable
 dotnet_diagnostic.CA1822.severity = None      # Member does not access instance data and can be marked static
 dotnet_diagnostic.CA2101.severity = None      # Specify marshalling for P/Invoke string arguments
-dotnet_diagnostic.CA2211.severity = None      # Non-constant fields should not be visible 
+dotnet_diagnostic.CA2211.severity = None      # Non-constant fields should not be visible
 dotnet_diagnostic.CA2231.severity = None      # Implement the equality operators, and make their behavior same as Equals
 dotnet_diagnostic.CA2245.severity = None      # Property should not be assigned to itself
 
@@ -99,3 +99,6 @@ dotnet_diagnostic.IDE0058.severity = None     # Expression value is never used
 dotnet_diagnostic.IDE0040.severity = None     # Accessibilty modifier required
 dotnet_diagnostic.IDE0008.severity = None     # Use explicit type instead of var
 dotnet_diagnostic.IDE0022.severity = None     # Use block body for methods
+
+# Resharper ----------------------------------------------------------
+resharper_separate_local_functions_with_jump_statement_highlighting = none

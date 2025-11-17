@@ -8,8 +8,7 @@ namespace Nori;
 /// <summary>VNode that renders an entire drawing</summary>
 public class Dwg2VN : VNode {
    // Constructor --------------------------------------------------------------
-   public Dwg2VN (Dwg2 dwg) : base (dwg) { mDwg = dwg; ChildSource = mDwg.Ents; }
-   readonly Dwg2 mDwg;
+   public Dwg2VN (Dwg2 dwg) : base (dwg) => ChildSource = dwg.Ents; 
 }
 #endregion
 
@@ -55,7 +54,7 @@ public class DwgFillVN : VNode {
       switch (ch.Action) {
          case ListChange.E.Added:
          case ListChange.E.Removing:
-            if (mDwg.Ents[ch.Index] is E2Poly p && p.Poly.IsClosed) Redraw ();
+            if (mDwg.Ents[ch.Index] is E2Poly { Poly.IsClosed: true }) Redraw ();
             break;
          case ListChange.E.Clearing: Redraw (); break;
          default: throw new BadCaseException (ch.Action);

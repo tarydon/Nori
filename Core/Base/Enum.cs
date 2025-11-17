@@ -12,7 +12,7 @@ public enum EAxis { X, Y, Z }
 public enum EDir { E, N, W, S }
 
 /// <summary>Types of joints used in a mechanism</summary>
-public enum EJoint { None, Translate, Rotate };
+public enum EJoint { None, Translate, Rotate }
 
 /// <summary>Different linetypes (supported by the Pix renderer, PDF writer etc)</summary>
 public enum ELineType { Continuous, Dot, Dash, DashDot, DashDotDot, Center, Border, Hidden, Dash2, Phantom }

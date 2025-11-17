@@ -6,7 +6,7 @@ using Nori.STEP;
 namespace Nori;
 
 partial class STEPReader {
-   public Model3 Build () {
+   public Model3 Build () {       
       foreach (var m in D.OfType<Manifold> ()) Process (m);
       return mModel;
    }
@@ -69,7 +69,7 @@ partial class STEPReader {
          Point3 start = GetPoint (ec.Start), end = GetPoint (ec.End);
          if (!oe.Dir) (start, end) = (end, start);
          Edge3 edge = D[ec.Basis] switch {
-            Line line => new Line3 (oe.Edge, start, end),
+            Line => new Line3 (oe.Edge, start, end),
             Circle circle => MakeArc (oe.Edge, circle, start, end, !(!ec.SameSense ^ !oe.Dir)),
             _ => throw new BadCaseException (ec.Basis)
          };
@@ -109,11 +109,11 @@ partial class STEPReader {
          };
          contours.Add (c);
       }
-      Ent3? ent = D[a.Face] switch {
+      Ent3 ent = D[a.Face] switch {
          Plane plane => MakePlane (a.Id, plane, contours, a.Dir),
          Cylinder cylinder => MakeCylinder (a.Id, cylinder, contours, a.Dir),
          _ => throw new BadCaseException (a.Face)
       };
-      if (ent != null) mModel.Ents.Add (ent);
+      mModel.Ents.Add (ent);
    }
 }

@@ -14,7 +14,7 @@ class AdvancedFace (int[] contours, int face, bool dir) : Entity {
    public readonly bool Dir = dir;
 }
 
-class AdvancedBRepShapeRepr (int[] items, int context) : ShapeRepr (items, context) { }
+class AdvancedBRepShapeRepr (int[] items, int context) : ShapeRepr (items, context);
 
 class BSplineCurve (int degree, int[] pts, string curveform, bool closed, bool intersect) : Entity {
    public readonly int Degree = degree;
@@ -99,7 +99,7 @@ class Cylinder (int coordsys, double radius) : ElementarySurface (coordsys) {
    public readonly double Radius = radius;
 }
 
-class DefinitionalRepr (int[] items, int context) : Representation (items, context) { }
+class DefinitionalRepr (int[] items, int context) : Representation (items, context);
 
 class Direction (Vector3 vec) : Entity {
    public readonly Vector3 Vec = vec;
@@ -140,14 +140,14 @@ class Manifold (int outer) : Entity {
    public readonly int Outer = outer;
 }
 
-class ManifoldSurfaceShapeRepr (int[] items, int context) : ShapeRepr (items, context) { }
+class ManifoldSurfaceShapeRepr (int[] items, int context) : ShapeRepr (items, context);
 
 class OrientedEdge (int edge, bool dir) : Entity {
    public readonly int Edge = edge;
    public readonly bool Dir = dir;     // If false, the OrientedEdge is the flip of the underlying Edge
 }
 
-class Plane (int coordsys) : ElementarySurface (coordsys) { }
+class Plane (int coordsys) : ElementarySurface (coordsys);
 
 class PCurve (int curve, int definition) : Entity {
    public readonly int Curve = curve;
@@ -163,7 +163,7 @@ class Representation (int[] items, int context) : Entity {
    public readonly int Context = context;
 }
 
-class ShapeRepr (int[] items, int context) : Representation (items, context) { }
+class ShapeRepr (int[] items, int context) : Representation (items, context);
 
 class ShapeRepRelationship (int rep1, int rep2) : Entity {
    public readonly int Rep1 = rep1;
@@ -174,7 +174,7 @@ class ShellBasedSurfaceModel (int[] shells) : Entity {
    public readonly int[] Shells = shells;
 }
 
-class Surface () : Entity { }
+class Surface : Entity;
 
 class Toroid (int coordsys, double major, double minor) : ElementarySurface (coordsys) {
    public readonly double MajorRadius = major;

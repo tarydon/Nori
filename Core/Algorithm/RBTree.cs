@@ -219,24 +219,32 @@ public partial class RBTree<TVal, TKey> : IEnumerable<TVal> where TKey : ICompar
    // Finds the index of the smallest key that is more than or equal to given key,
    // in the given subtree (returns 0 if none such found)
    int FindCeiling (int x, TKey key) {
-      if (x == 0) return 0;
-      ref readonly Node node = ref mA[x];
-      switch (key.CompareTo (mKeyer (node.Value))) {
-         case 0: return x;
-         case > 0: return FindCeiling (node.Right, key);
-         default: int t = FindCeiling (node.Left, key); return t > 0 ? t : x;
+      while (true) {
+         if (x == 0) return 0;
+         ref readonly Node node = ref mA[x];
+         switch (key.CompareTo (mKeyer (node.Value))) {
+            case 0: return x;
+            case > 0: x = node.Right; continue;
+            default:
+               int t = FindCeiling (node.Left, key);
+               return t > 0 ? t : x;
+         }
       }
    }
 
    // Finds the index of the largest key that is less than or equal to given key,
    // in the given subtree (returns 0 if none such found)
    int FindFloor (int x, TKey key) {
-      if (x == 0) return 0;
-      ref readonly Node node = ref mA[x];
-      switch (key.CompareTo (mKeyer (node.Value))) {
-         case 0: return x;
-         case < 0: return FindFloor (node.Left, key);
-         default: int t = FindFloor (node.Right, key); return t > 0 ? t : x;
+      while (true) {
+         if (x == 0) return 0;
+         ref readonly Node node = ref mA[x];
+         switch (key.CompareTo (mKeyer (node.Value))) {
+            case 0: return x; 
+            case < 0: x = node.Left; continue;
+            default:
+               int t = FindFloor (node.Right, key);
+               return t > 0 ? t : x;
+         }
       }
    }
 

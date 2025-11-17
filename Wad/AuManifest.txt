@@ -31,10 +31,10 @@ FileGeometry
   File Shift -Rotate
 E2Bendline
   ^Dwg Angle KFactor Radius Pts Thickness
-Spline
-  Nodes Rational Knot Weight
 Spline2
-  Ctrl
+  Imp Ctrl Rational Weight
+SplineImp
+  Nodes Knot
 Model3
   Ents Bound
 Ent3

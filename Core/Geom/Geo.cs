@@ -31,7 +31,7 @@ public static class Geo {
    /// </code>
    public static ReadOnlySpan<Point2> CircleXCircle (Point2 c1, double r1, Point2 c2, double r2, Span<Point2> buffer) {
       double R = c1.DistTo (c2);
-      if (R.IsZero ()) return buffer[0..0];     // Circles are concentric
+      if (R.IsZero ()) return buffer[..0];     // Circles are concentric
       double R1Sq = r1 * r1, R2Sq = r2 * r2, RSq = R * R, Rp4 = RSq * RSq;
 
       // The equation shown in the figure has 3 terms (each with an X and Y component in
@@ -50,11 +50,11 @@ public static class Geo {
       // If the multiplicand is 0, then the two intersection points merge into one (the
       // two circles are touching tangentially), and we can just return the one intersection
       // point as v1 + v2 (the v3 component gets multiplied by zero)
-      if (Abs (f3Sq) < 0.0000000001) { buffer[0] = (Point2)(v1 + v2); return buffer[0..1]; }
+      if (Abs (f3Sq) < 0.0000000001) { buffer[0] = (Point2)(v1 + v2); return buffer[..1]; }
 
       // If the square of the 3rd term multiplicand is negative, there are no solutions
       // (the circles don't intersect at all), and we return zero intersection points
-      if (f3Sq < 0) return buffer[0..0];
+      if (f3Sq < 0) return buffer[..0];
 
       // Otherwise, this is the most general case and there are 2 intersection points that
       // we return here as (v1 + v2) + v3, and (v1 + v2) - v3:
@@ -62,7 +62,7 @@ public static class Geo {
       Vector2 v3 = new ((c2.Y - c1.Y) * f3, (c1.X - c2.X) * f3);
       buffer[0] = (Point2)(v1 + v2 + v3); buffer[1] = (Point2)(v1 + v2 - v3);
       // Return a slice of the input buffer with exactly 2 results in it
-      return buffer[0..2];
+      return buffer[..2];
    }
 
    /// <summary>Returns the intersections between a circle and a line (0, 1, or 2 points)</summary>
@@ -89,7 +89,7 @@ public static class Geo {
       if (det.IsZero ()) {
          double t = -B / (2 * A);
          buffer[0] = new (p1.X + t * dx, p1.Y + t * dy);
-         return buffer[0..1];
+         return buffer[..1];
       } else if (det > 0) {
          A *= 2;
          double sdet = Sqrt (det);
@@ -97,7 +97,7 @@ public static class Geo {
          buffer[0] = new (p1.X + t * dx, p1.Y + t * dy);
          t = (-B - sdet) / A;
          buffer[1] = new (p1.X + t * dx, p1.Y + t * dy);
-         return buffer[0..2];
+         return buffer[..2];
       } else
          return [];
    }
@@ -112,7 +112,7 @@ public static class Geo {
       return pts.Length switch {
          0 => Point2.Nil,
          1 => pts[0],
-         _ => pts[0].DistToSq (close) < pts[1].DistToSq (close) ? pts[0] : pts[1],
+         _ => pts[0].DistToSq (close) < pts[1].DistToSq (close) ? pts[0] : pts[1]
       };
    }
 
@@ -133,7 +133,7 @@ public static class Geo {
       if (P1.IsNil) (P1, Q1) = GetBisector (a, b, e, f, pick1, pick3);
       if (P2.IsNil) (P2, Q2) = GetBisector (a, b, e, f, pick1, pick3);
 
-      var center = Geo.LineXLine (P1, Q1, P2, Q2);
+      var center = LineXLine (P1, Q1, P2, Q2);
       return (center, center.IsNil ? 0 : center.DistToLine (e, f));
    }
 
@@ -146,7 +146,7 @@ public static class Geo {
       Vector2 perp1 = (b - a).Perpendicular (), perp2 = (c - b).Perpendicular ();
 
       // The center is the intersection of these two perpendicular bisectors
-      return Nori.Geo.LineXLine (mid1, mid1 + perp1, mid2, mid2 + perp2);
+      return LineXLine (mid1, mid1 + perp1, mid2, mid2 + perp2);
    }
 
    /// <summary>Returns the angle-bisector of the lines a-b and c-d</summary>
@@ -158,7 +158,7 @@ public static class Geo {
    ///
    /// If the lines ab and cd do not intersect, this returns the tuple (Nil, Nil)
    public static (Point2 P, Point2 Q) GetBisector (Point2 a, Point2 b, Point2 c, Point2 d, Point2 pick1, Point2 pick2) {
-      Point2 P = Nori.Geo.LineXLine (a, b, c, d);
+      Point2 P = LineXLine (a, b, c, d);
       if (P.IsNil) return (P, Point2.Nil);// If lines don't intersect, return invalid result
       // Build direction vectors. Note that these have to be normalized, since
       // we are going to _average_ them below and that will work only if they are

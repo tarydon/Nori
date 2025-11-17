@@ -2,7 +2,6 @@
 // ╔═╦╦═╦╦╬╣ STPReader.cs
 // ║║║║╬║╔╣║ <<TODO>>
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
-using Nori;
 using Nori.STEP;
 namespace Nori;
 
@@ -12,16 +11,16 @@ public partial class STEPReader {
    int N;
 
    public void Parse () {
-      N = S.IndexOf ("DATA;") + 5; Assert (N > 10);
+      N = S.IndexOf ("DATA;", StringComparison.Ordinal) + 5; Assert (N > 10);
       // The following loop loads all the entities one by one
       ReadOnlySpan<char> endsec = "ENDSEC;";
       for (; ; ) {
          if (RTryMatch ('#')) REntity ();
-         else if (MemoryExtensions.Equals (S.AsSpan (N, 7), endsec, StringComparison.Ordinal)) break;
-         else Fatal ($"Unexpected end of file");
+         else if (S.AsSpan (N, 7).Equals (endsec, StringComparison.Ordinal)) break;
+         else Fatal ("Unexpected end of file");
       }
-      if (D.OfType<Manifold> ().FirstOrDefault () is Manifold m) Check (m);
-      else if (D.OfType<ShellBasedSurfaceModel> ().FirstOrDefault () is ShellBasedSurfaceModel sb) Check (sb);
+      if (D.OfType<Manifold> ().FirstOrDefault () is { } m) Check (m);
+      else if (D.OfType<ShellBasedSurfaceModel> ().FirstOrDefault () is { } sb) Check (sb);
       else Console.WriteLine ("No top level entity found");
    }
 
@@ -69,7 +68,7 @@ public partial class STEPReader {
             "TOROIDAL_SURFACE" => RToroid (),
             "VECTOR" => RVector (),
             "VERTEX_POINT" => RVertexPoint (),
-            _ => null,
+            _ => null
          };
          if (ent == null) {
             if (mUnsupported.Add (kw) && !Ignore.Contains (kw))

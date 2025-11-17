@@ -112,8 +112,10 @@ public readonly struct Mat4F {
 
    /// <summary>Returns true if two Mat4f are exactly the same</summary>
    public bool EQ (ref Mat4F b)
-      => M11 == b.M11 && M12 == b.M12 && M13 == b.M13 && M14 == b.M14 && M21 == b.M21 && M22 == b.M22 && M23 == b.M23 && M24 == b.M24
-      && M31 == b.M31 && M32 == b.M32 && M33 == b.M33 && M34 == b.M34 && X == b.X && Y == b.Y && Z == b.Z && M44 == b.M44;
+      => M11 == b.M11 && M12 == b.M12 && M13 == b.M13 && M14 == b.M14 && 
+         M21 == b.M21 && M22 == b.M22 && M23 == b.M23 && M24 == b.M24 && 
+         M31 == b.M31 && M32 == b.M32 && M33 == b.M33 && M34 == b.M34 && 
+         X == b.X && Y == b.Y && Z == b.Z && M44 == b.M44;
 }
 
 /// <summary>An axis-aligned pixel-rectangle (components are shorts)</summary>

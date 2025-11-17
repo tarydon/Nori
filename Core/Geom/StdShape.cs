@@ -12,7 +12,7 @@ public enum EShape {
    Hexagon, Octagon, ArcSlot, SquareArcslot, HShape, FlatKeyhole, DoubleFlatKeyhole,
    FlatKeyslot, Keyslot, DoubleKeyslot, QuadInfillet, RectInfillet, TwoRoundDiamond,
    IsoTriangle, RoundIsoTriangle, OneRoundIsoTriangle, OneRoundRightTriangle,
-   QuadFlatKeyhole,
+   QuadFlatKeyhole
 }
 #endregion
 
@@ -66,16 +66,16 @@ public static class ShapeRecognizer {
             if (IsSingleD (poly, ref desc)) return desc;
             break;
          case 4:
-            if (IsRect (poly, ref desc)) return desc;
-            if (IsObround (poly, ref desc)) return desc;
-            if (IsDoubleD (poly, ref desc)) return desc;
-            if (IsParallelogram (poly, ref desc)) return desc;
-            if (IsTrapezoid (poly, ref desc)) return desc;
+            if (IsRect (poly, ref desc) || 
+                IsObround (poly, ref desc) || 
+                IsDoubleD (poly, ref desc) || 
+                IsParallelogram (poly, ref desc) || 
+                IsTrapezoid (poly, ref desc)) return desc;
             break;
          case 8:
-            if (IsRoundRect (poly, ref desc)) return desc;
-            if (IsQuadInFillet (poly, ref desc)) return desc;
-            if (IsChamferedRect (poly, ref desc)) return desc;
+            if (IsRoundRect (poly, ref desc) || 
+                IsQuadInFillet (poly, ref desc) || 
+                IsChamferedRect (poly, ref desc)) return desc;
             break;
       }
       return ShapeDesc.None;

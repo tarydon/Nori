@@ -95,7 +95,7 @@ public class Matrix2 (double m11, double m12, double m21, double m22, double x, 
 
 #region class Matrix3 ------------------------------------------------------------------------------
 /// <summary>Matrix working in 3 dimensions</summary>
-public class Matrix3 {
+public class Matrix3 : IEQuable<Matrix3> {
    // Constructors -------------------------------------------------------------
    /// <summary>Construct a Matrix3 given the 12 components</summary>
    /// Since we use this only to support affine matrices, some of the 4x4 components are
@@ -224,13 +224,25 @@ public class Matrix3 {
    // Methods ------------------------------------------------------------------
    public Matrix3 ExtractRotation () => new (M11, M12, M13, M21, M22, M23, M31, M32, M33, 0, 0, 0);
 
+   public bool EQ (Matrix3 b)
+      => M11.EQ (b.M11) && M12.EQ (b.M12) && M13.EQ (b.M13)
+      && M21.EQ (b.M21) && M22.EQ (b.M22) && M23.EQ (b.M23)
+      && M31.EQ (b.M31) && M32.EQ (b.M32) && M33.EQ (b.M33)
+      && DX.EQ (b.DX) && DY.EQ (b.DY) && DZ.EQ (b.DZ);
+
    /// <summary>Composes a matrix to go FROM the given coordinate system to the World</summary>
    public static Matrix3 From (in CoordSystem cs) {
-      GetRotations (cs.VecX, cs.VecY, out double xRot, out double yRot, out double zRot);
-      return Translation (-(Vector3)cs.Org)
-           * Rotation (Vector3.YAxis, yRot)
-           * Rotation (Vector3.ZAxis, zRot)
-           * Rotation (Vector3.XAxis, xRot);
+      Vector3 x = cs.VecX, y = cs.VecY, z = cs.VecZ;
+      // Compute translation part (negative dot products)
+      var tx = -(x.X * cs.Org.X + x.Y * cs.Org.Y + x.Z * cs.Org.Z);
+      var ty = -(y.X * cs.Org.X + y.Y * cs.Org.Y + y.Z * cs.Org.Z);
+      var tz = -(z.X * cs.Org.X + z.Y * cs.Org.Y + z.Z * cs.Org.Z);
+      return new Matrix3 (
+         x.X, y.X, z.X,
+         x.Y, y.Y, z.Y,
+         x.Z, y.Z, z.Z,
+         tx, ty, tz
+      );
    }
 
    /// <summary>Returns the inverse of this matrix</summary>
@@ -260,11 +272,13 @@ public class Matrix3 {
 
    /// <summary>Composes a matrix to go TO the given coordinate-system from the World</summary>
    public static Matrix3 To (in CoordSystem cs) {
-      GetRotations (cs.VecX, cs.VecY, out double xRot, out double yRot, out double zRot);
-      return Rotation (Vector3.XAxis, -xRot)
-           * Rotation (Vector3.ZAxis, -zRot)
-           * Rotation (Vector3.YAxis, -yRot)
-           * Translation ((Vector3)cs.Org);
+      Vector3 x = cs.VecX, y = cs.VecY, z = cs.VecZ;
+      return new Matrix3 (
+         x.X, x.Y, x.Z,
+         y.X, y.Y, y.Z,
+         z.X, z.Y, z.Z,
+         cs.Org.X, cs.Org.Y, cs.Org.Z
+      );
    }
 
    // Operators ----------------------------------------------------------------
@@ -352,28 +366,6 @@ public class Matrix3 {
       double m31, double m32, double m33, double dx, double dy, double dz, EFlag flags) {
       M11 = m11; M12 = m12; M13 = m13; M21 = m21; M22 = m22; M23 = m23;
       M31 = m31; M32 = m32; M33 = m33; DX = dx; DY = dy; DZ = dz; Flags = flags;
-   }
-
-   /// <summary>Given an arbitrary vector vx and another one vy, computes rotations to align them to a coordinate system</summary>
-   /// This computes the xRot, yRot, zRot which must be applied in Y-Z-X order to align the
-   /// given vectors with the reference system; vx goes to X vector, vy goes to the +ve XY plane.
-   /// If vx and vy were mutually perpendicular to start with, vy will then go to the Y vector
-   static void GetRotations (Vector3 vx, Vector3 vy, out double xRot, out double yRot, out double zRot) {
-      xRot = yRot = zRot = 0;
-      // Rotate about Y to bring pb into the XY plane (pb.Z = 0)
-      if (Abs (vx.Z) > 1e-12 || Abs (vx.X) > 1e-12) {
-         yRot = Lib.HalfPI - Atan2 (vx.X, vx.Z);
-         vx = vx.Rotated (EAxis.Y, yRot); vy = vy.Rotated (EAxis.Y, yRot);
-      }
-      // Next, rotate about Z to align pb with the positive X axis (pb.Y = 0)
-      if (Abs (vx.Y) > 1e-12 || Abs (vx.X) > 1e-12) {
-         zRot = -Atan2 (vx.Y, vx.X);
-         vy = vy.Rotated (EAxis.Z, zRot);
-      }
-      // Next, rotate about X to align p3 with the +ve Y plane
-      if (Abs (vy.Z) > 1e-12 || Abs (vy.Y) > 1e-12) {
-         xRot = -Atan2 (vy.Z, vy.Y);
-      }
    }
 
    // Helper used to compute the flags

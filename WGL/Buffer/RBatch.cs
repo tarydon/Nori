@@ -202,7 +202,7 @@ struct RBatch : IIndexed {
       // Update stats
       mDrawCalls++;
    }
-   static internal int mDrawCalls, mVertsDrawn;
+   internal static int mDrawCalls, mVertsDrawn;
 
    // This is called to sort the RBatches before we draw them.
    // This sorts the batches with these keys (in descending order of importance):
@@ -249,7 +249,7 @@ struct RBatch : IIndexed {
       }
    }
 
-   public override readonly string ToString () {
+   public readonly override string ToString () {
       if (Count == 0) return "Empty";
       else {
          var shader = Shader.Get (NShader);
@@ -271,7 +271,7 @@ struct RBatch : IIndexed {
          if (n != 0) return n;
          return ra.Offset - rb.Offset;
       }
-      internal static RBatchCompare It = new ();
+      internal static readonly RBatchCompare It = new ();
    }
 }
 #endregion
