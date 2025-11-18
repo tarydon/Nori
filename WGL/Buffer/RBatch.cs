@@ -264,7 +264,11 @@ struct RBatch : IIndexed {
       public int Compare ((int B, ushort U) ub0, (int B, ushort U) ub1) {
          ref RBatch ra = ref mAll[ub0.B], rb = ref mAll[ub1.B];
          int n = ra.ZLevel - rb.ZLevel; if (n != 0) return n;
-         n = ra.NShader - rb.NShader; if (n != 0) return n;
+         if (ra.NShader != rb.NShader) {
+            Shader s1 = Shader.Get (ra.NShader), s2 = Shader.Get (rb.NShader);
+            return s1.SortCode - s2.SortCode;
+         }
+         if (n != 0) return n;
          n = ra.NBuffer - rb.NBuffer; if (n != 0) return n;
          var shader = Shader.Get (ra.NShader);
          n = shader.OrderUniforms (ub0.U, ub1.U);
