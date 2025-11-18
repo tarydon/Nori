@@ -10,9 +10,9 @@ namespace Nori;
 class ShaderImp {
    // Constructor --------------------------------------------------------------
    /// <summary>Construct a pipeline given the code for the individual shaders</summary>
-   ShaderImp (string name, EMode mode, EVertexSpec vspec, string[] code, bool blend, bool depthTest, bool polyOffset, EStencilBehavior stencil) {
-      (Name, Mode, VSpec, Blending, DepthTest, PolygonOffset, StencilBehavior, Handle)
-         = (name, mode, vspec, blend, depthTest, polyOffset, stencil, GL.CreateProgram ());
+   ShaderImp (string name, int sort, EMode mode, EVertexSpec vspec, string[] code, bool blend, bool depthTest, bool polyOffset, EStencilBehavior stencil) {
+      (Name, SortCode, Mode, VSpec, Blending, DepthTest, PolygonOffset, StencilBehavior, Handle)
+         = (name, sort, mode, vspec, blend, depthTest, polyOffset, stencil, GL.CreateProgram ());
       code.ForEach (a => GL.AttachShader (Handle, sCache.Get (a, CompileShader)));
       GL.LinkProgram (Handle);
       string log2 = GL.GetProgramInfoLog (Handle);
@@ -57,6 +57,8 @@ class ShaderImp {
    public readonly EStencilBehavior StencilBehavior;
    /// <summary>Enable polygon-offset-fill when this program is used</summary>
    public readonly bool PolygonOffset;
+   /// <summary>The sorting code for this (determines order in which batches are dispatched)</summary>
+   public readonly int SortCode;
    /// <summary>The vertex-specification for this shader</summary>
    public readonly EVertexSpec VSpec;
 
@@ -182,16 +184,17 @@ class ShaderImp {
    static ShaderImp Load ([CallerMemberName] string name = "") {
       sIndex ??= Lib.ReadLines ("nori:GL/Shader/Index.txt");
       // Each line in the index.txt contains these:
-      // 0:Name  1:Mode  2:VSpec  3:Blending  4:DepthTest  5:PolygonOffset  6:StencilBehavior  7:Programs
+      // 0:Name  1:SortCode  2:Mode  3:VSpec  4:Blending  5:DepthTest  6:PolygonOffset  7:StencilBehavior  8:Programs
       foreach (var line in sIndex) {
          var w = line.Split (' ', StringSplitOptions.RemoveEmptyEntries);
-         if (w.Length >= 8 && w[0] == name) {
-            var mode = Enum.Parse<EMode> (w[1], true);
-            var vspec = Enum.Parse<EVertexSpec> (w[2], true);
-            bool blending = w[3] == "1", depthtest = w[4] == "1", offset = w[5] == "1";
-            var stencil = Enum.Parse<EStencilBehavior> (w[6], true);
-            var programs = w[7].Split ('|');
-            return new (name, mode, vspec, programs, blending, depthtest, offset, stencil);
+         if (w.Length >= 9 && w[0] == name) {
+            var sort = int.Parse (w[1]);
+            var mode = Enum.Parse<EMode> (w[2], true);
+            var vspec = Enum.Parse<EVertexSpec> (w[3], true);
+            bool blending = w[4] == "1", depthtest = w[5] == "1", offset = w[6] == "1";
+            var stencil = Enum.Parse<EStencilBehavior> (w[7], true);
+            var programs = w[8].Split ('|');
+            return new (name, sort, mode, vspec, programs, blending, depthtest, offset, stencil);
          }
       }
       throw new NotImplementedException ($"Shader {name} not found in Shader/Index.txt");
