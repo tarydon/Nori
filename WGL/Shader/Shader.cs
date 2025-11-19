@@ -14,7 +14,9 @@ abstract class Shader {
    /// <summary>Construct a ShaderImp given the underlying ShaderImp</summary>
    protected Shader (ShaderImp program) {
       CBVertex = Attrib.GetSize ((Pgm = program).VSpec);
-      Idx = (ushort)mAll.Count; mAll.Add (this);
+      SortCode = Pgm.SortCode;
+      Idx = (ushort)mAll.Count; 
+      mAll.Add (this);
    }
 
    // Properties --------------------l-------------------------------------------
@@ -26,6 +28,9 @@ abstract class Shader {
 
    /// <summary>The underlying shader program this wraps around</summary>
    public readonly ShaderImp Pgm;
+
+   /// <summary>The sort-code for this program</summary>
+   public readonly int SortCode;
 
    // Methods ------------------------------------------------------------------
    /// <summary>Gets a shader, given its index</summary>
