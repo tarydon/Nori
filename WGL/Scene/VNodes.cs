@@ -11,7 +11,7 @@ public class GroupVN : VNode {
    // Constructors -------------------------------------------------------------
    /// <summary>Construct a GroupVN given multiple child VNodes to hold on to</summary>
    public GroupVN (IEnumerable<VNode> children) => mChildren = [.. children];
-   VNode[] mChildren;
+   readonly VNode[] mChildren;
 
    // Overrides ----------------------------------------------------------------
    // Return the children
@@ -102,7 +102,7 @@ public partial class TraceVN : VNode {
    int mDYLine = 20;    // Height of each line in pixes
    int mcLines = 100;   // Number of lines that will fit on the screen
    DispatcherTimer? mTimer;
-   List<(DateTime TS, string Text)> mLines = [];
+   readonly List<(DateTime TS, string Text)> mLines = [];
 }
 #endregion
 
@@ -114,7 +114,7 @@ public class XfmVN : VNode {
    /// If you need to transform multiple things, that child VNode could be a
    /// GroupVN which has its own children
    public XfmVN (Matrix3 xfm, VNode child) => (mXfm, mChild) = (xfm, child);
-   VNode mChild;
+   readonly VNode mChild;
 
    // Properties ---------------------------------------------------------------
    /// <summary>The Xfm to apply for this subtree (relative to the parent)</summary>

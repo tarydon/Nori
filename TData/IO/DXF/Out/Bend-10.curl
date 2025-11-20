@@ -3,7 +3,7 @@
   Styles:[
     { Name:Standard Font:txt XScale:1 }
     { Name:SLDTEXTSTYLE0 Font:TXT XScale:0.75 }
-    { Name:SLDTEXTSTYLE1 Font:TXT XScale:0.6864493306 }
+    { Name:SLDTEXTSTYLE1 Font:TXT XScale:0.686449 }
     { Name:SLDTEXTSTYLE2 Font:TXT XScale:0.6875 }
     { Name:SLDTEXTSTYLE3 Font:TXT XScale:0.65625 }
   ]
@@ -19,7 +19,7 @@
           Text:"UNLESS OTHERWISE SPECIFIED:"
           Style:SLDTEXTSTYLE0
           Alignment:TopLeft
-          Height:1.4999999997399998
+          Height:1.5
           XScale:0.75
         }
         (E2Text){
@@ -29,7 +29,7 @@
           Text:"DIMENSIONS ARE IN MILLIMETERS"
           Style:SLDTEXTSTYLE0
           Alignment:TopLeft
-          Height:1.4999999997399998
+          Height:1.5
           XScale:0.75
         }
         (E2Text){
@@ -39,7 +39,7 @@
           Text:"SURFACE FINISH:"
           Style:SLDTEXTSTYLE0
           Alignment:TopLeft
-          Height:1.4999999997399998
+          Height:1.5
           XScale:0.75
         }
         (E2Text){
@@ -49,7 +49,7 @@
           Text:"TOLERANCES:"
           Style:SLDTEXTSTYLE0
           Alignment:TopLeft
-          Height:1.4999999997399998
+          Height:1.5
           XScale:0.75
         }
         (E2Text){
@@ -59,7 +59,7 @@
           Text:"LINEAR:"
           Style:SLDTEXTSTYLE0
           Alignment:TopLeft
-          Height:1.4999999997399998
+          Height:1.5
           XScale:0.75
         }
         (E2Text){
@@ -69,7 +69,7 @@
           Text:"ANGULAR:"
           Style:SLDTEXTSTYLE0
           Alignment:TopLeft
-          Height:1.4999999997399998
+          Height:1.5
           XScale:0.75
         }
       ]
@@ -85,7 +85,7 @@
           Text:"DEBURR AND"
           Style:SLDTEXTSTYLE0
           Alignment:TopLeft
-          Height:1.4999999997399998
+          Height:1.5
           XScale:0.75
         }
         (E2Text){
@@ -95,7 +95,7 @@
           Text:"BREAK SHARP"
           Style:SLDTEXTSTYLE0
           Alignment:TopLeft
-          Height:1.4999999997399998
+          Height:1.5
           XScale:0.75
         }
         (E2Text){
@@ -105,7 +105,7 @@
           Text:EDGES
           Style:SLDTEXTSTYLE0
           Alignment:TopLeft
-          Height:1.4999999997399998
+          Height:1.5
           XScale:0.75
         }
       ]
@@ -1089,8 +1089,8 @@
       Text:DRAWN
       Style:SLDTEXTSTYLE1
       Alignment:TopLeft
-      Height:1.4999999997399998
-      XScale:0.6864493306
+      Height:1.5
+      XScale:0.686449
     }
     (E2Text){
       Layer:0
@@ -1099,7 +1099,7 @@
       Text:"CHK'D"
       Style:SLDTEXTSTYLE0
       Alignment:TopLeft
-      Height:1.4999999997399998
+      Height:1.5
       XScale:0.75
     }
     (E2Text){
@@ -1109,7 +1109,7 @@
       Text:"APPV'D"
       Style:SLDTEXTSTYLE0
       Alignment:TopLeft
-      Height:1.4999999997399998
+      Height:1.5
       XScale:0.75
     }
     (E2Text){
@@ -1119,7 +1119,7 @@
       Text:MFG
       Style:SLDTEXTSTYLE0
       Alignment:TopLeft
-      Height:1.4999999997399998
+      Height:1.5
       XScale:0.75
     }
     (E2Text){
@@ -1129,7 +1129,7 @@
       Text:Q.A
       Style:SLDTEXTSTYLE0
       Alignment:TopLeft
-      Height:1.4999999997399998
+      Height:1.5
       XScale:0.75
     }
     (E2Insert){ Layer:0 BlockName:SW_NOTE_0 Pt:999.593669,61.98737 XScale:1 YScale:1 }
@@ -1140,7 +1140,7 @@
       Text:"FINISH:"
       Style:SLDTEXTSTYLE0
       Alignment:TopLeft
-      Height:1.4999999997399998
+      Height:1.5
       XScale:0.75
     }
     (E2Insert){ Layer:0 BlockName:SW_NOTE_1 Pt:1080.309216,62.06949 XScale:1 YScale:1 }
@@ -1151,7 +1151,7 @@
       Text:NAME
       Style:SLDTEXTSTYLE0
       Alignment:TopLeft
-      Height:1.4999999997399998
+      Height:1.5
       XScale:0.75
     }
     (E2Text){
@@ -1161,7 +1161,7 @@
       Text:SIGNATURE
       Style:SLDTEXTSTYLE0
       Alignment:TopLeft
-      Height:1.4999999997399998
+      Height:1.5
       XScale:0.75
     }
     (E2Text){
@@ -1171,7 +1171,7 @@
       Text:DATE
       Style:SLDTEXTSTYLE0
       Alignment:TopLeft
-      Height:1.4999999997399998
+      Height:1.5
       XScale:0.75
     }
     (E2Text){
@@ -1181,7 +1181,7 @@
       Text:"MATERIAL:"
       Style:SLDTEXTSTYLE0
       Alignment:TopLeft
-      Height:1.4999999997399998
+      Height:1.5
       XScale:0.75
     }
     (E2Text){
@@ -1191,7 +1191,7 @@
       Text:"DO NOT SCALE DRAWING"
       Style:SLDTEXTSTYLE0
       Alignment:TopLeft
-      Height:1.4999999997399998
+      Height:1.5
       XScale:0.75
     }
     (E2Text){
@@ -1201,7 +1201,7 @@
       Text:REVISION
       Style:SLDTEXTSTYLE0
       Alignment:TopLeft
-      Height:1.4999999997399998
+      Height:1.5
       XScale:0.75
     }
     (E2Text){
@@ -1211,7 +1211,7 @@
       Text:"TITLE:"
       Style:SLDTEXTSTYLE0
       Alignment:TopLeft
-      Height:1.4999999997399998
+      Height:1.5
       XScale:0.75
     }
     (E2Text){
@@ -1221,7 +1221,7 @@
       Text:"DWG NO."
       Style:SLDTEXTSTYLE0
       Alignment:TopLeft
-      Height:1.4999999997399998
+      Height:1.5
       XScale:0.75
     }
     (E2Text){
@@ -1231,7 +1231,7 @@
       Text:"SCALE:2:1"
       Style:SLDTEXTSTYLE0
       Alignment:TopLeft
-      Height:1.4999999997399998
+      Height:1.5
       XScale:0.75
     }
     (E2Text){
@@ -1241,7 +1241,7 @@
       Text:"SHEET 1 OF 1"
       Style:SLDTEXTSTYLE2
       Alignment:TopLeft
-      Height:1.4999999997399998
+      Height:1.5
       XScale:0.6875
     }
     (E2Text){
@@ -1251,7 +1251,7 @@
       Text:A0
       Style:SLDTEXTSTYLE0
       Alignment:TopLeft
-      Height:2.91041666582
+      Height:2.910417
       XScale:0.75
     }
     (E2Text){
@@ -1261,7 +1261,7 @@
       Text:"3.3535/EN AW-5754 (AlMg3)"
       Style:SLDTEXTSTYLE0
       Alignment:TopCenter
-      Height:2.3812499999999996
+      Height:2.38125
       XScale:0.75
     }
     (E2Text){
@@ -1393,7 +1393,7 @@
     }
     (E2Bendline){
       Layer:0
-      Angle:-1.5707963267948966
+      Angle:-90
       KFactor:0.12
       Radius:0.04
       Pts:[ 308.422736,392.872849 401.418736,392.872849 ]
@@ -1401,7 +1401,7 @@
     }
     (E2Bendline){
       Layer:0
-      Angle:1.5707963267948966
+      Angle:90
       KFactor:0.12
       Radius:0.04
       Pts:[ 506.626736,587.072849 579.622736,587.072849 ]
@@ -1409,7 +1409,7 @@
     }
     (E2Bendline){
       Layer:0
-      Angle:1.5707963267948966
+      Angle:90
       KFactor:0.12
       Radius:0.04
       Pts:[ 532.572736,509.922849 532.572736,389.922849 ]
@@ -1417,7 +1417,7 @@
     }
     (E2Bendline){
       Layer:0
-      Angle:1.5707963267948966
+      Angle:90
       KFactor:0.12
       Radius:0.04
       Pts:[ 502.572736,576.919849 502.572736,513.922849 ]
@@ -1425,7 +1425,7 @@
     }
     (E2Bendline){
       Layer:0
-      Angle:1.5707963267948966
+      Angle:90
       KFactor:0.12
       Radius:0.04
       Pts:[ 401.472736,644.022849 401.472736,590.022849 ]
@@ -1433,7 +1433,7 @@
     }
     (E2Bendline){
       Layer:0
-      Angle:-1.5707963267948966
+      Angle:-90
       KFactor:0.12
       Radius:0.04
       Pts:[ 405.472736,580.922849 405.472736,396.926849 ]
@@ -1441,7 +1441,7 @@
     }
     (E2Bendline){
       Layer:0
-      Angle:1.5707963267948966
+      Angle:90
       KFactor:0.12
       Radius:0.04
       Pts:[ 308.422736,586.972849 397.419736,586.972849 ]
@@ -1449,7 +1449,7 @@
     }
     (E2Bendline){
       Layer:0
-      Angle:1.5707963267948966
+      Angle:90
       KFactor:0.12
       Radius:0.04
       Pts:[ 502.572736,688.022849 502.572736,744.022849 ]

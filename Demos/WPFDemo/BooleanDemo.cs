@@ -1,6 +1,6 @@
-// ────── ╔╗
-// ╔═╦╦═╦╦╬╣ LineFontDemo.cs
-// ║║║║╬║╔╣║ Demo showing various options to LineFont.Render (alignment, oblique, x-stretch etc)
+// ────── ╔╗                                                                                WPFDEMO
+// ╔═╦╦═╦╦╬╣ BooleanDemo.cs
+// ║║║║╬║╔╣║ Demo for Union, Intersection, Subtraction boolean operations
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 namespace WPFDemo;
 using Nori;
@@ -117,7 +117,7 @@ class BooleanRootVN (List<List<Poly>> polys, Bound2 bound) : VNode {
       public override void Draw () => Lux.Polys (mPolys.AsSpan ());
 
       public override VNode? GetChild (int n) {
-         if (mPane >= EPane.Union && n == 0) 
+         if (mPane >= EPane.Union && n == 0)
             return new FillVN (mPolys);
          return null;
       }
@@ -137,7 +137,7 @@ class BooleanRootVN (List<List<Poly>> polys, Bound2 bound) : VNode {
          List<Vec2F> path = [bound.Midpoint];
          mPolys.ForEach (x => {
             pts.Clear ();
-            x.Discretize (pts, 0.1);
+            x.Discretize (pts, 0.1, 0.5411);
             var idx0 = path.Count;
             indices.Add (0);
             path.AddRange (pts.Select (p => (Vec2F)p));

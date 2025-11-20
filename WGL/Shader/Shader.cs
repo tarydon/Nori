@@ -14,7 +14,9 @@ abstract class Shader {
    /// <summary>Construct a ShaderImp given the underlying ShaderImp</summary>
    protected Shader (ShaderImp program) {
       CBVertex = Attrib.GetSize ((Pgm = program).VSpec);
-      Idx = (ushort)mAll.Count; mAll.Add (this);
+      SortCode = Pgm.SortCode;
+      Idx = (ushort)mAll.Count; 
+      mAll.Add (this);
    }
 
    // Properties --------------------l-------------------------------------------
@@ -26,6 +28,9 @@ abstract class Shader {
 
    /// <summary>The underlying shader program this wraps around</summary>
    public readonly ShaderImp Pgm;
+
+   /// <summary>The sort-code for this program</summary>
+   public readonly int SortCode;
 
    // Methods ------------------------------------------------------------------
    /// <summary>Gets a shader, given its index</summary>
@@ -102,7 +107,7 @@ abstract class Shader {
 
    // Private data -------------------------------------------------------------
    // The list of all shaders - Shader.Idx indexes into this list
-   protected static List<Shader> mAll = [null];
+   protected static List<Shader> mAll = [null!];
 }
 #endregion
 
@@ -155,7 +160,7 @@ abstract class Shader<TVertex, TUniform> : Shader, IComparer<TUniform> where TVe
       // Helper fuction to see if we can just extend the last batch we added to
       // include these vertices as well. For this to work:
       // - The previous batch should be for the same VNode (since we are going to store
-      //   this batch in the mBatch list of that VNode.
+      //   this batch in the mBatch list of that VNode).
       // - The previous batch should use the same shader (this)
       // - The previous batch should be using the same set of uniforms
       bool ExtendBatch (int delta) {
@@ -179,7 +184,7 @@ abstract class Shader<TVertex, TUniform> : Shader, IComparer<TUniform> where TVe
       rb.NShader = Idx; rb.NUniform = SnapUniforms (); rb.NBuffer = 0;
       rb.Offset = mData.Count; rb.Count = data.Length;
       rb.IOffset = mIndex.Count; rb.ICount = indices.Length;
-      Lux.VNode!.Batches.Add ((rb.Idx1, rb.NUniform));
+      Lux.VNode.Batches.Add ((rb.Idx1, rb.NUniform));
 
       mData.AddRange (data);
       // Note that these indices are all zero-relative (as in the original mesh data). Later, when
@@ -195,7 +200,7 @@ abstract class Shader<TVertex, TUniform> : Shader, IComparer<TUniform> where TVe
    /// This copies 'count' vertices from our local mData storage into the given
    /// RBuffer. This means effectively 'count * CBVertex' bytes of data, This returns
    /// the byte offset within the RBuffer where the data has been copied.
-   public unsafe override int CopyVertices (RBuffer buffer, int offset, int count) {
+   public override unsafe int CopyVertices (RBuffer buffer, int offset, int count) {
       var span = CollectionsMarshal.AsSpan (mData);
       fixed (void* p = &span[offset])
          return buffer.AddData (p, count * CBVertex);
@@ -210,7 +215,7 @@ abstract class Shader<TVertex, TUniform> : Shader, IComparer<TUniform> where TVe
    /// copied. And indexOffset is the index (not byte-offset) into the RBuffer's index buffer
    /// where the indices have been copied. Both of these are used later as arguments for
    /// a DrawElementsBaseVertex call.
-   public unsafe override (int, int) CopyVertices (RBuffer buffer, int offset, int count, int ioffset, int icount) {
+   public override (int, int) CopyVertices (RBuffer buffer, int offset, int count, int ioffset, int icount) {
       int dataOffset = CopyVertices (buffer, offset, count);
       var span = CollectionsMarshal.AsSpan (mIndex);
       int indexOffset = buffer.AddIndices (span[ioffset..(ioffset + icount)]);
@@ -222,11 +227,14 @@ abstract class Shader<TVertex, TUniform> : Shader, IComparer<TUniform> where TVe
    public override string DescribeUniforms (int id)
       => mUniforms[id]?.ToString () ?? "";
 
+   /// <summary>Returns the Nth set of uniforms</summary>
+   public TUniform GetUniforms (int nUniform) => mUniforms[nUniform];
+
    /// <summary>Override this to compare the 'uniform data' of two batches</summary>
    /// This must provide a definitive ordering, to ensure that all batches with similar
    /// uniforms get grouped together so that we reduce the number of issues
    /// TODO: Make this use ref UBlock?
-   abstract protected int OrderUniformsImp (ref readonly TUniform a, ref readonly TUniform b);
+   protected abstract int OrderUniformsImp (ref readonly TUniform a, ref readonly TUniform b);
 
    public override int OrderUniforms (int id1, int id2) {
       if (id1 == id2) return 0;
@@ -237,7 +245,7 @@ abstract class Shader<TVertex, TUniform> : Shader, IComparer<TUniform> where TVe
 
    /// <summary>Override this to set up the uniforms for this batch</summary>
    /// TODO: Make this use ref UBlock?
-   abstract protected void ApplyUniformsImp (ref readonly TUniform settings);
+   protected abstract void ApplyUniformsImp (ref readonly TUniform settings);
 
    public override void ApplyUniforms (int nUniform) {
       var span = mUniforms.AsSpan ();
@@ -247,10 +255,10 @@ abstract class Shader<TVertex, TUniform> : Shader, IComparer<TUniform> where TVe
    }
 
    /// <summary>Helper used by SnapUniforms to do the actual encapsulation of uniforms into a UBlock object</summary>
-   abstract protected TUniform SnapUniformsImp ();
+   protected abstract TUniform SnapUniformsImp ();
 
    /// <summary>Helper used by SetConstants to do the actual setting of constants</summary>
-   abstract protected void SetConstantsImp ();
+   protected abstract void SetConstantsImp ();
 
    // Implementation -----------------------------------------------------------
    // Called internally to bind internal uniform-address fields like muVPScale, muDrawColor etc to
@@ -287,7 +295,7 @@ abstract class Shader<TVertex, TUniform> : Shader, IComparer<TUniform> where TVe
 
    /// <summary>Captures the current uniforms into mUniforms and returns that index</summary>
    /// We try to reuse the last-used uniforms as far as possible
-   public override sealed ushort SnapUniforms () {
+   public sealed override ushort SnapUniforms () {
       // If the uniforms have not changed at all since the last time we called SnapUniforms,
       // just reuse the last one. Note that this comparison will never return true when
       // mUniforms is empty because we bump up Lux.Rung at the start of each frame, and our
@@ -307,8 +315,8 @@ abstract class Shader<TVertex, TUniform> : Shader, IComparer<TUniform> where TVe
    int mRung1;
 
    // Private data -------------------------------------------------------------
-   List<TUniform> mUniforms = [];
-   List<TVertex> mData = [];
-   List<int> mIndex = [];
+   readonly List<TUniform> mUniforms = [];
+   readonly List<TVertex> mData = [];
+   readonly List<int> mIndex = [];
 }
 #endregion

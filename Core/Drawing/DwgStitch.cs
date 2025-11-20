@@ -7,8 +7,7 @@ namespace Nori;
 class DwgStitcher {
    public DwgStitcher (Dwg2 dwg, double threshold = 1e-3) {
       mDwg = dwg;
-      mComp = new (mThreshold = threshold, 0);
-      mEnds = new (mComp);
+      mEnds = new (new PointComparer (mThreshold = threshold));
    }
 
    public void Process () {
@@ -25,8 +24,7 @@ class DwgStitcher {
       }
 
       Layer2? layer = null;
-      for (int i = 0; i < ents.Count; i++) {
-         var ent = ents[i];
+      foreach (var ent in ents) {
          if (ent.Layer != layer) { AddRemaining (); layer = ent.Layer; }
 
          // If the poly can already be closed here, just close it and continue
@@ -104,15 +102,16 @@ class DwgStitcher {
    readonly Dwg2 mDwg;
    readonly double mThreshold;
    readonly Dictionary<Point2, E2Poly> mEnds;
-   readonly PointComparer mComp;
    readonly List<Ent2> mDone = [];
 }
 
-class PointComparer (double threshold, double offset) : IEqualityComparer<Point2> {
+class PointComparer (double threshold) : IEqualityComparer<Point2> {
    public bool Equals (Point2 a, Point2 b)
-      => (a.X + offset).Round (threshold) == (b.X + offset).Round (threshold)
-      && (a.Y + offset).Round (threshold) == (b.Y + offset).Round (threshold);
+      => a.X.Round (threshold) == b.X.Round (threshold)
+      && a.Y.Round (threshold) == b.Y.Round (threshold);
 
    public int GetHashCode (Point2 a)
-      => HashCode.Combine ((a.X + offset).Round (threshold), (a.Y + offset).Round (threshold));
+      => HashCode.Combine (a.X.Round (threshold), a.Y.Round (threshold));
+
+   public static readonly PointComparer Epsilon = new (1e-6);
 }

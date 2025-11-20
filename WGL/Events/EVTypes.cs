@@ -20,14 +20,14 @@ public enum EKey : short {
 
    Scroll = 168, CapsLock, Windows, Pause, Shift, Ctrl, Alt, Menu, Insert, Home, PageUp,
    Delete, End, PageDown, Up, Left, Down, Right, NumLock, NDivide, NMultiply, NSubtract, NAdd,
-   NEnter, NPeriod,
-};
+   NEnter, NPeriod
+}
 #endregion
 
 #region enum EKeyModifier --------------------------------------------------------------------------
 /// <summary>Used in KeyInfo to specify which modifiers (Shift / Control / Alt) are being held down</summary>
 [Flags]
-public enum EKeyModifier : byte { None = 0, Shift = 1, Control = 2, Alt = 4, }
+public enum EKeyModifier : byte { None = 0, Shift = 1, Control = 2, Alt = 4 }
 #endregion
 
 #region enum EKeyState -----------------------------------------------------------------------------
@@ -37,57 +37,48 @@ public enum EKeyState : byte { Pressed = 1, Released = 2 }
 
 #region struct KeyInfo -----------------------------------------------------------------------------
 /// <summary>Data about a key being pressed or released</summary>
-public readonly struct KeyInfo {
-   public KeyInfo (EKey key, EKeyModifier modifier, EKeyState state) 
-      => (Key, Modifier, State) = (key, modifier, state);
-
+public readonly struct KeyInfo (EKey key, EKeyModifier modifier, EKeyState state) {
    public bool IsPress () => State == EKeyState.Pressed;
    public bool IsPress (EKey key) => key == Key && State == EKeyState.Pressed;
 
    /// <summary>Which key on the keyboard was pressed or released</summary>
-   public readonly EKey Key;
+   public readonly EKey Key = key;
    /// <summary>Which modifiers (like Shift, Ctrl, Alt) are being held down</summary>
-   public readonly EKeyModifier Modifier;
+   public readonly EKeyModifier Modifier = modifier;
    /// <summary>Is the key being pressed or released</summary>
-   public readonly EKeyState State;
+   public readonly EKeyState State = state;
 }
 #endregion
 
 #region enum EMouseButton --------------------------------------------------------------------------
 /// <summary>Used by MouseInfo to specify which mouse button is clicked</summary>
-public enum EMouseButton : byte { Left, Middle, Right };
+public enum EMouseButton : byte { Left, Middle, Right }
 #endregion
 
 #region struct MouseClickInfo ----------------------------------------------------------------------
 /// <summary>Data about a mouse button being pressed or released</summary>
-public readonly struct MouseClickInfo {
-   public MouseClickInfo (EMouseButton button, Vec2S position, EKeyModifier modifier, EKeyState state)
-      => (Button, Position, Modifier, State) = (button, position, modifier, state);
-
+public readonly struct MouseClickInfo (EMouseButton button, Vec2S position, EKeyModifier modifier, EKeyState state) {
    public bool IsPress => State == EKeyState.Pressed;
    public bool IsLeftPress => State == EKeyState.Pressed && Button == EMouseButton.Left;
    public bool IsRelease => State == EKeyState.Released;
 
    /// <summary>Which mouse button is pressed or released</summary>
-   public readonly EMouseButton Button;
+   public readonly EMouseButton Button = button;
    /// <summary>The position where the mouse was clicked</summary>
-   public readonly Vec2S Position;
+   public readonly Vec2S Position = position;
    /// <summary>Which modifiers (like Shift, Control, Alt) are being held down</summary>
-   public readonly EKeyModifier Modifier;
+   public readonly EKeyModifier Modifier = modifier;
    /// <summary>Is the mouse button being pressed, or being released</summary>
-   public readonly EKeyState State;
+   public readonly EKeyState State = state;
 }
 #endregion
 
 #region struct MouseWheelInfo ----------------------------------------------------------------------
 /// <summary>Data about a mouse-wheel being rotated up or down</summary>
-public readonly struct MouseWheelInfo {
-   public MouseWheelInfo (int delta, Vec2S position)
-      => (Delta, Position) = (delta, position);
-
+public readonly struct MouseWheelInfo (int delta, Vec2S position) {
    /// <summary>How much has the mouse-wheel been rotated (+ or - value)</summary>
-   public readonly int Delta;
+   public readonly int Delta = delta;
    /// <summary>The position where the mouse wheel was rotated</summary>
-   public readonly Vec2S Position;
+   public readonly Vec2S Position = position;
 }
 #endregion

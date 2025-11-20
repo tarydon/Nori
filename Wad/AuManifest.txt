@@ -31,7 +31,30 @@ FileGeometry
   File Shift -Rotate
 E2Bendline
   ^Dwg Angle KFactor Radius Pts Thickness
-Spline
-  Nodes Rational Knot Weight
 Spline2
-  Ctrl
+  Imp Ctrl Rational Weight
+SplineImp
+  Nodes Knot
+Model3
+  Ents Bound
+Ent3
+  Id Flags
+E3Surface
+  Bound Contours
+E3ParaSurface
+E3CSSurface
+  CS
+E3Cylinder
+  Radius InFacing
+CoordSystem
+  Org VecX VecY
+Contour3
+  Edges
+Edge3
+  PairId
+Line3
+  Start End
+Arc3
+  CS Radius AngSpan
+E3Plane
+  CS

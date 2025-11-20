@@ -222,7 +222,7 @@ public class TypeFace {
 
    // Helper used to build the GL texture (from the mRawTexData byte-buffer we construct
    // when we iterate through all the glyphs). 
-   unsafe HTexture BuildTexture () {
+   HTexture BuildTexture () {
       _ = Notes;  // This will also build the mRawTexData buffer
       GL.ActiveTexture (ETexUnit.Tex0);
       HTexture texture = GL.GenTexture ();
@@ -252,7 +252,7 @@ public class TypeFace {
       mGlyph.Update (mRec.Glyph);
       return mGlyph;
    }
-   Glyph mGlyph = new ();
+   readonly Glyph mGlyph = new ();
 
    /// <summary>Dictionary that maps characters to glyph indices</summary>
    IReadOnlyDictionary<char, uint> Map {
@@ -292,8 +292,7 @@ public class TypeFace {
          mNotes ??= new Metrics[max + 1];
          byte[] texData = new byte[131072];
          int texOffset = 0;
-         for (int i = 0; i < glyphIndices.Count; i++) {
-            var index = glyphIndices[i];
+         foreach (var index in glyphIndices) {
             if (mNotes[index].TexOffset > 0) continue;
             var g = GetGlyph (index);
             mNotes[index] = new Metrics (g, texOffset);

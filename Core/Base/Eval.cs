@@ -19,8 +19,6 @@ public class Eval {
       } catch (EvalException) {
          res = double.NaN;
          return false;
-      } catch {
-         throw;
       }
    }
 
@@ -88,11 +86,12 @@ public class Eval {
       };
       mOperands.Push (res);
 
+      // Helpers ...........................................
       static double R2D (double f) => f * 180 / Math.PI;
       static double D2R (double f) => f * Math.PI / 180;
    }
 
-   static Dictionary<string, EOperation>.AlternateLookup<ReadOnlySpan<char>> sOperationMap = new Dictionary<string, EOperation> () {
+   static Dictionary<string, EOperation>.AlternateLookup<ReadOnlySpan<char>> sOperationMap = new Dictionary<string, EOperation> {
       ["+"] = EOperation.Add, ["-"] = EOperation.Sub, ["*"] = EOperation.Mul, ["/"] = EOperation.Div,
       ["sin"] = EOperation.Sin, ["cos"] = EOperation.Cos, ["tan"] = EOperation.Tan,
       ["asin"] = EOperation.Asin, ["acos"] = EOperation.Acos, ["atan"] = EOperation.Atan, ["atan2"] = EOperation.Atan2,

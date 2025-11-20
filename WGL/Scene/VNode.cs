@@ -28,9 +28,6 @@ public class VNode {
    /// objects.
    public VNode (object obj) => Obj = obj;
 
-   /// <summary>Get the VNode, given an ID</summary>
-   public static VNode Get (int id) => mNodes[id]!;
-
    // Properties ---------------------------------------------------------------
    /// <summary>The set of render-batches for this VNode, along with the corresponding uniforms</summary>
    /// This is a list of tuples - the NBatch value of each tuple is the index of a RBatch
@@ -60,7 +57,7 @@ public class VNode {
    /// and also to listen to changes in that list. The AList(T) collection implements both
    /// these interfaces, so you can just pass in an AList(T) and that will work.
    public IAList? ChildSource { get => mChildSource; init => mChildSource = value; }
-   IAList? mChildSource;
+   readonly IAList? mChildSource;
 
    // The unique Id of this VNode within this scene.
    // If the Id = 0, then the VNode has not yet been 'registered' into this Scene,
@@ -93,6 +90,9 @@ public class VNode {
    public void DisposeOnDetach (IDisposable disp) => (mDisposer ??= new ()).Add (disp);
    MultiDispose? mDisposer;
 
+   /// <summary>Get the VNode, given an ID</summary>
+   public static VNode Get (int id) => mNodes[id]!;
+
    /// <summary>'Virtual constructor' to make a VNode for a given object type</summary>
    /// An assembly that implements various types of VNode (like CircleVN, CubeVN etc) can
    /// be _Registered_ to the VNode system by calling VNode.RegisterAssembly(...). That builds
@@ -101,13 +101,21 @@ public class VNode {
    /// and construct the VNode for that. See RegisterAssembly for more details.
    public static VNode MakeFor (object obj) {
       ArgumentNullException.ThrowIfNull (obj);
-      if (!mBuilders.TryGetValue (obj.GetType (), out var ci))
-         throw new Exception ($"No VNode found for {obj.GetType ().FullName}");
+      var type = obj.GetType ();
+      if (!mBuilders.TryGetValue (type, out var ci)) {
+         foreach (var kvp in mBuilders)
+            if (kvp.Key.IsAssignableFrom (type)) {
+               ci = mBuilders[type] = kvp.Value;
+               break;
+            }
+         if (ci == null)
+            throw new Exception ($"No VNode found for {obj.GetType ().FullName}");
+      }
       return (VNode)ci.Invoke ([obj]);
    }
 
    /// <summary>Called when geometry has changed and complete redraw of this VNode is needed</summary>
-   public void Redraw () { mGeometryDirty = true; Lux.Redraw ();  }
+   public void Redraw () { mGeometryDirty = true; Lux.FlushPickBuffer (); Lux.Redraw ();  }
 
    /// <summary>Register an assembly as containing potential VNode types</summary>
    /// This is used in conjunction with the VNode.Makefor(...) above to construct a VNode
@@ -147,9 +155,12 @@ public class VNode {
    }
    // This dictionary maps particular domain types (like Poly, Text etc) to constructors
    // in appropriate VNode types (like PolyVN, TextVN etc)
-   static Dictionary<Type, ConstructorInfo> mBuilders = [];
+   static readonly Dictionary<Type, ConstructorInfo> mBuilders = [];
    // These are the assemblies we have already searched to find VNode-derived types
-   static HashSet<Assembly> mAssemblies = [];
+   static readonly HashSet<Assembly> mAssemblies = [];
+
+   /// <summary>Tries to get a VNode, given an ID (if the ID is out of range, returns null)</summary>
+   public static VNode? SafeGet (int id) => mNodes.SafeGet (id);
 
    // Overrides ----------------------------------------------------------------
    /// <summary>Specifies which attributes are inherited by children of this VNode</summary>
@@ -222,6 +233,7 @@ public class VNode {
          ref RBatch rb = ref RBatch.Get (n);
          rb.Release ();
       }
+      Lux.FlushPickBuffer ();
       Batches.Clear ();
    }
 
@@ -250,12 +262,13 @@ public class VNode {
          if (mGeometryDirty) {
             Draw ();
             mGeometryDirty = false;
+            Lux.FlushPickBuffer ();
          } else {
             // But if the geometry is not dirty, we don't need to create new batches at all,
             // but instead can just update the existing batches we have with freshly captured
             // batches (that the Shader will snap for us from the Lux global state). ☼IDEA001
             for (int i = 0; i < Batches.Count; i++) {
-               var (b, u) = Batches[i];
+               var (b, _) = Batches[i];
                var shader = Shader.Get (RBatch.Get (b).NShader);
                Batches[i] = (b, shader.SnapUniforms ());
             }
@@ -328,8 +341,8 @@ public class VNode {
 
       // Helper ............................................
       void Remove (int n) {
-         ChildRemoved (mAutoChildren![ch.Index]);
-         mAutoChildren.RemoveAt (ch.Index);
+         ChildRemoved (mAutoChildren![n]);
+         mAutoChildren.RemoveAt (n);
       }
    }
 
@@ -356,7 +369,7 @@ public class VNode {
       OnAttach ();
    }
    static VNode?[] mNodes = [null];
-   static Stack<int> mFreeIDs = [];
+   static readonly Stack<int> mFreeIDs = [];
 
    // Deregister is called when this VNode is no longer ever required.
    // This means it is not part of any scenes and its 'parent refs' counter has
@@ -392,7 +405,7 @@ public class VNode {
    // This tracks parent-child relationships within all VNodes.
    // The mParents and mChildren fields above are handles to linked-lists within
    // this Chains structure
-   static Chains<int> mFamily = new ();
+   static readonly Chains<int> mFamily = new ();
    // Number of parents this VNode has. When this runs down to zero, we can
    // release the VNode
    int mCRefs;

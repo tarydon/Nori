@@ -84,8 +84,8 @@ class AuType {
 
    public MethodInfo IArrayFromArray =>
       mFromArray ??= typeof (ImmutableArray).GetMethods ()
-      .Where (a => a.GetParameters ().Length == 1 && a.GetParameters ()[0].ParameterType.IsArray)
-      .Single ().MakeGenericMethod (mType.GetGenericArguments ()[0]);
+      .Single( a => a.GetParameters ().Length == 1 && a.GetParameters ()[0].ParameterType.IsArray)
+      .MakeGenericMethod (mType.GetGenericArguments ()[0]);
    MethodInfo? mFromArray;
 
    public AuType[] GenericArgs {
@@ -124,7 +124,7 @@ class AuType {
    public static AuType Get (Type type) {
       AuType? aut = mDict.GetValueOrDefault (type);
       if (aut == null) {
-         aut = new AuType (type); 
+         aut = new AuType (type);
          mByName.Add (Lib.NiceName (type), aut);
       }
       return aut;
@@ -246,7 +246,7 @@ class AuType {
             TypeCode.Int32 => Enum.ToObject (mType, (int)v), // Default backing type
             TypeCode.UInt32 => Enum.ToObject (mType, (uint)v),
             TypeCode.Int64 => Enum.ToObject (mType, (long)v),
-            TypeCode.UInt64 => Enum.ToObject (mType, (ulong)v),
+            TypeCode.UInt64 => Enum.ToObject (mType, v),
             TypeCode.Int16 => Enum.ToObject (mType, (short)v),
             TypeCode.UInt16 => Enum.ToObject (mType, (ushort)v),
             TypeCode.Byte => Enum.ToObject (mType, (byte)v),
@@ -261,12 +261,12 @@ class AuType {
    static ulong NormalizedEnumInteger (Type enumType, object o) {
       return Type.GetTypeCode (enumType) switch { // Note: Unboxing needs exact cast
          TypeCode.Int32 => (ulong)(int)o, // Default backing type
-         TypeCode.UInt32 => (ulong)(uint)o,
+         TypeCode.UInt32 => (uint)o,
          TypeCode.Int64 => (ulong)(long)o,
          TypeCode.UInt64 => (ulong)o,
          TypeCode.Int16 => (ulong)(short)o,
-         TypeCode.UInt16 => (ulong)(ushort)o,
-         TypeCode.Byte => (ulong)(byte)o,
+         TypeCode.UInt16 => (ushort)o,
+         TypeCode.Byte => (byte)o,
          TypeCode.SByte => (ulong)(sbyte)o,
          _ => throw new BadCaseException (enumType.FullName!)
       };
@@ -307,7 +307,10 @@ class AuType {
          case TypeCode.Int32: stm.Write ((int)value); break;
          case TypeCode.Int64: stm.Write ((long)value); break;
          case TypeCode.String: stm.Write ((string)value); break;
-         case TypeCode.Double: stm.Write ((double)value); break;
+         case TypeCode.Double:
+            double f = (double)value; if (Lib.Testing) f = f.Round (6);
+            stm.Write (f);
+            break;
          case TypeCode.Single: stm.Write ((float)value); break;
          case TypeCode.UInt16: stm.Write ((ushort)value); break;
          case TypeCode.UInt32: stm.Write ((uint)value); break;
@@ -409,8 +412,8 @@ class AuType {
          if (line.IsBlank ()) continue;
          if (line.StartsWith (' ')) {
             string[] words = line.Split (' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-            for (int i = 0; i < words.Length; i++) {
-               var (w, tactic) = (words[i], ECurlTactic.Std);
+            foreach (var word in words) {
+               var (w, tactic) = (word, ECurlTactic.Std);
                if (w[0] == '-') (w, tactic) = (w[1..], ECurlTactic.Skip);
                else if (w[0] == '^') (w, tactic) = (w[1..], ECurlTactic.Uplink);
                else if (w.EndsWith (".Name")) (w, tactic) = (w[..^5], ECurlTactic.ByName);
@@ -438,10 +441,14 @@ class AuField {
       if (Name.StartsWith ('m')) Name = Name[1..];
       mFieldType = AuType.Get (mFI.FieldType);
       IsNullable = mFI.HasAttribute<NullableAttribute> ();
+      IsAngle = mFI.HasAttribute<RadianAttribute> ();
    }
    readonly AuType mOwner;
 
    // properties ---------------------------------------------------------------
+   /// <summary>Is this field an angle in radians?</summary>
+   public readonly bool IsAngle;
+
    /// <summary>The AuType wrapper for the underlying type of this field</summary>
    public AuType FieldType => mFieldType;
    readonly AuType mFieldType;
@@ -512,7 +519,7 @@ class AuField {
 
 #region enum EAuTypeKind ---------------------------------------------------------------------------
 /// <summary>What 'Kind' of type is represented by a given AuType (primitive / list / enum / dict / class etc)</summary>
-enum EAuTypeKind { Unknown, Object, Primitive, AuPrimitive, Enum, List, Dictionary, Struct, Class };
+enum EAuTypeKind { Unknown, Object, Primitive, AuPrimitive, Enum, List, Dictionary, Struct, Class }
 #endregion
 
 #region enum ECurlTactic ---------------------------------------------------------------------------

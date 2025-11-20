@@ -79,7 +79,10 @@ public class CurlReader {
                R.Read (out string str);
                value = field.FieldType.ReadByName (mStack, str);
                break;
-            default: value = Read (field.FieldType); break;
+            default:
+               value = Read (field.FieldType);
+               if (field.IsAngle) value = ((double)value!).D2R ();
+               break;
          }
          field.SetValue (owner, value);
       }
@@ -107,7 +110,6 @@ public class CurlReader {
    }
 
    object ReadDictionary (AuType auType) {
-      var type = auType.Type;
       IDictionary dict = (IDictionary)auType.CreateInstance ();
       R.Match ('<');
       AuType keyType = auType.GenericArgs[0], valueType = auType.GenericArgs[1];

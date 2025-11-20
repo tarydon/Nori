@@ -2,7 +2,6 @@
 // ╔═╦╦═╦╦╬╣ Seg.cs
 // ║║║║╬║╔╣║ Implements the Seg struct (one segment of a Poly)
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
-using System.Threading;
 using static System.Math;
 namespace Nori;
 
@@ -29,11 +28,9 @@ public readonly struct Seg {
    /// If this is a linear segment, this returns 0
    public double AngSpan {
       get {
-         if (IsArc2 (out var cen, out var flags)) {
-            var (sa, ea) = GetStartAndEndAngles (cen, flags);
-            return ea - sa;
-         }
-         return 0;
+         if (!IsArc2 (out var cen, out var flags)) return 0;
+         var (sa, ea) = GetStartAndEndAngles (cen, flags);
+         return ea - sa;
       }
    }
 
@@ -89,7 +86,7 @@ public readonly struct Seg {
 
    /// <summary>Returns true if the given point is to the 'left' of this segment</summary>
    public bool IsPointOnLeft (Point2 pt) {
-      if (IsArc2 (out var cen, out var flags)) {
+      if (IsArc2 (out var cen, out _)) {
          double dist = cen.DistTo (pt), radius = cen.DistTo (A);
          return (dist > radius) ^ IsCCW;
       } else
@@ -99,12 +96,10 @@ public readonly struct Seg {
    /// <summary>Returns the length of this segment</summary>
    public double Length {
       get {
-         if (IsArc2 (out var cen, out var flags)) {
-            double r = cen.DistTo (A);
-            var (sa, ea) = GetStartAndEndAngles (cen, flags);
-            return r * Abs (sa - ea);
-         }
-         return A.DistTo (B);
+         if (!IsArc2 (out var cen, out var flags)) return A.DistTo (B);
+         double r = cen.DistTo (A);
+         var (sa, ea) = GetStartAndEndAngles (cen, flags);
+         return r * Abs (sa - ea);
       }
    }
 
@@ -157,11 +152,11 @@ public readonly struct Seg {
    /// This does NOT add the start point into the list - if this is a line, it adds just
    /// one endpoint. If this is an arc, it adds as many points as needed to keep the error between
    /// the theoretical arc and the 'chords' to within the given error threshold
-   public void Discretize (List<Point2> pts, double threshold) {
+   public void Discretize (List<Point2> pts, double threshold, double maxAngSpan) {
       if (IsArc2 (out var cen, out var flags)) {
          var (sa, ea) = GetStartAndEndAngles (cen, flags);
          var radius = cen.DistTo (A);
-         int cSteps = Lib.GetArcSteps (radius, Abs (ea - sa), threshold);
+         int cSteps = Lib.GetArcSteps (radius, Abs (ea - sa), threshold, maxAngSpan);
          double angstep = (ea - sa) / cSteps;
          for (int j = 1; j <= cSteps; j++)
             pts.Add (cen.Polar (radius, sa += angstep));
@@ -204,7 +199,7 @@ public readonly struct Seg {
 
    /// <summary>Returns the closest point to the given point on the given segment</summary>
    public Point2 GetClosestPoint (Point2 pt) {
-      if (IsArc2 (out var cen, out var flags)) {
+      if (IsArc2 (out var cen, out _)) {
          Point2 pt2 = cen.Polar (cen.DistTo (A), cen.AngleTo (pt));
          return GetPointAt (GetLie (pt2).Clamp ());
       } else
@@ -215,7 +210,7 @@ public readonly struct Seg {
    /// If the distance is more than the cutoff distance, this does not return
    /// the exact distance, but a conservative distance (greater than actual distance)
    public double GetDist (Point2 p, double cutoff) {
-      if (IsArc2 (out var cen, out var flags)) {
+      if (IsArc2 (out var cen, out _)) {
          var radius = cen.DistTo (A);
          double dist = Abs (cen.DistTo (p) - radius);
          if (dist >= cutoff) return dist;
@@ -231,9 +226,9 @@ public readonly struct Seg {
    /// <summary>Gets the 'lie' of a given point on the segment (0 = start, 1 = end)</summary>
    /// The lie may be less than zero or more than 1. For a point that lies outside
    /// the extent of an arc, there is an ambiguity - there may be a point that could
-   /// be represented as having either a positive lie (> 1) or a negative lie (< 0).
-   /// We pick the lie based on whether the given point is closer to the start or the
-   /// end point.
+   /// be represented as having either a positive lie (greater-than 1) or a negative
+   /// lie (less-than 0). We pick the lie based on whether the given point is closer
+   /// to the start or the end point.
    public double GetLie (Point2 pt) {
       if (IsArc2 (out var cen, out var flags)) {
          var (sa, ea) = GetStartAndEndAngles (cen, flags);
@@ -274,9 +269,8 @@ public readonly struct Seg {
    /// <summary>Gets the start and end angles of an arc</summary>
    /// - For a line, this returns (0, 0)
    /// - For a circle, this returns (0, 2*PI)
-   /// - For a CCW arc this ensures end > start
-   /// - For a CW arc, this ensures end < start
-   /// <returns></returns>
+   /// - For a CCW arc this ensures end greater-than start
+   /// - For a CW arc, this ensures end less-than start
    public (double Start, double End) GetStartAndEndAngles () {
       if (IsArc2 (out var cen, out var flags))
          return GetStartAndEndAngles (cen, flags);
@@ -291,9 +285,8 @@ public readonly struct Seg {
    /// otherwise checks for the extrapolations of the segments as well</param>
    /// <returns>A slice of the input buffer that contains 0, 1 or 2 points</returns>
    public ReadOnlySpan<Point2> Intersect (Point2 a, Point2 b, Span<Point2> buffer, bool finite) {
-      ReadOnlySpan<Point2> pts;
       if (IsArc2 (out var cen, out _)) {
-         pts = Geo.CircleXLine (cen, cen.DistTo (A), a, b, buffer);  // Returns 0, 1 or 2 points
+         var pts = Geo.CircleXLine (cen, cen.DistTo (A), a, b, buffer);  // Returns 0, 1 or 2 points
          if (!finite) return pts;
 
          // Limit the set to the points that lie within this span.
@@ -304,20 +297,19 @@ public readonly struct Seg {
          if (pts.Length > 1 && Contains (pts[1])) n |= 2;
          return n switch {
             0 => [],             // Neither of the points are contained
-            1 => pts[0..1],      // Only first point is contained
+            1 => pts[..1],      // Only first point is contained
             2 => pts[1..2],      // Only second point is contained
             _ => pts             // Both points are contained
          };
       } else {
          buffer[0] = Geo.LineXLine (A, B, a, b);
-         if (buffer[0].IsNil) return [];
-         if (finite && !Contains (buffer[0])) return [];
-         return buffer[0..1];
+         if (buffer[0].IsNil || (finite && !Contains (buffer[0]))) return [];
+         return buffer[..1];
       }
    }
 
    /// <summary>Computes the intersection between this segment and another</summary>
-   /// <param name="other">The other segment to intersect</param>
+   /// <param name="s2">The other segment to intersect</param>
    /// <param name="buffer">Buffer that the caller should allocate (should contain at least 2 elements)</param>
    /// <param name="finite">If set, returns only intersections that lie within the span of the segment,
    /// otherwise checks for the extrapolations of the segments as well</param>
@@ -342,7 +334,7 @@ public readonly struct Seg {
          if (pts.Length > 1 && Contains (pts[1]) && s2.Contains (pts[1])) n |= 2;
          return n switch {
             0 => [],             // Neither of the points are contained
-            1 => pts[0..1],      // Only first point is contained
+            1 => pts[..1],      // Only first point is contained
             2 => pts[1..2],      // Only second point is contained
             _ => pts             // Both points are contained
          };
@@ -354,7 +346,7 @@ public readonly struct Seg {
          } else {
             // Case: LINE x LINE
             var pt = finite ? Geo.LineSegXLineSeg (A, B, s2.A, s2.B) : Geo.LineXLine (A, B, s2.A, s2.B);
-            if (!pt.IsNil) { buffer[0] = pt; return buffer[0..1]; }
+            if (!pt.IsNil) { buffer[0] = pt; return buffer[..1]; }
             return [];
          }
       }

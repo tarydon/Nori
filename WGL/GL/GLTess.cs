@@ -73,11 +73,11 @@ public class Tess2D (List<Point2> pts, IReadOnlyList<int> splits) {
    // Called whenever a new triangle primitive begins
    GLUtessBeginProc TessBegin => type => (mPrimType, mnVerts) = (type, mnTriangles = 0);
    // Called to set the edge flag before outputting a vertex
-   GLUtessEdgeFlagProc TessEdgeFlag => (byte flag) => miNextEdge = flag != 0;
+   GLUtessEdgeFlagProc TessEdgeFlag => flag => miNextEdge = flag != 0;
    // Callback used to report errors during tessellation (this is very very rare)
-   GLUtessErrorProc TessError => (int error) => mError = $"Tesselation error: {error}";
+   GLUtessErrorProc TessError => error => mError = $"Tesselation error: {error}";
    // Called to record triangle indices
-   GLUtessVertexDataProc TessVertex => (nint data, nint another) => {
+   GLUtessVertexDataProc TessVertex => (data, _) => {
       miEdge[mnVerts] = miNextEdge ? EdgeBit : 0;
       mIdx[mnVerts] = (int)data;
       if (++mnVerts == 3) {
@@ -116,8 +116,8 @@ public class Tess2D (List<Point2> pts, IReadOnlyList<int> splits) {
    };
    // Called when a new vertex needs to be generated at an intersection point.
    // The paramter coords contains the location of the new point to be added to the list
-   // of points. We must return the index of the newly added point into *pout. 
-   unsafe GLUtessCombineProc TessCombine => (double* coords, void** d2, float* d3, int* pout) => {
+   // of points. We must return the index of the newly added point into *pout.
+   unsafe GLUtessCombineProc TessCombine => (coords, _, _, pout) => {
       *pout = NewVertex (coords[0], coords[1], coords[2]);
 
       // This is called by the combine-callback when it needs to generate new points
@@ -162,7 +162,7 @@ public static class BooleanOps {
    /// <summary>This performs a union of two given poly objects</summary>
    public static List<Poly> Union (this Poly a, Poly b) => Union ([a, b]);
    /// <summary>This performs a union of a number of polys</summary>
-   public static List<Poly> Union (this ReadOnlySpan<Poly> input) 
+   public static List<Poly> Union (this ReadOnlySpan<Poly> input)
       => new Boolean (input).Process ();
 
    /// <summary>Computes the intersection of two polys</summary>
@@ -193,8 +193,7 @@ public static class BooleanOps {
    /// operation. If the input polys are already reversed, call Union to do the subtraction instead.
    public static List<Poly> Subtract (this ReadOnlySpan<Poly> positive, ReadOnlySpan<Poly> negative) {
       List<Poly> input = [.. positive];
-      for (int i = 0; i < negative.Length; i++) 
-         input.Add (negative [i].Reversed ());
+      foreach (var poly in negative) input.Add (poly.Reversed ());
       return Union (input.AsSpan ());
    }
 
@@ -208,7 +207,7 @@ public static class BooleanOps {
             // Snap the polys to a micron grid.
             if (poly.HasArcs) {
                pts.Clear ();
-               poly.Discretize (pts, 0.05);
+               poly.Discretize (pts, 0.05, 0.5411);   // 0.5411 ~ 30 degrees
                mPts.AddRange (pts.Select (p => p.R6 ()));
             } else mPts.AddRange (poly.Pts.Select (x => x.R6 ()));
             mSplit.Add (mPts.Count);
@@ -258,10 +257,10 @@ public static class BooleanOps {
       // Called when a new vertex needs to be generated at an intersection point.
       // The paramter coords contains the location of the new point to be added to the list
       // of points. We must return the index of the newly added point into *pout.
-      unsafe GLUtessCombineProc TessCombine => (double* coords, void** d2, float* d3, int* pout) => {
+      unsafe GLUtessCombineProc TessCombine => (coords, _, _, pout) => {
          *pout = NewVertex (coords[0], coords[1]);
 
-         // Generates a new vertex or returns an existing (added in a previous Combine call) and 
+         // Generates a new vertex or returns an existing (added in a previous Combine call) and
          // returns the vertex index.
          int NewVertex (double x, double y) {
             Point2 pt = new (x, y);
@@ -277,7 +276,7 @@ public static class BooleanOps {
          if (poly.Count > 2 || poly.GetBound ().Area > 0.1) mOutput.Add (poly);
       };
       // Callback used to report errors during tesselation (this is very very rare)
-      GLUtessErrorProc TessError => error => Console.WriteLine ("TessError {0}", error);
+      static GLUtessErrorProc TessError => error => Console.WriteLine ("TessError {0}", error);
       // Called to output a new vertex; we handle all cases of triangle, triangle-strip and triangle-fan
       GLUtessVertexDataProc TessVertex => (data, _) => mBuilder.Line (mPts[(int)data]);
 

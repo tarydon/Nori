@@ -192,8 +192,9 @@ class TMisc {
       Lib.SolveLinearPair (3, 4, -13.3, 5, 6, -20.7, out var x, out var y).IsTrue ();
       x.Is (1.5); y.Is (2.2);
       Lib.SolveLinearPair (3, 4, -13.3, 30, 40, -133, out _, out _).IsFalse ();
-      Lib.GetArcSteps (10, Lib.PI, 0.1).Is (12);
-      Lib.GetArcSteps (10, Lib.PI, 0.01).Is (36);
+      Lib.GetArcSteps (10, Lib.PI, 0.1, 1.05).Is (12);
+      Lib.GetArcSteps (10, Lib.PI, 0.1, 10.01.D2R ()).Is (18);
+      Lib.GetArcSteps (10, Lib.PI, 0.01, 1.05).Is (36);
       int a = 3, b = 2; Lib.Sort (ref a, ref b);
       a.Is (2); b.Is (3);
       Lib.ReadText ("nori:GL/Shader/arrowhead.frag").Length.Is (240);
@@ -276,8 +277,8 @@ class TMisc {
    [Test (37, "class CMesh, CMeshBuilder test")]
    void Test9 () {
       // CMesh IO test
-      var part = CMesh.LoadTMesh ($"{NT.Data}/Geom/CMesh/part.tmesh");
-      part.Save (NT.TmpTxt);
+      var part = Mesh3.LoadTMesh ($"{NT.Data}/Geom/CMesh/part.tmesh");
+      File.WriteAllText (NT.TmpTxt, part.ToTMesh ());
       Assert.TextFilesEqual ("Geom/CMesh/part-out.tmesh", NT.TmpTxt);
 
       // CMeshBuilder test
@@ -287,7 +288,7 @@ class TMisc {
          pts.Add ((Point3)(pos.X, pos.Y, pos.Z));
       }
 
-      new CMeshBuilder (pts.AsSpan ()).Build ().Save (NT.TmpTxt);
+      File.WriteAllText (NT.TmpTxt, new Mesh3Builder (pts.AsSpan ()).Build ().ToTMesh ());
       Assert.TextFilesEqual ("Geom/CMesh/part-gen.tmesh", NT.TmpTxt);
    }
 
@@ -368,7 +369,7 @@ class TMisc {
       // Make tessellation inputs
       List<Point2> pts = []; List<int> splits = [0];
       foreach (var poly in polys) {
-         poly.Discretize (pts, 0.1);
+         poly.Discretize (pts, 0.1, 0.5411);
          splits.Add (pts.Count);
       }
 
@@ -377,7 +378,7 @@ class TMisc {
       var nodes = tries.Select (n => (Point3)pts[n]).ToList ();
 
       // Build and compare the mesh
-      new CMeshBuilder (nodes.AsSpan ()).Build ().Save (NT.TmpTxt);
+      File.WriteAllText (NT.TmpTxt, new Mesh3Builder (nodes.AsSpan ()).Build ().ToTMesh ());
       Assert.TextFilesEqual ("Geom/Tess/gl2d.tmesh", NT.TmpTxt);
    }
 
@@ -409,12 +410,12 @@ class TMisc {
       il[2] = 20; int n = (int)il[2]!; n.Is (20);
    }
 
-   [Test (131, "Test to handle duplicate layers")]
+   [Test (134, "Test to handle duplicate layers")]
    void Test14 () {
       var dwg = new Dwg2 ();
       // Add poly entities in different layers.
       SetLayer (new Layer2 ("Circle", Color4.Black, ELineType.Continuous));
-      dwg.Add (Poly.Circle (0, 0, 25)); dwg.Add (Poly.Circle (50, 50, 50));
+      dwg.Add (Poly.Circle (new (0, 0), 25)); dwg.Add (Poly.Circle (new (50, 50), 50));
       SetLayer (new Layer2 ("Rect", Color4.Red, ELineType.Continuous));
       dwg.Add (Poly.Rectangle (5, 5, 20, 20)); dwg.Add (Poly.Rectangle (40, 60, 80, 100));
       SetLayer (new Layer2 ("Line", Color4.Blue, ELineType.Continuous));

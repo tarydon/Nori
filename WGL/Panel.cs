@@ -62,6 +62,15 @@ class Panel : System.Windows.Controls.UserControl {
             byte[] data = new byte[bpp * x * y];
             GL.ReadPixels (0, 0, x, y, pxfmt, EPixelType.UByte, data);
             return new DIBitmap (x, y, fmt, data);
+         case ETarget.Pick:
+            GL.Finish ();
+            int size = (x = mFBViewport.X) * (y = mFBViewport.Y);
+            if (size > mPickDepth.Length)
+               (mPickPixel, mPickDepth) = (new byte[size * 4], new float[size]);
+            GL.PixelStore (EPixelStoreParam.PackAlignment, 4);
+            GL.ReadPixels (0, 0, x, y, EPixelFormat.BGRA, EPixelType.UByte, mPickPixel);
+            GL.ReadPixels (0, 0, x, y, EPixelFormat.DepthComponent, EPixelType.Float, mPickDepth);
+            return (mPickPixel, mPickDepth);
       }
       return null;
    }
@@ -102,7 +111,7 @@ class Panel : System.Windows.Controls.UserControl {
       Content = new WindowsFormsHost { Child = mSurface = new (), Focusable = false };
       HW.Panel = mSurface;
       var timer = new DispatcherTimer { Interval = TimeSpan.FromSeconds (0.1), IsEnabled = true };
-      timer.Tick += (s, e) => { mSurface.Focus (); timer.IsEnabled = false; };
+      timer.Tick += (_, _) => { mSurface.Focus (); timer.IsEnabled = false; };
    }
 
    // When this panel is unloaded, we dispose the surface and the WindowsFormsHost
@@ -118,6 +127,13 @@ class Panel : System.Windows.Controls.UserControl {
    HFrameBuffer mFrameBuffer;    // Frame-buffer for image rendering
    HRenderBuffer mColorBuffer, mDepthBuffer;    // Render buffers for the same
    Vec2S mFBSize;                // The size of the frame-buffer
+   float[] mPickDepth = [];      // The depth buffer, obtained during a Pick render
+   // This buffer contains the raw pixel-data obtained from a pick operation.
+   // Since the models are drawn in 'false-color' mode during a pick operation, this buffer
+   // effectively contains indices into the VModels list. Some finagling is required, such
+   // as discarding the least signifcant bits of each color component etc (see the code in
+   // Lux.Pick which reads and interprets these buffers)
+   byte[] mPickPixel = [];
 }
 #endregion
 
@@ -180,11 +196,12 @@ class Surface : UserControl {
          }
       }
       Lux.mReady = true;
+      Lib.Tessellate = Tess2D.Process;
       Lux.mOnReady.OnNext (0);
    }
 
    /// <summary>An 'empty' cursor</summary>
-   static internal FCursor EmptyCursor {
+   internal static FCursor EmptyCursor {
       get {
          if (mEmptyCursor == null)
             using (var stm = Lib.OpenRead ("nori:Cursor/Empty.cur"))
@@ -201,6 +218,6 @@ class Surface : UserControl {
    // Private data -------------------------------------------------------------
    HDC mDC;             // Device contex handle used for rendering
    HGLRC mGLRC;         // OpenGL context (HGLRC) used for this control
-   PixelFormatDescriptor mPFD = PixelFormatDescriptor.Default;
+   readonly PixelFormatDescriptor mPFD = PixelFormatDescriptor.Default;
 }
 #endregion

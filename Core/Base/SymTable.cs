@@ -54,6 +54,7 @@ public class SymTable<T> {
       mDict1.Add (hash, list2);
       mDict0.Remove (hash);
 
+      // Helper ............................................
       void Fatal () {
          string skey = Encoding.UTF8.GetString (key);
          throw new ArgumentException ($"An item with the same key ({skey}) has already been added");
@@ -98,7 +99,7 @@ public class SymTable<T> {
 
    // Impementation ------------------------------------------------------------
    // Compute the hash code of a ReadOnlySpan<byte>
-   int GetHashCode (ReadOnlySpan<byte> key) {
+   static int GetHashCode (ReadOnlySpan<byte> key) {
       int hash = 17;
       foreach (byte b in key) hash = Combine (hash, b);
       return hash;

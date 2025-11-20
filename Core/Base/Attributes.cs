@@ -46,6 +46,12 @@ public class EPropFieldAttribute (EProp prop) : Attribute {
 }
 #endregion
 
+#region [Radian] attribute -------------------------------------------------------------------------
+/// <summary>[Radian] is used to tag a field / property as an angle in radians</summary>
+[AttributeUsage (AttributeTargets.Field | AttributeTargets.Property)]
+public sealed class RadianAttribute : Attribute;
+#endregion
+
 #region [RedrawOnZoom] attribute -------------------------------------------------------------------
 /// <summary>Attach [RedrawOnZoom] to a widget to have it be automatically redrawn when the scene is zoomed or panned</summary>
 [AttributeUsage (AttributeTargets.Class)]

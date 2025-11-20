@@ -7,13 +7,13 @@ namespace Nori;
 #region class Bezier2DShader -----------------------------------------------------------------------
 /// <summary>A specialization of Seg2DShader, used to draw curved segs (using beziers)</summary>
 [Singleton]
-partial class Bezier2DShader () : Seg2DShader (ShaderImp.Bezier2D) { }
+partial class Bezier2DShader () : Seg2DShader (ShaderImp.Bezier2D);
 #endregion
 
 #region class BlackLineShader ----------------------------------------------------------------------
 /// <summary>Variant of StencilLineShader that draws solid black lines in 3D (anti-aliased)</summary>
 [Singleton]
-partial class BlackLineShader () : StencilLineShader (ShaderImp.BlackLine) { }
+partial class BlackLineShader () : StencilLineShader (ShaderImp.BlackLine);
 #endregion
 
 #region class DashLine2DShader ---------------------------------------------------------------------
@@ -52,12 +52,12 @@ partial class DashLine2DShader : Shader<Vec2F, DashLine2DShader.Settings> {
 
 #region class FacetShader --------------------------------------------------------------------------
 /// <summary>Base class for various types of 3D shader (Flat / Gourad / Phong)</summary>
-abstract class FacetShader : Shader<CMesh.Node, FacetShader.Settings> {
+abstract class FacetShader : Shader<Mesh3.Node, FacetShader.Settings> {
    // Constructors -------------------------------------------------------------
    protected FacetShader (ShaderImp imp) : base (imp) => Bind ();
 
    // Overrides ----------------------------------------------------------------
-   protected unsafe override void ApplyUniformsImp (ref readonly Settings a) {
+   protected override void ApplyUniformsImp (ref readonly Settings a) {
       //ref Mat4F xfm = ref Lux.Scene!.Xfms[a.IDXfm].Xfm; TODO check if this works
       //fixed (float* f = &xfm.M11) Pgm.Set (muXfm, f);
       Pgm.Set (muXfm, ref Lux.Scene!.Xfms[a.IDXfm].Xfm);
@@ -74,7 +74,7 @@ abstract class FacetShader : Shader<CMesh.Node, FacetShader.Settings> {
    protected override Settings SnapUniformsImp () => new (Lux.IDXfm, Lux.Color);
 
    // Private data -------------------------------------------------------------
-   int muXfm = 0, muNormalXfm = 0, muDrawColor = 0;
+   protected int muXfm = 0, muNormalXfm = 0, muDrawColor = 0;
 
    public readonly record struct Settings (int IDXfm, Color4 Color);
 }
@@ -83,31 +83,31 @@ abstract class FacetShader : Shader<CMesh.Node, FacetShader.Settings> {
 #region class FlatFacetShader ----------------------------------------------------------------------
 /// <summary>3D shader using flat shading (no interpolation)</summary>
 [Singleton]
-partial class FlatFacetShader () : FacetShader (ShaderImp.FlatFacet) { }
+partial class FlatFacetShader () : FacetShader (ShaderImp.FlatFacet);
 #endregion
 
 #region class GlassShader --------------------------------------------------------------------------
 /// <summary>3D shader that simulates translucency using stippling</summary>
 [Singleton]
-partial class GlassShader () : FacetShader (ShaderImp.Glass) { }
+partial class GlassShader () : FacetShader (ShaderImp.Glass);
 #endregion
 
 #region class GlassLineShader ----------------------------------------------------------------------
 /// <summary>Variant of StencilLineShader that draws stippled lines (50% transparency)</summary>
 [Singleton]
-partial class GlassLineShader () : StencilLineShader (ShaderImp.GlassLine) { }
+partial class GlassLineShader () : StencilLineShader (ShaderImp.GlassLine);
 #endregion
 
 #region class GouradShader -------------------------------------------------------------------------
 /// <summary>3D shader using the Gourad shader model (color interpolation)</summary>
 [Singleton]
-partial class GouradShader () : FacetShader (ShaderImp.Gourad) { }
+partial class GouradShader () : FacetShader (ShaderImp.Gourad);
 #endregion
 
 #region class Line2DShader -------------------------------------------------------------------------
 /// <summary>A specialization of Seg2DShader, used to draw linear segs</summary>
 [Singleton]
-partial class Line2DShader () : Seg2DShader (ShaderImp.Line2D) { }
+partial class Line2DShader () : Seg2DShader (ShaderImp.Line2D);
 #endregion
 
 #region class Line3DShader -------------------------------------------------------------------------
@@ -136,7 +136,25 @@ partial class Line3DShader : Shader<Vec3F, Seg2DShader.Settings> {
 #region class PhongShader --------------------------------------------------------------------------
 /// <summary>3D shader using the Phong shading model (normal vector interpolation)</summary>
 [Singleton]
-partial class PhongShader () : FacetShader (ShaderImp.Phong) { }
+partial class PhongShader () : FacetShader (ShaderImp.Phong);
+#endregion
+
+#region class PhongPinkShader ----------------------------------------------------------------------
+/// <summary>Phong shader that colors back-faces in Pink (useful for debugging)</summary>
+[Singleton]
+partial class PhongPinkShader () : FacetShader (ShaderImp.PhongPink);
+#endregion
+
+#region class PickShader ---------------------------------------------------------------------------
+/// <summary>3D shader used during picking - replaces actual colors with VNode Ids</summary>
+[Singleton]
+partial class PickShader () : FacetShader (ShaderImp.Pick) {
+   public void ApplyUniforms (int idXfm, Color4 color) {
+      Pgm.Set (muXfm, ref Lux.Scene!.Xfms[idXfm].Xfm);
+      Pgm.Set (muNormalXfm, ref Lux.Scene.Xfms[idXfm].NormalXfm);
+      Pgm.Set (muDrawColor, color);
+   }
+}
 #endregion
 
 #region class Point2DShader ------------------------------------------------------------------------
@@ -170,7 +188,7 @@ partial class Point2DShader : Shader<Vec2F, Point2DShader.Settings> {
 #region class Quad2DShader -------------------------------------------------------------------------
 /// <summary>Shader to draw simple quads in 2D (specified in world space, no anti-aliasing)</summary>
 [Singleton]
-partial class Quad2DShader () : TriQuad2DShader (ShaderImp.Quad2D) { }
+partial class Quad2DShader () : TriQuad2DShader (ShaderImp.Quad2D);
 #endregion
 
 #region class Seg2DShader --------------------------------------------------------------------------
@@ -181,7 +199,7 @@ class Seg2DShader : Shader<Vec2F, Seg2DShader.Settings> {
    int muVPScale = 0, muXfm = 0, muLineWidth = 0, muDrawColor = 0;
 
    // Overrides ----------------------------------------------------------------
-   protected unsafe override void ApplyUniformsImp (ref readonly Settings a) {
+   protected override void ApplyUniformsImp (ref readonly Settings a) {
       Pgm.Set (muXfm, ref Lux.Scene!.Xfms[a.IDXfm].Xfm);
       Pgm.Set (muLineWidth, a.LineWidth * Lux.DPIScale).Set (muDrawColor, a.Color);
    }
@@ -202,9 +220,9 @@ class Seg2DShader : Shader<Vec2F, Seg2DShader.Settings> {
 
 #region class StencilLineShader --------------------------------------------------------------------
 /// <summary>Shader used to draw the black stencil lines for a mesh</summary>
-abstract class StencilLineShader : Shader<CMesh.Node, StencilLineShader.Settings> {
+abstract class StencilLineShader : Shader<Mesh3.Node, StencilLineShader.Settings> {
    // Constructor --------------------------------------------------------------
-   public StencilLineShader (ShaderImp imp) : base (imp) => Bind ();
+   protected StencilLineShader (ShaderImp imp) : base (imp) => Bind ();
    int muXfm = 0, muVPScale = 0, muLineWidth = 0, muDrawColor = 0;
 
    // Overrides ----------------------------------------------------------------
@@ -290,7 +308,7 @@ partial class Text2DShader : Shader<Text2DShader.Args, Text2DShader.Settings> {
 #region class Triangle2DShader ---------------------------------------------------------------------
 /// <summary>Shader to draw simple triangles in 2D (specified in world space, no anti-aliasing)</summary>
 [Singleton]
-partial class Triangle2DShader () : TriQuad2DShader (ShaderImp.Triangle2D) { }
+partial class Triangle2DShader () : TriQuad2DShader (ShaderImp.Triangle2D);
 #endregion
 
 #region class TriFanStencilShader ------------------------------------------------------------------
@@ -322,7 +340,7 @@ partial class Triangle2DShader () : TriQuad2DShader (ShaderImp.Triangle2D) { }
 /// Subsequently, the TriFanCoverShader uses this stencil to fill in the pixels where stencil
 /// bit 0 is set
 [Singleton]
-partial class TriFanStencilShader () : TriQuad2DShader (ShaderImp.TriFanStencil) { }
+partial class TriFanStencilShader () : TriQuad2DShader (ShaderImp.TriFanStencil);
 #endregion
 
 #region class TriFanCoverShader --------------------------------------------------------------------
@@ -333,7 +351,7 @@ partial class TriFanStencilShader () : TriQuad2DShader (ShaderImp.TriFanStencil)
 /// paths in question. The implementation in Lux.FillPoly uses the bounding box of the set of
 /// paths and creates a triangle fan with 2 triangles that apply paint into this bounding box.
 [Singleton]
-partial class TriFanCoverShader () : TriQuad2DShader (ShaderImp.TriFanCover) { }
+partial class TriFanCoverShader () : TriQuad2DShader (ShaderImp.TriFanCover);
 #endregion
 
 #region class TriQuad2DShader ----------------------------------------------------------------------

@@ -2,11 +2,10 @@
 // ╔═╦╦═╦╦╬╣ DXFReader.cs
 // ║║║║╬║╔╣║ Implements DXFReader: reads in a Dwg2 from a DXF file
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
-using System.Diagnostics;
 namespace Nori;
 
 /// <summary>DXFReader is used to read a DXF file into a Dwg2</summary>
-public partial class DXFReader {
+public class DXFReader {
    // Constructors -------------------------------------------------------------
    /// <summary>Construct a DXFReader, given a filename</summary>
    public DXFReader (string file)
@@ -14,16 +13,9 @@ public partial class DXFReader {
 
    // Properties ---------------------------------------------------------------
    /// <summary>The Standard 256 ACAD Colors</summary>
-   public static Color4[] ACADColors {
-      get {
-         if (sACADColors == null) {
-            sACADColors = [..Lib.ReadLines ("nori:DXF/color.txt")
-                            .Select (a => new Color4 (uint.Parse (a, NumberStyles.HexNumber) | 0xff000000))];
-            Debug.Assert (sACADColors.Length == 256);
-         }
-         return sACADColors;
-      }
-   }
+   public static Color4[] ACADColors 
+      => sACADColors ??= [..Lib.ReadLines("nori:DXF/color.txt")
+                          .Select(a => new Color4(uint.Parse(a, NumberStyles.HexNumber) | 0xff000000))];
    static Color4[]? sACADColors;
 
    /// <summary>Darken all layer colors (to have a luminance of no more than 160)</summary>
@@ -136,7 +128,7 @@ public partial class DXFReader {
          mSB.Clear ();
          int last = 0; var tspan = text.AsSpan ();
          foreach (Match M in matches) {
-            // Extract the raw-text from the given string.
+            // Extract the raw-text1 from the given string.
             if (M.Index > last) Append2 (tspan[last..M.Index]);
             if (M.Groups.TryGetValue ("fract", out var fract) && fract.ValueSpan.Length > 0) {
                // No special fraction rendering is supported. Just concatenate using the division '/' symbol.
@@ -152,8 +144,8 @@ public partial class DXFReader {
          if (last < text.Length) Append2 (tspan[last..]);
          text = mSB.ToString ();
 
-         void Append (string text) => mSB.Append (text);
-         void Append2 (ReadOnlySpan<char> text) => mSB.Append (text);
+         void Append (string text1) => mSB.Append (text1);
+         void Append2 (ReadOnlySpan<char> text2) => mSB.Append (text2);
       }
       // Now cleanup the raw-string by removing code-blocks ({...}) and split
       // them into multiple lines by the line-break (\P).
@@ -161,13 +153,13 @@ public partial class DXFReader {
       // Output a text entity for each line.
       double dyLine = 0;
       var mat = Matrix2.Rotation (pos, angle);
-      for (int i = 0; i < lines.Length; i++) {
+      foreach (var line in lines) {
          var pt = pos;
          if (!dyLine.IsZero ()) {
             pt = new (pt.X, pt.Y - dyLine);
             if (!angle.IsZero ()) pt *= mat;
          }
-         var ent = new E2Text (layer, style, Clean (lines[i], mSB), pt, height, angle, style.Oblique, style.XScale, align) { Color = GetColor () };
+         var ent = new E2Text (layer, style, Clean (line, mSB), pt, height, angle, style.Oblique, style.XScale, align) { Color = GetColor () };
          dyLine += ent.DYLine;
          yield return ent;
       }
@@ -217,7 +209,6 @@ public partial class DXFReader {
                case 'p' or 'P': ch = (char)0xB1; i += 2; break;
                case 'c' or 'C': ch = (char)0x2205; i += 2; break;
             }
-            ;
          }
          sb.Append (ch);
       }
@@ -228,7 +219,7 @@ public partial class DXFReader {
    Color4 GetColor () => GetColor (ColorNo);
 
    /// <summary>Converts a DXF linetype string to the corresponding ELineType enum value </summary>
-   ELineType GetLType (string lt) => lt.ToUpper () switch {
+   static ELineType GetLType (string lt) => lt.ToUpper () switch {
       "DOT" or "DOTTED" => ELineType.Dot,
       "DASH" or "DASHED" => ELineType.Dash,
       "DASHDOT" => ELineType.DashDot,
@@ -238,7 +229,7 @@ public partial class DXFReader {
       "HIDDEN" => ELineType.Hidden,
       "DASH2" => ELineType.Dash2,
       "PHANTOM" => ELineType.Phantom,
-      _ => ELineType.Continuous,
+      _ => ELineType.Continuous
    };
 
    // Called at the start of each section.
@@ -251,7 +242,6 @@ public partial class DXFReader {
          while (Next ()) { if (G == 0 && V == "ENDSEC") break; }
       } else
          S[G] = name;
-      return;
    }
    static HashSet<string> sSections = ["TABLES", "HEADER", "BLOCKS", "ENTITIES"];
 
@@ -284,7 +274,7 @@ public partial class DXFReader {
       set {
          switch (mType) {
             case "ARC": Add (Poly.Arc (Center, Radius, StartAng, EndAng, true)); break;
-            case "CIRCLE": Add (Poly.Circle (Center.X * ZDir, Center.Y, Radius)); break;
+            case "CIRCLE": Add (Poly.Circle (new (Center.X * ZDir, Center.Y), Radius)); break;
             case "ELLIPSE": AddEllipse (Pt0, MajorAxis, AxisRatio, TRange); break;
             case "POINT": Add (new E2Point (Layer, Pt0) { Color = GetColor () }); break;
             case "POLYLINE": mClosedPoly = (Flags & 1) > 0; break;
@@ -461,7 +451,7 @@ public partial class DXFReader {
    string Text => S[1];
    string Name => S[2];
    string Font => S[3];
-   string LTypeName => S[6] ?? "CONTINUOUS";
+   string LTypeName => S[6].IsBlank () ? "CONTINUOUS" : S[6];
    string LayerName => S[8];
 
    double X1 => D[11]; double Y1 => D[21]; Point2 Pt1 => new (X1 * Scale, Y1 * Scale);

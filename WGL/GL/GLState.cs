@@ -6,9 +6,9 @@ namespace Nori;
 
 #region class GLState ------------------------------------------------------------------------------
 /// <summary>The GLState class is used to effect any changes to OpenGL state</summary>
-/// The point of this class is to call underlying functions like GL.Enable, 
-/// GL.Scissor etc only when the state actually changes (these are global state). 
-/// Also, at the start of every frame, we call GLState.Reset() to reset 
+/// The point of this class is to call underlying functions like GL.Enable,
+/// GL.Scissor etc only when the state actually changes (these are global state).
+/// Also, at the start of every frame, we call GLState.Reset() to reset
 /// all this state to a stable known default. This is an internal class,
 /// used primarily by the Lux draw classes.
 static class GLState {
@@ -16,7 +16,7 @@ static class GLState {
    /// <summary>Is Blending now enable (default = false)</summary>
    public static bool Blending {
       set {
-         if (Lib.Set (ref mBlending, value)) 
+         if (Lib.Set (ref mBlending, value))
             GL.Enable (ECap.Blend, value);
       }
    }
@@ -26,7 +26,7 @@ static class GLState {
    public static bool DepthTest {
       set {
          if (Lib.Set (ref mDepthTest, value))
-            GL.Enable (ECap.DepthTest, value); 
+            GL.Enable (ECap.DepthTest, value);
       }
    }
    static bool mDepthTest;
@@ -65,34 +65,34 @@ static class GLState {
       }
    }
    static ShaderImp? mProgram;
-   static internal int mPgmChanges;    // Number of program changes in this frame
+   internal static int mPgmChanges;    // Number of program changes in this frame
 
    /// <summary>The 'stencil behavior' of the current program</summary>
    /// See the TriFanStencil shader for a more detailed example of this algorithm (this is used
-   /// to implement the FillPoly Lux method). 
+   /// to implement the FillPoly Lux method).
    public static EStencilBehavior StencilBehavior {
       set {
          if (mStencilBehavior == value) return;
          mStencilBehavior = value;
-         // We enable the stencil test when the stencil-behavior is set other than NONE. 
+         // We enable the stencil test when the stencil-behavior is set other than NONE.
          // This enables both the StencilOp (used to update the stencil buffer) and the StencilFunc
          // used to test and discard some pixels using stencil buffer comparisons
          GL.Enable (ECap.StencilTest, mStencilBehavior != EStencilBehavior.None);
          switch (value) {
             case EStencilBehavior.Stencil:
                // This is used by the TriFanStencil shader - the first phase of the stencil-then-cover
-               // algorithm. We use only one bit of the Stencil buffer (bit 0), and start with this 
+               // algorithm. We use only one bit of the Stencil buffer (bit 0), and start with this
                // full cleared (by glClear). Then, for every pixel touched, we invert this as we draw
-               // a triangle-fan from a fixed point to every segment of every closed polyline in the path. 
-               // That will end up leaving the stencil bit set for every point inside the path. We also 
+               // a triangle-fan from a fixed point to every segment of every closed polyline in the path.
+               // That will end up leaving the stencil bit set for every point inside the path. We also
                // use StencilFunc to avoid updating any actual color buffer pixels during this phase.
                GL.StencilOp (EFace.FrontAndBack, EStencilOp.Invert, EStencilOp.Invert, EStencilOp.Invert);
                GL.StencilFunc (EFace.FrontAndBack, EStencilFunc.Never, 0, 0);
                break;
             case EStencilBehavior.Cover:
                // This is used by the TriFanCover shader - the second phase of the stencil-then-cover
-               // algorithm. For every pixel where the stencil bit 0 is set, we pass and update the 
-               // color buffer (painting through the stencil). We also clear those bits using the 
+               // algorithm. For every pixel where the stencil bit 0 is set, we pass and update the
+               // color buffer (painting through the stencil). We also clear those bits using the
                // StencilOp at the same time, so the stencil buffer is reset in preparation for the next
                // primitive to be drawn
                GL.StencilOp (EFace.FrontAndBack, EStencilOp.Zero, EStencilOp.Zero, EStencilOp.Zero);
@@ -115,7 +115,7 @@ static class GLState {
          }
       }
    }
-   static int mTypeFaceId = 0;
+   static int mTypeFaceId;
 
    /// <summary>The current vertex-array-object being used</summary>
    public static HVertexArray VAO {
@@ -127,7 +127,7 @@ static class GLState {
       }
    }
    static HVertexArray mHVAO;
-   static internal int mVAOChanges;    // Number of VAO changes in this frame
+   internal static int mVAOChanges;    // Number of VAO changes in this frame
 
    // Methods ------------------------------------------------------------------
    /// <summary>Resets everything to a known state (at the start of every frame)</summary>

@@ -36,7 +36,7 @@ public class Block2 {
 /// <summary>Bitflags for Ent2</summary>
 [Flags]
 public enum E2Flags {
-   Selected = 0x1, InBlock = 0x2, Closed = 0x4, Periodic = 0x8,
+   Selected = 0x1, InBlock = 0x2, Closed = 0x4, Periodic = 0x8
 }
 #endregion
 
@@ -69,7 +69,7 @@ public class Grid2 {
    /// <summary>Make a Grid2 with just the visibility changed</summary>
    public Grid2 WithVisible (bool visibility) => new (Pitch, Subdivs, visibility, Snap, Origin, Rotation);
 
-   public readonly static Grid2 Default = new (10.0, 5, false, false, Point2.Zero, 0);
+   public static readonly Grid2 Default = new (10.0, 5, false, false, Point2.Zero, 0);
 }
 #endregion
 
@@ -80,7 +80,7 @@ public class Style2 {
    Style2 () => Name = Font = "";
    public Style2 (string name, string font, double height, double xscale, double oblique) {
       (Name, Font, Height, XScale, Oblique) = (name, font, height, xscale, oblique);
-      if (Font.EndsWith (".shx")) Font = Font[..(Font.Length - 4)];
+      if (Font.EndsWith (".shx")) Font = Font[..^4];
    }
 
    public override string ToString () => $"Style2 {Name}({Font})";

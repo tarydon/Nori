@@ -50,9 +50,6 @@ public partial class Poly {
       Point2 a = pt + new Vector2 (radius, 0);
       return new Poly ([a], [new ArcInfo (pt, EFlags.CCW | EFlags.Circle)], EFlags.Closed | EFlags.HasArcs | EFlags.Circle);
    }
-   /// <summary>Make a full-circle Poly</summary>
-   public static Poly Circle (double x, double y, double radius)
-      => Circle (new (x, y), radius);
 
    /// <summary>Make a single-line Poly</summary>
    public static Poly Line (Point2 pt, Point2 pt2)
@@ -67,7 +64,7 @@ public partial class Poly {
 
    /// <summary>Create a polygon of given size at a given center, sides and rotation angle.</summary>
    public static Poly Polygon (Point2 cen, double radius, int sides, double angle = 0)
-      => Lines (Enumerable.Range (0, sides).Select (i => cen.Polar (radius, angle + Lib.HalfPI + Lib.TwoPI * i / sides)));
+      => Lines (Enumerable.Range (0, sides).Select (i => cen.Polar (radius, angle + HalfPI + TwoPI * i / sides)));
 
    /// <summary>This constructor makes a Pline from a Pline mini-language encoded string</summary>
    /// When we do ToString on a Pline, we get an encoding of that Pline in a mini-language.
@@ -95,7 +92,7 @@ public partial class Poly {
    /// <summary>Makes a full-rectangle Poly</summary>
    public static Poly Rectangle (double x0, double y0, double x1, double y1) {
       var pb = new PolyBuilder ();
-      Lib.Sort (ref x0, ref x1); Lib.Sort (ref y0, ref y1);
+      Sort (ref x0, ref x1); Sort (ref y0, ref y1);
       pb.Line (x0, y0).Line (x1, y0).Line (x1, y1).Line (x0, y1);
       return pb.Close ().Build ();
    }
@@ -231,11 +228,18 @@ public partial class Poly {
    }
 
    /// <summary>Discretizes the pline with a given error threshold into the given set of points</summary>
-   public void Discretize (List<Point2> pts, double threshold) {
+   /// <param name="pts">The output is added to this list of points (existing points here are not disturbed)</param>
+   /// <param name="threshold">Maximum lateral deviation between the chord approximation and the arc</param>
+   /// <param name="angleLimit">Maximum turn angle between successive chord segments in an arc</param>
+   /// The number of segments each arc is discretized into depends on both the threshold (linear deviation
+   /// between the chord and the original arc) and the angleLimit (turn angle between successive chords
+   /// approximating the arc) - the tighter of those two constraints will eventually determine the number
+   /// of segments each arc gets divided into.
+   public void Discretize (List<Point2> pts, double threshold, double angleLimit) {
       if (!HasArcs) pts.AddRange (mPts);
       else {
          pts.Add (A);
-         foreach (var seg in Segs) seg.Discretize (pts, threshold);
+         foreach (var seg in Segs) seg.Discretize (pts, threshold, angleLimit);
          if (IsClosed) pts.RemoveLast ();
       }
    }
@@ -283,8 +287,7 @@ public partial class Poly {
             // Output 'G' for CCW, and 'D' for CW arcs. The radius is always included,
             // but the angle is included only if it is not 90 degrees
             double ang = seg.AngSpan.R2D ().Round (decimals), rad = seg.Radius.Round (decimals);
-            if (ang >= 0) sb.Append ('G'); else sb.Append ('D');
-            sb.Append (rad);
+            sb.Append (ang >= 0 ? 'G' : 'D').Append (rad);
             ang = Abs (ang);
             if (!ang.EQ (90)) sb.Append ($",{ang}");
             sb.Append (' ');
@@ -294,7 +297,7 @@ public partial class Poly {
          // For a 90 degree turn, we don't output the angle.
          double turn = GetTurnAngle (i + 1);
          if (!turn.IsZero ()) {
-            if (turn >= 0) sb.Append ('L'); else sb.Append ('R');
+            sb.Append (turn >= 0 ? 'L' : 'R');
             turn = Abs (turn);
             if (!turn.EQ (HalfPI)) sb.Append (turn.R2D ().Round (decimals));
             sb.Append (' ');
@@ -388,7 +391,7 @@ public partial class Poly {
          }
       }
       var flags = mFlags;
-      if (extra.Count == 0 || extra.Any (_ => (_.Flags & EFlags.Arc) != 0))
+      if (extra.Count == 0 || extra.Any (e => (e.Flags & EFlags.Arc) != 0))
          flags &= ~EFlags.HasArcs;
       // Remove dup points
       var pts = mPts.Select ((pt, idx) => (pt, idx)).Where (a => !skipIdxs.Contains (a.idx)).Select (a => a.pt);
@@ -430,7 +433,7 @@ public partial class Poly {
          result = mergedSegs ? new Poly ([.. pts], [.. extras], mFlags) : null;
       // Consider merging last and first segs
       var poly = result ?? this;
-      if (poly.IsClosed && poly.Count > 1) {
+      if (poly is { IsClosed: true, Count: > 1 }) {
          var (last, first) = (poly[^1], poly[0]);
          _ = CanMerge (last, first, threshold) && poly.Roll (1).TryMergeConsecutiveSegs (out result, threshold);
       }
@@ -466,7 +469,7 @@ public partial class Poly {
       if (p.IsCircle) {
          var cen = p.Extra[0].Center;
          double radius = cen.DistTo (p.A) * xfm.ScaleFactor;
-         return Poly.Circle (cen * xfm, radius);
+         return Circle (cen * xfm, radius);
       } else {
          var pts = p.Pts.Select (a => a * xfm).ToImmutableArray ();
          ImmutableArray<ArcInfo> extra = [];
@@ -488,7 +491,7 @@ public partial class Poly {
       CW,             // Clockwise
       CCW,            // Counter-clockwise
       Indeterminate   // Cannot say - open poly, self-intersecting poly etc
-   };
+   }
 
    /// <summary>Addition information stored for curved segments (center point, winding)</summary>
    internal readonly struct ArcInfo (Point2 center, EFlags flags) {
@@ -571,8 +574,8 @@ public class PolyBuilder {
                   Line (a); a = b;
                } else {
                   double opp = a.DistTo (b) / 2, slope = a.AngleTo (b);
-                  double adj = opp / Tan (q * Lib.QuarterPI);
-                  Point2 cen = a.Polar (opp, slope).Polar (adj, slope + Lib.HalfPI);
+                  double adj = opp / Tan (q * QuarterPI);
+                  Point2 cen = a.Polar (opp, slope).Polar (adj, slope + HalfPI);
                   Arc (a, cen, q > 0 ? Poly.EFlags.CCW : Poly.EFlags.CW);
                   a = b;
                }
@@ -636,6 +639,10 @@ public class PolyBuilder {
    // Property -----------------------------------------------------------------
    /// <summary>Returns true if no Poly is built</summary>
    public bool IsNull => mPts.Count == 0;
+
+   public static PolyBuilder It => sIt ??= new ();
+   [ThreadStatic]
+   static PolyBuilder? sIt;
 
    // Private data -------------------------------------------------------------
    readonly List<Point2> mPts = [];

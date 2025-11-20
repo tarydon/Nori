@@ -16,7 +16,7 @@ namespace Nori;
 /// - The Wires array (taken 2 at a time) defines the stencil lines to be drawn.
 ///   Each endpoint of the wire is again an index into the Vertex array (and to draw the
 ///   wires, we use only the position, not the normal)
-public class CMesh (ImmutableArray<CMesh.Node> vertex, ImmutableArray<int> triangle, ImmutableArray<int> wire) {
+public class Mesh3 (ImmutableArray<Mesh3.Node> vertex, ImmutableArray<int> triangle, ImmutableArray<int> wire) {
    public readonly ImmutableArray<Node> Vertex = vertex;
    public readonly ImmutableArray<int> Triangle = triangle;
    public readonly ImmutableArray<int> Wire = wire;
@@ -25,13 +25,13 @@ public class CMesh (ImmutableArray<CMesh.Node> vertex, ImmutableArray<int> trian
 
    public Bound3 Bound {
       get {
-         if (mBound.IsEmpty) mBound = new Bound3 (Vertex.Select (a => a.Pos));
-         return mBound;
+         if (_bound.IsEmpty) _bound = new Bound3 (Vertex.Select (a => a.Pos));
+         return _bound;
       }
    }
-   Bound3 mBound = new ();
+   Bound3 _bound = new ();
 
-   public static CMesh operator * (CMesh mesh, Matrix3 xfm) {
+   public static Mesh3 operator * (Mesh3 mesh, Matrix3 xfm) {
       if (xfm.IsIdentity) return mesh;
       ImmutableArray<Node> nodes = [.. mesh.Vertex.Select (a => a * xfm)];
       return new (nodes, mesh.Triangle, mesh.Wire);
@@ -39,6 +39,8 @@ public class CMesh (ImmutableArray<CMesh.Node> vertex, ImmutableArray<int> trian
 
    [StructLayout (LayoutKind.Sequential, Pack = 2, Size = 20)]
    public readonly struct Node (Vec3F pos, Vec3H vec) {
+      public Node (Point3 pos, Vector3 vec) : this ((Vec3F)pos, (Vec3H)vec) { }
+
       public Vec3F Pos => pos;
       public Vec3H Vec => vec;
 
@@ -57,7 +59,7 @@ public class CMesh (ImmutableArray<CMesh.Node> vertex, ImmutableArray<int> trian
    }
 
    /// <summary>Returns a copy of the mesh shifted by the given vector</summary>
-   public CMesh Translated (Vector3 vec) {
+   public Mesh3 Translated (Vector3 vec) {
       var nodes = new Node[Vertex.Length];
       for (int i = 0; i < Vertex.Length; i++) {
          var node = Vertex[i];
@@ -66,13 +68,13 @@ public class CMesh (ImmutableArray<CMesh.Node> vertex, ImmutableArray<int> trian
       return new ([..nodes], Triangle, Wire);
    }
 
-   public static CMesh Load (string file) {
+   public static Mesh3 Load (string file) {
       using var stm = File.OpenRead (file);
       return Load (stm);
    }
 
    /// <summary>Loads a Mesh from a .mesh file</summary>
-   public unsafe static CMesh Load (Stream stm) {
+   public static unsafe Mesh3 Load (Stream stm) {
       using DeflateStream dfs = new (stm, CompressionMode.Decompress, false);
       ByteStm bs = new (dfs.ReadBytes (dfs.ReadInt32 ()));
       int sign = bs.ReadInt32 (), version = bs.ReadByte ();
@@ -80,7 +82,7 @@ public class CMesh (ImmutableArray<CMesh.Node> vertex, ImmutableArray<int> trian
          throw new IOException ("Mesh file is damaged");
       if (version >= 2) bs.ReadString ();    // Read and discard the name
 
-      CMesh[] meshes = new CMesh[bs.ReadInt32 ()];
+      Mesh3[] meshes = new Mesh3[bs.ReadInt32 ()];
       for (int i = 0; i < meshes.Length; i++) {
          // Read the marker to indicate if this is a 'small' mesh, and skip past the
          // 'mesh format'
@@ -98,8 +100,7 @@ public class CMesh (ImmutableArray<CMesh.Node> vertex, ImmutableArray<int> trian
             fixed (void* p = swIdx) bs.Read (p, wires * 2);
             tIdx = [.. stIdx.Select (a => (int)a)];
             ushort prev = 0xffff;
-            for (int j = 0; j < swIdx.Length; j++) {
-               ushort n = swIdx[j];
+            foreach (var n in swIdx) {
                if (prev != 0xffff && n != 0xffff) { wIdx.Add (prev); wIdx.Add (n); }
                prev = n;
             }
@@ -114,7 +115,7 @@ public class CMesh (ImmutableArray<CMesh.Node> vertex, ImmutableArray<int> trian
                prev = n;
             }
          }
-         meshes[i] = new CMesh ([.. nodes], [.. tIdx], [.. wIdx]);
+         meshes[i] = new Mesh3 ([.. nodes], [.. tIdx], [.. wIdx]);
       }
       List<Node> vertex = [];
       List<int> ftris = [], fwires = [];
@@ -124,11 +125,11 @@ public class CMesh (ImmutableArray<CMesh.Node> vertex, ImmutableArray<int> trian
          ftris.AddRange (mesh.Triangle.Select (a => a + nBase));
          fwires.AddRange (mesh.Wire.Select (a => a + nBase));
       }
-      return new CMesh ([..vertex], [..ftris], [..fwires]);
+      return new Mesh3 ([..vertex], [..ftris], [..fwires]);
    }
 
    /// <summary>Loads data from a TMesh file</summary>
-   public static CMesh LoadTMesh (string filename) {
+   public static Mesh3 LoadTMesh (string filename) {
       int n = 0;
       var lines = File.ReadAllLines (filename);
       // Parse the file header
@@ -136,7 +137,7 @@ public class CMesh (ImmutableArray<CMesh.Node> vertex, ImmutableArray<int> trian
 
       // Load the array of PointVec
       var nodes = new Node[int.Parse (Line ())];
-      var options = StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries;
+      const StringSplitOptions options = StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries;
       for (int i = 0; i < nodes.Length; i++) {
          double[] a = Line ().Split (',', options).Select (double.Parse).ToArray ();
          nodes[i] = new Node (new (a[0], a[1], a[2]), new Vec3H ((Half)a[3], (Half)a[4], (Half)a[5]));
@@ -158,8 +159,9 @@ public class CMesh (ImmutableArray<CMesh.Node> vertex, ImmutableArray<int> trian
       if (Line () != "EOF") Fatal ();
       return new (nodes.AsIArray (), triangle.AsIArray (), wire.AsIArray ());
 
-      void Fatal () => throw new Exception ("Invalid TMESH file");
+      // Helpers ...........................................
       string Line () => lines[n++];
+      static void Fatal () => throw new Exception ("Invalid TMESH file");
    }
 
    /// <summary>Saves the mesh to a TMesh file.</summary>
@@ -194,7 +196,7 @@ public class CMesh (ImmutableArray<CMesh.Node> vertex, ImmutableArray<int> trian
    /// EOF
    /// ]]>
    /// </code>
-   public void Save (string filename) {
+   public string ToTMesh () {
       // Version, Vertex count, vertices
       StringBuilder sb = new ($"TMESH\n1\n{Vertex.Length}\n");
       foreach (var (pos, vec) in Vertex)
@@ -209,8 +211,8 @@ public class CMesh (ImmutableArray<CMesh.Node> vertex, ImmutableArray<int> trian
       sb.Append ($"{Wire.Length / 2}\n");
       for (int i = 0; i < Wire.Length; i += 2)
          sb.Append ($"{Wire[i]} {Wire[i + 1]}\n");
-
-      File.WriteAllText (filename, sb.Append ("EOF\n").ToString ());
+      sb.Append ("EOF\n");
+      return sb.ToString ();
    }
 }
 #endregion
@@ -222,11 +224,11 @@ public class CMesh (ImmutableArray<CMesh.Node> vertex, ImmutableArray<int> trian
 /// more than a given threshold, it marks the edge as sharp. The SmoothMeshBuilder works with a given mesh
 /// as the target and adds triangles into that mesh. Note that you never need to supply normals to this.
 /// It computes normals based on which parts should be 'smooth' and which ones should be 'sharp'.
-public class CMeshBuilder {
+public class Mesh3Builder {
    /// <summary>Initialize a CMeshBuilder with a set of points </summary>
    /// These points, taken 3 at a time, define a set of triangles.
    /// <param name="pts">Triangle points.</param>
-   public CMeshBuilder (ReadOnlySpan<Point3> pts) {
+   public Mesh3Builder (ReadOnlySpan<Point3> pts) {
       Dictionary<Point3, int> verts = [];
       foreach (var pt in pts) {
          if (!verts.TryGetValue (pt, out int id)) {
@@ -239,7 +241,7 @@ public class CMeshBuilder {
    }
 
    /// <summary>Constructs a CMesh object from the given set of 'smoothed' triangles.</summary>
-   public CMesh Build () {
+   public Mesh3 Build () {
       for (int i = 0; i < mIdx.Count; i += 3) {
          int A = mIdx[i], B = mIdx[i + 1], C = mIdx[i + 2];
          Point3 a = mVertex[A].Pos, b = mVertex[B].Pos, c = mVertex[C].Pos;
@@ -249,7 +251,7 @@ public class CMeshBuilder {
          Add (ref mFace, ref mcFace, f);
       }
 
-      CMesh.Node[] nodes = new CMesh.Node[mcVertex]; int cNodes = 0;
+      Mesh3.Node[] nodes = new Mesh3.Node[mcVertex]; int cNodes = 0;
       List<int> wires = [], tries = [];
       HashSet<(Point3, Point3)> lines = [];
 
@@ -259,7 +261,7 @@ public class CMeshBuilder {
       // Now we have enough information to try and create the faces
       for (int i = 0; i < mcFace; i++) AddTriangle (i);
 
-      return new CMesh ([..nodes.AsSpan (0, cNodes)], [.. tries], [.. wires]);
+      return new Mesh3 ([..nodes.AsSpan (0, cNodes)], [.. tries], [.. wires]);
 
       // Assigns a reference to the given face to a given vertex
       // This tells the vertex that the face nFace references this vertex
@@ -306,7 +308,7 @@ public class CMeshBuilder {
    ///
    /// The GroupFaces method builds all the necessary data required to provide this averaged normal
    /// and the 'sharp-edge' flag at the next stage.
-   void GroupFaces (ref Vertex c, ref CMesh.Node[] nodes, ref int cNodes) {
+   void GroupFaces (ref Vertex c, ref Mesh3.Node[] nodes, ref int cNodes) {
       int max = 0;
       // First, assign group codes to each face - any face that forms a small enough angle to any
       // previous face uses that face's group code. Otherwise, it begins a new group.
@@ -342,7 +344,7 @@ public class CMeshBuilder {
       for (int i = 0; i < max; i++) {
          var norm = mAvgs[i].Normalized ();
          int vid = cNodes;
-         CMesh.Node node = new ((Vec3F)c.Pos, new ((Half)norm.X, (Half)norm.Y, (Half)norm.Z));
+         Mesh3.Node node = new ((Vec3F)c.Pos, new ((Half)norm.X, (Half)norm.Y, (Half)norm.Z));
          Add (ref nodes, ref cNodes, node);
          mVIDs[i] = vid;
       }

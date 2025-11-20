@@ -1,4 +1,4 @@
-// ────── ╔╗
+// ────── ╔╗                                                                                WPFDEMO
 // ╔═╦╦═╦╦╬╣ MeshScene.cs
 // ║║║║╬║╔╣║ Demo that uses Lux.Mesh to draw a 3D mesh, with stencil lines
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
@@ -14,8 +14,8 @@ class MeshScene : Scene3 {
    }
    readonly bool TessDemo = false;
 
-   CMesh MakeMesh () {
-      if (!TessDemo) return CMesh.Load ($"{Lib.DevRoot}/Wad/FanucX/Model/R.mesh")!;
+   Mesh3 MakeMesh () {
+      if (!TessDemo) return Mesh3.Load ($"{Lib.DevRoot}/Wad/FanucX/Model/R.mesh")!;
       // Tessellation demo makes a 'thick plane' from a Poly with holes.
       const double thk = 10;     // Plane thickness
       // 1. Create a flat with an outer contour and inner holes.
@@ -37,7 +37,7 @@ class MeshScene : Scene3 {
       // 2. Make tessellation inputs
       List<Point2> pts = []; List<int> splits = [0];
       foreach (var poly in polys) {
-         poly.Discretize (pts, 0.1);
+         poly.Discretize (pts, 0.1, 0.5411);
          splits.Add (pts.Count);
       }
 
@@ -61,12 +61,12 @@ class MeshScene : Scene3 {
       }
 
       // 5. Now build the mesh.
-      return new CMeshBuilder (nodes.AsSpan ()).Build ();
+      return new Mesh3Builder (nodes.AsSpan ()).Build ();
    }
-   CMesh mMesh;
+   Mesh3 mMesh;
 }
 
-class MeshVN (CMesh mesh) : VNode {
+class MeshVN (Mesh3 mesh) : VNode {
    public override void SetAttributes () { Lux.Color = new Color4 (255, 255, 128); Lux.LineWidth = 2f; }
    public override void Draw () => Lux.Mesh (mesh, EShadeMode.Phong);
 }

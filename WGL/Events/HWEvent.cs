@@ -190,7 +190,7 @@ class KeysWrap : EventWrapper<KeyInfo> {
       [Keys.NumPad0] = EKey.NPad0, [Keys.NumPad1] = EKey.NPad1, [Keys.NumPad2] = EKey.NPad2,
       [Keys.NumPad3] = EKey.NPad3, [Keys.NumPad4] = EKey.NPad4, [Keys.Clear] = EKey.NPad5,
       [Keys.NumPad6] = EKey.NPad6, [Keys.NumPad7] = EKey.NPad7, [Keys.NumPad8] = EKey.NPad8,
-      [Keys.NumPad9] = EKey.NPad9, [Keys.Space] = EKey.Space,
+      [Keys.NumPad9] = EKey.NPad9, [Keys.Space] = EKey.Space
    };
 }
 #endregion

@@ -42,6 +42,8 @@ public readonly record struct Vec3F (float X, float Y, float Z) : IEQuable<Vec3F
 /// <summary>3D vector of 16-bit half (used for passing data to OpenGL)</summary>
 [StructLayout (LayoutKind.Sequential, Pack = 2, Size = 6)]
 public readonly record struct Vec3H (Half X, Half Y, Half Z) : IEQuable<Vec3H> {
+   public static explicit operator Vec3H (Vector3 vec) => new ((Half)vec.X, (Half)vec.Y, (Half)vec.Z);
+   public static explicit operator Vector3 (Vec3H vec) => new ((double)vec.X, (double)vec.Y, (double)vec.Z);
    public bool EQ (Vec3H v) => X.EQ (v.X) && Y.EQ (v.Y) && Z.EQ (v.Z);
    public override string ToString () => $"<{X.R3 ()},{Y.R3 ()},{Z.R3 ()}>";
 }
@@ -110,8 +112,10 @@ public readonly struct Mat4F {
 
    /// <summary>Returns true if two Mat4f are exactly the same</summary>
    public bool EQ (ref Mat4F b)
-      => M11 == b.M11 && M12 == b.M12 && M13 == b.M13 && M14 == b.M14 && M21 == b.M21 && M22 == b.M22 && M23 == b.M23 && M24 == b.M24
-      && M31 == b.M31 && M32 == b.M32 && M33 == b.M33 && M34 == b.M34 && X == b.X && Y == b.Y && Z == b.Z && M44 == b.M44;
+      => M11 == b.M11 && M12 == b.M12 && M13 == b.M13 && M14 == b.M14 && 
+         M21 == b.M21 && M22 == b.M22 && M23 == b.M23 && M24 == b.M24 && 
+         M31 == b.M31 && M32 == b.M32 && M33 == b.M33 && M34 == b.M34 && 
+         X == b.X && Y == b.Y && Z == b.Z && M44 == b.M44;
 }
 
 /// <summary>An axis-aligned pixel-rectangle (components are shorts)</summary>

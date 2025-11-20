@@ -153,7 +153,7 @@ public readonly struct Vector3 : IEQuable<Vector3> {
    /// <summary>Returns the cosine of the angle between this Vector3 and another</summary>
    public double CosineTo (Vector3 v2) {
       double n = X * v2.X + Y * v2.Y + Z * v2.Z, d = Length * v2.Length;
-      if (Abs (d) < 1e-12) return 0;
+      if (d < 1e-12) return 0;
       return (n / d).Clamp (-1, 1);
    }
 

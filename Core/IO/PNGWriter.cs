@@ -150,7 +150,7 @@ public class PNGWriter : PNGCore {
             (prior, current) = (current, prior);
             filtered[0] = current;
 
-            // Helper ............................
+            // Helper ......................................
             static int Sum (byte[] data) {
                int sum = 0;
                foreach (var b in data) sum += b;

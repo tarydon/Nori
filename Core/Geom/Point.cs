@@ -270,6 +270,16 @@ public readonly struct Point3 : IEquatable<Point3> {
    public Point3 SnappedToLine (Point3 a, Point3 b) => SnapHelper (a, b, false);
    /// <summary>Returns the closest point to the given _finite_ line segment a..b</summary>
    public Point3 SnappedToLineSeg (Point3 a, Point3 b) => SnapHelper (a, b, true);
+   /// <summary>Returns the closest point on the given line a..b OF unit length</summary>
+   /// This works only for the special case where the line a..b is of length 1 (it is
+   /// a slightly optimized version of the general SnappedToLine routine
+   public Point3 SnappedToUnitLine (Point3 a, Point3 b) {
+      var (dx, dy, dz) = (b.X - a.X, b.Y - a.Y, b.Z - a.Z);
+      // Use the parametric form of the line equation, and compute
+      // the 'parameter t' of the closest point
+      double t = ((X - a.X) * dx + (Y - a.Y) * dy + (Z - a.Z) * dz);
+      return new (a.X + t * dx, a.Y + t * dy, a.Z + t * dz);
+   }
 
    /// <summary>A copy of this Point3, with just the X ordinate changed</summary>
    public Point3 WithX (double x) => new (x, Y, Z);

@@ -7,7 +7,7 @@ using Ptr = nint;
 
 #region class GL -----------------------------------------------------------------------------------
 /// <summary>Implements the P-Invoke connections to OpenGL</summary>
-unsafe static class GL {
+static unsafe class GL {
    // Interface ----------------------------------------------------------------
    // Select the active texture unit ...........................................
    public static void ActiveTexture (ETexUnit unit)
@@ -65,7 +65,7 @@ unsafe static class GL {
 
    // Creates an OpenGL context in Windows .....................................
    public static HGLRC CreateContextAttribsARB (HDC dc, HGLRC share, int major, int minor, bool debug, bool core) {
-      var retvalue = HGLRC.Zero;
+      HGLRC retvalue;
       int[] pn = new int[8];
       pCreateContextAttribsARB ??= Load<wglCreateContextAttribsARB> ();
       const int MAJOR_VERSION = 0x2091, MINOR_VERSION = 0x2092, PROFILE_MASK = 0x9126, CONTEXT_FLAGS = 0x2094;
@@ -92,21 +92,21 @@ unsafe static class GL {
    static glCreateShader? pCreateShader;
 
    // Delete a named buffer object .............................................
-   public static unsafe void DeleteBuffer (HBuffer buffer) 
+   public static void DeleteBuffer (HBuffer buffer) 
       => (pDeleteBuffers ??= Load<glDeleteBuffers> ()) (1, &buffer);
-   unsafe delegate void glDeleteBuffers (int n, HBuffer* buffers);
+   delegate void glDeleteBuffers (int n, HBuffer* buffers);
    static glDeleteBuffers? pDeleteBuffers;
 
    // Delete a texture .........................................................
-   public static unsafe void DeleteTexture (HTexture texture)
+   public static void DeleteTexture (HTexture texture)
       => (pDeleteTextures ??= Load<glDeleteTextures> ()) (1, &texture);
-   unsafe delegate void glDeleteTextures (int n, HTexture* textures);
+   delegate void glDeleteTextures (int n, HTexture* textures);
    static glDeleteTextures? pDeleteTextures;
 
    // Deletes a vertex array object ............................................
-   public unsafe static void DeleteVertexArray (HVertexArray array) 
+   public static void DeleteVertexArray (HVertexArray array) 
       => (pDeleteVertexArrays ??= Load<glDeleteVertexArrays> ()) (1, &array);
-   unsafe delegate void glDeleteVertexArrays (int n, HVertexArray* textures);
+   delegate void glDeleteVertexArrays (int n, HVertexArray* textures);
    static glDeleteVertexArrays? pDeleteVertexArrays;
 
    // Indexed drawing from an array (with baseVertex added to each index) ......
@@ -128,12 +128,12 @@ unsafe static class GL {
    static glFramebufferRenderbuffer? pFrameBufferRenderBuffer;
 
    // Allocate a new data-storage buffer object ................................
-   public static unsafe HBuffer GenBuffer () { 
+   public static HBuffer GenBuffer () { 
       HBuffer buffer; 
       (pGenBuffers ??= Load<glGenBuffers> ()) (1, &buffer); 
       return buffer; 
    }
-   unsafe delegate void glGenBuffers (int n, HBuffer* buffers);
+   delegate void glGenBuffers (int n, HBuffer* buffers);
    static glGenBuffers? pGenBuffers;
 
    // Create a new framebuffer (for render-to-image) ...........................
@@ -142,7 +142,7 @@ unsafe static class GL {
       (pGenFrameBuffers ??= Load<glGenFramebuffers> ()) (1, &buffer);
       return buffer;
    }
-   unsafe delegate void glGenFramebuffers (int n, HFrameBuffer* buffers);
+   delegate void glGenFramebuffers (int n, HFrameBuffer* buffers);
    static glGenFramebuffers? pGenFrameBuffers;
 
    // Create a new render buffer ...............................................
@@ -153,28 +153,28 @@ unsafe static class GL {
       (pGenRenderBuffers ??= Load<glGenRenderbuffers> ()) (1, &buffer);
       return buffer;
    }
-   unsafe delegate void glGenRenderbuffers (int n, HRenderBuffer* buffers);
+   delegate void glGenRenderbuffers (int n, HRenderBuffer* buffers);
    static glGenRenderbuffers? pGenRenderBuffers;
 
    // Creates a new texture ....................................................
    public static HTexture GenTexture () { HTexture tex; GenTextures (1, &tex); return tex; }
 
    // Allocate a new VertexArray object (VAO) ..................................
-   public unsafe static HVertexArray GenVertexArray () { 
+   public static HVertexArray GenVertexArray () { 
       HVertexArray array; 
       (pGenVertexArrays ??= Load<glGenVertexArrays> ()) (1, &array); 
       return array; 
    }
-   unsafe delegate void glGenVertexArrays (int n, HVertexArray* arrays);
+   delegate void glGenVertexArrays (int n, HVertexArray* arrays);
    static glGenVertexArrays? pGenVertexArrays;
 
    // Gets information about a program attribute ...............................
-   public unsafe static void GetActiveAttrib (HProgram program, int index, out int size, out EDataType type, out string name, out int location) {
+   public static void GetActiveAttrib (HProgram program, int index, out int size, out EDataType type, out string name, out int location) {
       pGetActiveAttrib ??= Load<glGetActiveAttrib> ();
       Span<byte> data = stackalloc byte[256];
       fixed (byte* p = &data[0]) {
          pGetActiveAttrib (program, index, 255, out int length, out size, out type, (Ptr)p);
-         name = Encoding.UTF8.GetString (data[0..length]);
+         name = Encoding.UTF8.GetString (data[..length]);
          location = GetAttribLocation (program, name);
       }
    }
@@ -182,12 +182,12 @@ unsafe static class GL {
    static glGetActiveAttrib? pGetActiveAttrib;
 
    // <summary>Gets information about a uniform variable .......................
-   public unsafe static void GetActiveUniform (HProgram program, int index, out int size, out EDataType type, out string name, out int location) {
+   public static void GetActiveUniform (HProgram program, int index, out int size, out EDataType type, out string name, out int location) {
       pGetActiveUniform ??= Load<glGetActiveUniform> ();
       Span<byte> data = stackalloc byte[256];
       fixed (byte* p = &data[0]) {
          pGetActiveUniform (program, index, 255, out int length, out size, out type, (Ptr)p);
-         name = Encoding.UTF8.GetString (data[0..length]);
+         name = Encoding.UTF8.GetString (data[..length]);
          location = GetUniformLocation (program, name);
       }
    }
@@ -195,7 +195,7 @@ unsafe static class GL {
    static glGetActiveUniform? pGetActiveUniform;
 
    // Gets information about an attribute's location ...........................
-   public unsafe static int GetAttribLocation (HProgram program, string name) 
+   public static int GetAttribLocation (HProgram program, string name) 
       => (pGetAttribLocation ??= Load<glGetAttribLocation> ()) (program, name);
    delegate int glGetAttribLocation (HProgram program, string name);
    static glGetAttribLocation? pGetAttribLocation;
@@ -207,7 +207,7 @@ unsafe static class GL {
    }
    delegate void glGetProgramiv (HProgram program, EProgramParam pname, int[] parameters);
    static glGetProgramiv? pGetProgramiv;
-   static int[] ints = [0];
+   static readonly int[] ints = [0];
 
    // Gets the error log for a program .........................................
    public static string GetProgramInfoLog (HProgram program) {
@@ -215,10 +215,10 @@ unsafe static class GL {
       int length = GetProgram (program, EProgramParam.InfoLogLength);
       if (length == 0) return "";
       StringBuilder sb = new (length + 2);
-      pGetProgramInfoLog (program, sb.Capacity, (nint)(&length), sb);
+      pGetProgramInfoLog (program, sb.Capacity, (Ptr)(&length), sb);
       return sb.ToString ();
    }
-   delegate void glGetProgramInfoLog (HProgram program, int bufSize, nint length, StringBuilder infoLog);
+   delegate void glGetProgramInfoLog (HProgram program, int bufSize, Ptr length, StringBuilder infoLog);
    static glGetProgramInfoLog? pGetProgramInfoLog;
 
    // Gets some information from a shader ......................................
@@ -235,10 +235,10 @@ unsafe static class GL {
       int length = GetShader (shader, EShaderParam.InfoLogLength);
       if (length == 0) return "";
       StringBuilder sb = new (length + 2);
-      pGetShaderInfoLog (shader, sb.Capacity, (nint)(&length), sb);
+      pGetShaderInfoLog (shader, sb.Capacity, (Ptr)(&length), sb);
       return sb.ToString ();
    }
-   delegate void glGetShaderInfoLog (HShader shader, int bufSize, nint length, StringBuilder infoLog);
+   delegate void glGetShaderInfoLog (HShader shader, int bufSize, Ptr length, StringBuilder infoLog);
    static glGetShaderInfoLog? pGetShaderInfoLog;
 
    // Gets the location (slot) of a uniform variable ...........................
@@ -315,7 +315,7 @@ unsafe static class GL {
    delegate void glUniform4f (int location, float v0, float v1, float v2, float v3);
    static glUniform4f? pUniform4f;
 
-   public static unsafe void Uniform (int location, bool transpose, float* value)
+   public static void Uniform (int location, bool transpose, float* value)
       => (pUniformMatrix4fv ??= Load<glUniformMatrix4fv> ()) (location, 1, transpose, value);
    delegate void glUniformMatrix4fv (int location, int count, bool transpose, float* value);
    static glUniformMatrix4fv? pUniformMatrix4fv;
@@ -353,7 +353,7 @@ unsafe static class GL {
 
    [DllImport (OPENGL32, EntryPoint = "glBegin")] public static extern void Begin (EMode mode);
    [DllImport (OPENGL32, EntryPoint = "glBindTexture")] public static extern void BindTexture (ETexTarget target, HTexture id);
-   [DllImport (OPENGL32, EntryPoint = "glBlendFunc")] static internal extern void BlendFunc (EBlendFactor sfactor, EBlendFactor dfactor);
+   [DllImport (OPENGL32, EntryPoint = "glBlendFunc")] internal static extern void BlendFunc (EBlendFactor sfactor, EBlendFactor dfactor);
    [DllImport (OPENGL32, EntryPoint = "glClear")] public static extern void Clear (EBuffer mask);
    [DllImport (OPENGL32, EntryPoint = "glClearColor")] public static extern void ClearColor (float red, float green, float blue, float alpha);
    [DllImport (OPENGL32, EntryPoint = "glColor3f")] public static extern void Color (float red, float green, float blue);
@@ -368,10 +368,10 @@ unsafe static class GL {
    [DllImport (OPENGL32, EntryPoint = "glFinish")] public static extern void Finish ();
    [DllImport (OPENGL32, EntryPoint = "glGenTextures")] public static extern void GenTextures (int n, HTexture* pTex);
    [DllImport (OPENGL32, EntryPoint = "glReadPixels")] public static extern void ReadPixels (int x, int y, int width, int height, EPixelFormat format, EPixelType type, Ptr pixels);
-   [DllImport (OPENGL32, EntryPoint = "wglGetProcAddress")] public static extern nint GetProcAddress (string name);
+   [DllImport (OPENGL32, EntryPoint = "wglGetProcAddress")] public static extern Ptr GetProcAddress (string name);
    [DllImport (OPENGL32, EntryPoint = "wglMakeCurrent")] public static extern int MakeCurrent (HDC hdc, HGLRC hrc);
-   [DllImport (OPENGL32, EntryPoint = "glPixelStorei")] static internal extern void PixelStore (EPixelStoreParam pname, int param);
-   [DllImport (OPENGL32, EntryPoint = "glPolygonOffset")] static internal extern void PolygonOffset (float factor, float units);
+   [DllImport (OPENGL32, EntryPoint = "glPixelStorei")] internal static extern void PixelStore (EPixelStoreParam pname, int param);
+   [DllImport (OPENGL32, EntryPoint = "glPolygonOffset")] internal static extern void PolygonOffset (float factor, float units);
    [DllImport (OPENGL32, EntryPoint = "glTexImage2D")] public static extern void TexImage2D (ETexTarget target, int level, EPixelInternalFormat publicformat, int width, int height, int border, EPixelFormat format, EPixelType type, void* pixels);
    public static void TexImage2D (ETexTarget target, EPixelInternalFormat infmt, int width, int height, EPixelFormat fmt, EPixelType type, byte[] data) 
       { fixed (byte* p = &data[0]) TexImage2D (target, 0, infmt, width, height, 0, fmt, type, p); }
@@ -391,7 +391,7 @@ unsafe static class GL {
    // raw Delegate that can be cast to the appropriate function signature
    static T Load<T> () where T : Delegate {
       Type type = typeof (T);
-      nint proc = GetProcAddress (type.Name);
+      Ptr proc = GetProcAddress (type.Name);
       if (proc == 0) throw new Exception ($"OpenGL function '{type.Name}' not found.");
       Delegate del = Marshal.GetDelegateForFunctionPointer (proc, type);
       return (T)del;
@@ -401,7 +401,7 @@ unsafe static class GL {
 
 #region class GLU ----------------------------------------------------------------------------------
 // Contains the GLU interface functions
-unsafe static class GLU {
+static unsafe class GLU {
    const string GLU32 = "glu32.dll";
    // Callback types -----------------------------------------------------------
    public delegate void GLUtessBeginProc (EPrimitive type);
@@ -441,16 +441,16 @@ unsafe static class GLU {
    }
 
    // PInvokes -----------------------------------------------------------------
-   [DllImport (GLU32, EntryPoint = "gluTessVertex")] static internal extern void AddVertex (this HTesselator tess, double* location, Ptr data);
-   [DllImport (GLU32, EntryPoint = "gluNewTess")] static internal extern HTesselator NewTess ();
-   [DllImport (GLU32, EntryPoint = "gluDeleteTess")] static internal extern void Delete (this HTesselator tess);
-   [DllImport (GLU32, EntryPoint = "gluTessProperty")] static internal extern void SetProperty (this HTesselator tess, uint prop, double value);
-   [DllImport (GLU32, EntryPoint = "gluTessNormal")] static internal extern void SetNormal (this HTesselator tess, double x, double y, double z);
-   [DllImport (GLU32, EntryPoint = "gluTessBeginContour")] static internal extern void BeginContour (this HTesselator tess);
-   [DllImport (GLU32, EntryPoint = "gluTessBeginPolygon")] static internal extern void BeginPolygon (this HTesselator tess, Ptr data);
+   [DllImport (GLU32, EntryPoint = "gluTessVertex")] internal static extern void AddVertex (this HTesselator tess, double* location, Ptr data);
+   [DllImport (GLU32, EntryPoint = "gluNewTess")] internal static extern HTesselator NewTess ();
+   [DllImport (GLU32, EntryPoint = "gluDeleteTess")] internal static extern void Delete (this HTesselator tess);
+   [DllImport (GLU32, EntryPoint = "gluTessProperty")] internal static extern void SetProperty (this HTesselator tess, uint prop, double value);
+   [DllImport (GLU32, EntryPoint = "gluTessNormal")] internal static extern void SetNormal (this HTesselator tess, double x, double y, double z);
+   [DllImport (GLU32, EntryPoint = "gluTessBeginContour")] internal static extern void BeginContour (this HTesselator tess);
+   [DllImport (GLU32, EntryPoint = "gluTessBeginPolygon")] internal static extern void BeginPolygon (this HTesselator tess, Ptr data);
    [DllImport (GLU32, EntryPoint = "gluTessCallback")] static extern void SetCallback (this HTesselator tess, uint which, Delegate proc);
-   [DllImport (GLU32, EntryPoint = "gluTessEndContour")] static internal extern void EndContour (this HTesselator tess);
-   [DllImport (GLU32, EntryPoint = "gluTessEndPolygon")] static internal extern void EndPolygon (this HTesselator tess);
+   [DllImport (GLU32, EntryPoint = "gluTessEndContour")] internal static extern void EndContour (this HTesselator tess);
+   [DllImport (GLU32, EntryPoint = "gluTessEndPolygon")] internal static extern void EndPolygon (this HTesselator tess);
 
    // Constants ----------------------------------------------------------------
    const uint GLU_TESS_BEGIN = 100100;

@@ -70,7 +70,7 @@ public partial class Mechanism {
    public readonly Vector3 JVector;
 
    /// <summary>The mesh used to render this Mechanism (could be null)</summary>
-   public CMesh? Mesh {
+   public Mesh3? Mesh {
       get {
          if (_mesh == null) {
             string name = FullName;
@@ -82,8 +82,8 @@ public partial class Mechanism {
          return _mesh;
       }
    }
-   CMesh? _mesh;
-   static ConcurrentDictionary<string, CMesh?> sMeshCache = [];
+   Mesh3? _mesh;
+   static ConcurrentDictionary<string, Mesh3?> sMeshCache = [];
 
    /// <summary>What's the name of this mechanism (or sub-mechanism)</summary>
    public readonly string Name = string.Empty;
@@ -118,7 +118,7 @@ public partial class Mechanism {
    string? _rootDir;
 
    /// <summary>Returns the transformation matrix for this piece of the mechanism</summary>
-   public Matrix3 Xfm => _xfm = Parent == null ? Matrix3.Identity : RelativeXfm * Parent.Xfm;
+   public Matrix3 Xfm => _xfm ??= Parent == null ? Matrix3.Identity : RelativeXfm * Parent.Xfm;
    Matrix3? _xfm;
 
    // Methods ------------------------------------------------------------------
@@ -137,19 +137,20 @@ public partial class Mechanism {
 
    // Implementation -----------------------------------------------------------
    string FullName => Parent == null ? Name : $"{Parent.FullName}.{Name}";
+   public override string ToString () => $"Mechanism:{Name}";
 }
 #endregion
 
 public abstract class GeometrySource {
-   public abstract CMesh GetMesh (string rootDir);
+   public abstract Mesh3 GetMesh (string rootDir);
 }
 
 public class FileGeometry : GeometrySource {
-   public override CMesh GetMesh (string rootDir) {
+   public override Mesh3 GetMesh (string rootDir) {
       string file = Path.Combine (rootDir, File);
       Matrix3 xfm = Rotate.IsIdentity ? Matrix3.Identity : Matrix3.Rotation (Rotate);
       xfm *= Matrix3.Translation (Shift);
-      return CMesh.Load (file) * xfm;
+      return Mesh3.Load (file) * xfm;
    }
 
    public readonly string File = string.Empty;

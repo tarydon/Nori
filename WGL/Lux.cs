@@ -10,20 +10,26 @@ namespace Nori;
 /// <summary>The public interface to the Lux renderer</summary>
 public static partial class Lux {
    // Properties ---------------------------------------------------------------
+   /// <summary>If set, back faces are colored pink (useful for debugging) when using the Phong shader</summary>
+   public static bool BackFacesPink;
+
    /// <summary>Subscribe to this to get a FPS (frames-per-second) report each second</summary>
    public static IObservable<int> FPS => mFPS;
-   static Subject<int> mFPS = new ();
+   static readonly Subject<int> mFPS = new ();
 
    /// <summary>Subscribe to this to get statistics after each frame is rendered</summary>
    public static IObservable<Stats> Info => mInfo;
-   static Subject<Stats> mInfo = new ();
+   static readonly Subject<Stats> mInfo = new ();
+
+   /// <summary>If set, we are redering a frame for 'picking'</summary>
+   public static bool IsPicking => mIsPicking;
+   static bool mIsPicking;
 
    /// <summary>Subscribe to this to know when Lux is ready (event raised only once)</summary>
    public static IObservable<int> OnReady => mOnReady;
    internal static Subject<int> mOnReady = new ();
 
-   /// Sets whether the cursor is visible or not when it is over the panel
-   /// </summary>
+   /// <summary>Sets whether the cursor is visible or not when it is over the panel</summary>
    /// If this is set to false, then the current scene must 'paint' a cursor that follows
    /// the mouse movement
    public static bool CursorVisible { set => Panel.CursorVisible = value; }
@@ -37,6 +43,7 @@ public static partial class Lux {
       get => mUIScene;
       set {
          mUIScene?.Detach ();
+         BackFacesPink = false;
          mUIScene = value; mViewBound.OnNext (0); Redraw ();
          Panel.CursorVisible = mUIScene?.CursorVisible ?? true;
       }
@@ -55,7 +62,7 @@ public static partial class Lux {
    }
 
    /// <summary>Subscribe to this to know when the 'View-Bound' changes (view is zoomed, panned or rotated)</summary>
-   static public IObservable<int> ViewBound => mViewBound;
+   public static IObservable<int> ViewBound => mViewBound;
    internal static Subject<int> mViewBound = new ();
 
    /// <summary>The viewport size (in pixels) of the Lux rendering panel</summary>
@@ -86,12 +93,47 @@ public static partial class Lux {
    }
    static Window? sHost;
 
+   /// <summary>Called when entities are redrawn, or when the transform changes</summary>
+   /// At these times, the pick buffer must be flushed so we don't pick on a stale
+   /// pick buffer
+   public static void FlushPickBuffer () => mPickBufferValid = false;
+   static bool mPickBufferValid;
+
+   /// <summary>Render a Scene to an image (for example, to generate a thumbnail)</summary>
+   /// The 'keepAlive' parameter controls whether the scene you pass in is disposed of
+   /// after rendering the image, or continues to remain connected to the Lux engine
+   /// for continued rendering. For example, if you are rendering the UIScene to a
+   /// thumbnail, you will keep it alive. In most other case, you will ask for the scene
+   /// to be 'detached' after use.
    public static DIBitmap RenderToImage (Scene scene, Vec2S size, DIBitmap.EFormat fmt, bool keepAlive = false) {
-      if (size.X % 4 != 0) throw new ArgumentException ($"Lux.RenderToImage: image width must be a multiple of 4");
+      if (size.X % 4 != 0) throw new ArgumentException ("Lux.RenderToImage: image width must be a multiple of 4");
       var dib =  (DIBitmap)Render (scene, size, ETarget.Image, fmt)!;
       if (!keepAlive) scene.Detach ();
       return dib;
    }
+
+   /// <summary>This does a 'pick' operation on the current UIScene</summary>
+   /// This effectively returns the VNode that lies underneat the current mouse position.
+   public static VNode? Pick (Vec2S pos) {
+      // If we're doign any simulation, return null
+      if (sRenderCompletes.Count > 0 || mRendering || !mReady || mUIScene == null) return null;
+      if (!mPickBufferValid) {
+         mPickBufferValid = true;
+         var tup = ((byte[], float[]))Render (mUIScene, mViewport, ETarget.Pick, DIBitmap.EFormat.Unknown)!;
+         mPickPixel = tup.Item1; mPickDepth = tup.Item2;
+      }
+      int index = (mViewport.Y - pos.Y - 1) * mViewport.X + pos.X;
+      if (index < 0 || index >= mPickDepth.Length) return null;
+
+      // Now, abandon the LSB 2 bits of r, g and b leaving only 6 bits each (this is to
+      // avoid round off errors in low-bit depth color buffers
+      index *= 4;
+      int b = mPickPixel[index] >> 2, g = mPickPixel[index + 1] >> 2, r = mPickPixel[index + 2] >> 2;
+      int vnodeId = r + (g << 6) + (b << 12);
+      return VNode.SafeGet (vnodeId);
+   }
+   static byte[] mPickPixel = [];
+   static float[] mPickDepth = [];
 
    /// <summary>Converts a pixel coordinate to world coordinates</summary>
    public static Point3 PixelToWorld (Vec2S pix) {
@@ -100,7 +142,7 @@ public static partial class Lux {
       Vec2S vp = mViewport;
       Point3 clip = new (2.0 * pix.X / vp.X - 1, 1.0 - 2.0 * pix.Y / vp.Y, 0);
       clip *= mUIScene.Xfms[0].InvXfm;
-      int d = Lux.PixelScale switch { > 1 => 0, > 0.1 => 1, > 0.01 => 2, > 0.001 => 3, _ => 4 };
+      int d = PixelScale switch { > 1 => 0, > 0.1 => 1, > 0.01 => 2, > 0.001 => 3, _ => 4 };
       clip = new (Math.Round (clip.X, d), Math.Round (clip.Y, d), Math.Round (clip.Z, d));
       return clip;
    }
@@ -109,9 +151,12 @@ public static partial class Lux {
    internal static object? Render (Scene? scene, Vec2S viewport, ETarget target, DIBitmap.EFormat fmt) {
       mcFrames++; mcFPSFrames++;
       var panel = Panel.It;
+      mIsPicking = target == ETarget.Pick;
+      mRendering = true;
       panel.BeginRender (viewport, target);
       StartFrame (viewport);
-      GLState.StartFrame (viewport, scene?.BgrdColor ?? Color4.Gray (96));
+      Color4 bgrdColor = mIsPicking ? Color4.White : (scene?.BgrdColor ?? Color4.Gray (96));
+      GLState.StartFrame (viewport, bgrdColor);
       RBatch.StartFrame ();
       Shader.StartFrame ();
       scene?.Render (viewport);
@@ -128,11 +173,12 @@ public static partial class Lux {
          if (elapsed >= 1.0) {
             // Every 1 second, issue an FPS (frames-per-second) report
             int fps = (int)(mcFPSFrames / elapsed + 0.5);
-            mFPS?.OnNext (fps);
+            mFPS.OnNext (fps);
             (mcFPSFrames, mFPSReportTS) = (0, frameTS);
          }
       }
       mLastFrameTS = frameTS;
+      mRendering = mIsPicking = false;
       return obj;
 
       // Helpers ...........................................
@@ -147,6 +193,7 @@ public static partial class Lux {
    static DateTime mLastFrameTS;    // What was the timestamp at which we rendered the last frame
    static DateTime mFPSReportTS;    // When did we last issue an FPS report
    static int mcFPSFrames;          // Frames rendered since that time
+   static bool mRendering;          // Currently rendering a frame
 
    /// <summary>Prompts the Lux system to redraw the screen (asynchronous)</summary>
    public static void Redraw () => Panel.mIt?.Redraw ();
@@ -176,7 +223,7 @@ public static partial class Lux {
          // and the timer would never fire.
          if (sTimer == null) {
             sTimer = new () { Interval = TimeSpan.FromMilliseconds (40), IsEnabled = true };
-            sTimer.Tick += (s, e) => Redraw ();
+            sTimer.Tick += (_, _) => Redraw ();
          }
          // Issue one redraw to prime things off
          sTimer.Start ();
@@ -213,7 +260,7 @@ public static partial class Lux {
       mNodeStack.Push ((mVNode, mChanged));
       (mVNode, mChanged) = (node, ELuxAttr.None);
    }
-   static Stack<(VNode?, ELuxAttr)> mNodeStack = [];
+   static readonly Stack<(VNode?, ELuxAttr)> mNodeStack = [];
 
    /// <summary>Called when a node is finished drawing</summary>
    internal static void EndNode () {
@@ -282,6 +329,6 @@ public static partial class Lux {
       /// <summary>Number of vertices drawn</summary>
       public int VertsDrawn => RBatch.mVertsDrawn;
    }
-   static Stats sStats = new ();
+   static readonly Stats sStats = new ();
 }
 #endregion
