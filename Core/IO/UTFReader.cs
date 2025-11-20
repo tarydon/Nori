@@ -44,6 +44,7 @@ public class UTFReader {
       b = 0; return false;
    }
 
+   // Methods ------------------------------------------------------------------
    /// <summary>Read a boolean value from the stream (skips past leading whitespace)</summary>
    /// Throws an exception if a valid boolean value "True" or "False" is not found
    public UTFReader Read (out bool value) {
@@ -202,7 +203,10 @@ public class UTFReader {
    static readonly SearchValues<byte> sSpace = SearchValues.Create (9, 10, 11, 13, 32);
 
    /// <summary>SKips until the given character is found (and consumes that character)</summary>
-   public void SkipTo (char b) { while (D[mN++] != b) { } }
+   public UTFReader SkipTo (char b) { while (D[mN++] != b) { } return this; }
+
+   /// <summary>Skips until the end of the line token is found and consumes it.</summary>
+   public UTFReader SkipToLineEnd () => SkipTo ('\n');
 
    /// <summary>Tries to match the given character, if it is found</summary>
    /// If the next character in the stream (skipping past whitespace) is the given
