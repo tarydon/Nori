@@ -15,27 +15,23 @@ public class STLReader {
       else return ReadBinary ();
    }
    /// <summary>Builds a mesh with smoothened normals using Mesh3Builder</summary>
-   /// <returns></returns>
    public Mesh3 BuildMesh () => new Mesh3Builder (GetTriangles ().AsSpan ()).Build ();
 
    // Implementation -----------------------------------------------------------
    List<Point3> ReadASCII () {
       List<Point3> pts = [];
       UTFReader r = new UTFReader (mData);
-      r.SkipToLineEnd (); // Skip the first line which is in the format 'solid xxxx'
-      r.SkipSpace ();
+      r.SkipToLineEnd ().SkipSpace (); // Skip the first line which is in the format 'solid xxxx'
       while (r.Peek == 102) { // The next character must be 'f' from "facet normal x y z" phrase. Otherwise, we are done.
          r.SkipToLineEnd (); // Skip the normal "facet normal ..."
-         r.SkipTo ('o'); r.SkipToLineEnd (); // Skip the phrase "outer loop"
+         r.SkipTo ('o').SkipToLineEnd (); // Skip the phrase "outer loop"
          for (int i = 0; i < 3; i++) {
             r.SkipTo ('x'); // Skip to the last character 'x' in 'vertex'.
-            r.Read (out double x);
-            r.Read (out double y);
-            r.Read (out double z);
+            r.Read (out double x).Read (out double y).Read (out double z);
             pts.Add (new Point3 (x, y, z));
          }
-         r.SkipTo ('p'); r.SkipToLineEnd (); // skip the phrase "endloop"
-         r.SkipTo ('e'); r.SkipToLineEnd (); // skip the phrase "endfacet"
+         r.SkipTo ('p').SkipToLineEnd (); // skip the phrase "endloop"
+         r.SkipTo ('e').SkipToLineEnd (); // skip the phrase "endfacet"
          r.SkipSpace ();
       }
       return pts;
