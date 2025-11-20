@@ -383,7 +383,7 @@ class PolyEdgeTests {
    void Test4 () {
       int width = 20, depth = 10, radius = 30;
       double startAng = 340.D2R (), endAng = 320.D2R (), rad90 = 90.D2R (), rad180 = 180.D2R (), rad270 = 270.D2R ();
-      Poly circle = Poly.Circle (0, 0, radius), arcCCW = Poly.Arc (Point2.Zero, radius, startAng, endAng, true),
+      Poly circle = Poly.Circle ((0, 0), radius), arcCCW = Poly.Arc (Point2.Zero, radius, startAng, endAng, true),
            arcCW = Poly.Arc (Point2.Zero, radius, endAng, startAng, false);
       Poly? poly;
 
