@@ -627,20 +627,16 @@ public partial class Poly {
       double radius = arcSeg.Radius, tolerance = 6 * Lib.Epsilon; // 6 is a magic number
       if (width >= (2 * radius) - tolerance) return null; // Check: Slot fits the given seg diameter.
 
-      // Indicates whether the key slot is present inside (or) outside the poly.
-      bool isInward = depth > 0;
-      depth = Math.Abs (depth);
-      Point2 cen = arcSeg.Center;
-
       // Computing the four corner points (topLeft, botLeft, botRight and topRight).
-      Point2 topMid = cen.Polar (radius, angle);
-      Point2 botMid = isInward ? topMid.Polar (-depth, angle) : topMid.Polar (depth, angle),
-             tempPt = botMid.Polar (width / 2, angle);
-      Point2 botRight = botMid + (botMid - tempPt).Perpendicular ();
-      if (isInward && cen.DistTo (botRight) >= radius) return null;
+      // Note: depth > 0 indicates the key slot is present inside the poly, else it present outside the poly.
+      Point2 cen = arcSeg.Center, tangPt = cen.Polar (radius, angle), botMid = tangPt.Polar (-depth, angle);
+      Point2 tempPt = botMid.Polar (width / 2, angle), botRight = botMid + (botMid - tempPt).Perpendicular ();
+      if (depth > 0 && cen.DistTo (botRight) >= radius) return null;
       Point2 botLeft = botMid + (tempPt - botMid).Perpendicular ();
-      Point2 topLeft = Geo.CircleXLineClosest (cen, radius, botLeft, botLeft.Polar (depth, angle), topMid),
-             topRight = Geo.CircleXLineClosest (cen, radius, botRight, botRight.Polar (depth, angle), topMid);
+      // Simple trigonometry function to compute topLeft and topRight for the key slot. file://N:/Doc/Img/KeySlotPoints.png
+      double ang = Math.Asin ((width / 2) / radius), dist = (width / 2) / Math.Tan (ang);
+      Point2 topMid = cen.Polar (dist, angle), topLeft = topMid + (tempPt - botMid).Perpendicular (),
+             topRight = topMid + (botMid - tempPt).Perpendicular ();
 
       // Check if the top left (or) right point is present within the poly.
       double leftOutside = arcSeg.GetLie (topLeft), rightOutside = arcSeg.GetLie (topRight);
