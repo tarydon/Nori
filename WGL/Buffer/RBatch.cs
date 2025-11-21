@@ -18,12 +18,25 @@ namespace Nori;
 struct RBatch : IIndexed {
    // Properties ---------------------------------------------------------------
    /// <summary>Implement IIndexed</summary>
-   public int Idx1 { get; set; }
+   public int Idx { get; set; }
 
    /// <summary>The VNode to which this batch belongs</summary>
    /// We need this to avoid merging batches belonging to different VNodes
    /// together (since each needs to be stored in the respective VNode's batch list)
    public ushort IDVNode;
+   /// <summary>
+   /// If set, these vertices are 'streamed' rather than retained
+   /// </summary>
+   /// Normally, vertices drawn are stored in RBuffer objects which can then be reused
+   /// across multiple frames of drawing. For example, entities in a drawing, components
+   /// of a machine, meshes of a part are all drawn hundreds or thousands of times
+   /// with no change (other than possibly some attributes like transform, color etc).
+   /// Those belong in an RBuffer. However, some drawing is very transient (for example
+   /// most stuff connected to the mouse cursor, widget feedback etc). These transient
+   /// artifacts are drawn using a StreamBuffer and such batches are tagged with 
+   /// Streaming=true (these are basically batches coming from VNodes that are themselves
+   /// tagged as streaming). 
+   public bool Streaming;
 
    /// <summary>The shader this RBatch uses</summary>
    public ushort NShader;
@@ -81,6 +94,7 @@ struct RBatch : IIndexed {
    /// RBatch's count in Issue()
    public static void IssueAll () {
       Sort ();
+      Debug.Print ($"Staging = {Staging.Count}");
       for (int n = Staging.Count, i = 0; i < n; i++) {
          var (b0, u0) = Staging[i];
          ref RBatch rb0 = ref mAll[b0];
@@ -110,7 +124,7 @@ struct RBatch : IIndexed {
    public readonly void Release () {
       if (NBuffer != 0)
          RBuffer.All[NBuffer].References--;
-      mAll.Release (Idx1);
+      mAll.Release (Idx);
    }
 
    /// <summary>This is called when we are starting a new frame</summary>
@@ -179,27 +193,35 @@ struct RBatch : IIndexed {
          GLState.Program = picker.Pgm;
          PickShader.It.ApplyUniforms (uniforms.IDXfm, color);
       }
-      // Select the VAO this batch uses as the current VAO. If this VAO
-      // is already selected, this is a no-op
-      var buffer = RBuffer.All[NBuffer];
-      GLState.VAO = buffer.VAO;
 
-      if (ICount > 0) {
-         // If we are using indexed drawing mode, we ignore the count that is passed
-         // in, and use this.ICount as the number of elements to draw
-         buffer.Draw (shader.Pgm.Mode, Offset, IOffset, ICount);
+      if (Streaming) {
+         // If this is a 'streaming' type buffer, then the data for this is still stored
+         // in the shader's vertex buffer. Ask the shader to transfer it directly to the
+         // StreamBuffer (singleton)
+         shader.StreamBatches (Offset, count);
       } else {
-         // If ICount = 0: we are using simple DrawArrays.
-         // We have to draw 'count' vertices starting at this batch's vertex
-         // offset (byte offset within that buffer). Note that we are not using
-         // this RBatch's count, but the count is passed in from outside. This
-         // is because IssueAll() sees if this batch and the subsequent one(s)
-         // all use the same shader, VAO and uniforms and thus can be merged into
-         // a larger single draw.
-         buffer.Draw (shader.Pgm.Mode, Offset, count);
-         mVertsDrawn += count;
+         // Select the VAO this batch uses as the current VAO. If this VAO
+         // is already selected, this is a no-op
+         var buffer = RBuffer.All[NBuffer];
+         GLState.VAO = buffer.VAO;
+
+         if (ICount > 0) {
+            // If we are using indexed drawing mode, we ignore the count that is passed
+            // in, and use this.ICount as the number of elements to draw
+            buffer.Draw (shader.Pgm.Mode, Offset, IOffset, ICount);
+         } else {
+            // If ICount = 0: we are using simple DrawArrays.
+            // We have to draw 'count' vertices starting at this batch's vertex
+            // offset (byte offset within that buffer). Note that we are not using
+            // this RBatch's count, but the count is passed in from outside. This
+            // is because IssueAll() sees if this batch and the subsequent one(s)
+            // all use the same shader, VAO and uniforms and thus can be merged into
+            // a larger single draw.
+            buffer.Draw (shader.Pgm.Mode, Offset, count);
+         }
       }
       // Update stats
+      mVertsDrawn += count;
       mDrawCalls++;
    }
    internal static int mDrawCalls, mVertsDrawn;
@@ -234,12 +256,12 @@ struct RBatch : IIndexed {
       // RBuffer, we will do that here.
       foreach (var (b, _) in Staging) {
          ref RBatch rb = ref mAll[b];
-         if (rb.NBuffer == 0) {
+         if (rb.NBuffer == 0 && !rb.Streaming) {
             // If the data of this RBatch has still not been uploaded to the GPU,
             // allocate a RB,,uffer and copy the data there
             var shader = Shader.Get (rb.NShader);
             var buf = RBuffer.Get (shader.Pgm.VSpec);
-            rb.NBuffer = buf.Idx1;
+            rb.NBuffer = buf.Idx;
             if (rb.ICount > 0)
                (rb.Offset, rb.IOffset) = shader.CopyVertices (buf, rb.Offset, rb.Count, rb.IOffset, rb.ICount);
             else

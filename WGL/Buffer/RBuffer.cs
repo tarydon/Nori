@@ -18,7 +18,7 @@ class RBuffer : IIndexed {
    public static IdxHeap<RBuffer> All = new ();
 
    /// <summary>IIndexed implementation of Idx</summary>
-   public int Idx1 { get; set; }
+   public int Idx { get; set; }
 
    /// <summary>The reference count for this RBuffer (how many RBatch objects are pointing to it)</summary>
    public int References {
@@ -98,7 +98,7 @@ class RBuffer : IIndexed {
       if (GLState.VAO == mHVAO) GLState.VAO = 0;
       GL.DeleteBuffer (mHVertex); GL.DeleteBuffer (mHIndex); GL.DeleteVertexArray (mHVAO);
       mHVertex = mHIndex = HBuffer.Zero; mHVAO = HVertexArray.Zero;
-      All.Release (Idx1);
+      All.Release (Idx);
    }
 
    // Called to transmit the data to the GPU.
@@ -111,6 +111,7 @@ class RBuffer : IIndexed {
       GL.BindBuffer (EBufferTarget.Array, mHVertex = GL.GenBuffer ());
       fixed (void* p = &mData[0])
          GL.BufferData (EBufferTarget.Array, mUsed, (Ptr)p, EBufferUsage.StaticDraw);
+      PushedVerts = mUsed;
 
       GL.BindBuffer (EBufferTarget.ElementArray, mHIndex = GL.GenBuffer ());
       fixed (void* p = &mIndex[0])
@@ -126,7 +127,13 @@ class RBuffer : IIndexed {
          GL.EnableVertexAttribArray (index);
          index++; offset += a.Size;
       }
+      PushID = ++mNextPushID;
    }
+   public int PushID, PushedVerts;
+   static int mNextPushID;
+
+   public override string ToString () 
+      => $"RBuffer Idx:{Idx}, Spec:{VSpec}, Push:{PushedVerts} bytes @ {PushID}";
 
    // Private data -------------------------------------------------------------
    byte[] mData = new byte[1024];   // Raw data storage

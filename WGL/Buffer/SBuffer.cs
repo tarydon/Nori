@@ -38,6 +38,9 @@ class StreamBuffer {
       GL.BufferData (EBufferTarget.Array, mSize = 8192 * 1024, 0, EBufferUsage.StreamDraw);
    }
 
+   public static StreamBuffer It => mIt ??= new ();
+   static StreamBuffer? mIt;
+
    // Methods ------------------------------------------------------------------
    /// <summary>Copy data into the buffer from the given pointer, and issue a DrawArrays call</summary>
    /// <param name="shader">The shader we're currently using (we use this to get the mode)</param>

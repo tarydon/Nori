@@ -23,6 +23,8 @@
          <Button Click="DwgDemo">Drawing Demo</Button>
          <Button Click="RobotDemo">Robot Demo</Button>
          <Button Click="STPDemo">STEP Demo</Button>
+         <Border Height="20" />
+         <Button Click="TempDemo">Temp. Demo</Button>
       </StackPanel>
          <StackPanel Name="mSettings" DockPanel.Dock="Right" Background="#AAA" />
       <Border Name="mContent" />

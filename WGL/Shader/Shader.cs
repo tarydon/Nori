@@ -14,10 +14,12 @@ abstract class Shader {
    /// <summary>Construct a ShaderImp given the underlying ShaderImp</summary>
    protected Shader (ShaderImp program) {
       CBVertex = Attrib.GetSize ((Pgm = program).VSpec);
+      Attribs = Attrib.GetFor (program.VSpec);
       SortCode = Pgm.SortCode;
       Idx = (ushort)mAll.Count; 
       mAll.Add (this);
    }
+   public readonly Attrib[] Attribs;
 
    // Properties --------------------l-------------------------------------------
    /// <summary>Returns the size of each vertex (the sum of sizes of the Attrib array)</summary>
@@ -105,6 +107,8 @@ abstract class Shader {
    /// that can be applied into a shader program by calling ApplyUniforms(int).
    public abstract ushort SnapUniforms ();
 
+   public abstract void StreamBatches (int start, int count);
+
    // Private data -------------------------------------------------------------
    // The list of all shaders - Shader.Idx indexes into this list
    protected static List<Shader> mAll = [null!];
@@ -150,10 +154,12 @@ abstract class Shader<TVertex, TUniform> : Shader, IComparer<TUniform> where TVe
       if (!ExtendBatch (data.Length)) {
          ref RBatch rb = ref RBatch.Alloc ();
          rb.IDVNode = (ushort)vnode.Id;
+         rb.Streaming = vnode.Streaming;
          rb.ZLevel = (short)Lux.ZLevel;
          rb.NShader = Idx; rb.NUniform = nUniform; rb.NBuffer = 0;
          rb.Offset = mData.Count; rb.Count = data.Length;
-         vnode.Batches.Add ((rb.Idx1, rb.NUniform));
+         if (vnode.Streaming) RBatch.Staging.Add ((rb.Idx, rb.NUniform));
+         else vnode.Batches.Add ((rb.Idx, rb.NUniform));
       }
       mData.AddRange (data);
 
@@ -179,12 +185,14 @@ abstract class Shader<TVertex, TUniform> : Shader, IComparer<TUniform> where TVe
    /// RBatch has a non-zero ICount value.
    public void Draw (ReadOnlySpan<TVertex> data, ReadOnlySpan<int> indices) {
       ref RBatch rb = ref RBatch.Alloc ();
-      rb.IDVNode = (ushort)Lux.VNode!.Id;
+      VNode vnode = Lux.VNode!;
+      rb.IDVNode = (ushort)vnode.Id;
       rb.ZLevel = (short)Lux.ZLevel;
       rb.NShader = Idx; rb.NUniform = SnapUniforms (); rb.NBuffer = 0;
       rb.Offset = mData.Count; rb.Count = data.Length;
       rb.IOffset = mIndex.Count; rb.ICount = indices.Length;
-      Lux.VNode.Batches.Add ((rb.Idx1, rb.NUniform));
+      if (vnode.Streaming) RBatch.Staging.Add ((rb.Idx, rb.NUniform));
+      else vnode.Batches.Add ((rb.Idx, rb.NUniform));
 
       mData.AddRange (data);
       // Note that these indices are all zero-relative (as in the original mesh data). Later, when
@@ -194,6 +202,47 @@ abstract class Shader<TVertex, TUniform> : Shader, IComparer<TUniform> where TVe
       // data to that
       mIndex.AddRange (indices);
    }
+
+   /// <summary>This is called to issue batch draw calls</summary>
+   /// After the batches are sorted (by SortBatches), the sorted set may not be using successive
+   /// locations in the mData array. So, we copy the data from the batches into a new array (called
+   /// mSorted), in the order in which the batches are to be issued. Now, the data sharing the same
+   /// uniforms becomes contiguous, and we can issue fewer draw calls. For example, suppose we are 
+   /// drawing points in Red and Yellow color, and draw calls were issued interspersed, so that the
+   /// mData array now contains red and yellow color points like this:
+   /// [(R R) (Y Y) (R R) (Y)]
+   /// To draw this will require 4 draw calls, since a Draw call can use only one uniform (Red or
+   /// Yellow). Note that even if the mData array is like this, the batches would have been sorted
+   /// already by uniforms, and so the two red batches would appear first in the mBatch list. The
+   /// mSorted array will have the same data as above, but shuffled like this:
+   /// [(R R) (R R) (Y Y) (Y)]
+   /// Then, we can actually combine the similar colors and issue just two draw calls:
+   /// [(R R R R) (Y Y Y)]
+   public override unsafe void StreamBatches (int start, int count) {
+      var buffer = StreamBuffer.It;
+      var attribs = Attribs;
+      int cbStruct = Marshal.SizeOf<TVertex> ();
+      var span = mData.AsSpan ();
+
+      int nSortedUsed = 0, end = start + count - 1;
+      fixed (void* p0 = &span[0]) {
+         byte* pSrc = (byte*)p0;
+         for (int i = start; i <= end; i++) {
+            ref RBatch b = ref RBatch.Get (i);
+            int cbBatch = b.Count * cbStruct;
+            while (nSortedUsed + cbBatch >= mSorted.Length)
+               Array.Resize (ref mSorted, mSorted.Length * 2);
+            fixed (void* p1 = &mSorted[0]) {
+               byte* pDst = (byte*)p1;
+               Buffer.MemoryCopy (pSrc + b.Offset * cbStruct, pDst + nSortedUsed, cbBatch, cbBatch);
+               nSortedUsed += cbBatch;
+            }
+         }
+      }
+      fixed (void* p1 = &mSorted[0])
+         buffer.Draw (Pgm, p1, nSortedUsed / cbStruct, attribs);
+   }
+   byte[] mSorted = new byte[64];
 
    // Overrides ----------------------------------------------------------------
    /// <summary>Copies vertices from our local mData storage to an RBuffer</summary>
