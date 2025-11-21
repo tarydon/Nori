@@ -70,6 +70,7 @@ class StreamBuffer {
       GL.DrawArrays (shader.Mode, 0, nVerts);
       for (int i = 0; i < index; i++) GL.DisableVertexAttribArray (index);
       GL.BindBuffer (EBufferTarget.Array, HBuffer.Zero);
+      Debug.Print ($"Cursor = {mCursor}");
    }
 
    // Implementation -----------------------------------------------------------

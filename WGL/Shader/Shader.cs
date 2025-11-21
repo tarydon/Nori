@@ -107,7 +107,7 @@ abstract class Shader {
    /// that can be applied into a shader program by calling ApplyUniforms(int).
    public abstract ushort SnapUniforms ();
 
-   public abstract void StreamBatches (int start, int count);
+   public abstract void StreamBatches (List<int> ids);
 
    // Private data -------------------------------------------------------------
    // The list of all shaders - Shader.Idx indexes into this list
@@ -158,8 +158,11 @@ abstract class Shader<TVertex, TUniform> : Shader, IComparer<TUniform> where TVe
          rb.ZLevel = (short)Lux.ZLevel;
          rb.NShader = Idx; rb.NUniform = nUniform; rb.NBuffer = 0;
          rb.Offset = mData.Count; rb.Count = data.Length;
-         if (vnode.Streaming) RBatch.Staging.Add ((rb.Idx, rb.NUniform));
-         else vnode.Batches.Add ((rb.Idx, rb.NUniform));
+         if (vnode.Streaming) {
+            RBatch.Streamed.Add (rb.Idx);
+            RBatch.Staging.Add ((rb.Idx, rb.NUniform));
+         } else 
+            vnode.Batches.Add ((rb.Idx, rb.NUniform));
       }
       mData.AddRange (data);
 
@@ -171,6 +174,7 @@ abstract class Shader<TVertex, TUniform> : Shader, IComparer<TUniform> where TVe
       // - The previous batch should be using the same set of uniforms
       bool ExtendBatch (int delta) {
          ref RBatch rb = ref RBatch.Recent ();
+         if (rb.Streaming) return false;
          if (rb.IDVNode != vnode.Id) return false;
          if (rb.NShader != Idx || rb.NUniform != nUniform || rb.NBuffer != 0) return false;
          rb.Extend (delta);
@@ -191,8 +195,11 @@ abstract class Shader<TVertex, TUniform> : Shader, IComparer<TUniform> where TVe
       rb.NShader = Idx; rb.NUniform = SnapUniforms (); rb.NBuffer = 0;
       rb.Offset = mData.Count; rb.Count = data.Length;
       rb.IOffset = mIndex.Count; rb.ICount = indices.Length;
-      if (vnode.Streaming) RBatch.Staging.Add ((rb.Idx, rb.NUniform));
-      else vnode.Batches.Add ((rb.Idx, rb.NUniform));
+      if (vnode.Streaming) {
+         RBatch.Streamed.Add (rb.Idx);
+         RBatch.Staging.Add ((rb.Idx, rb.NUniform));
+      } else 
+         vnode.Batches.Add ((rb.Idx, rb.NUniform));
 
       mData.AddRange (data);
       // Note that these indices are all zero-relative (as in the original mesh data). Later, when
@@ -203,46 +210,38 @@ abstract class Shader<TVertex, TUniform> : Shader, IComparer<TUniform> where TVe
       mIndex.AddRange (indices);
    }
 
-   /// <summary>This is called to issue batch draw calls</summary>
-   /// After the batches are sorted (by SortBatches), the sorted set may not be using successive
-   /// locations in the mData array. So, we copy the data from the batches into a new array (called
-   /// mSorted), in the order in which the batches are to be issued. Now, the data sharing the same
-   /// uniforms becomes contiguous, and we can issue fewer draw calls. For example, suppose we are 
-   /// drawing points in Red and Yellow color, and draw calls were issued interspersed, so that the
-   /// mData array now contains red and yellow color points like this:
-   /// [(R R) (Y Y) (R R) (Y)]
-   /// To draw this will require 4 draw calls, since a Draw call can use only one uniform (Red or
-   /// Yellow). Note that even if the mData array is like this, the batches would have been sorted
-   /// already by uniforms, and so the two red batches would appear first in the mBatch list. The
-   /// mSorted array will have the same data as above, but shuffled like this:
-   /// [(R R) (R R) (Y Y) (Y)]
-   /// Then, we can actually combine the similar colors and issue just two draw calls:
-   /// [(R R R R) (Y Y Y)]
-   public override unsafe void StreamBatches (int start, int count) {
-      var buffer = StreamBuffer.It;
-      var attribs = Attribs;
-      int cbStruct = Marshal.SizeOf<TVertex> ();
-      var span = mData.AsSpan ();
+   public unsafe override void StreamBatches (List<int> ids) {
+      // Select this program for use
+      GLState.Program = Pgm;
+      // Set the shader 'constants' - this is stuff like VPScale that does
+      // not change during the frame rendering, and this actually does some
+      // setting only once per frame, per shader
+      SetConstants ();
+      // Apply the uniforms for this set of batches. Note that this is called from 
+      // IssueAll which already has ensured that the batches specified in ids all use the same
+      // set of uniforms
+      ref RBatch rb0 = ref RBatch.Get (ids[0]);
+      ApplyUniforms (rb0.NUniform);
 
-      int nSortedUsed = 0, end = start + count - 1;
+      var span = mData.AsSpan ();
+      int cbStruct = Marshal.SizeOf<TVertex> (), nSortedUsed = 0;
+      mSorted ??= new byte[64];
       fixed (void* p0 = &span[0]) {
          byte* pSrc = (byte*)p0;
-         for (int i = start; i <= end; i++) {
-            ref RBatch b = ref RBatch.Get (i);
-            int cbBatch = b.Count * cbStruct;
+         foreach (var id in ids) {
+            ref RBatch rb = ref RBatch.Get (id);
+            int cbBatch = rb.Count * cbStruct;     // Size of this batch's data, in bytes
             while (nSortedUsed + cbBatch >= mSorted.Length)
                Array.Resize (ref mSorted, mSorted.Length * 2);
-            fixed (void* p1 = &mSorted[0]) {
-               byte* pDst = (byte*)p1;
-               Buffer.MemoryCopy (pSrc + b.Offset * cbStruct, pDst + nSortedUsed, cbBatch, cbBatch);
-               nSortedUsed += cbBatch;
-            }
+            fixed (byte* pDst= &mSorted[0]) 
+               Buffer.MemoryCopy (pSrc + rb.Offset * cbStruct, pDst + nSortedUsed, cbBatch, cbBatch);
+            nSortedUsed += cbBatch;
          }
       }
-      fixed (void* p1 = &mSorted[0])
-         buffer.Draw (Pgm, p1, nSortedUsed / cbStruct, attribs);
+      fixed (void* pSorted = &mSorted[0])
+         StreamBuffer.It.Draw (Pgm, pSorted, nSortedUsed / cbStruct, Attribs);
    }
-   byte[] mSorted = new byte[64];
+   byte[]? mSorted;
 
    // Overrides ----------------------------------------------------------------
    /// <summary>Copies vertices from our local mData storage to an RBuffer</summary>

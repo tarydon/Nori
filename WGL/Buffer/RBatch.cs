@@ -81,6 +81,10 @@ struct RBatch : IIndexed {
    /// (as stored in the Uniform value). This uniform is the index of a Uniforms struct peculiar
    /// to that shader, and stored in that Shader's Uniforms[] list.
    public static List<(int Batch, ushort Uniform)> Staging = [];
+   /// <summary>
+   /// These are the batches that got streamed in the last frame (and should be released at frame-end)
+   /// </summary>
+   public static List<int> Streamed = [];
 
    // Methods ------------------------------------------------------------------
    /// <summary>This allocates a new RBatch object (from the IdxHeap of RBatch that we manage)</summary>
@@ -95,18 +99,43 @@ struct RBatch : IIndexed {
    public static void IssueAll () {
       Sort ();
       Debug.Print ($"Staging = {Staging.Count}");
-      for (int n = Staging.Count, i = 0; i < n; i++) {
+      mStreaming.Clear (); 
+      for (int i = 0, n = Staging.Count; i < n; i++) {
          var (b0, u0) = Staging[i];
          ref RBatch rb0 = ref mAll[b0];
          int count = rb0.Count;
+         if (rb0.Streaming) mStreaming.Add (b0);
+         // Go through successive batches after this and see if they can be merged together
+         // into a single draw-call
          for (int j = i + 1; j < n; j++) {
             var (b1, u1) = Staging[j];
             ref RBatch rb1 = ref mAll[b1];
-            if (rb0.CanMerge (ref rb1, count, u0, u1)) { i = j; count += rb1.Count; } else break;
+            if (rb0.CanMerge (ref rb1, count, u0, u1)) {
+               if (rb1.Streaming) mStreaming.Add (b1);
+               count += rb1.Count;
+               i = j;
+            } else 
+               break;
          }
-         rb0.Issue (u0, count);
+         // At this point, if rb0 was a streaming batch, then the mStreaming list
+         // contains all the batches that we want to stream, and we do that here:
+         if (rb0.Streaming) {
+            Debug.Assert (!Lux.IsPicking && rb0.ICount == 0);
+            Debug.Print ($"Stream: {mStreaming.Count} batches");
+            Shader.Get (rb0.NShader).StreamBatches (mStreaming);
+            mStreaming.Clear ();
+         } else {
+            // Otherwise, rb0 is a retained-mode buffer, and we use the Issue call
+            // here to output 'count' vertices (which is the sum of vertices of all
+            // the buffers subsequent to rb0 that could get merged into this one)
+            rb0.Issue (u0, count);
+         }
       }
+      foreach (var n in Streamed) mAll.Release (n);
+      Streamed.Clear (); 
    }
+   // Helper used only during IssueAll call
+   static List<int> mStreaming = [];
 
    /// <summary>Extend this batch by a given number of extra vertices</summary>
    public void Extend (int delta) => Count = (ushort)(Count + delta);
@@ -155,13 +184,16 @@ struct RBatch : IIndexed {
       // if these two sets of uniforms are actually identical
       var shader = Shader.Get (NShader);
       int n = shader.OrderUniforms (uni0, uni1); if (n != 0) return false;
-      // Finally, the two batches storage should be back to back so that
-      // rb1's storage followed immediately after this one
-      if (NBuffer == 0) return Offset + count == rb1.Offset;
-      else return Offset + count * shader.CBVertex == rb1.Offset;
+      if (!rb1.Streaming) {   // TODO: Can we relax this for non-streaming buffers as well
+         // Finally, the two batches storage should be back to back so that
+         // rb1's storage followed immediately after this one
+         if (NBuffer == 0) return Offset + count == rb1.Offset;
+         else return Offset + count * shader.CBVertex == rb1.Offset;
+      }
+      return true;
    }
 
-   // <summary>This is called to 'issue' this batch (the actual DrawArrays or DrawElements)</summary>
+   // This is called to 'issue' this batch (the actual DrawArrays or DrawElements)
    readonly void Issue (ushort nUniform, int count) {
       var shader = Shader.Get (NShader);
       if (!Lux.IsPicking) {
@@ -194,37 +226,43 @@ struct RBatch : IIndexed {
          PickShader.It.ApplyUniforms (uniforms.IDXfm, color);
       }
 
-      if (Streaming) {
-         // If this is a 'streaming' type buffer, then the data for this is still stored
-         // in the shader's vertex buffer. Ask the shader to transfer it directly to the
-         // StreamBuffer (singleton)
-         shader.StreamBatches (Offset, count);
-      } else {
-         // Select the VAO this batch uses as the current VAO. If this VAO
-         // is already selected, this is a no-op
-         var buffer = RBuffer.All[NBuffer];
-         GLState.VAO = buffer.VAO;
+      // Select the VAO this batch uses as the current VAO. If this VAO
+      // is already selected, this is a no-op
+      var buffer = RBuffer.All[NBuffer];
+      GLState.VAO = buffer.VAO;
 
-         if (ICount > 0) {
-            // If we are using indexed drawing mode, we ignore the count that is passed
-            // in, and use this.ICount as the number of elements to draw
-            buffer.Draw (shader.Pgm.Mode, Offset, IOffset, ICount);
-         } else {
-            // If ICount = 0: we are using simple DrawArrays.
-            // We have to draw 'count' vertices starting at this batch's vertex
-            // offset (byte offset within that buffer). Note that we are not using
-            // this RBatch's count, but the count is passed in from outside. This
-            // is because IssueAll() sees if this batch and the subsequent one(s)
-            // all use the same shader, VAO and uniforms and thus can be merged into
-            // a larger single draw.
-            buffer.Draw (shader.Pgm.Mode, Offset, count);
-         }
+      if (ICount > 0) {
+         // If we are using indexed drawing mode, we ignore the count that is passed
+         // in, and use this.ICount as the number of elements to draw
+         buffer.Draw (shader.Pgm.Mode, Offset, IOffset, ICount);
+      } else {
+         // If ICount = 0: we are using simple DrawArrays.
+         // We have to draw 'count' vertices starting at this batch's vertex
+         // offset (byte offset within that buffer). Note that we are not using
+         // this RBatch's count, but the count is passed in from outside. This
+         // is because IssueAll() sees if this batch and the subsequent one(s)
+         // all use the same shader, VAO and uniforms and thus can be merged into
+         // a larger single draw.
+         buffer.Draw (shader.Pgm.Mode, Offset, count);
       }
       // Update stats
       mVertsDrawn += count;
       mDrawCalls++;
    }
    internal static int mDrawCalls, mVertsDrawn;
+
+   // This is called to issue a set of streaming batches
+   void IssueStreaming (int nUniform, List<int> ids) {
+      // Select the program used by this set of streaming batches
+      var shader = Shader.Get (NShader);
+      GLState.Program = shader.Pgm;
+      // Set the shader constants (stuff like VPScale that does not change for each batch).
+      // This is a no-op except for the first time this shader is used in this frame.
+      shader.SetConstants ();
+      // Ask the shader to apply the uniforms for this set of batches
+      shader.ApplyUniforms (nUniform);
+
+   }
 
    // This is called to sort the RBatches before we draw them.
    // This sorts the batches with these keys (in descending order of importance):

@@ -54,10 +54,11 @@ class TempDemoScene : Scene2 {
       var lines2 = new Lines ([new (40, 40), new (440, 40), new (440, 40), new (250, 280)], Color4.Red);
       var quads1 = new Quads ([new (10, 10), new (50, 10), new (70, 50), new (20, 60), new (200, 30), new (150, 70), new (120, 50), new (180, 30)], Color4.Yellow);
       var quads2 = new Quads ([new (350, 100), new (430, 110), new (420, 130), new (350, 120)], new Color4 (128, 200, 128));
+      var quads3 = new Quads ([new (10, 100), new (20, 100), new (40, 200), new (20, 200)], Color4.Yellow);
       var under = new Underlay ();
       var over = new Overlay ();
       // Root = new GroupVN ([under, lines1, lines2, quads1, quads2, over]);
-      Root = new GroupVN ([lines1, quads1]);
+      Root = new GroupVN ([quads1, lines1, quads2, quads3]);
 
       mKeys = HW.Keys.Where (a => a.Key == EKey.Space && a.State == EKeyState.Pressed).Subscribe (k => Lux.DumpStats ());
    }
