@@ -57,8 +57,9 @@ class TempDemoScene : Scene2 {
       var quads3 = new Quads ([new (10, 100), new (20, 100), new (40, 200), new (20, 200)], Color4.Yellow);
       var under = new Underlay ();
       var over = new Overlay ();
-      // Root = new GroupVN ([under, lines1, lines2, quads1, quads2, over]);
-      Root = new GroupVN ([quads1, lines1, quads2, quads3]);
+
+      Root = new GroupVN ([under, lines1, lines2, quads1, quads2, over, quads3]);
+      //Root = new GroupVN ([quads1, lines1, quads2, quads3]);
 
       mKeys = HW.Keys.Where (a => a.Key == EKey.Space && a.State == EKeyState.Pressed).Subscribe (k => Lux.DumpStats ());
    }
@@ -70,8 +71,10 @@ class TempDemoScene : Scene2 {
 class Underlay : VNode {
    public Underlay () {
       mTimer = new DispatcherTimer () { Interval = TimeSpan.FromSeconds (1) };
-      mTimer.Tick += (s, e) => Redraw ();
+      mTimer.Tick += (s, e) => { mPts.Clear (); Redraw (); };
+      Streaming = true;
    }
+   List<Vec2F> mPts = [];
    DispatcherTimer mTimer;
 
    public override void OnAttach () => mTimer.IsEnabled = true;
@@ -84,12 +87,13 @@ class Underlay : VNode {
    Random mRand = new ();
 
    public override void Draw () {
-      List<Vec2F> pts = [];
-      for (int i = 0; i < 20; i++) {
-         int x = mRand.Next (10, 490), y1 = mRand.Next (10, 290), y2 = mRand.Next (10, 290);
-         pts.Add (new (x, y1)); pts.Add (new (x, y2));
+      if (mPts.Count == 0) {
+         for (int i = 0; i < 20; i++) {
+            int x = mRand.Next (10, 490), y1 = mRand.Next (10, 290), y2 = mRand.Next (10, 290);
+            mPts.Add (new (x, y1)); mPts.Add (new (x, y2));
+         }
       }
-      Lux.Lines (pts.AsSpan ());
+      Lux.Lines (mPts.AsSpan ());
    }
 }
 
@@ -104,7 +108,7 @@ class Lines : VNode {
 
 class Quads : VNode {
    public Quads (List<Vec2F> pts, Color4 color) 
-      => (mPts, mColor, Streaming) = (pts, color, true); 
+      => (mPts, mColor, Streaming) = (pts, color, false); 
    Color4 mColor;
    List<Vec2F> mPts;
 
@@ -115,6 +119,7 @@ class Quads : VNode {
 class Overlay : VNode {
    public Overlay () {
       mFace = new TypeFace ("N:/Wad/GL/Fonts/RobotoMono-Regular.ttf", 24);
+      Streaming = true;
    }
    TypeFace mFace;
    IDisposable? mMouse;
@@ -123,7 +128,7 @@ class Overlay : VNode {
       mPt = (Point2)Lux.PixelToWorld (pt);
       Redraw ();
    }
-   Point2 mPt;
+   Point2 mPt = new Point2 (50, 50);
 
    public override void SetAttributes () {
       Lux.Color = Color4.DarkGreen; Lux.ZLevel = 20;

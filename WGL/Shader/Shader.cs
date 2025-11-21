@@ -158,10 +158,9 @@ abstract class Shader<TVertex, TUniform> : Shader, IComparer<TUniform> where TVe
          rb.ZLevel = (short)Lux.ZLevel;
          rb.NShader = Idx; rb.NUniform = nUniform; rb.NBuffer = 0;
          rb.Offset = mData.Count; rb.Count = data.Length;
-         if (vnode.Streaming) {
-            RBatch.Streamed.Add (rb.Idx);
+         if (vnode.Streaming) 
             RBatch.Staging.Add ((rb.Idx, rb.NUniform));
-         } else 
+         else 
             vnode.Batches.Add ((rb.Idx, rb.NUniform));
       }
       mData.AddRange (data);
@@ -195,10 +194,9 @@ abstract class Shader<TVertex, TUniform> : Shader, IComparer<TUniform> where TVe
       rb.NShader = Idx; rb.NUniform = SnapUniforms (); rb.NBuffer = 0;
       rb.Offset = mData.Count; rb.Count = data.Length;
       rb.IOffset = mIndex.Count; rb.ICount = indices.Length;
-      if (vnode.Streaming) {
-         RBatch.Streamed.Add (rb.Idx);
+      if (vnode.Streaming) 
          RBatch.Staging.Add ((rb.Idx, rb.NUniform));
-      } else 
+      else 
          vnode.Batches.Add ((rb.Idx, rb.NUniform));
 
       mData.AddRange (data);

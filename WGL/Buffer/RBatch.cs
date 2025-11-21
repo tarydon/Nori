@@ -81,10 +81,6 @@ struct RBatch : IIndexed {
    /// (as stored in the Uniform value). This uniform is the index of a Uniforms struct peculiar
    /// to that shader, and stored in that Shader's Uniforms[] list.
    public static List<(int Batch, ushort Uniform)> Staging = [];
-   /// <summary>
-   /// These are the batches that got streamed in the last frame (and should be released at frame-end)
-   /// </summary>
-   public static List<int> Streamed = [];
 
    // Methods ------------------------------------------------------------------
    /// <summary>This allocates a new RBatch object (from the IdxHeap of RBatch that we manage)</summary>
@@ -123,6 +119,7 @@ struct RBatch : IIndexed {
             Debug.Assert (!Lux.IsPicking && rb0.ICount == 0);
             Debug.Print ($"Stream: {mStreaming.Count} batches");
             Shader.Get (rb0.NShader).StreamBatches (mStreaming);
+            foreach (var id in mStreaming) mAll.Release (id);
             mStreaming.Clear ();
          } else {
             // Otherwise, rb0 is a retained-mode buffer, and we use the Issue call
@@ -131,8 +128,6 @@ struct RBatch : IIndexed {
             rb0.Issue (u0, count);
          }
       }
-      foreach (var n in Streamed) mAll.Release (n);
-      Streamed.Clear (); 
    }
    // Helper used only during IssueAll call
    static List<int> mStreaming = [];

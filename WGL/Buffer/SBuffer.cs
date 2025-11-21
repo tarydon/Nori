@@ -48,6 +48,7 @@ class StreamBuffer {
    /// <param name="nVerts">The number of 'vertices'</param>
    /// <param name="attribs">The set of Attrib values (like Vec4f, int, Vec2s etc)</param>
    internal unsafe void Draw (ShaderImp shader, void* pSrc, int nVerts, Attrib[] attribs) {
+      GLState.VAO = HVertexArray.Zero;
       GL.BindBuffer (EBufferTarget.Array, mId);
       int cbVertex = attribs.Sum (a => a.Size);
       int cbData = cbVertex * nVerts, cbReserve = cbData.RoundUp (64);
