@@ -1,4 +1,4 @@
-﻿// ────── ╔╗                                                                                WPFDEMO
+﻿// ────── ╔╗
 // ╔═╦╦═╦╦╬╣ STPScene.cs
 // ║║║║╬║╔╣║ Load and display a STEP file, select entities, connected entities
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
@@ -9,8 +9,7 @@ using Nori;
 class STPScene : Scene3 {
    public STPScene () {
       var sr = new STEPReader ("N:/TData/Step/S00178.stp");
-      sr.Parse ();
-      mModel = sr.Build ();
+      mModel = sr.Load ();
 
       Lib.Tracer = TraceVN.Print;
       BgrdColor = Color4.Gray (96);

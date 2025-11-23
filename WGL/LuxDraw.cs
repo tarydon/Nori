@@ -277,8 +277,8 @@ public static partial class Lux {
    /// - DrawColor : color of the triangles being drawn
    public static void Quads (ReadOnlySpan<Vec2F> a) {
       Quad2DShader.It.Draw (a);
-      //for (int i = 0; i < a.Length; i += 4)
-      //   Line2DShader.It.Draw ([a[i], a[i + 1], a[i + 1], a[i + 2], a[i + 2], a[i + 3], a[i + 3], a[i]]);  REMOVETHIS
+      for (int i = 0; i < a.Length; i += 4)
+         Line2DShader.It.Draw ([a[i], a[i + 1], a[i + 1], a[i + 2], a[i + 2], a[i + 3], a[i + 3], a[i]]);
    }
 
    /// <summary>Draws 2D triangles in world coordinates, with Z = 0</summary>

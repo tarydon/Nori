@@ -1,4 +1,4 @@
-﻿// ────── ╔╗                                                                                WPFDEMO
+﻿// ────── ╔╗
 // ╔═╦╦═╦╦╬╣ RobotScene.cs
 // ║║║║╬║╔╣║ Demonstrates Robot Forward & Inverse kinematics, simulation
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────

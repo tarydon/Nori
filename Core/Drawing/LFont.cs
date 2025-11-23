@@ -1,4 +1,4 @@
-// ────── ╔╗                                                                                   CORE
+// ────── ╔╗
 // ╔═╦╦═╦╦╬╣ LFont.cs
 // ║║║║╬║╔╣║ Contains the LineFont class needed to render vector fonts in a drawing.
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────

@@ -1,4 +1,4 @@
-// ────── ╔╗                                                                                   CORE
+// ────── ╔╗
 // ╔═╦╦═╦╦╬╣ Poly.cs
 // ║║║║╬║╔╣║ Implements the Poly class (polyline), and the Seg class (segment)
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
@@ -168,22 +168,7 @@ public partial class Poly {
    /// of segs in the poly is automatically wrapped around (thus, this[Count] is
    /// the same as this[0] for a closed poly, and this[-1] returns the last
    /// segment).
-   public Seg this[int i] {
-      get {
-#if OLDSEG
-         int n = Count; i = i.Wrap (n);
-         EFlags flags = (i == n - 1) ? EFlags.Last : 0;
-         Point2 a = mPts[i], b = mPts[(i + 1) % mPts.Length];
-         if (HasArcs && i < Extra.Length) {
-            var extra = Extra[i];
-            return new (a, b, extra.Center, extra.Flags | flags);
-         }
-         return new (a, b, Point2.Zero, flags);
-#else
-         return new (this, i);
-#endif
-      }
-   }
+   public Seg this[int i] => new (this, i);
 
    // Methods ------------------------------------------------------------------
    public Poly Clean ()
