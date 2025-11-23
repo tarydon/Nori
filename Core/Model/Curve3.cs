@@ -102,6 +102,7 @@ public class Arc3 : Edge3 {
 #endregion
 
 #region class Polyline3 -------------------------------------------------------------------------------
+/// <summary>Represents a PWL segment</summary>
 public class Polyline3 : Edge3 {
    // Constructors -------------------------------------------------------------
    Polyline3 () { }
@@ -109,9 +110,8 @@ public class Polyline3 : Edge3 {
 
    // Properties ---------------------------------------------------------------
    public readonly ImmutableArray<Point3> Pts;
-   public double Length => SD.TotalLength;
-   private SegData SD => _segData ??= ComputeSegLength ();
-   SegData? _segData = null;
+   public double Length => _length ??= ComputeLength ();
+   double? _length = null;
 
    // Edge3 Implementation -----------------------------------------------------
    public override Point3 Start => Pts[0];
@@ -119,38 +119,20 @@ public class Polyline3 : Edge3 {
 
    public override void Discretize (List<Point3> pts, double _, double __) => pts.AddRange (Pts);
    public override Point3 GetPointAt (double lie) {
-      // First deal with the most common cases (even disregarding epsilon)
-      if (lie == 0) return Start;
-      else if (lie == 1) return End;
+      if (lie < Lib.Epsilon) return Start;
+      else if (lie >= 1 - Lib.Epsilon) return End;
 
-      // Get the length from lie. We want to do epsilon comparison on the length and not lie.
-      var sd = SD;
-      double length = lie * sd.TotalLength;
-      if (length < Lib.Epsilon) return Start;
-      else if (length > sd.TotalLength - Lib.Epsilon) return End;
-
-      // Do a binary search and find the index of the first number that is greater than the given value.
-      int idx = sd.SegLengths.BinarySearch (length);
-      if (idx >= 0) return Pts[idx]; // Bang on a corner.
-      // The point is somewhere between two points.
-      idx = ~idx;
-      double l1 = sd.SegLengths[idx - 1], segLie = (length - l1) / (sd.SegLengths[idx] - l1);
-      return segLie.Along (Pts[idx - 1], Pts[idx]);
+      lie *= Pts.Length - 1;
+      int n = (int)lie;
+      return (lie - n).Along (Pts[n], Pts[n + 1]);
    }
 
    // Implementation -----------------------------------------------------------
-   SegData ComputeSegLength () {
+   double ComputeLength () {
       double totalLength = 0;
-      var segLengths = ImmutableArray.CreateBuilder<double> (Pts.Length - 1); segLengths.Add (0);
       for (int i = 1; i < Pts.Length; i++)
-         segLengths.Add (totalLength += Pts[i - 1].DistTo (Pts[i]));
-      return new SegData(totalLength, segLengths.ToImmutable ());
-   }
-
-   // Embedded types -----------------------------------------------------------
-   class SegData (double totalLength, ImmutableArray<double> segLengths) {
-      public readonly double TotalLength = totalLength;
-      public readonly ImmutableArray<double> SegLengths = segLengths;
+         totalLength += Pts[i - 1].DistTo (Pts[i]);
+      return totalLength;
    }
 }
 #endregion
