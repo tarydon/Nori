@@ -58,3 +58,5 @@ Arc3
   CS Radius AngSpan
 E3Plane
   CS
+Polyline3
+  Pts
