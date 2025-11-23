@@ -615,6 +615,54 @@ public partial class Poly {
       return pb.End (mPts[^1]);
    }
 
+   /// <summary>Inserts key slot on the specific angle (returns null if not possible)</summary>
+   /// <param name="seg">Current segment index on the poly</param>
+   /// <param name="width">Width of the key slot</param>
+   /// <param name="depth">Depth of the key slot</param>
+   /// <param name="angle">Orientation of the key slot</param>
+   public Poly? KeySlot (int seg, double width, double depth, double angle) {
+      var arcSeg = this[seg];
+      if (!arcSeg.IsArc || width.IsZero () || depth.IsZero ()) return null;
+
+      double radius = arcSeg.Radius, tolerance = 6 * Lib.Epsilon; // 6 is a magic number
+      if (width >= (2 * radius) - tolerance) return null; // Check: Slot fits the given seg diameter.
+
+      // Computing the four corner points (topLeft, botLeft, botRight and topRight).
+      // Note: depth > 0 indicates the key slot is present inside the poly, else it present outside the poly.
+      Point2 cen = arcSeg.Center, tangPt = cen.Polar (radius, angle), botMid = tangPt.Polar (-depth, angle);
+      Point2 tempPt = botMid.Polar (width / 2, angle), botRight = botMid + (botMid - tempPt).Perpendicular ();
+      if (depth > 0 && cen.DistTo (botRight) >= radius) return null;
+      Point2 botLeft = botMid + (tempPt - botMid).Perpendicular ();
+      // Simple trigonometry function to compute topLeft and topRight for the key slot. file://N:/Doc/Img/KeySlotPoints.png
+      double ang = Math.Asin ((width / 2) / radius), dist = (width / 2) / Math.Tan (ang);
+      Point2 topMid = cen.Polar (dist, angle), topLeft = topMid + (tempPt - botMid).Perpendicular (),
+             topRight = topMid + (botMid - tempPt).Perpendicular ();
+
+      // Check if the top left (or) right point is present within the poly.
+      double leftOutside = arcSeg.GetLie (topLeft), rightOutside = arcSeg.GetLie (topRight);
+      if (leftOutside >= 1 || leftOutside <= 0 || rightOutside >= 1 || rightOutside <= 0) return null;
+
+      PolyBuilder pb = new ();
+      for (int i = 0; i < mPts.Length; i++) {
+         var pt = mPts[i];
+         // This code adds all the other nodes (they could be the starts of line or arc
+         // segments, and we handle both by looking through the mExtra array). Note that
+         // we directly read the mExtra array rather than use Seg objects for better performance.
+         if (i < Count && this[i].IsArc) {
+            var extra = Extra[i]; var flags = extra.Flags & (EFlags.CCW | EFlags.CW); var extraCen = extra.Center;
+            if (!IsCircle) pb.Arc (pt, extraCen, flags);
+            if (i == seg) {
+               List<Point2> pts = (flags & EFlags.CCW) > 0 ? [topRight, botRight, botLeft, topLeft]
+                                                           : [topLeft, botLeft, botRight, topRight];
+               pb.Line (pts[0]).Line (pts[1]).Line (pts[2]).Arc (pts[3], extraCen, flags);
+            }
+         } else pb.Line (pt);
+      }
+      // Done, close the poly if needed and return it
+      if (IsClosed) pb.Close ();
+      return pb.Build ();
+   }
+
    /// <summary>Creates and returns a new reversed Poly of 'this'</summary>
    public Poly Reversed () {
       if (!HasArcs) return new ([.. mPts.Reverse ()], [], mFlags);
