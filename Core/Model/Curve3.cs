@@ -141,7 +141,7 @@ public class Polyline3 : Edge3 {
    // Implementation -----------------------------------------------------------
    SegData ComputeSegLength () {
       double totalLength = 0;
-      var segLengths = ImmutableArray.CreateBuilder<double> (); segLengths.Add (0);
+      var segLengths = ImmutableArray.CreateBuilder<double> (Pts.Length - 1); segLengths.Add (0);
       for (int i = 1; i < Pts.Length; i++)
          segLengths.Add (totalLength += Pts[i - 1].DistTo (Pts[i]));
       return new SegData(totalLength, segLengths.ToImmutable ());
