@@ -1,13 +1,17 @@
 // ────── ╔╗
 // ╔═╦╦═╦╦╬╣ STPBuild.cs
-// ║║║║╬║╔╣║ <<TODO>>
+// ║║║║╬║╔╣║ Implements the 'Build' phase of STEP reading
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 using Nori.STEP;
 namespace Nori;
 
 partial class STEPReader {
-   public Model3 Build () {       
-      foreach (var m in D.OfType<Manifold> ()) Process (m);
+   // Methods ------------------------------------------------------------------
+   public Model3 Load () {
+      if (mModel.Ents.Count == 0) {
+         Parse ();
+         foreach (var m in D.OfType<Manifold> ()) Process (m);
+      }
       return mModel;
    }
    Model3 mModel = new ();

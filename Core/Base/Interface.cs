@@ -1,4 +1,4 @@
-﻿// ────── ╔╗                                                                                   CORE
+﻿// ────── ╔╗
 // ╔═╦╦═╦╦╬╣ Interfaces.cs
 // ║║║║╬║╔╣║ Various interface definitions used (and exported) by Nore.Core
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
@@ -14,7 +14,7 @@ public interface IEQuable<in T> {
 #region interface IIndexed -------------------------------------------------------------------------
 /// <summary>IIndexed implements a class that has an unsigned 16-bit index</summary>
 public interface IIndexed {
-   int Idx1 { get; set; }
+   int Idx { get; set; }
 }
 #endregion
 

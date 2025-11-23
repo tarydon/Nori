@@ -1,4 +1,4 @@
-// ────── ╔╗                                                                                WPFDEMO
+// ────── ╔╗
 // ╔═╦╦═╦╦╬╣ BooleanDemo.cs
 // ║║║║╬║╔╣║ Demo for Union, Intersection, Subtraction boolean operations
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────

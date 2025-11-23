@@ -109,6 +109,12 @@ static unsafe class GL {
    delegate void glDeleteVertexArrays (int n, HVertexArray* textures);
    static glDeleteVertexArrays? pDeleteVertexArrays;
 
+   // Disable a vertex attribute array .........................................
+   public static void DisableVertexAttribArray (int index) 
+      => (pDisableVertexAttribArray ??= Load<glDisableVertexAttribArray> ()) (index);
+   delegate void glDisableVertexAttribArray (int index);
+   static glDisableVertexAttribArray? pDisableVertexAttribArray;
+
    // Indexed drawing from an array (with baseVertex added to each index) ......
    public static void DrawElementsBaseVertex (EMode mode, int count, EIndexType type, Ptr indices, int baseVertex)
       => (pDrawElementsBaseVertex ??= Load<glDrawElementsBaseVertex> ()) (mode, count, type, indices, baseVertex);
@@ -253,6 +259,12 @@ static unsafe class GL {
    delegate void glLinkProgram (HProgram program);
    static glLinkProgram? pLinkProgram;
 
+   // Map part of a buffer object to client address space ......................
+   public static Ptr MapBufferRange (EBufferTarget target, int offset, int length, EMapAccess access) 
+      => (pMapBufferRange ??= Load<glMapBufferRange>()) (target, offset, length, access);
+   delegate Ptr glMapBufferRange (EBufferTarget target, Ptr offset, Ptr length, EMapAccess access);
+   static glMapBufferRange? pMapBufferRange;
+
    // Set up a parameter for patch rendering (commonly the number of vertices per patch)
    public static void PatchParameter (EPatchParam pname, int value)
       => (pPatchParameteri ??= Load<glPatchParameteri> ()) (pname, value);
@@ -325,6 +337,12 @@ static unsafe class GL {
       => (pUniform1i ??= Load<glUniform1i> ()) (location, n);
    delegate void glUniform1i (int location, int val);
    static glUniform1i? pUniform1i;
+
+   // Release the mapping of a buffer object's data store ......................
+   public static void UnmapBuffer (EBufferTarget target) 
+      => (pUnmapBuffer ??= Load<glUnmapBuffer> ()) (target);
+   delegate bool glUnmapBuffer (EBufferTarget target);
+   static glUnmapBuffer? pUnmapBuffer;
 
    // This sets the program object to use for rendering ........................
    public static void UseProgram (HProgram program)

@@ -10,7 +10,7 @@ public partial class STEPReader {
    readonly string S, mFile;
    int N;
 
-   public void Parse () {
+   void Parse () {
       N = S.IndexOf ("DATA;", StringComparison.Ordinal) + 5; Assert (N > 10);
       // The following loop loads all the entities one by one
       ReadOnlySpan<char> endsec = "ENDSEC;";

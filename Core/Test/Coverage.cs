@@ -1,4 +1,4 @@
-﻿// ────── ╔╗                                                                                   CORE
+﻿// ────── ╔╗
 // ╔═╦╦═╦╦╬╣ Coverage.cs
 // ║║║║╬║╔╣║ Implements the Coverage class, used to load coverage.xml files from dotnet-coverage
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────

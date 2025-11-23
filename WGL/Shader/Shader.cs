@@ -14,10 +14,12 @@ abstract class Shader {
    /// <summary>Construct a ShaderImp given the underlying ShaderImp</summary>
    protected Shader (ShaderImp program) {
       CBVertex = Attrib.GetSize ((Pgm = program).VSpec);
+      Attribs = Attrib.GetFor (program.VSpec);
       SortCode = Pgm.SortCode;
       Idx = (ushort)mAll.Count; 
       mAll.Add (this);
    }
+   public readonly Attrib[] Attribs;
 
    // Properties --------------------l-------------------------------------------
    /// <summary>Returns the size of each vertex (the sum of sizes of the Attrib array)</summary>
@@ -57,7 +59,7 @@ abstract class Shader {
    /// When we create the draw calls (using Lux.Lines, Lux.Mesh etc), the data is first
    /// gathered in the respective mData buffers of each shader. Then later when the entire
    /// scene has been thus drawn, we move all this data into RBuffer objects using this method.
-   public abstract int CopyVertices (RBuffer buffer, int start, int count);
+   public abstract int CopyVertices (RetainBuffer buffer, int start, int count);
 
    /// <summary>Copy indexed vertex data to the specified RBuffer</summary>
    /// This is similar to the routine above, but the drawing in this case is done using indices.
@@ -76,7 +78,7 @@ abstract class Shader {
    /// more than once. In OpenGL terminology, this is the difference between the simpler glDrawArrays,
    /// and the more complex glDrawElements (this CopyVertices maps to a glDrawElements call, the
    /// earlier one to a glDrawArrays call).
-   public abstract (int, int) CopyVertices (RBuffer buffer, int start, int count, int istart, int icount);
+   public abstract (int, int) CopyVertices (RetainBuffer buffer, int start, int count, int istart, int icount);
 
    /// <summary>This is called after each frame to cleanup any frame-specific artifacts / data</summary>
    /// For all shaders, we clear the mUniforms[] array
@@ -104,6 +106,8 @@ abstract class Shader {
    /// This returns the index of the UBlock with that shader's Uniforms list. Later,
    /// that can be applied into a shader program by calling ApplyUniforms(int).
    public abstract ushort SnapUniforms ();
+
+   public abstract void StreamBatches (List<int> ids);
 
    // Private data -------------------------------------------------------------
    // The list of all shaders - Shader.Idx indexes into this list
@@ -150,10 +154,14 @@ abstract class Shader<TVertex, TUniform> : Shader, IComparer<TUniform> where TVe
       if (!ExtendBatch (data.Length)) {
          ref RBatch rb = ref RBatch.Alloc ();
          rb.IDVNode = (ushort)vnode.Id;
+         rb.Streaming = vnode.Streaming;
          rb.ZLevel = (short)Lux.ZLevel;
          rb.NShader = Idx; rb.NUniform = nUniform; rb.NBuffer = 0;
          rb.Offset = mData.Count; rb.Count = data.Length;
-         vnode.Batches.Add ((rb.Idx1, rb.NUniform));
+         if (vnode.Streaming) 
+            RBatch.Staging.Add ((rb.Idx, rb.NUniform));
+         else 
+            vnode.Batches.Add ((rb.Idx, rb.NUniform));
       }
       mData.AddRange (data);
 
@@ -165,6 +173,7 @@ abstract class Shader<TVertex, TUniform> : Shader, IComparer<TUniform> where TVe
       // - The previous batch should be using the same set of uniforms
       bool ExtendBatch (int delta) {
          ref RBatch rb = ref RBatch.Recent ();
+         if (rb.Streaming) return false;
          if (rb.IDVNode != vnode.Id) return false;
          if (rb.NShader != Idx || rb.NUniform != nUniform || rb.NBuffer != 0) return false;
          rb.Extend (delta);
@@ -179,12 +188,16 @@ abstract class Shader<TVertex, TUniform> : Shader, IComparer<TUniform> where TVe
    /// RBatch has a non-zero ICount value.
    public void Draw (ReadOnlySpan<TVertex> data, ReadOnlySpan<int> indices) {
       ref RBatch rb = ref RBatch.Alloc ();
-      rb.IDVNode = (ushort)Lux.VNode!.Id;
+      VNode vnode = Lux.VNode!;
+      rb.IDVNode = (ushort)vnode.Id;
       rb.ZLevel = (short)Lux.ZLevel;
       rb.NShader = Idx; rb.NUniform = SnapUniforms (); rb.NBuffer = 0;
       rb.Offset = mData.Count; rb.Count = data.Length;
       rb.IOffset = mIndex.Count; rb.ICount = indices.Length;
-      Lux.VNode.Batches.Add ((rb.Idx1, rb.NUniform));
+      if (vnode.Streaming) 
+         RBatch.Staging.Add ((rb.Idx, rb.NUniform));
+      else 
+         vnode.Batches.Add ((rb.Idx, rb.NUniform));
 
       mData.AddRange (data);
       // Note that these indices are all zero-relative (as in the original mesh data). Later, when
@@ -195,12 +208,45 @@ abstract class Shader<TVertex, TUniform> : Shader, IComparer<TUniform> where TVe
       mIndex.AddRange (indices);
    }
 
+   public unsafe override void StreamBatches (List<int> ids) {
+      // Select this program for use
+      GLState.Program = Pgm;
+      // Set the shader 'constants' - this is stuff like VPScale that does
+      // not change during the frame rendering, and this actually does some
+      // setting only once per frame, per shader
+      SetConstants ();
+      // Apply the uniforms for this set of batches. Note that this is called from 
+      // IssueAll which already has ensured that the batches specified in ids all use the same
+      // set of uniforms
+      ref RBatch rb0 = ref RBatch.Get (ids[0]);
+      ApplyUniforms (rb0.NUniform);
+
+      var span = mData.AsSpan ();
+      int cbStruct = Marshal.SizeOf<TVertex> (), nSortedUsed = 0;
+      mSorted ??= new byte[64];
+      fixed (void* p0 = &span[0]) {
+         byte* pSrc = (byte*)p0;
+         foreach (var id in ids) {
+            ref RBatch rb = ref RBatch.Get (id);
+            int cbBatch = rb.Count * cbStruct;     // Size of this batch's data, in bytes
+            while (nSortedUsed + cbBatch >= mSorted.Length)
+               Array.Resize (ref mSorted, mSorted.Length * 2);
+            fixed (byte* pDst= &mSorted[0]) 
+               Buffer.MemoryCopy (pSrc + rb.Offset * cbStruct, pDst + nSortedUsed, cbBatch, cbBatch);
+            nSortedUsed += cbBatch;
+         }
+      }
+      fixed (void* pSorted = &mSorted[0])
+         StreamBuffer.It.Draw (Pgm, pSorted, nSortedUsed / cbStruct, Attribs);
+   }
+   byte[]? mSorted;
+
    // Overrides ----------------------------------------------------------------
    /// <summary>Copies vertices from our local mData storage to an RBuffer</summary>
    /// This copies 'count' vertices from our local mData storage into the given
    /// RBuffer. This means effectively 'count * CBVertex' bytes of data, This returns
    /// the byte offset within the RBuffer where the data has been copied.
-   public override unsafe int CopyVertices (RBuffer buffer, int offset, int count) {
+   public override unsafe int CopyVertices (RetainBuffer buffer, int offset, int count) {
       var span = CollectionsMarshal.AsSpan (mData);
       fixed (void* p = &span[offset])
          return buffer.AddData (p, count * CBVertex);
@@ -215,7 +261,7 @@ abstract class Shader<TVertex, TUniform> : Shader, IComparer<TUniform> where TVe
    /// copied. And indexOffset is the index (not byte-offset) into the RBuffer's index buffer
    /// where the indices have been copied. Both of these are used later as arguments for
    /// a DrawElementsBaseVertex call.
-   public override (int, int) CopyVertices (RBuffer buffer, int offset, int count, int ioffset, int icount) {
+   public override (int, int) CopyVertices (RetainBuffer buffer, int offset, int count, int ioffset, int icount) {
       int dataOffset = CopyVertices (buffer, offset, count);
       var span = CollectionsMarshal.AsSpan (mIndex);
       int indexOffset = buffer.AddIndices (span[ioffset..(ioffset + icount)]);

@@ -1,9 +1,10 @@
 // ────── ╔╗
 // ╔═╦╦═╦╦╬╣ DwgStitch.cs
-// ║║║║╬║╔╣║ <<TODO>>
+// ║║║║╬║╔╣║ Implements the DwgStitcher class (used to connect 
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 namespace Nori;
 
+#region class DwgStitcher --------------------------------------------------------------------------
 class DwgStitcher {
    public DwgStitcher (Dwg2 dwg, double threshold = 1e-3) {
       mDwg = dwg;
@@ -104,7 +105,9 @@ class DwgStitcher {
    readonly Dictionary<Point2, E2Poly> mEnds;
    readonly List<Ent2> mDone = [];
 }
+#endregion
 
+#region class PointComparer ------------------------------------------------------------------------
 class PointComparer (double threshold) : IEqualityComparer<Point2> {
    public bool Equals (Point2 a, Point2 b)
       => a.X.Round (threshold) == b.X.Round (threshold)
@@ -115,3 +118,4 @@ class PointComparer (double threshold) : IEqualityComparer<Point2> {
 
    public static readonly PointComparer Epsilon = new (1e-6);
 }
+#endregion
