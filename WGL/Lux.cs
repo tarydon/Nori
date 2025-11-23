@@ -95,7 +95,7 @@ public static partial class Lux {
 
    public static void DumpStats () {
       Debug.Print ("Buffers:");
-      foreach (var buf in RBuffer.All.GetSnapshot ()) Debug.Print (buf.ToString ());
+      foreach (var buf in RetainBuffer.All.GetSnapshot ()) Debug.Print (buf.ToString ());
    }
 
    /// <summary>Called when entities are redrawn, or when the transform changes</summary>

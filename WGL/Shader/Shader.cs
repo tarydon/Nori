@@ -59,7 +59,7 @@ abstract class Shader {
    /// When we create the draw calls (using Lux.Lines, Lux.Mesh etc), the data is first
    /// gathered in the respective mData buffers of each shader. Then later when the entire
    /// scene has been thus drawn, we move all this data into RBuffer objects using this method.
-   public abstract int CopyVertices (RBuffer buffer, int start, int count);
+   public abstract int CopyVertices (RetainBuffer buffer, int start, int count);
 
    /// <summary>Copy indexed vertex data to the specified RBuffer</summary>
    /// This is similar to the routine above, but the drawing in this case is done using indices.
@@ -78,7 +78,7 @@ abstract class Shader {
    /// more than once. In OpenGL terminology, this is the difference between the simpler glDrawArrays,
    /// and the more complex glDrawElements (this CopyVertices maps to a glDrawElements call, the
    /// earlier one to a glDrawArrays call).
-   public abstract (int, int) CopyVertices (RBuffer buffer, int start, int count, int istart, int icount);
+   public abstract (int, int) CopyVertices (RetainBuffer buffer, int start, int count, int istart, int icount);
 
    /// <summary>This is called after each frame to cleanup any frame-specific artifacts / data</summary>
    /// For all shaders, we clear the mUniforms[] array
@@ -246,7 +246,7 @@ abstract class Shader<TVertex, TUniform> : Shader, IComparer<TUniform> where TVe
    /// This copies 'count' vertices from our local mData storage into the given
    /// RBuffer. This means effectively 'count * CBVertex' bytes of data, This returns
    /// the byte offset within the RBuffer where the data has been copied.
-   public override unsafe int CopyVertices (RBuffer buffer, int offset, int count) {
+   public override unsafe int CopyVertices (RetainBuffer buffer, int offset, int count) {
       var span = CollectionsMarshal.AsSpan (mData);
       fixed (void* p = &span[offset])
          return buffer.AddData (p, count * CBVertex);
@@ -261,7 +261,7 @@ abstract class Shader<TVertex, TUniform> : Shader, IComparer<TUniform> where TVe
    /// copied. And indexOffset is the index (not byte-offset) into the RBuffer's index buffer
    /// where the indices have been copied. Both of these are used later as arguments for
    /// a DrawElementsBaseVertex call.
-   public override (int, int) CopyVertices (RBuffer buffer, int offset, int count, int ioffset, int icount) {
+   public override (int, int) CopyVertices (RetainBuffer buffer, int offset, int count, int ioffset, int icount) {
       int dataOffset = CopyVertices (buffer, offset, count);
       var span = CollectionsMarshal.AsSpan (mIndex);
       int indexOffset = buffer.AddIndices (span[ioffset..(ioffset + icount)]);

@@ -1,6 +1,6 @@
 // ────── ╔╗
 // ╔═╦╦═╦╦╬╣ RBatch.cs
-// ║║║║╬║╔╣║ Implements RBatch, representing a set of vertices in a RBuffer
+// ║║║║╬║╔╣║ RBatch (render-batch) represents a set of vertices in a RetainBuffer / StreamBuffer
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 namespace Nori;
 
@@ -8,13 +8,18 @@ namespace Nori;
 /// <summary>Represents a batch of vertices being drawn</summary>
 /// Ultimately, all drawing happens using RBatch objects. Each RBatch includes the following
 /// information
-/// - Which RBuffer contains the vertices to be drawn (NBuffer)
+/// - Which RetainBuffer contains the vertices to be drawn (NBuffer).
+///   If this is set a Streaming buffer, then this is ignored since there is only
+///   a one StreamBuffer (singleton)
 /// - Which shader program is used to draw (NShader)
 /// - Which set of uniforms (within that shader) is being used (NUniform)
 ///   (this is the index within the mUniforms[] array maintained by that shader,
 ///   populated by that Shader's SnapUniforms method)
 /// - Start and Count indicating the start offset and number of vertices in that
 ///   buffer, both in terms of 'vertex units', not in terms of bytes
+/// - Streaming indicates if this batch of vertices is stored in a RetainBuffer (long 
+///   term storage, reused on multiple frames) or a StreamBuffer (transient vertices used only
+///   on one frame)
 struct RBatch : IIndexed {
    // Properties ---------------------------------------------------------------
    /// <summary>Implement IIndexed</summary>
@@ -24,9 +29,7 @@ struct RBatch : IIndexed {
    /// We need this to avoid merging batches belonging to different VNodes
    /// together (since each needs to be stored in the respective VNode's batch list)
    public ushort IDVNode;
-   /// <summary>
-   /// If set, these vertices are 'streamed' rather than retained
-   /// </summary>
+   /// <summary>If set, these vertices are 'streamed' rather than retained</summary>
    /// Normally, vertices drawn are stored in RBuffer objects which can then be reused
    /// across multiple frames of drawing. For example, entities in a drawing, components
    /// of a machine, meshes of a part are all drawn hundreds or thousands of times
@@ -94,7 +97,6 @@ struct RBatch : IIndexed {
    /// RBatch's count in Issue()
    public static void IssueAll () {
       Sort ();
-      Debug.Print ($"Staging = {Staging.Count}");
       mStreaming.Clear (); 
       for (int i = 0, n = Staging.Count; i < n; i++) {
          var (b0, u0) = Staging[i];
@@ -113,12 +115,14 @@ struct RBatch : IIndexed {
             } else 
                break;
          }
-         // At this point, if rb0 was a streaming batch, then the mStreaming list
-         // contains all the batches that we want to stream, and we do that here:
+
+         var shader = Shader.Get (rb0.NShader);
          if (rb0.Streaming) {
+            // At this point, if rb0 was a streaming batch, then the mStreaming list
+            // contains all the batches that we want to stream using the same program and
+            // the same set of uniforms
             Debug.Assert (!Lux.IsPicking && rb0.ICount == 0);
-            Debug.Print ($"Stream: {mStreaming.Count} batches");
-            Shader.Get (rb0.NShader).StreamBatches (mStreaming);
+            shader.StreamBatches (mStreaming);
             foreach (var id in mStreaming) mAll.Release (id);
             mStreaming.Clear ();
          } else {
@@ -147,7 +151,7 @@ struct RBatch : IIndexed {
    /// of use, they decrement the reference count on the RBuffer, and it eventually gets deleted
    public readonly void Release () {
       if (NBuffer != 0)
-         RBuffer.All[NBuffer].References--;
+         RetainBuffer.All[NBuffer].References--;
       mAll.Release (Idx);
    }
 
@@ -221,9 +225,9 @@ struct RBatch : IIndexed {
          PickShader.It.ApplyUniforms (uniforms.IDXfm, color);
       }
 
-      // Select the VAO this batch uses as the current VAO. If this VAO
+        // Select the VAO this batch uses as the current VAO. If this VAO
       // is already selected, this is a no-op
-      var buffer = RBuffer.All[NBuffer];
+      var buffer = RetainBuffer.All[NBuffer];
       GLState.VAO = buffer.VAO;
 
       if (ICount > 0) {
@@ -293,7 +297,7 @@ struct RBatch : IIndexed {
             // If the data of this RBatch has still not been uploaded to the GPU,
             // allocate a RB,,uffer and copy the data there
             var shader = Shader.Get (rb.NShader);
-            var buf = RBuffer.Get (shader.Pgm.VSpec);
+            var buf = RetainBuffer.Get (shader.Pgm.VSpec);
             rb.NBuffer = buf.Idx;
             if (rb.ICount > 0)
                (rb.Offset, rb.IOffset) = shader.CopyVertices (buf, rb.Offset, rb.Count, rb.IOffset, rb.ICount);

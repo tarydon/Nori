@@ -64,9 +64,7 @@ public class VNode {
    // and has been freshly created.
    internal int Id;
 
-   /// <summary>
-   /// If set, this VNode is 'transient' and we don't need to store vertices in RBuffers
-   /// </summary>
+   /// <summary>If set, this VNode is 'transient' and we don't need to store vertices in RBuffers</summary>
    /// Draw calls made by most VNodes have vertices saved in RBuffer objects that are reused
    /// for multiple frames. However, if the VNode has Streaming=true, then this is a transient
    /// that is used to draw mouse cursors, widget feedback and such stuff that has to be 
