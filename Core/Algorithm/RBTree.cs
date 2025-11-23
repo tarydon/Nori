@@ -276,7 +276,7 @@ public partial class RBTree<TVal, TKey> : IEnumerable<TVal> where TKey : ICompar
    // Is a node red? (return false for the NULL node 0)
    bool IsRed (int n) => mA[n].Color == EColor.Red;
 
-   // helper rountine: assuming that h is red and both h.left and h.left.left
+   // Helper routine: assuming that h is red and both h.left and h.left.left
    // are black, make h.left or one of its children red.
    int MoveRedLeft (int h) {
       Assert (h != 0);

@@ -78,7 +78,7 @@ public abstract class E3Surface : Ent3 {
    public override Bound3 Bound => Bound3.Update (ref mBound, ComputeBound);
    Bound3 mBound = new ();
 
-   public Mesh3 Mesh => _mesh ??= BuildMesh (Lib.FineTess);
+   public Mesh3 Mesh => _mesh ??= BuildMesh (Lib.FineTess, 0.541);  // 0.5411 ~ 31 degrees
    Mesh3? _mesh;
 
    public IReadOnlyList<Contour3> Contours => mContours;
@@ -87,11 +87,11 @@ public abstract class E3Surface : Ent3 {
    // Implementation -----------------------------------------------------------
    Bound3 ComputeBound () {
       List<Point3> pts = [];
-      mContours[0].Discretize (pts, Lib.CoarseTess, 0.5410);
+      mContours[0].Discretize (pts, Lib.CoarseTess, 1.065);   // 1.065 ~ 61 degrees
       return new (pts);
    }
 
-   protected abstract Mesh3 BuildMesh (double tolerance);
+   protected abstract Mesh3 BuildMesh (double tolerance, double maxAngStep);
 }
 #endregion
 
@@ -103,7 +103,7 @@ public abstract class E3ParaSurface : E3Surface {
    protected abstract Vector3 EvalNormal (Point2 pt);
    protected abstract Point2 Flatten (Point3 pt);
 
-   protected override Mesh3 BuildMesh (double tolerance) {
+   protected override Mesh3 BuildMesh (double tolerance, double maxAngStep) {
       // First, we flatten each trimming curve into the UV space, and compute a
       // 2D triangular tessellation in the UV space. At this point, we compute the
       // following set of data:
@@ -112,7 +112,7 @@ public abstract class E3ParaSurface : E3Surface {
       List<int> wires = [];   // Elements taken as pairs that defined the silhouette wires
       foreach (var contour in Contours) {
          int a = pts.Count;
-         contour.Discretize (pts, tolerance, 0.5410);
+         contour.Discretize (pts, tolerance, maxAngStep);
          int b = pts.Count; splits.Add (b);
          wires.Add (b - 1);
          for (int i = a; i < b; i++) { wires.Add (i); wires.Add (i); }

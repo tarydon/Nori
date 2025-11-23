@@ -5,6 +5,8 @@
 using Nori.STEP;
 namespace Nori;
 
+// Implements the build phase of STEP reading.
+// This converts the Nori.STEP.Entity objects into Model3 surfaces, curves etc
 partial class STEPReader {
    // Methods ------------------------------------------------------------------
    public Model3 Load () {
@@ -102,13 +104,13 @@ partial class STEPReader {
 
    void Process (AdvancedFace a) {
       Lib.Check (a.Contours.Length > 0, "Contours.Length > 0");
-      Lib.Check (D[a.Contours[0]]!.GetType ().Name == "FaceOuterBound", "First contour is FaceOuterBound");
+      var fb0 = (FaceBound)D[a.Contours[0]]!; 
+      Lib.Check (fb0.Outer == true, "First contour is FaceOuterBound");
 
       List<Contour3> contours = [];
       foreach (var n in a.Contours) {
          Contour3 c = D[n] switch {
             FaceBound fb => MakeContour (fb.EdgeLoop, fb.Dir, false),
-            FaceOuterBound fob => MakeContour (fob.EdgeLoop, fob.Dir, true),
             _ => throw new BadCaseException (n)
          };
          contours.Add (c);

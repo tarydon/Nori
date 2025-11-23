@@ -40,12 +40,12 @@ public sealed class E3Cylinder : E3CSSurface {
       }
    }
 
-   protected override Mesh3 BuildMesh (double tolerance)
-      => BuildFullCylinderMesh (tolerance) ??
-         BuildPartCylinderMesh (tolerance) ??
-         base.BuildMesh (tolerance);
+   protected override Mesh3 BuildMesh (double tolerance, double maxAngStep)
+      => BuildFullCylinderMesh (tolerance, maxAngStep) ??
+         BuildPartCylinderMesh (tolerance, maxAngStep) ??
+         base.BuildMesh (tolerance, maxAngStep);
 
-   Mesh3? BuildFullCylinderMesh (double tolerance) {
+   Mesh3? BuildFullCylinderMesh (double tolerance, double maxAngStep) {
       if (mContours.Length != 2 || mContours.Any (a => a.Edges.Length != 1)) return null;
       var arcs = mContours.Select (a => a.Edges[0]).OfType<Arc3> ().ToList ();
       if (arcs.Count != 2) return null;
@@ -59,7 +59,7 @@ public sealed class E3Cylinder : E3CSSurface {
       List<Point3> pts = [];
       List<Mesh3.Node> nodes = [];
       List<int> wires = [], tris = [];
-      arcs[0].Discretize (pts, tolerance, 0.5410); int n = pts.Count;
+      arcs[0].Discretize (pts, tolerance, maxAngStep); int n = pts.Count;
       foreach (var pt in pts) {
          Vector3 vec = (pt.SnappedToUnitLine (cen0, cenLift) - pt).Normalized ();
          if (!InFacing) vec = -vec;
@@ -76,7 +76,7 @@ public sealed class E3Cylinder : E3CSSurface {
       return new ([.. nodes], [.. tris], [.. wires]);
    }
 
-   Mesh3? BuildPartCylinderMesh (double tolerance) {
+   Mesh3? BuildPartCylinderMesh (double tolerance, double maxAngStep) {
       if (mContours.Length != 1 || mContours[0].Edges.Length < 4) return null;
       var arcs = mContours[0].Edges.OfType<Arc3> ().ToList (); if (arcs.Count != 2) return null;
       var lines = mContours[0].Edges.OfType<Line3> ().ToList ();
@@ -97,9 +97,9 @@ public sealed class E3Cylinder : E3CSSurface {
       Vector3 vecZ0 = arcs[1].Center - cen0;
       Point3 cenLift = cen0 + vecZ0.Normalized ();
       List<Point3> pts = [];
-      arcs[0].Discretize (pts, tolerance, 0.5410); pts.Add (arcs[0].End); int n = pts.Count;
+      arcs[0].Discretize (pts, tolerance, maxAngStep); pts.Add (arcs[0].End); int n = pts.Count;
       pts.Reverse ();
-      arcs[1].Discretize (pts, tolerance, 0.5410); pts.Add (arcs[1].End);
+      arcs[1].Discretize (pts, tolerance, maxAngStep); pts.Add (arcs[1].End);
       List<Mesh3.Node> nodes = [];
       foreach (var pt in pts) {
          Vector3 vec = (pt.SnappedToUnitLine (cen0, cenLift) - pt).Normalized ();
@@ -159,13 +159,13 @@ public sealed class E3Plane : E3Surface {
    public E3Plane (int id, IEnumerable<Contour3> trims, CoordSystem cs) : base (id, trims) => mCS = cs;
    CoordSystem mCS;
 
-   protected override Mesh3 BuildMesh (double tolerance) {
+   protected override Mesh3 BuildMesh (double tolerance, double maxAngStep) {
       List<Point2> pts = [];
 
       List<int> splits = [0], wires = [];
-      foreach (var poly in Contours.Select (a => a.Flatten (mCS))) {
+      foreach (var poly in Contours.Select (a => a.Flatten (mCS, tolerance, maxAngStep))) {
          int a = pts.Count;
-         poly.Discretize (pts, tolerance, 0.5411);    // 0.5411 ~ 30 degrees
+         poly.Discretize (pts, tolerance, maxAngStep);
          int b = pts.Count; splits.Add (b);
          wires.Add (b - 1);
          for (int i = a; i < b; i++) { wires.Add (i); wires.Add (i); }

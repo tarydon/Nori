@@ -1,15 +1,12 @@
-﻿// ────── ╔╗
+// ────── ╔╗
 // ╔═╦╦═╦╦╬╣ Eval.cs
 // ║║║║╬║╔╣║ A simple expression evaluator
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 namespace Nori;
 using System.Buffers;
 
-#region class EvalException ------------------------------------------------------------------------
-file class EvalException (string message) : Exception (message);
-#endregion
-
 #region class Eval ---------------------------------------------------------------------------------
+/// <summary>Eval implements a simple expression evaluator (for use in text-boxes etc)</summary>
 public class Eval {
    // Methods ------------------------------------------------------------------
    public bool TryEvaluate (string expr, out double res) {
@@ -41,7 +38,7 @@ public class Eval {
       return mOperands.Pop ();
    }
 
-   /// <summary>Processes the given token, and updates operator/operand stacks accordingly</summary>
+   // Processes the given token, and updates operator/operand stacks accordingly
    void Process (Tokenizer.EToken t, Tokenizer tokenizer, bool minusIsSubtract) {
       if (t == Tokenizer.EToken.Numeric) {
          mOperands.Push (tokenizer.GetF ());
@@ -59,7 +56,7 @@ public class Eval {
       }
    }
 
-   /// <summary>Executes the given operator and updates the operand stack</summary>
+   // Executes the given operator and updates the operand stack
    void ApplyOperator (Operator op) {
       if (mOperands.Count < op.COperands) throw new EvalException ("Too few operands");
       double a = mOperands.Pop (), b = a;
@@ -99,14 +96,17 @@ public class Eval {
    }.GetAlternateLookup<ReadOnlySpan<char>> ();
 
    // Nested -------------------------------------------------------------------
-   /// <summary>Specifies all the currently supported operations</summary>
-   public enum EOperation {
+   // Specifies all the currently supported operations
+   enum EOperation {
       Add, Sub, Mul, Div, Neg,
       Sin, Asin, Cos, Acos, Tan, Atan, Atan2,
       Exp, Log, Sqrt, Sqr, Abs
    }
 
-   /// <summary>Operator info pushed onto operator stack, or applied to modify operand stack</summary>
+   // Exception thrown during evaluation
+   class EvalException (string message) : Exception (message);
+
+   // Operator info pushed onto operator stack, or applied to modify operand stack
    readonly struct Operator {
       public Operator (EOperation op, int basePrecedence = 0)
          => (Op, Precedence, COperands) = (op, basePrecedence + sPrecedence[(int)op], sCOperands[(int)op]);
@@ -114,13 +114,13 @@ public class Eval {
       public int Precedence { get; }
       public int COperands { get; }
 
-      /// <summary>Specifies precedence of each operation</summary>
+      // Specifies precedence of each operation
       static int[] sPrecedence = [
          1, 1, 2, 2, 4,
          3, 3, 3, 3, 3, 3, 3,
          3, 3, 3, 3, 3
       ];
-      /// <summary>Specifies number of operands for each operation</summary>
+      // Specifies number of operands for each operation
       static int[] sCOperands = [
          2, 2, 2, 2, 1,
          1, 1, 1, 1, 1, 1, 2,
@@ -128,12 +128,12 @@ public class Eval {
       ];
    }
 
-   /// <summary>Raw tokenizer (works with lowercased expressions)</summary>
+   // Raw tokenizer (works with lowercased expressions)
    class Tokenizer (string expr) {
-      /// <summary>Raw token elements the tokenizer recognizes</summary>
+      // Raw token elements the tokenizer recognizes
       public enum EToken { Error, End, Punctuation, Numeric, Identifier }
 
-      /// <summary>Gets the next token (or returns EToken.End)</summary>
+      // Gets the next token (or returns EToken.End)
       public EToken Next () {
          ReadOnlySpan<char> chars = mExpr;
          while (mN < chars.Length) {
@@ -147,18 +147,18 @@ public class Eval {
          return EToken.End;
       }
 
-      /// <summary>Gets current token's text span</summary>
+      // Gets current token's text span
       public ReadOnlySpan<char> GetLiteral () => mExpr.AsSpan (mTokenStart, mN - mTokenStart);
-      /// <summary>Gets current token's text span, parsed as a double value</summary>
+      // Gets current token's text span, parsed as a double value
       public double GetF () {
          if (double.TryParse (GetLiteral (), out double res)) return res;
          throw new EvalException ($"Invalid numeric input : {GetLiteral ()}");
       }
-      /// <summary>Gets current token's text span's first character</summary>
+      // Gets current token's text span's first character
       public char CurrentChar => mExpr[mTokenStart];
 
       // Implementation -----------------------------------------------------------
-      /// <summary>Captures the numeric token's text span range</summary>
+      // Captures the numeric token's text span range
       EToken Numeric () {
          mTokenStart = mN - 1;
          ReadOnlySpan<char> chars = mExpr;
@@ -169,7 +169,7 @@ public class Eval {
          return EToken.Numeric;
       }
 
-      /// <summary>Captures the identifier token's text span range</summary>
+      // Captures the identifier token's text span range
       EToken Identifier () {
          mTokenStart = mN - 1;
          ReadOnlySpan<char> chars = mExpr;
@@ -185,13 +185,10 @@ public class Eval {
       static readonly SearchValues<char> mPuncChars = SearchValues.Create ("+-/*()");
    }
 
-   // Private ------------------------------------------------------------------
-   /// <summary>Evaluator's operand stack</summary>
-   readonly Stack<double> mOperands = new ();
-   /// <summary>Evaluator's operator stack</summary>
-   readonly Stack<Operator> mOperators = new ();
-   /// <summary>Current base precedence level</summary>
-   int mBasePrecedence;
+   // Private data -------------------------------------------------------------
+   readonly Stack<double> mOperands = new ();      // Evaluator's operand stack
+   readonly Stack<Operator> mOperators = new ();   // Evaluator's operator stack
+   int mBasePrecedence;                            // Current base precedence level
 }
 #endregion
 
