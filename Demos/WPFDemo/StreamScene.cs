@@ -33,7 +33,7 @@ class StreamDemoScene : Scene2 {
 
 class Underlay : VNode {
    public Underlay () {
-      mTimer = new DispatcherTimer () { Interval = TimeSpan.FromSeconds (0.5) };
+      mTimer = new DispatcherTimer () { Interval = TimeSpan.FromSeconds (0.025) };
       mTimer.Tick += (s, e) => { mPts.Clear (); Redraw (); };
       Streaming = true;
    }
