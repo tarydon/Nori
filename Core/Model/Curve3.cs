@@ -110,8 +110,8 @@ public class Polyline3 : Edge3 {
 
    // Properties ---------------------------------------------------------------
    public readonly ImmutableArray<Point3> Pts;
-   public double Length => _length ??= ComputeLength ();
-   double? _length = null;
+   public double Length => _length < 0 ? (_length = ComputeLength ()) : _length;
+   double _length = -1;
 
    // Edge3 Implementation -----------------------------------------------------
    public override Point3 Start => Pts[0];
