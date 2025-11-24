@@ -1,4 +1,4 @@
-// ────── ╔╗                                                                                   CORE
+// ────── ╔╗
 // ╔═╦╦═╦╦╬╣ Collections.cs
 // ║║║║╬║╔╣║ Implements collections (including the AList - active list)
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
@@ -257,7 +257,7 @@ public class IdxHeap<T> where T : IIndexed, new() {
       int idx = mRecent = mFree.Pop ();
       mData[idx] = new ();
       ref T obj = ref mData[idx]!;
-      obj.Idx1 = idx;
+      obj.Idx = idx;
       return ref obj;
    }
    // The object we most recently allocated
@@ -277,6 +277,13 @@ public class IdxHeap<T> where T : IIndexed, new() {
       => ref mData[idx]!;
 
    // Implementation -----------------------------------------------------------
+   public List<T> GetSnapshot () {
+      List<T> items = [];
+      for (int i = 0; i < mData.Length; i++) 
+         if (!mFree.Contains (i) && mData[i] != null) items.Add (mData[i]!);
+      return items;
+   }
+
    void Resize (int n) {
       if (n > mData.Length) {
          int n0 = mData.Length;

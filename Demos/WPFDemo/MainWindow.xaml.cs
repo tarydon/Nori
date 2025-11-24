@@ -1,8 +1,12 @@
-// ────── ╔╗                                                                                WPFDEMO
+// ────── ╔╗
 // ╔═╦╦═╦╦╬╣ MainWindow.xaml.cs
 // ║║║║╬║╔╣║ Main window of WPF demo application (various scenes implemented)
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
+using System.Diagnostics;
+using System.Reactive.Linq;
+using System.Text;
 using System.Windows;
+using System.Windows.Threading;
 using Nori;
 namespace WPFDemo;
 
@@ -30,11 +34,12 @@ public partial class MainWindow : Window {
    void DwgDemo (object sender, RoutedEventArgs e) => Display (new DwgScene ());
    void RobotDemo (object sender, RoutedEventArgs e) => Display (new RobotScene ());
    void STPDemo (object sender, RoutedEventArgs e) => Display (new STPScene ());
+   void StreamDemo (object sender, RoutedEventArgs e) => Display (new StreamDemoScene ());
 
    void Display (Scene scene) {
       mSettings.Children.Clear ();
       Lux.UIScene = scene;
       if (scene is RobotScene rs) rs.CreateUI (mSettings.Children);
-      if (scene is STPScene ss) Lux.BackFacesPink = true; 
+      if (scene is STPScene) Lux.BackFacesPink = true; 
    }
 }

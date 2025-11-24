@@ -12,8 +12,7 @@ class StepTests {
       try {
          Lib.FineTess = 0.2;
          var sr = new STEPReader (NT.File ("STEP/S00178.stp"));
-         sr.Parse ();
-         var model = sr.Build ();
+         var model = sr.Load ();
          var b = model.Bound;
          CurlWriter.Save (model, NT.TmpCurl, "S00178.stp");
          Assert.TextFilesEqual (NT.File ("STEP/S00178.curl"), NT.TmpCurl);

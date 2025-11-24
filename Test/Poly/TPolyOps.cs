@@ -378,4 +378,36 @@ class PolyEdgeTests {
       poly = line.UNotch (0, 5, 10, 10, 2); poly!.Is ("M0,0V8Q2,10,-1H8Q10,8,-1V0H50");
       poly = line.UNotch (0, 5, 10, -10, 2); poly!.Is ("M0,0V-8Q2,-10,1H8Q10,-8,1V0H50");
    }
+
+   [Test (121, "Poly Key Slot")]
+   void Test4 () {
+      int width = 20, depth = 10, radius = 30;
+      double startAng = 340.D2R (), endAng = 320.D2R (), rad90 = 90.D2R (), rad180 = 180.D2R (), rad270 = 270.D2R ();
+      Poly circle = Poly.Circle ((0, 0), radius), arcCCW = Poly.Arc (Point2.Zero, radius, startAng, endAng, true),
+           arcCW = Poly.Arc (Point2.Zero, radius, endAng, startAng, false);
+      Poly? poly;
+
+      // Check key slot operation for a circle entity
+      poly = circle.KeySlot (0, width, depth, 0); poly?.Is ("M28.284271,-10H20V10H28.284271Q28.284271,-10,3.567306Z");
+      poly = circle.KeySlot (0, width, -depth, rad90); poly?.Is ("M10,28.284271V40H-10V28.284271Q10,28.284271,3.567306Z");
+      poly = circle.KeySlot (0, width, depth, rad180); poly?.Is ("M-28.284271,10H-20V-10H-28.284271Q-28.284271,10,3.567306Z");
+      poly = circle.KeySlot (0, width, -depth, rad270); poly?.Is ("M-10,-28.284271V-40H10V-28.284271Q-10,-28.284271,3.567306Z");
+
+      // Check key slot operation for an arc entity
+      // Counter clockwise direction arc
+      poly = arcCCW.KeySlot (0, width, depth, 0);
+      poly?.Is ("M28.190779,-10.260604Q28.284271,-10,0.005875H20V10H28.284271Q22.981333,-19.283628,3.339209");
+      poly = arcCCW.KeySlot (0, width, -depth, rad90);
+      poly?.Is ("M28.190779,-10.260604Q10,28.284271,1.005875V40H-10V28.284271Q22.981333,-19.283628,2.339209");
+
+      // Clockwise direction arc
+      poly = arcCW.KeySlot (0, width, depth, rad180);
+      poly?.Is ("M22.981333,-19.283628Q-28.284271,-10,-1.339209H-20V10H-28.284271Q28.190779,-10.260604,-2.005875");
+      poly = arcCW.KeySlot (0, width, -depth, rad270);
+      poly?.Is ("M22.981333,-19.283628Q10,-28.284271,-0.339209V-40H-10V-28.284271Q28.190779,-10.260604,-3.005875");
+
+      poly = circle.KeySlot (0, 3 * width, depth, 0); Assert.IsTrue (poly is null); // Notch doesn't fit in the seg
+      poly = circle.KeySlot (0, width, 0, 0); Assert.IsTrue (poly is null); // depth is zero
+      poly = arcCW.KeySlot (0, width, depth, startAng); Assert.IsTrue (poly is null); // Notch doesn't fit in the seg
+   }
 }

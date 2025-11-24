@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:WPFDemo"
         Width="600" Height="600" Top="100" Left="100"
-        Title="MainWindow" WindowState="Maximized" Background="Black">
+        Title="NORI Demos" WindowState="Maximized" Background="Black">
    <Window.Resources>
       <Style TargetType="Button">
          <Setter Property="Margin" Value="4,0,4,4" />
@@ -23,6 +23,7 @@
          <Button Click="DwgDemo">Drawing Demo</Button>
          <Button Click="RobotDemo">Robot Demo</Button>
          <Button Click="STPDemo">STEP Demo</Button>
+         <Button Click="StreamDemo">Stream Demo</Button>
       </StackPanel>
          <StackPanel Name="mSettings" DockPanel.Dock="Right" Background="#AAA" />
       <Border Name="mContent" />

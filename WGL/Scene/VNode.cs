@@ -64,6 +64,15 @@ public class VNode {
    // and has been freshly created.
    internal int Id;
 
+   /// <summary>If set, this VNode is 'transient' and we don't need to store vertices in RBuffers</summary>
+   /// Draw calls made by most VNodes have vertices saved in RBuffer objects that are reused
+   /// for multiple frames. However, if the VNode has Streaming=true, then this is a transient
+   /// that is used to draw mouse cursors, widget feedback and such stuff that has to be 
+   /// redrawn on every frame. RBatches made from this VNode's draw commands will also have
+   /// Streaming=true, and will eventually deliver their vertices into StreamBuffer objects
+   /// rather than RetainBuffer objects
+   public bool Streaming;
+
    /// <summary>The domain-space Object which this VNode is rendering</summary>
    public readonly object? Obj;
 
@@ -259,10 +268,10 @@ public class VNode {
          // These Draw calls that we are using will create new batches, and will place those
          // (batch-index, uniform-index) tuples into the Batches[] list of the VNode that is currently
          // being drawn (that's why we call BeginNode at the start of this function).
-         if (mGeometryDirty) {
+         if (mGeometryDirty || Streaming) {
             Draw ();
             mGeometryDirty = false;
-            Lux.FlushPickBuffer ();
+            if (!Streaming) Lux.FlushPickBuffer ();
          } else {
             // But if the geometry is not dirty, we don't need to create new batches at all,
             // but instead can just update the existing batches we have with freshly captured

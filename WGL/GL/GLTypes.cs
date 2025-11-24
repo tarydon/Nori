@@ -12,7 +12,7 @@ namespace Nori;
 enum EBufferTarget : uint { Array = 0x8892, ElementArray = 0x8893 }
 
 // Usage hint for GL.BufferData
-enum EBufferUsage : uint { StaticDraw = 0x88E4 }
+enum EBufferUsage : uint { StreamDraw = 0x88E0, StaticDraw = 0x88E4 }
 
 // Blend factors used for BlendFunc
 enum EBlendFactor : uint { Zero = 0, One = 1, SrcAlpha = 770, OneMinusSrcAlpha = 771 }
@@ -45,6 +45,13 @@ enum EIndexType : uint { UByte = 5121, UShort = 5123, UInt = 5125 }
 
 // Values to pass to GL.StencilOpSeparate, GL.StencilFuncSeparate
 enum EFace : uint { Front = 0x404, Back = 0x405, FrontAndBack = 0x408 }
+
+// Access types for MapBufferRange
+[Flags]
+enum EMapAccess : uint {
+   Read = 0x1, Write = 0x2, Persistent = 0x40, Coherent = 0x80, InvalidateRange = 0x4,
+   InvalidateBuffer = 0x8, FlushExplicit = 0x10, Unsynchronized = 0x20,
+}
 
 // Various modes that can be passed to glBegin
 enum EMode : uint { 

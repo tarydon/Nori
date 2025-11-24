@@ -1,4 +1,4 @@
-// ────── ╔╗                                                                                   CORE
+// ────── ╔╗
 // ╔═╦╦═╦╦╬╣ RBTree.cs
 // ║║║║╬║╔╣║ Implements a balanced binary (red-black) tree that maintains elements in sorted order
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────

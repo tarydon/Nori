@@ -1,4 +1,4 @@
-// ────── ╔╗                                                                                   CORE
+// ────── ╔╗
 // ╔═╦╦═╦╦╬╣ Lib.cs
 // ║║║║╬║╔╣║ Implements the Lib module class that has a number of global functions
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
