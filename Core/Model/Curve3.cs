@@ -101,6 +101,42 @@ public class Arc3 : Edge3 {
 }
 #endregion
 
+#region class Polyline3 -------------------------------------------------------------------------------
+/// <summary>Represents a PWL segment</summary>
+public class Polyline3 : Edge3 {
+   // Constructors -------------------------------------------------------------
+   Polyline3 () { }
+   public Polyline3 (ImmutableArray<Point3> pts) { Pts = pts; } 
+
+   // Properties ---------------------------------------------------------------
+   public readonly ImmutableArray<Point3> Pts;
+   public double Length => _length < 0 ? (_length = ComputeLength ()) : _length;
+   double _length = -1;
+
+   // Edge3 Implementation -----------------------------------------------------
+   public override Point3 Start => Pts[0];
+   public override Point3 End => Pts[^1];
+
+   public override void Discretize (List<Point3> pts, double _, double __) => pts.AddRange (Pts);
+   public override Point3 GetPointAt (double lie) {
+      if (lie < Lib.Epsilon) return Start;
+      else if (lie >= 1 - Lib.Epsilon) return End;
+
+      lie *= Pts.Length - 1;
+      int n = (int)lie;
+      return (lie - n).Along (Pts[n], Pts[n + 1]);
+   }
+
+   // Implementation -----------------------------------------------------------
+   double ComputeLength () {
+      double totalLength = 0;
+      for (int i = 1; i < Pts.Length; i++)
+         totalLength += Pts[i - 1].DistTo (Pts[i]);
+      return totalLength;
+   }
+}
+#endregion
+
 public class Contour3 {
    public Contour3 (ImmutableArray<Edge3> edges) => mEdges = edges;
 
