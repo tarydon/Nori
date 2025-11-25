@@ -219,6 +219,8 @@ public readonly struct Point3 : IEquatable<Point3> {
    public double DistTo (Point3 b) => Sqrt (DistToSq (b));
    /// <summary>Returns the perpendicular distance between this point and the inifinite line a..b</summary>
    public double DistToLine (Point3 a, Point3 b) => DistTo (SnappedToLine (a, b));
+   /// <summary>Square of the perpendicular distance between this point and the infinite line a..b</summary>
+   public double DistToLineSq (Point3 a, Point3 b) => DistToSq (SnappedToLine (a, b));
    /// <summary>Returns the closest distance between this point and the finite line segment a..b</summary>
    public double DistToLineSeg (Point3 a, Point3 b) => DistTo (SnappedToLineSeg (a, b));
 
