@@ -15,6 +15,11 @@ public sealed class AuException (string message) : Exception (message);
 public class BadCaseException (object e, [CallerMemberName] string? caller = null) : Exception ($"Unhandled case '{e}' in {caller}");
 #endregion
 
+#region class IncompleteCodeException --------------------------------------------------------------
+/// <summary>Signals that some code is incomplete (some cases not handled, for example)</summary>
+public class IncompleteCodeException (string text) : Exception ($"Incomplete code: {text}");
+#endregion
+
 #region class ParseException -----------------------------------------------------------------------
 /// <summary>Thrown when we are not able to parse a string to a particular type</summary>
 public class ParseException : Exception {
@@ -22,15 +27,3 @@ public class ParseException : Exception {
    public ParseException (string text) : base (text) { }
 }
 #endregion
-
-#region class IncompleteCodeException --------------------------------------------------------------
-/// <summary>Signals that some code is incomplete (some cases not handled, for example)</summary>
-public class IncompleteCodeException (string text) : Exception ($"Incomplete code: {text}");
-#endregion
-
-public static class Except {
-   [DoesNotReturn]
-   public static void Incomplete (string message) => throw new IncompleteCodeException (message);
-   [DoesNotReturn]
-   public static void Parse (string message) => throw new ParseException (message);
-}

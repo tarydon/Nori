@@ -8,6 +8,7 @@ namespace Nori;
 /// <summary>Class to represent a drawing in 2D</summary>
 [EPropClass]
 public partial class Dwg2 {
+   // Constructors -------------------------------------------------------------
    public Dwg2 () => Ents.Subscribe (OnEntsChanged);
 
    // Properties ---------------------------------------------------------------
