@@ -142,11 +142,11 @@ public static class Lib {
       [typeof (string)] = "string", [typeof (char)] = "char", [typeof (object)] = "object"
    };
 
-   /// <summary>Normalizes an angle (in radians) to lie in the half open range (-PI .. PI]</summary>
+   /// <summary>Normalizes an angle (in radians) to lie in the half open range (-PI, PI]</summary>
    public static double NormalizeAngle (double fAng) {
-      fAng %= TwoPI;
-      if (fAng > PI) fAng -= TwoPI;
-      if (fAng <= -PI) fAng += TwoPI;
+      fAng %= TwoPI; // fAng interval (-TwoPI, TwoPI)
+      if (fAng > PI) return fAng - TwoPI; // Reduced to desired interval (-PI, PI]
+      if (fAng <= -PI) return fAng + TwoPI;
       return fAng;
    }
 
