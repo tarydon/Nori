@@ -5,11 +5,11 @@
     <TargetFramework>net9.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <OutDir>..\..\Bin</OutDir>
+		<OutDir>../../Bin</OutDir>
   </PropertyGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\..\Core\Nori.Core.csproj" />
-  </ItemGroup>
+	<PropertyGroup>
+		<DefineConstants>$(DefineConstants);WINDOWS</DefineConstants>
+	</PropertyGroup>
 
 </Project>
