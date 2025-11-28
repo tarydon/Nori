@@ -3,7 +3,6 @@
 // ║║║║╬║╔╣║ <<TODO>>
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 namespace Nori;
-using static Math;
 using CBox = CMesh.Box;
 
 public class Collision {
@@ -13,6 +12,7 @@ public class Collision {
       return false;
    }
 
+   // Implementation -----------------------------------------------------------
    bool Check (CMesh a, CMesh b) {
       if (a.Boxes.Length <= 1) return false;   //
       mABoxes = (mA = a).Boxes; mX0to1 = a.Xfm * b.InvXfm; mALeaf = -1;
@@ -124,6 +124,73 @@ public class Collision {
       }
    }
 
+   // Collision primitives -----------------------------------------------------
+   // Checks for collision of one box (from CMesh A) against another box (from CMesh B)
+   //    ca = Center of the first box
+   //    ea = Half-extents of the first box
+   //    cb = Center of the second box
+   //    eb = Half-extents of the second box
+   // Returns true if the boxes collide. 
+   // 
+   // This routine uses the matrix mX1to0 to rotate and translate the coordinates from
+   // box B into the space of A before performing the test. There are 3 types of tests to
+   // be performed:
+   // - Class I tests are ones where the separating axes are the basis vectors of box A.
+   //   There are 3 of these.
+   // - Class II tests are ones where the separating axes are the basis vectors of box B
+   //   There are 3 of these. 
+   // - Class III tests are the ones where the separating axes are the cross products of
+   //   the basis vectors. There are 9 of these
+   // In all, there are 15 tests to perform
+   bool BoxBox (Vec3F ea, Vec3F ca, Vec3F eb, Vec3F cb) {
+      // Class I: A's basis vectors
+      double Tx = mX1to0.M11 * cb.X + mX1to0.M21 * cb.Y + mX1to0.M31 * cb.Z + mX1to0.DX - ca.X;
+      double t = ea.X + eb.X * mAR.M11 + eb.Y * mAR.M21 + eb.Z * mAR.M31;
+      if (Math.Abs (Tx) > t) return false;
+
+      double Ty = mX1to0.M12 * cb.X + mX1to0.M22 * cb.Y + mX1to0.M32 * cb.Z + mX1to0.DY - ca.Y;
+      t = ea.Y + eb.X * mAR.M12 + eb.Y * mAR.M22 + eb.Z * mAR.M32;
+      if (Math.Abs (Ty) > t) return false;
+
+      double Tz = mX1to0.M13 * cb.X + mX1to0.M23 * cb.Y + mX1to0.M33 * cb.Z + mX1to0.DZ - ca.Z;
+      t = ea.Z + eb.X * mAR.M13 + eb.Y * mAR.M23 + eb.Z * mAR.M33;
+      if (Math.Abs (Tz) > t) return false;
+
+      // Class II: B's basis vectors
+      t = Tx * mX1to0.M11 + Ty * mX1to0.M12 + Tz * mX1to0.M13;
+      double t2 = ea.X * mAR.M11 + ea.Y * mAR.M12 + ea.Z * mAR.M13 + eb.X;
+      if (Math.Abs (t) > t2) return false;
+
+      t = Tx * mX1to0.M21 + Ty * mX1to0.M22 + Tz * mX1to0.M23;
+      t2 = ea.X * mAR.M21 + ea.Y * mAR.M22 + ea.Z * mAR.M23 + eb.Y;
+      if (Math.Abs (t) > t2) return false;
+
+      t = Tx * mX1to0.M31 + Ty * mX1to0.M32 + Tz * mX1to0.M33;
+      t2 = ea.X * mAR.M31 + ea.Y * mAR.M32 + ea.Z * mAR.M33 + eb.Z;
+      if (Math.Abs (t) > t2) return false;
+
+      // Class III: 9 cross products
+      t = Tz * mX1to0.M12 - Ty * mX1to0.M13; t2 = ea.Y * mAR.M13 + ea.Z * mAR.M12 + eb.Y * mAR.M31 + eb.Z * mAR.M21;
+      if (Math.Abs (t) > t2) return false;	// L = A0 x B0
+      t = Tz * mX1to0.M22 - Ty * mX1to0.M23; t2 = ea.Y * mAR.M23 + ea.Z * mAR.M22 + eb.X * mAR.M31 + eb.Z * mAR.M11;
+      if (Math.Abs (t) > t2) return false;	// L = A0 x B1
+      t = Tz * mX1to0.M32 - Ty * mX1to0.M33; t2 = ea.Y * mAR.M33 + ea.Z * mAR.M32 + eb.X * mAR.M21 + eb.Y * mAR.M11;
+      if (Math.Abs (t) > t2) return false;	// L = A0 x B2
+      t = Tx * mX1to0.M13 - Tz * mX1to0.M11; t2 = ea.X * mAR.M13 + ea.Z * mAR.M11 + eb.Y * mAR.M32 + eb.Z * mAR.M22;
+      if (Math.Abs (t) > t2) return false;	// L = A1 x B0
+      t = Tx * mX1to0.M23 - Tz * mX1to0.M21; t2 = ea.X * mAR.M23 + ea.Z * mAR.M21 + eb.X * mAR.M32 + eb.Z * mAR.M12;
+      if (Math.Abs (t) > t2) return false;	// L = A1 x B1
+      t = Tx * mX1to0.M33 - Tz * mX1to0.M31; t2 = ea.X * mAR.M33 + ea.Z * mAR.M31 + eb.X * mAR.M22 + eb.Y * mAR.M12;
+      if (Math.Abs (t) > t2) return false;	// L = A1 x B2
+      t = Ty * mX1to0.M11 - Tx * mX1to0.M12; t2 = ea.X * mAR.M12 + ea.Y * mAR.M11 + eb.Y * mAR.M33 + eb.Z * mAR.M23;
+      if (Math.Abs (t) > t2) return false;	// L = A2 x B0
+      t = Ty * mX1to0.M21 - Tx * mX1to0.M22; t2 = ea.X * mAR.M22 + ea.Y * mAR.M21 + eb.X * mAR.M33 + eb.Z * mAR.M13;
+      if (Math.Abs (t) > t2) return false;	// L = A2 x B1
+      t = Ty * mX1to0.M31 - Tx * mX1to0.M32; t2 = ea.X * mAR.M32 + ea.Y * mAR.M31 + eb.X * mAR.M23 + eb.Y * mAR.M13;
+      return !(Math.Abs (t) > t2);
+   }
+
+   // Private data -------------------------------------------------------------
    static Collision It => mIt ??= new ();
    [ThreadStatic] static Collision? mIt;
 
