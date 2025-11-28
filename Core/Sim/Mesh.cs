@@ -5,7 +5,7 @@
 using System.IO.Compression;
 namespace Nori;
 
-#region class CMesh --------------------------------------------------------------------------------
+#region class Mesh3 --------------------------------------------------------------------------------
 /// <summary>This implements a super-simple mesh format for rendering</summary>
 /// This format is very close to the way the data has to be presented for rendering,
 /// and is designed to be very simple to read / understand.
@@ -217,15 +217,15 @@ public class Mesh3 (ImmutableArray<Mesh3.Node> vertex, ImmutableArray<int> trian
 }
 #endregion
 
-#region class CMeshBuilder -------------------------------------------------------------------------
-/// <summary>The CMeshBuilder class builds meshes with auto-smoothing and marking of sharp creases</summary>
+#region class Mesh3Builder -------------------------------------------------------------------------
+/// <summary>The Mesh3Builder class builds meshes with auto-smoothing and marking of sharp creases</summary>
 /// To construct a mesh, all this needs is a triangle mesh and with consistent winding.
 /// This finds all the shared edges between faces and if the edge angle is
 /// more than a given threshold, it marks the edge as sharp. The SmoothMeshBuilder works with a given mesh
 /// as the target and adds triangles into that mesh. Note that you never need to supply normals to this.
 /// It computes normals based on which parts should be 'smooth' and which ones should be 'sharp'.
 public class Mesh3Builder {
-   /// <summary>Initialize a CMeshBuilder with a set of points </summary>
+   /// <summary>Initialize a Mesh3Builder with a set of points </summary>
    /// These points, taken 3 at a time, define a set of triangles.
    /// <param name="pts">Triangle points.</param>
    public Mesh3Builder (ReadOnlySpan<Point3> pts) {
@@ -240,7 +240,7 @@ public class Mesh3Builder {
       }
    }
 
-   /// <summary>Constructs a CMesh object from the given set of 'smoothed' triangles.</summary>
+   /// <summary>Constructs a Mesh3 object from the given set of 'smoothed' triangles.</summary>
    public Mesh3 Build () {
       for (int i = 0; i < mIdx.Count; i += 3) {
          int A = mIdx[i], B = mIdx[i + 1], C = mIdx[i + 2];

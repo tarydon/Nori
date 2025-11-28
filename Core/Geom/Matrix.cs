@@ -224,6 +224,14 @@ public class Matrix3 : IEQuable<Matrix3> {
    // Methods ------------------------------------------------------------------
    public Matrix3 ExtractRotation () => new (M11, M12, M13, M21, M22, M23, M31, M32, M33, 0, 0, 0);
 
+   public Matrix3 ExtractAbs () {
+      double e = 1e-6;
+      return new (Abs (M11) + e, Abs (M12) + e, Abs (M13) + e,
+                  Abs (M21) + e, Abs (M22) + e, Abs (M23) + e,
+                  Abs (M31) + e, Abs (M32) + e, Abs (M33) + e,
+                  Abs (DX) + e, Abs (DY) + e, Abs (DZ) + e, Flags);
+   }
+
    public bool EQ (Matrix3 b)
       => M11.EQ (b.M11) && M12.EQ (b.M12) && M13.EQ (b.M13)
       && M21.EQ (b.M21) && M22.EQ (b.M22) && M23.EQ (b.M23)

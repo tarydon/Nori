@@ -274,14 +274,14 @@ class TMisc {
       chains.Data[indices.Last ()].Is (1);
    }
 
-   [Test (37, "class CMesh, CMeshBuilder test")]
+   [Test (37, "class Mesh3, Mesh3Builder test")]
    void Test9 () {
-      // CMesh IO test
-      var part = Mesh3.LoadTMesh ($"{NT.Data}/Geom/CMesh/part.tmesh");
+      // Mesh3 IO test
+      var part = Mesh3.LoadTMesh ($"{NT.Data}/Geom/Mesh3/part.tmesh");
       File.WriteAllText (NT.TmpTxt, part.ToTMesh ());
-      Assert.TextFilesEqual ("Geom/CMesh/part-out.tmesh", NT.TmpTxt);
+      Assert.TextFilesEqual ("Geom/Mesh3/part-out.tmesh", NT.TmpTxt);
 
-      // CMeshBuilder test
+      // Mesh3Builder test
       List<Point3> pts = [];
       for (int i = 0; i < part.Triangle.Length; i++) {
          var pos = part.Vertex[part.Triangle[i]].Pos;
@@ -289,7 +289,7 @@ class TMisc {
       }
 
       File.WriteAllText (NT.TmpTxt, new Mesh3Builder (pts.AsSpan ()).Build ().ToTMesh ());
-      Assert.TextFilesEqual ("Geom/CMesh/part-gen.tmesh", NT.TmpTxt);
+      Assert.TextFilesEqual ("Geom/Mesh3/part-gen.tmesh", NT.TmpTxt);
    }
 
    [Test (38, "LineFont test")]
