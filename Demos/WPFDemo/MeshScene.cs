@@ -67,6 +67,9 @@ class MeshScene : Scene3 {
 }
 
 class MeshVN (Mesh3 mesh) : VNode {
-   public override void SetAttributes () { Lux.Color = new Color4 (255, 255, 128); Lux.LineWidth = 2f; }
-   public override void Draw () => Lux.Mesh (mesh, EShadeMode.Phong);
+   public override void SetAttributes () { Lux.Color = Color; Lux.LineWidth = 2f; }
+   public override void Draw () => Lux.Mesh (mesh, Shading);
+
+   public Color4 Color = new Color4 (255, 255, 128);
+   public EShadeMode Shading = EShadeMode.Phong;
 }

@@ -255,7 +255,7 @@ public readonly struct Bound3 : IEQuable<Bound3> {
    public Bound3 (Bound1 x, Bound1 y, Bound1 z) => (X, Y, Z) = (x, y, z);
    public override string ToString () => IsEmpty ? "Empty" : $"({X},{Y},{Z})";
 
-   public Bound3 (IEnumerable<Vec3F> pts) {
+   public Bound3 (IEnumerable<Point3f> pts) {
       (X, Y, Z) = (new (), new (), new ());
       foreach (var p in pts) { X += p.X; Y += p.Y; Z += p.Z; }
    }
@@ -335,7 +335,7 @@ public readonly struct Bound3 : IEQuable<Bound3> {
    /// <summary>Returns a Bound3 expanded to include the given Point3</summary>
    public static Bound3 operator + (Bound3 b, Point3 p) => new (b.X + p.X, b.Y + p.Y, b.Z + p.Z);
    /// <summary>Returns a Bound3 expanded to include the given Vec3F</summary>
-   public static Bound3 operator + (Bound3 b, Vec3F v) => new (b.X + v.X, b.Y + v.Y, b.Z + v.Z);
+   public static Bound3 operator + (Bound3 b, Point3f v) => new (b.X + v.X, b.Y + v.Y, b.Z + v.Z);
    /// <summary>Returns a Bound3 that is the union of two Bound3</summary>
    public static Bound3 operator + (Bound3 a, Bound3 b) => new (a.X + b.X, a.Y + b.Y, a.Z + b.Z);
    /// <summary>Returns the intersection of two Bound3 (could be empty)</summary>

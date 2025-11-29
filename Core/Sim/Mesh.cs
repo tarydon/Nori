@@ -10,7 +10,7 @@ namespace Nori;
 /// This format is very close to the way the data has to be presented for rendering,
 /// and is designed to be very simple to read / understand.
 /// - The Vertex array contains a set of nodes, each defined with a position
-///   (Vec3F) and normal (Vec3H)
+///   (Point3f) and normal (Vec3H)
 /// - The Triangle array (taken 3 at a time) defines the triangles as indices into
 ///   the Vertex array
 /// - The Wires array (taken 2 at a time) defines the stencil lines to be drawn.
@@ -38,16 +38,16 @@ public class Mesh3 (ImmutableArray<Mesh3.Node> vertex, ImmutableArray<int> trian
    }
 
    [StructLayout (LayoutKind.Sequential, Pack = 2, Size = 20)]
-   public readonly struct Node (Vec3F pos, Vec3H vec) {
-      public Node (Point3 pos, Vector3 vec) : this ((Vec3F)pos, (Vec3H)vec) { }
+   public readonly struct Node (Point3f pos, Vec3H vec) {
+      public Node (Point3 pos, Vector3 vec) : this ((Point3f)pos, (Vec3H)vec) { }
 
-      public Vec3F Pos => pos;
+      public Point3f Pos => pos;
       public Vec3H Vec => vec;
 
-      public void Deconstruct (out Vec3F p, out Vec3H v) => (p, v) = (Pos, Vec);
+      public void Deconstruct (out Point3f p, out Vec3H v) => (p, v) = (Pos, Vec);
       public override string ToString () => $"{pos}, {vec}";
       public static Node operator * (Node node, Matrix3 xfm) {
-         var pos = (Vec3F)(node.Pos * xfm);
+         var pos = node.Pos * xfm;
          var vec = node.Vec;
          if (!xfm.IsTranslation) {
             Vector3 v = new ((double)vec.X, (double)vec.Y, (double)vec.Z);
@@ -63,7 +63,7 @@ public class Mesh3 (ImmutableArray<Mesh3.Node> vertex, ImmutableArray<int> trian
       var nodes = new Node[Vertex.Length];
       for (int i = 0; i < Vertex.Length; i++) {
          var node = Vertex[i];
-         nodes[i] = new Node ((Vec3F)(node.Pos + vec), node.Vec);
+         nodes[i] = new Node ((Point3f)((Point3)node.Pos + vec), node.Vec);
       }
       return new ([..nodes], Triangle, Wire);
    }
@@ -126,6 +126,21 @@ public class Mesh3 (ImmutableArray<Mesh3.Node> vertex, ImmutableArray<int> trian
          fwires.AddRange (mesh.Wire.Select (a => a + nBase));
       }
       return new Mesh3 ([..vertex], [..ftris], [..fwires]);
+   }
+
+   public static Mesh3 LoadObj (string filename) {
+      List<Point3> raw = [], pts = [];
+      foreach (var line in File.ReadAllLines (filename)) {
+         if (line.StartsWith ('v')) {
+            var v = line[2..].Split (' ').Select (double.Parse).ToList ();
+            if (v.Count >= 3) raw.Add (new (v[0], v[1], v[2]));
+         } else if (line.StartsWith ('f')) {
+            var v = line[2..].Split (' ').Select (int.Parse).ToList ();
+            if (v.Count >= 3)
+               for (int i = 0; i < 3; i++) pts.Add (raw[v[i] - 1]);
+         }
+      }
+      return new Mesh3Builder (pts.AsSpan ()).Build ();
    }
 
    /// <summary>Loads data from a TMesh file</summary>
@@ -344,7 +359,7 @@ public class Mesh3Builder {
       for (int i = 0; i < max; i++) {
          var norm = mAvgs[i].Normalized ();
          int vid = cNodes;
-         Mesh3.Node node = new ((Vec3F)c.Pos, new ((Half)norm.X, (Half)norm.Y, (Half)norm.Z));
+         Mesh3.Node node = new ((Point3f)c.Pos, new ((Half)norm.X, (Half)norm.Y, (Half)norm.Z));
          Add (ref nodes, ref cNodes, node);
          mVIDs[i] = vid;
       }

@@ -24,6 +24,7 @@
          <Button Click="RobotDemo">Robot Demo</Button>
          <Button Click="STPDemo">STEP Demo</Button>
          <Button Click="StreamDemo">Stream Demo</Button>
+         <Button Click="CMeshDemo">Collider AABB</Button>
       </StackPanel>
          <StackPanel Name="mSettings" DockPanel.Dock="Right" Background="#AAA" />
       <Border Name="mContent" />

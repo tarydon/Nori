@@ -28,18 +28,17 @@ public readonly record struct Vec2S (short X, short Y) : IEQuable<Vec2S> {
 
 /// <summary>3D vector of floats (used for passing data to OpenGL)</summary>
 [StructLayout (LayoutKind.Sequential, Pack = 4, Size = 12)]
-public readonly record struct Vec3F (float X, float Y, float Z) : IEQuable<Vec3F> {
+public readonly record struct Vec3F : IEQuable<Vec3F> {
+   public Vec3F (float x, float y, float z) { X = x; Y = y; Z = z; }
    public Vec3F (double x, double y, double z) : this ((float)x, (float)y, (float)z) { }
    public static explicit operator Vec3F (Point3 pt) => new ((float)pt.X, (float)pt.Y, (float)pt.Z);
    public static explicit operator Vec3F (Vector3 vec) => new ((float)vec.X, (float)vec.Y, (float)vec.Z);
    public static implicit operator Vector3 (Vec3F vec) => new (vec.X, vec.Y, vec.Z);
    public static explicit operator Point3 (Vec3F vec) => new (vec.X, vec.Y, vec.Z);
-   public static Vec3F operator + (Vec3F a, Vec3F b) => new (a.X + b.X, a.Y + b.Y, a.Z + b.Z);
-   public static Vec3F operator - (Vec3F a, Vec3F b) => new (a.X - b.X, a.Y - b.Y, a.Z - b.Z);
-   public static Vec3F operator / (Vec3F v, double f) => new (v.X / f, v.Y / f, v.Z / f);
    public static readonly Vec3F Zero = new (0, 0, 0);
    public bool EQ (Vec3F b) => X.EQ (b.X) && Y.EQ (b.Y) && Z.EQ (b.Z);
    public override string ToString () => $"<{X.R5 ()},{Y.R5 ()},{Z.R5 ()}>";
+   public readonly float X, Y, Z;
 }
 
 /// <summary>3D vector of 16-bit half (used for passing data to OpenGL)</summary>

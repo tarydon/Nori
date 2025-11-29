@@ -37,7 +37,7 @@ public class CMeshBuilder {
       for (int i = 0; i < mIndex.Count; i++) {
          bound += mPts[mIndex[i]];
          if (i % 3 == 2) {
-            mTriCen.Add ((Vec3F)bound.Midpoint);
+            mTriCen.Add ((Point3f)bound.Midpoint);
             mTriBound.Add (bound);
             bound = new ();
          }
@@ -75,22 +75,23 @@ public class CMeshBuilder {
 
       int nodeIdx = ++mBoxesUsed;
       var box = new CMesh.Box {
-         Center = (Vec3F)bound.Midpoint,
+         Center = (Point3f)bound.Midpoint,
          Extent = new (bound.X.Length / 2, bound.Y.Length / 2, bound.Z.Length / 2),
       };
 
       // Now, if this node has 2 or more triangles, we have to create a split by 
       // partitioning this set of triangles into wo
       if (end > start + 2) {
-         Vec3F mean = new (0, 0, 0);
-         for (int i = start; i < end; i++) mean += mTriCen[mTriIdx[i]];
-         mean /= (end - start);
+         Point3f mean = new (0, 0, 0);
+         for (int i = start; i < end; i++) mean += (Vector3f)mTriCen[mTriIdx[i]];
+         int count = end - start;
+         mean = new (mean.X / count, mean.Y / count, mean.Z / count);
 
          // Now, compute the variances on the different axes
-         Vec3F vari = Vec3F.Zero;
+         Vector3f vari = new (0, 0, 0);
          for (int i = start; i < end; i++) {
-            Vec3F v = mTriCen[mTriIdx[i]] - mean;
-            vari += new Vec3F (v.X * v.X, v.Y * v.Y, v.Z + v.Z);
+            Vector3f v = mTriCen[mTriIdx[i]] - mean;
+            vari += new Vector3f (v.X * v.X, v.Y * v.Y, v.Z * v.Z);
          }
 
          // We are going to try splitting by the largest variance axis first, then
@@ -136,7 +137,7 @@ public class CMeshBuilder {
    // by the X axis and finally the Y axis (note that this is not using the 
    // absolute values of these components, but the actual value). This is meant to
    // be used with vectors where none of the components are negative
-   static int GetAxesSorted (Vec3F vec) {
+   static int GetAxesSorted (Vector3f vec) {
       if (vec.X > vec.Y) {
          if (vec.Z < vec.Y) return 321;         // ZYX
          if (vec.Z > vec.X) return 213;         // YXZ
@@ -162,14 +163,14 @@ public class CMeshBuilder {
    // This returns the partition index within the interval start..end. If the returned value
    // is equal to start or end, then this was not a successful split (meaning one of the
    // two partitions was empty)
-   int Partition (int start, int end, Vec3F mean, int axis) {
+   int Partition (int start, int end, Point3f mean, int axis) {
       // After this process, everything at the index split and beyond
       // is in the 'right half' of the tree, and everything below split is in the
       // 'left half' of the tree.
       int split = start;
       bool less = false;
       for (int i = start; i < end; i++) {
-         Vec3F pt = mTriCen[mTriIdx[i]];
+         Point3f pt = mTriCen[mTriIdx[i]];
          less = axis switch { 1 => pt.X < mean.X, 2 => pt.Y < mean.Y, 3 => pt.Z < mean.Z, _ => less };
          if (less) {
             // The triangle at index i is larger than the mean, so we should move it
@@ -185,7 +186,7 @@ public class CMeshBuilder {
    [ThreadStatic] static CMeshBuilder? mIt;
 
    // Private data -------------------------------------------------------------
-   List<Vec3F> mPts = [], mTriCen = [];
+   List<Point3f> mPts = [], mTriCen = [];
    List<Bound3> mTriBound = [];
    List<int> mIndex = [], mTriIdx = [];
    CMesh.Box[] mBoxes = [];

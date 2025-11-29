@@ -145,7 +145,7 @@ class StructTests {
 
    [Test (46, "Tests of Bound3")]
    void Test8 () {
-      Vec3F[] pts = [new (1, 20, 4), new (10, 2, 5)];
+      Point3f[] pts = [new (1, 20, 4), new (10, 2, 5)];
       Bound3 b1 = new (pts); b1.Is ("(1~10,2~20,4~5)");
       b1.Diagonal.Is (20.149442);
       Bound3 b2 = new (5, 10, 4.5, 20, 30, 10);

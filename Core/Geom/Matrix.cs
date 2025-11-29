@@ -351,6 +351,15 @@ public class Matrix3 : IEQuable<Matrix3> {
       double z = p.X * m.M13 + p.Y * m.M23 + p.Z * m.M33 + m.DZ;
       return new (x, y, z);
    }
+   // Multiple a Point3f by a Matrix
+   public static Point3f operator * (Point3f p, Matrix3 m) {
+      if (m.IsIdentity) return p;
+      if (m.IsTranslation) return new (p.X + m.DX, p.Y + m.DY, p.Z + m.DZ);
+      double x = p.X * m.M11 + p.Y * m.M21 + p.Z * m.M31 + m.DX;
+      double y = p.X * m.M12 + p.Y * m.M22 + p.Z * m.M32 + m.DY;
+      double z = p.X * m.M13 + p.Y * m.M23 + p.Z * m.M33 + m.DZ;
+      return new (x, y, z);
+   }
    /// <summary>Multiply a Vector3 by a Matrix</summary>
    public static Vector3 operator * (Vector3 v, Matrix3 m) {
       if (m.IsIdentity || m.IsTranslation) return v;
