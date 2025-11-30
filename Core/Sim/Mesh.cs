@@ -128,9 +128,9 @@ public class Mesh3 (ImmutableArray<Mesh3.Node> vertex, ImmutableArray<int> trian
       return new Mesh3 ([..vertex], [..ftris], [..fwires]);
    }
 
-   public static Mesh3 LoadObj (string filename) {
+   public static Mesh3 LoadObj (IEnumerable<string> lines) {
       List<Point3> raw = [], pts = [];
-      foreach (var line in File.ReadAllLines (filename)) {
+      foreach (var line in lines) {
          if (line.StartsWith ('v')) {
             var v = line[2..].Split (' ').Select (double.Parse).ToList ();
             if (v.Count >= 3) raw.Add (new (v[0], v[1], v[2]));
@@ -142,6 +142,9 @@ public class Mesh3 (ImmutableArray<Mesh3.Node> vertex, ImmutableArray<int> trian
       }
       return new Mesh3Builder (pts.AsSpan ()).Build ();
    }
+
+   public static Mesh3 LoadObj (string filename) 
+      => LoadObj (File.ReadAllLines (filename));
 
    /// <summary>Loads data from a TMesh file</summary>
    public static Mesh3 LoadTMesh (string filename) {

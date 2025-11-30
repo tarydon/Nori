@@ -14,17 +14,17 @@
    </Window.Resources>
    <DockPanel>
       <StackPanel DockPanel.Dock="Left" Background="#888">
-         <Button Margin="4" Click="LeafDemo">Leaf Demo</Button>
-         <Button Click="LineFontDemo">LineFont Demo</Button>
-         <Button Click="TrueTypeDemo">TrueType Demo</Button>
-         <Button Click="MeshDemo">Mesh Demo</Button>
-         <Button Click="TessDemo">Tessellation Demo</Button>
-         <Button Click="BooleanDemo">Boolean Demo</Button>
-         <Button Click="DwgDemo">Drawing Demo</Button>
-         <Button Click="RobotDemo">Robot Demo</Button>
-         <Button Click="STPDemo">STEP Demo</Button>
-         <Button Click="StreamDemo">Stream Demo</Button>
-         <Button Click="CMeshDemo">Collider AABB</Button>
+         <Button Margin="4" Click="LeafDemo">Polygon Fill</Button>
+         <Button Click="LineFontDemo">Line Fonts</Button>
+         <Button Click="TrueTypeDemo">TrueType Text</Button>
+         <Button Click="MeshDemo">Load TMesh</Button>
+         <Button Click="TessDemo">Tessellation</Button>
+         <Button Click="BooleanDemo">Poly Boolean</Button>
+         <Button Click="DwgDemo">Load DXF</Button>
+         <Button Click="RobotDemo">Robot IK/FK</Button>
+         <Button Click="STPDemo">Load STEP</Button>
+         <Button Click="StreamDemo">Streaming</Button>
+         <Button Click="AABBTreeDemo">AABB Tree</Button>
       </StackPanel>
          <StackPanel Name="mSettings" DockPanel.Dock="Right" Background="#AAA" />
       <Border Name="mContent" />
