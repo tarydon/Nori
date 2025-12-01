@@ -1,9 +1,16 @@
-﻿using System.IO;
+﻿// ────── ╔╗
+// ╔═╦╦═╦╦╬╣ BooleanDemo.cs
+// ║║║║╬║╔╣║ Demo for creation of AABB hierarchy (used for collision checks)
+// ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
+using System.IO;
 using System.IO.Compression;
 using System.Reactive.Linq;
 using Nori;
 namespace WPFDemo;
 
+// This implements a demo scene for showing a BVH (bounding volume hierarchy) made up of
+// AABBs (axis-aligned bounding boxes). We load a mesh from an OBJ file, and then create
+// a BVH that drills down to the level of individual triangles with the 
 class AABBTreeDemo : Scene3 {
    public AABBTreeDemo () {
       var zar = new ZipArchive (File.OpenRead ("N:/Demos/Data/cow.zip"));
@@ -11,17 +18,18 @@ class AABBTreeDemo : Scene3 {
       var zstm = new ZipReadStream (ze.Open (), ze.Length);
       var mesh = Mesh3.LoadObj (zstm.ReadAllLines ());
       mesh *= Matrix3.Rotation (EAxis.X, Lib.HalfPI) * Matrix3.Rotation (EAxis.Z, -Lib.HalfPI);
-      var cmesh = CMeshBuilder.Build (mesh);
+      var cmesh = CMesh.Builder.Build (mesh);
 
       mCMeshVN = new CMeshVN (cmesh);
       var meshVN = new MeshVN (mesh) {
-         Shading = EShadeMode.Flat,
+         Shading = EShadeMode.Gourad,
          Color = new Color4 (128, 128, 128)
       };
       Lib.Tracer = TraceVN.Print;
       Root = new GroupVN ([meshVN, mCMeshVN, TraceVN.It]);
       BgrdColor = Color4.Gray (64);
       Bound = mesh.Bound;
+      Viewpoint = new (-90, 90);
       Lib.Trace ("Right Click: Increase Level");
       Lib.Trace ("Shift+Right Click: Decrease Level");
    }
@@ -63,5 +71,5 @@ class CMeshVN : VNode {
       }
       Lux.Lines (pts.AsSpan ());
    }
-   int mLevel = 6;
+   int mLevel = 5;
 }

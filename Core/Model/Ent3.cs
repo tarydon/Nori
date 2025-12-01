@@ -116,10 +116,13 @@ public sealed class E3Cylinder : E3CSSurface {
       }
       Mesh3.Node n0 = nodes[tris[0]], n1 = nodes[tris[1]], n2 = nodes[tris[2]];
       Point3 p0 = (Point3)n0.Pos, p1 = (Point3)n1.Pos, p2 = (Point3)n2.Pos;
-      Vector3 v0 = (Vector3)n0.Vec, v1 = (Vector3)n1.Vec, v2 = (Vector3)n2.Vec;
+      Vector3 v0 = ToV (n0.Vec), v1 = ToV (n1.Vec), v2 = ToV (n2.Vec);
       Vector3 norma = (p1 - p0) * (p2 - p0), normb = v0 + v1 + v2;
       if (norma.Opposing (normb)) tris.Reverse ();
       return new ([.. nodes], [.. tris], [.. wires]);
+
+      // Helpers ...........................................
+      static Vector3 ToV (Vec3H v) => new ((double)v.X, (double)v.Y, (double)v.Z);
    }
 
    // Properties ---------------------------------------------------------------

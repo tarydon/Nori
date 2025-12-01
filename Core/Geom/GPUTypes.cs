@@ -7,54 +7,50 @@ namespace Nori;
 #region Types for OpenGL ---------------------------------------------------------------------------
 /// <summary>2D vector of floats (used for passing data to OpenGL)</summary>
 [StructLayout (LayoutKind.Sequential, Pack = 4, Size = 8)]
-public readonly record struct Vec2F (float X, float Y) : IEQuable<Vec2F> {
+public readonly struct Vec2F (float x, float y) : IEQuable<Vec2F> {
    public Vec2F (double x, double y) : this ((float)x, (float)y) { }
    public static implicit operator Vec2F (Point2 pt) => new ((float)pt.X, (float)pt.Y);
-   public static explicit operator Point2 (Vec2F vec) => new (vec.X, vec.Y);
    public static explicit operator Vec2F (Vector2 vec) => new ((float)vec.X, (float)vec.Y);
-   public static implicit operator Vector2 (Vec2F vec) => new (vec.X, vec.Y);
-   public static readonly Vec2F Zero = new (0, 0);
    public bool EQ (Vec2F b) => X.EQ (b.X) && Y.EQ (b.Y);
    public override string ToString () => $"<{X.R5 ()},{Y.R5 ()}>";
+   public readonly float X = x, Y = y;
 }
 
 /// <summary>2D vector of short-ints (used to represent viewport sizes etc)</summary>
-public readonly record struct Vec2S (short X, short Y) : IEQuable<Vec2S> {
+[StructLayout (LayoutKind.Sequential, Pack = 4, Size = 8)]
+public readonly struct Vec2S (short x, short y) : IEQuable<Vec2S> {
    public Vec2S (int x, int y) : this ((short)x, (short)y) { }
    public bool EQ (Vec2S b) => X == b.X && Y == b.Y;
    public override string ToString () => $"<{X},{Y}>";
    public static readonly Vec2S Zero = new (0, 0);
+   public readonly short X = x, Y = y;
 }
 
 /// <summary>3D vector of floats (used for passing data to OpenGL)</summary>
 [StructLayout (LayoutKind.Sequential, Pack = 4, Size = 12)]
-public readonly record struct Vec3F : IEQuable<Vec3F> {
-   public Vec3F (float x, float y, float z) { X = x; Y = y; Z = z; }
-   public Vec3F (double x, double y, double z) : this ((float)x, (float)y, (float)z) { }
+public readonly struct Vec3F (float x, float y, float z) : IEQuable<Vec3F> {
    public static explicit operator Vec3F (Point3 pt) => new ((float)pt.X, (float)pt.Y, (float)pt.Z);
    public static explicit operator Vec3F (Vector3 vec) => new ((float)vec.X, (float)vec.Y, (float)vec.Z);
-   public static implicit operator Vector3 (Vec3F vec) => new (vec.X, vec.Y, vec.Z);
-   public static explicit operator Point3 (Vec3F vec) => new (vec.X, vec.Y, vec.Z);
-   public static readonly Vec3F Zero = new (0, 0, 0);
+   public static explicit operator Vec3F (Point3f pt) => new (pt.X, pt.Y, pt.Z);
    public bool EQ (Vec3F b) => X.EQ (b.X) && Y.EQ (b.Y) && Z.EQ (b.Z);
    public override string ToString () => $"<{X.R5 ()},{Y.R5 ()},{Z.R5 ()}>";
-   public readonly float X, Y, Z;
+   public readonly float X = x, Y = y, Z = z;
 }
 
 /// <summary>3D vector of 16-bit half (used for passing data to OpenGL)</summary>
 [StructLayout (LayoutKind.Sequential, Pack = 2, Size = 6)]
-public readonly record struct Vec3H (Half X, Half Y, Half Z) : IEQuable<Vec3H> {
+public readonly struct Vec3H (Half x, Half y, Half z) : IEQuable<Vec3H> {
    public static explicit operator Vec3H (Vector3 vec) => new ((Half)vec.X, (Half)vec.Y, (Half)vec.Z);
-   public static explicit operator Vector3 (Vec3H vec) => new ((double)vec.X, (double)vec.Y, (double)vec.Z);
    public bool EQ (Vec3H v) => X.EQ (v.X) && Y.EQ (v.Y) && Z.EQ (v.Z);
    public override string ToString () => $"<{X.R3 ()},{Y.R3 ()},{Z.R3 ()}>";
+   public readonly Half X = x, Y = y, Z = z;
 }
 
 /// <summary>4D vector of floats (used for passing data to OpenGL)</summary>
 [StructLayout (LayoutKind.Sequential, Pack = 4, Size = 16)]
-public readonly record struct Vec4F (float X, float Y, float Z, float W) : IEQuable<Vec4F> {
+public readonly struct Vec4F (float x, float y, float z, float w) : IEQuable<Vec4F> {
    public Vec4F (double x, double y, double z, double w) : this ((float)x, (float)y, (float)z, (float)w) { }
-   public int CompareTo (Vec4F b) {
+   public int sCompareTo (Vec4F b) {
       int n = X.CompareTo (b.X); if (n != 0) return n;
       n = Y.CompareTo (b.Y); if (n != 0) return n;
       n = Z.CompareTo (b.Z); if (n != 0) return n;
@@ -62,6 +58,7 @@ public readonly record struct Vec4F (float X, float Y, float Z, float W) : IEQua
    }
    public bool EQ (Vec4F b) => X.EQ (b.X) && Y.EQ (b.Y) && Z.EQ (b.Z) && W.EQ (b.W);
    public override string ToString () => $"<{X.R5 ()},{Y.R5 ()},{Z.R5 ()},{W.R5 ()}>";
+   public readonly float X = x, Y = y, Z = z, W = w;
 }
 
 /// <summary>4D vector of 16-bit half (used for passing data to OpenGL)</summary>

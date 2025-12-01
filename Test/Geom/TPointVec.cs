@@ -241,7 +241,6 @@ class VectorTests {
       (-vec).Is ("<-3,-4>");
 
       Vec2F pfa = (Vec2F)vec; pfa.Is ("<3,4>");
-      Vector2 pfc = new Vec2F (7, 9); pfc.Is ("<7,9>");
       Vec2F pfb = new (-12.112233f, -13.2f); pfb.Is ("<-12.11223,-13.2>");
 
       Vector2.Along (EDir.E).Is ("<1,0>");
@@ -295,7 +294,6 @@ class VectorTests {
       (vec * vec2).Is ("<17,16,-23>");
 
       Vec3F pfa = (Vec3F)vec; pfa.Is ("<3,4,5>");
-      Vector3 pfc = new Vec3F (7, 9, 11); pfc.Is ("<7,9,11>");
       Vec3F pfb = new (-12.112233f, -13.2f, -14.3f); pfb.Is ("<-12.11223,-13.2,-14.3>");
       Vec3H pfd = new ((Half)(-1.12345f), (Half)(2.27f), (Half)(-3.35f)); pfd.Is ("<-1.123,2.27,-3.35>");
 

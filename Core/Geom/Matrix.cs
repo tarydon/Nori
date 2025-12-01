@@ -74,9 +74,6 @@ public class Matrix2 (double m11, double m12, double m21, double m22, double x, 
    /// <summary>Multiply a Point2 by a Matrix</summary>
    public static Point2 operator * (Point2 p, Matrix2 m)
       => new (m.M11 * p.X + m.M21 * p.Y + m.DX, m.M12 * p.X + m.M22 * p.Y + m.DY);
-   /// <summary>Multiply a Vec2F by a Matrix (returns a Vec2F)</summary>
-   public static Vec2F operator * (Vec2F p, Matrix2 m)
-      => new (m.M11 * p.X + m.M21 * p.Y + m.DX, m.M12 * p.X + m.M22 * p.Y + m.DY);
    /// <summary>Multiply a Vector2 by a Matrix</summary>
    public static Vector2 operator * (Vector2 v, Matrix2 m)
       => new (m.M11 * v.X + m.M21 * v.Y, m.M12 * v.X + m.M22 * v.Y);
