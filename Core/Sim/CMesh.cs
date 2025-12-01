@@ -40,6 +40,27 @@ public class CMesh {
    Matrix3? mInvXfm;
 
    // Methods ------------------------------------------------------------------
+   public string Dump () {
+      StringBuilder S = new ();
+      S.AppendLine ("Points:");
+      for (int i = 0; i < Pts.Length; i++) {
+         var p = Pts[i];
+         S.AppendLine ($" {i}. ({p.X.Round (3)},{p.Y.Round (3)},{p.Z.Round (3)})");
+      }
+      S.AppendLine ("Triangles:");
+      for (int i = 0; i < Index.Length; i += 3) 
+         S.AppendLine ($" {i / 3}. [{Index[i]},{Index[i + 1]},{Index[i + 2]}]");
+      S.AppendLine ("Boxes:");
+      for (int i = 1; i < Boxes.Length; i++) {
+         var b = Boxes[i];
+         var (c, s) = (b.Center, b.Extent);
+         S.Append ($" {i}. C=({c.X.Round (2)},{c.Y.Round (2)},{c.Z.Round (2)}) ");
+         S.Append ($" S={s.X.Round (1)}x{s.Y.Round (1)}x{s.Z.Round (1)} ");
+         S.AppendLine ($" L={b.Left} R={b.Right}");
+      }
+      return S.ToString ();
+   }
+
    /// <summary>Enumerate through the boxes (each box is returned with the 'level')</summary>
    /// Useful mostly for debugging
    public IEnumerable<Bound3> EnumBoxes (int maxLevel) {

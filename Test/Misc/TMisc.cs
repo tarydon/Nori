@@ -432,6 +432,14 @@ class TMisc {
       void SetLayer (Layer2 layer) { dwg.Add (layer); dwg.CurrentLayer = layer; }
    }
 
+   [Test (142, "Test for CMesh.Builder")]
+   void Test15 () {
+      var mesh = Mesh3.LoadTMesh (NT.File ("Misc/robot-1.tmesh"));
+      var cmesh = CMesh.Builder.Build (mesh);
+      File.WriteAllText (NT.TmpTxt, cmesh.Dump ());
+      Assert.TextFilesEqual ("Misc/robot-1.aabb.txt", NT.TmpTxt);
+   }
+
    class T1Type : IIndexed {
       public override string ToString () => $"T{Idx}";
       public int Idx { get; set; }

@@ -351,7 +351,7 @@ class PolyEdgeTests {
       poly = rounded.EdgeRecess (0, left: false, 15, 20, 10); poly!.Is ("M100,0V5H110V25H100V50H0V5Q5,0,1Z");
    }
 
-   [Test (121, "Poly Edge-V")]
+   [Test (141, "Poly Edge-V")]
    void Test2 () {
       Poly rect = Poly.Rectangle (0, 0, 100, 50);
       Poly? poly;
