@@ -67,7 +67,7 @@ public sealed class E3Cylinder : E3CSSurface {
       }
       for (int i = 0; i < n; i++) {
          int j = (i + 1) % n;
-         nodes.Add (new ((Vec3F)(pts[i] + vecZ0), nodes[i].Vec));
+         nodes.Add (new ((Point3f)(pts[i] + vecZ0), nodes[i].Vec));
          wires.Add (i); wires.Add (j); wires.Add (i + n); wires.Add (j + n);
          tris.Add (i); tris.Add (i + n); tris.Add (j);
          tris.Add (j); tris.Add (i + n); tris.Add (j + n);
@@ -116,10 +116,13 @@ public sealed class E3Cylinder : E3CSSurface {
       }
       Mesh3.Node n0 = nodes[tris[0]], n1 = nodes[tris[1]], n2 = nodes[tris[2]];
       Point3 p0 = (Point3)n0.Pos, p1 = (Point3)n1.Pos, p2 = (Point3)n2.Pos;
-      Vector3 v0 = (Vector3)n0.Vec, v1 = (Vector3)n1.Vec, v2 = (Vector3)n2.Vec;
+      Vector3 v0 = ToV (n0.Vec), v1 = ToV (n1.Vec), v2 = ToV (n2.Vec);
       Vector3 norma = (p1 - p0) * (p2 - p0), normb = v0 + v1 + v2;
       if (norma.Opposing (normb)) tris.Reverse ();
       return new ([.. nodes], [.. tris], [.. wires]);
+
+      // Helpers ...........................................
+      static Vector3 ToV (Vec3H v) => new ((double)v.X, (double)v.Y, (double)v.Z);
    }
 
    // Properties ---------------------------------------------------------------
@@ -178,7 +181,7 @@ public sealed class E3Plane : E3Surface {
       List<Mesh3.Node> nodes = [];
       foreach (var pt in pts) {
          Point3 pt3 = (Point3)pt * xfm;
-         nodes.Add (new (new Vec3F (pt3.X, pt3.Y, pt3.Z), normal));
+         nodes.Add (new (new Point3f (pt3.X, pt3.Y, pt3.Z), normal));
       }
       return new ([.. nodes], [.. tries], [.. wires]);
    }
