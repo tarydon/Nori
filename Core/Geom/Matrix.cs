@@ -74,9 +74,6 @@ public class Matrix2 (double m11, double m12, double m21, double m22, double x, 
    /// <summary>Multiply a Point2 by a Matrix</summary>
    public static Point2 operator * (Point2 p, Matrix2 m)
       => new (m.M11 * p.X + m.M21 * p.Y + m.DX, m.M12 * p.X + m.M22 * p.Y + m.DY);
-   /// <summary>Multiply a Vec2F by a Matrix (returns a Vec2F)</summary>
-   public static Vec2F operator * (Vec2F p, Matrix2 m)
-      => new (m.M11 * p.X + m.M21 * p.Y + m.DX, m.M12 * p.X + m.M22 * p.Y + m.DY);
    /// <summary>Multiply a Vector2 by a Matrix</summary>
    public static Vector2 operator * (Vector2 v, Matrix2 m)
       => new (m.M11 * v.X + m.M21 * v.Y, m.M12 * v.X + m.M22 * v.Y);
@@ -224,6 +221,14 @@ public class Matrix3 : IEQuable<Matrix3> {
    // Methods ------------------------------------------------------------------
    public Matrix3 ExtractRotation () => new (M11, M12, M13, M21, M22, M23, M31, M32, M33, 0, 0, 0);
 
+   public Matrix3 ExtractAbs () {
+      double e = 1e-6;
+      return new (Abs (M11) + e, Abs (M12) + e, Abs (M13) + e,
+                  Abs (M21) + e, Abs (M22) + e, Abs (M23) + e,
+                  Abs (M31) + e, Abs (M32) + e, Abs (M33) + e,
+                  Abs (DX) + e, Abs (DY) + e, Abs (DZ) + e, Flags);
+   }
+
    public bool EQ (Matrix3 b)
       => M11.EQ (b.M11) && M12.EQ (b.M12) && M13.EQ (b.M13)
       && M21.EQ (b.M21) && M22.EQ (b.M22) && M23.EQ (b.M23)
@@ -336,6 +341,15 @@ public class Matrix3 : IEQuable<Matrix3> {
 
    /// <summary>Multiply a Point3 by a Matrix</summary>
    public static Point3 operator * (Point3 p, Matrix3 m) {
+      if (m.IsIdentity) return p;
+      if (m.IsTranslation) return new (p.X + m.DX, p.Y + m.DY, p.Z + m.DZ);
+      double x = p.X * m.M11 + p.Y * m.M21 + p.Z * m.M31 + m.DX;
+      double y = p.X * m.M12 + p.Y * m.M22 + p.Z * m.M32 + m.DY;
+      double z = p.X * m.M13 + p.Y * m.M23 + p.Z * m.M33 + m.DZ;
+      return new (x, y, z);
+   }
+   // Multiple a Point3f by a Matrix
+   public static Point3f operator * (Point3f p, Matrix3 m) {
       if (m.IsIdentity) return p;
       if (m.IsTranslation) return new (p.X + m.DX, p.Y + m.DY, p.Z + m.DZ);
       double x = p.X * m.M11 + p.Y * m.M21 + p.Z * m.M31 + m.DX;

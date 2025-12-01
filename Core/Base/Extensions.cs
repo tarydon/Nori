@@ -164,6 +164,15 @@ public static class Extensions {
    /// This has special handling to avoid -0 from appearing
    public static double R6 (this double f) { f = Math.Round (f, 6); return f == -0 ? 0 : f; }
 
+   /// <summary>Reads all lines from the specified file at the given path</summary>
+   public static List<string> ReadAllLines (this Stream stm) {
+      string? line;
+      List<string> lines = [];
+      using (var reader = new StreamReader (stm))
+         while ((line = reader.ReadLine ()) != null) lines.Add (line);
+      return lines;
+   }
+
    /// <summary>Reads n bytes from the stream and returns a byte-array</summary>
    public static byte[] ReadBytes (this Stream stm, int n) {
       byte[] data = new byte[n]; stm.ReadExactly (data);

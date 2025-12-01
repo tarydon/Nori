@@ -5,12 +5,12 @@
 using System.IO.Compression;
 namespace Nori;
 
-#region class CMesh --------------------------------------------------------------------------------
+#region class Mesh3 --------------------------------------------------------------------------------
 /// <summary>This implements a super-simple mesh format for rendering</summary>
 /// This format is very close to the way the data has to be presented for rendering,
 /// and is designed to be very simple to read / understand.
 /// - The Vertex array contains a set of nodes, each defined with a position
-///   (Vec3F) and normal (Vec3H)
+///   (Point3f) and normal (Vec3H)
 /// - The Triangle array (taken 3 at a time) defines the triangles as indices into
 ///   the Vertex array
 /// - The Wires array (taken 2 at a time) defines the stencil lines to be drawn.
@@ -38,16 +38,16 @@ public class Mesh3 (ImmutableArray<Mesh3.Node> vertex, ImmutableArray<int> trian
    }
 
    [StructLayout (LayoutKind.Sequential, Pack = 2, Size = 20)]
-   public readonly struct Node (Vec3F pos, Vec3H vec) {
-      public Node (Point3 pos, Vector3 vec) : this ((Vec3F)pos, (Vec3H)vec) { }
+   public readonly struct Node (Point3f pos, Vec3H vec) {
+      public Node (Point3 pos, Vector3 vec) : this ((Point3f)pos, (Vec3H)vec) { }
 
-      public Vec3F Pos => pos;
+      public Point3f Pos => pos;
       public Vec3H Vec => vec;
 
-      public void Deconstruct (out Vec3F p, out Vec3H v) => (p, v) = (Pos, Vec);
+      public void Deconstruct (out Point3f p, out Vec3H v) => (p, v) = (Pos, Vec);
       public override string ToString () => $"{pos}, {vec}";
       public static Node operator * (Node node, Matrix3 xfm) {
-         var pos = (Vec3F)(node.Pos * xfm);
+         var pos = node.Pos * xfm;
          var vec = node.Vec;
          if (!xfm.IsTranslation) {
             Vector3 v = new ((double)vec.X, (double)vec.Y, (double)vec.Z);
@@ -63,7 +63,7 @@ public class Mesh3 (ImmutableArray<Mesh3.Node> vertex, ImmutableArray<int> trian
       var nodes = new Node[Vertex.Length];
       for (int i = 0; i < Vertex.Length; i++) {
          var node = Vertex[i];
-         nodes[i] = new Node ((Vec3F)(node.Pos + vec), node.Vec);
+         nodes[i] = new Node ((Point3f)((Point3)node.Pos + vec), node.Vec);
       }
       return new ([..nodes], Triangle, Wire);
    }
@@ -127,6 +127,24 @@ public class Mesh3 (ImmutableArray<Mesh3.Node> vertex, ImmutableArray<int> trian
       }
       return new Mesh3 ([..vertex], [..ftris], [..fwires]);
    }
+
+   public static Mesh3 LoadObj (IEnumerable<string> lines) {
+      List<Point3> raw = [], pts = [];
+      foreach (var line in lines) {
+         if (line.StartsWith ('v')) {
+            var v = line[2..].Split (' ').Select (double.Parse).ToList ();
+            if (v.Count >= 3) raw.Add (new (v[0], v[1], v[2]));
+         } else if (line.StartsWith ('f')) {
+            var v = line[2..].Split (' ').Select (int.Parse).ToList ();
+            if (v.Count >= 3)
+               for (int i = 0; i < 3; i++) pts.Add (raw[v[i] - 1]);
+         }
+      }
+      return new Mesh3Builder (pts.AsSpan ()).Build ();
+   }
+
+   public static Mesh3 LoadObj (string filename) 
+      => LoadObj (File.ReadAllLines (filename));
 
    /// <summary>Loads data from a TMesh file</summary>
    public static Mesh3 LoadTMesh (string filename) {
@@ -217,15 +235,15 @@ public class Mesh3 (ImmutableArray<Mesh3.Node> vertex, ImmutableArray<int> trian
 }
 #endregion
 
-#region class CMeshBuilder -------------------------------------------------------------------------
-/// <summary>The CMeshBuilder class builds meshes with auto-smoothing and marking of sharp creases</summary>
+#region class Mesh3Builder -------------------------------------------------------------------------
+/// <summary>The Mesh3Builder class builds meshes with auto-smoothing and marking of sharp creases</summary>
 /// To construct a mesh, all this needs is a triangle mesh and with consistent winding.
 /// This finds all the shared edges between faces and if the edge angle is
 /// more than a given threshold, it marks the edge as sharp. The SmoothMeshBuilder works with a given mesh
 /// as the target and adds triangles into that mesh. Note that you never need to supply normals to this.
 /// It computes normals based on which parts should be 'smooth' and which ones should be 'sharp'.
 public class Mesh3Builder {
-   /// <summary>Initialize a CMeshBuilder with a set of points </summary>
+   /// <summary>Initialize a Mesh3Builder with a set of points </summary>
    /// These points, taken 3 at a time, define a set of triangles.
    /// <param name="pts">Triangle points.</param>
    public Mesh3Builder (ReadOnlySpan<Point3> pts) {
@@ -240,7 +258,7 @@ public class Mesh3Builder {
       }
    }
 
-   /// <summary>Constructs a CMesh object from the given set of 'smoothed' triangles.</summary>
+   /// <summary>Constructs a Mesh3 object from the given set of 'smoothed' triangles.</summary>
    public Mesh3 Build () {
       for (int i = 0; i < mIdx.Count; i += 3) {
          int A = mIdx[i], B = mIdx[i + 1], C = mIdx[i + 2];
@@ -344,7 +362,7 @@ public class Mesh3Builder {
       for (int i = 0; i < max; i++) {
          var norm = mAvgs[i].Normalized ();
          int vid = cNodes;
-         Mesh3.Node node = new ((Vec3F)c.Pos, new ((Half)norm.X, (Half)norm.Y, (Half)norm.Z));
+         Mesh3.Node node = new ((Point3f)c.Pos, new ((Half)norm.X, (Half)norm.Y, (Half)norm.Z));
          Add (ref nodes, ref cNodes, node);
          mVIDs[i] = vid;
       }
