@@ -22,7 +22,7 @@ class AABBTreeDemo : Scene3 {
 
       mCMeshVN = new CMeshVN (cmesh);
       var meshVN = new MeshVN (mesh) {
-         Shading = EShadeMode.Gourad,
+         Shading = EShadeMode.Flat,
          Color = new Color4 (128, 128, 128)
       };
       Lib.Tracer = TraceVN.Print;

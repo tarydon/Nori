@@ -42,18 +42,6 @@ public class CMesh {
    // Methods ------------------------------------------------------------------
    /// <summary>Enumerate through the boxes (each box is returned with the 'level')</summary>
    /// Useful mostly for debugging
-   public IEnumerable<(Bound3 Box, int Level)> EnumBoxes () {
-      Queue<(int NBox, int Level)> todo = [];
-      todo.Enqueue ((1, 0));
-      while (todo.TryDequeue (out var tup)) {
-         var b = Boxes[tup.NBox];
-         if (b.Left < 0) todo.Enqueue ((-b.Left, tup.Level + 1));
-         if (b.Right < 0) todo.Enqueue ((-b.Right, tup.Level + 1));
-         Point3f min = b.Center - b.Extent, max = b.Center + b.Extent;
-         yield return (new Bound3 ([min, max]), tup.Level);
-      }
-   }
-
    public IEnumerable<Bound3> EnumBoxes (int maxLevel) {
       Queue<(int NBox, int Level)> todo = [];
       todo.Enqueue ((1, 0));
@@ -62,7 +50,7 @@ public class CMesh {
          if (tup.Level <= maxLevel) {
             // Output boxes at maxLevel. Also output leaf boxes from 
             // earlier levels (ones that don't have two boxes as children)
-            if (tup.Level == maxLevel || b.Left >= 0 || b.Right >= 0) {
+            if (tup.Level == maxLevel || (b.Left >= 0 && b.Right >= 0)) {
                Point3f min = b.Center - b.Extent, max = b.Center + b.Extent;
                yield return new Bound3 ([min, max]);
             }
