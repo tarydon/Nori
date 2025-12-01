@@ -1,5 +1,5 @@
 ﻿// ────── ╔╗
-// ╔═╦╦═╦╦╬╣ BooleanDemo.cs
+// ╔═╦╦═╦╦╬╣ AABBTreeDemo.cs
 // ║║║║╬║╔╣║ Demo for creation of AABB hierarchy (used for collision checks)
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 using System.IO;
@@ -37,31 +37,15 @@ class AABBTreeDemo : Scene3 {
    CMeshVN mCMeshVN;
 }
 
-class CMeshVN : VNode {
-   public CMeshVN (CMesh cm) {
-      mCM = cm;
-      mDisp = HW.MouseClicks.Where (a => a.IsPress && a.Button == EMouseButton.Right).Subscribe (OnMouse);
-   }
-   public readonly CMesh mCM;
-   readonly IDisposable mDisp;
-
-   public override void OnDetach () => mDisp.Dispose ();
-
-   void OnMouse (MouseClickInfo mi) {
-      if (mi.Modifier == EKeyModifier.Shift) { mLevel--; Redraw (); } else { mLevel++; Redraw (); }
-   }
-
-   public override void SetAttributes () {
-      Lux.Color = Color4.White;
-      Lux.LineWidth = 2f;
-   }
-
+// This VNode displays one level of the AABB hierarchy (by drawing boxes).
+// This VNode also connects to the keyboard handler.
+class CMeshVN (CMesh cm) : VNode {
+   // Overrides ----------------------------------------------------------------
    public override void Draw () {
-      var boxes = mCM.EnumBoxes ().Where (a => a.Level == mLevel).ToList ();
+      var boxes = mCM.EnumBoxes (mLevel).ToList ();
       Lib.Trace ($"Level {mLevel}, {boxes.Count} boxes");
       List<Vec3F> pts = [];
-      foreach (var (box0, level) in boxes) {
-         var box = box0.InflatedF (1);
+      foreach (var box in boxes) {
          var (x, y, z) = (box.X, box.Y, box.Z);
          Vec3F a = new (x.Min, y.Min, z.Min), b = new (x.Max, y.Min, z.Min);
          Vec3F c = new (x.Max, y.Max, z.Min), d = new (x.Min, y.Max, z.Min);
@@ -71,5 +55,24 @@ class CMeshVN : VNode {
       }
       Lux.Lines (pts.AsSpan ());
    }
+
+   public override void OnAttach () 
+      => mDisp = HW.MouseClicks
+                   .Where (a => a.IsPress && a.Button == EMouseButton.Right)
+                   .Subscribe (OnMouse);
+
+   public override void OnDetach () => mDisp?.Dispose ();
+
+   void OnMouse (MouseClickInfo mi) {
+      mLevel += (mi.Modifier == EKeyModifier.Shift) ? -1 : 1;
+      Redraw ();
+   }
+
+   public override void SetAttributes ()
+      => (Lux.Color, Lux.LineWidth) = (Color4.White, 2f);
+
+   // Private data -------------------------------------------------------------
    int mLevel = 5;
+   readonly CMesh mCM = cm;
+   IDisposable? mDisp;
 }

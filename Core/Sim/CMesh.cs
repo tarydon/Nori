@@ -54,6 +54,24 @@ public class CMesh {
       }
    }
 
+   public IEnumerable<Bound3> EnumBoxes (int maxLevel) {
+      Queue<(int NBox, int Level)> todo = [];
+      todo.Enqueue ((1, 0));
+      while (todo.TryDequeue (out var tup)) {
+         var b = Boxes[tup.NBox];
+         if (tup.Level <= maxLevel) {
+            // Output boxes at maxLevel. Also output leaf boxes from 
+            // earlier levels (ones that don't have two boxes as children)
+            if (tup.Level == maxLevel || b.Left >= 0 || b.Right >= 0) {
+               Point3f min = b.Center - b.Extent, max = b.Center + b.Extent;
+               yield return new Bound3 ([min, max]);
+            }
+            if (b.Left < 0) todo.Enqueue ((-b.Left, tup.Level + 1));
+            if (b.Right < 0) todo.Enqueue ((-b.Right, tup.Level + 1));
+         }
+      }
+   }
+
    /// <summary>Gets the vertices of the nth triangle, untransformed by the transformation matrix</summary>
    public void GetRawTriangle (int tri, out Point3f a, out Point3f b, out Point3f c) {
       tri *= 3;
