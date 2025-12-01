@@ -2,6 +2,8 @@
 // ╔═╦╦═╦╦╬╣ VNode.cs
 // ║║║║╬║╔╣║ Implements the VNode class (base class for all visual nodes)
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
+using System.Reflection;
+
 namespace Nori;
 
 #region class VNode --------------------------------------------------------------------------------

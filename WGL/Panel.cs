@@ -6,7 +6,18 @@ using System.Windows.Forms.Integration;
 using System.Windows.Threading;
 using static System.Windows.Forms.ControlStyles;
 using FCursor = System.Windows.Forms.Cursor;
+using WControl = System.Windows.Controls.UserControl;
 namespace Nori;
+
+public static class WinGL {
+   public static WControl Create (Action onReady, Action<int, int> onPaint) {
+      OnReady = onReady; OnPaint = onPaint;
+      return Panel.It;
+   }
+
+   internal static Action<int, int>? OnPaint;
+   internal static Action? OnReady;
+}
 
 #region class Panel --------------------------------------------------------------------------------
 /// <summary>A WPF UserControl used that houses an OpenGL rendering surface (used to display all GL content)</summary>
@@ -195,9 +206,10 @@ class Surface : UserControl {
             break;
          }
       }
-      Lux.mReady = true;
       Lib.Tessellate = Tess2D.Process;
-      Lux.mOnReady.OnNext (0);
+      WinGL.OnReady?.Invoke ();
+      //Lux.mReady = true;             // REMOVETHIS
+      //Lux.mOnReady.OnNext (0);
    }
 
    /// <summary>An 'empty' cursor</summary>
@@ -212,8 +224,10 @@ class Surface : UserControl {
    static FCursor? mEmptyCursor;
 
    // Override OnPaint to call back to PX.Render, where our actual paint code resides
-   protected override void OnPaint (PaintEventArgs e)
-      => Lux.Render (Lux.UIScene, new (Width, Height), ETarget.Screen, DIBitmap.EFormat.Unknown);
+   protected override void OnPaint (PaintEventArgs e) {
+      WinGL.OnPaint?.Invoke (Width, Height);
+      // Lux.Render (Lux.UIScene, new (Width, Height), ETarget.Screen, DIBitmap.EFormat.Unknown); // REMOVETHIS
+   }
 
    // Private data -------------------------------------------------------------
    HDC mDC;             // Device contex handle used for rendering

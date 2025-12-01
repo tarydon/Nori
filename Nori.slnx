@@ -1,0 +1,19 @@
+<Solution>
+  <Folder Name="/Demos/">
+    <Project Path="Demos/AuTest/AuTest.csproj" />
+    <Project Path="Demos/ConDemo/ConDemo.csproj" />
+    <Project Path="Demos/WPFDemo/WPFDemo.csproj" />
+  </Folder>
+  <Folder Name="/Test/">
+    <Project Path="Test/Nori.Test.csproj" />
+  </Folder>
+  <Folder Name="/Tools/">
+    <Project Path="Tools/Console/Nori.Con.csproj" />
+    <Project Path="Tools/Cover/Nori.Cover.csproj" />
+    <Project Path="Tools/Doc/Nori.Doc.csproj" />
+    <Project Path="Tools/Generate/Nori.Gen.csproj" />
+  </Folder>
+  <Project Path="Core/Nori.Core.csproj" />
+  <Project Path="Lux/Nori.Lux.csproj" />
+  <Project Path="WGL/Nori.WGL.csproj" />
+</Solution>

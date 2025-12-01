@@ -11,6 +11,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\Core\Nori.Core.csproj" />
+    <ProjectReference Include="..\..\Lux\Nori.Lux.csproj" />
     <ProjectReference Include="..\..\WGL\Nori.WGL.csproj" />
   </ItemGroup>
 
