@@ -74,41 +74,6 @@ public abstract partial class Ent2 {
 }
 #endregion
 
-#region class E2Dimension --------------------------------------------------------------------------
-/// <summary>Represents a dimension entity</summary>
-public class E2Dimension : Ent2 {
-   E2Dimension () { }
-   public E2Dimension (Layer2 layer) : base (layer) { }
-
-   // Properties ---------------------------------------------------------------
-   // The entities making up the dimension (in DXF, this is stored in a block, but since that
-   // block is used exactly once, it makes more sense to just store the entities here and create
-   // the block on the fly when the dimension is saved)
-   public IReadOnlyList<Ent2> Ents => mEnts;
-   Ent2[] mEnts = [];
-
-   // Overrides ----------------------------------------------------------------
-   public override Bound2 Bound
-      => Bound2.Update (ref mBound, () => new (mEnts.Select (a => a.Bound)));
-   Bound2 mBound = new ();
-
-   public override Bound2 GetBound (Matrix2 xfm)
-      => new (mEnts.Select (a => a.GetBound (xfm)));
-
-   public override E2Dimension XFormed (Matrix2 m)
-      => new (Layer) { mEnts = [.. mEnts.Select (a => a.XFormed (m))], Color = Color };
-
-   // Methods ------------------------------------------------------------------
-   public Block2? LoadEnts (Dwg2 dwg, string blockName) {
-      if (dwg.Blocks.FirstOrDefault (a => a.Name == blockName) is { } block) {
-         mEnts = [.. block.Ents];
-         return block;
-      }
-      return null;
-   }
-}
-#endregion
-
 #region class E2Bendline ---------------------------------------------------------------------------
 /// <summary>Represents a Bendline in a drawing</summary>
 public class E2Bendline : Ent2 {
@@ -162,6 +127,41 @@ public class E2Bendline : Ent2 {
 
    // Private data -------------------------------------------------------------
    readonly Dwg2 mDwg;  // Drawing this belongs to (needed to obtain the thickness)
+}
+#endregion
+
+#region class E2Dimension --------------------------------------------------------------------------
+/// <summary>Represents a dimension entity</summary>
+public class E2Dimension : Ent2 {
+   E2Dimension () { }
+   public E2Dimension (Layer2 layer) : base (layer) { }
+
+   // Properties ---------------------------------------------------------------
+   // The entities making up the dimension (in DXF, this is stored in a block, but since that
+   // block is used exactly once, it makes more sense to just store the entities here and create
+   // the block on the fly when the dimension is saved)
+   public IReadOnlyList<Ent2> Ents => mEnts;
+   Ent2[] mEnts = [];
+
+   // Overrides ----------------------------------------------------------------
+   public override Bound2 Bound
+      => Bound2.Update (ref mBound, () => new (mEnts.Select (a => a.Bound)));
+   Bound2 mBound = new ();
+
+   public override Bound2 GetBound (Matrix2 xfm)
+      => new (mEnts.Select (a => a.GetBound (xfm)));
+
+   public override E2Dimension XFormed (Matrix2 m)
+      => new (Layer) { mEnts = [.. mEnts.Select (a => a.XFormed (m))], Color = Color };
+
+   // Methods ------------------------------------------------------------------
+   public Block2? LoadEnts (Dwg2 dwg, string blockName) {
+      if (dwg.Blocks.FirstOrDefault (a => a.Name == blockName) is { } block) {
+         mEnts = [.. block.Ents];
+         return block;
+      }
+      return null;
+   }
 }
 #endregion
 
@@ -394,8 +394,8 @@ public class E2Text : Ent2 {
    public readonly double Height;
 
    /// <summary>Spacing between lines for multiline text</summary>
-   public double DYLine { get { Render (); return _DYLine; } }
-   double _DYLine;
+   public double DYLine { get { Render (); return _dyLine; } }
+   double _dyLine;
 
    /// <summary>Text obliquing angle, in radians</summary>
    public readonly double Oblique;
@@ -435,17 +435,17 @@ public class E2Text : Ent2 {
    public override E2Text XFormed (Matrix2 m)
       => new (Layer, Style, Text, Pt * m, Height * m.ScaleFactor, Angle + (Vector2.XAxis * m).Heading, Oblique, XScale, Alignment) { Color = Color };
 
-   #region Implementation and Private stuff --------------------------
+   // Implementation -----------------------------------------------------------
    public ImmutableArray<Poly> Polys => Render ();
+
    ImmutableArray<Poly> Render () {
       if (_Polys != null) return _Polys;
       List<Poly> polys = [];
       var font = LineFont.Get (Style.Font);
       font.Render (Text, Pt, Alignment, Oblique, XScale, Height, Angle, polys);
-      _DYLine = font.VAdvance * Height / font.Ascender;
+      _dyLine = font.VAdvance * Height / font.Ascender;
       return _Polys = [.. polys];
    }
    ImmutableArray<Poly> _Polys;
-   #endregion
 }
 #endregion

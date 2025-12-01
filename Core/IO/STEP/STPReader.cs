@@ -1,30 +1,19 @@
 // ────── ╔╗
 // ╔═╦╦═╦╦╬╣ STPReader.cs
-// ║║║║╬║╔╣║ <<TODO>>
+// ║║║║╬║╔╣║ Implements the first phase of STEP reading (loading entities from STEP)
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 using Nori.STEP;
 namespace Nori;
 
+#region class STEPReader ---------------------------------------------------------------------------
+/// <summary>STEP reader is used to load STEP files and make Model3 out of them</summary>
 public partial class STEPReader {
+   // Constructors -------------------------------------------------------------
+   /// <summary>Intialize a STEP reader given a filename</summary>
    public STEPReader (string file) => (S, mFile) = (File.ReadAllText (file), file);
-   readonly string S, mFile;
-   int N;
-
-   void Parse () {
-      N = S.IndexOf ("DATA;", StringComparison.Ordinal) + 5; Assert (N > 10);
-      // The following loop loads all the entities one by one
-      ReadOnlySpan<char> endsec = "ENDSEC;";
-      for (; ; ) {
-         if (RTryMatch ('#')) REntity ();
-         else if (S.AsSpan (N, 7).Equals (endsec, StringComparison.Ordinal)) break;
-         else Fatal ("Unexpected end of file");
-      }
-      if (D.OfType<Manifold> ().FirstOrDefault () is { } m) Check (m);
-      else if (D.OfType<ShellBasedSurfaceModel> ().FirstOrDefault () is { } sb) Check (sb);
-      else Console.WriteLine ("No top level entity found");
-   }
 
    // Entity switch ------------------------------------------------------------
+   // Each time this is called, this reads and returns one entity from the file
    void REntity () {
       Id = RInt (); RMatch ('=');
       if (RTryMatch ('(')) {
@@ -49,8 +38,8 @@ public partial class STEPReader {
             "EDGE_CURVE" => REdgeCurve (),
             "EDGE_LOOP" => REdgeLoop (),
             "ELLIPSE" => REllipse (),
-            "FACE_BOUND" => RFaceBound (),
-            "FACE_OUTER_BOUND" => RFaceOuterBound (),
+            "FACE_BOUND" => RFaceBound (false),
+            "FACE_OUTER_BOUND" => RFaceBound (true),
             "ITEM_DEFINED_TRANSFORMATION" => RItemDefinedXfm (),
             "LINE" => RLine (),
             "MANIFOLD_SOLID_BREP" => RManifold (),
@@ -71,7 +60,7 @@ public partial class STEPReader {
             _ => null
          };
          if (ent == null) {
-            if (mUnsupported.Add (kw) && !Ignore.Contains (kw))
+            if (mUnsupported.Add (kw) && !sIgnore!.Contains (kw))
                throw new Exception ($"Unsupported: {kw}");
             Unread[Id] = kw;
          } else {
@@ -81,15 +70,22 @@ public partial class STEPReader {
       }
       RSkip (';');
    }
-   List<Entity?> D = [];
-   HashSet<string> mUnsupported = [];
-   Dictionary<int, string> Unread = [];
-   int Id;
-
-   static HashSet<string> Ignore => sIgnore ??= [.. Lib.ReadLines ("nori:Core/STEPIgnore.txt")];
-   static HashSet<string>? sIgnore;
 
    // Low level read rountines -------------------------------------------------
+   void Parse () {
+      N = S.IndexOf ("DATA;", StringComparison.Ordinal) + 5; Assert (N > 10);
+      // The following loop loads all the entities one by one
+      ReadOnlySpan<char> endsec = "ENDSEC;";
+      for (; ; ) {
+         if (RTryMatch ('#')) REntity ();
+         else if (S.AsSpan (N, 7).Equals (endsec, StringComparison.Ordinal)) break;
+         else Fatal ("Unexpected end of file");
+      }
+      if (D.OfType<Manifold> ().FirstOrDefault () is { } m) Check (m);
+      else if (D.OfType<ShellBasedSurfaceModel> ().FirstOrDefault () is { } sb) Check (sb);
+      else Console.WriteLine ("No top level entity found");
+   }
+
    // Reads a 'bool' of the form .T. or .F. (after skipping past a leading comma)
    bool RBool () {
       RMatch (','); RMatch ('.');
@@ -245,9 +241,9 @@ public partial class STEPReader {
    AdvancedBRepShapeRepr RAdvancedBRepShapeRepr () { RString (); return new (RRefs (), RRef ()); }
    BSplineCurveWithKnots RBSplineCurveWithKnots () { RString (); return new (RInt(), RRefs(), REnum (), RBool(), RBool(), RInts(), RDoubles(), REnum ()); }
    BSplineSurfaceWithKnots RBSplineSurfaceWithKnots () { RString (); return new BSplineSurfaceWithKnots (RInt (), RInt (), RRefsList (), REnum (), RBool (), RBool (), RBool (), RInts (), RInts (), RDoubles (), RDoubles (), REnum ()); }
-   CompositeCurve RCompositeCurve () { RString (); return new (RRefs (), RBool ()); }
    Cartesian RCartesian () { RString (); return new (RPoint3 ()); }
    Circle RCircle () { RString (); return new (RRef (), RDouble ()); }
+   CompositeCurve RCompositeCurve () { RString (); return new (RRefs (), RBool ()); }
    Cone RConicalSurface () { RString (); return new Cone (RRef (), RDouble (), RDouble ()); }
    CoordSys RCoordSys () { RString (); return new (RRef (), RRef (), RRef ()); }
    CoordSys2 RCoordSys2 () { RString (); return new (RRef (), RRef ()); }
@@ -258,8 +254,7 @@ public partial class STEPReader {
    EdgeLoop REdgeLoop () { RString (); return new (RRefs ()); }
    Ellipse REllipse () { RString (); return new (RRef (), RDouble (), RDouble ()); }
    ExtrudedSurface RExtrudedSurface () { RString (); return new (RRef(), RRef()); }
-   FaceOuterBound RFaceOuterBound () { RString (); return new (RRef (), RBool ()); }
-   FaceBound RFaceBound () { RString (); return new (RRef (), RBool ()); }
+   FaceBound RFaceBound (bool outer) { RString (); return new (RRef (), RBool (), outer); }
    ItemDefinedXfm RItemDefinedXfm () { RString (); RString (); return new ItemDefinedXfm (RRef (), RRef ()); }
    Line RLine () { RString (); return new (RRef (), RRef ()); }
    Manifold RManifold () { RString (); return new (RRef ()); }
@@ -305,4 +300,15 @@ public partial class STEPReader {
       s = $"File = {mFile}, ID = {Id}: {s}";
       throw new Exception (s);
    }
+
+   // Private data -------------------------------------------------------------
+   int Id;                                   // ID of the entity we're loading in
+   List<Entity?> D = [];                     // List of entities we've read in
+   Dictionary<int, string> Unread = [];      // List of entities we could not read from this file
+   static HashSet<string> mUnsupported = []; // List of 'unsupported' entities
+   static HashSet<string> sIgnore = [.. Lib.ReadLines ("nori:Core/STEPIgnore.txt")];
+   readonly string mFile;                    // Name of the file we're loading from
+   readonly string S;                        // The full text of the file (loaded into a string)
+   int N;                                    // Cursor of next char into S
 }
+#endregion

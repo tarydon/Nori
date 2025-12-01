@@ -30,6 +30,15 @@ public static class Extensions {
    /// Note that you should not add or remove items from the list while the Span is being used.
    public static ReadOnlySpan<T> AsSpan<T> (this List<T> list) => CollectionsMarshal.AsSpan (list);
 
+   /// <summary>How many bytes to encode each pixel, with a given DIBitmap format</summary>
+   public static int BytesPerPixel (this DIBitmap.EFormat fmt) =>
+      fmt switch {
+         DIBitmap.EFormat.RGB8 => 3,
+         DIBitmap.EFormat.Gray8 => 1,
+         DIBitmap.EFormat.RGBA8 => 4,
+         _ => throw new BadCaseException (fmt)
+      };
+
    /// <summary>Clamps the given double to lie within min..max (inclusive)</summary>
    public static double Clamp (this double a, double min, double max) => a < min ? min : (a > max ? max : a);
    /// <summary>Clamps the given double to the range 0..1</summary>
@@ -188,6 +197,11 @@ public static class Extensions {
    /// <summary>Rounds a float to the given number of digits</summary>
    public static double Round (this float a, int digits) => Math.Round (a, digits);
 
+   /// <summary>Rounds the double to be a multiple of the given least count</summary>
+   /// For example, <tt>13.532.Round(0.2)</tt> will return 13.6, since that is the closest multiple
+   /// of 0.2 near 13.532.
+   public static double Round (this double a, double leastcount) => leastcount * Math.Round (a / leastcount);
+
    /// <summary>Rounds up the given integer to the next multiple of the given chunk size</summary>
    public static int RoundUp (this int n, int chunk) => chunk * ((n + chunk - 1) / chunk);
 
@@ -252,25 +266,5 @@ public static class Extensions {
 
    /// <summary>Wrap an integer to a range within 0..max-1</summary>
    public static int Wrap (this int n, int max) => (n + max) % max;
-
-   /// <summary>Rounds the double to be a multiple of the given least count</summary>
-   /// For example, <tt>13.532.Round(0.2)</tt> will return 13.6, since that is the closest multiple
-   /// of 0.2 near 13.532.
-   public static double Round (this double a, double leastcount) => leastcount * Math.Round (a / leastcount);
-
-}
-#endregion
-
-#region class EnumExtensions -----------------------------------------------------------------------
-/// <summary>Extension methods on various Nori-defined enums</summary>
-public static class EnumExtensions {
-   /// <summary>How many bytes to encode each pixel, with a given DIBitmap format</summary>
-   public static int BytesPerPixel (this DIBitmap.EFormat fmt) =>
-      fmt switch {
-         DIBitmap.EFormat.RGB8 => 3,
-         DIBitmap.EFormat.Gray8 => 1,
-         DIBitmap.EFormat.RGBA8 => 4,
-         _ => throw new BadCaseException (fmt)
-      };
 }
 #endregion

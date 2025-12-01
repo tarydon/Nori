@@ -222,7 +222,7 @@ class TMisc {
       new ParseException ("13e", typeof (double)).Message.Is ("Cannot convert '13e' to double");
       // Except
       string s = "";
-      try { Except.Incomplete ("Some"); } catch (Exception e) { s = e.Message; }
+      try { throw new IncompleteCodeException ("Some"); } catch (Exception e) { s = e.Message; }
       s.Is ("Incomplete code: Some");
    }
 

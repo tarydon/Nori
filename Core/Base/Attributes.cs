@@ -69,9 +69,7 @@ public class SingletonAttribute : Attribute;
 #endregion
 
 #region [Used] attribute ---------------------------------------------------------------------------
-/// <summary>
-/// Attach to a member to indicate that it is used (typically via reflection)
-/// </summary>
+/// <summary>Attach to a member to indicate that it is used (typically via reflection)</summary>
 [AttributeUsage (AttributeTargets.All), MeansImplicitUse]
 public sealed class UsedAttribute : Attribute;
 #endregion

@@ -245,7 +245,7 @@ public class UTFReader {
       sb.Append ($"At ({nLine},{nColumn})");
       if (mFile != null) sb.Append ($" of {mFile}");
       sb.Append ($": {s}");
-      Except.Parse (sb.ToString ());
+      throw new ParseException (sb.ToString ());
    }
 
    public override string ToString () {
