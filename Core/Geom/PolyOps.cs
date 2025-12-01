@@ -2,6 +2,9 @@
 // ╔═╦╦═╦╦╬╣ PolyOps.cs
 // ║║║║╬║╔╣║ Continuation of the Poly class, implements various operations
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
+using System.Net.NetworkInformation;
+using System.Transactions;
+
 namespace Nori;
 
 // This file contains a number of 'operations' on Poly.
@@ -661,6 +664,34 @@ public partial class Poly {
       // Done, close the poly if needed and return it
       if (IsClosed) pb.Close ();
       return pb.Build ();
+   }
+
+   /// <summary>Get sliced poly</summary>
+   /// <param name="startPolyLie">Poly start lie</param>
+   /// <param name="eLie">Poly end lie</param>
+   public Poly? Sliced (double startPolyLie, double endPolyLie) {
+      (int startN, int endN) = ((int)startPolyLie, (int)endPolyLie);
+      (double sLie, double eLie) = (startPolyLie - startN, endPolyLie - endN);
+      if (eLie.IsZero ()) { endN--; eLie = 1; }
+
+      System.Diagnostics.Debug.Assert (startPolyLie.EQ (startN + sLie) && endPolyLie.EQ (endN + eLie));
+
+      PolyBuilder pb = new ();
+      (bool hasArcs, int segCount) = (HasArcs, Count);
+      int lastN = (endPolyLie < startPolyLie) ? endN + segCount : endN; // Handles rollover
+      for (int i = startN; i <= lastN; i++) {
+         var N = i % segCount;
+         var pt = (i == startN) ? this[i].GetPointAt (sLie) : Pts[i];
+         if (hasArcs && i < Extra.Length) {
+            var extra = Extra[i];
+            if ((extra.Flags & EFlags.Arc) != 0) {
+               pb.Arc (pt, extra.Center, extra.Flags);
+               continue;
+            }
+         }
+         pb.Line (pt);
+      }
+      return pb.End (this[endN].GetPointAt (eLie));
    }
 
    /// <summary>Creates and returns a new reversed Poly of 'this'</summary>
