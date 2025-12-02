@@ -666,24 +666,22 @@ public partial class Poly {
       return pb.Build ();
    }
 
-   /// <summary>Get sliced poly</summary>
-   /// <param name="startPolyLie">Poly start lie</param>
-   /// <param name="eLie">Poly end lie</param>
-   public Poly? Sliced (double startPolyLie, double endPolyLie) {
-      (int startN, int endN) = ((int)startPolyLie, (int)endPolyLie);
-      (double sLie, double eLie) = (startPolyLie - startN, endPolyLie - endN);
+   /// <summary>Gets slice of the poly delimited by the specified range</summary>
+   public Poly Sliced (double sliceStartLie, double sliceEndLie) {
+      (int startN, int endN) = ((int)sliceStartLie, (int)sliceEndLie);
+      (double sLie, double eLie) = (sliceStartLie - startN, sliceEndLie - endN);
       if (eLie.IsZero ()) { endN--; eLie = 1; }
 
-      System.Diagnostics.Debug.Assert (startPolyLie.EQ (startN + sLie) && endPolyLie.EQ (endN + eLie));
+      System.Diagnostics.Debug.Assert (sliceStartLie.EQ (startN + sLie) && sliceEndLie.EQ (endN + eLie));
 
       PolyBuilder pb = new ();
       (bool hasArcs, int segCount) = (HasArcs, Count);
-      int lastN = (endPolyLie < startPolyLie) ? endN + segCount : endN; // Handles rollover
-      for (int i = startN; i <= lastN; i++) {
-         var N = i % segCount;
-         var pt = (i == startN) ? this[i].GetPointAt (sLie) : Pts[i];
-         if (hasArcs && i < Extra.Length) {
-            var extra = Extra[i];
+      int lastN = (sliceEndLie < sliceStartLie) ? endN + segCount : endN; // Handles rollover
+      for (int _i = startN; _i <= lastN; _i++) {
+         var N = _i % segCount;
+         var pt = (N == startN) ? this[startN].GetPointAt (sLie) : Pts[N];
+         if (hasArcs && N < Extra.Length) {
+            var extra = Extra[N];
             if ((extra.Flags & EFlags.Arc) != 0) {
                pb.Arc (pt, extra.Center, extra.Flags);
                continue;
@@ -692,6 +690,19 @@ public partial class Poly {
          pb.Line (pt);
       }
       return pb.End (this[endN].GetPointAt (eLie));
+   }
+
+   /// <summary>Trims out the specified range and returns the rest</summary>
+   public Poly[] Trimmed (double trimStartLie, double trimEndLie) {
+      if (IsClosed)
+         return [Sliced (trimEndLie, trimStartLie)];
+      // Open Poly may result in [0..2] trimmed Polys
+      List<Poly> trimmedPolys = [];
+      if (!trimStartLie.IsZero ())
+         trimmedPolys.Add (Sliced (0, trimStartLie));
+      if (!trimEndLie.EQ (Count))
+         trimmedPolys.Add (Sliced (trimEndLie, Count));
+      return [.. trimmedPolys];
    }
 
    /// <summary>Creates and returns a new reversed Poly of 'this'</summary>
