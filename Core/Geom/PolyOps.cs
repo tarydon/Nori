@@ -2,9 +2,6 @@
 // ╔═╦╦═╦╦╬╣ PolyOps.cs
 // ║║║║╬║╔╣║ Continuation of the Poly class, implements various operations
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
-using System.Net.NetworkInformation;
-using System.Transactions;
-
 namespace Nori;
 
 // This file contains a number of 'operations' on Poly.
