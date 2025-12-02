@@ -26,7 +26,6 @@ class RobotScene : Scene3 {
       BgrdColor = Color4.Gray (96);
       Bound = new Bound3 (-1200, -1200, 0, 1200, 1200, 1500);
       Root = new GroupVN ([robot, gripper, TraceVN.It]);
-      TraceVN.TextColor = Color4.Yellow;
    }
 
    public void CreateUI (UIElementCollection ui) {

@@ -15,7 +15,6 @@ class STPScene : Scene3 {
       BgrdColor = Color4.Gray (96);
       Bound = mModel.Bound;
       Root = new GroupVN ([new Model3VN (mModel), TraceVN.It]);
-      TraceVN.TextColor = Color4.Yellow;
    }
    Model3 mModel;
 

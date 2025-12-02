@@ -52,7 +52,7 @@ class E2BendlineVN (E2Bendline mBend) : Ent2VN (mBend) {
       text = mBend.Angle > 0 ? $"+{text}\u00b0" : $"{text}\u00b0";
       for (int i = 0; i < mBend.Pts.Length; i += 2) {
          Point2 pt = mBend.Pts[i].Midpoint (mBend.Pts[i + 1]);
-         Lux.Text2D (text, pt, ETextAlign.MidCenter, Vec2S.Zero);
+         Lux.Text2D (text, pt, ETextAlign.MidCenter, new (0, 0));
       }
    }
 }

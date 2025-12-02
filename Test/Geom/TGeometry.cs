@@ -238,17 +238,11 @@ class GPUTypesTests {
    void Test1 () {
       Vec2F a = new (3.654321f, 2.2f); a.Is ("<3.65432,2.2>");
       Vec2F b = (Vec2F)new Vector2 (1, 2); b.Is ("<1,2>");
-      Vec2F a1 = new (3.654321, 2.2); a1.Is ("<3.65432,2.2>");
-      Vector2 c = b; c.Is ("<1,2>");
-      Vec2F.Zero.Is ("<0,0>");
       a.EQ (new (3.65432f, 2.2f)).IsTrue ();
       a.EQ (new (3.6543f, 2.2f)).IsFalse ();
 
       Vec3F d = new (3.654321f, 2.2f, 1.1f); d.Is ("<3.65432,2.2,1.1>");
-      Vec3F d1 = new (3.654321, 2.2, 1.1); d1.Is ("<3.65432,2.2,1.1>");
       Vec3F e = (Vec3F)new Vector3 (1, 2, 3); e.Is ("<1,2,3>");
-      Vector3 f = e; f.Is ("<1,2,3>");
-      Vec3F.Zero.Is ("<0,0,0>");
       d.EQ (new (3.65432f, 2.2f, 1.1f)).IsTrue ();
       d.EQ (new (3.6543f, 2.2f, 1.1f)).IsFalse ();
 
@@ -260,11 +254,6 @@ class GPUTypesTests {
 
       Vec4F h = new (1.1, 2.2, 3.3, 4.4); h.EQ (h).IsTrue ();
       Vec4F h2 = new (1.1, 2.2, 3.3, 4.5); h.EQ (h2).IsFalse ();
-      h.CompareTo (h2).Is (-1);
-      h.CompareTo (new (1.2, 2.2, 3.3, 4.4)).Is (-1);
-      h.CompareTo (new (1.1, 2.3, 3.3, 4.4)).Is (-1);
-      h.CompareTo (new (1.1, 2.2, 3.2, 4.4)).Is (1);
-      h.CompareTo (new (1.1, 2.2, 3.3, 4.3)).Is (1);
 
       Mat4F m0 = new (11, 12, 13, 21, 22, 23, 31, 32, 33, 1, 2, 3);
       m0.Is ("[11,12,13,0, 21,22,23,0, 31,32,33,0, 1,2,3,1]");
