@@ -10,82 +10,36 @@ using WControl = System.Windows.Controls.UserControl;
 namespace Nori;
 
 public static class WinGL {
-   public static WControl Create (Action onReady, Action<int, int> onPaint) {
+   public static WControl Create (Action onReady, Action<int, int> onPaint, bool createHost) {
+      if (createHost) {
+         // If this is specified, we must also create a floating 'host window' to house
+         // the LuxPanel. This is used when Flux is running in some console mode, but still
+         // has to produce OpenGL images (for NC code, thumbnails etc)
+         if (sHost == null) {
+            sHost = new Window {
+               Title = "Snapshot", ShowInTaskbar = false, ShowActivated = false,
+               WindowStyle = WindowStyle.ToolWindow, ResizeMode = ResizeMode.NoResize,
+               Width = 500, Height = 500, Top = 0, Left = -5000
+            };
+            sHost.Show ();
+            sHost.Content = Panel.It;
+            while (!mReady) sHost.Dispatcher.Invoke (DispatcherPriority.Background, () => { });
+         }
+      }
       OnReady = onReady; OnPaint = onPaint;
       return Panel.It;
    }
 
    internal static Action<int, int>? OnPaint;
    internal static Action? OnReady;
+   internal static bool mReady;
+   static Window? sHost;
 }
 
 #region class Panel --------------------------------------------------------------------------------
 /// <summary>A WPF UserControl used that houses an OpenGL rendering surface (used to display all GL content)</summary>
-class Panel : System.Windows.Controls.UserControl {
+class Panel : WControl {
    // Interface ----------------------------------------------------------------
-   // Called from Lux when we need to start rendering a frame.
-   // Note that a viewport size is passed in, since when we are rendering to an Image, we
-   // could be rendering a size that is different from the panel size. What we do here depends
-   // on the render target, but in all cases, we have to make our display surface the 'current'
-   // GL context
-   public void BeginRender (Vec2S viewport, ETarget target) {
-      if (mSurface == null) return;
-      mSurface.BeginRender (viewport);
-      if (target is ETarget.Image or ETarget.Pick) {
-         mFBViewport = viewport;
-         if (mFrameBuffer == 0) {
-            mFrameBuffer = GL.GenFrameBuffer ();
-            mColorBuffer = GL.GenRenderBuffer (); mDepthBuffer = GL.GenRenderBuffer ();
-         }
-         GL.BindFrameBuffer (EFrameBufferTarget.DrawAndRead, mFrameBuffer);
-         if (viewport.X > mFBSize.X || viewport.Y > mFBSize.Y) {
-            mFBSize = viewport;
-            GL.BindRenderBuffer (ERenderBufferTarget.RenderBuffer, mColorBuffer);
-            GL.RenderBufferStorage (ERenderBufferFormat.RGBA8, viewport.X, viewport.Y);
-            GL.BindRenderBuffer (ERenderBufferTarget.RenderBuffer, mDepthBuffer);
-            GL.RenderBufferStorage (ERenderBufferFormat.Depth24Stencil8, viewport.X, viewport.Y);
-            GL.FrameBufferRenderBuffer (EFrameBufferTarget.DrawAndRead, EFrameBufferAttachment.Color0, mColorBuffer);
-            GL.FrameBufferRenderBuffer (EFrameBufferTarget.DrawAndRead, EFrameBufferAttachment.DepthStencil, mDepthBuffer);
-            if (GL.CheckFrameBufferStatus (EFrameBufferTarget.Draw) != EFrameBufferStatus.Complete)
-               throw new NotImplementedException ();
-         }
-      } else
-         GL.BindFrameBuffer (EFrameBufferTarget.DrawAndRead, 0);
-   }
-
-   // Called when the scene is finished rendering, and we need to 'show' it.
-   // What this returns depends on the render target
-   public object? EndRender (ETarget target, DIBitmap.EFormat fmt) {
-      switch (target) {
-         case ETarget.Screen:
-            mSurface?.EndRender ();
-            break;
-         case ETarget.Image:
-            GL.Finish ();
-            int x = mFBViewport.X, y = mFBViewport.Y, bpp = fmt.BytesPerPixel ();
-            var pxfmt = fmt switch {
-               DIBitmap.EFormat.RGBA8 => EPixelFormat.RGBA,
-               DIBitmap.EFormat.RGB8 => EPixelFormat.RGB,
-               DIBitmap.EFormat.Gray8 => EPixelFormat.Red,
-               _ => throw new BadCaseException (fmt)
-            };
-            GL.PixelStore (EPixelStoreParam.PackAlignment, 4);
-            byte[] data = new byte[bpp * x * y];
-            GL.ReadPixels (0, 0, x, y, pxfmt, EPixelType.UByte, data);
-            return new DIBitmap (x, y, fmt, data);
-         case ETarget.Pick:
-            GL.Finish ();
-            int size = (x = mFBViewport.X) * (y = mFBViewport.Y);
-            if (size > mPickDepth.Length)
-               (mPickPixel, mPickDepth) = (new byte[size * 4], new float[size]);
-            GL.PixelStore (EPixelStoreParam.PackAlignment, 4);
-            GL.ReadPixels (0, 0, x, y, EPixelFormat.BGRA, EPixelType.UByte, mPickPixel);
-            GL.ReadPixels (0, 0, x, y, EPixelFormat.DepthComponent, EPixelType.Float, mPickDepth);
-            return (mPickPixel, mPickDepth);
-      }
-      return null;
-   }
-
    // The Panel singleton (only one GL context, so only one Panel, one Surface)
    public static Panel It => mIt ??= new ();
    internal static Panel? mIt;
@@ -132,19 +86,6 @@ class Panel : System.Windows.Controls.UserControl {
       (Content as WindowsFormsHost)?.Dispose (); Content = null;
       mIt = null; HW.Panel = null;
    }
-
-   // Private data -------------------------------------------------------------
-   Vec2S mFBViewport;            // Viewport size, when rendering to a frame-buffer
-   HFrameBuffer mFrameBuffer;    // Frame-buffer for image rendering
-   HRenderBuffer mColorBuffer, mDepthBuffer;    // Render buffers for the same
-   Vec2S mFBSize;                // The size of the frame-buffer
-   float[] mPickDepth = [];      // The depth buffer, obtained during a Pick render
-   // This buffer contains the raw pixel-data obtained from a pick operation.
-   // Since the models are drawn in 'false-color' mode during a pick operation, this buffer
-   // effectively contains indices into the VModels list. Some finagling is required, such
-   // as discarding the least signifcant bits of each color component etc (see the code in
-   // Lux.Pick which reads and interprets these buffers)
-   byte[] mPickPixel = [];
 }
 #endregion
 
@@ -157,15 +98,6 @@ class Surface : UserControl {
       (DoubleBuffered, Name, AutoScaleMode) = (false, "PixSurface", AutoScaleMode.None);
       foreach (var style in new[] { Opaque, UserPaint, AllPaintingInWmPaint }) SetStyle (style, true);
       foreach (var style in new[] { OptimizedDoubleBuffer, Selectable }) SetStyle (style, false);
-   }
-
-   public void BeginRender (Vec2S viewport) {
-      GL.MakeCurrent (mDC, mGLRC);
-      GL.Viewport (0, 0, viewport.X, viewport.Y);
-   }
-
-   public void EndRender () {
-      GL.SwapBuffers (mDC);
    }
 
    // Overrides ----------------------------------------------------------------
@@ -207,9 +139,8 @@ class Surface : UserControl {
          }
       }
       Lib.Tessellate = Tess2D.Process;
+      WinGL.mReady = true; 
       WinGL.OnReady?.Invoke ();
-      //Lux.mReady = true;             // REMOVETHIS
-      //Lux.mOnReady.OnNext (0);
    }
 
    /// <summary>An 'empty' cursor</summary>
@@ -225,8 +156,10 @@ class Surface : UserControl {
 
    // Override OnPaint to call back to PX.Render, where our actual paint code resides
    protected override void OnPaint (PaintEventArgs e) {
+      GL.MakeCurrent (mDC, mGLRC);
+      GL.Viewport (0, 0, Width, Height);
       WinGL.OnPaint?.Invoke (Width, Height);
-      // Lux.Render (Lux.UIScene, new (Width, Height), ETarget.Screen, DIBitmap.EFormat.Unknown); // REMOVETHIS
+      GL.SwapBuffers (mDC);
    }
 
    // Private data -------------------------------------------------------------

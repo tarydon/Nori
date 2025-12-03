@@ -13,4 +13,8 @@
     <ProjectReference Include="..\WGL\Nori.WGL.csproj" />
   </ItemGroup>
 
+	<ItemGroup>
+		<ProjectReference Include="..\Tools\Generate\Nori.Gen.csproj" ReferenceOutputAssembly="false" OutputItemType="Analyzer" />
+	</ItemGroup>
+
 </Project>

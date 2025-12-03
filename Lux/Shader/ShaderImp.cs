@@ -2,6 +2,8 @@
 // ╔═╦╦═╦╦╬╣ ShaderImp.cs
 // ║║║║╬║╔╣║ ShaderImp is the low level wrapper around an OpenGL shader pipeline
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
+using System.Runtime.CompilerServices;
+using System.Text;
 namespace Nori;
 
 #region class ShaderImp ----------------------------------------------------------------------------

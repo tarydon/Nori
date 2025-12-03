@@ -371,7 +371,7 @@ static public unsafe class GL {
 
    [DllImport (OPENGL32, EntryPoint = "glBegin")] public static extern void Begin (EMode mode);
    [DllImport (OPENGL32, EntryPoint = "glBindTexture")] public static extern void BindTexture (ETexTarget target, HTexture id);
-   [DllImport (OPENGL32, EntryPoint = "glBlendFunc")] internal static extern void BlendFunc (EBlendFactor sfactor, EBlendFactor dfactor);
+   [DllImport (OPENGL32, EntryPoint = "glBlendFunc")] public static extern void BlendFunc (EBlendFactor sfactor, EBlendFactor dfactor);
    [DllImport (OPENGL32, EntryPoint = "glClear")] public static extern void Clear (EBuffer mask);
    [DllImport (OPENGL32, EntryPoint = "glClearColor")] public static extern void ClearColor (float red, float green, float blue, float alpha);
    [DllImport (OPENGL32, EntryPoint = "glColor3f")] public static extern void Color (float red, float green, float blue);
@@ -389,7 +389,7 @@ static public unsafe class GL {
    [DllImport (OPENGL32, EntryPoint = "wglGetProcAddress")] public static extern Ptr GetProcAddress (string name);
    [DllImport (OPENGL32, EntryPoint = "wglMakeCurrent")] internal static extern int MakeCurrent (HDC hdc, HGLRC hrc);
    [DllImport (OPENGL32, EntryPoint = "glPixelStorei")] public static extern void PixelStore (EPixelStoreParam pname, int param);
-   [DllImport (OPENGL32, EntryPoint = "glPolygonOffset")] internal static extern void PolygonOffset (float factor, float units);
+   [DllImport (OPENGL32, EntryPoint = "glPolygonOffset")] public static extern void PolygonOffset (float factor, float units);
    [DllImport (OPENGL32, EntryPoint = "glTexImage2D")] public static extern void TexImage2D (ETexTarget target, int level, EPixelInternalFormat publicformat, int width, int height, int border, EPixelFormat format, EPixelType type, void* pixels);
    public static void TexImage2D (ETexTarget target, EPixelInternalFormat infmt, int width, int height, EPixelFormat fmt, EPixelType type, byte[] data) 
       { fixed (byte* p = &data[0]) TexImage2D (target, 0, infmt, width, height, 0, fmt, type, p); }

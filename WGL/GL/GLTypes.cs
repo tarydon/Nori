@@ -15,7 +15,7 @@ public enum EBufferTarget : uint { Array = 0x8892, ElementArray = 0x8893 }
 public enum EBufferUsage : uint { StreamDraw = 0x88E0, StaticDraw = 0x88E4 }
 
 // Blend factors used for BlendFunc
-enum EBlendFactor : uint { Zero = 0, One = 1, SrcAlpha = 770, OneMinusSrcAlpha = 771 }
+public enum EBlendFactor : uint { Zero = 0, One = 1, SrcAlpha = 770, OneMinusSrcAlpha = 771 }
 
 // Various capabilities we can Enable / Disable
 public enum ECap : uint { 
