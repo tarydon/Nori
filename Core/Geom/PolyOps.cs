@@ -665,18 +665,21 @@ public partial class Poly {
 
    /// <summary>Gets slice of the poly delimited by the specified range</summary>
    public Poly Sliced (double sliceStartLie, double sliceEndLie) {
+      if (IsCircle) {
+         var seg = this[0];
+         return Poly.Arc (seg.GetPointAt (sliceStartLie), seg.GetSlopeAt (sliceStartLie), seg.GetPointAt (sliceEndLie));
+      }
+      (bool hasArcs, int segCount, bool closed) = (HasArcs, Count, IsClosed); // Cache
       (int startN, int endN) = ((int)sliceStartLie, (int)sliceEndLie);
       (double sLie, double eLie) = (sliceStartLie - startN, sliceEndLie - endN);
-      if (eLie.IsZero ()) { endN--; eLie = 1; }
-
-      System.Diagnostics.Debug.Assert (sliceStartLie.EQ (startN + sLie) && sliceEndLie.EQ (endN + eLie));
+      if (startN == segCount) { startN = 0; sliceStartLie = 0; } // sliceStartLie is reset to 0 to indicate no-rollover case!
+      if (sliceStartLie.EQ (sliceEndLie) && closed) return this;
 
       PolyBuilder pb = new ();
-      (bool hasArcs, int segCount) = (HasArcs, Count);
       int lastN = (sliceEndLie < sliceStartLie) ? endN + segCount : endN; // Handles rollover
-      for (int _i = startN; _i <= lastN; _i++) {
-         var N = _i % segCount;
-         var pt = (N == startN) ? this[startN].GetPointAt (sLie) : Pts[N];
+      for (int _segN = startN; _segN <= lastN; _segN++) {
+         var N = closed ? _segN % segCount : _segN;
+         var pt = (_segN == startN) ? this[startN].GetPointAt (sLie) : Pts[N]; // First lie is computed lie...
          if (hasArcs && N < Extra.Length) {
             var extra = Extra[N];
             if ((extra.Flags & EFlags.Arc) != 0) {
@@ -686,7 +689,7 @@ public partial class Poly {
          }
          pb.Line (pt);
       }
-      return pb.End (this[endN].GetPointAt (eLie));
+      return eLie.IsZero () ? pb.Build () : pb.End (this[endN].GetPointAt (eLie));
    }
 
    /// <summary>Trims out the specified range and returns the rest</summary>
