@@ -34,24 +34,25 @@ public class ZipStmLocator (string prefix, string zipFile) : IStmLocator {
    }
 
    ZipArchive? mArchive;
+}
+#endregion
 
-   // Nested -------------------------------------------------------------------
-   // Stream decorator to deal with DeflateStream's unsupported Length property!
-   class ZipReadStream : Stream {
-      public ZipReadStream (Stream stm, long length) => (mStm, mLength) = (stm, length);
-      readonly Stream mStm;
-      readonly long mLength;
+#region class ZipReadStream ------------------------------------------------------------------------
+/// <summary>Stream implementation to wrap around a Zip archive</summary>
+public class ZipReadStream : Stream {
+   public ZipReadStream (Stream stm, long length) => (mStm, mLength) = (stm, length);
+   readonly Stream mStm;
+   readonly long mLength;
 
-      public override bool CanRead => mStm.CanRead;
-      public override bool CanSeek => mStm.CanSeek;
-      public override bool CanWrite => false;
-      public override long Length => mLength;
-      public override long Position { get => mStm.Position; set => mStm.Position = value; }
-      public override void Flush () => throw new NotSupportedException ();
-      public override int Read (byte[] buffer, int offset, int count) => mStm.Read (buffer, offset, count);
-      public override long Seek (long offset, SeekOrigin origin) => mStm.Seek (offset, origin);
-      public override void SetLength (long value) => throw new NotSupportedException ();
-      public override void Write (byte[] buffer, int offset, int count) => throw new NotSupportedException ();
-   }
+   public override bool CanRead => mStm.CanRead;
+   public override bool CanSeek => mStm.CanSeek;
+   public override bool CanWrite => false;
+   public override long Length => mLength;
+   public override long Position { get => mStm.Position; set => mStm.Position = value; }
+   public override void Flush () => throw new NotSupportedException ();
+   public override int Read (byte[] buffer, int offset, int count) => mStm.Read (buffer, offset, count);
+   public override long Seek (long offset, SeekOrigin origin) => mStm.Seek (offset, origin);
+   public override void SetLength (long value) => throw new NotSupportedException ();
+   public override void Write (byte[] buffer, int offset, int count) => throw new NotSupportedException ();
 }
 #endregion

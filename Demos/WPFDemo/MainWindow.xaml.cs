@@ -2,11 +2,8 @@
 // ╔═╦╦═╦╦╬╣ MainWindow.xaml.cs
 // ║║║║╬║╔╣║ Main window of WPF demo application (various scenes implemented)
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
-using System.Diagnostics;
 using System.Reactive.Linq;
-using System.Text;
 using System.Windows;
-using System.Windows.Threading;
 using Nori;
 namespace WPFDemo;
 
@@ -22,6 +19,7 @@ public partial class MainWindow : Window {
    void OnLuxReady (int _) {
       var source = PresentationSource.FromVisual (this);
       if (source != null) Lux.DPIScale = (float)source.CompositionTarget.TransformToDevice.M11;
+      TraceVN.TextColor = Color4.Yellow;
       new SceneManipulator ();
    }
 
@@ -35,11 +33,12 @@ public partial class MainWindow : Window {
    void RobotDemo (object sender, RoutedEventArgs e) => Display (new RobotScene ());
    void STPDemo (object sender, RoutedEventArgs e) => Display (new STPScene ());
    void StreamDemo (object sender, RoutedEventArgs e) => Display (new StreamDemoScene ());
+   void AABBTreeDemo (object sender, RoutedEventArgs e) => Display (new AABBTreeDemo ());
 
    void Display (Scene scene) {
       mSettings.Children.Clear ();
       Lux.UIScene = scene;
       if (scene is RobotScene rs) rs.CreateUI (mSettings.Children);
-      if (scene is STPScene) Lux.BackFacesPink = true; 
+      if (scene is STPScene) Lux.BackFacesPink = true;
    }
 }

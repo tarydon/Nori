@@ -211,7 +211,7 @@ public static partial class Lux {
    public static void Lines (ReadOnlySpan<Vec3F> pts)
       => Line3DShader.It.Draw (pts);
 
-   /// <summary>Draws a CMesh using one of the shade-modes</summary>
+   /// <summary>Draws a Mesh3 using one of the shade-modes</summary>
    /// The shade modes are
    ///   0 - Flat shading
    ///   1 - Gourad shading

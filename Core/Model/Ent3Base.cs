@@ -131,7 +131,7 @@ public abstract class E3ParaSurface : E3Surface {
       List<int> triangles = [];
       for (int i = 0; i < uvs.Count; i++) {
          Point2 uv = uvs[i];
-         nodes.Add (new (uv, (Vec3F)pts[i], (Vec3H)EvalNormal (uv)));
+         nodes.Add (new (uv, (Point3f)pts[i], (Vec3H)EvalNormal (uv)));
       }
       Dictionary<Point2, int> cache = new (new PointComparer (1e-6));
       for (int i = 0; i < tris.Count; i += 3)
@@ -176,18 +176,18 @@ public abstract class E3ParaSurface : E3Surface {
 
       int AddNode (Point2 uv, Point3 pt) {
          if (cache.TryGetValue (uv, out int n)) return n;
-         nodes.Add (new (uv, (Vec3F)pt, (Vec3H)EvalNormal (uv)));
+         nodes.Add (new (uv, (Point3f)pt, (Vec3H)EvalNormal (uv)));
          cache.Add (uv, n = nodes.Count - 1);
          return n;
       }
 
-      static double Dist (Point3 pt, Vec3F a, Vec3F b)
+      static double Dist (Point3 pt, Point3f a, Point3f b)
          => pt.DistToLine ((Point3)a, (Point3)b);
    }
 
-   struct Node (Point2 uv, Vec3F pos, Vec3H normal) {
+   struct Node (Point2 uv, Point3f pos, Vec3H normal) {
       public readonly Point2 UV = uv;
-      public readonly Vec3F Pos = pos;
+      public readonly Point3f Pos = pos;
       public readonly Vec3H Normal = normal;
    }
 }
