@@ -12,12 +12,12 @@ namespace Nori;
 /// points, and also weighting some types of snaps like 'endpoint' over other types like 'on').
 ///
 /// This also maintains some state - whenever we have provided a snap like 'endpoint',
-/// 'midpoint' or 'interesection', that point is remembered as an 'anchor'. (We maintain
+/// 'midpoint' or 'intersection', that point is remembered as an 'anchor'. (We maintain
 /// a few anchors, and discard the oldest ones).
 ///
 /// From each anchor, horizontal and vertical construction lines are implied and whenever
 /// the mouse is close to them they are drawn, and can be used for an 'on' snap. Intersections
-/// betweeen construction lines, or between construction lines and geometry are also snap points
+/// between construction lines, or between construction lines and geometry are also snap points
 /// that are generated.
 ///
 /// When we are at the 'endpoint' of a line or arc, then there is also an implied construction
@@ -72,6 +72,8 @@ public class DwgSnap {
    /// <summary>The set of construction lines to be drawn (these are active construction lines the mouse is close to)</summary>
    public IEnumerable<(Point2 Pt, double Angle)> Lines 
       => mVisible.Select(con => (con.Anchor, con.Slope));
+
+   public Point2 LastClickedPt = Point2.Nil;
 
    /// <summary>The recent snap point that we computed</summary>
    public Point2 PtSnap => mPtSnap;
@@ -191,6 +193,11 @@ public class DwgSnap {
    // - mCons is updated with one or more additional construction lines (if we found a snap, that
    //   snap point is used as an anchor for additional construction lines)
    bool HardSnaps () {
+      // Firstly, consider the last clicked point as a hard snap. So that, when the mouse position
+      // aligns horizontally or vertically w.r.t to this point, construction line will be formed
+      // even when the entity is under creation.
+      Check (LastClickedPt, ESnap.On);
+
       mSegs.Clear ();
       var (ptRaw, aperture) = (mptRaw, mAperture);
       foreach (var ent in mDwg.Ents) {
@@ -251,8 +258,7 @@ public class DwgSnap {
       if (mSnap != ESnap.None) {
          AddConsLine (mPtSnap, [mTangent, mTangent + Lib.HalfPI, 0, Lib.HalfPI, mTangent2, mTangent2 + Lib.HalfPI]);
          return true;
-      } else
-         return false;
+      } else return false;
    }
    List<Seg> mSegs = [];         // List of segs we're close to
 
