@@ -2,6 +2,8 @@
 // ╔═╦╦═╦╦╬╣ VNode.cs
 // ║║║║╬║╔╣║ Implements the VNode class (base class for all visual nodes)
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
+using System.Reflection;
+
 namespace Nori;
 
 #region class VNode --------------------------------------------------------------------------------
@@ -17,16 +19,16 @@ namespace Nori;
 /// - A VNode can have zero or more _child_ VNodes, which are enumerated using GetChild()
 /// - It is possible for a VNode to have multiple parents (it can appear multiple times in
 ///   the scene graph).
-public class VNode {
+public abstract class VNode {
    // Constructors -------------------------------------------------------------
    /// <summary>Default VNode constructor</summary>
-   public VNode () { }
+   protected VNode () { }
    /// <summary>Constructor that allows you to specify which 'object' a VNode is rendering</summary>
    /// This should be used where there is a natural domain-space object that this
    /// VNode is rendering. During a 'pick' operation, this object (if one is bound to the VNode)
    /// is returned, so Lux.Pick returns domain-space objects, rather than internal rendering
    /// objects.
-   public VNode (object obj) => Obj = obj;
+   protected VNode (object obj) => Obj = obj;
 
    // Properties ---------------------------------------------------------------
    /// <summary>The set of render-batches for this VNode, along with the corresponding uniforms</summary>
