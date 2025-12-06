@@ -102,7 +102,7 @@ abstract class Shader {
 
    // Private data -------------------------------------------------------------
    // The list of all shaders - Shader.Idx indexes into this list
-   protected static List<Shader> mAll = [null];
+   protected static List<Shader> mAll = [null!];
 }
 #endregion
 
