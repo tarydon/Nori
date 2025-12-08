@@ -120,6 +120,8 @@ public static partial class Lux {
       int vnodeId = r + (g << 6) + (b << 12);
       return VNode.SafeGet (vnodeId);
    }
+
+   public static bool Ready => mReady;
    static bool mReady;
 
    /// <summary>Converts a pixel coordinate to world coordinates</summary>
