@@ -2,7 +2,9 @@
 // ╔═╦╦═╦╦╬╣ Lux.cs
 // ║║║║╬║╔╣║ The Lux class: public interface to the Lux rendering engine
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
+using System.Diagnostics;
 using System.Reactive.Subjects;
+using System.Reflection;
 using System.Windows.Threading;
 namespace Nori;
 
@@ -32,11 +34,7 @@ public static partial class Lux {
    /// <summary>Sets whether the cursor is visible or not when it is over the panel</summary>
    /// If this is set to false, then the current scene must 'paint' a cursor that follows
    /// the mouse movement
-   public static bool CursorVisible { set => Panel.CursorVisible = value; }
-
-   /// <summary>Read this property to know if Lux is ready (panel created, GL surface initialized)</summary>
-   public static bool Ready => mReady;
-   internal static bool mReady;
+   public static bool CursorVisible { set => HW.CursorVisible = value; }
 
    /// <summary>The current scene that is bound to the visible viewport</summary>
    public static Scene? UIScene {
@@ -45,7 +43,7 @@ public static partial class Lux {
          mUIScene?.Detach ();
          BackFacesPink = false;
          mUIScene = value; mViewBound.OnNext (0); Redraw ();
-         Panel.CursorVisible = mUIScene?.CursorVisible ?? true;
+         HW.CursorVisible = mUIScene?.CursorVisible ?? true;
       }
    }
    static Scene? mUIScene;
@@ -71,27 +69,12 @@ public static partial class Lux {
 
    // Methods ------------------------------------------------------------------
    /// <summary>Creates the Lux rendering panel</summary>
-   public static UIElement CreatePanel (bool createHost = false) {
-      if (createHost) {
-         // If this is specified, we must also create a floating 'host window' to house
-         // the LuxPanel. This is used when Flux is running in some console mode, but still
-         // has to produce OpenGL images (for NC code, thumbnails etc)
-         if (sHost == null) {
-            sHost = new Window {
-               Title = "Snapshot", ShowInTaskbar = false, ShowActivated = false,
-               WindowStyle = WindowStyle.ToolWindow, ResizeMode = ResizeMode.NoResize,
-               Width = 500, Height = 500, Top = 0, Left = -5000
-            };
-            sHost.Show ();
-            sHost.Content = Panel.It;
-            while (!mReady) sHost.Dispatcher.Invoke (DispatcherPriority.Background, () => { });
-         }
-      }
-      VNode.RegisterAssembly (Assembly.GetExecutingAssembly ());
-      mFPSReportTS = mLastFrameTS = DateTime.Now;
-      return Panel.It;
+   public static object CreatePanel (bool createHost = false) {
+      return WinGL.Create (OnReady, OnPaint, createHost);
+
+      static void OnReady () { mReady = true; mOnReady.OnNext (0); }
+      static void OnPaint (int x, int y) => Render (UIScene, new Vec2S (x, y), ETarget.Screen, DIBitmap.EFormat.Unknown);
    }
-   static Window? sHost;
 
    public static void DumpStats () {
       Debug.Print ("Buffers:");
@@ -137,8 +120,9 @@ public static partial class Lux {
       int vnodeId = r + (g << 6) + (b << 12);
       return VNode.SafeGet (vnodeId);
    }
-   static byte[] mPickPixel = [];
-   static float[] mPickDepth = [];
+
+   public static bool Ready => mReady;
+   static bool mReady;
 
    /// <summary>Converts a pixel coordinate to world coordinates</summary>
    public static Point3 PixelToWorld (Vec2S pix) {
@@ -155,17 +139,16 @@ public static partial class Lux {
    /// <summary>Stub for the Render method that is called when each frame has to be painted</summary>
    internal static object? Render (Scene? scene, Vec2S viewport, ETarget target, DIBitmap.EFormat fmt) {
       mcFrames++; mcFPSFrames++;
-      var panel = Panel.It;
       mIsPicking = target == ETarget.Pick;
       mRendering = true;
-      panel.BeginRender (viewport, target);
+      BeginRender (viewport, target);
       StartFrame (viewport);
       Color4 bgrdColor = mIsPicking ? Color4.White : (scene?.BgrdColor ?? Color4.Gray (96));
       GLState.StartFrame (viewport, bgrdColor);
       RBatch.StartFrame ();
       Shader.StartFrame ();
       scene?.Render (viewport);
-      object? obj = panel.EndRender (target, fmt);
+      object? obj = EndRender (target, fmt);
 
       // Various post-processing after frame render
       // Issue stats, and keep 'continuous render' loop going
@@ -200,8 +183,70 @@ public static partial class Lux {
    static int mcFPSFrames;          // Frames rendered since that time
    static bool mRendering;          // Currently rendering a frame
 
+   static void BeginRender (Vec2S viewport, ETarget target) {
+      if (target is ETarget.Image or ETarget.Pick) {
+         mFBViewport = viewport;
+         if (mFrameBuffer == 0) {
+            mFrameBuffer = GL.GenFrameBuffer ();
+            mColorBuffer = GL.GenRenderBuffer (); mDepthBuffer = GL.GenRenderBuffer ();
+         }
+         GL.BindFrameBuffer (EFrameBufferTarget.DrawAndRead, mFrameBuffer);
+         if (viewport.X > mFBSize.X || viewport.Y > mFBSize.Y) {
+            mFBSize = viewport;
+            GL.BindRenderBuffer (ERenderBufferTarget.RenderBuffer, mColorBuffer);
+            GL.RenderBufferStorage (ERenderBufferFormat.RGBA8, viewport.X, viewport.Y);
+            GL.BindRenderBuffer (ERenderBufferTarget.RenderBuffer, mDepthBuffer);
+            GL.RenderBufferStorage (ERenderBufferFormat.Depth24Stencil8, viewport.X, viewport.Y);
+            GL.FrameBufferRenderBuffer (EFrameBufferTarget.DrawAndRead, EFrameBufferAttachment.Color0, mColorBuffer);
+            GL.FrameBufferRenderBuffer (EFrameBufferTarget.DrawAndRead, EFrameBufferAttachment.DepthStencil, mDepthBuffer);
+            if (GL.CheckFrameBufferStatus (EFrameBufferTarget.Draw) != EFrameBufferStatus.Complete)
+               throw new NotImplementedException ();
+         }
+      } else
+         GL.BindFrameBuffer (EFrameBufferTarget.DrawAndRead, 0);
+   }
+   static Vec2S mFBViewport;            // Viewport size, when rendering to a frame-buffer
+   static HFrameBuffer mFrameBuffer;    // Frame-buffer for image rendering
+   static HRenderBuffer mColorBuffer, mDepthBuffer;    // Render buffers for the same
+   static Vec2S mFBSize;                // The size of the frame-buffer
+   static float[] mPickDepth = [];      // The depth buffer, obtained during a Pick render
+   // This buffer contains the raw pixel-data obtained from a pick operation.
+   // Since the models are drawn in 'false-color' mode during a pick operation, this buffer
+   // effectively contains indices into the VModels list. Some finagling is required, such
+   // as discarding the least signifcant bits of each color component etc (see the code in
+   // Lux.Pick which reads and interprets these buffers)
+   static byte[] mPickPixel = [];
+
+   static object? EndRender (ETarget target, DIBitmap.EFormat fmt) {
+      switch (target) {
+         case ETarget.Image:
+            GL.Finish ();
+            int x = mFBViewport.X, y = mFBViewport.Y, bpp = fmt.BytesPerPixel ();
+            var pxfmt = fmt switch {
+               DIBitmap.EFormat.RGBA8 => EPixelFormat.RGBA,
+               DIBitmap.EFormat.RGB8 => EPixelFormat.RGB,
+               DIBitmap.EFormat.Gray8 => EPixelFormat.Red,
+               _ => throw new BadCaseException (fmt)
+            };
+            GL.PixelStore (EPixelStoreParam.PackAlignment, 4);
+            byte[] data = new byte[bpp * x * y];
+            GL.ReadPixels (0, 0, x, y, pxfmt, EPixelType.UByte, data);
+            return new DIBitmap (x, y, fmt, data);
+         case ETarget.Pick:
+            GL.Finish ();
+            int size = (x = mFBViewport.X) * (y = mFBViewport.Y);
+            if (size > mPickDepth.Length)
+               (mPickPixel, mPickDepth) = (new byte[size * 4], new float[size]);
+            GL.PixelStore (EPixelStoreParam.PackAlignment, 4);
+            GL.ReadPixels (0, 0, x, y, EPixelFormat.BGRA, EPixelType.UByte, mPickPixel);
+            GL.ReadPixels (0, 0, x, y, EPixelFormat.DepthComponent, EPixelType.Float, mPickDepth);
+            return (mPickPixel, mPickDepth);
+      }
+      return null;
+   }
+
    /// <summary>Prompts the Lux system to redraw the screen (asynchronous)</summary>
-   public static void Redraw () => Panel.mIt?.Redraw ();
+   public static void Redraw () => HW.Redraw ();
 
    /// <summary>This is called to initiate 'continuous rendering'</summary>
    /// This function takes a 'callback' that will be invoked after each frame is rendered. Once

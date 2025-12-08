@@ -121,8 +121,8 @@ class BooleanOpsTests {
    }
 }
 
-[Fixture (26, "Poly trim and extend tests", "Geom.Poly")]
-class PolyTrimExtendTests {
+[Fixture (26, "Seg trim and extend tests", "Geom.Poly")]
+class SegTrimExtendTests {
    [Test (122, "Trim line seg")]
    void Test1 () {
       // Line seg in closed poly containing only lines
@@ -329,6 +329,185 @@ class PolyTrimExtendTests {
       resPoly.Count.Is (2);
       resPoly[0].Is ("M0,0H80Q60,40,2.590334");
       resPoly[1].Is ("M80,50H0");
+   }
+}
+
+[Fixture (30, "Poly slice and trim tests", "Geom.Poly")]
+class PolyTrimSliceTests {
+   [Test (143, "Single line poly slice/trim tests")]
+   void Test1 () {
+      Poly line = Poly.Parse ("M10,10H110");
+
+      {  // Slice/trim within the poly
+         (double sLie, double eLie) = (0.1, 0.9);
+
+         Poly slice = line.Sliced (sLie, eLie);
+         slice.Is ("M20,10H100");
+
+         var trims = line.Trimmed (sLie, eLie);
+         trims.Length.Is (2);
+         trims[0].Is ("M10,10H20");
+         trims[1].Is ("M100,10H110");
+      }
+
+      {  // Slice/trim applied at the start of Poly
+         (double sLie, double eLie) = (0, 0.1);
+
+         Poly slice = line.Sliced (sLie, eLie);
+         slice.Is ("M10,10H20");
+
+         var trims = line.Trimmed (sLie, eLie);
+         trims.Length.Is (1);
+         trims[0].Is ("M20,10H110");
+      }
+
+      {  // Slice/trim applied at the end of Poly
+         (double sLie, double eLie) = (0.9, 1);
+
+         Poly slice = line.Sliced (sLie, eLie);
+         slice.Is ("M100,10H110");
+
+         var trims = line.Trimmed (sLie, eLie);
+         trims.Length.Is (1);
+         trims[0].Is ("M10,10H100");
+      }
+   }
+
+   [Test (144, "Single arc poly slice/trim tests")]
+   void Test2 () {
+      Poly arc = Poly.Parse ("M100,0Q0,100,3"); // Circle at (100, 100) radius 100
+
+      {  // Slice/trim applied within the Poly
+         (double sLie, double eLie) = (1.0 / 3, 2.0 / 3);
+
+         Poly slice = arc.Sliced (sLie, eLie);
+         slice.Is ("M200,100Q100,200,1");
+
+         var trims = arc.Trimmed (sLie, eLie);
+         trims.Length.Is (2);
+         trims[0].Is ("M100,0Q200,100,1");
+         trims[1].Is ("M100,200Q0,100,1");
+      }
+
+      {  // Slice/trim applied at the start of Poly
+         (double sLie, double eLie) = (0, 2.0 / 3);
+
+         Poly slice = arc.Sliced (sLie, eLie);
+         slice.Is ("M100,0Q100,200,2");
+
+         var trims = arc.Trimmed (sLie, eLie);
+         trims.Length.Is (1);
+         trims[0].Is ("M100,200Q0,100,1");
+      }
+
+      {  // Slice/trim applied at the end of Poly
+         (double sLie, double eLie) = (1.0 / 3, 1);
+
+         Poly slice = arc.Sliced (sLie, eLie);
+         slice.Is ("M200,100Q0,100,2");
+
+         var trims = arc.Trimmed (sLie, eLie);
+         trims.Length.Is (1);
+         trims[0].Is ("M100,0Q200,100,1");
+      }
+   }
+
+   [Test (145, "Rect poly slice/trim tests")]
+   void Test3 () {
+      Poly rect = Poly.Parse ("M10,10H110V60H10Z"); // Rect 100 x 50, shifted by 10, 10
+
+      {  // Slice/trim applied within FIRST seg of the Rect
+         (double sLie, double eLie) = (0.1, 0.9);
+
+         Poly slice = rect.Sliced (sLie, eLie);
+         slice.Is ("M20,10H100");
+
+         var trims = rect.Trimmed (sLie, eLie);
+         trims.Length.Is (1);
+         trims[0].Is ("M100,10H110V60H10V10H20");
+      }
+
+      {  // Slice/trim applied within LAST seg of the Rect
+         (double sLie, double eLie) = (3.1, 3.9);
+
+         Poly slice = rect.Sliced (sLie, eLie);
+         slice.Is ("M10,55V15");
+
+         var trims = rect.Trimmed (sLie, eLie);
+         trims.Length.Is (1);
+         trims[0].Is ("M10,15V10H110V60H10V55");
+      }
+
+      {  // Slice/trim applied within (closed) Poly
+         (double sLie, double eLie) = (0.5, 3.5);
+
+         Poly slice = rect.Sliced (sLie, eLie);
+         slice.Is ("M60,10H110V60H10V35");
+
+         var trims = rect.Trimmed (sLie, eLie);
+         trims.Length.Is (1);
+         trims[0].Is ("M10,35V10H60");
+      }
+
+      {  // Slice/trim applied across (rollover) (closed) Poly [Opposite of the previous case]
+         (double sLie, double eLie) = (3.5, 0.5);
+
+         Poly slice = rect.Sliced (sLie, eLie);
+         slice.Is ("M10,35V10H60");
+
+         var trims = rect.Trimmed (sLie, eLie);
+         trims.Length.Is (1);
+         trims[0].Is ("M60,10H110V60H10V35");
+      }
+
+      {  // Slice/trim applied at the start of (closed) Poly
+         (double sLie, double eLie) = (0, 1);
+
+         Poly slice = rect.Sliced (sLie, eLie);
+         slice.Is ("M10,10H110");
+
+         var trims = rect.Trimmed (sLie, eLie);
+         trims.Length.Is (1);
+         trims[0].Is ("M110,10V60H10V10");
+      }
+
+      {  // Slice/trim applied at the end of (closed) Poly
+         (double sLie, double eLie) = (3, 4);
+
+         Poly slice = rect.Sliced (sLie, eLie);
+         slice.Is ("M10,60V10");
+
+         var trims = rect.Trimmed (sLie, eLie);
+         trims.Length.Is (1);
+         trims[0].Is ("M10,10H110V60H10");
+      }
+   }
+
+   [Test (146, "Circle poly slice/trim tests")]
+   void Test4 () {
+      var circ = Poly.Circle ((100, 100), 100);
+
+      { // Slice/trim within range
+         (double sLie, double eLie) = (0.25, 0.75);
+
+         Poly slice = circ.Sliced (sLie, eLie);
+         slice.Is ("M100,200Q100,0,2");
+
+         var trims = circ.Trimmed (sLie, eLie);
+         trims.Length.Is (1);
+         trims[0].Is ("M100,0Q100,200,2");
+      }
+
+      { // Slice/trim with rollover range
+         (double sLie, double eLie) = (0.75, 0.25);
+
+         Poly slice = circ.Sliced (sLie, eLie);
+         slice.Is ("M100,0Q100,200,2");
+
+         var trims = circ.Trimmed (sLie, eLie);
+         trims.Length.Is (1);
+         trims[0].Is ("M100,200Q100,0,2");
+      }
    }
 }
 

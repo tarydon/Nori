@@ -2,6 +2,7 @@
 // ╔═╦╦═╦╦╬╣ MouseDragger.cs
 // ║║║║╬║╔╣║ Implements the MouseDragger base class and some widgets derived from that
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
+using System.Reactive.Linq;
 namespace Nori;
 
 #region class MouseDragger -------------------------------------------------------------------------

@@ -11,8 +11,9 @@ namespace WPFDemo;
 public partial class MainWindow : Window {
    public MainWindow () {
       Lib.Init ();
+      Lux2.Init ();  // REMOVETHIS later
       InitializeComponent ();
-      mContent.Child = Lux.CreatePanel ();
+      mContent.Child = (UIElement)Lux.CreatePanel ();
       Lux.OnReady.Subscribe (OnLuxReady);
    }
 

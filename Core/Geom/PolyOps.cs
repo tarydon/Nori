@@ -663,6 +663,49 @@ public partial class Poly {
       return pb.Build ();
    }
 
+   /// <summary>Gets slice of the poly delimited by the specified range</summary>
+   public Poly Sliced (double sliceStartLie, double sliceEndLie) {
+      if (IsCircle) {
+         if (sliceStartLie.EQ (sliceEndLie)) return this;
+         var seg = this[0];
+         return Poly.Arc (seg.GetPointAt (sliceStartLie), seg.GetSlopeAt (sliceStartLie), seg.GetPointAt (sliceEndLie));
+      }
+      (bool hasArcs, int segCount, bool closed) = (HasArcs, Count, IsClosed); // Cache
+      (int startN, int endN) = ((int)sliceStartLie, (int)sliceEndLie);
+      (double sLie, double eLie) = (sliceStartLie - startN, sliceEndLie - endN);
+      if (startN == segCount) { startN = 0; sliceStartLie = 0; } // sliceStartLie is reset to 0 to indicate no-rollover case!
+      if (sliceStartLie.EQ (sliceEndLie) && closed) return this;
+
+      PolyBuilder pb = new ();
+      int lastN = (sliceEndLie < sliceStartLie) ? endN + segCount : endN; // Handles rollover
+      for (int _segN = startN; _segN <= lastN; _segN++) {
+         var N = closed ? _segN % segCount : _segN;
+         var pt = (_segN == startN) ? this[startN].GetPointAt (sLie) : Pts[N]; // First lie is computed lie...
+         if (hasArcs && N < Extra.Length) {
+            var extra = Extra[N];
+            if ((extra.Flags & EFlags.Arc) != 0) {
+               pb.Arc (pt, extra.Center, extra.Flags);
+               continue;
+            }
+         }
+         pb.Line (pt);
+      }
+      return eLie.IsZero () ? pb.Build () : pb.End (this[endN].GetPointAt (eLie));
+   }
+
+   /// <summary>Trims out the specified range and returns the rest</summary>
+   public Poly[] Trimmed (double trimStartLie, double trimEndLie) {
+      if (IsClosed)
+         return [Sliced (trimEndLie, trimStartLie)];
+      // Open Poly may result in [0..2] trimmed Polys
+      List<Poly> trimmedPolys = [];
+      if (!trimStartLie.IsZero ())
+         trimmedPolys.Add (Sliced (0, trimStartLie));
+      if (!trimEndLie.EQ (Count))
+         trimmedPolys.Add (Sliced (trimEndLie, Count));
+      return [.. trimmedPolys];
+   }
+
    /// <summary>Creates and returns a new reversed Poly of 'this'</summary>
    public Poly Reversed () {
       if (!HasArcs) return new ([.. mPts.Reverse ()], [], mFlags);
