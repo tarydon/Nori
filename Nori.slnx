@@ -1,6 +1,5 @@
 <Solution>
   <Folder Name="/Demos/">
-    <Project Path="Demos/AuTest/AuTest.csproj" />
     <Project Path="Demos/ConDemo/ConDemo.csproj" />
     <Project Path="Demos/WPFBoot/WPFBoot.csproj" Id="a9351b1d-6251-43f9-a6e4-7a732d11b3b7" />
     <Project Path="Demos/WPFDemo/WPFDemo.csproj" />

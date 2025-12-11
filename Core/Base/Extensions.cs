@@ -2,6 +2,7 @@
 // ╔═╦╦═╦╦╬╣ Extensions.cs
 // ║║║║╬║╔╣║ Various extension methods for common system types
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
+using System.IO.Compression;
 using static System.Math;
 namespace Nori;
 
@@ -183,6 +184,16 @@ public static class Extensions {
    public static unsafe int ReadInt32 (this Stream stm) {
       int n; stm.ReadExactly (new Span<byte> (&n, 4));
       return n;
+   }
+
+   /// <summary>
+   /// Read all lines of text from a specified stream in a ZIP archive
+   /// </summary>
+   public static List<string> ReadAllLines (this ZipArchive zar, string name) {
+      var entry = zar.GetEntry (name);
+      if (entry == null) throw new Exception ($"Stream {name} not found in ZipArchive");
+      using var stm = entry.Open ();
+      return ReadAllLines (stm);
    }
 
    /// <summary>Removes the last element from a List (and returns it)</summary>
