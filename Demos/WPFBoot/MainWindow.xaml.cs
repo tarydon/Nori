@@ -1,5 +1,4 @@
 ﻿using System.Windows;
-using System.Windows.Controls;
 using Nori;
 namespace WPFBoot;
 
@@ -12,7 +11,7 @@ public partial class MainWindow : Window {
       Lux2.Init ();
       InitializeComponent ();
       Content = Lux.CreatePanel ();
-      var model = new T3XReader ("c:/etc/t3/5X-019.t3x").Load ();
+      var model = new T3XReader ("c:/etc/t3/5X-016.t3x").Load ();
       Lux.OnReady.Subscribe (_ => Lux.UIScene = new MyScene ());
    }
 }

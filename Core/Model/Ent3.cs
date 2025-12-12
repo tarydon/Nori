@@ -3,7 +3,6 @@
 // ║║║║╬║╔╣║ <<TODO>>
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 using System.Threading;
-
 namespace Nori;
 
 #region class E3Cylinder ---------------------------------------------------------------------------
@@ -165,11 +164,13 @@ public sealed class E3Cylinder : E3CSSurface {
 /// <summary>
 /// Represents a NURBS surface (any order, rational or simple)
 /// </summary>
-public sealed class NurbsSurface : E3ParaSurface {
-   NurbsSurface () => mUImp = mVImp = null!;
-   public NurbsSurface (int id, ImmutableArray<Point3> ctrl, ImmutableArray<double> weight, int uCtl, ImmutableArray<double> uknots, ImmutableArray<double> vknots, IEnumerable<Contour3> trims) : base (id, trims) {
+public sealed class E3NurbsSurface : E3ParaSurface {
+   E3NurbsSurface () => mUImp = mVImp = null!;
+   public E3NurbsSurface (int id, ImmutableArray<Point3> ctrl, ImmutableArray<double> weight, int uCtl, ImmutableArray<double> uknots, ImmutableArray<double> vknots, IEnumerable<Contour3> trims) : base (id, trims) {
       UCtl = uCtl; Ctrl = ctrl; Weight = weight;
       mUImp = new (uCtl, uknots); mVImp = new (VCtl, vknots);
+      Rational = !(weight.IsEmpty || weight.All (a => a.EQ (1)));
+      if (!Rational) Weight = [];
    }
    readonly SplineImp mUImp, mVImp;
 
@@ -180,6 +181,11 @@ public sealed class NurbsSurface : E3ParaSurface {
    /// This is a 2D array, flattened. The total number of points here is UCtl x VCtl. 
    /// V is the index that varies fastest, so the linear index for (u, v) is (u * VCtl + v). 
    public readonly ImmutableArray<Point3> Ctrl;
+
+   /// <summary>
+   /// Is this a rational spline? (all weights set to 1)
+   /// </summary>
+   public readonly bool Rational;
 
    /// <summary>
    /// The weights for the control points (if all are set to 1, this is a non-rational spline)
@@ -210,29 +216,48 @@ public sealed class NurbsSurface : E3ParaSurface {
       while (vfactor.Length < mVImp.Order)
          mVFactor.Value = vfactor = new double[vfactor.Length * 2];
       int vSpan = mVImp.ComputeBasis (v, vfactor), vp = mVImp.Degree;
-      int vPts = mVImp.CPts;
+      int vPts = VCtl;
 
-      Point3 sum = Point3.Zero; double wsum = 0;
-      for (int j = 0; j <= up; j++) {
-         int jn = uSpan - up + j; double fBU = ufactor[j];
-         // The insum and inwsum values contain the vector sum and the weight sum of just
-         // this one row [j,*] of the entire control mesh. We use this to avoid having to 
-         // do so many multiplications with fBU, since that does not change during the inner
-         // loop. 
-         Point3 insum = Point3.Zero; double inwsum = 0;
-         for (int k = 0; k <= vp; k++) {
-            int kn = vSpan - vp + k;
-            double fBV = vfactor[k] * Weight[jn * vPts + kn];
-            insum += mCtrl[jn * vPts + kn] * fBV;
-            inwsum += fBV;
+      Point3 sum = Point3.Zero;
+      if (Rational) {
+         // We compute a weighted sum of some subset of the control points
+         // around a zone of interest
+         double wsum = 0;
+         for (int j = 0; j <= up; j++) {
+            int jn = uSpan - up + j; double fBU = ufactor[j];
+            // The insum and inwsum values contain the vector sum and the weight sum of just
+            // this one row [j,*] of the entire control mesh. We use this to avoid having to 
+            // do so many multiplications with fBU, since that does not change during the inner
+            // loop. 
+            Point3 insum = Point3.Zero; double inwsum = 0;
+            for (int k = 0; k <= vp; k++) {
+               int kn = vSpan - vp + k;
+               int idx = jn * vPts + kn;
+               double fBV = vfactor[k] * Weight[idx];
+               insum += Ctrl[idx] * fBV;
+               inwsum += fBV;
+            }
+            wsum += inwsum * fBU;
+            sum += insum * fBU;
          }
-         wsum += inwsum * fBU;
-         sum += insum * fBU;
+         if (wsum.IsZero ()) wsum = 1;
+         return sum * (1 / wsum);
+      } else {
+         // This is a slightly optimized implementation of the same 
+         // weighted-average loop as above, tuned for the case where all the
+         // weights are 1
+         for (int j = 0; j <= up; j++) {
+            int jn = uSpan - up + j; double fBU = ufactor[j];
+            Point3 insum = Point3.Zero; 
+            for (int k = 0; k <= vp; k++) {
+               int kn = vSpan - vp + k;
+               insum += Ctrl[jn * vPts + kn] * vfactor[k];
+            }
+            sum += insum * fBU;
+         }
+         return sum;
       }
-      if (wsum.IsZero ()) wsum = 1;
-      return sum * (1 / wsum);
    }
-
    // These buffers are used to store the results of SplineImp.ComputeBasis call in 
    // U and V. To avoid allocating a buffer on each Evaluate call, we make this static. 
    // To then make it thread safe, we mark it as ThreadLocal (we grow this as the 

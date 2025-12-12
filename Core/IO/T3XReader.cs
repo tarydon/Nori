@@ -14,6 +14,7 @@ public class T3XReader : IDisposable {
          Ent3? ent = type switch {
             "PLANE" => LoadPlane (),
             "CYLINDER" => LoadCylinder (),
+            "NURBSSURFACE" => LoadNurbsSurface (),
             "*" => null,
             _ => throw new BadCaseException (type)
          };
@@ -30,20 +31,18 @@ public class T3XReader : IDisposable {
       return new Arc3 (id, RCS (), rad, span);
    }
 
+   (List<Point3>, List<double>) LoadCtrlPts () {
+      List<Point3> ctrl = [];
+      List<double> weight = [];
+      while (!RDone ()) {
+         ctrl.Add (RPoint ()); weight.Add (RDouble ());
+      }
+      return (ctrl, weight);
+   }
+
    E3Cylinder LoadCylinder () {
       var (uid, rad, cs) = (RInt (), RDouble (), RCS ());
       return new E3Cylinder (uid, LoadContours (), cs, rad, false);  // REMOVETHIS - infacing not set correctly
-   }
-
-   Edge3? LoadEdge () {
-      string type = RWord ();
-      return type switch {
-         "LINE" => LoadLine (),
-         "ARC" => LoadArc (),
-         "NURBSCURVE" => LoadNurbsCurve (),
-         "*" => null,
-         _ => throw new BadCaseException (type),
-      };
    }
 
    List<Contour3> LoadContours () {
@@ -62,26 +61,56 @@ public class T3XReader : IDisposable {
       return contours;
    }
 
+   Edge3? LoadEdge () {
+      string type = RWord ();
+      return type switch {
+         "LINE" => LoadLine (),
+         "ARC" => LoadArc (),
+         "NURBSCURVE" => LoadNurbsCurve (),
+         "POLYLINE" => LoadPolyline (),
+         "*" => null,
+         _ => throw new BadCaseException (type),
+      };
+   }
+
+   List<double> LoadKnots () {
+      List<double> knot = [];
+      while (!RDone ()) {
+         double k = RDouble (); int rep = RInt ();
+         for (int i = 0; i < rep; i++) knot.Add (k);
+      }
+      return knot;
+   }
+
    Line3 LoadLine () 
       => new (RInt (), RPoint (), RPoint ());
 
    NurbsCurve LoadNurbsCurve () {
       var pairId = RInt ();
-      List<Point3> ctrl = []; 
-      List<double> knot = [], weight = [];
-      while (!RDone ()) {
-         ctrl.Add (RPoint ()); weight.Add (RDouble ());
-      }
-      while (!RDone ()) {
-         double k = RDouble (); int rep = RInt ();
-         for (int i = 0; i < rep; i++) knot.Add (k);
-      }
-      return new (pairId, [.. ctrl], [.. knot], [.. weight]);
+      var (ctrl, weight) = LoadCtrlPts ();
+      var knots = LoadKnots ();
+      return new (pairId, [.. ctrl], [.. knots], [.. weight]);
+   }
+
+   E3NurbsSurface LoadNurbsSurface () {
+      var (uid, uctl) = (RInt (), RInt ());
+      var (ctrl, weight) = LoadCtrlPts ();
+      var uknots = LoadKnots ();
+      var vknots = LoadKnots ();
+      var contours = LoadContours ();
+      return new (uid, [.. ctrl], [.. weight], uctl, [.. uknots], [.. vknots], contours);
    }
 
    E3Plane LoadPlane () {
       var (uid, cs) = (RInt (), RCS ());
       return new (uid, LoadContours (), cs);
+   }
+
+   Polyline3 LoadPolyline () {
+      var uid = RInt ();
+      List<Point3> ctrl = [];
+      while (!RDone ()) ctrl.Add (RPoint ());
+      return new Polyline3 (uid, [.. ctrl]);
    }
 
    // Low level routines -------------------------------------------------------
