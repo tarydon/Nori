@@ -2,9 +2,14 @@
 // ╔═╦╦═╦╦╬╣ Ent3.cs
 // ║║║║╬║╔╣║ <<TODO>>
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
+using System.Threading;
+
 namespace Nori;
 
 #region class E3Cylinder ---------------------------------------------------------------------------
+/// <summary>
+/// Represents a Cylinder in 3D space
+/// </summary>
 public sealed class E3Cylinder : E3CSSurface {
    // Constructors -------------------------------------------------------------
    E3Cylinder () { }
@@ -156,7 +161,93 @@ public sealed class E3Cylinder : E3CSSurface {
 }
 #endregion
 
+#region class NurbsSurface -------------------------------------------------------------------------
+/// <summary>
+/// Represents a NURBS surface (any order, rational or simple)
+/// </summary>
+public sealed class NurbsSurface : E3ParaSurface {
+   NurbsSurface () => mUImp = mVImp = null!;
+   public NurbsSurface (int id, ImmutableArray<Point3> ctrl, ImmutableArray<double> weight, int uCtl, ImmutableArray<double> uknots, ImmutableArray<double> vknots, IEnumerable<Contour3> trims) : base (id, trims) {
+      UCtl = uCtl; Ctrl = ctrl; Weight = weight;
+      mUImp = new (uCtl, uknots); mVImp = new (VCtl, vknots);
+   }
+   readonly SplineImp mUImp, mVImp;
+
+   // Properties ---------------------------------------------------------------
+   /// <summary>
+   /// The 2-dimensional grid of control points
+   /// </summary>
+   /// This is a 2D array, flattened. The total number of points here is UCtl x VCtl. 
+   /// V is the index that varies fastest, so the linear index for (u, v) is (u * VCtl + v). 
+   public readonly ImmutableArray<Point3> Ctrl;
+
+   /// <summary>
+   /// The weights for the control points (if all are set to 1, this is a non-rational spline)
+   /// </summary>
+   public readonly ImmutableArray<double> Weight;
+
+   /// <summary>
+   /// Number of 'columns' in the control point grid
+   /// </summary>
+   public readonly int UCtl;
+   /// <summary>
+   /// Number of 'rows' in the control point grid
+   /// </summary>
+   public int VCtl => Ctrl.Length / UCtl;
+
+   // Overrides ----------------------------------------------------------------
+   protected override Vector3 EvalNormal (Point2 pt) => throw new NotImplementedException ();
+
+   protected override Point3 Evaluate (Point2 pt) {
+      double u = pt.X.Clamp (mUImp.Knot[0], mUImp.Knot[^1] - 1e-9);
+      double[] ufactor = mUFactor.Value!;
+      while (ufactor.Length < mUImp.Order)
+         mUFactor.Value = ufactor = new double[ufactor.Length * 2];
+      int uSpan = mUImp.ComputeBasis (u, ufactor), up = mUImp.Degree; 
+
+      double v = pt.Y.Clamp (mVImp.Knot[0], mVImp.Knot[^1] - 1e-9);
+      double[] vfactor = mVFactor.Value!;
+      while (vfactor.Length < mVImp.Order)
+         mVFactor.Value = vfactor = new double[vfactor.Length * 2];
+      int vSpan = mVImp.ComputeBasis (v, vfactor), vp = mVImp.Degree;
+      int vPts = mVImp.CPts;
+
+      Point3 sum = Point3.Zero; double wsum = 0;
+      for (int j = 0; j <= up; j++) {
+         int jn = uSpan - up + j; double fBU = ufactor[j];
+         // The insum and inwsum values contain the vector sum and the weight sum of just
+         // this one row [j,*] of the entire control mesh. We use this to avoid having to 
+         // do so many multiplications with fBU, since that does not change during the inner
+         // loop. 
+         Point3 insum = Point3.Zero; double inwsum = 0;
+         for (int k = 0; k <= vp; k++) {
+            int kn = vSpan - vp + k;
+            double fBV = vfactor[k] * Weight[jn * vPts + kn];
+            insum += mCtrl[jn * vPts + kn] * fBV;
+            inwsum += fBV;
+         }
+         wsum += inwsum * fBU;
+         sum += insum * fBU;
+      }
+      if (wsum.IsZero ()) wsum = 1;
+      return sum * (1 / wsum);
+   }
+
+   // These buffers are used to store the results of SplineImp.ComputeBasis call in 
+   // U and V. To avoid allocating a buffer on each Evaluate call, we make this static. 
+   // To then make it thread safe, we mark it as ThreadLocal (we grow this as the 
+   // order of the Spline we're evalauting increases, and never shrink this buffer)
+   static readonly ThreadLocal<double[]> mUFactor = new (() => new double[8]);
+   static readonly ThreadLocal<double[]> mVFactor = new (() => new double[8]);
+
+   protected override Point2 Flatten (Point3 pt) => throw new NotImplementedException ();
+}
+#endregion
+
 #region class E3Plane ------------------------------------------------------------------------------
+/// <summary>
+/// Represents a Planar surface
+/// </summary>
 public sealed class E3Plane : E3Surface {
    E3Plane () { }
    public E3Plane (int id, IEnumerable<Contour3> trims, CoordSystem cs) : base (id, trims) => mCS = cs;

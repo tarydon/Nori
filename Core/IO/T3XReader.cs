@@ -10,10 +10,12 @@ public class T3XReader : IDisposable {
    public Model3 Load () {
       if (RWord () != "T3X" || RInt () != 1) Fatal ("Not a T3X file");
       for (; ; ) {
-         Ent3? ent = RWord () switch {
+         string type = RWord ();
+         Ent3? ent = type switch {
             "PLANE" => LoadPlane (),
+            "CYLINDER" => LoadCylinder (),
             "*" => null,
-            _ => null,
+            _ => throw new BadCaseException (type)
          };
          if (ent == null) break;
          mModel.Ents.Add (ent);
@@ -22,23 +24,27 @@ public class T3XReader : IDisposable {
    }
 
    // Implementation -----------------------------------------------------------
-   public void Dispose () => mZip.Dispose ();
-   void Fatal (string s) => throw new Exception (s);
-   void Fatal () => Fatal ($"Error on line {N}");
-
-   E3Plane LoadPlane () {
-      var (uid, cs) = (RInt (), RCS ());
-      return new (uid, LoadContours (), cs);
+   Arc3 LoadArc () {
+      int id = RInt ();
+      double rad = RDouble (), span = RDouble ();
+      return new Arc3 (id, RCS (), rad, span);
    }
 
-   Edge3? LoadEdge () 
-      => RWord () switch {
+   E3Cylinder LoadCylinder () {
+      var (uid, rad, cs) = (RInt (), RDouble (), RCS ());
+      return new E3Cylinder (uid, LoadContours (), cs, rad, false);  // REMOVETHIS - infacing not set correctly
+   }
+
+   Edge3? LoadEdge () {
+      string type = RWord ();
+      return type switch {
          "LINE" => LoadLine (),
          "ARC" => LoadArc (),
+         "NURBSCURVE" => LoadNurbsCurve (),
          "*" => null,
-         _ => null
+         _ => throw new BadCaseException (type),
       };
-
+   }
 
    List<Contour3> LoadContours () {
       List<Contour3> contours = [];
@@ -56,21 +62,39 @@ public class T3XReader : IDisposable {
       return contours;
    }
 
-   Arc3 LoadArc () {
-      int id = RInt ();
-      double rad = RDouble (), span = RDouble ();
-      return new Arc3 (id, RCS (), rad, span);
+   Line3 LoadLine () 
+      => new (RInt (), RPoint (), RPoint ());
+
+   NurbsCurve LoadNurbsCurve () {
+      var pairId = RInt ();
+      List<Point3> ctrl = []; 
+      List<double> knot = [], weight = [];
+      while (!RDone ()) {
+         ctrl.Add (RPoint ()); weight.Add (RDouble ());
+      }
+      while (!RDone ()) {
+         double k = RDouble (); int rep = RInt ();
+         for (int i = 0; i < rep; i++) knot.Add (k);
+      }
+      return new (pairId, [.. ctrl], [.. knot], [.. weight]);
    }
 
-   Line3 LoadLine () => new (RInt (), RPoint (), RPoint ());
+   E3Plane LoadPlane () {
+      var (uid, cs) = (RInt (), RCS ());
+      return new (uid, LoadContours (), cs);
+   }
 
    // Low level routines -------------------------------------------------------
+   public void Dispose () => mZip.Dispose ();
+   void Fatal (string s) => throw new Exception (s);
+   void Fatal () => Fatal ($"Error on line {N}");
    CoordSystem RCS () => new (RPoint (), RVector (), RVector ());
    double RDouble () { var (a, b) = Slice (); return double.Parse (T.AsSpan (a, b - a)); }
    double RDouble (char ch) { var (a, b) = SliceTo (ch); return double.Parse (T.AsSpan (a, b - a)); }
    int RInt () { var (a, b) = Slice (); return int.Parse (T.AsSpan (a, b - a)); }
    void RMatch (char ch) { SkipSpace (); if (T[N++] != ch) Fatal (); }
    string RWord () { var (a, b) = Slice (); return T[a..b]; }
+   bool RDone () { SkipSpace (); if (T[N] == '*') { N++; return true; } else return false; }
    (int A, int B) Slice () { SkipSpace (); int a = N; ToSpace (); return (a, N); }
    (int A, int B) SliceTo (char ch) { int a = N; while (T[N++] != ch) { }; return (a, N - 1); } 
    void SkipSpace () { while (char.IsWhiteSpace (T[N])) N++; }
