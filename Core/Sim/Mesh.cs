@@ -232,7 +232,160 @@ public class Mesh3 (ImmutableArray<Mesh3.Node> vertex, ImmutableArray<int> trian
       sb.Append ("EOF\n");
       return sb.ToString ();
    }
+
+   #region Plane Intersection ------------------------------------------------
+   /// <summary>Edge between two vertices and the two triangle indices sharing it.</summary>
+   record class Edge (int A, int B) {
+      public int TIdx1 { get; set; } = -1;
+      public int TIdx2 { get; set; } = -1;
+   }
+
+   /// <summary>Connected pair of edges belonging to a triangle intersection.</summary>
+   record class EdgePair (Edge Edge1, Edge Edge2) {
+      public bool IsChecked { get; set; }
+   }
+
+   /// <summary>Computes polygonal intersection loops between a mesh and a plane.</summary>
+   public List<ImmutableArray<Point3>> ComputePlaneIntersection (PlaneDef plane) {
+      int triCount = Triangle.Length, vertCount = Vertex.Length;
+      Vector3 n = plane.Normal; double d = plane.D;
+
+      // Precompute signed distances from plane
+      var dist = new (Point3f P, double D)[vertCount];
+      for (int i = 0; i < vertCount; i++) {
+         var p = Vertex[i].Pos;
+         dist[i] = (p, n.X * p.X + n.Y * p.Y + n.Z * p.Z + d);
+      }
+
+      // Edge map and list of triangle intersection edge pairs
+      mEdgeMap = []; List<EdgePair> triQueue = new (triCount / 3);
+
+      // Identify intersected triangles and store their crossing edges
+      for (int t = 0; t < triCount; t += 3)
+         if (IsChecked (t, dist, out Edge e1, out Edge e2)) {
+            RegisterEdge (e1, triQueue.Count);
+            RegisterEdge (e2, triQueue.Count);
+            triQueue.Add (new EdgePair (e1, e2));
+         }
+
+      // Trace all polylines produced by the intersected edges
+      var polyList = GetPointLoops (triQueue, dist);
+      return CombinedPoints (polyList);
+   }
+
+   // Checks if a triangle crosses the plane and returns its two crossing edges.
+   bool IsChecked (int t, (Point3f P, double D)[] dist, out Edge e1, out Edge e2) {
+      int i0 = Triangle[t++], i1 = Triangle[t++], i2 = Triangle[t++];
+      double d0 = dist[i0].D, d1 = dist[i1].D, d2 = dist[i2].D;
+
+      // Each sign change corresponds to an intersected edge
+      e1 = default!; e2 = default!;
+      if (d0 * d1 < 0) e1 = GetEdge (i0, i1);
+      if (d1 * d2 < 0) { if (e1 == default) e1 = GetEdge (i1, i2); else e2 = GetEdge (i1, i2); }
+      if (d2 * d0 < 0) { if (e1 == default) e1 = GetEdge (i2, i0); else e2 = GetEdge (i2, i0); }
+
+      return e1 != default && e2 != default;
+   }
+
+   // Gets or creates an edge (ensuring A < B) from the edge map.
+   Edge GetEdge (int a, int b) {
+      (int c, int d) = a < b ? (a, b) : (b, a);   // normalize ordering
+
+      if (!mEdgeMap.TryGetValue ((c, d), out var edge))
+         mEdgeMap[(c, d)] = edge = new Edge (c, d);
+
+      return edge;
+   }
+
+   // Registers which triangle index uses this edge.
+   void RegisterEdge (Edge e, int count) {
+      if (e.TIdx1 == -1) e.TIdx1 = count;
+      else e.TIdx2 = count;
+   }
+
+   // Traces all edge-pairs to reconstruct full intersection polylines.
+   List<List<Point3>> GetPointLoops (List<EdgePair> triQueue, (Point3f P, double D)[] dist) {
+      var polyList = new List<List<Point3>> ();
+
+      while (triQueue.Count > 0) {
+         // Find next unprocessed triangle edge pair
+         EdgePair? t = triQueue.FirstOrDefault (e => !e.IsChecked);
+         if (t == null) break;
+         t.IsChecked = true;
+
+         // Trace edges outward in both directions
+         var pts1 = WalkEdge (dist, triQueue, t.Edge1);
+         var pts2 = WalkEdge (dist, triQueue, t.Edge2);
+
+         pts1.Reverse ();   // First direction must be reversed before merging
+         polyList.Add ([.. pts1, .. pts2]);
+      }
+
+      return polyList;
+   }
+
+   // Walks along connected edges to collect intersection points in one direction.
+   List<Point3> WalkEdge ((Point3f P, double D)[] dist, List<EdgePair> triQueue, Edge edge) {
+      List<Point3> points = [];
+
+      while (true) {
+         // Compute intersection point along current edge
+         points.Add (Interpolate (dist[edge.A], dist[edge.B]));
+
+         if (edge.TIdx2 == -1) break; // No continuation
+
+         // Choose next triangle that share this edge
+         var t1 = triQueue[edge.TIdx1];
+         var t2 = triQueue[edge.TIdx2];
+         var next = t1.IsChecked ? t2 : t1;
+
+         if (next.IsChecked) break; // End of chain
+         next.IsChecked = true;
+
+         // Follow the next edge
+         edge = next.Edge1 == edge ? next.Edge2 : next.Edge1;
+      }
+
+      return points;
+   }
+
+   // Combines all polylines whose endpoints touch into continuous polylines.
+   List<ImmutableArray<Point3>> CombinedPoints (List<List<Point3>> pts) {
+      var result = new List<ImmutableArray<Point3>> ();
+
+      // Merge lists that connect head-to-tail
+      for (int i = 0; i < pts.Count; i++)
+         for (int j = i + 1; j < pts.Count; j++)
+            if (pts[i][^1].EQ (pts[j][0])) {
+               pts[i--].AddRange (pts[j].Skip (1));
+               pts.RemoveAt (j); break;
+            } else if (pts[i][^1].EQ (pts[j][^1])) {
+               pts[j].Reverse ();
+               pts[i--].AddRange (pts[j].Skip (1));
+               pts.RemoveAt (j); break;
+            }
+
+      pts.ForEach (e => result.Add ([.. e]));
+      return result;
+   }
+
+   // Interpolates the plane intersection point along an edge.
+   Point3 Interpolate ((Point3f, double) pd0, (Point3f, double) pd1) {
+      Point3f p0 = pd0.Item1, p1 = pd1.Item1;
+      // Signed-distance interpolation factor
+      double t = pd0.Item2 / (pd0.Item2 - pd1.Item2);
+
+      return new Point3 (
+          (float)(p0.X + t * (p1.X - p0.X)),
+          (float)(p0.Y + t * (p1.Y - p0.Y)),
+          (float)(p0.Z + t * (p1.Z - p0.Z))
+      );
+   }
+
+   /// <summary>Maps vertex-pairs to unique Edge.</summary>
+   Dictionary<(int, int), Edge> mEdgeMap = [];
 }
+#endregion Plane Intersection
 #endregion
 
 #region class Mesh3Builder -------------------------------------------------------------------------
