@@ -485,7 +485,13 @@ public partial class Poly {
 
       public static readonly ArcInfo Nil = new (Point2.Nil, 0);
 
-      public static ArcInfo operator * (ArcInfo e, Matrix2 xfm) => new (e.Center * xfm, e.Flags);
+      public static ArcInfo operator * (ArcInfo e, Matrix2 xfm) {
+         if (!xfm.IsMirror || (e.Flags & EFlags.Arc) == 0) return new (e.Center * xfm, e.Flags);
+         var flags = e.Flags;
+         flags = (flags & EFlags.CCW) != 0 ? (flags & ~EFlags.CCW) | EFlags.CW
+                                           : (flags & ~EFlags.CW) | EFlags.CCW;
+         return new (e.Center * xfm, flags);
+      }
    }
    /// <summary>This array is populated only if the Poly has any arcs</summary>
    internal readonly ImmutableArray<ArcInfo> Extra;
