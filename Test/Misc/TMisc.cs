@@ -489,6 +489,8 @@ class TMisc {
       c = MinCircle.From (pt2);
       // 639.129608, (240.79299,189.43126)
       c.ToString ().Is ("639.129608, (240.79299,189.43126)");
+      // There should not be any point outside the circle
+      c.Radius.Is (pt2.Max (c.Center.DistTo));
 
       // Sphere unit tests ------------
       // 1. Invalid inputs
@@ -540,6 +542,8 @@ class TMisc {
       s = MinSphere.From (pt3);
       // 531.058455, (169.309693,321.368582,63.459182)
       s.ToString ().Is ("531.058455, (169.309693,321.368582,63.459182)");
+      // There should not be any point outside the sphere
+      s.Radius.Is (pt3.Max (s.Center.DistTo));
    }
 
    class T1Type : IIndexed {

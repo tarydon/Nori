@@ -52,7 +52,7 @@ public readonly struct MinCircle {
       static MinCircle MEC (ReadOnlySpan<Point2> pts, ReadOnlySpan<Point2> outer) {
          MinCircle c = outer.Length switch {
             2 => From (outer[0], outer[1]), // Circle from diameter
-            3 => Find (outer), // Possibly Circumcircle
+            3 => From (outer[0], outer[1], outer[2]), // Possibly Circumcircle
             _ => Nil
          };
          if (pts.Length == 0 || outer.Length == 3) return c;
@@ -70,36 +70,32 @@ public readonly struct MinCircle {
          }
          return c;
       }
-
-      // Searches for the Minimum Enclosing Circle (MEC) for the given set of points.
-      static MinCircle Find (ReadOnlySpan<Point2> pts) {
-         if (pts.Length != 3) throw new ArgumentException ("Expecting three points to compute circumcircle.");
-         // Circum-circle from three points
-         MinCircle best = From (pts[0], pts[1], pts[2]);
-         // Find MEC from pair of points
-         for (int i = 0; i < pts.Length - 1; i++)
-            for (int j = i + 1; j < pts.Length; j++)
-               Consider (From (pts[i], pts[j]), pts);
-         return best;
-
-         void Consider (in MinCircle c, ReadOnlySpan<Point2> pts) {
-            if ((!best.OK || c.Radius < (best.Radius - Epsilon)) && c.Contains (pts))
-               best = c;
-         }
-      }
    }
 
    /// <summary>Constructs a circle with two endpoints specifying the diameter.</summary>
    public static MinCircle From (Point2 a, Point2 b) =>
       new (a.DistTo (b) / 2, new ((a.X + b.X) / 2, (a.Y + b.Y) / 2));
 
-   /// <summary>Constructs the circumcircle from three non-collinear points</summary>
-   internal static MinCircle From (Point2 a, Point2 b, Point2 c) {
+   /// <summary>Constructs the 'minimum enclosing circle' from three points</summary>
+   public static MinCircle From (Point2 a, Point2 b, Point2 c) {
       // To make computations easier, translate points by vector '-a' so 'a' becomes (0, 0).
       var ba = b - a; var ca = c - a;
       var cen = GetCenter (ba.X, ba.Y, ca.X, ca.Y);
-      return new (cen.DistTo (a), cen);
+      // Circum-circle from three points
+      MinCircle best = new (cen.DistTo (a), cen);
+      // Find MEC from pair of points
+      ReadOnlySpan<Point2> pts = [a, b, c];
+      for (int i = 0; i < pts.Length - 1; i++)
+         for (int j = i + 1; j < pts.Length; j++)
+            Consider (From (pts[i], pts[j]), pts);
+      return best;
 
+      // Considers a candidate circle for being the minimum enclosing circle.
+      void Consider (in MinCircle c, ReadOnlySpan<Point2> pts) {
+         if ((!best.OK || c.Radius < (best.Radius - Epsilon)) && c.Contains (pts))
+            best = c;
+      }
+      // Computes the center of the circum-circle from three points (with 'a' at origin).
       Point2 GetCenter (double bx, double by, double cx, double cy) {
          var B = bx * bx + by * by;
          var C = cx * cx + cy * cy;
@@ -163,7 +159,7 @@ public readonly struct MinSphere {
          MinSphere s = outer.Length switch {
             2 => From (outer[0], outer[1]), // Sphere from two boundary points
             3 => From (outer[0], outer[1], outer[2]), // Sphere from 3 boundary points
-            4 => Find (outer), // Possibly circumsphere from boundary points
+            4 => From (outer[0], outer[1], outer[2], outer[3]), // Possibly circumsphere from boundary points
             _ => Nil
          };
          if (pts.Length == 0 || outer.Length == 4) return s;
@@ -182,28 +178,6 @@ public readonly struct MinSphere {
             };
          }
          return s;
-      }
-
-      // Searches for the Minimum Enclosing Sphere (MES) from four points.
-      static MinSphere Find (ReadOnlySpan<Point3> pts) {
-         if (pts.Length != 4) throw new ArgumentException ("Expecting four points to compute circumsphere.");
-         // Circumsphere from four points
-         MinSphere best = From (pts[0], pts[1], pts[2], pts[3]);
-         // Find MES from pair of points
-         for (int i = 0; i < pts.Length - 1; i++)
-            for (int j = i + 1; j < pts.Length; j++) 
-               Consider (From (pts[i], pts[j]), pts);
-         // Find MES from triplet of points
-         for (int i = 0; i < pts.Length - 2; i++)
-            for (int j = i + 1; j < pts.Length - 1; j++)
-               for (int k = j + 1; k < pts.Length; k++) 
-                  Consider (From (pts[i], pts[j], pts[k]), pts);
-         return best;
-
-         void Consider (in MinSphere s, ReadOnlySpan<Point3> points) {
-            if ((!best.OK || s.Radius < (best.Radius - Epsilon)) && s.Contains (points)) 
-               best = s;
-         }
       }
    }
 
@@ -226,13 +200,33 @@ public readonly struct MinSphere {
       return new (C.Radius, a + u * C.Center.X + v * C.Center.Y);
    }
 
-   // Constructs the circumsphere from four non-coplanar points
-   static MinSphere From (Point3 a, Point3 b, Point3 c, Point3 d) {
+   /// <summary>Constructs the unique minimum enclosing sphere that passes through four specified points in three-dimensional space.</summary>
+   /// <remarks>This routine falls back to three and lower point variant when two or more points are coincident. 
+   /// It returns and undefined sphere (OK == false) when a sphere cannot be constructed.</remarks>   
+   public static MinSphere From (Point3 a, Point3 b, Point3 c, Point3 d) {
+      // Circumsphere from four points
       // To make computations easier, translate points by vector '-a' so 'a' becomes (0, 0, 0).
       var ba = b - a; var ca = c - a; var da = d - a;
       var cen = GetCenter (ba.X, ba.Y, ba.Z, ca.X, ca.Y, ca.Z, da.X, da.Y, da.Z);
-      return new (cen.DistTo (a), cen);
+      MinSphere best = new (cen.DistTo (a), cen);
+      // Find MES from pair of points
+      ReadOnlySpan<Point3> pts = [a, b, c, d];
+      for (int i = 0; i < pts.Length - 1; i++)
+         for (int j = i + 1; j < pts.Length; j++)
+            Consider (From (pts[i], pts[j]), pts);
+      // Find MES from triplet of points
+      for (int i = 0; i < pts.Length - 2; i++)
+         for (int j = i + 1; j < pts.Length - 1; j++)
+            for (int k = j + 1; k < pts.Length; k++)
+               Consider (From (pts[i], pts[j], pts[k]), pts);
+      return best;
 
+      // Considers a candidate sphere for being the minimum enclosing sphere.
+      void Consider (in MinSphere s, ReadOnlySpan<Point3> points) {
+         if ((!best.OK || s.Radius < (best.Radius - Epsilon)) && s.Contains (points))
+            best = s;
+      }
+      // Computes the center of the circumsphere from four points (with 'a' at origin).
       Point3 GetCenter (double ax, double ay, double az, double bx, double by, double bz, double cx, double cy, double cz) {
          var A = ax * ax + ay * ay + az * az;
          var B = bx * bx + by * by + bz * bz;
