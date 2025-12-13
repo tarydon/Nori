@@ -230,9 +230,11 @@ public static partial class Lux {
             else PhongShader.It.Draw (nodes, tris); 
             break;
       }
-      switch (shadeMode) {
-         case EShadeMode.Glass: GlassLineShader.It.Draw (nodes, wires); break;
-         default: BlackLineShader.It.Draw (nodes, wires); break;
+      if (wires.Length > 0) {
+         switch (shadeMode) {
+            case EShadeMode.Glass: GlassLineShader.It.Draw (nodes, wires); break;
+            default: BlackLineShader.It.Draw (nodes, wires); break;
+         }
       }
    }
 
