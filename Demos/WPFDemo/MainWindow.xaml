@@ -25,6 +25,7 @@
          <Button Click="STPDemo">Load STEP</Button>
          <Button Click="StreamDemo">Streaming</Button>
          <Button Click="AABBTreeDemo">AABB Tree</Button>
+         <Button Click="MinSphereDemo">Minimum Sphere</Button>
       </StackPanel>
          <StackPanel Name="mSettings" DockPanel.Dock="Right" Background="#AAA" />
       <Border Name="mContent" />

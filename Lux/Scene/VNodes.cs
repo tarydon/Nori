@@ -47,6 +47,12 @@ public partial class TraceVN : VNode {
    /// screen, the oldest text scrolls up out of the screen
    public static void Print (string s) => It.Add (s);
 
+   /// <summary>Clears all the text from the display.</summary>
+   public void Clear () {
+      mLines.Clear ();
+      Redraw ();
+   }
+
    // Overrides ----------------------------------------------------------------
    // Draw the lines, starting from the top left corner of the screen
    public override void Draw () {
