@@ -195,7 +195,7 @@ public readonly struct MinSphere {
       // Transform points from World (X, Y, Z) => Plane (U, V) space.
       Point2 p1 = Point2.Zero, p2 = new (ba.Length, 0), p3 = new (ca.Dot (u), ca.Dot (v));
       // Compute MEC in (U, V) space
-      var C = MinCircle.From ([p1, p2, p3]);
+      var C = MinCircle.From (p1, p2, p3);
       // Loft center from Plane (U, V) => World (X, Y, Z) space
       return new (C.Radius, a + u * C.Center.X + v * C.Center.Y);
    }

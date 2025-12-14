@@ -12,7 +12,7 @@ class MinSphereScene : Scene3 {
       Bound = new Bound3 (0, 0, 0, 800, 800, 800);
       Lib.Tracer = TraceVN.Print;
       Random R = new ();
-      Build ([..GeneratePoints (R, 500, Bound.Width * R.Next (35, 65) / 100)]);
+      Build ([..GeneratePoints (R, 50000, Bound.Width * R.Next (35, 65) / 100)]);
    }
 
    void Build (ReadOnlySpan<Point3> pts) {
@@ -23,8 +23,6 @@ class MinSphereScene : Scene3 {
       for (int i = 0; i < pts.Length; i++) {
          var pt = pts[i]; var d = pt.DistTo (s.Center);
          var (color, r) = d > rMax ? (Color4.Red, 6) : d < rMin ? (Color4.White, 3) : (Color4.Green, 5);
-         // Skip some of the internal points if there are too many of them.
-         if (pts.Length > 50000 && d < rMin) continue;
          models.Add (new (r, pt, color));
          if (color.Value == Color4.Green.Value) nSurfacePts++;
       }
@@ -32,7 +30,23 @@ class MinSphereScene : Scene3 {
       Lib.Trace ($"Sphere, Radius: {s.Radius.Round (1)}, Center: ({s.Center.X.Round (1)}, {s.Center.Y.Round (1)}, {s.Center.Z.Round (1)})");
       Lib.Trace ($"Points: {pts.Length}, On Sphere: {nSurfacePts}");
       Lib.Trace ("Press 'Mininum Sphere' again to regenerate");
-      Root = new GroupVN ([new RootVN (models), TraceVN.It]);
+
+      List<VNode> nodes = [new AxesVN (), TraceVN.It];
+      //// Approach 1: Add an individual node for each model.
+      //nodes.AddRange (models.Select (s => new ModelVN (s, Matrix3.Identity)));
+
+      //// Approach 2: Use the first node as reference.
+      //foreach (var grp in models.GroupBy (m => (m.Radius, m.Color, m.Tranclucent))) {
+      //   var first = grp.First (); var vn = new ModelVN (first, Matrix3.Identity); nodes.Add (vn);
+      //   nodes.AddRange (grp.Skip (1).Select (s => new XfmVN (Matrix3.Translation (s.Center - first.Center), vn)));
+      //}
+
+      // Approach 3: Use the first model as reference.
+      foreach (var grp in models.GroupBy (m => (m.Radius, m.Color, m.Tranclucent))) {
+         var first = grp.First (); nodes.Add (new ModelVN (first, Matrix3.Identity));
+         nodes.AddRange (grp.Skip (1).Select (s => new ModelVN (first, Matrix3.Translation (s.Center - first.Center))));
+      }
+      Root = new GroupVN (nodes);
    }
 
    static IEnumerable<Point3> GeneratePoints (Random R, int count, double size) {
@@ -44,26 +58,24 @@ class MinSphereScene : Scene3 {
       }
    }
 
-   class RootVN (List<Sphere> models) : VNode {
+   // Draw axis lines.
+   class AxesVN : VNode {
       public override void SetAttributes () => Lux.Color = Color4.Black;
-      public override VNode? GetChild (int n) => n >= Models.Count ? null : new ModelVN (Models[n]);
-
-      public override void Draw () {
-         base.Draw (); Vec3F org = new ();
-         // Draw axis lines.
-         Lux.Lines ([org, new (100, 0, 0), org, new (0, 100, 0), org, new (0, 0, 100)]);
-      }
-
-      readonly List<Sphere> Models = models;
+      public override void Draw () => Lux.Lines ([Zero, new (100, 0, 0), Zero, new (0, 100, 0), Zero, new (0, 0, 100)]);
+      readonly Vec3F Zero = new ();
    }
 
-   class ModelVN (Sphere s) : VNode {
-      public override void SetAttributes () => Lux.Color = S.Color;
+   class ModelVN (Sphere s, Matrix3 xfm) : VNode {
+      public override void SetAttributes () {
+         Lux.Color = S.Color;
+         Lux.Xfm = Xfm;
+      }
       public override void Draw () => Lux.Mesh (S.Mesh, S.Tranclucent ? EShadeMode.Glass : EShadeMode.Phong);
       readonly Sphere S = s;
+      readonly Matrix3 Xfm = xfm;
    }
 
-   struct Sphere (double radius, Point3 center, Color4 color, bool translucent = false) {
+   class Sphere (double radius, Point3 center, Color4 color, bool translucent = false) {
       public readonly double Radius = radius;
       public readonly Point3 Center = center;
       public readonly Color4 Color = color;
@@ -88,18 +100,16 @@ class MinSphereScene : Scene3 {
                // Add mesh node.
                nodes.Add (new (new (center.X + dx, center.Y + dy, center.Z + dz), vec));
                // Add triangles. Each segment between latitudes consists of two triangles.
-               // ______
-               // |\   |
-               // | \  |
-               // |  \ |
-               // |___\|
+               // ___a__d___
+               // |\ |\ |\ |
+               // |_\|_\|_\|
+               //    b  c
                if (i > 0 && j > 0) {
                   int a = (i - 1) * rows + (j - 1), d = a + 1;
                   int b = i * rows + (j - 1), c = b + 1;
-                  tries.AddRange ([a, b, c]);
                   // For the first and the last latitude, at poles, only one triangle per segment.
-                  if (i > 1 && i < longs)
-                     tries.AddRange ([c, d, a]);
+                  if (i < lats) tries.AddRange ([a, b, c]);
+                  if (i > 1) tries.AddRange ([c, d, a]);
                }
             }
          }
