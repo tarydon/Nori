@@ -5,15 +5,28 @@
 using System.Threading;
 namespace Nori;
 
+#region class E3Cone -------------------------------------------------------------------------------
+public sealed class E3Cone : E3CSSurface {
+   public E3Cone (int id, IEnumerable<Contour3> trims, CoordSystem cs, double radius, double halfAngle)
+      : base (id, trims, cs) => (Radius, HalfAngle) = (radius, halfAngle);
+   E3Cone () { }
+
+   public readonly double Radius;
+   public readonly double HalfAngle;
+
+   protected override Point3 EvaluateCanonical (Point2 pt) => throw new NotImplementedException ();
+   protected override Vector3 EvalNormalCanonical (Point2 pt) => throw new NotImplementedException ();
+   protected override Point2 FlattenCanonical (Point3 pt) => throw new NotImplementedException ();
+}
+#endregion
+
 #region class E3Cylinder ---------------------------------------------------------------------------
-/// <summary>
-/// Represents a Cylinder in 3D space
-/// </summary>
+/// <summary>Represents a Cylinder in 3D space</summary>
 public sealed class E3Cylinder : E3CSSurface {
    // Constructors -------------------------------------------------------------
-   E3Cylinder () { }
    public E3Cylinder (int id, IEnumerable<Contour3> trims, CoordSystem cs, double radius, bool infacing)
       : base (id, trims, cs) => (Radius, InFacing) = (radius, infacing);
+   E3Cylinder () { }
 
    public static E3Cylinder Build (int id, IReadOnlyList<Contour3> trims, CoordSystem cs, double radius, bool infacing) {
       // We want to possibly rotate the given CoordSystem about its local Z axis so that the
@@ -161,9 +174,7 @@ public sealed class E3Cylinder : E3CSSurface {
 #endregion
 
 #region class NurbsSurface -------------------------------------------------------------------------
-/// <summary>
-/// Represents a NURBS surface (any order, rational or simple)
-/// </summary>
+/// <summary>Represents a NURBS surface (any order, rational or simple)</summary>
 public sealed class E3NurbsSurface : E3ParaSurface {
    E3NurbsSurface () => mUImp = mVImp = null!;
    public E3NurbsSurface (int id, ImmutableArray<Point3> ctrl, ImmutableArray<double> weight, int uCtl, ImmutableArray<double> uknots, ImmutableArray<double> vknots, IEnumerable<Contour3> trims) : base (id, trims) {
@@ -175,30 +186,20 @@ public sealed class E3NurbsSurface : E3ParaSurface {
    readonly SplineImp mUImp, mVImp;
 
    // Properties ---------------------------------------------------------------
-   /// <summary>
-   /// The 2-dimensional grid of control points
-   /// </summary>
+   /// <summary>The 2-dimensional grid of control points</summary>
    /// This is a 2D array, flattened. The total number of points here is UCtl x VCtl. 
    /// V is the index that varies fastest, so the linear index for (u, v) is (u * VCtl + v). 
    public readonly ImmutableArray<Point3> Ctrl;
 
-   /// <summary>
-   /// Is this a rational spline? (all weights set to 1)
-   /// </summary>
+   /// <summary>Is this a rational spline? (all weights set to 1)</summary>
    public readonly bool Rational;
 
-   /// <summary>
-   /// The weights for the control points (if all are set to 1, this is a non-rational spline)
-   /// </summary>
+   /// <summary>The weights for the control points (if all are set to 1, this is a non-rational spline)</summary>
    public readonly ImmutableArray<double> Weight;
 
-   /// <summary>
-   /// Number of 'columns' in the control point grid
-   /// </summary>
+   /// <summary>Number of 'columns' in the control point grid</summary>
    public readonly int UCtl;
-   /// <summary>
-   /// Number of 'rows' in the control point grid
-   /// </summary>
+   /// <summary>Number of 'rows' in the control point grid</summary>
    public int VCtl => Ctrl.Length / UCtl;
 
    // Overrides ----------------------------------------------------------------
@@ -270,13 +271,11 @@ public sealed class E3NurbsSurface : E3ParaSurface {
 #endregion
 
 #region class E3Plane ------------------------------------------------------------------------------
-/// <summary>
-/// Represents a Planar surface
-/// </summary>
+/// <summary>Represents a Planar surface</summary>
 public sealed class E3Plane : E3Surface {
    E3Plane () { }
    public E3Plane (int id, IEnumerable<Contour3> trims, CoordSystem cs) : base (id, trims) => mCS = cs;
-   CoordSystem mCS;
+   readonly CoordSystem mCS;
 
    protected override Mesh3 BuildMesh (double tolerance, double maxAngStep) {
       List<Point2> pts = [];
@@ -304,5 +303,74 @@ public sealed class E3Plane : E3Surface {
 
    Matrix3 ToXfm => _toXfm ??= Matrix3.To (mCS);
    Matrix3? _toXfm;
+}
+#endregion
+
+#region class E3Sphere -----------------------------------------------------------------------------
+/// <summary>A sphere is defined by a center point and radius</summary>
+/// The parametrization is as follows:
+/// - U goes from 0 at the south pole to 1 at the north pole
+/// - V goes from 0 to 1 as we rotate about the polar axis
+public sealed class E3Sphere : E3ParaSurface {
+   public E3Sphere (int id, List<Contour3> trims, Point3 center, double radius) : base (id, trims) {
+      Center = center; Radius = radius; 
+   }
+   public readonly Point3 Center;
+   public readonly double Radius;
+
+   protected override Vector3 EvalNormal (Point2 pt) => throw new NotImplementedException ();
+   protected override Point3 Evaluate (Point2 pt) => throw new NotImplementedException ();
+   protected override Point2 Flatten (Point3 pt) => throw new NotImplementedException ();
+}
+#endregion
+
+#region class E3SpunSurface ------------------------------------------------------------------------
+/// <summary>A SpunSurface is generated by rotating a generatrix curve around an axis</summary>
+/// Canonically, the axis is the Z axis, and the resulting surface is lofted into space
+/// using the provided CS transform
+public sealed class E3SpunSurface : E3CSSurface {
+   public E3SpunSurface (int id, IEnumerable<Contour3> trims, CoordSystem cs, Edge3 genetrix) : base (id, trims, cs) {
+      Genetrix = genetrix; 
+   }
+   E3SpunSurface () => Genetrix = null!;
+   public readonly Edge3 Genetrix;
+
+   protected override Point3 EvaluateCanonical (Point2 pt) => throw new NotImplementedException ();
+   protected override Vector3 EvalNormalCanonical (Point2 pt) => throw new NotImplementedException ();
+   protected override Point2 FlattenCanonical (Point3 pt) => throw new NotImplementedException ();
+}
+#endregion
+
+#region class E3SweptSurface -----------------------------------------------------------------------
+/// <summary>A SweptSurface is generated by sweeping a generatrix curve about a vector</summary>
+public sealed class E3SweptSurface : E3ParaSurface {
+   public E3SweptSurface (int id, IEnumerable<Contour3> trims, Edge3 genetrix, Vector3 sweep) : base (id, trims) {
+      Genetrix = genetrix; Sweep = sweep;
+   }
+   E3SweptSurface () => Genetrix = null!;
+
+   public readonly Edge3 Genetrix;
+   public readonly Vector3 Sweep;
+
+   protected override Point3 Evaluate (Point2 pt) => throw new NotImplementedException ();
+   protected override Vector3 EvalNormal (Point2 pt) => throw new NotImplementedException ();
+   protected override Point2 Flatten (Point3 pt) => throw new NotImplementedException ();
+}
+#endregion
+
+#region class E3Torus ------------------------------------------------------------------------------
+/// <summary>A Torus is defined in the XY plane and lofted into a given coordinate system</summary>
+public sealed class E3Torus : E3CSSurface {
+   public E3Torus (int id, IEnumerable<Contour3> trims, CoordSystem cs, double rmajor, double rminor) : base (id, trims, cs) {
+      RMajor = rmajor; RMinor = rminor;
+   }
+   E3Torus () { }
+
+   public readonly double RMajor;
+   public readonly double RMinor;
+
+   protected override Point3 EvaluateCanonical (Point2 pt) => throw new NotImplementedException ();
+   protected override Vector3 EvalNormalCanonical (Point2 pt) => throw new NotImplementedException ();
+   protected override Point2 FlattenCanonical (Point3 pt) => throw new NotImplementedException ();
 }
 #endregion

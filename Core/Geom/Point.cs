@@ -331,9 +331,7 @@ public readonly struct Point3 : IEquatable<Point3> {
    // Operators ----------------------------------------------------------------
    /// <summary>Returns the displaced point got by adding a Vector2 to a Point2</summary>
    public static Point3 operator + (Point3 a, Vector3 b) => new (a.X + b.X, a.Y + b.Y, a.Z + b.Z);
-   /// <summary>
-   /// Adds two points together (used when we are trying to make weighted sums of points)
-   /// </summary>
+   /// <summary>Adds two points together (used when we are trying to make weighted sums of points)</summary>
    public static Point3 operator + (Point3 a, Point3 b) => new (a.X + b.X, a.Y + b.Y, a.Z + b.Z);
    /// <summary>Returns the displaced point got by subtracting a Vector2 from a Point2</summary>
    public static Point3 operator - (Point3 a, Vector3 b) => new (a.X - b.X, a.Y - b.Y, a.Z - b.Z);

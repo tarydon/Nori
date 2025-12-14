@@ -151,9 +151,7 @@ public static class Extensions {
       foreach (var elem in seq) yield return (c++, elem);
    }
 
-   /// <summary>
-   /// Opens a specified stream from a ZIP archive, throws an exception if not found
-   /// </summary>
+   /// <summary>Opens a specified stream from a ZIP archive, throws an exception if not found</summary>
    public static Stream Open (this ZipArchive zar, string name) {
       var entry = zar.GetEntry (name);
       return entry == null ? throw new Exception ($"Stream {name} not found in ZipArchive") : entry.Open ();
@@ -182,9 +180,7 @@ public static class Extensions {
       return lines;
    }
 
-   /// <summary>
-   /// Reads all the text from a specified stream
-   /// </summary>
+   /// <summary>Reads all the text from a specified stream</summary>
    public static string ReadAllText (this Stream stm) {
       using (var reader = new StreamReader (stm))
          return reader.ReadToEnd ();
@@ -202,17 +198,13 @@ public static class Extensions {
       return n;
    }
 
-   /// <summary>
-   /// Read all lines of text from a specified stream in a ZIP archive
-   /// </summary>
+   /// <summary>Read all lines of text from a specified stream in a ZIP archive</summary>
    public static List<string> ReadAllLines (this ZipArchive zar, string name) {
       using (var stm = zar.Open (name))
          return ReadAllLines (stm);
    }
 
-   /// <summary>
-   /// Read all text from a specified strream in a ZIP archive 
-   /// </summary>
+   /// <summary>Read all text from a specified strream in a ZIP archive</summary>
    public static string ReadAllText (this ZipArchive zar, string name) {
       using (var stm = zar.Open (name))
          return ReadAllText (stm);

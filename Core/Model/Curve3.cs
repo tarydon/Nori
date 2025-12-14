@@ -74,6 +74,35 @@ public sealed class Line3 : Edge3 {
 }
 #endregion
 
+#region class Ellipse3 -----------------------------------------------------------------------------
+public sealed class Ellipse3 : Edge3 {
+   Ellipse3 () { }
+   public Ellipse3 (int pairId, CoordSystem cs, double xRadius, double yRadius, double ang0, double ang1)
+      : base (pairId) { }
+
+   public readonly CoordSystem CS;
+   public readonly double XRadius;
+   public readonly double YRadius;
+   public readonly double Ang0;
+   public readonly double Ang1;
+
+   public override Point3 Start => GetPointAt (0);
+   public override Point3 End => GetPointAt (1);
+
+   public override Point3 GetPointAt (double lie) {
+      var (sin, cos) = Math.SinCos (lie.Along (Ang0, Ang1));
+      return CS.Org + CS.VecX * (XRadius * cos) + CS.VecY * (YRadius * sin);
+   }
+
+   public override void Discretize (List<Point3> pts, double tolerance, double maxAngStep) {
+      double angSpan = Ang1 - Ang0;
+      int n = Lib.GetArcSteps ((XRadius + YRadius) / 2, angSpan, tolerance, maxAngStep);
+      if (angSpan.EQ (Lib.TwoPI) && n.IsOdd ()) n++;
+      for (int i = 0; i < n; i++) pts.Add (GetPointAt ((double)i / n));
+   }
+}
+#endregion
+
 #region class Arc3 ---------------------------------------------------------------------------------
 /// <summary>Arc3 represents a section of a circular arc in space</summary>
 /// The Arc3 is defined on the XY plane - always clockwise, with the center at the
@@ -154,17 +183,13 @@ public class NurbsCurve : Edge3 {
    /// <summary>The set of control points for this Spline</summary>
    public readonly ImmutableArray<Point3> Ctrl;
 
-   /// <summary>
-   /// Endpoint of the NurbsCurve
-   /// </summary>
+   /// <summary>Endpoint of the NurbsCurve</summary>
    public override Point3 End => Ctrl[^1];
 
    /// <summary>Is this a rational spline (not all weights are set to 1)</summary>
    public readonly bool Rational;
 
-   /// <summary>
-   /// Start point of the NurbsCurve
-   /// </summary>
+   /// <summary>Start point of the NurbsCurve</summary>
    public override Point3 Start => Ctrl[0];
 
    /// <summary>Weights attached to the control points</summary>

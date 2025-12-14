@@ -1,4 +1,8 @@
-﻿using System.IO.Compression;
+// ────── ╔╗
+// ╔═╦╦═╦╦╬╣ T3XReader.cs
+// ║║║║╬║╔╣║ <<TODO>>
+// ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
+using System.IO.Compression;
 namespace Nori;
 
 public class T3XReader : IDisposable {
@@ -12,9 +16,13 @@ public class T3XReader : IDisposable {
       for (; ; ) {
          string type = RWord ();
          Ent3? ent = type switch {
-            "PLANE" => LoadPlane (),
+            "CONE" => LoadCone (),
             "CYLINDER" => LoadCylinder (),
             "NURBSSURFACE" => LoadNurbsSurface (),
+            "PLANE" => LoadPlane (),
+            "SPUNSURFACE" => LoadSpunSurface (),
+            "SWEPTSURFACE" => LoadSweptSurface (),
+            "TORUS" => LoadTorus (),
             "*" => null,
             _ => throw new BadCaseException (type)
          };
@@ -38,6 +46,11 @@ public class T3XReader : IDisposable {
          ctrl.Add (RPoint ()); weight.Add (RDouble ());
       }
       return (ctrl, weight);
+   }
+
+   E3Cone LoadCone () {
+      var (uid, rad, hangle, cs) = (RInt (), RDouble (), RDouble (), RCS ());
+      return new E3Cone (uid, LoadContours (), cs, rad, hangle);
    }
 
    E3Cylinder LoadCylinder () {
@@ -64,13 +77,19 @@ public class T3XReader : IDisposable {
    Edge3? LoadEdge () {
       string type = RWord ();
       return type switch {
-         "LINE" => LoadLine (),
          "ARC" => LoadArc (),
+         "ELLIPSE" => LoadEllipse (),
+         "LINE" => LoadLine (),
          "NURBSCURVE" => LoadNurbsCurve (),
          "POLYLINE" => LoadPolyline (),
          "*" => null,
          _ => throw new BadCaseException (type),
       };
+   }
+
+   Ellipse3 LoadEllipse () {
+      var (id, rx, ry, a0, a1) = (RInt (), RDouble (), RDouble (), RDouble (), RDouble ());
+      return new Ellipse3 (id, RCS (), rx, ry, a0, a1);
    }
 
    List<double> LoadKnots () {
@@ -111,6 +130,25 @@ public class T3XReader : IDisposable {
       List<Point3> ctrl = [];
       while (!RDone ()) ctrl.Add (RPoint ());
       return new Polyline3 (uid, [.. ctrl]);
+   }
+
+   E3SpunSurface LoadSpunSurface () {
+      var (uid, cs) = (RInt (), RCS ());
+      if (RWord () != "GENERATRIX") Fatal ();
+      Edge3 genetrix = LoadEdge ()!;
+      return new E3SpunSurface (uid, LoadContours (), cs, genetrix);
+   }
+
+   E3SweptSurface LoadSweptSurface () {
+      var (uid, sweep) = (RInt (), RVector ());
+      if (RWord () != "GENERATRIX") Fatal ();
+      Edge3 genetrix = LoadEdge ()!;
+      return new E3SweptSurface (uid, LoadContours (), genetrix, sweep);
+   }
+
+   E3Torus LoadTorus () {
+      var (uid, rmajor, rminor, cs) = (RInt (), RDouble (), RDouble (), RCS ());
+      return new E3Torus (uid, LoadContours (), cs, rmajor, rminor);
    }
 
    // Low level routines -------------------------------------------------------
