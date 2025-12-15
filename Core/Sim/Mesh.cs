@@ -233,7 +233,18 @@ public class Mesh3 (ImmutableArray<Mesh3.Node> vertex, ImmutableArray<int> trian
       return sb.ToString ();
    }
 
-   #region Plane Intersection ------------------------------------------------
+   /// <summary>Computes polygonal intersection loops between a mesh and a plane.</summary>
+   public List<ImmutableArray<Point3>> ComputePlaneIntersection (PlaneDef plane)
+      => new PlaneMeshIntersector (this).Compute (plane);
+}
+#endregion Mesh3
+
+#region class PlaneMeshIntersector -----------------------------------------------------------------
+/// <summary>Provides plane/mesh intersection functionality for a specific mesh.</summary>
+/// This class computes polygonal intersection loops between a mesh and a plane.
+/// Create an instance with a mesh and call `Compute` repeatedly to intersect
+/// multiple planes against the same mesh.
+public class PlaneMeshIntersector(Mesh3 mesh) {
    /// <summary>Edge between two vertices and the two triangle indices sharing it.</summary>
    record class Edge (int A, int B) {
       public int TIdx1 { get; set; } = -1;
@@ -245,20 +256,22 @@ public class Mesh3 (ImmutableArray<Mesh3.Node> vertex, ImmutableArray<int> trian
       public bool IsChecked { get; set; }
    }
 
-   /// <summary>Computes polygonal intersection loops between a mesh and a plane.</summary>
-   public List<ImmutableArray<Point3>> ComputePlaneIntersection (PlaneDef plane) {
-      int triCount = Triangle.Length, vertCount = Vertex.Length;
+   /// <summary>Computes polygonal intersection loops between the stored mesh and a plane.</summary>
+   public List<ImmutableArray<Point3>> Compute (PlaneDef plane) {
+      int triCount = mesh.Triangle.Length, vertCount = mesh.Vertex.Length;
       Vector3 n = plane.Normal; double d = plane.D;
 
       // Precompute signed distances from plane
       var dist = new (Point3f P, double D)[vertCount];
       for (int i = 0; i < vertCount; i++) {
-         var p = Vertex[i].Pos;
+         var p = mesh.Vertex[i].Pos;
          dist[i] = (p, n.X * p.X + n.Y * p.Y + n.Z * p.Z + d);
       }
 
       // Edge map and list of triangle intersection edge pairs
-      mEdgeMap = []; List<EdgePair> triQueue = new (triCount / 3);
+      mEdgeMap.Clear();
+      int initialCapacity = Math.Max (4, triCount / 18);
+      var triQueue = new List<EdgePair> (initialCapacity);
 
       // Identify intersected triangles and store their crossing edges
       for (int t = 0; t < triCount; t += 3)
@@ -275,16 +288,16 @@ public class Mesh3 (ImmutableArray<Mesh3.Node> vertex, ImmutableArray<int> trian
 
    // Checks if a triangle crosses the plane and returns its two crossing edges.
    bool IsChecked (int t, (Point3f P, double D)[] dist, out Edge e1, out Edge e2) {
-      int i0 = Triangle[t++], i1 = Triangle[t++], i2 = Triangle[t++];
+      int i0 = mesh.Triangle[t++], i1 = mesh.Triangle[t++], i2 = mesh.Triangle[t++];
       double d0 = dist[i0].D, d1 = dist[i1].D, d2 = dist[i2].D;
 
       // Each sign change corresponds to an intersected edge
-      e1 = default!; e2 = default!;
+      e1 = null!; e2 = null!;
       if (d0 * d1 < 0) e1 = GetEdge (i0, i1);
-      if (d1 * d2 < 0) { if (e1 == default) e1 = GetEdge (i1, i2); else e2 = GetEdge (i1, i2); }
-      if (d2 * d0 < 0) { if (e1 == default) e1 = GetEdge (i2, i0); else e2 = GetEdge (i2, i0); }
+      if (d1 * d2 < 0) { if (e1 == null) e1 = GetEdge (i1, i2); else e2 = GetEdge (i1, i2); }
+      if (d2 * d0 < 0) { if (e1 == null) e1 = GetEdge (i2, i0); else e2 = GetEdge (i2, i0); }
 
-      return e1 != default && e2 != default;
+      return e1 != null && e2 != null;
    }
 
    // Gets or creates an edge (ensuring A < B) from the edge map.
@@ -307,7 +320,7 @@ public class Mesh3 (ImmutableArray<Mesh3.Node> vertex, ImmutableArray<int> trian
    List<List<Point3>> GetPointLoops (List<EdgePair> triQueue, (Point3f P, double D)[] dist) {
       var polyList = new List<List<Point3>> ();
 
-      while (triQueue.Count > 0) {
+      while (true) {
          // Find next unprocessed triangle edge pair
          EdgePair? t = triQueue.FirstOrDefault (e => !e.IsChecked);
          if (t == null) break;
@@ -353,17 +366,22 @@ public class Mesh3 (ImmutableArray<Mesh3.Node> vertex, ImmutableArray<int> trian
    List<ImmutableArray<Point3>> CombinedPoints (List<List<Point3>> pts) {
       var result = new List<ImmutableArray<Point3>> ();
 
-      // Merge lists that connect head-to-tail
-      for (int i = 0; i < pts.Count; i++)
-         for (int j = i + 1; j < pts.Count; j++)
+      // Merge lists that connect head-to-tail / tail-to-head
+      for (int i = 0; i < pts.Count; i++) {
+         for (int j = i + 1; j < pts.Count; j++) {
+            // tail(i) == head(j) -> append j to i
             if (pts[i][^1].EQ (pts[j][0])) {
                pts[i--].AddRange (pts[j].Skip (1));
                pts.RemoveAt (j); break;
-            } else if (pts[i][^1].EQ (pts[j][^1])) {
+            }
+            // tail(i) == tail(j) -> reverse j then append
+            else if (pts[i][^1].EQ (pts[j][^1])) {
                pts[j].Reverse ();
                pts[i--].AddRange (pts[j].Skip (1));
                pts.RemoveAt (j); break;
             }
+         }
+      }
 
       pts.ForEach (e => result.Add ([.. e]));
       return result;
@@ -376,17 +394,16 @@ public class Mesh3 (ImmutableArray<Mesh3.Node> vertex, ImmutableArray<int> trian
       double t = pd0.Item2 / (pd0.Item2 - pd1.Item2);
 
       return new Point3 (
-          (float)(p0.X + t * (p1.X - p0.X)),
-          (float)(p0.Y + t * (p1.Y - p0.Y)),
-          (float)(p0.Z + t * (p1.Z - p0.Z))
+          p0.X + t * (p1.X - p0.X),
+          p0.Y + t * (p1.Y - p0.Y),
+          p0.Z + t * (p1.Z - p0.Z)
       );
    }
 
    /// <summary>Maps vertex-pairs to unique Edge.</summary>
    Dictionary<(int, int), Edge> mEdgeMap = [];
 }
-#endregion Plane Intersection
-#endregion
+#endregion PlaneMeshIntersector
 
 #region class Mesh3Builder -------------------------------------------------------------------------
 /// <summary>The Mesh3Builder class builds meshes with auto-smoothing and marking of sharp creases</summary>
