@@ -24,18 +24,19 @@ public partial class MainWindow : Window {
       new SceneManipulator ();
    }
 
-   void LeafDemo (object sender, RoutedEventArgs e) => Display (new LeafDemoScene ());
-   void LineFontDemo (object sender, RoutedEventArgs e) => Display (new LineFontScene ());
-   void TrueTypeDemo (object sender, RoutedEventArgs e) => Display (new TrueTypeScene ());
-   void MeshDemo (object sender, RoutedEventArgs e) => Display (new MeshScene ());
-   void TessDemo (object sender, RoutedEventArgs e) => Display (new MeshScene (true));
-   void BooleanDemo (object sender, RoutedEventArgs e) => Display (new BooleanScene ());
-   void DwgDemo (object sender, RoutedEventArgs e) => Display (new DwgScene ());
-   void RobotDemo (object sender, RoutedEventArgs e) => Display (new RobotScene ());
-   void STPDemo (object sender, RoutedEventArgs e) => Display (new STPScene ());
-   void StreamDemo (object sender, RoutedEventArgs e) => Display (new StreamDemoScene ());
-   void AABBTreeDemo (object sender, RoutedEventArgs e) => Display (new AABBTreeDemo ());
-   void MinSphereDemo (object sender, RoutedEventArgs e) => Display (new MinSphereScene ());
+   void LeafDemo (object s, RoutedEventArgs e) => Display (new LeafDemoScene ());
+   void LineFontDemo (object s, RoutedEventArgs e) => Display (new LineFontScene ());
+   void TrueTypeDemo (object s, RoutedEventArgs e) => Display (new TrueTypeScene ());
+   void MeshDemo (object s, RoutedEventArgs e) => Display (new MeshScene ());
+   void TessDemo (object s, RoutedEventArgs e) => Display (new MeshScene (true));
+   void BooleanDemo (object s, RoutedEventArgs e) => Display (new BooleanScene ());
+   void DwgDemo (object s, RoutedEventArgs e) => Display (new DwgScene ());
+   void RobotDemo (object s, RoutedEventArgs e) => Display (new RobotScene ());
+   void STPDemo (object s, RoutedEventArgs e) => Display (new STPScene ());
+   void StreamDemo (object s, RoutedEventArgs e) => Display (new StreamDemoScene ());
+   void AABBTreeDemo (object s, RoutedEventArgs e) => Display (new AABBTreeDemo ());
+   void MinSphereDemo (object s, RoutedEventArgs e) => Display (new MinSphereScene ());
+   void T3XReaderDemo (object s, RoutedEventArgs e) => Display (new T3XDemoScene ());
 
    void Display (Scene scene) {
       mSettings.Children.Clear ();

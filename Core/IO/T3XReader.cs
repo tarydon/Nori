@@ -15,7 +15,7 @@ public class T3XReader : IDisposable {
       if (RWord () != "T3X" || RInt () != 1) Fatal ("Not a T3X file");
       for (; ; ) {
          string type = RWord ();
-         Ent3? ent = type switch {
+         E3Surface? ent = type switch {
             "CONE" => LoadCone (),
             "CYLINDER" => LoadCylinder (),
             "NURBSSURFACE" => LoadNurbsSurface (),
@@ -27,6 +27,7 @@ public class T3XReader : IDisposable {
             _ => throw new BadCaseException (type)
          };
          if (ent == null) break;
+         ent.Mesh = LoadMesh (ent.Id);
          mModel.Ents.Add (ent);
       }
       return mModel;
@@ -103,6 +104,22 @@ public class T3XReader : IDisposable {
 
    Line3 LoadLine () 
       => new (RInt (), RPoint (), RPoint ());
+
+   Mesh3 LoadMesh (int id) {
+      using var ms = new MemoryStream (mZip.ReadAllBytes ($"{id}.meshx"));
+      using var br = new BinaryReader (ms);
+      if (br.ReadInt32 () != 0x1A48534D || br.ReadInt32 () != 1) Fatal ();
+      var nodes = new Mesh3.Node[br.ReadInt32 ()];
+      var tris = new int[br.ReadInt32 ()]; var wires = new int[br.ReadInt32 ()];
+      for (int i = 0; i < nodes.Length; i++) {
+         float x = br.ReadSingle (), y = br.ReadSingle (), z = br.ReadSingle ();
+         Half p = br.ReadHalf (), q = br.ReadHalf (), r = br.ReadHalf ();
+         nodes[i] = new Mesh3.Node (new Point3f (x, y, z), new Vec3H (p, q, r));
+      }
+      for (int i = 0; i < tris.Length; i++) tris[i] = br.ReadInt32 ();
+      for (int i = 0; i < wires.Length; i++) wires[i] = br.ReadInt32 ();
+      return new ([.. nodes], [.. tris], [.. wires]);
+   }
 
    NurbsCurve LoadNurbsCurve () {
       var pairId = RInt ();

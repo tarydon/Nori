@@ -198,6 +198,19 @@ public static class Extensions {
       return n;
    }
 
+   /// <summary>
+   /// Reads all the bytes from a stream in a Zip file
+   /// </summary>
+   public static byte[] ReadAllBytes (this ZipArchive zar, string name) {
+      var entry = zar.GetEntry (name);
+      if (entry == null) throw new Exception ($"Stream {name} not found in ZipArchive");
+      using (var stm = zar.Open (name)) {
+         byte[] data = new byte[entry.Length];
+         stm.ReadExactly (data);
+         return data;
+      }
+   }
+
    /// <summary>Read all lines of text from a specified stream in a ZIP archive</summary>
    public static List<string> ReadAllLines (this ZipArchive zar, string name) {
       using (var stm = zar.Open (name))

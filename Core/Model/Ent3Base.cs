@@ -49,6 +49,11 @@ public abstract partial class Ent3 {
       set { if (Set (E3Flags.Selected, value)) Notify (EProp.Selected); }
    }
 
+   public bool IsTranslucent {
+      get => Get (E3Flags.Translucent);
+      set { if (Set (E3Flags.Translucent, value)) Notify (EProp.Translucency); }
+   }
+
    public E3Flags Flags => mFlags;
 
    // Protected ----------------------------------------------------------------
@@ -67,7 +72,8 @@ public abstract partial class Ent3 {
 
 [Flags]
 public enum E3Flags {
-   Selected = 0x1
+   Selected = 0x1,
+   Translucent = 0x2,
 }
 
 #region class E3Surface ----------------------------------------------------------------------------
@@ -78,7 +84,10 @@ public abstract class E3Surface : Ent3 {
    public override Bound3 Bound => Bound3.Update (ref mBound, ComputeBound);
    Bound3 mBound = new ();
 
-   public Mesh3 Mesh => _mesh ??= BuildMesh (Lib.FineTess, 0.541);  // 0.5411 ~ 31 degrees
+   public Mesh3 Mesh {
+      get => _mesh ??= BuildMesh (Lib.FineTess, 0.541);  // 0.5411 ~ 31 degrees
+      set => _mesh = value;
+   }
    Mesh3? _mesh;
 
    public IReadOnlyList<Contour3> Contours => mContours;
@@ -86,6 +95,7 @@ public abstract class E3Surface : Ent3 {
 
    // Implementation -----------------------------------------------------------
    Bound3 ComputeBound () {
+      if (_mesh != null) return _mesh.Bound;
       List<Point3> pts = [];
       mContours[0].Discretize (pts, Lib.CoarseTess, 1.065);   // 1.065 ~ 61 degrees
       return new (pts);
