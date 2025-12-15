@@ -487,9 +487,7 @@ public partial class Poly {
 
       public static ArcInfo operator * (ArcInfo e, Matrix2 xfm) {
          if (!xfm.IsMirror || (e.Flags & EFlags.Arc) == 0) return new (e.Center * xfm, e.Flags);
-         var flags = e.Flags;
-         flags = (flags & EFlags.CCW) != 0 ? (flags & ~EFlags.CCW) | EFlags.CW
-                                           : (flags & ~EFlags.CW) | EFlags.CCW;
+         var flags = e.Flags; flags ^= EFlags.Arc;
          return new (e.Center * xfm, flags);
       }
    }
