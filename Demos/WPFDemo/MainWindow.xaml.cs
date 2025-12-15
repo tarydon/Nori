@@ -35,6 +35,7 @@ public partial class MainWindow : Window {
    void STPDemo (object sender, RoutedEventArgs e) => Display (new STPScene ());
    void StreamDemo (object sender, RoutedEventArgs e) => Display (new StreamDemoScene ());
    void AABBTreeDemo (object sender, RoutedEventArgs e) => Display (new AABBTreeDemo ());
+   void MinSphereDemo (object sender, RoutedEventArgs e) => Display (new MinSphereScene ());
 
    void Display (Scene scene) {
       mSettings.Children.Clear ();

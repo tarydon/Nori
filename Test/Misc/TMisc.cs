@@ -4,6 +4,7 @@
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 using System.Collections;
 using System.Collections.Immutable;
+using static System.Math;
 namespace Nori.Testing;
 
 [Fixture (3, "Miscellaneous tests", "Misc")]
@@ -438,6 +439,111 @@ class TMisc {
       var cmesh = CMesh.Builder.Build (mesh);
       File.WriteAllText (NT.TmpTxt, cmesh.Dump ());
       Assert.TextFilesEqual ("Misc/robot-1.aabb.txt", NT.TmpTxt);
+   }
+
+   [Test (147, "Minimum Enclosing Circle/Sphere")]
+   void Test16 () {
+      double[] D = [.. File.ReadAllLines (NT.File ("Misc/MES.pts")).Select (double.Parse)];
+      // Circle unit tests ------------
+      // 1. Invalid inputs
+      // Empty set
+      var c = MinCircle.From ([]);
+      c.OK.IsFalse ();
+      // One point
+      c = MinCircle.From ([(10, 10)]);
+      c.OK.IsFalse ();
+      // Duplicate points
+      c = MinCircle.From ([(10, 10), (10, 10), (10, 10), (10, 10)]);
+      c.OK.IsFalse ();
+
+      // 2. Two points.
+      c = MinCircle.From ([(10, 0), (-10, 0)]);
+      c.Radius.Is (10); c.Center.Is ("(0,0)");
+      // Equality tests
+      Assert.IsTrue (c.EQ (MinCircle.From ([(0, 10), (0, -10)])));
+      Assert.IsFalse (c.EQ (MinCircle.From ([(0, 11), (0, -11)])));
+      Assert.IsFalse (c.EQ (MinCircle.From ([(10, 10), (10, -10)])));
+
+      // 3. Three points.
+      // Three points on circumference.
+      c = MinCircle.From ([(10, 0), (-10, 0), (0, 10)]);
+      c.Radius.Is (10); c.Center.Is ("(0,0)");
+      // Two points on circumference, one inside.
+      c = MinCircle.From ([(10, 0), (0, 9), (-10, 0)]);
+      c.Radius.Is (10); c.Center.Is ("(0,0)");
+      c = MinCircle.From ([(10, 0), (10, 0), (-10, 0)]);
+      c.Radius.Is (10); c.Center.Is ("(0,0)");
+
+      // 4. Four or more points.
+      // Three points on circumference, one inside.
+      c = MinCircle.From ([(10, 0), (-10, 0), (0, 10), (0, -9)]);
+      c.Radius.Is (10); c.Center.Is ("(0,0)");
+      // Two points on circumference, two inside.
+      c = MinCircle.From ([(10, 0), (0, 9), (0, -9), (-10, 0)]);
+      c.Radius.Is (10); c.Center.Is ("(0,0)");
+      // All on circumference.
+      c = MinCircle.From ([(10, 0), (0, 10), (-10, 0), (0, -10)]);
+      c.Radius.Is (10); c.Center.Is ("(0,0)");
+      // Dataset from file
+      Point2[] pt2 = [.. D.Chunk (2).Select (a => (a[0], a[1]))];
+      c = MinCircle.From (pt2);
+      // 639.129608, (240.79299,189.43126)
+      c.ToString ().Is ("639.129608, (240.79299,189.43126)");
+      // There should not be any point outside the circle
+      c.Radius.Is (pt2.Max (c.Center.DistTo));
+
+      // Sphere unit tests ------------
+      // 1. Invalid inputs
+      // Empty set
+      var s = MinSphere.From ([]);
+      s.OK.IsFalse ();
+      // One point
+      s = MinSphere.From ([(10, 10, 0)]);
+      s.OK.IsFalse ();
+      // Duplicate points
+      s = MinSphere.From ([(10, 10, 0), (10, 10, 0), (10, 10, 0), (10, 10, 0)]);
+      s.OK.IsFalse ();
+
+      // 2. Two points.
+      s = MinSphere.From ([(10, 0, 0), (-10, 0, 0)]);
+      s.Radius.Is (10); s.Center.Is ("(0,0,0)");
+      // Equality tests
+      Assert.IsTrue (s.EQ (MinSphere.From ([(0, 10, 0), (0, -10, 0)])));
+      Assert.IsFalse (s.EQ (MinSphere.From ([(0, 11, 0), (0, -11, 0)])));
+      Assert.IsFalse (s.EQ (MinSphere.From ([(10, 0, 10), (10, 0, -10)])));
+
+      // 3.Three points.
+      // Three points on circumference.
+      s = MinSphere.From ([(10, 0, 0), (-10, 0, 0), (0, 0, 10)]);
+      s.Radius.Is (10); s.Center.Is ("(0,0,0)");
+      // Two points on circumference, one inside.
+      s = MinSphere.From ([(10, 0, 0), (0, 9, 0), (-10, 0, 0)]);
+      s.Radius.Is (10); s.Center.Is ("(0,0,0)");
+      s = MinSphere.From ([(10, 0, 0), (10, 0, 0), (-10, 0, 0)]);
+      s.Radius.Is (10); s.Center.Is ("(0,0,0)");
+
+      // 4. Four or more points.
+      // Two points defining diameter, two points inside.
+      s = MinSphere.From ([(10, 0, 0), (8, 0, 1), (0, 5, 0), (-10, 0, 0)]);
+      s.Radius.Is (10); s.Center.Is ("(0,0,0)");
+      // Another variant of the above but all in same plane.
+      s = MinSphere.From ([(10, 0, 0), (3, 3, 0), (-3, -3, 0), (-10, 0, 0)]);
+      s.Radius.Is (10); s.Center.Is ("(0,0,0)");
+      // Three points on surface (circle circumference), one inside.
+      double a = 2 * PI / 3, b = 4 * PI / 3;
+      s = MinSphere.From ([(10, 0, 0), (10 * Cos (a), 10 * Sin (a), 0), (10 * Cos (b), 10 * Sin (b), 0), (1, 0, 2)]);
+      s.Radius.Is (10); s.Center.Is ("(0,0,0)");
+      // All on circumference.
+      s = MinSphere.From ([(10, 0, 0), (0, 10, 0), (0, 0, 10), (-10, 0, 0), (0, -10, 0), (0, 0, -10)]);
+      s.Radius.Is (10); s.Center.Is ("(0,0,0)");
+
+      // 5. Dataset from file
+      Point3[] pt3 = [.. D.Chunk (3).Select (a => (a[0], a[1], a[2]))];
+      s = MinSphere.From (pt3);
+      // 531.058455, (169.309693,321.368582,63.459182)
+      s.ToString ().Is ("531.058455, (169.309693,321.368582,63.459182)");
+      // There should not be any point outside the sphere
+      s.Radius.Is (pt3.Max (s.Center.DistTo));
    }
 
    class T1Type : IIndexed {

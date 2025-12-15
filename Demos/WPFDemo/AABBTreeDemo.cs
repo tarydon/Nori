@@ -26,6 +26,7 @@ class AABBTreeDemo : Scene3 {
          Color = new Color4 (128, 128, 128)
       };
       Lib.Tracer = TraceVN.Print;
+      TraceVN.It.Clear ();
       Root = new GroupVN ([meshVN, mCMeshVN, TraceVN.It]);
       BgrdColor = Color4.Gray (64);
       Bound = mesh.Bound;
