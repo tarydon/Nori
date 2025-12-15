@@ -31,9 +31,7 @@ public enum EProp {
    Selected,
    /// <summary>The joint value of a mechanism</summary>
    JValue,
-   /// <summary>
-   /// Translucency of an entity
-   /// </summary>
+   /// <summary>Translucency of an entity</summary>
    Translucency,
 
    Grid, FillInterior, CurrentLayer

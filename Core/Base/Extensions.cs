@@ -198,9 +198,7 @@ public static class Extensions {
       return n;
    }
 
-   /// <summary>
-   /// Reads all the bytes from a stream in a Zip file
-   /// </summary>
+   /// <summary>Reads all the bytes from a stream in a Zip file</summary>
    public static byte[] ReadAllBytes (this ZipArchive zar, string name) {
       var entry = zar.GetEntry (name);
       if (entry == null) throw new Exception ($"Stream {name} not found in ZipArchive");
