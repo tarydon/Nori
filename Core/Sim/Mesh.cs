@@ -366,7 +366,7 @@ public class PlaneMeshIntersector(Mesh3 mesh) {
    List<ImmutableArray<Point3>> CombinedPoints (List<List<Point3>> pts) {
       var result = new List<ImmutableArray<Point3>> ();
 
-      // Merge lists that connect head-to-tail / tail-to-head
+      // Merge lists that connect 
       for (int i = 0; i < pts.Count; i++) {
          for (int j = i + 1; j < pts.Count; j++) {
             // tail(i) == head(j) -> append j to i
@@ -379,6 +379,17 @@ public class PlaneMeshIntersector(Mesh3 mesh) {
                pts[j].Reverse ();
                pts[i--].AddRange (pts[j].Skip (1));
                pts.RemoveAt (j); break;
+            }
+            // head(i) == tail(j) -> prepend j to i
+            else if (pts[i][0].EQ (pts[j][^1])) {
+               pts[i].InsertRange (0, pts[j].Take (pts[j].Count - 1));
+               pts.RemoveAt (j); i--; break;
+            }
+            // head(i) == head(j) -> reverse j then prepend
+            else if (pts[i][0].EQ (pts[j][0])) {
+               pts[j].Reverse ();
+               pts[i].InsertRange(0, pts[j].Take (pts[j].Count - 1));
+               pts.RemoveAt (j); i--; break;
             }
          }
       }
