@@ -98,6 +98,14 @@ class Matrix2Tests {
 
       var m6 = (Matrix3)Matrix2.Translation (1, 2);
       m6.Is ("[1,0,0, 0,1,0, 0,0,1, 1,2,0]");
+
+      var poly = Poly.Parse ("M0,0 Q10,10,-1");
+      var m12 = Matrix2.Mirror ((15, 10), (15, 0));
+      (poly * m12).Is ("M30,0Q20,10,1"); // Flipping the arc winding when mirroring
+
+      var poly1 = Poly.Circle ((5, 5), 5);
+      var m13 = Matrix2.Mirror ((15, 15), (15, 0));
+      (poly1 * m13).Is ("C25,5,5");
    }
 
    [Test (5, "Matrix2 multiplication, inverse")]
