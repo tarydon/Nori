@@ -103,9 +103,9 @@ class Matrix2Tests {
       var m12 = Matrix2.Mirror ((15, 10), (15, 0));
       (poly * m12).Is ("M30,0Q20,10,1"); // Flipping the arc winding when mirroring
 
-      var poly1 = Poly.Circle ((5, 5), 5);
+      poly = Poly.Circle ((5, 5), 5);
       var m13 = Matrix2.Mirror ((15, 15), (15, 0));
-      (poly1 * m13).Is ("C25,5,5");
+      (poly * m13).Is ("C25,5,5");
    }
 
    [Test (5, "Matrix2 multiplication, inverse")]
