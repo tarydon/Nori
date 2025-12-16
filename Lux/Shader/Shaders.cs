@@ -185,6 +185,34 @@ partial class Point2DShader : Shader<Vec2F, Point2DShader.Settings> {
 }
 #endregion
 
+#region class Point3DShader ------------------------------------------------------------------------
+/// <summary>Shader used to draw points in 3D</summary>
+[Singleton]
+partial class Point3DShader : Shader<Vec3F, Point3DShader.Settings> {
+   // Constructor --------------------------------------------------------------
+   public Point3DShader () : base (ShaderImp.Point3D) => Bind ();
+   int muVPScale = 0, muXfm = 0, muPointSize = 0, muDrawColor = 0;
+
+   // Overrides ----------------------------------------------------------------
+   protected override void ApplyUniformsImp (ref readonly Settings a) {
+      Pgm.Set (muXfm, ref Lux.Scene!.Xfms[a.IDXfm].Xfm);
+      Pgm.Set (muPointSize, a.PointSize * Lux.DPIScale).Set (muDrawColor, a.Color);
+   }
+
+   protected override int OrderUniformsImp (ref readonly Settings a, ref readonly Settings b) {
+      int n = a.IDXfm - b.IDXfm; if (n != 0) return n;
+      n = a.PointSize.CompareTo (b.PointSize); if (n != 0) return n;
+      return (int)(a.Color.Value - b.Color.Value);
+   }
+
+   protected override void SetConstantsImp () => Pgm.Set (muVPScale, Lux.VPScale);
+   protected override Settings SnapUniformsImp () => new (Lux.IDXfm, Lux.PointSize, Lux.Color);
+
+   // Nested types -------------------------------------------------------------
+   public readonly record struct Settings (int IDXfm, float PointSize, Color4 Color);
+}
+#endregion
+
 #region class Quad2DShader -------------------------------------------------------------------------
 /// <summary>Shader to draw simple quads in 2D (specified in world space, no anti-aliasing)</summary>
 [Singleton]

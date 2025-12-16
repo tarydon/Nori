@@ -2,6 +2,7 @@
 // ╔═╦╦═╦╦╬╣ Extensions.cs
 // ║║║║╬║╔╣║ Various extension methods for common system types
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
+using System.IO.Compression;
 using static System.Math;
 namespace Nori;
 
@@ -150,6 +151,12 @@ public static class Extensions {
       foreach (var elem in seq) yield return (c++, elem);
    }
 
+   /// <summary>Opens a specified stream from a ZIP archive, throws an exception if not found</summary>
+   public static Stream Open (this ZipArchive zar, string name) {
+      var entry = zar.GetEntry (name);
+      return entry == null ? throw new Exception ($"Stream {name} not found in ZipArchive") : entry.Open ();
+   }
+
    /// <summary>Convert an angle from radians to degrees</summary>
    public static double R2D (this double f) => f * DegreesPerRadian;
    const double DegreesPerRadian = 180 / PI;
@@ -164,13 +171,19 @@ public static class Extensions {
    /// This has special handling to avoid -0 from appearing
    public static double R6 (this double f) { f = Math.Round (f, 6); return f == -0 ? 0 : f; }
 
-   /// <summary>Reads all lines from the specified file at the given path</summary>
+   /// <summary>Reads all lines of text from the specified stream</summary>
    public static List<string> ReadAllLines (this Stream stm) {
       string? line;
       List<string> lines = [];
-      using (var reader = new StreamReader (stm))
+      using (var reader = new StreamReader (stm)) 
          while ((line = reader.ReadLine ()) != null) lines.Add (line);
       return lines;
+   }
+
+   /// <summary>Reads all the text from a specified stream</summary>
+   public static string ReadAllText (this Stream stm) {
+      using (var reader = new StreamReader (stm))
+         return reader.ReadToEnd ();
    }
 
    /// <summary>Reads n bytes from the stream and returns a byte-array</summary>
@@ -183,6 +196,29 @@ public static class Extensions {
    public static unsafe int ReadInt32 (this Stream stm) {
       int n; stm.ReadExactly (new Span<byte> (&n, 4));
       return n;
+   }
+
+   /// <summary>Reads all the bytes from a stream in a Zip file</summary>
+   public static byte[] ReadAllBytes (this ZipArchive zar, string name) {
+      var entry = zar.GetEntry (name);
+      if (entry == null) throw new Exception ($"Stream {name} not found in ZipArchive");
+      using (var stm = zar.Open (name)) {
+         byte[] data = new byte[entry.Length];
+         stm.ReadExactly (data);
+         return data;
+      }
+   }
+
+   /// <summary>Read all lines of text from a specified stream in a ZIP archive</summary>
+   public static List<string> ReadAllLines (this ZipArchive zar, string name) {
+      using (var stm = zar.Open (name))
+         return ReadAllLines (stm);
+   }
+
+   /// <summary>Read all text from a specified strream in a ZIP archive</summary>
+   public static string ReadAllText (this ZipArchive zar, string name) {
+      using (var stm = zar.Open (name))
+         return ReadAllText (stm);
    }
 
    /// <summary>Removes the last element from a List (and returns it)</summary>

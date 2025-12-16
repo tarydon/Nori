@@ -60,7 +60,7 @@ public enum EMode : uint {
 }
 
 /// <summary>Various shading modes to pass to Lux.Mesh(...)</summary>
-public enum EShadeMode { Flat, Gourad, Phong, Glass }
+public enum EShadeMode { Flat, Gourad, Phong, Glass, GlassNoStencil }
 
 // Pixel storage formats
 public enum EPixelFormat : uint { 
