@@ -18,7 +18,7 @@ class TLux {
          Lux.Lines ([new Vec2F (0, 0), new (100, 0), new (100, 0), new (70, 100)]);
          Lux.Beziers ([new (0, 0), new (0, 80), new (20, 100), new (70, 100),
                        new (100, 0), new (50, 25), new (25, 50), new (70, 100)]);
-         Lux.Points ([new (10, 10), new (30, 10), new (30, 30), new (10, 30)]);
+         Lux.Points ([new Vec2F (10, 10), new (30, 10), new (30, 30), new (10, 30)]);
       }
    }
 
