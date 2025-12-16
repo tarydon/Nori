@@ -3,6 +3,7 @@
 // ║║║║╬║╔╣║ Implements the Mesh3 class, a simple mesh format for rendering
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 using System.IO.Compression;
+using System.Runtime.Intrinsics;
 namespace Nori;
 
 #region class Mesh3 --------------------------------------------------------------------------------
@@ -16,10 +17,25 @@ namespace Nori;
 /// - The Wires array (taken 2 at a time) defines the stencil lines to be drawn.
 ///   Each endpoint of the wire is again an index into the Vertex array (and to draw the
 ///   wires, we use only the position, not the normal)
-public class Mesh3 (ImmutableArray<Mesh3.Node> vertex, ImmutableArray<int> triangle, ImmutableArray<int> wire) {
-   public readonly ImmutableArray<Node> Vertex = vertex;
-   public readonly ImmutableArray<int> Triangle = triangle;
-   public readonly ImmutableArray<int> Wire = wire;
+public class Mesh3 {
+   public Mesh3 (ImmutableArray<Node> vertex, ImmutableArray<int> tris, ImmutableArray<int> wire) {
+      Vertex = vertex; Triangle = tris; Wire = wire;
+   }
+
+   public bool Opposing () {
+      for (int i = 0; i < Triangle.Length; i += 3) {
+         Node na = Vertex[Triangle[i]], nb = Vertex[Triangle[i + 1]], nc = Vertex[Triangle[i + 2]];
+         Point3 pa = (Point3)na.Pos, pb = (Point3)nb.Pos, pc = (Point3)nc.Pos;
+         Vector3 va = ((pb - pa) * (pc - pb)).Normalized ();
+         Vector3 vb = ((Vector3)na.Vec + (Vector3)nb.Vec + (Vector3)nc.Vec).Normalized ();
+         if (va.Opposing (vb)) return true;
+      }
+      return false;
+   }
+
+   public readonly ImmutableArray<Node> Vertex;
+   public readonly ImmutableArray<int> Triangle;
+   public readonly ImmutableArray<int> Wire;
 
    public Bound3 GetBound (Matrix3 xfm) => new (Vertex.Select (a => (Point3)a.Pos * xfm));
 

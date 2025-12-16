@@ -67,9 +67,7 @@ abstract class EventWrapper<T> : IObservable<T> {
 /// <summary>This class represents the low-level hardware and provides a number of event streams</summary>
 public static class HW {
    // Properties ---------------------------------------------------------------
-   /// <summary>
-   /// Is the cursor visible when over the OpenGL surface?
-   /// </summary>
+   /// <summary>Is the cursor visible when over the OpenGL surface?</summary>
    public static bool CursorVisible { set => Nori.Panel.CursorVisible = value; }
 
    /// <summary>Is the ALT key currently pressed?</summary>
@@ -86,9 +84,7 @@ public static class HW {
       return panel.Capture;
    }
 
-   /// <summary>
-   /// Force a redraw of the OpenGL panel
-   /// </summary>
+   /// <summary>Force a redraw of the OpenGL panel</summary>
    public static void Redraw () => Nori.Panel.It?.Redraw ();
 
    // Observable points --------------------------------------------------------
