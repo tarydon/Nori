@@ -125,9 +125,10 @@ class ShaderImp {
    public static ShaderImp Line3D => mLine3D ??= Load ();
    public static ShaderImp DashLine2D => mDashLine2D ??= Load ();
    public static ShaderImp Point2D => mPoint2D ??= Load ();
+   public static ShaderImp Point3D => mPoint3D ??= Load ();
    public static ShaderImp Triangle2D => mTriangle2D ??= Load ();
    public static ShaderImp Quad2D => mQuad2D ??= Load ();
-   static ShaderImp? mLine2D, mLine3D, mBezier2D, mPoint2D, mTriangle2D, mQuad2D, mDashLine2D;
+   static ShaderImp? mLine2D, mLine3D, mBezier2D, mPoint2D, mPoint3D, mTriangle2D, mQuad2D, mDashLine2D;
 
    public static ShaderImp BlackLine => mBlackLine ??= Load ();
    public static ShaderImp GlassLine => mGlassLine ??= Load ();

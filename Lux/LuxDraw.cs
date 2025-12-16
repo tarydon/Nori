@@ -238,6 +238,7 @@ public static partial class Lux {
          }
       }
    }
+   static List<Vec3F> mHairs = [];
 
    /// <summary>Draws 2D points in world coordinates, with Z = 0</summary>
    /// The following Lux properties are used:
@@ -245,6 +246,9 @@ public static partial class Lux {
    /// - DrawColor : color of the points being drawn
    public static void Points (ReadOnlySpan<Vec2F> pts)
       => Point2DShader.It.Draw (pts);
+
+   public static void Points (ReadOnlySpan<Vec3F> pts)
+      => Point3DShader.It.Draw (pts);
 
    /// <summary>Draws a Poly object in world coordinates, with Z = 0</summary>
    public static void Poly (Poly p) {

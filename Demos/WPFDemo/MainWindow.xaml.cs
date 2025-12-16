@@ -42,6 +42,6 @@ public partial class MainWindow : Window {
       mSettings.Children.Clear ();
       Lux.UIScene = scene;
       if (scene is RobotScene rs) rs.CreateUI (mSettings.Children);
-      if (scene is STPScene) Lux.BackFacesPink = true;
+      if (scene is STPScene or T3XDemoScene) Lux.BackFacesPink = true;
    }
 }
