@@ -83,7 +83,7 @@ public class Matrix2 (double m11, double m12, double m21, double m22, double x, 
 
    /// <summary>Multiply two matrices together</summary>
    public static Matrix2 operator * (Matrix2 a, Matrix2 b) =>
-       new (a.M11 * b.M11 + a.M12 * b.M21, a.M11 * b.M12 + a.M12 * b.M22,
+      new (a.M11 * b.M11 + a.M12 * b.M21, a.M11 * b.M12 + a.M12 * b.M22,
            a.M21 * b.M11 + a.M22 * b.M21, a.M21 * b.M12 + a.M22 * b.M22,
            a.DX * b.M11 + a.DY * b.M21 + b.DX, a.DX * b.M12 + a.DY * b.M22 + b.DY) {
           IsMirror = a.IsMirror ^ b.IsMirror
