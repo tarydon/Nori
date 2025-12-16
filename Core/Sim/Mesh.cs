@@ -93,7 +93,7 @@ public class Mesh3 (ImmutableArray<Mesh3.Node> vertex, ImmutableArray<int> trian
             fixed (Node* pnode = &nodes[0])
                for (int j = 0; j < nodes.Length; j++) bs.Read (pnode + j, 18);
 
-         int[] tIdx;  List<int> wIdx = [];
+         int[] tIdx; List<int> wIdx = [];
          if (small) {
             ushort[] stIdx = new ushort[tris], swIdx = new ushort[all - tris];
             fixed (void* p = stIdx) bs.Read (p, tris * 2);
@@ -143,7 +143,7 @@ public class Mesh3 (ImmutableArray<Mesh3.Node> vertex, ImmutableArray<int> trian
       return new Mesh3Builder (pts.AsSpan ()).Build ();
    }
 
-   public static Mesh3 LoadObj (string filename) 
+   public static Mesh3 LoadObj (string filename)
       => LoadObj (File.ReadAllLines (filename));
 
    /// <summary>Loads data from a TMesh file</summary>
@@ -244,7 +244,7 @@ public class Mesh3 (ImmutableArray<Mesh3.Node> vertex, ImmutableArray<int> trian
 /// This class computes polygonal intersection loops between a mesh and a plane.
 /// Create an instance with a mesh and call `Compute` repeatedly to intersect
 /// multiple planes against the same mesh.
-public class PlaneMeshIntersector(Mesh3 mesh) {
+public class PlaneMeshIntersector (Mesh3 mesh) {
    /// <summary>Edge between two vertices and the two triangle indices sharing it.</summary>
    record class Edge (int A, int B) {
       public int TIdx1 { get; set; } = -1;
@@ -257,6 +257,11 @@ public class PlaneMeshIntersector(Mesh3 mesh) {
    }
 
    /// <summary>Computes polygonal intersection loops between the stored mesh and a plane.</summary>
+   /// Computes intersection loops where the mesh crosses the plane:
+   /// - Classify each vertex as above/below the plane using signed distance.
+   /// - For each triangle, if its vertices straddle the plane, find the two edges crossed.
+   /// - Register those edges in the edge map and the triangle queue for connectivity.
+   /// - Trace intersected edges into continuous polylines (loops or open).
    public List<ImmutableArray<Point3>> Compute (PlaneDef plane) {
       int triCount = mesh.Triangle.Length, vertCount = mesh.Vertex.Length;
       Vector3 n = plane.Normal; double d = plane.D;
@@ -386,7 +391,7 @@ public class PlaneMeshIntersector(Mesh3 mesh) {
             // head(i) == head(j) -> reverse j then prepend
             else if (pts[i][0].EQ (pts[j][0])) {
                pts[j].Reverse ();
-               pts[i].InsertRange(0, pts[j].Take (pts[j].Count - 1));
+               pts[i].InsertRange (0, pts[j].Take (pts[j].Count - 1));
                pts.RemoveAt (j); i--; break;
             }
          }
@@ -412,7 +417,10 @@ public class PlaneMeshIntersector(Mesh3 mesh) {
    /// <summary>Maps vertex-pairs to unique Edge.</summary>
    Dictionary<(int, int), Edge> mEdgeMap = [];
    /// <summary>List of edge pairs of intersected triangles.</summary>
-   List<EdgePair> mTriQueue = new(Math.Max (4, mesh.Triangle.Length / 18));
+   /// The initial capacity is set to 1/6th the number of triangles in the mesh,
+   /// i.e., mesh.Triangle.Length / 18, since in most cases, the number of intersecting
+   /// triangles is much less than the total.
+   List<EdgePair> mTriQueue = new (Math.Max (4, mesh.Triangle.Length / 18));
 }
 #endregion PlaneMeshIntersector
 
