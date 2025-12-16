@@ -269,20 +269,18 @@ public class PlaneMeshIntersector(Mesh3 mesh) {
       }
 
       // Edge map and list of triangle intersection edge pairs
-      mEdgeMap.Clear();
-      int initialCapacity = Math.Max (4, triCount / 18);
-      var triQueue = new List<EdgePair> (initialCapacity);
+      mEdgeMap.Clear (); mTriQueue.Clear ();
 
       // Identify intersected triangles and store their crossing edges
       for (int t = 0; t < triCount; t += 3)
          if (IsChecked (t, dist, out Edge e1, out Edge e2)) {
-            RegisterEdge (e1, triQueue.Count);
-            RegisterEdge (e2, triQueue.Count);
-            triQueue.Add (new EdgePair (e1, e2));
+            RegisterEdge (e1, mTriQueue.Count);
+            RegisterEdge (e2, mTriQueue.Count);
+            mTriQueue.Add (new EdgePair (e1, e2));
          }
 
       // Trace all polylines produced by the intersected edges
-      var polyList = GetPointLoops (triQueue, dist);
+      var polyList = GetPointLoops (dist);
       return CombinedPoints (polyList);
    }
 
@@ -317,18 +315,18 @@ public class PlaneMeshIntersector(Mesh3 mesh) {
    }
 
    // Traces all edge-pairs to reconstruct full intersection polylines.
-   List<List<Point3>> GetPointLoops (List<EdgePair> triQueue, (Point3f P, double D)[] dist) {
+   List<List<Point3>> GetPointLoops ((Point3f P, double D)[] dist) {
       var polyList = new List<List<Point3>> ();
 
       while (true) {
          // Find next unprocessed triangle edge pair
-         EdgePair? t = triQueue.FirstOrDefault (e => !e.IsChecked);
+         EdgePair? t = mTriQueue.FirstOrDefault (e => !e.IsChecked);
          if (t == null) break;
          t.IsChecked = true;
 
          // Trace edges outward in both directions
-         var pts1 = WalkEdge (dist, triQueue, t.Edge1);
-         var pts2 = WalkEdge (dist, triQueue, t.Edge2);
+         var pts1 = WalkEdge (dist, t.Edge1);
+         var pts2 = WalkEdge (dist, t.Edge2);
 
          pts1.Reverse ();   // First direction must be reversed before merging
          polyList.Add ([.. pts1, .. pts2]);
@@ -338,7 +336,7 @@ public class PlaneMeshIntersector(Mesh3 mesh) {
    }
 
    // Walks along connected edges to collect intersection points in one direction.
-   List<Point3> WalkEdge ((Point3f P, double D)[] dist, List<EdgePair> triQueue, Edge edge) {
+   List<Point3> WalkEdge ((Point3f P, double D)[] dist, Edge edge) {
       List<Point3> points = [];
 
       while (true) {
@@ -348,8 +346,8 @@ public class PlaneMeshIntersector(Mesh3 mesh) {
          if (edge.TIdx2 == -1) break; // No continuation
 
          // Choose next triangle that share this edge
-         var t1 = triQueue[edge.TIdx1];
-         var t2 = triQueue[edge.TIdx2];
+         var t1 = mTriQueue[edge.TIdx1];
+         var t2 = mTriQueue[edge.TIdx2];
          var next = t1.IsChecked ? t2 : t1;
 
          if (next.IsChecked) break; // End of chain
@@ -413,6 +411,8 @@ public class PlaneMeshIntersector(Mesh3 mesh) {
 
    /// <summary>Maps vertex-pairs to unique Edge.</summary>
    Dictionary<(int, int), Edge> mEdgeMap = [];
+   /// <summary>List of edge pairs of intersected triangles.</summary>
+   List<EdgePair> mTriQueue = new(Math.Max (4, mesh.Triangle.Length / 18));
 }
 #endregion PlaneMeshIntersector
 
