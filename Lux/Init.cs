@@ -1,4 +1,8 @@
-﻿using System.Reflection;
+// ────── ╔╗
+// ╔═╦╦═╦╦╬╣ Init.cs
+// ║║║║╬║╔╣║ <<TODO>>
+// ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
+using System.Reflection;
 namespace Nori;
 
 public class Lux2 {
