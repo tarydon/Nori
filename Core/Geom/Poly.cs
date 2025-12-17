@@ -487,9 +487,7 @@ public partial class Poly {
 
       public static ArcInfo operator * (ArcInfo e, Matrix2 xfm) {
          if ((e.Flags & EFlags.Arc) == 0) return e;
-         if (!xfm.IsMirror) return new (e.Center * xfm, e.Flags);
-         var flags = e.Flags; flags ^= EFlags.Arc;
-         return new (e.Center * xfm, flags);
+         return new (e.Center * xfm, xfm.IsMirror ? e.Flags ^ EFlags.Arc : e.Flags);
       }
    }
    /// <summary>This array is populated only if the Poly has any arcs</summary>
