@@ -261,24 +261,13 @@ public class Mesh3 {
 /// Create an instance with a mesh and call `Compute` repeatedly to intersect
 /// multiple planes against the same mesh.
 public class PlaneMeshIntersector (Mesh3 mesh) {
-   /// <summary>Edge between two vertices and the two triangle indices sharing it.</summary>
-   record class Edge (int A, int B) {
-      public int TIdx1 { get; set; } = -1;
-      public int TIdx2 { get; set; } = -1;
-   }
-
-   /// <summary>Connected pair of edges belonging to a triangle intersection.</summary>
-   record class EdgePair (Edge Edge1, Edge Edge2) {
-      public bool IsChecked { get; set; }
-   }
-
    /// <summary>Computes polygonal intersection loops between the stored mesh and a plane.</summary>
    /// Computes intersection loops where the mesh crosses the plane:
    /// - Classify each vertex as above/below the plane using signed distance.
    /// - For each triangle, if its vertices straddle the plane, find the two edges crossed.
    /// - Register those edges in the edge map and the triangle queue for connectivity.
    /// - Trace intersected edges into continuous polylines (loops or open).
-   public List<ImmutableArray<Point3>> Compute (PlaneDef plane) {
+   public List<ImmutableArray<Point3>> Compute (PlaneDef plane, double tolerance = 1e-3) {
       int triCount = mesh.Triangle.Length, vertCount = mesh.Vertex.Length;
       Vector3 n = plane.Normal; double d = plane.D;
 
@@ -294,7 +283,7 @@ public class PlaneMeshIntersector (Mesh3 mesh) {
 
       // Identify intersected triangles and store their crossing edges
       for (int t = 0; t < triCount; t += 3)
-         if (IsChecked (t, dist, out Edge e1, out Edge e2)) {
+         if (IsChecked (t, dist, out Edge? e1, out Edge? e2)) {
             RegisterEdge (e1, mTriQueue.Count);
             RegisterEdge (e2, mTriQueue.Count);
             mTriQueue.Add (new EdgePair (e1, e2));
@@ -302,16 +291,30 @@ public class PlaneMeshIntersector (Mesh3 mesh) {
 
       // Trace all polylines produced by the intersected edges
       var polyList = GetPointLoops (dist);
-      return CombinedPoints (polyList);
+      return CombinedPoints (polyList, tolerance);
+   }
+
+   /// <summary>Edge between two vertices and the two triangle indices sharing it.</summary>
+   public record class Edge (int A, int B) {
+      public int TIdx1 = -1;
+      public int TIdx2 = -1;
+   }
+
+   /// <summary>Connected pair of edges belonging to a triangle intersection.</summary>
+   struct EdgePair (Edge edge1, Edge edge2) {
+      public Edge Edge1 = edge1;
+      public Edge Edge2 = edge2;
+      public bool IsChecked;
    }
 
    // Checks if a triangle crosses the plane and returns its two crossing edges.
-   bool IsChecked (int t, (Point3f P, double D)[] dist, out Edge e1, out Edge e2) {
+   bool IsChecked (int t, (Point3f P, double D)[] dist, [NotNullWhen (true)] out Edge? e1,
+                                                        [NotNullWhen (true)] out Edge? e2) {
       int i0 = mesh.Triangle[t++], i1 = mesh.Triangle[t++], i2 = mesh.Triangle[t++];
       double d0 = dist[i0].D, d1 = dist[i1].D, d2 = dist[i2].D;
 
       // Each sign change corresponds to an intersected edge
-      e1 = null!; e2 = null!;
+      e1 = null; e2 = null; 
       if (d0 * d1 < 0) e1 = GetEdge (i0, i1);
       if (d1 * d2 < 0) { if (e1 == null) e1 = GetEdge (i1, i2); else e2 = GetEdge (i1, i2); }
       if (d2 * d0 < 0) { if (e1 == null) e1 = GetEdge (i2, i0); else e2 = GetEdge (i2, i0); }
@@ -321,10 +324,10 @@ public class PlaneMeshIntersector (Mesh3 mesh) {
 
    // Gets or creates an edge (ensuring A < B) from the edge map.
    Edge GetEdge (int a, int b) {
-      (int c, int d) = a < b ? (a, b) : (b, a);   // normalize ordering
+      if (b < a) (a, b) = (b, a);   // normalize ordering
 
-      if (!mEdgeMap.TryGetValue ((c, d), out var edge))
-         mEdgeMap[(c, d)] = edge = new Edge (c, d);
+      if (!mEdgeMap.TryGetValue ((a, b), out var edge))
+         mEdgeMap[(a, b)] = edge = new Edge (a, b);
 
       return edge;
    }
@@ -340,10 +343,12 @@ public class PlaneMeshIntersector (Mesh3 mesh) {
       var polyList = new List<List<Point3>> ();
 
       while (true) {
-         // Find next unprocessed triangle edge pair
-         EdgePair? t = mTriQueue.FirstOrDefault (e => !e.IsChecked);
-         if (t == null) break;
-         t.IsChecked = true;
+         // Find index of next unprocessed triangle edge pair
+         int idx = mTriQueue.FindIndex (e => !e.IsChecked);
+         if (idx == -1) break;
+
+         var t = mTriQueue[idx]; t.IsChecked = true;
+         mTriQueue[idx] = t;
 
          // Trace edges outward in both directions
          var pts1 = WalkEdge (dist, t.Edge1);
@@ -366,13 +371,11 @@ public class PlaneMeshIntersector (Mesh3 mesh) {
 
          if (edge.TIdx2 == -1) break; // No continuation
 
-         // Choose next triangle that share this edge
-         var t1 = mTriQueue[edge.TIdx1];
-         var t2 = mTriQueue[edge.TIdx2];
-         var next = t1.IsChecked ? t2 : t1;
-
-         if (next.IsChecked) break; // End of chain
-         next.IsChecked = true;
+         // Continue traversal through the unvisited adjacent triangle
+         int nextIdx = mTriQueue[edge.TIdx1].IsChecked ? edge.TIdx2 : edge.TIdx1;
+         
+         var next = mTriQueue[nextIdx]; if (next.IsChecked) break; // Safety check
+         next.IsChecked = true; mTriQueue[nextIdx] = next;
 
          // Follow the next edge
          edge = next.Edge1 == edge ? next.Edge2 : next.Edge1;
@@ -382,30 +385,30 @@ public class PlaneMeshIntersector (Mesh3 mesh) {
    }
 
    // Combines all polylines whose endpoints touch into continuous polylines.
-   List<ImmutableArray<Point3>> CombinedPoints (List<List<Point3>> pts) {
+   List<ImmutableArray<Point3>> CombinedPoints (List<List<Point3>> pts, double tolerance) {
       var result = new List<ImmutableArray<Point3>> ();
 
       // Merge lists that connect 
       for (int i = 0; i < pts.Count; i++) {
          for (int j = i + 1; j < pts.Count; j++) {
             // tail(i) == head(j) -> append j to i
-            if (pts[i][^1].EQ (pts[j][0])) {
+            if (pts[i][^1].EQ (pts[j][0], tolerance)) {
                pts[i--].AddRange (pts[j].Skip (1));
                pts.RemoveAt (j); break;
             }
             // tail(i) == tail(j) -> reverse j then append
-            else if (pts[i][^1].EQ (pts[j][^1])) {
+            else if (pts[i][^1].EQ (pts[j][^1], tolerance)) {
                pts[j].Reverse ();
                pts[i--].AddRange (pts[j].Skip (1));
                pts.RemoveAt (j); break;
             }
             // head(i) == tail(j) -> prepend j to i
-            else if (pts[i][0].EQ (pts[j][^1])) {
+            else if (pts[i][0].EQ (pts[j][^1], tolerance)) {
                pts[i].InsertRange (0, pts[j].Take (pts[j].Count - 1));
                pts.RemoveAt (j); i--; break;
             }
             // head(i) == head(j) -> reverse j then prepend
-            else if (pts[i][0].EQ (pts[j][0])) {
+            else if (pts[i][0].EQ (pts[j][0], tolerance)) {
                pts[j].Reverse ();
                pts[i].InsertRange (0, pts[j].Take (pts[j].Count - 1));
                pts.RemoveAt (j); i--; break;
@@ -433,10 +436,7 @@ public class PlaneMeshIntersector (Mesh3 mesh) {
    /// <summary>Maps vertex-pairs to unique Edge.</summary>
    Dictionary<(int, int), Edge> mEdgeMap = [];
    /// <summary>List of edge pairs of intersected triangles.</summary>
-   /// The initial capacity is set to 1/6th the number of triangles in the mesh,
-   /// i.e., mesh.Triangle.Length / 18, since in most cases, the number of intersecting
-   /// triangles is much less than the total.
-   List<EdgePair> mTriQueue = new (Math.Max (4, mesh.Triangle.Length / 18));
+   List<EdgePair> mTriQueue = [];
 }
 #endregion PlaneMeshIntersector
 
