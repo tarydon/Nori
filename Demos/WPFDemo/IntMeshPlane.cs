@@ -20,9 +20,28 @@ class IntMeshPlaneScene : Scene3 {
       List<VNode> vnodes = [new MeshVN (fullmesh) { Color = Color4.White, Shading = EShadeMode.Glass }, TraceVN.It];
       Bound = fullmesh.Bound;
 
-      AddIntersections (fullmesh, vnodes, 4);
+      int slices = 20;
+      // AddIntersections (fullmesh, vnodes, slices);
+      AddIntersections2 (fullmesh, vnodes, slices);
       BgrdColor = new Color4 (32, 64, 96);
       Root = new GroupVN (vnodes);
+   }
+
+   void AddIntersections2 (Mesh3 mesh, List<VNode> nodes, int step) {
+      using var bt = new BlockTimer ("Slice Mesh");
+      MeshSlicer pmi = new (mesh);
+      var bound = mesh.Bound;
+      for (int i = step; i <= 100; i += step) {
+         double x = (i / 100.0).Along (bound.X.Min, bound.X.Max);
+         PlaneDef pdef = new (new (x, 0, 0), Vector3.XAxis);
+         var pts = pmi.Slice (pdef);
+         nodes.Add (new LinesVN ([.. pts.Select (a => (Vec3F)a)]));
+
+         double y = (i / 100.0).Along (Bound.Y.Min, Bound.Y.Max);
+         pdef = new (new (0, y, 0), Vector3.YAxis);
+         pts = pmi.Slice (pdef);
+         nodes.Add (new LinesVN ([.. pts.Select (a => (Vec3F)a)]));
+      }
    }
 
    void AddIntersections (Mesh3 mesh, List<VNode> curves, int step) {
@@ -41,4 +60,8 @@ class IntMeshPlaneScene : Scene3 {
             curves.Add (new Curve3VN (new Polyline3 (0, lines)));
       }
    }
+}
+
+class LinesVN (List<Vec3F> pts) : VNode (pts) {
+   public override void Draw () => Lux.Lines (pts.AsSpan ());
 }
