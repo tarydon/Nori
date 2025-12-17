@@ -153,6 +153,8 @@ public readonly struct Point2 : IEQuable<Point2> {
    // Operators ----------------------------------------------------------------
    /// <summary>Returns the displaced point got by adding a Vector2 to a Point2</summary>
    public static Point2 operator + (Point2 a, Vector2 b) => new (a.X + b.X, a.Y + b.Y);
+   /// <summary>Adds two points together (used when we are trying to make weighted sums of points)</summary>
+   public static Point2 operator + (Point2 a, Point2 b) => new (a.X + b.X, a.Y + b.Y);
    /// <summary>Returns the displaced point got by subtracting a Vector2 from a Point2</summary>
    public static Point2 operator - (Point2 a, Vector2 b) => new (a.X - b.X, a.Y - b.Y);
    /// <summary>Returns the Vector2 (displacement) between two points</summary>
