@@ -1,5 +1,6 @@
 Bin/*
 .vs/*
+**/BenchmarkDotNet.Artifacts/*
 *.tmp
 *.user
 *.tlb
