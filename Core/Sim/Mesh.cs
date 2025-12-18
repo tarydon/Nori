@@ -276,6 +276,7 @@ public class PlaneMeshIntersector (Mesh3 mesh) {
       for (int i = 0; i < vertCount; i++) {
          var p = mesh.Vertex[i].Pos;
          dist[i] = (p, n.X * p.X + n.Y * p.Y + n.Z * p.Z + d);
+         if (Math.Abs (d) < 1e-10) d += 1e-8;
       }
 
       // Edge map and list of triangle intersection edge pairs
