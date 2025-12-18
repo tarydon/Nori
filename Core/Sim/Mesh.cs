@@ -295,9 +295,14 @@ public class PlaneMeshIntersector (Mesh3 mesh) {
    }
 
    /// <summary>Edge between two vertices and the two triangle indices sharing it.</summary>
-   public record class Edge (int A, int B) {
+   public class Edge (int a, int b) : IEquatable<Edge> {
+      public int A = a;
+      public int B = b;
       public int TIdx1 = -1;
       public int TIdx2 = -1;
+
+      public bool Equals (Edge? other)
+         => A == other?.A && B == other.B;
    }
 
    /// <summary>Connected pair of edges belonging to a triangle intersection.</summary>

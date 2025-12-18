@@ -272,7 +272,7 @@ public readonly struct Point3 : IEquatable<Point3> {
    public bool EQ (Point3 b) => X.EQ (b.X) && Y.EQ (b.Y) && Z.EQ (b.Z);
 
    /// <summary>Compares two points are equal to within the given tolerance</summary>
-   public bool EQ (Point3 b, double tol) => X.EQ(b.X, tol) && Y.EQ(b.Y, tol) && Z.EQ(b.Z, tol);
+   public bool EQ (Point3 b, double tol) => X.EQ (b.X, tol) && Y.EQ (b.Y, tol) && Z.EQ (b.Z, tol);
 
    /// <summary>Unboxed version of Equals.</summary>
    public bool Equals (Point3 other) => EQ (other);
