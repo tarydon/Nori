@@ -54,15 +54,15 @@ public class Matrix2 (double m11, double m12, double m21, double m22, double x, 
    public readonly double M11 = m11, M12 = m12, M21 = m21, M22 = m22, DX = x, DY = y;
    public static readonly Matrix2 Identity = new (1, 0, 0, 1, 0, 0);
    /// <summary>A matrix that mirrors about Y (horizontally)</summary>
-   public static readonly Matrix2 HMirror = new (-1, 0, 0, 1, 0, 0) { IsMirror = true };
+   public static readonly Matrix2 HMirror = new (-1, 0, 0, 1, 0, 0);
    /// <summary>A matrix that mirrors about X (vertically)</summary>
-   public static readonly Matrix2 VMirror = new (1, 0, 0, -1, 0, 0) { IsMirror = true };
+   public static readonly Matrix2 VMirror = new (1, 0, 0, -1, 0, 0);
 
    /// <summary>The 'scaling factor' of this matrix (assuming equal scaling in all axes)</summary>
    public double ScaleFactor => (Vector2.XAxis * this).Length;
 
    /// <summary>Is this a mirroring matrix?</summary>
-   public bool IsMirror { get; private set; }
+   public bool IsMirror => M11 * M22 - M12 * M21 < 0;
 
    // Methods ------------------------------------------------------------------
    /// <summary>Computes the inverse of a matrix (throws an exception for a singular matrix)</summary>
@@ -85,9 +85,7 @@ public class Matrix2 (double m11, double m12, double m21, double m22, double x, 
    public static Matrix2 operator * (Matrix2 a, Matrix2 b) =>
       new (a.M11 * b.M11 + a.M12 * b.M21, a.M11 * b.M12 + a.M12 * b.M22,
            a.M21 * b.M11 + a.M22 * b.M21, a.M21 * b.M12 + a.M22 * b.M22,
-           a.DX * b.M11 + a.DY * b.M21 + b.DX, a.DX * b.M12 + a.DY * b.M22 + b.DY) {
-          IsMirror = a.IsMirror ^ b.IsMirror
-       };
+           a.DX * b.M11 + a.DY * b.M21 + b.DX, a.DX * b.M12 + a.DY * b.M22 + b.DY);
 
    /// <summary>Convert a Matrix2 to an equivalent Matrix3</summary>
    public static explicit operator Matrix3 (Matrix2 m)
