@@ -48,7 +48,7 @@ class MeshScene : Scene3 {
       // 4.a. Make the bottom plane from triangles at Z=0
       var nodes = tries.Select (n => (Point3)pts[n]).ToList ();
       // 4.b. Shift the bottom plane by thickness in Z to make the top plane
-      nodes.AddRange (nodes.Select (x => x.WithZ (thk)).ToArray ());
+      nodes.AddRange ([.. nodes.Select (x => x.WithZ (thk))]);
       // 4.c. Make side walls from the polygon contours
       var span = pts.AsSpan ();
       for (int i = 1; i < splits.Count; i++) {
@@ -56,7 +56,7 @@ class MeshScene : Scene3 {
          for (int j = 1; j <= span2.Length; j++) {
             Point3 a = (Point3)span2[j - 1], b = (Point3)span2[j % span2.Length];
             Point3 c = a.WithZ (thk), d = b.WithZ (thk);
-            nodes.AddRange (stackalloc[] { a, b, d, d, c, a });
+            nodes.AddRange ([a, b, d, d, c, a]);
          }
       }
 

@@ -3,7 +3,6 @@
 // ║║║║╬║╔╣║ Implements the Mesh3 class, a simple mesh format for rendering
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 using System.IO.Compression;
-using System.Runtime.Intrinsics;
 namespace Nori;
 
 #region class Mesh3 --------------------------------------------------------------------------------
@@ -247,6 +246,72 @@ public class Mesh3 {
          sb.Append ($"{Wire[i]} {Wire[i + 1]}\n");
       sb.Append ("EOF\n");
       return sb.ToString ();
+   }
+
+   /// <summary>Builds a sphere mesh centered at 'center' with the specified 'radius'/>.
+   /// The generated sphere mesh consists of triangles of uniform size. The number of output 
+   /// triangles, and the accuracy of the mesh relative to the spherical surface, are determined 
+   /// by the 'tolerance' parameter, which defines the allowable _relative deviation_ of a 
+   /// triangle from the ideal sphere.
+   /// <remarks>
+   /// This method employs octahedron-based subdivision to produce equilateral triangles. Each subdivision
+   /// step replaces one triangle with four smaller triangles. The number of subdivisions performed is
+   /// controlled by the tolerance value.
+   /// </remarks>
+   /// <param name="center">Center of the sphere.</param>
+   /// <param name="radius">Radius of the sphere.</param>
+   /// <param name="tolerance">Percentage mismatch (default is 2%)</param>
+   public static Mesh3 Sphere (Point3 center, double radius, double tolerance = 0.02) {
+      ReadOnlySpan<Vector3> axes = [Vector3.ZAxis, Vector3.XAxis, Vector3.YAxis];
+      List<Vector3> pts = []; Dictionary<Vector3, int> dict = [];
+      for (int i = 0; i < axes.Length; i++) {
+         Add (axes[i] * radius); Add (axes[i] * -radius);
+      }
+      // Build an initial octahedron with the six axis points.
+      List<int> tries = [0, 2, 4, 0, 4, 3, 0, 3, 5, 0, 5, 2, 1, 4, 2, 1, 2, 5, 1, 5, 3, 1, 3, 4], buf = [];
+      // Subdivide until the maximum error is within tolerance.
+      for (; ; ) {
+         buf.Clear (); double maxerr = 0;
+         for (int i = 0; i < tries.Count; i += 3) {
+            var err = Subdivide (i);
+            if (err > maxerr) maxerr = err;
+         }
+         // Swap buffer with the main triangle list
+         (buf, tries) = (tries, buf);
+         if (maxerr <= tolerance) break;
+      }
+      return new ([.. pts.Select (Node)], [.. tries], []);
+
+      // Divide equilateral triangle 'ABC' into four smaller equilateral triangles.
+      //        A
+      //       / \
+      //      /   \
+      //    P/_____\R
+      //    /\    / \
+      //   /  \  /   \  
+      //  /____\/_____\
+      // B     Q       C
+      double Subdivide (int i) {
+         var (A, B, C) = (tries[i], tries[i + 1], tries[i + 2]);
+         Vector3 a = pts[A], b = pts[B], c = pts[C];
+         // Mid points
+         Vector3 ab = (a + b) * 0.5, ac = (a + c) * 0.5, bc = (b + c) * 0.5;
+         var f = 1 - bc.Length / radius; // The approximate error.
+         // Inflate 'mid-points' to the sphere surface.
+         ab *= radius / ab.Length; ac *= radius / ac.Length; bc *= radius / bc.Length;
+         // Register nodes and make new triangles.
+         var (P, Q, R) = (Add (ab), Add (bc), Add (ac));
+         buf.AddRange ([A, P, R, P, Q, R, P, B, Q, Q, C, R]);
+         return f;
+      }
+      // Add a point to the node list if not already present, and return its index.
+      int Add (Vector3 pos) {
+         if (dict.TryGetValue (pos, out int n)) return n;
+         n = pts.Count; pts.Add (pos); dict[pos] = n;
+         return n;
+      }
+      // Create a mesh node from a position-vector.
+      Mesh3.Node Node (Vector3 v) => new (center + v, v.Normalized ());
    }
 }
 #endregion

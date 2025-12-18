@@ -546,6 +546,13 @@ class TMisc {
       s.Radius.Is (pt3.Max (s.Center.DistTo));
    }
 
+   [Test (148, "Mesh3.Sphere")]
+   void Test17 () {
+      var mesh = Mesh3.Sphere ((1, 2, 0), 10, 0.02);
+      File.WriteAllText (NT.TmpTxt, mesh.ToTMesh ());
+      Assert.TextFilesEqual ("Misc/sphere-10.tmesh", NT.TmpTxt);
+   }
+
    class T1Type : IIndexed {
       public override string ToString () => $"T{Idx}";
       public int Idx { get; set; }

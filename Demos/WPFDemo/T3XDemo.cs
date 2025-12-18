@@ -5,8 +5,8 @@ class T3XDemoScene : Scene3 {
    public T3XDemoScene () {
       var blank = new T3XReader ("N:/Demos/Data/5x-043-blank.t3x").Load ();
       var part = mModel = new T3XReader ("N:/Demos/Data/5x-043.t3x").Load ();
-      foreach (var ent in blank.Ents) ent.IsTranslucent = true; 
-
+      foreach (var ent in blank.Ents) ent.IsTranslucent = true;
+      TraceVN.It.Clear ();
       Lib.Tracer = TraceVN.Print;
       BgrdColor = new Color4 (80, 84, 88);
       Bound = blank.Bound;
