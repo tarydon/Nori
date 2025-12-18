@@ -16,14 +16,14 @@ class MinSphereScene : Scene3 {
 
    // Build the scene with the minimum enclosing sphere for given points.
    void Build (Point3[] pts) {
+      TraceVN.It.Clear ();
       Stopwatch sw = Stopwatch.StartNew (); sw.Start ();
       var s = MinSphere.From (pts); // Compute minimum enclosing sphere
-      sw.Stop ();
       (Point3 Pt, int N)[] ptlie = [.. pts.Select (pt => (pt, d: pt.DistTo (s.Center))).Select (x => (x.pt, x.d.EQ (s.Radius) ? 0 : x.d < s.Radius ? 1 : 2))];
       MeshVN sphere = new (Mesh3.Sphere (s.Center, s.Radius)) { Shading = EShadeMode.Glass };
+      sw.Stop ();
       List<VNode> nodes = [new AxesVN (), TraceVN.It, sphere, new PointsVN ([s.Center], (Color4.Magenta, 6))];
       nodes.AddRange (ptlie.GroupBy (x => x.N).Select (g => new PointsVN (g.Select (x => x.Pt), Styles[g.Key])));
-      TraceVN.It.Clear ();
       Lib.Trace ($"Sphere, Radius: {s.Radius.Round (1)}, Center: ({s.Center.X.Round (1)}, {s.Center.Y.Round (1)}, {s.Center.Z.Round (1)})");
       Lib.Trace ($"Points: {pts.Length}, On Sphere: {ptlie.Count (x => x.N == 0)}, Elapsed: {sw.ElapsedMilliseconds} ms");
       Lib.Trace ("Press 'Min. Sphere' again to regenerate");

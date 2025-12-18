@@ -260,27 +260,64 @@ public class Mesh3 {
    /// </remarks>
    /// <param name="center">Center of the sphere.</param>
    /// <param name="radius">Radius of the sphere.</param>
-   /// <param name="tolerance">Percentage mismatch (default is 2%)</param>
-   public static Mesh3 Sphere (Point3 center, double radius, double tolerance = 0.02) {
+   /// <param name="tolerance">Percentage mismatch (default is 0.1%)</param>
+   public static Mesh3 Sphere (Point3 center, double radius, double tolerance = 0.001) {
       ReadOnlySpan<Vector3> axes = [Vector3.ZAxis, Vector3.XAxis, Vector3.YAxis];
       List<Vector3> pts = []; Dictionary<Vector3, int> dict = [];
+
+      // Build an initial octahedron with the six axis points.
       for (int i = 0; i < axes.Length; i++) {
          Add (axes[i] * radius); Add (axes[i] * -radius);
       }
-      // Build an initial octahedron with the six axis points.
       List<int> tries = [0, 2, 4, 0, 4, 3, 0, 3, 5, 0, 5, 2, 1, 4, 2, 1, 2, 5, 1, 5, 3, 1, 3, 4], buf = [];
-      // Subdivide until the maximum error is within tolerance.
-      for (; ; ) {
-         buf.Clear (); double maxerr = 0;
-         for (int i = 0; i < tries.Count; i += 3) {
-            var err = Subdivide (i);
-            if (err > maxerr) maxerr = err;
-         }
+
+      // Compute subdivision count for the given tolerance.
+      int citer = ComputeSubdivisions (pts[tries[0]], pts[tries[1]], tolerance);
+
+      // Subdivide triangles without 'inflating' the nodes to preserve the `equilaterality`
+      // of the sub-triangles. We will loft them after the recursive subdivision.
+      for (int iter = 0; iter < citer; iter++) {
+         buf.Clear ();
+         for (int i = 0; i < tries.Count; i += 3) Subdivide (i);
          // Swap buffer with the main triangle list
          (buf, tries) = (tries, buf);
-         if (maxerr <= tolerance) break;
+      }
+
+      // Inflate the nodes to the sphere surface
+      for (int i = 0; i < pts.Count; i++) {
+         var pt = pts[i]; var d = pt.Length;
+         if (d.EQ (radius)) continue;
+         pts[i] = pt * (radius / d);
       }
       return new ([.. pts.Select (Node)], [.. tries], []);
+
+      // Add a position-vector to the node list if not already present, and return its index.
+      int Add (Vector3 pos) {
+         if (dict.TryGetValue (pos, out int n)) return n;
+         n = pts.Count; pts.Add (pos); dict[pos] = n;
+         return n;
+      }
+
+      // Given the tolerance value and a sphere chord, compute the number of subdivision levels.
+      static int ComputeSubdivisions (Vector3 a, Vector3 b, double tol) {
+         if (tol < Lib.Epsilon) tol = Lib.Epsilon;
+         // Sphere radius = 1 with center (0, 0)
+         (a, b) = (a.Normalized (), b.Normalized ());
+         // This is how close to the sphere radius we want to get.
+         var minLen = 1 - tol;
+         // Limit subdivision count 's' to 10. That is aleady too much with
+         // 8 * power(4, '10') triangles for s = '10'. Where 8 is the initial faces.
+         for (int s = 0; s < 10; s++) {
+            var mid = (a + b) * 0.5; var len = mid.Length;
+            if (len >= minLen) return s;
+            // Snap to sphere
+            b = mid / len;
+         }
+         return 10;
+      }
+
+      // Create a mesh node from a position-vector.
+      Mesh3.Node Node (Vector3 v) => new (center + v, v.Normalized ());
 
       // Divide equilateral triangle 'ABC' into four smaller equilateral triangles.
       //        A
@@ -291,27 +328,16 @@ public class Mesh3 {
       //   /  \  /   \  
       //  /____\/_____\
       // B     Q       C
-      double Subdivide (int i) {
+      void Subdivide (int i) {
          var (A, B, C) = (tries[i], tries[i + 1], tries[i + 2]);
+         // Position vectors
          Vector3 a = pts[A], b = pts[B], c = pts[C];
-         // Mid points
+         // Mid points on the triangle sides
          Vector3 ab = (a + b) * 0.5, ac = (a + c) * 0.5, bc = (b + c) * 0.5;
-         var f = 1 - bc.Length / radius; // The approximate error.
-         // Inflate 'mid-points' to the sphere surface.
-         ab *= radius / ab.Length; ac *= radius / ac.Length; bc *= radius / bc.Length;
          // Register nodes and make new triangles.
          var (P, Q, R) = (Add (ab), Add (bc), Add (ac));
          buf.AddRange ([A, P, R, P, Q, R, P, B, Q, Q, C, R]);
-         return f;
       }
-      // Add a point to the node list if not already present, and return its index.
-      int Add (Vector3 pos) {
-         if (dict.TryGetValue (pos, out int n)) return n;
-         n = pts.Count; pts.Add (pos); dict[pos] = n;
-         return n;
-      }
-      // Create a mesh node from a position-vector.
-      Mesh3.Node Node (Vector3 v) => new (center + v, v.Normalized ());
    }
 }
 #endregion
