@@ -258,7 +258,7 @@ public class Mesh3 {
    /// by the 'tolerance' parameter, which defines the allowable _relative deviation_ of a 
    /// triangle from the ideal sphere.
    /// <remarks>
-   /// This method employs octahedron-based subdivision to produce equilateral triangles. Each subdivision
+   /// This method employs polyhedron-based subdivision to produce equilateral triangles. Each subdivision
    /// step replaces one triangle with four smaller triangles. The number of subdivisions performed is
    /// controlled by the tolerance value.
    /// </remarks>
@@ -347,7 +347,7 @@ public class Mesh3 {
          Vector3 ab = (a + b) * 0.5, ac = (a + c) * 0.5, bc = (b + c) * 0.5;
          // Register nodes and make new triangles.
          var (P, Q, R) = (Add (ab), Add (bc), Add (ac));
-         buf.AddRange ([A, P, R, P, Q, R, P, B, Q, Q, C, R]);
+         buf.AddRange (stackalloc int[] { A, P, R, P, Q, R, P, B, Q, Q, C, R });
       }
    }
 
