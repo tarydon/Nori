@@ -248,6 +248,10 @@ public class Mesh3 {
       return sb.ToString ();
    }
 
+   /// <summary>Computes polygonal intersection loops between a mesh and a plane.</summary>
+   public List<ImmutableArray<Point3>> ComputePlaneIntersection (PlaneDef plane)
+      => new PlaneMeshIntersector (this).Compute (plane);
+
    /// <summary>Builds a sphere mesh centered at 'center' with the specified 'radius'/>.
    /// The generated sphere mesh consists of triangles of uniform size. The number of output 
    /// triangles, and the accuracy of the mesh relative to the spherical surface, are determined 
@@ -347,16 +351,20 @@ public class Mesh3 {
       }
    }
 
-   /// <summary>Computes polygonal intersection loops between a mesh and a plane.</summary>
-   public List<ImmutableArray<Point3>> ComputePlaneIntersection (PlaneDef plane)
-      => new PlaneMeshIntersector (this).Compute (plane);
-
    // The icosahedron is constructed from three mutually perpendicular golden rectangles.
    // See https://en.wikipedia.org/wiki/Regular_icosahedron#Construction and
    // https://en.wikipedia.org/wiki/Golden_rectangle for more.
-   // Sqr (a) + Sqr (b) = 1 
-   // a = b * (golden ratio)
-   // golden ratio = (1 + Math.Sqrt (5)) / 2 
+   // ________________________(a,b,0)
+   // |          |           | One of the three golden rectangles.
+   // |          b           | Corners of the rectangles are the 
+   // |          |_____a_____| icosahedron vertices.
+   // |        (0,0,0)       |
+   // |                      |
+   // |______________________|(a,-b,0)
+   // For 'unit sphere':
+   //  Sqr (a) + Sqr (b) = 1 
+   //  a = b * (golden ratio)
+   //  Golden ratio = (1 + Math.Sqrt (5)) / 2 
    readonly static double _GR = (1 + Math.Sqrt (5)) * 0.5;
    readonly static double _B = Math.Sqrt (1 / (1 + _GR * _GR));
    readonly static double _A = _B * _GR;
@@ -365,16 +373,16 @@ public class Mesh3 {
    readonly static (ImmutableArray<Vector3> Vertices, ImmutableArray<int> Faces)[] _SphereData = [
       // Octahedron vertices and triangles (6 and 8)
       ([Vector3.ZAxis, -Vector3.ZAxis, Vector3.XAxis, -Vector3.XAxis, Vector3.YAxis, -Vector3.YAxis],
-      [0, 2, 4, 0, 4, 3, 0, 3, 5, 0, 5, 2, 1, 4, 2, 1, 2, 5, 1, 5, 3, 1, 3, 4]), 
+      [0,2,4, 0,4,3, 0,3,5, 0,5,2, 1,4,2, 1,2,5, 1,5,3, 1,3,4]), 
 
       // Icosahedron vertices and triangles (12 and 20)
-      ([new (-_B,0,_A), new (_B,0,_A), new (-_B,0,-_A), new (_B,0,-_A),
-        new (0,_A,_B), new (0,_A,-_B), new (0,-_A,_B), new (0,-_A,-_B),
-        new (_A,_B,0), new (-_A,_B,0), new (_A,-_B,0), new (-_A,-_B, 0)],
-      [0,4,1,0,9,4,9,5,4,4,5,8,4,8,1,
-       8,10,1,8,3,10,5,3,8,5,2,3,2,7,3,
-       7,10,3,7,6,10,7,11,6,11,0,6,0,1,6,
-       6,1,10,9,0,11,9,11,2,9,2,5,7,2,11])
+      ([new (-_B,0,_A), new (_B,0,_A),  new (-_B,0,-_A), new (_B,0,-_A),
+        new (0,_A,_B),  new (0,_A,-_B), new (0,-_A,_B),  new (0,-_A,-_B),
+        new (_A,_B,0),  new (-_A,_B,0), new (_A,-_B,0),  new (-_A,-_B, 0)],
+      [0,4,1,  0,9,4,  9,5,4,  4,5,8,  4,8,1,
+       8,10,1, 8,3,10, 5,3,8,  5,2,3,  2,7,3,
+       7,10,3, 7,6,10, 7,11,6, 11,0,6, 0,1,6,
+       6,1,10, 9,0,11, 9,11,2, 9,2,5,  7,2,11])
    ];
 }
 #endregion Mesh3
