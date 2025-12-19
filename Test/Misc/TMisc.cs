@@ -546,6 +546,15 @@ class TMisc {
       s.Radius.Is (pt3.Max (s.Center.DistTo));
    }
 
+   [Test (148, "Plane intersection with mesh")]
+   public void Test17 () {
+      var mesh = new STLReader (NT.File ("Misc/cali-bee.STL")).BuildMesh ();
+      var plane = new PlaneDef (Point3.Zero, Vector3.YAxis);
+      var curves = mesh.ComputePlaneIntersection (plane);
+      CurlWriter.Save (curves, NT.TmpCurl);
+      Assert.TextFilesEqual ("Misc/Curves.curl", NT.TmpCurl);
+   }
+
    class T1Type : IIndexed {
       public override string ToString () => $"T{Idx}";
       public int Idx { get; set; }
