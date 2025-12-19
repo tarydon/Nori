@@ -234,6 +234,18 @@ public readonly struct Point3 : IEquatable<Point3> {
       return new (x, y, z);
    }
 
+   /// <summary>
+   /// Rotates the point by the given amount around a given axis (passing through origin)
+   /// </summary>
+   public Point3 Rotated (EAxis a, double ang) {
+      var (s, c) = SinCos (ang);
+      return a switch {
+         EAxis.X => new (X, c * Y - s * Z, s * Y + c * Z),
+         EAxis.Y => new (s * Z + c * X, Y, c * Z - s * X),
+         _ => new (c * X - s * Y, s * X + c * Y, Z)
+      };
+   }
+
    // Properties ---------------------------------------------------------------
    /// <summary>The X ordinate of the Point3</summary>
    public readonly double X;

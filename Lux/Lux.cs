@@ -113,14 +113,19 @@ public static partial class Lux {
       }
       int index = (mViewport.Y - pos.Y - 1) * mViewport.X + pos.X;
       if (index < 0 || index >= mPickDepth.Length) return null;
+      float fDepth = mPickDepth[index];
 
       // Now, abandon the LSB 2 bits of r, g and b leaving only 6 bits each (this is to
       // avoid round off errors in low-bit depth color buffers
       index *= 4;
       int b = mPickPixel[index] >> 2, g = mPickPixel[index + 1] >> 2, r = mPickPixel[index + 2] >> 2;
       int vnodeId = r + (g << 6) + (b << 12);
-      return VNode.SafeGet (vnodeId);
+      VNode? node = VNode.SafeGet (vnodeId);
+      if (node != null) PickPos = mUIScene.Unproject (pos, fDepth);
+      return node;
    }
+
+   public static Point3 PickPos;
 
    public static bool Ready => mReady;
    static bool mReady;

@@ -56,6 +56,14 @@ public abstract class Scene {
    readonly List<XfmEntry> mXfms = [];
 
    // Methods ------------------------------------------------------------------
+   internal Point3 Unproject (Vec2S pos, float depth) {
+      var vp = Lux.Viewport;
+      double x = 2.0 * pos.X / vp.X - 1;
+      double y = -(2.0 * pos.Y / vp.Y - 1);
+      double z = 2 * depth - 1;
+      return new Point3 (x, y, z) * mXfms[0].InvXfm;
+   }
+
    public void Render (Vec2S viewport) {
       Lux.Scene = this;
       if (Lib.Set (ref mViewport, viewport)) XfmChanged ();
@@ -214,6 +222,10 @@ class XfmEntry {
    }
 
    // Properties ---------------------------------------------------------------
+   /// <summary>Inverse transform that transforms OpenGL clip spaces to world (inverse of Xfm)</summary>
+   public Matrix3 InvXfm => mInvXfm ??= (mScene.WorldXfm * mScene.ProjectionXfm).GetInverse ();
+   Matrix3? mInvXfm;
+
    /// <summary>The NormalXfm to use for 3D scenes</summary>
    public ref Mat4F NormalXfm { get { _ = ObjToWorld; return ref mNormalXfm; } }
 
@@ -236,10 +248,6 @@ class XfmEntry {
    /// <summary>The overall transform from the world to the OpenGL clip coordinates</summary>
    public ref Mat4F Xfm { get { _ = ObjToWorld; return ref mXfm; } }
    Mat4F mXfm, mNormalXfm;
-
-   /// <summary>Inverse transform that transforms OpenGL clip spaces to world (inverse of Xfm)</summary>
-   public Matrix3 InvXfm => mInvXfm ??= (mScene.WorldXfm * mScene.ProjectionXfm).GetInverse ();
-   Matrix3? mInvXfm;
 
    // Private data -------------------------------------------------------------
    readonly Scene mScene;           // The scene we're working with

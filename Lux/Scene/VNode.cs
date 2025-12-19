@@ -72,7 +72,16 @@ public abstract class VNode {
    /// redrawn on every frame. RBatches made from this VNode's draw commands will also have
    /// Streaming=true, and will eventually deliver their vertices into StreamBuffer objects
    /// rather than RetainBuffer objects
-   public bool Streaming;
+   public bool Streaming {
+      get => mStreaming;
+      set { mStreaming = value; if (value) NoPicking = true; }
+   }
+   bool mStreaming;
+
+   /// <summary>
+   /// If set, this VNode is ignored during picking
+   /// </summary>
+   public bool NoPicking;
 
    /// <summary>The domain-space Object which this VNode is rendering</summary>
    public readonly object? Obj;
@@ -127,7 +136,7 @@ public abstract class VNode {
    /// <summary>Called when geometry has changed and complete redraw of this VNode is needed</summary>
    public void Redraw () { 
       mGeometryDirty = true; 
-      if (!Streaming) Lux.FlushPickBuffer (); 
+      if (!NoPicking) Lux.FlushPickBuffer (); 
       Lux.Redraw ();  
    }
 
@@ -247,7 +256,7 @@ public abstract class VNode {
          ref RBatch rb = ref RBatch.Get (n);
          rb.Release ();
       }
-      if (!Streaming) Lux.FlushPickBuffer ();
+      if (!NoPicking) Lux.FlushPickBuffer ();
       Batches.Clear ();
    }
 
@@ -280,7 +289,7 @@ public abstract class VNode {
          if (mGeometryDirty || Streaming) {
             Draw ();
             mGeometryDirty = false;
-            if (!Streaming) Lux.FlushPickBuffer ();
+            if (!NoPicking) Lux.FlushPickBuffer ();
          } else {
             // But if the geometry is not dirty, we don't need to create new batches at all,
             // but instead can just update the existing batches we have with freshly captured
