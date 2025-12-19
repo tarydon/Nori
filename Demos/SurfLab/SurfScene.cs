@@ -1,36 +1,25 @@
 ﻿using System.Diagnostics;
+using System.Windows.Forms;
+using System.Windows.Media.Media3D;
 using Nori;
 namespace SurfLab;
 
 class SurfScene : Scene3 {
    public SurfScene (string file) {
-      Point3 pa = new Point3 (1, 2, 3);
-      double ang = -Lib.QuarterPI;
-      Point3 pb = pa.Rotated (EAxis.X, ang);
-      Point3 pc = pa.Rotated (EAxis.Y, ang);
-      Point3 pd = pa.Rotated (EAxis.Z, ang);
-
-      Point3 pb2 = pa * Matrix3.Rotation (EAxis.X, ang);
-      Point3 pc2 = pa * Matrix3.Rotation (EAxis.Y, ang);
-      Point3 pd2 = pa * Matrix3.Rotation (EAxis.Z, ang);
-
-      Debug.Assert (pb.EQ (pb2));
-      Debug.Assert (pc.EQ (pc2));
-      Debug.Assert (pd.EQ (pd2));
-
-
       mModel = new T3XReader (file).Load ();
-      mModel.Ents.RemoveIf (a => a.Id is not (662 or 620));
+      mModel.Ents.RemoveIf (a => a is E3Torus);
 
       BgrdColor = new (96, 128, 160);
       Bound = mModel.Bound;
-      Root = new GroupVN ([new Model3VN (mModel), TraceVN.It, mMarker, mMeshVN]);
+      Root = new GroupVN ([new Model3VN (mModel), TraceVN.It, mPlus, mNormal, mMeshVN]);
 
       mHooks = HW.MouseMoves.Subscribe (OnMouseMove);
    }
    Model3 mModel;
    IDisposable mHooks;
-   MarkerVN mMarker = new ();
+   PlusMarkerVN mPlus = new (Color4.Blue);
+   CrossMarkerVN mCross = new (Color4.Red);
+   NormalVN mNormal = new (5);
    MeshLineVN mMeshVN = new ();
 
    public override void Detached () => mHooks.Dispose ();
@@ -38,13 +27,39 @@ class SurfScene : Scene3 {
    // Called when the mouse is moving
    void OnMouseMove (Vec2S pt) {
       if (!HW.IsDragging) {
-         if (Lux.Pick (pt)?.Obj is E3Surface e3s) {
-            mMarker.Pt = Lux.PickPos;
+         if (Lux.Pick (pt)?.Obj is E3ParaSurface e3s) {
             mMeshVN.Mesh = e3s.Mesh;
-         } else
-            mMarker.Pt = Point3.Nil;
+            Point3 pt3d = Lux.PickPos; mPlus.Pt = pt3d; 
+            Point2 uv = e3s.Flatten (pt3d); 
+            Point3 ptLoft = e3s.Evaluate (uv);
+            Vector3 vecNorm = e3s.EvalNormal (uv);
+            mNormal.Ray = (ptLoft, vecNorm);
+         } else 
+            mPlus.Pt = mCross.Pt = Point3.Nil;
       } 
    }
+}
+
+class NormalVN : VNode {
+   public NormalVN (double len) => (NoPicking, mLen) = (true, len);
+   readonly double mLen;
+
+   public (Point3 Pos, Vector3 Vec) Ray {
+      set {
+         mPts.Clear ();
+         mPts.Add ((Vec3F)value.Pos);
+         mPts.Add ((Vec3F)(value.Pos + value.Vec * mLen));
+         Redraw ();
+      }
+   }
+   List<Vec3F> mPts = [];
+
+   public override void SetAttributes () {
+      Lux.Color = Color4.Red;
+      Lux.LineWidth = 4f;
+   }
+
+   public override void Draw () => Lux.Lines (mPts.AsSpan ());
 }
 
 class MeshLineVN : VNode {
@@ -77,21 +92,42 @@ class MeshLineVN : VNode {
    }
 }
 
-class MarkerVN : VNode {
-   public MarkerVN () => Streaming = true;
+class PlusMarkerVN : VNode {
+   public PlusMarkerVN (Color4 color) => (mColor, Streaming) = (color, true);
+   readonly Color4 mColor;
 
-   public Point3 Pt { get => field; set { field = value; Redraw (); } }
+   public Point3 Pt { set { mPt = (Vec3F)value; Redraw (); } }
+   Vec3F mPt;
 
-   public override void SetAttributes () { 
-      Lux.Color = Color4.Blue;
+   public override void SetAttributes () {
+      Lux.Color = mColor;
       Lux.LineWidth = 2f;
    }
    
    public override void Draw () {
-      float a = 1;
-      float x = (float)Pt.X, y = (float)Pt.Y, z = (float)Pt.Z;
+      float a = 1, x = mPt.X, y = mPt.Y, z = mPt.Z;
       Lux.Lines ([new Vec3F (x - a, y, z), new (x + a, y, z), 
-                  new (x, y - a, z), new (x, y + a, z), 
-                  new (x, y, z - a), new (x, y, z + a)]);
+                        new (x, y - a, z), new (x, y + a, z), 
+                        new (x, y, z - a), new (x, y, z + a)]);
+   }
+}
+
+class CrossMarkerVN : VNode {
+   public CrossMarkerVN (Color4 color) => (mColor, Streaming) = (color, true);
+   readonly Color4 mColor;
+
+   public Point3 Pt { set { mPt = (Vec3F)value; Redraw (); } }
+   Vec3F mPt;
+
+   public override void SetAttributes () {
+      Lux.Color = mColor;
+      Lux.LineWidth = 3f;
+   }
+
+   public override void Draw () {
+      float a = 0.7f, x = mPt.X, y = mPt.Y, z = mPt.Z;
+      Lux.Lines ([new Vec3F (x - a, y - a, z - a), new (x + a, y + a, z + a),
+                        new (x - a, y + a, z - a), new (x + a, y - a, z + a),
+                        new (x - a, y - a, z + a), new (x + a, y + a, z - a)]);
    }
 }

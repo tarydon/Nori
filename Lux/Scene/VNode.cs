@@ -78,9 +78,7 @@ public abstract class VNode {
    }
    bool mStreaming;
 
-   /// <summary>
-   /// If set, this VNode is ignored during picking
-   /// </summary>
+   /// <summary>If set, this VNode is ignored during picking</summary>
    public bool NoPicking;
 
    /// <summary>The domain-space Object which this VNode is rendering</summary>

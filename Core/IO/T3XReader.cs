@@ -27,7 +27,7 @@ public class T3XReader : IDisposable {
             _ => throw new BadCaseException (type)
          };
          if (ent == null) break;
-         ent.Mesh = LoadMesh (ent.Id);
+         ent.SetMesh (LoadMesh (ent.Id));
          mModel.Ents.Add (ent);
       }
       return mModel;

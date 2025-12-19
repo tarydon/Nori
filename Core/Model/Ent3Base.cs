@@ -84,11 +84,10 @@ public abstract class E3Surface : Ent3 {
    public override Bound3 Bound => Bound3.Update (ref mBound, ComputeBound);
    Bound3 mBound = new ();
 
-   public Mesh3 Mesh {
-      get => _mesh ??= BuildMesh (Lib.FineTess, 0.541);  // 0.5411 ~ 31 degrees
-      set => _mesh = value;
-   }
+   public Mesh3 Mesh => _mesh ??= BuildMesh (Lib.FineTess, 0.541);  // 0.5411 ~ 31 degrees
    Mesh3? _mesh;
+
+   public virtual void SetMesh (Mesh3 mesh) => _mesh = mesh;
 
    public IReadOnlyList<Contour3> Contours => mContours;
    protected Contour3[] mContours = [];
@@ -109,9 +108,13 @@ public abstract class E3Surface : Ent3 {
 public abstract class E3ParaSurface : E3Surface {
    protected E3ParaSurface () { }
    protected E3ParaSurface (int id, IEnumerable<Contour3> trims) : base (id, trims) { }
-   protected abstract Point3 Evaluate (Point2 pt);
-   protected abstract Vector3 EvalNormal (Point2 pt);
-   protected abstract Point2 Flatten (Point3 pt);
+
+   public abstract Point3 Evaluate (Point2 pt);
+   public abstract Vector3 EvalNormal (Point2 pt);
+   public abstract Point2 Flatten (Point3 pt);
+
+   /// <summary>If set, then the normal evaluated by the parametrization should be 'flipped'</summary>
+   public bool FlipNormal;
 
    protected override Mesh3 BuildMesh (double tolerance, double maxAngStep) {
       // First, we flatten each trimming curve into the UV space, and compute a
@@ -219,9 +222,12 @@ public abstract class E3CSSurface : E3ParaSurface {
    public Matrix3 FromXfm => _fromXfm ??= Matrix3.From (mCS);
    Matrix3? _fromXfm;
 
-   protected sealed override Point3 Evaluate (Point2 pt) => EvaluateCanonical (pt) * ToXfm;
-   protected sealed override Vector3 EvalNormal (Point2 pt) => EvalNormalCanonical (pt) * ToXfm;
-   protected sealed override Point2 Flatten (Point3 pt) => FlattenCanonical (pt * FromXfm);
+   public sealed override Point3 Evaluate (Point2 pt) => EvaluateCanonical (pt) * ToXfm;
+   public sealed override Vector3 EvalNormal (Point2 pt) {
+      Vector3 vec = EvalNormalCanonical (pt) * ToXfm;
+      return FlipNormal ? -vec : vec;
+   }
+   public sealed override Point2 Flatten (Point3 pt) => FlattenCanonical (pt * FromXfm);
 
    protected abstract Point3 EvaluateCanonical (Point2 pt);
    protected abstract Vector3 EvalNormalCanonical (Point2 pt);
