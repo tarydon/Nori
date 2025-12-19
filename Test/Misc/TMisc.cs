@@ -548,9 +548,12 @@ class TMisc {
 
    [Test (148, "Mesh3.Sphere")]
    void Test17 () {
-      var mesh = Mesh3.Sphere ((1, 2, 0), 10, 0.02);
+      var mesh = Mesh3.Sphere ((1, 2, 0), 10, 0.01);
       File.WriteAllText (NT.TmpTxt, mesh.ToTMesh ());
       Assert.TextFilesEqual ("Misc/sphere-10.tmesh", NT.TmpTxt);
+      mesh = Mesh3.Sphere ((1, 2, 0), 10, 0.02);
+      // Expecting octahedron selection with '2' subdivisions (384 = (8 * 4 * 4) * 3)
+      mesh.Triangle.Length.Is (384);
    }
 
    class T1Type : IIndexed {

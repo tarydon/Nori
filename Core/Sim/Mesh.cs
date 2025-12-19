@@ -262,17 +262,10 @@ public class Mesh3 {
    /// <param name="radius">Radius of the sphere.</param>
    /// <param name="tolerance">Percentage mismatch (default is 0.1%)</param>
    public static Mesh3 Sphere (Point3 center, double radius, double tolerance = 0.001) {
-      ReadOnlySpan<Vector3> axes = [Vector3.ZAxis, Vector3.XAxis, Vector3.YAxis];
+      // All computations are done on 'unit sphere' of radius = 1 with center (0, 0)
       List<Vector3> pts = []; Dictionary<Vector3, int> dict = [];
-
-      // Build an initial octahedron with the six axis points.
-      for (int i = 0; i < axes.Length; i++) {
-         Add (axes[i] * radius); Add (axes[i] * -radius);
-      }
-      List<int> tries = [0, 2, 4, 0, 4, 3, 0, 3, 5, 0, 5, 2, 1, 4, 2, 1, 2, 5, 1, 5, 3, 1, 3, 4], buf = [];
-
-      // Compute subdivision count for the given tolerance.
-      int citer = ComputeSubdivisions (pts[tries[0]], pts[tries[1]], tolerance);
+      var (V, T, citer) = PickSeedData (tolerance); V.ForEach (v => Add (v));
+      List<int> tries = [..T], buf = [];
 
       // Subdivide triangles without 'inflating' the nodes to preserve the `equilaterality`
       // of the sub-triangles. We will loft them after the recursive subdivision.
@@ -283,13 +276,13 @@ public class Mesh3 {
          (buf, tries) = (tries, buf);
       }
 
-      // Inflate the nodes to the sphere surface
-      for (int i = 0; i < pts.Count; i++) {
-         var pt = pts[i]; var d = pt.Length;
-         if (d.EQ (radius)) continue;
-         pts[i] = pt * (radius / d);
-      }
-      return new ([.. pts.Select (Node)], [.. tries], []);
+      // Inflate the nodes to the 'unit sphere' surface
+      var sphere = pts.Select (p => p.Normalized ());
+      // Compose the Mesh.
+      return new ([.. sphere.Select (Node)], [.. tries], []);
+
+      // Create a mesh node from a position-vector on the unit sphere
+      Mesh3.Node Node (Vector3 v) => new (center + v * radius, v);
 
       // Add a position-vector to the node list if not already present, and return its index.
       int Add (Vector3 pos) {
@@ -298,26 +291,40 @@ public class Mesh3 {
          return n;
       }
 
-      // Given the tolerance value and a sphere chord, compute the number of subdivision levels.
-      static int ComputeSubdivisions (Vector3 a, Vector3 b, double tol) {
-         if (tol < Lib.Epsilon) tol = Lib.Epsilon;
-         // Sphere radius = 1 with center (0, 0)
-         (a, b) = (a.Normalized (), b.Normalized ());
-         // This is how close to the sphere radius we want to get.
-         var minLen = 1 - tol;
-         // Limit subdivision count 's' to 10. That is aleady too much with
-         // 8 * power(4, '10') triangles for s = '10'. Where 8 is the initial faces.
-         for (int s = 0; s < 10; s++) {
-            var mid = (a + b) * 0.5; var len = mid.Length;
-            if (len >= minLen) return s;
-            // Snap to sphere
-            b = mid / len;
+      // Picks the optimal approximation beetween icosahedron and octahedron for the
+      // given tolerance. It also estiamtes the number of required subdivisions.
+      // It compares the number of generated triangles and picks the one which can match
+      // the tolerance with fewer triangles. While making the mesh generation faster,
+      // it also helps smoothen the subdivision-to-tolerance-range map.
+      static (ImmutableArray<Vector3> V, ImmutableArray<int> T, int Subs) PickSeedData (double tol) {
+         int idx = -1, subs = 0, cfaces = int.MaxValue;
+         for (int i = 0; i < _SphereData.Length; i++) {
+            var (V, T) = _SphereData[i];
+            // Number of subdivisions to achieve the tolerance.
+            int s = ComputeSubdivisions (V[T[0]], V[T[1]], tol);
+            // Triangles count for 's'
+            int c = (int)(T.Length / 3 * Math.Pow (4, s));
+            if (c < cfaces) (idx, subs, cfaces) = (i, s, c);
          }
-         return 10;
-      }
+         return (_SphereData[idx].Vertices, _SphereData[idx].Faces, subs);
 
-      // Create a mesh node from a position-vector.
-      Mesh3.Node Node (Vector3 v) => new (center + v, v.Normalized ());
+         // Given the tolerance value and a 'unit sphere' chord, compute the number of subdivision levels.
+         static int ComputeSubdivisions (Vector3 a, Vector3 b, double tol) {
+            if (tol < Lib.Epsilon) tol = Lib.Epsilon;
+            // This is how close to the sphere radius we want to get.
+            var minLen = 1 - tol;
+            // Limit subdivision count 's' to 10. That is aleady too much with
+            // N0 * power(4, '10') triangles for s = '10'. Where N0 is the
+            // initial faces (8 for octahedron and 20 for icosahedron).
+            for (int s = 0; s < 10; s++) {
+               var mid = (a + b) * 0.5; var len = mid.Length;
+               if (len >= minLen) return s;
+               // Snap to sphere
+               b = mid / len;
+            }
+            return 10;
+         }
+      }
 
       // Divide equilateral triangle 'ABC' into four smaller equilateral triangles.
       //        A
@@ -339,6 +346,32 @@ public class Mesh3 {
          buf.AddRange ([A, P, R, P, Q, R, P, B, Q, Q, C, R]);
       }
    }
+
+   // The icosahedron is constructed from three mutually perpendicular golden rectangles.
+   // See https://en.wikipedia.org/wiki/Regular_icosahedron#Construction and
+   // https://en.wikipedia.org/wiki/Golden_rectangle for more.
+   // Sqr (a) + Sqr (b) = 1 
+   // a = b * (golden ratio)
+   // golden ratio = (1 + Math.Sqrt (5)) / 2 
+   readonly static double _GR = (1 + Math.Sqrt (5)) * 0.5;
+   readonly static double _B = Math.Sqrt (1 / (1 + _GR * _GR));
+   readonly static double _A = _B * _GR;
+
+   // The 'known' sphere approximations with equilaterial triangles.
+   readonly static (ImmutableArray<Vector3> Vertices, ImmutableArray<int> Faces)[] _SphereData = [
+      // Octahedron vertices and triangles (6 and 8)
+      ([Vector3.ZAxis, -Vector3.ZAxis, Vector3.XAxis, -Vector3.XAxis, Vector3.YAxis, -Vector3.YAxis],
+      [0, 2, 4, 0, 4, 3, 0, 3, 5, 0, 5, 2, 1, 4, 2, 1, 2, 5, 1, 5, 3, 1, 3, 4]), 
+
+      // Icosahedron vertices and triangles (12 and 20)
+      ([new (-_B,0,_A), new (_B,0,_A), new (-_B,0,-_A), new (_B,0,-_A),
+        new (0,_A,_B), new (0,_A,-_B), new (0,-_A,_B), new (0,-_A,-_B),
+        new (_A,_B,0), new (-_A,_B,0), new (_A,-_B,0), new (-_A,-_B, 0)],
+      [0,4,1,0,9,4,9,5,4,4,5,8,4,8,1,
+       8,10,1,8,3,10,5,3,8,5,2,3,2,7,3,
+       7,10,3,7,6,10,7,11,6,11,0,6,0,1,6,
+       6,1,10,9,0,11,9,11,2,9,2,5,7,2,11])
+   ];
 }
 #endregion
 
