@@ -107,6 +107,7 @@ public static partial class Lux {
       if (sRenderCompletes.Count > 0 || mRendering || !mReady || mUIScene == null) return null;
       if (!mPickBufferValid) {
          mPickBufferValid = true;
+         Debug.Write ("PickRender ");
          var tup = ((byte[], float[]))Render (mUIScene, mViewport, ETarget.Pick, DIBitmap.EFormat.Unknown)!;
          mPickPixel = tup.Item1; mPickDepth = tup.Item2;
       }
@@ -140,6 +141,7 @@ public static partial class Lux {
    internal static object? Render (Scene? scene, Vec2S viewport, ETarget target, DIBitmap.EFormat fmt) {
       mcFrames++; mcFPSFrames++;
       mIsPicking = target == ETarget.Pick;
+      if (mRendering) throw new InvalidOperationException ();
       mRendering = true;
       BeginRender (viewport, target);
       StartFrame (viewport);

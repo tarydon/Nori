@@ -4,6 +4,8 @@
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 namespace Nori;
 using GLPanel = UserControl;
+using WMouse = System.Windows.Input.Mouse;
+using WMouseButtonState = System.Windows.Input.MouseButtonState;
 
 #region class EventWrapper<T> ----------------------------------------------------------------------
 /// <summary>The base class for various classes that convert events to IObservables</summary>
@@ -83,6 +85,8 @@ public static class HW {
       panel.Capture = capture;
       return panel.Capture;
    }
+
+   public static bool IsDragging => Panel?.Capture == true;
 
    /// <summary>Force a redraw of the OpenGL panel</summary>
    public static void Redraw () => Nori.Panel.It?.Redraw ();

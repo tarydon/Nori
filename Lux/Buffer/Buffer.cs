@@ -98,6 +98,7 @@ class RetainBuffer : IIndexed {
       if (GLState.VAO == mHVAO) GLState.VAO = 0;
       GL.DeleteBuffer (mHVertex); GL.DeleteBuffer (mHIndex); GL.DeleteVertexArray (mHVAO);
       mHVertex = mHIndex = HBuffer.Zero; mHVAO = HVertexArray.Zero;
+      Debug.WriteLine ($"Release {Idx}"); // REMOVETHIS
       All.Release (Idx);
    }
 

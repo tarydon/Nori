@@ -3,7 +3,6 @@
 // ║║║║╬║╔╣║ Implements the VNode class (base class for all visual nodes)
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 using System.Reflection;
-
 namespace Nori;
 
 #region class VNode --------------------------------------------------------------------------------
@@ -126,7 +125,11 @@ public abstract class VNode {
    }
 
    /// <summary>Called when geometry has changed and complete redraw of this VNode is needed</summary>
-   public void Redraw () { mGeometryDirty = true; Lux.FlushPickBuffer (); Lux.Redraw ();  }
+   public void Redraw () { 
+      mGeometryDirty = true; 
+      if (!Streaming) Lux.FlushPickBuffer (); 
+      Lux.Redraw ();  
+   }
 
    /// <summary>Register an assembly as containing potential VNode types</summary>
    /// This is used in conjunction with the VNode.Makefor(...) above to construct a VNode
@@ -244,7 +247,7 @@ public abstract class VNode {
          ref RBatch rb = ref RBatch.Get (n);
          rb.Release ();
       }
-      Lux.FlushPickBuffer ();
+      if (!Streaming) Lux.FlushPickBuffer ();
       Batches.Clear ();
    }
 
@@ -252,6 +255,10 @@ public abstract class VNode {
    // under it. So, call Scene.Root.Render() will draw the entire scene.
    internal void Render () {
       Lux.BeginNode (this);
+      if (Streaming && Lux.IsPicking) {
+         if (mGeometryDirty) { Lux.Redraw (); }
+         return;
+      }
       try {
          // If the GeometryDirty flag is set, it means the geometry of this VNode
          // has changed - the batches it might be holding on to are all useless now, and we

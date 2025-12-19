@@ -227,6 +227,12 @@ public static class Extensions {
       return elem;
    }
 
+   /// <summary>Removes all elements matching a particular condition</summary>
+   public static void RemoveIf<T> (this IList<T> list, Predicate<T> match) {
+      for (int i = list.Count - 1; i >= 0; i--)
+         if (match (list[i])) list.RemoveAt (i);
+   }
+
    /// <summary>'Rolls' a list, treating it as a circular list, starting with element N</summary>
    /// The element N is returned first, then N+1 and so on, until we finish with
    /// the element N-1. Thus, [1,2,3,4,5].Roll (2) will return [3,4,5,1,2].
