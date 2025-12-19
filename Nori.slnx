@@ -1,6 +1,7 @@
 <Solution>
   <Folder Name="/Demos/">
     <Project Path="Demos/ConDemo/ConDemo.csproj" />
+    <Project Path="Demos/Surfer/Surfer.csproj" Id="500bcd99-2cb8-4658-94c7-a4f226b7cd19" />
     <Project Path="Demos/WPFDemo/WPFDemo.csproj" />
   </Folder>
   <Folder Name="/Test/">
