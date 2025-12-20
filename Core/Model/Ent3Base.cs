@@ -50,25 +50,23 @@ namespace Nori;
 public abstract partial class Ent3 {
    // Constructors -------------------------------------------------------------
    protected Ent3 () { }
-   /// <summary>
-   /// Protected contstructor - each Ent3 has an Id
-   /// </summary>
+   /// <summary>Protected contstructor - each Ent3 has an Id</summary>
    protected Ent3 (int id) => Id = id;
 
    // Properties ---------------------------------------------------------------
-   /// <summary>
-   /// Returns the Bound of the Ent3 (overridden in target surfaces)
-   /// </summary>
+   /// <summary>Returns the Bound of the Ent3 (overridden in target surfaces)</summary>
    public abstract Bound3 Bound { get; }
 
-   /// <summary>
-   /// Various surface-related flags
-   /// </summary>
+   /// <summary>Various surface-related flags</summary>
    public E3Flags Flags => mFlags;
 
-   /// <summary>
-   /// ID of the surface (often used to map to an entity number in STEP / IGES etc)
-   /// </summary>
+   /// <summary>Is the normal flipped (back-side of surface is to be used)</summary>
+   public bool FlipNormal { 
+      get => Get (E3Flags.FlipNormal); 
+      protected set => Set (E3Flags.FlipNormal, value); 
+   }
+
+   /// <summary>ID of the surface (often used to map to an entity number in STEP / IGES etc)</summary>
    public readonly int Id;
 
    /// <summary>Is this entity selected?</summary>
@@ -77,9 +75,7 @@ public abstract partial class Ent3 {
       set { if (Set (E3Flags.Selected, value)) Notify (EProp.Selected); }
    }
 
-   /// <summary>
-   /// Should this entity be rendered using a translucent (glass) shader
-   /// </summary>
+   /// <summary>Should this entity be rendered using a translucent (glass) shader</summary>
    public bool IsTranslucent {
       get => Get (E3Flags.Translucent);
       set { if (Set (E3Flags.Translucent, value)) Notify (EProp.Translucency); }
@@ -103,19 +99,34 @@ public abstract partial class Ent3 {
 #endregion
 
 #region enum E3Flags -------------------------------------------------------------------------------
-/// <summary>
-/// Bitflags for Ent3
-/// </summary>
+/// <summary>Bitflags for Ent3</summary>
 [Flags]
 public enum E3Flags {
-   Selected = 0x1, Translucent = 0x2,
+   Selected = 0x1, Translucent = 0x2, FlipNormal = 0x4,
 }
 #endregion
 
+/// <summary>An Entity that represents a free-space curve</summary>
+public class E3Curve : Ent3 {
+   public E3Curve (Edge3 curve) => Edge = curve;
+   public readonly Edge3 Edge;
+
+   public override Bound3 Bound {
+      get {
+         if (mBound.IsEmpty) {
+            List<Point3> pts = [];
+            Edge.Discretize (pts, Lib.CoarseTess, 1.065);   // 1.065 ~ 61 degrees
+            pts.Add (Edge.End);
+            mBound = new (pts);
+         }
+         return mBound;
+      }
+   }
+   Bound3 mBound = new ();
+}
+
 #region class E3Surface ----------------------------------------------------------------------------
-/// <summary>
-/// E3Surface is the base class for parametric surfaces with no thickness
-/// </summary>
+/// <summary>E3Surface is the base class for parametric surfaces with no thickness</summary>
 /// The surfaces are parametric - the 3D points can be unlofted into a UV parameter space 
 /// (using the GetUV method), and given a UV value, we can compute the corresponding 3D position
 /// (using the GetPoint method) and the corresponding normal (using the GetNormal method). 
@@ -128,36 +139,43 @@ public enum E3Flags {
 public abstract class E3Surface : Ent3 {
    // Constructors -------------------------------------------------------------
    protected E3Surface () { }
-   /// <summary>
-   /// Create an E3Surface given the ID and set of trimming curves
-   /// </summary>
+   /// <summary>Create an E3Surface given the ID and set of trimming curves</summary>
    protected E3Surface (int id, IEnumerable<Contour3> trims) : base (id) => mContours = [.. trims];
 
    // Properties ---------------------------------------------------------------
-   /// <summary>
-   /// The Bound is computed on demand and cached
-   /// </summary>
+   /// <summary>The Bound of the surface in 3D</summary>
+   /// This is computed by the ComputeBound override, and cached here
    public override Bound3 Bound => Bound3.Update (ref mBound, ComputeBound);
    Bound3 mBound = new ();
 
-   /// <summary>
-   /// Set of contours of the surface
-   /// </summary>
+   /// <summary>Set of contours of the surface</summary>
    public IReadOnlyList<Contour3> Contours => mContours;
    protected Contour3[] mContours = [];
 
-   /// <summary>
-   /// The tessellation of the surface is computed on demand by BuildMesh (which can be overridden)
-   /// </summary>
-   public Mesh3 Mesh => _mesh ??= BuildMesh (Lib.FineTess, 0.541);  // 0.5411 ~ 31 degrees
+   /// <summary>The Domain of the surface in UV parameter space</summary>
+   /// This is computed by the ComputeDomain override, and cached here
+   public Bound2 Domain => Bound2.Update (ref mDomain, ComputeDomain);
+   Bound2 mDomain = new ();
+
+   /// <summary>The tessellation of the surface is computed on demand by BuildMesh (which can be overridden)</summary>
+   public Mesh3 Mesh {
+      get => _mesh ??= BuildMesh (Lib.FineTess, 0.541);  // 0.5411 ~ 31 degrees
+      set {
+         _mesh = value;
+         if (this is E3Plane or E3Cylinder or E3Torus or E3Cone) {
+            if (_mesh.Triangle.Length > 0) {
+               var node = _mesh.Vertex[_mesh.Triangle[0]];
+               Point2 uv = GetUV ((Point3)node.Pos);
+               Vector3 vec1 = GetNormal (uv), vec2 = (Vector3)node.Vec;
+               if (vec1.Opposing (vec2)) FlipNormal = true;
+            }
+         }
+      }
+   }
    Mesh3? _mesh;
 
-   public virtual void SetMesh (Mesh3 mesh) => _mesh = mesh;
-
    // Overrides ----------------------------------------------------------------
-   /// <summary>
-   /// BuildMesh is called to compute a tessellated mesh for this surface
-   /// </summary>
+   /// <summary>BuildMesh is called to compute a tessellated mesh for this surface</summary>
    /// We have a default implementation here that uses the SurfaceMesher to compute
    /// a mesh. This unlofts the contours to create a set of UV contours. These are flat,
    /// and can be tessellated by the 2D tessellator. Then, 3D triangles are created from
@@ -173,19 +191,16 @@ public abstract class E3Surface : Ent3 {
    protected virtual Mesh3 BuildMesh (double tolerance, double maxAngStep) 
       => new SurfaceMesher (this).Build (tolerance, maxAngStep);
 
-   /// <summary>
-   /// Computes the 3D point given a particular UV parameter values
-   /// </summary>
+   /// <summary>Override this to compute the domain of the surface</summary>
+   public virtual Bound2 ComputeDomain () => throw new NotImplementedException ();
+
+   /// <summary>Computes the 3D point given a particular UV parameter values</summary>
    public abstract Point3 GetPoint (Point2 uv);
 
-   /// <summary>
-   /// Computes the normal given a particular UV parameter value
-   /// </summary>
+   /// <summary>Computes the normal given a particular UV parameter value</summary>
    public abstract Vector3 GetNormal (Point2 uv);
 
-   /// <summary>
-   /// Compute the UV parameter value corresponding to a point lying on the surface
-   /// </summary>
+   /// <summary>Compute the UV parameter value corresponding to a point lying on the surface</summary>
    public abstract Point2 GetUV (Point3 pt3d);
 
    // Implementation -----------------------------------------------------------

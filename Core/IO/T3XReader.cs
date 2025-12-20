@@ -27,7 +27,7 @@ public class T3XReader : IDisposable {
             _ => throw new BadCaseException (type)
          };
          if (ent == null) break;
-         ent.SetMesh (LoadMesh (ent.Id));
+         ent.Mesh = LoadMesh (ent.Id);
          mModel.Ents.Add (ent);
       }
       return mModel;
@@ -51,6 +51,8 @@ public class T3XReader : IDisposable {
 
    E3Cone LoadCone () {
       var (uid, rad, hangle, cs) = (RInt (), RDouble (), RDouble (), RCS ());
+      double height = rad / Math.Tan (hangle);
+      cs += cs.VecZ * -height;
       return new E3Cone (uid, LoadContours (), cs, rad, hangle);
    }
 

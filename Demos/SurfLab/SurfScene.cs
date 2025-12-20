@@ -1,13 +1,11 @@
 ﻿using System.Diagnostics;
-using System.Windows.Forms;
-using System.Windows.Media.Media3D;
 using Nori;
 namespace SurfLab;
 
 class SurfScene : Scene3 {
    public SurfScene (string file) {
       mModel = new T3XReader (file).Load ();
-      mModel.Ents.RemoveIf (a => a is not E3Cylinder);
+      mModel.Ents.RemoveIf (a => !Include (a));
 
       BgrdColor = new (96, 128, 160);
       Bound = mModel.Bound;
@@ -22,18 +20,38 @@ class SurfScene : Scene3 {
    NormalVN mNormal = new (5);
    MeshLineVN mMeshVN = new ();
 
+   public override void Picked (object obj) {
+      if (obj is E3Surface surf) {
+         string s = surf.ToString ();
+         if (surf.FlipNormal) s += " Flip";
+         Lib.Trace (s);
+      }
+   }
+
+   bool Include (Ent3 e) {
+      if (e is E3Plane or E3Cylinder or E3Torus or E3Cone) return false;
+      if (e is E3NurbsSurface) return false;
+      // if (e is E3SweptSurface) return false;
+      if (e.Id != 572) return false;
+      return true;
+   }
+
    public override void Detached () => mHooks.Dispose ();
 
    // Called when the mouse is moving
    void OnMouseMove (Vec2S pt) {
       if (!HW.IsDragging) {
-         if (Lux.Pick (pt)?.Obj is E3ParaSurface e3s) {
+         if (Lux.Pick (pt)?.Obj is E3Surface e3s) {
             mMeshVN.Mesh = e3s.Mesh;
-            Point3 pt3d = Lux.PickPos; mPlus.Pt = pt3d; 
-            Point2 uv = e3s.GetUV (pt3d); 
-            Point3 ptLoft = e3s.GetPoint (uv);
-            Vector3 vecNorm = e3s.GetNormal (uv);
-            mNormal.Ray = (ptLoft, vecNorm);
+            Point3 pt3d = Lux.PickPos; mPlus.Pt = pt3d;
+            try {
+               Point2 uv = e3s.GetUV (pt3d);
+               Point3 ptLoft = e3s.GetPoint (uv);
+               Vector3 vecNorm = e3s.GetNormal (uv);
+               mNormal.Ray = (ptLoft, vecNorm);
+            } catch (Exception) {
+               Debug.WriteLine ("Crashed");
+            }
          } else 
             mPlus.Pt = mCross.Pt = Point3.Nil;
       } 

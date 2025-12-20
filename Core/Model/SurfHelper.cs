@@ -1,8 +1,10 @@
-﻿namespace Nori;
+// ────── ╔╗
+// ╔═╦╦═╦╦╬╣ SurfHelper.cs
+// ║║║║╬║╔╣║ <<TODO>>
+// ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
+namespace Nori;
 
-/// <summary>
-/// This computes a Mesh3 for a surface
-/// </summary>
+/// <summary>This computes a Mesh3 for a surface</summary>
 class SurfaceMesher {
    public SurfaceMesher (E3Surface surf) => mSurf = surf;
    readonly E3Surface mSurf;
@@ -11,6 +13,7 @@ class SurfaceMesher {
       // First, we flatten each trimming curve into the UV space, and compute a
       // 2D triangular tessellation in the UV space. At this point, we compute the
       // following set of data:
+      mTolerance = tolerance;
       List<Point3> pts = [];  // Discretization of all the trimming curves of the surface
       List<int> splits = [0]; // Split points that divide pts into individual contours
       List<int> wires = [];   // Elements taken as pairs that defined the silhouette wires
@@ -51,7 +54,7 @@ class SurfaceMesher {
    }
    readonly List<Node> mNodes = [];
    readonly List<int> mTris = [];
-   readonly double mTolerance;
+   double mTolerance;
 
    void AddTriangle (int a, int b, int c) {
       // Take each of the midpoints and see which one has the worst deviation,
