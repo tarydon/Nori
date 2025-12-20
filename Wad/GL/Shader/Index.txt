@@ -14,7 +14,7 @@ Phong             8  Triangles    Vec3F_Vec3H      0      1      1        None  
 PhongPink         9  Triangles    Vec3F_Vec3H      0      1      1        None     Phong.vert|PhongPink.frag
 Pick             10  Triangles    Vec3F_Vec3H      0      1      1        None     FlatFacet.vert|Flat.frag
 Glass            11  Triangles    Vec3F_Vec3H      0      1      1        None     Gourad.vert|Glass.frag
-FlatFacet        12  Triangles    Vec3F_Vec3H      0      1      1        None     FlatFacet.vert|FlatFacet.frag
+FlatFacet        12  Triangles    Vec3F_Vec3H      0      1      1        None     FlatFacet.vert|FlatFacet.geom|FlatFacet.frag
 TextPx          104  Points       Vec4S_Int        1      0      0        None     TextPx.vert|Text.geom|Text.frag
 DashLine2D       13  Lines        Vec2F            1      0      0        None     World2D.vert|DashLine2D.geom|DashLine.frag
 TriFanCover     105  TriangleFan  Vec2F            0      0      0        Cover    World2D.vert|Flat.frag
