@@ -172,6 +172,26 @@ public static class Geo {
       return (P, P + (v1 + v2));
    }
 
+   /// <summary>Given a Z vector, returns X and Y vectors in that coordinate system</summary>
+   /// Of course, there are infinitely many X and Y vectors possible, this just
+   /// picks one pair and returns them, such that X * Y = Z
+   public static (Vector3 x, Vector3 y) GetXYFromZ (Vector3 z) {
+      z = z.Normalized ();
+      // Take the least component of this and consider that arbitrarily the x
+      double cx = Math.Abs (z.X), cy = Math.Abs (z.Y), cz = Math.Abs (z.Z);
+      Vector3 x = Vector3.ZAxis;
+      if (cx < cy && cx < cz) {
+         x = Vector3.XAxis;
+      } else if (cy < cz) {
+         x = Vector3.YAxis;
+      } 
+      // Of course, this choice of x is not really likely to be correct, so we can
+      // now compute a 'correct' y by cross multiplication. Then, we can recompute
+      // x again by cross-multiplication
+      Vector3 y = (z * x).Normalized (); x = (y * z).Normalized ();
+      return (x, y);
+   }
+
    /// <summary>Return the intersection Point2 of two lines A-B and C-D</summary>
    /// <param name="A">First Point2 on line 1</param>
    /// <param name="B">Second Point2 on line 1</param>

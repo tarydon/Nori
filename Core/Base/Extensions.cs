@@ -83,6 +83,11 @@ public static class Extensions {
       foreach (var elem in seq) action (elem);
    }
 
+   /// <summary>
+   /// Gets the lie of f along the interval a..b
+   /// </summary>
+   public static double GetLieOn (this double f, double a, double b) => (f - a) / (b - a);
+
    /// <summary>Gets a value from a dictionary, or adds a new one (synthesized by the maker function)</summary>
    public static U Get<T, U> (this IDictionary<T, U> dict, T key, Func<T, U> maker) {
       if (!dict.TryGetValue (key, out var value))

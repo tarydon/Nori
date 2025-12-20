@@ -66,6 +66,14 @@ public abstract partial class Ent3 {
       protected set => Set (E3Flags.FlipNormal, value); 
    }
 
+   /// <summary>
+   /// Is the Genetrix lying in the XY plane
+   /// </summary>
+   public bool FlatGenetrix {
+      get => Get (E3Flags.FlatGenetrix);
+      protected set => Set (E3Flags.FlatGenetrix, value);
+   }
+
    /// <summary>ID of the surface (often used to map to an entity number in STEP / IGES etc)</summary>
    public readonly int Id;
 
@@ -102,7 +110,7 @@ public abstract partial class Ent3 {
 /// <summary>Bitflags for Ent3</summary>
 [Flags]
 public enum E3Flags {
-   Selected = 0x1, Translucent = 0x2, FlipNormal = 0x4,
+   Selected = 0x1, Translucent = 0x2, FlipNormal = 0x4, FlatGenetrix = 0x8,
 }
 #endregion
 

@@ -4,6 +4,48 @@
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 namespace Nori;
 
+class CurveUnlofter {
+   public CurveUnlofter (Edge3 edge) {
+      mEdge = edge;
+      const int tDiv = 8;
+      var domain = edge.Domain;
+      double dt = domain.Length / tDiv;
+
+      // Build a set of T3D points
+      for (int i = 0; i <= tDiv; i++) 
+         mNodes.Add (new T3D (mEdge, domain.Min + i * dt));
+      // Then, make Segs out of them
+      for (int i = 0; i < tDiv; i++)
+
+   }
+   readonly Edge3 mEdge;
+
+   /// <summary>
+   /// This struct holds a T value and the corresponding point in 3D space
+   /// </summary>
+   readonly struct T3D {
+      public T3D (Edge3 edge, double t) {
+         T = (float)t; 
+         XYZ = (Point3f)edge.GetPoint (t);
+      }
+
+      public readonly float T;
+      public readonly Point3f XYZ; 
+   }
+
+   readonly struct Seg {
+      // Constructs a Seg, given the 2 end points making up the Seg.
+      // a = Index of the left point (in owner's mNodes array)
+      // b = Index of the right point
+      // level = The seg level
+      public Seg (CurveUnlofter owner, int a, int b, int level) {
+      }
+   }
+
+   readonly List<T3D> mNodes = [];
+   readonly List<Seg> mSegs = [];
+}
+
 /// <summary>This computes a Mesh3 for a surface</summary>
 class SurfaceMesher {
    public SurfaceMesher (E3Surface surf) => mSurf = surf;

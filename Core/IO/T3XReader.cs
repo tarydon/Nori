@@ -53,7 +53,7 @@ public class T3XReader : IDisposable {
       var (uid, rad, hangle, cs) = (RInt (), RDouble (), RDouble (), RCS ());
       double height = rad / Math.Tan (hangle);
       cs += cs.VecZ * -height;
-      return new E3Cone (uid, LoadContours (), cs, rad, hangle);
+      return new E3Cone (uid, LoadContours (), cs, hangle);
    }
 
    E3Cylinder LoadCylinder () {
@@ -123,7 +123,7 @@ public class T3XReader : IDisposable {
       return new ([.. nodes], [.. tris], [.. wires]);
    }
 
-   NurbsCurve LoadNurbsCurve () {
+   NurbsCurve3 LoadNurbsCurve () {
       var pairId = RInt ();
       var (ctrl, weight) = LoadCtrlPts ();
       var knots = LoadKnots ();
@@ -161,8 +161,10 @@ public class T3XReader : IDisposable {
    E3SweptSurface LoadSweptSurface () {
       var (uid, sweep) = (RInt (), RVector ());
       if (RWord () != "GENERATRIX") Fatal ();
-      Edge3 genetrix = LoadEdge ()!;
-      return new E3SweptSurface (uid, LoadContours (), genetrix, sweep);
+      Edge3 genetrix = LoadEdge ()!;      
+      var (x, y) = Geo.GetXYFromZ (sweep);
+      var cs = new CoordSystem (genetrix.Start, x, y);
+      return new E3SweptSurface (uid, LoadContours (), cs, genetrix.Xformed (Matrix3.From (cs)));
    }
 
    E3Torus LoadTorus () {
