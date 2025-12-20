@@ -283,10 +283,7 @@ public readonly struct Point3 : IEquatable<Point3> {
    public override bool Equals ([NotNullWhen (true)] object? obj) => obj is Point3 other && EQ (other);
 
    /// <summary>Returns the Hash-code of the Point3 (based on their rounded-off approximations)</summary>
-   public override int GetHashCode () {
-      var pt = R6 ();
-      return (pt.X, pt.Y, pt.Z).GetHashCode ();
-   }
+   public override int GetHashCode () => HashCode.Combine (X.R6 (), Y.R6 (), Z.R6 ());
 
    /// <summary>Gets the lie of this point on the given line segment a..b</summary>
    /// This is accurate only if the point actually lies on the infinite line through a..b

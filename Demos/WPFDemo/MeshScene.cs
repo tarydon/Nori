@@ -56,7 +56,7 @@ class MeshScene : Scene3 {
          for (int j = 1; j <= span2.Length; j++) {
             Point3 a = (Point3)span2[j - 1], b = (Point3)span2[j % span2.Length];
             Point3 c = a.WithZ (thk), d = b.WithZ (thk);
-            nodes.AddRange ([a, b, d, d, c, a]);
+            nodes.AddRange (a, b, d, d, c, a);
          }
       }
 

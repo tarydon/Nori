@@ -347,7 +347,7 @@ public class Mesh3 {
          Vector3 ab = (a + b) * 0.5, ac = (a + c) * 0.5, bc = (b + c) * 0.5;
          // Register nodes and make new triangles.
          var (P, Q, R) = (Add (ab), Add (bc), Add (ac));
-         buf.AddRange (stackalloc int[] { A, P, R, P, Q, R, P, B, Q, Q, C, R });
+         buf.AddRange (A, P, R, P, Q, R, P, B, Q, Q, C, R);
       }
    }
 
