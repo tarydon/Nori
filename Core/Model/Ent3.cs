@@ -16,9 +16,9 @@ public sealed class E3Cone : E3CSSurface {
    public readonly double Radius;
    public readonly double HalfAngle;
 
-   protected override Point3 EvaluateCanonical (Point2 pt) => throw new NotImplementedException ();
-   protected override Vector3 EvalNormalCanonical (Point2 pt) => throw new NotImplementedException ();
-   protected override Point2 FlattenCanonical (Point3 pt) => throw new NotImplementedException ();
+   protected override Point3 GetPointCanonical (Point2 pt) => throw new NotImplementedException ();
+   protected override Vector3 GetNormalCanonical (Point2 pt) => throw new NotImplementedException ();
+   protected override Point2 GetUVCanonical (Point3 pt) => throw new NotImplementedException ();
 }
 #endregion
 
@@ -156,19 +156,19 @@ public sealed class E3Cylinder : E3CSSurface {
    // the origin, and the axis aligned with +Z. The parametrization is this:
    // - U is directly in radians, wraps around in the XY plane (0 = X axis)
    // - V is the height above XY plane, in linear units
-   protected override Point3 EvaluateCanonical (Point2 pt) {
+   protected override Point3 GetPointCanonical (Point2 pt) {
       var (sin, cos) = SinCos (pt.X);
       return new (Radius * cos, Radius * sin, pt.Y);
    }
 
    // The normal in canonical space is always horizontal
-   protected override Vector3 EvalNormalCanonical (Point2 pt) {
+   protected override Vector3 GetNormalCanonical (Point2 pt) {
       var (sin, cos) = SinCos (pt.X);
       return new (cos, sin, 0);
    }
 
    // See EvaluateCanonical for the definition of U and V
-   protected override Point2 FlattenCanonical (Point3 pt) {
+   protected override Point2 GetUVCanonical (Point3 pt) {
       double ang = Atan2 (pt.Y, pt.X); if (ang < 0) ang += Lib.TwoPI;
       return new (ang, pt.Z);
    }
@@ -205,9 +205,9 @@ public sealed class E3NurbsSurface : E3ParaSurface {
    public int VCtl => Ctrl.Length / UCtl;
 
    // Overrides ----------------------------------------------------------------
-   public override Vector3 EvalNormal (Point2 pt) => throw new NotImplementedException ();
+   public override Vector3 GetNormal (Point2 pt) => throw new NotImplementedException ();
 
-   public override Point3 Evaluate (Point2 pt) {
+   public override Point3 GetPoint (Point2 pt) {
       double u = pt.X.Clamp (mUImp.Knot[0], mUImp.Knot[^1] - 1e-9);
       double[] ufactor = mUFactor.Value!;
       while (ufactor.Length < mUImp.Order)
@@ -268,7 +268,7 @@ public sealed class E3NurbsSurface : E3ParaSurface {
    static readonly ThreadLocal<double[]> mUFactor = new (() => new double[8]);
    static readonly ThreadLocal<double[]> mVFactor = new (() => new double[8]);
 
-   public override Point2 Flatten (Point3 pt) => throw new NotImplementedException ();
+   public override Point2 GetUV (Point3 pt) => throw new NotImplementedException ();
 }
 #endregion
 
@@ -320,9 +320,9 @@ public sealed class E3Sphere : E3ParaSurface {
    public readonly Point3 Center;
    public readonly double Radius;
 
-   public override Vector3 EvalNormal (Point2 pt) => throw new NotImplementedException ();
-   public override Point3 Evaluate (Point2 pt) => throw new NotImplementedException ();
-   public override Point2 Flatten (Point3 pt) => throw new NotImplementedException ();
+   public override Vector3 GetNormal (Point2 pt) => throw new NotImplementedException ();
+   public override Point3 GetPoint (Point2 pt) => throw new NotImplementedException ();
+   public override Point2 GetUV (Point3 pt) => throw new NotImplementedException ();
 }
 #endregion
 
@@ -337,9 +337,9 @@ public sealed class E3SpunSurface : E3CSSurface {
    E3SpunSurface () => Genetrix = null!;
    public readonly Edge3 Genetrix;
 
-   protected override Point3 EvaluateCanonical (Point2 pt) => throw new NotImplementedException ();
-   protected override Vector3 EvalNormalCanonical (Point2 pt) => throw new NotImplementedException ();
-   protected override Point2 FlattenCanonical (Point3 pt) => throw new NotImplementedException ();
+   protected override Point3 GetPointCanonical (Point2 pt) => throw new NotImplementedException ();
+   protected override Vector3 GetNormalCanonical (Point2 pt) => throw new NotImplementedException ();
+   protected override Point2 GetUVCanonical (Point3 pt) => throw new NotImplementedException ();
 }
 #endregion
 
@@ -354,9 +354,9 @@ public sealed class E3SweptSurface : E3ParaSurface {
    public readonly Edge3 Genetrix;
    public readonly Vector3 Sweep;
 
-   public override Point3 Evaluate (Point2 pt) => throw new NotImplementedException ();
-   public override Vector3 EvalNormal (Point2 pt) => throw new NotImplementedException ();
-   public override Point2 Flatten (Point3 pt) => throw new NotImplementedException ();
+   public override Point3 GetPoint (Point2 pt) => throw new NotImplementedException ();
+   public override Vector3 GetNormal (Point2 pt) => throw new NotImplementedException ();
+   public override Point2 GetUV (Point3 pt) => throw new NotImplementedException ();
 }
 #endregion
 
@@ -371,8 +371,8 @@ public sealed class E3Torus : E3CSSurface {
    public override void SetMesh (Mesh3 mesh) {
       base.SetMesh (mesh);
       var node = mesh.Vertex[mesh.Triangle[0]];
-      Point2 uv = Flatten ((Point3)node.Pos);
-      Vector3 vec1 = EvalNormal (uv), vec2 = (Vector3)node.Vec;
+      Point2 uv = GetUV ((Point3)node.Pos);
+      Vector3 vec1 = GetNormal (uv), vec2 = (Vector3)node.Vec;
       if (vec1.Opposing (vec2)) FlipNormal = true;
    }
 
@@ -385,7 +385,7 @@ public sealed class E3Torus : E3CSSurface {
    /// - U is the position along the initial minor circle, with U=0 corresponding to
    ///   the point at (RMajor+RMinor, 0, 0) and moving CCW as viewed from +Y
    /// - V is the rotation of this generating minor circle about Z axis
-   protected override Point3 EvaluateCanonical (Point2 pt) {
+   protected override Point3 GetPointCanonical (Point2 pt) {
       var (sin, cos) = SinCos (pt.X);     
       Point3 pos = new (RMajor + RMinor * cos, 0, RMinor * sin);
       return pos.Rotated (EAxis.Z, pt.Y);
@@ -393,13 +393,13 @@ public sealed class E3Torus : E3CSSurface {
 
    /// <summary>See EvaluateCanonical for an explanation of the parametrization</summary>
    /// The normal computation follows from the same
-   protected override Vector3 EvalNormalCanonical (Point2 pt) {
+   protected override Vector3 GetNormalCanonical (Point2 pt) {
       var (sin, cos) = SinCos (pt.X);
       return new Vector3 (cos, 0, sin).Rotated (EAxis.Z, pt.Y);
    }
    
    /// <summary>See EvaluateCanonical above for a description of the parametrization</summary>
-   protected override Point2 FlattenCanonical (Point3 pt) {
+   protected override Point2 GetUVCanonical (Point3 pt) {
       // First, look from above to figure out the V value (the rotation of the
       // generating circle about Z axis)
       double v = Atan2 (pt.Y, pt.X);

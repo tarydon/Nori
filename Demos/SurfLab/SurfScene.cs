@@ -7,7 +7,7 @@ namespace SurfLab;
 class SurfScene : Scene3 {
    public SurfScene (string file) {
       mModel = new T3XReader (file).Load ();
-      mModel.Ents.RemoveIf (a => a is E3Torus);
+      mModel.Ents.RemoveIf (a => a is not E3Cylinder);
 
       BgrdColor = new (96, 128, 160);
       Bound = mModel.Bound;
@@ -30,9 +30,9 @@ class SurfScene : Scene3 {
          if (Lux.Pick (pt)?.Obj is E3ParaSurface e3s) {
             mMeshVN.Mesh = e3s.Mesh;
             Point3 pt3d = Lux.PickPos; mPlus.Pt = pt3d; 
-            Point2 uv = e3s.Flatten (pt3d); 
-            Point3 ptLoft = e3s.Evaluate (uv);
-            Vector3 vecNorm = e3s.EvalNormal (uv);
+            Point2 uv = e3s.GetUV (pt3d); 
+            Point3 ptLoft = e3s.GetPoint (uv);
+            Vector3 vecNorm = e3s.GetNormal (uv);
             mNormal.Ray = (ptLoft, vecNorm);
          } else 
             mPlus.Pt = mCross.Pt = Point3.Nil;
