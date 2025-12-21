@@ -61,18 +61,12 @@ public abstract partial class Ent3 {
    public E3Flags Flags => mFlags;
 
    /// <summary>Is the normal flipped (back-side of surface is to be used)</summary>
-   public bool FlipNormal { 
-      get => Get (E3Flags.FlipNormal); 
-      protected set => Set (E3Flags.FlipNormal, value); 
-   }
+   public bool IsNormalFlipped => Get (E3Flags.FlipNormal); 
 
    /// <summary>
    /// Is the Genetrix lying in the XY plane
    /// </summary>
-   public bool FlatGenetrix {
-      get => Get (E3Flags.FlatGenetrix);
-      protected set => Set (E3Flags.FlatGenetrix, value);
-   }
+   public bool IsGenetrixFlat => Get (E3Flags.FlatGenetrix);
 
    /// <summary>ID of the surface (often used to map to an entity number in STEP / IGES etc)</summary>
    public readonly int Id;
@@ -88,6 +82,10 @@ public abstract partial class Ent3 {
       get => Get (E3Flags.Translucent);
       set { if (Set (E3Flags.Translucent, value)) Notify (EProp.Translucency); }
    }
+
+   public bool IsULinear => Get (E3Flags.ULinear);
+
+   public bool IsVLinear => Get (E3Flags.VLinear);
 
    // Protected ----------------------------------------------------------------
    // Bitflags for this entity
@@ -111,6 +109,7 @@ public abstract partial class Ent3 {
 [Flags]
 public enum E3Flags {
    Selected = 0x1, Translucent = 0x2, FlipNormal = 0x4, FlatGenetrix = 0x8,
+   ULinear = 0x10, VLinear = 0x20,
 }
 #endregion
 
@@ -175,7 +174,7 @@ public abstract class E3Surface : Ent3 {
                var node = _mesh.Vertex[_mesh.Triangle[0]];
                Point2 uv = GetUV ((Point3)node.Pos);
                Vector3 vec1 = GetNormal (uv), vec2 = (Vector3)node.Vec;
-               if (vec1.Opposing (vec2)) FlipNormal = true;
+               if (vec1.Opposing (vec2)) mFlags |= E3Flags.FlipNormal;
             }
          }
       }
@@ -206,7 +205,16 @@ public abstract class E3Surface : Ent3 {
    public abstract Point3 GetPoint (Point2 uv);
 
    /// <summary>Computes the normal given a particular UV parameter value</summary>
-   public abstract Vector3 GetNormal (Point2 uv);
+   public virtual Vector3 GetNormal (Point2 uv) {
+      var d = Domain;
+      double u = uv.X, v = uv.Y, du = d.X.Length / 40, dv = d.Y.Length / 40;
+      double u0 = d.X.Clamp (u - du), u1 = d.X.Clamp (u + du);
+      double v0 = d.Y.Clamp (v - dv), v1 = d.Y.Clamp (v + dv);
+      var vecx = GetPoint (new (u1, v)) - GetPoint (new (u0, v));
+      var vecy = GetPoint (new (u, v1)) - GetPoint (new (u, v0));
+      var vecz = (vecx * vecy).Normalized ();
+      return IsNormalFlipped ? -vecz : vecz;
+   }
 
    /// <summary>Compute the UV parameter value corresponding to a point lying on the surface</summary>
    public abstract Point2 GetUV (Point3 pt3d);
@@ -244,10 +252,10 @@ public abstract class E3CSSurface : E3Surface {
 
    public sealed override Vector3 GetNormal (Point2 pt) {
       Vector3 vec = GetNormalCanonical (pt) * ToXfm;
-      return FlipNormal ? -vec : vec;
+      return IsNormalFlipped ? -vec : vec;
    }
 
-   public sealed override Point2 GetUV (Point3 pt) 
+   public override Point2 GetUV (Point3 pt) 
       => GetUVCanonical (pt * FromXfm);
 
    protected abstract Point3 GetPointCanonical (Point2 pt);

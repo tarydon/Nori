@@ -1,5 +1,4 @@
-﻿using System.Diagnostics;
-using Nori;
+﻿using Nori;
 namespace SurfLab;
 
 class SurfScene : Scene3 {
@@ -9,7 +8,7 @@ class SurfScene : Scene3 {
 
       BgrdColor = new (96, 128, 160);
       Bound = mModel.Bound;
-      Root = new GroupVN ([new Model3VN (mModel), TraceVN.It, mPlus, mNormal, mMeshVN]);
+      Root = new GroupVN ([new Model3VN (mModel), TraceVN.It, mPlus, mNormal, mUnloft]);
 
       mHooks = HW.MouseMoves.Subscribe (OnMouseMove);
    }
@@ -19,20 +18,22 @@ class SurfScene : Scene3 {
    CrossMarkerVN mCross = new (Color4.Red);
    NormalVN mNormal = new (5);
    MeshLineVN mMeshVN = new ();
+   UnloftTracker mUnloft = new ();
 
    public override void Picked (object obj) {
       if (obj is E3Surface surf) {
          string s = surf.ToString ();
-         if (surf.FlipNormal) s += " Flip";
+         if (surf.IsNormalFlipped) s += " Flip";
          Lib.Trace (s);
       }
    }
 
    bool Include (Ent3 e) {
       if (e is E3Plane or E3Cylinder or E3Torus or E3Cone) return false;
-      if (e is E3NurbsSurface) return false;
-      // if (e is E3SweptSurface) return false;
-      if (e.Id != 572) return false;
+      // if (e is E3NurbsSurface) return false;
+      if (e is E3SweptSurface) return false;
+      if (e.Id != 15) return false;
+      e.IsTranslucent = true;
       return true;
    }
 
@@ -44,18 +45,34 @@ class SurfScene : Scene3 {
          if (Lux.Pick (pt)?.Obj is E3Surface e3s) {
             mMeshVN.Mesh = e3s.Mesh;
             Point3 pt3d = Lux.PickPos; mPlus.Pt = pt3d;
-            try {
-               Point2 uv = e3s.GetUV (pt3d);
-               Point3 ptLoft = e3s.GetPoint (uv);
-               Vector3 vecNorm = e3s.GetNormal (uv);
-               mNormal.Ray = (ptLoft, vecNorm);
-            } catch (Exception) {
-               Debug.WriteLine ("Crashed");
-            }
-         } else 
+            Point2 uv = e3s.GetUV (pt3d);
+            Point3 ptLoft = e3s.GetPoint (uv);
+            Vector3 vecNorm = e3s.GetNormal (uv);
+            mNormal.Ray = (ptLoft, vecNorm);
+         } else
             mPlus.Pt = mCross.Pt = Point3.Nil;
-      } 
+      }
    }
+}
+
+class UnloftTracker : VNode {
+   public UnloftTracker () {
+      NoPicking = true;
+      DisposeOnDetach (Unlofter.NewTile.Subscribe (OnChanged));
+   }
+
+   void OnChanged (Unlofter un) {
+      pts.Clear (); 
+      pts.AddRange (un.GetTileOutlines ().Select (a => (Vec3F)a));
+      Redraw ();
+   }
+   List<Vec3F> pts = [];
+
+   public override void SetAttributes () {
+      Lux.Color = Color4.DarkBlue;
+   }
+
+   public override void Draw () => Lux.Lines (pts.AsSpan ());
 }
 
 class NormalVN : VNode {

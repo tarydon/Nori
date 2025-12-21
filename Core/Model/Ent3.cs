@@ -12,6 +12,7 @@ public sealed class E3Cone : E3CSSurface {
    public E3Cone (int id, IEnumerable<Contour3> trims, CoordSystem cs, double halfAngle) : base (id, trims, cs) {
       HalfAngle = halfAngle;
       (mSin, mCos) = SinCos (halfAngle);
+      mFlags |= E3Flags.VLinear;
    }
    E3Cone () { }
 
@@ -37,8 +38,10 @@ public sealed class E3Cone : E3CSSurface {
 /// <summary>Represents a Cylinder in 3D space</summary>
 public sealed class E3Cylinder : E3CSSurface {
    // Constructors -------------------------------------------------------------
-   public E3Cylinder (int id, IEnumerable<Contour3> trims, CoordSystem cs, double radius, bool infacing)
-      : base (id, trims, cs) => (Radius, InFacing) = (radius, infacing);
+   public E3Cylinder (int id, IEnumerable<Contour3> trims, CoordSystem cs, double radius, bool infacing) : base (id, trims, cs) {
+      (Radius, InFacing) = (radius, infacing);
+      mFlags |= E3Flags.VLinear;
+   }
    E3Cylinder () { }
 
    public static E3Cylinder Build (int id, IReadOnlyList<Contour3> trims, CoordSystem cs, double radius, bool infacing) {
@@ -216,8 +219,6 @@ public sealed class E3NurbsSurface : E3Surface {
    public int VCtl => Ctrl.Length / UCtl;
 
    // Overrides ----------------------------------------------------------------
-   public override Vector3 GetNormal (Point2 pt) => throw new NotImplementedException ();
-
    public override Point3 GetPoint (Point2 pt) {
       double u = pt.X.Clamp (mUImp.Knot[0], mUImp.Knot[^1] - 1e-9);
       double[] ufactor = mUFactor.Value!;
@@ -279,7 +280,10 @@ public sealed class E3NurbsSurface : E3Surface {
    static readonly ThreadLocal<double[]> mUFactor = new (() => new double[8]);
    static readonly ThreadLocal<double[]> mVFactor = new (() => new double[8]);
 
-   public override Point2 GetUV (Point3 pt) => throw new NotImplementedException ();
+   public override Bound2 ComputeDomain () => new (mUImp.Knot[0], mVImp.Knot[0], mUImp.Knot[^1], mVImp.Knot[^1]);
+
+   public override Point2 GetUV (Point3 pt) => (_unlofter ??= new (this)).GetUV (pt);
+   Unlofter? _unlofter;
 }
 #endregion
 
@@ -287,7 +291,8 @@ public sealed class E3NurbsSurface : E3Surface {
 /// <summary>Represents a Planar surface</summary>
 public sealed class E3Plane : E3CSSurface {
    E3Plane () { }
-   public E3Plane (int id, IEnumerable<Contour3> trims, CoordSystem cs) : base (id, trims, cs) { }
+   public E3Plane (int id, IEnumerable<Contour3> trims, CoordSystem cs) : base (id, trims, cs) 
+      => mFlags |= (E3Flags.ULinear | E3Flags.VLinear);
 
    protected override Mesh3 BuildMesh (double tolerance, double maxAngStep) {
       List<Point2> pts = [];
@@ -331,7 +336,6 @@ public sealed class E3Sphere : E3Surface {
    public readonly Point3 Center;
    public readonly double Radius;
 
-   public override Vector3 GetNormal (Point2 pt) => throw new NotImplementedException ();
    public override Point3 GetPoint (Point2 pt) => throw new NotImplementedException ();
    public override Point2 GetUV (Point3 pt) => throw new NotImplementedException ();
 }
@@ -359,7 +363,8 @@ public sealed class E3SpunSurface : E3CSSurface {
 public sealed class E3SweptSurface : E3CSSurface {
    public E3SweptSurface (int id, IEnumerable<Contour3> trims, CoordSystem cs, Edge3 genetrix) : base (id, trims, cs) {
       Genetrix = genetrix;
-      if (Genetrix.IsOnXYPlane) FlatGenetrix = true;
+      if (Genetrix.IsOnXYPlane) mFlags |= E3Flags.FlatGenetrix;
+      mFlags |= E3Flags.VLinear;
    }
    E3SweptSurface () => Genetrix = null!;
 
@@ -368,13 +373,12 @@ public sealed class E3SweptSurface : E3CSSurface {
    protected override Point3 GetPointCanonical (Point2 pt) => Genetrix.GetPoint (pt.X).Moved (0, 0, pt.Y);
 
    protected override Vector3 GetNormalCanonical (Point2 pt) => throw new NotImplementedException ();
+   protected override Point2 GetUVCanonical (Point3 pt) => Point2.Zero; // This is never used since we override GetUV
 
-   protected override Point2 GetUVCanonical (Point3 pt) {
-      double u = Genetrix.GetLie (new (pt.X, pt.Y));
-      double v = pt.Z;
-      if (!FlatGenetrix) v -= Genetrix.GetPoint (u).Z;
-      return new (u, v);
-   }
+   public override Bound2 ComputeDomain () => new Bound2 (Genetrix.Domain, new Bound1 (0, 100));
+
+   public override Point2 GetUV (Point3 pt) => (_unlofter ??= new (this)).GetUV (pt);
+   Unlofter? _unlofter;
 }
 #endregion
 

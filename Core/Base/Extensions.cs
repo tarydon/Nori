@@ -9,6 +9,11 @@ namespace Nori;
 #region class Extensions ---------------------------------------------------------------------------
 /// <summary>Extension functions on various standard types</summary>
 public static class Extensions {
+   /// <summary>
+   /// Add multiple elements into a list easily
+   /// </summary>
+   public static void AddM<T> (this List<T> list, params ReadOnlySpan<T> elems) => list.AddRange (elems);
+
    /// <summary>Interpolates using a given lie f between two doubles a and b</summary>
    public static double Along (this double f, double a, double b)
       => a + (b - a) * f;

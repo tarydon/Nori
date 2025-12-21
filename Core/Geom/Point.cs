@@ -2,6 +2,7 @@
 // ╔═╦╦═╦╦╬╣ Point.cs
 // ║║║║╬║╔╣║ Various point classes (in 2D and 3D)
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
+using JetBrains.Annotations;
 using static System.Math;
 namespace Nori;
 
@@ -194,6 +195,21 @@ public readonly struct Point3f {
    /// <summary>Construct a Point3f given 3 floats</summary>
    public Point3f (float x, float y, float z) => (X, Y, Z) = (x, y, z);
 
+   // Properties ---------------------------------------------------------------
+   /// <summary>The X ordinate of the Point3</summary>
+   public readonly float X;
+   /// <summary>The Y ordinate of the Point3</summary>
+   public readonly float Y;
+   /// <summary>The Z ordinate of the Point3</summary>
+   public readonly float Z;
+
+   // Methods ------------------------------------------------------------------
+   public double DistToSq (Point3f b) {
+      double dx = X - b.X, dy = Y - b.Y, dz = Z - b.Z;
+      return dx * dx + dy * dy + dz * dz;
+   }
+
+   // Operators ----------------------------------------------------------------
    /// <summary>Converts a Point3f to a Point3</summary>
    public static explicit operator Point3 (Point3f a) => new (a.X, a.Y, a.Z);
    /// <summary>Converts a Point3 to a Point3f</summary>
@@ -207,14 +223,14 @@ public readonly struct Point3f {
    public static Point3f operator - (Point3f p, Vector3f v) => new (p.X - v.X, p.Y - v.Y, p.Z - v.Z);
    /// <summary>Subtracting one Point3f from another gives us a Vector3f</summary>
    public static Vector3f operator - (Point3f a, Point3f b) => new (a.X - b.X, a.Y - b.Y, a.Z - b.Z);
-
-   // Properties ---------------------------------------------------------------
-   /// <summary>The X ordinate of the Point3</summary>
-   public readonly float X;
-   /// <summary>The Y ordinate of the Point3</summary>
-   public readonly float Y;
-   /// <summary>The Z ordinate of the Point3</summary>
-   public readonly float Z;
+   /// <summary>
+   /// Adds two Point3f together
+   /// </summary>
+   public static Point3f operator + (Point3f p, Point3f q) => new (p.X + q.X, p.Y + q.Y, p.Z + q.Z);
+   /// <summary>
+   /// Scales a Point3f by a given factor
+   /// </summary>
+   public static Point3f operator * (Point3f a, double f) => new (a.X * f, a.Y * f, a.Z * f);
 
    public override string ToString () => $"({X.S5 ()},{Y.S5 ()},{Z.S5 ()}";
 }

@@ -9,6 +9,10 @@
 		<OutDir>..\..\Bin</OutDir>
   </PropertyGroup>
 
+  <ItemGroup>
+    <PackageReference Include="System.Reactive" Version="6.0.1" />
+  </ItemGroup>
+
 	<ItemGroup>
 		<ProjectReference Include="..\..\Core\Nori.Core.csproj" />
 		<ProjectReference Include="..\..\Lux\Nori.Lux.csproj" />

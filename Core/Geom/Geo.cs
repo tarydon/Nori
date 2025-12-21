@@ -137,6 +137,33 @@ public static class Geo {
       return (center, center.IsNil ? 0 : center.DistToLine (e, f));
    }
 
+   /// <summary>Computes a normal, given atleast 3 points</summary>
+   /// This first uses GetBasisPoints to get 3 points from the list that are _far from_ 
+   /// each other, and then uses those three to compute a normal.
+   public static Vector3 GetNormal (IList<Point3> pts) {
+      GetBasisPoints (out int a, out int b, out int c);
+      return ((pts[b] - pts[a]) * (pts[c] - pts[a])).Normalized ();
+
+      // Helper ............................................
+      void GetBasisPoints (out int a, out int b, out int c) {
+         if (pts.Count < 3) throw new ArgumentException ("Need 3 points for GetNormal");
+         a = 0; b = 1; c = 2; if (pts.Count == 3) return;
+
+         double fMax = double.MinValue;
+         Point3 pa = pts[0], pb = pa;
+         for (int i = pts.Count - 1; i >= 1; i--) {
+            double fDist = pts[i].DistToSq (pa);
+            if (fDist > fMax) (fMax, pb) = (fDist, pts[b = i]); 
+         }
+         fMax = double.MinValue;
+         for (int i = pts.Count - 1; i >= 1; i--) {
+            double fDist = pts[i].DistToLineSq (pa, pb);
+            if (fDist > fMax) (fMax, c) = (fDist, i);
+         }
+         if (b > c) (b, c) = (c, b);
+      }
+   }
+
    /// <summary> Returns the center of the circle passing through three non-collinear points</summary>
    /// If the points are collinear, this returns Point2.Nil
    public static Point2 Get3PCircle (Point2 a, Point2 b, Point2 c) {

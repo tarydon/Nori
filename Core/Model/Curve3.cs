@@ -17,9 +17,9 @@ public abstract class Edge3 {
    public abstract Bound1 Domain { get; }
 
    /// <summary>Get the start point of the Edge3</summary>
-   public virtual Point3 Start => GetPoint (Domain.Min);
+   public abstract Point3 Start { get; }
    /// <summary>Get the end point of the Edge3</summary>
-   public virtual Point3 End => GetPoint (Domain.Max);
+   public abstract Point3 End { get; }
 
    /// <summary>
    /// Is this curve lying on the XY plane?
@@ -118,6 +118,9 @@ public sealed class Ellipse3 : Edge3 {
 
    public override Bound1 Domain => new (Ang0, Ang1);
 
+   public override Point3 Start => GetPoint (Ang0);
+   public override Point3 End => GetPoint (Ang1);
+
    public override bool IsOnXYPlane 
       => CS.Org.Z.IsZero () && Math.Abs (CS.VecZ.Z).EQ (1);
 
@@ -164,7 +167,7 @@ public class Arc3 : Edge3 {
    [Radian]
    public readonly double AngSpan;
 
-   public override Bound1 Domain => new (0, AngSpan);
+   public override Bound1 Domain => new (0, 1);
 
     /// <summary>The coordinate system in which the Arc3 is defined</summary>
    /// In this CS, the arc lies in the XY plane, and winds CCW about the Z
@@ -181,6 +184,8 @@ public class Arc3 : Edge3 {
 
    public override bool IsOnXYPlane
       => CS.Org.Z.IsZero () && Math.Abs (CS.VecZ.Z).EQ (1);
+
+   public override Point3 End => GetPoint (1);
 
    /// <summary>Start point of the Arc3 (is always at (Radius,0,0) in the local coordinate system)</summary>
    public override Point3 Start => CS.Org + CS.VecX * Radius;
@@ -347,8 +352,7 @@ public class NurbsCurve3 : Edge3 {
    // order of the Spline we're evalauting increases, and never shrink this buffer)
    static readonly ThreadLocal<double[]> mFactor = new (() => new double[8]);
 
-   public override double GetT (Point3 pt) {
-   }
+   public override double GetT (Point3 pt) => throw new NotImplementedException ();
 
    public override NurbsCurve3 Xformed (Matrix3 xfm)
       => new (PairId, [.. Ctrl.Select (a => a * xfm)], mImp.Knot, Weight);

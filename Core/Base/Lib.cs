@@ -20,6 +20,10 @@ public static class Lib {
    public const double PI = Math.PI;
    /// <summary>Tessellation error</summary>
    public static double FineTess = 0.01;
+   /// <summary>
+   /// Square of the tessellation error
+   /// </summary>
+   public static double FineTessSq = FineTess * FineTess;
    /// <summary>TwoPI = 360 degrees, in radians</summary>
    public const double TwoPI = 2 * Math.PI;
    /// <summary>HalfPI = 90 degrees, in radians</summary>
