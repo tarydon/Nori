@@ -283,7 +283,7 @@ public sealed class E3NurbsSurface : E3Surface {
    public override Bound2 ComputeDomain () => new (mUImp.Knot[0], mVImp.Knot[0], mUImp.Knot[^1], mVImp.Knot[^1]);
 
    public override Point2 GetUV (Point3 pt) => (_unlofter ??= new (this)).GetUV (pt);
-   Unlofter? _unlofter;
+   SurfaceUnlofter? _unlofter;
 }
 #endregion
 
