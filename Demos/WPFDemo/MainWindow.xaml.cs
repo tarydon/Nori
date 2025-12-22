@@ -37,6 +37,7 @@ public partial class MainWindow : Window {
    void AABBTreeDemo (object s, RoutedEventArgs e) => Display (new AABBTreeDemo ());
    void MinSphereDemo (object s, RoutedEventArgs e) => Display (new MinSphereScene ());
    void T3XReaderDemo (object s, RoutedEventArgs e) => Display (new T3XDemoScene ());
+   void SliceMeshDemo (object s, RoutedEventArgs e) => Display (new IntMeshPlaneScene ());
 
    void Display (Scene scene) {
       mSettings.Children.Clear ();

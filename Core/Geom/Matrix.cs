@@ -61,6 +61,9 @@ public class Matrix2 (double m11, double m12, double m21, double m22, double x, 
    /// <summary>The 'scaling factor' of this matrix (assuming equal scaling in all axes)</summary>
    public double ScaleFactor => (Vector2.XAxis * this).Length;
 
+   /// <summary>Is this a mirroring matrix?</summary>
+   public bool IsMirror => M11 * M22 - M12 * M21 < 0;
+
    // Methods ------------------------------------------------------------------
    /// <summary>Computes the inverse of a matrix (throws an exception for a singular matrix)</summary>
    public Matrix2 GetInverse () {
