@@ -1,4 +1,5 @@
-﻿namespace Nori;
+﻿using System.Reactive.Subjects;
+namespace Nori;
 
 public class SurfaceUnlofter {
    public SurfaceUnlofter (E3Surface surf) {
@@ -11,6 +12,7 @@ public class SurfaceUnlofter {
          double v = (j + 0.5) * dv;          // Center V of the tile
          for (int i = 0; i < uDivs; i++) {
             double u = (i + 0.5) * du;       // Center U of the tile
+            GrowArrays ();
             int node = AddNode (u, v);
             AddTile (-1, node, du, dv);
          }
@@ -30,15 +32,52 @@ public class SurfaceUnlofter {
       return tile.GetUV (this, pt);
    }
 
+   public (List<Vec3F> Lines, List<Vec3F> Points) GetTileOutlines () {
+      List<Vec3F> lines = [], points = [];
+      for (int i = 0; i < mRootTiles; i++) {
+         ref Tile tile = ref mTiles[i];
+         Process (ref tile);
+      }
+      return (lines, points);
+
+      // Helpers ...........................................
+      void Process (ref Tile tile) {
+         switch (tile.State) {
+            case EState.Raw: 
+               points.Add ((Vec3F)mNodes[tile.Center].Pt); 
+               break;
+            case EState.Subdivide2 or EState.Subdivide4:
+               for (int i = 0; i < (int)tile.State; i++) {
+                  ref Tile child = ref mTiles[tile.Children[i]];
+                  Process (ref child);
+               }
+               break;
+            default:
+               foreach (int n in new int[] { 0, 1, 1, 2, 2, 3, 3, 0 }) 
+                  lines.Add ((Vec3F)mNodes[tile.Corners[n]].Pt);
+               break;
+         }
+      }
+   }
+
+   // Properties ---------------------------------------------------------------
+   public static IObservable<SurfaceUnlofter> NewTile => (mSubject ??= new ());
+   static Subject<SurfaceUnlofter>? mSubject;
+
    // Implementation -----------------------------------------------------------
+   // Since we're working with structs for efficiency, we have to be very careful to 
+   // ensure that methods that modify these structs, or take refernces to structs 
+   // while growing these arrays (mNodes, or mTiles) do not cause any growing to happen 
+   // while these methods are executing. 
+   // This can be guaranteed by ensuring that mNodes always has space for at least 12
+   // nodes more than what we have used at any point, and mTiles always has space for
+   // atleast 4 more tiles (when we return from AddNode or AddTile)
    int AddNode (double u, double v) {
-      if (mUsedNodes >= mNodes.Length) Array.Resize (ref mNodes, mNodes.Length * 2);
       mNodes[mUsedNodes] = new Node (mSurf, mUsedNodes, u, v);
       return mUsedNodes++;
    }
 
    int AddTile (int parent, int center, double du, double dv) {
-      if (mUsedTiles >= mTiles.Length) Array.Resize (ref mTiles, mTiles.Length * 2);
       mTiles[mUsedTiles] = new Tile (mUsedTiles, parent, center, du, dv);
       return mUsedTiles++;
    }
@@ -50,6 +89,11 @@ public class SurfaceUnlofter {
       corners[0] = botLeft; corners[1] = botRight;
       corners[2] = topRight; corners[3] = topLeft;
       return nTile;
+   }
+
+   void GrowArrays () {
+      if (mUsedNodes + 12 >= mNodes.Length) Array.Resize (ref mNodes, mNodes.Length * 2);
+      if (mUsedTiles + 4 >= mTiles.Length) Array.Resize (ref mTiles, mTiles.Length * 2);
    }
 
    // Nested types -------------------------------------------------------------
@@ -67,7 +111,7 @@ public class SurfaceUnlofter {
    [InlineArray (4)]
    struct FourInts { int _elem0; }
 
-   enum EState { Raw = 0, Left = 1, Subdivide2 = 2, Subdivide4 = 4 };
+   enum EState { Raw = 0, Leaf = 1, Subdivide2 = 2, Subdivide4 = 4 };
 
    struct Tile {
       public Tile (int id, int parent, int center, double du, double dv) {
@@ -75,8 +119,10 @@ public class SurfaceUnlofter {
          for (int i = 0; i < 4; i++) Corners[i] = Children[i] = -1;
       }
 
+      public override string ToString () => $"Tile#{Id} : {State}";
+
       public Point2 GetUV (SurfaceUnlofter owner, Point3 pt) {
-         if (State == EState.Raw) Subdivide (owner);
+         if (State == EState.Raw) { Subdivide (owner); owner.GrowArrays (); }
          ref Node node = ref owner.mNodes[Center];
          return new (node.U, node.V);
       }
@@ -85,9 +131,8 @@ public class SurfaceUnlofter {
          // If we get here, we are still in the 'raw' state (first time this tile
          // been used). We need to first figure out if the tile is 'flat enough', or
          // needs to be subdivided. Let's evaluate the corners first
-         var nodes = owner.mNodes;
          double tolerance = Lib.FineTessSq;
-         ref Node center = ref nodes[Center];
+         ref Node center = ref owner.mNodes[Center];
          double uCen = center.U, vCen = center.V;
          // First, if any of the corner nodes have not yet been evaluated,
          // evaluate those
@@ -106,6 +151,7 @@ public class SurfaceUnlofter {
          // To check if we need to subdivide, we check the perpendicular distance of the
          // center point of the tile from each of its diagonals. If the center deviates too
          // much from either of them, the tile is still too curved and needs to be subdivided 
+         var nodes = owner.mNodes;
          Point3 ptCen = center.Pt;
          ref Node botLeft = ref nodes[Corners[0]], topRight = ref nodes[Corners[2]];
          ref Node botRight = ref nodes[Corners[1]], topLeft = ref nodes[Corners[3]];
@@ -116,6 +162,7 @@ public class SurfaceUnlofter {
          // We need to subdivide. Let's see if a U sibdivision is needed first
          int nLeft = owner.AddNode (uCen - DU, vCen), nRight = owner.AddNode (uCen + DU, vCen);
          int nBottom = owner.AddNode (uCen, vCen - DV), nTop = owner.AddNode (uCen, vCen + DV);
+         nodes = owner.mNodes;
          ref Node left = ref nodes[nLeft], right = ref nodes[nRight];
          ref Node bottom = ref nodes[nBottom], top = ref nodes[nTop];
          bool divideU = ptCen.DistToLineSq (left.Pt, right.Pt) > tolerance
@@ -127,7 +174,6 @@ public class SurfaceUnlofter {
          if (!(divideU || divideV)) { State = EState.Leaf; return; }
 
          double uStep = DU / 2, vStep = DV / 2;
-         var tiles = owner.mTiles;
          if (divideU && divideV) {
             State = EState.Subdivide4;
             // Divide in both U and V. We're going to create 4 smaller tiles here. 
@@ -147,7 +193,6 @@ public class SurfaceUnlofter {
             // 4. Top left quarter-tile
             nCenter = owner.AddNode (uCen - uStep, vCen - vStep);
             Children[3] = owner.AddTile (Id, nCenter, uStep, vStep, left.Id, Center, top.Id, Corners[3]);
-
          } else if (divideU) {
             // Divide only in U
             State = EState.Subdivide2;
@@ -159,7 +204,6 @@ public class SurfaceUnlofter {
             // 2. Right half-tile
             nCenter = owner.AddNode (uCen + uStep, vCen);
             Children[1] = owner.AddTile (Id, nCenter, uStep, DV, bottom.Id, Corners[1], Corners[2], top.Id);
-
          } else {
             // Divide only in V
             State = EState.Subdivide2;
@@ -167,8 +211,12 @@ public class SurfaceUnlofter {
             // two half-tiles by slicing horizontally
             // 1. Bottom half-tile
             int nCenter = owner.AddNode (uCen, vCen - vStep);
-            Children[0] = owner.AddTile (Id, nCenter, DU, vStep, 
+            Children[0] = owner.AddTile (Id, nCenter, DU, vStep, Corners[0], Corners[1], right.Id, left.Id);
+            // 2. Top half-tile
+            nCenter = owner.AddNode (uCen, vCen + vStep);
+            Children[1] = owner.AddTile (Id, nCenter, DU, vStep, left.Id, right.Id, Corners[2], Corners[3]);
          }
+         mSubject?.OnNext (owner);
          return;
       }
 
@@ -180,7 +228,7 @@ public class SurfaceUnlofter {
       public FourInts Corners;         // The 4 'corner nodes' of this tile (-1 means not evaluated)
       public FourInts Children;        // The 4 children of this tile (0 means child not existing)
    }
-   Tile[] mTiles = new Tile[16];
+   Tile[] mTiles = new Tile[8];
    int mUsedTiles, mRootTiles;
 
    // Private data -------------------------------------------------------------

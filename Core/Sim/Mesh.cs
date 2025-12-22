@@ -3,7 +3,6 @@
 // ║║║║╬║╔╣║ Implements the Mesh3 class, a simple mesh format for rendering
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 using System.IO.Compression;
-using System.Runtime.Intrinsics;
 namespace Nori;
 
 #region class Mesh3 --------------------------------------------------------------------------------

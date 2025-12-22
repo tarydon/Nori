@@ -8,7 +8,7 @@ class SurfScene : Scene3 {
 
       BgrdColor = new (96, 128, 160);
       Bound = mModel.Bound;
-      Root = new GroupVN ([new Model3VN (mModel), TraceVN.It, mPlus, mNormal, mUnloft]);
+      Root = new GroupVN ([new Model3VN (mModel), TraceVN.It, mPlus, mNormal, mUnloft, mUnloft2]);
 
       mHooks = HW.MouseMoves.Subscribe (OnMouseMove);
    }
@@ -19,6 +19,7 @@ class SurfScene : Scene3 {
    NormalVN mNormal = new (5);
    MeshLineVN mMeshVN = new ();
    UnloftTracker mUnloft = new ();
+   UnloftTracker2 mUnloft2 = new ();
 
    public override void Picked (object obj) {
       if (obj is E3Surface surf) {
@@ -52,6 +53,29 @@ class SurfScene : Scene3 {
          } else
             mPlus.Pt = mCross.Pt = Point3.Nil;
       }
+   }
+}
+
+class UnloftTracker2 : VNode {
+   public UnloftTracker2 () {
+      NoPicking = true;
+      DisposeOnDetach (SurfaceUnlofter.NewTile.Subscribe (OnChanged));
+   }
+
+   void OnChanged (SurfaceUnlofter un) {
+      (mLines, mPoints) = un.GetTileOutlines ();
+      Redraw ();
+   }
+   List<Vec3F> mLines = [], mPoints = [];
+
+   public override void SetAttributes () { 
+      Lux.PointSize = 8f; 
+      Lux.Color = Color4.DarkBlue; 
+   }
+
+   public override void Draw () {
+      Lux.Lines (mLines.AsSpan ());
+      Lux.Points (mPoints.AsSpan ());
    }
 }
 
