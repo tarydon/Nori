@@ -178,7 +178,7 @@ public class Unlofter {
 
    #region Methods ------------------------------------------------
    /// <summary>This is the main function that takes a point in 3D space and returns the corresponding UV point</summary>
-   internal Point2 GetUV (Point3 xyz) {
+   public Point2 GetUV (Point3 xyz) {
       Point2 uv = new (), uvBest = uv;
 
       // See if there is a tile that contains this point; since we're using a simple

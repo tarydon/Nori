@@ -1,4 +1,5 @@
-﻿using System.Reactive.Subjects;
+﻿using System.Diagnostics;
+using System.Reactive.Subjects;
 namespace Nori;
 
 public class SurfaceUnlofter {
@@ -6,30 +7,61 @@ public class SurfaceUnlofter {
       mDomain = (mSurf = surf).Domain;
 
       // Create the initial subdivision of 4 x 4 tiles
-      int uDivs = 4, vDivs = 4;
-      double du = mDomain.X.Length / uDivs, dv = mDomain.Y.Length / vDivs;
-      for (int j = 0; j < vDivs; j++) {
+      double du = mDomain.X.Length / mUDivs, dv = mDomain.Y.Length / mVDivs;
+      for (int j = 0; j < mVDivs; j++) {
          double v = (j + 0.5) * dv;          // Center V of the tile
-         for (int i = 0; i < uDivs; i++) {
+         for (int i = 0; i < mUDivs; i++) {
             double u = (i + 0.5) * du;       // Center U of the tile
-            GrowArrays ();
             int node = AddNode (u, v);
-            AddTile (-1, node, du, dv);
+            AddTile (-1, node, du / 2, dv / 2);
          }
       }
       mRootTiles = mUsedTiles;
    }
+   int mUDivs = 4, mVDivs = 4;
 
    public Point2 GetUV (Point3 pt) {
-      int iBest = -1;
+      int iBest = -1, cNodes = mUsedNodes;
       double minDist = double.MaxValue;
       for (int i = 0; i < mRootTiles; i++) {
          ref Node node = ref mNodes[i];
          double dist = pt.DistToSq (node.Pt);
          if (dist < minDist) (minDist, iBest) = (dist, i);
       }
-      ref Tile tile = ref mTiles[iBest];
-      return tile.GetUV (this, pt);
+      return GetUV (iBest, pt);
+   }
+
+   Point2 GetUV (int nTile, Point3 pt) {
+      for (; ; ) {
+         EState state = CheckAndSubdivide (nTile);
+         ref Tile tile = ref mTiles[nTile];
+         switch (state) {
+            case EState.Subdivide2 or EState.Subdivide4:
+               int iBest = -1; double minDist = double.MaxValue;
+               for (int i = 0; i < (int)state; i++) {
+                  int n = tile.Children[i];
+                  ref Tile tileN = ref mTiles[n];
+                  ref Node node = ref mNodes[tileN.Center];
+                  double dist = pt.DistToSq (node.Pt);
+                  if (dist < minDist) (minDist, iBest) = (dist, n);
+               }
+               nTile = iBest;
+               break;
+            default:
+               return tile.GetUV (this, pt);
+         }
+      }
+   }
+
+   EState CheckAndSubdivide (int nTile) {
+      ref Tile tile = ref mTiles[nTile];
+      if (tile.State == EState.Raw) {
+         GrowArrays ();
+         ref Tile tileN = ref mTiles[nTile];
+         tileN.Subdivide (this);
+         return tileN.State;
+      }
+      return tile.State;
    }
 
    public (List<Vec3F> Lines, List<Vec3F> Points) GetTileOutlines () {
@@ -73,11 +105,13 @@ public class SurfaceUnlofter {
    // nodes more than what we have used at any point, and mTiles always has space for
    // atleast 4 more tiles (when we return from AddNode or AddTile)
    int AddNode (double u, double v) {
+      if (mUsedNodes >= mNodes.Length) Array.Resize (ref mNodes, mNodes.Length * 2);
       mNodes[mUsedNodes] = new Node (mSurf, mUsedNodes, u, v);
       return mUsedNodes++;
    }
 
    int AddTile (int parent, int center, double du, double dv) {
+      if (mUsedTiles >= mTiles.Length) Array.Resize (ref mTiles, mTiles.Length * 2);
       mTiles[mUsedTiles] = new Tile (mUsedTiles, parent, center, du, dv);
       return mUsedTiles++;
    }
@@ -101,6 +135,8 @@ public class SurfaceUnlofter {
       public Node (E3Surface surf, int id, double u, double v)
          => (Id, U, V, Pt) = (id, u, v, surf.GetPoint (new (u, v)));
 
+      public override string ToString () => $"Node ({U},{V})";
+
       public readonly int Id;       // Node index (within mNodes array)
       public readonly double U, V;  // U, V position of this Node
       public readonly Point3 Pt;    // Corresponding 3D position of the node
@@ -108,10 +144,16 @@ public class SurfaceUnlofter {
    Node[] mNodes = new Node[16];
    int mUsedNodes;
 
+   List<Point2> mProjNodes = [];
+
    [InlineArray (4)]
    struct FourInts { int _elem0; }
 
-   enum EState { Raw = 0, Leaf = 1, Subdivide2 = 2, Subdivide4 = 4 };
+   enum EState { 
+      Raw = 0, Leaf = 1, Subdivide2 = 2, Subdivide4 = 4,
+      LeafXY = 5, LeafYZ = 6, LeafXZ = 7
+   
+   };
 
    struct Tile {
       public Tile (int id, int parent, int center, double du, double dv) {
@@ -119,20 +161,111 @@ public class SurfaceUnlofter {
          for (int i = 0; i < 4; i++) Corners[i] = Children[i] = -1;
       }
 
+      public Bound2 GetUVBound (SurfaceUnlofter owner) {
+         ref Node center = ref owner.mNodes[Center];
+         return new (center.U - DU, center.V - DV, center.U + DU, center.V + DV);
+      }
+
       public override string ToString () => $"Tile#{Id} : {State}";
 
       public Point2 GetUV (SurfaceUnlofter owner, Point3 pt) {
-         if (State == EState.Raw) { Subdivide (owner); owner.GrowArrays (); }
-         ref Node node = ref owner.mNodes[Center];
-         return new (node.U, node.V);
+         if (State == EState.Leaf) {
+            // If we are in 'Leaf' state, we haven't determined a suitable projection
+            // axis yet (and the corners may not yet have been evaluated).
+            // First, evaluate the nodes
+            var nodes = owner.mNodes;
+            ref Node center = ref nodes[Center];
+            double uCen = center.U, vCen = center.V;
+
+            // First, if any of the corner nodes have not yet been evaluated,
+            // evaluate those
+            for (int i = 0; i < 4; i++) {
+               if (Corners[i] < 0) {
+                  var (uNew, vNew) = i switch {
+                     0 => (uCen - DU, vCen - DV),
+                     1 => (uCen + DU, vCen - DV),
+                     2 => (uCen + DU, vCen + DV),
+                     _ => (uCen - DU, vCen + DV)
+                  };
+                  int n = owner.AddNode (uNew, vNew);
+                  Corners[i] = n;
+               }
+            }
+            nodes = owner.mNodes;
+            Bound3 bound = new ();
+            for (int i = 0; i < 4; i++) bound += nodes[Corners[i]].Pt;
+
+            // Figure out which of the two axes we want to project through
+            double dx = Math.Abs (bound.X.Length),
+                   dy = Math.Abs (bound.Y.Length), 
+                   dz = Math.Abs (bound.Z.Length);
+            if (dx >= dz && dy >= dz) State = EState.LeafXY;
+            else if (dx >= dy && dz >= dy) State = EState.LeafXZ;
+            else State = EState.LeafYZ;
+
+            // Depending on the State, get 2D projections of the 4 corners and
+            // add them in
+            NProject = owner.mProjNodes.Count;
+            for (int i = 0; i < 4; i++) {
+               var pt3 = nodes[Corners[i]].Pt;
+               Point2 pt2 = State switch {
+                  EState.LeafXY => new (pt3.X, pt3.Y),
+                  EState.LeafXZ => new (pt3.X, pt3.Z),
+                  EState.LeafYZ => new (pt3.Y, pt3.Z),
+                  _ => throw new NotImplementedException ()
+               };
+               owner.mProjNodes.Add (pt2);
+            }
+         }
+
+         var pnodes = owner.mProjNodes;
+         Point2 s = State switch {
+            EState.LeafXY => new (pt.X, pt.Y),
+            EState.LeafXZ => new (pt.X, pt.Z),
+            _ => new (pt.Y, pt.Z)
+         };
+         Point2 a = pnodes[NProject + 0], b = pnodes[NProject + 1];
+         Point2 c = pnodes[NProject + 2], d = pnodes[NProject + 3];
+         Vector2 e = b - a, f = d - a, g = (a - b) + (c - d), h = s - a;
+
+         // Compose the quadratic for v
+         double u, v;
+         double k2 = g.X * f.Y - g.Y * f.X;
+         double k1 = e.X * f.Y - e.Y * f.X + g.Y * h.X - g.X * h.Y;
+         double k0 = h.X * e.Y - e.X * h.Y;
+         double toler = 0.1;
+         if (k2.IsZero ()) {
+            // If k2 is zero, then the 4 points make up a rectangle, and we have actually
+            // a linear equation.
+            if (k1.IsZero ()) v = 0.5; else v = -k0 / k1;
+         } else {
+            // If k2 is not zero, we have proper quadrilateral
+            double tmp = k1 * k1 - 4 * k0 * k2;
+            tmp = Math.Sqrt (tmp);
+            double v1 = (-k1 + tmp) / (2 * k2), v2 = (-k1 - tmp) / (2 * k2);
+            v = Math.Abs (v1 - 0.5) < Math.Abs (v2 - 0.5) ? v1 : v2;
+         }
+
+         // Now that we know v, compute the value for u
+         double d1 = e.X + g.X * v, d2 = e.Y + g.Y * v;
+         if (Math.Abs (d1) > Math.Abs (d2))
+            u = (h.X - f.X * v) / d1;
+         else
+            u = (h.Y - f.Y * v) / d2;
+
+         ref Node center1 = ref owner.mNodes[Center];
+         double left = center1.U - DU, right = center1.U + DU;
+         double bottom = center1.V - DV, top = center1.V + DV;
+         return new (u.Along (left, right), v.Along (bottom, top));
       }
 
-      void Subdivide (SurfaceUnlofter owner) {
+      public void Subdivide (SurfaceUnlofter owner) {
          // If we get here, we are still in the 'raw' state (first time this tile
          // been used). We need to first figure out if the tile is 'flat enough', or
          // needs to be subdivided. Let's evaluate the corners first
+         var nodes = owner.mNodes;
          double tolerance = Lib.FineTessSq;
-         ref Node center = ref owner.mNodes[Center];
+         ref Node center = ref nodes[Center];
          double uCen = center.U, vCen = center.V;
          // First, if any of the corner nodes have not yet been evaluated,
          // evaluate those
@@ -151,7 +284,6 @@ public class SurfaceUnlofter {
          // To check if we need to subdivide, we check the perpendicular distance of the
          // center point of the tile from each of its diagonals. If the center deviates too
          // much from either of them, the tile is still too curved and needs to be subdivided 
-         var nodes = owner.mNodes;
          Point3 ptCen = center.Pt;
          ref Node botLeft = ref nodes[Corners[0]], topRight = ref nodes[Corners[2]];
          ref Node botRight = ref nodes[Corners[1]], topLeft = ref nodes[Corners[3]];
@@ -162,7 +294,6 @@ public class SurfaceUnlofter {
          // We need to subdivide. Let's see if a U sibdivision is needed first
          int nLeft = owner.AddNode (uCen - DU, vCen), nRight = owner.AddNode (uCen + DU, vCen);
          int nBottom = owner.AddNode (uCen, vCen - DV), nTop = owner.AddNode (uCen, vCen + DV);
-         nodes = owner.mNodes;
          ref Node left = ref nodes[nLeft], right = ref nodes[nRight];
          ref Node bottom = ref nodes[nBottom], top = ref nodes[nTop];
          bool divideU = ptCen.DistToLineSq (left.Pt, right.Pt) > tolerance
@@ -191,7 +322,7 @@ public class SurfaceUnlofter {
             nCenter = owner.AddNode (uCen + uStep, vCen + vStep);
             Children[2] = owner.AddTile (Id, nCenter, uStep, vStep, Center, right.Id, Corners[2], top.Id);
             // 4. Top left quarter-tile
-            nCenter = owner.AddNode (uCen - uStep, vCen - vStep);
+            nCenter = owner.AddNode (uCen - uStep, vCen + vStep);
             Children[3] = owner.AddTile (Id, nCenter, uStep, vStep, left.Id, Center, top.Id, Corners[3]);
          } else if (divideU) {
             // Divide only in U
@@ -216,7 +347,6 @@ public class SurfaceUnlofter {
             nCenter = owner.AddNode (uCen, vCen + vStep);
             Children[1] = owner.AddTile (Id, nCenter, DU, vStep, left.Id, right.Id, Corners[2], Corners[3]);
          }
-         mSubject?.OnNext (owner);
          return;
       }
 
@@ -227,8 +357,9 @@ public class SurfaceUnlofter {
       public readonly double DU, DV;   // Half-span in U and V of this tile 
       public FourInts Corners;         // The 4 'corner nodes' of this tile (-1 means not evaluated)
       public FourInts Children;        // The 4 children of this tile (0 means child not existing)
+      public int NProject;             
    }
-   Tile[] mTiles = new Tile[8];
+   Tile[] mTiles = new Tile[16];
    int mUsedTiles, mRootTiles;
 
    // Private data -------------------------------------------------------------

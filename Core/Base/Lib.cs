@@ -23,7 +23,7 @@ public static class Lib {
    /// <summary>
    /// Square of the tessellation error
    /// </summary>
-   public static double FineTessSq = FineTess * FineTess;
+   public static double FineTessSq = 0.0001;
    /// <summary>TwoPI = 360 degrees, in radians</summary>
    public const double TwoPI = 2 * Math.PI;
    /// <summary>HalfPI = 90 degrees, in radians</summary>

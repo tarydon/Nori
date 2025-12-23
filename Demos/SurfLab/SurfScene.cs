@@ -33,7 +33,7 @@ class SurfScene : Scene3 {
       if (e is E3Plane or E3Cylinder or E3Torus or E3Cone) return false;
       // if (e is E3NurbsSurface) return false;
       if (e is E3SweptSurface) return false;
-      if (e.Id != 15) return false;
+      if (e.Id != 338) return false;
       e.IsTranslucent = true;
       return true;
    }
@@ -45,7 +45,9 @@ class SurfScene : Scene3 {
       if (!HW.IsDragging) {
          if (Lux.Pick (pt)?.Obj is E3Surface e3s) {
             mMeshVN.Mesh = e3s.Mesh;
-            Point3 pt3d = Lux.PickPos; mPlus.Pt = pt3d;
+            Point3 pt3d = Lux.PickPos;
+//            pt3d = new (168.316932, -78.455859, -48.18612);
+            mPlus.Pt = pt3d;
             Point2 uv = e3s.GetUV (pt3d);
             Point3 ptLoft = e3s.GetPoint (uv);
             Vector3 vecNorm = e3s.GetNormal (uv);
