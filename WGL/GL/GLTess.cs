@@ -111,7 +111,7 @@ public class Tess2D (List<Point2> pts, IReadOnlyList<int> splits) {
             var vec2 = (Vector3)(mPts[n2 & 0xffffff] - mPts[n3 & 0xffffff]);
             if ((vec1 * vec2).LengthSq < MinArea) return;
          }
-         mResult.AddRange (stackalloc[] { n1, n2, n3 });
+         mResult.AddRange (n1, n2, n3);
       }
    };
    // Called when a new vertex needs to be generated at an intersection point.

@@ -153,6 +153,8 @@ public readonly struct Point2 : IEQuable<Point2> {
    // Operators ----------------------------------------------------------------
    /// <summary>Returns the displaced point got by adding a Vector2 to a Point2</summary>
    public static Point2 operator + (Point2 a, Vector2 b) => new (a.X + b.X, a.Y + b.Y);
+   /// <summary>Adds two points together (used when we are trying to make weighted sums of points)</summary>
+   public static Point2 operator + (Point2 a, Point2 b) => new (a.X + b.X, a.Y + b.Y);
    /// <summary>Returns the displaced point got by subtracting a Vector2 from a Point2</summary>
    public static Point2 operator - (Point2 a, Vector2 b) => new (a.X - b.X, a.Y - b.Y);
    /// <summary>Returns the Vector2 (displacement) between two points</summary>
@@ -209,11 +211,11 @@ public readonly struct Point3f {
    public static Vector3f operator - (Point3f a, Point3f b) => new (a.X - b.X, a.Y - b.Y, a.Z - b.Z);
 
    // Properties ---------------------------------------------------------------
-   /// <summary>The X ordinate of the Point3</summary>
+   /// <summary>The X ordinate of the Point3f</summary>
    public readonly float X;
-   /// <summary>The Y ordinate of the Point3</summary>
+   /// <summary>The Y ordinate of the Point3f</summary>
    public readonly float Y;
-   /// <summary>The Z ordinate of the Point3</summary>
+   /// <summary>The Z ordinate of the Point3f</summary>
    public readonly float Z;
 
    public override string ToString () => $"({X.S5 ()},{Y.S5 ()},{Z.S5 ()}";
@@ -228,7 +230,7 @@ public readonly struct Point3 : IEquatable<Point3> {
    /// <summary>Construct a Point3 given the X, Y, Z, ordinates</summary>
    public Point3 (double x, double y, double z) => (X, Y, Z) = (x, y, z);
 
-   /// <summary>Read a Point2 from a UTF8 stream</summary>
+   /// <summary>Read a Point3 from a UTF8 stream</summary>
    public static Point3 Read (UTFReader R) {
       R.Read (out double x).Match (',').Read (out double y).Match (',').Read (out double z);
       return new (x, y, z);
@@ -281,10 +283,7 @@ public readonly struct Point3 : IEquatable<Point3> {
    public override bool Equals ([NotNullWhen (true)] object? obj) => obj is Point3 other && EQ (other);
 
    /// <summary>Returns the Hash-code of the Point3 (based on their rounded-off approximations)</summary>
-   public override int GetHashCode () {
-      var pt = R6 ();
-      return (pt.X, pt.Y, pt.Z).GetHashCode ();
-   }
+   public override int GetHashCode () => HashCode.Combine (X.R6 (), Y.R6 (), Z.R6 ());
 
    /// <summary>Gets the lie of this point on the given line segment a..b</summary>
    /// This is accurate only if the point actually lies on the infinite line through a..b
@@ -332,15 +331,15 @@ public readonly struct Point3 : IEquatable<Point3> {
    public void Write (UTFWriter B) => B.Write (X.R6 ()).Write (',').Write (Y.R6 ()).Write (',').Write (Z.R6 ());
 
    // Operators ----------------------------------------------------------------
-   /// <summary>Returns the displaced point got by adding a Vector2 to a Point2</summary>
+   /// <summary>Returns the displaced point got by adding a Vector3 to a Point3</summary>
    public static Point3 operator + (Point3 a, Vector3 b) => new (a.X + b.X, a.Y + b.Y, a.Z + b.Z);
    /// <summary>Adds two points together (used when we are trying to make weighted sums of points)</summary>
    public static Point3 operator + (Point3 a, Point3 b) => new (a.X + b.X, a.Y + b.Y, a.Z + b.Z);
-   /// <summary>Returns the displaced point got by subtracting a Vector2 from a Point2</summary>
+   /// <summary>Returns the displaced point got by subtracting a Vector3 from a Point3</summary>
    public static Point3 operator - (Point3 a, Vector3 b) => new (a.X - b.X, a.Y - b.Y, a.Z - b.Z);
-   /// <summary>Returns the Vector2 (displacement) between two points</summary>
+   /// <summary>Returns the Vector3 (displacement) between two points</summary>
    public static Vector3 operator - (Point3 a, Point3 b) => new (a.X - b.X, a.Y - b.Y, a.Z - b.Z);
-   /// <summary>Scales a Point2 uniformly by a scalar</summary>
+   /// <summary>Scales a Point3 uniformly by a scalar</summary>
    public static Point3 operator * (Point3 a, double f) => new (a.X * f, a.Y * f, a.Z * f);
 
    /// <summary>Converts a Point3 to a Vector3</summary>
