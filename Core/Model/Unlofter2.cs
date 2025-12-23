@@ -99,15 +99,6 @@ public class SurfaceUnlofter {
          ref Tile tile = ref mTiles[i];
          Process (ref tile);
       }
-
-      var b = mSurf.Bound;
-      lines.Add (new (b.X.Min, b.Y.Min, b.Z.Min));
-      lines.Add (new (b.X.Max, b.Y.Min, b.Z.Min));
-      lines.Add (new (b.X.Min, b.Y.Min, b.Z.Min));
-      lines.Add (new (b.X.Min, b.Y.Max, b.Z.Min));
-      lines.Add (new (b.X.Min, b.Y.Min, b.Z.Min));
-      lines.Add (new (b.X.Min, b.Y.Min, b.Z.Max));
-
       return (lines, points);
 
       // Helpers ...........................................
@@ -233,16 +224,13 @@ public class SurfaceUnlofter {
                }
             }
             nodes = owner.mNodes;
-            Bound3 bound = new ();
-            for (int i = 0; i < 4; i++) bound += nodes[Corners[i]].Pt;
-
+            Point3 bl = nodes[Corners[0]].Pt, br = nodes[Corners[1]].Pt, tl = nodes[Corners[3]].Pt;
+            Vector3 norm = (br - bl) * (tl - bl);
             // Figure out which of the two axes we want to project through
-            double dx = Math.Abs (bound.X.Length),
-                   dy = Math.Abs (bound.Y.Length), 
-                   dz = Math.Abs (bound.Z.Length);
-            if (dx >= dz && dy >= dz) State = EState.LeafXY;
-            else if (dx >= dy && dz >= dy) State = EState.LeafXZ;
-            else State = EState.LeafYZ;
+            double dx = Math.Abs (norm.X), dy = Math.Abs (norm.Y), dz = Math.Abs (norm.Z);
+            if (dx >= dy && dx >= dz) State = EState.LeafYZ;
+            else if (dy >= dx && dy >= dz) State = EState.LeafXZ;
+            else State = EState.LeafXY;
 
             // Depending on the State, get 2D projections of the 4 corners and
             // add them in
@@ -268,12 +256,6 @@ public class SurfaceUnlofter {
          Point2 a = pnodes[NProject + 0], b = pnodes[NProject + 1];
          Point2 c = pnodes[NProject + 2], d = pnodes[NProject + 3];
          Vector2 e = b - a, f = d - a, g = (a - b) + (c - d), h = s - a;
-
-         var db = new Dwg2 ();
-         var pb = new PolyBuilder (); pb.Line (a).Line (b).Line (c).Line (d).Close ();
-         db.Add (pb.Build ());
-         db.Add (new E2Point (db.CurrentLayer, s));
-         DXFWriter.Save (db, "c:/etc/test.dxf");   // REMOVETHIS
 
          // Compose the quadratic for v
          double u, v;
