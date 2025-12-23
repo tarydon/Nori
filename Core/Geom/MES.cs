@@ -73,8 +73,7 @@ public readonly struct MinCircle {
    }
 
    /// <summary>Constructs a circle with two endpoints specifying the diameter.</summary>
-   public static MinCircle From (Point2 a, Point2 b) =>
-      new (a.DistTo (b) / 2, new ((a.X + b.X) / 2, (a.Y + b.Y) / 2));
+   public static MinCircle From (Point2 a, Point2 b) => new (a.DistTo (b) * 0.5, (a + b) * 0.5);
 
    /// <summary>Constructs the 'minimum enclosing circle' from three points</summary>
    public static MinCircle From (Point2 a, Point2 b, Point2 c) {
@@ -182,8 +181,7 @@ public readonly struct MinSphere {
    }
 
    // Constructs a sphere with two endpoints specifying the diameter.
-   public static MinSphere From (Point3 a, Point3 b) =>
-      new (a.DistTo (b) / 2, new ((a.X + b.X) / 2, (a.Y + b.Y) / 2, (a.Z + b.Z) / 2));
+   public static MinSphere From (Point3 a, Point3 b) => new (a.DistTo (b) * 0.5, (a + b) * 0.5);
 
    // Constructs a minimum sphere passing through three non-collinear points
    // We first calculate the unique, 'Great Circle' (at equator) of the sphere
@@ -195,7 +193,7 @@ public readonly struct MinSphere {
       // Transform points from World (X, Y, Z) => Plane (U, V) space.
       Point2 p1 = Point2.Zero, p2 = new (ba.Length, 0), p3 = new (ca.Dot (u), ca.Dot (v));
       // Compute MEC in (U, V) space
-      var C = MinCircle.From ([p1, p2, p3]);
+      var C = MinCircle.From (p1, p2, p3);
       // Loft center from Plane (U, V) => World (X, Y, Z) space
       return new (C.Radius, a + u * C.Center.X + v * C.Center.Y);
    }
