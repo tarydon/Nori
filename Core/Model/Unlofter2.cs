@@ -16,9 +16,10 @@ public class SurfaceUnlofter {
             AddTile (-1, node, du / 2, dv / 2);
          }
       }
+      mSubject?.OnNext (this);
       mRootTiles = mUsedTiles;
    }
-   int mUDivs = 4, mVDivs = 4;
+   int mUDivs = 8, mVDivs = 8;
 
    public Point2 GetUV (Point3 pt) {
       int iBest = -1, cNodes = mUsedNodes;
@@ -28,10 +29,11 @@ public class SurfaceUnlofter {
          double dist = pt.DistToSq (node.Pt);
          if (dist < minDist) (minDist, iBest) = (dist, i);
       }
-      return GetUV (iBest, pt);
+      mSubject?.OnNext (this);
+      return GetUV (iBest, pt, false);
    }
 
-   Point2 GetUV (int nTile, Point3 pt) {
+   Point2 GetUV (int nTile, Point3 pt, bool recursing = false) {
       for (; ; ) {
          EState state = CheckAndSubdivide (nTile);
          ref Tile tile = ref mTiles[nTile];
@@ -48,10 +50,37 @@ public class SurfaceUnlofter {
                nTile = iBest;
                break;
             default:
-               return tile.GetUV (this, pt);
+               Point2 puv = tile.GetUV (this, pt);
+               if (recursing) return puv;
+               mAlts.Clear ();
+
+               Point2 cen = mNodes[tile.Center].UV;
+               double du = tile.DU * 0.9, dv = tile.DV * 0.9;
+               if (puv.X < cen.X - du) {
+                  int col = nTile % mUDivs;
+                  if (col > 0) mAlts.Add (GetUV (nTile - 1, pt, true));
+               } else if (puv.X > cen.X + du) {
+                  int col = nTile % mUDivs;
+                  if (col < mUDivs - 2) mAlts.Add (GetUV (nTile + 1, pt, true));
+               }
+               if (puv.Y < cen.Y - dv) {
+                  int row = nTile / mUDivs;
+                  if (row > 0) mAlts.Add (GetUV (nTile - mUDivs, pt, true));
+               } else if (puv.Y > cen.Y + dv) {
+                  int row = nTile / mUDivs;
+                  if (row < mVDivs - 2) mAlts.Add (GetUV (nTile + mUDivs, pt, true));
+               }
+               double minErr = pt.DistToSq (mSurf.GetPoint (puv));
+               foreach (var uvTest in mAlts) {
+                  double err = pt.DistToSq (mSurf.GetPoint (uvTest));
+                  if (err < minErr) (minErr, puv) = (err, uvTest);
+               }
+               return puv;
          }
       }
    }
+   List<Point2> mAlts = [];
+   public int Edgy;
 
    EState CheckAndSubdivide (int nTile) {
       ref Tile tile = ref mTiles[nTile];
@@ -70,15 +99,26 @@ public class SurfaceUnlofter {
          ref Tile tile = ref mTiles[i];
          Process (ref tile);
       }
+
+      var b = mSurf.Bound;
+      lines.Add (new (b.X.Min, b.Y.Min, b.Z.Min));
+      lines.Add (new (b.X.Max, b.Y.Min, b.Z.Min));
+      lines.Add (new (b.X.Min, b.Y.Min, b.Z.Min));
+      lines.Add (new (b.X.Min, b.Y.Max, b.Z.Min));
+      lines.Add (new (b.X.Min, b.Y.Min, b.Z.Min));
+      lines.Add (new (b.X.Min, b.Y.Min, b.Z.Max));
+
       return (lines, points);
 
       // Helpers ...........................................
       void Process (ref Tile tile) {
          switch (tile.State) {
-            case EState.Raw: 
+            case EState.Raw:
                points.Add ((Vec3F)mNodes[tile.Center].Pt); 
                break;
             case EState.Subdivide2 or EState.Subdivide4:
+               foreach (int n in new int[] { 0, 1, 1, 2, 2, 3, 3, 0 })
+                  lines.Add ((Vec3F)mNodes[tile.Corners[n]].Pt);
                for (int i = 0; i < (int)tile.State; i++) {
                   ref Tile child = ref mTiles[tile.Children[i]];
                   Process (ref child);
@@ -140,6 +180,7 @@ public class SurfaceUnlofter {
       public readonly int Id;       // Node index (within mNodes array)
       public readonly double U, V;  // U, V position of this Node
       public readonly Point3 Pt;    // Corresponding 3D position of the node
+      public Point2 UV => new (U, V);
    }
    Node[] mNodes = new Node[16];
    int mUsedNodes;
@@ -228,12 +269,17 @@ public class SurfaceUnlofter {
          Point2 c = pnodes[NProject + 2], d = pnodes[NProject + 3];
          Vector2 e = b - a, f = d - a, g = (a - b) + (c - d), h = s - a;
 
+         var db = new Dwg2 ();
+         var pb = new PolyBuilder (); pb.Line (a).Line (b).Line (c).Line (d).Close ();
+         db.Add (pb.Build ());
+         db.Add (new E2Point (db.CurrentLayer, s));
+         DXFWriter.Save (db, "c:/etc/test.dxf");   // REMOVETHIS
+
          // Compose the quadratic for v
          double u, v;
          double k2 = g.X * f.Y - g.Y * f.X;
          double k1 = e.X * f.Y - e.Y * f.X + g.Y * h.X - g.X * h.Y;
          double k0 = h.X * e.Y - e.X * h.Y;
-         double toler = 0.1;
          if (k2.IsZero ()) {
             // If k2 is zero, then the 4 points make up a rectangle, and we have actually
             // a linear equation.
@@ -241,7 +287,7 @@ public class SurfaceUnlofter {
          } else {
             // If k2 is not zero, we have proper quadrilateral
             double tmp = k1 * k1 - 4 * k0 * k2;
-            tmp = Math.Sqrt (tmp);
+            tmp = Math.Sqrt (Math.Max (tmp, 0));
             double v1 = (-k1 + tmp) / (2 * k2), v2 = (-k1 - tmp) / (2 * k2);
             v = Math.Abs (v1 - 0.5) < Math.Abs (v2 - 0.5) ? v1 : v2;
          }
@@ -259,12 +305,13 @@ public class SurfaceUnlofter {
          return new (u.Along (left, right), v.Along (bottom, top));
       }
 
+      const double Tolerance = 0.0001;
+
       public void Subdivide (SurfaceUnlofter owner) {
          // If we get here, we are still in the 'raw' state (first time this tile
          // been used). We need to first figure out if the tile is 'flat enough', or
          // needs to be subdivided. Let's evaluate the corners first
          var nodes = owner.mNodes;
-         double tolerance = Lib.FineTessSq;
          ref Node center = ref nodes[Center];
          double uCen = center.U, vCen = center.V;
          // First, if any of the corner nodes have not yet been evaluated,
@@ -287,8 +334,8 @@ public class SurfaceUnlofter {
          Point3 ptCen = center.Pt;
          ref Node botLeft = ref nodes[Corners[0]], topRight = ref nodes[Corners[2]];
          ref Node botRight = ref nodes[Corners[1]], topLeft = ref nodes[Corners[3]];
-         bool subdivide = ptCen.DistToLineSq (botLeft.Pt, topRight.Pt) > tolerance 
-                       || ptCen.DistToLineSq (botRight.Pt, topLeft.Pt) > tolerance;
+         bool subdivide = ptCen.DistToLineSq (botLeft.Pt, topRight.Pt) > Tolerance 
+                       || ptCen.DistToLineSq (botRight.Pt, topLeft.Pt) > Tolerance;
          if (!subdivide) { State = EState.Leaf; return; }
 
          // We need to subdivide. Let's see if a U sibdivision is needed first
@@ -296,12 +343,12 @@ public class SurfaceUnlofter {
          int nBottom = owner.AddNode (uCen, vCen - DV), nTop = owner.AddNode (uCen, vCen + DV);
          ref Node left = ref nodes[nLeft], right = ref nodes[nRight];
          ref Node bottom = ref nodes[nBottom], top = ref nodes[nTop];
-         bool divideU = ptCen.DistToLineSq (left.Pt, right.Pt) > tolerance
-                     || bottom.Pt.DistToLineSq (botLeft.Pt, botRight.Pt) > tolerance
-                     || top.Pt.DistToLineSq (topLeft.Pt, topRight.Pt) > tolerance;
-         bool divideV = ptCen.DistToLineSq (bottom.Pt, top.Pt) > tolerance
-                     || left.Pt.DistToLineSq (botLeft.Pt, topLeft.Pt) > tolerance
-                     || right.Pt.DistToLineSq (botRight.Pt, topRight.Pt) > tolerance;
+         bool divideU = ptCen.DistToLineSq (left.Pt, right.Pt) > Tolerance
+                     || bottom.Pt.DistToLineSq (botLeft.Pt, botRight.Pt) > Tolerance
+                     || top.Pt.DistToLineSq (topLeft.Pt, topRight.Pt) > Tolerance;
+         bool divideV = ptCen.DistToLineSq (bottom.Pt, top.Pt) > Tolerance
+                     || left.Pt.DistToLineSq (botLeft.Pt, topLeft.Pt) > Tolerance
+                     || right.Pt.DistToLineSq (botRight.Pt, topRight.Pt) > Tolerance;
          if (!(divideU || divideV)) { State = EState.Leaf; return; }
 
          double uStep = DU / 2, vStep = DV / 2;
@@ -347,6 +394,7 @@ public class SurfaceUnlofter {
             nCenter = owner.AddNode (uCen, vCen + vStep);
             Children[1] = owner.AddTile (Id, nCenter, DU, vStep, left.Id, right.Id, Corners[2], Corners[3]);
          }
+         mSubject?.OnNext (owner);
          return;
       }
 

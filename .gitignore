@@ -10,3 +10,4 @@ Bin/*
 **/bin/*
 **/obj/*
 TData/tmpfile.*
+**/BenchmarkDotNet.Artifacts/*
