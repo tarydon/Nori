@@ -108,7 +108,7 @@ public class Mesh3 {
             fixed (Node* pnode = &nodes[0])
                for (int j = 0; j < nodes.Length; j++) bs.Read (pnode + j, 18);
 
-         int[] tIdx;  List<int> wIdx = [];
+         int[] tIdx; List<int> wIdx = [];
          if (small) {
             ushort[] stIdx = new ushort[tris], swIdx = new ushort[all - tris];
             fixed (void* p = stIdx) bs.Read (p, tris * 2);
@@ -158,7 +158,7 @@ public class Mesh3 {
       return new Mesh3Builder (pts.AsSpan ()).Build ();
    }
 
-   public static Mesh3 LoadObj (string filename) 
+   public static Mesh3 LoadObj (string filename)
       => LoadObj (File.ReadAllLines (filename));
 
    /// <summary>Loads data from a TMesh file</summary>
@@ -247,8 +247,336 @@ public class Mesh3 {
       sb.Append ("EOF\n");
       return sb.ToString ();
    }
+
+   /// <summary>Computes polygonal intersection loops between a mesh and a plane.</summary>
+   public List<ImmutableArray<Point3>> ComputePlaneIntersection (PlaneDef plane)
+      => new PlaneMeshIntersector (this).Compute (plane);
+
+   /// <summary>Builds a sphere mesh centered at 'center' with the specified 'radius'/>.
+   /// The generated sphere mesh consists of triangles of uniform size. The number of output 
+   /// triangles, and the accuracy of the mesh relative to the spherical surface, are determined 
+   /// by the 'tolerance' parameter, which defines the allowable _relative deviation_ of a 
+   /// triangle from the ideal sphere.
+   /// <remarks>
+   /// This method employs polyhedron-based subdivision to produce equilateral triangles. Each subdivision
+   /// step replaces one triangle with four smaller triangles. The number of subdivisions performed is
+   /// controlled by the tolerance value.
+   /// </remarks>
+   /// <param name="center">Center of the sphere.</param>
+   /// <param name="radius">Radius of the sphere.</param>
+   /// <param name="tolerance">Percentage mismatch (default is 0.1%)</param>
+   public static Mesh3 Sphere (Point3 center, double radius, double tolerance = 0.001) {
+      // All computations are done on 'unit sphere' of radius = 1 with center (0, 0)
+      List<Vector3> pts = []; Dictionary<Vector3, int> dict = [];
+      var (V, T, citer) = PickSeedData (tolerance); V.ForEach (v => Add (v));
+      List<int> tries = [..T], buf = [];
+
+      // Subdivide triangles without 'inflating' the nodes to preserve the `equilaterality`
+      // of the sub-triangles. We will loft them after the recursive subdivision.
+      for (int iter = 0; iter < citer; iter++) {
+         buf.Clear ();
+         for (int i = 0; i < tries.Count; i += 3) Subdivide (i);
+         // Swap buffer with the main triangle list
+         (buf, tries) = (tries, buf);
+      }
+
+      // Inflate the nodes to the 'unit sphere' surface
+      var sphere = pts.Select (p => p.Normalized ());
+      // Compose the Mesh.
+      return new ([.. sphere.Select (Node)], [.. tries], []);
+
+      // Create a mesh node from a position-vector on the unit sphere
+      Mesh3.Node Node (Vector3 v) => new (center + v * radius, v);
+
+      // Add a position-vector to the node list if not already present, and return its index.
+      int Add (Vector3 pos) {
+         if (dict.TryGetValue (pos, out int n)) return n;
+         n = pts.Count; pts.Add (pos); dict[pos] = n;
+         return n;
+      }
+
+      // Picks the optimal approximation beetween icosahedron and octahedron for the
+      // given tolerance. It also estiamtes the number of required subdivisions.
+      // It compares the number of generated triangles and picks the one which can match
+      // the tolerance with fewer triangles. While making the mesh generation faster,
+      // it also helps smoothen the subdivision-to-tolerance-range map.
+      static (ImmutableArray<Vector3> V, ImmutableArray<int> T, int Subs) PickSeedData (double tol) {
+         int idx = -1, subs = 0, cfaces = int.MaxValue;
+         for (int i = 0; i < _SphereData.Length; i++) {
+            var (V, T) = _SphereData[i];
+            // Number of subdivisions to achieve the tolerance.
+            int s = ComputeSubdivisions (V[T[0]], V[T[1]], tol);
+            // Triangles count for 's'
+            int c = (int)(T.Length / 3 * Math.Pow (4, s));
+            if (c < cfaces) (idx, subs, cfaces) = (i, s, c);
+         }
+         return (_SphereData[idx].Vertices, _SphereData[idx].Faces, subs);
+
+         // Given the tolerance value and a 'unit sphere' chord, compute the number of subdivision levels.
+         static int ComputeSubdivisions (Vector3 a, Vector3 b, double tol) {
+            if (tol < Lib.Epsilon) tol = Lib.Epsilon;
+            // This is how close to the sphere radius we want to get.
+            var minLen = 1 - tol;
+            // Limit subdivision count 's' to 10. That is aleady too much with
+            // N0 * power(4, '10') triangles for s = '10'. Where N0 is the
+            // initial faces (8 for octahedron and 20 for icosahedron).
+            for (int s = 0; s < 10; s++) {
+               var mid = (a + b) * 0.5; var len = mid.Length;
+               if (len >= minLen) return s;
+               // Snap to sphere
+               b = mid / len;
+            }
+            return 10;
+         }
+      }
+
+      // Divide equilateral triangle 'ABC' into four smaller equilateral triangles.
+      //        A
+      //       / \
+      //      /   \
+      //    P/_____\R
+      //    /\    / \
+      //   /  \  /   \  
+      //  /____\/_____\
+      // B     Q       C
+      void Subdivide (int i) {
+         var (A, B, C) = (tries[i], tries[i + 1], tries[i + 2]);
+         // Position vectors
+         Vector3 a = pts[A], b = pts[B], c = pts[C];
+         // Mid points on the triangle sides
+         Vector3 ab = (a + b) * 0.5, ac = (a + c) * 0.5, bc = (b + c) * 0.5;
+         // Register nodes and make new triangles.
+         var (P, Q, R) = (Add (ab), Add (bc), Add (ac));
+         buf.AddRange (A, P, R, P, Q, R, P, B, Q, Q, C, R);
+      }
+   }
+
+   // The icosahedron is constructed from three mutually perpendicular golden rectangles.
+   // See https://en.wikipedia.org/wiki/Regular_icosahedron#Construction and
+   // https://en.wikipedia.org/wiki/Golden_rectangle for more.
+   // ________________________(a,b,0)
+   // |          |           | One of the three golden rectangles.
+   // |          b           | Corners of the rectangles are the 
+   // |          |_____a_____| icosahedron vertices.
+   // |        (0,0,0)       |
+   // |                      |
+   // |______________________|(a,-b,0)
+   // For 'unit sphere':
+   //  Sqr (a) + Sqr (b) = 1 
+   //  a = b * (golden ratio)
+   //  Golden ratio = (1 + Math.Sqrt (5)) / 2 
+   readonly static double _GR = (1 + Math.Sqrt (5)) * 0.5;
+   readonly static double _B = Math.Sqrt (1 / (1 + _GR * _GR));
+   readonly static double _A = _B * _GR;
+
+   // The 'known' sphere approximations with equilaterial triangles.
+   readonly static (ImmutableArray<Vector3> Vertices, ImmutableArray<int> Faces)[] _SphereData = [
+      // Octahedron vertices and triangles (6 and 8)
+      ([Vector3.ZAxis, -Vector3.ZAxis, Vector3.XAxis, -Vector3.XAxis, Vector3.YAxis, -Vector3.YAxis],
+      [0,2,4, 0,4,3, 0,3,5, 0,5,2, 1,4,2, 1,2,5, 1,5,3, 1,3,4]), 
+
+      // Icosahedron vertices and triangles (12 and 20)
+      ([new (-_B,0,_A), new (_B,0,_A),  new (-_B,0,-_A), new (_B,0,-_A),
+        new (0,_A,_B),  new (0,_A,-_B), new (0,-_A,_B),  new (0,-_A,-_B),
+        new (_A,_B,0),  new (-_A,_B,0), new (_A,-_B,0),  new (-_A,-_B, 0)],
+      [0,4,1,  0,9,4,  9,5,4,  4,5,8,  4,8,1,
+       8,10,1, 8,3,10, 5,3,8,  5,2,3,  2,7,3,
+       7,10,3, 7,6,10, 7,11,6, 11,0,6, 0,1,6,
+       6,1,10, 9,0,11, 9,11,2, 9,2,5,  7,2,11])
+   ];
 }
-#endregion
+#endregion Mesh3
+
+#region class PlaneMeshIntersector -----------------------------------------------------------------
+/// <summary>Provides plane/mesh intersection functionality for a specific mesh.</summary>
+/// This class computes polygonal intersection loops between a mesh and a plane.
+/// Create an instance with a mesh and call `Compute` repeatedly to intersect
+/// multiple planes against the same mesh.
+public class PlaneMeshIntersector (Mesh3 mesh) {
+   /// <summary>Computes polygonal intersection loops between the stored mesh and a plane.</summary>
+   /// Computes intersection loops where the mesh crosses the plane:
+   /// - Classify each vertex as above/below the plane using signed distance.
+   /// - For each triangle, if its vertices straddle the plane, find the two edges crossed.
+   /// - Register those edges in the edge map and the triangle queue for connectivity.
+   /// - Trace intersected edges into continuous polylines (loops or open).
+   public List<ImmutableArray<Point3>> Compute (PlaneDef plane, double tolerance = 1e-3) {
+      int triCount = mesh.Triangle.Length, vertCount = mesh.Vertex.Length;
+      Vector3 n = plane.Normal; double d = plane.D;
+
+      // Precompute signed distances from plane
+      var dist = new (Point3f P, double D)[vertCount];
+      for (int i = 0; i < vertCount; i++) {
+         var p = mesh.Vertex[i].Pos;
+         dist[i] = (p, n.X * p.X + n.Y * p.Y + n.Z * p.Z + d);
+         if (Math.Abs (d) < 1e-10) d += 1e-8;
+      }
+
+      // Edge map and list of triangle intersection edge pairs
+      mEdgeMap.Clear (); mTriQueue.Clear ();
+
+      // Identify intersected triangles and store their crossing edges
+      for (int t = 0; t < triCount; t += 3)
+         if (IsChecked (t, dist, out Edge? e1, out Edge? e2)) {
+            RegisterEdge (e1, mTriQueue.Count);
+            RegisterEdge (e2, mTriQueue.Count);
+            mTriQueue.Add (new EdgePair (e1, e2));
+         }
+
+      // Trace all polylines produced by the intersected edges
+      var polyList = GetPointLoops (dist);
+      return CombinedPoints (polyList, tolerance);
+   }
+
+   /// <summary>Edge between two vertices and the two triangle indices sharing it.</summary>
+   public class Edge (int a, int b) : IEquatable<Edge> {
+      public int A = a;
+      public int B = b;
+      public int TIdx1 = -1;
+      public int TIdx2 = -1;
+
+      public bool Equals (Edge? other)
+         => A == other?.A && B == other.B;
+   }
+
+   /// <summary>Connected pair of edges belonging to a triangle intersection.</summary>
+   struct EdgePair (Edge edge1, Edge edge2) {
+      public Edge Edge1 = edge1;
+      public Edge Edge2 = edge2;
+      public bool IsChecked;
+   }
+
+   // Checks if a triangle crosses the plane and returns its two crossing edges.
+   bool IsChecked (int t, (Point3f P, double D)[] dist, [NotNullWhen (true)] out Edge? e1,
+                                                        [NotNullWhen (true)] out Edge? e2) {
+      int i0 = mesh.Triangle[t++], i1 = mesh.Triangle[t++], i2 = mesh.Triangle[t++];
+      double d0 = dist[i0].D, d1 = dist[i1].D, d2 = dist[i2].D;
+
+      // Each sign change corresponds to an intersected edge
+      e1 = null; e2 = null; 
+      if (d0 * d1 < 0) e1 = GetEdge (i0, i1);
+      if (d1 * d2 < 0) { if (e1 == null) e1 = GetEdge (i1, i2); else e2 = GetEdge (i1, i2); }
+      if (d2 * d0 < 0) { if (e1 == null) e1 = GetEdge (i2, i0); else e2 = GetEdge (i2, i0); }
+
+      return e1 != null && e2 != null;
+   }
+
+   // Gets or creates an edge (ensuring A < B) from the edge map.
+   Edge GetEdge (int a, int b) {
+      if (b < a) (a, b) = (b, a);   // normalize ordering
+
+      if (!mEdgeMap.TryGetValue ((a, b), out var edge))
+         mEdgeMap[(a, b)] = edge = new Edge (a, b);
+
+      return edge;
+   }
+
+   // Registers which triangle index uses this edge.
+   void RegisterEdge (Edge e, int count) {
+      if (e.TIdx1 == -1) e.TIdx1 = count;
+      else e.TIdx2 = count;
+   }
+
+   // Traces all edge-pairs to reconstruct full intersection polylines.
+   List<List<Point3>> GetPointLoops ((Point3f P, double D)[] dist) {
+      var polyList = new List<List<Point3>> ();
+
+      while (true) {
+         // Find index of next unprocessed triangle edge pair
+         int idx = mTriQueue.FindIndex (e => !e.IsChecked);
+         if (idx == -1) break;
+
+         var t = mTriQueue[idx]; t.IsChecked = true;
+         mTriQueue[idx] = t;
+
+         // Trace edges outward in both directions
+         var pts1 = WalkEdge (dist, t.Edge1);
+         var pts2 = WalkEdge (dist, t.Edge2);
+
+         pts1.Reverse ();   // First direction must be reversed before merging
+         polyList.Add ([.. pts1, .. pts2]);
+      }
+
+      return polyList;
+   }
+
+   // Walks along connected edges to collect intersection points in one direction.
+   List<Point3> WalkEdge ((Point3f P, double D)[] dist, Edge edge) {
+      List<Point3> points = [];
+
+      while (true) {
+         // Compute intersection point along current edge
+         points.Add (Interpolate (dist[edge.A], dist[edge.B]));
+
+         if (edge.TIdx2 == -1) break; // No continuation
+
+         // Continue traversal through the unvisited adjacent triangle
+         int nextIdx = mTriQueue[edge.TIdx1].IsChecked ? edge.TIdx2 : edge.TIdx1;
+         
+         var next = mTriQueue[nextIdx]; if (next.IsChecked) break; // Safety check
+         next.IsChecked = true; mTriQueue[nextIdx] = next;
+
+         // Follow the next edge
+         edge = next.Edge1 == edge ? next.Edge2 : next.Edge1;
+      }
+
+      return points;
+   }
+
+   // Combines all polylines whose endpoints touch into continuous polylines.
+   List<ImmutableArray<Point3>> CombinedPoints (List<List<Point3>> pts, double tolerance) {
+      var result = new List<ImmutableArray<Point3>> ();
+
+      // Merge lists that connect 
+      for (int i = 0; i < pts.Count; i++) {
+         for (int j = i + 1; j < pts.Count; j++) {
+            // tail(i) == head(j) -> append j to i
+            if (pts[i][^1].EQ (pts[j][0], tolerance)) {
+               pts[i--].AddRange (pts[j].Skip (1));
+               pts.RemoveAt (j); break;
+            }
+            // tail(i) == tail(j) -> reverse j then append
+            else if (pts[i][^1].EQ (pts[j][^1], tolerance)) {
+               pts[j].Reverse ();
+               pts[i--].AddRange (pts[j].Skip (1));
+               pts.RemoveAt (j); break;
+            }
+            // head(i) == tail(j) -> prepend j to i
+            else if (pts[i][0].EQ (pts[j][^1], tolerance)) {
+               pts[i].InsertRange (0, pts[j].Take (pts[j].Count - 1));
+               pts.RemoveAt (j); i--; break;
+            }
+            // head(i) == head(j) -> reverse j then prepend
+            else if (pts[i][0].EQ (pts[j][0], tolerance)) {
+               pts[j].Reverse ();
+               pts[i].InsertRange (0, pts[j].Take (pts[j].Count - 1));
+               pts.RemoveAt (j); i--; break;
+            }
+         }
+      }
+
+      pts.ForEach (e => result.Add ([.. e]));
+      return result;
+   }
+
+   // Interpolates the plane intersection point along an edge.
+   Point3 Interpolate ((Point3f, double) pd0, (Point3f, double) pd1) {
+      Point3f p0 = pd0.Item1, p1 = pd1.Item1;
+      // Signed-distance interpolation factor
+      double t = pd0.Item2 / (pd0.Item2 - pd1.Item2);
+
+      return new Point3 (
+          p0.X + t * (p1.X - p0.X),
+          p0.Y + t * (p1.Y - p0.Y),
+          p0.Z + t * (p1.Z - p0.Z)
+      );
+   }
+
+   /// <summary>Maps vertex-pairs to unique Edge.</summary>
+   Dictionary<(int, int), Edge> mEdgeMap = [];
+   /// <summary>List of edge pairs of intersected triangles.</summary>
+   List<EdgePair> mTriQueue = [];
+}
+#endregion PlaneMeshIntersector
 
 #region class Mesh3Builder -------------------------------------------------------------------------
 /// <summary>The Mesh3Builder class builds meshes with auto-smoothing and marking of sharp creases</summary>

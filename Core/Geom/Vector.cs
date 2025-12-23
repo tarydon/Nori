@@ -169,6 +169,11 @@ public readonly struct Vector3 : IEQuable<Vector3> {
    /// <summary>Returns true if two Vector3 are equal to within Epsilon</summary>
    public bool EQ (Vector3 b) => X.EQ (b.X) && Y.EQ (b.Y) && Z.EQ (b.Z);
 
+   /// <summary>Compares two Vector3 for equality</summary>
+   public override bool Equals ([NotNullWhen (true)] object? obj) => obj is Vector3 v && EQ (v);
+   /// <summary>Returns the Hash-code of the Vector3 (based on their rounded-off approximations)</summary>
+   public override int GetHashCode () => HashCode.Combine (X.R6 (), Y.R6 (), Z.R6 ());
+
    /// <summary>Returns true if this vector opposes the other</summary>
    public bool Opposing (Vector3 b) => Dot (b) < 0;
 
