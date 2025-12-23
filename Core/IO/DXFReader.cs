@@ -10,9 +10,31 @@ public class DXFReader {
    static DXFReader () => Encoding.RegisterProvider (CodePagesEncodingProvider.Instance);
 
    /// <summary>Construct a DXFReader, given a filename</summary>
-   public DXFReader (string file)
-      => mReader = new StreamReader (new FileStream (mFile = file, FileMode.Open, FileAccess.Read, FileShare.ReadWrite));
+   public DXFReader (string file) : this (File.OpenRead (file)) { }
 
+   public DXFReader (Stream stm) {
+      stm.Position = 0;
+      const string ACADVERTAG = "$ACADVER", CODEPAGETAG = "$DWGCODEPAGE"; // DXF group code tags for version identifier and code page
+      string? acadver = null, codepage = null;
+      using (StreamReader tmpstm = new (stm, Encoding.Default, false, 1024, true)) {
+         tmpstm.ReadLine (); string? s2 = tmpstm.ReadLine (), s3 = tmpstm.ReadLine (), line;
+         while ((line = tmpstm.ReadLine ()) != "ENDSEC") {
+            if (line is ACADVERTAG or CODEPAGETAG) {
+               tmpstm.ReadLine (); // Skip the line after the tag
+               string? val = tmpstm.ReadLine ();
+               if (line == ACADVERTAG) acadver = val; // Skip extra line for Macintosh
+               else codepage = val;
+            }
+            if (acadver != null && codepage != null) break;
+         }
+      }
+      var encodingToUse = Encoding.UTF8;
+      if (!acadver.IsBlank () && !codepage.IsBlank () && string.CompareOrdinal (acadver, "AC1021") < 0)
+         encodingToUse = Encoding.GetEncoding (int.TryParse (codepage.Split ('_').Last (), out int cp) ? cp : 1252);
+      stm.Position = 0;
+      mReader = new StreamReader (stm, encodingToUse, false);
+   }
+  
    // Properties ---------------------------------------------------------------
    /// <summary>The Standard 256 ACAD Colors</summary>
    public static Color4[] ACADColors 
