@@ -6,7 +6,8 @@ using Nori;
 
 [MemoryDiagnoser]
 public class Benchmark {
-   public Benchmark (int steps) {
+   public Benchmark () {
+      int steps = 1000;
       Lib.Init ();
       Lib.Tracer = Console.Write;
       var model = new T3XReader ("C:/Etc/T3/5X-051.t3x").Load ();
@@ -30,60 +31,57 @@ public class Benchmark {
 
    [Benchmark]
    public void TestNewUnlofter () {
-      using var bt = new BlockTimer ("New Unlofter");
       SurfaceUnlofter un = new SurfaceUnlofter (mSurf);
-      double totalError = 0, maxError = 0; 
+      double maxError = 0; 
       for (int i = 0; i < mPts.Count; i++) {
          Point2 puv = un.GetUV (mPts[i]);
          double error = puv.DistTo (mUVs[i]);
          if (error > maxError) maxError = error;
-         totalError += error;
       }
-      Console.WriteLine ($"MaxErr: {maxError:F5}, AvgErr: {totalError / mPts.Count:F5}");
    }
 
-   [Benchmark]
+   //[Benchmark]
    public void TestOldUnlofter () {
-      using var bt = new BlockTimer ("Old Unlofter");
       Unlofter un = new Unlofter (mSurf);
-      double totalError = 0, maxError = 0; 
+      double maxError = 0; 
       for (int i = 0; i < mPts.Count; i++) {
          Point2 puv = un.GetUV (mPts[i]);
          double error = puv.DistTo (mUVs[i]);
          if (error > maxError) maxError = error;
-         totalError += error;
       }
-      Console.WriteLine ($"MaxErr: {maxError:F5}, AvgErr: {totalError / mPts.Count:F5}");
    }
 
    public void RefineNewUnlofter () {
       using var bt = new BlockTimer ("New Unlofter");
       SurfaceUnlofter un = new SurfaceUnlofter (mSurf);
-      double maxError = 0; int iWorst = -1;
+      double totalError = 0, maxError = 0; int iWorst = -1;
       for (int i = 0; i < mPts.Count; i++) {
          Point2 puv = un.GetUV (mPts[i]);
          double err = puv.DistTo (mUVs[i]);
          if (err > maxError) (maxError, iWorst) = (err, i);
+         totalError += err;
       }
-      Console.WriteLine ($"{iWorst}");
-      Console.WriteLine ($"UVError: {maxError}");
+      Console.WriteLine ($"MaxError: {maxError} at {iWorst}");
+      Console.WriteLine ($"AvgError: {totalError / mPts.Count}");
       Console.WriteLine ($"Actual UV: {mUVs[iWorst]}");
       Console.WriteLine ($"Computed UV: {un.GetUV (mPts[iWorst])}");
       Console.WriteLine ($"3DPoint: {mPts[iWorst]}");
       Console.WriteLine ($"Check: {mPts[iWorst].DistTo (mSurf.GetPoint (mUVs[iWorst]))}");
+      un.DumpStats ();
    }
 
    public void RefineOldUnlofter () {
       using var bt = new BlockTimer ("Old Unlofter");
       var un = new Unlofter (mSurf);
-      double maxError = 0; int iWorst = -1;
+      double totalError = 0, maxError = 0; int iWorst = -1;
       for (int i = 0; i < mPts.Count; i++) {
          Point2 puv = un.GetUV (mPts[i]);
          double err = puv.DistTo (mUVs[i]);
          if (err > maxError) (maxError, iWorst) = (err, i);
+         totalError += err;
       }
-      Console.WriteLine ($"{iWorst}");
-      Console.WriteLine ($"UVError: {maxError}");
+      Console.WriteLine ($"MaxError: {maxError} at {iWorst}");
+      Console.WriteLine ($"AvgError: {totalError / mPts.Count}");
       Console.WriteLine ($"Actual UV: {mUVs[iWorst]}");
       Console.WriteLine ($"Computed UV: {un.GetUV (mPts[iWorst])}");
       Console.WriteLine ($"3DPoint: {mPts[iWorst]}");
@@ -93,21 +91,14 @@ public class Benchmark {
 
 class Program {
    static void Main () {
-      var b = new Benchmark (1000);
+      var b = new Benchmark ();
       for (int i = 0; i < 10; i++) {
          Console.Clear ();
          b.RefineOldUnlofter ();
          Console.WriteLine ();
          b.RefineNewUnlofter ();
-         Console.WriteLine ();
       }
 
-      //   b.TestNewUnlofter ();
-      //   for (int i = 0; i < 10; i++) b.TestOldUnlofter ();
-
-      //   Console.WriteLine (); Console.WriteLine ();
-      ////   Console.WriteLine ();
-      //   for (int i = 0; i < 10; i++) b.TestNewUnlofter ();
-      ////   // BenchmarkRunner.Run<Benchmark> ();
+      // BenchmarkRunner.Run<Benchmark> ();
    }
 }

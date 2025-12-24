@@ -46,7 +46,7 @@ class SurfScene : Scene3 {
          if (Lux.Pick (pt)?.Obj is E3Surface e3s) {
             mMeshVN.Mesh = e3s.Mesh;
             Point3 pt3d = Lux.PickPos;
-            if (!HW.IsShiftDown) pt3d = new (140.808558, -67.832178, -45.747396);
+            if (!HW.IsShiftDown) pt3d = new (151.753621, -87.962736, -52.931576);
             mPlus.Pt = pt3d;
             Point2 uv = e3s.GetUV (pt3d);
             Point3 ptLoft = e3s.GetPoint (uv);
@@ -72,15 +72,15 @@ class UnloftTracker2 : VNode {
    List<SurfaceUnlofter.Label> mLabels = [];
 
    public override void SetAttributes () { 
-      Lux.PointSize = 8f; 
+      Lux.PointSize = 6f; 
       Lux.Color = Color4.DarkBlue; 
    }
 
    public override void Draw () {
       Lux.Lines (mLines.AsSpan ());
-      // Lux.Points (mPoints.AsSpan ());
-      foreach (var lab in mLabels)
-         Lux.Text3D (lab.Text, lab.Pos, ETextAlign.MidCenter, Vec2S.Zero);
+      Lux.Points (mPoints.AsSpan ());
+      //foreach (var lab in mLabels)
+      //   Lux.Text3D (lab.Text, lab.Pos, ETextAlign.MidCenter, Vec2S.Zero);
    }
 }
 

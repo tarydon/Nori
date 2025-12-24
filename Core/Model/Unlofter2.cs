@@ -2,7 +2,7 @@
 using System.Reactive.Subjects;
 namespace Nori;
 
-public class SurfaceUnlofter {
+public partial class SurfaceUnlofter {
    public SurfaceUnlofter (E3Surface surf) {
       mDomain = (mSurf = surf).Domain;
 
@@ -23,6 +23,13 @@ public class SurfaceUnlofter {
 
    public int Iterations;
 
+   public void DumpStats () {
+      int cb = mUsedNodes * Marshal.SizeOf<Node> ();
+      Console.WriteLine ($"{mUsedNodes} nodes ({cb} bytes)");
+      cb = mUsedTiles * Marshal.SizeOf<Tile> ();
+      Console.WriteLine ($"{mUsedTiles} tiles ({cb} bytes)");
+   }
+
    public Point2 GetUV (Point3 pt) {
       mRung++;
       Iterations = 0; 
@@ -42,17 +49,27 @@ public class SurfaceUnlofter {
 
       // The uv computed did not lie within the tile boundary, so we might need
       // to explore some neighboring tiles
-      mQueue.Clear ();
+      mQueue.Clear (); mUVAlts.Clear ();
       AddNeighbors (nLeaf, overrun);
       while (mQueue.Count > 0) {
          int nTile2 = mQueue.Dequeue ();
          var (uv2, leaf2, overrun2) = GetUV (nTile2, pt);
+         Log ($"   Using {nTile2}, leaf = {leaf2}, overrun = {overrun2}");
          if (overrun2 == EDir.Nil) return uv2;
+         mUVAlts.Add (uv2);
          AddNeighbors (leaf2, overrun2);
+      }
+
+      double minError = pt.DistToSq (mSurf.GetPoint (uvBest));
+      for (int i = mUVAlts.Count - 1; i >= 0; i--) {
+         var uv = mUVAlts[i];
+         double error = pt.DistToSq (mSurf.GetPoint (uv));
+         if (error < minError) (minError, uvBest) = (error, uv);
       }
       return uvBest;
    }
    Queue<int> mQueue = [];
+   List<Point2> mUVAlts = [];
    int mRung;
 
    void AddNeighbors (int n, EDir dir) {
@@ -98,9 +115,16 @@ public class SurfaceUnlofter {
       // Helpers ...........................................
       void Add (int nTile) {
          ref Tile tile = ref mTiles[nTile];
-         if (tile.Rung != mRung) { tile.Rung = mRung; mQueue.Enqueue (nTile); }
+         if (tile.Rung != mRung) {
+            ref Tile outer = ref mTiles[n];
+            Log ($"Add {dir} of {n} ({outer.Location} child of {outer.Parent}) : {nTile}");
+            tile.Rung = mRung; mQueue.Enqueue (nTile); 
+         }
       }
    }
+
+   partial void Log (string s);
+   // partial void Log (string s) => Debug.WriteLine (s);
 
    (Point2 UV, int Leaf, EDir dir) GetUV (int nTile, Point3 pt) {
       for (; ; ) {
@@ -314,6 +338,11 @@ public class SurfaceUnlofter {
          Point2 c = pnodes[NProject + 2], d = pnodes[NProject + 3];
          Vector2 e = b - a, f = d - a, g = (a - b) + (c - d), h = s - a;
 
+         //var dwg = new Dwg2 ();
+         //dwg.Add (Poly.Lines ([a, b, c, d]).Close ());
+         //dwg.Add (s);
+         //DXFWriter.Save (dwg, "c:/etc/test.dxf"); REMOVETHIS
+
          // Compose the quadratic for v
          double u, v;
          double k2 = g.X * f.Y - g.Y * f.X;
@@ -391,7 +420,7 @@ public class SurfaceUnlofter {
          bool divideV = ptCen.DistToLineSq (bottom.Pt, top.Pt) > Tolerance
                      || left.Pt.DistToLineSq (botLeft.Pt, topLeft.Pt) > Tolerance
                      || right.Pt.DistToLineSq (botRight.Pt, topRight.Pt) > Tolerance;
-         if (!(divideU || divideV)) { State = EState.Leaf; return; }
+         if (!divideU && !divideV) divideU = divideV = true;
 
          double uStep = DU / 2, vStep = DV / 2;
          if (divideU && divideV) {
