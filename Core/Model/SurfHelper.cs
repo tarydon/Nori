@@ -285,6 +285,8 @@ public class Unlofter {
       #region Properties --------------------------------
       /// <summary>Does this tile have any children, or is it a 'leaf-level' tile?</summary>
       public readonly bool HasChildren => mcChildren is > 0 and < 0xFF;
+
+      public int Rung;
       #endregion
 
       #region Methods -----------------------------------

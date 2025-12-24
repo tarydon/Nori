@@ -13,30 +13,99 @@ public class SurfaceUnlofter {
          for (int i = 0; i < mUDivs; i++) {
             double u = (i + 0.5) * du;       // Center U of the tile
             int node = AddNode (u, v);
-            AddTile (-1, node, du / 2, dv / 2);
+            AddTile (-1, node, du / 2, dv / 2, EDir.Root);
          }
       }
       mSubject?.OnNext (this);
       mRootTiles = mUsedTiles;
    }
-   int mUDivs = 8, mVDivs = 8;
+   int mUDivs = 4, mVDivs = 4;
 
    public Point2 GetUV (Point3 pt) {
-      int iBest = -1, cNodes = mUsedNodes;
+      mRung++;
+      int iRoot = -1;
       double minDist = double.MaxValue;
       for (int i = 0; i < mRootTiles; i++) {
          ref Node node = ref mNodes[i];
          double dist = pt.DistToSq (node.Pt);
-         if (dist < minDist) (minDist, iBest) = (dist, i);
+         if (dist < minDist) (minDist, iRoot) = (dist, i);
       }
       mSubject?.OnNext (this);
-      return GetUV (iBest, pt, false);
+
+      // Try this 'best bet' tile. Very often, the point in question
+      // will lie within this tile, and we are done - this is the fast happy path
+      var (uvBest, nLeaf, overrun) = GetUV (iRoot, pt);
+      if (overrun == EDir.Nil) return uvBest;
+
+      // The uv computed did not lie within the tile boundary, so we might need
+      // to explore some neighboring tiles
+      mQueue.Clear ();
+      AddNeighbors (nLeaf, overrun);
+      while (mQueue.Count > 0) {
+         int nTile2 = mQueue.Dequeue ();
+         var (uv2, leaf2, overrun2) = GetUV (nTile2, pt);
+         if (overrun2 == EDir.Nil) return uv2;
+         AddNeighbors (leaf2, overrun2);
+      }
+      return uvBest;
+   }
+   Queue<int> mQueue = [];
+   int mRung;
+
+   void AddNeighbors (int n, EDir dir) {
+      if (n == -1) return;
+      ref Tile tile = ref mTiles[n];
+      if ((dir & EDir.W) != 0) {
+         // See if there is a tile to the west of this at this same level. If none are found 
+         // at this level, we move up to the parent and try. If this is already at the root level,
+         // we use special 'grid logic' to figure out the potential neighbor in that direction. 
+         switch (tile.Location) {
+            case EDir.E or EDir.SE: Add (n - 1); break;
+            case EDir.NE: Add (n + 1); break;   // Ordering with 4 tiles = SW SE NE NW
+            case EDir.Root: int col = n % mUDivs; if (col > 0) Add (n - 1); break;
+            default: AddNeighbors (tile.Parent, EDir.W); break;   
+         }
+      } else if ((dir & EDir.E) != 0) {
+         // See if there is a tile to the east of this
+         switch (tile.Location) {
+            case EDir.W or EDir.SW: Add (n + 1); break;
+            case EDir.NW: Add (n - 1); break;
+            case EDir.Root: int col = n % mUDivs; if (col < mUDivs - 2) Add (n + 1); break;
+            default: AddNeighbors (tile.Parent, EDir.E); break;
+         }
+      }
+
+      if ((dir & EDir.S) != 0) {
+         // Add the possible tile to the south of this
+         switch (tile.Location) {
+            case EDir.N or EDir.NE: Add (n - 1); break;
+            case EDir.NW: Add (n - 3); break;
+            case EDir.Root: int row = n / mUDivs; if (row > 0) Add (n - mUDivs); break;
+            default: AddNeighbors (tile.Parent, EDir.S); break;
+         }
+      } else if ((dir & EDir.N) != 0) {
+         switch (tile.Location) {
+            case EDir.S or EDir.SE: Add (n + 1); break;
+            case EDir.SW: Add (n + 3); break;
+            case EDir.Root: int row = n / mUDivs; if (row < mVDivs - 2) Add (n + mUDivs); break;
+            default: AddNeighbors (tile.Parent, EDir.N); break;
+         }
+      }
+
+      // Helpers ...........................................
+      void Add (int nTile) {
+         ref Tile tile = ref mTiles[nTile];
+         if (tile.Rung != mRung) { tile.Rung = mRung; mQueue.Enqueue (nTile); }
+      }
    }
 
-   Point2 GetUV (int nTile, Point3 pt, bool recursing = false) {
+   (Point2 UV, int Leaf, EDir dir) GetUV (int nTile, Point3 pt) {
+      Debug.WriteLine ("\nStarting");
       for (; ; ) {
          EState state = CheckAndSubdivide (nTile);
          ref Tile tile = ref mTiles[nTile];
+         tile.Rung = mRung;
+         Debug.WriteLine ($"Tile {nTile} {tile.State}");
          switch (state) {
             case EState.Subdivide2 or EState.Subdivide4:
                int iBest = -1; double minDist = double.MaxValue;
@@ -45,42 +114,17 @@ public class SurfaceUnlofter {
                   ref Tile tileN = ref mTiles[n];
                   ref Node node = ref mNodes[tileN.Center];
                   double dist = pt.DistToSq (node.Pt);
+                  Debug.Write ($"   {n} {Math.Sqrt (dist).Round (3)}");
                   if (dist < minDist) (minDist, iBest) = (dist, n);
                }
+               Debug.WriteLine ("");
                nTile = iBest;
                break;
             default:
-               Point2 puv = tile.GetUV (this, pt);
-               if (recursing) return puv;
-               mAlts.Clear ();
-
-               Point2 cen = mNodes[tile.Center].UV;
-               double du = tile.DU * 0.9, dv = tile.DV * 0.9;
-               if (puv.X < cen.X - du) {
-                  int col = nTile % mUDivs;
-                  if (col > 0) mAlts.Add (GetUV (nTile - 1, pt, true));
-               } else if (puv.X > cen.X + du) {
-                  int col = nTile % mUDivs;
-                  if (col < mUDivs - 2) mAlts.Add (GetUV (nTile + 1, pt, true));
-               }
-               if (puv.Y < cen.Y - dv) {
-                  int row = nTile / mUDivs;
-                  if (row > 0) mAlts.Add (GetUV (nTile - mUDivs, pt, true));
-               } else if (puv.Y > cen.Y + dv) {
-                  int row = nTile / mUDivs;
-                  if (row < mVDivs - 2) mAlts.Add (GetUV (nTile + mUDivs, pt, true));
-               }
-               double minErr = pt.DistToSq (mSurf.GetPoint (puv));
-               foreach (var uvTest in mAlts) {
-                  double err = pt.DistToSq (mSurf.GetPoint (uvTest));
-                  if (err < minErr) (minErr, puv) = (err, uvTest);
-               }
-               return puv;
+               return tile.GetUV (this, pt);
          }
       }
    }
-   List<Point2> mAlts = [];
-   public int Edgy;
 
    EState CheckAndSubdivide (int nTile) {
       ref Tile tile = ref mTiles[nTile];
@@ -93,21 +137,27 @@ public class SurfaceUnlofter {
       return tile.State;
    }
 
-   public (List<Vec3F> Lines, List<Vec3F> Points) GetTileOutlines () {
+   public record struct Label (Vec3F Pos, string Text);
+
+   public (List<Vec3F> Lines, List<Vec3F> Points, List<Label> labels) GetTileOutlines () {
       List<Vec3F> lines = [], points = [];
+      List<Label> labels = [];
       for (int i = 0; i < mRootTiles; i++) {
          ref Tile tile = ref mTiles[i];
          Process (ref tile);
       }
-      return (lines, points);
+      return (lines, points, labels);
 
       // Helpers ...........................................
       void Process (ref Tile tile) {
+         Vec3F cen = (Vec3F)mNodes[tile.Center].Pt;
          switch (tile.State) {
             case EState.Raw:
-               points.Add ((Vec3F)mNodes[tile.Center].Pt); 
+               points.Add (cen);
+               labels.Add (new Label (cen, $"{tile.Id}"));
                break;
             case EState.Subdivide2 or EState.Subdivide4:
+               labels.Add (new Label (cen, $"{tile.Id}"));
                foreach (int n in new int[] { 0, 1, 1, 2, 2, 3, 3, 0 })
                   lines.Add ((Vec3F)mNodes[tile.Corners[n]].Pt);
                for (int i = 0; i < (int)tile.State; i++) {
@@ -116,6 +166,7 @@ public class SurfaceUnlofter {
                }
                break;
             default:
+               labels.Add (new Label (cen, $"{tile.Id}"));
                foreach (int n in new int[] { 0, 1, 1, 2, 2, 3, 3, 0 }) 
                   lines.Add ((Vec3F)mNodes[tile.Corners[n]].Pt);
                break;
@@ -141,14 +192,14 @@ public class SurfaceUnlofter {
       return mUsedNodes++;
    }
 
-   int AddTile (int parent, int center, double du, double dv) {
+   int AddTile (int parent, int center, double du, double dv, EDir location) {
       if (mUsedTiles >= mTiles.Length) Array.Resize (ref mTiles, mTiles.Length * 2);
-      mTiles[mUsedTiles] = new Tile (mUsedTiles, parent, center, du, dv);
+      mTiles[mUsedTiles] = new Tile (mUsedTiles, parent, center, du, dv, location);
       return mUsedTiles++;
    }
 
-   int AddTile (int parent, int center, double du, double dv, int botLeft, int botRight, int topRight, int topLeft) {
-      int nTile = AddTile (parent, center, du, dv);
+   int AddTile (int parent, int center, double du, double dv, int botLeft, int botRight, int topRight, int topLeft, EDir location) {
+      int nTile = AddTile (parent, center, du, dv, location);
       ref Tile tile = ref mTiles[nTile];
       var corners = tile.Corners;
       corners[0] = botLeft; corners[1] = botRight;
@@ -162,6 +213,11 @@ public class SurfaceUnlofter {
    }
 
    // Nested types -------------------------------------------------------------
+   // Used to indicate one of the 8 cardinal directions
+   enum EDir {
+      Nil, W = 1, E = 2, S = 4, N = 8, SW = 5, SE = 6, NE = 10, NW = 9, Root = 100
+   }
+
    readonly struct Node {
       public Node (E3Surface surf, int id, double u, double v)
          => (Id, U, V, Pt) = (id, u, v, surf.GetPoint (new (u, v)));
@@ -183,13 +239,12 @@ public class SurfaceUnlofter {
 
    enum EState { 
       Raw = 0, Leaf = 1, Subdivide2 = 2, Subdivide4 = 4,
-      LeafXY = 5, LeafYZ = 6, LeafXZ = 7
-   
+      LeafXY = 5, LeafYZ = 6, LeafXZ = 7  
    };
 
    struct Tile {
-      public Tile (int id, int parent, int center, double du, double dv) {
-         (Id, Parent, Center, DU, DV) = (id, parent, center, du, dv);
+      public Tile (int id, int parent, int center, double du, double dv, EDir location) {
+         (Id, Parent, Center, DU, DV, Location) = (id, parent, center, du, dv, location);
          for (int i = 0; i < 4; i++) Corners[i] = Children[i] = -1;
       }
 
@@ -198,9 +253,11 @@ public class SurfaceUnlofter {
          return new (center.U - DU, center.V - DV, center.U + DU, center.V + DV);
       }
 
-      public override string ToString () => $"Tile#{Id} : {State}";
+      public override string ToString () => $"Tile#{Id} State:{State} Loc:{Location}";
 
-      public Point2 GetUV (SurfaceUnlofter owner, Point3 pt) {
+      public int Rung;
+
+      public (Point2 UV, int Id, EDir Overrun) GetUV (SurfaceUnlofter owner, Point3 pt) {
          if (State == EState.Leaf) {
             // If we are in 'Leaf' state, we haven't determined a suitable projection
             // axis yet (and the corners may not yet have been evaluated).
@@ -284,7 +341,11 @@ public class SurfaceUnlofter {
          ref Node center1 = ref owner.mNodes[Center];
          double left = center1.U - DU, right = center1.U + DU;
          double bottom = center1.V - DV, top = center1.V + DV;
-         return new (u.Along (left, right), v.Along (bottom, top));
+         Debug.WriteLine ($"   {Id} : {u.Round (4)}, {v.Round (4)}");
+         EDir overrun = EDir.Nil;
+         if (u < 0) overrun |= EDir.W; else if (u > 1) overrun |= EDir.E;
+         if (v < 0) overrun |= EDir.S; else if (v > 1) overrun |= EDir.N;
+         return (new (u.Along (left, right), v.Along (bottom, top)), Id, overrun);
       }
 
       const double Tolerance = 0.0001;
@@ -343,16 +404,16 @@ public class SurfaceUnlofter {
             // one for the center
             // 1. Bottom left quarter-tile
             int nCenter = owner.AddNode (uCen - uStep, vCen - vStep);
-            Children[0] = owner.AddTile (Id, nCenter, uStep, vStep, Corners[0], bottom.Id, Center, left.Id);
+            Children[0] = owner.AddTile (Id, nCenter, uStep, vStep, Corners[0], bottom.Id, Center, left.Id, EDir.SW);
             // 2. Bottom right quarter-tile
             nCenter = owner.AddNode (uCen + uStep, vCen - vStep);
-            Children[1] = owner.AddTile (Id, nCenter, uStep, vStep, bottom.Id, Corners[1], right.Id, Center);
+            Children[1] = owner.AddTile (Id, nCenter, uStep, vStep, bottom.Id, Corners[1], right.Id, Center, EDir.SE);
             // 3. Top right quarter-tile
             nCenter = owner.AddNode (uCen + uStep, vCen + vStep);
-            Children[2] = owner.AddTile (Id, nCenter, uStep, vStep, Center, right.Id, Corners[2], top.Id);
+            Children[2] = owner.AddTile (Id, nCenter, uStep, vStep, Center, right.Id, Corners[2], top.Id, EDir.NE);
             // 4. Top left quarter-tile
             nCenter = owner.AddNode (uCen - uStep, vCen + vStep);
-            Children[3] = owner.AddTile (Id, nCenter, uStep, vStep, left.Id, Center, top.Id, Corners[3]);
+            Children[3] = owner.AddTile (Id, nCenter, uStep, vStep, left.Id, Center, top.Id, Corners[3], EDir.NW);
          } else if (divideU) {
             // Divide only in U
             State = EState.Subdivide2;
@@ -360,10 +421,10 @@ public class SurfaceUnlofter {
             // create 2 half tiles by slicing vertically
             // 1. Left half-tile
             int nCenter = owner.AddNode (uCen - uStep, vCen);
-            Children[0] = owner.AddTile (Id, nCenter, uStep, DV, Corners[0], bottom.Id, top.Id, Corners[3]);
+            Children[0] = owner.AddTile (Id, nCenter, uStep, DV, Corners[0], bottom.Id, top.Id, Corners[3], EDir.W);
             // 2. Right half-tile
             nCenter = owner.AddNode (uCen + uStep, vCen);
-            Children[1] = owner.AddTile (Id, nCenter, uStep, DV, bottom.Id, Corners[1], Corners[2], top.Id);
+            Children[1] = owner.AddTile (Id, nCenter, uStep, DV, bottom.Id, Corners[1], Corners[2], top.Id, EDir.E);
          } else {
             // Divide only in V
             State = EState.Subdivide2;
@@ -371,10 +432,10 @@ public class SurfaceUnlofter {
             // two half-tiles by slicing horizontally
             // 1. Bottom half-tile
             int nCenter = owner.AddNode (uCen, vCen - vStep);
-            Children[0] = owner.AddTile (Id, nCenter, DU, vStep, Corners[0], Corners[1], right.Id, left.Id);
+            Children[0] = owner.AddTile (Id, nCenter, DU, vStep, Corners[0], Corners[1], right.Id, left.Id, EDir.S);
             // 2. Top half-tile
             nCenter = owner.AddNode (uCen, vCen + vStep);
-            Children[1] = owner.AddTile (Id, nCenter, DU, vStep, left.Id, right.Id, Corners[2], Corners[3]);
+            Children[1] = owner.AddTile (Id, nCenter, DU, vStep, left.Id, right.Id, Corners[2], Corners[3], EDir.N);
          }
          mSubject?.OnNext (owner);
          return;
@@ -387,7 +448,8 @@ public class SurfaceUnlofter {
       public readonly double DU, DV;   // Half-span in U and V of this tile 
       public FourInts Corners;         // The 4 'corner nodes' of this tile (-1 means not evaluated)
       public FourInts Children;        // The 4 children of this tile (0 means child not existing)
-      public int NProject;             
+      public int NProject;
+      public readonly EDir Location;   // Position of this tile within the parent's set of children
    }
    Tile[] mTiles = new Tile[16];
    int mUsedTiles, mRootTiles;
