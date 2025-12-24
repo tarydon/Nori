@@ -46,7 +46,7 @@ class SurfScene : Scene3 {
          if (Lux.Pick (pt)?.Obj is E3Surface e3s) {
             mMeshVN.Mesh = e3s.Mesh;
             Point3 pt3d = Lux.PickPos;
-            if (!HW.IsShiftDown) pt3d = new (149.705786,-84.655034,-52.212201);
+            if (!HW.IsShiftDown) pt3d = new (140.808558, -67.832178, -45.747396);
             mPlus.Pt = pt3d;
             Point2 uv = e3s.GetUV (pt3d);
             Point3 ptLoft = e3s.GetPoint (uv);

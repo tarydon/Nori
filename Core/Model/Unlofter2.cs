@@ -21,8 +21,11 @@ public class SurfaceUnlofter {
    }
    int mUDivs = 4, mVDivs = 4;
 
+   public int Iterations;
+
    public Point2 GetUV (Point3 pt) {
       mRung++;
+      Iterations = 0; 
       int iRoot = -1;
       double minDist = double.MaxValue;
       for (int i = 0; i < mRootTiles; i++) {
@@ -40,6 +43,7 @@ public class SurfaceUnlofter {
       // The uv computed did not lie within the tile boundary, so we might need
       // to explore some neighboring tiles
       mQueue.Clear ();
+      Debug.WriteLine ("");
       AddNeighbors (nLeaf, overrun);
       while (mQueue.Count > 0) {
          int nTile2 = mQueue.Dequeue ();
@@ -54,6 +58,7 @@ public class SurfaceUnlofter {
 
    void AddNeighbors (int n, EDir dir) {
       if (n == -1) return;
+      Debug.WriteLine ($"AddNeighbors {n} {dir}");
       ref Tile tile = ref mTiles[n];
       if ((dir & EDir.W) != 0) {
          // See if there is a tile to the west of this at this same level. If none are found 
@@ -70,7 +75,7 @@ public class SurfaceUnlofter {
          switch (tile.Location) {
             case EDir.W or EDir.SW: Add (n + 1); break;
             case EDir.NW: Add (n - 1); break;
-            case EDir.Root: int col = n % mUDivs; if (col < mUDivs - 2) Add (n + 1); break;
+            case EDir.Root: int col = n % mUDivs; if (col < mUDivs - 1) Add (n + 1); break;
             default: AddNeighbors (tile.Parent, EDir.E); break;
          }
       }
@@ -87,7 +92,7 @@ public class SurfaceUnlofter {
          switch (tile.Location) {
             case EDir.S or EDir.SE: Add (n + 1); break;
             case EDir.SW: Add (n + 3); break;
-            case EDir.Root: int row = n / mUDivs; if (row < mVDivs - 2) Add (n + mUDivs); break;
+            case EDir.Root: int row = n / mUDivs; if (row < mVDivs - 1) Add (n + mUDivs); break;
             default: AddNeighbors (tile.Parent, EDir.N); break;
          }
       }
@@ -100,12 +105,10 @@ public class SurfaceUnlofter {
    }
 
    (Point2 UV, int Leaf, EDir dir) GetUV (int nTile, Point3 pt) {
-      Debug.WriteLine ("\nStarting");
       for (; ; ) {
          EState state = CheckAndSubdivide (nTile);
          ref Tile tile = ref mTiles[nTile];
          tile.Rung = mRung;
-         Debug.WriteLine ($"Tile {nTile} {tile.State}");
          switch (state) {
             case EState.Subdivide2 or EState.Subdivide4:
                int iBest = -1; double minDist = double.MaxValue;
@@ -114,13 +117,12 @@ public class SurfaceUnlofter {
                   ref Tile tileN = ref mTiles[n];
                   ref Node node = ref mNodes[tileN.Center];
                   double dist = pt.DistToSq (node.Pt);
-                  Debug.Write ($"   {n} {Math.Sqrt (dist).Round (3)}");
                   if (dist < minDist) (minDist, iBest) = (dist, n);
                }
-               Debug.WriteLine ("");
                nTile = iBest;
                break;
             default:
+               Iterations++;
                return tile.GetUV (this, pt);
          }
       }
@@ -341,7 +343,6 @@ public class SurfaceUnlofter {
          ref Node center1 = ref owner.mNodes[Center];
          double left = center1.U - DU, right = center1.U + DU;
          double bottom = center1.V - DV, top = center1.V + DV;
-         Debug.WriteLine ($"   {Id} : {u.Round (4)}, {v.Round (4)}");
          EDir overrun = EDir.Nil;
          if (u < 0) overrun |= EDir.W; else if (u > 1) overrun |= EDir.E;
          if (v < 0) overrun |= EDir.S; else if (v > 1) overrun |= EDir.N;

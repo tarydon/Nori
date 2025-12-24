@@ -321,7 +321,7 @@ abstract class Shader<TVertex, TUniform> : Shader, IComparer<TUniform> where TVe
       foreach (var f in fields)
          if (f.Name.StartsWith ("mu") && f.FieldType.FullName == "System.Int32") {
             int id = Pgm.GetUniformId (f.Name[2..]);
-            if (id == -1) Debug.Write ($"Uniform '{f.Name[2..]}' not found in shader '{Pgm.Name}'");
+            if (id == -1) Debug.WriteLine ($"Uniform '{f.Name[2..]}' not found in shader '{Pgm.Name}'");
             f.SetValue (this, id);
          }
    }

@@ -57,6 +57,7 @@ public class Benchmark {
    }
 
    public void RefineNewUnlofter () {
+      using var bt = new BlockTimer ("Evaluate");
       SurfaceUnlofter un = new SurfaceUnlofter (mSurf);
       double maxError = 0; int iWorst = -1;
       for (int i = 0; i < mPts.Count; i++) {

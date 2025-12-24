@@ -107,7 +107,6 @@ public static partial class Lux {
       if (sRenderCompletes.Count > 0 || mRendering || !mReady || mUIScene == null) return null;
       if (!mPickBufferValid) {
          mPickBufferValid = true;
-         Debug.Write ("PickRender ");
          var tup = ((byte[], float[]))Render (mUIScene, mViewport, ETarget.Pick, DIBitmap.EFormat.Unknown)!;
          mPickPixel = tup.Item1; mPickDepth = tup.Item2;
       }
