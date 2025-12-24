@@ -6,7 +6,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
 		<OutDir>..\..\Bin</OutDir>
-		<Optimize>false</Optimize>
+		<Optimize>true</Optimize>
   </PropertyGroup>
 
   <ItemGroup>

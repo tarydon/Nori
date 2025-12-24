@@ -43,7 +43,6 @@ public class SurfaceUnlofter {
       // The uv computed did not lie within the tile boundary, so we might need
       // to explore some neighboring tiles
       mQueue.Clear ();
-      Debug.WriteLine ("");
       AddNeighbors (nLeaf, overrun);
       while (mQueue.Count > 0) {
          int nTile2 = mQueue.Dequeue ();
@@ -58,7 +57,6 @@ public class SurfaceUnlofter {
 
    void AddNeighbors (int n, EDir dir) {
       if (n == -1) return;
-      Debug.WriteLine ($"AddNeighbors {n} {dir}");
       ref Tile tile = ref mTiles[n];
       if ((dir & EDir.W) != 0) {
          // See if there is a tile to the west of this at this same level. If none are found 

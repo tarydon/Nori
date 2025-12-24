@@ -57,8 +57,25 @@ public class Benchmark {
    }
 
    public void RefineNewUnlofter () {
-      using var bt = new BlockTimer ("Evaluate");
+      using var bt = new BlockTimer ("New Unlofter");
       SurfaceUnlofter un = new SurfaceUnlofter (mSurf);
+      double maxError = 0; int iWorst = -1;
+      for (int i = 0; i < mPts.Count; i++) {
+         Point2 puv = un.GetUV (mPts[i]);
+         double err = puv.DistTo (mUVs[i]);
+         if (err > maxError) (maxError, iWorst) = (err, i);
+      }
+      Console.WriteLine ($"{iWorst}");
+      Console.WriteLine ($"UVError: {maxError}");
+      Console.WriteLine ($"Actual UV: {mUVs[iWorst]}");
+      Console.WriteLine ($"Computed UV: {un.GetUV (mPts[iWorst])}");
+      Console.WriteLine ($"3DPoint: {mPts[iWorst]}");
+      Console.WriteLine ($"Check: {mPts[iWorst].DistTo (mSurf.GetPoint (mUVs[iWorst]))}");
+   }
+
+   public void RefineOldUnlofter () {
+      using var bt = new BlockTimer ("Old Unlofter");
+      var un = new Unlofter (mSurf);
       double maxError = 0; int iWorst = -1;
       for (int i = 0; i < mPts.Count; i++) {
          Point2 puv = un.GetUV (mPts[i]);
@@ -77,14 +94,20 @@ public class Benchmark {
 class Program {
    static void Main () {
       var b = new Benchmark (1000);
-      b.RefineNewUnlofter ();
+      for (int i = 0; i < 10; i++) {
+         Console.Clear ();
+         b.RefineOldUnlofter ();
+         Console.WriteLine ();
+         b.RefineNewUnlofter ();
+         Console.WriteLine ();
+      }
 
-   //   b.TestNewUnlofter ();
-   //   for (int i = 0; i < 10; i++) b.TestOldUnlofter ();
+      //   b.TestNewUnlofter ();
+      //   for (int i = 0; i < 10; i++) b.TestOldUnlofter ();
 
-   //   Console.WriteLine (); Console.WriteLine ();
-   ////   Console.WriteLine ();
-   //   for (int i = 0; i < 10; i++) b.TestNewUnlofter ();
-   ////   // BenchmarkRunner.Run<Benchmark> ();
+      //   Console.WriteLine (); Console.WriteLine ();
+      ////   Console.WriteLine ();
+      //   for (int i = 0; i < 10; i++) b.TestNewUnlofter ();
+      ////   // BenchmarkRunner.Run<Benchmark> ();
    }
 }
