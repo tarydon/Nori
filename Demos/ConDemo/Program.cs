@@ -91,8 +91,8 @@ public class Benchmark {
 
 class Program {
    static void Main () {
-      // BenchmarkRunner.Run<Benchmark> ();
-      new Benchmark ().RefineNewUnlofter ();
+      BenchmarkRunner.Run<Benchmark> ();
+      // new Benchmark ().RefineNewUnlofter ();
    }
 
 }

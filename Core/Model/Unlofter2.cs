@@ -134,7 +134,7 @@ public partial class SurfaceUnlofter {
             case EState.Subdivide2 or EState.Subdivide4:
                int iBest = -1; double minDist = double.MaxValue;
                for (int i = 0; i < (int)state; i++) {
-                  int n = tile.Children[i];
+                  int n = tile.Children + i;
                   ref Tile tileN = ref mTiles[n];
                   ref Node node = ref mNodes[tileN.Center];
                   double dist = pt.DistToSq (node.Pt);
@@ -184,7 +184,7 @@ public partial class SurfaceUnlofter {
                foreach (int n in new int[] { 0, 1, 1, 2, 2, 3, 3, 0 })
                   lines.Add ((Vec3F)mNodes[tile.Corners[n]].Pt);
                for (int i = 0; i < (int)tile.State; i++) {
-                  ref Tile child = ref mTiles[tile.Children[i]];
+                  ref Tile child = ref mTiles[tile.Children + i];
                   Process (ref child);
                }
                break;
@@ -211,7 +211,7 @@ public partial class SurfaceUnlofter {
    // atleast 4 more tiles (when we return from AddNode or AddTile)
    int AddNode (double u, double v) {
       if (mUsedNodes >= mNodes.Length) Array.Resize (ref mNodes, mNodes.Length * 2);
-      mNodes[mUsedNodes] = new Node (mSurf, mUsedNodes, u, v);
+      mNodes[mUsedNodes] = new Node (mSurf, u, v);
       return mUsedNodes++;
    }
 
@@ -242,12 +242,11 @@ public partial class SurfaceUnlofter {
    }
 
    readonly struct Node {
-      public Node (E3Surface surf, int id, double u, double v)
-         => (Id, U, V, Pt) = (id, u, v, surf.GetPoint (new (u, v)));
+      public Node (E3Surface surf, double u, double v)
+         => (U, V, Pt) = (u, v, surf.GetPoint (new (u, v)));
 
       public override string ToString () => $"Node ({U},{V})";
 
-      public readonly int Id;       // Node index (within mNodes array)
       public readonly double U, V;  // U, V position of this Node
       public readonly Point3 Pt;    // Corresponding 3D position of the node
       public Point2 UV => new (U, V);
@@ -268,7 +267,7 @@ public partial class SurfaceUnlofter {
    struct Tile {
       public Tile (int id, int parent, int center, double du, double dv, EDir location) {
          (Id, Parent, Center, DU, DV, Location) = (id, parent, center, du, dv, location);
-         for (int i = 0; i < 4; i++) Corners[i] = Children[i] = -1;
+         for (int i = 0; i < 4; i++) Corners[i] = -1; Children = -1;
       }
 
       public Bound2 GetUVBound (SurfaceUnlofter owner) {
@@ -402,23 +401,23 @@ public partial class SurfaceUnlofter {
          // center point of the tile from each of its diagonals. If the center deviates too
          // much from either of them, the tile is still too curved and needs to be subdivided 
          Point3 ptCen = center.Pt;
-         ref Node botLeft = ref nodes[Corners[0]], topRight = ref nodes[Corners[2]];
-         ref Node botRight = ref nodes[Corners[1]], topLeft = ref nodes[Corners[3]];
-         bool subdivide = ptCen.DistToLineSq (botLeft.Pt, topRight.Pt) > Tolerance 
-                       || ptCen.DistToLineSq (botRight.Pt, topLeft.Pt) > Tolerance;
+         Point3 botLeft = nodes[Corners[0]].Pt, topRight = nodes[Corners[2]].Pt;
+         Point3 botRight = nodes[Corners[1]].Pt, topLeft = nodes[Corners[3]].Pt;
+         bool subdivide = ptCen.DistToLineSq (botLeft, topRight) > Tolerance 
+                       || ptCen.DistToLineSq (botRight, topLeft) > Tolerance;
          if (!subdivide) { State = EState.Leaf; return; }
 
          // We need to subdivide. Let's see if a U sibdivision is needed first
          int nLeft = owner.AddNode (uCen - DU, vCen), nRight = owner.AddNode (uCen + DU, vCen);
          int nBottom = owner.AddNode (uCen, vCen - DV), nTop = owner.AddNode (uCen, vCen + DV);
-         ref Node left = ref nodes[nLeft], right = ref nodes[nRight];
-         ref Node bottom = ref nodes[nBottom], top = ref nodes[nTop];
-         bool divideU = ptCen.DistToLineSq (left.Pt, right.Pt) > Tolerance
-                     || bottom.Pt.DistToLineSq (botLeft.Pt, botRight.Pt) > Tolerance
-                     || top.Pt.DistToLineSq (topLeft.Pt, topRight.Pt) > Tolerance;
-         bool divideV = ptCen.DistToLineSq (bottom.Pt, top.Pt) > Tolerance
-                     || left.Pt.DistToLineSq (botLeft.Pt, topLeft.Pt) > Tolerance
-                     || right.Pt.DistToLineSq (botRight.Pt, topRight.Pt) > Tolerance;
+         Point3 left = nodes[nLeft].Pt, right = nodes[nRight].Pt;
+         Point3 bottom = nodes[nBottom].Pt, top = nodes[nTop].Pt;
+         bool divideU = ptCen.DistToLineSq (left, right) > Tolerance
+                     || bottom.DistToLineSq (botLeft, botRight) > Tolerance
+                     || top.DistToLineSq (topLeft, topRight) > Tolerance;
+         bool divideV = ptCen.DistToLineSq (bottom, top) > Tolerance
+                     || left.DistToLineSq (botLeft, topLeft) > Tolerance
+                     || right.DistToLineSq (botRight, topRight) > Tolerance;
          if (!divideU && !divideV) divideU = divideV = true;
 
          double uStep = DU / 2, vStep = DV / 2;
@@ -431,16 +430,16 @@ public partial class SurfaceUnlofter {
             // one for the center
             // 1. Bottom left quarter-tile
             int nCenter = owner.AddNode (uCen - uStep, vCen - vStep);
-            Children[0] = owner.AddTile (Id, nCenter, uStep, vStep, Corners[0], bottom.Id, Center, left.Id, EDir.SW);
+            Children = owner.AddTile (Id, nCenter, uStep, vStep, Corners[0], nBottom, Center, nLeft, EDir.SW);
             // 2. Bottom right quarter-tile
             nCenter = owner.AddNode (uCen + uStep, vCen - vStep);
-            Children[1] = owner.AddTile (Id, nCenter, uStep, vStep, bottom.Id, Corners[1], right.Id, Center, EDir.SE);
+            owner.AddTile (Id, nCenter, uStep, vStep, nBottom, Corners[1], nRight, Center, EDir.SE);
             // 3. Top right quarter-tile
             nCenter = owner.AddNode (uCen + uStep, vCen + vStep);
-            Children[2] = owner.AddTile (Id, nCenter, uStep, vStep, Center, right.Id, Corners[2], top.Id, EDir.NE);
+            owner.AddTile (Id, nCenter, uStep, vStep, Center, nRight, Corners[2], nTop, EDir.NE);
             // 4. Top left quarter-tile
             nCenter = owner.AddNode (uCen - uStep, vCen + vStep);
-            Children[3] = owner.AddTile (Id, nCenter, uStep, vStep, left.Id, Center, top.Id, Corners[3], EDir.NW);
+            owner.AddTile (Id, nCenter, uStep, vStep, nLeft, Center, nTop, Corners[3], EDir.NW);
          } else if (divideU) {
             // Divide only in U
             State = EState.Subdivide2;
@@ -448,10 +447,10 @@ public partial class SurfaceUnlofter {
             // create 2 half tiles by slicing vertically
             // 1. Left half-tile
             int nCenter = owner.AddNode (uCen - uStep, vCen);
-            Children[0] = owner.AddTile (Id, nCenter, uStep, DV, Corners[0], bottom.Id, top.Id, Corners[3], EDir.W);
+            Children = owner.AddTile (Id, nCenter, uStep, DV, Corners[0], nBottom, nTop, Corners[3], EDir.W);
             // 2. Right half-tile
             nCenter = owner.AddNode (uCen + uStep, vCen);
-            Children[1] = owner.AddTile (Id, nCenter, uStep, DV, bottom.Id, Corners[1], Corners[2], top.Id, EDir.E);
+            owner.AddTile (Id, nCenter, uStep, DV, nBottom, Corners[1], Corners[2], nTop, EDir.E);
          } else {
             // Divide only in V
             State = EState.Subdivide2;
@@ -459,10 +458,10 @@ public partial class SurfaceUnlofter {
             // two half-tiles by slicing horizontally
             // 1. Bottom half-tile
             int nCenter = owner.AddNode (uCen, vCen - vStep);
-            Children[0] = owner.AddTile (Id, nCenter, DU, vStep, Corners[0], Corners[1], right.Id, left.Id, EDir.S);
+            Children = owner.AddTile (Id, nCenter, DU, vStep, Corners[0], Corners[1], nRight, nLeft, EDir.S);
             // 2. Top half-tile
             nCenter = owner.AddNode (uCen, vCen + vStep);
-            Children[1] = owner.AddTile (Id, nCenter, DU, vStep, left.Id, right.Id, Corners[2], Corners[3], EDir.N);
+            owner.AddTile (Id, nCenter, DU, vStep, nLeft, nRight, Corners[2], Corners[3], EDir.N);
          }
          mSubject?.OnNext (owner);
          return;
@@ -474,7 +473,7 @@ public partial class SurfaceUnlofter {
       public readonly int Center;      // Index of the node at the center of this tile
       public readonly double DU, DV;   // Half-span in U and V of this tile 
       public FourInts Corners;         // The 4 'corner nodes' of this tile (-1 means not evaluated)
-      public FourInts Children;        // The 4 children of this tile (0 means child not existing)
+      public int Children;             // Children of this tile start from this index
       public int NProject;
       public readonly EDir Location;   // Position of this tile within the parent's set of children
    }
