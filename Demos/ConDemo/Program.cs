@@ -61,8 +61,8 @@ public class Benchmark {
          if (err > maxError) (maxError, iWorst) = (err, i);
          totalError += err;
       }
-      Console.WriteLine ($"MaxError: {maxError} at {iWorst}");
-      Console.WriteLine ($"AvgError: {totalError / mPts.Count}");
+      Console.WriteLine ($"MaxError: {maxError:F6} at {iWorst}");
+      Console.WriteLine ($"AvgError: {totalError / mPts.Count:F6}");
       Console.WriteLine ($"Actual UV: {mUVs[iWorst]}");
       Console.WriteLine ($"Computed UV: {un.GetUV (mPts[iWorst])}");
       Console.WriteLine ($"3DPoint: {mPts[iWorst]}");
@@ -80,8 +80,8 @@ public class Benchmark {
          if (err > maxError) (maxError, iWorst) = (err, i);
          totalError += err;
       }
-      Console.WriteLine ($"MaxError: {maxError} at {iWorst}");
-      Console.WriteLine ($"AvgError: {totalError / mPts.Count}");
+      Console.WriteLine ($"MaxError: {maxError:F6} at {iWorst}");
+      Console.WriteLine ($"AvgError: {totalError / mPts.Count:F6}");
       Console.WriteLine ($"Actual UV: {mUVs[iWorst]}");
       Console.WriteLine ($"Computed UV: {un.GetUV (mPts[iWorst])}");
       Console.WriteLine ($"3DPoint: {mPts[iWorst]}");
@@ -91,14 +91,8 @@ public class Benchmark {
 
 class Program {
    static void Main () {
-      var b = new Benchmark ();
-      for (int i = 0; i < 10; i++) {
-         Console.Clear ();
-         b.RefineOldUnlofter ();
-         Console.WriteLine ();
-         b.RefineNewUnlofter ();
-      }
-
       // BenchmarkRunner.Run<Benchmark> ();
+      new Benchmark ().RefineNewUnlofter ();
    }
+
 }

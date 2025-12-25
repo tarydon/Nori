@@ -21,18 +21,17 @@ public partial class SurfaceUnlofter {
    }
    int mUDivs = 4, mVDivs = 4;
 
-   public int Iterations;
+   public static long Interpolate = 0; 
 
    public void DumpStats () {
-      int cb = mUsedNodes * Marshal.SizeOf<Node> ();
-      Console.WriteLine ($"{mUsedNodes} nodes ({cb} bytes)");
-      cb = mUsedTiles * Marshal.SizeOf<Tile> ();
-      Console.WriteLine ($"{mUsedTiles} tiles ({cb} bytes)");
+      int cb = mNodes.Length * Marshal.SizeOf<Node> ();
+      cb += mTiles.Length * Marshal.SizeOf<Tile> ();
+      cb += mProjNodes.Capacity * Marshal.SizeOf<Point2> ();
+      Console.WriteLine ($"{cb / 1024} Kb allocated, {Interpolate} evals");
    }
 
    public Point2 GetUV (Point3 pt) {
       mRung++;
-      Iterations = 0; 
       int iRoot = -1;
       double minDist = double.MaxValue;
       for (int i = 0; i < mRootTiles; i++) {
@@ -144,7 +143,7 @@ public partial class SurfaceUnlofter {
                nTile = iBest;
                break;
             default:
-               Iterations++;
+               Interpolate++;
                return tile.GetUV (this, pt);
          }
       }
