@@ -32,13 +32,13 @@ class IntMeshPlaneScene : Scene3 {
       for (int i = step; i <= 100; i += step) {
          double x = (i / 100.0).Along (bound.X.Min, bound.X.Max);
          PlaneDef pdef = new (new (x, 0, 0), Vector3.XAxis);
-         foreach (var lines in pmi.Compute (pdef))
-            curves.Add (new Curve3VN (new Polyline3 (0, lines)));
+         foreach (var poly in pmi.Compute (pdef))
+            curves.Add (new Curve3VN (poly));
 
          double y = (i / 100.0).Along (Bound.Y.Min, Bound.Y.Max);
          pdef = new (new (0, y, 0), Vector3.YAxis);
-         foreach (var lines in pmi.Compute (pdef))
-            curves.Add (new Curve3VN (new Polyline3 (0, lines)));
+         foreach (var poly in pmi.Compute (pdef))
+            curves.Add (new Curve3VN (poly));
       }
    }
 }
