@@ -59,10 +59,10 @@ public partial class SurfaceUnlofter {
          AddNeighbors (leaf2, overrun2);
       }
 
-      double minError = pt.DistToSq (mSurf.GetPoint (uvBest));
+      double minError = pt.DistToSq (mSurf.GetPoint (uvBest.X, uvBest.Y));
       for (int i = mUVAlts.Count - 1; i >= 0; i--) {
          var uv = mUVAlts[i];
-         double error = pt.DistToSq (mSurf.GetPoint (uv));
+         double error = pt.DistToSq (mSurf.GetPoint (uv.X, uv.Y));
          if (error < minError) (minError, uvBest) = (error, uv);
       }
       return uvBest;
@@ -242,13 +242,15 @@ public partial class SurfaceUnlofter {
    }
 
    readonly struct Node {
-      public Node (E3Surface surf, double u, double v)
-         => (U, V, Pt) = (u, v, surf.GetPoint (new (u, v)));
+      public Node (E3Surface surf, double u, double v) {
+         U = (float)u; V = (float)v;
+         Pt = surf.GetPoint (u, v);
+      }
 
       public override string ToString () => $"Node ({U},{V})";
 
-      public readonly double U, V;  // U, V position of this Node
-      public readonly Point3 Pt;    // Corresponding 3D position of the node
+      public readonly float U, V;  // U, V position of this Node
+      public readonly Point3 Pt;
       public Point2 UV => new (U, V);
    }
    Node[] mNodes = new Node[16];

@@ -49,7 +49,7 @@ class SurfScene : Scene3 {
             if (!HW.IsShiftDown) pt3d = new (151.753621, -87.962736, -52.931576);
             mPlus.Pt = pt3d;
             Point2 uv = e3s.GetUV (pt3d);
-            Point3 ptLoft = e3s.GetPoint (uv);
+            Point3 ptLoft = e3s.GetPoint (uv.X, uv.Y);
             Vector3 vecNorm = e3s.GetNormal (uv);
             mNormal.Ray = (ptLoft, vecNorm);
          } else

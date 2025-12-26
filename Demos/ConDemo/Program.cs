@@ -20,7 +20,7 @@ public class Benchmark {
          for (int i = 0; i <= steps; i++) {
             double u = (i / (double)steps).Along (domain.X.Min, domain.X.Max);
             Point2 puv = new (u, v);
-            Point3 p3d = mSurf.GetPoint (puv);
+            Point3 p3d = mSurf.GetPoint (u, v);
             mUVs.Add (puv); mPts.Add (p3d);
          }
       }
@@ -66,7 +66,7 @@ public class Benchmark {
       Console.WriteLine ($"Actual UV: {mUVs[iWorst]}");
       Console.WriteLine ($"Computed UV: {un.GetUV (mPts[iWorst])}");
       Console.WriteLine ($"3DPoint: {mPts[iWorst]}");
-      Console.WriteLine ($"Check: {mPts[iWorst].DistTo (mSurf.GetPoint (mUVs[iWorst]))}");
+      Console.WriteLine ($"Check: {mPts[iWorst].DistTo (mSurf.GetPoint (mUVs[iWorst].X, mUVs[iWorst].Y))}");
       un.DumpStats ();
    }
 
@@ -85,7 +85,7 @@ public class Benchmark {
       Console.WriteLine ($"Actual UV: {mUVs[iWorst]}");
       Console.WriteLine ($"Computed UV: {un.GetUV (mPts[iWorst])}");
       Console.WriteLine ($"3DPoint: {mPts[iWorst]}");
-      Console.WriteLine ($"Check: {mPts[iWorst].DistTo (mSurf.GetPoint (mUVs[iWorst]))}");
+      Console.WriteLine ($"Check: {mPts[iWorst].DistTo (mSurf.GetPoint (mUVs[iWorst].X, mUVs[iWorst].Y))}");
    }
 }
 

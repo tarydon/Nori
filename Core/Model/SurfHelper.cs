@@ -32,8 +32,10 @@ class SurfaceMesher {
       // Now we can use the 2D tessellator to compute the following:
       var uvs = pts.Select (mSurf.GetUV).ToList (); // Same as the set of pts, flattened to UV space
       var tris = Lib.Tessellate (uvs, splits);  // The indices (taken 3 at a time) forming the tessellation in UV space
-      for (int i = pts.Count; i < uvs.Count; i++)
-         pts.Add (mSurf.GetPoint (uvs[i]));
+      for (int i = pts.Count; i < uvs.Count; i++) {
+         var uv = uvs[i];
+         pts.Add (mSurf.GetPoint (uv.X, uv.Y));
+      }
 
       // The UV tessellation will have some triangles, but not all of them can directly be lofted
       // and used in the 3D. Some of them will need to be further subdivided into smaller triangles
@@ -65,7 +67,7 @@ class SurfaceMesher {
       // that will be where we split
       Node na = mNodes[a], nb = mNodes[b], nc = mNodes[c];
       Point2 p2ab = na.UV.Midpoint (nb.UV), p2bc = nb.UV.Midpoint (nc.UV), p2ca = nc.UV.Midpoint (na.UV);
-      Point3 p3ab = mSurf.GetPoint (p2ab), p3bc = mSurf.GetPoint (p2bc), p3ca = mSurf.GetPoint (p2ca);
+      Point3 p3ab = mSurf.GetPoint (p2ab.X, p2bc.Y), p3bc = mSurf.GetPoint (p2bc.X, p2bc.Y), p3ca = mSurf.GetPoint (p2ca.X, p2ca.Y);
       double dab = Dist (p3ab, na.Pos, nb.Pos), dbc = Dist (p3bc, nb.Pos, nc.Pos), dca = Dist (p3ca, nc.Pos, na.Pos);
 
       if (dab > mTolerance && dbc > mTolerance && dca > mTolerance) {   // Split into 4 triangles
@@ -189,7 +191,7 @@ public class Unlofter {
          bool iPass2 = (pass == 1);
          for (int i = mcRootTiles - 1; i >= 0; i--) {
             if (mTiles[i].GetUV (this, i, xyz, ref uv, iPass2)) {
-               double dist = Surf.GetPoint (new (uv.X, uv.Y)).DistTo (xyz);
+               double dist = Surf.GetPoint (uv.X, uv.Y).DistTo (xyz);
                if (dist < minDist) { minDist = dist; uvBest = uv; }
             }
          }
@@ -237,7 +239,7 @@ public class Unlofter {
    readonly struct UV3D {
       public UV3D (E3Surface surf, double u, double v) {
          U = (float)u; V = (float)v;
-         XYZ = (Point3f)surf.GetPoint (new (U, V));
+         XYZ = (Point3f)surf.GetPoint (U, V);
       }
       public readonly float U;
       public readonly float V;

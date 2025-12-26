@@ -202,7 +202,7 @@ public abstract class E3Surface : Ent3 {
    public virtual Bound2 ComputeDomain () => throw new NotImplementedException ();
 
    /// <summary>Computes the 3D point given a particular UV parameter values</summary>
-   public abstract Point3 GetPoint (Point2 uv);
+   public abstract Point3 GetPoint (double u, double v);
 
    /// <summary>Computes the normal given a particular UV parameter value</summary>
    public virtual Vector3 GetNormal (Point2 uv) {
@@ -210,8 +210,8 @@ public abstract class E3Surface : Ent3 {
       double u = uv.X, v = uv.Y, du = d.X.Length / 40, dv = d.Y.Length / 40;
       double u0 = d.X.Clamp (u - du), u1 = d.X.Clamp (u + du);
       double v0 = d.Y.Clamp (v - dv), v1 = d.Y.Clamp (v + dv);
-      var vecx = GetPoint (new (u1, v)) - GetPoint (new (u0, v));
-      var vecy = GetPoint (new (u, v1)) - GetPoint (new (u, v0));
+      var vecx = GetPoint (u1, v) - GetPoint (u0, v);
+      var vecy = GetPoint (u, v1) - GetPoint (u, v0);
       var vecz = (vecx * vecy).Normalized ();
       return IsNormalFlipped ? -vecz : vecz;
    }
@@ -247,8 +247,8 @@ public abstract class E3CSSurface : E3Surface {
    public Matrix3 FromXfm => _fromXfm ??= Matrix3.From (mCS);
    Matrix3? _fromXfm;
 
-   public sealed override Point3 GetPoint (Point2 pt) 
-      => GetPointCanonical (pt) * ToXfm;
+   public sealed override Point3 GetPoint (double u, double v) 
+      => GetPointCanonical (u, v) * ToXfm;
 
    public sealed override Vector3 GetNormal (Point2 pt) {
       Vector3 vec = GetNormalCanonical (pt) * ToXfm;
@@ -258,7 +258,7 @@ public abstract class E3CSSurface : E3Surface {
    public override Point2 GetUV (Point3 pt) 
       => GetUVCanonical (pt * FromXfm);
 
-   protected abstract Point3 GetPointCanonical (Point2 pt);
+   protected abstract Point3 GetPointCanonical (double u, double v);
    protected abstract Vector3 GetNormalCanonical (Point2 pt);
    protected abstract Point2 GetUVCanonical (Point3 pt);
 }
