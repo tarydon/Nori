@@ -8,7 +8,7 @@ class SurfScene : Scene3 {
 
       BgrdColor = new (96, 128, 160);
       Bound = mModel.Bound;
-      Root = new GroupVN ([new Model3VN (mModel), TraceVN.It, mPlus, mNormal, mUnloft, mUnloft2]);
+      Root = new GroupVN ([new Model3VN (mModel), TraceVN.It, mPlus, mNormal, mUnloft2]);
 
       mHooks = HW.MouseMoves.Subscribe (OnMouseMove);
    }
@@ -18,7 +18,6 @@ class SurfScene : Scene3 {
    CrossMarkerVN mCross = new (Color4.Red);
    NormalVN mNormal = new (5);
    MeshLineVN mMeshVN = new ();
-   UnloftTracker mUnloft = new ();
    UnloftTracker2 mUnloft2 = new ();
 
    public override void Picked (object obj) {
@@ -50,7 +49,7 @@ class SurfScene : Scene3 {
             mPlus.Pt = pt3d;
             Point2 uv = e3s.GetUV (pt3d);
             Point3 ptLoft = e3s.GetPoint (uv.X, uv.Y);
-            Vector3 vecNorm = e3s.GetNormal (uv);
+            Vector3 vecNorm = e3s.GetNormal (uv.X, uv.Y);
             mNormal.Ray = (ptLoft, vecNorm);
          } else
             mPlus.Pt = mCross.Pt = Point3.Nil;
@@ -82,26 +81,6 @@ class UnloftTracker2 : VNode {
       //foreach (var lab in mLabels)
       //   Lux.Text3D (lab.Text, lab.Pos, ETextAlign.MidCenter, Vec2S.Zero);
    }
-}
-
-class UnloftTracker : VNode {
-   public UnloftTracker () {
-      NoPicking = true;
-      DisposeOnDetach (Unlofter.NewTile.Subscribe (OnChanged));
-   }
-
-   void OnChanged (Unlofter un) {
-      pts.Clear (); 
-      pts.AddRange (un.GetTileOutlines ().Select (a => (Vec3F)a));
-      Redraw ();
-   }
-   List<Vec3F> pts = [];
-
-   public override void SetAttributes () {
-      Lux.Color = Color4.DarkBlue;
-   }
-
-   public override void Draw () => Lux.Lines (pts.AsSpan ());
 }
 
 class NormalVN : VNode {

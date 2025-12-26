@@ -58,7 +58,7 @@ public class T3XReader : IDisposable {
 
    E3Cylinder LoadCylinder () {
       var (uid, rad, cs) = (RInt (), RDouble (), RCS ());
-      return new E3Cylinder (uid, LoadContours (), cs, rad, false);  // REMOVETHIS - infacing not set correctly
+      return new E3Cylinder (uid, LoadContours (), cs, rad);  // REMOVETHIS - infacing not set correctly
    }
 
    List<Contour3> LoadContours () {

@@ -54,22 +54,16 @@ public abstract partial class Ent3 {
    protected Ent3 (int id) => Id = id;
 
    // Properties ---------------------------------------------------------------
-   /// <summary>Returns the Bound of the Ent3 (overridden in target surfaces)</summary>
+   /// <summary>Returns the Bound of the Ent3 (overridden in descendents)</summary>
    public abstract Bound3 Bound { get; }
-
-   /// <summary>Various surface-related flags</summary>
-   public E3Flags Flags => mFlags;
-
-   /// <summary>Is the normal flipped (back-side of surface is to be used)</summary>
-   public bool IsNormalFlipped => Get (E3Flags.FlipNormal); 
-
-   /// <summary>
-   /// Is the Genetrix lying in the XY plane
-   /// </summary>
-   public bool IsGenetrixFlat => Get (E3Flags.FlatGenetrix);
 
    /// <summary>ID of the surface (often used to map to an entity number in STEP / IGES etc)</summary>
    public readonly int Id;
+
+   /// <summary>Is the normal flipped (back-side of surface is to be used)</summary>
+   public bool IsNormalFlipped => Get (E3Flags.FlipNormal); 
+   /// <summary>Is the Genetrix lying in the XY plane</summary>
+   public bool IsGenetrixFlat => Get (E3Flags.FlatGenetrix);
 
    /// <summary>Is this entity selected?</summary>
    public bool IsSelected {
@@ -82,10 +76,6 @@ public abstract partial class Ent3 {
       get => Get (E3Flags.Translucent);
       set { if (Set (E3Flags.Translucent, value)) Notify (EProp.Translucency); }
    }
-
-   public bool IsULinear => Get (E3Flags.ULinear);
-
-   public bool IsVLinear => Get (E3Flags.VLinear);
 
    // Protected ----------------------------------------------------------------
    // Bitflags for this entity
@@ -112,25 +102,6 @@ public enum E3Flags {
    ULinear = 0x10, VLinear = 0x20,
 }
 #endregion
-
-/// <summary>An Entity that represents a free-space curve</summary>
-public class E3Curve : Ent3 {
-   public E3Curve (Edge3 curve) => Edge = curve;
-   public readonly Edge3 Edge;
-
-   public override Bound3 Bound {
-      get {
-         if (mBound.IsEmpty) {
-            List<Point3> pts = [];
-            Edge.Discretize (pts, Lib.CoarseTess, 1.065);   // 1.065 ~ 61 degrees
-            pts.Add (Edge.End);
-            mBound = new (pts);
-         }
-         return mBound;
-      }
-   }
-   Bound3 mBound = new ();
-}
 
 #region class E3Surface ----------------------------------------------------------------------------
 /// <summary>E3Surface is the base class for parametric surfaces with no thickness</summary>
@@ -164,16 +135,21 @@ public abstract class E3Surface : Ent3 {
    public Bound2 Domain => Bound2.Update (ref mDomain, ComputeDomain);
    Bound2 mDomain = new ();
 
+   /// <summary>Is the surface linear in the U parameter direction?</summary>
+   public bool IsULinear => Get (E3Flags.ULinear);
+   /// <summary>Is the surface linear in the V parameter dimension</summary>
+   public bool IsVLinear => Get (E3Flags.VLinear);
+
    /// <summary>The tessellation of the surface is computed on demand by BuildMesh (which can be overridden)</summary>
    public Mesh3 Mesh {
-      get => _mesh ??= BuildMesh (Lib.FineTess, 0.541);  // 0.5411 ~ 31 degrees
+      get => _mesh ??= BuildMesh (Lib.FineTess, Lib.FineTessAngle);
       set {
          _mesh = value;
-         if (this is E3Plane or E3Cylinder or E3Torus or E3Cone) {
+         if (this is E3Plane or E3Cylinder or E3Torus or E3Cone or E3NurbsSurface) {
             if (_mesh.Triangle.Length > 0) {
                var node = _mesh.Vertex[_mesh.Triangle[0]];
                Point2 uv = GetUV ((Point3)node.Pos);
-               Vector3 vec1 = GetNormal (uv), vec2 = (Vector3)node.Vec;
+               Vector3 vec1 = GetNormal (uv.X, uv.Y), vec2 = (Vector3)node.Vec;
                if (vec1.Opposing (vec2)) mFlags |= E3Flags.FlipNormal;
             }
          }
@@ -205,9 +181,9 @@ public abstract class E3Surface : Ent3 {
    public abstract Point3 GetPoint (double u, double v);
 
    /// <summary>Computes the normal given a particular UV parameter value</summary>
-   public virtual Vector3 GetNormal (Point2 uv) {
+   public virtual Vector3 GetNormal (double u, double v) {
       var d = Domain;
-      double u = uv.X, v = uv.Y, du = d.X.Length / 40, dv = d.Y.Length / 40;
+      double du = d.X.Length / 40, dv = d.Y.Length / 40;
       double u0 = d.X.Clamp (u - du), u1 = d.X.Clamp (u + du);
       double v0 = d.Y.Clamp (v - dv), v1 = d.Y.Clamp (v + dv);
       var vecx = GetPoint (u1, v) - GetPoint (u0, v);
@@ -225,41 +201,56 @@ public abstract class E3Surface : Ent3 {
    Bound3 ComputeBound () {
       if (_mesh != null) return _mesh.Bound;
       List<Point3> pts = [];
-      mContours[0].Discretize (pts, Lib.CoarseTess, 1.065);   // 1.065 ~ 61 degrees
+      mContours[0].Discretize (pts, Lib.CoarseTess, Lib.CoarseTessAngle);
       return new (pts);
    }
 }
 #endregion
 
 #region class E3CSSurface --------------------------------------------------------------------------
+/// <summary>E3CSSurface are defined in canonical space and lofted up into a CS</summary>
 public abstract class E3CSSurface : E3Surface {
+   // Constructors -------------------------------------------------------------
    protected E3CSSurface () { }
    protected E3CSSurface (int id, IEnumerable<Contour3> trims, CoordSystem cs) : base (id, trims) => mCS = cs;
 
+   // Properties ---------------------------------------------------------------
+   /// <summary>The coordinate system into which the surface has to be lofted up</summary>
    public CoordSystem CS => mCS;
    readonly CoordSystem mCS;
-
-   // The matrix to go from the world coordinate system to the entity's private CS
-   public Matrix3 ToXfm => _toXfm ??= Matrix3.To (mCS);
-   Matrix3? _toXfm;
 
    /// <summary>Matrix to go from the entity's private CS to the world Coordinate System</summary>
    public Matrix3 FromXfm => _fromXfm ??= Matrix3.From (mCS);
    Matrix3? _fromXfm;
 
+   // The matrix to go from the world coordinate system to the entity's private CS
+   public Matrix3 ToXfm => _toXfm ??= Matrix3.To (mCS);
+   Matrix3? _toXfm;
+
+   // Overrides ----------------------------------------------------------------
+   /// <summary>GetPoint computes the point in canonical space and lofts it up using the ToXfm</summary>
+   /// The underlying GetPointCanonical is overridden by derived classes, and the 
+   /// reasoning is that it would be much simpler to implement some surfaces like cones,
+   /// spheres, torii etc in a canonical space (world coordinate system) rather than in 
+   /// an arbitary position / orientation
    public sealed override Point3 GetPoint (double u, double v) 
       => GetPointCanonical (u, v) * ToXfm;
 
-   public sealed override Vector3 GetNormal (Point2 pt) {
-      Vector3 vec = GetNormalCanonical (pt) * ToXfm;
+   /// <summary>GetNormal computes the normal in canonical space and lofts it up</summary>
+   public sealed override Vector3 GetNormal (double u, double v) {
+      Vector3 vec = GetNormalCanonical (u, v) * ToXfm;
       return IsNormalFlipped ? -vec : vec;
    }
 
+   /// <summary>GetUV unlofts the point into canonical space, and then uses GetUVCanonical</summary>
    public override Point2 GetUV (Point3 pt) 
       => GetUVCanonical (pt * FromXfm);
 
+   /// <summary>GetPointCanonical computes the point in canonical space, given UV coordinates</summary>
    protected abstract Point3 GetPointCanonical (double u, double v);
-   protected abstract Vector3 GetNormalCanonical (Point2 pt);
-   protected abstract Point2 GetUVCanonical (Point3 pt);
+   /// <summary>GetNormalCanonical computes a normal in canonical space, given UV coordinates</summary>
+   protected abstract Vector3 GetNormalCanonical (double u, double v);
+   /// <summary>Computes UV coordinates, given a point in canonical space</summary>
+   protected abstract Point2 GetUVCanonical (Point3 ptCanon);
 }
 #endregion

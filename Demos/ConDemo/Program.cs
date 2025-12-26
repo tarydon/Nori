@@ -40,17 +40,6 @@ public class Benchmark {
       }
    }
 
-   //[Benchmark]
-   public void TestOldUnlofter () {
-      Unlofter un = new Unlofter (mSurf);
-      double maxError = 0; 
-      for (int i = 0; i < mPts.Count; i++) {
-         Point2 puv = un.GetUV (mPts[i]);
-         double error = puv.DistTo (mUVs[i]);
-         if (error > maxError) maxError = error;
-      }
-   }
-
    public void RefineNewUnlofter () {
       using var bt = new BlockTimer ("New Unlofter");
       SurfaceUnlofter un = new SurfaceUnlofter (mSurf);
@@ -68,24 +57,6 @@ public class Benchmark {
       Console.WriteLine ($"3DPoint: {mPts[iWorst]}");
       Console.WriteLine ($"Check: {mPts[iWorst].DistTo (mSurf.GetPoint (mUVs[iWorst].X, mUVs[iWorst].Y))}");
       un.DumpStats ();
-   }
-
-   public void RefineOldUnlofter () {
-      using var bt = new BlockTimer ("Old Unlofter");
-      var un = new Unlofter (mSurf);
-      double totalError = 0, maxError = 0; int iWorst = -1;
-      for (int i = 0; i < mPts.Count; i++) {
-         Point2 puv = un.GetUV (mPts[i]);
-         double err = puv.DistTo (mUVs[i]);
-         if (err > maxError) (maxError, iWorst) = (err, i);
-         totalError += err;
-      }
-      Console.WriteLine ($"MaxError: {maxError:F6} at {iWorst}");
-      Console.WriteLine ($"AvgError: {totalError / mPts.Count:F6}");
-      Console.WriteLine ($"Actual UV: {mUVs[iWorst]}");
-      Console.WriteLine ($"Computed UV: {un.GetUV (mPts[iWorst])}");
-      Console.WriteLine ($"3DPoint: {mPts[iWorst]}");
-      Console.WriteLine ($"Check: {mPts[iWorst].DistTo (mSurf.GetPoint (mUVs[iWorst].X, mUVs[iWorst].Y))}");
    }
 }
 

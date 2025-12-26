@@ -2,45 +2,107 @@
 // ╔═╦╦═╦╦╬╣ Ent3.cs
 // ║║║║╬║╔╣║ <<TODO>>
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
-using System.Diagnostics;
 using System.Threading;
 namespace Nori;
 using static Math;
 
 #region class E3Cone -------------------------------------------------------------------------------
+/// <summary>Defines a Cone surface</summary>
+/// The surface is defined in canonical space with tip at the origin, and expanding outward
+/// along +Z direction. 
+/// 
+/// Parametrization:
+/// Given a canonical point ptCanon lying on the canonical surface of the cone:
+/// - U is in radians, and is the heading of this ptCanon from the origin, as projected on
+///   the XY plane (viewing from above). A U value of 0 means the point is lying on the
+///   XY plane and will project to a point on the X axis in 2D
+/// - V is the distance of this point from the tip of the cone (which is basically the origin)
 public sealed class E3Cone : E3CSSurface {
    public E3Cone (int id, IEnumerable<Contour3> trims, CoordSystem cs, double halfAngle) : base (id, trims, cs) {
       HalfAngle = halfAngle;
-      (mSin, mCos) = SinCos (halfAngle);
       mFlags |= E3Flags.VLinear;
    }
    E3Cone () { }
 
+   // Properties ---------------------------------------------------------------
+   /// <summary>The half-angle inscribed by the cone at the tip (between 0 .. PI/2)</summary>
    public readonly double HalfAngle;
-   readonly double mSin, mCos;
 
+   // Overrides ----------------------------------------------------------------
    protected override Point3 GetPointCanonical (double u, double v) {
       // The V value of the parametrization is linear distance from the tip of the cone. 
       // From this we can compute the radius at that point, and also the Z-height from the tip
-      double r = v * mSin, z = v * mCos;
+      double radius = v * _sin, z = v * _cos;
       // The U parameter is just the rotation of this point about the Z axis (starting with 
       // U=0 lying on the X axis itself
-      return new Point3 (r, 0, z).Rotated (EAxis.Z, u);
+      return new Point3 (radius, 0, z).Rotated (EAxis.Z, u);
    }
 
-   protected override Vector3 GetNormalCanonical (Point2 uv) => new Vector3 (mCos, 0, -mSin).Rotated (EAxis.Z, uv.X);
+   // The normal does not depend on the v value at all (at a particular u, it is constant
+   // across the height of the cone)
+   protected override Vector3 GetNormalCanonical (double u, double v) 
+      => new Vector3 (_cos, 0, -_sin).Rotated (EAxis.Z, u);
 
-   protected override Point2 GetUVCanonical (Point3 pt) => new (Atan2 (pt.Y, pt.X), pt.Z / mCos);
+   // V is the distance from the tip, but since we know that the point lies on this cone,
+   // we can compute it more efficiently as just pt.Z / _cos. U we get by looking at above
+   // (consider X and Y) and computing the heading. U ranges from 0 .. 2*PI
+   protected override Point2 GetUVCanonical (Point3 pt) {
+      double u = Atan2 (pt.Y, pt.X); if (u < 0) u += Lib.TwoPI;
+      return new (u, pt.Z / _cos);
+   }
+
+   // Implementation -----------------------------------------------------------
+   void PostLoad () => (_sin, _cos) = SinCos (HalfAngle);
+
+   // Private data -------------------------------------------------------------
+   double _sin, _cos;
+}
+#endregion
+
+#region class E3Curve ------------------------------------------------------------------------------
+/// <summary>An Entity that represents a free-space curve</summary>
+public class E3Curve : Ent3 {
+   // Constructors -------------------------------------------------------------
+   E3Curve () => Edge = null!;
+   public E3Curve (Edge3 curve) => Edge = curve;
+
+   // Properties ---------------------------------------------------------------
+   /// <summary>The underlying Curve3</summary>
+   public readonly Edge3 Edge;
+
+   /// <summary>The Bound of the curve</summary>
+   public override Bound3 Bound {
+      get {
+         if (mBound.IsEmpty) {
+            List<Point3> pts = [];
+            Edge.Discretize (pts, Lib.CoarseTess, Lib.CoarseTessAngle);
+            pts.Add (Edge.End);
+            mBound = new (pts);
+         }
+         return mBound;
+      }
+   }
+   Bound3 mBound = new ();
 }
 #endregion
 
 #region class E3Cylinder ---------------------------------------------------------------------------
 /// <summary>Represents a Cylinder in 3D space</summary>
+/// The surface is defined in the canonical space and lofted into final position with 
+/// a CoordSystem. 
+/// 
+/// Parametrization:
+/// Given a canonical point ptCanon lying on the canonical surface of the cone:
+/// - U is in radians, and is the heading of this ptCanon from the origin, as projected on
+///   the XY plane (viewing from above). A U value of 0 means the point is lying on the
+///   XY plane and will project to a point on the X axis in 2D
+/// - V is the distance of this point from the XY plane (along height of the cylinder)
 public sealed class E3Cylinder : E3CSSurface {
    // Constructors -------------------------------------------------------------
-   public E3Cylinder (int id, IEnumerable<Contour3> trims, CoordSystem cs, double radius, bool infacing) : base (id, trims, cs) {
-      (Radius, InFacing) = (radius, infacing);
+   public E3Cylinder (int id, IEnumerable<Contour3> trims, CoordSystem cs, double radius, bool infacing = false) : base (id, trims, cs) {
+      Radius = radius;
       mFlags |= E3Flags.VLinear;
+      if (infacing) mFlags |= E3Flags.FlipNormal;
    }
    E3Cylinder () { }
 
@@ -95,7 +157,7 @@ public sealed class E3Cylinder : E3CSSurface {
       arcs[0].Discretize (pts, tolerance, maxAngStep); int n = pts.Count;
       foreach (var pt in pts) {
          Vector3 vec = (pt.SnappedToUnitLine (cen0, cenLift) - pt).Normalized ();
-         if (!InFacing) vec = -vec;
+         if (!IsNormalFlipped) vec = -vec;
          nodes.Add (new (pt, vec));
       }
       for (int i = 0; i < n; i++) {
@@ -105,7 +167,7 @@ public sealed class E3Cylinder : E3CSSurface {
          tris.Add (i); tris.Add (i + n); tris.Add (j);
          tris.Add (j); tris.Add (i + n); tris.Add (j + n);
       }
-      if (InFacing) tris.Reverse ();
+      if (IsNormalFlipped) tris.Reverse ();
       return new ([.. nodes], [.. tris], [.. wires]);
    }
 
@@ -136,7 +198,7 @@ public sealed class E3Cylinder : E3CSSurface {
       List<Mesh3.Node> nodes = [];
       foreach (var pt in pts) {
          Vector3 vec = (pt.SnappedToUnitLine (cen0, cenLift) - pt).Normalized ();
-         if (!InFacing) vec = -vec;
+         if (!IsNormalFlipped) vec = -vec;
          nodes.Add (new (pt, vec));
       }
       List<int> tris = [], wires = [0, n, n - 1, 2 * n - 1];
@@ -162,9 +224,6 @@ public sealed class E3Cylinder : E3CSSurface {
    /// <summary>Radius of the cylinder</summary>
    public readonly double Radius;
 
-   /// <summary>If set, the normals are facing towards the center</summary>
-   public readonly bool InFacing;
-
    // Overrides ----------------------------------------------------------------
    // In the canonical definition, the cylinder is defined with the base center at
    // the origin, and the axis aligned with +Z. The parametrization is this:
@@ -176,8 +235,8 @@ public sealed class E3Cylinder : E3CSSurface {
    }
 
    // The normal in canonical space is always horizontal
-   protected override Vector3 GetNormalCanonical (Point2 pt) {
-      var (sin, cos) = SinCos (pt.X);
+   protected override Vector3 GetNormalCanonical (double u, double v) {
+      var (sin, cos) = SinCos (u);
       return new (cos, sin, 0);
    }
 
@@ -289,6 +348,8 @@ public sealed class E3NurbsSurface : E3Surface {
 
 #region class E3Plane ------------------------------------------------------------------------------
 /// <summary>Represents a Planar surface</summary>
+/// A Plane is effectively built on a basis CoordSystem, which maps the XY plane 
+/// to some arbitrary location / orientation in space
 public sealed class E3Plane : E3CSSurface {
    E3Plane () { }
    public E3Plane (int id, IEnumerable<Contour3> trims, CoordSystem cs) : base (id, trims, cs) 
@@ -319,7 +380,7 @@ public sealed class E3Plane : E3CSSurface {
    }
 
    protected override Point3 GetPointCanonical (double u, double v) => new (u, v, 0);
-   protected override Vector3 GetNormalCanonical (Point2 pt) => new (0, 0, 1);
+   protected override Vector3 GetNormalCanonical (double u, double v) => new (0, 0, 1);
    protected override Point2 GetUVCanonical (Point3 pt) => new (pt.X, pt.Y);
 }
 #endregion
@@ -337,7 +398,10 @@ public sealed class E3Sphere : E3Surface {
    public readonly double Radius;
 
    public override Point3 GetPoint (double u, double v) => throw new NotImplementedException ();
+   public override Vector3 GetNormal (double u, double v) => throw new NotImplementedException ();
    public override Point2 GetUV (Point3 pt) => throw new NotImplementedException ();
+
+   public override Bound2 ComputeDomain () => new (0, 0, Lib.TwoPI, Lib.TwoPI);
 }
 #endregion
 
@@ -345,6 +409,10 @@ public sealed class E3Sphere : E3Surface {
 /// <summary>A SpunSurface is generated by rotating a generatrix curve around an axis</summary>
 /// Canonically, the axis is the Z axis, and the resulting surface is lofted into space
 /// using the provided CS transform
+/// 
+/// Parametrization:
+/// - V is the parameter value (T) along the genetrix
+/// - U is the rotation of the generated point about the Z axis
 public sealed class E3SpunSurface : E3CSSurface {
    public E3SpunSurface (int id, IEnumerable<Contour3> trims, CoordSystem cs, Edge3 genetrix) : base (id, trims, cs) {
       Genetrix = genetrix; 
@@ -353,13 +421,18 @@ public sealed class E3SpunSurface : E3CSSurface {
    public readonly Edge3 Genetrix;
 
    protected override Point3 GetPointCanonical (double u, double v) => throw new NotImplementedException ();
-   protected override Vector3 GetNormalCanonical (Point2 pt) => throw new NotImplementedException ();
+   protected override Vector3 GetNormalCanonical (double u, double v) => throw new NotImplementedException ();
    protected override Point2 GetUVCanonical (Point3 pt) => throw new NotImplementedException ();
+
+   public override Bound2 ComputeDomain () => new (new Bound1 (0, Lib.TwoPI), Genetrix.Domain);
 }
 #endregion
 
 #region class E3SweptSurface -----------------------------------------------------------------------
 /// <summary>A SweptSurface is generated by sweeping a generatrix curve about a vector</summary>
+/// Parametrization:
+/// - V is the parameter value (T) along the genetrix
+/// - U is the sweep of the generated point along the sweep direction (+Z in canonical)
 public sealed class E3SweptSurface : E3CSSurface {
    public E3SweptSurface (int id, IEnumerable<Contour3> trims, CoordSystem cs, Edge3 genetrix) : base (id, trims, cs) {
       Genetrix = genetrix;
@@ -370,15 +443,11 @@ public sealed class E3SweptSurface : E3CSSurface {
 
    public readonly Edge3 Genetrix;
 
-   protected override Point3 GetPointCanonical (double u, double v) => Genetrix.GetPoint (u).Moved (0, 0, v);
+   protected override Point3 GetPointCanonical (double u, double v) => Genetrix.GetPoint (v).Moved (0, 0, z);
+   protected override Vector3 GetNormalCanonical (double u, double v) => throw new NotImplementedException ();
+   protected override Point2 GetUVCanonical (Point3 pt) => throw new NotImplementedException ();
 
-   protected override Vector3 GetNormalCanonical (Point2 pt) => throw new NotImplementedException ();
-   protected override Point2 GetUVCanonical (Point3 pt) => Point2.Zero; // This is never used since we override GetUV
-
-   public override Bound2 ComputeDomain () => new Bound2 (Genetrix.Domain, new Bound1 (0, 100));
-
-   public override Point2 GetUV (Point3 pt) => (_unlofter ??= new (this)).GetUV (pt);
-   Unlofter? _unlofter;
+   public override Bound2 ComputeDomain () => new (new Bound1 (0, 100), Genetrix.Domain);
 }
 #endregion
 
@@ -396,30 +465,32 @@ public sealed class E3Torus : E3CSSurface {
    /// <summary>Converts the given U,V coordinate into a 3D point on the surface of the Torus</summary>
    /// The Torus is generated by rotating a circle initially centered at (RMajor,0,0)
    /// and aligned in the XZ plane, about the Z axis. 
-   /// - U is the position along the initial minor circle, with U=0 corresponding to
+   /// - V is the position along the initial minor circle, with V=0 corresponding to
    ///   the point at (RMajor+RMinor, 0, 0) and moving CCW as viewed from +Y
-   /// - V is the rotation of this generating minor circle about Z axis
+   /// - U is the rotation of this generating minor circle about Z axis
    protected override Point3 GetPointCanonical (double u, double v) {
-      var (sin, cos) = SinCos (u);     
+      var (sin, cos) = SinCos (v);     
       Point3 pos = new (RMajor + RMinor * cos, 0, RMinor * sin);
-      return pos.Rotated (EAxis.Z, v);
+      return pos.Rotated (EAxis.Z, u);
    }
 
    /// <summary>See EvaluateCanonical for an explanation of the parametrization</summary>
    /// The normal computation follows from the same
-   protected override Vector3 GetNormalCanonical (Point2 pt) {
-      var (sin, cos) = SinCos (pt.X);
-      return new Vector3 (cos, 0, sin).Rotated (EAxis.Z, pt.Y);
+   protected override Vector3 GetNormalCanonical (double u, double v) {
+      var (sin, cos) = SinCos (v);
+      return new Vector3 (cos, 0, sin).Rotated (EAxis.Z, u);
    }
    
    /// <summary>See EvaluateCanonical above for a description of the parametrization</summary>
    protected override Point2 GetUVCanonical (Point3 pt) {
-      // First, look from above to figure out the V value (the rotation of the
+      // First, look from above to figure out the U value (the rotation of the
       // generating circle about Z axis)
-      double v = Atan2 (pt.Y, pt.X);
-      pt = pt.Rotated (EAxis.Z, -v);      // Now, rotate the generating circle to its canonical orientation (v = 0)
-      double u = Atan2 (pt.Z, pt.X - RMajor);
+      double u = Atan2 (pt.Y, pt.X);
+      pt = pt.Rotated (EAxis.Z, -u);      // Now, rotate the generating circle to its canonical orientation (v = 0)
+      double v = Atan2 (pt.Z, pt.X - RMajor);
       return new (u, v);
    }
+
+   public override Bound2 ComputeDomain () => new (0, 0, Lib.TwoPI, Lib.TwoPI);
 }
 #endregion

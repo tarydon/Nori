@@ -12,6 +12,8 @@ public static class Lib {
    // Constants ----------------------------------------------------------------
    /// <summary>Coarse tessellation threshold</summary>
    public const double CoarseTess = 0.2;
+   /// <summary>Coarse tessellation angle tolerance (~ 61 degrees)</summary>
+   public const double CoarseTessAngle = 1.065;
    /// <summary>Delta = 1e-6</summary>
    public const double Delta = 1e-3;
    /// <summary>Epsilon = 1e-6</summary>
@@ -20,10 +22,10 @@ public static class Lib {
    public const double PI = Math.PI;
    /// <summary>Tessellation error</summary>
    public static double FineTess = 0.01;
-   /// <summary>
-   /// Square of the tessellation error
-   /// </summary>
+   /// <summary>Square of the tessellation error</summary>
    public static double FineTessSq = 0.0001;
+   /// <summary>Fine tessellation angle tolerance (~ 31 degrees)</summary>
+   public static double FineTessAngle = 0.5411;
    /// <summary>TwoPI = 360 degrees, in radians</summary>
    public const double TwoPI = 2 * Math.PI;
    /// <summary>HalfPI = 90 degrees, in radians</summary>

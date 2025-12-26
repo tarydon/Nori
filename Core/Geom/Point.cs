@@ -225,13 +225,9 @@ public readonly struct Point3f {
    public static Point3f operator - (Point3f p, Vector3f v) => new (p.X - v.X, p.Y - v.Y, p.Z - v.Z);
    /// <summary>Subtracting one Point3f from another gives us a Vector3f</summary>
    public static Vector3f operator - (Point3f a, Point3f b) => new (a.X - b.X, a.Y - b.Y, a.Z - b.Z);
-   /// <summary>
-   /// Adds two Point3f together
-   /// </summary>
+   /// <summary>Adds two Point3f together</summary>
    public static Point3f operator + (Point3f p, Point3f q) => new (p.X + q.X, p.Y + q.Y, p.Z + q.Z);
-   /// <summary>
-   /// Scales a Point3f by a given factor
-   /// </summary>
+   /// <summary>Scales a Point3f by a given factor</summary>
    public static Point3f operator * (Point3f a, double f) => new (a.X * f, a.Y * f, a.Z * f);
 
    public override string ToString () => $"({X.S5 ()},{Y.S5 ()},{Z.S5 ()}";

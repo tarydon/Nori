@@ -18,7 +18,7 @@ public class E3SurfaceVN (E3Surface mSurface) : Ent3VN (mSurface) {
 class E3CurveVN (E3Curve mCurve) : Ent3VN (mCurve) {
    public override void Draw () {
       List<Point3> pts = [];
-      mCurve.Edge.Discretize (pts, Lib.FineTess, 0.541);
+      mCurve.Edge.Discretize (pts, Lib.FineTess, Lib.FineTessAngle);
       pts.Add (mCurve.Edge.End);
 
       List<Vec3F> vec = [(Vec3F)pts[0]];
@@ -32,7 +32,7 @@ public class Curve3VN (Edge3 edge) : VNode (edge) {
    public override void Draw () {
       if (mPts.Count == 0) {
          List<Point3> pts = [];
-         mEdge.Discretize (pts, Lib.FineTess, 0.5411);
+         mEdge.Discretize (pts, Lib.FineTess, Lib.FineTessAngle);
          mPts.Add ((Vec3F)pts[0]);
          for (int i = 0; i < pts.Count - 1; i++) { mPts.Add ((Vec3F)pts[i]); mPts.Add ((Vec3F)pts[i]); }
          mPts.Add ((Vec3F)pts[^1]);

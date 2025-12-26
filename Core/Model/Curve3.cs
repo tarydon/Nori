@@ -21,9 +21,7 @@ public abstract class Edge3 {
    /// <summary>Get the end point of the Edge3</summary>
    public abstract Point3 End { get; }
 
-   /// <summary>
-   /// Is this curve lying on the XY plane?
-   /// </summary>
+   /// <summary>Is this curve lying on the XY plane?</summary>
    public abstract bool IsOnXYPlane { get; }
 
    /// <summary>If non-zero, this is the pair-ID of this edge</summary>
@@ -36,9 +34,7 @@ public abstract class Edge3 {
    // Methods ------------------------------------------------------------------
    public abstract Point3 GetPoint (double t);
 
-   /// <summary>
-   /// Returns the point at a given parameter value T along the curve
-   /// </summary>
+   /// <summary>Returns the point at a given parameter value T along the curve</summary>
    public abstract double GetT (Point3 pt);
 
    /// <summary>Returns a PiecewiseLinear approximation of this curve</summary>
@@ -47,9 +43,7 @@ public abstract class Edge3 {
    ///    point of the next Edge in the sequence
    public abstract void Discretize (List<Point3> pts, double tolerance, double maxAngStep);
 
-   /// <summary>
-   /// Returns a copy of this Edge3 transformed by the given transform
-   /// </summary>
+   /// <summary>Returns a copy of this Edge3 transformed by the given transform</summary>
    public abstract Edge3 Xformed (Matrix3 xfm);
 
    // Implementation -----------------------------------------------------------
@@ -92,9 +86,7 @@ public sealed class Line3 : Edge3 {
 
    public override double GetT (Point3 pt) => pt.GetLieOn (mStart, mEnd);
 
-   /// <summary>
-   /// Transformed copy of this line
-   /// </summary>
+   /// <summary>Transformed copy of this line</summary>
    public override Line3 Xformed (Matrix3 xfm) => new (PairId, mStart * xfm, mEnd * xfm);
 
    // Implementation -----------------------------------------------------------
