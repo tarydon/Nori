@@ -19,7 +19,7 @@ public partial class MainWindow : Window {
       TraceVN.TextColor = Color4.Yellow;
       Lib.Tracer = TraceVN.Print;
       new SceneManipulator ();
-      Lux.UIScene = new SurfScene ("C:/Etc/T3/5X-016.t3x");
+      Lux.UIScene = new SurfScene ("C:/Etc/T3/5X-022.t3x");
       Lux.BackFacesPink = true;
    }
 }

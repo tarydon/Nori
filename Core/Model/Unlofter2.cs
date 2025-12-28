@@ -12,10 +12,11 @@ public partial class SurfaceUnlofter {
 
       // Create the initial subdivision of 4 x 4 tiles
       double du = mDomain.X.Length / mUDivs, dv = mDomain.Y.Length / mVDivs;
+      double uMin = mDomain.X.Min, vMin = mDomain.Y.Min;
       for (int j = 0; j < mVDivs; j++) {
-         double v = (j + 0.5) * dv;          // Center V of the tile
+         double v = vMin + (j + 0.5) * dv;          // Center V of the tile
          for (int i = 0; i < mUDivs; i++) {
-            double u = (i + 0.5) * du;       // Center U of the tile
+            double u = uMin + (i + 0.5) * du;       // Center U of the tile
             int node = AddNode (u, v);
             AddTile (-1, node, du / 2, dv / 2, EDir.Root);
          }

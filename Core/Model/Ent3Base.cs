@@ -61,7 +61,7 @@ public abstract partial class Ent3 {
    public readonly int Id;
 
    /// <summary>Is the normal flipped (back-side of surface is to be used)</summary>
-   public bool IsNormalFlipped => Get (E3Flags.FlipNormal); 
+   public bool IsNormalFlipped { get => Get (E3Flags.FlipNormal); set => Set (E3Flags.FlipNormal, value); }
    /// <summary>Is the Genetrix lying in the XY plane</summary>
    public bool IsGenetrixFlat => Get (E3Flags.FlatGenetrix);
 

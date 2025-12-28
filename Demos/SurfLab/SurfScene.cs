@@ -29,8 +29,8 @@ class SurfScene : Scene3 {
    }
 
    bool Include (Ent3 e) {
-      if (e is E3Plane or E3Cylinder or E3Torus or E3Cone or E3NurbsSurface or E3NurbsSurface or E3SweptSurface) return false;
-      if (e.Id is not (6 or 15)) return false;
+      //e.IsNormalFlipped = !e.IsNormalFlipped;
+      //return e.Id == 71;
       return true;
    }
 
