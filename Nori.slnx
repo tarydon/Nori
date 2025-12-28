@@ -1,7 +1,6 @@
 <Solution>
   <Folder Name="/Demos/">
     <Project Path="Demos/ConDemo/ConDemo.csproj" />
-    <Project Path="Demos/Pentax/Pentax.csproj" Id="d2467944-ad47-441b-8e03-6473e10396c6" />
     <Project Path="Demos/SurfLab/SurfLab.csproj" />
     <Project Path="Demos/WPFDemo/WPFDemo.csproj" />
   </Folder>
