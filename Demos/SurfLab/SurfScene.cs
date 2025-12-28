@@ -8,7 +8,7 @@ class SurfScene : Scene3 {
 
       BgrdColor = new (96, 128, 160);
       Bound = mModel.Bound;
-      Root = new GroupVN ([new Model3VN (mModel), TraceVN.It, mPlus, mNormal, mUnloft2]);
+      Root = new GroupVN ([new Model3VN (mModel), TraceVN.It, mPlus, mNormal]);
 
       mHooks = HW.MouseMoves.Subscribe (OnMouseMove);
    }
@@ -16,7 +16,7 @@ class SurfScene : Scene3 {
    IDisposable mHooks;
    PlusMarkerVN mPlus = new (Color4.Blue);
    CrossMarkerVN mCross = new (Color4.Red);
-   NormalVN mNormal = new (5);
+   NormalVN mNormal = new (25);
    MeshLineVN mMeshVN = new ();
    UnloftTracker2 mUnloft2 = new ();
 

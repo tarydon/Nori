@@ -2,6 +2,8 @@
 // ╔═╦╦═╦╦╬╣ Ent3Base.cs
 // ║║║║╬║╔╣║ Defines some the Ent3 hierarchy of classes (the abstract base classes)
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
+using System.Diagnostics;
+
 namespace Nori;
 
 #region class Ent3 ---------------------------------------------------------------------------------
@@ -145,13 +147,27 @@ public abstract class E3Surface : Ent3 {
       get => _mesh ??= BuildMesh (Lib.FineTess, Lib.FineTessAngle);
       set {
          _mesh = value;
-         if (this is E3Plane or E3Cylinder or E3Torus or E3Cone or E3SweptSurface or E3SpunSurface) {
-            if (_mesh.Triangle.Length > 0) {
-               var node = _mesh.Vertex[_mesh.Triangle[0]];
-               Point2 uv = GetUV ((Point3)node.Pos);
-               Vector3 vec1 = GetNormal (uv.X, uv.Y), vec2 = (Vector3)node.Vec;
-               if (vec1.Opposing (vec2)) mFlags |= E3Flags.FlipNormal;
+         if (_mesh.Triangle.Length > 0) {
+            var n1 = _mesh.Vertex[_mesh.Triangle[0]];
+            var n2 = _mesh.Vertex[_mesh.Triangle[1]];
+            var n3 = _mesh.Vertex[_mesh.Triangle[2]];
+            Vector3 vec1 = (Vector3)n1.Vec + (Vector3)n2.Vec + (Vector3)n3.Vec;
+            Vector3 vec2 = ((Point3)n2.Pos - (Point3)n1.Pos) * ((Point3)n3.Pos - (Point3)n2.Pos);
+            
+            Point2 uv = GetUV ((Point3)n1.Pos);
+            vec1 = GetNormal (uv.X, uv.Y);
+            vec2 = (Vector3)n1.Vec;
+            if (vec1.Opposing (vec2) ^ (this is not E3Plane)) {
+               Debug.WriteLine ($"* {GetType ().Name}");
+               mFlags |= E3Flags.FlipNormal;
+            } else {
+               Debug.WriteLine ($". {GetType ().Name}");
             }
+            if (this is E3Plane) mFlags ^= E3Flags.FlipNormal;
+            //var node = _mesh.Vertex[_mesh.Triangle[0]];
+            //Point2 uv = GetUV ((Point3)node.Pos);
+            //Vector3 vec1 = GetNormal (uv.X, uv.Y), vec2 = (Vector3)node.Vec;
+            //if (vec1.Opposing (vec2)) { mFlags |= E3Flags.FlipNormal; Debug.Write ('*'); } else Debug.Write ('.');
          }
       }
    }
