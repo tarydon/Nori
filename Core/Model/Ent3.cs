@@ -415,16 +415,29 @@ public sealed class E3Sphere : E3Surface {
 /// - U is the rotation of the generated point about the Z axis
 public sealed class E3SpunSurface : E3CSSurface {
    public E3SpunSurface (int id, IEnumerable<Contour3> trims, CoordSystem cs, Curve3 genetrix) : base (id, trims, cs) {
-      Genetrix = genetrix; 
+      Genetrix = genetrix;
+      if (Genetrix.IsOnXZPlane) mFlags |= E3Flags.FlatGenetrix;
+      else throw new NotImplementedException ();
    }
    E3SpunSurface () => Genetrix = null!;
    public readonly Curve3 Genetrix;
 
-   protected override Point3 GetPointCanonical (double u, double v) => throw new NotImplementedException ();
-   protected override Vector3 GetNormalCanonical (double u, double v) => throw new NotImplementedException ();
-   protected override Point2 GetUVCanonical (Point3 pt) => throw new NotImplementedException ();
+   protected override Point3 GetPointCanonical (double u, double v)
+      => Genetrix.GetPoint (v).Rotated (EAxis.Z, u);
 
-   public override Bound2 ComputeDomain () => new (new Bound1 (0, Lib.TwoPI), Genetrix.Domain);
+   protected override Vector3 GetNormalCanonical (double u, double v)
+      => Vector3.YAxis * Genetrix.GetTangent (v);
+
+   protected override Point2 GetUVCanonical (Point3 pt) {
+      double u = Atan2 (pt.Y, pt.X);
+      pt = pt.Rotated (EAxis.Z, -u);
+      double v = Genetrix.GetT (pt);
+      if (u < 0) u += Lib.TwoPI;
+      return new (u, v);
+   }
+
+   public override Bound2 ComputeDomain () 
+      => new (new Bound1 (0, Lib.TwoPI), Genetrix.Domain);
 }
 #endregion
 
@@ -496,7 +509,7 @@ public sealed class E3Torus : E3CSSurface {
       // generating circle about Z axis)
       double u = Atan2 (pt.Y, pt.X);
       pt = pt.Rotated (EAxis.Z, -u);      // Now, rotate the generating circle to its canonical orientation (v = 0)
-      double v = Atan2 (pt.Z, pt.X - RMajor);
+      double v = Atan2 (pt.Z, pt.X - RMajor); if (v < 0) v += Lib.TwoPI;
       return new (u, v);
    }
 

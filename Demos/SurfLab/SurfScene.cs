@@ -30,6 +30,7 @@ class SurfScene : Scene3 {
 
    bool Include (Ent3 e) {
       if (e is E3Plane or E3Cylinder or E3Torus or E3Cone or E3NurbsSurface or E3NurbsSurface or E3SweptSurface) return false;
+      if (e.Id is not (6 or 15)) return false;
       return true;
    }
 
@@ -42,10 +43,10 @@ class SurfScene : Scene3 {
             mMeshVN.Mesh = e3s.Mesh;
             Point3 pt3d = Lux.PickPos;
             mPlus.Pt = pt3d;
-            //Point2 uv = e3s.GetUV (pt3d);
-            //Point3 ptLoft = e3s.GetPoint (uv.X, uv.Y);
-            //Vector3 vecNorm = e3s.GetNormal (uv.X, uv.Y);
-            //mNormal.Ray = (ptLoft, vecNorm);
+            Point2 uv = e3s.GetUV (pt3d);
+            Point3 ptLoft = e3s.GetPoint (uv.X, uv.Y);
+            Vector3 vecNorm = e3s.GetNormal (uv.X, uv.Y);
+            mNormal.Ray = (ptLoft, vecNorm);
          } else
             mPlus.Pt = mCross.Pt = Point3.Nil;
       }

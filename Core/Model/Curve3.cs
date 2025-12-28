@@ -28,6 +28,10 @@ public abstract class Curve3 {
 
    /// <summary>Is this curve lying on the XY plane?</summary>
    public abstract bool IsOnXYPlane { get; }
+   /// <summary>
+   /// Is this curve lying on the XZ plane?
+   /// </summary>
+   public abstract bool IsOnXZPlane { get; }
 
    /// <summary>If non-zero, this is the pair-ID of this edge</summary>
    /// In each fully connected manifold model, there are exactly two edges with
@@ -83,6 +87,7 @@ public sealed class Line3 : Curve3 {
    readonly Point3 mEnd;
 
    public override bool IsOnXYPlane => mStart.Z.IsZero () && mEnd.Z.IsZero ();
+   public override bool IsOnXZPlane => mStart.Y.IsZero () && mEnd.Y.IsZero ();
 
    /// <summary>Length of the line</summary>
    public double Length => Start.DistTo (End);
@@ -129,6 +134,9 @@ public sealed class Ellipse3 : Curve3 {
 
    public override bool IsOnXYPlane 
       => CS.Org.Z.IsZero () && Math.Abs (CS.VecZ.Z).EQ (1);
+
+   public override bool IsOnXZPlane
+      => CS.Org.Y.IsZero () && Math.Abs (CS.VecZ.Y).EQ (1);
 
    public override Point3 GetPoint (double lie) {
       var (sin, cos) = Math.SinCos (lie.Along (Ang0, Ang1));
@@ -190,6 +198,9 @@ public class Arc3 : Curve3 {
 
    public override bool IsOnXYPlane
       => CS.Org.Z.IsZero () && Math.Abs (CS.VecZ.Z).EQ (1);
+
+   public override bool IsOnXZPlane
+      => CS.Org.Y.IsZero () && Math.Abs (CS.VecZ.Y).EQ (1);
 
    public override Point3 End => GetPoint (1);
 
@@ -267,6 +278,8 @@ public class NurbsCurve3 : Curve3 {
    public override Point3 Start => Ctrl[0];
 
    public override bool IsOnXYPlane => Ctrl.All (a => a.Z.EQ (0));
+
+   public override bool IsOnXZPlane => Ctrl.All (a => a.Y.EQ (0));
 
    /// <summary>Weights attached to the control points</summary>
    /// If this array is empty, then this is a non-rational spline (all weights are 1)
@@ -418,6 +431,8 @@ public class Polyline3 : Curve3 {
    }
 
    public override bool IsOnXYPlane => Pts.All (a => a.Z.EQ (0));
+
+   public override bool IsOnXZPlane => Pts.All (a => a.Y.EQ (0));
 
    public override Polyline3 Xformed (Matrix3 xfm)
       => new (PairId, [.. Pts.Select (a => a * xfm)]);
