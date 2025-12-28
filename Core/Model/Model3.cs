@@ -24,7 +24,7 @@ public class Model3 {
          _neighbors = [];
          Dictionary<int, E3Surface> unpaired = [];
          foreach (var ent1 in Ents.OfType<E3Surface> ()) {
-            foreach (var edge in ent1.Contours.SelectMany (a => a.Edges)) {
+            foreach (var edge in ent1.Contours.SelectMany (a => a.Curves)) {
                if (unpaired.TryGetValue (edge.PairId, out var ent2)) {
                   if (!_neighbors.TryGetValue (ent1, out var list1)) _neighbors[ent1] = list1 = [];
                   list1.Add (ent2);

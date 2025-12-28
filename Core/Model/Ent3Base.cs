@@ -145,7 +145,7 @@ public abstract class E3Surface : Ent3 {
       get => _mesh ??= BuildMesh (Lib.FineTess, Lib.FineTessAngle);
       set {
          _mesh = value;
-         if (this is E3Plane or E3Cylinder or E3Torus or E3Cone or E3NurbsSurface) {
+         if (this is E3Plane or E3Cylinder or E3Torus or E3Cone or E3SweptSurface) {
             if (_mesh.Triangle.Length > 0) {
                var node = _mesh.Vertex[_mesh.Triangle[0]];
                Point2 uv = GetUV ((Point3)node.Pos);

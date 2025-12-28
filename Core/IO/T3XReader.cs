@@ -63,11 +63,11 @@ public class T3XReader : IDisposable {
 
    List<Contour3> LoadContours () {
       List<Contour3> contours = [];
-      List<Edge3> edges = [];
+      List<Curve3> edges = [];
       for (; ; ) {
          if (RWord () == "*") break;
          for (; ; ) {
-            Edge3? edge = LoadEdge ();
+            Curve3? edge = LoadEdge ();
             if (edge == null) break;
             edges.Add (edge);
          }
@@ -77,7 +77,7 @@ public class T3XReader : IDisposable {
       return contours;
    }
 
-   Edge3? LoadEdge () {
+   Curve3? LoadEdge () {
       string type = RWord ();
       return type switch {
          "ARC" => LoadArc (),
@@ -154,14 +154,14 @@ public class T3XReader : IDisposable {
    E3SpunSurface LoadSpunSurface () {
       var (uid, cs) = (RInt (), RCS ());
       if (RWord () != "GENERATRIX") Fatal ();
-      Edge3 genetrix = LoadEdge ()!;
+      Curve3 genetrix = LoadEdge ()!;
       return new E3SpunSurface (uid, LoadContours (), cs, genetrix);
    }
 
    E3SweptSurface LoadSweptSurface () {
       var (uid, sweep) = (RInt (), RVector ());
       if (RWord () != "GENERATRIX") Fatal ();
-      Edge3 genetrix = LoadEdge ()!;      
+      Curve3 genetrix = LoadEdge ()!;      
       var (x, y) = Geo.GetXYFromZ (sweep);
       var cs = new CoordSystem (genetrix.Start, x, y);
       return new E3SweptSurface (uid, LoadContours (), cs, genetrix.Xformed (Matrix3.From (cs)));

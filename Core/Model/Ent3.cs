@@ -64,11 +64,11 @@ public sealed class E3Cone : E3CSSurface {
 public class E3Curve : Ent3 {
    // Constructors -------------------------------------------------------------
    E3Curve () => Edge = null!;
-   public E3Curve (Edge3 curve) => Edge = curve;
+   public E3Curve (Curve3 curve) => Edge = curve;
 
    // Properties ---------------------------------------------------------------
    /// <summary>The underlying Curve3</summary>
-   public readonly Edge3 Edge;
+   public readonly Curve3 Edge;
 
    /// <summary>The Bound of the curve</summary>
    public override Bound3 Bound {
@@ -111,7 +111,7 @@ public sealed class E3Cylinder : E3CSSurface {
       // cut line
       Bound1 angSpan = new ();
       var xfm = Matrix3.From (cs);
-      foreach (var edge in trims.First ().Edges) {
+      foreach (var edge in trims.First ().Curves) {
          Adjust (edge.Start); Adjust (edge.GetPoint (0.5));
       }
       if (angSpan.Length < Lib.TwoPI - Lib.Epsilon)
@@ -141,8 +141,8 @@ public sealed class E3Cylinder : E3CSSurface {
          base.BuildMesh (tolerance, maxAngStep);
 
    Mesh3? BuildFullCylinderMesh (double tolerance, double maxAngStep) {
-      if (mContours.Length != 2 || mContours.Any (a => a.Edges.Length != 1)) return null;
-      var arcs = mContours.Select (a => a.Edges[0]).OfType<Arc3> ().ToList ();
+      if (mContours.Length != 2 || mContours.Any (a => a.Curves.Length != 1)) return null;
+      var arcs = mContours.Select (a => a.Curves[0]).OfType<Arc3> ().ToList ();
       if (arcs.Count != 2) return null;
       double cos = arcs[0].CS.VecZ.CosineToAlreadyNormalized (arcs[1].CS.VecZ);
       if (!Abs (cos).EQ (1)) return null;
@@ -172,9 +172,9 @@ public sealed class E3Cylinder : E3CSSurface {
    }
 
    Mesh3? BuildPartCylinderMesh (double tolerance, double maxAngStep) {
-      if (mContours.Length != 1 || mContours[0].Edges.Length < 4) return null;
-      var arcs = mContours[0].Edges.OfType<Arc3> ().ToList (); if (arcs.Count != 2) return null;
-      var lines = mContours[0].Edges.OfType<Line3> ().ToList ();
+      if (mContours.Length != 1 || mContours[0].Curves.Length < 4) return null;
+      var arcs = mContours[0].Curves.OfType<Arc3> ().ToList (); if (arcs.Count != 2) return null;
+      var lines = mContours[0].Curves.OfType<Line3> ().ToList ();
       for (int i = lines.Count - 1; i >= 1; i--) {
          Line3 line0 = lines[i - 1], line1 = lines[i];
          Vector3 vec0 = (line0.End - line0.Start).Normalized ();
@@ -414,11 +414,11 @@ public sealed class E3Sphere : E3Surface {
 /// - V is the parameter value (T) along the genetrix
 /// - U is the rotation of the generated point about the Z axis
 public sealed class E3SpunSurface : E3CSSurface {
-   public E3SpunSurface (int id, IEnumerable<Contour3> trims, CoordSystem cs, Edge3 genetrix) : base (id, trims, cs) {
+   public E3SpunSurface (int id, IEnumerable<Contour3> trims, CoordSystem cs, Curve3 genetrix) : base (id, trims, cs) {
       Genetrix = genetrix; 
    }
    E3SpunSurface () => Genetrix = null!;
-   public readonly Edge3 Genetrix;
+   public readonly Curve3 Genetrix;
 
    protected override Point3 GetPointCanonical (double u, double v) => throw new NotImplementedException ();
    protected override Vector3 GetNormalCanonical (double u, double v) => throw new NotImplementedException ();
@@ -434,18 +434,27 @@ public sealed class E3SpunSurface : E3CSSurface {
 /// - V is the parameter value (T) along the genetrix
 /// - U is the sweep of the generated point along the sweep direction (+Z in canonical)
 public sealed class E3SweptSurface : E3CSSurface {
-   public E3SweptSurface (int id, IEnumerable<Contour3> trims, CoordSystem cs, Edge3 genetrix) : base (id, trims, cs) {
+   public E3SweptSurface (int id, IEnumerable<Contour3> trims, CoordSystem cs, Curve3 genetrix) : base (id, trims, cs) {
       Genetrix = genetrix;
       if (Genetrix.IsOnXYPlane) mFlags |= E3Flags.FlatGenetrix;
+      else throw new NotImplementedException ();
       mFlags |= E3Flags.VLinear;
    }
    E3SweptSurface () => Genetrix = null!;
 
-   public readonly Edge3 Genetrix;
+   public readonly Curve3 Genetrix;
 
-   protected override Point3 GetPointCanonical (double u, double v) => Genetrix.GetPoint (v).Moved (0, 0, z);
-   protected override Vector3 GetNormalCanonical (double u, double v) => throw new NotImplementedException ();
-   protected override Point2 GetUVCanonical (Point3 pt) => throw new NotImplementedException ();
+   protected override Point3 GetPointCanonical (double u, double v) 
+      => Genetrix.GetPoint (v).Moved (0, 0, u);
+
+   protected override Vector3 GetNormalCanonical (double u, double v)
+      => Vector3.ZAxis * Genetrix.GetTangent (v);
+
+   protected override Point2 GetUVCanonical (Point3 pt) {
+      double v = (_unlofter ??= new CurveUnlofter (Genetrix)).GetT (pt);
+      return new (pt.Z, v);
+   }
+   CurveUnlofter? _unlofter;
 
    public override Bound2 ComputeDomain () => new (new Bound1 (0, 100), Genetrix.Domain);
 }

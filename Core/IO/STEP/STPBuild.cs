@@ -74,7 +74,7 @@ partial class STEPReader {
          EdgeCurve ec = (EdgeCurve)D[oe.Edge]!;
          Point3 start = GetPoint (ec.Start), end = GetPoint (ec.End);
          if (!oe.Dir) (start, end) = (end, start);
-         Edge3 edge = D[ec.Basis] switch {
+         Curve3 edge = D[ec.Basis] switch {
             Line => new Line3 (oe.Edge, start, end),
             Circle circle => MakeArc (oe.Edge, circle, start, end, !(!ec.SameSense ^ !oe.Dir)),
             _ => throw new BadCaseException (ec.Basis)
@@ -85,7 +85,7 @@ partial class STEPReader {
          Lib.Check (mEdges[i].End.EQ (mEdges[(i + 1) % mEdges.Count].Start), "MakeContour");
       return new Contour3 ([..mEdges]);
    }
-   List<Edge3> mEdges = [];
+   List<Curve3> mEdges = [];
 
    E3Plane MakePlane (int id, Plane plane, List<Contour3> contours, bool aligned) {
       var cs = GetCoordSys (plane.CoordSys);

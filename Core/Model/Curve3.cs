@@ -1,24 +1,29 @@
 // ────── ╔╗
 // ╔═╦╦═╦╦╬╣ Curve3.cs
-// ║║║║╬║╔╣║ Implements Edge3 and various types of derived edges
+// ║║║║╬║╔╣║ Implements Curve3 and various types of derived curve
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 using System.Diagnostics;
 using System.Threading;
 namespace Nori;
 
-#region class Edge3 --------------------------------------------------------------------------------
-/// <summary>Base class for various types of Edge3</summary>
-public abstract class Edge3 {
+#region class Curve3 -------------------------------------------------------------------------------
+/// <summary>Base class for various types of Curve3</summary>
+/// A Curve3 represents a parametric curve in 3D space. Most Curve3 are found embedded
+/// in Contour3 objects, which form the boundaries of BREP surfaces. An important property
+/// of a Curve3 is the PairId, through which it gets connected to a corresponding Curve3 
+/// on the 'other side' of an edge of a model. In a closed manifold object, there will be
+/// exactly two Curve3 with a particular PairId. 
+public abstract class Curve3 {
    // Constructors -------------------------------------------------------------
-   protected Edge3 () { }
-   protected Edge3 (int pairId) => PairId = pairId;
+   protected Curve3 () { }
+   protected Curve3 (int pairId) => PairId = pairId;
 
    // Properties ---------------------------------------------------------------
    public abstract Bound1 Domain { get; }
 
-   /// <summary>Get the start point of the Edge3</summary>
+   /// <summary>Get the start point of the curve</summary>
    public abstract Point3 Start { get; }
-   /// <summary>Get the end point of the Edge3</summary>
+   /// <summary>Get the end point of the curve</summary>
    public abstract Point3 End { get; }
 
    /// <summary>Is this curve lying on the XY plane?</summary>
@@ -34,6 +39,13 @@ public abstract class Edge3 {
    // Methods ------------------------------------------------------------------
    public abstract Point3 GetPoint (double t);
 
+   public virtual Vector3 GetTangent (double t) {
+      var d = Domain;
+      double dt = d.Length / 50;
+      double t0 = d.Clamp (t - dt), t1 = d.Clamp (t + dt);
+      return (GetPoint (t1) - GetPoint (t0)).Normalized ();
+   }
+
    /// <summary>Returns the point at a given parameter value T along the curve</summary>
    public abstract double GetT (Point3 pt);
 
@@ -43,8 +55,8 @@ public abstract class Edge3 {
    ///    point of the next Edge in the sequence
    public abstract void Discretize (List<Point3> pts, double tolerance, double maxAngStep);
 
-   /// <summary>Returns a copy of this Edge3 transformed by the given transform</summary>
-   public abstract Edge3 Xformed (Matrix3 xfm);
+   /// <summary>Returns a copy of this curve transformed by the given transform</summary>
+   public abstract Curve3 Xformed (Matrix3 xfm);
 
    // Implementation -----------------------------------------------------------
    public override string ToString ()
@@ -54,7 +66,7 @@ public abstract class Edge3 {
 
 #region class Line3 --------------------------------------------------------------------------------
 /// <summary>Line3 implements a linear edge between two points</summary>
-public sealed class Line3 : Edge3 {
+public sealed class Line3 : Curve3 {
    // Constructors -------------------------------------------------------------
    Line3 () { }
    public Line3 (int pairId, Point3 start, Point3 end) : base (pairId) => (mStart, mEnd) = (start, end);
@@ -77,12 +89,14 @@ public sealed class Line3 : Edge3 {
 
    // Methods ------------------------------------------------------------------
    /// <summary>Discretize just adds the start point of the Line3</summary>
-   /// The convention is that the end point is never included (it is added as part of the next Edge3)
+   /// The convention is that the end point is never included (it is added as part of the next curve)
    public override void Discretize (List<Point3> pts, double tolerance, double maxAngStep) 
       => pts.Add (Start);
 
    /// <summary>Gets the point at a given lie</summary>
    public override Point3 GetPoint (double lie) => lie.Along (mStart, mEnd);
+
+   public override Vector3 GetTangent (double t) => (mEnd - mStart).Normalized ();
 
    public override double GetT (Point3 pt) => pt.GetLieOn (mStart, mEnd);
 
@@ -96,7 +110,7 @@ public sealed class Line3 : Edge3 {
 #endregion
 
 #region class Ellipse3 -----------------------------------------------------------------------------
-public sealed class Ellipse3 : Edge3 {
+public sealed class Ellipse3 : Curve3 {
    Ellipse3 () { }
    public Ellipse3 (int pairId, CoordSystem cs, double xRadius, double yRadius, double ang0, double ang1) : base (pairId) {
       Debug.Assert (Ang1 >= Ang0);
@@ -146,7 +160,7 @@ public sealed class Ellipse3 : Edge3 {
 /// The Arc3 is defined on the XY plane - always clockwise, with the center at the
 /// origin and winding counter-clockwise about the Z axis. Then, it is lofted into space
 /// using the specified coord-system CS.
-public class Arc3 : Edge3 {
+public class Arc3 : Curve3 {
    // Constructors -------------------------------------------------------------
    Arc3 () { }
    public Arc3 (int pairId, CoordSystem cs, double radius, double angSpan) : base (pairId)
@@ -201,6 +215,11 @@ public class Arc3 : Edge3 {
       return CS.Org + CS.VecX * (Radius * cos) + CS.VecY * (Radius * sin);
    }
 
+   public override Vector3 GetTangent (double t) {
+      var (sin, cos) = Math.SinCos (AngSpan * t);
+      return CS.VecX * -sin + CS.VecY * cos;
+   }
+
    public override double GetT (Point3 pt) {
       pt *= (mFrom ??= Matrix3.From (CS));
       double ang = Math.Atan2 (pt.Y, pt.X);
@@ -221,7 +240,7 @@ public class Arc3 : Edge3 {
 #region class NurbsCurve ---------------------------------------------------------------------------
 /// <summary>Implements a 3 dimensional spline</summary>
 /// This is a generalized spline - any order, rational or irrational
-public class NurbsCurve3 : Edge3 {
+public class NurbsCurve3 : Curve3 {
    /// <summary>Construct a 3D spline given the control points, knot vector and the weights</summary>
    public NurbsCurve3 (int pairId, ImmutableArray<Point3> ctrl, ImmutableArray<double> knot, ImmutableArray<double> weight) : base (pairId) {
       mImp = new SplineImp (ctrl.Length, knot);
@@ -344,7 +363,8 @@ public class NurbsCurve3 : Edge3 {
    // order of the Spline we're evalauting increases, and never shrink this buffer)
    static readonly ThreadLocal<double[]> mFactor = new (() => new double[8]);
 
-   public override double GetT (Point3 pt) => throw new NotImplementedException ();
+   public override double GetT (Point3 pt) => (_unlofter = new CurveUnlofter (this)).GetT (pt);
+   CurveUnlofter? _unlofter;
 
    public override NurbsCurve3 Xformed (Matrix3 xfm)
       => new (PairId, [.. Ctrl.Select (a => a * xfm)], mImp.Knot, Weight);
@@ -361,7 +381,7 @@ public class NurbsCurve3 : Edge3 {
 
 #region class Polyline3 -------------------------------------------------------------------------------
 /// <summary>Represents a PWL segment</summary>
-public class Polyline3 : Edge3 {
+public class Polyline3 : Curve3 {
    // Constructors -------------------------------------------------------------
    Polyline3 () { }
    public Polyline3 (int pairId, ImmutableArray<Point3> pts) : base (pairId) => Pts = pts;
@@ -371,7 +391,7 @@ public class Polyline3 : Edge3 {
    public double Length => _length < 0 ? (_length = ComputeLength ()) : _length;
    double _length = -1;
 
-   // Edge3 Implementation -----------------------------------------------------
+   // Curve3 Implementation ----------------------------------------------------
    public override Point3 Start => Pts[0];
    public override Point3 End => Pts[^1];
 
@@ -413,28 +433,28 @@ public class Polyline3 : Edge3 {
 #endregion
 
 #region class Contour3 -----------------------------------------------------------------------------
-/// <summary>Contour3 is a collection of Edge3 connected end-to-end</summary>
+/// <summary>Contour3 is a collection of Curve3 connected end-to-end</summary>
 /// Typically surfaces are bounded by a set of Contour3
 public class Contour3 {
    // Constructors -------------------------------------------------------------
    Contour3 () { }
-   public Contour3 (ImmutableArray<Edge3> edges) => mEdges = edges;
+   public Contour3 (ImmutableArray<Curve3> edges) => mCurves = edges;
 
    // Properties ---------------------------------------------------------------
-   /// <summary>The list of Edge3 in this Contour3</summary>
-   public ImmutableArray<Edge3> Edges => mEdges;
-   readonly ImmutableArray<Edge3> mEdges;
+   /// <summary>The list of Curve3  in this Contour3</summary>
+   public ImmutableArray<Curve3> Curves => mCurves;
+   readonly ImmutableArray<Curve3> mCurves;
 
    // Methods ------------------------------------------------------------------
    /// <summary>Discretize this Contour3 into a piecewise-linear approximation</summary>
    public void Discretize (List<Point3> pts, double tolerance, double maxAngStep)
-      => mEdges.ForEach (e => e.Discretize (pts, tolerance, maxAngStep));
+      => mCurves.ForEach (e => e.Discretize (pts, tolerance, maxAngStep));
 
    /// <summary>Project the Contour3 into a</summary>
    public Poly Flatten (CoordSystem cs, double tolerance, double maxAngStep) {
       var pb = PolyBuilder.It;
       var xfm = Matrix3.From (cs);
-      foreach (var edge in mEdges) {
+      foreach (var edge in mCurves) {
          switch (edge) {
             case Line3 line:
                pb.Line (Xfm (line.Start));

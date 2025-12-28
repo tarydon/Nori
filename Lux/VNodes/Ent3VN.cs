@@ -28,7 +28,7 @@ class E3CurveVN (E3Curve mCurve) : Ent3VN (mCurve) {
    }
 }
 
-public class Curve3VN (Edge3 edge) : VNode (edge) {
+public class Curve3VN (Curve3 edge) : VNode (edge) {
    public override void Draw () {
       if (mPts.Count == 0) {
          List<Point3> pts = [];
@@ -39,6 +39,6 @@ public class Curve3VN (Edge3 edge) : VNode (edge) {
       }
       Lux.Lines (mPts.AsSpan ());
    }
-   readonly Edge3 mEdge = edge;
+   readonly Curve3 mEdge = edge;
    List<Vec3F> mPts = [];
 }
