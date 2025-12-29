@@ -27,7 +27,7 @@ class IntMeshPlaneScene : Scene3 {
 
    void AddIntersections (Mesh3 mesh, List<VNode> curves, int step) {
       using var bt = new BlockTimer ("Compute Intersections");
-      PlaneMeshIntersector pmi = new (mesh);
+      PlaneMeshIntersector pmi = new ([mesh]);
       var bound = mesh.Bound;
       for (int i = step; i <= 100; i += step) {
          double x = (i / 100.0).Along (bound.X.Min, bound.X.Max);

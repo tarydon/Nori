@@ -250,7 +250,7 @@ public class Mesh3 {
 
    /// <summary>Computes polygonal intersection loops between a mesh and a plane.</summary>
    public List<Polyline3> ComputePlaneIntersection (PlaneDef plane)
-      => new PlaneMeshIntersector (this).Compute (plane);
+      => new PlaneMeshIntersector ([this]).Compute (plane);
 
    /// <summary>Builds a sphere mesh centered at 'center' with the specified 'radius'/>.
    /// The generated sphere mesh consists of triangles of uniform size. The number of output 
@@ -390,29 +390,71 @@ public class Mesh3 {
 #region class PlaneMeshIntersector -----------------------------------------------------------------
 /// <summary>Provides plane/mesh intersection functionality for a specific mesh.</summary>
 /// This class computes polygonal intersection loops between a mesh and a plane.
-/// Create an instance with a mesh and call `Compute` repeatedly to intersect
-/// multiple planes against the same mesh.
-public class PlaneMeshIntersector (Mesh3 mesh) {
-   /// <summary>Computes polygonal intersection loops between the stored mesh and a plane.</summary>
-   /// - Computes signed distances of all mesh vertices to the plane (used to detect edge crossings).
-   /// - Walks triangles; for each crossing edge, creates (or reuses) an interpolated intersection point.
-   /// - Links triangle intersection points into a small adjacency graph (each point has up to two neighbours).
-   /// - Builds an endpoint map to identify/open chains and reconnect matching endpoints when needed.
-   /// - Traverses the adjacency graph to extract chains/loops and converts them into returned Polyline3 objects.
+/// Create an instance with a mesh collection and call `Compute` repeatedly to intersect
+/// multiple planes against the same mesh set.
+public class PlaneMeshIntersector (IEnumerable<Mesh3> meshes) {
+   /// <summary>Computes polygonal intersection loops between the stored meshes and a plane.</summary>
+   /// - Quickly rejects meshes whose Bound lies entirely on one side of the plane.
+   /// - For remaining meshes:
+   ///   - Computes signed distances of all mesh vertices to the plane (used to detect edge crossings).
+   ///   - Walks triangles; for each crossing edge, creates (or reuses) an interpolated intersection point.
+   ///   - Links triangle intersection points into a small adjacency graph (each point has up to two neighbours).
+   ///   - Builds an endpoint map to identify/open chains and reconnect matching endpoints when needed.
+   ///   - Traverses the adjacency graph to extract chains/loops and converts them into returned Polyline3 objects.
    public List<Polyline3> Compute (PlaneDef plane) {
-      ComputeDistances (plane);
-      ResetWorkBuffers ();
-      BuildAdjacency ();
-      BuildEndMap ();
-      PrepareVisited (mRaw.Count);
-      WalkAllChains ();
+      Vector3 n = plane.Normal; double d = plane.D;
+      List<Polyline3> polylines = [];
 
-      return BuildPolylines ();
+      foreach (var mesh in meshes) {
+         if (!Intersects (mesh.Bound, n, d)) continue;
+
+         PrepareMesh (mesh);
+         ComputeDistances (n, d);
+
+         ResetWorkBuffers ();
+         BuildAdjacency ();
+         BuildEndMap ();
+         PrepareVisited (mRaw.Count);
+         WalkAllChains ();
+         polylines.AddRange (BuildPolylines ());
+      }
+
+      return polylines;
+   }
+
+   // Quick plane-vs-mesh test; returns false if the bound lies strictly on one side.
+   bool Intersects (Bound3 bound, Vector3 n, double d) {
+      if (bound.IsEmpty) return false;
+
+      // Center (Mid) and half extents (Length/2) per axis.
+      double cx = bound.X.Mid, cy = bound.Y.Mid, cz = bound.Z.Mid;
+      double ex = bound.X.Length * 0.5, ey = bound.Y.Length * 0.5, ez = bound.Z.Length * 0.5;
+
+      // Signed distance from bound center to plane: dot(n, c) + d.
+      double dist = n.X * cx + n.Y * cy + n.Z * cz + d;
+
+      // Project the bound extents onto the plane normal to get the max reach.
+      double r = Math.Abs (n.X) * ex + Math.Abs (n.Y) * ey + Math.Abs (n.Z) * ez;
+
+      // If center distance exceeds projected radius, plane cannot hit the mesh.
+      return Math.Abs (dist) <= r;
+   }
+
+   // Loads/caches the current mesh's positions and triangles into reusable buffers.
+   void PrepareMesh (Mesh3 mesh) {
+      if (mPts.Length != mesh.Vertex.Length)
+         mPts = new Point3f[mesh.Vertex.Length];
+
+      for (int i = 0; i < mPts.Length; i++)
+         mPts[i] = mesh.Vertex[i].Pos;
+
+      mTri = mesh.Triangle;
+      if (mDist.Length != mPts.Length)
+         mDist = new double[mPts.Length];
    }
 
    // Computes signed distances of all mesh vertices to the plane.
-   void ComputeDistances (PlaneDef plane) {
-      double dBias = plane.D; Vector3 n = plane.Normal;
+   void ComputeDistances (Vector3 n, double dBias) {
       for (int i = 0; i < mPts.Length; i++) {
          // Signed distance to plane: dot(n, p) + d.
          var p = mPts[i];
@@ -570,12 +612,12 @@ public class PlaneMeshIntersector (Mesh3 mesh) {
       return idx;
    }
 
-   // Input mesh positions and triangles (cached)
-   readonly Point3f[] mPts = [.. mesh.Vertex.Select (a => a.Pos)];
-   readonly ImmutableArray<int> mTri = mesh.Triangle;
+   // Input mesh positions and triangles (set per mesh during Compute)
+   Point3f[] mPts = [];
+   ImmutableArray<int> mTri = [];
 
    // Per-instance working storage reused between Compute calls
-   readonly double[] mDist = new double[mesh.Vertex.Length];
+   double[] mDist = [];
    readonly Dictionary<(int, int), int> mEdgeMap = [];
    readonly Dictionary<Point3f, (int A, int B)> mEnds = new (Point3fComparer.Delta);
    readonly List<int> mNbr1 = [], mNbr2 = [];   // Neighbours of intersection points at each index
