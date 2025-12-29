@@ -40,7 +40,7 @@ public partial class Dwg2 {
    Layer2? mCurrentLayer;
 
    /// <summary>The list of entities in the drawing (active list, implements Observable(ListChange)</summary>
-   public AList <Ent2> Ents => mEnts;
+   public AList<Ent2> Ents => mEnts;
    AList<Ent2> mEnts = [];
 
    /// <summary>Should the interior of the drawing be filled or not?</summary>
@@ -55,7 +55,7 @@ public partial class Dwg2 {
    Grid2? mGrid;
 
    /// <summary>The list of layers in the drawing</summary>
-   public IReadOnlyList <Layer2> Layers => mLayers;
+   public IReadOnlyList<Layer2> Layers => mLayers;
    List<Layer2> mLayers = [];
 
    /// <summary>The list of blocks in the drawing</summary>
@@ -84,17 +84,17 @@ public partial class Dwg2 {
    public void Add (Poly poly) => Add (new E2Poly (CurrentLayer, poly));
 
    /// <summary>Add a set of entities into the drawing</summary>
-   public void Add (IEnumerable<Ent2> ents) => ents.ForEach (Add);
+   public void Add (IList<Ent2> ents) => ents.ForEach (Add);
 
    /// <summary>Add a layer into the drawing</summary>
    /// If a layer with the same name exists, replace it and update the associated entities.
    public void Add (Layer2 layer) {
       int idx = mLayers.FindIndex (a => a.Name == layer.Name);
       if (idx == -1) mLayers.Add (layer);
-      else { 
+      else {
          Ents.Where (e => e.Layer == mLayers[idx]).ForEach (a => a.Layer = layer);
          mLayers[idx] = layer;
-      } 
+      }
    }
 
    /// <summary>Adds a Block2 to the list of blocks in the drawing</summary>
@@ -105,6 +105,9 @@ public partial class Dwg2 {
       if (style.Name.IsBlank ()) return;
       (mStyles ??= []).Add (style); _styleMap = null;
    }
+
+   /// <summary>Remove all the entities on the specified layer</summary>
+   public void ClearLayer (Layer2 l) => RemoveOrdered ([.. mEnts.Where (ent => ent.Layer == l)]);
 
    /// <summary>Removes an "existing" entity from the drawing</summary>
    public void Remove (Ent2 ent) => Lib.Check (mEnts.Remove (ent), "Coding Error");
