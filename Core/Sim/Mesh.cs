@@ -44,6 +44,9 @@ public class Mesh3 {
          return _bound;
       }
    }
+
+   public bool IsEmpty => Triangle.Length == 0;
+
    Bound3 _bound = new ();
 
    public static Mesh3 operator * (Mesh3 mesh, Matrix3 xfm) {
