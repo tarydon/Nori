@@ -180,17 +180,17 @@ class SegTrimExtendTests {
 
       polySoup = [c, line0, line180];  // Line cutting circle at 0 and 180
       resPolys = [.. c.TrimmedSeg (0, 0.2, polySoup)];
-      resPolys.Count.Is (1); resPolys[0].Is ("M40,0Q-40,0,-2");
+      resPolys.Count.Is (1); resPolys[0].Is ("M-40,0Q40,0,2");
       resPolys = [.. c.TrimmedSeg (0, 0.8, polySoup)];
-      resPolys.Count.Is (1); resPolys[0].Is ("M-40,0Q40,0,-2");
+      resPolys.Count.Is (1); resPolys[0].Is ("M40,0Q-40,0,2");
 
       polySoup = [c, Poly.Line (0, 0, 0, 50), Poly.Line (0, 0, 0, -50)];  // Line cutting circle at 90 and -90
       resPolys = [.. c.TrimmedSeg (0, 0.2, polySoup)];
-      resPolys.Count.Is (1); resPolys[0].Is ("M0,-40Q0,40,-2");
+      resPolys.Count.Is (1); resPolys[0].Is ("M0,40Q0,-40,2");
       resPolys = [.. c.TrimmedSeg (0, 0.8, polySoup)];
-      resPolys.Count.Is (1); resPolys[0].Is ("M0,-40Q0,40,-2");
+      resPolys.Count.Is (1); resPolys[0].Is ("M0,40Q0,-40,2");
       resPolys = [.. c.TrimmedSeg (0, 0.5, polySoup)];
-      resPolys.Count.Is (1); resPolys[0].Is ("M0,40Q0,-40,-2");
+      resPolys.Count.Is (1); resPolys[0].Is ("M0,-40Q0,40,2");
    }
 
    [Test (124, "Trim arc seg")]
