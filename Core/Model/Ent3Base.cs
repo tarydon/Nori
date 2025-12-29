@@ -159,10 +159,6 @@ public abstract class E3Surface : Ent3 {
             vec2 = (Vector3)n1.Vec;
             if (vec1.Opposing (vec2) ^ (this is not E3Plane)) mFlags |= E3Flags.FlipNormal;
             if (this is E3Plane) mFlags ^= E3Flags.FlipNormal;
-            //var node = _mesh.Vertex[_mesh.Triangle[0]];
-            //Point2 uv = GetUV ((Point3)node.Pos);
-            //Vector3 vec1 = GetNormal (uv.X, uv.Y), vec2 = (Vector3)node.Vec;
-            //if (vec1.Opposing (vec2)) { mFlags |= E3Flags.FlipNormal; Debug.Write ('*'); } else Debug.Write ('.');
          }
       }
    }

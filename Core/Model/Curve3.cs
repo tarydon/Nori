@@ -28,9 +28,7 @@ public abstract class Curve3 {
 
    /// <summary>Is this curve lying on the XY plane?</summary>
    public abstract bool IsOnXYPlane { get; }
-   /// <summary>
-   /// Is this curve lying on the XZ plane?
-   /// </summary>
+   /// <summary>Is this curve lying on the XZ plane?</summary>
    public abstract bool IsOnXZPlane { get; }
 
    /// <summary>If non-zero, this is the pair-ID of this edge</summary>

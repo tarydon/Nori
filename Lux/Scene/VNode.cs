@@ -269,7 +269,7 @@ public abstract class VNode {
    // under it. So, call Scene.Root.Render() will draw the entire scene.
    internal void Render () {
       Lux.BeginNode (this);
-      if (Streaming && Lux.IsPicking) {
+      if (NoPicking && Lux.IsPicking) {
          if (mGeometryDirty) { Lux.Redraw (); }
          return;
       }

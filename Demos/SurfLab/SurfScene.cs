@@ -6,9 +6,9 @@ class SurfScene : Scene3 {
       mModel = new T3XReader (file).Load ();
       mModel.Ents.RemoveIf (a => !Include (a));
 
-      BgrdColor = new (96, 128, 160);
+      BgrdColor = new (96, 160, 128);
       Bound = mModel.Bound;
-      Root = new GroupVN ([new Model3VN (mModel), TraceVN.It, mPlus, mNormal]);
+      Root = new GroupVN ([new Model3VN (mModel), TraceVN.It, mPlus, mCross, mUnloft2, mNormal]);
 
       mHooks = HW.MouseMoves.Subscribe (OnMouseMove);
    }
