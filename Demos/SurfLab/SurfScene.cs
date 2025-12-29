@@ -22,6 +22,10 @@ class SurfScene : Scene3 {
 
    public override void Picked (object obj) {
       if (obj is E3Surface surf) {
+         mModel.Ents.ForEach (a => a.IsSelected = false);
+         surf.IsSelected = true;
+         foreach (var ent in mModel.GetNeighbors (surf))
+            ent.IsSelected = true;
          string s = surf.ToString ();
          if (surf.IsNormalFlipped) s += " Flip";
          Lib.Trace (s);
