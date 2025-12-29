@@ -27,6 +27,8 @@ public static partial class Lux {
    static Color4 mColor;
    static readonly Stack<Color4> mColors = [];
 
+   public static Color4 StencilColor = Color4.Black;
+
    /// <summary>The DPI scaling (how many pixels to one logical pixel)</summary>
    public static float DPIScale { get => mDPIScale; set => mDPIScale = value; }
    static float mDPIScale = 1;
