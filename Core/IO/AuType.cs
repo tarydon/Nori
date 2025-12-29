@@ -155,7 +155,6 @@ class AuType {
    List<AuField>? mUplinks;
 
    // Methods ------------------------------------------------------------------
-   /// <summary>Creates an instance of the object using its parameterless constructor</summary>
    public object CreateInstance () {
       mConstructor ??= mType.GetConstructor (Public | Instance | NonPublic, []) ??
          throw new AuException ($"No parameterless constructor found for {mType.FullName}");
