@@ -561,7 +561,7 @@ public class PlaneMeshIntersector (IEnumerable<Mesh3> meshes) {
    void Traverse (int from, int nextIdx, bool prepend, List<Point3f> pts) {
       int prev = from, curr = nextIdx;
 
-      while (true) {
+      while (curr != -1 && !mVisited[curr]) {
          // Follow links until the chain ends (-1) or point visited.
          while (curr != -1 && !mVisited[curr]) {
             if (prepend) pts.Insert (0, mRaw[curr]);
