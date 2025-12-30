@@ -40,7 +40,7 @@ public class T3XReader : IDisposable {
    /// </summary>
    public Model3 Load () {
       // Check this is a T3X file and the version
-      if (RWord () != "T3X" || RInt () != 1) Fatal ("Not a T3X file");
+      if (RWord () != "T3X" || RInt () != 2) Fatal ("Not a T3X file");
       for (; ; ) {
          // Each entity starts with the type name, and the list below 
          // shows all the entity types that are supported
@@ -66,7 +66,19 @@ public class T3XReader : IDisposable {
    }
 
    // Implementation -----------------------------------------------------------
-   // Loads an Arc3 from an "ARC" entity (subtype of Curve3)
+   // Loads an Arc3 from an "ARC" entity (subtype of Curve3).
+   // The schema is: 
+   //   ID  Radius  AngSpan  CoordSys
+   // The arc is defined in the world coordinate system and lofted up into position
+   // using the CoordSystem. The canonical arc is centered on the origin, lies in the
+   // XY plane and winds CCW starting with a point on the X axis (Radius,0,0). 
+   // For all Curve3 objects, the ID is basically the PairID (or coedge ID), and there
+   // are at most two Curve3 having the same PairID - these two are the touching edges from
+   // two surfaces that are adjacent to each other, and are the way connectivity information
+   // is maintained. 
+   // A PairID of 0 means this is a free edge, unconnected to any other surface (an outer
+   // edge or a hole edge of a non-manifold thin model, for example). A non-zero PairID that
+   // is not matched by another Curve3 carrying the same one in the model is also a free edge. 
    Arc3 LoadArc () {
       int id = RInt ();
       double rad = RDouble (), span = RDouble ();
@@ -74,7 +86,10 @@ public class T3XReader : IDisposable {
    }
 
    // Loads a set of control points, along with weights (this could be part of
-   // a NurbsCurve or a NurbsSurface
+   // a NurbsCurve or a NurbsSurface. Each line contains:
+   //   Point3  Weight
+   // The list is terminated with a line containing an asterisk *. 
+   // Even if all the weights are 1.0, they are present and are never omitted.
    (List<Point3>, List<double>) LoadCtrlPts () {
       List<Point3> ctrl = [];
       List<double> weight = [];
@@ -82,26 +97,42 @@ public class T3XReader : IDisposable {
       return (ctrl, weight);
    }
 
+   // Loads an E3Cone surface (subtype of Surface3) from a "CONE" entry
+   // The schema is:
+   //   ID  HalfAngle  CoordSys  Trims
+   // The cone tip is at the origin and it expands upwards along the +Z axis, with the
+   // specified Half-Angle at the tip.
+   // As with all surfaces, the surface finishes with a list of trimming curves. Since
+   // Cones are cyclic surfaces, it is not guaranteed that Trims[0] is an 'outer' trimming
+   // curve and the rest are inner (there may not even be a well defined 'outer' curve, 
+   // for example when there are two trimming circles defining a band running the whole
+   // way around the cone).
    E3Cone LoadCone () {
-      var (uid, rad, hangle, cs) = (RInt (), RDouble (), RDouble (), RCS ());
-      double height = rad / Math.Tan (hangle);
-      cs += cs.VecZ * -height;
-      return new E3Cone (uid, LoadContours (), cs, hangle);
+      var (id, hangle, cs) = (RInt (), RDouble (), RCS ());
+      return new E3Cone (id, LoadContours (), cs, hangle) { IsSelected = true };
    }
 
+   // Loads an E3Cylinder surface (subtype of Surface3) from a "CYLINDER" entry
+   // The schema is:
+   //   ID  Radius  CoordSys  Trims
+   // The cylinder is defined as centered at the origin, with axis aligned to +Z. 
+   // Trimming curves follow the same rules as for the Cone (no guarantee that Trims[0]
+   // is the outer trim)
    E3Cylinder LoadCylinder () {
       var (uid, rad, cs) = (RInt (), RDouble (), RCS ());
-      return new E3Cylinder (uid, LoadContours (), cs, rad);  // REMOVETHIS - infacing not set correctly
+      return new E3Cylinder (uid, LoadContours (), cs, rad);
    }
 
+   // Loads a list of contours (these are basically trimming curves in XYZ space
+   // for any of the surfaces). The complete list of contours is terminated by a *, 
+   // and the list of edges within each contour is also terminated by a *.
    List<Contour3> LoadContours () {
-      List<Contour3> contours = [];
       List<Curve3> edges = [];
-      for (; ; ) {
-         if (RWord () == "*") break;
+      List<Contour3> contours = [];
+      while (!RDone ()) { 
          for (; ; ) {
             Curve3? edge = LoadEdge ();
-            if (edge == null) break;
+            if (edge == null) break;      // Null is returned when we see a * (marking end of contour)
             edges.Add (edge);
          }
          contours.Add (new ([.. edges]));
@@ -110,6 +141,9 @@ public class T3XReader : IDisposable {
       return contours;
    }
 
+   // Loads one of the Curve3 (typically, this is part of a list of Curve3 making up a Contour),
+   // but Curve3 also appear in other places, such as the Generatrix for a SpunSurface
+   // or SweptSurface
    Curve3? LoadEdge () {
       string type = RWord ();
       return type switch {
@@ -123,11 +157,25 @@ public class T3XReader : IDisposable {
       };
    }
 
+   // Loads an Ellipse entity. 
+   // The schema is:
+   //   ID  RadiusX  RadiusY  StartAng  EndAng  CoordSys
+   // The ellipse is always defined with center at the origin and axes aligned to +X and +Y,
+   // and then lofted up into its final location. The ellipse winds CCW from StartAng to EndAng.
    Ellipse3 LoadEllipse () {
       var (id, rx, ry, a0, a1) = (RInt (), RDouble (), RDouble (), RDouble (), RDouble ());
       return new Ellipse3 (id, RCS (), rx, ry, a0, a1);
    }
 
+   // Loads a Knot Vector (just a list of doubles)
+   // The storage of a knot vector in the T3X file takes into account that knots are often
+   // repeated. So the schema is:
+   //   Knot1  Repeat1
+   //   Knot2  Repeat2
+   //   ...
+   //   *
+   // So each knot is followed by a repeat count that specifies how many times that knot should
+   // be repeated in the knot vector. As with all open lists this is terminated with an asterisk *.
    List<double> LoadKnots () {
       List<double> knot = [];
       while (!RDone ()) {
@@ -137,9 +185,21 @@ public class T3XReader : IDisposable {
       return knot;
    }
 
+   // Loads a Line3 (subtype of Curve3)
+   // The schema is
+   //   ID  StartPoint  EndPoint
    Line3 LoadLine () 
       => new (RInt (), RPoint (), RPoint ());
 
+   // Loads a mesh, given an entity ID
+   // Meshes are stored in separate streams in the ZIP file, and the stream name is derived from
+   // the ID. Each stream itself is binary encoded and has the following schema:
+   //   0x1A48534D  1                 <- signature, version number (int)
+   //   CNode  CTri  CWire            <- count of nodes, triangles and wires (all int)
+   //   X Y Z P Q R                   <- 3 floats & 3 half making the pos & normal of a Node
+   //   ...                           <- repeated CNode times
+   //   A B C ...                     <- CTri integers making up the triangles
+   //   A B C ...                     <- CWire integers making up the wires
    Mesh3 LoadMesh (int id) {
       using var ms = new MemoryStream (mZip.ReadAllBytes ($"{id}.meshx"));
       using var br = new BinaryReader (ms);
@@ -156,6 +216,22 @@ public class T3XReader : IDisposable {
       return new ([.. nodes], [.. tris], [.. wires]);
    }
 
+   // Loads a 3D Nurbs curve (subtype of Curve3)
+   // The schema is
+   //   ID                          <- PairId
+   //     (X Y Z) W                 <- control point + weight
+   //     (X Y Z) W                 
+   //     ...
+   //     *                         <- end of control points
+   //     K1 R1                     <- knot value, repeat count
+   //     K2 R2
+   //     ...
+   //     *                         <- end of knot vector  
+   // The set of all control points is loaded in using LoadCtrlPts, and the knot
+   // vector is loaded in using LoadKnots (this is because these sub-structures are 
+   // used for NurbsSurfaces as well). Note that we always store this as a rational NURBs curve,
+   // but the weights may all be equal to 1, making it non-rational (the NurbsCurve entity handles
+   // this optimization internally)
    NurbsCurve3 LoadNurbsCurve () {
       var pairId = RInt ();
       var (ctrl, weight) = LoadCtrlPts ();
@@ -163,6 +239,19 @@ public class T3XReader : IDisposable {
       return new (pairId, [.. ctrl], [.. knots], [.. weight]);
    }
 
+   // Loads a 3D Nurbs Surface (subtype of Surface3)
+   // The schema is:
+   //   ID  UCtl                    <- PairId, number of U control points (column count)
+   //   { ControlPoints }           <- N control points, and VCtl can be computed as N / UCtl
+   //   { U-Knots }                 <- Knot vector for U direction
+   //   { V-Knots }                 <- Knot vector for V direction
+   //   Trims                       <- Trimming curves
+   // Note that the ControlPoints are stored as a single list, but effectively make up a 2D
+   // array (UCtl is the number of colums in that array, and the number of rows is implicitly
+   // N / UCtl). The knot vectors are stored in the same format as defined in the LoadNurbsCurve
+   // above. Note that we always store this as a rational NURBs surface, but the weights on all
+   // the control points may be equal to 1, making it non-rational (the NurbsSurface entity handles
+   // this optimization internally)
    E3NurbsSurface LoadNurbsSurface () {
       var (uid, uctl) = (RInt (), RInt ());
       var (ctrl, weight) = LoadCtrlPts ();
@@ -172,11 +261,23 @@ public class T3XReader : IDisposable {
       return new (uid, [.. ctrl], [.. weight], uctl, [.. uknots], [.. vknots], contours);
    }
 
+   // Loads a Plane (subtype of Surface3)
+   // The schema is:
+   //   ID  CoordSys  Trims
+   // The plane is canonically defined as lying the XY plane, and then lofted up into
+   // final position using a CoordSys. 
    E3Plane LoadPlane () {
       var (uid, cs) = (RInt (), RCS ());
       return new (uid, LoadContours (), cs);
    }
 
+   // Loads a Polyline3 (subtype of Curve3) - a piecewise linear curve
+   // The schema is 
+   //   ID
+   //   Point1
+   //   Point2
+   //   ...
+   //   *
    Polyline3 LoadPolyline () {
       var uid = RInt ();
       List<Point3> ctrl = [];
@@ -184,16 +285,26 @@ public class T3XReader : IDisposable {
       return new Polyline3 (uid, [.. ctrl]);
    }
 
+   // Loads a SpunSurface (subtype of Surface3) - basically a surface-of-revolution
+   // The schema is
+   //   ID  CoordSys  "GENERATRIX"  Curve3  Trims
+   // The spun surface is defined canonically with a spin axis along Z, and the generatrix
+   // curve lying on the XZ plane. Since the generatrix curve is loaded using LoadEdge, it 
+   // is polymorphic and could be any Curve3 type. (The PairID of this Curve3 is always set to
+   // 0, since it is not a boundary curve in the BRep). 
    E3SpunSurface LoadSpunSurface () {
       var (uid, cs) = (RInt (), RCS ());
-      if (RWord () != "GENERATRIX") Fatal ();
       Curve3 genetrix = LoadEdge ()!;
       return new E3SpunSurface (uid, LoadContours (), cs, genetrix);
    }
 
+   // Loads a SweptSurface (subtype of Surface)
+   // The schema is
+   //   ID  CoordSys  "GENERATRIX"  Curve3  Trims
+   // The swept surface is defined canonically with a sweep vector along +Y and the 
+   // generatrix curve lying in the XZ plane. 
    E3SweptSurface LoadSweptSurface () {
       var (uid, sweep) = (RInt (), RVector ());
-      if (RWord () != "GENERATRIX") Fatal ();
       Curve3 genetrix = LoadEdge ()!;      
       var (x, y) = Geo.GetXYFromZ (sweep);
       var cs = new CoordSystem (genetrix.Start, x, y);
@@ -239,3 +350,4 @@ public class T3XReader : IDisposable {
    readonly Model3 mModel = new ();    // The model we're constructing
    readonly ZipArchive mZip;           // Zip file we're loading from 
 }
+#endregion
