@@ -3,9 +3,8 @@
 // ║║║║╬║╔╣║ Implements hardware events (keyboard, mouse) in a platform independent manner
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 namespace Nori;
+
 using GLPanel = UserControl;
-using WMouse = System.Windows.Input.Mouse;
-using WMouseButtonState = System.Windows.Input.MouseButtonState;
 
 #region class EventWrapper<T> ----------------------------------------------------------------------
 /// <summary>The base class for various classes that convert events to IObservables</summary>

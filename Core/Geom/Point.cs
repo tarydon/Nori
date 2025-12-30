@@ -2,7 +2,6 @@
 // ╔═╦╦═╦╦╬╣ Point.cs
 // ║║║║╬║╔╣║ Various point classes (in 2D and 3D)
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
-using JetBrains.Annotations;
 using static System.Math;
 namespace Nori;
 

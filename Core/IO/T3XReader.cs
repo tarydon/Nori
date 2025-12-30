@@ -1,19 +1,49 @@
 // ────── ╔╗
 // ╔═╦╦═╦╦╬╣ T3XReader.cs
-// ║║║║╬║╔╣║ <<TODO>>
+// ║║║║╬║╔╣║ Code to load a Model3 from a T3X file
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 using System.IO.Compression;
 namespace Nori;
 
+#region class T3XReader --------------------------------------------------------
+/// <summary>
+/// Reader to load Model3 from T3X files (exported from Flux typically)
+/// </summary>
+/// A T3X file is now sued to transfer 3D files from Flux to Nori, but is a general
+/// format that could be written from other applications as well. A T3X file is 
+/// basically a ZIP file. The ZIP file must contain one stream inside called "Data"
+/// that contains a text representation of all the entities in the file. 
+/// In addition, the T3X file can also contain pre-tesselated meshes for these
+/// entities - these are stored in binary mesh format (meshx) streams with names
+/// like 1.meshx, 2.meshx, where the integer is the Id of the entity.
+/// 
+/// For now, the T3XWriter in Flux is the only source of T3X files. Until there
+/// are some other writers, both writer and reader will be maintained in lock-step
+/// so only the 'latest' version of the T3X file will be supported by this reader.
+/// 
+/// Each open-ended list in a T3X file (like the top level list of entities, the list
+/// of control points in a Nurb etc) are terminated with a line that contains only an
+/// asterisk * in it (other than whitespace characters). 
 public class T3XReader : IDisposable {
+   // Constructors -------------------------------------------------------------
+   /// <summary>
+   /// Initialize a T3XReader, given the name of a T3X file
+   /// </summary>
    public T3XReader (string file) {
       mZip = new (File.OpenRead (file), ZipArchiveMode.Read, false);
       T = mZip.ReadAllText ("Data");
    }
 
+   // Methods ------------------------------------------------------------------
+   /// <summary>
+   /// Constructs the Model3 and returns it
+   /// </summary>
    public Model3 Load () {
+      // Check this is a T3X file and the version
       if (RWord () != "T3X" || RInt () != 1) Fatal ("Not a T3X file");
       for (; ; ) {
+         // Each entity starts with the type name, and the list below 
+         // shows all the entity types that are supported
          string type = RWord ();
          E3Surface? ent = type switch {
             "CONE" => LoadCone (),
@@ -23,10 +53,12 @@ public class T3XReader : IDisposable {
             "SPUNSURFACE" => LoadSpunSurface (),
             "SWEPTSURFACE" => LoadSweptSurface (),
             "TORUS" => LoadTorus (),
-            "*" => null,
+            "*" => null,   // This is the delimiter that terminates the file
             _ => throw new BadCaseException (type)
          };
          if (ent == null) break;
+         // It's possible the mesh for this entity might also be stored in the
+         // file, so attempt to load it and attach it to the entity
          ent.Mesh = LoadMesh (ent.Id);
          mModel.Ents.Add (ent);
       }
@@ -34,18 +66,19 @@ public class T3XReader : IDisposable {
    }
 
    // Implementation -----------------------------------------------------------
+   // Loads an Arc3 from an "ARC" entity (subtype of Curve3)
    Arc3 LoadArc () {
       int id = RInt ();
       double rad = RDouble (), span = RDouble ();
       return new Arc3 (id, RCS (), rad, span);
    }
 
+   // Loads a set of control points, along with weights (this could be part of
+   // a NurbsCurve or a NurbsSurface
    (List<Point3>, List<double>) LoadCtrlPts () {
       List<Point3> ctrl = [];
       List<double> weight = [];
-      while (!RDone ()) {
-         ctrl.Add (RPoint ()); weight.Add (RDouble ());
-      }
+      while (!RDone ()) { ctrl.Add (RPoint ()); weight.Add (RDouble ()); }
       return (ctrl, weight);
    }
 

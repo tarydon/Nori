@@ -3,10 +3,6 @@
 // ║║║║╬║╔╣║ <<TODO>>
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 namespace Nori;
-
-using System.Reactive.Subjects;
-using static Math;
-
 #region class SurfaceMesher ------------------------------------------------------------------------
 /// <summary>This computes a Mesh3 for a surface</summary>
 class SurfaceMesher {

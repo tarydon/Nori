@@ -137,9 +137,10 @@ public static class Geo {
       return (center, center.IsNil ? 0 : center.DistToLine (e, f));
    }
 
-   /// <summary>Computes a normal, given atleast 3 points</summary>
+   /// <summary>Computes a normal, given atleast 3 coplanar points</summary>
    /// This first uses GetBasisPoints to get 3 points from the list that are _far from_ 
-   /// each other, and then uses those three to compute a normal.
+   /// each other, and then uses those three to compute a normal. If the given set of
+   /// points are not coplanar, the result is indeterminate
    public static Vector3 GetNormal (IList<Point3> pts) {
       GetBasisPoints (out int a, out int b, out int c);
       return ((pts[b] - pts[a]) * (pts[c] - pts[a])).Normalized ();

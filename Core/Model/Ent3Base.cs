@@ -2,8 +2,6 @@
 // ╔═╦╦═╦╦╬╣ Ent3Base.cs
 // ║║║║╬║╔╣║ Defines some the Ent3 hierarchy of classes (the abstract base classes)
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
-using System.Diagnostics;
-
 namespace Nori;
 
 #region class Ent3 ---------------------------------------------------------------------------------

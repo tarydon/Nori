@@ -2,9 +2,7 @@
 // ╔═╦╦═╦╦╬╣ Lux.cs
 // ║║║║╬║╔╣║ The Lux class: public interface to the Lux rendering engine
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
-using System.Diagnostics;
 using System.Reactive.Subjects;
-using System.Reflection;
 using System.Windows.Threading;
 namespace Nori;
 
