@@ -31,8 +31,10 @@ public abstract class Scene {
    public VNode? Root {
       get => mRoot;
       set {
-         mRoot?.Deregister ();
-         (mRoot = value)?.Register ();
+         if (miAttached) {
+            mRoot?.Deregister ();
+            (mRoot = value)?.Register ();
+         } else mRoot = value;
       }
    }
    VNode? mRoot;
@@ -66,8 +68,11 @@ public abstract class Scene {
    }
    protected Vec2S mViewport;
 
+   internal void Attach () { miAttached = true; mRoot?.Register (); }
+   bool miAttached = false;
+
    /// <summary>Called when the scene is detached from the Lux renderer</summary>
-   public void Detach () { Detached (); mRoot?.Deregister (); }
+   internal void Detach () { Detached (); mRoot?.Deregister (); miAttached = false; }
 
    /// <summary>Override this to zoom in or out about the given position (in pixels)</summary>
    public void Zoom (Vec2S pos, double factor) {
