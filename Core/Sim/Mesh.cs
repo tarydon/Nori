@@ -419,6 +419,7 @@ public class PlaneMeshIntersector (IEnumerable<Mesh3> meshes) {
          polylines.AddRange (BuildPolylines ());
       }
 
+      RemoveEmptyAndZeroLength (polylines);
       return polylines;
    }
 
@@ -575,7 +576,8 @@ public class PlaneMeshIntersector (IEnumerable<Mesh3> meshes) {
 
          // If curr != -1 we hit a visited node,
          // meaning this direction is complete (loop or overlap).
-         if (curr != -1) return;
+         // Close the loop by adding the visited point to pts.
+         if (curr != -1) { pts.Add (mRaw[curr]); return; }
 
          // We hit an open end (curr == -1). Try to continue
          // by jumping to the matching endpoint (same geometric position)
@@ -610,6 +612,25 @@ public class PlaneMeshIntersector (IEnumerable<Mesh3> meshes) {
       // Start with no neighbours; BuildAdjacency/Link will fill these.
       mNbr1.Add (-1); mNbr2.Add (-1); mEdgeMap[key] = idx;
       return idx;
+   }
+
+   // Removes empty polylines and polylines with no geometric length.
+   void RemoveEmptyAndZeroLength (List<Polyline3> polylines) {
+      for (int i = polylines.Count - 1; i >= 0; i--) {
+         var pts = polylines[i].Pts;
+
+         // Empty / degenerate point count.
+         if (pts.Length < 2) { polylines.RemoveAt (i); continue; }
+
+         // Reject if no segment has non-trivial length (all points equal within tolerance).
+         var prev = pts[0]; bool hasLen = false;
+         for (int j = 1; j < pts.Length; j++) {
+            var p = pts[j];
+            if (!p.EQ (prev, 1e-3)) { hasLen = true; break; }
+            prev = p;
+         }
+         if (!hasLen) polylines.RemoveAt (i);
+      }
    }
 
    // Input mesh positions and triangles (set per mesh during Compute)
