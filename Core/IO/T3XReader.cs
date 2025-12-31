@@ -6,9 +6,7 @@ using System.IO.Compression;
 namespace Nori;
 
 #region class T3XReader --------------------------------------------------------
-/// <summary>
-/// Reader to load Model3 from T3X files (exported from Flux typically)
-/// </summary>
+/// <summary>Reader to load Model3 from T3X files (exported from Flux typically)</summary>
 /// A T3X file is now sued to transfer 3D files from Flux to Nori, but is a general
 /// format that could be written from other applications as well. A T3X file is 
 /// basically a ZIP file. The ZIP file must contain one stream inside called "Data"
@@ -26,18 +24,14 @@ namespace Nori;
 /// asterisk * in it (other than whitespace characters). 
 public class T3XReader : IDisposable {
    // Constructors -------------------------------------------------------------
-   /// <summary>
-   /// Initialize a T3XReader, given the name of a T3X file
-   /// </summary>
+   /// <summary>Initialize a T3XReader, given the name of a T3X file</summary>
    public T3XReader (string file) {
       mZip = new (File.OpenRead (file), ZipArchiveMode.Read, false);
       T = mZip.ReadAllText ("Data");
    }
 
    // Methods ------------------------------------------------------------------
-   /// <summary>
-   /// Constructs the Model3 and returns it
-   /// </summary>
+   /// <summary>Constructs the Model3 and returns it</summary>
    public Model3 Load () {
       if (mModel.Ents.Count > 0) return mModel;
       // Check this is a T3X file and the version

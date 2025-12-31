@@ -257,6 +257,7 @@ public class NurbsCurve3 : Curve3 {
       Rational = !(weight.IsEmpty || weight.All (a => a.EQ (1)));
       if (!Rational) Weight = [];
    }
+
    NurbsCurve3 () => mImp = null!;
    readonly SplineImp mImp;
 
@@ -278,6 +279,8 @@ public class NurbsCurve3 : Curve3 {
    public override bool IsOnXYPlane => Ctrl.All (a => a.Z.EQ (0));
 
    public override bool IsOnXZPlane => Ctrl.All (a => a.Y.IsZero (Lib.Delta));
+
+   public ImmutableArray<double> Knot => mImp.Knot;
 
    /// <summary>Weights attached to the control points</summary>
    /// If this array is empty, then this is a non-rational spline (all weights are 1)

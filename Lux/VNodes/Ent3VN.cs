@@ -11,7 +11,7 @@ public abstract class Ent3VN (Ent3 mEnt) : VNode (mEnt) {
 }
 
 public class E3SurfaceVN (E3Surface mSurface) : Ent3VN (mSurface) {
-   public override void Draw () 
+   public override void Draw ()
       => Lux.Mesh (mSurface.Mesh, mSurface.IsTranslucent ? EShadeMode.GlassNoStencil : EShadeMode.Phong);
 }
 

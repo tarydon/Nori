@@ -34,7 +34,6 @@ class SurfScene : Scene3 {
    }
 
    bool Include (Ent3 e) {
-      return e.Id == 127;
       return true;
    }
 

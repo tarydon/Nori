@@ -11,7 +11,7 @@ public class CurveUnlofter {
       // Create an initial subdivision with 4 segs
       double dt = mDomain.Length / mRootTiles;
       for (int i = 0; i <  mRootTiles; i++) {
-         AddNode (dt * (i + 0.5));
+         AddNode (dt * (i + 0.5) + mDomain.Min);
          AddSeg (i, dt / 2);
       }
    }
@@ -120,7 +120,8 @@ public class CurveUnlofter {
          Left = owner.AddNode (tCen - DT); Right = owner.AddNode (tCen + DT);
          Point3 cen = center.Pt;
          Point3 left = nodes[Left].Pt, right = nodes[Right].Pt;
-         if (cen.DistToLineSq (left, right) < Lib.FineTessSq) {
+         if (cen.DistToLineSq (left, right) < Lib.FineTessSq
+          && Math.Abs (cen.DistTo (left) - cen.DistTo (right)) < Lib.FineTess) {
             State = EState.Leaf;
             return;
          }

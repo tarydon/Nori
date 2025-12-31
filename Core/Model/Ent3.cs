@@ -406,9 +406,7 @@ public sealed class E3Sphere : E3Surface {
 #endregion
 
 #region class E3RuledSurface -----------------------------------------------------------------------
-/// <summary>
-/// A RuledSurface is generaeted by connecting equi-parameter points on the bottom & top curves
-/// </summary>
+/// <summary>A RuledSurface is generaeted by connecting equi-parameter points on the bottom & top curves</summary>
 /// 
 /// Parametrization: 
 /// - V is the parameter value (T) along the bottom and top curves
@@ -488,14 +486,29 @@ public sealed class E3SweptSurface : E3CSSurface {
    protected override Point3 GetPointCanonical (double u, double v) 
       => Genetrix.GetPoint (v).Moved (0, 0, u);
 
-   protected override Vector3 GetNormalCanonical (double u, double v)
-      => Vector3.ZAxis * Genetrix.GetTangent (v);
+   protected override Vector3 GetNormalCanonical (double u, double v) {
+      Vector3 normal = Vector3.ZAxis * Genetrix.GetTangent (v);
+      if (!IsGenetrixFlat) normal = normal.Normalized ();
+      return normal;
+   }
 
    protected override Point2 GetUVCanonical (Point3 pt) {
-      double v = (_unlofter ??= new CurveUnlofter (Genetrix)).GetT (pt);
-      return new (pt.Z, v);
+      if (IsGenetrixFlat) {
+         double v = (_unlofter ??= new CurveUnlofter (Genetrix)).GetT (pt);
+         return new (pt.Z, v);
+      } else {
+         if (Genetrix is NurbsCurve3 nc) {
+            var ctrl = nc.Ctrl.Select (a => new Point3 (a.X, a.Y, 0));
+            _flatGenetrix = new NurbsCurve3 (0, [.. ctrl], nc.Knot, nc.Weight);
+         } else
+            throw new NotImplementedException ();
+
+         double v = (_unlofter ??= new CurveUnlofter (_flatGenetrix)).GetT (new (pt.X, pt.Y, 0));
+         return new (pt.Z - Genetrix.GetPoint (v).Z, v);
+      }
    }
    CurveUnlofter? _unlofter;
+   Curve3? _flatGenetrix;
 
    public override Bound2 ComputeDomain () => new (new Bound1 (0, 100), Genetrix.Domain);
 }
