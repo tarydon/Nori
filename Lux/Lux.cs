@@ -100,9 +100,13 @@ public static partial class Lux {
       return dib;
    }
 
+   /// <summary>Gets the VNode under the given mouse position.</summary>
+   public static VNode? Pick (Vec2S pos) => Pick (pos, out _);
+
    /// <summary>This does a 'pick' operation on the current UIScene</summary>
-   /// This effectively returns the VNode that lies underneat the current mouse position.
-   public static VNode? Pick (Vec2S pos) {
+   /// This effectively returns the VNode that lies underneath the current mouse position.
+   public static VNode? Pick (Vec2S pos, out float depth) {
+      depth = float.NaN;
       // If we're doign any simulation, return null
       if (sRenderCompletes.Count > 0 || mRendering || !mReady || mUIScene == null) return null;
       if (!mPickBufferValid) {
@@ -112,6 +116,7 @@ public static partial class Lux {
       }
       int index = (mViewport.Y - pos.Y - 1) * mViewport.X + pos.X;
       if (index < 0 || index >= mPickDepth.Length) return null;
+      depth = mPickDepth[index];
 
       // Now, abandon the LSB 2 bits of r, g and b leaving only 6 bits each (this is to
       // avoid round off errors in low-bit depth color buffers
@@ -125,11 +130,13 @@ public static partial class Lux {
    static bool mReady;
 
    /// <summary>Converts a pixel coordinate to world coordinates</summary>
-   public static Point3 PixelToWorld (Vec2S pix) {
+   /// <param name="pix">The screen pixel position</param>
+   /// <param name="zDepth">The zdepth at that position obtained by calling Pick (..., out float depth)</param>
+   public static Point3 PixelToWorld (Vec2S pix, double zDepth = 0) {
       if (mUIScene == null) return new (pix.X, pix.Y, 0);
       // Convert pixel coordinate to OpenGL clip space coordinates.
       Vec2S vp = mViewport;
-      Point3 clip = new (2.0 * pix.X / vp.X - 1, 1.0 - 2.0 * pix.Y / vp.Y, 0);
+      Point3 clip = new (2.0 * pix.X / vp.X - 1, 1.0 - 2.0 * pix.Y / vp.Y, 2 * zDepth - 1);
       clip *= mUIScene.Xfms[0].InvXfm;
       int d = PixelScale switch { > 1 => 0, > 0.1 => 1, > 0.01 => 2, > 0.001 => 3, _ => 4 };
       clip = new (Math.Round (clip.X, d), Math.Round (clip.Y, d), Math.Round (clip.Z, d));
