@@ -31,9 +31,8 @@ class MinSphereScene : Scene3 {
       sw.Restart ();
       var s2 = MinSphere.FromQuickApprox (pts);
       sw.Stop ();
-      Lib.Trace ($"Approx-Sphere, Radius: {s2.Radius.Round (1)}, Center: ({s2.Center.X.Round (1)}, {s2.Center.Y.Round (1)}, {s2.Center.Z.Round (1)})");
+      Lib.Trace ($"Approx-Sphere, Radius: {s2.Radius.Round (1)}, Center: ({s2.Center.X.Round (1)}, {s2.Center.Y.Round (1)}, {s2.Center.Z.Round (1)}), Elapsed: {sw.Elapsed.TotalMicroseconds:F0} us");
       Lib.Trace ($"Deviation: {((s2.Radius - s.Radius) / s.Radius):P2}");
-      Lib.Trace ($"Elapsed: {sw.Elapsed.TotalMicroseconds:F0} us");
 
       Lib.Trace ("Press 'Min. Sphere' again to regenerate");
       Root = new GroupVN (nodes);
