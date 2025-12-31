@@ -39,8 +39,9 @@ public class T3XReader : IDisposable {
    /// Constructs the Model3 and returns it
    /// </summary>
    public Model3 Load () {
+      if (mModel.Ents.Count > 0) return mModel;
       // Check this is a T3X file and the version
-      if (RWord () != "T3X" || RInt () != 2) Fatal ("Not a T3X file");
+      if (RWord () != "T3X" || RInt () != 3) Fatal ("Not a T3X file");
       for (; ; ) {
          // Each entity starts with the type name, and the list below 
          // shows all the entity types that are supported
@@ -50,6 +51,7 @@ public class T3XReader : IDisposable {
             "CYLINDER" => LoadCylinder (),
             "NURBSSURFACE" => LoadNurbsSurface (),
             "PLANE" => LoadPlane (),
+            "RULEDSURFACE" => LoadRuledSurface (),
             "SPUNSURFACE" => LoadSpunSurface (),
             "SWEPTSURFACE" => LoadSweptSurface (),
             "TORUS" => LoadTorus (),
@@ -62,6 +64,7 @@ public class T3XReader : IDisposable {
          ent.Mesh = LoadMesh (ent.Id);
          mModel.Ents.Add (ent);
       }
+      mZip.Dispose (); 
       return mModel;
    }
 
@@ -129,7 +132,8 @@ public class T3XReader : IDisposable {
    List<Contour3> LoadContours () {
       List<Curve3> edges = [];
       List<Contour3> contours = [];
-      while (!RDone ()) { 
+      for (; ;) {
+         string wor = RWord (); if (wor == "*") break;
          for (; ; ) {
             Curve3? edge = LoadEdge ();
             if (edge == null) break;      // Null is returned when we see a * (marking end of contour)
@@ -285,34 +289,53 @@ public class T3XReader : IDisposable {
       return new Polyline3 (uid, [.. ctrl]);
    }
 
+   // Loads a RuledSurface (subtype of Surface3)
+   // The scheme is 
+   //    ID  Bottom  Top  Trims
+   // The ruled surface is defined by drawing lines between equi-parametric points
+   // on the bottom and top generator curves
+   E3RuledSurface LoadRuledSurface () {
+      var uid = RInt ();
+      if (RWord () != "BOTTOM") Fatal ();
+      Curve3 bottom = LoadEdge ()!;
+      if (RWord () != "TOP") Fatal ();
+      Curve3 top = LoadEdge ()!;
+      return new E3RuledSurface (uid, LoadContours (), bottom, top); 
+   }
+
    // Loads a SpunSurface (subtype of Surface3) - basically a surface-of-revolution
    // The schema is
-   //   ID  CoordSys  "GENERATRIX"  Curve3  Trims
+   //   ID  CoordSys  Curve3  Trims
    // The spun surface is defined canonically with a spin axis along Z, and the generatrix
    // curve lying on the XZ plane. Since the generatrix curve is loaded using LoadEdge, it 
    // is polymorphic and could be any Curve3 type. (The PairID of this Curve3 is always set to
    // 0, since it is not a boundary curve in the BRep). 
    E3SpunSurface LoadSpunSurface () {
       var (uid, cs) = (RInt (), RCS ());
+      if (RWord () != "GENERATRIX") Fatal ();
       Curve3 genetrix = LoadEdge ()!;
       return new E3SpunSurface (uid, LoadContours (), cs, genetrix);
    }
 
    // Loads a SweptSurface (subtype of Surface)
    // The schema is
-   //   ID  CoordSys  "GENERATRIX"  Curve3  Trims
+   //   ID  CoordSys  Curve3  Trims
    // The swept surface is defined canonically with a sweep vector along +Y and the 
    // generatrix curve lying in the XZ plane. 
    E3SweptSurface LoadSweptSurface () {
       var (uid, sweep) = (RInt (), RVector ());
+      if (RWord () != "GENERATRIX") Fatal ();
       Curve3 genetrix = LoadEdge ()!;      
       var (x, y) = Geo.GetXYFromZ (sweep);
       var cs = new CoordSystem (genetrix.Start, x, y);
       return new E3SweptSurface (uid, LoadContours (), cs, genetrix.Xformed (Matrix3.From (cs)));
    }
 
+   // Loads a Torus (subtype of Surface)
+   // The schema is
+   //   ID  CoordSys  RMajor  RMinor  Trims
    E3Torus LoadTorus () {
-      var (uid, rmajor, rminor, cs) = (RInt (), RDouble (), RDouble (), RCS ());
+      var (uid, cs, rmajor, rminor) = (RInt (), RCS (), RDouble (), RDouble ());
       return new E3Torus (uid, LoadContours (), cs, rmajor, rminor);
    }
 

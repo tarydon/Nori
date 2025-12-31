@@ -1,4 +1,5 @@
-﻿using Nori;
+﻿using System.IO;
+using Nori;
 namespace SurfLab;
 
 class SurfScene : Scene3 {
@@ -33,8 +34,7 @@ class SurfScene : Scene3 {
    }
 
    bool Include (Ent3 e) {
-      //e.IsNormalFlipped = !e.IsNormalFlipped;
-      //return e.Id == 71;
+      return e.Id == 127;
       return true;
    }
 

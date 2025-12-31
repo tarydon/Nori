@@ -1,3 +1,4 @@
+using System.IO;
 using System.Windows;
 using Nori;
 using SurfLab;
@@ -19,7 +20,8 @@ public partial class MainWindow : Window {
       TraceVN.TextColor = Color4.Yellow;
       Lib.Tracer = TraceVN.Print;
       new SceneManipulator ();
-      Lux.UIScene = new SurfScene ("C:/Etc/T3/5X-051.t3x");
-      // Lux.BackFacesPink = true;
+
+      string file = "C:/Etc/T3/Bad/5X-039.t3x";
+      Lux.UIScene = new SurfScene (file);
    }
 }
