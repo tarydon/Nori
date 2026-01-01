@@ -27,6 +27,11 @@ class MinSphereScene : Scene3 {
       Lib.Trace ($"Min-Sphere, Radius: {s.Radius.Round (1)}, Center: ({s.Center.X.Round (1)}, {s.Center.Y.Round (1)}, {s.Center.Z.Round (1)})");
       Lib.Trace ($"Points: {pts.Length}, On Sphere: {ptlie.Count (x => x.N == 0)}, Elapsed: {sw.Elapsed.TotalMicroseconds:F0} us");
 
+      sw.Restart ();
+      s = MinSphere.From2 (pts); // Compute minimum enclosing sphere (alternative algorithm)
+      sw.Stop ();
+      Lib.Trace ($"Min-Sphere alternate method, Radius: {s.Radius.Round (1)}, Center: ({s.Center.X.Round (1)}, {s.Center.Y.Round (1)}, {s.Center.Z.Round (1)}), Elapsed: {sw.Elapsed.TotalMicroseconds:F0} us");
+
       // Compute approximate sphere by Ritter's algorithm for comparison
       sw.Restart ();
       var s2 = MinSphere.FromQuickApprox (pts);
