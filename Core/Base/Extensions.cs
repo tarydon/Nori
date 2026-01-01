@@ -233,6 +233,12 @@ public static class Extensions {
       return elem;
    }
 
+   /// <summary>Removes all elements except the ones matching a particular condition</summary>
+   public static void RemoveExcept<T> (this IList<T> list, Predicate<T> filter) {
+      for (int i = list.Count - 1; i >= 0; i--)
+         if (!filter (list[i])) list.RemoveAt (i);
+   }
+
    /// <summary>Removes all elements matching a particular condition</summary>
    public static void RemoveIf<T> (this IList<T> list, Predicate<T> match) {
       for (int i = list.Count - 1; i >= 0; i--)

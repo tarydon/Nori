@@ -121,6 +121,15 @@ public abstract class E3Surface : Ent3 {
    protected E3Surface (int id, IEnumerable<Contour3> trims) : base (id) => mContours = [.. trims];
 
    // Properties ---------------------------------------------------------------
+   /// <summary>The surface area of this surface</summary>
+   public double Area {
+      get {
+         if (mArea.IsNaN ()) mArea = Mesh.GetArea ();
+         return mArea;
+      }
+   }
+   double mArea = double.NaN;
+
    /// <summary>The Bound of the surface in 3D</summary>
    /// This is computed by the ComputeBound override, and cached here
    public override Bound3 Bound => Bound3.Update (ref mBound, ComputeBound);

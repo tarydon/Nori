@@ -47,6 +47,7 @@ public class T3XReader : IDisposable {
             "PLANE" => LoadPlane (),
             "RULEDSURFACE" => LoadRuledSurface (),
             "SPUNSURFACE" => LoadSpunSurface (),
+            "SPHERE" => LoadSphere (),
             "SWEPTSURFACE" => LoadSweptSurface (),
             "TORUS" => LoadTorus (),
             "*" => null,   // This is the delimiter that terminates the file
@@ -295,6 +296,16 @@ public class T3XReader : IDisposable {
       if (RWord () != "TOP") Fatal ();
       Curve3 top = LoadEdge ()!;
       return new E3RuledSurface (uid, LoadContours (), bottom, top); 
+   }
+
+   /// <summary>Loads an E3Sphere surface (subtype of Surface3) from a "SPHERE" entry</summary>
+   /// The schema is:
+   ///   ID  Radius CoordSys  Trims
+   /// The sphere is canonically centered at the origin and lofted into final position
+   /// and orientation with a CoordSys
+   E3Sphere LoadSphere () {
+      var (id, radius, cs) = (RInt (), RDouble (), RCS ());
+      return new E3Sphere (id, LoadContours (), cs, radius);
    }
 
    // Loads a SpunSurface (subtype of Surface3) - basically a surface-of-revolution

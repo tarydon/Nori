@@ -21,6 +21,17 @@ public class Mesh3 {
       Vertex = vertex; Triangle = tris; Wire = wire;
    }
 
+   public double GetArea () {
+      double total = 0;
+      for (int i = 0; i < Triangle.Length; i += 3) {
+         Point3 pa = (Point3)Vertex[Triangle[i]].Pos,
+                pb = (Point3)Vertex[Triangle[i + 1]].Pos,
+                pc = (Point3)Vertex[Triangle[i + 2]].Pos;
+         total += ((pb - pa) * (pc - pb)).Length;
+      }
+      return total / 2; 
+   }
+
    public bool Opposing () {
       for (int i = 0; i < Triangle.Length; i += 3) {
          Node na = Vertex[Triangle[i]], nb = Vertex[Triangle[i + 1]], nc = Vertex[Triangle[i + 2]];

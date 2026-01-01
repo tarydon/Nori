@@ -388,20 +388,34 @@ public sealed class E3Plane : E3CSSurface {
 #region class E3Sphere -----------------------------------------------------------------------------
 /// <summary>A sphere is defined by a center point and radius</summary>
 /// The parametrization is as follows:
-/// - U goes from 0 at the south pole to 1 at the north pole
-/// - V goes from 0 to 1 as we rotate about the polar axis
-public sealed class E3Sphere : E3Surface {
-   public E3Sphere (int id, List<Contour3> trims, Point3 center, double radius) : base (id, trims) {
-      Center = center; Radius = radius; 
-   }
-   public readonly Point3 Center;
+/// - U goes from -PI/2 at the south pole to +PI/2 at the north pole
+/// - V goes from 0 to 2*PI as we rotate about the polar axis
+public sealed class E3Sphere : E3CSSurface {
+   public E3Sphere (int id, List<Contour3> trims, CoordSystem cs, double radius) : base (id, trims, cs)
+      => Radius = radius; 
    public readonly double Radius;
 
-   public override Point3 GetPoint (double u, double v) => throw new NotImplementedException ();
-   public override Vector3 GetNormal (double u, double v) => throw new NotImplementedException ();
-   public override Point2 GetUV (Point3 pt) => throw new NotImplementedException ();
+   public override Bound2 ComputeDomain () 
+      => new (-Lib.HalfPI, 0, Lib.HalfPI, Lib.TwoPI);
 
-   public override Bound2 ComputeDomain () => new (0, 0, Lib.TwoPI, Lib.TwoPI);
+   protected override Point3 GetPointCanonical (double u, double v) {
+      var (sin, cos) = Math.SinCos (u);
+      Point3 pt = new (cos * Radius, 0, sin * Radius);  // Point on the XZ plane
+      return pt.Rotated (EAxis.Z, v);
+   }
+
+   protected override Vector3 GetNormalCanonical (double u, double v) {
+      var (sin, cos) = Math.SinCos (u);
+      Vector3 vec = new (cos, 0, sin);
+      return vec.Rotated (EAxis.Z, v);
+   }
+
+   protected override Point2 GetUVCanonical (Point3 pt) {
+      double v = Atan2 (pt.Y, pt.X);
+      pt = pt.Rotated (EAxis.Z, -v);      // Now, rotate the generating arc to its canonical orientation (v = 0)
+      double u = Atan2 (pt.Z, pt.X);
+      return new (u, v);
+   }
 }
 #endregion
 

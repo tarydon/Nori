@@ -3,9 +3,9 @@ using Nori;
 namespace SurfLab;
 
 class SurfScene : Scene3 {
-   public SurfScene (string file) {
+   public SurfScene (string file, int id) {
       mModel = new T3XReader (file).Load ();
-      mModel.Ents.RemoveIf (a => !Include (a));
+      mModel.Ents.RemoveExcept (Include);
 
       BgrdColor = new (96, 160, 128);
       Bound = mModel.Bound;
