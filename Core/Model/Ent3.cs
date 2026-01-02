@@ -21,6 +21,7 @@ public sealed class E3Cone : E3CSSurface {
    public E3Cone (int id, IEnumerable<Contour3> trims, CoordSystem cs, double halfAngle) : base (id, trims, cs) {
       HalfAngle = halfAngle;
       mFlags |= E3Flags.VLinear;
+      PostLoad ();
    }
    E3Cone () { }
 

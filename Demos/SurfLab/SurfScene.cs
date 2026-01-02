@@ -7,8 +7,16 @@ class SurfScene : Scene3 {
       mModel = new T3XReader (file).Load ();
       mModel.Ents.RemoveExcept (Include);
 
+      foreach (var c in mModel.Ents.OfType<E3Cone> ().ToList ()) {
+         var cs = c.CS;
+         List<Point3> pts = [];
+         pts.Add (cs.Org); pts.Add (cs.Org + cs.VecX * 10);
+         pts.Add (cs.Org); pts.Add (cs.Org + cs.VecY * 5);
+         mModel.Ents.Add (new E3Curve (new Polyline3 (0, [..pts])));
+      }
+
       BgrdColor = new (96, 160, 128);
-      Bound = mModel.Bound;
+      Bound = mModel.Bound.InflatedF (3);
       Root = new GroupVN ([new Model3VN (mModel), TraceVN.It, mPlus, mCross, mUnloft2, mNormal]);
 
       mHooks = HW.MouseMoves.Subscribe (OnMouseMove);
@@ -34,6 +42,7 @@ class SurfScene : Scene3 {
    }
 
    bool Include (Ent3 e) {
+      return e is E3Cone;
       return true;
    }
 

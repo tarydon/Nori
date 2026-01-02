@@ -21,7 +21,7 @@ public partial class MainWindow : Window {
       Lib.Tracer = TraceVN.Print;
       new SceneManipulator ();
 
-      string file = "C:/Etc/T3/Raw/SWEPTSURFACE.t3x";
+      string file = "C:/Etc/T3/5x-051.t3x";
       Lux.UIScene = new SurfScene (file, -1);
    }
 }
