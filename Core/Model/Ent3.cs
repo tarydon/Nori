@@ -30,6 +30,17 @@ public sealed class E3Cone : E3CSSurface {
    public readonly double HalfAngle;
 
    // Overrides ----------------------------------------------------------------
+   public override Bound2 ComputeDomain () {
+      List<Point3> pts = [];
+      Bound1 v = new (); var xfm = FromXfm;
+      foreach (var c in mContours.SelectMany (a => a.Curves)) {
+         pts.Clear ();
+         c.Discretize (pts, Lib.CoarseTess, Lib.CoarseTessAngle);
+         foreach (var pt in pts) v += (pt * xfm).Z / _cos;
+      }
+      return new (new (0, Lib.TwoPI), v);
+   }
+
    protected override Point3 GetPointCanonical (double u, double v) {
       // The V value of the parametrization is linear distance from the tip of the cone. 
       // From this we can compute the radius at that point, and also the Z-height from the tip
@@ -226,6 +237,17 @@ public sealed class E3Cylinder : E3CSSurface {
    public readonly double Radius;
 
    // Overrides ----------------------------------------------------------------
+   public override Bound2 ComputeDomain () {
+      List<Point3> pts = [];
+      Bound1 v = new (); var xfm = FromXfm;
+      foreach (var c in mContours.SelectMany (a => a.Curves)) {
+         pts.Clear ();
+         c.Discretize (pts, Lib.CoarseTess, Lib.CoarseTessAngle);
+         foreach (var pt in pts) v += (pt * xfm).Z;
+      }
+      return new (new (0, Lib.TwoPI), v);
+   }
+
    // In the canonical definition, the cylinder is defined with the base center at
    // the origin, and the axis aligned with +Z. The parametrization is this:
    // - U is directly in radians, wraps around in the XY plane (0 = X axis)
@@ -380,6 +402,17 @@ public sealed class E3Plane : E3CSSurface {
       return new ([.. nodes], [.. tries], [.. wires]);
    }
 
+   public override Bound2 ComputeDomain () {
+      List<Point3> pts = [];
+      Bound2 dom = new (); var xfm = FromXfm;
+      foreach (var c in mContours.SelectMany (a => a.Curves)) {
+         pts.Clear ();
+         c.Discretize (pts, Lib.CoarseTess, Lib.CoarseTessAngle);
+         foreach (var pt in pts) dom += (Point2)(pt * xfm);
+      }
+      return dom;
+   }
+
    protected override Point3 GetPointCanonical (double u, double v) => new (u, v, 0);
    protected override Vector3 GetNormalCanonical (double u, double v) => new (0, 0, 1);
    protected override Point2 GetUVCanonical (Point3 pt) => new (pt.X, pt.Y);
@@ -498,6 +531,17 @@ public sealed class E3SweptSurface : E3CSSurface {
 
    public readonly Curve3 Genetrix;
 
+   public override Bound2 ComputeDomain () {
+      List<Point3> pts = [];
+      Bound1 u = new (); var xfm = FromXfm;
+      foreach (var c in mContours.SelectMany (a => a.Curves)) {
+         pts.Clear ();
+         c.Discretize (pts, Lib.CoarseTess, Lib.CoarseTessAngle);
+         foreach (var pt in pts) u += GetUV (pt).X;
+      }
+      return new (u, Genetrix.Domain);
+   }
+
    protected override Point3 GetPointCanonical (double u, double v) 
       => Genetrix.GetPoint (v).Moved (0, 0, u);
 
@@ -524,8 +568,6 @@ public sealed class E3SweptSurface : E3CSSurface {
    }
    CurveUnlofter? _unlofter;
    Curve3? _flatGenetrix;
-
-   public override Bound2 ComputeDomain () => new (new Bound1 (0, 100), Genetrix.Domain);
 }
 #endregion
 

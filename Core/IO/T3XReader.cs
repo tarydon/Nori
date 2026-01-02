@@ -107,7 +107,7 @@ public class T3XReader : IDisposable {
    // way around the cone).
    E3Cone LoadCone () {
       var (id, hangle, cs) = (RInt (), RDouble (), RCS ());
-      return new E3Cone (id, LoadContours (), cs, hangle) { IsSelected = true };
+      return new E3Cone (id, LoadContours (), cs, hangle);
    }
 
    // Loads an E3Cylinder surface (subtype of Surface3) from a "CYLINDER" entry

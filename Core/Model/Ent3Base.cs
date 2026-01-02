@@ -2,6 +2,8 @@
 // ╔═╦╦═╦╦╬╣ Ent3Base.cs
 // ║║║║╬║╔╣║ Defines some the Ent3 hierarchy of classes (the abstract base classes)
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
+using System.Diagnostics;
+
 namespace Nori;
 
 #region class Ent3 ---------------------------------------------------------------------------------
@@ -56,6 +58,8 @@ public abstract partial class Ent3 {
    // Properties ---------------------------------------------------------------
    /// <summary>Returns the Bound of the Ent3 (overridden in descendents)</summary>
    public abstract Bound3 Bound { get; }
+
+   public E3Flags Flags => mFlags;
 
    /// <summary>ID of the surface (often used to map to an entity number in STEP / IGES etc)</summary>
    public readonly int Id;
@@ -122,6 +126,7 @@ public abstract class E3Surface : Ent3 {
 
    // Properties ---------------------------------------------------------------
    /// <summary>The surface area of this surface</summary>
+   [DebuggerBrowsable (DebuggerBrowsableState.Never)]
    public double Area {
       get {
          if (mArea.IsNaN ()) mArea = Mesh.GetArea ();
@@ -132,6 +137,7 @@ public abstract class E3Surface : Ent3 {
 
    /// <summary>The Bound of the surface in 3D</summary>
    /// This is computed by the ComputeBound override, and cached here
+   [DebuggerBrowsable (DebuggerBrowsableState.Never)]
    public override Bound3 Bound => Bound3.Update (ref mBound, ComputeBound);
    Bound3 mBound = new ();
 
@@ -141,6 +147,7 @@ public abstract class E3Surface : Ent3 {
 
    /// <summary>The Domain of the surface in UV parameter space</summary>
    /// This is computed by the ComputeDomain override, and cached here
+   [DebuggerBrowsable (DebuggerBrowsableState.Never)]
    public Bound2 Domain => Bound2.Update (ref mDomain, ComputeDomain);
    Bound2 mDomain = new ();
 
@@ -150,6 +157,7 @@ public abstract class E3Surface : Ent3 {
    public bool IsVLinear => Get (E3Flags.VLinear);
 
    /// <summary>The tessellation of the surface is computed on demand by BuildMesh (which can be overridden)</summary>
+   [DebuggerBrowsable (DebuggerBrowsableState.Never)]
    public Mesh3 Mesh {
       get => _mesh ??= BuildMesh (Lib.FineTess, Lib.FineTessAngle);
       set {

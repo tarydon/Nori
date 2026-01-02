@@ -1,4 +1,5 @@
 ﻿using System.IO;
+using System.Text;
 using Nori;
 namespace SurfLab;
 
@@ -7,6 +8,8 @@ class SurfScene : Scene3 {
       mModel = new T3XReader (file).Load ();
       mModel.Ents.RemoveIf (a => !Include (a));
       var len = 1;
+
+      var sb = new StringBuilder ();
       foreach (var ent in mModel.Ents.OfType<E3Surface> ().ToList ()) {
          if (flip) ent.IsNormalFlipped = !ent.IsNormalFlipped;
          List<Point3> pts = [];
@@ -20,6 +23,14 @@ class SurfScene : Scene3 {
          for (int i = 0; i < pts.Count; i++) {
             mModel.Ents.Add (new E3Curve (new Polyline3 (0, [pts[i], pts[i] + normal[i] * len])));
          }
+         sb.AppendLine (ent.GetType ().Name);
+         sb.AppendLine ($"Flags: {ent.Flags}");
+         sb.AppendLine ($"Domain: {ent.Domain}");
+         sb.AppendLine ($"Bound: {ent.Bound}");
+         sb.AppendLine ($"Area: {ent.Area.Round (6)}");
+         for (int i = 0; i < pts.Count; i++) 
+            sb.AppendLine ($"{i} {pts[i].R6 ()} {uvs[i].R6 ()} {normal[i].R6 ()}");
+         File.WriteAllText (Path.ChangeExtension (file, ".txt"), sb.ToString ());
       }
 
       BgrdColor = new (96, 160, 128);
