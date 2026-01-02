@@ -204,7 +204,7 @@ public readonly struct MinSphere {
       (arr[0], arr[id1]) = (arr[id1], arr[0]); // Move p1 to front
 
       // Now find p2 farthest from p1.
-      maxD = -1;
+      maxD = -1; id1 = 0;
       for (int i = 1; i < arr.Length; i++) {
          double d = p1.DistToSq (arr[i]);
          if (d > maxD) {
@@ -222,7 +222,6 @@ public readonly struct MinSphere {
    /// A quick and dirty minimum enclosing sphere (not optimal) using Ritter's algorithm.
    /// Usually within 2% of optimal. On average about 0.9% larger than optimal, but 10x faster to compute.
    public static MinSphere FromQuickApprox (ReadOnlySpan<Point3> pts) {
-      
       if (pts.Length == 0) return Nil;
       if (pts.Length == 1) return new MinSphere (0, pts[0]);
 
