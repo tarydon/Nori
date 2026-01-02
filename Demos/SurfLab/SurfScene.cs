@@ -3,21 +3,28 @@ using Nori;
 namespace SurfLab;
 
 class SurfScene : Scene3 {
-   public SurfScene (string file, int id) {
+   public SurfScene (string file, bool flip) {
       mModel = new T3XReader (file).Load ();
-      mModel.Ents.RemoveExcept (Include);
-
-      foreach (var c in mModel.Ents.OfType<E3Cone> ().ToList ()) {
-         var cs = c.CS;
+      mModel.Ents.RemoveIf (a => !Include (a));
+      var len = 1;
+      foreach (var ent in mModel.Ents.OfType<E3Surface> ().ToList ()) {
+         if (flip) ent.IsNormalFlipped = !ent.IsNormalFlipped;
          List<Point3> pts = [];
-         pts.Add (cs.Org); pts.Add (cs.Org + cs.VecX * 10);
-         pts.Add (cs.Org); pts.Add (cs.Org + cs.VecY * 5);
-         mModel.Ents.Add (new E3Curve (new Polyline3 (0, [..pts])));
+         var curves = ent.Contours.SelectMany (a => a.Curves).ToList ();
+         foreach (var c in curves) {
+            c.Discretize (pts, Lib.FineTess, Lib.FineTessAngle);
+            if (c is Line3) pts.Add (c.Start.Midpoint (c.End));
+         }
+         List<Point2> uvs = [.. pts.Select (ent.GetUV)];
+         List<Vector3> normal = [.. uvs.Select (p => ent.GetNormal (p.X, p.Y))];
+         for (int i = 0; i < pts.Count; i++) {
+            mModel.Ents.Add (new E3Curve (new Polyline3 (0, [pts[i], pts[i] + normal[i] * len])));
+         }
       }
 
       BgrdColor = new (96, 160, 128);
-      Bound = mModel.Bound.InflatedF (3);
-      Root = new GroupVN ([new Model3VN (mModel), TraceVN.It, mPlus, mCross, mUnloft2, mNormal]);
+      Bound = mModel.Bound.InflatedF (1);
+      Root = new GroupVN ([new Model3VN (mModel), TraceVN.It]);
 
       mHooks = HW.MouseMoves.Subscribe (OnMouseMove);
    }
@@ -42,7 +49,6 @@ class SurfScene : Scene3 {
    }
 
    bool Include (Ent3 e) {
-      return e is E3Cone;
       return true;
    }
 

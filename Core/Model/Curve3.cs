@@ -292,8 +292,6 @@ public class NurbsCurve3 : Curve3 {
    /// the PWL approximation and the original spline curve exceed the given error threshold
    /// 'error'
    public override void Discretize (List<Point3> pts, double error, double maxAngStep) {
-      pts.Clear ();
-
       // Set up for adaptive evaluation. We create a rough linear approximation by evaluating
       // the spline at each of the unique knot values, and we push these values of t (along with
       // their evaluated points) into a stack of Nodes
