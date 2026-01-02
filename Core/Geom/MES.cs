@@ -181,16 +181,12 @@ public readonly struct MinSphere {
       }
    }
 
-   /// <summary>Constructs a minimum-enclosing-circle from a given set of points</summary>
-   /// 1. We start off similar to Rittor's approximation by finding two farthest points.
-   /// 2. Then we use Welzl's algorithm to compute the exact minimum enclosing sphere. But before that
-   ///    we sort the points in decreasing order of distance from one of the farthest points. This will
-   ///    ensure we quickly find the boundary points and converge faster.
-   /// Compared to a naive Welzl's algorithm, this approach is about 2x - 10x faster in practice.
-   public static MinSphere From (IEnumerable<Point3> pts) {
-      if (!pts.Any ()) return Nil;
-
-      Point3[] arr = pts.ToArray ();
+   /// <summary>Constructs a minimum-enclosing-circle from a given set of points. BEWARE: Points will be shuffled in the input span</summary>
+   /// 1. We start off similar to Rittor's approximation by finding two farthest points and moving them to the front.
+   /// 2. Then we use Welzl's algorithm to compute the exact minimum enclosing sphere.
+   /// Compared to a naive Welzl's algorithm, this approach is about 10x faster in practice.
+   public static MinSphere From (Span<Point3> arr) {
+      if (arr.Length == 0) return Nil;
       Point3 p0 = arr[0];
 
       // Find the point p1 farthest from p0.
@@ -207,62 +203,17 @@ public readonly struct MinSphere {
       Point3 p1 = arr[id1];
       (arr[0], arr[id1]) = (arr[id1], arr[0]); // Move p1 to front
 
-      // Sort points by decreasing distance from p1 as points farthest from p1 are more likely to be on boundary.
-      var tmp = new (Point3 Point, double Dist)[arr.Length - 1];
-      for (int i = 1; i < arr.Length; i++)
-         tmp[i - 1] = (arr[i], p1.DistToSq (arr[i]));
-      Array.Sort (tmp, (x, y) => y.Dist.CompareTo (x.Dist));
-      for (int i = 1; i < arr.Length; i++)
-         arr[i] = tmp[i - 1].Point;
-
-      return Welzl (arr);
-   }
-
-   /// <summary>Constructs a minimum-enclosing-circle from a given set of points</summary>
-   /// 1. We start off similar to Rittor's approximation by finding two farthest points.
-   /// 2. Then we use Welzl's algorithm to compute the exact minimum enclosing sphere. But before that
-   ///    we sort the points in decreasing order of distance from one of the farthest points. This will
-   ///    ensure we quickly find the boundary points and converge faster.
-   /// Compared to a naive Welzl's algorithm, this approach is about 2x - 10x faster in practice.
-   public static MinSphere From2 (IEnumerable<Point3> pts) {
-      if (!pts.Any ()) return Nil;
-
-      Point3[] arr = [.. pts.Shuffle ()];
-
-      // Move points with extreme projections on X, Y & Z axes to the front of the array.
-      int ixMin = 0, ixMax = 0, iyMin = 0, iyMax = 0, izMin = 0, izMax = 0;
+      // Now find p2 farthest from p1.
+      maxD = -1;
       for (int i = 1; i < arr.Length; i++) {
-         var p = arr[i];
-         if (p.X < arr[ixMin].X) ixMin = i;
-         if (p.X > arr[ixMax].X) ixMax = i;
-         if (p.Y < arr[iyMin].Y) iyMin = i;
-         if (p.Y > arr[iyMax].Y) iyMax = i;
-         if (p.Z < arr[izMin].Z) izMin = i;
-         if (p.Z > arr[izMax].Z) izMax = i;
+         double d = p1.DistToSq (arr[i]);
+         if (d > maxD) {
+            maxD = d;
+            id1 = i;
+         }
       }
-
-      // Collect unique extreme indices preserving order: Xmin, Xmax, Ymin, Ymax, Zmin, Zmax.
-      Span<int> idx = stackalloc int[6];
-      int count = 0;
-      void AddIdx (Span<int> s, int v) {
-         for (int j = 0; j < count; j++)
-            if (s[j] == v) return;
-         s[count++] = v;
-      }
-      AddIdx (idx, ixMin);
-      AddIdx (idx, ixMax);
-      AddIdx (idx, iyMin);
-      AddIdx (idx, iyMax);
-      AddIdx (idx, izMin);
-      AddIdx (idx, izMax);
-
-      int write = 0;
-      for (int k = 0; k < count; k++) {
-         int src = idx[k];
-         if (src != write)
-            (arr[write], arr[src]) = (arr[src], arr[write]);
-         write++;
-      }
+      if (id1 > 1)
+         (arr[1], arr[id1]) = (arr[id1], arr[1]); // Move p2 to front
 
       return Welzl (arr);
    }
