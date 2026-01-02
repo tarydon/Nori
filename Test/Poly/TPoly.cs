@@ -302,4 +302,18 @@ class PolyTests {
          Assert.TextFilesEqual ($"Poly/{file}.txt", NT.TmpTxt);
       }
    }
+
+   [Test (126, "Stitching entities test")]
+   void Test13 () {
+      var dwg = new Dwg2 ();
+      var p1 = Poly.Parse ("M0,0L10,10");
+      dwg.Add (p1);
+      var p2 = Poly.Parse ("M10,10V0");
+      dwg.Add (p2);
+      var p3 = Poly.Parse ("M10,0H0");
+      dwg.Add (p3);
+      dwg.Ents.Count.Is (1);
+      var poly = dwg.Ents.First () as E2Poly;
+      Assert.IsTrue (poly!.Poly.IsClosed);
+   }
 }

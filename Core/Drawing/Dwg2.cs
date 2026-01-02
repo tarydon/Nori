@@ -81,7 +81,43 @@ public partial class Dwg2 {
    public void Add (Ent2 ent) => mEnts.Add (ent);
 
    /// <summary>Add a Poly to the drawing, after wrapping it up in an E2Poly</summary>
-   public void Add (Poly poly) => Add (new E2Poly (CurrentLayer, poly));
+   /// This stitches the poly with any existing poly within the threshold (1e-6)
+   public void Add (Poly p) {
+      if (p.IsOpen) {
+         Point2 start = p.A, end = p.B;
+         if (start.EQ (end)) { // Check for self-closing polylines
+            if (!p.GetPerimeter ().IsZero ()) Add (p.Close ());
+            return;
+         }
+         // Check for polylines that can be appended before and after the current poly
+         // A match occurs when the current poly’s start point aligns (within tolerance)
+         // with another poly’s start or endpoint for a “before” append and when the current poly’s
+         // end point aligns with another poly’s start or endpoint for an “after” append.
+         int before = -1, after = -1;
+         for (int i = mEnts.Count - 1; i >= 0; i--) {
+            if (mEnts[i] is not E2Poly e2p || e2p.Layer != CurrentLayer) continue;
+            var poly = e2p.Poly; if (poly.IsClosed) continue;
+            if (before == -1 && (start.EQ (poly.A) || start.EQ (poly.B))) before = i;
+            if (after == -1 && (end.EQ (poly.A) || end.EQ (poly.B))) after = i;
+         }
+         if (before != -1) {
+            var poly = (E2Poly)mEnts[before];
+            if (!p.TryAppend (poly.Poly, out Poly? tmp)) before = -1;
+            else p = tmp;
+         }
+         if (after != -1 && after != before) {
+            var poly = (E2Poly)mEnts[after];
+            if (!p.TryAppend (poly.Poly, out Poly? tmp)) after = -1;
+            else p = tmp;
+         }
+
+         Lib.Sort (ref before, ref after); // Remove the entities in correct order
+         if (after != -1) mEnts.RemoveAt (after);
+         if (before != -1 && before != after) mEnts.RemoveAt (before);
+         if (before != -1 || after != -1) p = p.Clean ();
+      }
+      Add (new E2Poly (CurrentLayer, p));
+   }
 
    /// <summary>Add a set of entities into the drawing</summary>
    public void Add (IEnumerable<Ent2> ents) => ents.ForEach (Add);
