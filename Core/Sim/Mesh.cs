@@ -249,8 +249,8 @@ public class Mesh3 {
    }
 
    /// <summary>Computes polygonal intersection loops between a mesh and a plane.</summary>
-   public List<ImmutableArray<Point3>> ComputePlaneIntersection (PlaneDef plane)
-      => new PlaneMeshIntersector (this).Compute (plane);
+   public List<Polyline3> ComputePlaneIntersection (PlaneDef plane)
+      => new PlaneMeshIntersector ([this]).Compute (plane);
 
    /// <summary>Builds a sphere mesh centered at 'center' with the specified 'radius'/>.
    /// The generated sphere mesh consists of triangles of uniform size. The number of output 
@@ -390,191 +390,264 @@ public class Mesh3 {
 #region class PlaneMeshIntersector -----------------------------------------------------------------
 /// <summary>Provides plane/mesh intersection functionality for a specific mesh.</summary>
 /// This class computes polygonal intersection loops between a mesh and a plane.
-/// Create an instance with a mesh and call `Compute` repeatedly to intersect
-/// multiple planes against the same mesh.
-public class PlaneMeshIntersector (Mesh3 mesh) {
-   /// <summary>Computes polygonal intersection loops between the stored mesh and a plane.</summary>
-   /// Computes intersection loops where the mesh crosses the plane:
-   /// - Classify each vertex as above/below the plane using signed distance.
-   /// - For each triangle, if its vertices straddle the plane, find the two edges crossed.
-   /// - Register those edges in the edge map and the triangle queue for connectivity.
-   /// - Trace intersected edges into continuous polylines (loops or open).
-   public List<ImmutableArray<Point3>> Compute (PlaneDef plane, double tolerance = 1e-3) {
-      int triCount = mesh.Triangle.Length, vertCount = mesh.Vertex.Length;
+/// Create an instance with a mesh collection and call `Compute` repeatedly to intersect
+/// multiple planes against the same mesh set.
+public class PlaneMeshIntersector (IEnumerable<Mesh3> meshes) {
+   /// <summary>Computes polygonal intersection loops between the stored meshes and a plane.</summary>
+   /// - Quickly rejects meshes whose Bound lies entirely on one side of the plane.
+   /// - For remaining meshes:
+   ///   - Computes signed distances of all mesh vertices to the plane (used to detect edge crossings).
+   ///   - Walks triangles; for each crossing edge, creates (or reuses) an interpolated intersection point.
+   ///   - Links triangle intersection points into a small adjacency graph (each point has up to two neighbours).
+   ///   - Builds an endpoint map to identify/open chains and reconnect matching endpoints when needed.
+   ///   - Traverses the adjacency graph to extract chains/loops and converts them into returned Polyline3 objects.
+   public List<Polyline3> Compute (PlaneDef plane) {
       Vector3 n = plane.Normal; double d = plane.D;
+      List<Polyline3> polylines = [];
 
-      // Precompute signed distances from plane
-      var dist = new (Point3f P, double D)[vertCount];
-      for (int i = 0; i < vertCount; i++) {
-         var p = mesh.Vertex[i].Pos;
-         dist[i] = (p, n.X * p.X + n.Y * p.Y + n.Z * p.Z + d);
-         if (Math.Abs (d) < 1e-10) d += 1e-8;
+      foreach (var mesh in meshes) {
+         if (!Intersects (mesh.Bound, n, d)) continue;
+
+         PrepareMesh (mesh);
+         ComputeDistances (n, d);
+
+         ResetWorkBuffers ();
+         BuildAdjacency ();
+         BuildEndMap ();
+         PrepareVisited (mRaw.Count);
+         WalkAllChains ();
+         polylines.AddRange (BuildPolylines ());
       }
 
-      // Edge map and list of triangle intersection edge pairs
-      mEdgeMap.Clear (); mTriQueue.Clear ();
+      RemoveEmptyAndZeroLength (polylines);
+      return polylines;
+   }
 
-      // Identify intersected triangles and store their crossing edges
-      for (int t = 0; t < triCount; t += 3)
-         if (IsChecked (t, dist, out Edge? e1, out Edge? e2)) {
-            RegisterEdge (e1, mTriQueue.Count);
-            RegisterEdge (e2, mTriQueue.Count);
-            mTriQueue.Add (new EdgePair (e1, e2));
+   // Quick plane-vs-mesh test; returns false if the bound lies strictly on one side.
+   bool Intersects (Bound3 bound, Vector3 n, double d) {
+      if (bound.IsEmpty) return false;
+
+      // Center (Mid) and half extents (Length/2) per axis.
+      double cx = bound.X.Mid, cy = bound.Y.Mid, cz = bound.Z.Mid;
+      double ex = bound.X.Length * 0.5, ey = bound.Y.Length * 0.5, ez = bound.Z.Length * 0.5;
+
+      // Signed distance from bound center to plane: dot(n, c) + d.
+      double dist = n.X * cx + n.Y * cy + n.Z * cz + d;
+
+      // Project the bound extents onto the plane normal to get the max reach.
+      double r = Math.Abs (n.X) * ex + Math.Abs (n.Y) * ey + Math.Abs (n.Z) * ez;
+
+      // If center distance exceeds projected radius, plane cannot hit the mesh.
+      return Math.Abs (dist) <= r;
+   }
+
+   // Loads/caches the current mesh's positions and triangles into reusable buffers.
+   void PrepareMesh (Mesh3 mesh) {
+      if (mPts.Length != mesh.Vertex.Length)
+         mPts = new Point3f[mesh.Vertex.Length];
+
+      for (int i = 0; i < mPts.Length; i++)
+         mPts[i] = mesh.Vertex[i].Pos;
+
+      mTri = mesh.Triangle;
+      if (mDist.Length != mPts.Length)
+         mDist = new double[mPts.Length];
+   }
+
+   // Computes signed distances of all mesh vertices to the plane.
+   void ComputeDistances (Vector3 n, double dBias) {
+      for (int i = 0; i < mPts.Length; i++) {
+         // Signed distance to plane: dot(n, p) + d.
+         var p = mPts[i];
+         double v = n.X * p.X + n.Y * p.Y + n.Z * p.Z + dBias;
+         // A tiny bias to avoid ambiguous "on plane" classification
+         if (Math.Abs (v) < 1e-10) v += 1e-8; mDist[i] = v;
+      }
+   }
+
+   // Clears all per-call working collections.
+   void ResetWorkBuffers () {
+      mRaw.Clear (); mNbr1.Clear (); mNbr2.Clear ();
+      mEdgeMap.Clear (); mEnds.Clear (); mOutChains.Clear ();
+   }
+
+   // Builds the adjacency lists between plane-edge intersection points produced from triangles.
+   void BuildAdjacency () {
+      for (int t = 0; t < mTri.Length; t += 3) {
+         int a = mTri[t], b = mTri[t + 1], c = mTri[t + 2];
+         double da = mDist[a], db = mDist[b], dc = mDist[c];
+
+         int p1 = -1, p2 = -1;
+
+         // For each triangle edge, a sign change means the edge crosses the plane and yields one
+         // intersection point (created once per mesh edge via mEdgeMap).
+         if (da * db < 0) p1 = GetOrAddEdgePoint (a, b, da, db);
+         if (db * dc < 0) { int p = GetOrAddEdgePoint (b, c, db, dc); if (p1 == -1) p1 = p; else p2 = p; }
+         if (dc * da < 0) { int p = GetOrAddEdgePoint (c, a, dc, da); if (p1 == -1) p1 = p; else p2 = p; }
+
+         // A plane cutting a triangle produces exactly 2 points.
+         // When we have 2, add those as neighbours to each other.
+         if (p1 != -1 && p2 != -1) Link (p1, p2);
+      }
+   }
+
+   // Adds a bidirectional link between two intersection points in the per-point adjacency lists.
+   void Link (int a, int b) {
+      if (mNbr1[a] == -1) mNbr1[a] = b; else mNbr2[a] = b;
+      if (mNbr1[b] == -1) mNbr1[b] = a; else mNbr2[b] = a;
+   }
+
+   // Builds a dictionary mapping open-chain endpoints to their associated intersection point indices.
+   void BuildEndMap () {
+      for (int i = 0; i < mRaw.Count; i++) {
+         // EndPoints of a chain have only one neighbour
+         if (mNbr2[i] != -1) continue; // Skip non-endpoints
+
+         // This allows reconnecting open ends that are geometrically equal 
+         // (within the Point3fComparer tolerance) but produced via different tris.
+         var key = mRaw[i];
+         if (mEnds.TryGetValue (key, out var v)) mEnds[key] = (v.A, i);
+         else mEnds.Add (key, (i, -1));
+      }
+   }
+
+   // Ensures the visited array is large enough and clears it for the current intersection run.
+   void PrepareVisited (int count) {
+      if (mVisited.Length < count) mVisited = new bool[count];
+      else Array.Clear (mVisited, 0, count);
+   }
+
+   // Walks all unvisited intersection points to extract all polylines/chains for this plane cut.
+   void WalkAllChains () {
+      for (int i = 0; i < mRaw.Count; i++) {
+         if (mVisited[i]) continue;
+         mOutChains.Add (WalkChainByLinks (i));
+      }
+   }
+
+   // Converts extracted chains into Polyline3 and returns pooled lists back to the pool.
+   List<Polyline3> BuildPolylines () {
+      var polylines = new List<Polyline3> (mOutChains.Count);
+      for (int i = 0; i < mOutChains.Count; i++) {
+         var src = mOutChains[i]; int nPts = src.Count;
+
+         var dst = new Point3[nPts];
+         for (int j = 0; j < nPts; j++) dst[j] = (Point3)src[j];
+         polylines.Add (new Polyline3 (0, ImmutableArray.Create (dst)));
+
+         // Return list to pool for reuse in subsequent Compute() calls
+         src.Clear (); mTmpPool.Push (src);
+      }
+      mOutChains.Clear ();
+      return polylines;
+   }
+
+   // Walk the chain using mNext/mPrev starting at 'start'. Marks mVisited nodes.
+   List<Point3f> WalkChainByLinks (int start) {
+      mVisited[start] = true;
+
+      // Pooled list reduces per-chain allocations when computing many planes.
+      var pts = (mTmpPool.Count != 0) ? mTmpPool.Pop () : new List<Point3f> (32);
+      pts.Clear (); pts.Add (mRaw[start]);
+
+      // Walk forward and backward to collect all points in the chain.
+      Traverse (start, mNbr1[start], false, pts);
+      Traverse (start, mNbr2[start], true, pts);
+
+      return pts;
+   }
+
+   // Traverses a polyline in one direction from a start point, optionally prepending points to preserve order.
+   void Traverse (int from, int nextIdx, bool prepend, List<Point3f> pts) {
+      int prev = from, curr = nextIdx;
+
+      while (curr != -1 && !mVisited[curr]) {
+         // Follow links until the chain ends (-1) or point visited.
+         while (curr != -1 && !mVisited[curr]) {
+            if (prepend) pts.Insert (0, mRaw[curr]);
+            else pts.Add (mRaw[curr]);
+            mVisited[curr] = true;
+
+            // Pick the neighbour that is not the node we came from.
+            int n1 = mNbr1[curr], n2 = mNbr2[curr];
+            int next = n1 != prev ? n1 : n2;
+            prev = curr; curr = next;
          }
 
-      // Trace all polylines produced by the intersected edges
-      var polyList = GetPointLoops (dist);
-      return CombinedPoints (polyList, tolerance);
-   }
+         // If curr != -1 we hit a visited node,
+         // meaning this direction is complete (loop or overlap).
+         // Close the loop by adding the visited point to pts.
+         if (curr != -1) { pts.Add (mRaw[curr]); return; }
 
-   /// <summary>Edge between two vertices and the two triangle indices sharing it.</summary>
-   public class Edge (int a, int b) : IEquatable<Edge> {
-      public int A = a;
-      public int B = b;
-      public int TIdx1 = -1;
-      public int TIdx2 = -1;
+         // We hit an open end (curr == -1). Try to continue
+         // by jumping to the matching endpoint (same geometric position)
+         // if the intersection produced discontinuous chains due to tolerance.
+         if (!mEnds.TryGetValue (mRaw[prev], out var val)) return;
+         mEnds.Remove (mRaw[prev]);
 
-      public bool Equals (Edge? other)
-         => A == other?.A && B == other.B;
-   }
+         // If we have only one side recorded, there is nothing to jump to.
+         if (val.A == -1 || val.B == -1) return;
 
-   /// <summary>Connected pair of edges belonging to a triangle intersection.</summary>
-   struct EdgePair (Edge edge1, Edge edge2) {
-      public Edge Edge1 = edge1;
-      public Edge Edge2 = edge2;
-      public bool IsChecked;
-   }
+         // Jump to the other stored index at the same end point.
+         int idx = (val.A == prev) ? val.B : val.A;
+         if (idx == -1 || mVisited[idx]) return;
 
-   // Checks if a triangle crosses the plane and returns its two crossing edges.
-   bool IsChecked (int t, (Point3f P, double D)[] dist, [NotNullWhen (true)] out Edge? e1,
-                                                        [NotNullWhen (true)] out Edge? e2) {
-      int i0 = mesh.Triangle[t++], i1 = mesh.Triangle[t++], i2 = mesh.Triangle[t++];
-      double d0 = dist[i0].D, d1 = dist[i1].D, d2 = dist[i2].D;
-
-      // Each sign change corresponds to an intersected edge
-      e1 = null; e2 = null; 
-      if (d0 * d1 < 0) e1 = GetEdge (i0, i1);
-      if (d1 * d2 < 0) { if (e1 == null) e1 = GetEdge (i1, i2); else e2 = GetEdge (i1, i2); }
-      if (d2 * d0 < 0) { if (e1 == null) e1 = GetEdge (i2, i0); else e2 = GetEdge (i2, i0); }
-
-      return e1 != null && e2 != null;
-   }
-
-   // Gets or creates an edge (ensuring A < B) from the edge map.
-   Edge GetEdge (int a, int b) {
-      if (b < a) (a, b) = (b, a);   // normalize ordering
-
-      if (!mEdgeMap.TryGetValue ((a, b), out var edge))
-         mEdgeMap[(a, b)] = edge = new Edge (a, b);
-
-      return edge;
-   }
-
-   // Registers which triangle index uses this edge.
-   void RegisterEdge (Edge e, int count) {
-      if (e.TIdx1 == -1) e.TIdx1 = count;
-      else e.TIdx2 = count;
-   }
-
-   // Traces all edge-pairs to reconstruct full intersection polylines.
-   List<List<Point3>> GetPointLoops ((Point3f P, double D)[] dist) {
-      var polyList = new List<List<Point3>> ();
-
-      while (true) {
-         // Find index of next unprocessed triangle edge pair
-         int idx = mTriQueue.FindIndex (e => !e.IsChecked);
-         if (idx == -1) break;
-
-         var t = mTriQueue[idx]; t.IsChecked = true;
-         mTriQueue[idx] = t;
-
-         // Trace edges outward in both directions
-         var pts1 = WalkEdge (dist, t.Edge1);
-         var pts2 = WalkEdge (dist, t.Edge2);
-
-         pts1.Reverse ();   // First direction must be reversed before merging
-         polyList.Add ([.. pts1, .. pts2]);
+         // Resume traversal from the jumped point.
+         // We mark it visited immediately to prevent cycles.
+         prev = idx; curr = mNbr1[idx];
+         mVisited[idx] = true;
       }
-
-      return polyList;
    }
 
-   // Walks along connected edges to collect intersection points in one direction.
-   List<Point3> WalkEdge ((Point3f P, double D)[] dist, Edge edge) {
-      List<Point3> points = [];
+   // Gets an existing intersection point or creates it.
+   int GetOrAddEdgePoint (int a, int b, double da, double db) {
+      // Normalize edge key so (a,b) and (b,a) map to same point.
+      var key = a < b ? (a, b) : (b, a);
+      if (mEdgeMap.TryGetValue (key, out int idx)) return idx;
 
-      while (true) {
-         // Compute intersection point along current edge
-         points.Add (Interpolate (dist[edge.A], dist[edge.B]));
+      // Interpolate along the edge using signed distances: t = da / (da - db).
+      idx = mRaw.Count;
+      mRaw.Add ((da / (da - db)).Along (mPts[a], mPts[b]));
 
-         if (edge.TIdx2 == -1) break; // No continuation
-
-         // Continue traversal through the unvisited adjacent triangle
-         int nextIdx = mTriQueue[edge.TIdx1].IsChecked ? edge.TIdx2 : edge.TIdx1;
-         
-         var next = mTriQueue[nextIdx]; if (next.IsChecked) break; // Safety check
-         next.IsChecked = true; mTriQueue[nextIdx] = next;
-
-         // Follow the next edge
-         edge = next.Edge1 == edge ? next.Edge2 : next.Edge1;
-      }
-
-      return points;
+      // Start with no neighbours; BuildAdjacency/Link will fill these.
+      mNbr1.Add (-1); mNbr2.Add (-1); mEdgeMap[key] = idx;
+      return idx;
    }
 
-   // Combines all polylines whose endpoints touch into continuous polylines.
-   List<ImmutableArray<Point3>> CombinedPoints (List<List<Point3>> pts, double tolerance) {
-      var result = new List<ImmutableArray<Point3>> ();
+   // Removes empty polylines and polylines with no geometric length.
+   void RemoveEmptyAndZeroLength (List<Polyline3> polylines) {
+      for (int i = polylines.Count - 1; i >= 0; i--) {
+         var pts = polylines[i].Pts;
 
-      // Merge lists that connect 
-      for (int i = 0; i < pts.Count; i++) {
-         for (int j = i + 1; j < pts.Count; j++) {
-            // tail(i) == head(j) -> append j to i
-            if (pts[i][^1].EQ (pts[j][0], tolerance)) {
-               pts[i--].AddRange (pts[j].Skip (1));
-               pts.RemoveAt (j); break;
-            }
-            // tail(i) == tail(j) -> reverse j then append
-            else if (pts[i][^1].EQ (pts[j][^1], tolerance)) {
-               pts[j].Reverse ();
-               pts[i--].AddRange (pts[j].Skip (1));
-               pts.RemoveAt (j); break;
-            }
-            // head(i) == tail(j) -> prepend j to i
-            else if (pts[i][0].EQ (pts[j][^1], tolerance)) {
-               pts[i].InsertRange (0, pts[j].Take (pts[j].Count - 1));
-               pts.RemoveAt (j); i--; break;
-            }
-            // head(i) == head(j) -> reverse j then prepend
-            else if (pts[i][0].EQ (pts[j][0], tolerance)) {
-               pts[j].Reverse ();
-               pts[i].InsertRange (0, pts[j].Take (pts[j].Count - 1));
-               pts.RemoveAt (j); i--; break;
-            }
+         // Empty / degenerate point count.
+         if (pts.Length < 2) { polylines.RemoveAt (i); continue; }
+
+         // Reject if no segment has non-trivial length (all points equal within tolerance).
+         var prev = pts[0]; bool hasLen = false;
+         for (int j = 1; j < pts.Length; j++) {
+            var p = pts[j];
+            if (!p.EQ (prev, 1e-3)) { hasLen = true; break; }
+            prev = p;
          }
+         if (!hasLen) polylines.RemoveAt (i);
       }
-
-      pts.ForEach (e => result.Add ([.. e]));
-      return result;
    }
 
-   // Interpolates the plane intersection point along an edge.
-   Point3 Interpolate ((Point3f, double) pd0, (Point3f, double) pd1) {
-      Point3f p0 = pd0.Item1, p1 = pd1.Item1;
-      // Signed-distance interpolation factor
-      double t = pd0.Item2 / (pd0.Item2 - pd1.Item2);
+   // Input mesh positions and triangles (set per mesh during Compute)
+   Point3f[] mPts = [];
+   ImmutableArray<int> mTri = [];
 
-      return new Point3 (
-          p0.X + t * (p1.X - p0.X),
-          p0.Y + t * (p1.Y - p0.Y),
-          p0.Z + t * (p1.Z - p0.Z)
-      );
-   }
+   // Per-instance working storage reused between Compute calls
+   double[] mDist = [];
+   readonly Dictionary<(int, int), int> mEdgeMap = [];
+   readonly Dictionary<Point3f, (int A, int B)> mEnds = new (Point3fComparer.Delta);
+   readonly List<int> mNbr1 = [], mNbr2 = [];   // Neighbours of intersection points at each index
+   readonly List<Point3f> mRaw = [];            // interpolated intersection points (Point3f)
+   bool[] mVisited = [];
 
-   /// <summary>Maps vertex-pairs to unique Edge.</summary>
-   Dictionary<(int, int), Edge> mEdgeMap = [];
-   /// <summary>List of edge pairs of intersected triangles.</summary>
-   List<EdgePair> mTriQueue = [];
+   // Reuse temporary lists to reduce GC pressure
+   readonly List<List<Point3f>> mOutChains = [];
+   readonly Stack<List<Point3f>> mTmpPool = new ();
 }
 #endregion PlaneMeshIntersector
 
@@ -799,3 +872,18 @@ public class Mesh3Builder {
    }
 }
 #endregion
+
+class Point3fComparer (float threshold) : IEqualityComparer<Point3f> {
+   public bool Equals (Point3f a, Point3f b)
+      => a.X.Round (threshold) == b.X.Round (threshold)
+      && a.Y.Round (threshold) == b.Y.Round (threshold)
+      && a.Z.Round (threshold) == b.Z.Round (threshold);
+
+   public int GetHashCode (Point3f a)
+      => HashCode.Combine (a.X.Round (threshold), a.Y.Round (threshold), a.Z.Round (threshold));
+
+   /// <summary>A Point3f comparer that compares points with a threshold of 1e-3</summary>
+   public static readonly Point3fComparer Delta = new (1e-3f);
+   /// <summary>A Point3f comparer that compares points with a threshold of 1e-6</summary>
+   public static readonly Point3fComparer Epsilon = new (1e-6f);
+}
