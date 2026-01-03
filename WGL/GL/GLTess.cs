@@ -207,7 +207,7 @@ public static class BooleanOps {
             // Snap the polys to a micron grid.
             if (poly.HasArcs) {
                pts.Clear ();
-               poly.Discretize (pts, 0.05, 0.5411);   // 0.5411 ~ 30 degrees
+               poly.Discretize (pts, 0.05, Lib.FineTessAngle);
                mPts.AddRange (pts.Select (p => p.R6 ()));
             } else mPts.AddRange (poly.Pts.Select (x => x.R6 ()));
             mSplit.Add (mPts.Count);

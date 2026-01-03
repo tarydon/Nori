@@ -188,13 +188,12 @@ public readonly struct Vector3 : IEQuable<Vector3> {
    /// <param name="angle">The angle to rotate, in radians</param>
    /// <returns>The rotated copy of the input vector</returns>
    public Vector3 Rotated (EAxis a, double angle) {
-      var (sin, cos) = SinCos (angle);  double  x, y, z;
-      switch (a) {
-         case EAxis.X: y = Y * cos - Z * sin; z = Y * sin + Z * cos; x = X; break;
-         case EAxis.Y: z = Z * cos - X * sin; x = Z * sin + X * cos; y = Y; break;
-         default: x = X * cos - Y * sin; y = X * sin + Y * cos; z = Z; break;
-      }
-      return new (x, y, z);
+      var (sin, cos) = SinCos (angle); 
+      return a switch {
+         EAxis.X => new (X, Y * cos - Z * sin, Y * sin + Z * cos),
+         EAxis.Y => new (Z * sin + X * cos, Y, Z * cos - X * sin),
+         _ => new (X * cos - Y * sin, X * sin + Y * cos, Z)
+      };
    }
 
    /// <summary>Returns the Vector3 with components rounded off to 6 decimals</summary>

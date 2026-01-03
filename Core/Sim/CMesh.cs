@@ -2,7 +2,6 @@
 // ╔═╦╦═╦╦╬╣ CMesh.cs
 // ║║║║╬║╔╣║ Represents a collision BVH using AABBs as the bounding primitive
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
-using System.Diagnostics;
 namespace Nori;
 
 #region class CMesh --------------------------------------------------------------------------------

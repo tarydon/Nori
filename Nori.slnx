@@ -1,6 +1,7 @@
 <Solution>
   <Folder Name="/Demos/">
     <Project Path="Demos/ConDemo/ConDemo.csproj" />
+    <Project Path="Demos/SurfLab/SurfLab.csproj" />
     <Project Path="Demos/WPFDemo/WPFDemo.csproj" />
   </Folder>
   <Folder Name="/Test/">

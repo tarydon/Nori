@@ -680,7 +680,7 @@ public partial class Poly {
       if (IsCircle) {
          if (sliceStartLie.EQ (sliceEndLie)) return this;
          var seg = this[0];
-         return Poly.Arc (seg.GetPointAt (sliceStartLie), seg.GetSlopeAt (sliceStartLie), seg.GetPointAt (sliceEndLie));
+         return Arc (seg.GetPointAt (sliceStartLie), seg.GetSlopeAt (sliceStartLie), seg.GetPointAt (sliceEndLie));
       }
       (bool hasArcs, int segCount, bool closed) = (HasArcs, Count, IsClosed); // Cache
       (int startN, int endN) = ((int)sliceStartLie, (int)sliceEndLie);

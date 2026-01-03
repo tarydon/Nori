@@ -74,7 +74,7 @@ partial class STEPReader {
          EdgeCurve ec = (EdgeCurve)D[oe.Edge]!;
          Point3 start = GetPoint (ec.Start), end = GetPoint (ec.End);
          if (!oe.Dir) (start, end) = (end, start);
-         Edge3 edge = D[ec.Basis] switch {
+         Curve3 edge = D[ec.Basis] switch {
             Line => new Line3 (oe.Edge, start, end),
             Circle circle => MakeArc (oe.Edge, circle, start, end, !(!ec.SameSense ^ !oe.Dir)),
             _ => throw new BadCaseException (ec.Basis)
@@ -85,15 +85,15 @@ partial class STEPReader {
          Lib.Check (mEdges[i].End.EQ (mEdges[(i + 1) % mEdges.Count].Start), "MakeContour");
       return new Contour3 ([..mEdges]);
    }
-   List<Edge3> mEdges = [];
+   List<Curve3> mEdges = [];
 
-   E3Plane MakePlane (int id, Plane plane, List<Contour3> contours, bool aligned) {
+   E3Plane MakePlane (int id, Plane plane, ImmutableArray<Contour3> contours, bool aligned) {
       var cs = GetCoordSys (plane.CoordSys);
       if (!aligned) cs = new (cs.Org, cs.VecX, -cs.VecY);
       return new E3Plane (id, contours, cs);
    }
 
-   E3Cylinder MakeCylinder (int id, Cylinder cylinder, List<Contour3> contours, bool aligned)
+   E3Cylinder MakeCylinder (int id, Cylinder cylinder, ImmutableArray<Contour3> contours, bool aligned)
       => E3Cylinder.Build (id, contours, GetCoordSys (cylinder.CoordSys), cylinder.Radius, !aligned);
 
    void Process (Manifold m)
@@ -107,14 +107,16 @@ partial class STEPReader {
       var fb0 = (FaceBound)D[a.Contours[0]]!; 
       Lib.Check (fb0.Outer == true, "First contour is FaceOuterBound");
 
-      List<Contour3> contours = [];
+      List<Contour3> cons = [];
       foreach (var n in a.Contours) {
          Contour3 c = D[n] switch {
             FaceBound fb => MakeContour (fb.EdgeLoop, fb.Dir, false),
             _ => throw new BadCaseException (n)
          };
-         contours.Add (c);
+         cons.Add (c);
       }
+
+      ImmutableArray<Contour3> contours = [.. cons];
       Ent3 ent = D[a.Face] switch {
          Plane plane => MakePlane (a.Id, plane, contours, a.Dir),
          Cylinder cylinder => MakeCylinder (a.Id, cylinder, contours, a.Dir),

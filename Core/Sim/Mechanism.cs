@@ -56,7 +56,7 @@ public partial class Mechanism {
    public double JValue {
       get => mJValue;
       set {
-         if (mJValue.EQ (value) || value.IsNaN ()) return;
+         if (mJValue.EQ (value) || value.IsNan) return;
          mJValue = value; EnumTree ().ForEach (a => a._xfm = null);
          Notify (EProp.JValue);
       }
