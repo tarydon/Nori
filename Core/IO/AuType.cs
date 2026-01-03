@@ -156,11 +156,12 @@ class AuType {
 
    // Methods ------------------------------------------------------------------
    public object CreateInstance () {
-      mConstructor ??= mType.GetConstructor (Public | Instance | NonPublic, []) ??
+      try {
+         return Activator.CreateInstance (mType, nonPublic:true)!;
+      } catch (MissingMethodException) {
          throw new AuException ($"No parameterless constructor found for {mType.FullName}");
-      return mConstructor.Invoke ([]);
+      }
    }
-   ConstructorInfo? mConstructor;
 
    /// <summary>Get a field of an object, given its name</summary>
    public AuField? GetField (ReadOnlySpan<byte> name) {
