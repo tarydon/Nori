@@ -17,8 +17,9 @@ class MinSphereScene : Scene3 {
    // Build the scene with the minimum enclosing sphere for given points.
    void Build (Point3[] pts) {
       TraceVN.It.Clear ();
+      // Compute minimum enclosing sphere
       Stopwatch sw = Stopwatch.StartNew (); sw.Start ();
-      var s = MinSphere.From (pts); // Compute minimum enclosing sphere
+      var s = MinSphere.From (pts);
       sw.Stop ();
       (Point3 Pt, int N)[] ptlie = [.. pts.Select (pt => (pt, d: pt.DistTo (s.Center))).Select (x => (x.pt, x.d.EQ (s.Radius) ? 0 : x.d < s.Radius ? 1 : 2))];
       MeshVN sphere = new (Mesh3.Sphere (s.Center, s.Radius)) { Shading = EShadeMode.Glass };
@@ -27,13 +28,12 @@ class MinSphereScene : Scene3 {
       Lib.Trace ($"Min-Sphere, Radius: {s.Radius.Round (1)}, Center: ({s.Center.X.Round (1)}, {s.Center.Y.Round (1)}, {s.Center.Z.Round (1)})");
       Lib.Trace ($"Points: {pts.Length}, On Sphere: {ptlie.Count (x => x.N == 0)}, Elapsed: {sw.Elapsed.TotalMicroseconds:F0} us");
 
-      // Compute approximate sphere by Ritter's algorithm for comparison
+      // Compute approximate enclosing sphere by Ritter's algorithm for comparison
       sw.Restart ();
       var s2 = MinSphere.FromQuickApprox (pts);
       sw.Stop ();
-      Lib.Trace ($"Approx-Sphere, Radius: {s2.Radius.Round (1)}, Center: ({s2.Center.X.Round (1)}, {s2.Center.Y.Round (1)}, {s2.Center.Z.Round (1)})");
+      Lib.Trace ($"Approx-Sphere, Radius: {s2.Radius.Round (1)}, Center: ({s2.Center.X.Round (1)}, {s2.Center.Y.Round (1)}, {s2.Center.Z.Round (1)}), Elapsed: {sw.Elapsed.TotalMicroseconds:F0} us");
       Lib.Trace ($"Deviation: {((s2.Radius - s.Radius) / s.Radius):P2}");
-      Lib.Trace ($"Elapsed: {sw.Elapsed.TotalMicroseconds:F0} us");
 
       Lib.Trace ("Press 'Min. Sphere' again to regenerate");
       Root = new GroupVN (nodes);

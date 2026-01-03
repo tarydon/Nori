@@ -111,7 +111,6 @@ public readonly struct MinCircle {
 
 #region struct MinSphere ---------------------------------------------------------------------------
 /// <summary>Implements a minimum sphere for a given set of points.</summary>
-/// This is an implementation of Welzl's algorithm for finding the minimum enclosing sphere.
 public readonly struct MinSphere {
    // Private constructor to construct a sphere from radius and center.
    MinSphere (double radius, Point3 center) {
@@ -151,7 +150,9 @@ public readonly struct MinSphere {
    /// MinSphere sphere = MinSphere.From (points);
    /// </code>
    /// <param name="pts">The input points.</param>
-   public static MinSphere From (ReadOnlySpan<Point3> pts) {
+   /// This is an implementation of Welzl's algorithm for finding the minimum enclosing sphere.
+   /// The input points should be pre-shuffled (or randomized order) for optimal performance.
+   static MinSphere Welzl (ReadOnlySpan<Point3> pts) {
       return pts.Length <= 4 ? MES ([], pts) : MES (pts, []);
 
       static MinSphere MES (ReadOnlySpan<Point3> pts, ReadOnlySpan<Point3> outer) {
@@ -180,11 +181,47 @@ public readonly struct MinSphere {
       }
    }
 
+   /// <summary>Constructs a minimum-enclosing-circle from a given set of points. BEWARE: Points will be shuffled in the input span</summary>
+   /// 1. We start off similar to Rittor's approximation by finding two farthest points and moving them to the front.
+   /// 2. Then we use Welzl's algorithm to compute the exact minimum enclosing sphere.
+   /// Compared to a naive Welzl's algorithm, this approach is about 10x faster in practice.
+   public static MinSphere From (Span<Point3> arr) {
+      if (arr.Length == 0) return Nil;
+      Point3 p0 = arr[0];
+
+      // Find the point p1 farthest from p0.
+      int id1 = 0;
+      double maxD = -1;
+      for (int i = 0; i < arr.Length; i++) {
+         double d = p0.DistToSq (arr[i]);
+         if (d > maxD) {
+            maxD = d;
+            id1 = i;
+         }
+      }
+
+      Point3 p1 = arr[id1];
+      (arr[0], arr[id1]) = (arr[id1], arr[0]); // Move p1 to front
+
+      // Now find p2 farthest from p1.
+      maxD = -1; id1 = 0;
+      for (int i = 1; i < arr.Length; i++) {
+         double d = p1.DistToSq (arr[i]);
+         if (d > maxD) {
+            maxD = d;
+            id1 = i;
+         }
+      }
+      if (id1 > 1)
+         (arr[1], arr[id1]) = (arr[id1], arr[1]); // Move p2 to front
+
+      return Welzl (arr);
+   }
+
    /// <summary>Constructs a close-to-minimum enclosing sphere for a given set of points very quickly. (not "the" optimal min. sphere)</summary>
    /// A quick and dirty minimum enclosing sphere (not optimal) using Ritter's algorithm.
    /// Usually within 2% of optimal. On average about 0.9% larger than optimal, but 10x faster to compute.
    public static MinSphere FromQuickApprox (ReadOnlySpan<Point3> pts) {
-      
       if (pts.Length == 0) return Nil;
       if (pts.Length == 1) return new MinSphere (0, pts[0]);
 
