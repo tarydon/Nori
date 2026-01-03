@@ -74,7 +74,7 @@ public class Mesh3 {
       public Vec3H Vec => vec;
 
       public void Deconstruct (out Point3f p, out Vec3H v) => (p, v) = (Pos, Vec);
-      public override string ToString () => $"{pos}, {vec}";
+      public override string ToString () => $"{pos} {vec}";
       public static Node operator * (Node node, Matrix3 xfm) {
          var pos = node.Pos * xfm;
          var vec = node.Vec;

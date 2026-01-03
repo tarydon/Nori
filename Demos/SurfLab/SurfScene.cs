@@ -38,7 +38,7 @@ class SurfScene : Scene3 {
 
       BgrdColor = new (96, 160, 128);
       Bound = mModel.Bound.InflatedF (1);
-      Root = new GroupVN ([new Model3VN (mModel), TraceVN.It]);
+      Root = new GroupVN ([new Model3VN (mModel), TraceVN.It, mPlus, mNormal, mUnloft2]);
 
       mHooks = HW.MouseMoves.Subscribe (OnMouseMove);
    }

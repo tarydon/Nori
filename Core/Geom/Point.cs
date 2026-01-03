@@ -229,7 +229,7 @@ public readonly struct Point3f {
    /// <summary>Scales a Point3f by a given factor</summary>
    public static Point3f operator * (Point3f a, double f) => new (a.X * f, a.Y * f, a.Z * f);
 
-   public override string ToString () => $"({X.S5 ()},{Y.S5 ()},{Z.S5 ()}";
+   public override string ToString () => $"({X.S5 ()},{Y.S5 ()},{Z.S5 ()})";
 }
 #endregion
 

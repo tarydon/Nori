@@ -1,19 +1,21 @@
-﻿using System.Threading;
-
+// ────── ╔╗
+// ╔═╦╦═╦╦╬╣ E3Surface.cs
+// ║║║║╬║╔╣║ <<TODO>>
+// ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
+using System.Threading;
 namespace Nori;
-
 
 #region class E3NurbsSurface -----------------------------------------------------------------------
 /// <summary>Represents a NURBS surface (any order, rational or simple)</summary>
 public sealed class E3NurbsSurface : E3Surface {
-   E3NurbsSurface () => mUImp = mVImp = null!;
+   // Constructors -------------------------------------------------------------
    public E3NurbsSurface (int id, ImmutableArray<Point3> ctrl, ImmutableArray<double> weight, int uCtl, ImmutableArray<double> uknots, ImmutableArray<double> vknots, ImmutableArray<Contour3> trims) : base (id, trims) {
       UCtl = uCtl; Ctrl = ctrl; Weight = weight;
       mUImp = new (uCtl, uknots); mVImp = new (VCtl, vknots);
       Rational = !(weight.IsEmpty || weight.All (a => a.EQ (1)));
       if (!Rational) Weight = [];
    }
-   readonly SplineImp mUImp, mVImp;
+   E3NurbsSurface () => mUImp = mVImp = null!;
 
    // Properties ---------------------------------------------------------------
    /// <summary>The 2-dimensional grid of control points</summary>
@@ -24,15 +26,21 @@ public sealed class E3NurbsSurface : E3Surface {
    /// <summary>Is this a rational spline? (all weights set to 1)</summary>
    public readonly bool Rational;
 
-   /// <summary>The weights for the control points (if all are set to 1, this is a non-rational spline)</summary>
-   public readonly ImmutableArray<double> Weight;
-
    /// <summary>Number of 'columns' in the control point grid</summary>
    public readonly int UCtl;
    /// <summary>Number of 'rows' in the control point grid</summary>
    public int VCtl => Ctrl.Length / UCtl;
 
+   /// <summary>The weights for the control points (if all are set to 1, this is a non-rational spline)</summary>
+   public readonly ImmutableArray<double> Weight;
+
    // Overrides ----------------------------------------------------------------
+   // Computes the domain of the NURBS surface (just the limits of the knots in U and V)
+   protected override Bound2 ComputeDomain () 
+      => new (mUImp.Knot[0], mVImp.Knot[0], mUImp.Knot[^1], mVImp.Knot[^1]);
+
+   // Given a U,V computes a point on the NURBS surface. The SplineImps mUImp and mVImp
+   // are the evaluators of the basis functions in U and V directions.
    public override Point3 GetPoint (double u, double v) {
       u = u.Clamp (mUImp.Knot[0], mUImp.Knot[^1] - 1e-9);
       double[] ufactor = mUFactor.Value!;
@@ -94,10 +102,13 @@ public sealed class E3NurbsSurface : E3Surface {
    static readonly ThreadLocal<double[]> mUFactor = new (() => new double[8]);
    static readonly ThreadLocal<double[]> mVFactor = new (() => new double[8]);
 
-   protected override Bound2 ComputeDomain () => new (mUImp.Knot[0], mVImp.Knot[0], mUImp.Knot[^1], mVImp.Knot[^1]);
-
-   public override Point2 GetUV (Point3 pt) => (_unlofter ??= new (this)).GetUV (pt);
+   /// <summary>Computes the U,V</summary>
+   public override Point2 GetUV (Point3 pt) 
+      => (_unlofter ??= new (this)).GetUV (pt);
    SurfaceUnlofter? _unlofter;
+
+   // Private data -------------------------------------------------------------
+   readonly SplineImp mUImp, mVImp;
 }
 #endregion
 
@@ -106,24 +117,36 @@ public sealed class E3NurbsSurface : E3Surface {
 /// 
 /// Parametrization: 
 /// - V is the parameter value (T) along the bottom and top curves
-/// - U is the interpolation between these two points (0..1)
+/// - U is the interpolation between these two points from 0 .. USpan , where
+///   USpan is the average of [bottom.Start .. top.Start] and [bottom.End .. top.End]
 public sealed class E3RuledSurface : E3Surface {
+   // Constructors -------------------------------------------------------------
    public E3RuledSurface (int id, ImmutableArray<Contour3> trims, Curve3 bottom, Curve3 top) : base (id, trims) {
       (Bottom, Top) = (bottom, top);
       Lib.Check (bottom.Domain.EQ (top.Domain), "RuledSurface domains unequal");
+      mUSpan = (Bottom.Start.DistTo (top.Start) + Bottom.End.DistTo (top.End)) / 2;
+      mUSpan = Math.Max (mUSpan, 1);
    }
+   E3RuledSurface () => Bottom = Top = null!;
 
+   // Properties ---------------------------------------------------------------
+   /// <summary>Bottom generatrix curve</summary>
    public readonly Curve3 Bottom;
+   /// <summary>Top generatrix curve</summary>
    public readonly Curve3 Top;
 
+   // Overrides ----------------------------------------------------------------
+   protected override Bound2 ComputeDomain ()
+      => new (new (0, mUSpan), Bottom.Domain);
+
    public override Point3 GetPoint (double u, double v)
-      => u.Along (Bottom.GetPoint (v), Top.GetPoint (v));
+      => (u / mUSpan).Along (Bottom.GetPoint (v), Top.GetPoint (v));
 
    public override Point2 GetUV (Point3 pt3d)
       => (_unlofter = new (this)).GetUV (pt3d);
    SurfaceUnlofter? _unlofter;
 
-   protected override Bound2 ComputeDomain ()
-      => new (new (0, 1), Bottom.Domain);
+   // Private data -------------------------------------------------------------
+   double mUSpan;
 }
 #endregion

@@ -29,7 +29,7 @@ static class ComputeCoverage {
          double f = Math.Round (100.0 * covered / total, 2);
          data.Add (new (file[3..], total, covered, f));
       }
-      data = [.. data.OrderByDescending (a => a.Percent)];
+      data = [.. data.OrderBy (a => a.Uncovered)];
 
       Console.WriteLine ("                             File  Blocks  Covered Uncovered       %");
       Console.WriteLine ("-----------------------------------------------------------------------");

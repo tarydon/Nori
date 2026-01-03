@@ -1,5 +1,5 @@
 E3SpunSurface
-Flags: FlipNormal, FlatGenetrix
+Flags: FlipNormal, GeneratrixFlat
 Domain: (0~6.28319,0~1)
 Bound: (13.88477~32,188~206.11523,206.5~209.65791)
 Area: 269.126106
