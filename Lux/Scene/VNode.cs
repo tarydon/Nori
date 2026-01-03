@@ -407,7 +407,7 @@ public abstract class VNode {
       }
       mFamily.ReleaseChain (ref mChildren);
       mFreeIDs.Push (Id); mNodes[Id] = null;
-      mGeometryDirty = mChildrenAdded = true; mKnownChildren = 0;
+      mGeometryDirty = mChildrenAdded = true;
       Id = 0;
    }
 

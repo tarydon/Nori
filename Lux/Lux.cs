@@ -42,7 +42,7 @@ public static partial class Lux {
       set {
          mUIScene?.Detach ();
          BackFacesPink = false;
-         mUIScene = value; mUIScene?.Attach (); mViewBound.OnNext (0); Redraw ();
+         mUIScene = value; mViewBound.OnNext (0); Redraw ();
          HW.CursorVisible = mUIScene?.CursorVisible ?? true;
       }
    }
