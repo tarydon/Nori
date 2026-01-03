@@ -2,7 +2,6 @@
 // ╔═╦╦═╦╦╬╣ Curve3.cs
 // ║║║║╬║╔╣║ Implements Curve3 and various types of derived curve
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
-using System.Diagnostics;
 using System.Threading;
 namespace Nori;
 

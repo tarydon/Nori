@@ -124,7 +124,7 @@ public class T3XReader : IDisposable {
    // Loads a list of contours (these are basically trimming curves in XYZ space
    // for any of the surfaces). The complete list of contours is terminated by a *, 
    // and the list of edges within each contour is also terminated by a *.
-   List<Contour3> LoadContours () {
+   ImmutableArray<Contour3> LoadContours () {
       List<Curve3> edges = [];
       List<Contour3> contours = [];
       for (; ;) {
@@ -137,7 +137,7 @@ public class T3XReader : IDisposable {
          contours.Add (new ([.. edges]));
          edges.Clear ();
       }
-      return contours;
+      return [..contours];
    }
 
    // Loads one of the Curve3 (typically, this is part of a list of Curve3 making up a Contour),

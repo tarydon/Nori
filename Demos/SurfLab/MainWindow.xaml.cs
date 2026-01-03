@@ -1,4 +1,3 @@
-using System.IO;
 using System.Windows;
 using Nori;
 using SurfLab;

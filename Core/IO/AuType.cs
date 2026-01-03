@@ -492,7 +492,7 @@ class AuField {
    public bool SkipWriting ([NotNullWhen (false)] object? value) {
       if (value == null || Tactic == ECurlTactic.Uplink) return true;
       if (Equals (value, mFieldType.SkipValue)) return true;
-      if (value is double d && d.IsNaN ()) return true; 
+      if (value is double d && d.IsNan) return true; 
       return false;
    }
 

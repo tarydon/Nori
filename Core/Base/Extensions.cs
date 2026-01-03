@@ -102,8 +102,6 @@ public static class Extensions {
    /// <summary>Returns true if a string is null, empty or whitespace</summary>
    public static bool IsBlank ([NotNullWhen (false)] this string? s) => string.IsNullOrWhiteSpace (s);
 
-   /// <summary>Checks if a double is NaN</summary>
-   public static bool IsNaN (this double a) => double.IsNaN (a);
    /// <summary>Checks if a float is NaN</summary>
    public static bool IsNaN (this float a) => float.IsNaN (a);
 
@@ -329,5 +327,24 @@ public static class Extensions {
 
    /// <summary>Wrap an integer to a range within 0..max-1</summary>
    public static int Wrap (this int n, int max) => (n + max) % max;
+}
+#endregion
+
+#region class Extensions ---------------------------------------------------------------------------
+/// <summary>Extension methods, properties on various standard types</summary>
+public static class Extensions2 {
+   // Extension methods on double
+   extension(double f) {
+      /// <summary>Returns true if a double is nan - easier to use than double.IsNaN(f)</summary>
+      public bool IsNan => double.IsNaN (f);
+   }
+
+   extension(ref double f) {
+      /// <summary>Computes a double using the provided function (if it's NaN), caching it</summary>
+      public double Cached (Func<double> compute) {
+         if (double.IsNaN (f)) f = compute ();
+         return f; 
+      }         
+   }
 }
 #endregion

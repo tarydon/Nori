@@ -18,8 +18,8 @@ public class E3SurfaceVN (E3Surface mSurface) : Ent3VN (mSurface) {
 class E3CurveVN (E3Curve mCurve) : Ent3VN (mCurve) {
    public override void Draw () {
       List<Point3> pts = [];
-      mCurve.Edge.Discretize (pts, Lib.FineTess, Lib.FineTessAngle);
-      pts.Add (mCurve.Edge.End);
+      mCurve.Curve.Discretize (pts, Lib.FineTess, Lib.FineTessAngle);
+      pts.Add (mCurve.Curve.End);
 
       List<Vec3F> vec = [(Vec3F)pts[0]];
       for (int i = 1; i < pts.Count; i++) { vec.Add ((Vec3F)pts[i]); vec.Add ((Vec3F)pts[i]); }

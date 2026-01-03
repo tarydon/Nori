@@ -38,7 +38,7 @@ public readonly struct Point2 : IEQuable<Point2> {
    public static readonly Point2 Nil = new (double.NaN, double.NaN);
 
    /// <summary>Returns true if this is a Nil Point2</summary>
-   public bool IsNil => double.IsNaN (X) || double.IsNaN (Y);
+   public bool IsNil => X.IsNan || Y.IsNan;
 
    // Methods ------------------------------------------------------------------
    /// <summary>Returns the heading between this point and the given point pt</summary>
@@ -270,7 +270,7 @@ public readonly struct Point3 : IEquatable<Point3> {
    /// <summary>The 'Nil' point</summary>
    public static readonly Point3 Nil = new (double.NaN, double.NaN, double.NaN);
    /// <summary>Is this point Nil (similar to NaN for double)</summary>
-   public bool IsNil => double.IsNaN (X);
+   public bool IsNil => X.IsNan;
 
    // Methods ------------------------------------------------------------------
    /// <summary>Distance between this point and another</summary>

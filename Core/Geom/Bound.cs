@@ -210,7 +210,7 @@ public readonly struct Bound2 : IEQuable<Bound2> {
    ///   public Bound2 Bound
    ///     => Bound2.Update (ref mBound, () => new (mPts));
    ///   Bound2 mBound = new ();
-   public static Bound2 Update (ref Bound2 bound, Func<Bound2> computer) {
+   public static Bound2 Cached (ref Bound2 bound, Func<Bound2> computer) {
       if (bound.IsEmpty) bound = computer ();
       return bound;
    }
@@ -315,7 +315,7 @@ public readonly struct Bound3 : IEQuable<Bound3> {
    ///   public Bound3 Bound
    ///     => Bound3.Update (ref mBound, () => new (mPts));
    ///   Bound3 mBound = new ();
-   public static Bound3 Update (ref Bound3 bound, Func<Bound3> computer) {
+   public static Bound3 Cached (ref Bound3 bound, Func<Bound3> computer) {
       if (bound.IsEmpty) bound = computer ();
       return bound;
    }

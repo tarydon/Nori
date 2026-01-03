@@ -1,616 +1,306 @@
 // ────── ╔╗
 // ╔═╦╦═╦╦╬╣ Ent3.cs
-// ║║║║╬║╔╣║ <<TODO>>
+// ║║║║╬║╔╣║ Defines some of the Ent3 hierarchy of classes (the abstract base classes)
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
-using System.Threading;
 namespace Nori;
-using static Math;
 
-#region class E3Cone -------------------------------------------------------------------------------
-/// <summary>Defines a Cone surface</summary>
-/// The surface is defined in canonical space with tip at the origin, and expanding outward
-/// along +Z direction. 
+#region class Ent3 ---------------------------------------------------------------------------------
+/// <summary>The base class for all Ent3</summary>
+/// The hierarchy below shows the different classes derived from Ent3. When we import a STEP file,
+/// all the surfaces from the BREP become objects of types derived from E3Surface (that is the level
+/// at which we maintain connectivity information). When we do a sheet-metalization of that model, 
+/// we create entities derived from E3Thick (then we have a developable sheet-metal model). 
 /// 
-/// Parametrization:
-/// Given a canonical point ptCanon lying on the canonical surface of the cone:
-/// - U is in radians, and is the heading of this ptCanon from the origin, as projected on
-///   the XY plane (viewing from above). A U value of 0 means the point is lying on the
-///   XY plane and will project to a point on the X axis in 2D
-/// - V is the distance of this point from the tip of the cone (which is basically the origin)
-public sealed class E3Cone : E3CSSurface {
-   public E3Cone (int id, IEnumerable<Contour3> trims, CoordSystem cs, double halfAngle) : base (id, trims, cs) {
-      HalfAngle = halfAngle;
-      mFlags |= E3Flags.VLinear;
-      PostLoad ();
-   }
-   E3Cone () { }
+/// All E3Surface are parametric surfaces, and the documentation of each surface defines the 
+/// parametrization. Each point on the surface can be converted to a corresponding point in UV
+/// space (parameter space) by the GetUV method. (Caveat: for some points like the poles of a sphere,
+/// this is not a well defined function!). From a given UV value in parameter space, we can compute
+/// the corresponding point on the surface (using the GetPoint method) and the corresponding normal
+/// at that point (using the GetNormal method). 
+/// 
+/// The "parametrization" is useful in many places. For example, given a particular point on the
+/// surface (which we might get from Lux.Pick for example), we can get the UV and then get the normal
+/// to compute the normal at that point. Also, the parametrized UV curves of the surface form a set
+/// of 2D polylines, and can be used as a starting point to tessellate the surface. 
+/// 
+/// A subset of the E3Surface types are derived from E3CSSurface. These are some common primitives
+/// like sphere, torus, cone etc. They are often canonically defined to be at the origin, oriented
+/// along the principal X, Y, Z axes, and then 'lofted up' into their final positions using a 
+/// transformation CS (Coordinate System). This definition simplifies the GetPoint, GetUV type methods
+/// for these surfaces much simpler, since we can work with a canonical definition and finally just
+/// transform to/from the final positioning and orientation of the surface. 
+///
+/// E3Mesh                - Wrapper around a Mesh
+/// E3Thick               - Base for all sheet-metal models (entities with thickness)
+///   E3Sheet             - Thick planar surface (equivalent of Flux E3Plane)
+///   E3Flex              - Represents a deforming area of the sheet (bend line)
+/// E3Curve               - Curves in space
+/// E3Surface             - Basis for BRep model (parametric surface with trimming curves, connectivity)
+///   E3CSSurface         - Surfaces defined in a canonical world space and lofted up using a CS
+///     E3Cylinder        - Cylindrical surface (canonical definition with base center at origin, axis along +Z)
+///     E3Cone            - Conical surface (canonical definition with base center at origin, axis along +Z)
+///     E3Plane           - Plane defined by a set of Poly lofted into space
+///     E3Sphere          - Spherical surface (canonical definition with center at origin)
+///     E3SpunSurface     - Surface defined by spinning a generatrix curve about an axis
+///     E3SweptSurface    - Surface defined by sweeping a generatrix curve along a line
+///     E3Torus           - Toroidal surface (canonical definition with center at origin, aligned to XY plane)
+///   E3NurbSurface       - Rational spline surface of arbitrary order / degree
+///   E3RuledSurface      - Surface defined by drawing ruling lines between two equi-parametric curves
+[EPropClass]
+public abstract partial class Ent3 {
+   // Constructors -------------------------------------------------------------
+   /// <summary>Protected constructor - each Ent3 has an Id</summary>
+   protected Ent3 (int id) => Id = id;
+   protected Ent3 () { }
 
    // Properties ---------------------------------------------------------------
-   /// <summary>The half-angle inscribed by the cone at the tip (between 0 .. PI/2)</summary>
-   public readonly double HalfAngle;
+   /// <summary>Returns the Bound of the Ent3 (overridden in descendents)</summary>
+   public abstract Bound3 Bound { get; }
 
-   // Overrides ----------------------------------------------------------------
-   public override Bound2 ComputeDomain () {
-      List<Point3> pts = [];
-      Bound1 v = new (); var xfm = FromXfm;
-      foreach (var c in mContours.SelectMany (a => a.Curves)) {
-         pts.Clear ();
-         c.Discretize (pts, Lib.CoarseTess, Lib.CoarseTessAngle);
-         foreach (var pt in pts) v += (pt * xfm).Z / _cos;
-      }
-      return new (new (0, Lib.TwoPI), v);
+   /// <summary>Returns the flags for this entity</summary>
+   public E3Flags Flags => mFlags;
+
+   /// <summary>ID of the surface (often used to map to an entity number in STEP / IGES etc)</summary>
+   public readonly int Id;
+
+   /// <summary>Is the normal flipped (back-side of surface is to be used)</summary>
+   public bool IsNormalFlipped { get => Get (E3Flags.FlipNormal); set => Set (E3Flags.FlipNormal, value); }
+   /// <summary>Is the Genetrix lying in the XY or XZ plane</summary>
+   public bool IsGeneratrixFlat => Get (E3Flags.GeneratrixFlat);
+
+   /// <summary>Is this entity selected?</summary>
+   public bool IsSelected {
+      get => Get (E3Flags.Selected);
+      set { if (Set (E3Flags.Selected, value)) Notify (EProp.Selected); }
    }
 
-   protected override Point3 GetPointCanonical (double u, double v) {
-      // The V value of the parametrization is linear distance from the tip of the cone. 
-      // From this we can compute the radius at that point, and also the Z-height from the tip
-      double radius = v * _sin, z = v * _cos;
-      // The U parameter is just the rotation of this point about the Z axis (starting with 
-      // U=0 lying on the X axis itself
-      return new Point3 (radius, 0, z).Rotated (EAxis.Z, u);
+   /// <summary>Should this entity be rendered using a translucent (glass) shader</summary>
+   public bool IsTranslucent {
+      get => Get (E3Flags.Translucent);
+      set { if (Set (E3Flags.Translucent, value)) Notify (EProp.Translucency); }
    }
 
-   // The normal does not depend on the v value at all (at a particular u, it is constant
-   // across the height of the cone)
-   protected override Vector3 GetNormalCanonical (double u, double v) 
-      => new Vector3 (_cos, 0, -_sin).Rotated (EAxis.Z, u);
-
-   // V is the distance from the tip, but since we know that the point lies on this cone,
-   // we can compute it more efficiently as just pt.Z / _cos. U we get by looking at above
-   // (consider X and Y) and computing the heading. U ranges from 0 .. 2*PI
-   protected override Point2 GetUVCanonical (Point3 pt) {
-      double u = Atan2 (pt.Y, pt.X); if (u < 0) u += Lib.TwoPI;
-      return new (u, pt.Z / _cos);
+   // Protected ----------------------------------------------------------------
+   // Bitflags for this entity
+   protected E3Flags mFlags;
+   // Returns true if the specified bit is set
+   protected bool Get (E3Flags bit) => (mFlags & bit) != 0;
+   // Sets/resets one bit from the flags, returns true if state changed
+   protected bool Set (E3Flags bits, bool value) {
+      var old = mFlags;
+      if (value) mFlags |= bits; else mFlags &= ~bits;
+      return mFlags != old;
    }
 
    // Implementation -----------------------------------------------------------
-   void PostLoad () => (_sin, _cos) = SinCos (HalfAngle);
+   public override string ToString () => $"{GetType ().Name} #{Id}";
+}
+#endregion
 
-   // Private data -------------------------------------------------------------
-   double _sin, _cos;
+#region enum E3Flags -------------------------------------------------------------------------------
+/// <summary>Bitflags for Ent3</summary>
+[Flags]
+public enum E3Flags {
+   Selected = 0x1, Translucent = 0x2, FlipNormal = 0x4, GeneratrixFlat = 0x8,
+   ULinear = 0x10, VLinear = 0x20,
 }
 #endregion
 
 #region class E3Curve ------------------------------------------------------------------------------
 /// <summary>An Entity that represents a free-space curve</summary>
-public class E3Curve : Ent3 {
+public sealed class E3Curve : Ent3 {
    // Constructors -------------------------------------------------------------
-   E3Curve () => Edge = null!;
-   public E3Curve (Curve3 curve) => Edge = curve;
+   public E3Curve (Curve3 curve) => Curve = curve;
+   E3Curve () => Curve = null!;
 
    // Properties ---------------------------------------------------------------
    /// <summary>The underlying Curve3</summary>
-   public readonly Curve3 Edge;
+   public readonly Curve3 Curve;
 
    /// <summary>The Bound of the curve</summary>
-   public override Bound3 Bound {
-      get {
-         if (mBound.IsEmpty) {
-            List<Point3> pts = [];
-            Edge.Discretize (pts, Lib.CoarseTess, Lib.CoarseTessAngle);
-            pts.Add (Edge.End);
-            mBound = new (pts);
-         }
-         return mBound;
-      }
-   }
+   public override Bound3 Bound => Bound3.Cached (ref mBound, ComputeBound);
    Bound3 mBound = new ();
+
+   // Implementation -----------------------------------------------------------
+   // Computes the bound of the curve
+   Bound3 ComputeBound () {
+      List<Point3> pts = [];
+      Curve.Discretize (pts, Lib.CoarseTess, Lib.CoarseTessAngle);
+      pts.Add (Curve.End);
+      return new (pts);
+   }
 }
 #endregion
 
-#region class E3Cylinder ---------------------------------------------------------------------------
-/// <summary>Represents a Cylinder in 3D space</summary>
-/// The surface is defined in the canonical space and lofted into final position with 
-/// a CoordSystem. 
+#region class E3Surface ----------------------------------------------------------------------------
+/// <summary>E3Surface is the base class for parametric surfaces with no thickness</summary>
+/// The surfaces are parametric - the 3D points can be unlofted into a UV parameter space 
+/// (using the GetUV method), and given a UV value, we can compute the corresponding 3D position
+/// (using the GetPoint method) and the corresponding normal (using the GetNormal method). 
+/// The surface is bounded by a set of trimming curves - each one is a Contour3 made up of
+/// multiple Curve3 entities (like Line3, Arc3, NurbsCurve3 etc). 
 /// 
-/// Parametrization:
-/// Given a canonical point ptCanon lying on the canonical surface of the cone:
-/// - U is in radians, and is the heading of this ptCanon from the origin, as projected on
-///   the XY plane (viewing from above). A U value of 0 means the point is lying on the
-///   XY plane and will project to a point on the X axis in 2D
-/// - V is the distance of this point from the XY plane (along height of the cylinder)
-public sealed class E3Cylinder : E3CSSurface {
+/// Each Curve3 has a PairId which may match a PairId of some other edge on some other surface,
+/// thus generating connectivity information between surfaces. This connectivity information 
+/// can be used to fetch the neighbors of a surface (using Model.GetNeighbors). 
+public abstract class E3Surface : Ent3 {
    // Constructors -------------------------------------------------------------
-   public E3Cylinder (int id, IEnumerable<Contour3> trims, CoordSystem cs, double radius, bool infacing = false) : base (id, trims, cs) {
-      Radius = radius;
-      mFlags |= E3Flags.VLinear;
-      if (infacing) mFlags |= E3Flags.FlipNormal;
-   }
-   E3Cylinder () { }
-
-   public static E3Cylinder Build (int id, IReadOnlyList<Contour3> trims, CoordSystem cs, double radius, bool infacing) {
-      // We want to possibly rotate the given CoordSystem about its local Z axis so that the
-      // cut line
-      Bound1 angSpan = new ();
-      var xfm = Matrix3.From (cs);
-      foreach (var edge in trims.First ().Curves) {
-         Adjust (edge.Start); Adjust (edge.GetPoint (0.5));
-      }
-      if (angSpan.Length < Lib.TwoPI - Lib.Epsilon)
-         cs *= Matrix3.Rotation (cs.Org, cs.Org + cs.VecZ, -(angSpan.Mid + Lib.PI));
-      return new (id, trims, cs, radius, infacing);
-
-      void Adjust (Point3 pt) {
-         pt *= xfm;
-         double ang = Atan2 (pt.Y, pt.X);
-         if (angSpan.IsEmpty) angSpan += ang;
-         else if (!angSpan.Contains (ang)) {
-            if (ang < angSpan.Min) {
-               double altAng = ang + Lib.TwoPI;
-               if (altAng - angSpan.Max < angSpan.Min - ang) ang = altAng;
-            } else {
-               double altAng = ang - Lib.TwoPI;
-               if (ang - angSpan.Max > angSpan.Min - altAng) ang = altAng;
-            }
-            angSpan += ang;
-         }
-      }
-   }
-
-   protected override Mesh3 BuildMesh (double tolerance, double maxAngStep)
-      => BuildFullCylinderMesh (tolerance, maxAngStep) ??
-         BuildPartCylinderMesh (tolerance, maxAngStep) ??
-         base.BuildMesh (tolerance, maxAngStep);
-
-   Mesh3? BuildFullCylinderMesh (double tolerance, double maxAngStep) {
-      if (mContours.Length != 2 || mContours.Any (a => a.Curves.Length != 1)) return null;
-      var arcs = mContours.Select (a => a.Curves[0]).OfType<Arc3> ().ToList ();
-      if (arcs.Count != 2) return null;
-      double cos = arcs[0].CS.VecZ.CosineToAlreadyNormalized (arcs[1].CS.VecZ);
-      if (!Abs (cos).EQ (1)) return null;
-      Point3 cen0 = arcs[0].Center;
-      Vector3 vecZ0 = arcs[1].Center - cen0, vecZ1 = arcs[1].Start - arcs[0].Start;
-      if (!vecZ0.EQ (vecZ1)) return null;
-      Point3 cenLift = cen0 + vecZ0.Normalized ();
-
-      List<Point3> pts = [];
-      List<Mesh3.Node> nodes = [];
-      List<int> wires = [], tris = [];
-      arcs[0].Discretize (pts, tolerance, maxAngStep); int n = pts.Count;
-      foreach (var pt in pts) {
-         Vector3 vec = (pt.SnappedToUnitLine (cen0, cenLift) - pt).Normalized ();
-         if (!IsNormalFlipped) vec = -vec;
-         nodes.Add (new (pt, vec));
-      }
-      for (int i = 0; i < n; i++) {
-         int j = (i + 1) % n;
-         nodes.Add (new ((Point3f)(pts[i] + vecZ0), nodes[i].Vec));
-         wires.Add (i); wires.Add (j); wires.Add (i + n); wires.Add (j + n);
-         tris.Add (i); tris.Add (i + n); tris.Add (j);
-         tris.Add (j); tris.Add (i + n); tris.Add (j + n);
-      }
-      if (IsNormalFlipped) tris.Reverse ();
-      return new ([.. nodes], [.. tris], [.. wires]);
-   }
-
-   Mesh3? BuildPartCylinderMesh (double tolerance, double maxAngStep) {
-      if (mContours.Length != 1 || mContours[0].Curves.Length < 4) return null;
-      var arcs = mContours[0].Curves.OfType<Arc3> ().ToList (); if (arcs.Count != 2) return null;
-      var lines = mContours[0].Curves.OfType<Line3> ().ToList ();
-      for (int i = lines.Count - 1; i >= 1; i--) {
-         Line3 line0 = lines[i - 1], line1 = lines[i];
-         Vector3 vec0 = (line0.End - line0.Start).Normalized ();
-         Vector3 vec1 = (line1.End - line1.Start).Normalized ();
-         if (vec0.EQ (vec1) && line0.End.EQ (line1.Start)) {
-            lines[i - 1] = new (line0.PairId, line0.Start, line1.End);
-            lines.RemoveAt (i);
-         }
-      }
-      if (lines.Count != 2) return null;
-      if (!arcs[0].AngSpan.EQ (arcs[1].AngSpan, 0.001)) return null;
-      if (!lines[0].Length.EQ (lines[1].Length, 0.01)) return null;
-
-      Point3 cen0 = arcs[0].Center;
-      Vector3 vecZ0 = arcs[1].Center - cen0;
-      Point3 cenLift = cen0 + vecZ0.Normalized ();
-      List<Point3> pts = [];
-      arcs[0].Discretize (pts, tolerance, maxAngStep); pts.Add (arcs[0].End); int n = pts.Count;
-      pts.Reverse ();
-      arcs[1].Discretize (pts, tolerance, maxAngStep); pts.Add (arcs[1].End);
-      List<Mesh3.Node> nodes = [];
-      foreach (var pt in pts) {
-         Vector3 vec = (pt.SnappedToUnitLine (cen0, cenLift) - pt).Normalized ();
-         if (!IsNormalFlipped) vec = -vec;
-         nodes.Add (new (pt, vec));
-      }
-      List<int> tris = [], wires = [0, n, n - 1, 2 * n - 1];
-      for (int i = 0; i < n - 1; i++) {
-         int j = i + 1;
-         wires.Add (i); wires.Add (i + 1);
-         wires.Add (i + n + 1); wires.Add (i + n);
-         tris.Add (i); tris.Add (i + n); tris.Add (j);
-         tris.Add (j); tris.Add (i + n); tris.Add (j + n);
-      }
-      Mesh3.Node n0 = nodes[tris[0]], n1 = nodes[tris[1]], n2 = nodes[tris[2]];
-      Point3 p0 = (Point3)n0.Pos, p1 = (Point3)n1.Pos, p2 = (Point3)n2.Pos;
-      Vector3 v0 = ToV (n0.Vec), v1 = ToV (n1.Vec), v2 = ToV (n2.Vec);
-      Vector3 norma = (p1 - p0) * (p2 - p0), normb = v0 + v1 + v2;
-      if (norma.Opposing (normb)) tris.Reverse ();
-      return new ([.. nodes], [.. tris], [.. wires]);
-
-      // Helpers ...........................................
-      static Vector3 ToV (Vec3H v) => new ((double)v.X, (double)v.Y, (double)v.Z);
-   }
+   /// <summary>Create an E3Surface given the ID and set of trimming curves</summary>
+   protected E3Surface (int id, ImmutableArray<Contour3> trims) : base (id) => Contours = trims;
+   protected E3Surface () { }
 
    // Properties ---------------------------------------------------------------
-   /// <summary>Radius of the cylinder</summary>
-   public readonly double Radius;
+   [DebuggerBrowsable (DebuggerBrowsableState.Never)]
+   public double Area => mArea.Cached (Mesh.GetArea);
+   double mArea = double.NaN;
+
+   /// <summary>The Bound of the surface in 3D</summary>
+   /// This is computed by the ComputeBound override, and cached here
+   [DebuggerBrowsable (DebuggerBrowsableState.Never)]
+   public override Bound3 Bound => Bound3.Cached (ref mBound, ComputeBound);
+   Bound3 mBound = new ();
+
+   /// <summary>Set of contours of the surface</summary>
+   public readonly ImmutableArray<Contour3> Contours;
+
+   /// <summary>The Domain of the surface in UV parameter space</summary>
+   /// This is computed by the ComputeDomain override, and cached here
+   [DebuggerBrowsable (DebuggerBrowsableState.Never)]
+   public Bound2 Domain => Bound2.Cached (ref mDomain, ComputeDomain);
+   Bound2 mDomain = new ();
+
+   /// <summary>Is the surface linear in the U parameter direction?</summary>
+   public bool IsULinear => Get (E3Flags.ULinear);
+   /// <summary>Is the surface linear in the V parameter dimension</summary>
+   public bool IsVLinear => Get (E3Flags.VLinear);
+
+   /// <summary>The tessellation of the surface is computed on demand by BuildMesh (which can be overridden)</summary>
+   [DebuggerBrowsable (DebuggerBrowsableState.Never)]
+   public Mesh3 Mesh {
+      get => _mesh ??= BuildMesh (Lib.FineTess, Lib.FineTessAngle);
+      set {
+         _mesh = value;
+         if (_mesh.Triangle.Length > 0) {
+            var n1 = _mesh.Vertex[_mesh.Triangle[0]];
+            var n2 = _mesh.Vertex[_mesh.Triangle[1]];
+            var n3 = _mesh.Vertex[_mesh.Triangle[2]];
+            Vector3 vec1 = (Vector3)n1.Vec + (Vector3)n2.Vec + (Vector3)n3.Vec;
+            Vector3 vec2 = ((Point3)n2.Pos - (Point3)n1.Pos) * ((Point3)n3.Pos - (Point3)n2.Pos);
+            
+            Point2 uv = GetUV ((Point3)n1.Pos);
+            vec1 = GetNormal (uv.X, uv.Y);
+            vec2 = (Vector3)n1.Vec;
+            if (vec1.Opposing (vec2) ^ (this is not E3Plane)) mFlags |= E3Flags.FlipNormal;
+            if (this is E3Plane) mFlags ^= E3Flags.FlipNormal;
+         }
+      }
+   }
+   Mesh3? _mesh;
 
    // Overrides ----------------------------------------------------------------
-   public override Bound2 ComputeDomain () {
+   /// <summary>BuildMesh is called to compute a tessellated mesh for this surface</summary>
+   /// We have a default implementation here that uses the SurfaceMesher to compute
+   /// a mesh. This unlofts the contours to create a set of UV contours. These are flat,
+   /// and can be tessellated by the 2D tessellator. Then, 3D triangles are created from
+   /// these 2D triangles (by lofting them using GetPoint). These 3D triangles are then
+   /// adaptively subdivided until they are 'flat enough' to meet our tolerance requirements.
+   /// This is expensive, and for a lot of surfaces like Plane, Cylinder, Cone etc, we will
+   /// have overrides that simplify this process considerably.
+   /// 
+   /// Also note that this method cannot reliably handle cylical surfaces like spheres,
+   /// cylinders, torus etc where the 3D surface often does not have any 'edges' in one or
+   /// both of the parameter directions. The UV parametrization in such cases needs to introduce
+   /// a 'seam' and all that logic is not yet handled by SurfaceMesher. 
+   protected virtual Mesh3 BuildMesh (double tolerance, double maxAngStep) 
+      => new SurfaceMesher (this).Build (tolerance, maxAngStep);
+
+   /// <summary>Override this to compute the domain of the surface</summary>
+   protected abstract Bound2 ComputeDomain ();
+
+   /// <summary>Computes the 3D point given a particular UV parameter values</summary>
+   public abstract Point3 GetPoint (double u, double v);
+
+   /// <summary>Computes the normal given a particular UV parameter value</summary>
+   public virtual Vector3 GetNormal (double u, double v) {
+      var d = Domain;
+      double du = d.X.Length / 40, dv = d.Y.Length / 40;
+      double u0 = d.X.Clamp (u - du), u1 = d.X.Clamp (u + du);
+      double v0 = d.Y.Clamp (v - dv), v1 = d.Y.Clamp (v + dv);
+      var vecx = GetPoint (u1, v) - GetPoint (u0, v);
+      var vecy = GetPoint (u, v1) - GetPoint (u, v0);
+      var vecz = (vecx * vecy).Normalized ();
+      return IsNormalFlipped ? -vecz : vecz;
+   }
+
+   /// <summary>Compute the UV parameter value corresponding to a point lying on the surface</summary>
+   public abstract Point2 GetUV (Point3 pt3d);
+
+   // Implementation -----------------------------------------------------------
+   // If a mesh exists, we use that to return the bound. Otherwise, we compute a bound
+   // by evaluating the contours
+   Bound3 ComputeBound () {
+      if (_mesh != null) return _mesh.Bound;
       List<Point3> pts = [];
-      Bound1 v = new (); var xfm = FromXfm;
-      foreach (var c in mContours.SelectMany (a => a.Curves)) {
-         pts.Clear ();
-         c.Discretize (pts, Lib.CoarseTess, Lib.CoarseTessAngle);
-         foreach (var pt in pts) v += (pt * xfm).Z;
-      }
-      return new (new (0, Lib.TwoPI), v);
-   }
-
-   // In the canonical definition, the cylinder is defined with the base center at
-   // the origin, and the axis aligned with +Z. The parametrization is this:
-   // - U is directly in radians, wraps around in the XY plane (0 = X axis)
-   // - V is the height above XY plane, in linear units
-   protected override Point3 GetPointCanonical (double u, double v) {
-      var (sin, cos) = SinCos (u);
-      return new (Radius * cos, Radius * sin, v);
-   }
-
-   // The normal in canonical space is always horizontal
-   protected override Vector3 GetNormalCanonical (double u, double v) {
-      var (sin, cos) = SinCos (u);
-      return new (cos, sin, 0);
-   }
-
-   // See EvaluateCanonical for the definition of U and V
-   protected override Point2 GetUVCanonical (Point3 pt) {
-      double ang = Atan2 (pt.Y, pt.X); if (ang < 0) ang += Lib.TwoPI;
-      return new (ang, pt.Z);
+      Contours[0].Discretize (pts, Lib.CoarseTess, Lib.CoarseTessAngle);
+      return new (pts);
    }
 }
 #endregion
 
-#region class NurbsSurface -------------------------------------------------------------------------
-/// <summary>Represents a NURBS surface (any order, rational or simple)</summary>
-public sealed class E3NurbsSurface : E3Surface {
-   E3NurbsSurface () => mUImp = mVImp = null!;
-   public E3NurbsSurface (int id, ImmutableArray<Point3> ctrl, ImmutableArray<double> weight, int uCtl, ImmutableArray<double> uknots, ImmutableArray<double> vknots, IEnumerable<Contour3> trims) : base (id, trims) {
-      UCtl = uCtl; Ctrl = ctrl; Weight = weight;
-      mUImp = new (uCtl, uknots); mVImp = new (VCtl, vknots);
-      Rational = !(weight.IsEmpty || weight.All (a => a.EQ (1)));
-      if (!Rational) Weight = [];
-   }
-   readonly SplineImp mUImp, mVImp;
+#region class E3CSSurface --------------------------------------------------------------------------
+/// <summary>E3CSSurface are defined in canonical space and lofted up into a CS</summary>
+public abstract class E3CSSurface : E3Surface {
+   // Constructors -------------------------------------------------------------
+   protected E3CSSurface (int id, ImmutableArray<Contour3> trims, CoordSystem cs) : base (id, trims) => mCS = cs;
+   protected E3CSSurface () { }
 
    // Properties ---------------------------------------------------------------
-   /// <summary>The 2-dimensional grid of control points</summary>
-   /// This is a 2D array, flattened. The total number of points here is UCtl x VCtl. 
-   /// V is the index that varies fastest, so the linear index for (u, v) is (u * VCtl + v). 
-   public readonly ImmutableArray<Point3> Ctrl;
+   /// <summary>The coordinate system into which the surface has to be lofted up</summary>
+   public CoordSystem CS => mCS;
+   readonly CoordSystem mCS;
 
-   /// <summary>Is this a rational spline? (all weights set to 1)</summary>
-   public readonly bool Rational;
+   /// <summary>Matrix to go from the entity's private CS to the world Coordinate System</summary>
+   public Matrix3 FromXfm => _fromXfm ??= Matrix3.From (mCS);
+   Matrix3? _fromXfm;
 
-   /// <summary>The weights for the control points (if all are set to 1, this is a non-rational spline)</summary>
-   public readonly ImmutableArray<double> Weight;
+   // The matrix to go from the world coordinate system to the entity's private CS
+   public Matrix3 ToXfm => _toXfm ??= Matrix3.To (mCS);
+   Matrix3? _toXfm;
 
-   /// <summary>Number of 'columns' in the control point grid</summary>
-   public readonly int UCtl;
-   /// <summary>Number of 'rows' in the control point grid</summary>
-   public int VCtl => Ctrl.Length / UCtl;
+   // Methods ------------------------------------------------------------------
+   // Several surfaces use the U value as a rotation about Z axis - this function
+   // computes that U axis value, and also rotates the input point by -U to bring it
+   // into the XZ plane
+   protected double GetUAxis (ref Point3 pt, bool rotate = true) {
+      double u = Math.Atan2 (pt.Y, pt.X); if (u < 0) u += Lib.TwoPI;
+      if (rotate) pt = pt.Rotated (EAxis.Z, -u);
+      return u;
+   }
 
    // Overrides ----------------------------------------------------------------
-   public override Point3 GetPoint (double u, double v) {
-      u = u.Clamp (mUImp.Knot[0], mUImp.Knot[^1] - 1e-9);
-      double[] ufactor = mUFactor.Value!;
-      while (ufactor.Length < mUImp.Order)
-         mUFactor.Value = ufactor = new double[ufactor.Length * 2];
-      int uSpan = mUImp.ComputeBasis (u, ufactor), up = mUImp.Degree; 
+   /// <summary>GetPoint computes the point in canonical space and lofts it up using the ToXfm</summary>
+   /// The underlying GetPointCanonical is overridden by derived classes, and the 
+   /// reasoning is that it would be much simpler to implement some surfaces like cones,
+   /// spheres, torii etc in a canonical space (world coordinate system) rather than in 
+   /// an arbitary position / orientation
+   public sealed override Point3 GetPoint (double u, double v) 
+      => GetPointCanonical (u, v) * ToXfm;
 
-      v = v.Clamp (mVImp.Knot[0], mVImp.Knot[^1] - 1e-9);
-      double[] vfactor = mVFactor.Value!;
-      while (vfactor.Length < mVImp.Order)
-         mVFactor.Value = vfactor = new double[vfactor.Length * 2];
-      int vSpan = mVImp.ComputeBasis (v, vfactor), vp = mVImp.Degree;
-      int vPts = VCtl;
-
-      Point3 sum = Point3.Zero;
-      if (Rational) {
-         // We compute a weighted sum of some subset of the control points
-         // around a zone of interest
-         double wsum = 0;
-         for (int j = 0; j <= up; j++) {
-            int jn = uSpan - up + j; double fBU = ufactor[j];
-            // The insum and inwsum values contain the vector sum and the weight sum of just
-            // this one row [j,*] of the entire control mesh. We use this to avoid having to 
-            // do so many multiplications with fBU, since that does not change during the inner
-            // loop. 
-            Point3 insum = Point3.Zero; double inwsum = 0;
-            for (int k = 0; k <= vp; k++) {
-               int kn = vSpan - vp + k;
-               int idx = jn * vPts + kn;
-               double fBV = vfactor[k] * Weight[idx];
-               insum += Ctrl[idx] * fBV;
-               inwsum += fBV;
-            }
-            wsum += inwsum * fBU;
-            sum += insum * fBU;
-         }
-         if (wsum.IsZero ()) wsum = 1;
-         return sum * (1 / wsum);
-      } else {
-         // This is a slightly optimized implementation of the same 
-         // weighted-average loop as above, tuned for the case where all the
-         // weights are 1
-         for (int j = 0; j <= up; j++) {
-            int jn = uSpan - up + j; double fBU = ufactor[j];
-            Point3 insum = Point3.Zero; 
-            for (int k = 0; k <= vp; k++) {
-               int kn = vSpan - vp + k;
-               insum += Ctrl[jn * vPts + kn] * vfactor[k];
-            }
-            sum += insum * fBU;
-         }
-         return sum;
-      }
-   }
-   // These buffers are used to store the results of SplineImp.ComputeBasis call in 
-   // U and V. To avoid allocating a buffer on each Evaluate call, we make this static. 
-   // To then make it thread safe, we mark it as ThreadLocal (we grow this as the 
-   // order of the Spline we're evalauting increases, and never shrink this buffer)
-   static readonly ThreadLocal<double[]> mUFactor = new (() => new double[8]);
-   static readonly ThreadLocal<double[]> mVFactor = new (() => new double[8]);
-
-   public override Bound2 ComputeDomain () => new (mUImp.Knot[0], mVImp.Knot[0], mUImp.Knot[^1], mVImp.Knot[^1]);
-
-   public override Point2 GetUV (Point3 pt) => (_unlofter ??= new (this)).GetUV (pt);
-   SurfaceUnlofter? _unlofter;
-}
-#endregion
-
-#region class E3Plane ------------------------------------------------------------------------------
-/// <summary>Represents a Planar surface</summary>
-/// A Plane is effectively built on a basis CoordSystem, which maps the XY plane 
-/// to some arbitrary location / orientation in space
-public sealed class E3Plane : E3CSSurface {
-   E3Plane () { }
-   public E3Plane (int id, IEnumerable<Contour3> trims, CoordSystem cs) : base (id, trims, cs) 
-      => mFlags |= (E3Flags.ULinear | E3Flags.VLinear);
-
-   protected override Mesh3 BuildMesh (double tolerance, double maxAngStep) {
-      List<Point2> pts = [];
-
-      List<int> splits = [0], wires = [];
-      foreach (var poly in Contours.Select (a => a.Flatten (CS, tolerance, maxAngStep))) {
-         int a = pts.Count;
-         poly.Discretize (pts, tolerance, maxAngStep);
-         int b = pts.Count; splits.Add (b);
-         wires.Add (b - 1);
-         for (int i = a; i < b; i++) { wires.Add (i); wires.Add (i); }
-         wires.RemoveLast ();
-      }
-
-      var xfm = ToXfm;
-      var normal = (Vec3H)CS.VecZ;
-      var tries = Lib.Tessellate (pts, splits);
-      List<Mesh3.Node> nodes = [];
-      foreach (var pt in pts) {
-         Point3 pt3 = (Point3)pt * xfm;
-         nodes.Add (new (new Point3f (pt3.X, pt3.Y, pt3.Z), normal));
-      }
-      return new ([.. nodes], [.. tries], [.. wires]);
+   /// <summary>GetNormal computes the normal in canonical space and lofts it up</summary>
+   public sealed override Vector3 GetNormal (double u, double v) {
+      Vector3 vec = GetNormalCanonical (u, v) * ToXfm;
+      return IsNormalFlipped ? -vec : vec;
    }
 
-   public override Bound2 ComputeDomain () {
-      List<Point3> pts = [];
-      Bound2 dom = new (); var xfm = FromXfm;
-      foreach (var c in mContours.SelectMany (a => a.Curves)) {
-         pts.Clear ();
-         c.Discretize (pts, Lib.CoarseTess, Lib.CoarseTessAngle);
-         foreach (var pt in pts) dom += (Point2)(pt * xfm);
-      }
-      return dom;
-   }
+   /// <summary>GetUV unlofts the point into canonical space, and then uses GetUVCanonical</summary>
+   public override Point2 GetUV (Point3 pt) 
+      => GetUVCanonical (pt * FromXfm);
 
-   protected override Point3 GetPointCanonical (double u, double v) => new (u, v, 0);
-   protected override Vector3 GetNormalCanonical (double u, double v) => new (0, 0, 1);
-   protected override Point2 GetUVCanonical (Point3 pt) => new (pt.X, pt.Y);
-}
-#endregion
-
-#region class E3Sphere -----------------------------------------------------------------------------
-/// <summary>A sphere is defined by a center point and radius</summary>
-/// The parametrization is as follows:
-/// - U goes from -PI/2 at the south pole to +PI/2 at the north pole
-/// - V goes from 0 to 2*PI as we rotate about the polar axis
-public sealed class E3Sphere : E3CSSurface {
-   public E3Sphere (int id, List<Contour3> trims, CoordSystem cs, double radius) : base (id, trims, cs)
-      => Radius = radius; 
-   public readonly double Radius;
-
-   public override Bound2 ComputeDomain () 
-      => new (-Lib.HalfPI, 0, Lib.HalfPI, Lib.TwoPI);
-
-   protected override Point3 GetPointCanonical (double u, double v) {
-      var (sin, cos) = Math.SinCos (u);
-      Point3 pt = new (cos * Radius, 0, sin * Radius);  // Point on the XZ plane
-      return pt.Rotated (EAxis.Z, v);
-   }
-
-   protected override Vector3 GetNormalCanonical (double u, double v) {
-      var (sin, cos) = Math.SinCos (u);
-      Vector3 vec = new (cos, 0, sin);
-      return vec.Rotated (EAxis.Z, v);
-   }
-
-   protected override Point2 GetUVCanonical (Point3 pt) {
-      double v = Atan2 (pt.Y, pt.X);
-      pt = pt.Rotated (EAxis.Z, -v);      // Now, rotate the generating arc to its canonical orientation (v = 0)
-      double u = Atan2 (pt.Z, pt.X);
-      return new (u, v);
-   }
-}
-#endregion
-
-#region class E3RuledSurface -----------------------------------------------------------------------
-/// <summary>A RuledSurface is generaeted by connecting equi-parameter points on the bottom & top curves</summary>
-/// 
-/// Parametrization: 
-/// - V is the parameter value (T) along the bottom and top curves
-/// - U is the interpolation between these two points (0..1)
-public sealed class E3RuledSurface : E3Surface {
-   public E3RuledSurface (int id, IEnumerable<Contour3> trims, Curve3 bottom, Curve3 top) : base (id, trims) {
-      (Bottom, Top) = (bottom, top);
-      Lib.Check (bottom.Domain.EQ (top.Domain), "RuledSurface domains unequal");
-   }
-
-   public readonly Curve3 Bottom;
-   public readonly Curve3 Top;
-
-   public override Point3 GetPoint (double u, double v)
-      => u.Along (Bottom.GetPoint (v), Top.GetPoint (v));
-
-   public override Point2 GetUV (Point3 pt3d)
-      => (_unlofter = new (this)).GetUV (pt3d);
-   SurfaceUnlofter? _unlofter;
-
-   public override Bound2 ComputeDomain () 
-      => new (new (0, 1), Bottom.Domain);
-}
-#endregion
-
-#region class E3SpunSurface ------------------------------------------------------------------------
-/// <summary>A SpunSurface is generated by rotating a generatrix curve around an axis</summary>
-/// Canonically, the axis is the Z axis, and the resulting surface is lofted into space
-/// using the provided CS transform
-/// 
-/// Parametrization:
-/// - V is the parameter value (T) along the genetrix
-/// - U is the rotation of the generated point about the Z axis
-public sealed class E3SpunSurface : E3CSSurface {
-   public E3SpunSurface (int id, IEnumerable<Contour3> trims, CoordSystem cs, Curve3 genetrix) : base (id, trims, cs) {
-      Genetrix = genetrix;
-      if (Genetrix.IsOnXZPlane) mFlags |= E3Flags.FlatGenetrix;
-      else throw new ArgumentException ("Invalid generatrix for SpunSurface");
-   }
-   E3SpunSurface () => Genetrix = null!;
-   public readonly Curve3 Genetrix;
-
-   protected override Point3 GetPointCanonical (double u, double v)
-      => Genetrix.GetPoint (v).Rotated (EAxis.Z, u);
-
-   protected override Vector3 GetNormalCanonical (double u, double v)
-      => (Vector3.YAxis * Genetrix.GetTangent (v)).Rotated (EAxis.Z, u);
-
-   protected override Point2 GetUVCanonical (Point3 pt) {
-      double u = Atan2 (pt.Y, pt.X);
-      pt = pt.Rotated (EAxis.Z, -u);
-      double v = Genetrix.GetT (pt);
-      if (u < 0) u += Lib.TwoPI;
-      return new (u, v);
-   }
-
-   public override Bound2 ComputeDomain () 
-      => new (new Bound1 (0, Lib.TwoPI), Genetrix.Domain);
-}
-#endregion
-
-#region class E3SweptSurface -----------------------------------------------------------------------
-/// <summary>A SweptSurface is generated by sweeping a generatrix curve about a vector</summary>
-/// Parametrization:
-/// - V is the parameter value (T) along the genetrix
-/// - U is the sweep of the generated point along the sweep direction (+Z in canonical)
-public sealed class E3SweptSurface : E3CSSurface {
-   public E3SweptSurface (int id, IEnumerable<Contour3> trims, CoordSystem cs, Curve3 genetrix) : base (id, trims, cs) {
-      Genetrix = genetrix;
-      if (Genetrix.IsOnXYPlane) mFlags |= E3Flags.FlatGenetrix;
-      mFlags |= E3Flags.VLinear;
-   }
-   E3SweptSurface () => Genetrix = null!;
-
-   public readonly Curve3 Genetrix;
-
-   public override Bound2 ComputeDomain () {
-      List<Point3> pts = [];
-      Bound1 u = new (); var xfm = FromXfm;
-      foreach (var c in mContours.SelectMany (a => a.Curves)) {
-         pts.Clear ();
-         c.Discretize (pts, Lib.CoarseTess, Lib.CoarseTessAngle);
-         foreach (var pt in pts) u += GetUV (pt).X;
-      }
-      return new (u, Genetrix.Domain);
-   }
-
-   protected override Point3 GetPointCanonical (double u, double v) 
-      => Genetrix.GetPoint (v).Moved (0, 0, u);
-
-   protected override Vector3 GetNormalCanonical (double u, double v) {
-      Vector3 normal = Vector3.ZAxis * Genetrix.GetTangent (v);
-      if (!IsGenetrixFlat) normal = normal.Normalized ();
-      return normal;
-   }
-
-   protected override Point2 GetUVCanonical (Point3 pt) {
-      if (IsGenetrixFlat) {
-         double v = (_unlofter ??= new CurveUnlofter (Genetrix)).GetT (pt);
-         return new (pt.Z, v);
-      } else {
-         if (Genetrix is NurbsCurve3 nc) {
-            var ctrl = nc.Ctrl.Select (a => new Point3 (a.X, a.Y, 0));
-            _flatGenetrix = new NurbsCurve3 (0, [.. ctrl], nc.Knot, nc.Weight);
-         } else
-            throw new NotImplementedException ();
-
-         double v = (_unlofter ??= new CurveUnlofter (_flatGenetrix)).GetT (new (pt.X, pt.Y, 0));
-         return new (pt.Z - Genetrix.GetPoint (v).Z, v);
-      }
-   }
-   CurveUnlofter? _unlofter;
-   Curve3? _flatGenetrix;
-}
-#endregion
-
-#region class E3Torus ------------------------------------------------------------------------------
-/// <summary>A Torus is defined in the XY plane and lofted into a given coordinate system</summary>
-public sealed class E3Torus : E3CSSurface {
-   public E3Torus (int id, IEnumerable<Contour3> trims, CoordSystem cs, double rmajor, double rminor) : base (id, trims, cs) {
-      RMajor = rmajor; RMinor = rminor;
-   }
-   E3Torus () { }
-
-   public readonly double RMajor;
-   public readonly double RMinor;
-
-   /// <summary>Converts the given U,V coordinate into a 3D point on the surface of the Torus</summary>
-   /// The Torus is generated by rotating a circle initially centered at (RMajor,0,0)
-   /// and aligned in the XZ plane, about the Z axis. 
-   /// - V is the position along the initial minor circle, with V=0 corresponding to
-   ///   the point at (RMajor+RMinor, 0, 0) and moving CCW as viewed from +Y
-   /// - U is the rotation of this generating minor circle about Z axis
-   protected override Point3 GetPointCanonical (double u, double v) {
-      var (sin, cos) = SinCos (v);     
-      Point3 pos = new (RMajor + RMinor * cos, 0, RMinor * sin);
-      return pos.Rotated (EAxis.Z, u);
-   }
-
-   /// <summary>See EvaluateCanonical for an explanation of the parametrization</summary>
-   /// The normal computation follows from the same
-   protected override Vector3 GetNormalCanonical (double u, double v) {
-      var (sin, cos) = SinCos (v);
-      return new Vector3 (cos, 0, sin).Rotated (EAxis.Z, u);
-   }
-   
-   /// <summary>See EvaluateCanonical above for a description of the parametrization</summary>
-   protected override Point2 GetUVCanonical (Point3 pt) {
-      // First, look from above to figure out the U value (the rotation of the
-      // generating circle about Z axis)
-      double u = Atan2 (pt.Y, pt.X);
-      pt = pt.Rotated (EAxis.Z, -u);      // Now, rotate the generating circle to its canonical orientation (v = 0)
-      double v = Atan2 (pt.Z, pt.X - RMajor); if (v < 0) v += Lib.TwoPI;
-      return new (u, v);
-   }
-
-   public override Bound2 ComputeDomain () => new (0, 0, Lib.TwoPI, Lib.TwoPI);
+   /// <summary>GetPointCanonical computes the point in canonical space, given UV coordinates</summary>
+   protected abstract Point3 GetPointCanonical (double u, double v);
+   /// <summary>GetNormalCanonical computes a normal in canonical space, given UV coordinates</summary>
+   protected abstract Vector3 GetNormalCanonical (double u, double v);
+   /// <summary>Computes UV coordinates, given a point in canonical space</summary>
+   protected abstract Point2 GetUVCanonical (Point3 ptCanon);
 }
 #endregion

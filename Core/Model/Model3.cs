@@ -12,7 +12,7 @@ public class Model3 {
 
    // Properties ---------------------------------------------------------------
    /// <summary>The Bound of this Model</summary>
-   public Bound3 Bound => Bound3.Update (ref mBound, () => new (mEnts.Select (e => e.Bound)));
+   public Bound3 Bound => Bound3.Cached (ref mBound, () => new (mEnts.Select (e => e.Bound)));
    Bound3 mBound = new ();
 
    /// <summary>The set of entities in this Model</summary>

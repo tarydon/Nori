@@ -30,6 +30,9 @@ class SurfScene : Scene3 {
          sb.AppendLine ($"Area: {ent.Area.Round (6)}");
          for (int i = 0; i < pts.Count; i++) 
             sb.AppendLine ($"{i} {pts[i].R6 ()} {uvs[i].R6 ()} {normal[i].R6 ()}");
+
+         double ff = ent.Area;
+
          File.WriteAllText (Path.ChangeExtension (file, ".txt"), sb.ToString ());
       }
 
