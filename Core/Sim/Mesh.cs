@@ -21,6 +21,22 @@ public class Mesh3 {
       Vertex = vertex; Triangle = tris; Wire = wire;
    }
 
+   /// <summary>Returns a copy of this mesh with full stencil lines</summary>
+   public Mesh3 Wireframed () {
+      List<int> wires = [];
+      HashSet<(int A, int B)> done = [];
+      for (int i = 0; i < Triangle.Length; i += 3) {
+         int a = Triangle[i], b = Triangle[i + 1], c = Triangle[i + 2];
+         Add (a, b); Add (b, c); Add (c, a);
+
+         void Add (int t1, int t2) {
+            if (t1 > t2) (t1, t2) = (t2, t1);
+            if (done.Add ((t1, t2))) { wires.Add (t1); wires.Add (t2); }
+         }
+      }
+      return new (Vertex, Triangle, [.. wires]);
+   }
+
    public double GetArea () {
       double total = 0;
       for (int i = 0; i < Triangle.Length; i += 3) {
