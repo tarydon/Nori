@@ -3,6 +3,8 @@
 // ║║║║╬║╔╣║ Demonstrates Robot Forward & Inverse kinematics, simulation
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 namespace WPFDemo;
+
+using System.Text;
 using System.Windows;
 using System.Windows.Controls;
 using Nori;
@@ -49,6 +51,9 @@ class RobotScene : Scene3 {
             mSelStance = mStances.SelectedIndex; ComputeIK ();
          }
       };
+      Button b = new Button { Content = "Output" };
+      b.Click += (s, e) => SaveOutput ();
+      ui.Add (b);
 
       // Helper ..................................
       void AddLabel (string text)
@@ -64,12 +69,28 @@ class RobotScene : Scene3 {
          sp.Children.Add (label); sp.Children.Add (slider); ui.Add (sp);
          mSliders[text] = slider;
       }
+
+      void SaveOutput () {
+         var sb = new StringBuilder ();
+         sb.Append ($"{mX} {mY} {mZ}\n{mRx} {mRy} {mRz}\n");
+         for (int j = 0; j < 8; j++) {
+            var a = mSolver.Solutions[j];
+            sb.Append ($"{(a.OK ? 1 : 0)}");
+            for (int i = 0; i < 6; i++) sb.Append ($" {a.GetJointAngle (i)}");
+            sb.AppendLine ();
+         }
+         sb.AppendLine ();
+         System.IO.File.AppendAllText ("c:/etc/test.txt", sb.ToString ());
+      }
    }
    ListBox mStances = new () { Margin = new Thickness (8, 0, 8, 4) };
    Dictionary<string, Slider> mSliders = [];
    double mX, mY, mZ, mRx, mRy, mRz;
 
    void ComputeIK () {
+      mX = 489.20863309352495; mY = -575.5395683453237; mZ = -172.66187050359716;
+      mRx = -34.31654676258993; mRy = 85.46762589928056; mRz = 71.22302158273355;
+
       mComputingIK = true;
       var cs = CoordSystem.World;
       cs *= Matrix3.Rotation (EAxis.X, mRx.D2R ());
