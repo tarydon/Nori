@@ -289,6 +289,10 @@ public class Matrix3 : IEQuable<Matrix3> {
       );
    }
 
+   /// <summary>Convert this matrix3 to a CoordSystem</summary>
+   public CoordSystem ToCS ()
+      => new (Point3.Zero * this, Vector3.XAxis * this, Vector3.YAxis * this);
+
    // Operators ----------------------------------------------------------------
    /// <summary>Multiply two matrices together</summary>
    public static Matrix3 operator * (Matrix3 a, Matrix3 b) {
