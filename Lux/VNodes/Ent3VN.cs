@@ -11,8 +11,12 @@ public abstract class Ent3VN (Ent3 mEnt) : VNode (mEnt) {
 }
 
 public class E3SurfaceVN (E3Surface mSurface) : Ent3VN (mSurface) {
-   public override void Draw ()
-      => Lux.Mesh (mSurface.Mesh, mSurface.IsTranslucent ? EShadeMode.GlassNoStencil : EShadeMode.Phong);
+   public override void Draw () {
+      var mode = EShadeMode.Phong;
+      if (mSurface.IsTranslucent) mode = EShadeMode.GlassNoStencil;
+      if (mSurface.NoStencil) mode = EShadeMode.PhongNoStencil;
+      Lux.Mesh (mSurface.Mesh, mode);
+   }
 }
 
 class E3CurveVN (E3Curve mCurve) : Ent3VN (mCurve) {

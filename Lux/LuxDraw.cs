@@ -234,7 +234,7 @@ public static partial class Lux {
       }
       if (wires.Length > 0) {
          switch (shadeMode) {
-            case EShadeMode.GlassNoStencil: break;
+            case EShadeMode.GlassNoStencil or EShadeMode.PhongNoStencil: break;
             case EShadeMode.Glass: GlassLineShader.It.Draw (nodes, wires); break;
             default: BlackLineShader.It.Draw (nodes, wires); break;
          }

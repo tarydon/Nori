@@ -75,10 +75,12 @@ public abstract partial class Ent3 {
    }
 
    /// <summary>Should this entity be rendered using a translucent (glass) shader</summary>
-   public bool IsTranslucent {
-      get => Get (E3Flags.Translucent);
-      set { if (Set (E3Flags.Translucent, value)) Notify (EProp.Translucency); }
-   }
+   public bool IsTranslucent { get => Get (E3Flags.Translucent); set => Set (E3Flags.Translucent, value); }
+
+   /// <summary>
+   /// Don't draw stencil lines around this model's wireframes
+   /// </summary>
+   public bool NoStencil { get => Get (E3Flags.NoStencil); set => Set (E3Flags.NoStencil, value); }
 
    // Protected ----------------------------------------------------------------
    // Bitflags for this entity
@@ -102,7 +104,7 @@ public abstract partial class Ent3 {
 [Flags]
 public enum E3Flags {
    Selected = 0x1, Translucent = 0x2, FlipNormal = 0x4, GeneratrixFlat = 0x8,
-   ULinear = 0x10, VLinear = 0x20,
+   ULinear = 0x10, VLinear = 0x20, NoStencil = 0x40
 }
 #endregion
 
