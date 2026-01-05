@@ -31,7 +31,7 @@ class MinSphereScene : Scene3 {
       var s2 = MinSphere.FromQuickApprox (pts);
       sw.Stop ();
       Lib.Trace ($"Approx-Sphere, Radius: {S(s2.Radius)}, Center: {S(s2.Center)}");
-      Lib.Trace ($"Deviation: {((s2.Radius - s.Radius) / s.Radius):P2}, Elapsed: {S (sw.Elapsed)}");
+      Lib.Trace ($"Deviation: {((s2.Radius - s.Radius) + (s2.Center - s.Center).Length) / s.Radius:P2}, Elapsed: {S (sw.Elapsed)}");
       Lib.Trace ($"");
       // OBB
       sw.Restart ();

@@ -565,6 +565,19 @@ class TMisc {
       mesh.Triangle.Length.Is (384);
    }
 
+   [Test (166, "OBB from points")]
+   void Test19 () {
+      Point3[] pts = [(500, 0, 0), (0, 500, 0), (0, 0, 500), (-500, 0, 0), (0, -500, 0), (0, 0, -500)];
+      var obb = OBB.From (pts);
+      obb.CS.ToString ().Is ("CoordSystem:(0,0,0),<0.707107,-0.707107,0>,<0.408248,0.408248,0.816497>");
+      obb.Extent.Is ("<353.553391,408.24829,288.675135>");
+      // Test when OBB is AABB
+      pts = [(500, 400, 300), (500, -400, 300), (-500, 400, 300), (-500, -400, 300), (500, 400, -300), (500, -400, -300), (-500, 400, -300), (-500, -400, -300)];
+      var aabb = OBB.From (pts);
+      aabb.CS.IsWorld.IsTrue ();
+      aabb.Extent.Is ("<500,400,300>");
+   }
+
    class T1Type : IIndexed {
       public override string ToString () => $"T{Idx}";
       public int Idx { get; set; }
