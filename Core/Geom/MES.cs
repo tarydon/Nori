@@ -228,8 +228,13 @@ public readonly struct MinSphere {
    /// A quick and dirty minimum enclosing sphere (not optimal) using Ritter's algorithm.
    /// Usually within 2% of optimal. On average about 0.9% larger than optimal, but 10x faster to compute.
    public static MinSphere FromQuickApprox (ReadOnlySpan<Point3> pts) {
-      if (pts.Length == 0) return Nil;
-      if (pts.Length == 1) return new MinSphere (0, pts[0]);
+      switch (pts.Length) {
+         case 0: case 1: return Nil;
+         case 2: return From (pts[0], pts[1]);
+         case 3: return From (pts[0], pts[1], pts[2]);
+         case 4: return From (pts[0], pts[1], pts[2], pts[3]);
+         default: break;
+      }
 
       // 1) Pick an arbitrary point p0.
       var p0 = pts[0];
