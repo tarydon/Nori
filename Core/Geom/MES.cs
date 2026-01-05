@@ -186,9 +186,15 @@ public readonly struct MinSphere {
    /// 2. Then we use Welzl's algorithm to compute the exact minimum enclosing sphere.
    /// Compared to a naive Welzl's algorithm, this approach is about 10x faster in practice.
    public static MinSphere From (Span<Point3> arr) {
-      if (arr.Length == 0) return Nil;
-      Point3 p0 = arr[0];
+      switch (arr.Length) {
+         case 0: case 1: return Nil;
+         case 2: return From (arr[0], arr[1]);
+         case 3: return From (arr[0], arr[1], arr[2]);
+         case 4: return From (arr[0], arr[1], arr[2], arr[3]);
+         default: break;
+      }
 
+      Point3 p0 = arr[0];
       // Find the point p1 farthest from p0.
       int id1 = 0;
       double maxD = -1;
