@@ -266,7 +266,7 @@ abstract class StencilLineShader : Shader<Mesh3.Node, StencilLineShader.Settings
    }
 
    protected override void SetConstantsImp () => Pgm.Set (muVPScale, Lux.VPScale);
-   protected override Settings SnapUniformsImp () => new (Lux.IDXfm, Lux.LineWidth, Color4.Black);
+   protected override Settings SnapUniformsImp () => new (Lux.IDXfm, Lux.LineWidth, Lux.StencilColor);
 
    // Nested types -------------------------------------------------------------
    public readonly record struct Settings (int IDXfm, float LineWidth, Color4 Color);
@@ -330,6 +330,36 @@ partial class Text2DShader : Shader<Text2DShader.Args, Text2DShader.Settings> {
    [StructLayout (LayoutKind.Sequential)]
    public readonly record struct Args (Vec2F Pos, Vec4S Cell, int TexOffset);
    public readonly record struct Settings (int IDXfm, Color4 Color, TypeFace Face);
+}
+#endregion
+
+#region class Text2DShader -------------------------------------------------------------------------
+/// <summary>Draws the text defined in world coordinates</summary>
+[Singleton]
+partial class Text3DShader : Shader<Text3DShader.Args, Text2DShader.Settings> {
+   // Constructor --------------------------------------------------------------
+   public Text3DShader () : base (ShaderImp.Text3D) => Bind ();
+   int muXfm = 0, muVPScale = 0, muDrawColor = 0, muFontTexture = 0;
+
+   // Overrides ----------------------------------------------------------------
+   protected override void ApplyUniformsImp (ref readonly Text2DShader.Settings a) {
+      GLState.TypeFace = a.Face;
+      Pgm.Set (muXfm, ref Lux.Scene!.Xfms[a.IDXfm].Xfm);
+      Pgm.Set (muDrawColor, a.Color);
+   }
+
+   protected override int OrderUniformsImp (ref readonly Text2DShader.Settings a, ref readonly Text2DShader.Settings b) {
+      int n = a.Face.UID - b.Face.UID; if (n != 0) return n;
+      n = a.IDXfm - b.IDXfm; if (n != 0) return n;
+      return (int)(a.Color.Value - b.Color.Value);
+   }
+
+   protected override void SetConstantsImp () => Pgm.Set (muVPScale, Lux.VPScale).Set (muFontTexture, 0);
+   protected override Text2DShader.Settings SnapUniformsImp () => new (Lux.IDXfm, Lux.Color, Lux.TypeFace ?? TypeFace.Default);
+
+   // Nested types -------------------------------------------------------------
+   [StructLayout (LayoutKind.Sequential)]
+   public readonly record struct Args (Vec3F Pos, Vec4S Cell, int TexOffset);
 }
 #endregion
 

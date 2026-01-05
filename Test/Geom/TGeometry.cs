@@ -369,8 +369,7 @@ class GeoTests {
       dwg.Add (layer2);
       foreach (var (a, b, c, d, pick1, pick2) in data) {
          dwg.Add (Poly.Line (a, b)); dwg.Add (Poly.Line (c, d));
-         dwg.Add (new E2Point (dwg.CurrentLayer, pick1));
-         dwg.Add (new E2Point (dwg.CurrentLayer, pick2));
+         dwg.Add (pick1); dwg.Add (pick2);
          var (p, q) = Geo.GetBisector (a, b, c, d, pick1, pick2);
          Assert.IsTrue (!p.IsNil && !q.IsNil);
          dwg.Add (new E2Poly (layer2, Poly.Line (p, q)));
