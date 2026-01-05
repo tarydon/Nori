@@ -150,35 +150,32 @@ public readonly struct MinSphere {
    /// MinSphere sphere = MinSphere.From (points);
    /// </code>
    /// <param name="pts">The input points.</param>
+   /// <param name="outer">The boundary points.</param>
    /// This is an implementation of Welzl's algorithm for finding the minimum enclosing sphere.
    /// The input points should be pre-shuffled (or randomized order) for optimal performance.
-   static MinSphere Welzl (ReadOnlySpan<Point3> pts) {
-      return pts.Length <= 4 ? MES ([], pts) : MES (pts, []);
+   static MinSphere Welzl (ReadOnlySpan<Point3> pts, ReadOnlySpan<Point3> outer) {
+      MinSphere s = outer.Length switch {
+         2 => From (outer[0], outer[1]), // Sphere from two boundary points
+         3 => From (outer[0], outer[1], outer[2]), // Sphere from 3 boundary points
+         4 => From (outer[0], outer[1], outer[2], outer[3]), // Possibly circumsphere from boundary points
+         _ => Nil
+      };
+      if (pts.Length == 0 || outer.Length == 4) return s;
 
-      static MinSphere MES (ReadOnlySpan<Point3> pts, ReadOnlySpan<Point3> outer) {
-         MinSphere s = outer.Length switch {
-            2 => From (outer[0], outer[1]), // Sphere from two boundary points
-            3 => From (outer[0], outer[1], outer[2]), // Sphere from 3 boundary points
-            4 => From (outer[0], outer[1], outer[2], outer[3]), // Possibly circumsphere from boundary points
-            _ => Nil
+      for (int i = 0; i < pts.Length; i++) {
+         var pt = pts[i];
+         if (s.Contains (pt)) continue;
+         s = (outer.Length, s.OK) switch {
+            (0, _) => Welzl (pts[..i], [pt]),
+            (1, false) => From (outer[0], pt), // Sphere from diameter points
+            (1, _) => Welzl (pts[..i], [outer[0], pt]),
+            (2, false) => From (outer[0], outer[1], pt), // Minimum sphere from 3 points
+            (2, _) => Welzl (pts[..i], [outer[0], outer[1], pt]),
+            (3, _) => Welzl (pts[..i], [outer[0], outer[1], outer[2], pt]),
+            _ => throw new Exception ("Not expecting this")
          };
-         if (pts.Length == 0 || outer.Length == 4) return s;
-
-         for (int i = 0; i < pts.Length; i++) {
-            var pt = pts[i];
-            if (s.Contains (pt)) continue;
-            s = (outer.Length, s.OK) switch {
-               (0, _) => MES (pts[..i], [pt]),
-               (1, false) => From (outer[0], pt), // Sphere from diameter points
-               (1, _) => MES (pts[..i], [outer[0], pt]),
-               (2, false) => From (outer[0], outer[1], pt), // Minimum sphere from 3 points
-               (2, _) => MES (pts[..i], [outer[0], outer[1], pt]),
-               (3, _) => MES (pts[..i], [outer[0], outer[1], outer[2], pt]),
-               _ => throw new Exception ("Not expecting this")
-            };
-         }
-         return s;
       }
+      return s;
    }
 
    /// <summary>Constructs a minimum-enclosing-circle from a given set of points. BEWARE: Points will be shuffled in the input span</summary>
@@ -186,13 +183,7 @@ public readonly struct MinSphere {
    /// 2. Then we use Welzl's algorithm to compute the exact minimum enclosing sphere.
    /// Compared to a naive Welzl's algorithm, this approach is about 10x faster in practice.
    public static MinSphere From (Span<Point3> arr) {
-      switch (arr.Length) {
-         case 0: case 1: return Nil;
-         case 2: return From (arr[0], arr[1]);
-         case 3: return From (arr[0], arr[1], arr[2]);
-         case 4: return From (arr[0], arr[1], arr[2], arr[3]);
-         default: break;
-      }
+      if (arr.Length <= 4) return Welzl ([], arr);
 
       Point3 p0 = arr[0];
       // Find the point p1 farthest from p0.
@@ -221,7 +212,7 @@ public readonly struct MinSphere {
       if (id1 > 1)
          (arr[1], arr[id1]) = (arr[id1], arr[1]); // Move p2 to front
 
-      return Welzl (arr);
+      return Welzl (arr, []);
    }
 
    /// <summary>Constructs a close-to-minimum enclosing sphere for a given set of points very quickly. (not "the" optimal min. sphere)</summary>
