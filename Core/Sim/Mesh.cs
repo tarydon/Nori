@@ -80,7 +80,7 @@ public class Mesh3 {
          var node = Vertex[i];
          nodes[i] = new Node ((Point3f)((Point3)node.Pos + vec), node.Vec);
       }
-      return new ([..nodes], Triangle, Wire);
+      return new ([.. nodes], Triangle, Wire);
    }
 
    public static Mesh3 Load (string file) {
@@ -140,7 +140,7 @@ public class Mesh3 {
          ftris.AddRange (mesh.Triangle.Select (a => a + nBase));
          fwires.AddRange (mesh.Wire.Select (a => a + nBase));
       }
-      return new Mesh3 ([..vertex], [..ftris], [..fwires]);
+      return new Mesh3 ([.. vertex], [.. ftris], [.. fwires]);
    }
 
    public static Mesh3 LoadObj (IEnumerable<string> lines) {
@@ -269,7 +269,7 @@ public class Mesh3 {
       // All computations are done on 'unit sphere' of radius = 1 with center (0, 0)
       List<Vector3> pts = []; Dictionary<Vector3, int> dict = [];
       var (V, T, citer) = PickSeedData (tolerance); V.ForEach (v => Add (v));
-      List<int> tries = [..T], buf = [];
+      List<int> tries = [.. T], buf = [];
 
       // Subdivide triangles without 'inflating' the nodes to preserve the `equilaterality`
       // of the sub-triangles. We will loft them after the recursive subdivision.
@@ -403,7 +403,7 @@ public class PlaneMeshIntersector (IEnumerable<Mesh3> meshes) {
    ///   - Traverses the adjacency graph to extract chains/loops and converts them into returned Polyline3 objects.
    public List<Polyline3> Compute (PlaneDef plane) {
       Vector3 n = plane.Normal; double d = plane.D;
-      List<Polyline3> polylines = [];
+      mOutChains.Clear ();
 
       foreach (var mesh in meshes) {
          if (!Intersects (mesh.Bound, n, d)) continue;
@@ -416,11 +416,75 @@ public class PlaneMeshIntersector (IEnumerable<Mesh3> meshes) {
          BuildEndMap ();
          PrepareVisited (mRaw.Count);
          WalkAllChains ();
-         polylines.AddRange (BuildPolylines ());
       }
 
-      RemoveEmptyAndZeroLength (polylines);
+      return MergePolylines ();
+   }
+
+   List<Polyline3> MergePolylines () {
+      const float tol = 1e-3f;
+      List<Polyline3> polylines = [];
+
+      // Remove all closed loops in outChains first
+      for (int i = mOutChains.Count - 1; i >= 0; i--) {
+         var chain = mOutChains[i];
+         if (chain[0].EQ (chain[^1], tol)) {
+            BuildPolyline (chain, polylines);
+            mOutChains.RemoveAt (i);
+         }
+      }
+
+      PrepareVisited (mOutChains.Count);
+
+      void AddToPtMap (Point3f pt, (int idx, bool isEnd) val) {
+         if (!ptMap.TryGetValue (pt, out List<(int idx, bool isEnd)>? lst))
+            ptMap[pt] = [val];
+         else lst.Add (val);
+      }
+
+      for (int i = 0; i < mOutChains.Count; i++) {
+         var chain = mOutChains[i];
+         AddToPtMap (chain[0], (i, false));
+         AddToPtMap (chain[^1], (i, true));
+      }
+
+      for (int i = 0; i < mOutChains.Count; i++) {
+         if (mVisited[i]) continue;
+
+         mVisited[i] = true; var chain = mOutChains[i];
+
+         TraverseAndMerge (chain, false);
+         TraverseAndMerge (chain, true);
+
+         BuildPolyline (chain, polylines);
+      }
+
       return polylines;
+   }
+
+   void TraverseAndMerge (List<Point3f> chain, bool fromHead) {
+      Point3f pt = fromHead ? chain[0] : chain[^1];
+
+      while (ptMap.TryGetValue (pt, out var lst)) {
+         if (lst.Count > 2) break;
+
+         (int nIdx, bool isEnd) = lst.Find (a => !mVisited[a.idx]);
+         if (nIdx == 0) break;
+
+         var nChain = mOutChains[nIdx]; int nCount = nChain.Count; mVisited[nIdx] = true;
+
+         if (fromHead) {
+            // Backward direction: attach at chain start
+            if (isEnd) for (int j = nCount - 2; j >= 0; j--) chain.Insert (0, nChain[j]);
+            else for (int j = 1; j < nCount; j++) chain.Insert (0, nChain[j]);
+            pt = chain[0];
+         } else {
+            // Forward direction: attach at chain end
+            if (isEnd) for (int j = nCount - 2; j >= 0; j--) chain.Add (nChain[j]);
+            else for (int j = 1; j < nCount; j++) chain.Add (nChain[j]);
+            pt = chain[^1];
+         }
+      }
    }
 
    // Quick plane-vs-mesh test; returns false if the bound lies strictly on one side.
@@ -468,7 +532,7 @@ public class PlaneMeshIntersector (IEnumerable<Mesh3> meshes) {
    // Clears all per-call working collections.
    void ResetWorkBuffers () {
       mRaw.Clear (); mNbr1.Clear (); mNbr2.Clear ();
-      mEdgeMap.Clear (); mEnds.Clear (); mOutChains.Clear ();
+      mEdgeMap.Clear (); mEnds.Clear ();
    }
 
    // Builds the adjacency lists between plane-edge intersection points produced from triangles.
@@ -521,40 +585,42 @@ public class PlaneMeshIntersector (IEnumerable<Mesh3> meshes) {
    void WalkAllChains () {
       for (int i = 0; i < mRaw.Count; i++) {
          if (mVisited[i]) continue;
-         mOutChains.Add (WalkChainByLinks (i));
+         mVisited[i] = true;
+
+         // Pooled list reduces per-chain allocations when computing many planes.
+         List<Point3f> pts = [mRaw[i]];
+
+         // Walk forward and backward to collect all points in the chain.
+         Traverse (i, mNbr1[i], false, pts);
+         Traverse (i, mNbr2[i], true, pts);
+
+         mOutChains.Add (pts);
       }
    }
 
    // Converts extracted chains into Polyline3 and returns pooled lists back to the pool.
-   List<Polyline3> BuildPolylines () {
-      var polylines = new List<Polyline3> (mOutChains.Count);
-      for (int i = 0; i < mOutChains.Count; i++) {
-         var src = mOutChains[i]; int nPts = src.Count;
+   void BuildPolyline (List<Point3f> pts, List<Polyline3> polylines) {
+      int nPts = pts.Count;
 
-         var dst = new Point3[nPts];
-         for (int j = 0; j < nPts; j++) dst[j] = (Point3)src[j];
-         polylines.Add (new Polyline3 (0, ImmutableArray.Create (dst)));
+      // return empty polyline if no points
+      if (nPts < 2) return;
 
-         // Return list to pool for reuse in subsequent Compute() calls
-         src.Clear (); mTmpPool.Push (src);
+      // check if zero length polyline (all points equal)
+      var prev = pts[0]; bool hasLen = false;
+      for (int j = 1; j < nPts; j++) {
+         var p = pts[j];
+         if (!p.EQ (prev, 1e-3f)) { hasLen = true; break; }
+         prev = p;
       }
-      mOutChains.Clear ();
-      return polylines;
-   }
 
-   // Walk the chain using mNext/mPrev starting at 'start'. Marks mVisited nodes.
-   List<Point3f> WalkChainByLinks (int start) {
-      mVisited[start] = true;
+      if (!hasLen) return;
 
-      // Pooled list reduces per-chain allocations when computing many planes.
-      var pts = (mTmpPool.Count != 0) ? mTmpPool.Pop () : new List<Point3f> (32);
-      pts.Clear (); pts.Add (mRaw[start]);
+      var dst = new Point3[nPts];
+      for (int j = 0; j < nPts; j++) dst[j] = (Point3)pts[j];
 
-      // Walk forward and backward to collect all points in the chain.
-      Traverse (start, mNbr1[start], false, pts);
-      Traverse (start, mNbr2[start], true, pts);
-
-      return pts;
+      // Return list to pool for reuse in subsequent Compute() calls
+      pts.Clear (); mTmpPool.Push (pts);
+      polylines.Add (new Polyline3 (0, ImmutableArray.Create (dst)));
    }
 
    // Traverses a polyline in one direction from a start point, optionally prepending points to preserve order.
@@ -614,25 +680,6 @@ public class PlaneMeshIntersector (IEnumerable<Mesh3> meshes) {
       return idx;
    }
 
-   // Removes empty polylines and polylines with no geometric length.
-   void RemoveEmptyAndZeroLength (List<Polyline3> polylines) {
-      for (int i = polylines.Count - 1; i >= 0; i--) {
-         var pts = polylines[i].Pts;
-
-         // Empty / degenerate point count.
-         if (pts.Length < 2) { polylines.RemoveAt (i); continue; }
-
-         // Reject if no segment has non-trivial length (all points equal within tolerance).
-         var prev = pts[0]; bool hasLen = false;
-         for (int j = 1; j < pts.Length; j++) {
-            var p = pts[j];
-            if (!p.EQ (prev, 1e-3)) { hasLen = true; break; }
-            prev = p;
-         }
-         if (!hasLen) polylines.RemoveAt (i);
-      }
-   }
-
    // Input mesh positions and triangles (set per mesh during Compute)
    Point3f[] mPts = [];
    ImmutableArray<int> mTri = [];
@@ -641,6 +688,7 @@ public class PlaneMeshIntersector (IEnumerable<Mesh3> meshes) {
    double[] mDist = [];
    readonly Dictionary<(int, int), int> mEdgeMap = [];
    readonly Dictionary<Point3f, (int A, int B)> mEnds = new (Point3fComparer.Delta);
+   readonly Dictionary<Point3f, List<(int idx, bool isEnd)>> ptMap = new (Point3fComparer.Delta);
    readonly List<int> mNbr1 = [], mNbr2 = [];   // Neighbours of intersection points at each index
    readonly List<Point3f> mRaw = [];            // interpolated intersection points (Point3f)
    bool[] mVisited = [];
@@ -695,7 +743,7 @@ public class Mesh3Builder {
       // Now we have enough information to try and create the faces
       for (int i = 0; i < mcFace; i++) AddTriangle (i);
 
-      return new Mesh3 ([..nodes.AsSpan (0, cNodes)], [.. tries], [.. wires]);
+      return new Mesh3 ([.. nodes.AsSpan (0, cNodes)], [.. tries], [.. wires]);
 
       // Assigns a reference to the given face to a given vertex
       // This tells the vertex that the face nFace references this vertex
@@ -874,10 +922,7 @@ public class Mesh3Builder {
 #endregion
 
 class Point3fComparer (float threshold) : IEqualityComparer<Point3f> {
-   public bool Equals (Point3f a, Point3f b)
-      => a.X.Round (threshold) == b.X.Round (threshold)
-      && a.Y.Round (threshold) == b.Y.Round (threshold)
-      && a.Z.Round (threshold) == b.Z.Round (threshold);
+   public bool Equals (Point3f a, Point3f b) => a.EQ (b, threshold);
 
    public int GetHashCode (Point3f a)
       => HashCode.Combine (a.X.Round (threshold), a.Y.Round (threshold), a.Z.Round (threshold));

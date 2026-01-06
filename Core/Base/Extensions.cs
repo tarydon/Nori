@@ -69,6 +69,8 @@ public static class Extensions {
    public static bool EQ (this double a, double b, double epsilon) => Abs (a - b) < epsilon;
    /// <summary>Compare two floats for equality to within 1e-5</summary>
    public static bool EQ (this float a, float b) => Abs (a - b) < 1e-5;
+   /// <summary>Compare two floats for equality with the given epsilon</summary>
+   public static bool EQ (this float a, float b, float epsilon) => Abs (a - b) < epsilon;
    /// <summary>Compare two halfs for equality to within 1e-4</summary>
    public static bool EQ (this Half a, Half b) => Abs ((float)a - (float)b) < 1e-3;
 

@@ -196,6 +196,10 @@ public readonly struct Point3f {
    /// <summary>Construct a Point3f given 3 floats</summary>
    public Point3f (float x, float y, float z) => (X, Y, Z) = (x, y, z);
 
+   /// <summary>Compares two points are equal to within the given tolerance</summary>
+   public bool EQ (Point3f b, float tol) => X.EQ (b.X, tol) && Y.EQ (b.Y, tol) && Z.EQ (b.Z, tol);
+
+   // Operators ----------------------------------------------------------------
    /// <summary>Converts a Point3f to a Point3</summary>
    public static explicit operator Point3 (Point3f a) => new (a.X, a.Y, a.Z);
    /// <summary>Converts a Point3 to a Point3f</summary>
