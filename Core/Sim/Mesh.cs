@@ -99,6 +99,7 @@ public class Mesh3 {
          if (!xfm.IsTranslation) {
             Vector3 v = new ((double)vec.X, (double)vec.Y, (double)vec.Z);
             v *= xfm;
+            if (xfm.HasScaling) v = v.Normalized ();
             vec = new ((Half)v.X, (Half)v.Y, (Half)v.Z);
          }
          return new (pos, vec);
@@ -204,21 +205,21 @@ public class Mesh3 {
       var nodes = new Node[int.Parse (Line ())];
       const StringSplitOptions options = StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries;
       for (int i = 0; i < nodes.Length; i++) {
-         double[] a = Line ().Split (',', options).Select (double.Parse).ToArray ();
+         double[] a = [.. Line ().Split (',', options).Select (double.Parse)];
          nodes[i] = new Node (new (a[0], a[1], a[2]), new Vec3H ((Half)a[3], (Half)a[4], (Half)a[5]));
       }
 
       // Load the array of triangles
       int[] triangle = new int[3 * int.Parse (Line ())];
       for (int i = 0; i < triangle.Length; i += 3) {
-         int[] a = Line ().Split (' ', options).Select (int.Parse).ToArray ();
+         int[] a = [.. Line ().Split (' ', options).Select (int.Parse)];
          for (int j = 0; j < 3; j++) triangle[i + j] = a[j];
       }
 
       // Load the array of wires
       int[] wire = new int[2 * int.Parse (Line ())];
       for (int i = 0; i < wire.Length; i += 2) {
-         int[] a = Line ().Split (' ', options).Select (int.Parse).ToArray ();
+         int[] a = [.. Line ().Split (' ', options).Select (int.Parse)];
          for (int j = 0; j < 2; j++) wire[i + j] = a[j];
       }
       if (Line () != "EOF") Fatal ();

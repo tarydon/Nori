@@ -210,8 +210,7 @@ public static class Extensions {
 
    /// <summary>Reads all the bytes from a stream in a Zip file</summary>
    public static byte[] ReadAllBytes (this ZipArchive zar, string name) {
-      var entry = zar.GetEntry (name);
-      if (entry == null) throw new Exception ($"Stream {name} not found in ZipArchive");
+      var entry = zar.GetEntry (name) ?? throw new Exception ($"Stream {name} not found in ZipArchive");
       using (var stm = zar.Open (name)) {
          byte[] data = new byte[entry.Length];
          stm.ReadExactly (data);
@@ -323,7 +322,7 @@ public static class Extensions {
       if (int.TryParse (s, out int n)) return n;
       if (s.IsBlank ()) return 0;
       s = s.Trim ();
-      if (char.IsDigit (s[0])) return int.Parse (new string (s.TakeWhile (char.IsDigit).ToArray ()));
+      if (char.IsDigit (s[0])) return int.Parse (new string ([.. s.TakeWhile (char.IsDigit)]));
       return 0;
    }
 
@@ -339,10 +338,15 @@ public static class Extensions {
 #region class Extensions ---------------------------------------------------------------------------
 /// <summary>Extension methods, properties on various standard types</summary>
 public static class Extensions2 {
+   // Extensions on double -----------------------------------------------------
    // Extension methods on double
    extension(double f) {
       /// <summary>Returns true if a double is nan - easier to use than double.IsNaN(f)</summary>
       public bool IsNan => double.IsNaN (f);
+
+      /// <summary>Transforms a distance by the given transform</summary>
+      /// Distance is updated only if the matrix has a scaling component
+      public static double operator * (double a, Matrix3 xfm) => a * xfm.ScaleFactor;
    }
 
    extension(ref double f) {
@@ -350,7 +354,13 @@ public static class Extensions2 {
       public double Cached (Func<double> compute) {
          if (double.IsNaN (f)) f = compute ();
          return f; 
-      }         
+      }
+   }
+
+   // Extensions on ImmutableArray<Contour> ------------------------------------
+   extension(ImmutableArray<Contour3> contours) {
+      public static ImmutableArray<Contour3> operator * (ImmutableArray<Contour3> cons, Matrix3 xfm) 
+         => [.. cons.Select (a => a * xfm)];
    }
 }
 #endregion
