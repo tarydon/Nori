@@ -143,9 +143,7 @@ public static class Extensions {
    /// <summary>Returns a random bool</summary>
    public static bool NextBool (this Random r) => r.Next (10000) < 5000;
 
-   /// <summary>
-   /// Returns true if NONE of the elements in the sequence match the given predicate
-   /// </summary>
+   /// <summary>Returns true if NONE of the elements in the sequence match the given predicate</summary>
    public static bool None<T> (this IEnumerable<T> seq, Predicate<T> pred) {
       foreach (var elem in seq) if (pred (elem)) return false;
       return true;

@@ -85,6 +85,8 @@ public class Mesh3 {
    [StructLayout (LayoutKind.Sequential, Pack = 2, Size = 20)]
    public readonly struct Node (Point3f pos, Vec3H vec) {
       public Node (Point3 pos, Vector3 vec) : this ((Point3f)pos, (Vec3H)vec) { }
+      public Node (double x, double y, double z, double dx, double dy, double dz)
+         : this (new Point3f (x, y, z), new Vec3H ((Half)dx, (Half)dy, (Half)dz)) { }
 
       public Point3f Pos => pos;
       public Vec3H Vec => vec;

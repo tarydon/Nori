@@ -77,9 +77,7 @@ public abstract partial class Ent3 {
    /// <summary>Should this entity be rendered using a translucent (glass) shader</summary>
    public bool IsTranslucent { get => Get (E3Flags.Translucent); set => Set (E3Flags.Translucent, value); }
 
-   /// <summary>
-   /// Don't draw stencil lines around this model's wireframes
-   /// </summary>
+   /// <summary>Don't draw stencil lines around this model's wireframes</summary>
    public bool NoStencil { get => Get (E3Flags.NoStencil); set => Set (E3Flags.NoStencil, value); }
 
    // Protected ----------------------------------------------------------------
