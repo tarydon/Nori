@@ -155,13 +155,13 @@ class AuType {
    List<AuField>? mUplinks;
 
    // Methods ------------------------------------------------------------------
-   /// <summary>Creates an instance of the object using its parameterless constructor</summary>
    public object CreateInstance () {
-      mConstructor ??= mType.GetConstructor (Public | Instance | NonPublic, []) ??
+      try {
+         return Activator.CreateInstance (mType, nonPublic:true)!;
+      } catch (MissingMethodException) {
          throw new AuException ($"No parameterless constructor found for {mType.FullName}");
-      return mConstructor.Invoke ([]);
+      }
    }
-   ConstructorInfo? mConstructor;
 
    /// <summary>Get a field of an object, given its name</summary>
    public AuField? GetField (ReadOnlySpan<byte> name) {
@@ -492,6 +492,7 @@ class AuField {
    public bool SkipWriting ([NotNullWhen (false)] object? value) {
       if (value == null || Tactic == ECurlTactic.Uplink) return true;
       if (Equals (value, mFieldType.SkipValue)) return true;
+      if (value is double d && d.IsNan) return true; 
       return false;
    }
 

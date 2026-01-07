@@ -2,8 +2,8 @@
 // ╔═╦╦═╦╦╬╣ VNode.cs
 // ║║║║╬║╔╣║ Implements the VNode class (base class for all visual nodes)
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
+using System.Linq.Expressions;
 using System.Reflection;
-
 namespace Nori;
 
 #region class VNode --------------------------------------------------------------------------------
@@ -73,7 +73,14 @@ public abstract class VNode {
    /// redrawn on every frame. RBatches made from this VNode's draw commands will also have
    /// Streaming=true, and will eventually deliver their vertices into StreamBuffer objects
    /// rather than RetainBuffer objects
-   public bool Streaming;
+   public bool Streaming {
+      get => mStreaming;
+      set { mStreaming = value; if (value) NoPicking = true; }
+   }
+   bool mStreaming;
+
+   /// <summary>If set, this VNode is ignored during picking</summary>
+   public bool NoPicking;
 
    /// <summary>The domain-space Object which this VNode is rendering</summary>
    public readonly object? Obj;
@@ -113,20 +120,24 @@ public abstract class VNode {
    public static VNode MakeFor (object obj) {
       ArgumentNullException.ThrowIfNull (obj);
       var type = obj.GetType ();
-      if (!mBuilders.TryGetValue (type, out var ci)) {
+      if (!mBuilders.TryGetValue (type, out var de)) {
          foreach (var kvp in mBuilders)
             if (kvp.Key.IsAssignableFrom (type)) {
-               ci = mBuilders[type] = kvp.Value;
+               de = mBuilders[type] = kvp.Value;
                break;
             }
-         if (ci == null)
+         if (de == null)
             throw new Exception ($"No VNode found for {obj.GetType ().FullName}");
       }
-      return (VNode)ci.Invoke ([obj]);
+      return de.Invoke (obj);
    }
 
    /// <summary>Called when geometry has changed and complete redraw of this VNode is needed</summary>
-   public void Redraw () { mGeometryDirty = true; Lux.FlushPickBuffer (); Lux.Redraw ();  }
+   public void Redraw () { 
+      mGeometryDirty = true; 
+      if (!NoPicking) Lux.FlushPickBuffer (); 
+      Lux.Redraw ();  
+   }
 
    /// <summary>Register an assembly as containing potential VNode types</summary>
    /// This is used in conjunction with the VNode.Makefor(...) above to construct a VNode
@@ -159,14 +170,20 @@ public abstract class VNode {
                // parameters of the line, there should be a single LineVM that handles all those
                // cases in its Draw() method
                var args = ci.GetParameters ();
-               if (args.Length == 1) mBuilders.Add (args[0].ParameterType, ci);
+               if (args.Length == 1) {
+                  var paramExpr = Expression.Parameter (typeof (object));
+                  var newExpr = Expression.New (ci, Expression.Convert (paramExpr, args[0].ParameterType));
+                  var lambda = Expression.Lambda<Func<object, VNode>> (newExpr, paramExpr);
+                  var ctorDelegate = lambda.Compile ();
+                  mBuilders.Add (args[0].ParameterType, ctorDelegate);
+               }
             }
          }
       }
    }
    // This dictionary maps particular domain types (like Poly, Text etc) to constructors
    // in appropriate VNode types (like PolyVN, TextVN etc)
-   static readonly Dictionary<Type, ConstructorInfo> mBuilders = [];
+   static readonly Dictionary<Type, Func<object, VNode>> mBuilders = [];
    // These are the assemblies we have already searched to find VNode-derived types
    static readonly HashSet<Assembly> mAssemblies = [];
 
@@ -244,7 +261,7 @@ public abstract class VNode {
          ref RBatch rb = ref RBatch.Get (n);
          rb.Release ();
       }
-      Lux.FlushPickBuffer ();
+      if (!NoPicking) Lux.FlushPickBuffer ();
       Batches.Clear ();
    }
 
@@ -252,6 +269,10 @@ public abstract class VNode {
    // under it. So, call Scene.Root.Render() will draw the entire scene.
    internal void Render () {
       Lux.BeginNode (this);
+      if (NoPicking && Lux.IsPicking) {
+         if (mGeometryDirty) { Lux.Redraw (); }
+         return;
+      }
       try {
          // If the GeometryDirty flag is set, it means the geometry of this VNode
          // has changed - the batches it might be holding on to are all useless now, and we
@@ -273,7 +294,7 @@ public abstract class VNode {
          if (mGeometryDirty || Streaming) {
             Draw ();
             mGeometryDirty = false;
-            if (!Streaming) Lux.FlushPickBuffer ();
+            if (!NoPicking) Lux.FlushPickBuffer ();
          } else {
             // But if the geometry is not dirty, we don't need to create new batches at all,
             // but instead can just update the existing batches we have with freshly captured

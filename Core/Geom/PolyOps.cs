@@ -466,10 +466,11 @@ public partial class Poly {
       var seg = this[segIdx];
       ArcInfo segExtra = segIdx < Extra.Length ? Extra[segIdx] : ArcInfo.Nil;
       if (IsCircle) {
-         (double lieA, double lieB) = CircleTrimExtents (seg, lie.Clamp (), polySoup);
-         if (lieA.IsZero () && lieB.EQ (1)) yield break; // Fully trimmed out
-         bool iCCW = (mFlags & EFlags.CCW) != 0;
-         yield return Arc (segExtra.Center, this[0].Radius, lieA * Lib.TwoPI, lieB * Lib.TwoPI, iCCW);
+         (double sLie, double eLie) = CircleTrimExtents (seg, lie.Clamp (), polySoup);
+         double lieSpan = Math.Abs (eLie - sLie);
+         if (lieSpan.EQ (1)) yield break; // Fully trim'd; No remnants...
+         (sLie, eLie) = (eLie, sLie); // Get remnant extents...
+         yield return Arc (segExtra.Center, this[0].Radius, sLie * Lib.TwoPI, eLie * Lib.TwoPI, seg.IsCCW);
          yield break;
       }
 
@@ -549,22 +550,33 @@ public partial class Poly {
 
       static (double fromLie, double toLie) CircleTrimExtents (Seg seg, double refLie, IEnumerable<Poly> polySoup) {
          if (!seg.IsCircle) throw new Exception ("Expected Circle seg");
-         // Issue: If the trim section passes through the circle's only node point, then standard TrimExtents cannot be used
-         (double fromLie, double toLie) = (0, 1);
-         (double minLie, double maxLie) = (1, 0);
+         // Note: Lie range may be out of [0, 1] range, if knot point section is getting trim'd.
+
+         // All computations assume CCW Circle.
+         // Compute lies of trim section, lying about refLie
+         // sLie <= refLie <= eLie
+         (double sLie, double eLie) = (double.MinValue, double.MaxValue);
          Span<Point2> buffer = stackalloc Point2[2];
          foreach (var s in polySoup.SelectMany (p => p.Segs)) {
             foreach (var pt in seg.Intersect (s, buffer, finite: true)) {
-               double lie = seg.GetLie (pt);
-               if (lie > refLie) toLie = Math.Min (toLie, lie);
-               else fromLie = Math.Max (fromLie, lie);
-               maxLie = Math.Max (maxLie, lie);
-               minLie = Math.Min (minLie, lie);
+               double lie = GetLieOnCircle (seg.Center, pt);
+               // Trim section start lie
+               if (lie < refLie) sLie = Math.Max (sLie, lie);
+               else sLie = Math.Max (sLie, lie - 1);
+               // Trim section end lie
+               if (lie > refLie) eLie = Math.Min (eLie, lie);
+               else eLie = Math.Min (eLie, lie + 1);
             }
          }
-         if (maxLie.EQ (minLie)) return (0, 1);
-         if (refLie > maxLie || refLie < minLie) return (maxLie, minLie); // Section passing through the circle's node point
-         return (fromLie.IsZero () ? 0 : fromLie, toLie.EQ (1) ? 1 : toLie);
+         if (sLie == double.MinValue)
+            return (0, 1); // No intersections; Fully trim'd
+          // Lie may be out of range, to accommodate section containing knot point
+          return seg.IsCCW ? (sLie, eLie) : (1 - eLie, 1 - sLie);
+
+         static double GetLieOnCircle (Point2 center, Point2 liePt) { // Assuming CCW Circle!
+            double lie = center.AngleTo (liePt) / Lib.TwoPI; // Half-open range [0.5, -0.5)
+            return lie < 0 ? ++lie : lie; // Half-open range [0, 1)
+         }
       }
    }
 
@@ -668,7 +680,7 @@ public partial class Poly {
       if (IsCircle) {
          if (sliceStartLie.EQ (sliceEndLie)) return this;
          var seg = this[0];
-         return Poly.Arc (seg.GetPointAt (sliceStartLie), seg.GetSlopeAt (sliceStartLie), seg.GetPointAt (sliceEndLie));
+         return Arc (seg.GetPointAt (sliceStartLie), seg.GetSlopeAt (sliceStartLie), seg.GetPointAt (sliceEndLie));
       }
       (bool hasArcs, int segCount, bool closed) = (HasArcs, Count, IsClosed); // Cache
       (int startN, int endN) = ((int)sliceStartLie, (int)sliceEndLie);

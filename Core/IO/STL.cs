@@ -100,7 +100,7 @@ public static class STLWriter {
    public static void WriteBinary (Mesh3 mesh, Stream stm) {
       var bw = new BinaryWriter (stm);
       // Write the 80 byte header.
-      byte[] header = ASCIIEncoding.ASCII.GetBytes ("Exported from Nori");
+      byte[] header = Encoding.ASCII.GetBytes ("Exported from Nori");
       bw.Write (header);
       for (int i = header.Length; i < 80; i++)
          bw.Write ((byte)0);

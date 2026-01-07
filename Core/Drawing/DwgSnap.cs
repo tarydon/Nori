@@ -122,7 +122,7 @@ public class DwgSnap {
       for (int i = 0; i < angles.Count; i++) {
          // If this same infinite line does not exist already, add it
          double ang = angles[i];
-         if (ang.IsNaN ()) continue;
+         if (ang.IsNan) continue;
          var angle = Lib.NormalizeAngle (ang);
          if (angle < -Lib.Epsilon) angle += Lib.PI;
          if (angle.EQ (Lib.PI)) angle = 0;

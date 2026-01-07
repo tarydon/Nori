@@ -9,6 +9,9 @@ namespace Nori;
 #region class Extensions ---------------------------------------------------------------------------
 /// <summary>Extension functions on various standard types</summary>
 public static class Extensions {
+   /// <summary>Add multiple elements into a list easily</summary>
+   public static void AddM<T> (this List<T> list, params ReadOnlySpan<T> elems) => list.AddRange (elems);
+
    /// <summary>Interpolates using a given lie f between two doubles a and b</summary>
    public static double Along (this double f, double a, double b)
       => a + (b - a) * f;
@@ -88,6 +91,9 @@ public static class Extensions {
       foreach (var elem in seq) action (elem);
    }
 
+   /// <summary>Gets the lie of f along the interval a..b</summary>
+   public static double GetLieOn (this double f, double a, double b) => (f - a) / (b - a);
+
    /// <summary>Gets a value from a dictionary, or adds a new one (synthesized by the maker function)</summary>
    public static U Get<T, U> (this IDictionary<T, U> dict, T key, Func<T, U> maker) {
       if (!dict.TryGetValue (key, out var value))
@@ -101,8 +107,6 @@ public static class Extensions {
    /// <summary>Returns true if a string is null, empty or whitespace</summary>
    public static bool IsBlank ([NotNullWhen (false)] this string? s) => string.IsNullOrWhiteSpace (s);
 
-   /// <summary>Checks if a double is NaN</summary>
-   public static bool IsNaN (this double a) => double.IsNaN (a);
    /// <summary>Checks if a float is NaN</summary>
    public static bool IsNaN (this float a) => float.IsNaN (a);
 
@@ -143,6 +147,14 @@ public static class Extensions {
 
    /// <summary>Returns a random bool</summary>
    public static bool NextBool (this Random r) => r.Next (10000) < 5000;
+
+   /// <summary>
+   /// Returns true if NONE of the elements in the sequence match the given predicate
+   /// </summary>
+   public static bool None<T> (this IEnumerable<T> seq, Predicate<T> pred) {
+      foreach (var elem in seq) if (pred (elem)) return false;
+      return true;
+   }
 
    /// <summary>Returns the non-null elements from a sequence</summary>
    public static IEnumerable<T> NonNull<T> (this IEnumerable<T?> seq) where T: class {
@@ -232,6 +244,18 @@ public static class Extensions {
       return elem;
    }
 
+   /// <summary>Removes all elements except the ones matching a particular condition</summary>
+   public static void RemoveExcept<T> (this IList<T> list, Predicate<T> filter) {
+      for (int i = list.Count - 1; i >= 0; i--)
+         if (!filter (list[i])) list.RemoveAt (i);
+   }
+
+   /// <summary>Removes all elements matching a particular condition</summary>
+   public static void RemoveIf<T> (this IList<T> list, Predicate<T> match) {
+      for (int i = list.Count - 1; i >= 0; i--)
+         if (match (list[i])) list.RemoveAt (i);
+   }
+
    /// <summary>'Rolls' a list, treating it as a circular list, starting with element N</summary>
    /// The element N is returned first, then N+1 and so on, until we finish with
    /// the element N-1. Thus, [1,2,3,4,5].Roll (2) will return [3,4,5,1,2].
@@ -318,5 +342,24 @@ public static class Extensions {
 
    /// <summary>Wrap an integer to a range within 0..max-1</summary>
    public static int Wrap (this int n, int max) => (n + max) % max;
+}
+#endregion
+
+#region class Extensions ---------------------------------------------------------------------------
+/// <summary>Extension methods, properties on various standard types</summary>
+public static class Extensions2 {
+   // Extension methods on double
+   extension(double f) {
+      /// <summary>Returns true if a double is nan - easier to use than double.IsNaN(f)</summary>
+      public bool IsNan => double.IsNaN (f);
+   }
+
+   extension(ref double f) {
+      /// <summary>Computes a double using the provided function (if it's NaN), caching it</summary>
+      public double Cached (Func<double> compute) {
+         if (double.IsNaN (f)) f = compute ();
+         return f; 
+      }         
+   }
 }
 #endregion

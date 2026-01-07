@@ -62,7 +62,7 @@ class TMisc {
       Dictionary<int, int> squares = [];
       squares.Get (5, n => n * n).Is (25);
       squares.Get (5, n => n * n).Is (25);
-      5.0.IsNaN ().IsFalse (); double.NaN.IsNaN ().IsTrue ();
+      5.0.IsNan.IsFalse (); double.NaN.IsNan.IsTrue ();
       5f.IsNaN ().IsFalse (); float.NaN.IsNaN ().IsTrue ();
       5f.IsZero ().IsFalse (); 1e-6f.IsZero ().IsTrue ();
       22.RoundUp (10).Is (30);
@@ -389,9 +389,9 @@ class TMisc {
       dwg.Add (Poly.Rectangle (0, 0, 100, 60));
       dwg.Add (new E2Bendline (dwg, Point2.List (75, 0, 75, 60), Lib.HalfPI, 1, 0.38, 1));
       var s = dwg.Ents.OfType<E2Bendline> ().First ();
-      Assert.IsTrue (Math.Round (s.FlatWidth, 3) == 2.168 && Math.Round (s.Deduction, 3) == 1.832);
+      Assert.IsTrue (Round (s.FlatWidth, 3) == 2.168 && Round (s.Deduction, 3) == 1.832);
       s.Deduction = 1.5;
-      Assert.IsTrue (Math.Round (s.FlatWidth, 1) == 2.5 && Math.Round (s.KFactor, 3) == 0.592);
+      Assert.IsTrue (Round (s.FlatWidth, 1) == 2.5 && Round (s.KFactor, 3) == 0.592);
    }
 
    [Test (114, "Miscellany: DIBitmap, MultiDispose, AList")]

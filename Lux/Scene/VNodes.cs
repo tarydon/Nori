@@ -36,6 +36,8 @@ public class SimpleVN (Action setattr, Action draw) : VNode (draw) {
 /// <summary>Displays Trace text in the window</summary>
 [Singleton]
 public partial class TraceVN : VNode {
+   TraceVN () => Streaming = true;
+
    // Properties ---------------------------------------------------------------
    /// <summary>Text color</summary>
    public static Color4 TextColor = Color4.Blue;
