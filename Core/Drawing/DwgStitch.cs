@@ -5,7 +5,7 @@
 namespace Nori;
 
 #region class DwgStitcher --------------------------------------------------------------------------
-class DwgStitcher {
+public class DwgStitcher {
    public DwgStitcher (Dwg2 dwg, double threshold = 1e-3) {
       mDwg = dwg;
       mEnds = new (new PointComparer (mThreshold = threshold));
