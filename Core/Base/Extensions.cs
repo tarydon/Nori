@@ -15,6 +15,9 @@ public static class Extensions {
    /// <summary>Interpolates using a given lie f between two doubles a and b</summary>
    public static double Along (this double f, double a, double b)
       => a + (b - a) * f;
+   /// <summary>Interpolates using a given lie f within a given Bound1</summary>
+   public static double Along (this double f, Bound1 b)
+      => b.Min + b.Length * f;
    /// <summary>Interpolates using a given lie f between two Point2 a and b</summary>
    public static Point2 Along (this double f, Point2 a, Point2 b)
       => new (f.Along (a.X, b.X), f.Along (a.Y, b.Y));

@@ -486,6 +486,9 @@ public class Contour3 {
                } else
                   pb.Arc (start, center, flags);
                break;
+            case Polyline3 poly:
+               foreach (var pt in poly.Pts) pb.Line (Xfm (pt));
+               break;
             default:
                throw new BadCaseException (edge);
          }
