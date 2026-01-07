@@ -87,7 +87,21 @@ public abstract class VNode {
 
    // Methods ------------------------------------------------------------------
    /// <summary>Should be called from outside when the parent object has new children</summary>
-   public void ChildAdded () { mChildrenAdded = true; Lux.Redraw (); }
+   public void ChildAdded () {
+      for (; ; mKnownChildren++) {
+         var child = GetChild (mKnownChildren);
+         if (child == null) break;
+         // Note that a child returned here might have an Id > 0 (already registered), since
+         // the same child can occur multiple times in the scene's DAG of nodes.
+         if (child.Id == 0) child.Register ();
+         // This sets up the bi-directional links connecting a parent to all of its children,
+         // and a child to all of its parents (there may be more than 1).
+         mFamily.Add (ref mChildren, child.Id);
+         mFamily.Add (ref child.mParents, Id);
+         child.mCRefs++;
+      }
+      Lux.Redraw ();
+   }
 
    /// <summary>Called to tell this parent one of its children is removed</summary>
    public void ChildRemoved (VNode child) {
