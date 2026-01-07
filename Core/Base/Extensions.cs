@@ -346,7 +346,8 @@ public static class Extensions2 {
 
       /// <summary>Transforms a distance by the given transform</summary>
       /// Distance is updated only if the matrix has a scaling component
-      public static double operator * (double a, Matrix3 xfm) => a * xfm.ScaleFactor;
+      public static double operator * (double a, Matrix3 xfm)
+         => xfm.HasScaling ? a * xfm.ScaleFactor : a;
    }
 
    extension(ref double f) {

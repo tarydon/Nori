@@ -242,7 +242,7 @@ public class Arc3 : Curve3 {
    Matrix3? _from;
 
    protected override Arc3 Xformed (Matrix3 xfm)
-      => new (PairId, CS * xfm, Radius, AngSpan);
+      => new (PairId, CS * xfm, Radius * xfm, AngSpan);
 
    // Implementation -----------------------------------------------------------
    public override string ToString ()

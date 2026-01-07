@@ -50,8 +50,11 @@ namespace Nori;
 public abstract partial class Ent3 {
    // Constructors -------------------------------------------------------------
    /// <summary>Protected constructor - each Ent3 has an Id</summary>
-   protected Ent3 (int id) => Id = id;
+   protected Ent3 (int id) => (Id, UID) = (id, ++NextUID);
    protected Ent3 () { }
+
+   public uint UID;
+   static uint NextUID;
 
    // Properties ---------------------------------------------------------------
    /// <summary>Returns the Bound of the Ent3 (overridden in descendents)</summary>
@@ -75,14 +78,24 @@ public abstract partial class Ent3 {
    }
 
    /// <summary>Should this entity be rendered using a translucent (glass) shader</summary>
-   public bool IsTranslucent { get => Get (E3Flags.Translucent); set => Set (E3Flags.Translucent, value); }
+   public bool IsTranslucent { 
+      get => Get (E3Flags.Translucent);
+      set { if (Set (E3Flags.Translucent, value)) Notify (EProp.Geometry); }
+   }
 
    /// <summary>Don't draw stencil lines around this model's wireframes</summary>
-   public bool NoStencil { get => Get (E3Flags.NoStencil); set => Set (E3Flags.NoStencil, value); }
+   public bool NoStencil { 
+      get => Get (E3Flags.NoStencil);
+      set { if (Set (E3Flags.NoStencil, value)) Notify (EProp.Geometry); }
+   }
 
    // Operators ----------------------------------------------------------------
    /// <summary>Returns a transformed copy of the Ent3, given the transformation matrix</summary>
-   public static Ent3 operator * (Ent3 ent, Matrix3 xfm) => ent.Xformed (xfm);
+   public static Ent3 operator * (Ent3 ent, Matrix3 xfm) {
+      var newEnt = ent.Xformed (xfm);
+      newEnt.mFlags = ent.mFlags;
+      return newEnt;
+   }
 
    // Protected ----------------------------------------------------------------
    // Bitflags for this entity
