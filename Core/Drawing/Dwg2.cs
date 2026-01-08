@@ -119,6 +119,9 @@ public partial class Dwg2 {
       Add (new E2Poly (CurrentLayer, p));
    }
 
+   /// <summary>Adds a point to the drawing (after wrapping it in an E2Point)</summary>
+   public void Add (Point2 pt) => Add (new E2Point (CurrentLayer, pt));
+
    /// <summary>Add a set of entities into the drawing</summary>
    public void Add (IEnumerable<Ent2> ents) => ents.ForEach (Add);
 

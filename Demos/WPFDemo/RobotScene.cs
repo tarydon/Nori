@@ -3,6 +3,8 @@
 // ║║║║╬║╔╣║ Demonstrates Robot Forward & Inverse kinematics, simulation
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 namespace WPFDemo;
+
+using System.Text;
 using System.Windows;
 using System.Windows.Controls;
 using Nori;
@@ -49,6 +51,9 @@ class RobotScene : Scene3 {
             mSelStance = mStances.SelectedIndex; ComputeIK ();
          }
       };
+      Button b = new Button { Content = "Output" };
+      b.Click += (s, e) => SaveOutput ();
+      ui.Add (b);
 
       // Helper ..................................
       void AddLabel (string text)
@@ -63,6 +68,19 @@ class RobotScene : Scene3 {
          slider.IsSnapToTickEnabled = false;
          sp.Children.Add (label); sp.Children.Add (slider); ui.Add (sp);
          mSliders[text] = slider;
+      }
+
+      void SaveOutput () {
+         var sb = new StringBuilder ();
+         sb.Append ($"{mX} {mY} {mZ}\n{mRx} {mRy} {mRz}\n");
+         for (int j = 0; j < 8; j++) {
+            var a = mSolver.Solutions[j];
+            sb.Append ($"{(a.OK ? 1 : 0)}");
+            for (int i = 0; i < 6; i++) sb.Append ($" {a.GetJointAngle (i)}");
+            sb.AppendLine ();
+         }
+         sb.AppendLine ();
+         System.IO.File.AppendAllText ("c:/etc/test.txt", sb.ToString ());
       }
    }
    ListBox mStances = new () { Margin = new Thickness (8, 0, 8, 4) };

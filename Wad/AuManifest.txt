@@ -40,7 +40,7 @@ Model3
 Ent3
   Id Flags
 E3Surface
-  Bound Contours
+  Area Bound Domain Contours
 E3ParaSurface
 E3CSSurface
   CS
@@ -49,8 +49,8 @@ E3Cylinder
 CoordSystem
   Org VecX VecY
 Contour3
-  Edges
-Edge3
+  Curves
+Curve3
   PairId
 Line3
   Start End

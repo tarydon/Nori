@@ -145,7 +145,7 @@ public class E2Dimension : Ent2 {
 
    // Overrides ----------------------------------------------------------------
    public override Bound2 Bound
-      => Bound2.Update (ref mBound, () => new (mEnts.Select (a => a.Bound)));
+      => Bound2.Cached (ref mBound, () => new (mEnts.Select (a => a.Bound)));
    Bound2 mBound = new ();
 
    public override Bound2 GetBound (Matrix2 xfm)
@@ -214,7 +214,7 @@ public class E2Insert : Ent2 {
 
    // Overrides ----------------------------------------------------------------
    public override Bound2 Bound
-      => Bound2.Update (ref mBound, () => new (Block.Ents.Select (a => a.GetBound (Xfm))));
+      => Bound2.Cached (ref mBound, () => new (Block.Ents.Select (a => a.GetBound (Xfm))));
    Bound2 mBound = new ();
 
    public override Bound2 GetBound (Matrix2 xfm) {
@@ -278,7 +278,7 @@ public class E2Poly : Ent2 {
    public E2Poly (Layer2 layer, Poly poly) : base (layer) => mPoly = poly;
 
    // Properties ---------------------------------------------------------------
-   public override Bound2 Bound => Bound2.Update (ref mBound, mPoly.GetBound);
+   public override Bound2 Bound => Bound2.Cached (ref mBound, mPoly.GetBound);
    Bound2 mBound = new ();
 
    /// <summary>The Poly object that defines this entity's actual shape.</summary>
@@ -362,7 +362,7 @@ public class E2Spline : Ent2 {
    }
    List<Point2> mPts = [];
 
-   public override Bound2 Bound => Bound2.Update (ref mBound, () => new (Pts));
+   public override Bound2 Bound => Bound2.Cached (ref mBound, () => new (Pts));
    Bound2 mBound = new ();
 
    public override Bound2 GetBound (Matrix2 xfm) => new (Pts.Select (a => a * xfm));
@@ -415,7 +415,7 @@ public class E2Text : Ent2 {
    // Overrides ----------------------------------------------------------------
    /// <summary>The text bounding rectangle.</summary>
    public override Bound2 Bound
-      => Bound2.Update (ref mBound, () => new (Polys.Select (x => x.GetBound ())));
+      => Bound2.Cached (ref mBound, () => new (Polys.Select (x => x.GetBound ())));
    Bound2 mBound = new ();
 
    public override Bound2 GetBound (Matrix2 xfm)

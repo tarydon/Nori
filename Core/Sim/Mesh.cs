@@ -21,6 +21,33 @@ public class Mesh3 {
       Vertex = vertex; Triangle = tris; Wire = wire;
    }
 
+   /// <summary>Returns a copy of this mesh with full stencil lines</summary>
+   public Mesh3 Wireframed () {
+      List<int> wires = [];
+      HashSet<(int A, int B)> done = [];
+      for (int i = 0; i < Triangle.Length; i += 3) {
+         int a = Triangle[i], b = Triangle[i + 1], c = Triangle[i + 2];
+         Add (a, b); Add (b, c); Add (c, a);
+
+         void Add (int t1, int t2) {
+            if (t1 > t2) (t1, t2) = (t2, t1);
+            if (done.Add ((t1, t2))) { wires.Add (t1); wires.Add (t2); }
+         }
+      }
+      return new (Vertex, Triangle, [.. wires]);
+   }
+
+   public double GetArea () {
+      double total = 0;
+      for (int i = 0; i < Triangle.Length; i += 3) {
+         Point3 pa = (Point3)Vertex[Triangle[i]].Pos,
+                pb = (Point3)Vertex[Triangle[i + 1]].Pos,
+                pc = (Point3)Vertex[Triangle[i + 2]].Pos;
+         total += ((pb - pa) * (pc - pb)).Length;
+      }
+      return total / 2; 
+   }
+
    public bool Opposing () {
       for (int i = 0; i < Triangle.Length; i += 3) {
          Node na = Vertex[Triangle[i]], nb = Vertex[Triangle[i + 1]], nc = Vertex[Triangle[i + 2]];
@@ -44,6 +71,9 @@ public class Mesh3 {
          return _bound;
       }
    }
+
+   public bool IsEmpty => Triangle.Length == 0;
+
    Bound3 _bound = new ();
 
    public static Mesh3 operator * (Mesh3 mesh, Matrix3 xfm) {
@@ -60,7 +90,7 @@ public class Mesh3 {
       public Vec3H Vec => vec;
 
       public void Deconstruct (out Point3f p, out Vec3H v) => (p, v) = (Pos, Vec);
-      public override string ToString () => $"{pos}, {vec}";
+      public override string ToString () => $"{pos} {vec}";
       public static Node operator * (Node node, Matrix3 xfm) {
          var pos = node.Pos * xfm;
          var vec = node.Vec;

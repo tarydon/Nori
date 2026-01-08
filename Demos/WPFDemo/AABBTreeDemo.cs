@@ -13,7 +13,7 @@ namespace WPFDemo;
 // a BVH that drills down to the level of individual triangles with the 
 class AABBTreeDemo : Scene3 {
    public AABBTreeDemo () {
-      var zar = new ZipArchive (File.OpenRead ("N:/Demos/Data/cow.zip"));
+      var zar = new ZipArchive (File.OpenRead ("N:/TData/IO/MESH/cow.zip"));
       var ze = zar.GetEntry ("cow.obj")!;
       var zstm = new ZipReadStream (ze.Open (), ze.Length);
       var mesh = Mesh3.LoadObj (zstm.ReadAllLines ());
