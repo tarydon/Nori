@@ -10,6 +10,7 @@
     (E2Poly){ Layer:Circle Poly:C50,50,50 }
     (E2Poly){ Layer:Rect Poly:M5,5H20V20H5Z }
     (E2Poly){ Layer:Rect Poly:M40,60H80V100H40Z }
-    (E2Poly){ Layer:Line Poly:M0,0L100,100 }
+    (E2Poly){ Layer:Line Poly:M0,0L50,50 }
+    (E2Poly){ Layer:Line Poly:M50,50L100,100 }
   ]
 }
