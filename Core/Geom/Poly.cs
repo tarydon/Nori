@@ -406,6 +406,8 @@ public partial class Poly {
                pts.Add (curr.A);
             if (!IsClosed)
                pts.Add (curr.B);
+            if (curr.IsArc)
+               extras.Add (Extra[^1]);
             break;
          }
 
