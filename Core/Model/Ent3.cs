@@ -50,11 +50,8 @@ namespace Nori;
 public abstract partial class Ent3 {
    // Constructors -------------------------------------------------------------
    /// <summary>Protected constructor - each Ent3 has an Id</summary>
-   protected Ent3 (int id) => (Id, UID) = (id, ++NextUID);
+   protected Ent3 (int id) => Id = id;
    protected Ent3 () { }
-
-   public uint UID;
-   static uint NextUID;
 
    // Properties ---------------------------------------------------------------
    /// <summary>Returns the Bound of the Ent3 (overridden in descendents)</summary>
