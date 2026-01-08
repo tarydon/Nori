@@ -406,7 +406,7 @@ public partial class Poly {
                pts.Add (curr.A);
             if (!IsClosed)
                pts.Add (curr.B);
-            if (curr.IsArc)
+            if (curr.IsArc) // If the last segment is arc, add the corresponding ArcInfo
                extras.Add (Extra[^1]);
             break;
          }
