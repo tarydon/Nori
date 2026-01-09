@@ -97,6 +97,11 @@ public abstract class Scene {
 
       XfmChanged ();
    }
+
+   public double ZoomFactor {
+      get => mZoomFactor;
+      set { if(Lib.Set (ref mZoomFactor, value)) XfmChanged (); }
+   }
    protected double mZoomFactor = 1;
 
    // Called when the root transform is changed

@@ -77,11 +77,40 @@ public class SceneManipulator {
       HW.Keys.Where (a => a.IsPress ()).Subscribe (OnKey);
    }
 
+   public void ZoomExtents (bool animate) {
+      if (mZoomExtentsAnimation == null && Lux.UIScene != null) {
+         if (!animate) { Lux.UIScene.ZoomExtents (); return; }
+
+         // If there is a wheel animation running, stop it
+         mWheelAnimation?.Stop (this);
+
+         // Snapshot the current scene, thread context, zoom, pan and start a stopwatch
+         Scene scene = Lux.UIScene;
+         SynchronizationContext context = SynchronizationContext.Current!;
+         double startZoomFactor = scene.ZoomFactor; Vector2 startPan = scene.PanVector;
+         Stopwatch sw = Stopwatch.StartNew ();
+
+         // Every 16ms (approx 60fps), update the zoom and pan based on elapsed time.
+         mZoomExtentsAnimation = Observable.Interval (TimeSpan.FromMilliseconds (16))
+            .ObserveOn (context)
+            .TakeWhile (_ => sw.ElapsedMilliseconds < AnimationTime && Lux.UIScene == scene)
+            .Subscribe (_ => { // On tick interpolate the zoom and pan based on elapsed time
+               double f = (sw.ElapsedMilliseconds / AnimationTime);
+               scene.ZoomFactor = startZoomFactor + f * (1.0 - startZoomFactor);
+               scene.PanVector = startPan + (Vector2.Zero - startPan) * f;
+            }, () => { // On completion, ensure we are exactly at zoom-extents
+               Lux.UIScene?.ZoomExtents ();
+               mZoomExtentsAnimation = null;
+            });
+      }
+   }
+   IDisposable? mZoomExtentsAnimation = null;
+
    // Implementation -----------------------------------------------------------
    // When Ctrl+E is pressed, do a zoom-extents
    void OnKey (KeyInfo ki) {
       if (ki.Key == EKey.E && ki.Modifier == EKeyModifier.Control)
-         Lux.UIScene?.ZoomExtents ();
+         ZoomExtents (true);
    }
 
    // Start rotating when the left mouse button is clicked (if the current scene is 3D)
@@ -100,8 +129,61 @@ public class SceneManipulator {
    }
 
    // Zoom in/out when the mouse wheel is rotated
-   void OnMouseWheel (MouseWheelInfo mw)
-      => Lux.UIScene?.Zoom (mw.Position, mw.Delta < 0 ? 0.95 : (1 / 0.95));
+   void OnMouseWheel (MouseWheelInfo mw) {
+      if (Lux.UIScene != null && mZoomExtentsAnimation == null) {
+         if (mWheelAnimation != null) mWheelAnimation.Continue (mw);// If there is a running animation, append to it.
+         else mWheelAnimation = new ZoomAnim (this, mw); // Create a new animation.
+      }
+   }
+   ZoomAnim? mWheelAnimation = null; // Any running zoom animation. Will be null if there is no active animation.
+
+   // Creates the storyboard for a zoom in/out animation using mousewheel
+   class ZoomAnim {
+      /// <summary>Creates the animation object and starts the animation on the scene.</summary>
+      /// <param name="owner">The owner scene manipulator who is starting this zoom animation.</param>
+      public ZoomAnim (SceneManipulator owner, MouseWheelInfo mw) {
+         // Snapshot the current scene, mouse position, zoom factors and start a stopwatch
+         (mScene, mPosition) = (Lux.UIScene!, mw.Position);
+         mStartZoomFactor = mScene.ZoomFactor;
+         mTargetZoomFactor = mStartZoomFactor * (mw.Delta < 0 ? 0.8 : 1.0 / 0.8);
+         mSW = Stopwatch.StartNew ();
+
+         SynchronizationContext context = SynchronizationContext.Current!;
+         mAction = Observable.Interval (TimeSpan.FromMilliseconds (16))
+            .ObserveOn (context) // Switch to UI thread
+            .TakeWhile (_ => mSW.ElapsedMilliseconds < AnimationTime && Lux.UIScene == mScene) // Take only while elapsed is less than animation duration.
+            .Subscribe ((_) => { // On tick
+               double target = mStartZoomFactor + (mSW.ElapsedMilliseconds / AnimationTime) * (mTargetZoomFactor - mStartZoomFactor);
+               mScene.Zoom (mPosition, target / mScene.ZoomFactor);
+            }, () => { // On completion
+               if (Lux.UIScene == mScene) {
+                  mScene.Zoom (mPosition, mTargetZoomFactor / mScene.ZoomFactor);
+                  owner.mWheelAnimation = null; // Set it to null on owner.
+               }
+            });
+      }
+
+      /// <summary>Call this to continue zoom animation when user zoomed even while the previous zoom
+      /// operation was still animating.</summary>
+      /// <param name="position">The new mouse position.</param>
+      /// <param name="zoomIn">Whether we are zooming in or out</param>
+      public void Continue (MouseWheelInfo mw) {
+         mPosition = mw.Position;
+         mStartZoomFactor = mScene.ZoomFactor;
+         mTargetZoomFactor *= (mw.Delta < 0 ? 0.9 : 1.0 / 0.9);
+         mSW.Restart ();
+      }
+
+      /// <summary>Stops the animation in its tracks</summary>
+      public void Stop (SceneManipulator owner) { mAction.Dispose (); owner.mWheelAnimation = null; }
+
+      readonly Scene mScene;
+      readonly Stopwatch mSW;
+      readonly IDisposable mAction;
+      double mStartZoomFactor, mTargetZoomFactor;
+      Vec2S mPosition;
+   }
+   const double AnimationTime = 200; // milliseconds
 }
 #endregion
 
