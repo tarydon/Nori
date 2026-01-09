@@ -101,7 +101,7 @@ public abstract class Scene {
    public void Zoom (Vec2S pos, double factor, bool animate) {
       if (animate) {
          if (mZoomAnimation is SceneZoomAnima anim) anim.Continue (pos, factor);
-         else if (mZoomAnimation is null) mZoomAnimation = new SceneZoomAnima (this, pos, factor);
+         else mZoomAnimation ??= new SceneZoomAnima (this, pos, factor);
       } else {
          double oldZoom = mZoomFactor;
          mZoomFactor = (oldZoom * factor).Clamp (0.01, 100);
@@ -218,7 +218,7 @@ public abstract class Scene {
 
    // Private data -------------------------------------------------------------
    IDisposable? mZoomAnimation = null;
-   Subject<Unit> mRenderCompletedSubj = new ();
+   readonly Subject<Unit> mRenderCompletedSubj = new ();
    public const double AnimationTime = 200; // milliseconds
 }
 #endregion
