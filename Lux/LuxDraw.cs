@@ -19,7 +19,7 @@ public static partial class Lux {
    public static Color4 Color {
       get => mColor;
       set {
-         if (mColor.EQ (value)) return;
+         if (mColor.EQ (value) || value.IsNil) return;
          if (Set (ELuxAttr.Color)) mColors.Push (mColor);
          mColor = value; Rung++;
       }

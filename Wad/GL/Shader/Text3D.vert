@@ -9,11 +9,14 @@ layout (location = 2) in int TexOffset;
 
 out ivec2 vCellSize;
 out int vTexOffset;
+out float vClipSpaceZ;
 
 void main () {
    vCellSize = ivec2 (CharBoxN.z - CharBoxN.x, CharBoxN.w - CharBoxN.y);
    vTexOffset = TexOffset;
-   vec2 xyref = (Xfm * vec4 (VertexPos, 1)).xy;        // xy0 now in clip space
+   vec4 xyzClip = Xfm * vec4 (VertexPos, 1);
+   vClipSpaceZ = xyzClip.z;
+   vec2 xyref = xyzClip.xy;                            // xy0 now in clip space
    xyref = floor (xyref / VPScale);                    // now in pixel coordinates
    xyref = xyref + vec2 (0.01, 0.01);                  // delta to avoid truncation errors
    vec2 xy0 = (xyref + CharBoxN.xy); 
