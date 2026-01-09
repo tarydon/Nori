@@ -4,7 +4,6 @@
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 using System.Linq.Expressions;
 using System.Reflection;
-
 namespace Nori;
 
 #region class VNode --------------------------------------------------------------------------------
@@ -74,7 +73,14 @@ public abstract class VNode {
    /// redrawn on every frame. RBatches made from this VNode's draw commands will also have
    /// Streaming=true, and will eventually deliver their vertices into StreamBuffer objects
    /// rather than RetainBuffer objects
-   public bool Streaming;
+   public bool Streaming {
+      get => mStreaming;
+      set { mStreaming = value; if (value) NoPicking = true; }
+   }
+   bool mStreaming;
+
+   /// <summary>If set, this VNode is ignored during picking</summary>
+   public bool NoPicking;
 
    /// <summary>The domain-space Object which this VNode is rendering</summary>
    public readonly object? Obj;
@@ -127,7 +133,11 @@ public abstract class VNode {
    }
 
    /// <summary>Called when geometry has changed and complete redraw of this VNode is needed</summary>
-   public void Redraw () { mGeometryDirty = true; Lux.FlushPickBuffer (); Lux.Redraw ();  }
+   public void Redraw () { 
+      mGeometryDirty = true; 
+      if (!NoPicking) Lux.FlushPickBuffer (); 
+      Lux.Redraw ();  
+   }
 
    /// <summary>Register an assembly as containing potential VNode types</summary>
    /// This is used in conjunction with the VNode.Makefor(...) above to construct a VNode
@@ -251,7 +261,7 @@ public abstract class VNode {
          ref RBatch rb = ref RBatch.Get (n);
          rb.Release ();
       }
-      Lux.FlushPickBuffer ();
+      if (!NoPicking) Lux.FlushPickBuffer ();
       Batches.Clear ();
    }
 
@@ -259,6 +269,10 @@ public abstract class VNode {
    // under it. So, call Scene.Root.Render() will draw the entire scene.
    internal void Render () {
       Lux.BeginNode (this);
+      if (NoPicking && Lux.IsPicking) {
+         if (mGeometryDirty) { Lux.Redraw (); }
+         return;
+      }
       try {
          // If the GeometryDirty flag is set, it means the geometry of this VNode
          // has changed - the batches it might be holding on to are all useless now, and we
@@ -280,7 +294,7 @@ public abstract class VNode {
          if (mGeometryDirty || Streaming) {
             Draw ();
             mGeometryDirty = false;
-            if (!Streaming) Lux.FlushPickBuffer ();
+            if (!NoPicking) Lux.FlushPickBuffer ();
          } else {
             // But if the geometry is not dirty, we don't need to create new batches at all,
             // but instead can just update the existing batches we have with freshly captured
@@ -407,7 +421,7 @@ public abstract class VNode {
       }
       mFamily.ReleaseChain (ref mChildren);
       mFreeIDs.Push (Id); mNodes[Id] = null;
-      mGeometryDirty = mChildrenAdded = true;
+      mGeometryDirty = mChildrenAdded = true; mKnownChildren = 0;
       Id = 0;
    }
 

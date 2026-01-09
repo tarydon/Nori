@@ -339,7 +339,7 @@ public class DXFReader {
                   else if (s.StartsWith ("BEND_RADIUS:")) radius = s[12..].ToDouble () * Scale;
                   else if (s.StartsWith ("K_FACTOR:")) kfactor = s[9..].ToDouble ();
                }
-               if (!ba.IsNaN ()) {
+               if (!ba.IsNan) {
                   Add (new E2Bendline (mDwg, line.Pts, ba, radius, kfactor));
                   mXData.Clear ();
                } else Add (line);

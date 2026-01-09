@@ -137,6 +137,34 @@ public static class Geo {
       return (center, center.IsNil ? 0 : center.DistToLine (e, f));
    }
 
+   /// <summary>Computes a normal, given atleast 3 coplanar points</summary>
+   /// This first uses GetBasisPoints to get 3 points from the list that are _far from_ 
+   /// each other, and then uses those three to compute a normal. If the given set of
+   /// points are not coplanar, the result is indeterminate
+   public static Vector3 GetNormal (IList<Point3> pts) {
+      GetBasisPoints (out int a, out int b, out int c);
+      return ((pts[b] - pts[a]) * (pts[c] - pts[a])).Normalized ();
+
+      // Helper ............................................
+      void GetBasisPoints (out int a, out int b, out int c) {
+         if (pts.Count < 3) throw new ArgumentException ("Need 3 points for GetNormal");
+         a = 0; b = 1; c = 2; if (pts.Count == 3) return;
+
+         double fMax = double.MinValue;
+         Point3 pa = pts[0], pb = pa;
+         for (int i = pts.Count - 1; i >= 1; i--) {
+            double fDist = pts[i].DistToSq (pa);
+            if (fDist > fMax) (fMax, pb) = (fDist, pts[b = i]); 
+         }
+         fMax = double.MinValue;
+         for (int i = pts.Count - 1; i >= 1; i--) {
+            double fDist = pts[i].DistToLineSq (pa, pb);
+            if (fDist > fMax) (fMax, c) = (fDist, i);
+         }
+         if (b > c) (b, c) = (c, b);
+      }
+   }
+
    /// <summary> Returns the center of the circle passing through three non-collinear points</summary>
    /// If the points are collinear, this returns Point2.Nil
    public static Point2 Get3PCircle (Point2 a, Point2 b, Point2 c) {
@@ -170,6 +198,26 @@ public static class Geo {
 
       // Returns base point P and a second point in the average direction of v1 and v2
       return (P, P + (v1 + v2));
+   }
+
+   /// <summary>Given a Z vector, returns X and Y vectors in that coordinate system</summary>
+   /// Of course, there are infinitely many X and Y vectors possible, this just
+   /// picks one pair and returns them, such that X * Y = Z
+   public static (Vector3 x, Vector3 y) GetXYFromZ (Vector3 z) {
+      z = z.Normalized ();
+      // Take the least component of this and consider that arbitrarily the x
+      double cx = Abs (z.X), cy = Abs (z.Y), cz = Abs (z.Z);
+      Vector3 x = Vector3.ZAxis;
+      if (cx < cy && cx < cz) {
+         x = Vector3.XAxis;
+      } else if (cy < cz) {
+         x = Vector3.YAxis;
+      } 
+      // Of course, this choice of x is not really likely to be correct, so we can
+      // now compute a 'correct' y by cross multiplication. Then, we can recompute
+      // x again by cross-multiplication
+      Vector3 y = (z * x).Normalized (); x = (y * z).Normalized ();
+      return (x, y);
    }
 
    /// <summary>Return the intersection Point2 of two lines A-B and C-D</summary>

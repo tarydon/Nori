@@ -31,8 +31,10 @@ public abstract class Scene {
    public VNode? Root {
       get => mRoot;
       set {
-         mRoot?.Deregister ();
-         (mRoot = value)?.Register ();
+         if (miAttached) {
+            mRoot?.Deregister ();
+            (mRoot = value)?.Register ();
+         } else mRoot = value;
       }
    }
    VNode? mRoot;
@@ -56,6 +58,14 @@ public abstract class Scene {
    readonly List<XfmEntry> mXfms = [];
 
    // Methods ------------------------------------------------------------------
+   internal Point3 Unproject (Vec2S pos, float depth) {
+      var vp = Lux.Viewport;
+      double x = 2.0 * pos.X / vp.X - 1;
+      double y = -(2.0 * pos.Y / vp.Y - 1);
+      double z = 2 * depth - 1;
+      return new Point3 (x, y, z) * mXfms[0].InvXfm;
+   }
+
    public void Render (Vec2S viewport) {
       Lux.Scene = this;
       if (Lib.Set (ref mViewport, viewport)) XfmChanged ();
@@ -66,8 +76,11 @@ public abstract class Scene {
    }
    protected Vec2S mViewport;
 
+   internal void Attach () { miAttached = true; mRoot?.Register (); }
+   bool miAttached = false;
+
    /// <summary>Called when the scene is detached from the Lux renderer</summary>
-   public void Detach () { Detached (); mRoot?.Deregister (); }
+   internal void Detach () { Detached (); mRoot?.Deregister (); miAttached = false; }
 
    /// <summary>Override this to zoom in or out about the given position (in pixels)</summary>
    public void Zoom (Vec2S pos, double factor) {
@@ -214,6 +227,10 @@ class XfmEntry {
    }
 
    // Properties ---------------------------------------------------------------
+   /// <summary>Inverse transform that transforms OpenGL clip spaces to world (inverse of Xfm)</summary>
+   public Matrix3 InvXfm => mInvXfm ??= (mScene.WorldXfm * mScene.ProjectionXfm).GetInverse ();
+   Matrix3? mInvXfm;
+
    /// <summary>The NormalXfm to use for 3D scenes</summary>
    public ref Mat4F NormalXfm { get { _ = ObjToWorld; return ref mNormalXfm; } }
 
@@ -236,10 +253,6 @@ class XfmEntry {
    /// <summary>The overall transform from the world to the OpenGL clip coordinates</summary>
    public ref Mat4F Xfm { get { _ = ObjToWorld; return ref mXfm; } }
    Mat4F mXfm, mNormalXfm;
-
-   /// <summary>Inverse transform that transforms OpenGL clip spaces to world (inverse of Xfm)</summary>
-   public Matrix3 InvXfm => mInvXfm ??= (mScene.WorldXfm * mScene.ProjectionXfm).GetInverse ();
-   Matrix3? mInvXfm;
 
    // Private data -------------------------------------------------------------
    readonly Scene mScene;           // The scene we're working with

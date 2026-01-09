@@ -606,7 +606,7 @@ public class PolyBuilder {
    // Helpers ------------------------------------------------------------------
    void PopBulge (Point2 b) {
       // The bulge is the tangent of one quarter of the turn angle
-      if (mBulge.IsNaN ()) return;
+      if (mBulge.IsNan) return;
       double bulge = mBulge; mBulge = double.NaN;
       if (bulge > 1e6 || bulge.IsZero ()) return;  // Only a Line
 

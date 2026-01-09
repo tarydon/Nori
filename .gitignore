@@ -6,7 +6,9 @@ Bin/*
 *.bak
 *.pdb
 *.obj
+Demos/Pentax
 **/launchSettings.json
 **/bin/*
 **/obj/*
 TData/tmpfile.*
+**/BenchmarkDotNet.Artifacts/*

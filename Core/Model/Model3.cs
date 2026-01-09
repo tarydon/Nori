@@ -12,7 +12,7 @@ public class Model3 {
 
    // Properties ---------------------------------------------------------------
    /// <summary>The Bound of this Model</summary>
-   public Bound3 Bound => Bound3.Update (ref mBound, () => new (mEnts.Select (e => e.Bound)));
+   public Bound3 Bound => Bound3.Cached (ref mBound, () => new (mEnts.Select (e => e.Bound)));
    Bound3 mBound = new ();
 
    /// <summary>The set of entities in this Model</summary>
@@ -24,7 +24,7 @@ public class Model3 {
          _neighbors = [];
          Dictionary<int, E3Surface> unpaired = [];
          foreach (var ent1 in Ents.OfType<E3Surface> ()) {
-            foreach (var edge in ent1.Contours.SelectMany (a => a.Edges)) {
+            foreach (var edge in ent1.Contours.SelectMany (a => a.Curves)) {
                if (unpaired.TryGetValue (edge.PairId, out var ent2)) {
                   if (!_neighbors.TryGetValue (ent1, out var list1)) _neighbors[ent1] = list1 = [];
                   list1.Add (ent2);
@@ -38,6 +38,10 @@ public class Model3 {
       return _neighbors.TryGetValue (ent, out var list) ? list : [];
    }
    Dictionary<E3Surface, List<E3Surface>>? _neighbors;
+
+   // Operators ----------------------------------------------------------------
+   /// <summary>Returns a copy of the entire model transformed by the given matrix</summary>
+   public static Model3 operator * (Model3 model, Matrix3 xfm) => new (model, xfm);
 
    // Implementation -----------------------------------------------------------
    // Handles changes in the Ents list, and keeps the Bound up-to-date
@@ -55,6 +59,12 @@ public class Model3 {
             break;
          default: mBound = new (); break;
       }
+   }
+
+   // Constructor used by transform operator
+   Model3 (Model3 src, Matrix3 xfm) {
+      foreach (var ent in src.Ents) mEnts.Add (ent * xfm);
+      mEnts.Subscribe (OnEntsChanged);
    }
 }
 #endregion

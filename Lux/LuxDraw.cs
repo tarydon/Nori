@@ -19,13 +19,15 @@ public static partial class Lux {
    public static Color4 Color {
       get => mColor;
       set {
-         if (mColor.EQ (value)) return;
+         if (mColor.EQ (value) || value.IsNil) return;
          if (Set (ELuxAttr.Color)) mColors.Push (mColor);
          mColor = value; Rung++;
       }
    }
    static Color4 mColor;
    static readonly Stack<Color4> mColors = [];
+
+   public static Color4 StencilColor = Color4.Black;
 
    /// <summary>The DPI scaling (how many pixels to one logical pixel)</summary>
    public static float DPIScale { get => mDPIScale; set => mDPIScale = value; }
@@ -232,7 +234,7 @@ public static partial class Lux {
       }
       if (wires.Length > 0) {
          switch (shadeMode) {
-            case EShadeMode.GlassNoStencil: break;
+            case EShadeMode.GlassNoStencil or EShadeMode.PhongNoStencil: break;
             case EShadeMode.Glass: GlassLineShader.It.Draw (nodes, wires); break;
             default: BlackLineShader.It.Draw (nodes, wires); break;
          }
@@ -308,7 +310,7 @@ public static partial class Lux {
    /// - Xfm       : current transformation matrix
    /// - DrawColor : color of the text being drawn
    /// - TypeFace  : font, style, size of the text being drawn
-   public static void Text2D (ReadOnlySpan<char> text, Vec2F pos, ETextAlign align, Vec2S offset) {
+   public static void Text2D (ReadOnlySpan<char> text, Vec2F pos, ETextAlign align, Vec2S offset) {   // Can eliminate this and use just Text3D?
       if (text.IsWhiteSpace ()) return;
       // First, get the basic cells as we would for a TextPx shader, assuming the text
       // is starting at a position of (0,0)
@@ -344,6 +346,54 @@ public static partial class Lux {
          output[i] = new (pos, new (v.X + dx, v.Y + dy, v.Z + dx, v.W + dy), input.TexOffset);
       }
       Text2DShader.It.Draw (output);
+   }
+
+   /// <summary>Draws text positioned at a given point in world coordinates</summary>
+   /// The position _pos_ specifies a point in world coordinates (with Z = 0) where
+   /// the text is positioned. Based on the alignment parameter, there are 12 different
+   /// 'reference points' on the text which get mapped to this position pos. See
+   /// file://n:/tdata/lux/text2d.png for an example of all the 12 alignments.
+   ///
+   /// The following Lux properties are used by this shader:
+   /// - Xfm       : current transformation matrix
+   /// - DrawColor : color of the text being drawn
+   /// - TypeFace  : font, style, size of the text being drawn
+   public static void Text3D (ReadOnlySpan<char> text, Vec3F pos, ETextAlign align, Vec2S offset) {
+      if (text.IsWhiteSpace ()) return;
+      // First, get the basic cells as we would for a TextPx shader, assuming the text
+      // is starting at a position of (0,0)
+      var face = TypeFace ?? TypeFace.Default;
+      Span<TextPxShader.Args> cells = stackalloc TextPxShader.Args[text.Length];
+      int x = GetTextCells (text, offset, cells);
+
+      // If we are going to draw the text with a 'BaseLeft' alignment, then the cells
+      // we obtained are already correct (since the transformed coordinates of the _pos_
+      // parameter from above will get added to each cell position). However, if we want
+      // other alignments like TopRight or MidCenter, we need to adjust all these cells.
+      // Let's compute the dx and dy for that adjustment here:
+      var cellM = face.Measure ("M", true);
+      short dx = 0, dy = 0, nAlign = (short)(align - 1);
+      Span<Text3DShader.Args> output = stackalloc Text3DShader.Args[text.Length];
+
+      // First compute the dx needed based on the horizontal alignment (left alignment
+      // is the default value of 0 in the case below)
+      switch (nAlign % 3) {
+         case 1: dx = (short)(-x / 2); break;   // 'Mid' alignment (shift left by half the width)
+         case 2: dx = (short)-x; break;         // 'Right' alignment (shift left by the width)
+      }
+      // Then, compute the dy needed based on the vertical alignment (base alignment is the
+      // default value of 3 in the case below)
+      switch (nAlign / 3) {
+         case 0: dy = (short)(-cellM.Top); break;        // Top alignment
+         case 1: dy = (short)(-cellM.Top / 2); break;    // Center alignment
+         case 2: dy = (short)face.Descender; break;      // Bottom alignment (based on face bounding box)
+      }
+      for (int i = 0; i < cells.Length; i++) {
+         ref TextPxShader.Args input = ref cells[i];
+         var v = input.Cell;
+         output[i] = new (pos, new (v.X + dx, v.Y + dy, v.Z + dx, v.W + dy), input.TexOffset);
+      }
+      Text3DShader.It.Draw (output);
    }
 
    /// <summary>Draws text at specified pixel-coordinates (uses the current TypeFace and DrawColor)</summary>

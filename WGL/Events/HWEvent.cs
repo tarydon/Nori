@@ -3,6 +3,7 @@
 // ║║║║╬║╔╣║ Implements hardware events (keyboard, mouse) in a platform independent manner
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 namespace Nori;
+
 using GLPanel = UserControl;
 
 #region class EventWrapper<T> ----------------------------------------------------------------------
@@ -83,6 +84,8 @@ public static class HW {
       panel.Capture = capture;
       return panel.Capture;
    }
+
+   public static bool IsDragging => Panel?.Capture == true;
 
    /// <summary>Force a redraw of the OpenGL panel</summary>
    public static void Redraw () => Nori.Panel.It?.Redraw ();

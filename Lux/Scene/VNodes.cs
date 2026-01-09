@@ -11,7 +11,9 @@ public class GroupVN : VNode {
    // Constructors -------------------------------------------------------------
    /// <summary>Construct a GroupVN given multiple child VNodes to hold on to</summary>
    public GroupVN (IEnumerable<VNode> children) => mChildren = [.. children];
-   readonly VNode[] mChildren;
+   readonly List<VNode> mChildren;
+
+   public void Add (VNode child) { mChildren.Add (child); ChildAdded (); }
 
    // Overrides ----------------------------------------------------------------
    // Return the children
@@ -32,10 +34,31 @@ public class SimpleVN (Action setattr, Action draw) : VNode (draw) {
 }
 #endregion
 
+#region class Mesh3VN ------------------------------------------------------------------------------
+/// <summary>VNode used to draw a Mesh3</summary>
+public class Mesh3VN : VNode {
+   // Constructor --------------------------------------------------------------
+   public Mesh3VN (Mesh3 mesh) : base (mesh) => mMesh = mesh;
+   readonly Mesh3 mMesh;
+
+   // Properties ---------------------------------------------------------------
+   /// <summary>Color for the Mesh (set to Color4.Nil to inherit parent color)</summary>
+   public Color4 Color = Color4.Yellow;
+   /// <summary>Shade mode for this mesh</summary>
+   public EShadeMode Mode = EShadeMode.Phong;
+
+   // Overrides ----------------------------------------------------------------
+   public override void SetAttributes () => Lux.Color = Color;
+   public override void Draw () => Lux.Mesh (mMesh, Mode);
+}
+#endregion
+
 #region class TraceVN ------------------------------------------------------------------------------
 /// <summary>Displays Trace text in the window</summary>
 [Singleton]
 public partial class TraceVN : VNode {
+   TraceVN () => Streaming = true;
+
    // Properties ---------------------------------------------------------------
    /// <summary>Text color</summary>
    public static Color4 TextColor = Color4.Blue;

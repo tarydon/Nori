@@ -218,6 +218,9 @@ public class Matrix3 : IEQuable<Matrix3> {
    /// <summary>Does this matrix include mirroring?</summary>
    public bool HasMirroring => (Flags & EFlag.Mirror) != 0;
 
+   /// <summary>Does this matrix have a scaling component</summary>
+   public bool HasScaling => (Flags & EFlag.Scale) != 0;
+
    /// <summary>The 'scaling factor' of this matrix (assuming equal scaling in all axes)</summary>
    public double ScaleFactor => (Vector3.XAxis * this).Length;
 
@@ -288,6 +291,10 @@ public class Matrix3 : IEQuable<Matrix3> {
          cs.Org.X, cs.Org.Y, cs.Org.Z
       );
    }
+
+   /// <summary>Convert this matrix3 to a CoordSystem</summary>
+   public CoordSystem ToCS ()
+      => new (Point3.Zero * this, Vector3.XAxis * this, Vector3.YAxis * this);
 
    // Operators ----------------------------------------------------------------
    /// <summary>Multiply two matrices together</summary>

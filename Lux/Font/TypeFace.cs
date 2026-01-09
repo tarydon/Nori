@@ -2,7 +2,6 @@
 // ╔═╦╦═╦╦╬╣ TypeFace.cs
 // ║║║║╬║╔╣║ Wrapper around a FreeType typeface
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
-using System.IO;
 using Nori.FreeType;
 namespace Nori;
 using static Nori.FreeType.FreeType;
