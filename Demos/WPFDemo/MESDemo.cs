@@ -58,7 +58,7 @@ class MinSphereScene : Scene3 {
       xfm *= Matrix3.Translation (V () * half); // Move to anchor
       int i = 0;
       do {
-         var pt = P () * half; 
+         var pt = P () * half;
          if (!bound.Contains (pt)) continue;
          i++;
          yield return pt * xfm;
@@ -101,18 +101,18 @@ class MinSphereScene : Scene3 {
                      corners.Add (new (v.X * dx, v.Y * dy, v.Z * dz));
 
             // Fill box edges with center at the origin
-            Pts = [.. Edges.SelectMany (e => e.Select (n => corners[n]))];
+            Pts = [.. Edges.Select (n => corners[n])];
          }
          Lux.Lines (Pts);
       }
 
-      readonly static int[][] Edges = 
-         [[0,1], [0,2], [0,4],
-         [1,3], [1,5],
-         [2,3], [2,6],  
-         [3,7],
-         [4,5], [4,6],
-         [5,7], [6,7]];
+      readonly static int[] Edges =
+         [0,1,  0,2,  0,4,
+          1,3,  1,5,
+          2,3,  2,6,
+          3,7,
+          4,5,  4,6,
+          5,7,  6,7];
    }
 
    // Draw points cloud
