@@ -333,7 +333,7 @@ public class T3XReader : IDisposable {
       Curve3 genetrix = LoadEdge ()!;      
       var (x, y) = Geo.GetXYFromZ (sweep);
       var cs = new CoordSystem (genetrix.Start, x, y);
-      return new E3SweptSurface (uid, LoadContours (), cs, genetrix.Xformed (Matrix3.From (cs)));
+      return new E3SweptSurface (uid, LoadContours (), cs, genetrix * Matrix3.From (cs));
    }
 
    // Loads a Torus (subtype of Surface)

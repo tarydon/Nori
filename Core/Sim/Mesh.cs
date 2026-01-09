@@ -85,6 +85,8 @@ public class Mesh3 {
    [StructLayout (LayoutKind.Sequential, Pack = 2, Size = 20)]
    public readonly struct Node (Point3f pos, Vec3H vec) {
       public Node (Point3 pos, Vector3 vec) : this ((Point3f)pos, (Vec3H)vec) { }
+      public Node (double x, double y, double z, double dx, double dy, double dz)
+         : this (new Point3f (x, y, z), new Vec3H ((Half)dx, (Half)dy, (Half)dz)) { }
 
       public Point3f Pos => pos;
       public Vec3H Vec => vec;
@@ -97,6 +99,7 @@ public class Mesh3 {
          if (!xfm.IsTranslation) {
             Vector3 v = new ((double)vec.X, (double)vec.Y, (double)vec.Z);
             v *= xfm;
+            if (xfm.HasScaling) v = v.Normalized ();
             vec = new ((Half)v.X, (Half)v.Y, (Half)v.Z);
          }
          return new (pos, vec);
@@ -216,7 +219,7 @@ public class Mesh3 {
       // Load the array of wires
       int[] wire = new int[2 * int.Parse (Line ())];
       for (int i = 0; i < wire.Length; i += 2) {
-         int[] a = [.. Line().Split(' ', options).Select(int.Parse)];
+         int[] a = [.. Line ().Split (' ', options).Select (int.Parse)];
          for (int j = 0; j < 2; j++) wire[i + j] = a[j];
       }
       if (Line () != "EOF") Fatal ();

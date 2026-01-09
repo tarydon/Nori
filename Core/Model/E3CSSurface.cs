@@ -66,6 +66,13 @@ public sealed class E3Cone : E3CSSurface {
       return new (u, pt.Z / _cos);
    }
 
+   // Transform the cone by the given Matrix
+   protected override E3Cone Xformed (Matrix3 xfm) {
+      E3Cone cone = new (Id, Contours * xfm, CS * xfm, HalfAngle);
+      cone.CopyMeshFrom (this, xfm);
+      return cone; 
+   }
+
    // Implementation -----------------------------------------------------------
    void PostLoad () => (_sin, _cos) = SinCos (HalfAngle);
    double _sin, _cos;
@@ -167,6 +174,13 @@ public sealed class E3Cylinder : E3CSSurface {
    protected override Point2 GetUVCanonical (Point3 pt) {
       double u = GetUAxis (ref pt, false);
       return new (u, pt.Z);
+   }
+
+   // Transform the Cylinder by the given matrix
+   protected override E3Cylinder Xformed (Matrix3 xfm) {
+      E3Cylinder cyl = new (Id, Contours * xfm, CS * xfm, Radius * xfm, IsNormalFlipped);
+      cyl.CopyMeshFrom (this, xfm);
+      return cyl;
    }
 
    // Implementation -----------------------------------------------------------
@@ -287,7 +301,7 @@ public sealed class E3Plane : E3CSSurface {
    protected override Mesh3 BuildMesh (double tolerance, double maxAngStep) {
       List<Point2> pts = [];
       List<int> splits = [0], wires = [];
-      foreach (var poly in Contours.Select (a => a.Flatten (CS, tolerance, maxAngStep))) {
+      foreach (var poly in Contours.Select (a => a.Flatten (CS))) {
          int a = pts.Count;
          poly.Discretize (pts, tolerance, maxAngStep);
          int b = pts.Count; splits.Add (b);
@@ -329,6 +343,13 @@ public sealed class E3Plane : E3CSSurface {
 
    // The UV coordinate of a point is just the X,Y coordinate of the point 
    protected override Point2 GetUVCanonical (Point3 pt)  => new (pt.X, pt.Y);
+
+   // Transform the Plane by the given transform
+   protected override E3Plane Xformed (Matrix3 xfm) {
+      E3Plane plane = new (Id, Contours * xfm, CS * xfm);
+      plane.CopyMeshFrom (this, xfm);
+      return plane; 
+   }
 }
 #endregion
 
@@ -371,6 +392,13 @@ public sealed class E3Sphere : E3CSSurface {
    protected override Point2 GetUVCanonical (Point3 pt) {
       double u = GetUAxis (ref pt);       // First, bring pt into 0 longitude (and compute U)
       return new (u, Atan2 (pt.Z, pt.X));
+   }
+
+   // Transform the sphere by the given transform
+   protected override E3Sphere Xformed (Matrix3 xfm) {
+      E3Sphere sphere = new (Id, Contours * xfm, CS * xfm, Radius * xfm);
+      sphere.CopyMeshFrom (this, xfm);
+      return sphere;
    }
 }
 #endregion
@@ -419,6 +447,13 @@ public sealed class E3SpunSurface : E3CSSurface {
    // Domain in u is 0..360 degrees, and in V is just the domain of the Generatrix curve
    protected override Bound2 ComputeDomain () 
       => new (new Bound1 (0, Lib.TwoPI), Generatrix.Domain);
+
+   // Returns a transformed copy of this SpunSurface
+   protected override E3SpunSurface Xformed (Matrix3 xfm) {
+      E3SpunSurface spun = new (Id, Contours * xfm, CS * xfm, Generatrix * xfm);
+      spun.CopyMeshFrom (this, xfm);
+      return spun;
+   }
 }
 #endregion
 
@@ -499,6 +534,13 @@ public sealed class E3SweptSurface : E3CSSurface {
    }
    CurveUnlofter? _unlofter;
    Curve3? _flatGenetrix;
+
+   // Returns a copy of this SweptSurface transformed by the given matrix
+   protected override E3SweptSurface Xformed (Matrix3 xfm) {
+      E3SweptSurface swept = new (Id, Contours * xfm, CS * xfm, Generatrix * xfm);
+      swept.CopyMeshFrom (this, xfm);
+      return swept;
+   }
 }
 #endregion
 
@@ -548,6 +590,13 @@ public sealed class E3Torus : E3CSSurface {
       double u = GetUAxis (ref pt);
       double v = Atan2 (pt.Z, pt.X - RMajor); if (v < 0) v += Lib.TwoPI;
       return new (u, v);
+   }
+
+   // Transform the entity by the given matrix
+   protected override E3Torus Xformed (Matrix3 xfm) {
+      E3Torus torus = new (Id, Contours * xfm, CS * xfm, RMajor * xfm, RMinor * xfm);
+      torus.CopyMeshFrom (this, xfm);
+      return torus; 
    }
 }
 #endregion
