@@ -40,7 +40,7 @@ public static partial class Lux {
       set {
          mUIScene?.Detach ();
          BackFacesPink = false;
-         mUIScene = value; mViewBound.OnNext (0); Redraw ();
+         mUIScene = value; mUIScene?.Attach (); mViewBound.OnNext (0); Redraw ();
          HW.CursorVisible = mUIScene?.CursorVisible ?? true;
       }
    }
@@ -86,15 +86,11 @@ public static partial class Lux {
    static bool mPickBufferValid;
 
    /// <summary>Render a Scene to an image (for example, to generate a thumbnail)</summary>
-   /// The 'keepAlive' parameter controls whether the scene you pass in is disposed of
-   /// after rendering the image, or continues to remain connected to the Lux engine
-   /// for continued rendering. For example, if you are rendering the UIScene to a
-   /// thumbnail, you will keep it alive. In most other case, you will ask for the scene
-   /// to be 'detached' after use.
-   public static DIBitmap RenderToImage (Scene scene, Vec2S size, DIBitmap.EFormat fmt, bool keepAlive = false) {
+   public static DIBitmap RenderToImage (Scene scene, Vec2S size, DIBitmap.EFormat fmt) {
       if (size.X % 4 != 0) throw new ArgumentException ("Lux.RenderToImage: image width must be a multiple of 4");
+      if (scene != Lux.UIScene) scene.Attach ();
       var dib =  (DIBitmap)Render (scene, size, ETarget.Image, fmt)!;
-      if (!keepAlive) scene.Detach ();
+      if (scene != Lux.UIScene) scene.Detach ();
       return dib;
    }
 
