@@ -167,6 +167,8 @@ public static partial class Lux {
       }
       mLastFrameTS = frameTS;
       mRendering = mIsPicking = false;
+      if (target == ETarget.Screen)
+         mUIScene?.RaiseRendered ();
       return obj;
 
       // Helpers ...........................................

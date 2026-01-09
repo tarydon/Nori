@@ -81,7 +81,7 @@ public class SceneManipulator {
    // When Ctrl+E is pressed, do a zoom-extents
    void OnKey (KeyInfo ki) {
       if (ki.Key == EKey.E && ki.Modifier == EKeyModifier.Control)
-         Lux.UIScene?.ZoomExtents ();
+         Lux.UIScene?.ZoomExtents (true);
    }
 
    // Start rotating when the left mouse button is clicked (if the current scene is 3D)
@@ -101,7 +101,7 @@ public class SceneManipulator {
 
    // Zoom in/out when the mouse wheel is rotated
    void OnMouseWheel (MouseWheelInfo mw)
-      => Lux.UIScene?.Zoom (mw.Position, mw.Delta < 0 ? 0.95 : (1 / 0.95));
+      => Lux.UIScene?.Zoom (mw.Position, mw.Delta < 0 ? 0.9 : (1 / 0.9), true);
 }
 #endregion
 

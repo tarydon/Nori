@@ -2,6 +2,10 @@
 // ╔═╦╦═╦╦╬╣ Scene.cs
 // ║║║║╬║╔╣║ Implements the Scene base class, Scene2 (for 2D) and Scene3 (for 3D) classes
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
+using System.Reactive;
+using System.Reactive.Linq;
+using System.Reactive.Subjects;
+
 namespace Nori;
 
 #region class Scene --------------------------------------------------------------------------------
@@ -26,6 +30,9 @@ public abstract class Scene {
    /// <summary>The Projection transform (transforms world coordinates to OpenGL clip space)</summary>
    internal Matrix3 ProjectionXfm { get { _ = WorldXfm; return mProjectionXfm; } }
    Matrix3 mProjectionXfm = Matrix3.Identity;
+
+   /// <summary>Observable that signals when rendering cycle is complete</summary>
+   public IObservable<Unit> RenderCompleted => mRenderCompletedSubj.AsObservable ();
 
    /// <summary>The root VNode of this Scene</summary>
    public VNode? Root {
@@ -80,22 +87,35 @@ public abstract class Scene {
    bool miAttached = false;
 
    /// <summary>Called when the scene is detached from the Lux renderer</summary>
-   internal void Detach () { Detached (); mRoot?.Deregister (); miAttached = false; }
+   internal void Detach () {
+      Detached ();
+      mRoot?.Deregister ();
+      mZoomAnimation?.Dispose (); mZoomAnimation = null;
+      miAttached = false;
+   }
+
+   // Called by the Lux renderer when a render cycle is complete
+   internal void RaiseRendered () => mRenderCompletedSubj.OnNext (Unit.Default);
 
    /// <summary>Override this to zoom in or out about the given position (in pixels)</summary>
-   public void Zoom (Vec2S pos, double factor) {
-      double oldZoom = mZoomFactor;
-      mZoomFactor = (oldZoom * factor).Clamp (0.01, 100);
-      factor = mZoomFactor / oldZoom;
+   public void Zoom (Vec2S pos, double factor, bool animate) {
+      if (animate) {
+         if (mZoomAnimation is SceneZoomAnima anim) anim.Continue (pos, factor);
+         else if (mZoomAnimation is null) mZoomAnimation = new SceneZoomAnima (this, pos, factor);
+      } else {
+         double oldZoom = mZoomFactor;
+         mZoomFactor = (oldZoom * factor).Clamp (0.01, 100);
+         factor = mZoomFactor / oldZoom;
 
-      var vp = Lux.Viewport;
-      Point3 mid = Midpoint * (WorldXfm * ProjectionXfm);
-      Point2 pmid = new (vp.X * (mid.X + 1) / 2, vp.Y * (1 - mid.Y) / 2);
-      Point2 pt = new (pos.X, pos.Y), pmouse2 = pmid + (pt - pmid) * factor;
-      Vector2 vshift = pt - pmouse2;
-      mPanVector += new Vector2 (2 * vshift.X / vp.X, -2 * vshift.Y / vp.Y);
+         var vp = Lux.Viewport;
+         Point3 mid = Midpoint * (WorldXfm * ProjectionXfm);
+         Point2 pmid = new (vp.X * (mid.X + 1) / 2, vp.Y * (1 - mid.Y) / 2);
+         Point2 pt = new (pos.X, pos.Y), pmouse2 = pmid + (pt - pmid) * factor;
+         Vector2 vshift = pt - pmouse2;
+         mPanVector += new Vector2 (2 * vshift.X / vp.X, -2 * vshift.Y / vp.Y);
 
-      XfmChanged ();
+         XfmChanged ();
+      }
    }
    protected double mZoomFactor = 1;
 
@@ -106,9 +126,32 @@ public abstract class Scene {
       Lux.mViewBound.OnNext (0); Lux.Redraw ();
    }
 
-   public virtual void ZoomExtents () {
-      mZoomFactor = 1; mPanVector = Vector2.Zero;
-      XfmChanged ();
+   public virtual void ZoomExtents (bool animate) {
+      if (animate) {
+         if (mZoomAnimation == null) {
+            // Snapshot the current thread context, zoom, pan and start a stopwatch
+            SynchronizationContext context = SynchronizationContext.Current!;
+            double startZoomFactor = mZoomFactor; Vector2 startPan = mPanVector;
+            Stopwatch sw = Stopwatch.StartNew ();
+
+            // In a continuous render update the zoom and pan based on elapsed time.
+            mZoomAnimation = RenderCompleted
+               .TakeWhile (_ => sw.ElapsedMilliseconds < AnimationTime && Lux.UIScene == this)
+               .Subscribe (_ => { // On tick interpolate the zoom and pan based on elapsed time
+                  double f = (sw.ElapsedMilliseconds / AnimationTime);
+                  mZoomFactor = startZoomFactor + f * (1.0 - startZoomFactor);
+                  mPanVector = startPan + (Vector2.Zero - startPan) * f;
+                  XfmChanged ();
+               }, () => { // On completion, ensure we are exactly at zoom-extents
+                  ZoomExtents (false);
+                  mZoomAnimation = null;
+               });
+            XfmChanged (); // To trigger redraw.
+         }
+      } else {
+         mZoomFactor = 1; mPanVector = Vector2.Zero;
+         XfmChanged ();
+      }
    }
 
    // Overrides ----------------------------------------------------------------
@@ -129,6 +172,54 @@ public abstract class Scene {
 
    /// <summary>Called when an object is picked</summary>
    public virtual void Picked (object obj) => Lib.Trace ($"Picked: {obj}");
+
+   // Embedded types -----------------------------------------------------------
+   // Creates the storyboard for a zoom in/out animation using mousewheel
+   class SceneZoomAnima : IDisposable {
+      /// <summary>Creates the animation object and starts the animation on the scene.</summary>
+      public SceneZoomAnima (Scene scene, Vec2S position, double factor) {
+         // Snapshot the scene's current zoom and pan and start a stopwatch
+         (mScene, mPosition, mStartZoomFactor, mTargetZoomFactor) = (scene, position, scene.mZoomFactor, scene.mZoomFactor * factor);
+         mSW = Stopwatch.StartNew ();
+
+         SynchronizationContext context = SynchronizationContext.Current!;
+         mAction = mScene.RenderCompleted
+            .TakeWhile (_ => mSW.ElapsedMilliseconds < AnimationTime && Lux.UIScene == mScene) // Take only while elapsed is less than animation duration.
+            .Subscribe ((_) => { // On tick
+               double target = mStartZoomFactor + (mSW.ElapsedMilliseconds / AnimationTime) * (mTargetZoomFactor - mStartZoomFactor);
+               mScene.Zoom (mPosition, target / mScene.mZoomFactor, false);
+            }, () => { // On completion
+               mScene.Zoom (mPosition, mTargetZoomFactor / mScene.mZoomFactor, false);
+               mScene.mZoomAnimation = null; // Set it to null on owner.
+            });
+         mScene.XfmChanged (); // To trigger redraw.
+      }
+
+      /// <summary>Call this to continue zoom animation when user zoomed even while the previous zoom
+      /// operation was still animating.</summary>
+      public void Continue (Vec2S position, double factor) {
+         (mPosition, mStartZoomFactor) = (position, mScene.mZoomFactor);
+         mTargetZoomFactor *= factor;
+         mSW.Restart ();
+      }
+
+      public void Dispose () {
+         mAction.Dispose ();
+         if (mScene.mZoomAnimation == this)
+            mScene.mZoomAnimation = null;
+      }
+
+      readonly Scene mScene;
+      readonly Stopwatch mSW;
+      readonly IDisposable mAction;
+      double mStartZoomFactor, mTargetZoomFactor;
+      Vec2S mPosition;
+   }
+
+   // Private data -------------------------------------------------------------
+   IDisposable? mZoomAnimation = null;
+   Subject<Unit> mRenderCompletedSubj = new ();
+   public const double AnimationTime = 200; // milliseconds
 }
 #endregion
 
