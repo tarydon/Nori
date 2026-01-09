@@ -14,5 +14,6 @@ void main () {
    int offset = y * gCellSize.x + x + gTexOffset;
    ivec2 st = ivec2 (offset % 8192, offset / 8192);
    float r = texelFetch (FontTexture, st).r;
+   if (r < 0.001) discard;
    FragColor = vec4 (DrawColor.rgb, r);
 }

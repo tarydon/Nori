@@ -11,34 +11,35 @@ class MinSphereScene : Scene3 {
       BgrdColor = Color4.Gray (96);
       Bound = new (0, 0, 0, 1000, 1000, 1000);
       Lib.Tracer = TraceVN.Print; Random R = new ();
-      Build ([.. GeneratePoints (R, 500, Bound.Width)]);
+      Build ([.. GeneratePoints (R, 10000, Bound.Width)]);
    }
 
    // Build the scene with the minimum enclosing sphere for given points.
    void Build (Point3[] pts) {
       TraceVN.It.Clear ();
+      // Compute minimum enclosing sphere
       Stopwatch sw = Stopwatch.StartNew (); sw.Start ();
-      var s = MinSphere.From (pts); // Compute minimum enclosing sphere
+      var s = MinSphere.From (pts);
       sw.Stop ();
       (Point3 Pt, int N)[] ptlie = [.. pts.Select (pt => (pt, d: pt.DistTo (s.Center))).Select (x => (x.pt, x.d.EQ (s.Radius) ? 0 : x.d < s.Radius ? 1 : 2))];
       MeshVN sphere = new (Mesh3.Sphere (s.Center, s.Radius)) { Shading = EShadeMode.Glass };
       List<VNode> nodes = [new AxesVN (), TraceVN.It, sphere, new PointsVN ([s.Center], (Color4.Magenta, 6))];
       nodes.AddRange (ptlie.GroupBy (x => x.N).Select (g => new PointsVN (g.Select (x => x.Pt), Styles[g.Key])));
-      Lib.Trace ($"Min-Sphere, Radius: {S(s.Radius)}, Center: {S(s.Center)}");
+      Lib.Trace ($"Min-Sphere, Radius: {S (s.Radius)}, Center: {S (s.Center)}");
       Lib.Trace ($"Points: {pts.Length}, On Sphere: {ptlie.Count (x => x.N == 0)}, Elapsed: {S (sw.Elapsed)}");
-      // Compute approximate sphere by Ritter's algorithm for comparison
+      // Compute approximate enclosing sphere by Ritter's algorithm for comparison
       sw.Restart ();
       var s2 = MinSphere.FromQuickApprox (pts);
       sw.Stop ();
-      Lib.Trace ($"Approx-Sphere, Radius: {S(s2.Radius)}, Center: {S(s2.Center)}");
+      Lib.Trace ($"Approx-Sphere, Radius: {S (s2.Radius)}, Center: {S (s2.Center)}");
       Lib.Trace ($"Deviation: {((s2.Radius - s.Radius) + (s2.Center - s.Center).Length) / s.Radius:P2}, Elapsed: {S (sw.Elapsed)}");
       Lib.Trace ($"");
-      // OBB
+      // OBB demo
       sw.Restart ();
       var obb = OBB.From (pts);
       sw.Stop ();
       nodes.Add (new BoxVN (obb));
-      Bound3 aabb = new (pts); 
+      Bound3 aabb = new (pts);
       var vol = obb.Volume;
       var abvol = aabb.Width * aabb.Height * aabb.Depth;
       var svol = 4 / 3 * Lib.PI * Math.Pow (s.Radius, 3);
@@ -46,7 +47,6 @@ class MinSphereScene : Scene3 {
       Lib.Trace ("Press 'Min. Sphere' again to regenerate");
       Root = new GroupVN (nodes);
    }
-
    readonly static (Color4 Clr, float Size)[] Styles = [(Color4.Green, 8), (Color4.White, 3), (Color4.Red, 8)];
 
    // Generate random points within a randomly rotated cuboid of maximum size 'size'.
@@ -74,8 +74,7 @@ class MinSphereScene : Scene3 {
    static string S (Vector3 v) => $"<{v.X:F1},{v.Y:F1},{v.Z:F1}>";
    static string S (TimeSpan ts) => $"{ts.TotalMicroseconds:F0} us";
 
-
-
+   // View Nodes
    // Draw axis lines.
    class AxesVN : VNode {
       public override void SetAttributes () => Lux.Color = Color4.White;
@@ -86,26 +85,25 @@ class MinSphereScene : Scene3 {
    // Draw OBB.
    class BoxVN (OBB box) : VNode {
       readonly OBB Box = box;
-      readonly List<Vec3F> Pts = [];
+      Vec3F[] Pts = [];
       readonly Matrix3 Xfm = Matrix3.To (box.CS);
+
       public override void SetAttributes () =>
          (Lux.Color, Lux.Xfm, Lux.LineWidth) = (Color4.White, Xfm, 2);
 
       public override void Draw () {
-         if (Pts.Count > 0) {
-            Lux.Lines (Pts.AsSpan ());
-            return;
-         }
-         List<Vec3F> corners = [];
-         var v = (Vec3F)Box.Extent;
-         for (int dx = -1; dx <= 1; dx += 2)
-            for (int dy = -1; dy <= 1; dy += 2)
-               for (int dz = -1; dz <= 1; dz += 2)
-                  corners.Add (new (v.X * dx, v.Y * dy, v.Z * dz));
+         if (Pts.Length == 0) {
+            List<Vec3F> corners = [];
+            var v = (Vec3F)Box.Extent;
+            for (int dx = -1; dx <= 1; dx += 2)
+               for (int dy = -1; dy <= 1; dy += 2)
+                  for (int dz = -1; dz <= 1; dz += 2)
+                     corners.Add (new (v.X * dx, v.Y * dy, v.Z * dz));
 
-         // Fill box edges with center at the origin
-         foreach (var e in Edges) Pts.AddRange (corners[e[0]],  corners[e[1]]);
-         Lux.Lines (Pts.AsSpan ());
+            // Fill box edges with center at the origin
+            Pts = [.. Edges.SelectMany (e => e.Select (n => corners[n]))];
+         }
+         Lux.Lines (Pts);
       }
 
       readonly static int[][] Edges = 

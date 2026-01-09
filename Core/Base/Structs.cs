@@ -182,8 +182,11 @@ public readonly struct CoordSystem {
       => new (cs.Org + vec, cs.VecX, cs.VecY);
 
    /// <summary>Multiply a CoordSystem by a transformation matrix</summary>
-   public static CoordSystem operator * (CoordSystem cs, Matrix3 xfm)
-      => new (cs.Org * xfm, cs.VecX * xfm, cs.VecY * xfm);
+   public static CoordSystem operator * (CoordSystem cs, Matrix3 xfm) {
+      Point3 org = cs.Org * xfm; Vector3 vecx = cs.VecX * xfm, vecy = cs.VecY * xfm;
+      if (xfm.HasScaling) { vecx = vecx.Normalized (); vecy = vecy.Normalized (); }
+      return new (org, vecx, vecy);
+   }
 
    public override string ToString ()
       => $"CoordSystem:{Org.R6 ()},{VecX.R6 ()},{VecY.R6 ()}";

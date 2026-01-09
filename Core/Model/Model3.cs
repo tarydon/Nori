@@ -39,6 +39,10 @@ public class Model3 {
    }
    Dictionary<E3Surface, List<E3Surface>>? _neighbors;
 
+   // Operators ----------------------------------------------------------------
+   /// <summary>Returns a copy of the entire model transformed by the given matrix</summary>
+   public static Model3 operator * (Model3 model, Matrix3 xfm) => new (model, xfm);
+
    // Implementation -----------------------------------------------------------
    // Handles changes in the Ents list, and keeps the Bound up-to-date
    void OnEntsChanged (ListChange ch) {
@@ -55,6 +59,12 @@ public class Model3 {
             break;
          default: mBound = new (); break;
       }
+   }
+
+   // Constructor used by transform operator
+   Model3 (Model3 src, Matrix3 xfm) {
+      foreach (var ent in src.Ents) mEnts.Add (ent * xfm);
+      mEnts.Subscribe (OnEntsChanged);
    }
 }
 #endregion

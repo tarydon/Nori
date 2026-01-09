@@ -15,6 +15,9 @@ public static class Extensions {
    /// <summary>Interpolates using a given lie f between two doubles a and b</summary>
    public static double Along (this double f, double a, double b)
       => a + (b - a) * f;
+   /// <summary>Interpolates using a given lie f within a given Bound1</summary>
+   public static double Along (this double f, Bound1 b)
+      => b.Min + b.Length * f;
    /// <summary>Interpolates using a given lie f between two Point2 a and b</summary>
    public static Point2 Along (this double f, Point2 a, Point2 b)
       => new (f.Along (a.X, b.X), f.Along (a.Y, b.Y));
@@ -143,6 +146,12 @@ public static class Extensions {
    /// <summary>Returns a random bool</summary>
    public static bool NextBool (this Random r) => r.Next (10000) < 5000;
 
+   /// <summary>Returns true if NONE of the elements in the sequence match the given predicate</summary>
+   public static bool None<T> (this IEnumerable<T> seq, Predicate<T> pred) {
+      foreach (var elem in seq) if (pred (elem)) return false;
+      return true;
+   }
+
    /// <summary>Returns the non-null elements from a sequence</summary>
    public static IEnumerable<T> NonNull<T> (this IEnumerable<T?> seq) where T: class {
       foreach (var elem in seq)
@@ -204,8 +213,7 @@ public static class Extensions {
 
    /// <summary>Reads all the bytes from a stream in a Zip file</summary>
    public static byte[] ReadAllBytes (this ZipArchive zar, string name) {
-      var entry = zar.GetEntry (name);
-      if (entry == null) throw new Exception ($"Stream {name} not found in ZipArchive");
+      var entry = zar.GetEntry (name) ?? throw new Exception ($"Stream {name} not found in ZipArchive");
       using (var stm = zar.Open (name)) {
          byte[] data = new byte[entry.Length];
          stm.ReadExactly (data);
@@ -317,7 +325,7 @@ public static class Extensions {
       if (int.TryParse (s, out int n)) return n;
       if (s.IsBlank ()) return 0;
       s = s.Trim ();
-      if (char.IsDigit (s[0])) return int.Parse (new string (s.TakeWhile (char.IsDigit).ToArray ()));
+      if (char.IsDigit (s[0])) return int.Parse (new string ([.. s.TakeWhile (char.IsDigit)]));
       return 0;
    }
 
@@ -333,10 +341,16 @@ public static class Extensions {
 #region class Extensions ---------------------------------------------------------------------------
 /// <summary>Extension methods, properties on various standard types</summary>
 public static class Extensions2 {
+   // Extensions on double -----------------------------------------------------
    // Extension methods on double
    extension(double f) {
       /// <summary>Returns true if a double is nan - easier to use than double.IsNaN(f)</summary>
       public bool IsNan => double.IsNaN (f);
+
+      /// <summary>Transforms a distance by the given transform</summary>
+      /// Distance is updated only if the matrix has a scaling component
+      public static double operator * (double a, Matrix3 xfm)
+         => xfm.HasScaling ? a * xfm.ScaleFactor : a;
    }
 
    extension(ref double f) {
@@ -344,7 +358,13 @@ public static class Extensions2 {
       public double Cached (Func<double> compute) {
          if (double.IsNaN (f)) f = compute ();
          return f; 
-      }         
+      }
+   }
+
+   // Extensions on ImmutableArray<Contour> ------------------------------------
+   extension(ImmutableArray<Contour3> contours) {
+      public static ImmutableArray<Contour3> operator * (ImmutableArray<Contour3> cons, Matrix3 xfm) 
+         => [.. cons.Select (a => a * xfm)];
    }
 }
 #endregion
