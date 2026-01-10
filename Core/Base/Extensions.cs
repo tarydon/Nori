@@ -24,6 +24,9 @@ public static class Extensions {
    /// <summary>Interpolates using a given lie f between two Point3 a and b</summary>
    public static Point3 Along (this double f, Point3 a, Point3 b)
       => new (f.Along (a.X, b.X), f.Along (a.Y, b.Y), f.Along (a.Z, b.Z));
+   /// <summary>Interpolates using a given lie between two Point3f a and b</summary>
+   public static Point3f Along (this double f, Point3f a, Point3f b)
+      => new (f.Along (a.X, b.X), f.Along (a.Y, b.Y), f.Along (a.Z, b.Z));
 
    /// <summary>Gets the underlying T array for an immutablearray</summary>
    public static T[] AsArray<T> (this ImmutableArray<T> iarray)
@@ -72,6 +75,8 @@ public static class Extensions {
    public static bool EQ (this double a, double b, double epsilon) => Abs (a - b) < epsilon;
    /// <summary>Compare two floats for equality to within 1e-5</summary>
    public static bool EQ (this float a, float b) => Abs (a - b) < 1e-5;
+   /// <summary>Compare two floats for equality with the given epsilon</summary>
+   public static bool EQ (this float a, float b, float epsilon) => Abs (a - b) < epsilon;
    /// <summary>Compare two halfs for equality to within 1e-4</summary>
    public static bool EQ (this Half a, Half b) => Abs ((float)a - (float)b) < 1e-3;
 
@@ -270,6 +275,8 @@ public static class Extensions {
    /// For example, <tt>13.532.Round(0.2)</tt> will return 13.6, since that is the closest multiple
    /// of 0.2 near 13.532.
    public static double Round (this double a, double leastcount) => leastcount * Math.Round (a / leastcount);
+   /// <summary>Rounds a float to be a multiple of the given least-count</summary>
+   public static float Round (this float a, float leastcount) => leastcount * (float)Math.Round (a / leastcount);
 
    /// <summary>Rounds up the given integer to the next multiple of the given chunk size</summary>
    public static int RoundUp (this int n, int chunk) => chunk * ((n + chunk - 1) / chunk);
