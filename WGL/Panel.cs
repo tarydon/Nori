@@ -10,7 +10,7 @@ using WControl = System.Windows.Controls.UserControl;
 namespace Nori;
 
 public static class WinGL {
-   public static WControl Create (Action onReady, Action<int, int> onPaint, bool createHost) {
+   public static WControl Create (Action onReady, Action<int, int> onPaint, Action onRendered, bool createHost) {
       if (createHost) {
          // If this is specified, we must also create a floating 'host window' to house
          // the LuxPanel. This is used when Flux is running in some console mode, but still
@@ -26,12 +26,13 @@ public static class WinGL {
             while (!mReady) sHost.Dispatcher.Invoke (DispatcherPriority.Background, () => { });
          }
       }
-      OnReady = onReady; OnPaint = onPaint;
+      OnReady = onReady; OnPaint = onPaint; OnRendered = onRendered;
       return Panel.It;
    }
 
    internal static Action<int, int>? OnPaint;
    internal static Action? OnReady;
+   internal static Action? OnRendered;
    internal static bool mReady;
    static Window? sHost;
 }
@@ -160,6 +161,7 @@ class Surface : UserControl {
       GL.Viewport (0, 0, Width, Height);
       WinGL.OnPaint?.Invoke (Width, Height);
       GL.SwapBuffers (mDC);
+      WinGL.OnRendered?.Invoke ();
    }
 
    // Private data -------------------------------------------------------------

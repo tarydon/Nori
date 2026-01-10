@@ -68,10 +68,11 @@ public static partial class Lux {
    // Methods ------------------------------------------------------------------
    /// <summary>Creates the Lux rendering panel</summary>
    public static object CreatePanel (bool createHost = false) {
-      return WinGL.Create (OnReady, OnPaint, createHost);
+      return WinGL.Create (OnReady, OnPaint, OnRendered, createHost);
 
       static void OnReady () { mReady = true; mOnReady.OnNext (0); }
       static void OnPaint (int x, int y) => Render (UIScene, new Vec2S (x, y), ETarget.Screen, DIBitmap.EFormat.Unknown);
+      static void OnRendered () => UIScene?.RaiseRendered ();
    }
 
    public static void DumpStats () {
@@ -167,8 +168,6 @@ public static partial class Lux {
       }
       mLastFrameTS = frameTS;
       mRendering = mIsPicking = false;
-      if (target == ETarget.Screen)
-         mUIScene?.RaiseRendered ();
       return obj;
 
       // Helpers ...........................................

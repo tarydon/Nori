@@ -130,7 +130,6 @@ public abstract class Scene {
       if (animate) {
          if (mZoomAnimation == null) {
             // Snapshot the current thread context, zoom, pan and start a stopwatch
-            SynchronizationContext context = SynchronizationContext.Current!;
             double startZoomFactor = mZoomFactor; Vector2 startPan = mPanVector;
             Stopwatch sw = Stopwatch.StartNew ();
 
@@ -182,7 +181,6 @@ public abstract class Scene {
          (mScene, mPosition, mStartZoomFactor, mTargetZoomFactor) = (scene, position, scene.mZoomFactor, scene.mZoomFactor * factor);
          mSW = Stopwatch.StartNew ();
 
-         SynchronizationContext context = SynchronizationContext.Current!;
          mAction = mScene.RenderCompleted
             .TakeWhile (_ => mSW.ElapsedMilliseconds < AnimationTime && Lux.UIScene == mScene) // Take only while elapsed is less than animation duration.
             .Subscribe ((_) => { // On tick
