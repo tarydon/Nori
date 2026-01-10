@@ -9,6 +9,7 @@ class IntMeshPlaneScene : Scene3 {
       List<Mesh3.Node> nodes = [];
       List<int> tris = [], wires = [];
       foreach (var ent in model.Ents.OfType<E3Surface> ()) {
+         if (ent.Id == 1) ent.IsSelected = true;
          var mesh = ent.Mesh;
          meshes.Add (mesh);
          int n = nodes.Count; 
@@ -20,11 +21,15 @@ class IntMeshPlaneScene : Scene3 {
 
       Lib.Tracer = TraceVN.Print;      
       Mesh3 fullmesh = new ([.. nodes], [.. tris], [.. wires]);
-      List<VNode> vnodes = [new MeshVN (fullmesh) { Color = Color4.White, Shading = EShadeMode.Glass }, TraceVN.It];
+      List<VNode> vnodes = [
+         new Model3VN (model),
+         // new MeshVN (fullmesh) { Color = Color4.White, Shading = EShadeMode.Phong }, 
+         TraceVN.It
+      ];
       Bound = fullmesh.Bound;
 
       // AddIntersections ([fullmesh], Bound, vnodes, 50);
-      AddIntersections (meshes, Bound, vnodes, 1);
+      AddIntersections (meshes, Bound, vnodes, 25);
       BgrdColor = new Color4 (32, 64, 96);
       Root = new GroupVN (vnodes);
    }
@@ -40,6 +45,7 @@ class IntMeshPlaneScene : Scene3 {
             vnodes.Add (new Curve3VN (poly));
             ends.Add ((Vec3F)poly.Start); ends.Add ((Vec3F)poly.End);
          }
+         break;
 
          double y = (i / 100.0).Along (Bound.Y.Min, Bound.Y.Max);
          pdef = new (new (0, y, 0), Vector3.YAxis);

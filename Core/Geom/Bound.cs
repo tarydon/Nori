@@ -293,8 +293,13 @@ public readonly struct Bound3 : IEQuable<Bound3> {
       }
    }
 
+   /// <summary>
+   /// The diagonal vector of this Bound3
+   /// </summary>
+   public Vector3 DiagVector => new (X.Length, Y.Length, Z.Length);
+
    // Methods ------------------------------------------------------------------
-   /// <summary>Check if a Bound3 contains a given 3D point</summary>
+      /// <summary>Check if a Bound3 contains a given 3D point</summary>
    public bool Contains (Point3 pt) => X.Contains (pt.X) && Y.Contains (pt.Y) && Z.Contains (pt.Z);
 
    /// <summary>Checks if a Bound3 contains another bound (exact overlap is treated as containment)</summary>

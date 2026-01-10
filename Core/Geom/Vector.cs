@@ -150,6 +150,11 @@ public readonly struct Vector3 : IEQuable<Vector3> {
    /// CosineTo is considerably faster, use that if that value is adequate
    public double AngleTo (Vector3 v2) => Lib.Acos (CosineTo (v2));
 
+   /// <summary>
+   /// A vector3 whose components are the absolute values 
+   /// </summary>
+   public Vector3 Abs () => new (Math.Abs (X), Math.Abs (Y), Math.Abs (Z));
+
    /// <summary>Returns the cosine of the angle between this Vector3 and another</summary>
    public double CosineTo (Vector3 v2) {
       double n = X * v2.X + Y * v2.Y + Z * v2.Z, d = Length * v2.Length;
@@ -179,7 +184,7 @@ public readonly struct Vector3 : IEQuable<Vector3> {
 
    /// <summary>Normalizes this vector and returns it</summary>
    public Vector3 Normalized () {
-      double f = Length; if (Abs (f) < 1e-12) return XAxis;
+      double f = Length; if (Math.Abs (f) < 1e-12) return XAxis;
       return new (X / f, Y / f, Z / f);
    }
 

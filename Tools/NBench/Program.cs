@@ -37,7 +37,7 @@ public class Tester {
    [Benchmark]
    public void MeshSlice () {
       int step = 1;
-      var pmi = new MeshSlicer (mMeshes);
+      var pmi = new MeshSlicer ([..mMeshes]);
       for (int i = step; i < 100; i += step) {
          double x = (i / 100.0).Along (mBound.X);
          PlaneDef pdef = new (new (x, 0, 0), Vector3.XAxis);
@@ -75,7 +75,7 @@ public class Tester {
 
    public void Test2 () {
       int step = 25;
-      var pmi = new MeshSlicer (mMeshes);
+      var pmi = new MeshSlicer ([..mMeshes]);
       var sb = new StringBuilder ();
       for (int i = step; i < 100; i += step) {
          double x = (i / 100.0).Along (mBound.X);
@@ -98,8 +98,6 @@ public class Tester {
 
 static class Program {
    public static void Main () {
-      // BenchmarkRunner.Run<Tester> ();
-
       var t = new Tester ();
       t.Test1 ();
       t.Test2 ();
@@ -107,5 +105,9 @@ static class Program {
          Console.WriteLine ("FILES DIFFERENT!");
       else
          Console.WriteLine ("Files same");
+   }
+
+   public static void Main1 () {
+      BenchmarkRunner.Run<Tester> ();
    }
 }
