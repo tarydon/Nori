@@ -550,7 +550,7 @@ class TMisc {
    public void Test17 () {
       var mesh = new STLReader (NT.File ("Misc/cali-bee.STL")).BuildMesh ();
       var plane = new PlaneDef (Point3.Zero, Vector3.YAxis);
-      var curves = mesh.ComputePlaneIntersection (plane);
+      var curves = new PlaneMeshIntersector ([mesh]).Compute (plane);
       CurlWriter.Save (curves, NT.TmpCurl);
       Assert.TextFilesEqual ("Misc/Curves.curl", NT.TmpCurl);
    }

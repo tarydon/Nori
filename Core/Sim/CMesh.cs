@@ -35,10 +35,10 @@ public class CMesh {
    /// <summary>Returns the inverse transform (from CMesh position to World)</summary>
    [DebuggerBrowsable (DebuggerBrowsableState.Never)]
    public Matrix3 InvXfm => mInvXfm ??= Xfm.GetInverse ();
-   [DebuggerBrowsable (DebuggerBrowsableState.Never)]
    Matrix3? mInvXfm;
 
    // Methods ------------------------------------------------------------------
+   /// <summary>Dump method used for testing a CMesh</summary>
    public string Dump () {
       StringBuilder S = new ();
       S.AppendLine ("Points:");
@@ -111,7 +111,7 @@ public class CMesh {
    }
 
    #region class CMesh.Builder ---------------------------------------------------------------------
-   /// <summary>Builds a</summary>
+   /// <summary>Builds a CMesh</summary>
    public class Builder {
       // Interface -------------------------------------------------------------
       /// <summary>Build a collision mesh from a Mesh3</summary>
@@ -122,12 +122,14 @@ public class CMesh {
       }
 
       // Implementation --------------------------------------------------------
+      // Helper used by the constructor
       void Add (Mesh3 mesh) {
          int n = mPts.Count;
          mPts.AddRange (mesh.Vertex.Select (a => a.Pos));
          mIndex.AddRange (mesh.Triangle.Select (a => a + n));
       }
 
+      // Implements the actual building of the mesh
       CMesh Build () {
          // This is the number of triangles
          int tris = mIndex.Count / 3;
@@ -262,6 +264,10 @@ public class CMesh {
          }
       }
 
+      // Called initially to reset the CMesh.Builder before each cycle:
+      //   Reset - AddMeshes - Build
+      // We have this Reset method so the same CMesh.Builder can be used repeatedly (there is
+      // one instance of this for each thread)
       void Reset () {
          mPts.Clear (); mIndex.Clear (); mPermute.Clear ();
          mTriCen.Clear (); mTriBound.Clear ();
