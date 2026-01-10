@@ -272,6 +272,11 @@ public readonly struct PlaneDef {
    /// <summary>Given a point, returns the signed distance (+ve means to the left, -ve means to the right)</summary>
    public double SignedDist (Point3 pt) => A * pt.X + B * pt.Y + C * pt.Z + D;
 
+   /// <summary>
+   /// Returns the signed distance of a Point3f from a PlaneDef
+   /// </summary>
+   public double SignedDist (Point3f pt) => A * pt.X + B * pt.Y + C * pt.Z + D;
+
    public override string ToString ()
       => $"PlaneDef:{A.R6 ()},{B.R6 ()},{C.R6 ()},{D.R6 ()}";
 }

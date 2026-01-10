@@ -24,7 +24,7 @@ class IntMeshPlaneScene : Scene3 {
       Bound = fullmesh.Bound;
 
       // AddIntersections ([fullmesh], Bound, vnodes, 50);
-      AddIntersections (meshes, Bound, vnodes, 50);
+      AddIntersections (meshes, Bound, vnodes, 1);
       BgrdColor = new Color4 (32, 64, 96);
       Root = new GroupVN (vnodes);
    }

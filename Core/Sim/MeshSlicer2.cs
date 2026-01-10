@@ -1,12 +1,11 @@
 ﻿namespace Nori;
 using static Math;
 
-#region class PlaneMeshIntersector -----------------------------------------------------------------
 /// <summary>Provides plane/mesh intersection functionality for a specific mesh.</summary>
 /// This class computes polygonal intersection loops between a mesh and a plane.
 /// Create an instance with a mesh collection and call `Compute` repeatedly to intersect
 /// multiple planes against the same mesh set.
-public class PlaneMeshIntersector (IEnumerable<Mesh3> meshes) {
+public class MeshSlicer (IEnumerable<Mesh3> meshes) {
    /// <summary>Computes all mesh/plane intersection polylines for the configured mesh set.</summary>
    /// For each input mesh whose bound intersects the plane:
    /// - Reuses a per-instance distance buffer sized to the mesh's vertex count.
@@ -305,4 +304,3 @@ public class PlaneMeshIntersector (IEnumerable<Mesh3> meshes) {
    readonly List<List<Point3f>> mOutChains = [];
    readonly List<List<Point3f>> mChainPool = [];
 }
-#endregion PlaneMeshIntersector

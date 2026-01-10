@@ -11,6 +11,7 @@
     <Project Path="Tools/Cover/Nori.Cover.csproj" />
     <Project Path="Tools/Doc/Nori.Doc.csproj" />
     <Project Path="Tools/Generate/Nori.Gen.csproj" />
+    <Project Path="Tools/NBench/NBench.csproj" Id="e500d487-82d7-40c6-8db0-e8e49ccf910e" />
   </Folder>
   <Project Path="Core/Nori.Core.csproj" />
   <Project Path="Lux/Nori.Lux.csproj" />
