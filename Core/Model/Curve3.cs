@@ -57,11 +57,14 @@ public abstract class Curve3 {
    public abstract void Discretize (List<Point3> pts, double tolerance, double maxAngStep);
 
    /// <summary>Returns a copy of this curve transformed by the given transform</summary>
-   public abstract Curve3 Xformed (Matrix3 xfm);
+   public static Curve3 operator * (Curve3 curve, Matrix3 xfm) => curve.Xformed (xfm);
 
    // Implementation -----------------------------------------------------------
    public override string ToString ()
       => $"{GetType ().Name} PairID={PairId}";
+
+   // Override this in each derived Curve3
+   protected abstract Curve3 Xformed (Matrix3 xfm);
 }
 #endregion
 
@@ -102,12 +105,13 @@ public sealed class Line3 : Curve3 {
 
    public override double GetT (Point3 pt) => pt.GetLieOn (mStart, mEnd);
 
-   /// <summary>Transformed copy of this line</summary>
-   public override Line3 Xformed (Matrix3 xfm) => new (PairId, mStart * xfm, mEnd * xfm);
-
    // Implementation -----------------------------------------------------------
    public override string ToString ()
       => $"{base.ToString ()} Len={Start.DistTo (End).Round (2)}";
+
+   /// <summary>Transformed copy of this line</summary>
+   protected override Line3 Xformed (Matrix3 xfm) 
+      => new (PairId, mStart * xfm, mEnd * xfm);
 }
 #endregion
 
@@ -115,6 +119,7 @@ public sealed class Line3 : Curve3 {
 public sealed class Ellipse3 : Curve3 {
    Ellipse3 () { }
    public Ellipse3 (int pairId, CoordSystem cs, double xRadius, double yRadius, double ang0, double ang1) : base (pairId) {
+      CS = cs; XRadius = xRadius; YRadius = yRadius; Ang0 = ang0; Ang1 = ang1;
       Debug.Assert (Ang1 >= Ang0);
    }
 
@@ -155,7 +160,7 @@ public sealed class Ellipse3 : Curve3 {
       for (int i = 0; i < n; i++) pts.Add (GetPoint ((double)i / n));
    }
 
-   public override Ellipse3 Xformed (Matrix3 xfm) 
+   protected override Ellipse3 Xformed (Matrix3 xfm) 
       => new (PairId, CS * xfm, XRadius, YRadius, Ang0, Ang1);
 }
 #endregion
@@ -236,8 +241,8 @@ public class Arc3 : Curve3 {
    }
    Matrix3? _from;
 
-   public override Arc3 Xformed (Matrix3 xfm)
-      => new (PairId, CS * xfm, Radius, AngSpan);
+   protected override Arc3 Xformed (Matrix3 xfm)
+      => new (PairId, CS * xfm, Radius * xfm, AngSpan);
 
    // Implementation -----------------------------------------------------------
    public override string ToString ()
@@ -377,7 +382,7 @@ public class NurbsCurve3 : Curve3 {
    public override double GetT (Point3 pt) => (_unlofter = new CurveUnlofter (this)).GetT (pt);
    CurveUnlofter? _unlofter;
 
-   public override NurbsCurve3 Xformed (Matrix3 xfm)
+   protected override NurbsCurve3 Xformed (Matrix3 xfm)
       => new (PairId, [.. Ctrl.Select (a => a * xfm)], mImp.Knot, Weight);
 
    // Nested types -------------------------------------------------------------
@@ -432,7 +437,7 @@ public class Polyline3 : Curve3 {
 
    public override bool IsOnXZPlane => Pts.All (a => a.Y.IsZero (Lib.Delta));
 
-   public override Polyline3 Xformed (Matrix3 xfm)
+   protected override Polyline3 Xformed (Matrix3 xfm)
       => new (PairId, [.. Pts.Select (a => a * xfm)]);
 
    // Implementation -----------------------------------------------------------
@@ -464,7 +469,7 @@ public class Contour3 {
       => mCurves.ForEach (e => e.Discretize (pts, tolerance, maxAngStep));
 
    /// <summary>Project the Contour3 into a</summary>
-   public Poly Flatten (CoordSystem cs, double tolerance, double maxAngStep) {
+   public Poly Flatten (CoordSystem cs) {
       var pb = PolyBuilder.It;
       var xfm = Matrix3.From (cs);
       foreach (var edge in mCurves) {
@@ -481,6 +486,9 @@ public class Contour3 {
                } else
                   pb.Arc (start, center, flags);
                break;
+            case Polyline3 poly:
+               foreach (var pt in poly.Pts) pb.Line (Xfm (pt));
+               break;
             default:
                throw new BadCaseException (edge);
          }
@@ -493,5 +501,10 @@ public class Contour3 {
          return new (pt.X, pt.Y);
       }
    }
+
+   // Operators ------------------------------------------------------------------------------------
+   /// <summary>Transform the Contour3 by the given transform</summary>
+   public static Contour3 operator * (Contour3 con, Matrix3 xfm)
+      => new ([.. con.Curves.Select (a => a * xfm)]);
 }
 #endregion

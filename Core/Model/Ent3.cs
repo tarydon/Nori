@@ -75,9 +75,23 @@ public abstract partial class Ent3 {
    }
 
    /// <summary>Should this entity be rendered using a translucent (glass) shader</summary>
-   public bool IsTranslucent {
+   public bool IsTranslucent { 
       get => Get (E3Flags.Translucent);
-      set { if (Set (E3Flags.Translucent, value)) Notify (EProp.Translucency); }
+      set { if (Set (E3Flags.Translucent, value)) Notify (EProp.Geometry); }
+   }
+
+   /// <summary>Don't draw stencil lines around this model's wireframes</summary>
+   public bool NoStencil { 
+      get => Get (E3Flags.NoStencil);
+      set { if (Set (E3Flags.NoStencil, value)) Notify (EProp.Geometry); }
+   }
+
+   // Operators ----------------------------------------------------------------
+   /// <summary>Returns a transformed copy of the Ent3, given the transformation matrix</summary>
+   public static Ent3 operator * (Ent3 ent, Matrix3 xfm) {
+      var newEnt = ent.Xformed (xfm);
+      newEnt.mFlags = ent.mFlags;
+      return newEnt;
    }
 
    // Protected ----------------------------------------------------------------
@@ -92,6 +106,9 @@ public abstract partial class Ent3 {
       return mFlags != old;
    }
 
+   /// <summary>Derived classes override this to do the actual transformation</summary>
+   protected abstract Ent3 Xformed (Matrix3 xfm);
+
    // Implementation -----------------------------------------------------------
    public override string ToString () => $"{GetType ().Name} #{Id}";
 }
@@ -102,7 +119,7 @@ public abstract partial class Ent3 {
 [Flags]
 public enum E3Flags {
    Selected = 0x1, Translucent = 0x2, FlipNormal = 0x4, GeneratrixFlat = 0x8,
-   ULinear = 0x10, VLinear = 0x20,
+   ULinear = 0x10, VLinear = 0x20, NoStencil = 0x40
 }
 #endregion
 
@@ -129,6 +146,9 @@ public sealed class E3Curve : Ent3 {
       pts.Add (Curve.End);
       return new (pts);
    }
+
+   // Transform the E3Curve by the given transform
+   protected override Ent3 Xformed (Matrix3 xfm) => new E3Curve (Curve * xfm);
 }
 #endregion
 
@@ -182,14 +202,9 @@ public abstract class E3Surface : Ent3 {
          _mesh = value;
          if (_mesh.Triangle.Length > 0) {
             var n1 = _mesh.Vertex[_mesh.Triangle[0]];
-            var n2 = _mesh.Vertex[_mesh.Triangle[1]];
-            var n3 = _mesh.Vertex[_mesh.Triangle[2]];
-            Vector3 vec1 = (Vector3)n1.Vec + (Vector3)n2.Vec + (Vector3)n3.Vec;
-            Vector3 vec2 = ((Point3)n2.Pos - (Point3)n1.Pos) * ((Point3)n3.Pos - (Point3)n2.Pos);
-            
             Point2 uv = GetUV ((Point3)n1.Pos);
-            vec1 = GetNormal (uv.X, uv.Y);
-            vec2 = (Vector3)n1.Vec;
+            Vector3 vec1 = GetNormal (uv.X, uv.Y);
+            Vector3 vec2 = (Vector3)n1.Vec;
             if (vec1.Opposing (vec2) ^ (this is not E3Plane)) mFlags |= E3Flags.FlipNormal;
             if (this is E3Plane) mFlags ^= E3Flags.FlipNormal;
          }
@@ -243,6 +258,10 @@ public abstract class E3Surface : Ent3 {
       List<Point3> pts = [];
       Contours[0].Discretize (pts, Lib.CoarseTess, Lib.CoarseTessAngle);
       return new (pts);
+   }
+
+   protected void CopyMeshFrom (E3Surface src, Matrix3 xfm) {
+      if (src._mesh != null) _mesh = src._mesh * xfm;
    }
 }
 #endregion

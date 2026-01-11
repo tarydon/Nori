@@ -13,11 +13,10 @@ public partial class Dwg2 {
 
    // Properties ---------------------------------------------------------------
    /// <summary>The bounding rectangle of the drawing</summary>
-   /// When the drawing is empty, a special case bounding rectangle of (0,0,100,50) is returned
    public Bound2 Bound {
       get {
          if (mBound.IsEmpty) {
-            if (mEnts.Count == 0) mBound = new (0, 0, 100, 50);
+            if (mEnts.Count == 0) mBound = new (-60, -30, 360, 180); // Default (visible) _empty_ drawing extents
             else mBound = new (mEnts.Select (a => a.Bound));
             Lib.Trace ($"Bound: {mBound.Width.Round (0)}x{mBound.Height.Round (0)}");
          }

@@ -15,11 +15,17 @@ public static class Extensions {
    /// <summary>Interpolates using a given lie f between two doubles a and b</summary>
    public static double Along (this double f, double a, double b)
       => a + (b - a) * f;
+   /// <summary>Interpolates using a given lie f within a given Bound1</summary>
+   public static double Along (this double f, Bound1 b)
+      => b.Min + b.Length * f;
    /// <summary>Interpolates using a given lie f between two Point2 a and b</summary>
    public static Point2 Along (this double f, Point2 a, Point2 b)
       => new (f.Along (a.X, b.X), f.Along (a.Y, b.Y));
    /// <summary>Interpolates using a given lie f between two Point3 a and b</summary>
    public static Point3 Along (this double f, Point3 a, Point3 b)
+      => new (f.Along (a.X, b.X), f.Along (a.Y, b.Y), f.Along (a.Z, b.Z));
+   /// <summary>Interpolates using a given lie between two Point3f a and b</summary>
+   public static Point3f Along (this double f, Point3f a, Point3f b)
       => new (f.Along (a.X, b.X), f.Along (a.Y, b.Y), f.Along (a.Z, b.Z));
 
    /// <summary>Gets the underlying T array for an immutablearray</summary>
@@ -69,6 +75,8 @@ public static class Extensions {
    public static bool EQ (this double a, double b, double epsilon) => Abs (a - b) < epsilon;
    /// <summary>Compare two floats for equality to within 1e-5</summary>
    public static bool EQ (this float a, float b) => Abs (a - b) < 1e-5;
+   /// <summary>Compare two floats for equality with the given epsilon</summary>
+   public static bool EQ (this float a, float b, float epsilon) => Abs (a - b) < epsilon;
    /// <summary>Compare two halfs for equality to within 1e-4</summary>
    public static bool EQ (this Half a, Half b) => Abs ((float)a - (float)b) < 1e-3;
 
@@ -143,6 +151,12 @@ public static class Extensions {
    /// <summary>Returns a random bool</summary>
    public static bool NextBool (this Random r) => r.Next (10000) < 5000;
 
+   /// <summary>Returns true if NONE of the elements in the sequence match the given predicate</summary>
+   public static bool None<T> (this IEnumerable<T> seq, Predicate<T> pred) {
+      foreach (var elem in seq) if (pred (elem)) return false;
+      return true;
+   }
+
    /// <summary>Returns the non-null elements from a sequence</summary>
    public static IEnumerable<T> NonNull<T> (this IEnumerable<T?> seq) where T: class {
       foreach (var elem in seq)
@@ -204,8 +218,7 @@ public static class Extensions {
 
    /// <summary>Reads all the bytes from a stream in a Zip file</summary>
    public static byte[] ReadAllBytes (this ZipArchive zar, string name) {
-      var entry = zar.GetEntry (name);
-      if (entry == null) throw new Exception ($"Stream {name} not found in ZipArchive");
+      var entry = zar.GetEntry (name) ?? throw new Exception ($"Stream {name} not found in ZipArchive");
       using (var stm = zar.Open (name)) {
          byte[] data = new byte[entry.Length];
          stm.ReadExactly (data);
@@ -262,6 +275,8 @@ public static class Extensions {
    /// For example, <tt>13.532.Round(0.2)</tt> will return 13.6, since that is the closest multiple
    /// of 0.2 near 13.532.
    public static double Round (this double a, double leastcount) => leastcount * Math.Round (a / leastcount);
+   /// <summary>Rounds a float to be a multiple of the given least-count</summary>
+   public static float Round (this float a, float leastcount) => leastcount * (float)Math.Round (a / leastcount);
 
    /// <summary>Rounds up the given integer to the next multiple of the given chunk size</summary>
    public static int RoundUp (this int n, int chunk) => chunk * ((n + chunk - 1) / chunk);
@@ -317,7 +332,7 @@ public static class Extensions {
       if (int.TryParse (s, out int n)) return n;
       if (s.IsBlank ()) return 0;
       s = s.Trim ();
-      if (char.IsDigit (s[0])) return int.Parse (new string (s.TakeWhile (char.IsDigit).ToArray ()));
+      if (char.IsDigit (s[0])) return int.Parse (new string ([.. s.TakeWhile (char.IsDigit)]));
       return 0;
    }
 
@@ -333,10 +348,16 @@ public static class Extensions {
 #region class Extensions ---------------------------------------------------------------------------
 /// <summary>Extension methods, properties on various standard types</summary>
 public static class Extensions2 {
+   // Extensions on double -----------------------------------------------------
    // Extension methods on double
    extension(double f) {
       /// <summary>Returns true if a double is nan - easier to use than double.IsNaN(f)</summary>
       public bool IsNan => double.IsNaN (f);
+
+      /// <summary>Transforms a distance by the given transform</summary>
+      /// Distance is updated only if the matrix has a scaling component
+      public static double operator * (double a, Matrix3 xfm)
+         => xfm.HasScaling ? a * xfm.ScaleFactor : a;
    }
 
    extension(ref double f) {
@@ -344,7 +365,13 @@ public static class Extensions2 {
       public double Cached (Func<double> compute) {
          if (double.IsNaN (f)) f = compute ();
          return f; 
-      }         
+      }
+   }
+
+   // Extensions on ImmutableArray<Contour> ------------------------------------
+   extension(ImmutableArray<Contour3> contours) {
+      public static ImmutableArray<Contour3> operator * (ImmutableArray<Contour3> cons, Matrix3 xfm) 
+         => [.. cons.Select (a => a * xfm)];
    }
 }
 #endregion

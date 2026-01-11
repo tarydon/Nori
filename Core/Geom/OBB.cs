@@ -1,4 +1,4 @@
-﻿// ────── ╔╗
+// ────── ╔╗
 // ╔═╦╦═╦╦╬╣ OBB.cs
 // ║║║║╬║╔╣║ Implements minimum enclosing 'Orientend Bounding Box' in 3D
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
@@ -21,12 +21,12 @@ public struct OBB {
    public Bound3 Bound {
       get {
          if (_Bound != null) return _Bound.Value;
-         var (C, dx, dy, dz) = (Center, CS.VecX * Extent.X, CS.VecY * Extent.Y, CS.VecZ * Extent.Z);
+         var (C, dx, dy, dz) = (CS.Org, CS.VecX * Extent.X, CS.VecY * Extent.Y, CS.VecZ * Extent.Z);
          _Bound = new (
             C + dx + dy + dz, C + dx + dy - dz,
             C + dx - dy + dz, C + dx - dy - dz,
             C - dx + dy + dz, C - dx + dy - dz,
-            C - dx - dy + dz, C- dx - dy - dz
+            C - dx - dy + dz, C - dx - dy - dz
          );
          return _Bound.Value;
       }
