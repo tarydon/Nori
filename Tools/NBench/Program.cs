@@ -17,7 +17,7 @@ public class Tester {
    Mesh3[] mMeshes;
    Bound3 mBound;
 
-   [Benchmark]
+   [Benchmark (Baseline = true)]
    public void PlaneMeshInt () {
       int step = 1; 
       var pmi = new PlaneMeshIntersector (mMeshes);
@@ -94,20 +94,27 @@ public class Tester {
       }
       File.WriteAllText ("c:/etc/test2.txt", sb.ToString ());
    }
+
+   public void Test3 () {
+      var ms = new MeshSlicer ([.. mMeshes]);
+      PlaneDef pdef = new (mBound.Midpoint, Vector3.XAxis);
+      var set = ms.Compute (pdef);
+   }
 }
 
 static class Program {
-   public static void Main () {
+   public static void Main1 () {
       var t = new Tester ();
-      t.Test1 ();
-      t.Test2 ();
-      if (File.ReadAllText ("c:/etc/test1.txt") != File.ReadAllText ("c:/etc/test2.txt"))
-         Console.WriteLine ("FILES DIFFERENT!");
-      else
-         Console.WriteLine ("Files same");
+      t.Test3 ();
+      //t.Test1 ();
+      //t.Test2 ();
+      //if (File.ReadAllText ("c:/etc/test1.txt") != File.ReadAllText ("c:/etc/test2.txt"))
+      //   Console.WriteLine ("FILES DIFFERENT!");
+      //else
+      //   Console.WriteLine ("Files same");
    }
 
-   public static void Main1 () {
+   public static void Main () {
       BenchmarkRunner.Run<Tester> ();
    }
 }

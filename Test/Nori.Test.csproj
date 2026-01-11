@@ -5,7 +5,7 @@
     <TargetFramework>net10.0-windows</TargetFramework>
     <Nullable>enable</Nullable>
     <OutDir>..\Bin</OutDir>
-		<Optimize>false</Optimize>
+		<Optimize>true</Optimize>
 		<AllowUnsafeBlocks>True</AllowUnsafeBlocks>
   </PropertyGroup>
 
