@@ -17,7 +17,7 @@ public class Tester {
    Mesh3[] mMeshes;
    Bound3 mBound;
 
-   [Benchmark (Baseline = true)]
+   // [Benchmark (Baseline = true)]
    public void PlaneMeshInt () {
       int step = 1; 
       var pmi = new PlaneMeshIntersector (mMeshes);
@@ -35,53 +35,20 @@ public class Tester {
    }
 
    [Benchmark]
-   public void MeshSliceExp () {
+   public void MeshSliceHybrid () {
       int step = 1;
-      var pmi = new MeshSlicerExp ([..mMeshes]);
-      for (int i = step; i < 100; i += step) {
-         double x = (i / 100.0).Along (mBound.X);
-         PlaneDef pdef = new (new (x, 0, 0), Vector3.XAxis);
-         var set = pmi.Compute (pdef);
-         if (set.Count != 1) throw new InvalidOperationException ();
-
-         double y = (i / 100.0).Along (mBound.Y);
-         pdef = new (new (0, y, 0), Vector3.YAxis);
-         set = pmi.Compute (pdef);
-         if (set.Count != 1) throw new InvalidOperationException ();
-      }
-   }
-
-   [Benchmark]
-   public void MeshSliceFinal () {
-      int step = 1;
-      var pmi = new MeshSlicerFinal ([.. mMeshes]);
-      for (int i = step; i < 100; i += step) {
-         double x = (i / 100.0).Along (mBound.X);
-         PlaneDef pdef = new (new (x, 0, 0), Vector3.XAxis);
-         var set = pmi.Compute (pdef);
-         if (set.Count != 1) throw new InvalidOperationException ();
-
-         double y = (i / 100.0).Along (mBound.Y);
-         pdef = new (new (0, y, 0), Vector3.YAxis);
-         set = pmi.Compute (pdef);
-         if (set.Count != 1) throw new InvalidOperationException ();
-      }
-   }
-
-   [Benchmark]
-   public void MeshSlice () {
-      int step = 1;
+      List<Polyline3> output = [];
       var pmi = new MeshSlicer ([.. mMeshes]);
       for (int i = step; i < 100; i += step) {
          double x = (i / 100.0).Along (mBound.X);
          PlaneDef pdef = new (new (x, 0, 0), Vector3.XAxis);
-         var set = pmi.Compute (pdef);
-         if (set.Count != 1) throw new InvalidOperationException ();
+         output.Clear (); pmi.Compute (pdef, output);
+         if (output.Count != 1) throw new InvalidOperationException ();
 
          double y = (i / 100.0).Along (mBound.Y);
          pdef = new (new (0, y, 0), Vector3.YAxis);
-         set = pmi.Compute (pdef);
-         if (set.Count != 1) throw new InvalidOperationException ();
+         output.Clear (); pmi.Compute (pdef, output);
+         if (output.Count != 1) throw new InvalidOperationException ();
       }
    }
 
@@ -106,40 +73,11 @@ public class Tester {
       }
       File.WriteAllText ("c:/etc/test1.txt", sb.ToString ());
    }
-
-   public void Test2 () {
-      int step = 25;
-      var pmi = new MeshSlicerExp ([..mMeshes]);
-      var sb = new StringBuilder ();
-      for (int i = step; i < 100; i += step) {
-         double x = (i / 100.0).Along (mBound.X);
-         PlaneDef pdef = new (new (x, 0, 0), Vector3.XAxis);
-         var set = pmi.Compute (pdef);
-         if (set.Count != 1) throw new InvalidOperationException ();
-         sb.AppendLine ($"X = {x}");
-         foreach (var pt in set[0].Pts) sb.AppendLine ($" {pt}");
-
-         double y = (i / 100.0).Along (mBound.Y);
-         pdef = new (new (0, y, 0), Vector3.YAxis);
-         set = pmi.Compute (pdef);
-         if (set.Count != 1) throw new InvalidOperationException ();
-         sb.AppendLine ($"Y = {x}");
-         foreach (var pt in set[0].Pts) sb.AppendLine ($" {pt}");
-      }
-      File.WriteAllText ("c:/etc/test2.txt", sb.ToString ());
-   }
-
-   public void Test3 () {
-      var ms = new MeshSlicerExp ([.. mMeshes]);
-      PlaneDef pdef = new (mBound.Midpoint, Vector3.XAxis);
-      var set = ms.Compute (pdef);
-   }
 }
 
 static class Program {
    public static void Main1 () {
       var t = new Tester ();
-      t.Test3 ();
       //t.Test1 ();
       //t.Test2 ();
       //if (File.ReadAllText ("c:/etc/test1.txt") != File.ReadAllText ("c:/etc/test2.txt"))

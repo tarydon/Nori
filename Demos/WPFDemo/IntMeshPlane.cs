@@ -34,27 +34,27 @@ class IntMeshPlaneScene : Scene3 {
 
    void AddIntersections (IList<Mesh3> meshes, Bound3 bound, List<VNode> vnodes, int step) {
       using var bt = new BlockTimer ("Compute Intersections");
-      MeshSlicerExp pmi = new ([..meshes]);
+      MeshSlicer pmi = new ([..meshes]);
       List<Vec3F> ends = [];
+      List<Polyline3> output = [];
       for (int i = step; i < 100; i += step) {
          double x = (i / 100.0).Along (bound.X);
          PlaneDef pdef = new (new (x, 0, 0), Vector3.XAxis);
-         foreach (var poly in pmi.Compute (pdef)) Add (poly);
+         pmi.Compute (pdef, output);
 
          double y = (i / 100.0).Along (bound.Y);
          pdef = new (new (0, y, 0), Vector3.YAxis);
-         foreach (var poly in pmi.Compute (pdef)) Add (poly);
+         pmi.Compute (pdef, output);
 
          double z = (i / 100.0).Along (bound.Z);
          pdef = new (new (0, 0, z), Vector3.ZAxis);
-         foreach (var poly in pmi.Compute (pdef)) Add (poly);
-
-         void Add (Polyline3 poly) {
-            vnodes.Add (new Curve3VN (poly));
-            if (!poly.Pts[0].EQ (poly.Pts[^1])) {
-               ends.Add ((Vec3F)poly.Start); 
-               ends.Add ((Vec3F)poly.End);
-            }
+         pmi.Compute (pdef, output);
+      }
+      foreach (var poly in output) {
+         vnodes.Add (new Curve3VN (poly));
+         if (!poly.Pts[0].EQ (poly.Pts[^1])) {
+            ends.Add ((Vec3F)poly.Start);
+            ends.Add ((Vec3F)poly.End);
          }
       }
 
