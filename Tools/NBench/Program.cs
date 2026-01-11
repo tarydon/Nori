@@ -35,9 +35,43 @@ public class Tester {
    }
 
    [Benchmark]
+   public void MeshSliceExp () {
+      int step = 1;
+      var pmi = new MeshSlicerExp ([..mMeshes]);
+      for (int i = step; i < 100; i += step) {
+         double x = (i / 100.0).Along (mBound.X);
+         PlaneDef pdef = new (new (x, 0, 0), Vector3.XAxis);
+         var set = pmi.Compute (pdef);
+         if (set.Count != 1) throw new InvalidOperationException ();
+
+         double y = (i / 100.0).Along (mBound.Y);
+         pdef = new (new (0, y, 0), Vector3.YAxis);
+         set = pmi.Compute (pdef);
+         if (set.Count != 1) throw new InvalidOperationException ();
+      }
+   }
+
+   [Benchmark]
+   public void MeshSliceFinal () {
+      int step = 1;
+      var pmi = new MeshSlicerFinal ([.. mMeshes]);
+      for (int i = step; i < 100; i += step) {
+         double x = (i / 100.0).Along (mBound.X);
+         PlaneDef pdef = new (new (x, 0, 0), Vector3.XAxis);
+         var set = pmi.Compute (pdef);
+         if (set.Count != 1) throw new InvalidOperationException ();
+
+         double y = (i / 100.0).Along (mBound.Y);
+         pdef = new (new (0, y, 0), Vector3.YAxis);
+         set = pmi.Compute (pdef);
+         if (set.Count != 1) throw new InvalidOperationException ();
+      }
+   }
+
+   [Benchmark]
    public void MeshSlice () {
       int step = 1;
-      var pmi = new MeshSlicer ([..mMeshes]);
+      var pmi = new MeshSlicer ([.. mMeshes]);
       for (int i = step; i < 100; i += step) {
          double x = (i / 100.0).Along (mBound.X);
          PlaneDef pdef = new (new (x, 0, 0), Vector3.XAxis);
@@ -75,7 +109,7 @@ public class Tester {
 
    public void Test2 () {
       int step = 25;
-      var pmi = new MeshSlicer ([..mMeshes]);
+      var pmi = new MeshSlicerExp ([..mMeshes]);
       var sb = new StringBuilder ();
       for (int i = step; i < 100; i += step) {
          double x = (i / 100.0).Along (mBound.X);
@@ -96,7 +130,7 @@ public class Tester {
    }
 
    public void Test3 () {
-      var ms = new MeshSlicer ([.. mMeshes]);
+      var ms = new MeshSlicerExp ([.. mMeshes]);
       PlaneDef pdef = new (mBound.Midpoint, Vector3.XAxis);
       var set = ms.Compute (pdef);
    }

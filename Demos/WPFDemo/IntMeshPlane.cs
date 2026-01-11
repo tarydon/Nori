@@ -34,7 +34,7 @@ class IntMeshPlaneScene : Scene3 {
 
    void AddIntersections (IList<Mesh3> meshes, Bound3 bound, List<VNode> vnodes, int step) {
       using var bt = new BlockTimer ("Compute Intersections");
-      MeshSlicer pmi = new ([..meshes]);
+      MeshSlicerExp pmi = new ([..meshes]);
       List<Vec3F> ends = [];
       for (int i = step; i < 100; i += step) {
          double x = (i / 100.0).Along (bound.X);
