@@ -28,7 +28,8 @@
          <Button Click="MinSphereDemo">Min. Sphere</Button>
          <Button Click="T3XReaderDemo">Load T3X File</Button>
          <Button Click="SliceMeshDemo">Slice Mesh</Button>
-      </StackPanel>
+         <Button Click="CollisionDemo">Collision</Button>
+        </StackPanel>
          <StackPanel Name="mSettings" DockPanel.Dock="Right" Background="#AAA" />
       <Border Name="mContent" />
    </DockPanel>

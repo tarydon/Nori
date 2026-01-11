@@ -7,19 +7,34 @@ using static Nori.Lib;
 
 #region struct OBB ---------------------------------------------------------------------------------
 /// <summary>Represents a bounding cuboid oriented along an arbitrary axes.</summary>
-public readonly struct OBB {
+public struct OBB {
    public OBB (CoordSystem cs, Vector3 ext) => (CS, Extent) = (cs, ext);
-
    /// <summary> The box center</summary>
-   public Point3 Center => CS.Org;
+   public readonly Point3 Center => CS.Org;
    /// <summary>OBB's local space.</summary>
    public readonly CoordSystem CS;
    /// <summary>The 'half extent' along the axes.</summary>
    public readonly Vector3 Extent;
    /// <summary>The box area</summary>
-   public double Area => 8 * (Extent.X * Extent.Y + Extent.X * Extent.Z + Extent.Y * Extent.Z);
+   public readonly double Area => 8 * (Extent.X * Extent.Y + Extent.X * Extent.Z + Extent.Y * Extent.Z);
+   /// <summary>The axis-aligned bounding box enclosing this OBB</summary>
+   public Bound3 Bound {
+      get {
+         if (_Bound != null) return _Bound.Value;
+         var (C, dx, dy, dz) = (Center, CS.VecX * Extent.X, CS.VecY * Extent.Y, CS.VecZ * Extent.Z);
+         _Bound = new (
+            C + dx + dy + dz, C + dx + dy - dz,
+            C + dx - dy + dz, C + dx - dy - dz,
+            C - dx + dy + dz, C - dx + dy - dz,
+            C - dx - dy + dz, C- dx - dy - dz
+         );
+         return _Bound.Value;
+      }
+   }
+   Bound3? _Bound;
+
    /// <summary>The box volume</summary>
-   public double Volume => 8 * (Extent.X * Extent.Y * Extent.Z);
+   public readonly double Volume => 8 * (Extent.X * Extent.Y * Extent.Z);
 
    /// <summary>Tries to find a tight oriented bound for a given set of points.</summary>
    /// This OBB search takes O(n) time to find 'nearly' optimal OBB orientation. It falls

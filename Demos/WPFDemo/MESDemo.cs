@@ -11,7 +11,7 @@ class MinSphereScene : Scene3 {
       BgrdColor = Color4.Gray (96);
       Bound = new (0, 0, 0, 1000, 1000, 1000);
       Lib.Tracer = TraceVN.Print; Random R = new ();
-      Build ([.. GeneratePoints (R, 500, Bound.Width)]);
+      Build ([.. GeneratePoints (R, 10000, Bound.Width)]);
    }
 
    // Build the scene with the minimum enclosing sphere for given points.
