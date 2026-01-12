@@ -166,7 +166,7 @@ public class FileGeometry : GeometrySource {
       string file = Path.Combine (rootDir, File);
       Matrix3 xfm = Rotate.IsIdentity ? Matrix3.Identity : Matrix3.Rotation (Rotate);
       xfm *= Matrix3.Translation (Shift);
-      return Mesh3.Load (file) * xfm;
+      return Mesh3.LoadFluxMesh (file) * xfm;
    }
 
    public readonly string File = string.Empty;

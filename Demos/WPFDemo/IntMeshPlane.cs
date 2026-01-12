@@ -20,34 +20,43 @@ class IntMeshPlaneScene : Scene3 {
 
       Lib.Tracer = TraceVN.Print;      
       Mesh3 fullmesh = new ([.. nodes], [.. tris], [.. wires]);
-      List<VNode> vnodes = [new MeshVN (fullmesh) { Color = Color4.White, Shading = EShadeMode.Glass }, TraceVN.It];
+      List<VNode> vnodes = [
+         new MeshVN (fullmesh) { Color = Color4.White, Shading = EShadeMode.Glass }, 
+         TraceVN.It
+      ];
       Bound = fullmesh.Bound;
 
-      // AddIntersections ([fullmesh], Bound, vnodes, 50);
-      AddIntersections (meshes, Bound, vnodes, 50);
+      AddIntersections (meshes, Bound, vnodes, 25);
       BgrdColor = new Color4 (32, 64, 96);
       Root = new GroupVN (vnodes);
    }
 
    void AddIntersections (IList<Mesh3> meshes, Bound3 bound, List<VNode> vnodes, int step) {
       using var bt = new BlockTimer ("Compute Intersections");
-      PlaneMeshIntersector pmi = new (meshes);
+      MeshSlicer pmi = new ([..meshes]);
       List<Vec3F> ends = [];
+      List<Polyline3> output = [];
       for (int i = step; i < 100; i += step) {
-         double x = (i / 100.0).Along (bound.X.Min, bound.X.Max);
+         double x = (i / 100.0).Along (bound.X);
          PlaneDef pdef = new (new (x, 0, 0), Vector3.XAxis);
-         foreach (var poly in pmi.Compute (pdef)) {
-            vnodes.Add (new Curve3VN (poly));
-            ends.Add ((Vec3F)poly.Start); ends.Add ((Vec3F)poly.End);
-         }
+         pmi.Compute (pdef, output);
 
-         double y = (i / 100.0).Along (Bound.Y.Min, Bound.Y.Max);
+         double y = (i / 100.0).Along (bound.Y);
          pdef = new (new (0, y, 0), Vector3.YAxis);
-         foreach (var poly in pmi.Compute (pdef)) {
-            vnodes.Add (new Curve3VN (poly));
-            ends.Add ((Vec3F)poly.Start); ends.Add ((Vec3F)poly.End);
+         pmi.Compute (pdef, output);
+
+         double z = (i / 100.0).Along (bound.Z);
+         pdef = new (new (0, 0, z), Vector3.ZAxis);
+         pmi.Compute (pdef, output);
+      }
+      foreach (var poly in output) {
+         vnodes.Add (new Curve3VN (poly));
+         if (!poly.Pts[0].EQ (poly.Pts[^1])) {
+            ends.Add ((Vec3F)poly.Start);
+            ends.Add ((Vec3F)poly.End);
          }
       }
+
       vnodes.Add (new SimpleVN (
          () => { Lux.PointSize = 7f; Lux.Color = Color4.Yellow; },
          () => Lux.Points (ends.AsSpan ())
