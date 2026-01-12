@@ -17,7 +17,7 @@ public class DwgStitcher {
       List<E2Poly> ents = [];
       foreach (var ent in mDwg.Ents.OrderBy (a => a.Layer.Name)) {
          if (ent is E2Poly e2p) {
-            if (e2p.Poly.TryCleanup (out var tmp)) e2p = e2p.With (tmp);
+            if (e2p.Poly.TryCleanup (out var tmp)) { e2p = e2p.With (tmp); mStitched = true; }
             if (e2p.Poly.IsOpen) ents.Add (e2p);
             else mDone.Add (ent);
          } else
@@ -30,7 +30,7 @@ public class DwgStitcher {
 
          // If the poly can already be closed here, just close it and continue
          Poly poly = ent.Poly;
-         if (TryClose (ent, poly)) continue;
+         if (TryClose (ent, poly)) { mStitched = true; continue; }
 
          // 'final' is this candidate poly with possibly other open fragments attached
          // to either of its ends (if nothing gets attached to it, then final will just
@@ -45,7 +45,7 @@ public class DwgStitcher {
                   // If so, remove this endpoint from the list of free-floating ends, and
                   // if the newly joined result is now self-closing, we are done.
                   RemoveEnds (other);
-                  if (TryClose (ent, final = tmp.Clean ())) goto Done;
+                  if (TryClose (ent, final = tmp.Clean ())) { mStitched = true; goto Done; }
                } else
                   throw new Exception ("DwgStitcher: Coding error");
             }
@@ -59,15 +59,17 @@ public class DwgStitcher {
       }
       // Add the remaining entities (unclosed ones)
       AddRemaining ();
+      if (!mStitched) return;
       mDwg.Ents.Clear (); mDwg.Add (mDone);
    }
+   bool mStitched = true;
 
    // Implementation -----------------------------------------------------------
    void AddEnds (E2Poly ent) {
       mEnds[ent.Poly.A] = ent; mEnds[ent.Poly.B] = ent;
    }
 
-   void AddRemaining () {
+   void AddRemaining () { // Cleanup current pass in preparation for the next pass/layer
       List<E2Poly?> set = [.. mEnds.Values.Distinct ()];
       for (int i = 1; i < set.Count; i++) {
          var pi = set[i]; if (pi == null) continue;
@@ -79,6 +81,7 @@ public class DwgStitcher {
                   mDone.Add (pi.With (pres.Close (mThreshold).Clean ()));
                else
                   set.Add (pi.With (pres));
+               mStitched = true;
                break;
             }
          }
@@ -91,7 +94,7 @@ public class DwgStitcher {
       mEnds.Remove (ent.Poly.A); mEnds.Remove (ent.Poly.B);
    }
 
-   bool TryClose (E2Poly template , Poly poly) {
+   bool TryClose (E2Poly template, Poly poly) {
       if (poly.A.EQ (poly.B, mThreshold)) {
          mDone.Add (template.With (poly.Close (mThreshold).Clean ()));
          return true;

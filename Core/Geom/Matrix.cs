@@ -218,6 +218,9 @@ public class Matrix3 : IEQuable<Matrix3> {
    /// <summary>Does this matrix include mirroring?</summary>
    public bool HasMirroring => (Flags & EFlag.Mirror) != 0;
 
+   /// <summary>Does this matrix have a scaling component</summary>
+   public bool HasScaling => (Flags & EFlag.Scale) != 0;
+
    /// <summary>The 'scaling factor' of this matrix (assuming equal scaling in all axes)</summary>
    public double ScaleFactor => (Vector3.XAxis * this).Length;
 

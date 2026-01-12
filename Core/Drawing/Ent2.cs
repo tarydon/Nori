@@ -39,7 +39,7 @@ public abstract partial class Ent2 {
    /// <summary>Is this entity part of a block definition?</summary>
    public bool InBlock {
       get => Get (E2Flags.InBlock);
-      set => Set (E2Flags.InBlock, value);
+      internal set => Set (E2Flags.InBlock, value);
    }
 
    // Methods ------------------------------------------------------------------
@@ -56,9 +56,8 @@ public abstract partial class Ent2 {
    /// - Set threshold to the minimum distance
    public virtual bool IsCloser (Point2 pt, ref double threshold) => false;
 
-   /// <summary>Returns a copy of the entity transformed by given matrix.</summary>
-   /// This method is useful for exploding the entities inside a block entity.
-   public abstract Ent2 XFormed (Matrix2 m);
+   /// <summary>Returns a copy of the entity transformed by a given matrix</summary>
+   public static Ent2 operator * (Ent2 ent, Matrix2 xfm) => ent.Xformed (xfm);
 
    // Protected ----------------------------------------------------------------
    // Bitflags for this entity
@@ -71,6 +70,9 @@ public abstract partial class Ent2 {
       if (value) mFlags |= bits; else mFlags &= ~bits;
       return mFlags != old;
    }
+
+   // Override this to implement the entity transformation
+   protected abstract Ent2 Xformed (Matrix2 xfm);
 }
 #endregion
 
@@ -122,7 +124,7 @@ public class E2Bendline : Ent2 {
    public override Bound2 Bound => new (Pts);
    public override Bound2 GetBound (Matrix2 xfm) => new (Pts.Select (a => a * xfm));
 
-   public override E2Bendline XFormed (Matrix2 m)
+   protected override E2Bendline Xformed (Matrix2 m)
       => new (mDwg, Pts.Select (a => a * m), Angle, Radius, KFactor, Thickness);
 
    // Private data -------------------------------------------------------------
@@ -151,8 +153,8 @@ public class E2Dimension : Ent2 {
    public override Bound2 GetBound (Matrix2 xfm)
       => new (mEnts.Select (a => a.GetBound (xfm)));
 
-   public override E2Dimension XFormed (Matrix2 m)
-      => new (Layer) { mEnts = [.. mEnts.Select (a => a.XFormed (m))], Color = Color };
+   protected override E2Dimension Xformed (Matrix2 m)
+      => new (Layer) { mEnts = [.. mEnts.Select (a => a * m)], Color = Color };
 
    // Methods ------------------------------------------------------------------
    public Block2? LoadEnts (Dwg2 dwg, string blockName) {
@@ -222,7 +224,7 @@ public class E2Insert : Ent2 {
       return new (Block.Ents.Select (a => a.GetBound (final)));
    }
 
-   public override E2Insert XFormed (Matrix2 m)
+   protected override E2Insert Xformed (Matrix2 m)
      => new (mDwg, Layer, BlockName, Pt * m, Angle + (Vector2.XAxis * m).Heading, XScale * m.ScaleFactor, YScale * m.ScaleFactor) { Color = Color };
 
    // Methods ------------------------------------------------------------------
@@ -265,7 +267,7 @@ public class E2Point : Ent2 {
       return false;
    }
 
-   public override E2Point XFormed (Matrix2 m) => new (Layer, mPt * m) { Color = Color };
+   protected override E2Point Xformed (Matrix2 m) => new (Layer, mPt * m) { Color = Color };
 }
 #endregion
 
@@ -300,7 +302,7 @@ public class E2Poly : Ent2 {
    /// <summary>Compute the Bound of the E2Poly under a rotation</summary>
    public override Bound2 GetBound (Matrix2 xfm) => mPoly.GetBound (xfm);
 
-   public override E2Poly XFormed (Matrix2 m) => new (Layer, mPoly * m) { Color = Color };
+   protected override E2Poly Xformed (Matrix2 m) => new (Layer, mPoly * m) { Color = Color };
 
    /// <summary>Makes a clone of this E2Poly, but just with a different polyline</summary>
    /// This copies the layer, color and flags from the existing poly
@@ -321,7 +323,7 @@ public class E2Solid : Ent2 {
    public override Bound2 GetBound (Matrix2 xfm)
       => new (mPts.Select (a => a * xfm));
 
-   public override E2Solid XFormed (Matrix2 m) => new (Layer, mPts.Select (a => a * m)) { Color = Color };
+   protected override E2Solid Xformed (Matrix2 m) => new (Layer, mPts.Select (a => a * m)) { Color = Color };
 
    /// <summary>The list of points in this solid</summary>
    public IReadOnlyList<Point2> Pts => mPts;
@@ -367,7 +369,7 @@ public class E2Spline : Ent2 {
 
    public override Bound2 GetBound (Matrix2 xfm) => new (Pts.Select (a => a * xfm));
 
-   public override E2Spline XFormed (Matrix2 m) => new (Layer, mSpline * m, mFlags) { Color = Color };
+   protected override E2Spline Xformed (Matrix2 m) => new (Layer, mSpline * m, mFlags) { Color = Color };
 
    public Spline2 Spline => mSpline;
    readonly Spline2 mSpline;
@@ -432,7 +434,7 @@ public class E2Text : Ent2 {
       return false;
    }
 
-   public override E2Text XFormed (Matrix2 m)
+   protected override E2Text Xformed (Matrix2 m)
       => new (Layer, Style, Text, Pt * m, Height * m.ScaleFactor, Angle + (Vector2.XAxis * m).Heading, Oblique, XScale, Alignment) { Color = Color };
 
    // Implementation -----------------------------------------------------------

@@ -182,8 +182,11 @@ public readonly struct CoordSystem {
       => new (cs.Org + vec, cs.VecX, cs.VecY);
 
    /// <summary>Multiply a CoordSystem by a transformation matrix</summary>
-   public static CoordSystem operator * (CoordSystem cs, Matrix3 xfm)
-      => new (cs.Org * xfm, cs.VecX * xfm, cs.VecY * xfm);
+   public static CoordSystem operator * (CoordSystem cs, Matrix3 xfm) {
+      Point3 org = cs.Org * xfm; Vector3 vecx = cs.VecX * xfm, vecy = cs.VecY * xfm;
+      if (xfm.HasScaling) { vecx = vecx.Normalized (); vecy = vecy.Normalized (); }
+      return new (org, vecx, vecy);
+   }
 
    public override string ToString ()
       => $"CoordSystem:{Org.R6 ()},{VecX.R6 ()},{VecY.R6 ()}";
@@ -268,6 +271,9 @@ public readonly struct PlaneDef {
 
    /// <summary>Given a point, returns the signed distance (+ve means to the left, -ve means to the right)</summary>
    public double SignedDist (Point3 pt) => A * pt.X + B * pt.Y + C * pt.Z + D;
+
+   /// <summary>Returns the signed distance of a Point3f from a PlaneDef</summary>
+   public double SignedDist (Point3f pt) => A * pt.X + B * pt.Y + C * pt.Z + D;
 
    public override string ToString ()
       => $"PlaneDef:{A.R6 ()},{B.R6 ()},{C.R6 ()},{D.R6 ()}";

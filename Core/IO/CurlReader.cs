@@ -27,7 +27,7 @@ public class CurlReader {
 
    // Implementation -----------------------------------------------------------
    // Construct a UTFReader, and skips past any leading comments
-   CurlReader (UTFReader r) { R = r; while (R.Peek == ';') R.SkipTo ('\n'); }
+   CurlReader (UTFReader r) { R = r; SkipComment (); }
    readonly UTFReader R;
 
    // Top level routine used to read an object given the AuType, just switches based
@@ -69,6 +69,7 @@ public class CurlReader {
       mStack.Add (owner);
       R.Match ('{');
       for (; ; ) {
+         SkipComment ();
          if (R.TryMatch ('}')) break;     // Finished reading all the fields
          var fieldName = R.TakeUntil (mNameStop, true);
          var field = auType.GetField (fieldName) ?? throw new AuException ($"Field {Encoding.UTF8.GetString (fieldName)} not found in {auType.Type.FullName}");
@@ -126,10 +127,22 @@ public class CurlReader {
    // Reads an [AuPrimitive] from the curl file
    // The underlying auType implements the ReadAuPrimitive that has a cached pointer
    // to the Read(UTFReader) method on the type and that is used to read the primitive
-   object? ReadAuPrimitive (AuType auType) => auType.ReadAuPrimitive (R);
+   object? ReadAuPrimitive (AuType auType) {
+      // Any primitive value may be "quoted" - this is not NEEDED unless the textual
+      // representation of the value contains a special character, but is always permitted,
+      // so we have to handle that situation.
+      bool quoted = R.TryMatch ('"');
+      var result = auType.ReadAuPrimitive (R);
+      if (quoted) R.Match ('"');
+      return result;
+   }
 
    // Reads a .Net primitve type from the curl file
    // This is handled by the UTFReader.ReadPrimitive core method
    object ReadPrimitive (AuType auType) => R.ReadPrimitive (auType.Type);
+
+   // Checks if a comment follows (semicolon character), and skips past it.
+   // The comment continues to the end of the line. 
+   void SkipComment () { while (R.Peek == ';') R.SkipTo ('\n'); }
 }
 #endregion

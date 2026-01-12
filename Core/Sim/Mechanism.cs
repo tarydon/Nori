@@ -19,15 +19,7 @@ public partial class Mechanism {
 
    // Properties --------------------------------------------------------------
    /// <summary>Returns the bound of this mechanism</summary>
-   public Bound3 Bound {
-      get {
-         if (_bound.IsEmpty) {
-            if (Mesh != null) _bound += Mesh.GetBound (Xfm);
-            EnumTree ().Skip (1).ForEach (c => _bound += c.Bound);
-         }
-         return _bound;
-      }
-   }
+   public Bound3 Bound => Bound3.Cached (ref _bound, ComputeBound);
    Bound3 _bound = new ();
 
    /// <summary>These are the children of this mechanism</summary>
@@ -125,6 +117,12 @@ public partial class Mechanism {
    /// <summary>Adds a child mechanism to this one</summary>
    public void AddChild (Mechanism child) => (mChildren ??= []).Add (child);
 
+   /// <summary>Makes a clone of this mechanism</summary>
+   /// Normally, mechanisms attached to machines, robots etc should not be directly updated,
+   /// since we don't want the same mechanism to be used for multiple parts / jobs. We always 
+   /// make a clone of the mechanism and use it
+   public Mechanism Clone () => new (this, null);
+
    /// <summary>Enumerates the subtree of mechanisms under this one</summary>
    public IEnumerable<Mechanism> EnumTree () {
       yield return this;
@@ -138,6 +136,24 @@ public partial class Mechanism {
    // Implementation -----------------------------------------------------------
    string FullName => Parent == null ? Name : $"{Parent.FullName}.{Name}";
    public override string ToString () => $"Mechanism:{Name}";
+
+   // Constructor used for cloning
+   Mechanism (Mechanism b, Mechanism? parent) {
+      Color = b.Color; ConnectTo = b.ConnectTo; Geometry = b.Geometry; Joint = b.Joint; JMin = b.JMin; 
+      JMax = b.JMax; JAsDrawn = b.JAsDrawn; JVector = b.JVector; JValue = b.JValue; 
+      Name = b.Name; Sockets = b.Sockets; Parent = parent; _rootDir = b._rootDir;
+      if (b.mChildren != null) 
+         mChildren = [.. b.mChildren.Select (a => new Mechanism (a, this))];
+   }
+   Mechanism () { }
+
+   // Computes the bound of this mechanism (subtree starting from here)
+   Bound3 ComputeBound () {
+      Bound3 b = new ();
+      if (Mesh != null) b += Mesh.GetBound (Xfm);
+      EnumTree ().Skip (1).ForEach (c => b += c.Bound);
+      return b;
+   }
 }
 #endregion
 
@@ -150,7 +166,7 @@ public class FileGeometry : GeometrySource {
       string file = Path.Combine (rootDir, File);
       Matrix3 xfm = Rotate.IsIdentity ? Matrix3.Identity : Matrix3.Rotation (Rotate);
       xfm *= Matrix3.Translation (Shift);
-      return Mesh3.Load (file) * xfm;
+      return Mesh3.LoadFluxMesh (file) * xfm;
    }
 
    public readonly string File = string.Empty;

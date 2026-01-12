@@ -107,6 +107,14 @@ public sealed class E3NurbsSurface : E3Surface {
       => (_unlofter ??= new (this)).GetUV (pt);
    SurfaceUnlofter? _unlofter;
 
+   // Returns a copy of the NURBsSurface transformed by the given matrix
+   protected override E3NurbsSurface Xformed (Matrix3 xfm) {
+      ImmutableArray<Point3> ctrl = [.. Ctrl.Select (a => a * xfm)];
+      E3NurbsSurface nurb = new (Id, ctrl, Weight, UCtl, mUImp.Knot, mVImp.Knot, Contours * xfm);
+      nurb.CopyMeshFrom (this, xfm);
+      return nurb;
+   }
+
    // Private data -------------------------------------------------------------
    readonly SplineImp mUImp, mVImp;
 }
@@ -145,6 +153,13 @@ public sealed class E3RuledSurface : E3Surface {
    public override Point2 GetUV (Point3 pt3d)
       => (_unlofter = new (this)).GetUV (pt3d);
    SurfaceUnlofter? _unlofter;
+
+   // Returns a copy of the RuledSurface, transformed by the given matrix
+   protected override Ent3 Xformed (Matrix3 xfm) {
+      E3RuledSurface ruled = new (Id, Contours * xfm, Bottom * xfm, Top * xfm);
+      ruled.CopyMeshFrom (this, xfm);
+      return ruled;
+   }
 
    // Private data -------------------------------------------------------------
    double mUSpan;
