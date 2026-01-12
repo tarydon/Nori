@@ -210,6 +210,9 @@ public readonly struct Point3f {
       return dx * dx + dy * dy + dz * dz;
    }
 
+   /// <summary>Compares two points are equal to within the given tolerance</summary>
+   public bool EQ (Point3f b, float tol) => X.EQ (b.X, tol) && Y.EQ (b.Y, tol) && Z.EQ (b.Z, tol);
+
    // Operators ----------------------------------------------------------------
    /// <summary>Converts a Point3f to a Point3</summary>
    public static explicit operator Point3 (Point3f a) => new (a.X, a.Y, a.Z);

@@ -56,9 +56,7 @@ public abstract partial class Ent2 {
    /// - Set threshold to the minimum distance
    public virtual bool IsCloser (Point2 pt, ref double threshold) => false;
 
-   /// <summary>
-   /// Returns a copy of the entity transformed by a given matrix
-   /// </summary>
+   /// <summary>Returns a copy of the entity transformed by a given matrix</summary>
    public static Ent2 operator * (Ent2 ent, Matrix2 xfm) => ent.Xformed (xfm);
 
    // Protected ----------------------------------------------------------------
