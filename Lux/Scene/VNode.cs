@@ -407,7 +407,7 @@ public abstract class VNode {
    // This means it is not part of any scenes and its 'parent refs' counter has
    // run down to zero.
    internal void Deregister () {
-      Debug.Assert (Id > 0);
+      if (Id == 0) return;
       OnDetach ();
       mDisposer?.Dispose ();
       ReleaseBatches ();
