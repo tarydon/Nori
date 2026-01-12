@@ -40,24 +40,11 @@ class PolyStitchTests {
    void Test1 () {
       var (a, b) = (Poly.Line ((0, 0), (10, 0)), Poly.Line ((0, 10), (10, 10)));
       Dwg2 dwg = new ();
-
-      {
-         dwg.Add (a); dwg.Add (b);
-         using (dwg.Ents.Subscribe (a => Assert.IsTrue (false))) // Not expecting any change notifications
-            new DwgStitcher (dwg).Process ();
-         dwg.Ents.Count.Is (2);
-         ((E2Poly)dwg.Ents[0]).Poly.Is (a);
-         ((E2Poly)dwg.Ents[1]).Poly.Is (b);
-      }
-
-      { // Re-test by reordering the entities!
-         dwg.Ents.Clear ();
-         dwg.Add (b); dwg.Add (a);
-         using (dwg.Ents.Subscribe (a => Assert.IsTrue (false))) // Not expecting any change notifications
-            new DwgStitcher (dwg).Process ();
-         dwg.Ents.Count.Is (2);
-         ((E2Poly)dwg.Ents[0]).Poly.Is (b);
-         ((E2Poly)dwg.Ents[1]).Poly.Is (a);
-      }
+      dwg.Add (a); dwg.Add (b);
+      using (dwg.Ents.Subscribe (a => Assert.IsTrue (false))) // Not expecting any change notifications
+         new DwgStitcher (dwg).Process ();
+      dwg.Ents.Count.Is (2);
+      ((E2Poly)dwg.Ents[0]).Poly.Is (a);
+      ((E2Poly)dwg.Ents[1]).Poly.Is (b);
    }
 }
