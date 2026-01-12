@@ -19,25 +19,24 @@ class CollisionScene : Scene3 {
    void Build (int shapes, double extent) {
       TraceVN.It.Clear ();
       Random R = new ();
-      List<OBB> obbs = [];
+      var obbs = new OBB[shapes];
       for (int i = 0; i < shapes; i++) {
          var vX = V ().Normalized (); var v = V ().Normalized ();
          var vY = vX * v;
-         obbs.Add (new (new (P () * extent, vX, vY), V () * 100));
+         obbs[i] = new (new (P () * extent, vX, vY), V () * 100);
       }
+      
       var collisions = new bool[shapes];
       Stopwatch sw = Stopwatch.StartNew (); sw.Start ();
-      for (int i = 0; i < obbs.Count - 1; i++) {
-         var A = obbs[i];
-         for (int j = i + 1; j < obbs.Count; j++)
-            //if (Collision.Check (A.Bound, obbs[j].Bound))
-            if (Collision.Check (A, obbs[j]))
+      for (int i = 0; i < obbs.Length - 1; i++)
+         for (int j = i + 1; j < obbs.Length; j++)
+            //if (Collision.Check (obbs[i].Bound, obbs[j].Bound))
+            if (Collision.Check (obbs[i], obbs[j]))
                collisions[i] = collisions[j] = true;
-      }
       sw.Stop ();
 
       Lib.Trace ($"Total: {shapes} objects, {collisions.Count (x => x)} collide. Elapsed: {S (sw.Elapsed)}");
-      Lib.Trace ("Press 'Collision' to rerun");
+      Lib.Trace ("Press 'Collision' button to rerun");
 
       List<VNode> nodes = [TraceVN.It];
       nodes.AddRange (obbs.Select ((x, n) => new BoxVN (x, collisions[n])));
