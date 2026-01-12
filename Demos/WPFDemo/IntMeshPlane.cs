@@ -9,7 +9,6 @@ class IntMeshPlaneScene : Scene3 {
       List<Mesh3.Node> nodes = [];
       List<int> tris = [], wires = [];
       foreach (var ent in model.Ents.OfType<E3Surface> ()) {
-         if (ent.Id == 1) ent.IsSelected = true;
          var mesh = ent.Mesh;
          meshes.Add (mesh);
          int n = nodes.Count; 
@@ -27,7 +26,7 @@ class IntMeshPlaneScene : Scene3 {
       ];
       Bound = fullmesh.Bound;
 
-      AddIntersections (meshes, Bound, vnodes, 10);
+      AddIntersections (meshes, Bound, vnodes, 25);
       BgrdColor = new Color4 (32, 64, 96);
       Root = new GroupVN (vnodes);
    }

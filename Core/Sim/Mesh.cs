@@ -82,9 +82,7 @@ public class Mesh3 {
    /// <summary>Loads a Mesh from an OBJ file</summary>
    public static Mesh3 LoadObj (string file) => LoadObj (File.ReadAllLines (file));
 
-   /// <summary>
-   /// Loads a Mesh from OBJ file data (presented as strings)
-   /// </summary>
+   /// <summary>Loads a Mesh from OBJ file data (presented as strings)</summary>
    public static Mesh3 LoadObj (IList<string> lines) {
       List<Point3> raw = [], pts = [];
       foreach (var line in lines) {

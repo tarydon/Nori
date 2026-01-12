@@ -1,7 +1,12 @@
-﻿namespace Nori;
+// ────── ╔╗
+// ╔═╦╦═╦╦╬╣ PlaneMeshInt.cs
+// ║║║║╬║╔╣║ <<TODO>>
+// ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
+namespace Nori;
 using static Math;
 
 #region class PlaneMeshIntersector -----------------------------------------------------------------
+[Obsolete ("Use MeshSlicer instead, this will be removed soon")]
 /// <summary>Provides plane/mesh intersection functionality for a specific mesh.</summary>
 /// This class computes polygonal intersection loops between a mesh and a plane.
 /// Create an instance with a mesh collection and call `Compute` repeatedly to intersect

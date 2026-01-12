@@ -293,9 +293,7 @@ public readonly struct Bound3 : IEQuable<Bound3> {
       }
    }
 
-   /// <summary>
-   /// The diagonal vector of this Bound3
-   /// </summary>
+   /// <summary>The diagonal vector of this Bound3</summary>
    public Vector3 DiagVector => new (X.Length, Y.Length, Z.Length);
 
    // Methods ------------------------------------------------------------------

@@ -1,11 +1,25 @@
-﻿namespace Nori;
+// ────── ╔╗
+// ╔═╦╦═╦╦╬╣ MeshSlicer.cs
+// ║║║║╬║╔╣║ Implements MeshSlicer - computing the intersection line of a Plane with a Mesh3
+// ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
+namespace Nori;
 using static Math;
 
+#region class MeshSlicer ---------------------------------------------------------------------------
+/// <summary>MeshSlicer computes the line of intersection between a Plane and Mesh3 (slice line)</summary>
+/// One possibly use-case for this is to find the line of intersection between a vertical plane
+/// and a formed part (input for 5-axis cutting). This line of intersection could be the top contour
+/// of a support fixture. 
 public class MeshSlicer {
    // Constructor --------------------------------------------------------------
+   /// <summary>Construct a MeshSlicer given a collection of meshes to work with</summary>
+   /// Once primed with these meshes, the meshslicer can be used to computed 
+   /// intersections with various planes by passing in different PlaneDef to the Compute
+   /// method
    public MeshSlicer (ImmutableArray<Mesh3> meshes) => mMeshes = meshes;
 
    // Methods ------------------------------------------------------------------
+   /// <summary>Compute the intersection between the meshes and a given PlaneDef</summary>
    public void Compute (PlaneDef def, List<Polyline3> output) {
       // Prepare for this PlaneDef by resetting some plane-specific data
       mUsedNodes = 0; mNodeMap.Clear ();
@@ -112,15 +126,23 @@ public class MeshSlicer {
          (prev, n) = (n, node.Link1 + node.Link2 - prev);
          if (n == -1) break;
       }
-      return mTemp.Count;
+      int count = mTemp.Count;
+      for (int i = count - 1; i >= 1; i--)
+         if (mTemp[i].EQ (mTemp[i - 1], Lib.Delta)) mTemp.RemoveAt (i);
+      return count;
    }
 
    // Gets the node on the edge between a..b
    // da and db are the signed distances of these two vertices a and b from the plane
    int GetNode (int a, int b, double da, double db) {
       // Normalize the edge so that edges a..b and b..a both map to the
-      // same key value (the key is just a 64-bit integer with the two values a and b
-      // packed into it)
+      // same key value. Depending on whether this is a 'big mesh' or not (whether there
+      // are more than 2^16 vertices in the mesh or not), the key value is a 64-bit value
+      // with both endpoints packed in, or a 32-bit value with both endpoints (as 16-bit
+      // unsigned values) packed in.
+      // Thus, only one of either mBigEdgeMap or mSmallEdgeMap is in use (while one mesh
+      // is being processed). This may seem a bit fussy, but using the uint based small edge
+      // map is about 7% faster, and is therefore worth the bother. 
       int idx;
       if (mBigMesh) {
          long key = a < b ? (((long)a) << 32) + b : (((long)b) << 32) + a;
@@ -239,3 +261,4 @@ public class MeshSlicer {
    // to mNode entries (used to do the second level of connectivity)
    Dictionary<Point3f, int> mNodeMap = new (Point3fComparer.Delta);
 }
+#endregion

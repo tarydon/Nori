@@ -1,4 +1,8 @@
-﻿namespace Nori;
+// ────── ╔╗
+// ╔═╦╦═╦╦╬╣ MeshBuild.cs
+// ║║║║╬║╔╣║ <<TODO>>
+// ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
+namespace Nori;
 
 #region class Mesh3Builder -------------------------------------------------------------------------
 /// <summary>The Mesh3Builder class builds meshes with auto-smoothing and marking of sharp creases</summary>
