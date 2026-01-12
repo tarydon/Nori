@@ -18,10 +18,15 @@ public class Tester {
          int[] a = [.. line.Split ().Select (int.Parse)];
          for (int i = 0; i < 9; i += 3) P.Add (new (a[i], a[i + 1], a[i + 2]));
       }
+      F = new float[P.Count * 3];
+      for (int i = 0; i < P.Count; i++) {
+         F[i * 3] = P[i].X; F[i * 3 + 1] = P[i].Y; F[i * 3 + 2] = P[i].Z;
+      }
    }
    List<Point3f> P = [];
+   float[] F;
 
-   [Benchmark]
+//   [Benchmark]
    public void CollideMCAM () {
       int crashes = 0;
       for (int i = 0; i < 100; i++) {
@@ -47,6 +52,21 @@ public class Tester {
          }
       }
       if (crashes != 202) throw new NotImplementedException ();
+   }
+
+   [Benchmark]
+   public unsafe void CollideMoller () {
+      int crashes = 0; 
+      fixed (float* pf = F) {
+         for (int i = 0; i < 100; i++) {
+            int a = i * 3;
+            for (int j = 0; j < 100; j++) {
+               int b = j * 3;
+               bool check = i == j || Tri.CollideMoller (pf, a, a + 1, a + 2, b, b + 1, b + 2);
+               if (check) crashes++;
+            }
+         }
+      }
    }
 
    [Benchmark]
