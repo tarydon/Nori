@@ -244,6 +244,15 @@ public readonly struct Vector3f {
    /// <summary>Construct a Vector3f given 3 floats</summary>
    public Vector3f (float x, float y, float z) => (X, Y, Z) = (x, y, z);
 
+   // Properties ---------------------------------------------------------------
+   /// <summary>The X ordinate of the Point3</summary>
+   public readonly float X;
+   /// <summary>The Y ordinate of the Point3</summary>
+   public readonly float Y;
+   /// <summary>The Z ordinate of the Point3</summary>
+   public readonly float Z;
+
+   // Operators ----------------------------------------------------------------
    /// <summary>Converts a Point3f to a Point3</summary>
    public static explicit operator Vector3 (Vector3f a) => new (a.X, a.Y, a.Z);
    /// <summary>Converts a Point3 to a Point3f</summary>
@@ -252,13 +261,12 @@ public readonly struct Vector3f {
    /// <summary>Adds two Vector3f together</summary>
    public static Vector3f operator + (Vector3f a, Vector3f b) => new (a.X + b.X, a.Y + b.Y, a.Z + b.Z);
 
-   // Properties ---------------------------------------------------------------
-   /// <summary>The X ordinate of the Point3</summary>
-   public readonly float X;
-   /// <summary>The Y ordinate of the Point3</summary>
-   public readonly float Y;
-   /// <summary>The Z ordinate of the Point3</summary>
-   public readonly float Z;
+   /// <summary>Returns the cross-product of two Vector3f</summary>
+   public static Vector3f operator * (Vector3f a, Vector3f b)
+      => new (a.Y * b.Z - a.Z * b.Y, a.Z * b.X - a.X * b.Z, a.X * b.Y - a.Y * b.X);
+
+   /// <summary>Returns the dot product of this vectorf with another</summary>
+   public double Dot (Vector3f b) => X * b.X + Y * b.Y + Z * b.Z;
 
    public override string ToString () => $"<{X.S5 ()},{Y.S5 ()},{Z.S5 ()}>";
 }
