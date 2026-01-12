@@ -14,16 +14,24 @@ namespace NBench;
 public class Tester {
    public Tester () {
       Lib.Init ();
-      foreach (var line in File.ReadAllLines ("c:/etc/tri/input.txt")) {
-         int[] a = [.. line.Split ().Select (int.Parse)];
-         for (int i = 0; i < 9; i += 3) P.Add (new (a[i], a[i + 1], a[i + 2]));
+      var lines = File.ReadAllLines ("C:/Dropbox/Nori/TriTri.txt");
+      for (int i = 0; i < lines.Length; i++) {
+         string line = lines[i];
+         if (i % 3 == 2) Crash.Add (line.Trim () == "1");
+         else {
+            float[] f = [.. line.Split ().Select (float.Parse)];
+            for (int j = 0; j < 9; j += 3)
+               P.Add (new (f[j], f[j + 1], f[j + 2]));
+         }
       }
+
       F = new float[P.Count * 3];
       for (int i = 0; i < P.Count; i++) {
          F[i * 3] = P[i].X; F[i * 3 + 1] = P[i].Y; F[i * 3 + 2] = P[i].Z;
       }
    }
    List<Point3f> P = [];
+   List<bool> Crash = [];
    float[] F;
 
 //   [Benchmark]
