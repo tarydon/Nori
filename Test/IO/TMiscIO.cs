@@ -80,8 +80,7 @@ class STLTests {
       var zstm = new ZipReadStream (ze.Open (), ze.Length);
       var mesh = Mesh3.LoadObj (zstm.ReadAllLines ());
       mesh *= Matrix3.Rotation (EAxis.X, Lib.HalfPI) * Matrix3.Rotation (EAxis.Z, -Lib.HalfPI);
-      mesh = mesh.Translated (new (1, 2, 3));
-      mesh.Opposing ().IsFalse ();
+      mesh *= Matrix3.Translation (1, 2, 3);
       mesh.IsEmpty.IsFalse ();
       mesh.Bound.Is ("(0.72783~1.27201,1.01957~2.68977,2.41668~3.43965)");
       mesh.GetBound (Matrix3.Translation (0, 0, 1)).Is ("(0.72783~1.27201,1.01957~2.68977,3.41668~4.43965)");
@@ -92,7 +91,7 @@ class STLTests {
 
    [Test (160, "Load Mesh3 from Flux .mesh format")]
    void Test6 () {
-      var mesh = Mesh3.Load (NT.File ("IO/MESH/Carriage.mesh"));
+      var mesh = Mesh3.LoadFluxMesh (NT.File ("IO/MESH/Carriage.mesh"));
       File.WriteAllText (NT.TmpTxt, mesh.ToTMesh ());
       Assert.TextFilesEqual (NT.File ("IO/MESH/Carriage.tmesh"), NT.TmpTxt);
    }

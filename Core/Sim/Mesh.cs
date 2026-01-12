@@ -17,112 +17,15 @@ namespace Nori;
 ///   Each endpoint of the wire is again an index into the Vertex array (and to draw the
 ///   wires, we use only the position, not the normal)
 public class Mesh3 {
+   // Constructor --------------------------------------------------------------
+   /// <summary>Core constructor for a Mesh3</summary>
    public Mesh3 (ImmutableArray<Node> vertex, ImmutableArray<int> tris, ImmutableArray<int> wire) {
       Vertex = vertex; Triangle = tris; Wire = wire;
    }
 
-   /// <summary>Returns a copy of this mesh with full stencil lines</summary>
-   public Mesh3 Wireframed () {
-      List<int> wires = [];
-      HashSet<(int A, int B)> done = [];
-      for (int i = 0; i < Triangle.Length; i += 3) {
-         int a = Triangle[i], b = Triangle[i + 1], c = Triangle[i + 2];
-         Add (a, b); Add (b, c); Add (c, a);
-
-         void Add (int t1, int t2) {
-            if (t1 > t2) (t1, t2) = (t2, t1);
-            if (done.Add ((t1, t2))) { wires.Add (t1); wires.Add (t2); }
-         }
-      }
-      return new (Vertex, Triangle, [.. wires]);
-   }
-
-   public double GetArea () {
-      double total = 0;
-      for (int i = 0; i < Triangle.Length; i += 3) {
-         Point3 pa = (Point3)Vertex[Triangle[i]].Pos,
-                pb = (Point3)Vertex[Triangle[i + 1]].Pos,
-                pc = (Point3)Vertex[Triangle[i + 2]].Pos;
-         total += ((pb - pa) * (pc - pb)).Length;
-      }
-      return total / 2; 
-   }
-
-   public bool Opposing () {
-      for (int i = 0; i < Triangle.Length; i += 3) {
-         Node na = Vertex[Triangle[i]], nb = Vertex[Triangle[i + 1]], nc = Vertex[Triangle[i + 2]];
-         Point3 pa = (Point3)na.Pos, pb = (Point3)nb.Pos, pc = (Point3)nc.Pos;
-         Vector3 va = ((pb - pa) * (pc - pb)).Normalized ();
-         Vector3 vb = ((Vector3)na.Vec + (Vector3)nb.Vec + (Vector3)nc.Vec).Normalized ();
-         if (va.Opposing (vb)) return true;
-      }
-      return false;
-   }
-
-   public readonly ImmutableArray<Node> Vertex;
-   public readonly ImmutableArray<int> Triangle;
-   public readonly ImmutableArray<int> Wire;
-
-   public Bound3 GetBound (Matrix3 xfm) => new (Vertex.Select (a => (Point3)a.Pos * xfm));
-
-   public Bound3 Bound {
-      get {
-         if (_bound.IsEmpty) _bound = new Bound3 (Vertex.Select (a => a.Pos));
-         return _bound;
-      }
-   }
-
-   public bool IsEmpty => Triangle.Length == 0;
-
-   Bound3 _bound = new ();
-
-   public static Mesh3 operator * (Mesh3 mesh, Matrix3 xfm) {
-      if (xfm.IsIdentity) return mesh;
-      ImmutableArray<Node> nodes = [.. mesh.Vertex.Select (a => a * xfm)];
-      return new (nodes, mesh.Triangle, mesh.Wire);
-   }
-
-   [StructLayout (LayoutKind.Sequential, Pack = 2, Size = 20)]
-   public readonly struct Node (Point3f pos, Vec3H vec) {
-      public Node (Point3 pos, Vector3 vec) : this ((Point3f)pos, (Vec3H)vec) { }
-      public Node (double x, double y, double z, double dx, double dy, double dz)
-         : this (new Point3f (x, y, z), new Vec3H ((Half)dx, (Half)dy, (Half)dz)) { }
-
-      public Point3f Pos => pos;
-      public Vec3H Vec => vec;
-
-      public void Deconstruct (out Point3f p, out Vec3H v) => (p, v) = (Pos, Vec);
-      public override string ToString () => $"{pos} {vec}";
-      public static Node operator * (Node node, Matrix3 xfm) {
-         var pos = node.Pos * xfm;
-         var vec = node.Vec;
-         if (!xfm.IsTranslation) {
-            Vector3 v = new ((double)vec.X, (double)vec.Y, (double)vec.Z);
-            v *= xfm;
-            if (xfm.HasScaling) v = v.Normalized ();
-            vec = new ((Half)v.X, (Half)v.Y, (Half)v.Z);
-         }
-         return new (pos, vec);
-      }
-   }
-
-   /// <summary>Returns a copy of the mesh shifted by the given vector</summary>
-   public Mesh3 Translated (Vector3 vec) {
-      var nodes = new Node[Vertex.Length];
-      for (int i = 0; i < Vertex.Length; i++) {
-         var node = Vertex[i];
-         nodes[i] = new Node ((Point3f)((Point3)node.Pos + vec), node.Vec);
-      }
-      return new ([.. nodes], Triangle, Wire);
-   }
-
-   public static Mesh3 Load (string file) {
+   /// <summary>Loads a Mesh from a Flux .mesh file</summary>
+   public static unsafe Mesh3 LoadFluxMesh (string file) {
       using var stm = File.OpenRead (file);
-      return Load (stm);
-   }
-
-   /// <summary>Loads a Mesh from a .mesh file</summary>
-   public static unsafe Mesh3 Load (Stream stm) {
       using DeflateStream dfs = new (stm, CompressionMode.Decompress, false);
       ByteStm bs = new (dfs.ReadBytes (dfs.ReadInt32 ()));
       int sign = bs.ReadInt32 (), version = bs.ReadByte ();
@@ -176,7 +79,11 @@ public class Mesh3 {
       return new Mesh3 ([.. vertex], [.. ftris], [.. fwires]);
    }
 
-   public static Mesh3 LoadObj (IEnumerable<string> lines) {
+   /// <summary>Loads a Mesh from an OBJ file</summary>
+   public static Mesh3 LoadObj (string file) => LoadObj (File.ReadAllLines (file));
+
+   /// <summary>Loads a Mesh from OBJ file data (presented as strings)</summary>
+   public static Mesh3 LoadObj (IList<string> lines) {
       List<Point3> raw = [], pts = [];
       foreach (var line in lines) {
          if (line.StartsWith ('v')) {
@@ -190,9 +97,6 @@ public class Mesh3 {
       }
       return new Mesh3Builder (pts.AsSpan ()).Build ();
    }
-
-   public static Mesh3 LoadObj (string filename)
-      => LoadObj (File.ReadAllLines (filename));
 
    /// <summary>Loads data from a TMesh file</summary>
    public static Mesh3 LoadTMesh (string filename) {
@@ -229,61 +133,6 @@ public class Mesh3 {
       string Line () => lines[n++];
       static void Fatal () => throw new Exception ("Invalid TMESH file");
    }
-
-   /// <summary>Saves the mesh to a TMesh file.</summary>
-   /// The TMESH file has following sections:
-   /// 1. HEADER: The header section contains file format signature and file version.
-   /// 2. VERTICES: This section contains the vertex table where a vertex node is defined
-   ///    by a vertex position and the normal.
-   /// 3. TRIANGLES: These are the triangles table where a row contains three vertex indices
-   ///    for a triangle corner each.
-   /// 4. STENCILS: This section contains the stencil lines defined with a pair of vertex indeces.
-   /// 5. The file is terminated with an EOF (end-of-file) marker.
-   ///
-   /// The data sections (2, 3 and 4) start with the count followed by the one-per-line entries.
-   /// A sample mesh file with two triangles forming a rectangular plane and a border:
-   /// <code>
-   /// <![CDATA[
-   /// TMESH
-   /// 1
-   /// 4
-   /// 5,-50,-30,  1,0,0
-   /// 5,50,-30,  1,0,0
-   /// 5,50,30,  1,0,0
-   /// 5,-50,30,  1,0,0
-   /// 2
-   /// 0 1 2
-   /// 2 3 0
-   /// 4
-   /// 0 1
-   /// 1 2
-   /// 2 3
-   /// 3 0
-   /// EOF
-   /// ]]>
-   /// </code>
-   public string ToTMesh () {
-      // Version, Vertex count, vertices
-      StringBuilder sb = new ($"TMESH\n1\n{Vertex.Length}\n");
-      foreach (var (pos, vec) in Vertex)
-         sb.Append ($"{pos.X},{pos.Y},{pos.Z},  {vec.X},{vec.Y},{vec.Z}\n");
-
-      // Triangle count, triangle indices
-      sb.Append ($"{Triangle.Length / 3}\n");
-      for (int i = 0; i < Triangle.Length; i += 3)
-         sb.Append ($"{Triangle[i]} {Triangle[i + 1]} {Triangle[i + 2]}\n");
-
-      // Stencil count, stencil indices
-      sb.Append ($"{Wire.Length / 2}\n");
-      for (int i = 0; i < Wire.Length; i += 2)
-         sb.Append ($"{Wire[i]} {Wire[i + 1]}\n");
-      sb.Append ("EOF\n");
-      return sb.ToString ();
-   }
-
-   /// <summary>Computes polygonal intersection loops between a mesh and a plane.</summary>
-   public List<Polyline3> ComputePlaneIntersection (PlaneDef plane)
-      => new PlaneMeshIntersector ([this]).Compute (plane);
 
    /// <summary>Builds a sphere mesh centered at 'center' with the specified 'radius'/>.
    /// The generated sphere mesh consists of triangles of uniform size. The number of output 
@@ -401,7 +250,6 @@ public class Mesh3 {
    readonly static double _GR = (1 + Math.Sqrt (5)) * 0.5;
    readonly static double _B = Math.Sqrt (1 / (1 + _GR * _GR));
    readonly static double _A = _B * _GR;
-
    // The 'known' sphere approximations with equilaterial triangles.
    readonly static (ImmutableArray<Vector3> Vertices, ImmutableArray<int> Faces)[] _SphereData = [
       // Octahedron vertices and triangles (6 and 8)
@@ -417,545 +265,153 @@ public class Mesh3 {
        7,10,3, 7,6,10, 7,11,6, 11,0,6, 0,1,6,
        6,1,10, 9,0,11, 9,11,2, 9,2,5,  7,2,11])
    ];
+
+   // Properties ---------------------------------------------------------------
+   /// <summary>Returns the bounding cuboid of this Mesh3</summary>
+   public Bound3 Bound => Bound3.Cached (ref _bound, () => new (Vertex.Select (a => a.Pos)));
+   Bound3 _bound = new ();
+
+   /// <summary>Is this an empty mesh3 (no triangles)</summary>
+   public bool IsEmpty => Triangle.Length == 0;
+   /// <summary>These integers, taken 3 at a time, are indices into Vertex[], making up the triangles</summary>
+   public readonly ImmutableArray<int> Triangle;
+   /// <summary>Set of Vertices of this Mesh3</summary>
+   /// Each vertex contains a Point3f (for position) and a Vec3H (for normal vector)
+   public readonly ImmutableArray<Node> Vertex;
+   /// <summary>These integers, taken 2 at a time, are the stencil lines to be drawn in the mesh</summary>
+   public readonly ImmutableArray<int> Wire;
+
+   // Methods ------------------------------------------------------------------
+   /// <summary>Returns the surface area of this mesh (sum of areas of all triangles)</summary>
+   public double GetArea () {
+      double total = 0;
+      for (int i = 0; i < Triangle.Length; i += 3) {
+         Point3 pa = (Point3)Vertex[Triangle[i]].Pos,
+                pb = (Point3)Vertex[Triangle[i + 1]].Pos,
+                pc = (Point3)Vertex[Triangle[i + 2]].Pos;
+         total += ((pb - pa) * (pc - pb)).Length;
+      }
+      return total / 2;
+   }
+
+   /// <summary>Returns the Bound of this Mesh3, transformed by the given matrix</summary>
+   public Bound3 GetBound (Matrix3 xfm) => new (Vertex.Select (a => (Point3)a.Pos * xfm));
+
+   /// <summary>Returns a copy of this mesh with full stencil lines</summary>
+   public Mesh3 Wireframed () {
+      List<int> wires = [];
+      HashSet<(int A, int B)> done = [];
+      for (int i = 0; i < Triangle.Length; i += 3) {
+         int a = Triangle[i], b = Triangle[i + 1], c = Triangle[i + 2];
+         Add (a, b); Add (b, c); Add (c, a);
+
+         void Add (int t1, int t2) {
+            if (t1 > t2) (t1, t2) = (t2, t1);
+            if (done.Add ((t1, t2))) { wires.Add (t1); wires.Add (t2); }
+         }
+      }
+      return new (Vertex, Triangle, [.. wires]);
+   }
+
+   /// <summary>Saves the mesh to a TMesh file.</summary>
+   /// The TMESH file has following sections:
+   /// 1. HEADER: The header section contains file format signature and file version.
+   /// 2. VERTICES: This section contains the vertex table where a vertex node is defined
+   ///    by a vertex position and the normal.
+   /// 3. TRIANGLES: These are the triangles table where a row contains three vertex indices
+   ///    for a triangle corner each.
+   /// 4. STENCILS: This section contains the stencil lines defined with a pair of vertex indeces.
+   /// 5. The file is terminated with an EOF (end-of-file) marker.
+   ///
+   /// The data sections (2, 3 and 4) start with the count followed by the one-per-line entries.
+   /// A sample mesh file with two triangles forming a rectangular plane and a border:
+   /// <code>
+   /// <![CDATA[
+   /// TMESH
+   /// 1
+   /// 4
+   /// 5,-50,-30,  1,0,0
+   /// 5,50,-30,  1,0,0
+   /// 5,50,30,  1,0,0
+   /// 5,-50,30,  1,0,0
+   /// 2
+   /// 0 1 2
+   /// 2 3 0
+   /// 4
+   /// 0 1
+   /// 1 2
+   /// 2 3
+   /// 3 0
+   /// EOF
+   /// ]]>
+   /// </code>
+   public string ToTMesh () {
+      // Version, Vertex count, vertices
+      StringBuilder sb = new ($"TMESH\n1\n{Vertex.Length}\n");
+      foreach (var (pos, vec) in Vertex)
+         sb.Append ($"{pos.X},{pos.Y},{pos.Z},  {vec.X},{vec.Y},{vec.Z}\n");
+
+      // Triangle count, triangle indices
+      sb.Append ($"{Triangle.Length / 3}\n");
+      for (int i = 0; i < Triangle.Length; i += 3)
+         sb.Append ($"{Triangle[i]} {Triangle[i + 1]} {Triangle[i + 2]}\n");
+
+      // Stencil count, stencil indices
+      sb.Append ($"{Wire.Length / 2}\n");
+      for (int i = 0; i < Wire.Length; i += 2)
+         sb.Append ($"{Wire[i]} {Wire[i + 1]}\n");
+      sb.Append ("EOF\n");
+      return sb.ToString ();
+   }
+
+   // Operators ----------------------------------------------------------------
+   /// <summary>Multiply a Mesh3 by a given transform</summary>
+   public static Mesh3 operator * (Mesh3 mesh, Matrix3 xfm) {
+      if (xfm.IsIdentity) return mesh;
+      ImmutableArray<Node> nodes = [.. mesh.Vertex.Select (a => a * xfm)];
+      return new (nodes, mesh.Triangle, mesh.Wire);
+   }
+
+   // Nested types -------------------------------------------------------------
+   /// <summary>Represents a vertex in a Mesh3 (with a position, and a normal)</summary>
+   [StructLayout (LayoutKind.Sequential, Pack = 2, Size = 20)]
+   public readonly struct Node {
+      // Constructors ----------------------------------------------------------
+      /// <summary>Basic constructor for Node</summary>
+      public Node (Point3f pos, Vec3H vec) { Pos = pos; Vec = vec; }
+      /// <summary>Construct a Node given a Point3 and a Vector3</summary>
+      public Node (Point3 pos, Vector3 vec) { Pos = (Point3f)pos; Vec = (Vec3H)vec; }
+      /// <summary>Construct a Node3 given 3 components for position and 3 components for normal</summary>
+      public Node (double x, double y, double z, double dx, double dy, double dz) {
+         Pos = new Point3f (x, y, z); Vec = new Vec3H ((Half)dx, (Half)dy, (Half)dz);
+      }
+
+      // Properties ------------------------------------------------------------
+      /// <summary>The Position of the Node</summary>
+      public readonly Point3f Pos;
+      /// <summary>The Normal Vector of the node</summary>
+      public readonly Vec3H Vec;
+
+      // Implementation --------------------------------------------------------
+      public void Deconstruct (out Point3f p, out Vec3H v) => (p, v) = (Pos, Vec);
+      public override string ToString () => $"{Pos} {Vec}";
+
+      // Operators -------------------------------------------------------------
+      /// <summary>Multiply a node by a given translation matrix</summary>
+      /// Optimizes some special cases:
+      /// - If this is a pure translation matrix, the Vector does not change
+      /// - If there is no scaling, the new Vector does not have be normalized
+      public static Node operator * (Node node, Matrix3 xfm) {
+         var pos = node.Pos * xfm;
+         var vec = node.Vec;
+         if (!xfm.IsTranslation) {
+            Vector3 v = new ((double)vec.X, (double)vec.Y, (double)vec.Z);
+            v *= xfm;
+            if (xfm.HasScaling) v = v.Normalized ();
+            vec = new ((Half)v.X, (Half)v.Y, (Half)v.Z);
+         }
+         return new (pos, vec);
+      }
+   }
 }
 #endregion Mesh3
-
-#region class PlaneMeshIntersector -----------------------------------------------------------------
-/// <summary>Provides plane/mesh intersection functionality for a specific mesh.</summary>
-/// This class computes polygonal intersection loops between a mesh and a plane.
-/// Create an instance with a mesh collection and call `Compute` repeatedly to intersect
-/// multiple planes against the same mesh set.
-public class PlaneMeshIntersector (IEnumerable<Mesh3> meshes) {
-   /// <summary>Computes all mesh/plane intersection polylines for the configured mesh set.</summary>
-   /// For each input mesh whose bound intersects the plane:
-   /// - Reuses a per-instance distance buffer sized to the mesh's vertex count.
-   /// - Computes signed distances of all mesh vertices to the plane to detect crossing edges.
-   /// - Walks all triangles; for each edge whose endpoints lie on opposite sides of the plane,
-   ///   creates or reuses an interpolated intersection point and records adjacency between the
-   ///   two intersection points produced in that triangle.
-   /// - Traverses the resulting point-adjacency graph to extract raw intersection chains.
-   /// - Merges chains whose endpoints coincide within a small tolerance, and discards degenerate
-   ///   or zero-length results.
-   /// - Converts the final chains into immutable Polyline3 instances and returns them.
-   public List<Polyline3> Compute (PlaneDef plane) {
-      Vector3 n = plane.Normal; double d = plane.D;
-      ptMap.Clear (); mOutChains.Clear ();
-
-      foreach (var mesh in meshes) {
-         if (!Intersects (mesh.Bound, n, d)) continue;
-
-         mVtx = mesh.Vertex;
-         EnsureDistCapacity (mVtx.Length);
-         ComputeDistances (n, d);
-
-         ResetWorkBuffers ();
-         BuildAdjacency (mesh.Triangle);
-         PrepareVisited (mRaw.Count);
-         WalkAllChains ();
-      }
-
-      return MergePolylines ();
-   }
-
-   // Makes sure mDist has enough capacity.
-   void EnsureDistCapacity (int count) {
-      if (mDist.Length < count) 
-         mDist = new double[count];
-   }
-
-   // Merges open polylines by matching endpoints and returns final polylines.
-   List<Polyline3> MergePolylines () {
-      List<Polyline3> polylines = [];
-      RemoveClosedLoops (polylines);
-
-      // If only one chain remains, return it directly
-      if (mOutChains.Count == 1) {
-         BuildPolyline (mOutChains[0], polylines);
-         return polylines;
-      }
-
-      PrepareEndpointMap ();
-      MergeOpenChains (polylines);
-
-      return polylines;
-   }
-
-   // Removes closed loops from mOutChains and appends them as polylines.
-   void RemoveClosedLoops (List<Polyline3> polylines) {
-      for (int i = mOutChains.Count - 1; i >= 0; i--) {
-         var chain = mOutChains[i];
-         if (chain.Count > 0 && chain[0].EQ (chain[^1], 1e-3f)) {
-            BuildPolyline (chain, polylines);
-            mOutChains.RemoveAt (i);
-         }
-      }
-   }
-
-   // Builds the endpoint map from current chains in mOutChains.
-   void PrepareEndpointMap () {
-      PrepareVisited (mOutChains.Count);     // for tracking merged chains
-
-      for (int i = 0; i < mOutChains.Count; i++) {
-         var chain = mOutChains[i];
-         if (chain.Count == 0) continue;
-         AddToPtMap (chain[0], (i, false));  // head
-         AddToPtMap (chain[^1], (i, true));  // tail
-      }
-   }
-
-   // Merges open chains using the endpoint map and appends final polylines.
-   void MergeOpenChains (List<Polyline3> polylines) {
-      for (int i = 0; i < mOutChains.Count; i++) {
-         if (mVisited[i]) continue;          // already merged
-
-         mVisited[i] = true; var chain = mOutChains[i];
-
-         TraverseAndMerge (chain, false);    // traverse forward
-         TraverseAndMerge (chain, true);     // traverse backward
-
-         BuildPolyline (chain, polylines);   // convert to Polyline3
-      }
-   }
-
-   // Adds points to endpoint map for merging chains.
-   void AddToPtMap (Point3f pt, (int idx, bool isEnd) val) {
-      if (ptMap.TryGetValue (pt, out var lst))
-         lst.Add (val);          // append to existing list
-      else ptMap[pt] = [val];    // create new list
-   }
-
-   // Travels through the endpoint map to merge chains into the given chain.
-   void TraverseAndMerge (List<Point3f> chain, bool fromHead) {
-      if (chain.Count == 0) return;
-
-      // If fromHead is true, we are traverse backward.
-      Point3f pt = fromHead ? chain[0] : chain[^1];
-
-      // Keep traversing while we can find unvisited chains to attach.
-      while (ptMap.TryGetValue (pt, out var lst)) {
-         if (lst.Count > 2) break;     // ambiguous case, stop here
-
-         int nIdx = -1; bool isEnd = false;
-         for (int i = 0; i < lst.Count; i++) {
-            var item = lst[i];
-            if (!mVisited[item.idx]) { nIdx = item.idx; isEnd = item.isEnd; break; }
-         }
-         if (nIdx < 0) break;          // no unvisited chain found
-
-         var nChain = mOutChains[nIdx]; int nCount = nChain.Count; mVisited[nIdx] = true;
-
-         if (fromHead) {   // Backward direction: attach at chain start
-            if (isEnd) for (int j = nCount - 2; j >= 0; j--) chain.Insert (0, nChain[j]);
-            else for (int j = 1; j < nCount; j++) chain.Insert (0, nChain[j]);
-            pt = chain[0];
-         } else {          // Forward direction: attach at chain end
-            if (isEnd) for (int j = nCount - 2; j >= 0; j--) chain.Add (nChain[j]);
-            else for (int j = 1; j < nCount; j++) chain.Add (nChain[j]);
-            pt = chain[^1];
-         }
-      }
-   }
-
-   // Quick plane-vs-mesh test; returns false if the bound lies strictly on one side.
-   bool Intersects (Bound3 bound, Vector3 n, double d) {
-      if (bound.IsEmpty) return false;
-
-      // Center (Mid) and half extents (Length/2) per axis.
-      double cx = bound.X.Mid, cy = bound.Y.Mid, cz = bound.Z.Mid;
-      double ex = bound.X.Length * 0.5, ey = bound.Y.Length * 0.5, ez = bound.Z.Length * 0.5;
-
-      // Signed distance from bound center to plane: dot(n, c) + d.
-      double dist = n.X * cx + n.Y * cy + n.Z * cz + d;
-
-      // Project the bound extents onto the plane normal to get the max reach.
-      double r = Math.Abs (n.X) * ex + Math.Abs (n.Y) * ey + Math.Abs (n.Z) * ez;
-
-      // If center distance exceeds projected radius, plane cannot hit the mesh.
-      return Math.Abs (dist) <= r;
-   }
-
-   // Computes signed distances of all mesh vertices to the plane.
-   void ComputeDistances (Vector3 n, double dBias) {
-      for (int i = 0; i < mVtx.Length; i++) {
-         // Signed distance to plane: dot(n, p) + d.
-         var p = mVtx[i].Pos;
-         double v = n.X * p.X + n.Y * p.Y + n.Z * p.Z + dBias;
-         // A tiny bias to avoid ambiguous "on plane" classification
-         if (Math.Abs (v) < 1e-10) v += 1e-8; mDist[i] = v;
-      }
-   }
-
-   // Clears all per-call working collections.
-   void ResetWorkBuffers () {
-      mNbr1.Clear (); mNbr2.Clear ();
-      mRaw.Clear (); mEdgeMap.Clear ();
-   }
-
-   // Builds the adjacency lists between plane-edge intersection points produced from triangles.
-   void BuildAdjacency (ImmutableArray<int> mtri) {
-      for (int t = 0; t < mtri.Length; t += 3) {
-         int a = mtri[t], b = mtri[t + 1], c = mtri[t + 2];
-         double da = mDist[a], db = mDist[b], dc = mDist[c];
-
-         int p1 = -1, p2 = -1;
-
-         // For each triangle edge, a sign change means the edge crosses the plane and yields one
-         // intersection point (created once per mesh edge via mEdgeMap).
-         if (da * db < 0) p1 = GetOrAddEdgePoint (a, b, da, db);
-         if (db * dc < 0) { int p = GetOrAddEdgePoint (b, c, db, dc); if (p1 == -1) p1 = p; else p2 = p; }
-         if (dc * da < 0) { int p = GetOrAddEdgePoint (c, a, dc, da); if (p1 == -1) p1 = p; else p2 = p; }
-
-         // A plane cutting a triangle produces exactly 2 points.
-         // When we have 2, add those as neighbours to each other.
-         if (p1 != -1 && p2 != -1) Link (p1, p2);
-      }
-   }
-
-   // Adds a bidirectional link between two intersection points in the per-point adjacency lists.
-   void Link (int a, int b) {
-      if (mNbr1[a] == -1) mNbr1[a] = b; else mNbr2[a] = b;
-      if (mNbr1[b] == -1) mNbr1[b] = a; else mNbr2[b] = a;
-   }
-
-   // Ensures the visited array is large enough and clears it for the current intersection run.
-   void PrepareVisited (int count) {
-      if (mVisited.Length < count) mVisited = new bool[count];
-      else Array.Clear (mVisited, 0, count);
-   }
-
-   // Walks all unvisited intersection points to extract all polylines/chains for this plane cut.
-   void WalkAllChains () {
-      for (int i = 0; i < mRaw.Count; i++) {
-         if (mVisited[i]) continue;
-         mVisited[i] = true;
-
-         List<Point3f> pts = GetChainList ();
-         pts.Add (mRaw[i]);
-
-         // Walk forward and backward to collect all points in the chain.
-         Traverse (i, mNbr1[i], false, pts);
-         Traverse (i, mNbr2[i], true, pts);
-
-         mOutChains.Add (pts);
-      }
-   }
-
-   // Converts extracted chains into Polyline3 and returns pooled lists back to the pool.
-   void BuildPolyline (List<Point3f> pts, List<Polyline3> polylines) {
-      int nPts = pts.Count;
-
-      // Discard degenerate polylines
-      if (nPts < 2) { ReturnChainList (pts); return; }
-
-      // Check if all points are identical
-      var prev = pts[0]; bool hasLen = false;
-      for (int j = 1; j < nPts; j++) {
-         var p = pts[j];
-         // Break if we find a point that is not equal to previous
-         if (!p.EQ (prev, 1e-3f)) { hasLen = true; break; }
-         prev = p;
-      }
-      if (!hasLen) { ReturnChainList (pts); return; }
-
-      // Convert to Point3 array
-      var dst = new Point3[nPts];
-      for (int j = 0; j < nPts; j++) dst[j] = (Point3)pts[j];
-
-      pts.Clear ();           // Clear before returning to pool
-      ReturnChainList (pts);  // Return to pool
-
-      polylines.Add (new Polyline3 (0, ImmutableArray.Create (dst)));
-   }
-
-   // Traverses a polyline in one direction from a start point, optionally prepending points to preserve order.
-   void Traverse (int from, int nextIdx, bool prepend, List<Point3f> pts) {
-      int prev = from, curr = nextIdx;
-
-      // Follow links until the chain ends (-1) or point visited.
-      while (curr != -1 && !mVisited[curr]) {
-         if (prepend) pts.Insert (0, mRaw[curr]);
-         else pts.Add (mRaw[curr]);
-         mVisited[curr] = true;
-
-         // Pick the neighbour that is not the node we came from.
-         int n1 = mNbr1[curr], n2 = mNbr2[curr];
-         int next = n1 != prev ? n1 : n2;
-         prev = curr; curr = next;
-      }
-   }
-
-   // Gets an existing intersection point or creates it.
-   int GetOrAddEdgePoint (int a, int b, double da, double db) {
-      // Normalize edge key so (a,b) and (b,a) map to same point.
-      var key = a < b ? (a, b) : (b, a);
-      if (mEdgeMap.TryGetValue (key, out int idx)) return idx;
-
-      // Interpolate along the edge using signed distances: t = da / (da - db).
-      idx = mRaw.Count;
-      mRaw.Add ((da / (da - db)).Along (mVtx[a].Pos, mVtx[b].Pos));
-
-      // Start with no neighbours; BuildAdjacency/Link will fill these.
-      mNbr1.Add (-1); mNbr2.Add (-1); mEdgeMap[key] = idx;
-      return idx;
-   }
-
-   // List<Point3f> pool for chains
-   List<Point3f> GetChainList () {
-      if (mChainPool.Count == 0) return [];
-
-      var lst = mChainPool[^1];  // reuse last list
-      mChainPool.RemoveAt (mChainPool.Count - 1);
-      return lst;
-   }
-
-   // Returns a chain list back to the pool
-   void ReturnChainList (List<Point3f> pts) => mChainPool.Add (pts);
-
-   // Per-instance working storage reused between Compute calls
-   double[] mDist = [];
-   ImmutableArray<Mesh3.Node> mVtx;
-   readonly Dictionary<(int, int), int> mEdgeMap = [];
-   readonly Dictionary<Point3f, List<(int idx, bool isEnd)>> ptMap = new (Point3fComparer.Delta);
-   readonly List<int> mNbr1 = [], mNbr2 = [];   // Neighbours of intersection points at each index
-   readonly List<Point3f> mRaw = [];            // interpolated intersection points (Point3f)
-   bool[] mVisited = [];
-
-   // Reuse temporary lists to reduce GC pressure
-   readonly List<List<Point3f>> mOutChains = [];
-   readonly List<List<Point3f>> mChainPool = [];
-}
-#endregion PlaneMeshIntersector
-
-#region class Mesh3Builder -------------------------------------------------------------------------
-/// <summary>The Mesh3Builder class builds meshes with auto-smoothing and marking of sharp creases</summary>
-/// To construct a mesh, all this needs is a triangle mesh and with consistent winding.
-/// This finds all the shared edges between faces and if the edge angle is
-/// more than a given threshold, it marks the edge as sharp. The SmoothMeshBuilder works with a given mesh
-/// as the target and adds triangles into that mesh. Note that you never need to supply normals to this.
-/// It computes normals based on which parts should be 'smooth' and which ones should be 'sharp'.
-public class Mesh3Builder {
-   /// <summary>Initialize a Mesh3Builder with a set of points </summary>
-   /// These points, taken 3 at a time, define a set of triangles.
-   /// <param name="pts">Triangle points.</param>
-   public Mesh3Builder (ReadOnlySpan<Point3> pts) {
-      Dictionary<Point3, int> verts = [];
-      foreach (var pt in pts) {
-         if (!verts.TryGetValue (pt, out int id)) {
-            id = verts.Count;
-            verts.Add (pt, id);
-            Add (ref mVertex, ref mcVertex, new (pt));
-         }
-         mIdx.Add (id);
-      }
-   }
-
-   /// <summary>Constructs a Mesh3 object from the given set of 'smoothed' triangles.</summary>
-   public Mesh3 Build () {
-      for (int i = 0; i < mIdx.Count; i += 3) {
-         int A = mIdx[i], B = mIdx[i + 1], C = mIdx[i + 2];
-         Point3 a = mVertex[A].Pos, b = mVertex[B].Pos, c = mVertex[C].Pos;
-         var norm = (b - a) * (c - a);
-         Face f = new (A, B, C, norm / norm.Length, norm.Length);
-         AssignFace (f.A, mcFace); AssignFace (f.B, mcFace); AssignFace (f.C, mcFace);
-         Add (ref mFace, ref mcFace, f);
-      }
-
-      Mesh3.Node[] nodes = new Mesh3.Node[mcVertex]; int cNodes = 0;
-      List<int> wires = [], tries = [];
-      HashSet<(Point3, Point3)> lines = [];
-
-      // First go through the faces touching each corner and gather them into smoothing-groups
-      for (int i = 0; i < mcVertex; i++) GroupFaces (ref mVertex[i], ref nodes, ref cNodes);
-
-      // Now we have enough information to try and create the faces
-      for (int i = 0; i < mcFace; i++) AddTriangle (i);
-
-      return new Mesh3 ([.. nodes.AsSpan (0, cNodes)], [.. tries], [.. wires]);
-
-      // Assigns a reference to the given face to a given vertex
-      // This tells the vertex that the face nFace references this vertex
-      void AssignFace (int nVert, int nFace) =>
-         mChains.Add (ref mVertex[nVert].FaceChain, new FaceData (nFace));
-
-      // Records a mesh triangle and the stencil line.
-      void AddTriangle (int nFace) {
-         Face f = mFace[nFace];
-         Vertex v1 = mVertex[f.A], v2 = mVertex[f.B], v3 = mVertex[f.C];
-         int n1 = GetVID (v1, nFace), n2 = GetVID (v2, nFace), n3 = GetVID (v3, nFace);
-
-         tries.Add (n1); tries.Add (n2); tries.Add (n3);
-         if (IsStencil (v1, f.B)) AddLine (n1, n2, v1, v2);
-         if (IsStencil (v2, f.C)) AddLine (n2, n3, v2, v3);
-         if (IsStencil (v3, f.A)) AddLine (n3, n1, v3, v1);
-      }
-
-      // Adds an entry to the stencil array
-      void AddLine (int n1, int n2, in Vertex v1, in Vertex v2) {
-         // Skip duplicate lines.
-         if (lines.Contains ((v1.Pos, v2.Pos)) || lines.Contains ((v2.Pos, v1.Pos))) return;
-         lines.Add ((v1.Pos, v2.Pos));
-         wires.Add (n1); wires.Add (n2);
-      }
-
-      // Returns the vertex ID of a corner, as it appears in face nFace
-      int GetVID (Vertex v, int nFace) {
-         foreach (var fd in mChains.Enum (v.FaceChain))
-            if (fd.NFace == nFace) return fd.NGroup;
-         throw new NotImplementedException ();
-      }
-   }
-
-   /// <summary>Given a Vertex c, this assigns group codes to each face referencing this vertex</summary>
-   /// Note that these group codes are local to this vertex - they are not a property of the face.
-   /// That is, AT this vertex, we set up group codes for all the faces touching it. For example,
-   /// it's possible that 6 faces might touch a vertex. Looking top down on the vertex, let's say
-   /// they form a hexagonal web at the vertex, and the faces are A, B, C, D, E, F (in that order).
-   /// Suppose also that A,B,C have a group code 0 (at this vertex) and D,E,F have a group code 1.
-   /// This means that the normals of A,B,C will be averaged to provide the normal on 'that side'
-   /// of the sharp edge, while the normals of D,E,F will be averaged to provide the other normal.
-   /// The sharp edges here are the edges between C-D and the edge between F-A.
-   ///
-   /// The GroupFaces method builds all the necessary data required to provide this averaged normal
-   /// and the 'sharp-edge' flag at the next stage.
-   void GroupFaces (ref Vertex c, ref Mesh3.Node[] nodes, ref int cNodes) {
-      int max = 0;
-      // First, assign group codes to each face - any face that forms a small enough angle to any
-      // previous face uses that face's group code. Otherwise, it begins a new group.
-      mChains.GatherRawIndices (c.FaceChain, mVF);
-      for (int i = 0; i < mVF.Count; i++) {
-         ref FaceData fd1 = ref mChains.Data[mVF[i]];
-         Vector3 vec = mFace[fd1.NFace].Vec;
-         for (int j = 0; j < i; j++) {
-            ref FaceData fd2 = ref mChains.Data[mVF[j]];
-            if (mFace[fd2.NFace].Vec.CosineToAlreadyNormalized (vec) > mCos) fd1.NGroup = fd2.NGroup;
-         }
-         if (fd1.NGroup == -1) fd1.NGroup = max++;
-      }
-
-      // At this Point, max is the number of groups at this vertex (this is usually a small number,
-      // less than 6 to 10). We have to now compute the normal vectors for each of the groups, by
-      // averaging the normals of all faces with that group code. We weight this average by the face
-      // area.
-      while (mAvgs.Count < max) { mAvgs.Add (Vector3.Zero); mVIDs.Add (0); }
-      for (int i = 0; i < max; i++) mAvgs[i] = Vector3.Zero;
-
-      foreach (int n in mVF) {
-         FaceData fd = mChains.Data[n];
-         Face f = mFace[fd.NFace];
-         mAvgs[fd.NGroup] += f.Vec * f.Area;
-      }
-
-      // We now have the weighted average of the normal from each face-group for this corner. Add
-      // multiple vertices into the mesh. If there are 3 groups, then we can now add 3 'mesh-vertex'
-      // objects (each of which consists of a position+normal). The position is same for all of these,
-      // but the normals are based on the group-averaged normals. As we do this, we get the vertex-ids
-      // of these from the mesh and add them into the mVIDs temporary array.
-      for (int i = 0; i < max; i++) {
-         var norm = mAvgs[i].Normalized ();
-         int vid = cNodes;
-         Mesh3.Node node = new ((Point3f)c.Pos, new ((Half)norm.X, (Half)norm.Y, (Half)norm.Z));
-         Add (ref nodes, ref cNodes, node);
-         mVIDs[i] = vid;
-      }
-      // Now update the facedata with the VIDs. After this, the NGroup values in the FaceData contain
-      // actually vertex IDs within the mesh. This is critical: up to this point, the NGroup values contained
-      // the group codes for the faces (small numbers like 0,1,2). At this point, we replace those with
-      // vertex-IDs within the mesh (so that these numbers can directly be used later to compose triangles).
-      foreach (int n in mVF)
-         mChains.Data[n].NGroup = mVIDs[mChains.Data[n].NGroup];
-   }
-
-   /// <summary>This tells us if the edge from this vertex (c) to the next vertex (next) is 'sharp'</summary>
-   bool IsStencil (Vertex c, int next) {
-      if (Wireframe) return true;
-      // We have to find two faces that have 'next' in their corner list. Then, if they
-      // both have the same group code, there is no stencil. If we find only one face, or if their
-      // group codes are different, there is a stencil.
-      int cFound = 0, nGroup = 0;
-      foreach (var fd in mChains.Enum (c.FaceChain)) {
-         if (!mFace[fd.NFace].Contains (next)) continue;
-         if (++cFound == 1) nGroup = fd.NGroup;    // Found 1 face
-         else return nGroup != fd.NGroup;          // Found 2nd face, we can now figure out if this is a sharp edge
-      }
-      // Note that we will not find 3 faces in any well-formed mesh.
-      return true;
-   }
-
-   public bool Wireframe = false;
-
-   // This is the list of faces at this vertex (a temporary used only by GroupFaces)
-   readonly List<int> mVF = [];
-   // The list of group-wise averages (a temporary used only by GroupFaces)
-   readonly List<Vector3> mAvgs = [];
-   // The list of vertex-IDs for these groups (a temporary used only by GroupFaces)
-   readonly List<int> mVIDs = [];
-
-   // If two faces have a cosine less than this between them, it's a sharp edge
-   const double mCos = 0.51;
-
-   // This is the list of vertices
-   readonly Vertex[] mVertex = [];
-   // How many of these vertices are used?
-   readonly int mcVertex;
-
-   // This is the list of all the faces (each has 3 vertices, area and normal)
-   Face[] mFace = [];
-   // How many of the elements from this array are used?
-   int mcFace;
-
-   // These contain the chains of face-data stored with each vertex
-   readonly Chains<FaceData> mChains = new ();
-   // This is the temporary array into which indices are gathered (they are used only when Build() is called)
-   readonly List<int> mIdx = [];
-
-   // Add an element into an array, growing the array as needed
-   static void Add<T> ([NotNull] ref T[]? data, ref int cUsed, T value) {
-      int n = data?.Length ?? 0;
-      if (cUsed >= n || data == null) { n = Math.Max (8, n * 2); Array.Resize (ref data, n); }
-      data[cUsed++] = value;
-   }
-
-   /// <summary>This holds the data about a Face (the 3 vertices it is made of, the normal, the area)</summary>
-   /// <param name="A">The first Face corner</param>
-   /// <param name="B">The second Face corner</param>
-   /// <param name="C">The third Face corner</param>
-   /// <param name="Vec">The face normal</param>
-   /// <param name="Area">Area of 'this' face (used when computing an average normal at a corner)</param>
-   readonly record struct Face (int A, int B, int C, Vector3 Vec, double Area) {
-      /// <summary>Returns true if the given vertex belongs to this face</summary>
-      public bool Contains (int n) => A == n || B == n || C == n;
-   }
-
-   /// <summary>This structure holds the reference of a face within a vertex</summary>
-   /// It is primarily used to assign group numbers to these faces such that all faces
-   /// sharing a group number are part of the same 'smoothing group'.
-   struct FaceData (int nFace) {
-      /// <summary>The face reference.</summary>
-      public readonly int NFace = nFace;
-      /// <summary>Faces with the same group code are in the same smoothing-group</summary>
-      public int NGroup = -1;
-   }
-
-   /// <summary>This maintains the data for a given vertex</summary>
-   /// This holds the list of faces this vertex is referenced by, and the actual
-   /// geometric position of the vertex
-   struct Vertex (in Point3 pos) {
-      /// <summary>Position of 'this' vertex.</summary>
-      public readonly Point3 Pos = pos;
-      /// <summary>This is the chain of faces connected to this corner</summary>
-      public int FaceChain;
-   }
-}
-#endregion
-
-class Point3fComparer (float threshold) : IEqualityComparer<Point3f> {
-   public bool Equals (Point3f a, Point3f b) => a.EQ (b, threshold);
-
-   public int GetHashCode (Point3f a)
-      => HashCode.Combine (a.X.Round (threshold), a.Y.Round (threshold), a.Z.Round (threshold));
-
-   /// <summary>A Point3f comparer that compares points with a threshold of 1e-3</summary>
-   public static readonly Point3fComparer Delta = new (1e-3f);
-   /// <summary>A Point3f comparer that compares points with a threshold of 1e-6</summary>
-   public static readonly Point3fComparer Epsilon = new (1e-6f);
-}

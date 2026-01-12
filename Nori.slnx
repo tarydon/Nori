@@ -1,7 +1,9 @@
 <Solution>
   <Folder Name="/Demos/">
-    <Project Path="Demos/ConDemo/ConDemo.csproj" />
     <Project Path="Demos/WPFDemo/WPFDemo.csproj" />
+    <Project Path="Demos/ConShell/ConShell.csproj" />
+    <Project Path="Demos/BenchShell/BenchShell.csproj" />
+    <Project Path="Demos/WPFShell/WPFShell.csproj" />
   </Folder>
   <Folder Name="/Test/">
     <Project Path="Test/Nori.Test.csproj" />
