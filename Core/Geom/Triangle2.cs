@@ -18,6 +18,17 @@ public static partial class Tri {
       double du0du1 = du0 * du1, du0du2 = du0 * du2;
       if (du0du1 > 0.0 && du0du2 > 0.0) return false;
 
+      E1 = U1 - U0; E2 = U2 - U0; Vector3f N2 = E1 * E2;
+      double d2 = -Dot (N2, U0);
+      double dv0 = N2.X * V0.X + N2.Y * V0.Y + N2.Z * V0.Z + d2;
+      double dv1 = N2.X * V1.X + N2.Y * V1.Y + N2.Z * V1.Z + d2;
+      double dv2 = N2.X * V2.X + N2.Y * V2.Y + N2.Z * V2.Z + d2;
+      if (Abs (dv0) < EPSILON) du0 = 0.0;
+      if (Abs (dv1) < EPSILON) du1 = 0.0;
+      if (Abs (dv2) < EPSILON) du2 = 0.0;
+      double dv0dv1 = dv0 * dv1, dv0dv2 = dv0 * dv2;
+      if (dv0dv1 > 0.0 && dv0dv2 > 0.0) return false;
+
       // Find the line of projection of the triangle U on the plane of V0
       Point3f a = new (), b = Point3f.Nil;
       if (du1 * du2 <= 0) a = (du1 / (du1 - du2)).Along (U1, U2);

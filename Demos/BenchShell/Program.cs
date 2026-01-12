@@ -28,7 +28,7 @@ public class Tester {
          int a = i * 3;
          for (int j = 0; j < 100; j++) {
             int b = j * 3;
-            bool check = Tri.CollideMCAM (P[a], P[a + 1], P[a + 2], P[b], P[b + 1], P[b + 2]);
+            bool check = i == j || Tri.CollideMCAM (P[a], P[a + 1], P[a + 2], P[b], P[b + 1], P[b + 2]);
             if (check) crashes++;
          }
       }
@@ -42,8 +42,7 @@ public class Tester {
          int a = i * 3;
          for (int j = 0; j < 100; j++) {
             int b = j * 3;
-            bool check = Tri.CollideFlux (P[a], P[a + 1], P[a + 2], P[b], P[b + 1], P[b + 2]);
-            if (i == j) check = true;
+            bool check = i == j || Tri.CollideFlux (P[a], P[a + 1], P[a + 2], P[b], P[b + 1], P[b + 2]);
             if (check) crashes++;
          }
       }
@@ -57,7 +56,7 @@ public class Tester {
          int a = i * 3;
          for (int j = 0; j < 100; j++) {
             int b = j * 3;
-            bool check = Tri.CollideHeld (P[a], P[a + 1], P[a + 2], P[b], P[b + 1], P[b + 2]);
+            bool check = i == j || Tri.CollideHeld (P[a], P[a + 1], P[a + 2], P[b], P[b + 1], P[b + 2]);
             if (check) crashes++;
          }
       }
