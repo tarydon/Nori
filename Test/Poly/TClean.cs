@@ -43,7 +43,8 @@ class PolyStitchTests {
 
       {
          dwg.Add (a); dwg.Add (b);
-         new DwgStitcher (dwg).Process ();
+         using (dwg.Ents.Subscribe (a => Assert.IsTrue (false))) // Not expecting any change notifications
+            new DwgStitcher (dwg).Process ();
          dwg.Ents.Count.Is (2);
          ((E2Poly)dwg.Ents[0]).Poly.Is (a);
          ((E2Poly)dwg.Ents[1]).Poly.Is (b);
@@ -52,7 +53,8 @@ class PolyStitchTests {
       { // Re-test by reordering the entities!
          dwg.Ents.Clear ();
          dwg.Add (b); dwg.Add (a);
-         new DwgStitcher (dwg).Process ();
+         using (dwg.Ents.Subscribe (a => Assert.IsTrue (false))) // Not expecting any change notifications
+            new DwgStitcher (dwg).Process ();
          dwg.Ents.Count.Is (2);
          ((E2Poly)dwg.Ents[0]).Poly.Is (b);
          ((E2Poly)dwg.Ents[1]).Poly.Is (a);
