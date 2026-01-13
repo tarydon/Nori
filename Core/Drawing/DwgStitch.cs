@@ -5,7 +5,7 @@
 namespace Nori;
 
 #region class DwgStitcher --------------------------------------------------------------------------
-class DwgStitcher {
+public class DwgStitcher {
    public DwgStitcher (Dwg2 dwg, double threshold = 1e-3) {
       mDwg = dwg;
       mEnds = new (new PointComparer (mThreshold = threshold));
@@ -45,7 +45,8 @@ class DwgStitcher {
                   // If so, remove this endpoint from the list of free-floating ends, and
                   // if the newly joined result is now self-closing, we are done.
                   RemoveEnds (other);
-                  if (TryClose (ent, final = tmp.Clean ())) { mStitched = true; goto Done; }
+                  mStitched = true;
+                  if (TryClose (ent, final = tmp.Clean ())) goto Done;
                } else
                   throw new Exception ("DwgStitcher: Coding error");
             }
@@ -62,7 +63,7 @@ class DwgStitcher {
       if (!mStitched) return;
       mDwg.Ents.Clear (); mDwg.Add (mDone);
    }
-   bool mStitched = true;
+   bool mStitched = false;
 
    // Implementation -----------------------------------------------------------
    void AddEnds (E2Poly ent) {
