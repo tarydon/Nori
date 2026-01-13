@@ -10,7 +10,7 @@ public class DXFReader {
    static DXFReader () => Encoding.RegisterProvider (CodePagesEncodingProvider.Instance);
 
    /// <summary>Construct a DXFReader, given a filename</summary>
-   public DXFReader (string file) : this (File.OpenRead (file)) { }
+   public DXFReader (string file) : this (File.OpenRead (file)) { mFile = file; }
 
    public DXFReader (Stream stm) {
       stm.Position = 0;
@@ -29,7 +29,7 @@ public class DXFReader {
          }
       }
       var encodingToUse = Encoding.UTF8;
-      if (!acadver.IsBlank () && !codepage.IsBlank () && string.CompareOrdinal (acadver, "AC1021") < 0)
+      if (!acadver.IsBlank () && !codepage.IsBlank () && string.CompareOrdinal (acadver, "AC1021") < 0 && string.CompareOrdinal (codepage.Split ('_').Last (), "932") < 0)
          encodingToUse = Encoding.GetEncoding (int.TryParse (codepage.Split ('_').Last (), out int cp) ? cp : 1252);
       stm.Position = 0;
       mReader = new StreamReader (stm, encodingToUse, false);
