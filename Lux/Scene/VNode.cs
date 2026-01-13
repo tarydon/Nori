@@ -87,28 +87,14 @@ public abstract class VNode {
 
    // Methods ------------------------------------------------------------------
    /// <summary>Should be called from outside when the parent object has new children</summary>
-   public void ChildAdded () {
-      for (; ; mKnownChildren++) {
-         var child = GetChild (mKnownChildren);
-         if (child == null) break;
-         // Note that a child returned here might have an Id > 0 (already registered), since
-         // the same child can occur multiple times in the scene's DAG of nodes.
-         if (child.Id == 0) child.Register ();
-         // This sets up the bi-directional links connecting a parent to all of its children,
-         // and a child to all of its parents (there may be more than 1).
-         mFamily.Add (ref mChildren, child.Id);
-         mFamily.Add (ref child.mParents, Id);
-         child.mCRefs++;
-      }
-      Lux.Redraw ();
-   }
+   public void ChildAdded () { mChildrenAdded = true; Lux.Redraw (); }
 
    /// <summary>Called to tell this parent one of its children is removed</summary>
    public void ChildRemoved (VNode child) {
       mFamily.Remove (ref mChildren, child.Id);
       mFamily.Remove (ref child.mParents, Id);
-      if (--child.mCRefs <= 0) child.Deregister ();
-      mKnownChildren--;
+      if (--child.mCRefs <= 0 && child.Deregister ())
+         mKnownChildren--;
       Lux.Redraw ();
    }
 
@@ -420,8 +406,10 @@ public abstract class VNode {
    // Deregister is called when this VNode is no longer ever required.
    // This means it is not part of any scenes and its 'parent refs' counter has
    // run down to zero.
-   internal void Deregister () {
-      Debug.Assert (Id > 0);
+   internal bool Deregister () {
+      if (Id == 0) { // As yet unregistered node getting de-registered
+         return false;
+      }
       OnDetach ();
       mDisposer?.Dispose ();
       ReleaseBatches ();
@@ -437,6 +425,7 @@ public abstract class VNode {
       mFreeIDs.Push (Id); mNodes[Id] = null;
       mGeometryDirty = mChildrenAdded = true; mKnownChildren = 0;
       Id = 0;
+      return true;
    }
 
    // Private data -------------------------------------------------------------
