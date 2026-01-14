@@ -36,6 +36,7 @@ public partial class MainWindow : Window {
 // without any fuss (that is effectively a no-op)
 class DwgScene1 : Scene2 {
    public DwgScene1 (Dwg2 dwg) {
+      dwg.Ents.Clear ();
       Dwg = dwg;
       Bound = Dwg.Bound.InflatedF (1.1);
       BgrdColor = Color4.Gray (216);
