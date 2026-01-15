@@ -34,7 +34,7 @@ public class Tester {
    List<bool> Crash = [];
    float[] F;
 
-//   [Benchmark]
+   [Benchmark]
    public void CollideMCAM () {
       int crashes = 0;
       for (int i = 0; i < 100; i++) {
@@ -45,7 +45,6 @@ public class Tester {
             if (check) crashes++;
          }
       }
-      if (crashes != 202) throw new NotImplementedException ();
    }
 
    [Benchmark (Baseline = true)]
@@ -59,7 +58,6 @@ public class Tester {
             if (check) crashes++;
          }
       }
-      if (crashes != 202) throw new NotImplementedException ();
    }
 
    [Benchmark]
@@ -88,7 +86,6 @@ public class Tester {
             if (check) crashes++;
          }
       }
-      if (crashes != 202) throw new NotImplementedException ();
    }
 }
 

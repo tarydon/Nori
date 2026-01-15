@@ -22,7 +22,7 @@ public static partial class Tri {
       // E1 = V1 - V0, E2 = V2 - V0, N1 = E1 * E2
       float E1x = V1x - V0x, E1y = V1y - V0y, E1z = V1z - V0z;
       float E2x = V2x - V0x, E2y = V2y - V0y, E2z = V2z - V0z;
-      float N1x = E1y * E2z - E1z * E2y, N1y = E1z * E2x - E1x - E2z, N1z = E1x * E2y - E1y * E2x;
+      float N1x = E1y * E2z - E1z * E2y, N1y = E1z * E2x - E1x * E2z, N1z = E1x * E2y - E1y * E2x;
       double d1 = -(N1x * V0x + N1y * V0y + N1z * V0z);     // d1 = N1 . V0
 
       // Now, the plane equation 1 is N1.X + d1 = 0
@@ -47,7 +47,7 @@ public static partial class Tri {
       // E1 = U1 - U0, E2 = U2 - U0, N2 = E1 * E2
       E1x = U1x - U0x; E1y = U1y - U0y; E1z = U1z - U0z;
       E2x = U2x - U0x; E2y = U2y - U0y; E2z = U2z - U0z;
-      float N2x = E1y * E2z - E1z * E2y, N2y = E1z * E2x - E1x - E2z, N2z = E1x * E2y - E1y * E2x;
+      float N2x = E1y * E2z - E1z * E2y, N2y = E1z * E2x - E1x * E2z, N2z = E1x * E2y - E1y * E2x;
       double d2 = -(N2x * U0x + N2y * U0y + N2z * U0z);  // d2 = -N2 . U0
 
       // Now the plane equation 2 is N2.X + d2 = 0
@@ -68,11 +68,11 @@ public static partial class Tri {
 
       // ----------------------------------------------------------
       // 3. Compute the direction of the intersection line
-      float Dx = N1y * N2z - N1z * N2y, Dy = N1z * N2x - N1x - N2z, Dz = N1x * N2y - N1y * N2x;
+      float Dx = N1y * N2z - N1z * N2y, Dy = N1z * N2x - N1x * N2z, Dz = N1x * N2y - N1y * N2x;
 
       // Compute the index of the largest component of D
       double max = Math.Abs (Dx); int index = 0;
-      double bb = Math.Abs (Dx); if (bb > max) { max = bb; index = 1; }
+      double bb = Math.Abs (Dy); if (bb > max) { max = bb; index = 1; }
       double cc = Math.Abs (Dz); if (cc > max) { index = 2; }
 
       // This is the simplified projection onto L

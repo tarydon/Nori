@@ -252,6 +252,17 @@ public readonly struct Vector3f {
    /// <summary>The Z ordinate of the Point3</summary>
    public readonly float Z;
 
+   public double Length => Math.Sqrt (X * X + Y * Y + Z * Z);
+
+   // Methods ------------------------------------------------------------------
+   /// <summary>Returns the dot product of this vectorf with another</summary>
+   public double Dot (Vector3f b) => X * b.X + Y * b.Y + Z * b.Z;
+
+   /// <summary>
+   /// Returns this vector normalized to length 1
+   /// </summary>
+   public Vector3f Normalized () { double len = Length; return new (X / len, Y / len, Z / len); }
+
    // Operators ----------------------------------------------------------------
    /// <summary>Converts a Point3f to a Point3</summary>
    public static explicit operator Vector3 (Vector3f a) => new (a.X, a.Y, a.Z);
@@ -264,9 +275,6 @@ public readonly struct Vector3f {
    /// <summary>Returns the cross-product of two Vector3f</summary>
    public static Vector3f operator * (Vector3f a, Vector3f b)
       => new (a.Y * b.Z - a.Z * b.Y, a.Z * b.X - a.X * b.Z, a.X * b.Y - a.Y * b.X);
-
-   /// <summary>Returns the dot product of this vectorf with another</summary>
-   public double Dot (Vector3f b) => X * b.X + Y * b.Y + Z * b.Z;
 
    public override string ToString () => $"<{X.S5 ()},{Y.S5 ()},{Z.S5 ()}>";
 }
