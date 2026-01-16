@@ -39,6 +39,30 @@ public class Model3 {
    }
    Dictionary<E3Surface, List<E3Surface>>? _neighbors;
 
+   public List<E3Surface> GetConnected (E3Surface seed) {
+      HashSet<E3Surface> seen = [seed];
+      Queue<E3Surface> todo = []; todo.Enqueue (seed);
+      while (todo.Count > 0) {
+         var ent = todo.Dequeue ();
+         foreach (var neighbor in GetNeighbors (ent))
+            if (seen.Add (neighbor)) todo.Enqueue (neighbor);
+      }
+      return [.. seen];
+   }
+
+   public List<List<E3Surface>> PartitionByConnectivity () {
+      HashSet<E3Surface> done = [];
+      List<List<E3Surface>> sets = [];
+      foreach (var seed in Ents.OfType<E3Surface> ()) {
+         if (done.Add (seed)) {
+            var set = GetConnected (seed);
+            foreach (var a in set) done.Add (a);
+            sets.Add (set);
+         }
+      }
+      return sets;
+   }
+
    // Operators ----------------------------------------------------------------
    /// <summary>Returns a copy of the entire model transformed by the given matrix</summary>
    public static Model3 operator * (Model3 model, Matrix3 xfm) => new (model, xfm);
