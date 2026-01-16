@@ -30,6 +30,10 @@ public abstract class Curve3 {
    /// <summary>Is this curve lying on the XZ plane?</summary>
    public abstract bool IsOnXZPlane { get; }
 
+   /// <summary>Returns the point at the middle of the domain</summary>
+   [DebuggerBrowsable (DebuggerBrowsableState.Never)]
+   public Point3 Midpoint => GetPoint (Domain.Mid);
+
    /// <summary>If non-zero, this is the pair-ID of this edge</summary>
    /// In each fully connected manifold model, there are exactly two edges with
    /// the same pair-ID. These are the two co-edges on two adjacent faces that are
