@@ -92,9 +92,14 @@ public class AList<T> : IReadOnlyList<T>, IList<T>, IAList {
    public IEnumerator<T> GetEnumerator () => mList.GetEnumerator ();
 
    // Implementation -----------------------------------------------------------
-   void Fire (ListChange.E action, int index) => mSubject?.OnNext (new (action, index));
+   void Fire (ListChange.E action, int index) {
+      if (mFiring) throw new Exception ("AList modified inside change observer");
+      mFiring = true;
+      try { mSubject?.OnNext (new (action, index)); } finally { mFiring = false; }
+   }
    Subject<ListChange>? mSubject;
    readonly List<T> mList = [];
+   bool mFiring;
 }
 #endregion
 

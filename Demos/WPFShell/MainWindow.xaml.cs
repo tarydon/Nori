@@ -1,6 +1,5 @@
 ﻿using System.Windows;
 using Nori;
-
 namespace WPFShell;
 
 public partial class MainWindow : Window {
@@ -19,19 +18,6 @@ public partial class MainWindow : Window {
       new SceneManipulator ();
       Lux.UIScene = new TriScene (this);
    }
-}
-
-class DemoScene : Scene2 {
-   public DemoScene () {
-      mFace = new (Lib.ReadBytes ("nori:GL/Fonts/Roboto-Regular.ttf"), (int)(48 * Lux.DPIScale));
-      Bound = new Bound2 (0, 0, 100, 50);
-      BgrdColor = new Color4 (128, 96, 64);
-      Root = new SimpleVN (
-         () => (Lux.Color, Lux.TypeFace) = (Color4.White, mFace),
-         () => Lux.TextPx ("Welcome to Nori.", new Vec2S (100, 100))
-      );
-   }
-   TypeFace mFace;
 }
 
 class TriScene : Scene3 {
