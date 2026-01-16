@@ -191,11 +191,11 @@ public class Matrix3 : IEQuable<Matrix3> {
 
    /// <summary>Compose a uniform scaling matrix</summary>
    public static Matrix3 Scaling (double s)
-      => new (s, 0, 0, 0, s, 0, 0, 0, s, 0, 0, 0);
+      => s.EQ (1) ? Identity : new (s, 0, 0, 0, s, 0, 0, 0, s, 0, 0, 0);
 
    /// <summary>Compose a non-uniform scaling matrix (separate scaling factors in X, Y, Z)</summary>
-   public static Matrix3 Scaling (double xs, double ys, double sz)
-      => new (xs, 0, 0, 0, ys, 0, 0, 0, sz, 0, 0, 0, EFlag.Scale);
+   public static Matrix3 Scaling (double xs, double ys, double zs)
+      => (xs.EQ (1) && ys.EQ (1) && zs.EQ (1)) ? Identity : new (xs, 0, 0, 0, ys, 0, 0, 0, zs, 0, 0, 0, EFlag.Scale);
 
    /// <summary>Compose a translation matrix, given the 3 components</summary>
    public static Matrix3 Translation (double dx, double dy, double dz)
@@ -203,7 +203,7 @@ public class Matrix3 : IEQuable<Matrix3> {
 
    /// <summary>Compose a translation matrix, given the vector of translation</summary>
    public static Matrix3 Translation (Vector3 v)
-      => v.Length.IsZero () ? Identity : new (1, 0, 0, 0, 1, 0, 0, 0, 1, v.X, v.Y, v.Z, EFlag.Translate);
+      => v.LengthSq.IsZero (Lib.EpsilonSq) ? Identity : new (1, 0, 0, 0, 1, 0, 0, 0, 1, v.X, v.Y, v.Z, EFlag.Translate);
 
    // Properties ---------------------------------------------------------------
    /// <summary>Is this an identity matrix</summary>
