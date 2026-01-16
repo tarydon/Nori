@@ -64,7 +64,6 @@ public readonly struct Vector2 : IEQuable<Vector2> {
    public bool EQ (Vector2 b) => X.EQ (b.X) && Y.EQ (b.Y);
 
    /// <summary>Returns this vector, normalized</summary>
-   /// <returns></returns>
    public Vector2 Normalized () {
       double f = Length; if (Abs (f) < 1e-12) return XAxis;
       return this / f;
@@ -258,9 +257,7 @@ public readonly struct Vector3f {
    /// <summary>Returns the dot product of this vectorf with another</summary>
    public double Dot (Vector3f b) => X * b.X + Y * b.Y + Z * b.Z;
 
-   /// <summary>
-   /// Returns this vector normalized to length 1
-   /// </summary>
+   /// <summary>Returns this vector normalized to length 1</summary>
    public Vector3f Normalized () { double len = Length; return new (X / len, Y / len, Z / len); }
 
    // Operators ----------------------------------------------------------------

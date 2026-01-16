@@ -450,7 +450,7 @@ public sealed class E3SpunSurface : E3CSSurface {
 
    // Returns a transformed copy of this SpunSurface
    protected override E3SpunSurface Xformed (Matrix3 xfm) {
-      E3SpunSurface spun = new (Id, Contours * xfm, CS * xfm, Generatrix * xfm);
+      E3SpunSurface spun = new (Id, Contours * xfm, CS * xfm, Generatrix);
       spun.CopyMeshFrom (this, xfm);
       return spun;
    }

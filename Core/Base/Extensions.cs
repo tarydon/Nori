@@ -80,9 +80,6 @@ public static class Extensions {
    /// <summary>Compare two halfs for equality to within 1e-4</summary>
    public static bool EQ (this Half a, Half b) => Abs ((float)a - (float)b) < 1e-3;
 
-   /// <summary>Compares two string for equality, ignoring case</summary>
-   public static bool EqIC (this string a, string b) => a.Equals (b, StringComparison.OrdinalIgnoreCase);
-
    /// <summary>Returns all elements of a sequence _except_ those that match the specified predicate</summary>
    public static IEnumerable<T> Except<T> (this IEnumerable<T> sequence, Predicate<T> excluder) {
       foreach (var elem in sequence)
@@ -322,11 +319,6 @@ public static class Extensions {
       return sb.ToString ();
    }
 
-   /// <summary>Convert a string to a double - if the conversion fails, this silently returns 0</summary>
-   public static double ToDouble (this string s) {
-      double.TryParse (s, NumberStyles.Float, NumberFormatInfo.InvariantInfo, out double f);
-      return f;
-   }
    /// <summary>Convert a string to an integer - if the conversion fails, this silently returns 0</summary>
    public static int ToInt (this string s) {
       if (int.TryParse (s, out int n)) return n;
@@ -342,36 +334,5 @@ public static class Extensions {
 
    /// <summary>Wrap an integer to a range within 0..max-1</summary>
    public static int Wrap (this int n, int max) => (n + max) % max;
-}
-#endregion
-
-#region class Extensions ---------------------------------------------------------------------------
-/// <summary>Extension methods, properties on various standard types</summary>
-public static class Extensions2 {
-   // Extensions on double -----------------------------------------------------
-   // Extension methods on double
-   extension(double f) {
-      /// <summary>Returns true if a double is nan - easier to use than double.IsNaN(f)</summary>
-      public bool IsNan => double.IsNaN (f);
-
-      /// <summary>Transforms a distance by the given transform</summary>
-      /// Distance is updated only if the matrix has a scaling component
-      public static double operator * (double a, Matrix3 xfm)
-         => xfm.HasScaling ? a * xfm.ScaleFactor : a;
-   }
-
-   extension(ref double f) {
-      /// <summary>Computes a double using the provided function (if it's NaN), caching it</summary>
-      public double Cached (Func<double> compute) {
-         if (double.IsNaN (f)) f = compute ();
-         return f; 
-      }
-   }
-
-   // Extensions on ImmutableArray<Contour> ------------------------------------
-   extension(ImmutableArray<Contour3> contours) {
-      public static ImmutableArray<Contour3> operator * (ImmutableArray<Contour3> cons, Matrix3 xfm) 
-         => [.. cons.Select (a => a * xfm)];
-   }
 }
 #endregion
