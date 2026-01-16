@@ -79,5 +79,4 @@ public static partial class Tri {
    }
 
    static double Dot (Vector3f a, Point3f b) => a.X * b.X + a.Y * b.Y + a.Z * b.Z;
-
 }
