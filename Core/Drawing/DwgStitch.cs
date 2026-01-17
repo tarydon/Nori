@@ -22,7 +22,7 @@ public class DwgStitcher {
                e2p = e2p.With (tmp); mStitched = true;
             }
             if (e2p.Poly.IsOpen) ents.Add (e2p);
-            else mDone.Add (ent);
+            else mDone.Add (e2p);
          } else
             mDone.Add (ent);
       }
