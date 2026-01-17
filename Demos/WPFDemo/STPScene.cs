@@ -10,7 +10,7 @@ class STPScene : Scene3 {
    public STPScene () {
       var sr = new STEPReader ("N:/TData/Step/S00178.stp");
       mModel = sr.Load ();
-
+ 
       Lib.Tracer = TraceVN.Print;
       BgrdColor = Color4.Gray (96);
       Bound = mModel.Bound;

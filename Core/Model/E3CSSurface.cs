@@ -106,10 +106,12 @@ public sealed class E3Cylinder : E3CSSurface {
       Bound1 angSpan = new ();
       var xfm = Matrix3.From (cs);
       foreach (var edge in trims.First ().Curves) {
+         if (edge is Arc3 arc && arc.AngSpan.EQ (Lib.TwoPI)) goto Done;
          Adjust (edge.Start); Adjust (edge.GetPoint (0.5));
       }
       if (angSpan.Length < Lib.TwoPI - Lib.Epsilon)
          cs *= Matrix3.Rotation (cs.Org, cs.Org + cs.VecZ, -(angSpan.Mid + Lib.PI));
+    Done:
       return new (id, trims, cs, radius, infacing);
 
       void Adjust (Point3 pt) {
