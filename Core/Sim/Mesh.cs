@@ -216,8 +216,10 @@ public partial class Mesh3 {
    public string ToTMesh () {
       // Version, Vertex count, vertices
       StringBuilder sb = new ($"TMESH\n1\n{Vertex.Length}\n");
-      foreach (var (pos, vec) in Vertex)
+      foreach (var (pos0, vec) in Vertex) {
+         var pos = ((Point3)pos0).R6 ();
          sb.Append ($"{pos.X},{pos.Y},{pos.Z},  {vec.X},{vec.Y},{vec.Z}\n");
+      }
 
       // Triangle count, triangle indices
       sb.Append ($"{Triangle.Length / 3}\n");

@@ -112,7 +112,7 @@ class TMesh3Build {
    void Test4 () {
       Mesh3 mesh = Mesh3.Extrude (
          [Poly.Parse ("M0,0 H100 V30 Q80,50,1 H20 Q0,30,-1 Z"), Poly.Parse ("M60,20 H90 V30 Q80,40,1 H60 Z")],
-         20, Matrix3.Rotation (EAxis.Y, 0.D2R ()));
+         20, Matrix3.Rotation (EAxis.Y, 90.D2R ()) * Matrix3.Translation (0, 0, 1));
       File.WriteAllText (NT.TmpTxt, mesh.ToTMesh ());
       Assert.TextFilesEqual ("Geom/Mesh3/extrude.tmesh", NT.TmpTxt);
    }
