@@ -1,6 +1,6 @@
 // ────── ╔╗
 // ╔═╦╦═╦╦╬╣ E3Surface.cs
-// ║║║║╬║╔╣║ <<TODO>>
+// ║║║║╬║╔╣║ Implements several types derived from E3Surface
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 using System.Threading;
 namespace Nori;
@@ -9,6 +9,7 @@ namespace Nori;
 /// <summary>Represents a NURBS surface (any order, rational or simple)</summary>
 public sealed class E3NurbsSurface : E3Surface {
    // Constructors -------------------------------------------------------------
+   /// <summary>Construct a NurbsSurface, given the control mesh, knot vectors in U and V etc</summary>
    public E3NurbsSurface (int id, ImmutableArray<Point3> ctrl, ImmutableArray<double> weight, int uCtl, ImmutableArray<double> uknots, ImmutableArray<double> vknots, ImmutableArray<Contour3> trims) : base (id, trims) {
       UCtl = uCtl; Ctrl = ctrl; Weight = weight;
       mUImp = new (uCtl, uknots); mVImp = new (VCtl, vknots);
@@ -129,6 +130,7 @@ public sealed class E3NurbsSurface : E3Surface {
 ///   USpan is the average of [bottom.Start .. top.Start] and [bottom.End .. top.End]
 public sealed class E3RuledSurface : E3Surface {
    // Constructors -------------------------------------------------------------
+   /// <summary>Construct the RuledSurface, given the bottom and top generatrix curves</summary>
    public E3RuledSurface (int id, ImmutableArray<Contour3> trims, Curve3 bottom, Curve3 top) : base (id, trims) {
       (Bottom, Top) = (bottom, top);
       Lib.Check (bottom.Domain.EQ (top.Domain), "RuledSurface domains unequal");
@@ -136,6 +138,7 @@ public sealed class E3RuledSurface : E3Surface {
       mUSpan = Math.Max (mUSpan, 1);
    }
    E3RuledSurface () => Bottom = Top = null!;
+   readonly double mUSpan;
 
    // Properties ---------------------------------------------------------------
    /// <summary>Bottom generatrix curve</summary>
@@ -144,12 +147,17 @@ public sealed class E3RuledSurface : E3Surface {
    public readonly Curve3 Top;
 
    // Overrides ----------------------------------------------------------------
+   // The u-span is the average distance between the bottom and top curves,
+   // and the v-span is domain of the bottom or top curves (both are equal)
    protected override Bound2 ComputeDomain ()
       => new (new (0, mUSpan), Bottom.Domain);
 
+   // Compute the 'v' points on both the bottom and top curves and linear
+   // interpolate between them
    public override Point3 GetPoint (double u, double v)
       => (u / mUSpan).Along (Bottom.GetPoint (v), Top.GetPoint (v));
 
+   // Unlofting a RuledSurface requires a general-purpose SurfaceUnlofter
    public override Point2 GetUV (Point3 pt3d)
       => (_unlofter = new (this)).GetUV (pt3d);
    SurfaceUnlofter? _unlofter;
@@ -160,8 +168,5 @@ public sealed class E3RuledSurface : E3Surface {
       ruled.CopyMeshFrom (this, xfm);
       return ruled;
    }
-
-   // Private data -------------------------------------------------------------
-   double mUSpan;
 }
 #endregion

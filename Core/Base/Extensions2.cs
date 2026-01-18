@@ -1,10 +1,10 @@
 // ────── ╔╗
 // ╔═╦╦═╦╦╬╣ Extensions2.cs
-// ║║║║╬║╔╣║ <<TODO>>
+// ║║║║╬║╔╣║ Extension methods on built-in types (defined using extension blocks)
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 namespace Nori;
 
-#region class Extensions ---------------------------------------------------------------------------
+#region class Extensions2 --------------------------------------------------------------------------
 /// <summary>Extension methods, properties on various standard types</summary>
 public static class Extensions2 {
    // Extensions on double -----------------------------------------------------
