@@ -17,7 +17,7 @@ public partial class MainWindow : Window {
       if (source != null) Lux.DPIScale = (float)source.CompositionTarget.TransformToDevice.M11;
       TraceVN.TextColor = Color4.Yellow;
       new SceneManipulator ();
-      Lux.UIScene = new MeshDemo ();
+      Lux.UIScene = new DemoScene ();
    }
 }
 
@@ -32,15 +32,4 @@ class DemoScene : Scene2 {
       );
    }
    TypeFace mFace;
-}
-
-class MeshDemo : Scene3 {
-   public MeshDemo () {
-      Mesh3 mesh = Mesh3.Extrude (
-         [Poly.Parse ("M0,0 H100 V30 Q80,50,1 H20 Q0,30,-1 Z"), Poly.Circle (new (80, 30), 10)],
-         20, Matrix3.Rotation (EAxis.X, 30.D2R ()));
-
-      Root = new Mesh3VN (mesh) { Color = Color4.White };
-      Bound = mesh.Bound;
-   }
 }

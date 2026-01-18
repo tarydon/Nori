@@ -79,8 +79,7 @@ public static class Lib {
 
    public static void AddMetadata (string[] metadata) => AuType.AddTactics (metadata);
 
-   /// <summary>Checks a condition, and throws an exception in debug mode</summary>
-   /// In release mode, this just returns the condition quietly
+   /// <summary>Checks a condition, and throws an exception if it fails</summary>
    public static bool Check (bool condition, string message) 
       => !condition ? throw new Exception (message) : condition;
 

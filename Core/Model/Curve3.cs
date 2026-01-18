@@ -14,8 +14,8 @@ namespace Nori;
 /// exactly two Curve3 with a particular PairId. 
 public abstract class Curve3 {
    // Constructors -------------------------------------------------------------
-   protected Curve3 () { }
    protected Curve3 (int pairId) => PairId = pairId;
+   protected Curve3 () { }
 
    // Properties ---------------------------------------------------------------
    /// <summary>Returns the domain of the Curve</summary>
@@ -248,8 +248,8 @@ public sealed class Ellipse3 : Curve3 {
 /// <summary>Line3 implements a linear edge between two points</summary>
 public sealed class Line3 : Curve3 {
    // Constructors -------------------------------------------------------------
-   Line3 () { }
    public Line3 (int pairId, Point3 start, Point3 end) : base (pairId) => (mStart, mEnd) = (start, end);
+   Line3 () { }
 
    // Properties ---------------------------------------------------------------
    /// <summary>Domain of a Line is 0..1</summary>
@@ -507,8 +507,8 @@ public class Polyline3 : Curve3 {
 /// Typically surfaces are bounded by a set of Contour3
 public class Contour3 {
    // Constructors -------------------------------------------------------------
-   Contour3 () { }
    public Contour3 (ImmutableArray<Curve3> edges) => mCurves = edges;
+   Contour3 () { }
 
    // Properties ---------------------------------------------------------------
    /// <summary>The list of Curve3  in this Contour3</summary>

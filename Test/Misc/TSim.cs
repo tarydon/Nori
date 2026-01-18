@@ -4,9 +4,9 @@
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 namespace Nori.Testing;
 
-[Fixture (32, "Robot basic tests", "Sim")]
-class TSim {
-   TSim () {
+[Fixture (32, "RBR robot basic tests", "Sim")]
+class TRBRSolver {
+   TRBRSolver () {
       mMech = Mechanism.Load ("N:/Wad/FanucX/mechanism.curl");
       mTip = mMech.FindChild ("Tip")!;
       mJoints = [.. "SLURBT".Select (a => mMech.FindChild (a.ToString ())!)];
@@ -67,5 +67,53 @@ class TSim {
       }
       File.WriteAllText (NT.TmpTxt, sb.ToString ());
       Assert.TextFilesEqual (NT.File ($"Sim/{file}.txt"), NT.TmpTxt);
+   }
+}
+
+[Fixture (34, "Mesh3 builders", "Mesh")]
+class TMesh3Build {
+   [Test (37, "class Mesh3, Mesh3Builder test")]
+   void Test1 () {
+      // Mesh3 IO test
+      var part = Mesh3.LoadTMesh ($"{NT.Data}/Geom/Mesh3/part.tmesh");
+      File.WriteAllText (NT.TmpTxt, part.ToTMesh ());
+      Assert.TextFilesEqual ("Geom/Mesh3/part-out.tmesh", NT.TmpTxt);
+
+      // Mesh3Builder test
+      List<Point3> pts = [];
+      for (int i = 0; i < part.Triangle.Length; i++) {
+         var pos = part.Vertex[part.Triangle[i]].Pos;
+         pts.Add ((Point3)(pos.X, pos.Y, pos.Z));
+      }
+
+      File.WriteAllText (NT.TmpTxt, new Mesh3Builder (pts.AsSpan ()).Build ().ToTMesh ());
+      Assert.TextFilesEqual ("Geom/Mesh3/part-gen.tmesh", NT.TmpTxt);
+   }
+
+   [Test (142, "Test for CMesh.Builder")]
+   void Test2 () {
+      var mesh = Mesh3.LoadTMesh (NT.File ("Misc/robot-1.tmesh"));
+      var cmesh = CMesh.Builder.Build (mesh);
+      File.WriteAllText (NT.TmpTxt, cmesh.Dump ());
+      Assert.TextFilesEqual ("Misc/robot-1.aabb.txt", NT.TmpTxt);
+   }
+
+   [Test (149, "Mesh3.Sphere")]
+   void Test3 () {
+      var mesh = Mesh3.Sphere ((1, 2, 0), 10, 0.01);
+      File.WriteAllText (NT.TmpTxt, mesh.ToTMesh ());
+      Assert.TextFilesEqual ("Misc/sphere-10.tmesh", NT.TmpTxt);
+      mesh = Mesh3.Sphere ((1, 2, 0), 10, 0.02);
+      // Expecting octahedron selection with '2' subdivisions (384 = (8 * 4 * 4) * 3)
+      mesh.Triangle.Length.Is (384);
+   }
+
+   [Test (168, "Test for Mesh3 Extrude")]
+   void Test4 () {
+      Mesh3 mesh = Mesh3.Extrude (
+         [Poly.Parse ("M0,0 H100 V30 Q80,50,1 H20 Q0,30,-1 Z"), Poly.Parse ("M60,20 H90 V30 Q80,40,1 H60 Z")],
+         20, Matrix3.Rotation (EAxis.Y, 0.D2R ()));
+      File.WriteAllText (NT.TmpTxt, mesh.ToTMesh ());
+      Assert.TextFilesEqual ("Geom/Mesh3/extrude.tmesh", NT.TmpTxt);
    }
 }

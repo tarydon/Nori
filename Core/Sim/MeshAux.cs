@@ -25,10 +25,14 @@ public partial class Mesh3 {
       // Bottom plane triangles are already added, add the top plane triangles as well
       for (int i = 0, max = tris.Count; i < max; i += 3)
          tris.AddM ([tris[i + 2] + n, tris[i + 1] + n, tris[i] + n]);
-      // Now, the sidewalls 
-      for (int i = 0; i < n; i++) {
-         int j = (i + 1) % n;
-         tris.AddM ([i, j, j + n, i, j + n, i + n]);
+
+      // Now, the sidewalls
+      for (int c = 0; c < splits.Count - 1; c++) {
+         int start = splits[c], count = splits[c + 1] - start;
+         for (int p = 0; p < count; p++) {
+            int i = p + start, j = ((p + 1) % count) + start;
+            tris.AddM ([i, j, j + n, i, j + n, i + n]);
+         }
       }
 
       var vertex = tris.Select (a => raw[a] * xfm).ToArray ();
