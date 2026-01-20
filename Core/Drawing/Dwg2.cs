@@ -209,6 +209,9 @@ public partial class Dwg2 {
       if (ent != null) ent.IsSelected ^= true; // Toggle selection
    }
 
+   /// <summary>Exposes drawing layers editor VM</summary>
+   public EditTableVM GetLayersEditor () => new LayersTableVM (this);
+
    // Implementation -----------------------------------------------------------
    // Handles changes in the Ents list, and keeps the Bound up-to-date
    void OnEntsChanged (ListChange ch) {
@@ -234,5 +237,52 @@ public partial class Dwg2 {
       => Blocks.SelectMany (a => a.Ents)
          .Concat (Dimensions.SelectMany (a => a.Ents))
          .Concat (mEnts);
+
+   #region Nested
+   // Exposes Nori.Dwg2 layers for editing!
+   class LayersTableVM : EditTableVM {
+      public LayersTableVM (Dwg2 dwg) => mDwg = dwg;
+      readonly Dwg2 mDwg;
+
+      public override int Rows => mDwg.Layers.Count;
+
+      public override IReadOnlyList<ESemantics> ColSemantics => [ESemantics.String, ESemantics.Color, ESemantics.SelectOne];
+
+      public override IReadOnlyList<string> ColNames => ["Name", "Color", "Line style"];
+
+      public override object? Get (int row, int col) {
+         Layer2 layer = mDwg.Layers[row];
+         return col switch {
+            0 => layer.Name,
+            1 => layer.Color,
+            2 => layer.Linetype,
+            _ => throw new BadCaseException (string.Empty),
+         };
+      }
+
+      public override void Set (int row, int col, object value) {
+         Layer2 layer = mDwg.Layers[row];
+         var (name, color, linetype) = (layer.Name, layer.Color, layer.Linetype);
+         switch (col) {
+            case 0: name = (string)value; break;
+            case 1: color = (Color4)value; break;
+            case 2: linetype = (ELineType)value; break;
+            default: throw new BadCaseException (string.Empty);
+         }
+         mDwg.mLayers[row] = new Layer2 (name, color, linetype);
+      }
+   }
+   #endregion
+}
+#endregion
+
+#region EditTableVM --------------------------------------------------------------------------------
+public abstract class EditTableVM { // Generic tabular data VM - View will interact with this interface to show and edit tabular presentation
+   public enum ESemantics { String, Color, SelectOne }
+   public abstract int Rows { get; }
+   public abstract IReadOnlyList<ESemantics> ColSemantics { get; }
+   public abstract IReadOnlyList<string> ColNames { get; }
+   public abstract object? Get (int row, int col);
+   public abstract void Set (int row, int col, object value);
 }
 #endregion
