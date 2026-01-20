@@ -18,20 +18,18 @@ public struct OBB {
    /// <summary>The box area</summary>
    public readonly double Area => 8 * (Extent.X * Extent.Y + Extent.X * Extent.Z + Extent.Y * Extent.Z);
    /// <summary>The axis-aligned bounding box enclosing this OBB</summary>
-   public Bound3 Bound {
-      get {
-         if (_Bound != null) return _Bound.Value;
-         var (C, dx, dy, dz) = (CS.Org, CS.VecX * Extent.X, CS.VecY * Extent.Y, CS.VecZ * Extent.Z);
-         _Bound = new (
-            C + dx + dy + dz, C + dx + dy - dz,
-            C + dx - dy + dz, C + dx - dy - dz,
-            C - dx + dy + dz, C - dx + dy - dz,
-            C - dx - dy + dz, C - dx - dy - dz
-         );
-         return _Bound.Value;
-      }
+   public Bound3 Bound => _bound ??= ComputeBound ();
+   Bound3? _bound = null;
+
+   readonly Bound3 ComputeBound () {
+      var (C, dx, dy, dz) = (CS.Org, CS.VecX * Extent.X, CS.VecY * Extent.Y, CS.VecZ * Extent.Z);
+      return new (
+         C + dx + dy + dz, C + dx + dy - dz,
+         C + dx - dy + dz, C + dx - dy - dz,
+         C - dx + dy + dz, C - dx + dy - dz,
+         C - dx - dy + dz, C - dx - dy - dz
+      );
    }
-   Bound3? _Bound;
 
    /// <summary>The box volume</summary>
    public readonly double Volume => 8 * (Extent.X * Extent.Y * Extent.Z);

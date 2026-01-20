@@ -5,6 +5,7 @@
 namespace WPFDemo;
 using Nori;
 using System.Diagnostics;
+using System.Reactive.Linq;
 
 class CollisionScene : Scene3 {
    public CollisionScene () {
@@ -15,32 +16,74 @@ class CollisionScene : Scene3 {
       Build (150, extent);
    }
 
+   // Demo mode: 0=Box-Box, 1=Tri-Tri, 2=Box-Tri
+   static int Mode = 2;
+
    // Build the scene 
    void Build (int shapes, double extent) {
       TraceVN.It.Clear ();
       Random R = new ();
-      var obbs = new OBB[shapes];
-      for (int i = 0; i < shapes; i++) {
+
+      var (boxcnt, tricnt, kind) = Mode switch {
+         0 => (shapes, 0, "Box-Box"),
+         1 => (0, shapes, "Tri-Tri"),
+         _ => (shapes / 2, shapes / 2, "Box-Tri")
+      };
+
+      var obbs = new OBB[boxcnt];
+      for (int i = 0; i < obbs.Length; i++) {
          var vX = V ().Normalized (); var v = V ().Normalized ();
          var vY = vX * v;
          obbs[i] = new (new (P () * extent, vX, vY), V () * 100);
       }
-      
-      var collisions = new bool[shapes];
+
+      Tri[] tris = new Tri[tricnt];
+      for (int i = 0; i < tris.Length; i++) {
+         var a = P () * extent; var b = a + V () * R.Next (200, 300);
+         var c = a + V () * R.Next (200, 300);
+         tris[i] = new Tri (a, b, c);
+      }
+
+      var bcolls = new bool[obbs.Length];
+      var tcolls = new bool[tris.Length];
       Stopwatch sw = Stopwatch.StartNew (); sw.Start ();
-      for (int i = 0; i < obbs.Length - 1; i++)
-         for (int j = i + 1; j < obbs.Length; j++)
-            //if (Collision.Check (obbs[i].Bound, obbs[j].Bound))
-            if (Collision.Check (obbs[i], obbs[j]))
-               collisions[i] = collisions[j] = true;
+
+      switch (Mode) {
+         case 0:
+            for (int i = 0; i < obbs.Length - 1; i++)
+               for (int j = i + 1; j < obbs.Length; j++)
+                  if (Collision.Check (obbs[i], obbs[j]))
+                     bcolls[i] = bcolls[j] = true;
+            break;
+
+         case 1:
+            for (int i = 0; i < tris.Length - 1; i++)
+               for (int j = i + 1; j < tris.Length; j++)
+                  if (Collision.Check (tris[i].Bound, tris[j].Bound))
+                     tcolls[i] = tcolls[j] = true;
+            break;
+
+         case 2:
+            for (int i = 0; i < tris.Length; i++)
+               for (int j = 0; j < obbs.Length; j++)
+                  if (Collision.Check (tris[i], obbs[j]))
+                     bcolls[j] = tcolls[i] = true;
+            break;
+      }
       sw.Stop ();
 
-      Lib.Trace ($"Total: {shapes} objects, {collisions.Count (x => x)} collide. Elapsed: {S (sw.Elapsed)}");
-      Lib.Trace ("Press 'Collision' button to rerun");
-
       List<VNode> nodes = [TraceVN.It];
-      nodes.AddRange (obbs.Select ((x, n) => new BoxVN (x, collisions[n])));
+      var boxNodes = obbs.Select ((x, n) => new BoxVN (x, bcolls[n]));
+      var triNodes = tris.Select ((x, n) => new TriVN (x, tcolls[n]));
+      if (HW.IsCtrlDown) {
+         boxNodes = boxNodes.Where (x => x.Collides); 
+         triNodes = triNodes.Where (x => x.Collides);
+      }
+      nodes.AddRange (boxNodes); nodes.AddRange (triNodes);
       Root = new GroupVN (nodes);
+      Lib.Trace ($"Total: {shapes} objects, {bcolls.Count (x => x) + tcolls.Count (x => x)} collide ({kind}). Elapsed: {S (sw.Elapsed)}");
+      Lib.Trace ("Press 'Collision' button to rerun. Keep the 'Ctrl' key pressed to filter collisions");
+      Mode = (Mode + 1) % 3;
 
       Point3 P () => new (Bias () * R.NextDouble (), Bias () * R.NextDouble (), R.NextDouble ());
       Vector3 V () => new (R.NextDouble (), R.NextDouble (), R.NextDouble ());
@@ -48,25 +91,27 @@ class CollisionScene : Scene3 {
    }
 
    static string S (TimeSpan ts) => $"{ts.TotalMicroseconds:F0} us";
+   static readonly Color4[] Colors = [Color4.Cyan, Color4.Magenta, Color4.Magenta];
 
    // Draw OBB.
    class BoxVN (OBB box, bool collides) : VNode {
       readonly OBB Box = box;
       public bool Collides = collides;
+      public Mesh3 Mesh => mMesh ??= BuildMesh ();
+      Mesh3? mMesh;
       Vec3F[] Pts = [];
-      Mesh3? Mesh;
       readonly Matrix3 Xfm = Matrix3.To (box.CS);
 
       public override void SetAttributes () =>
-         (Lux.Color, Lux.Xfm, Lux.LineWidth) = (Collides ? Color4.Red : Color4.White, Xfm, 2);
+         (Lux.Color, Lux.Xfm, Lux.LineWidth) = (Collides ? Color4.Magenta : Color4.White, Xfm, 2);
 
       public override void Draw () {
          if (Mesh == null) BuildMesh ();
          Lux.Lines (Pts);
-         if (Mesh != null) Lux.Mesh (Mesh, EShadeMode.Phong);
+         if (Mesh != null) Lux.Mesh (Mesh, EShadeMode.Flat);
       }
 
-      void BuildMesh () {
+      Mesh3 BuildMesh () {
          List<Point3f> corners = [];
          var v = Box.Extent;
          for (int dx = -1; dx <= 1; dx += 2)
@@ -87,7 +132,7 @@ class CollisionScene : Scene3 {
             tries.AddRange (idx, idx + 1, idx + 2);
             tries.AddRange (idx + 1, idx + 2, idx + 3);
          }
-         Mesh = new Mesh3 ([.. nodes], [.. tries], []);
+         return new Mesh3 ([.. nodes], [.. tries], []);
       }
 
       readonly static int[][] Faces =
@@ -105,5 +150,31 @@ class CollisionScene : Scene3 {
           3,7,
           4,5,  4,6,
           5,7,  6,7];
+   }
+
+   // Draw Triangle
+   class TriVN (Tri tri, bool collides) : VNode {
+      readonly Tri Tri = tri;
+      public bool Collides = collides;
+      public Mesh3 Mesh => mMesh ??= BuildMesh ();
+      private Mesh3? mMesh;
+
+      public override void SetAttributes () =>
+         (Lux.Color, Lux.LineWidth) = (Collides ? Color4.Magenta : Color4.Cyan, 2);
+
+      public override void Draw () {
+         Lux.Mesh (Mesh, EShadeMode.Flat);
+         Lux.Lines ([(Vec3F)Tri.A, (Vec3F)Tri.B, (Vec3F)Tri.B, (Vec3F)Tri.C, (Vec3F)Tri.C, (Vec3F)Tri.A]);
+      }
+
+      Mesh3 BuildMesh () {
+         List<Mesh3.Node> nodes = [];
+         ReadOnlySpan<Point3> pts = [Tri.A, Tri.B, Tri.C];
+         for (int i = 0; i < pts.Length; i++) {
+            Vector3 n = ((pts[(i + 1) % 3] - pts[i]) * (pts[(i + 2) % 3] - pts[i])).Normalized ();
+            nodes.Add (new (pts[i], n));
+         }
+         return new Mesh3 ([.. nodes], [0, 1, 2], []);
+      }
    }
 }
