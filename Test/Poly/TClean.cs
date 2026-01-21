@@ -33,3 +33,18 @@ class PolyJoinTests {
       Assert.TextFilesEqual (NT.File ($"Poly/Join/{file}.curl"), NT.TmpCurl);
    }
 }
+
+[Fixture (33, "Additional DwgStitcher tests", "Geom.Poly")]
+class PolyStitchTests {
+   [Test (166, "No stitch must not update dwg")]
+   void Test1 () {
+      var (a, b) = (Poly.Line ((0, 0), (10, 0)), Poly.Line ((0, 10), (10, 10)));
+      Dwg2 dwg = new ();
+      dwg.Add (a); dwg.Add (b);
+      using (dwg.Ents.Subscribe (a => Assert.IsTrue (false))) // Not expecting any change notifications
+         new DwgStitcher (dwg).Process ();
+      dwg.Ents.Count.Is (2);
+      ((E2Poly)dwg.Ents[0]).Poly.Is (a);
+      ((E2Poly)dwg.Ents[1]).Poly.Is (b);
+   }
+}

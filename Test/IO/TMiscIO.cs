@@ -133,10 +133,12 @@ class T3XTests {
 
       List<Point3> pts = [];
       var sb = new StringBuilder ();
-      var curves = surf.Contours.SelectMany (a => a.Curves).ToList ();
-      foreach (var c in curves) {
-         c.Discretize (pts, Lib.FineTess, Lib.FineTessAngle);
-         if (c is Line3) pts.Add (c.Start.Midpoint (c.End));
+      foreach (var con in surf.Contours) {
+         var curves = con.Curves;
+         foreach (var c in curves) {
+            c.Discretize (pts, Lib.FineTess, Lib.FineTessAngle); pts.RemoveLast ();
+            if (c is Line3) pts.Add (c.Start.Midpoint (c.End));
+         }
       }
       List<Point2> uvs = [.. pts.Select (surf.GetUV)];
       List<Vector3> normal = [.. uvs.Select (p => surf.GetNormal (p.X, p.Y))];

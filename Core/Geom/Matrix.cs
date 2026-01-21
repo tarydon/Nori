@@ -191,11 +191,11 @@ public class Matrix3 : IEQuable<Matrix3> {
 
    /// <summary>Compose a uniform scaling matrix</summary>
    public static Matrix3 Scaling (double s)
-      => new (s, 0, 0, 0, s, 0, 0, 0, s, 0, 0, 0);
+      => s.EQ (1) ? Identity : new (s, 0, 0, 0, s, 0, 0, 0, s, 0, 0, 0);
 
    /// <summary>Compose a non-uniform scaling matrix (separate scaling factors in X, Y, Z)</summary>
-   public static Matrix3 Scaling (double xs, double ys, double sz)
-      => new (xs, 0, 0, 0, ys, 0, 0, 0, sz, 0, 0, 0, EFlag.Scale);
+   public static Matrix3 Scaling (double xs, double ys, double zs)
+      => (xs.EQ (1) && ys.EQ (1) && zs.EQ (1)) ? Identity : new (xs, 0, 0, 0, ys, 0, 0, 0, zs, 0, 0, 0, EFlag.Scale);
 
    /// <summary>Compose a translation matrix, given the 3 components</summary>
    public static Matrix3 Translation (double dx, double dy, double dz)
@@ -203,7 +203,7 @@ public class Matrix3 : IEQuable<Matrix3> {
 
    /// <summary>Compose a translation matrix, given the vector of translation</summary>
    public static Matrix3 Translation (Vector3 v)
-      => v.Length.IsZero () ? Identity : new (1, 0, 0, 0, 1, 0, 0, 0, 1, v.X, v.Y, v.Z, EFlag.Translate);
+      => v.LengthSq.IsZero (Lib.EpsilonSq) ? Identity : new (1, 0, 0, 0, 1, 0, 0, 0, 1, v.X, v.Y, v.Z, EFlag.Translate);
 
    // Properties ---------------------------------------------------------------
    /// <summary>Is this an identity matrix</summary>
@@ -358,7 +358,12 @@ public class Matrix3 : IEQuable<Matrix3> {
       double z = p.X * m.M13 + p.Y * m.M23 + p.Z * m.M33 + m.DZ;
       return new (x, y, z);
    }
-   // Multiple a Point3f by a Matrix
+
+   /// <summary>Multiply a Point2 by a Matrix, resulting in a Matrix3</summary>
+   public static Point3 operator * (Point2 p, Matrix3 m) 
+      => ((Point3)p) * m;
+
+   /// <summary>Multiple a Point3f by a Matrix</summary>
    public static Point3f operator * (Point3f p, Matrix3 m) {
       if (m.IsIdentity) return p;
       if (m.IsTranslation) return new (p.X + m.DX, p.Y + m.DY, p.Z + m.DZ);
@@ -367,6 +372,7 @@ public class Matrix3 : IEQuable<Matrix3> {
       double z = p.X * m.M13 + p.Y * m.M23 + p.Z * m.M33 + m.DZ;
       return new (x, y, z);
    }
+
    /// <summary>Multiply a Vector3 by a Matrix</summary>
    public static Vector3 operator * (Vector3 v, Matrix3 m) {
       if (m.IsIdentity || m.IsTranslation) return v;

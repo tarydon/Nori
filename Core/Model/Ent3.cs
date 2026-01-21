@@ -189,6 +189,10 @@ public abstract class E3Surface : Ent3 {
    public Bound2 Domain => Bound2.Cached (ref mDomain, ComputeDomain);
    Bound2 mDomain = new ();
 
+   /// <summary>Returns a normal vector at the midpoint of the bound (typical normal)</summary>
+   [DebuggerBrowsable (DebuggerBrowsableState.Never)]
+   public Vector3 MidNormal => GetNormal (Domain.Midpoint);
+
    /// <summary>Is the surface linear in the U parameter direction?</summary>
    public bool IsULinear => Get (E3Flags.ULinear);
    /// <summary>Is the surface linear in the V parameter dimension</summary>
@@ -232,8 +236,14 @@ public abstract class E3Surface : Ent3 {
    /// <summary>Override this to compute the domain of the surface</summary>
    protected abstract Bound2 ComputeDomain ();
 
+   /// <summary>Flip the normals of this surface</summary>
+   public bool FlipNormal () => IsNormalFlipped = !IsNormalFlipped;
+
    /// <summary>Computes the 3D point given a particular UV parameter values</summary>
    public abstract Point3 GetPoint (double u, double v);
+
+   /// <summary>Computes the 3D point, given a particular UV parameter value</summary>
+   public Point3 GetPoint (Point2 puv) => GetPoint (puv.X, puv.Y);
 
    /// <summary>Computes the normal given a particular UV parameter value</summary>
    public virtual Vector3 GetNormal (double u, double v) {
@@ -246,6 +256,9 @@ public abstract class E3Surface : Ent3 {
       var vecz = (vecx * vecy).Normalized ();
       return IsNormalFlipped ? -vecz : vecz;
    }
+
+   /// <summary>Computes the normal given a particular UV parameter value</summary>
+   public Vector3 GetNormal (Point2 puv) => GetNormal (puv.X, puv.Y);
 
    /// <summary>Compute the UV parameter value corresponding to a point lying on the surface</summary>
    public abstract Point2 GetUV (Point3 pt3d);
