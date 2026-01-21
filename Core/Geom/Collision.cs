@@ -20,18 +20,22 @@ public struct Tri (Point3 a, Point3 b, Point3 c) {
 /// <summary>Provides methods for collision detection between various geometric primitives.</summary>
 public static class Collision {
    /// <summary>Checks if 'a' Bound3 intersects with another Bound3 'b'</summary>
+   [MethodImpl (MethodImplOptions.AggressiveInlining)]
    public static bool Check (in Bound3 a, in Bound3 b) => Check (a.X, b.X) && Check (a.Y, b.Y) && Check (a.Z, b.Z);
 
    /// <summary>Checks if 'a' Bound1 intersects with another Bound1 'b'</summary>
+   [MethodImpl (MethodImplOptions.AggressiveInlining)]
    public static bool Check (in Bound1 a, in Bound1 b) => a.Min <= b.Max && a.Max >= b.Min;
 
    /// <summary>Checks if 'a' sphere intersects with another sphere 'b'</summary>
+   [MethodImpl (MethodImplOptions.AggressiveInlining)]
    public static bool Check (in MinSphere A, in MinSphere B) {
       var r = A.Radius + B.Radius;
       return (A.Center - B.Center).LengthSq <= r * r;
    }
 
    /// <summary>Checks if two OBBs intersect.</summary>
+   [MethodImpl (MethodImplOptions.AggressiveInlining)]
    public static bool Check (in OBB a, in OBB b) =>
       BoxBox (a.Center, a.CS.VecX, a.CS.VecY, a.Extent, b.Center, b.CS.VecX, b.CS.VecY, b.Extent);
 
@@ -116,31 +120,33 @@ public static class Collision {
       var c = new Point3 (Dot (v2, bX), Dot (v2, bY), Dot (v2, bZ));
 
       // Check 1. Nine edge cross products
-      Vector3 va = (Vector3)a, vb = (Vector3)b, vc = (Vector3)c;
-      // Optimize the cross product calculations for the axes
-      // by directly using the components of the triangle edges.
-      // a x b = (ax, ay, az) x (bx, by, bz) = (ay * bz - az * by, az * bx - ax * bz, ax * by - ay * bx)
-      // a x xAxis = (ax, ay, az) x (1, 0, 0) = (0, az, -ay)
-      // a x yAxis = (ax, ay, az) x (0, 1, 0) = (-az, 0, ax)
-      // a x zAxis = (ax, ay, az) x (0, 0, 1) = (ay, -ax, 0)
+      // Following two optimizations are applied to improve performance:
+      // 1. Optimize the cross product calculations for the axes by directly using the components of the triangle edges.
+      //  a x b = (ax, ay, az) x (bx, by, bz) = (ay * bz - az * by, az * bx - ax * bz, ax * by - ay * bx)
+      //  a x xAxis = (ax, ay, az) x (1, 0, 0) = (0, az, -ay)
+      //  a x yAxis = (ax, ay, az) x (0, 1, 0) = (-az, 0, ax)
+      //  a x zAxis = (ax, ay, az) x (0, 0, 1) = (ay, -ax, 0)
+      //
+      // 2. Ignore zero components in the cross products since they do not contribute to the projection.
+      //  Axis 'n' = e0 x xAxis = (0, e0.Z, -e0.Y) => r = bH.Y * |ny| + bH.Z * |nz|, d0 = ny * a.Y + nz * a.Z, etc.
 
       // Edge 0
       var e0 = b - a;
-      if (!TestAxis (new (0, e0.Z, -e0.Y), bH, va, vb, vc)) return false;
-      if (!TestAxis (new (-e0.Z, 0, e0.X), bH, va, vb, vc)) return false;
-      if (!TestAxis (new (e0.Y, -e0.X, 0), bH, va, vb, vc)) return false;
+      if (!TestAxis (e0.Z, -e0.Y, bH.Y, bH.Z, a.Y, a.Z, b.Y, b.Z, c.Y, c.Z)) return false;
+      if (!TestAxis (-e0.Z, e0.X, bH.X, bH.Z, a.X, a.Z, b.X, b.Z, c.X, c.Z)) return false;
+      if (!TestAxis (e0.Y, -e0.X, bH.X, bH.Y, a.X, a.Y, b.X, b.Y, c.X, c.Y)) return false;
 
       // Edge 1
       var e1 = c - b;
-      if (!TestAxis (new (0, e1.Z, -e1.Y), bH, va, vb, vc)) return false;
-      if (!TestAxis (new (-e1.Z, 0, e1.X), bH, va, vb, vc)) return false;
-      if (!TestAxis (new (e1.Y, -e1.X, 0), bH, va, vb, vc)) return false;
+      if (!TestAxis (e1.Z, -e1.Y, bH.Y, bH.Z, a.Y, a.Z, b.Y, b.Z, c.Y, c.Z)) return false;
+      if (!TestAxis (-e1.Z, e1.X, bH.X, bH.Z, a.X, a.Z, b.X, b.Z, c.X, c.Z)) return false;
+      if (!TestAxis (e1.Y, -e1.X, bH.X, bH.Y, a.X, a.Y, b.X, b.Y, c.X, c.Y)) return false;
 
       // Edge 2
       var e2 = a - c;
-      if (!TestAxis (new (0, e2.Z, -e2.Y), bH, va, vb, vc)) return false;
-      if (!TestAxis (new (-e2.Z, 0, e2.X), bH, va, vb, vc)) return false;
-      if (!TestAxis (new (e2.Y, -e2.X, 0), bH, va, vb, vc)) return false;
+      if (!TestAxis (e2.Z, -e2.Y, bH.Y, bH.Z, a.Y, a.Z, b.Y, b.Z, c.Y, c.Z)) return false;
+      if (!TestAxis (-e2.Z, e2.X, bH.X, bH.Z, a.X, a.Z, b.X, b.Z, c.X, c.Z)) return false;
+      if (!TestAxis (e2.Y, -e2.X, bH.X, bH.Y, a.X, a.Y, b.X, b.Y, c.X, c.Y)) return false;
 
       // Check 2. Check Box's AABB vs Triangle's AABB (three face normals of the Box)
       Bound3 b1 = new (-bH.X, -bH.Y, -bH.Z, bH.X, bH.Y, bH.Z), b2 = new (a, b, c);
@@ -158,12 +164,13 @@ public static class Collision {
       return true;
 
       [MethodImpl (MethodImplOptions.AggressiveInlining)]
-      static bool TestAxis (in Vector3 axis, in Vector3 bH, in Vector3 a, in Vector3 b, in Vector3 c) {
+      static bool TestAxis (double n1, double n2, double h1, double h2, double a1, double a2, double b1, double b2, double c1, double c2) {
+         // Components. Axis: n1, n2, Box half extents: h1, h2, Triangle vertices: a1,a2; b1,b2; c1,c2
          // The radius of the box projected onto the axis
-         var r = bH.X * Abs (axis.X) + bH.Y * Abs (axis.Y) + bH.Z * Abs (axis.Z);
+         var r = h1 * Abs (n1) + h2 * Abs (n2);
 
          // Project triangle onto axis to find min and max
-         double d0 = Dot (axis, a), d1 = Dot (axis, b), d2 = Dot (axis, c);
+         double d0 = n1 * a1 + n2 * a2, d1 = n1 * b1 + n2 * b2, d2 = n1 * c1 + n2 * c2;
          var (min, max) = (d0, d0);
          if (d1 < min) min = d1; else if (d1 > max) max = d1;
          if (d2 < min) min = d2; else if (d2 > max) max = d2;
