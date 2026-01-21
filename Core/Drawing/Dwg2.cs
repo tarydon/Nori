@@ -210,7 +210,7 @@ public partial class Dwg2 {
    }
 
    /// <summary>Exposes drawing layers editor VM</summary>
-   public EditTableVM GetLayersEditor () => new LayersTableVM (this);
+   public EditTableVM CreateLayersEditor () => new LayersTableVM (this);
 
    // Implementation -----------------------------------------------------------
    // Handles changes in the Ents list, and keeps the Bound up-to-date
@@ -246,11 +246,11 @@ public partial class Dwg2 {
 
       public override int Rows => mDwg.Layers.Count;
 
-      public override IReadOnlyList<ESemantics> ColSemantics => [ESemantics.String, ESemantics.Color, ESemantics.SelectOne];
+      public override IReadOnlyList<ESemantics> ColSemantics => [ESemantics.Label, ESemantics.Color, ESemantics.SelectOne];
 
       public override IReadOnlyList<string> ColNames => ["Name", "Color", "Line style"];
 
-      public override object? Get (int row, int col) {
+      public override object Get (int row, int col) {
          Layer2 layer = mDwg.Layers[row];
          return col switch {
             0 => layer.Name,
@@ -278,11 +278,11 @@ public partial class Dwg2 {
 
 #region EditTableVM --------------------------------------------------------------------------------
 public abstract class EditTableVM { // Generic tabular data VM - View will interact with this interface to show and edit tabular presentation
-   public enum ESemantics { String, Color, SelectOne }
+   public enum ESemantics { Label, Color, SelectOne }
    public abstract int Rows { get; }
    public abstract IReadOnlyList<ESemantics> ColSemantics { get; }
    public abstract IReadOnlyList<string> ColNames { get; }
-   public abstract object? Get (int row, int col);
+   public abstract object Get (int row, int col);
    public abstract void Set (int row, int col, object value);
 }
 #endregion
