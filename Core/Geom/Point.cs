@@ -204,6 +204,11 @@ public readonly struct Point3f {
    /// <summary>The Z ordinate of the Point3f</summary>
    public readonly float Z;
 
+   /// <summary>The 'Nil' point</summary>
+   public static readonly Point3f Nil = new (float.NaN, float.NaN, float.NaN);
+   /// <summary>Is this point Nil (similar to NaN for double)</summary>
+   public bool IsNil => X.IsNaN ();
+
    // Methods ------------------------------------------------------------------
    public double DistToSq (Point3f b) {
       double dx = X - b.X, dy = Y - b.Y, dz = Z - b.Z;

@@ -17,12 +17,14 @@ public static class Lib {
    public const double Delta = 1e-3;
    /// <summary>Epsilon = 1e-6</summary>
    public const double Epsilon = 1e-6;
+   /// <summary>Square of epsilon (1e-12)</summary>
+   public const double EpsilonSq = Epsilon * Epsilon;
    /// <summary>PI = 180 degrees, in radians</summary>
    public const double PI = Math.PI;
    /// <summary>Tessellation error</summary>
    public static double FineTess = 0.01;
    /// <summary>Square of the tessellation error</summary>
-   public static double FineTessSq = 0.0001;
+   public static double FineTessSq = FineTess * FineTess;
    /// <summary>Fine tessellation angle tolerance (~ 31 degrees)</summary>
    public static double FineTessAngle = 0.5411;
    /// <summary>TwoPI = 360 degrees, in radians</summary>
@@ -77,8 +79,7 @@ public static class Lib {
 
    public static void AddMetadata (string[] metadata) => AuType.AddTactics (metadata);
 
-   /// <summary>Checks a condition, and throws an exception in debug mode</summary>
-   /// In release mode, this just returns the condition quietly
+   /// <summary>Checks a condition, and throws an exception if it fails</summary>
    public static bool Check (bool condition, string message) 
       => !condition ? throw new Exception (message) : condition;
 

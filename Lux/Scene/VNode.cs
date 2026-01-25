@@ -93,8 +93,8 @@ public abstract class VNode {
    public void ChildRemoved (VNode child) {
       mFamily.Remove (ref mChildren, child.Id);
       mFamily.Remove (ref child.mParents, Id);
-      if (--child.mCRefs <= 0) child.Deregister ();
-      mKnownChildren--;
+      if (--child.mCRefs <= 0 && child.Deregister ())
+         mKnownChildren--;
       Lux.Redraw ();
    }
 
@@ -406,8 +406,8 @@ public abstract class VNode {
    // Deregister is called when this VNode is no longer ever required.
    // This means it is not part of any scenes and its 'parent refs' counter has
    // run down to zero.
-   internal void Deregister () {
-      Debug.Assert (Id > 0);
+   internal bool Deregister () {
+      if (Id == 0) return false;
       OnDetach ();
       mDisposer?.Dispose ();
       ReleaseBatches ();
@@ -423,6 +423,7 @@ public abstract class VNode {
       mFreeIDs.Push (Id); mNodes[Id] = null;
       mGeometryDirty = mChildrenAdded = true; mKnownChildren = 0;
       Id = 0;
+      return true;
    }
 
    // Private data -------------------------------------------------------------

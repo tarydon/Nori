@@ -59,12 +59,12 @@ public partial class Poly {
       => Line (new (x1, y1), new (x2, y2));
 
    /// <summary>Make a multi-segment PolyLine</summary>
-   public static Poly Lines (IEnumerable<Point2> points)
-      => new ([.. points], [], EFlags.Closed);
+   public static Poly Lines (IEnumerable<Point2> points, bool closed)
+      => new ([.. points], [], closed ? EFlags.Closed : 0);
 
    /// <summary>Create a polygon of given size at a given center, sides and rotation angle.</summary>
    public static Poly Polygon (Point2 cen, double radius, int sides, double angle = 0)
-      => Lines (Enumerable.Range (0, sides).Select (i => cen.Polar (radius, angle + HalfPI + TwoPI * i / sides)));
+      => Lines (Enumerable.Range (0, sides).Select (i => cen.Polar (radius, angle + HalfPI + TwoPI * i / sides)), true);
 
    /// <summary>This constructor makes a Pline from a Pline mini-language encoded string</summary>
    /// When we do ToString on a Pline, we get an encoding of that Pline in a mini-language.

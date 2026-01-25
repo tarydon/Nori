@@ -14,14 +14,13 @@ namespace Nori;
 /// exactly two Curve3 with a particular PairId. 
 public abstract class Curve3 {
    // Constructors -------------------------------------------------------------
-   protected Curve3 () { }
    protected Curve3 (int pairId) => PairId = pairId;
+   protected Curve3 () { }
 
    // Properties ---------------------------------------------------------------
+   /// <summary>Returns the domain of the Curve</summary>
    public abstract Bound1 Domain { get; }
 
-   /// <summary>Get the start point of the curve</summary>
-   public abstract Point3 Start { get; }
    /// <summary>Get the end point of the curve</summary>
    public abstract Point3 End { get; }
 
@@ -29,6 +28,13 @@ public abstract class Curve3 {
    public abstract bool IsOnXYPlane { get; }
    /// <summary>Is this curve lying on the XZ plane?</summary>
    public abstract bool IsOnXZPlane { get; }
+
+   /// <summary>Get the start point of the curve</summary>
+   public abstract Point3 Start { get; }
+
+   /// <summary>Returns the point at the middle of the domain</summary>
+   [DebuggerBrowsable (DebuggerBrowsableState.Never)]
+   public Point3 Midpoint => GetPoint (Domain.Mid);
 
    /// <summary>If non-zero, this is the pair-ID of this edge</summary>
    /// In each fully connected manifold model, there are exactly two edges with
@@ -38,8 +44,21 @@ public abstract class Curve3 {
    public readonly int PairId;
 
    // Methods ------------------------------------------------------------------
+   /// <summary>Returns a PiecewiseLinear approximation of this curve</summary>
+   /// 1. The curve is approximated with the given error threshold
+   /// 2. In addition, the maxAngStep value is used to provide a maximum turn angle
+   ///    that cannot be exceeded (this really works only for a smooth curve like an
+   ///    arc or NURB with at least 2nd order continuity)
+   /// Derived classes MUST implement this
+   public abstract void Discretize (List<Point3> pts, double tolerance, double maxAngStep);
+
+   /// <summary>Evaluates the point at a given parameter value t</summary>
+   /// Derived classes MUST implement this 
    public abstract Point3 GetPoint (double t);
 
+   /// <summary>Evaluates the tangent at a given parameter value t</summary>
+   /// Derived classes CAN implement this for optimizing, otherwise this default
+   /// implementation approximates the tangent using two evaluations 
    public virtual Vector3 GetTangent (double t) {
       var d = Domain;
       double dt = d.Length / 50;
@@ -48,120 +67,17 @@ public abstract class Curve3 {
    }
 
    /// <summary>Returns the point at a given parameter value T along the curve</summary>
+   /// Derived clases MUST implement this
    public abstract double GetT (Point3 pt);
-
-   /// <summary>Returns a PiecewiseLinear approximation of this curve</summary>
-   /// 1. The curve is approximated with the given error threshold
-   /// 2. The End point of the curve is not included (it is effectively the start
-   ///    point of the next Edge in the sequence
-   public abstract void Discretize (List<Point3> pts, double tolerance, double maxAngStep);
 
    /// <summary>Returns a copy of this curve transformed by the given transform</summary>
    public static Curve3 operator * (Curve3 curve, Matrix3 xfm) => curve.Xformed (xfm);
 
    // Implementation -----------------------------------------------------------
-   public override string ToString ()
-      => $"{GetType ().Name} PairID={PairId}";
+   public override string ToString () => $"{GetType ().Name} ID={PairId}, {Start} to {End}";
 
    // Override this in each derived Curve3
    protected abstract Curve3 Xformed (Matrix3 xfm);
-}
-#endregion
-
-#region class Line3 --------------------------------------------------------------------------------
-/// <summary>Line3 implements a linear edge between two points</summary>
-public sealed class Line3 : Curve3 {
-   // Constructors -------------------------------------------------------------
-   Line3 () { }
-   public Line3 (int pairId, Point3 start, Point3 end) : base (pairId) => (mStart, mEnd) = (start, end);
-
-   // Properties ---------------------------------------------------------------
-   public override Bound1 Domain => new (0, 1);
-
-   /// <summary>Start point of the line</summary>
-   public override Point3 Start => mStart;
-   readonly Point3 mStart;
-
-   /// <summary>End point of the line</summary>
-   public override Point3 End => mEnd;
-   readonly Point3 mEnd;
-
-   public override bool IsOnXYPlane => mStart.Z.IsZero () && mEnd.Z.IsZero ();
-   public override bool IsOnXZPlane => mStart.Y.IsZero (Lib.Delta) && mEnd.Y.IsZero (Lib.Delta);
-
-   /// <summary>Length of the line</summary>
-   public double Length => Start.DistTo (End);
-
-   // Methods ------------------------------------------------------------------
-   /// <summary>Discretize just adds the start point of the Line3</summary>
-   /// The convention is that the end point is never included (it is added as part of the next curve)
-   public override void Discretize (List<Point3> pts, double tolerance, double maxAngStep) 
-      => pts.Add (Start);
-
-   /// <summary>Gets the point at a given lie</summary>
-   public override Point3 GetPoint (double lie) => lie.Along (mStart, mEnd);
-
-   public override Vector3 GetTangent (double t) => (mEnd - mStart).Normalized ();
-
-   public override double GetT (Point3 pt) => pt.GetLieOn (mStart, mEnd);
-
-   // Implementation -----------------------------------------------------------
-   public override string ToString ()
-      => $"{base.ToString ()} Len={Start.DistTo (End).Round (2)}";
-
-   /// <summary>Transformed copy of this line</summary>
-   protected override Line3 Xformed (Matrix3 xfm) 
-      => new (PairId, mStart * xfm, mEnd * xfm);
-}
-#endregion
-
-#region class Ellipse3 -----------------------------------------------------------------------------
-public sealed class Ellipse3 : Curve3 {
-   Ellipse3 () { }
-   public Ellipse3 (int pairId, CoordSystem cs, double xRadius, double yRadius, double ang0, double ang1) : base (pairId) {
-      CS = cs; XRadius = xRadius; YRadius = yRadius; Ang0 = ang0; Ang1 = ang1;
-      Debug.Assert (Ang1 >= Ang0);
-   }
-
-   public readonly CoordSystem CS;
-   public readonly double XRadius;
-   public readonly double YRadius;
-   public readonly double Ang0;
-   public readonly double Ang1;
-
-   public override Bound1 Domain => new (Ang0, Ang1);
-
-   public override Point3 Start => GetPoint (Ang0);
-   public override Point3 End => GetPoint (Ang1);
-
-   public override bool IsOnXYPlane 
-      => CS.Org.Z.IsZero () && Math.Abs (CS.VecZ.Z).EQ (1);
-
-   public override bool IsOnXZPlane
-      => CS.Org.Y.IsZero (Lib.Delta) && Math.Abs (CS.VecZ.Y).EQ (1, Lib.Delta);
-
-   public override Point3 GetPoint (double lie) {
-      var (sin, cos) = Math.SinCos (lie.Along (Ang0, Ang1));
-      return CS.Org + CS.VecX * (XRadius * cos) + CS.VecY * (YRadius * sin);
-   }
-
-   public override double GetT (Point3 pt) {      
-      pt *= (mFrom ??= Matrix3.From (CS));
-      double ang = Math.Atan2 (pt.Y, pt.X);
-      while (ang < Ang0) ang += Lib.TwoPI;
-      return ang.GetLieOn (Ang0, Ang1);
-   }
-   Matrix3? mFrom;
-
-   public override void Discretize (List<Point3> pts, double tolerance, double maxAngStep) {
-      double angSpan = Ang1 - Ang0;
-      int n = Lib.GetArcSteps ((XRadius + YRadius) / 2, angSpan, tolerance, maxAngStep);
-      if (angSpan.EQ (Lib.TwoPI) && n.IsOdd ()) n++;
-      for (int i = 0; i < n; i++) pts.Add (GetPoint ((double)i / n));
-   }
-
-   protected override Ellipse3 Xformed (Matrix3 xfm) 
-      => new (PairId, CS * xfm, XRadius, YRadius, Ang0, Ang1);
 }
 #endregion
 
@@ -172,9 +88,12 @@ public sealed class Ellipse3 : Curve3 {
 /// using the specified coord-system CS.
 public class Arc3 : Curve3 {
    // Constructors -------------------------------------------------------------
-   Arc3 () { }
+   /// <summary>Construct an Arc3</summary>
+   /// The Arc3 always starts at the point (Radius,0,0) in the canonical space, before
+   /// being transformed into the final CS. 
    public Arc3 (int pairId, CoordSystem cs, double radius, double angSpan) : base (pairId)
       => (CS, Radius, AngSpan) = (cs, radius, angSpan);
+   Arc3 () { }
 
    // Properties ---------------------------------------------------------------
    /// <summary>Angular span of the arc (in radians)</summary>
@@ -183,9 +102,7 @@ public class Arc3 : Curve3 {
    [Radian]
    public readonly double AngSpan;
 
-   public override Bound1 Domain => new (0, 1);
-
-    /// <summary>The coordinate system in which the Arc3 is defined</summary>
+   /// <summary>The coordinate system in which the Arc3 is defined</summary>
    /// In this CS, the arc lies in the XY plane, and winds CCW about the Z
    /// axis. The start point of the arc is along the X axis and the angular span
    /// is in radians. So, with an angular span of +PI/2, the arc will finish
@@ -195,16 +112,19 @@ public class Arc3 : Curve3 {
    /// <summary>Returns the center point of the arc</summary>
    public Point3 Center => CS.Org;
 
+   /// <summary>The domain of an arc is always in radians</summary>
+   public override Bound1 Domain => new (0, AngSpan);
+
+   /// <summary>Get the endpoint of the Arc</summary>
+   public override Point3 End => GetPoint (AngSpan);
+
    /// <summary>Radius of the arc</summary>
    public readonly double Radius;
 
-   public override bool IsOnXYPlane
-      => CS.Org.Z.IsZero () && Math.Abs (CS.VecZ.Z).EQ (1);
-
-   public override bool IsOnXZPlane
-      => CS.Org.Y.IsZero (Lib.Delta) && Math.Abs (CS.VecZ.Y).EQ (1, Lib.Delta);
-
-   public override Point3 End => GetPoint (1);
+   /// <summary>Check if the arc is on the XY plane</summary>
+   public override bool IsOnXYPlane => CS.Org.Z.IsZero (Lib.Delta) && Math.Abs (CS.VecZ.Z).EQ (1, Lib.Delta);
+   /// <summary>Check if the arc is on the XZ plane</summary>
+   public override bool IsOnXZPlane => CS.Org.Y.IsZero (Lib.Delta) && Math.Abs (CS.VecZ.Y).EQ (1, Lib.Delta);
 
    /// <summary>Start point of the Arc3 (is always at (Radius,0,0) in the local coordinate system)</summary>
    public override Point3 Start => CS.Org + CS.VecX * Radius;
@@ -219,34 +139,159 @@ public class Arc3 : Curve3 {
    public override void Discretize (List<Point3> pts, double tolerance, double maxAngStep) {
       int n = Lib.GetArcSteps (Radius, AngSpan, tolerance, maxAngStep);
       if (AngSpan.EQ (Lib.TwoPI) && n.IsOdd ()) n++;
-      for (int i = 0; i < n; i++) pts.Add (GetPoint ((double)i / n));
+      for (int i = 0; i <= n; i++) pts.Add (GetPoint ((double)i / n * AngSpan));
    }
 
    /// <summary>Returns the point at a given lie</summary>
-   public override Point3 GetPoint (double lie) {
-      var (sin, cos) = Math.SinCos (AngSpan * lie);
+   public override Point3 GetPoint (double t) {
+      var (sin, cos) = Math.SinCos (t);
       return CS.Org + CS.VecX * (Radius * cos) + CS.VecY * (Radius * sin);
    }
 
+   /// <summary>Returns the tangent a the given value of t</summary>
    public override Vector3 GetTangent (double t) {
-      var (sin, cos) = Math.SinCos (AngSpan * t);
+      var (sin, cos) = Math.SinCos (t);
       return CS.VecX * -sin + CS.VecY * cos;
    }
 
+   /// <summary>Computes the T value corresponding to the given point</summary>
    public override double GetT (Point3 pt) {
       pt *= (_from ??= Matrix3.From (CS));
       double ang = Math.Atan2 (pt.Y, pt.X);
       if (ang < 0) ang += Lib.TwoPI;
-      return ang / AngSpan;
+      return ang;
    }
    Matrix3? _from;
-
-   protected override Arc3 Xformed (Matrix3 xfm)
-      => new (PairId, CS * xfm, Radius * xfm, AngSpan);
 
    // Implementation -----------------------------------------------------------
    public override string ToString ()
       => $"{base.ToString ()} R={Radius.Round (2)} Span={AngSpan.R2D ().Round (1)}\u00b0";
+
+   // Transform the Arc3 by the given CS
+   protected override Arc3 Xformed (Matrix3 xfm) => new (PairId, CS * xfm, Radius * xfm, AngSpan);
+}
+#endregion
+
+#region class Ellipse3 -----------------------------------------------------------------------------
+/// <summary>Ellipse3 implements a curve (canonical is on XY plane, projected into a space CS)</summary>
+public sealed class Ellipse3 : Curve3 {
+   // Constructors -------------------------------------------------------------
+   /// <summary>Constructs an Ellipse3 given X & Y radii, start and end angles</summary>
+   /// The ellipse is defined in the XY plane first and then lofted up into the final position
+   /// using the given CS. The Ellipse always goes CCW from ang0 to ang1, which are both in the
+   /// interval 0 .. 2PI
+   public Ellipse3 (int pairId, CoordSystem cs, double xRadius, double yRadius, double ang0, double ang1) : base (pairId) {
+      CS = cs; XRadius = xRadius; YRadius = yRadius;
+      Debug.Assert (ang1 >= ang0);
+      while (ang0 < 0) ang0 += Lib.TwoPI;
+      while (ang1 < ang0) ang1 += Lib.TwoPI;
+      mDomain = new (ang0, ang1);
+   }
+   Ellipse3 () { }
+
+   // Properties ---------------------------------------------------------------
+   /// <summary>CoordSystem in which this Ellipse is defined</summary>
+   public readonly CoordSystem CS;
+
+   /// <summary>The domain of an Ellipse3 is in radians</summary>
+   [Radian]
+   public override Bound1 Domain => mDomain;
+   Bound1 mDomain;
+
+   /// <summary>End is the curve evaluated at the max limit of the domain</summary>
+   public override Point3 End => GetPoint (mDomain.Max);
+
+   /// <summary>Checks if the Ellipse3 is on the XY plane</summary>
+   public override bool IsOnXYPlane => CS.Org.Z.IsZero () && Math.Abs (CS.VecZ.Z).EQ (1);
+   /// <summary>Checks if the Ellipse3 is on the XZ plane</summary>
+   public override bool IsOnXZPlane => CS.Org.Y.IsZero (Lib.Delta) && Math.Abs (CS.VecZ.Y).EQ (1, Lib.Delta);
+
+   /// <summary>Start is the curve evaluated at the min limit of the domain</summary>
+   public override Point3 Start => GetPoint (mDomain.Min);
+
+   /// <summary>Radius of the ellipse along the X direction</summary>
+   public readonly double XRadius;
+   /// <summary>Radius of the ellipse along the Y direction</summary>
+   public readonly double YRadius;
+
+   // Methods ------------------------------------------------------------------
+   /// <summary>Discretize the arc with a given</summary>
+   public override void Discretize (List<Point3> pts, double tolerance, double maxAngStep) {
+      double angSpan = mDomain.Length;
+      int n = Lib.GetArcSteps ((XRadius + YRadius) / 2, angSpan, tolerance, maxAngStep);
+      if (angSpan.EQ (Lib.TwoPI) && n.IsOdd ()) n++;
+      for (int i = 0; i <= n; i++) pts.Add (GetPoint (((double)i / n).Along (mDomain)));
+   }
+
+   /// <summary>Returns the point at a given parameter value t (which is directly in domains)</summary>
+   public override Point3 GetPoint (double t) {
+      var (sin, cos) = Math.SinCos (t);
+      return CS.Org + CS.VecX * (XRadius * cos) + CS.VecY * (YRadius * sin);
+   }
+
+   /// <summary>Returns the t value of a given point</summary>
+   public override double GetT (Point3 pt) {
+      pt *= (mFrom ??= Matrix3.From (CS));
+      double ang = Math.Atan2 (pt.Y, pt.X);
+      if (ang < 0) ang += Lib.TwoPI;
+      return ang;
+   }
+   Matrix3? mFrom;
+
+   /// <summary>Returns the Ellipse transformed by a given transform</summary>
+   protected override Ellipse3 Xformed (Matrix3 xfm)
+      => new (PairId, CS * xfm, XRadius * xfm, YRadius * xfm, mDomain.Min, mDomain.Max);
+}
+#endregion
+
+#region class Line3 --------------------------------------------------------------------------------
+/// <summary>Line3 implements a linear edge between two points</summary>
+public sealed class Line3 : Curve3 {
+   // Constructors -------------------------------------------------------------
+   public Line3 (int pairId, Point3 start, Point3 end) : base (pairId) => (mStart, mEnd) = (start, end);
+   Line3 () { }
+
+   // Properties ---------------------------------------------------------------
+   /// <summary>Domain of a Line is 0..1</summary>
+   public override Bound1 Domain => new (0, 1);
+
+   /// <summary>End point of the line</summary>
+   public override Point3 End => mEnd;
+   readonly Point3 mEnd;
+
+   /// <summary>Checks if the Line is on the XY plane</summary>
+   public override bool IsOnXYPlane => mStart.Z.IsZero () && mEnd.Z.IsZero ();
+   /// <summary>Checks if the line is on the XZ plane</summary>
+   public override bool IsOnXZPlane => mStart.Y.IsZero (Lib.Delta) && mEnd.Y.IsZero (Lib.Delta);
+
+   /// <summary>Length of the line</summary>
+   public double Length => Start.DistTo (End);
+
+   /// <summary>Start point of the line</summary>
+   public override Point3 Start => mStart;
+   readonly Point3 mStart;
+
+   // Methods ------------------------------------------------------------------
+   /// <summary>Discretize just adds the start point of the Line3</summary>
+   /// The convention is that the end point is never included (it is added as part of the next curve)
+   public override void Discretize (List<Point3> pts, double tolerance, double maxAngStep) {
+      pts.Add (mStart); pts.Add (mEnd);
+   }
+
+   /// <summary>Gets the point at a given lie</summary>
+   public override Point3 GetPoint (double lie) => lie.Along (mStart, mEnd);
+
+   /// <summary>The tangent anywhere along a line is independent of the paramter value t</summary>
+   public override Vector3 GetTangent (double t) => (mEnd - mStart).Normalized ();
+
+   /// <summary>Returns the T value of a given point</summary>
+   public override double GetT (Point3 pt) => pt.GetLieOn (mStart, mEnd);
+
+   // Implementation -----------------------------------------------------------
+   public override string ToString () => $"{base.ToString ()}, Len={Start.DistTo (End).Round (2)}";
+
+   // Transformed copy of this line
+   protected override Line3 Xformed (Matrix3 xfm) => new (PairId, mStart * xfm, mEnd * xfm);
 }
 #endregion
 
@@ -261,7 +306,6 @@ public class NurbsCurve3 : Curve3 {
       Rational = !(weight.IsEmpty || weight.All (a => a.EQ (1)));
       if (!Rational) Weight = [];
    }
-
    NurbsCurve3 () => mImp = null!;
    readonly SplineImp mImp;
 
@@ -269,10 +313,16 @@ public class NurbsCurve3 : Curve3 {
    /// <summary>The set of control points for this Spline</summary>
    public readonly ImmutableArray<Point3> Ctrl;
 
+   /// <summary>The domain of the NurbsCurve is just from the first to last knot</summary>
    public override Bound1 Domain => new (mImp.Knot[0], mImp.Knot[^1]);
 
    /// <summary>Endpoint of the NurbsCurve</summary>
    public override Point3 End => Ctrl[^1];
+
+   /// <summary>Check if the NurbsCurve is on the XY plane</summary>
+   public override bool IsOnXYPlane => Ctrl.All (a => a.Z.EQ (0));
+   /// <summary>Check if the NurbsCurve is on the XZ plane</summary>
+   public override bool IsOnXZPlane => Ctrl.All (a => a.Y.IsZero (Lib.Delta));
 
    /// <summary>Is this a rational spline (not all weights are set to 1)</summary>
    public readonly bool Rational;
@@ -280,10 +330,7 @@ public class NurbsCurve3 : Curve3 {
    /// <summary>Start point of the NurbsCurve</summary>
    public override Point3 Start => Ctrl[0];
 
-   public override bool IsOnXYPlane => Ctrl.All (a => a.Z.EQ (0));
-
-   public override bool IsOnXZPlane => Ctrl.All (a => a.Y.IsZero (Lib.Delta));
-
+   /// <summary>Returns the knot vector of the NurbsCurve</summary>
    public ImmutableArray<double> Knot => mImp.Knot;
 
    /// <summary>Weights attached to the control points</summary>
@@ -379,11 +426,9 @@ public class NurbsCurve3 : Curve3 {
    // order of the Spline we're evalauting increases, and never shrink this buffer)
    static readonly ThreadLocal<double[]> mFactor = new (() => new double[8]);
 
+   /// <summary>Return the T value corresponding to the given pt</summary>
    public override double GetT (Point3 pt) => (_unlofter = new CurveUnlofter (this)).GetT (pt);
    CurveUnlofter? _unlofter;
-
-   protected override NurbsCurve3 Xformed (Matrix3 xfm)
-      => new (PairId, [.. Ctrl.Select (a => a * xfm)], mImp.Knot, Weight);
 
    // Nested types -------------------------------------------------------------
    // Node is an internal struct used during discretization of a spline
@@ -392,30 +437,46 @@ public class NurbsCurve3 : Curve3 {
       public double A;
       public int Level;
    }
+
+   // Implementation -----------------------------------------------------------
+   // Transforms the NurbsCurve3 by the given transform
+   protected override NurbsCurve3 Xformed (Matrix3 xfm)
+      => new (PairId, [.. Ctrl.Select (a => a * xfm)], mImp.Knot, Weight);
 }
 #endregion
 
-#region class Polyline3 -------------------------------------------------------------------------------
+#region class Polyline3 ----------------------------------------------------------------------------
 /// <summary>Represents a PWL segment</summary>
 public class Polyline3 : Curve3 {
    // Constructors -------------------------------------------------------------
-   Polyline3 () { }
+   /// <summary>Create the Polyline3, given a set of pts</summary>
    public Polyline3 (int pairId, ImmutableArray<Point3> pts) : base (pairId) => Pts = pts;
+   Polyline3 () { }
 
    // Properties ---------------------------------------------------------------
-   public readonly ImmutableArray<Point3> Pts;
-   public double Length => _length < 0 ? (_length = ComputeLength ()) : _length;
-   double _length = -1;
-
-   // Curve3 Implementation ----------------------------------------------------
-   public override Point3 Start => Pts[0];
-   public override Point3 End => Pts[^1];
-
+   /// <summary>The domain of the Polyline3 is 0 .. Pts.Length-1</summary>
    public override Bound1 Domain => new (0, Pts.Length - 1);
 
-   public override void Discretize (List<Point3> pts, double _, double __) 
+   /// <summary>The end of the Polyline3</summary>
+   public override Point3 End => Pts[^1];
+
+   /// <summary>Checks if the Polyline3 is on the XY plane</summary>
+   public override bool IsOnXYPlane => Pts.All (a => a.Z.EQ (0));
+   /// <summary>Checks if the Polyline3 is on the XZ plane</summary>
+   public override bool IsOnXZPlane => Pts.All (a => a.Y.IsZero (Lib.Delta));
+
+   /// <summary>The set of points making up the Polyline3</summary>
+   public readonly ImmutableArray<Point3> Pts;
+
+   /// <summary>The start of the Polyline3</summary>
+   public override Point3 Start => Pts[0];
+
+   // Methods ------------------------------------------------------------------
+   /// <summary>Discretize the Polyline3 just returns the set of points</summary>
+   public override void Discretize (List<Point3> pts, double _, double __)
       => pts.AddRange (Pts);
 
+   /// <summary>Gets the point at a given lie</summary>
    public override Point3 GetPoint (double lie) {
       if (lie < Lib.Epsilon) return Start;
       else if (lie >= Pts.Length - 1 - Lib.Epsilon) return End;
@@ -423,6 +484,7 @@ public class Polyline3 : Curve3 {
       return (lie - n).Along (Pts[n], Pts[n + 1]);
    }
 
+   /// <summary>Gets the T value for the given point</summary>
    public override double GetT (Point3 pt) {
       int iBest = 0;
       double minDist = double.MaxValue;
@@ -433,20 +495,10 @@ public class Polyline3 : Curve3 {
       return pt.GetLieOn (Pts[iBest], Pts[iBest + 1]) + iBest;
    }
 
-   public override bool IsOnXYPlane => Pts.All (a => a.Z.EQ (0));
-
-   public override bool IsOnXZPlane => Pts.All (a => a.Y.IsZero (Lib.Delta));
-
+   // Implementation -----------------------------------------------------------
+   // Transform the Polyline3 by the given xfm
    protected override Polyline3 Xformed (Matrix3 xfm)
       => new (PairId, [.. Pts.Select (a => a * xfm)]);
-
-   // Implementation -----------------------------------------------------------
-   double ComputeLength () {
-      double totalLength = 0;
-      for (int i = 1; i < Pts.Length; i++)
-         totalLength += Pts[i - 1].DistTo (Pts[i]);
-      return totalLength;
-   }
 }
 #endregion
 
@@ -455,8 +507,8 @@ public class Polyline3 : Curve3 {
 /// Typically surfaces are bounded by a set of Contour3
 public class Contour3 {
    // Constructors -------------------------------------------------------------
-   Contour3 () { }
    public Contour3 (ImmutableArray<Curve3> edges) => mCurves = edges;
+   Contour3 () { }
 
    // Properties ---------------------------------------------------------------
    /// <summary>The list of Curve3  in this Contour3</summary>
@@ -465,8 +517,13 @@ public class Contour3 {
 
    // Methods ------------------------------------------------------------------
    /// <summary>Discretize this Contour3 into a piecewise-linear approximation</summary>
-   public void Discretize (List<Point3> pts, double tolerance, double maxAngStep)
-      => mCurves.ForEach (e => e.Discretize (pts, tolerance, maxAngStep));
+   public void Discretize (List<Point3> pts, double tolerance, double maxAngStep) {
+      for (int i = 0; i < mCurves.Length; i++) {
+         mCurves[i].Discretize (pts, tolerance, maxAngStep);
+         // The endpoint of curve N is also the start point of curve N + 1
+         if (i < mCurves.Length - 1) pts.RemoveLast ();
+      }
+   }
 
    /// <summary>Project the Contour3 into a</summary>
    public Poly Flatten (CoordSystem cs) {

@@ -39,6 +39,60 @@ public class Model3 {
    }
    Dictionary<E3Surface, List<E3Surface>>? _neighbors;
 
+   /// <summary>Given a particular Curve3, this returns the co-edge (and the surface it belongs to)</summary>
+   /// If no co-edge is found, this returns false. If a coedge is found is sets s2 and c2 and
+   /// returns true. 
+   public bool GetCoedge (Curve3 c, [NotNullWhen (true)]out E3Surface? s2, [NotNullWhen (true)]out Curve3? c2) {
+      if (_coedges == null) {
+         // First time we cal lthis, build up a dictionary that maps each pair-id
+         // with both the curves carrying that edge
+         _coedges = [];
+         Dictionary<int, (E3Surface S, Curve3 C)> unpaired = [];
+         foreach (var s1 in Ents.OfType<E3Surface> ()) {
+            foreach (var c1 in s1.Contours.SelectMany (con => con.Curves)) {
+               if (unpaired.TryGetValue (c1.PairId, out var tuple))
+                  _coedges.Add (c1.PairId, (tuple.S, tuple.C, s1, c1));
+               else
+                  unpaired.Add (c1.PairId, (s1, c1));
+            }
+         }
+      }
+      // Once the dictionary has been built, we can find the two curves corresponding 
+      // to this edge
+      if (_coedges.TryGetValue (c.PairId, out var pair)) {
+         if (pair.C1 == c) { s2 = pair.S2; c2 = pair.C2; return true; }
+         if (pair.C2 == c) { s2 = pair.S1; c2 = pair.C2; return true; }
+         throw new InvalidOperationException ();
+      }
+      s2 = null; c2 = null;
+      return false;
+   }
+   Dictionary<int, (E3Surface S1, Curve3 C1, E3Surface S2, Curve3 C2)>? _coedges;
+
+   public List<E3Surface> GetConnected (E3Surface seed) {
+      HashSet<E3Surface> seen = [seed];
+      Queue<E3Surface> todo = []; todo.Enqueue (seed);
+      while (todo.Count > 0) {
+         var ent = todo.Dequeue ();
+         foreach (var neighbor in GetNeighbors (ent))
+            if (seen.Add (neighbor)) todo.Enqueue (neighbor);
+      }
+      return [.. seen];
+   }
+
+   public List<List<E3Surface>> PartitionByConnectivity () {
+      HashSet<E3Surface> done = [];
+      List<List<E3Surface>> sets = [];
+      foreach (var seed in Ents.OfType<E3Surface> ()) {
+         if (done.Add (seed)) {
+            var set = GetConnected (seed);
+            foreach (var a in set) done.Add (a);
+            sets.Add (set);
+         }
+      }
+      return sets;
+   }
+
    // Operators ----------------------------------------------------------------
    /// <summary>Returns a copy of the entire model transformed by the given matrix</summary>
    public static Model3 operator * (Model3 model, Matrix3 xfm) => new (model, xfm);
