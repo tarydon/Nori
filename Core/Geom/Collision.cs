@@ -14,7 +14,9 @@ public struct Tri (Point3 a, Point3 b, Point3 c) {
    public Bound3 Bound => _bound ??= ComputeBound ();
    Bound3? _bound = null;
 
-   readonly Bound3 ComputeBound () => new (A, B, C);
+   readonly Bound3 ComputeBound ()
+      => new (Min (A.X, Min (B.X, C.X)), Min (A.Y, Min (B.Y, C.Y)), Min (A.Z, Min (B.Z, C.Z)), 
+         Max (A.X, Max (B.X, C.X)), Max (A.Y, Max (B.Y, C.Y)), Max (A.Z, Max (B.Z, C.Z)));
 }
 
 /// <summary>Provides methods for collision detection between various geometric primitives.</summary>
@@ -39,9 +41,13 @@ public static class Collision {
    public static bool Check (in OBB a, in OBB b) =>
       BoxBox (a.Center, a.CS.VecX, a.CS.VecY, a.Extent, b.Center, b.CS.VecX, b.CS.VecY, b.Extent);
 
+   [MethodImpl (MethodImplOptions.AggressiveInlining)]
    public static bool Check (in Tri a, in OBB b) =>
       BoxTri (b.Center, b.CS.VecX, b.CS.VecY, b.Extent, a.A, a.B, a.C);
-   //Check (a.Bound, b.Bound);
+
+   [MethodImpl (MethodImplOptions.AggressiveInlining)]
+   public static bool Check (in Tri a, in Tri b) => //Check (a.Bound, b.Bound) && 
+      TriTri (a.A, a.B, a.C, b.A, b.B, b.C);
 
    /// <summary>Checks if two OBBs intersect using the Separating Axis Theorem (SAT)</summary>
    /// The algorithm tests 15 potential separating axes, and if no separating axis is found, the 
@@ -179,6 +185,89 @@ public static class Collision {
          // is greater than the projected radius, there is a separating axis.
          return !(min > r || max < -r);
       }
+   }
+
+   /// <summary>Checks if two triangles intersect in 3D space.</summary>
+   /// It implements the Devilliers & Guigue algorithm for triangle-triangle intersection.
+   public static bool TriTri (Point3 a1, Point3 b1, Point3 c1, Point3 a2, Point3 b2, Point3 c2) {
+      // Step 1. Plane-side tests
+      // 1a. Check if triangle 1 is completely on one side of triangle 2's plane
+      var n2 = (b2 - a2) * (c2 - a2);
+      var sa1 = Sign (Dot (a1 - a2, n2));
+      var sb1 = Sign (Dot (b1 - a2, n2));
+      var sc1 = Sign (Dot (c1 - a2, n2));
+      if (SameSign (sa1, sb1, sc1)) return false;
+
+      // Step 2. Check for coplanar case and check 2D overlap
+      if (sa1 == sb1 && sb1 == sc1 && sa1 == 0) {
+         // Coplanar case - not handled yet
+      }
+
+      // 1b. Check if triangle 2 is completely on one side of triangle 1's plane
+      var n1 = (b1 - a1) * (c1 - a1);
+      var sa2 = Sign (Dot (a2 - a1, n1));
+      var sb2 = Sign (Dot (b2 - a1, n1));
+      var sc2 = Sign (Dot (c2 - a1, n1));
+      if (SameSign (sa2, sb2, sc2)) return false;
+
+      // Step 3. Convert triangles by reordering vertices in the 'cannonical' form. In this form, vertex 'a'
+      // is the isolated vertex on one side of the plane, and it is in the positive half-space.
+      // 3a. Reorder triangles such that 'a' is the isolated vertex
+      ReorderTriangle (ref sa1, ref sb1, ref sc1, ref a1, ref b1, ref c1);
+      ReorderTriangle (ref sa2, ref sb2, ref sc2, ref a2, ref b2, ref c2);
+
+      // 3b. Ensure 'a' is in the positive half of the 'other' triangle by
+      // swapping the other 'b' and 'c' if necessary
+      if (sa1 < 0) (b2, c2) = (c2, b2);
+      if (sa2 < 0) (b1, c1) = (c1, b1);
+
+      // Step 4. Final overlap test on the intersection line
+      // After the cannonical reordering, this checks if the 'min' of intersection interval
+      // of triangle 1 is less than or equal to the 'max' of triangle 2 and vice versa.
+      var s1 = Orient (a1, b1, a2, b2);
+      var s2 = Orient (a1, c1, c2, a2);
+      return s1 <= 0 && s2 <= 0;
+
+      // Gets the orientation of point 'd' with respect to the plane defined by triangle 'abc'
+      [MethodImpl (MethodImplOptions.AggressiveInlining)]
+      static int Orient (Point3 a, Point3 b, Point3 c, Point3 d)
+         => Sign (Dot (d - a, (b - a) * (c - a)));
+
+      [MethodImpl (MethodImplOptions.AggressiveInlining)]
+      static void ReorderTriangle (ref int sa, ref int sb, ref int sc, ref Point3 a, ref Point3 b, ref Point3 c) {
+         // Rotate until 'b' and 'c' are on the same side and 'a' is the isolated vertex
+         // on the other side of the plane (or on the plane).
+         if (sa == sb) {
+            RotateRight (ref sa, ref sb, ref sc);
+            RotateRight (ref a, ref b, ref c);
+         } else if (sa == sc) {
+            RotateLeft (ref sa, ref sb, ref sc);
+            RotateLeft (ref a, ref b, ref c);
+         } else if (sb != sc) {
+            if (sb > 0) {
+               RotateLeft (ref sa, ref sb, ref sc);
+               RotateLeft (ref a, ref b, ref c);
+            } else if (sc > 0) {
+               RotateRight (ref sa, ref sb, ref sc);
+               RotateRight (ref a, ref b, ref c);
+            }
+         }
+
+         [MethodImpl (MethodImplOptions.AggressiveInlining)]
+         static void RotateLeft<T> (ref T a, ref T b, ref T c) => (a, b, c) = (b, c, a);
+         [MethodImpl (MethodImplOptions.AggressiveInlining)]
+         static void RotateRight<T> (ref T a, ref T b, ref T c) => (a, b, c) = (c, a, b);
+      }
+
+      [MethodImpl (MethodImplOptions.AggressiveInlining)]
+      static int Sign (double d) => d < -Lib.EpsilonSq ? -1 : d > Lib.EpsilonSq ? 1 : 0;
+
+      [MethodImpl (MethodImplOptions.AggressiveInlining)]
+      static bool SameSign (int a, int b, int c) => a == b && b == c && a != 0;
+   }
+
+   static bool TriTri2D (Point2 p1, Point2 p2, Point2 p3, Point2 q1, Point2 q2, Point2 q3) {
+      return true;
    }
 
    [MethodImpl (MethodImplOptions.AggressiveInlining)]

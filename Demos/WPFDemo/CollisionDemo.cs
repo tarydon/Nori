@@ -13,11 +13,11 @@ class CollisionScene : Scene3 {
       const int extent = 1500;
       Bound = (new Bound3 (0, 0, -extent / 5, extent, extent, extent * 4 / 5)).InflatedF (1.5);
       Lib.Tracer = TraceVN.Print;
-      Build (150, extent);
+      Build (250, extent);
    }
 
    // Demo mode: 0=Box-Box, 1=Tri-Tri, 2=Box-Tri
-   static int Mode = 2;
+   static int Mode = 1;
 
    // Build the scene 
    void Build (int shapes, double extent) {
@@ -59,7 +59,7 @@ class CollisionScene : Scene3 {
          case 1:
             for (int i = 0; i < tris.Length - 1; i++)
                for (int j = i + 1; j < tris.Length; j++)
-                  if (Collision.Check (tris[i].Bound, tris[j].Bound))
+                  if (Collision.Check (tris[i], tris[j]))
                      tcolls[i] = tcolls[j] = true;
             break;
 
