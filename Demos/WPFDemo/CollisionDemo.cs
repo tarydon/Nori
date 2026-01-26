@@ -3,7 +3,6 @@
 // ║║║║╬║╔╣║ Demonstrates the collision detections between the primitives
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 namespace WPFDemo;
-
 using Nori;
 using System.Diagnostics;
 using System.Reactive.Linq;
@@ -26,11 +25,11 @@ class CollisionScene : Scene3 {
       TraceVN.It.Clear ();
       Random R = new ();
 
-      var (boxcnt, tricnt, kind) = Mode switch {
+      var (boxcnt, tricnt, test) = Mode switch {
          0 => (shapes, 0, "Box-Box"),
-         1 => (0, shapes, "Tri-Tri"),
-         2 => (0, shapes, "Tri-Tri-2D"),
-         _ => (shapes / 2, shapes / 2, "Box-Tri")
+         1 => (shapes / 2, shapes / 2, "Box-Tri"),
+         2 => (0, shapes, "Tri-Tri"),
+         _ => (0, shapes, "Tri-Tri-2D"),
       };
       shapes = tricnt + boxcnt;
 
@@ -47,7 +46,7 @@ class CollisionScene : Scene3 {
          var a = P () * extent; var b = a + V () * R.Next (200, 300);
          var c = a + V () * R.Next (200, 300);
          // Planar triangles
-         if (Mode == 2) (a, b, c) = (X (a), X (b), X (c));
+         if (Mode == 3) (a, b, c) = (X (a), X (b), X (c));
          tris[i] = new Tri (a, b, c);
       }
 
@@ -63,19 +62,20 @@ class CollisionScene : Scene3 {
                      bcolls[i] = bcolls[j] = true;
             break;
 
-         case 1: case 2:
+         case 1:
+            for (int i = 0; i < tris.Length; i++)
+               for (int j = 0; j < obbs.Length; j++)
+                  if (Collision.Check (tris[i], obbs[j]))
+                     bcolls[j] = tcolls[i] = true;
+            break;
+
+         case 2: case 3:
             for (int i = 0; i < tris.Length - 1; i++)
                for (int j = i + 1; j < tris.Length; j++)
                   if (Collision.Check (tris[i], tris[j]))
                      tcolls[i] = tcolls[j] = true;
             break;
 
-         case 3:
-            for (int i = 0; i < tris.Length; i++)
-               for (int j = 0; j < obbs.Length; j++)
-                  if (Collision.Check (tris[i], obbs[j]))
-                     bcolls[j] = tcolls[i] = true;
-            break;
       }
       sw.Stop ();
 
@@ -88,9 +88,9 @@ class CollisionScene : Scene3 {
       }
       nodes.AddRange (boxNodes); nodes.AddRange (triNodes);
       Root = new GroupVN (nodes);
-      Lib.Trace ($"Total: {shapes} objects, {bcolls.Count (x => x) + tcolls.Count (x => x)} collide ({kind}). Elapsed: {S (sw.Elapsed)}");
+      Lib.Trace ($"{test} test. 'Ctrl': Show only collisions, 'Shift': Repeat '{test}'");
+      Lib.Trace ($"Total: {shapes} objects, {bcolls.Count (x => x) + tcolls.Count (x => x)} collide. Elapsed: {S (sw.Elapsed)}");
       Lib.Trace ("Press 'Collision' button to rerun");
-      Lib.Trace ("'Ctrl': Show only collisions, 'Shift': Repeat mode");
 
       Point3 P () => new (Bias () * R.NextDouble (), Bias () * R.NextDouble (), R.NextDouble ());
       Vector3 V () => new (R.NextDouble (), R.NextDouble (), R.NextDouble ());
