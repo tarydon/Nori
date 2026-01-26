@@ -3,6 +3,7 @@
 // ║║║║╬║╔╣║ Demonstrates the collision detections between the primitives
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 namespace WPFDemo;
+
 using Nori;
 using System.Diagnostics;
 using System.Reactive.Linq;
@@ -11,24 +12,27 @@ class CollisionScene : Scene3 {
    public CollisionScene () {
       BgrdColor = Color4.Gray (64);
       const int extent = 1500;
-      Bound = (new Bound3 (0, 0, -extent / 5, extent, extent, extent * 4 / 5)).InflatedF (1.5);
+      Bound = new Bound3 (0, 0, -extent / 5, extent, extent, extent * 4 / 5).InflatedF (1.6);
       Lib.Tracer = TraceVN.Print;
       Build (250, extent);
    }
 
-   // Demo mode: 0=Box-Box, 1=Tri-Tri, 2=Box-Tri
-   static int Mode = 1;
+   // Demo mode: 0=Box-Box, 1=Tri-Tri, 2=Tri-Tri-2D, 3=Box-Tri
+   static int Mode = -1;
 
    // Build the scene 
    void Build (int shapes, double extent) {
+      if (Mode < 0 || !HW.IsShiftDown) Mode = (Mode + 1) % 4;
       TraceVN.It.Clear ();
       Random R = new ();
 
       var (boxcnt, tricnt, kind) = Mode switch {
          0 => (shapes, 0, "Box-Box"),
          1 => (0, shapes, "Tri-Tri"),
+         2 => (0, shapes, "Tri-Tri-2D"),
          _ => (shapes / 2, shapes / 2, "Box-Tri")
       };
+      shapes = tricnt + boxcnt;
 
       var obbs = new OBB[boxcnt];
       for (int i = 0; i < obbs.Length; i++) {
@@ -37,10 +41,13 @@ class CollisionScene : Scene3 {
          obbs[i] = new (new (P () * extent, vX, vY), V () * 100);
       }
 
+      static Point3 X (Point3 p) => p.WithZ (300);
       Tri[] tris = new Tri[tricnt];
       for (int i = 0; i < tris.Length; i++) {
          var a = P () * extent; var b = a + V () * R.Next (200, 300);
          var c = a + V () * R.Next (200, 300);
+         // Planar triangles
+         if (Mode == 2) (a, b, c) = (X (a), X (b), X (c));
          tris[i] = new Tri (a, b, c);
       }
 
@@ -56,14 +63,14 @@ class CollisionScene : Scene3 {
                      bcolls[i] = bcolls[j] = true;
             break;
 
-         case 1:
+         case 1: case 2:
             for (int i = 0; i < tris.Length - 1; i++)
                for (int j = i + 1; j < tris.Length; j++)
                   if (Collision.Check (tris[i], tris[j]))
                      tcolls[i] = tcolls[j] = true;
             break;
 
-         case 2:
+         case 3:
             for (int i = 0; i < tris.Length; i++)
                for (int j = 0; j < obbs.Length; j++)
                   if (Collision.Check (tris[i], obbs[j]))
@@ -72,18 +79,18 @@ class CollisionScene : Scene3 {
       }
       sw.Stop ();
 
-      List<VNode> nodes = [TraceVN.It];
+      List<VNode> nodes = [TraceVN.It, new MinSphereScene.AxesVN ()];
       var boxNodes = obbs.Select ((x, n) => new BoxVN (x, bcolls[n]));
       var triNodes = tris.Select ((x, n) => new TriVN (x, tcolls[n]));
       if (HW.IsCtrlDown) {
-         boxNodes = boxNodes.Where (x => x.Collides); 
+         boxNodes = boxNodes.Where (x => x.Collides);
          triNodes = triNodes.Where (x => x.Collides);
       }
       nodes.AddRange (boxNodes); nodes.AddRange (triNodes);
       Root = new GroupVN (nodes);
       Lib.Trace ($"Total: {shapes} objects, {bcolls.Count (x => x) + tcolls.Count (x => x)} collide ({kind}). Elapsed: {S (sw.Elapsed)}");
-      Lib.Trace ("Press 'Collision' button to rerun. Keep the 'Ctrl' key pressed to filter collisions");
-      Mode = (Mode + 1) % 3;
+      Lib.Trace ("Press 'Collision' button to rerun");
+      Lib.Trace ("'Ctrl': Show only collisions, 'Shift': Repeat mode");
 
       Point3 P () => new (Bias () * R.NextDouble (), Bias () * R.NextDouble (), R.NextDouble ());
       Vector3 V () => new (R.NextDouble (), R.NextDouble (), R.NextDouble ());
@@ -91,11 +98,10 @@ class CollisionScene : Scene3 {
    }
 
    static string S (TimeSpan ts) => $"{ts.TotalMicroseconds:F0} us";
-   static readonly Color4[] Colors = [Color4.Cyan, Color4.Magenta, Color4.Magenta];
 
    // Draw OBB.
    class BoxVN (OBB box, bool collides) : VNode {
-      readonly OBB Box = box;
+      public readonly OBB Box = box;
       public bool Collides = collides;
       public Mesh3 Mesh => mMesh ??= BuildMesh ();
       Mesh3? mMesh;
@@ -143,10 +149,10 @@ class CollisionScene : Scene3 {
           [2, 3, 6, 7],
           [1, 3, 5, 7]];
 
-      readonly static int[] Edges = 
+      readonly static int[] Edges =
          [0,1,  0,2,  0,4,
           1,3,  1,5,
-          2,3,  2,6,  
+          2,3,  2,6,
           3,7,
           4,5,  4,6,
           5,7,  6,7];
@@ -154,7 +160,7 @@ class CollisionScene : Scene3 {
 
    // Draw Triangle
    class TriVN (Tri tri, bool collides) : VNode {
-      readonly Tri Tri = tri;
+      public readonly Tri Tri = tri;
       public bool Collides = collides;
       public Mesh3 Mesh => mMesh ??= BuildMesh ();
       private Mesh3? mMesh;

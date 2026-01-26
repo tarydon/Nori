@@ -25,6 +25,10 @@ public static class Collision {
    [MethodImpl (MethodImplOptions.AggressiveInlining)]
    public static bool Check (in Bound3 a, in Bound3 b) => Check (a.X, b.X) && Check (a.Y, b.Y) && Check (a.Z, b.Z);
 
+   /// <summary>Checks if 'a' Bound2 intersects with another Bound2 'b'</summary>
+   [MethodImpl (MethodImplOptions.AggressiveInlining)]
+   public static bool Check (in Bound2 a, in Bound2 b) => Check (a.X, b.X) && Check (a.Y, b.Y);
+
    /// <summary>Checks if 'a' Bound1 intersects with another Bound1 'b'</summary>
    [MethodImpl (MethodImplOptions.AggressiveInlining)]
    public static bool Check (in Bound1 a, in Bound1 b) => a.Min <= b.Max && a.Max >= b.Min;
@@ -188,7 +192,13 @@ public static class Collision {
    }
 
    /// <summary>Checks if two triangles intersect in 3D space.</summary>
-   /// It implements the Devilliers & Guigue algorithm for triangle-triangle intersection.
+   /// To test if two triangles in 3D intersect, it checks:
+   /// 1. If each triangle intersects the plane of the 'other' triangle.
+   /// 2. If the triangle intersection segments overlap on the intersection line (1D overlap check)
+   /// The algorithm relies on orientation tests to detect the overlap, making it relatively
+   /// robust against numerical precision errors.
+   // It implements the Devilliers & Guigue algorithm for triangle-triangle intersection.
+   // Reference: https://inria.hal.science/inria-00072100/file/RR-4488.pdf
    public static bool TriTri (Point3 a1, Point3 b1, Point3 c1, Point3 a2, Point3 b2, Point3 c2) {
       // Step 1. Plane-side tests
       // 1a. Check if triangle 1 is completely on one side of triangle 2's plane
@@ -198,9 +208,21 @@ public static class Collision {
       var sc1 = Sign (Dot (c1 - a2, n2));
       if (SameSign (sa1, sb1, sc1)) return false;
 
-      // Step 2. Check for coplanar case and check 2D overlap
+      // Step 2. Check for coplanar case. 
       if (sa1 == sb1 && sb1 == sc1 && sa1 == 0) {
-         // Coplanar case - not handled yet
+         // Now perform 2D triangle overlap tests by projecting 3D triangle points into 2D space.
+         // Instead of mapping points directly onto the triangle’s plane, we project them onto
+         // a principal plane that best aligns with the triangle. This approach simplifies
+         // the transformation and avoids several costly arithmetic operations.
+         var (nx, ny, nz) = (Abs (n2.X), Abs (n2.Y), Abs (n2.Z));
+         Func<Point3, Point2> P2 = XY;
+         if (nx > ny && nx > nz) P2 = YZ;
+         else if (ny > nx && ny > nz) P2 = ZX;
+         return TriTri2D (P2 (a1), P2 (b1), P2 (c1), P2 (a2), P2 (b2), P2 (c2));
+
+         static Point2 XY (Point3 p) => new (p.X, p.Y); // Project to XY plane
+         static Point2 YZ (Point3 p) => new (p.Y, p.Z); // Project to YZ plane
+         static Point2 ZX (Point3 p) => new (p.X, p.Z); // Project to ZX plane
       }
 
       // 1b. Check if triangle 2 is completely on one side of triangle 1's plane
@@ -223,15 +245,13 @@ public static class Collision {
 
       // Step 4. Final overlap test on the intersection line
       // After the cannonical reordering, this checks if the 'min' of intersection interval
-      // of triangle 1 is less than or equal to the 'max' of triangle 2 and vice versa.
-      var s1 = Orient (a1, b1, a2, b2);
-      var s2 = Orient (a1, c1, c2, a2);
-      return s1 <= 0 && s2 <= 0;
+      // of triangle 1 is less than or equal to the 'max' of triangle 2 and vice-versa.
+      return Side (a1, b1, a2, b2) <= 0 && Side (a1, c1, c2, a2) <= 0;
 
       // Gets the orientation of point 'd' with respect to the plane defined by triangle 'abc'
+      // +1 = d is on the positive side of the plane, -1 = d is on the negative side, 0 = d is on the plane
       [MethodImpl (MethodImplOptions.AggressiveInlining)]
-      static int Orient (Point3 a, Point3 b, Point3 c, Point3 d)
-         => Sign (Dot (d - a, (b - a) * (c - a)));
+      static int Side (Point3 a, Point3 b, Point3 c, Point3 d) => Sign (Dot (d - a, (b - a) * (c - a)));
 
       [MethodImpl (MethodImplOptions.AggressiveInlining)]
       static void ReorderTriangle (ref int sa, ref int sb, ref int sc, ref Point3 a, ref Point3 b, ref Point3 c) {
@@ -252,24 +272,121 @@ public static class Collision {
                RotateRight (ref a, ref b, ref c);
             }
          }
-
-         [MethodImpl (MethodImplOptions.AggressiveInlining)]
-         static void RotateLeft<T> (ref T a, ref T b, ref T c) => (a, b, c) = (b, c, a);
-         [MethodImpl (MethodImplOptions.AggressiveInlining)]
-         static void RotateRight<T> (ref T a, ref T b, ref T c) => (a, b, c) = (c, a, b);
       }
-
-      [MethodImpl (MethodImplOptions.AggressiveInlining)]
-      static int Sign (double d) => d < -Lib.EpsilonSq ? -1 : d > Lib.EpsilonSq ? 1 : 0;
 
       [MethodImpl (MethodImplOptions.AggressiveInlining)]
       static bool SameSign (int a, int b, int c) => a == b && b == c && a != 0;
    }
 
-   static bool TriTri2D (Point2 p1, Point2 p2, Point2 p3, Point2 q1, Point2 q2, Point2 q3) {
-      return true;
+   /// <summary>Tests if two coplanar triangles intersect with each other.</summary>
+   /// Primarily it performs following two tests to check the intersection:
+   /// 1. If vertex of one triangle is inside or on the boundary of the other
+   /// 2. If edge of first triangle crosses edge of the other
+   /// Like the 3D triangle intersection check, the planar variant also uses orientation
+   /// tests to determine the intersections. 
+   public static bool TriTri2D (Point2 a1, Point2 b1, Point2 c1, Point2 a2, Point2 b2, Point2 c2) {
+      // Step 0: Ensure both triangles are ccw
+      if (Side (a1, b1, c1) < 0) (b1, c1) = (c1, b1);
+      if (Side (a2, b2, c2) < 0) (b2, c2) = (c2, b2);
+
+      // Step 1: Classify 'a1' w.r.t. the second triangle's edges (walking ccw)
+      var s1 = Side (a2, b2, a1) >= 0 ? '+' : '-'; 
+      var s2 = Side (b2, c2, a1) >= 0 ? '+' : '-'; 
+      var s3 = Side (c2, a2, a1) >= 0 ? '+' : '-';
+
+      // Step 2 & 3: Now test for cases:
+      // a. vertex is fully contained within other triangle
+      // b. vertex lies in region R1 (+ + -) of the triangle plane
+      // c. vertex lies in region R2 (+ - -) of the triangle plane
+      // Permute other cases by aligning them to b or c.
+      switch ((s1, s2, s3)) {
+         case ('+', '+', '+'): return true;       // Inside or on the boundary
+         case ('+', '+', '-'): return TestR1 ();  // Inside region R1
+         case ('+', '-', '-'): return TestR2 ();  // Inside rigion R2
+         case ('+', '-', '+'): 
+            RotateRight (ref a2, ref b2, ref c2);
+            return TestR1 ();
+         case ('-', '+', '+'): 
+            RotateLeft (ref a2, ref b2, ref c2);
+            return TestR1 ();
+         case ('-', '+', '-'):
+            RotateLeft (ref a2, ref b2, ref c2);
+            return TestR2 ();
+         case ('-', '-', '+'):
+            RotateRight (ref a2, ref b2, ref c2);
+            return TestR2 ();
+      }
+      return false;
+
+      // Step 3: Orientation based decision tree for (+ + -) and (+ - -).
+      // Implements decision tree for configuration (+ + -) from Fig 9
+      bool TestR1 () {
+         if (Side (c2, a2, b1) >= 0) { // I
+            if (Side (c2, a1, b1) >= 0) { // II.a
+               if (Side (a1, a2, b1) >= 0) { // III.a
+                  return true;   // b1 in R13 (Fig 7)
+               } else {
+                  if (Side (a1, a2, c1) >= 0) // IV.a
+                     if (Side (b1, c1, a2) >= 0) // V
+                        return true;
+               }
+            }
+         } else {
+            if (Side (c2, a2, c1) >= 0) { // II.b
+               if (Side (b1, c1, c2) >= 0) // III.b
+                  if (Side (a1, a2, c1) >= 0) // IV.b  
+                     return true;
+            }
+         }
+         return false;
+      }
+
+      // Implements decision tree for configuration (+ - -) from Fig 10
+      bool TestR2 () {
+         if (Side (c2, a2, b1) >= 0) { // I
+            if (Side (b2, c2, b1) >= 0) { // II.a
+               if (Side (a1, a2, b1) >= 0) { // III.a
+                  if (Side (a1, b2, b1) <= 0) // IV.a
+                     return true;
+               } else {
+                  if (Side (a1, a2, c1) >= 0) // IV.b
+                     if (Side (c2, a2, c1) <= 0) // V.a
+                        return true;
+               }
+            } else {
+               if (Side (a1, b2, b1) <= 0) // III.b
+                  if (Side (b2, c2, c1) >= 0) // IV.c
+                     if (Side (b1, c1, b2) >= 0) // V.b
+                        return true;
+            }
+         } else {
+            if (Side (c2, a2, c1) >= 0) { // II.b
+               if (Side (b1, c1, c2) >= 0) { // III.c
+                  if (Side (c1, a1, a2) >= 0) // IV.d
+                     return true;
+               } else {
+                  if (Side (b1, c1, b2) >= 0) // IV.e
+                     if (Side (b2, c2, c1) >= 0) // V.c
+                        return true;
+               }
+            }
+         }
+
+         return false;
+      }
+
+      // Gets the orientation of point 'c' with respect to the line defined by points 'a' and 'b'
+      // +1 = c is on the left side of the line, -1 = c is on the right side, 0 = c is on the line
+      static int Side (Point2 a, Point2 b, Point2 c)
+         => Sign ((a.X - c.X) * (b.Y - c.Y) - (a.Y - c.Y) * (b.X - c.X));
    }
 
    [MethodImpl (MethodImplOptions.AggressiveInlining)]
    static double Dot (Vector3 a, Vector3 b) => a.X * b.X + a.Y * b.Y + a.Z * b.Z;
+   [MethodImpl (MethodImplOptions.AggressiveInlining)]
+   static void RotateLeft<T> (ref T a, ref T b, ref T c) => (a, b, c) = (b, c, a);
+   [MethodImpl (MethodImplOptions.AggressiveInlining)]
+   static void RotateRight<T> (ref T a, ref T b, ref T c) => (a, b, c) = (c, a, b);
+   [MethodImpl (MethodImplOptions.AggressiveInlining)]
+   static int Sign (double d) => d < -Lib.EpsilonSq ? -1 : d > Lib.EpsilonSq ? 1 : 0;
 }
