@@ -29,6 +29,12 @@ public class Block2 {
    /// <summary>The VNode for this Block2 (if one has been created)</summary>
    public object? VNode { get => _vnode; set => _vnode = value; }
    object? _vnode;
+
+   // Methods ------------------------------------------------------------------
+   /// <summary>Returns the bound of this Block2</summary>
+   public Bound2 GetBound () => new (mEnts.Select (a => a.Bound));
+
+   public override string ToString () => $"Block:{mName}, {mEnts.Count} ents";
 }
 #endregion
 

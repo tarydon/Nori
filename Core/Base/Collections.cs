@@ -26,7 +26,11 @@ public class AList<T> : IReadOnlyList<T>, IList<T>, IAList {
    public void Add (T item) { mList.Add (item); Fire (ListChange.E.Added, mList.Count - 1); }
 
    /// <summary>Clear the list, fires the 'Clearing' notification before clearing</summary>
-   public void Clear () { Fire (ListChange.E.Clearing, mList.Count - 1); mList.Clear (); }
+   public void Clear () {
+      if (mList.Count == 0) return;
+      Fire (ListChange.E.Clearing, mList.Count - 1); 
+      mList.Clear (); 
+   }
 
    /// <summary>Returns true if the list contains the given item</summary>
    public bool Contains (T item) => mList.Contains (item);
