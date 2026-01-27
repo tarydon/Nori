@@ -13,6 +13,9 @@ public static class Extensions2 {
       /// <summary>Returns true if a double is nan - easier to use than double.IsNaN(f)</summary>
       public bool IsNan => double.IsNaN (f);
 
+      /// <summary>Rounds a double to the nearest integer</summary>
+      public int RInt () => (int)(Math.Round (f) + 0.5);
+
       /// <summary>Transforms a distance by the given transform</summary>
       /// Distance is updated only if the matrix has a scaling component
       public static double operator * (double a, Matrix3 xfm)

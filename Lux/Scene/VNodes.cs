@@ -15,6 +15,8 @@ public class GroupVN : VNode {
 
    public void Add (VNode child) { mChildren.Add (child); ChildAdded (); }
 
+   public void Remove (VNode child) { if (mChildren.Remove (child)) ChildRemoved (child); }
+
    // Overrides ----------------------------------------------------------------
    // Return the children
    public override VNode? GetChild (int n) => mChildren.SafeGet (n);
