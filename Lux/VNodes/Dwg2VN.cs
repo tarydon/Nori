@@ -2,13 +2,15 @@
 // ╔═╦╦═╦╦╬╣ Dwg2VN.cs
 // ║║║║╬║╔╣║ Implements basic VNodes related to the Dwg2 class
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
+using System.Reactive.Linq;
+
 namespace Nori;
 
 #region class Dwg2VN -------------------------------------------------------------------------------
 /// <summary>VNode that renders an entire drawing</summary>
 public class Dwg2VN : VNode {
    // Constructor --------------------------------------------------------------
-   public Dwg2VN (Dwg2 dwg) : base (dwg) => ChildSource = dwg.Ents; 
+   public Dwg2VN (Dwg2 dwg) : base (dwg) => ChildSource = dwg.Ents;
 }
 #endregion
 
@@ -26,7 +28,9 @@ public class DwgFillVN : VNode {
    public override void Draw () {
       var bound = mDwg.Bound.InflatedF (1.01);
       mIdx.Clear (); mVec.Clear (); mVec.Add (bound.Midpoint);
-      var polys = mDwg.Polys.Where (a => a.IsClosed).ToList ();
+      var polys = mDwg.Ents.Where (ent => ent.Layer.Name == "0")
+                           .OfType<E2Poly> ().Select (polyEnt => polyEnt.Poly)
+                           .Where (poly => poly.IsClosed == true).ToList ();
       foreach (var poly in polys) {
          mPts.Clear (); poly.Discretize (mPts, 0.05, Lib.FineTessAngle);
          mIdx.Add (0); int idx0 = mVec.Count;
