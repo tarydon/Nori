@@ -30,7 +30,7 @@ public class DwgFillVN : VNode {
       mIdx.Clear (); mVec.Clear (); mVec.Add (bound.Midpoint);
       var polys = mDwg.Ents.Where (ent => ent.Layer.Name == "0")
                            .OfType<E2Poly> ().Select (polyEnt => polyEnt.Poly)
-                           .Where (poly => poly.IsClosed == true).ToList ();
+                           .Where (poly => poly.IsClosed);
       foreach (var poly in polys) {
          mPts.Clear (); poly.Discretize (mPts, 0.05, Lib.FineTessAngle);
          mIdx.Add (0); int idx0 = mVec.Count;
