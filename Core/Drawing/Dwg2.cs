@@ -86,17 +86,16 @@ public partial class Dwg2 {
    public void Add (Point2 pt) => Add (new E2Point (CurrentLayer, pt));
 
    /// <summary>Add a set of entities into the drawing</summary>
-   public void Add (IEnumerable<Ent2> ents) => ents.ForEach (Add);
+   public void Add (IReadOnlyList<Ent2> ents) => ents.ForEach (Add);
 
    /// <summary>Add a layer into the drawing</summary>
    /// If a layer with the same name exists, replace it and update the associated entities.
    public void Add (Layer2 layer) {
       int idx = mLayers.FindIndex (a => a.Name == layer.Name);
-      if (idx == -1) mLayers.Add (layer);
-      else { 
-         Ents.Where (e => e.Layer == mLayers[idx]).ForEach (a => a.Layer = layer);
-         mLayers[idx] = layer;
-      } 
+      if (idx == -1) { mLayers.Add (layer); return; }
+      var oldLayer = mLayers [idx];
+      Ents.Where (a => ReferenceEquals (a.Layer, oldLayer)).ForEach (a => a.Layer = layer);
+      mLayers[idx] = layer;
    }
 
    /// <summary>Adds a Block2 to the list of blocks in the drawing</summary>
@@ -127,6 +126,14 @@ public partial class Dwg2 {
          }
       }
       Lib.Check (false, "Coding error");
+   }
+
+   /// <summary>Replace existing layer object with new one</summary>
+   public void UpdateLayer (Layer2 oldLayer, Layer2 newLayer) {
+      int idx = mLayers.FindIndex (a => ReferenceEquals (a, oldLayer));
+      if (idx == -1) throw new Exception ("Coding error");
+      Ents.Where (a => ReferenceEquals (a.Layer, oldLayer)).ForEach (a => a.Layer = newLayer);
+      mLayers[idx] = newLayer;
    }
 
    /// <summary>Gets a block given the name (could return null if the name does not exist)</summary>
