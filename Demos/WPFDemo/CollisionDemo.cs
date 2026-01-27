@@ -88,9 +88,9 @@ class CollisionScene : Scene3 {
       }
       nodes.AddRange (boxNodes); nodes.AddRange (triNodes);
       Root = new GroupVN (nodes);
-      Lib.Trace ($"{test} test. 'Ctrl': Show only collisions, 'Shift': Repeat '{test}'");
+      Lib.Trace ($"{test} test. Press 'Collision' to rerun ('Ctrl': Only collisions, 'Shift': Repeat '{test}')");
       Lib.Trace ($"Total: {shapes} objects, {bcolls.Count (x => x) + tcolls.Count (x => x)} collide. Elapsed: {S (sw.Elapsed)}");
-      Lib.Trace ("Press 'Collision' button to rerun");
+      Lib.Trace ("");
 
       Point3 P () => new (Bias () * R.NextDouble (), Bias () * R.NextDouble (), R.NextDouble ());
       Vector3 V () => new (R.NextDouble (), R.NextDouble (), R.NextDouble ());

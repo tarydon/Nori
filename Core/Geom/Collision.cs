@@ -299,28 +299,23 @@ public static class Collision {
       // b. vertex lies in region R1 (+ + -) of the triangle plane
       // c. vertex lies in region R2 (+ - -) of the triangle plane
       // Permute other cases by aligning them to b or c.
-      switch ((s1, s2, s3)) {
-         case ('+', '+', '+'): return true;       // Inside or on the boundary
-         case ('+', '+', '-'): return TestR1 ();  // Inside region R1
-         case ('+', '-', '-'): return TestR2 ();  // Inside rigion R2
-         case ('+', '-', '+'): 
-            RotateRight (ref a2, ref b2, ref c2);
-            return TestR1 ();
-         case ('-', '+', '+'): 
-            RotateLeft (ref a2, ref b2, ref c2);
-            return TestR1 ();
-         case ('-', '+', '-'):
-            RotateLeft (ref a2, ref b2, ref c2);
-            return TestR2 ();
-         case ('-', '-', '+'):
-            RotateRight (ref a2, ref b2, ref c2);
-            return TestR2 ();
-      }
-      return false;
+      return (s1, s2, s3) switch {
+         ('+', '+', '+') => true,
+         ('+', '+', '-') => R1 (),
+         ('+', '-', '-') => R2 (),
+         ('+', '-', '+') => R1 (1),
+         ('-', '+', '+') => R1 (-1),
+         ('-', '+', '-') => R2 (-1),
+         ('-', '-', '+') => R2 (1),
+         _ => false
+      };
 
       // Step 3: Orientation based decision tree for (+ + -) and (+ - -).
-      // Implements decision tree for configuration (+ + -) from Fig 9
-      bool TestR1 () {
+      // Implements decision tree for configuration (+ + -) from Fig 9.
+      // Depending on 'rotate' flag value -1/+1, it reorders the 'second' triangle
+      // by rotating it to the left/right to bring it to the canonical form.
+      bool R1 (int rotate = 0) {
+         if (rotate != 0) RotateT2 (rotate < 0);
          if (Side (c2, a2, b1) >= 0) { // I
             if (Side (c2, a1, b1) >= 0) { // II.a
                if (Side (a1, a2, b1) >= 0) { // III.a
@@ -342,7 +337,8 @@ public static class Collision {
       }
 
       // Implements decision tree for configuration (+ - -) from Fig 10
-      bool TestR2 () {
+      bool R2 (int rotate = 0) {
+         if (rotate != 0) RotateT2 (rotate < 0);
          if (Side (c2, a2, b1) >= 0) { // I
             if (Side (b2, c2, b1) >= 0) { // II.a
                if (Side (a1, a2, b1) >= 0) { // III.a
@@ -373,6 +369,12 @@ public static class Collision {
          }
 
          return false;
+      }
+
+      // Rotates the second tringle to the left or right.
+      void RotateT2 (bool left) {
+         if (left) RotateLeft (ref a2, ref b2, ref c2);
+         else RotateRight (ref a2, ref b2, ref c2);
       }
 
       // Gets the orientation of point 'c' with respect to the line defined by points 'a' and 'b'
