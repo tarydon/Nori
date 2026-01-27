@@ -2,8 +2,6 @@
 // ╔═╦╦═╦╦╬╣ Dwg2VN.cs
 // ║║║║╬║╔╣║ Implements basic VNodes related to the Dwg2 class
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
-using System.Reactive.Linq;
-
 namespace Nori;
 
 #region class Dwg2VN -------------------------------------------------------------------------------
