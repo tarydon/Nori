@@ -226,7 +226,7 @@ public class Mesh3Builder {
 }
 #endregion
 
-class Point3fComparer (float threshold) : IEqualityComparer<Point3f> {
+public class Point3fComparer (float threshold) : IEqualityComparer<Point3f> {
    public bool Equals (Point3f a, Point3f b) => a.EQ (b, threshold);
 
    public int GetHashCode (Point3f a)
