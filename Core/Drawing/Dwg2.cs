@@ -92,11 +92,8 @@ public partial class Dwg2 {
    /// If a layer with the same name exists, replace it and update the associated entities.
    public void Add (Layer2 layer) {
       int idx = mLayers.FindIndex (a => a.Name == layer.Name);
-      if (idx == -1) mLayers.Add (layer);
-      else { 
-         Ents.Where (e => e.Layer == mLayers[idx]).ForEach (a => a.Layer = layer);
-         mLayers[idx] = layer;
-      } 
+      if (idx == -1) { mLayers.Add (layer); return; }
+      UpdateLayer (idx, layer);
    }
 
    /// <summary>Adds a Block2 to the list of blocks in the drawing</summary>
@@ -127,6 +124,13 @@ public partial class Dwg2 {
          }
       }
       Lib.Check (false, "Coding error");
+   }
+
+   /// <summary>Replace existing layer object with new one</summary>
+   public void UpdateLayer (Layer2 oldLayer, Layer2 newLayer) {
+      int idx = mLayers.FindIndex (a => a == oldLayer);
+      if (idx == -1) throw new Exception ("Coding error");
+      UpdateLayer (idx, newLayer);
    }
 
    /// <summary>Gets a block given the name (could return null if the name does not exist)</summary>
@@ -210,6 +214,14 @@ public partial class Dwg2 {
    }
 
    // Implementation -----------------------------------------------------------
+
+   // Injects new layer object at specified layers index, and updates the affected entities
+   void UpdateLayer (int idx, Layer2 layer) {
+      var oldLayer = mLayers [idx];
+      Ents.Where (a => a.Layer == oldLayer).ForEach (a => a.Layer = layer);
+      mLayers[idx] = layer;
+   }
+
    // Handles changes in the Ents list, and keeps the Bound up-to-date
    void OnEntsChanged (ListChange ch) {
       switch (ch.Action) {
