@@ -41,18 +41,6 @@ public class Tester {
    CTri[] CT;
    float[] F;
 
-   public void CollideMCAM () {
-      int crashes = 0;
-      for (int i = 0; i < 100; i++) {
-         int a = i * 3;
-         for (int j = 0; j < 100; j++) {
-            int b = j * 3;
-            bool check = i == j || Tri.CollideMCAM (P[a], P[a + 1], P[a + 2], P[b], P[b + 1], P[b + 2]);
-            if (check) crashes++;
-         }
-      }
-   }
-
    [Benchmark (Baseline = true)]
    public void CollideFlux () {
       int crashes = 0;
@@ -61,6 +49,18 @@ public class Tester {
          bool check = Tri.CollideFlux (P[a], P[a + 1], P[a + 2], P[a + 3], P[a + 4], P[a + 5]);
          if (check) crashes++;
       }
+      Console.WriteLine ($"Flux: {crashes}");
+   }
+
+   [Benchmark]
+   public void CollideMCAM () {
+      int crashes = 0;
+      for (int i = 0, n = Crash.Count; i < n; i++) {
+         int a = i * 6;
+         bool check = Tri.CollideMCAM (P[a], P[a + 1], P[a + 2], P[a + 3], P[a + 4], P[a + 5]);
+         if (check) crashes++;
+      }
+      Console.WriteLine ($"MCAM: {crashes}");
    }
 
    [Benchmark]
@@ -69,10 +69,13 @@ public class Tester {
       fixed (float* pf = F) {
          for (int i = 0, n = Crash.Count; i < n; i++) {
             int a = i * 6;
+            if (i == 166)
+               Console.Write ("");
             bool check = Tri.CollideMoller (pf, a, a + 1, a + 2, a + 3, a + 4, a + 5);
             if (check) crashes++;
          }
       }
+      Console.WriteLine ($"Moller: {crashes}");
    }
 
    [Benchmark]
@@ -85,28 +88,32 @@ public class Tester {
             if (check) crashes++;
          }
       }
+      Console.WriteLine ($"MollerFast: {crashes}");
    }
 
-   public void CollideHeld () {
+   [Benchmark]
+   public unsafe void CollideGD () {
       int crashes = 0;
-      for (int i = 0; i < 100; i++) {
-         int a = i * 3;
-         for (int j = 0; j < 100; j++) {
-            int b = j * 3;
-            bool check = i == j || Tri.CollideHeld (P[a], P[a + 1], P[a + 2], P[b], P[b + 1], P[b + 2]);
+      fixed (float* pf = F) {
+         for (int i = 0, n = Crash.Count; i < n; i++) {
+            int a = i * 2;
+            bool check = Tri.CollideGD (pf, ref CT[a], ref CT[a + 1]);
             if (check) crashes++;
          }
       }
+      Console.WriteLine ($"GD: {crashes}");
    }
 }
 
 static class Program {
    public static void Main () {
-      BenchmarkRunner.Run<Tester> ();
+      // BenchmarkRunner.Run<Tester> ();
 
-      //var t = new Tester ();
-      //t.CollideFlux ();
-      //t.CollideMoller ();
-      //t.CollideMollerFast ();
+      var t = new Tester ();
+      t.CollideMCAM ();
+      t.CollideFlux ();
+      t.CollideMoller ();
+      t.CollideMollerFast ();
+      t.CollideGD ();
    }
 }

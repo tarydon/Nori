@@ -21,10 +21,10 @@ public readonly struct CTri {
       N = e1 * e2;
       D = -(N.X * pa.X + N.Y * pa.Y + N.Z * pa.Z);
 
-      K = 0xb_0001;  // Assume we're using Xy plane for projecting (00 01)
+      K = 0b_0001;  // Assume we're using Xy plane for projecting (00 01)
       float ax = MathF.Abs (N.X), ay = MathF.Abs (N.Y), az = MathF.Abs (N.Z);
-      if (ax >= ay && ax >= az) K = 0xb_0110;         // Use YZ plane (01 10)
-      else if (ay >= ax && ay >= az) K = 0xb_0010;    // Use XZ plane (00 10)
+      if (ax >= ay && ax >= az) K = 0b_0110;         // Use YZ plane (01 10)
+      else if (ay >= ax && ay >= az) K = 0b_0010;    // Use XZ plane (00 10)
    }
 
    /// <summary>
