@@ -2,8 +2,6 @@
 // ╔═╦╦═╦╦╬╣ Dwg2VN.cs
 // ║║║║╬║╔╣║ Implements basic VNodes related to the Dwg2 class
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
-using System.Reactive.Linq;
-
 namespace Nori;
 
 #region class Dwg2VN -------------------------------------------------------------------------------
@@ -18,8 +16,9 @@ public class Dwg2VN : VNode {
 /// <summary>DwgFillVN is used to fill the interior closed polylines of a drawing</summary>
 public class DwgFillVN : VNode {
    // Constructors -------------------------------------------------------------
-   public DwgFillVN (Dwg2 dwg, int _) : base (dwg) => mDwg = dwg;
+   public DwgFillVN (Dwg2 dwg, Predicate<E2Poly>? filter = null) : base (dwg) { mDwg = dwg; mFilter = filter; }
    readonly Dwg2 mDwg;
+   readonly Predicate<E2Poly>? mFilter;
 
    // Overrides ----------------------------------------------------------------
    // See the Lux.FillPath routine for more details on the input required for this shader.
@@ -28,9 +27,9 @@ public class DwgFillVN : VNode {
    public override void Draw () {
       var bound = mDwg.Bound.InflatedF (1.01);
       mIdx.Clear (); mVec.Clear (); mVec.Add (bound.Midpoint);
-      var polys = mDwg.Ents.Where (ent => ent.Layer.Name == "0")
-                           .OfType<E2Poly> ().Select (polyEnt => polyEnt.Poly)
-                           .Where (poly => poly.IsClosed);
+      var polys = mFilter == null ? mDwg.Polys.Where (p => p.IsClosed)
+                                  : mDwg.Ents.OfType<E2Poly> ().Where (p => mFilter (p))
+                                  .Select (p => p.Poly).Where (poly => poly.IsClosed);
       foreach (var poly in polys) {
          mPts.Clear (); poly.Discretize (mPts, 0.05, Lib.FineTessAngle);
          mIdx.Add (0); int idx0 = mVec.Count;
