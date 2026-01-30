@@ -263,6 +263,10 @@ public readonly struct Bound3 : IEQuable<Bound3> {
       (X, Y, Z) = (new (), new (), new ());
       foreach (var p in pts) { X += p.X; Y += p.Y; Z += p.Z; }
    }
+   public Bound3 (params ReadOnlySpan<Point3> pts) {
+      (X, Y, Z) = (new (), new (), new ());
+      foreach (var p in pts) { X += p.X; Y += p.Y; Z += p.Z; }
+   }
    /// <summary>Construct a Bound3  that encompasses all the given Bound3 (union)</summary>
    public Bound3 (IEnumerable<Bound3> bounds) {
       (X, Y, Z) = (new (), new (), new ());
