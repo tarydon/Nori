@@ -544,6 +544,35 @@ class TMisc {
       aabb.Extent.Is ("<500,400,300>");
    }
 
+   [Test (169, "Convex-hull of point set")]
+   void Test20 () {
+      Point2[] pts = [(0, 0), (100, 0), (100, 100), (50, 50), (0, 100), (50, 25), (75, 75)];
+      var hull = ConvexHull.Compute (pts);
+      Assert.IsTrue (hull.Count == 4);
+      Assert.IsTrue (hull.Contains ((0, 0)) && hull.Contains ((100, 0)) && hull.Contains ((0, 100)) && hull.Contains ((100, 100)));
+   }
+
+   [Test (170, "Convex-hull of simple polygon")]
+   void Test21 () {
+      Point2[] pts = [(0, 0), (100, 0), (100, 100), (50, 50), (0, 100), (50, 25)];
+      var hull = ConvexHull.ComputeForSimplePolygon (pts);
+      Assert.IsTrue (hull.Count == 4);
+      Assert.IsTrue (hull.Contains ((0, 0)) && hull.Contains ((100, 0)) && hull.Contains ((0, 100)) && hull.Contains ((100, 100)));
+      hull = ConvexHull.ComputeForSimplePolygon ([.. pts.Reverse ()]);
+      Assert.IsTrue (hull.Count == 4);
+      Assert.IsTrue (hull.Contains ((0, 0)) && hull.Contains ((100, 0)) && hull.Contains ((0, 100)) && hull.Contains ((100, 100)));
+
+      pts = [(0, 0), (100, 0), (100, 100), (0, 100)]; // A simple square.
+      hull = ConvexHull.ComputeForSimplePolygon ([.. pts.Reverse ()]);
+      Assert.IsTrue (hull.Count == 4);
+      Assert.IsTrue (hull.Contains ((0, 0)) && hull.Contains ((100, 0)) && hull.Contains ((0, 100)) && hull.Contains ((100, 100)));
+
+      pts = [(0, 0), (25, 0), (50, 10), (75, 0), (100, 0), (100, 100), (0, 100)]; // Simple polygon with a "dent"
+      hull = ConvexHull.ComputeForSimplePolygon ([.. pts.Reverse ()]);
+      Assert.IsTrue (hull.Count == 4);
+      Assert.IsTrue (hull.Contains ((0, 0)) && hull.Contains ((100, 0)) && hull.Contains ((0, 100)) && hull.Contains ((100, 100)));
+   }
+
    class T1Type : IIndexed {
       public override string ToString () => $"T{Idx}";
       public int Idx { get; set; }
