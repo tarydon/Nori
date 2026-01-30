@@ -10,7 +10,7 @@ class DwgScene : Scene2 {
       mDwg = MakeDwg ();
       BgrdColor = new Color4 (200, 200, 206);
       Bound = mDwg.Bound.InflatedF (1.2);
-      Root = new GroupVN ([new Dwg2VN (mDwg), new DwgFillVN (mDwg, 0)]);
+      Root = new GroupVN ([new Dwg2VN (mDwg), new DwgFillVN (mDwg)]);
    }
    readonly Dwg2 mDwg;
 
