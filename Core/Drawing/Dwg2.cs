@@ -18,7 +18,6 @@ public partial class Dwg2 {
          if (mBound.IsEmpty) {
             if (mEnts.Count == 0) mBound = new (-60, -30, 360, 180); // Default (visible) _empty_ drawing extents
             else mBound = new (mEnts.Select (a => a.Bound));
-            Lib.Trace ($"Bound: {mBound.Width.Round (0)}x{mBound.Height.Round (0)}");
          }
          return mBound;
       }
