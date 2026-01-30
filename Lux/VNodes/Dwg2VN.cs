@@ -8,7 +8,7 @@ namespace Nori;
 /// <summary>VNode that renders an entire drawing</summary>
 public class Dwg2VN : VNode {
    // Constructor --------------------------------------------------------------
-   public Dwg2VN (Dwg2 dwg) : base (dwg) => ChildSource = dwg.Ents; 
+   public Dwg2VN (Dwg2 dwg) : base (dwg) => ChildSource = dwg.Ents;
 }
 #endregion
 
@@ -16,8 +16,9 @@ public class Dwg2VN : VNode {
 /// <summary>DwgFillVN is used to fill the interior closed polylines of a drawing</summary>
 public class DwgFillVN : VNode {
    // Constructors -------------------------------------------------------------
-   public DwgFillVN (Dwg2 dwg, int _) : base (dwg) => mDwg = dwg;
+   public DwgFillVN (Dwg2 dwg, Predicate<E2Poly>? filter = null) : base (dwg) => (mDwg, mFilter) = (dwg, filter);
    readonly Dwg2 mDwg;
+   readonly Predicate<E2Poly>? mFilter;
 
    // Overrides ----------------------------------------------------------------
    // See the Lux.FillPath routine for more details on the input required for this shader.
@@ -26,7 +27,9 @@ public class DwgFillVN : VNode {
    public override void Draw () {
       var bound = mDwg.Bound.InflatedF (1.01);
       mIdx.Clear (); mVec.Clear (); mVec.Add (bound.Midpoint);
-      var polys = mDwg.Polys.Where (a => a.IsClosed).ToList ();
+      var polys = mFilter == null ? mDwg.Polys.Where (p => p.IsClosed)
+                                  : mDwg.Ents.OfType<E2Poly> ().Where (e2p => e2p.Poly.IsClosed && mFilter (e2p))
+                                  .Select (e2p => e2p.Poly);
       foreach (var poly in polys) {
          mPts.Clear (); poly.Discretize (mPts, 0.05, Lib.FineTessAngle);
          mIdx.Add (0); int idx0 = mVec.Count;
