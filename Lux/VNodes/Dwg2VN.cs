@@ -16,7 +16,7 @@ public class Dwg2VN : VNode {
 /// <summary>DwgFillVN is used to fill the interior closed polylines of a drawing</summary>
 public class DwgFillVN : VNode {
    // Constructors -------------------------------------------------------------
-   public DwgFillVN (Dwg2 dwg, Predicate<E2Poly>? filter = null) : base (dwg) { mDwg = dwg; mFilter = filter; }
+   public DwgFillVN (Dwg2 dwg, Predicate<E2Poly>? filter = null) : base (dwg) => (mDwg, mFilter) = (dwg, filter);
    readonly Dwg2 mDwg;
    readonly Predicate<E2Poly>? mFilter;
 
@@ -28,8 +28,8 @@ public class DwgFillVN : VNode {
       var bound = mDwg.Bound.InflatedF (1.01);
       mIdx.Clear (); mVec.Clear (); mVec.Add (bound.Midpoint);
       var polys = mFilter == null ? mDwg.Polys.Where (p => p.IsClosed)
-                                  : mDwg.Ents.OfType<E2Poly> ().Where (p => mFilter (p))
-                                  .Select (p => p.Poly).Where (poly => poly.IsClosed);
+                                  : mDwg.Ents.OfType<E2Poly> ().Where (e2p => e2p.Poly.IsClosed && mFilter (e2p))
+                                  .Select (e2p => e2p.Poly);
       foreach (var poly in polys) {
          mPts.Clear (); poly.Discretize (mPts, 0.05, Lib.FineTessAngle);
          mIdx.Add (0); int idx0 = mVec.Count;
