@@ -28,7 +28,7 @@ public class UndoStack {
    public UndoStep? NextRedo => mSteps.SafeGet (mCursor + 1);
 
    public void Undo () {
-      if (mCursor > 0) mSteps[mCursor--].Step (EUndo.Undo);
+      if (mCursor >= 0) mSteps[mCursor--].Step (EUndo.Undo);
    }
 
    public void Redo () {
