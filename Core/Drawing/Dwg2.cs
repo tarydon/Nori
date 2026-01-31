@@ -107,6 +107,15 @@ public partial class Dwg2 {
    /// <summary>Removes an "existing" entity from the drawing</summary>
    public void Remove (Ent2 ent) => Lib.Check (mEnts.Remove (ent), "Coding Error");
 
+   /// <summary>
+   /// Removes an existing layer from the drawing
+   /// </summary>
+   public void Remove (Layer2 layer) {
+      if (Ents.Any (a => a.Layer == layer))
+         throw new ArgumentException ("Cannot remove non-empty layer");
+      mLayers.Remove (layer);
+   }
+
    /// <summary>Removes set of "existing" entities from the drawing</summary>
    /// The entities are supposed to be 'ordered' in the same ordering as in the mEnts array.
    /// This makes it possible for the removal of all entities to happen in O(n) time, rather

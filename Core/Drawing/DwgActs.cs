@@ -6,6 +6,7 @@ public class ModifyDwgEnts : UndoStep {
       mAdd = [.. add]; mRmv = [.. rmv];
       mDwg = dwg;
       QuickStitch ();
+      Lib.Trace ($"{desc}: add {mAdd.Count}, remove {mRmv.Count}");
    }
    readonly Dwg2 mDwg;
    readonly string mDescription;
@@ -43,4 +44,21 @@ public class ModifyDwgEnts : UndoStep {
          }
       }
    }
+}
+
+public class ModifyDwgLayers : UndoStep {
+   public ModifyDwgLayers (Dwg2 dwg, string desc, IEnumerable<Layer2> add, IEnumerable<Layer2> rmv) 
+      => (mDwg, mDescription, mAdd, mRmv) = (dwg, desc, [.. add], [.. rmv]);
+
+   public override string Description => mDescription;
+
+   public override void Step (EUndo dir) {
+      var (add, rmv) = dir == EUndo.Redo ? (mAdd, mRmv) : (mRmv, mAdd);
+      foreach (var layer in rmv) mDwg.Remove (layer);
+      foreach (var layer in add) mDwg.Add (layer);
+   }
+
+   readonly Dwg2 mDwg;
+   readonly string mDescription;
+   readonly List<Layer2> mAdd, mRmv;
 }

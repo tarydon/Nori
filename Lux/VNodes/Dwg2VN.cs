@@ -16,17 +16,24 @@ public class Dwg2VN : VNode {
 /// <summary>DwgFillVN is used to fill the interior closed polylines of a drawing</summary>
 public class DwgFillVN : VNode {
    // Constructors -------------------------------------------------------------
-   public DwgFillVN (Dwg2 dwg, int _) : base (dwg) => mDwg = dwg;
+   public DwgFillVN (Dwg2 dwg, Predicate<E2Poly>? filter = null) : base (dwg)
+      => (mDwg, mFilter) = (dwg, filter);
    readonly Dwg2 mDwg;
+   readonly Predicate<E2Poly>? mFilter;
 
    // Overrides ----------------------------------------------------------------
    // See the Lux.FillPath routine for more details on the input required for this shader.
    // Basically we rasterize all the closed polylines in the drawing and use that to fill
    // the 'interior' of the drawing.
    public override void Draw () {
+      List<Poly> polys = [];
       var bound = mDwg.Bound.InflatedF (1.01);
       mIdx.Clear (); mVec.Clear (); mVec.Add (bound.Midpoint);
-      var polys = mDwg.Polys.Where (a => a.IsClosed).ToList ();
+      foreach (var ent in mDwg.Ents) {
+         if (ent is not E2Poly e2p || e2p.Poly.IsOpen) continue;
+         if (mFilter != null && !mFilter (e2p)) continue;
+         polys.Add (e2p.Poly);
+      }
       foreach (var poly in polys) {
          mPts.Clear (); poly.Discretize (mPts, 0.05, Lib.FineTessAngle);
          mIdx.Add (0); int idx0 = mVec.Count;
