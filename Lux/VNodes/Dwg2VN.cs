@@ -8,7 +8,7 @@ namespace Nori;
 /// <summary>VNode that renders an entire drawing</summary>
 public class Dwg2VN : VNode {
    // Constructor --------------------------------------------------------------
-   public Dwg2VN (Dwg2 dwg) : base (dwg) => ChildSource = dwg.Ents; 
+   public Dwg2VN (Dwg2 dwg) : base (dwg) => ChildSource = dwg.Ents;
 }
 #endregion
 
@@ -18,8 +18,8 @@ public class DwgFillVN : VNode {
    // Constructors -------------------------------------------------------------
    public DwgFillVN (Dwg2 dwg, Predicate<E2Poly>? filter = null) : base (dwg)
       => (mDwg, mFilter) = (dwg, filter);
-   readonly Dwg2 mDwg;
    readonly Predicate<E2Poly>? mFilter;
+   readonly Dwg2 mDwg;
 
    // Overrides ----------------------------------------------------------------
    // See the Lux.FillPath routine for more details on the input required for this shader.

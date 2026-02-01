@@ -18,8 +18,8 @@ public class ModifyDwgEnts : UndoStep {
 
    public override string Description => mDescription;
 
-   public override void Step (EUndo dir) {
-      var (add, rmv) = dir == EUndo.Redo ? (mAdd, mRmv) : (mRmv, mAdd);
+   public override void Step (EUndoDir dir) {
+      var (add, rmv) = dir == EUndoDir.Redo ? (mAdd, mRmv) : (mRmv, mAdd);
       foreach (var ent in rmv) mDwg.Ents.Remove (ent);
       foreach (var ent in add) mDwg.Ents.Add (ent);
    }
@@ -56,8 +56,8 @@ public class ModifyDwgLayers : UndoStep {
 
    public override string Description => mDescription;
 
-   public override void Step (EUndo dir) {
-      var (add, rmv) = dir == EUndo.Redo ? (mAdd, mRmv) : (mRmv, mAdd);
+   public override void Step (EUndoDir dir) {
+      var (add, rmv) = dir == EUndoDir.Redo ? (mAdd, mRmv) : (mRmv, mAdd);
       foreach (var layer in rmv) mDwg.Remove (layer);
       foreach (var layer in add) mDwg.Add (layer);
    }
