@@ -16,9 +16,14 @@ namespace Nori;
 /// and the code should reverse the changes. The 'Description' property exists to provide a 
 /// human-readable name to be used in the UI (for the Undo/Redo menus).
 public abstract class UndoStep {
+   /// <summary>Construct an UndoStep, given a 'document' it is working with, and a description</summary>
+   public UndoStep (object document, string description) => (Doc, mDescription) = (document, description);
+   public readonly object Doc;
+
    // Properties ---------------------------------------------------------------
-   /// <summary>Override this to provide a description of the Step (for the Undo/Redo menu)</summary>
-   public abstract string Description { get; }
+   /// <summary>Override this to provide a custom description of the Step (for the Undo/Redo menu)</summary>
+   public virtual string Description => mDescription;
+   readonly string mDescription;
 
    // Methods ------------------------------------------------------------------
    /// <summary>Override this to do the actual Undo or Redo of the action</summary>
