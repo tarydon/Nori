@@ -15,7 +15,6 @@ public class ModifyDwgEnts : UndoStep {
    public ModifyDwgEnts (Dwg2 dwg, string desc, IEnumerable<Ent2> add, IEnumerable<Ent2> rmv, bool stitch = true) : base (dwg, desc) {
       mDwg = dwg; mAdd = [.. add]; mRmv = [.. rmv];
       if (stitch) QuickStitch ();
-      Lib.Trace ($"{desc}: add {mAdd.Count}, remove {mRmv.Count}");
    }
 
    // Overrides ----------------------------------------------------------------
