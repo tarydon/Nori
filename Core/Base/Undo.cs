@@ -156,13 +156,9 @@ public class ClubbedStep : UndoStep {
    /// At this point, the list of sub-steps within this ClubbedStep is not yet set. They
    /// will get pushed into the stack on top of this, and will all finally be gathered and
    /// placed into the Steps collection by UndoStack.ClubSteps().
-   public ClubbedStep (string description) => mDescription = description;
+   public ClubbedStep (object doc, string description) : base (doc, description) { }
 
    // Properties ---------------------------------------------------------------
-   /// <summary>Description of the ClubbedStep</summary>
-   public override string Description => mDescription;
-   readonly string mDescription;
-
    /// <summary>List of steps within this ClubbedStep</summary>
    internal readonly List<UndoStep> Steps = [];
 
