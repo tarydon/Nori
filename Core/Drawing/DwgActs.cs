@@ -1,4 +1,8 @@
-﻿namespace Nori;
+// ────── ╔╗
+// ╔═╦╦═╦╦╬╣ DwgActs.cs
+// ║║║║╬║╔╣║ <<TODO>>
+// ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
+namespace Nori;
 
 public class ModifyDwgEnts : UndoStep {
    public ModifyDwgEnts (Dwg2 dwg, string desc, IEnumerable<Ent2> add, IEnumerable<Ent2> rmv) {

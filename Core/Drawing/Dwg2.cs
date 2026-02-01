@@ -107,9 +107,7 @@ public partial class Dwg2 {
    /// <summary>Removes an "existing" entity from the drawing</summary>
    public void Remove (Ent2 ent) => Lib.Check (mEnts.Remove (ent), "Coding Error");
 
-   /// <summary>
-   /// Removes an existing layer from the drawing
-   /// </summary>
+   /// <summary>Removes an existing layer from the drawing</summary>
    public void Remove (Layer2 layer) {
       if (Ents.Any (a => a.Layer == layer))
          throw new ArgumentException ("Cannot remove non-empty layer");
