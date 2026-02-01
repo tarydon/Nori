@@ -18,7 +18,6 @@ public partial class Dwg2 {
          if (mBound.IsEmpty) {
             if (mEnts.Count == 0) mBound = new (-60, -30, 360, 180); // Default (visible) _empty_ drawing extents
             else mBound = new (mEnts.Select (a => a.Bound));
-            Lib.Trace ($"Bound: {mBound.Width.Round (0)}x{mBound.Height.Round (0)}");
          }
          return mBound;
       }
@@ -107,6 +106,13 @@ public partial class Dwg2 {
 
    /// <summary>Removes an "existing" entity from the drawing</summary>
    public void Remove (Ent2 ent) => Lib.Check (mEnts.Remove (ent), "Coding Error");
+
+   /// <summary>Removes an existing layer from the drawing</summary>
+   public void Remove (Layer2 layer) {
+      if (Ents.Any (a => a.Layer == layer))
+         throw new ArgumentException ("Cannot remove non-empty layer");
+      mLayers.Remove (layer);
+   }
 
    /// <summary>Removes set of "existing" entities from the drawing</summary>
    /// The entities are supposed to be 'ordered' in the same ordering as in the mEnts array.
