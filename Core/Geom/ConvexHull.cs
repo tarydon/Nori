@@ -2,64 +2,9 @@
 // ╔═╦╦═╦╦╬╣ ConvexHull.cs
 // ║║║║╬║╔╣║ Implements algorithms to compute the convex hull of a set of 2D points.
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
-
 namespace Nori;
 
 public static class ConvexHull {
-   /// <summary>Computes the "convex hull" of the polyline formed from the given set of points.</summary>
-   /// The alternative Andrew's monotone chain algorithm is clearly better. Remove this after testing/comparison.
-   public static IEnumerable<Point2> ComputeByGrahamScan (IList<Point2> pts) {
-      if (pts.Count <= 3) return pts;
-
-      Point2 p0 = pts.Min (RightMostLowestPointComparer);
-
-      Stack<Point2> hull = new Stack<Point2> (); // Represents the vertices of the resulting convex hull.
-      pts = pts.OrderBy (pt => p0.AngleTo (pt)).ThenBy (pt => p0.DistTo (pt)).ToList ();
-
-      // Remove the duplicate points
-      for (int i = pts.Count - 1; i >= 1; i--) {
-         int j = (i + 1) % pts.Count;
-         if (pts[i].EQ (pts[j])) { pts.RemoveAt (i); continue; }
-         double a1 = p0.AngleTo (pts[i]), a2 = p0.AngleTo (pts[j]);
-         if (a1.EQ (a2))
-            pts.RemoveAt (p0.DistTo (pts[i]) < p0.DistTo (pts[j]) ? i : j);
-      }
-
-      // If 3 points form a U-notch, remove the middle point
-      for (int i = pts.Count - 1; i >= 1; i--) {
-         int j = (i + 1) % pts.Count, k = (i + 2) % pts.Count;
-         Point2 pa = pts[i], pb = pts[j], pc = pts[k];
-         if (pa.DistToLineSq (pb, pc) > Lib.EpsilonSq) continue;
-         if ((pb - pa).Opposing (pc - pb)) pts.RemoveAt (j);
-      }
-
-      for (int i = 0; i < pts.Count;) {
-         Point2 pt = pts[i];
-         // if we don't yet have 2 points in the hull, just keep adding points until we do
-         if (hull.Count < 2) {
-            hull.Push (pt); i++; continue;
-         }
-
-         Point2 end = hull.Pop (), start = hull.Peek (); // Get the last 'line' that was added
-         int side = pt.ExactSide (start, end);           // And see which side of this line the incoming Point2 lies
-         if (side == 1) {                    // If the new Point2 is to the left(strictly) of the line,
-            hull.Push (end);                 // then push the endpoint Point2 back in
-            hull.Push (pt); i++;             // and push the incoming Point2 (this is a left turn)
-         } else if (side == 0) {             // If the Point2 lies on the line, take the Point2 which is farther away for 'second' Point2
-            hull.Push (pt.DistTo (start) > end.DistTo (start) ? pt : end);
-            i++;
-         }
-         // If side == -1, the topmost Point2 is not replaced back in AND there is no indexing increment.
-      }
-
-      if (hull.Count > 2) {
-         // A special case where the last Point2 may be collinear with p0 and the second-last Point2 and hence is redundant.
-         Point2 top = hull.Pop ();
-         if (p0.Side (hull.Peek (), top) != 0) hull.Push (top);
-      }
-      return hull.Reverse ();                // Reversal is needed because of the stack action
-   }
-
    /// <summary>Computes the convex hull of a set of points using Andrew's monotone chain algorithm.</summary>
    /// Andrew's Monotone Chain Algorithm which is O(N logN). Simpler and does not require trigonometric functions.
    public static List<Point2> Compute (IReadOnlyList<Point2> points) {

@@ -205,6 +205,14 @@ public static partial class Lux {
    }
    static readonly List<Vec2F> mBuf = [];
 
+   /// <summary>Draws a 2D line-loop (closed polyline made up of the given set of points)</summary>
+   public static void LineLoop (IReadOnlyList<Point2> pts) {
+      mBuf.Clear (); mBuf.Add (pts[0]);
+      for (int i = 1; i < pts.Count; i++) { mBuf.Add (pts[i]); mBuf.Add (pts[i]); }
+      mBuf.Add (pts[0]);
+      Lines (mBuf.AsSpan ());
+   }
+
    /// <summary>Draws 3D lines</summary>
    /// The following Lux properties are used:
    /// - Xfm: current transformation matrix
