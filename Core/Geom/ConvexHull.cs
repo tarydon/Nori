@@ -93,13 +93,15 @@ public static class ConvexHull {
       return lower;
    }
 
-   /// <summary>Computes the convex hull of a simple polygon in O(N) time</summary>
-   /// For a simple polygon, which does not have self-intersections, degenerate points or collinear points,
-   /// Melkman's algorithm can reliably compute the convex-hull in linear time.
-   public static List<Point2> Compute (Poly poly) {
+   /// <summary>Computes the convex hull of a polyline</summary>
+   /// <param name="poly">The polyline</param>
+   /// <param name="isSimplePolygon">Pass true if it is known that the polyline is a cleaned-up 
+   /// simple polygon (no self-intersections). In such cases, convex-hull can be computed faster.</param>
+   /// Real world 2D part contours are usually guaranteed to be simple polygons.
+   public static List<Point2> Compute (Poly poly, bool isSimplePolygon) {
       List<Point2> pts = new List<Point2> (poly.Count);
       poly.Discretize (pts, Lib.FineTess, Lib.FineTessAngle);
-      return ComputeForSimplePolygon (pts);
+      return isSimplePolygon ? ComputeForSimplePolygon (pts) : Compute (pts);
    }
 
    /// <summary> Computes the convex hull of a simple polygon using Melkman's algorithm in O(N) time. </summary>
@@ -249,7 +251,7 @@ public static class ConvexHull {
       // Collect only points that are outside the polygon
       var result = new List<Point2> (Math.Max (8, (int)Math.Log10 (pts.Count)));
       foreach (var p in pts)
-         if (IsOutside (p, extremes))
+         if (IsOutside (p, extremes)) // IsOutside is guaranteed to include extremes also.
             result.Add (p);
 
       return result;

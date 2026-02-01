@@ -571,6 +571,10 @@ class TMisc {
       hull = ConvexHull.ComputeForSimplePolygon ([.. pts.Reverse ()]);
       Assert.IsTrue (hull.Count == 4);
       Assert.IsTrue (hull.Contains ((0, 0)) && hull.Contains ((100, 0)) && hull.Contains ((0, 100)) && hull.Contains ((100, 100)));
+
+      hull = ConvexHull.Compute (Poly.Lines (pts, true), true);
+      Assert.IsTrue (hull.Count == 4);
+      Assert.IsTrue (hull.Contains ((0, 0)) && hull.Contains ((100, 0)) && hull.Contains ((0, 100)) && hull.Contains ((100, 100)));
    }
 
    class T1Type : IIndexed {
