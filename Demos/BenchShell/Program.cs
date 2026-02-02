@@ -61,6 +61,7 @@ public class Tester {
          bool check = Tri.CollideFlux (P[a], P[a + 1], P[a + 2], P[a + 3], P[a + 4], P[a + 5]);
          if (check) crashes++;
       }
+      if (crashes != 14708) throw new NotImplementedException ();
    }
 
    [Benchmark]
@@ -73,6 +74,7 @@ public class Tester {
             if (check) crashes++;
          }
       }
+      if (crashes != 14708) throw new NotImplementedException ();
    }
 
    [Benchmark]
@@ -85,28 +87,31 @@ public class Tester {
             if (check) crashes++;
          }
       }
+      if (crashes != 14708) throw new NotImplementedException ();
    }
 
-   public void CollideHeld () {
+   [Benchmark]
+   public unsafe void CollideMollerFaster () {
       int crashes = 0;
-      for (int i = 0; i < 100; i++) {
-         int a = i * 3;
-         for (int j = 0; j < 100; j++) {
-            int b = j * 3;
-            bool check = i == j || Tri.CollideHeld (P[a], P[a + 1], P[a + 2], P[b], P[b + 1], P[b + 2]);
+      fixed (float* pf = F) {
+         for (int i = 0, n = Crash.Count; i < n; i++) {
+            int a = i * 2;
+            bool check = Tri.CollideMollerFaster (pf, ref CT[a], ref CT[a + 1]);
             if (check) crashes++;
          }
       }
+      if (crashes != 14708) throw new NotImplementedException ();
    }
 }
 
 static class Program {
    public static void Main () {
-      BenchmarkRunner.Run<Tester> ();
+      // BenchmarkRunner.Run<Tester> ();
 
-      //var t = new Tester ();
-      //t.CollideFlux ();
-      //t.CollideMoller ();
-      //t.CollideMollerFast ();
+      var t = new Tester ();
+      t.CollideFlux ();
+      t.CollideMoller ();
+      t.CollideMollerFast ();
+      t.CollideMollerFaster ();
    }
 }
