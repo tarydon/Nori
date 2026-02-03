@@ -35,15 +35,16 @@ class MinSphereScene : Scene3 {
       Lib.Trace ($"Deviation: {((s2.Radius - s.Radius) + (s2.Center - s.Center).Length) / s.Radius:P2}, Elapsed: {S (sw.Elapsed)}");
       Lib.Trace ($"");
       // OBB demo
+      Point3f[] ptsF = [.. pts.Select (x => (Point3f)x)];
       sw.Restart ();
-      var obb = OBB.From (pts);
+      var obb = OBB.From (ptsF);
       sw.Stop ();
       nodes.Add (new BoxVN (obb));
       Bound3 aabb = new (pts);
       var vol = obb.Volume;
       var abvol = aabb.Width * aabb.Height * aabb.Depth;
       var svol = 4 / 3 * Lib.PI * Math.Pow (s.Radius, 3);
-      Lib.Trace ($"OBB: {S (obb.Center)}, Size: {S (obb.Extent.Length)}, Vol.: ({vol / svol:P0} of Sphere, {vol / abvol:P0} of AABB), Elapsed: {S (sw.Elapsed)}");
+      Lib.Trace ($"OBB: {S ((Point3)obb.Center)}, Size: {S (obb.Extent.Length)}, Vol.: ({vol / svol:P0} of Sphere, {vol / abvol:P0} of AABB), Elapsed: {S (sw.Elapsed)}");
       Lib.Trace ("Press 'Min. Sphere' again to regenerate");
       Root = new GroupVN (nodes);
    }
@@ -86,7 +87,7 @@ class MinSphereScene : Scene3 {
    class BoxVN (OBB box) : VNode {
       readonly OBB Box = box;
       Vec3F[] Pts = [];
-      readonly Matrix3 Xfm = Matrix3.To (box.CS);
+      readonly Matrix3 Xfm = Matrix3.To (new CoordSystem ((Point3)box.Center, (Vector3)box.X, (Vector3)box.Y));
 
       public override void SetAttributes () =>
          (Lux.Color, Lux.Xfm, Lux.LineWidth) = (Color4.White, Xfm, 2);
@@ -94,11 +95,11 @@ class MinSphereScene : Scene3 {
       public override void Draw () {
          if (Pts.Length == 0) {
             List<Vec3F> corners = [];
-            var v = (Vec3F)Box.Extent;
+            var (ex, ey, ez) = (Box.Extent.X, Box.Extent.Y, Box.Extent.Z);
             for (int dx = -1; dx <= 1; dx += 2)
                for (int dy = -1; dy <= 1; dy += 2)
                   for (int dz = -1; dz <= 1; dz += 2)
-                     corners.Add (new (v.X * dx, v.Y * dy, v.Z * dz));
+                     corners.Add (new (ex * dx, ey * dy, ez * dz));
 
             // Fill box edges with center at the origin
             Pts = [.. Edges.Select (n => corners[n])];
