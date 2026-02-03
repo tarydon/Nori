@@ -154,7 +154,7 @@ public static partial class Lux {
       // Issue stats, and keep 'continuous render' loop going
       mInfo.OnNext (sStats);
       var frameTS = DateTime.Now;
-      mLastFrameTime = (DateTime.Now - frameTS).TotalSeconds;
+      mLastFrameTime = (DateTime.Now - sLastFrametime).TotalSeconds;
       if (sRenderCompletes.Count > 0 && target == ETarget.Screen) {
          Lib.Post (NextFrame);
          double elapsed = (frameTS - mFPSReportTS).TotalSeconds;
@@ -165,7 +165,7 @@ public static partial class Lux {
             (mcFPSFrames, mFPSReportTS) = (0, frameTS);
          }
       }
-      mLastFrameTS = frameTS;
+      sLastFrametime = frameTS;
       mRendering = mIsPicking = false;
       return obj;
 
@@ -178,7 +178,6 @@ public static partial class Lux {
    }
    static int mcFrames;             // Frames rendered totally
    static double mLastFrameTime;    // How many seconds did the last frame take to render
-   static DateTime mLastFrameTS;    // What was the timestamp at which we rendered the last frame
    static DateTime mFPSReportTS;    // When did we last issue an FPS report
    static int mcFPSFrames;          // Frames rendered since that time
    static bool mRendering;          // Currently rendering a frame
