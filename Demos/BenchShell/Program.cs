@@ -14,12 +14,20 @@ namespace NBench;
 public class Tester {
    public Tester () {
       Lib.Init ();
+      Random r = new Random (1);
       var model = new T3XReader ("C:/Etc/T3/5X-004.t3x").Load ();
       foreach (var ent in model.Ents.OfType<E3Surface> ()) {
          Point3f[] set = [.. ent.Mesh.Vertex.Select (a => a.Pos)];
          if (set.Length > 0) {
             mSets.Add (set);
             mSets2.Add ([.. set.Select (a => (Point3)a)]);
+
+            for (int i = 0; i < 5; i++) {
+               double xRot = Lib.PI * r.NextDouble (), yRot = Lib.PI * r.NextDouble (), zRot = Lib.PI * r.NextDouble ();
+               var xfm = Matrix3.Rotation (EAxis.X, xRot) * Matrix3.Rotation (EAxis.Y, yRot) * Matrix3.Rotation (EAxis.X, zRot);
+               mSets.Add ([..set.Select (a => a * xfm)]);
+               mSets2.Add ([.. set.Select (a => (Point3)(a * xfm))]);
+            }
          }
       }
    }
@@ -69,6 +77,7 @@ public class Tester {
          a1Total += a1; a2Total += a2; a3Total += a3; a4Total += a4; a5Total += a5; a6Total += a6;
       }
       Console.WriteLine ("Tightness (smaller is better)");
+      Console.WriteLine ($"Dito   : {Math.Round (a1Total / a1Total, 3)}");
       Console.WriteLine ($"PCA    : {Math.Round (a2Total / a1Total, 3)}");
       Console.WriteLine ($"Hull13 : {Math.Round (a4Total / a1Total, 3)}");
       Console.WriteLine ($"Hull10 : {Math.Round (a5Total / a1Total, 3)}");

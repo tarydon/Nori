@@ -40,7 +40,7 @@ class OBBScene : Scene3 {
          mObbVN.Obb = obb;
 
          var pts2 = surf.Mesh.Vertex.Select (a => a.Pos).ToList ();
-         var obb2 = OBB2.From (pts2.AsSpan ());
+         var obb2 = OBB2.FromPCA (pts2.AsSpan ());
          mObb2VN.Obb = obb2;
       }
    }
