@@ -252,6 +252,8 @@ public readonly struct Vector3f {
    /// <summary>The Z ordinate of the Point3</summary>
    public readonly float Z;
 
+   /// <summary>Is a Vector3f zero to within Epsilon</summary>
+   public bool IsZero => X.IsZero () && Y.IsZero () && Z.IsZero ();
    public double Length => Math.Sqrt (X * X + Y * Y + Z * Z);
 
    // Methods ------------------------------------------------------------------
@@ -273,8 +275,12 @@ public readonly struct Vector3f {
    /// <summary>Returns the cross-product of two Vector3f</summary>
    public static Vector3f operator * (Vector3f a, Vector3f b)
       => new (a.Y * b.Z - a.Z * b.Y, a.Z * b.X - a.X * b.Z, a.X * b.Y - a.Y * b.X);
+   /// <summary>Multiply a Vector3f with a scalar</summary>
+   public static Vector3f operator * (Vector3f a, float f) => new (a.X * f, a.Y * f, a.Z * f);
 
    public override string ToString () => $"<{X.S5 ()},{Y.S5 ()},{Z.S5 ()}>";
+   /// <summary>The Zero vector</summary>
+   public static readonly Vector3 Zero = new (0, 0, 0);
 }
 #endregion
 
