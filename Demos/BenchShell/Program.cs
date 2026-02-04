@@ -18,7 +18,7 @@ public class Tester {
       var model = new T3XReader ("C:/Etc/T3/5X-004.t3x").Load ();
       foreach (var ent in model.Ents.OfType<E3Surface> ()) {
          Point3f[] set = [.. ent.Mesh.Vertex.Select (a => a.Pos)];
-         if (set.Length > 0) {
+         if (set.Length > 5) {
             mSets.Add (set);
             mMassive.AddRange (set);
 
@@ -34,11 +34,11 @@ public class Tester {
    List<Point3f[]> mSets = [];
    List<Point3f> mMassive = [];
 
-   //[Benchmark]
-   //public void TestOBBDito () {
-   //   foreach (var set in mSets)
-   //      OBB.From (set);
-   //}
+   [Benchmark (Baseline = true)]
+   public void TestOBBDito () {
+      foreach (var set in mSets)
+         OBB.From (set);
+   }
 
    //[Benchmark (Baseline = true)]
    //public void TestOBBPCA () {
@@ -47,45 +47,61 @@ public class Tester {
    //}
 
    [Benchmark]
-   public void TestOBBDitoMassive () {
-      OBB.From (mMassive.AsSpan ());
+   public void TestOBBAlt () {
+      foreach (var set in mSets)
+         OBB.FromAlt (set);
    }
 
-   [Benchmark (Baseline = true)]
-   public void TestOBBPCAMassive () {
-      OBB.FromPCA (mMassive.AsSpan ());
+   [Benchmark]
+   public void TestOBBAltNew () {
+      foreach (var set in mSets)
+         OBB.FromAltNew (set);
    }
+
+   //[Benchmark]
+   //public void TestOBBDitoMassive () {
+   //   OBB.From (mMassive.AsSpan ());
+   //}
+
+   //[Benchmark (Baseline = true)]
+   //public void TestOBBPCAMassive () {
+   //   OBB.FromPCA (mMassive.AsSpan ());
+   //}
 
    public void Compare () {
-      double a1Total = 0, a2Total = 0;
+      double a1Total = 0, a2Total = 0, a3Total = 0; 
       for (int i = 0; i < mSets.Count; i++) {
          var obb1 = OBB.From (mSets[i]);
          var obb2 = OBB.FromPCA (mSets[i]);
-         double a1 = obb1.Area, a2 = obb2.Area;
-         a1Total += a1;  a2Total += a2;
+         var obb3 = OBB.FromAltNew (mSets[i]);
+         double a1 = obb1.Area, a2 = obb2.Area, a3 = obb3.Area;
+         a1Total += a1;  a2Total += a2; a3Total += a3;
       }
       int average = mSets.Sum (a => a.Length) / mSets.Count;
       Console.WriteLine ($"Average: {average} pts");
       Console.WriteLine ("Tightness (smaller is better)");
-      Console.WriteLine ($"Dito   : {Math.Round (a1Total / a1Total, 3)}");
-      Console.WriteLine ($"PCA    : {Math.Round (a2Total / a1Total, 3)}");
+      Console.WriteLine ($"Dito   : {Math.Round (a1Total / a1Total, 5)}");
+      Console.WriteLine ($"PCA    : {Math.Round (a2Total / a1Total, 5)}");
+      Console.WriteLine ($"Alt    : {Math.Round (a3Total / a1Total, 5)}");
    }
 
    public void CompareMassive () {
       double a1Total = OBB.From (mMassive.AsSpan ()).Area;
       double a2Total = OBB.FromPCA (mMassive.AsSpan ()).Area;
+      double a3Total = OBB.FromAltNew (mMassive.AsSpan ()).Area;
       Console.WriteLine ();
       Console.WriteLine ($"Average: {mMassive.Count} pts");
       Console.WriteLine ("Tightness (smaller is better)");
-      Console.WriteLine ($"Dito   : {Math.Round (a1Total / a1Total, 3)}");
-      Console.WriteLine ($"PCA    : {Math.Round (a2Total / a1Total, 3)}");
+      Console.WriteLine ($"Dito   : {Math.Round (a1Total / a1Total, 5)}");
+      Console.WriteLine ($"PCA    : {Math.Round (a2Total / a1Total, 5)}");
+      Console.WriteLine ($"Alt    : {Math.Round (a3Total / a1Total, 5)}");
    }
 
 }
 
 static class Program {
    public static void Main () {
-      // BenchmarkRunner.Run<Tester> ();
+      BenchmarkRunner.Run<Tester> ();
       new Tester ().Compare ();
       new Tester ().CompareMassive ();
    }

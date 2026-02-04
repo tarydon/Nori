@@ -215,8 +215,18 @@ public readonly struct Point3f {
       return dx * dx + dy * dy + dz * dz;
    }
 
+   /// <summary>Square of the perpendicular distance between this point and the infinite line a..b</summary>
+   public double DistToLineSq (Point3f a, Point3f b) => DistToSq (SnappedToLine (a, b));
+
    /// <summary>Compares two points are equal to within the given tolerance</summary>
    public bool EQ (Point3f b, float tol) => X.EQ (b.X, tol) && Y.EQ (b.Y, tol) && Z.EQ (b.Z, tol);
+   /// <summary>
+   /// Compare two Point3f to within Lib.Epsilon
+   /// </summary>
+   public bool EQ (Point3f b) => X.EQ (b.X) && Y.EQ (b.Y) && Z.EQ (b.Z);
+
+   /// If the points a and b are the same, this just returns a
+   public Point3f SnappedToLine (Point3f a, Point3f b) => SnapHelper (a, b);
 
    // Operators ----------------------------------------------------------------
    /// <summary>Converts a Point3f to a Point3</summary>
@@ -238,6 +248,18 @@ public readonly struct Point3f {
    public static Point3f operator * (Point3f a, double f) => new (a.X * f, a.Y * f, a.Z * f);
 
    public override string ToString () => $"({X.S5 ()},{Y.S5 ()},{Z.S5 ()})";
+
+   // Implementation -----------------------------------------------------------
+   // Helper used by SnappedToLine and SnappedToLineSeg
+   Point3f SnapHelper (Point3f a, Point3f b) {
+      var (dx, dy, dz) = (b.X - a.X, b.Y - a.Y, b.Z - a.Z);
+      double scale = 1 / (dx * dx + dy * dy + dz * dz);
+      if (double.IsInfinity (scale)) return a;
+      // Use the parametric form of the line equation, and compute
+      // the 'parameter t' of the closest point
+      double t = ((X - a.X) * dx + (Y - a.Y) * dy + (Z - a.Z) * dz) * scale;
+      return new (a.X + t * dx, a.Y + t * dy, a.Z + t * dz);
+   }
 }
 #endregion
 

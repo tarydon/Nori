@@ -260,6 +260,11 @@ public readonly struct Vector3f {
    /// <summary>Returns the dot product of this vectorf with another</summary>
    public double Dot (Vector3f b) => X * b.X + Y * b.Y + Z * b.Z;
 
+   /// <summary>
+   /// Compare two Vector3f to within Lib.Epsilon
+   /// </summary>
+   public bool EQ (Vector3f b) => X.EQ (b.X) && Y.EQ (b.Y) && Z.EQ (b.Z);
+
    /// <summary>Returns this vector normalized to length 1</summary>
    public Vector3f Normalized () { double len = Length; return new (X / len, Y / len, Z / len); }
 
@@ -281,6 +286,13 @@ public readonly struct Vector3f {
    public static Vector3f operator * (Vector3f a, float f) => new (a.X * f, a.Y * f, a.Z * f);
 
    public override string ToString () => $"<{X.S5 ()},{Y.S5 ()},{Z.S5 ()}>";
+
+   /// <summary>Unit vector, aligned to the X axis</summary>
+   public static readonly Vector3f XAxis = new (1, 0, 0);
+   /// <summary>Unit vector, aligned to the Y axis</summary>
+   public static readonly Vector3f YAxis = new (0, 1, 0);
+   /// <summary>Unit vector, aligned to the Z axis</summary>
+   public static readonly Vector3f ZAxis = new (0, 0, 1);
    /// <summary>The Zero vector</summary>
    public static readonly Vector3 Zero = new (0, 0, 0);
 }
