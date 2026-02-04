@@ -271,6 +271,8 @@ public readonly struct Vector3f {
 
    /// <summary>Adds two Vector3f together</summary>
    public static Vector3f operator + (Vector3f a, Vector3f b) => new (a.X + b.X, a.Y + b.Y, a.Z + b.Z);
+   /// <summary>Subtract one Vector3f from another</summary>
+   public static Vector3f operator - (Vector3f a, Vector3f b) => new (a.X - b.X, a.Y - b.Y, a.Z - b.Z);
 
    /// <summary>Returns the cross-product of two Vector3f</summary>
    public static Vector3f operator * (Vector3f a, Vector3f b)
