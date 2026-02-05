@@ -1,4 +1,4 @@
-﻿// ────── ╔╗
+// ────── ╔╗
 // ╔═╦╦═╦╦╬╣ OBB.cs
 // ║║║║╬║╔╣║ Implements minimum enclosing 'Orientend Bounding Box' in 3D
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
@@ -6,20 +6,33 @@ namespace Nori;
 
 #region struct OBB ---------------------------------------------------------------------------------
 /// <summary>Represents a bounding cuboid oriented along an arbitrary axes.</summary>
-public readonly struct OBB {
+public struct OBB {
    public OBB (Point3f cen, Vector3f x, Vector3f y, Vector3f ext) => (Center, X, Y, Extent) = (cen, x, y, ext);
 
-   /// <summary> The box center</summary>
    public readonly Point3f Center;
    /// <summary>The 'half extent' along the axes.</summary>
    public readonly Vector3f Extent;
    /// <summary>Bounding box's co-ordinate axes.</summary>
    public readonly Vector3f X, Y;
-   public Vector3f Z => X * Y;
+   public readonly Vector3f Z => X * Y;
    /// <summary>The box area</summary>
-   public double Area => 8 * (Extent.X * Extent.Y + Extent.X * Extent.Z + Extent.Y * Extent.Z);
+   public readonly double Area => 8 * (Extent.X * Extent.Y + Extent.X * Extent.Z + Extent.Y * Extent.Z);
+   /// <summary>The axis-aligned bounding box enclosing this OBB</summary>
+   public Bound3 Bound => _bound ??= ComputeBound ();
+   Bound3? _bound = null;
+
+   readonly Bound3 ComputeBound () {
+      var (C, dx, dy, dz) = (Center, X * Extent.X, Y * Extent.Y, Z * Extent.Z);
+      return new (
+         C + dx + dy + dz, C + dx + dy - dz,
+         C + dx - dy + dz, C + dx - dy - dz,
+         C - dx + dy + dz, C - dx + dy - dz,
+         C - dx - dy + dz, C - dx - dy - dz
+      );
+   }
+
    /// <summary>The box volume</summary>
-   public double Volume => 8 * (Extent.X * Extent.Y * Extent.Z);
+   public readonly double Volume => 8 * (Extent.X * Extent.Y * Extent.Z);
 
    /// <summary>Tries to find a tight oriented bound for a given set of points.</summary>
    /// This OBB search takes O(n) time to find 'nearly' optimal OBB orientation. It falls
