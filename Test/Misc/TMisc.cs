@@ -533,15 +533,51 @@ class TMisc {
 
    [Test (167, "OBB from points")]
    void Test19 () {
-      Point3[] pts = [(500, 0, 0), (0, 500, 0), (0, 0, 500), (-500, 0, 0), (0, -500, 0), (0, 0, -500)];
+      Point3f[] pts = [new (500, 0, 0), new (0, 500, 0), new (0, 0, 500), new (-500, 0, 0), new (0, -500, 0), new (0, 0, -500)];
       var obb = OBB.From (pts);
-      obb.CS.ToString ().Is ("CoordSystem:(0,0,0),<0.707107,-0.707107,0>,<0.408248,0.408248,0.816497>");
-      obb.Extent.Is ("<353.553391,408.24829,288.675135>");
+      obb.Center.Is ("(0,0,0)");
+      obb.X.Is ("<0.70711,-0.70711,0>");
+      obb.Y.Is ("<0.40825,0.40825,0.8165>");
+      obb.Extent.Is ("<353.55338,408.24826,288.67514>");
       // Test when OBB is AABB
-      pts = [(500, 400, 300), (500, -400, 300), (-500, 400, 300), (-500, -400, 300), (500, 400, -300), (500, -400, -300), (-500, 400, -300), (-500, -400, -300)];
+      pts = [new (500, 400, 300), new (500, -400, 300), new (-500, 400, 300), new (-500, -400, 300), 
+         new (500, 400, -300), new (500, -400, -300), new (-500, 400, -300), new (-500, -400, -300)];
       var aabb = OBB.From (pts);
-      aabb.CS.IsWorld.IsTrue ();
+      aabb.X.Is ("<1,0,0>"); aabb.Y.Is ("<0,1,0>");
       aabb.Extent.Is ("<500,400,300>");
+   }
+
+   [Test (169, "Convex-hull of point set")]
+   void Test20 () {
+      Point2[] pts = [(0, 0), (100, 0), (100, 100), (50, 50), (0, 100), (50, 25), (75, 75)];
+      var hull = ConvexHull.Compute (pts);
+      Assert.IsTrue (hull.Count == 4);
+      Assert.IsTrue (hull.Contains ((0, 0)) && hull.Contains ((100, 0)) && hull.Contains ((0, 100)) && hull.Contains ((100, 100)));
+   }
+
+   [Test (170, "Convex-hull of simple polygon")]
+   void Test21 () {
+      Point2[] pts = [(0, 0), (100, 0), (100, 100), (50, 50), (0, 100), (50, 25)];
+      var hull = ConvexHull.ComputeForSimplePolygon (pts);
+      Assert.IsTrue (hull.Count == 4);
+      Assert.IsTrue (hull.Contains ((0, 0)) && hull.Contains ((100, 0)) && hull.Contains ((0, 100)) && hull.Contains ((100, 100)));
+      hull = ConvexHull.ComputeForSimplePolygon ([.. pts.Reverse ()]);
+      Assert.IsTrue (hull.Count == 4);
+      Assert.IsTrue (hull.Contains ((0, 0)) && hull.Contains ((100, 0)) && hull.Contains ((0, 100)) && hull.Contains ((100, 100)));
+
+      pts = [(0, 0), (100, 0), (100, 100), (0, 100)]; // A simple square.
+      hull = ConvexHull.ComputeForSimplePolygon ([.. pts.Reverse ()]);
+      Assert.IsTrue (hull.Count == 4);
+      Assert.IsTrue (hull.Contains ((0, 0)) && hull.Contains ((100, 0)) && hull.Contains ((0, 100)) && hull.Contains ((100, 100)));
+
+      pts = [(0, 0), (25, 0), (50, 10), (75, 0), (100, 0), (100, 100), (0, 100)]; // Simple polygon with a "dent"
+      hull = ConvexHull.ComputeForSimplePolygon ([.. pts.Reverse ()]);
+      Assert.IsTrue (hull.Count == 4);
+      Assert.IsTrue (hull.Contains ((0, 0)) && hull.Contains ((100, 0)) && hull.Contains ((0, 100)) && hull.Contains ((100, 100)));
+
+      hull = ConvexHull.Compute (Poly.Lines (pts, true), true);
+      Assert.IsTrue (hull.Count == 4);
+      Assert.IsTrue (hull.Contains ((0, 0)) && hull.Contains ((100, 0)) && hull.Contains ((0, 100)) && hull.Contains ((100, 100)));
    }
 
    class T1Type : IIndexed {

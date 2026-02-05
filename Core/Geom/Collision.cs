@@ -2,14 +2,14 @@
 // ╔═╦╦═╦╦╬╣ Collision.cs
 // ║║║║╬║╔╣║ Primitive collision detection methods
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
-using static System.Math;
+using static System.MathF;
 namespace Nori;
 
 /// <summary>Represents a triangle defined by three points in 3D space.</summary>
-public struct Tri (Point3 a, Point3 b, Point3 c) {
-   public readonly Point3 A = a;
-   public readonly Point3 B = b;
-   public readonly Point3 C = c;
+public struct Tri (Point3f a, Point3f b, Point3f c) {
+   public readonly Point3f A = a;
+   public readonly Point3f B = b;
+   public readonly Point3f C = c;
 
    public Bound3 Bound => _bound ??= ComputeBound ();
    Bound3? _bound = null;
@@ -43,11 +43,11 @@ public static class Collision {
    /// <summary>Checks if two OBBs intersect.</summary>
    [MethodImpl (MethodImplOptions.AggressiveInlining)]
    public static bool Check (in OBB a, in OBB b) =>
-      BoxBox (a.Center, a.CS.VecX, a.CS.VecY, a.Extent, b.Center, b.CS.VecX, b.CS.VecY, b.Extent);
+      BoxBox (a.Center, a.X, a.Y, a.Extent, b.Center, b.X, b.Y, b.Extent);
 
    [MethodImpl (MethodImplOptions.AggressiveInlining)]
    public static bool Check (in Tri a, in OBB b) =>
-      BoxTri (b.Center, b.CS.VecX, b.CS.VecY, b.Extent, a.A, a.B, a.C);
+      BoxTri (b.Center, b.X, b.Y, b.Extent, a.A, a.B, a.C);
 
    [MethodImpl (MethodImplOptions.AggressiveInlining)]
    public static bool Check (in Tri a, in Tri b) => //Check (a.Bound, b.Bound) && 
@@ -58,14 +58,13 @@ public static class Collision {
    /// OBBs are intersecting. The 15 axes are the 3 axes of each OBB (face-face) and the 9 axes 
    /// formed by the cross products of each pair of axes from the two OBBs (edge-edge).
    [MethodImpl (MethodImplOptions.AggressiveInlining)]
-   public static bool BoxBox (Point3 aC, Vector3 aX, Vector3 aY, Vector3 aR, Point3 bC, Vector3 bX, Vector3 bY, Vector3 bR) {
-      const double E = 1e-6;
-      Vector3 aZ = aX * aY, bZ = bX * bY;
-      double a0 = aR.X, a1 = aR.Y, a2 = aR.Z, b0 = bR.X, b1 = bR.Y, b2 = bR.Z;
+   public static bool BoxBox (Point3f aC, Vector3f aX, Vector3f aY, Vector3f aR, Point3f bC, Vector3f bX, Vector3f bY, Vector3f bR) {
+      Vector3f aZ = aX * aY, bZ = bX * bY;
+      float a0 = aR.X, a1 = aR.Y, a2 = aR.Z, b0 = bR.X, b1 = bR.Y, b2 = bR.Z;
 
       // Check 1. Test A axes: aX, aY, aZ
       // The translation vector T <t0, t1, t2> from a to b (in a's coordinate system)      
-      var tmp = bC - aC; double t0 = Dot (tmp, aX);
+      var tmp = bC - aC; float t0 = Dot (tmp, aX);
       // The rotation matrix R (R00, R01 ... R33) represents 'b' in a's coordinate system.
       // Since the absolute values of R (denoted AR = |R|) are repeatedly used in all tests,
       // we precompute them once for efficiency. A small epsilon is added to handle
@@ -73,18 +72,18 @@ public static class Collision {
       // cross product to approach zero.
       // T, R, and AR are initialized in an interleaved manner to avoid redundant computations,
       // with early termination triggered on detection of a separating axis.
-      double R00 = Dot (aX, bX), R01 = Dot (aX, bY), R02 = Dot (aX, bZ);
-      double AR00 = Abs (R00) + E, AR01 = Abs (R01) + E, AR02 = Abs (R02) + E;
+      float R00 = Dot (aX, bX), R01 = Dot (aX, bY), R02 = Dot (aX, bZ);
+      float AR00 = Abs (R00) + E, AR01 = Abs (R01) + E, AR02 = Abs (R02) + E;
       if (Abs (t0) > a0 + b0 * AR00 + b1 * AR01 + b2 * AR02) return false;
 
-      double t1 = Dot (tmp, aY);
-      double R10 = Dot (aY, bX), R11 = Dot (aY, bY), R12 = Dot (aY, bZ);
-      double AR10 = Abs (R10) + E, AR11 = Abs (R11) + E, AR12 = Abs (R12) + E;
+      float t1 = Dot (tmp, aY);
+      float R10 = Dot (aY, bX), R11 = Dot (aY, bY), R12 = Dot (aY, bZ);
+      float AR10 = Abs (R10) + E, AR11 = Abs (R11) + E, AR12 = Abs (R12) + E;
       if (Abs (t1) > a1 + b0 * AR10 + b1 * AR11 + b2 * AR12) return false;
 
-      double t2 = Dot (tmp, aZ);
-      double R20 = Dot (aZ, bX), R21 = Dot (aZ, bY), R22 = Dot (aZ, bZ);
-      double AR20 = Abs (R20) + E, AR21 = Abs (R21) + E, AR22 = Abs (R22) + E;
+      float t2 = Dot (tmp, aZ);
+      float R20 = Dot (aZ, bX), R21 = Dot (aZ, bY), R22 = Dot (aZ, bZ);
+      float AR20 = Abs (R20) + E, AR21 = Abs (R21) + E, AR22 = Abs (R22) + E;
       if (Abs (t2) > a2 + b0 * AR20 + b1 * AR21 + b2 * AR22) return false;
 
       // Check 2. Test B axes: bX, bY, bZ
@@ -121,13 +120,13 @@ public static class Collision {
    /// <param name="p1">Triangle vertex 2</param>
    /// <param name="p2">Triangle vertex 3</param>
    /// <returns>True, if there is a collision. False otherwise.</returns>
-   public static bool BoxTri (Point3 bC, Vector3 bX, Vector3 bY, Vector3 bH, Point3 p0, Point3 p1, Point3 p2) {
+   public static bool BoxTri (Point3f bC, Vector3f bX, Vector3f bY, Vector3f bH, Point3f p0, Point3f p1, Point3f p2) {
       // Transform triangle vertices (p0, p1, p2) into box's local space as (a, b, c)
       var bZ = bX * bY;
-      Vector3 v0 = p0 - bC, v1 = p1 - bC, v2 = p2 - bC;
-      var a = new Point3 (Dot (v0, bX), Dot (v0, bY), Dot (v0, bZ));
-      var b = new Point3 (Dot (v1, bX), Dot (v1, bY), Dot (v1, bZ));
-      var c = new Point3 (Dot (v2, bX), Dot (v2, bY), Dot (v2, bZ));
+      Vector3f v0 = p0 - bC, v1 = p1 - bC, v2 = p2 - bC;
+      var a = new Point3f (Dot (v0, bX), Dot (v0, bY), Dot (v0, bZ));
+      var b = new Point3f (Dot (v1, bX), Dot (v1, bY), Dot (v1, bZ));
+      var c = new Point3f (Dot (v2, bX), Dot (v2, bY), Dot (v2, bZ));
 
       // Check 1. Nine edge cross products
       // Following two optimizations are applied to improve performance:
@@ -174,13 +173,13 @@ public static class Collision {
       return true;
 
       [MethodImpl (MethodImplOptions.AggressiveInlining)]
-      static bool TestAxis (double n1, double n2, double h1, double h2, double a1, double a2, double b1, double b2, double c1, double c2) {
+      static bool TestAxis (float n1, float n2, float h1, float h2, float a1, float a2, float b1, float b2, float c1, float c2) {
          // Components. Axis: n1, n2, Box half extents: h1, h2, Triangle vertices: a1,a2; b1,b2; c1,c2
          // The radius of the box projected onto the axis
          var r = h1 * Abs (n1) + h2 * Abs (n2);
 
          // Project triangle onto axis to find min and max
-         double d0 = n1 * a1 + n2 * a2, d1 = n1 * b1 + n2 * b2, d2 = n1 * c1 + n2 * c2;
+         float d0 = n1 * a1 + n2 * a2, d1 = n1 * b1 + n2 * b2, d2 = n1 * c1 + n2 * c2;
          var (min, max) = (d0, d0);
          if (d1 < min) min = d1; else if (d1 > max) max = d1;
          if (d2 < min) min = d2; else if (d2 > max) max = d2;
@@ -199,7 +198,7 @@ public static class Collision {
    /// robust against numerical precision errors.
    // It implements the Devilliers & Guigue algorithm for triangle-triangle intersection.
    // Reference: https://inria.hal.science/inria-00072100/file/RR-4488.pdf
-   public static bool TriTri (Point3 a1, Point3 b1, Point3 c1, Point3 a2, Point3 b2, Point3 c2) {
+   public static bool TriTri (Point3f a1, Point3f b1, Point3f c1, Point3f a2, Point3f b2, Point3f c2) {
       // Step 1. Plane-side tests
       // 1a. Check if triangle 1 is completely on one side of triangle 2's plane
       var n2 = (b2 - a2) * (c2 - a2);
@@ -215,14 +214,14 @@ public static class Collision {
          // a principal plane that best aligns with the triangle. This approach simplifies
          // the transformation and avoids several costly arithmetic operations.
          var (nx, ny, nz) = (Abs (n2.X), Abs (n2.Y), Abs (n2.Z));
-         Func<Point3, Point2> P2 = XY;
+         Func<Point3f, Point2> P2 = XY;
          if (nx > ny && nx > nz) P2 = YZ;
          else if (ny > nx && ny > nz) P2 = ZX;
          return TriTri2D (P2 (a1), P2 (b1), P2 (c1), P2 (a2), P2 (b2), P2 (c2));
 
-         static Point2 XY (Point3 p) => new (p.X, p.Y); // Project to XY plane
-         static Point2 YZ (Point3 p) => new (p.Y, p.Z); // Project to YZ plane
-         static Point2 ZX (Point3 p) => new (p.X, p.Z); // Project to ZX plane
+         static Point2 XY (Point3f p) => new (p.X, p.Y); // Project to XY plane
+         static Point2 YZ (Point3f p) => new (p.Y, p.Z); // Project to YZ plane
+         static Point2 ZX (Point3f p) => new (p.X, p.Z); // Project to ZX plane
       }
 
       // 1b. Check if triangle 2 is completely on one side of triangle 1's plane
@@ -251,10 +250,10 @@ public static class Collision {
       // Gets the orientation of point 'd' with respect to the plane defined by triangle 'abc'
       // +1 = d is on the positive side of the plane, -1 = d is on the negative side, 0 = d is on the plane
       [MethodImpl (MethodImplOptions.AggressiveInlining)]
-      static int Side (Point3 a, Point3 b, Point3 c, Point3 d) => Sign (Dot (d - a, (b - a) * (c - a)));
+      static int Side (Point3f a, Point3f b, Point3f c, Point3f d) => Sign (Dot (d - a, (b - a) * (c - a)));
 
       [MethodImpl (MethodImplOptions.AggressiveInlining)]
-      static void ReorderTriangle (ref int sa, ref int sb, ref int sc, ref Point3 a, ref Point3 b, ref Point3 c) {
+      static void ReorderTriangle (ref int sa, ref int sb, ref int sc, ref Point3f a, ref Point3f b, ref Point3f c) {
          // Rotate until 'b' and 'c' are on the same side and 'a' is the isolated vertex
          // on the other side of the plane (or on the plane).
          if (sa == sb) {
@@ -379,16 +378,21 @@ public static class Collision {
 
       // Gets the orientation of point 'c' with respect to the line defined by points 'a' and 'b'
       // +1 = c is on the left side of the line, -1 = c is on the right side, 0 = c is on the line
-      static int Side (Point2 a, Point2 b, Point2 c)
+      static int Side (in Point2 a, in Point2 b, in Point2 c)
          => Sign ((a.X - c.X) * (b.Y - c.Y) - (a.Y - c.Y) * (b.X - c.X));
    }
 
    [MethodImpl (MethodImplOptions.AggressiveInlining)]
-   static double Dot (Vector3 a, Vector3 b) => a.X * b.X + a.Y * b.Y + a.Z * b.Z;
+   static float Dot (in Vector3f a, in Vector3f b) => a.X * b.X + a.Y * b.Y + a.Z * b.Z;
    [MethodImpl (MethodImplOptions.AggressiveInlining)]
    static void RotateLeft<T> (ref T a, ref T b, ref T c) => (a, b, c) = (b, c, a);
    [MethodImpl (MethodImplOptions.AggressiveInlining)]
    static void RotateRight<T> (ref T a, ref T b, ref T c) => (a, b, c) = (c, a, b);
    [MethodImpl (MethodImplOptions.AggressiveInlining)]
+   static int Sign (float d) => d < -ESq ? -1 : d > ESq ? 1 : 0;
+   [MethodImpl (MethodImplOptions.AggressiveInlining)]
    static int Sign (double d) => d < -Lib.EpsilonSq ? -1 : d > Lib.EpsilonSq ? 1 : 0;
+
+   const float E = (float)Lib.Epsilon;
+   const float ESq = (float)Lib.EpsilonSq;
 }

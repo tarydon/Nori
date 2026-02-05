@@ -21,6 +21,9 @@ public readonly struct Bound1 : IEQuable<Bound1> {
    /// <summary>Constructs a bound that encompasses a and b (a and b need not be ordered)</summary>
    public Bound1 (double a, double b) => (Min, Max) = ((float)Min (a, b), (float)Max (a, b));
 
+   /// <summary>Constructs a bound that encompasses a and b (a and b need not be ordered)</summary>
+   public Bound1 (float a, float b) => (Min, Max) = (MathF.Min (a, b), MathF.Max (a, b));
+
    /// <summary>Deconstruct a Bound1 into min and max values</summary>
    public void Deconstruct (out float min, out float max) => (min, max) = (Min, Max);
 
@@ -252,6 +255,8 @@ public readonly struct Bound3 : IEQuable<Bound3> {
    public Bound3 () => (X, Y, Z) = (new (), new (), new ());
    public Bound3 (double xmin, double ymin, double zmin, double xmax, double ymax, double zmax)
       => (X, Y, Z) = (new (xmin, xmax), new (ymin, ymax), new (zmin, zmax));
+   public Bound3 (float xmin, float ymin, float zmin, float xmax, float ymax, float zmax)
+      => (X, Y, Z) = (new (xmin, xmax), new (ymin, ymax), new (zmin, zmax));
    public Bound3 (Bound1 x, Bound1 y, Bound1 z) => (X, Y, Z) = (x, y, z);
    public override string ToString () => IsEmpty ? "Empty" : $"({X},{Y},{Z})";
 
@@ -264,6 +269,10 @@ public readonly struct Bound3 : IEQuable<Bound3> {
       foreach (var p in pts) { X += p.X; Y += p.Y; Z += p.Z; }
    }
    public Bound3 (params ReadOnlySpan<Point3> pts) {
+      (X, Y, Z) = (new (), new (), new ());
+      foreach (var p in pts) { X += p.X; Y += p.Y; Z += p.Z; }
+   }
+   public Bound3 (params ReadOnlySpan<Point3f> pts) {
       (X, Y, Z) = (new (), new (), new ());
       foreach (var p in pts) { X += p.X; Y += p.Y; Z += p.Z; }
    }

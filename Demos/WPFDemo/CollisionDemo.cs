@@ -20,7 +20,7 @@ class CollisionScene : Scene3 {
    static int Mode = -1;
 
    // Build the scene 
-   void Build (int shapes, double extent) {
+   void Build (int shapes, float extent) {
       if (Mode < 0 || !HW.IsShiftDown) Mode = (Mode + 1) % 4;
       TraceVN.It.Clear ();
       Random R = new ();
@@ -36,11 +36,11 @@ class CollisionScene : Scene3 {
       var obbs = new OBB[boxcnt];
       for (int i = 0; i < obbs.Length; i++) {
          var vX = V ().Normalized (); var v = V ().Normalized ();
-         var vY = vX * v;
-         obbs[i] = new (new (P () * extent, vX, vY), V () * 100);
+         var vY = (vX * v).Normalized ();
+         obbs[i] = new (P () * extent, vX, vY, V () * 100);
       }
 
-      static Point3 X (Point3 p) => p.WithZ (300);
+      static Point3f X (Point3f p) => new (p.X, p.Y, 300);
       Tri[] tris = new Tri[tricnt];
       for (int i = 0; i < tris.Length; i++) {
          var a = P () * extent; var b = a + V () * R.Next (200, 300);
@@ -92,8 +92,8 @@ class CollisionScene : Scene3 {
       Lib.Trace ($"Total: {shapes} objects, {bcolls.Count (x => x) + tcolls.Count (x => x)} collide. Elapsed: {S (sw.Elapsed)}");
       Lib.Trace ("");
 
-      Point3 P () => new (Bias () * R.NextDouble (), Bias () * R.NextDouble (), R.NextDouble ());
-      Vector3 V () => new (R.NextDouble (), R.NextDouble (), R.NextDouble ());
+      Point3f P () => new (Bias () * R.NextDouble (), Bias () * R.NextDouble (), R.NextDouble ());
+      Vector3f V () => new (R.NextDouble (), R.NextDouble (), R.NextDouble ());
       double Bias () => R.NextDouble () switch { < 0.25 => -0.5, _ => 1.5 }; // Spreading out a little in X, Y for a better view
    }
 
@@ -106,7 +106,7 @@ class CollisionScene : Scene3 {
       public Mesh3 Mesh => mMesh ??= BuildMesh ();
       Mesh3? mMesh;
       Vec3F[] Pts = [];
-      readonly Matrix3 Xfm = Matrix3.To (box.CS);
+      readonly Matrix3 Xfm = To (box);
 
       public override void SetAttributes () =>
          (Lux.Color, Lux.Xfm, Lux.LineWidth) = (Collides ? Color4.Magenta : Color4.White, Xfm, 2);
@@ -139,6 +139,12 @@ class CollisionScene : Scene3 {
             tries.AddRange (idx + 1, idx + 2, idx + 3);
          }
          return new Mesh3 ([.. nodes], [.. tries], []);
+      }
+
+      // Computes World-To-OBB transform.
+      static Matrix3 To (OBB box) {
+         var (x, y, z, t) = (box.X, box.Y, box.Z, box.Center);
+         return new (x.X, x.Y, x.Z, y.X, y.Y, y.Z, z.X, z.Y, z.Z, t.X, t.Y, t.Z);
       }
 
       readonly static int[][] Faces =
@@ -175,9 +181,9 @@ class CollisionScene : Scene3 {
 
       Mesh3 BuildMesh () {
          List<Mesh3.Node> nodes = [];
-         ReadOnlySpan<Point3> pts = [Tri.A, Tri.B, Tri.C];
+         ReadOnlySpan<Point3f> pts = [Tri.A, Tri.B, Tri.C];
          for (int i = 0; i < pts.Length; i++) {
-            Vector3 n = ((pts[(i + 1) % 3] - pts[i]) * (pts[(i + 2) % 3] - pts[i])).Normalized ();
+            var n = (Vec3H)((pts[(i + 1) % 3] - pts[i]) * (pts[(i + 2) % 3] - pts[i])).Normalized ();
             nodes.Add (new (pts[i], n));
          }
          return new Mesh3 ([.. nodes], [0, 1, 2], []);
