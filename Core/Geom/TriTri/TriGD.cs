@@ -8,25 +8,25 @@ public static partial class Tri {
       // u0, u1, u2 = Vertices of the second triangle T2 in the plane P2
       var (u0, u1, u2) = (FetchVertex (tb.A), FetchVertex (tb.B), FetchVertex (tb.C));
 
-      // An extra ABB intersection test for early check out. (This step is not suggested in the algorithm)
-      if (((new Bound3 () + v0 + v1 + v2) * (new Bound3 () + u0 + u1 + u2)).IsEmpty) return false;
+      // An extra AABB intersection test for early check out. (This step is not suggested in the algorithm)
+      //if (((new Bound3 () + v0 + v1 + v2) * (new Bound3 () + u0 + u1 + u2)).IsEmpty) return false;
 
       // --------------------------------------------------------------------------------
       // 1. Check if the vertices of T1 are all on the same side of the plane P2
-      var n2 = ta.N; // normal of P2
+      var n2 = tb.N; // normal of P2
       var d0 = Side (n2, v0 - u0);
       var d1 = Side (n2, v1 - u0);
       var d2 = Side (n2, v2 - u0);
-      if (d0 == 0 && d1 == 0 && d2 == 0) return CoplanarTriTriGD (v0, v1, v2, u0, u1, u2);
+      if (d0 == 0 && d1 == 0 && d2 == 0) return CoplanarTriTriGD (p, ref ta, ref tb);
       else if (d0 == d1 && d1 == d2) return false;
 
       // --------------------------------------------------------------------------------
       // 2. Check if the vertices of T2 are all on the same side of the plane P1
-      var n1 = tb.N; // normal of P1
+      var n1 = ta.N; // normal of P1
       var d3 = Side (n1, u0 - v0);
       var d4 = Side (n1, u1 - v0);
       var d5 = Side (n1, u2 - v0);
-      if (d3 == 0 && d4 == 0 && d5 == 0) return CoplanarTriTriGD (v0, v1, v2, u0, u1, u2);
+      if (d3 == 0 && d4 == 0 && d5 == 0) return CoplanarTriTriGD (p, ref ta, ref tb); // is optional?
       if (d3 == d4 && d4 == d5) return false;
 
       // --------------------------------------------------------------------------------
@@ -36,37 +36,42 @@ public static partial class Tri {
       // ensures that the two edges connected to V0 (or U0) are the ones that intersect the line of intersection L.
       FixIsolatedVertex (ref v0, ref v1, ref v2, d0, d1, d2); // For T1
       FixIsolatedVertex (ref u0, ref u1, ref u2, d3, d4, d5); // For T2
+      if (Side (v0, v1, v2, u0) < 0) (v1, v2) = (v2, v1);
+      if (Side (u0, u1, u2, v0) < 0) (u1, u2) = (u2, u1);
 
       // --------------------------------------------------------------------------------
       // 4. Check the intersection of the interval bounds
       // Now the edges (V0, V2) and (V0, V1) of T1, (U0, U1) and (U0, U2) of T2 intersects L.
       // If their bound intersects, we can declare that the triangles T1 and T2 intersects.
-      return Side (v0, v1, u1, u1) <= 0 && Side (v0, v2, u2, u0) <= 0;
+      return Side (v0, v1, u0, u1) <= 0 && Side (v0, v2, u2, u0) <= 0;
 
       // Helper routines -------------------------------------------------
       Point3f FetchVertex (int i) => new (p[i], p[i + 1], p[i + 2]);
 
       void FixIsolatedVertex (ref Point3f A, ref Point3f B, ref Point3f C, int x, int y, int z) {
-         bool left, right = false, mid = false, swap = false;
-         if (left = (x == y)) swap = z < 0;
-         else if (right = (x == z)) swap = y < 0;
-         else if (mid = (y == z)) swap = x < 0;
+         bool left = false, right = false, mid = true, swap = false;
+         if (right = (x == y)) swap = z < 0;
+         else if (left = (x == z)) swap = y < 0;
+         else if (y == z) { mid = false; swap = x < 0; }
+         // In case where all 3 vertices lie on differnt space (+, -, 0) i.e when mid = true
+         // we choose the one which is not lying in the negative half space.
 
          // Apply a circular permutation to the vertices so that this isolated vertex is moved to the first position
          if (left || (mid && y > 0)) (A, B, C) = (B, C, A);
          else if (right || (mid && z > 0)) (A, B, C) = (C, A, B);
          // Perform swap to ensure the found vertex lies in the positive open half space of the other plane
-         if (swap) (B, C) = (C, B);
-
-         // NOTE: In case of A lies on +ve space, B lies on -ve space and 1 vertex on the plane,
-         // we choose the one which is not lying in the negative half space.
+         //if (swap) (B, C) = (C, B);
       }
    }
 
    // Routine used to test the intersection of two co-planar triangles based on the Guigue-Devillers algorithm.
    // In this test, all the checks are based on the 2D predicate. To confirm the intersection a maximum of
    // 10 predicates (2 for finding orientation + 3 for mapping region + 5 for confirmation) will be computed.
-   static bool CoplanarTriTriGD (Point3f v0, Point3f v1, Point3f v2, Point3f u0, Point3f u1, Point3f u2) {
+   static unsafe bool CoplanarTriTriGD (float* p, ref CTri ta, ref CTri tb) {
+      // v0, v1, v2 = Vertices of the first triangle T1 in the plane P1
+      var (v0, v1, v2) = (FetchVertex (ta.A), FetchVertex (ta.B), FetchVertex (ta.C));
+      // u0, u1, u2 = Vertices of the second triangle T2 in the plane P2
+      var (u0, u1, u2) = (FetchVertex (tb.A), FetchVertex (tb.B), FetchVertex (tb.C));
       // --------------------------------------------------------------------------------
       // 1. Make the T1 and T2 CCW
       // This is the preliminary step in which we will the fix the orientation of the two triangles.
@@ -84,15 +89,15 @@ public static partial class Tri {
 
       bool region; // true for R1, false for R2
       switch (s1, s2, s3) {
-         case (1, 1, 1): return true; // All 3 positives indicates p1 lies inside T2
+         case (1, 1, 1): return true; // All 3 positives indicates V0 lies inside T2
 
-         // Any two values are zero indicates p1 lies on one of the T2 vertices.
+         // Any two values are zero indicates V0 lies on one of the T2 vertices.
          case (0, 0, _) or (0, _, 0) or (_, 0, 0): return true;
          case (0, _, _) or (_, 0, _) or (_, _, 0): {
-            // As (0, -1, -1) is impossible to occur, it is either (0, 1, 1) or (0, -1, 1)
-            if (s1 + s2 + s3 == 2) return true; // (0, 1, 1) indicates p1 lies on the edge of T2
-            // (0, +, -) indicates p1 lies along the infinite line along T2 edge, but outside the triangle. Hence it is R2 region
-            else region = true; break;
+            // As (0, -, -) is impossible to occur, it is either (0, +, +) or (0, -, +)
+            if (s1 + s2 + s3 == 2) return true; // (0, +, +) indicates V0 lies on the edge of T2
+            // (0, +, -) indicates V0 lies along the infinite line along T2 edge, but outside the triangle. Hence it is R2 region
+            else region = false; break;
          }
          // If 2 positives and 1 negative, make it (+, +, -) which maps to R1 region
          case (-1, 1, 1): (u0, u1, u2) = (u2, u0, u1); region = true; break;
@@ -110,14 +115,14 @@ public static partial class Tri {
       // 3. Perform the final 5 predicates to confirm the intersection
       return region ? R1Test () : R2Test ();
 
-      bool R1Test () { // p1 belongs to R1
+      bool R1Test () {
          if (Side (u2, u0, v1) >= 0 && Side (u2, v0, v1) >= 0) {
             if (Side (v0, u0, v1) >= 0 || (Side (v0, u0, v2) >= 0 && Side (v1, v2, u0) >= 0)) return true;
          } else if (Side (u2, u0, v2) >= 0 && Side (v1, v2, u2) >= 0 && Side (v0, u0, v2) >= 0) return true;
          return false;
       }
 
-      bool R2Test () { // p1 lies on R2
+      bool R2Test () {
          if (Side (u2, u0, v1) >= 0) {
             if (Side (u1, u2, v1) >= 0 &&
               ((Side (v0, u0, v1) >= 0 && Side (v0, u1, v1) <= 0) ||
@@ -128,10 +133,12 @@ public static partial class Tri {
                    (Side (v1, v2, u1) >= 0 && Side (u1, u2, v2) >= 0))) return true;
          return false;
       }
+
+      Point3f FetchVertex (int i) => new (p[i], p[i + 1], p[i + 2]);
    }
 
    // This 3D predicate [a, b, c, d] tells (in accordance with right-handed thumb rule),
-   // (1) The side the point d relative to the plane through a, b and c. Above (1), Below (-1), On the plane (0).
+   // (1) The side of the point d relative to the plane through a, b and c. Above (1), Below (-1), On the plane (0).
    // (2) The twist direction along the ray ab relative to the direction of ray cd. Towards (1), Away (-1), Same direction (0).
    static int Side (Point3f a, Point3f b, Point3f c, Point3f d) {
       var (dx, dy, dz) = (d.X, d.Y, d.Z);
