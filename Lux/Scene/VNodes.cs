@@ -65,6 +65,8 @@ public partial class TraceVN : VNode {
    /// <summary>Text color</summary>
    public static Color4 TextColor = Color4.Blue;
 
+   public static int HoldTime = 7;
+
    // Methods ------------------------------------------------------------------
    /// <summary>Prints text to the TraceVN (this is static, since the class is a singleton)</summary>
    /// The text can contain \n separators to split it into multiple lines. The text
@@ -125,7 +127,7 @@ public partial class TraceVN : VNode {
    // Timer handler, removes text that is more than 7 seconds old
    void OnTick (object? s, EventArgs e) {
       int n = mLines.Count;
-      while (mLines.Count > 0 && mLines[0].TS + TimeSpan.FromSeconds (7) < DateTime.Now) mLines.RemoveAt (0);
+      while (mLines.Count > 0 && mLines[0].TS + TimeSpan.FromSeconds (HoldTime) < DateTime.Now) mLines.RemoveAt (0);
       if (n != mLines.Count) Redraw ();
    }
 

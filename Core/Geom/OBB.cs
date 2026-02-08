@@ -30,13 +30,20 @@ public readonly partial struct OBB {
    public readonly Point3f Center;
    /// <summary>The 'half extent' along the axes.</summary>
    public readonly Vector3f Extent;
+
    /// <summary>Bounding box's co-ordinate axes.</summary>
    public readonly Vector3f X, Y;
    public Vector3f Z => X * Y;
+
    /// <summary>The box area</summary>
    public readonly double Area => 8 * (Extent.X * Extent.Y + Extent.X * Extent.Z + Extent.Y * Extent.Z);
    /// <summary>The box volume</summary>
    public readonly double Volume => 8 * (Extent.X * Extent.Y * Extent.Z);
+
+   /// <summary>
+   /// A 'zero volume' OBB (useful to initialize OBB structs)
+   /// </summary>
+   public static readonly OBB Zero = new (Point3f.Zero, Vector3f.XAxis, Vector3f.YAxis, Vector3f.Zero);
 
    // Methods ------------------------------------------------------------------
    /// <summary>Compares two OBB for equality</summary>

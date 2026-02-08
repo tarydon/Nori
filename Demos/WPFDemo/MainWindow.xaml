@@ -29,6 +29,7 @@
          <Button Click="T3XReaderDemo">Load T3X File</Button>
          <Button Click="SliceMeshDemo">Slice Mesh</Button>
          <Button Click="ConvexHullDemo">Convex Hull</Button>
+         <Button Click="BuildOBBDemo">Build OBB</Button>
       </StackPanel>
          <StackPanel Name="mSettings" DockPanel.Dock="Right" Background="#AAA" />
       <Border Name="mContent" />

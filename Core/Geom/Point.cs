@@ -206,6 +206,10 @@ public readonly struct Point3f {
 
    /// <summary>The 'Nil' point</summary>
    public static readonly Point3f Nil = new (float.NaN, float.NaN, float.NaN);
+   /// <summary>
+   /// The 'zero' point (origin)
+   /// </summary>
+   public static readonly Point3f Zero = new (0, 0, 0);
    /// <summary>Is this point Nil (similar to NaN for double)</summary>
    public bool IsNil => X.IsNaN ();
 

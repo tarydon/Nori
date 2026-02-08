@@ -292,7 +292,7 @@ public readonly struct Vector3f {
    /// <summary>Unit vector, aligned to the Z axis</summary>
    public static readonly Vector3f ZAxis = new (0, 0, 1);
    /// <summary>The Zero vector</summary>
-   public static readonly Vector3 Zero = new (0, 0, 0);
+   public static readonly Vector3f Zero = new (0, 0, 0);
 }
 #endregion
 
