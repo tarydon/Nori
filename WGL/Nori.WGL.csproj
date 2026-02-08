@@ -22,7 +22,7 @@
 		<ImplicitUsings>enable</ImplicitUsings>
 		<OutDir>..\Bin</OutDir>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-		<Optimize>true</Optimize>
+		<Optimize>false</Optimize>
 		<GenerateDocumentationFile>false</GenerateDocumentationFile>
 		<DocumentationFile>..\Bin\Nori.WGL.xml</DocumentationFile>
 	</PropertyGroup>
