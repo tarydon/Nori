@@ -220,9 +220,7 @@ public readonly struct Point3f {
 
    /// <summary>Compares two points are equal to within the given tolerance</summary>
    public bool EQ (Point3f b, float tol) => X.EQ (b.X, tol) && Y.EQ (b.Y, tol) && Z.EQ (b.Z, tol);
-   /// <summary>
-   /// Compare two Point3f to within Lib.Epsilon
-   /// </summary>
+   /// <summary>Compare two Point3f to within Lib.Epsilon</summary>
    public bool EQ (Point3f b) => X.EQ (b.X) && Y.EQ (b.Y) && Z.EQ (b.Z);
 
    /// If the points a and b are the same, this just returns a

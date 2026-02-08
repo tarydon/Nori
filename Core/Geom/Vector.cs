@@ -260,9 +260,7 @@ public readonly struct Vector3f {
    /// <summary>Returns the dot product of this vectorf with another</summary>
    public double Dot (Vector3f b) => X * b.X + Y * b.Y + Z * b.Z;
 
-   /// <summary>
-   /// Compare two Vector3f to within Lib.Epsilon
-   /// </summary>
+   /// <summary>Compare two Vector3f to within Lib.Epsilon</summary>
    public bool EQ (Vector3f b) => X.EQ (b.X) && Y.EQ (b.Y) && Z.EQ (b.Z);
 
    /// <summary>Returns this vector normalized to length 1</summary>
