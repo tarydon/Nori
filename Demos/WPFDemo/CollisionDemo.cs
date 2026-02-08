@@ -42,18 +42,20 @@ class CollisionScene : Scene3 {
 
       static Point3f X (Point3f p) => new (p.X, p.Y, 300);
       Tri[] tris = new Tri[tricnt];
+      List<Point3f> pts = [];
       for (int i = 0; i < tris.Length; i++) {
          var a = P () * extent; var b = a + V () * R.Next (200, 300);
          var c = a + V () * R.Next (200, 300);
          // Planar triangles
          if (Mode == 3) (a, b, c) = (X (a), X (b), X (c));
-         tris[i] = new Tri (a, b, c);
+         int j = pts.Count; pts.AddRange (a, b, c);
+         tris[i] = new (pts.AsSpan (), j, j + 1, j + 2);
       }
 
       var bcolls = new bool[obbs.Length];
       var tcolls = new bool[tris.Length];
+      Point3f[] points = [.. pts];
       Stopwatch sw = Stopwatch.StartNew (); sw.Start ();
-
       switch (Mode) {
          case 0:
             for (int i = 0; i < obbs.Length - 1; i++)
@@ -65,14 +67,14 @@ class CollisionScene : Scene3 {
          case 1:
             for (int i = 0; i < tris.Length; i++)
                for (int j = 0; j < obbs.Length; j++)
-                  if (Collision.Check (tris[i], obbs[j]))
+                  if (Collision.Check (points, tris[i], obbs[j]))
                      bcolls[j] = tcolls[i] = true;
             break;
 
          case 2: case 3:
             for (int i = 0; i < tris.Length - 1; i++)
                for (int j = i + 1; j < tris.Length; j++)
-                  if (Collision.Check (tris[i], tris[j]))
+                  if (Collision.Check (points, tris[i], tris[j]))
                      tcolls[i] = tcolls[j] = true;
             break;
 
@@ -81,7 +83,7 @@ class CollisionScene : Scene3 {
 
       List<VNode> nodes = [TraceVN.It, new MinSphereScene.AxesVN ()];
       var boxNodes = obbs.Select ((x, n) => new BoxVN (x, bcolls[n]));
-      var triNodes = tris.Select ((x, n) => new TriVN (x, tcolls[n]));
+      var triNodes = tris.Select ((x, n) => new TriVN (points[x.A], points[x.B], points[x.C], tcolls[n]));
       if (HW.IsCtrlDown) {
          boxNodes = boxNodes.Where (x => x.Collides);
          triNodes = triNodes.Where (x => x.Collides);
@@ -165,8 +167,8 @@ class CollisionScene : Scene3 {
    }
 
    // Draw Triangle
-   class TriVN (Tri tri, bool collides) : VNode {
-      public readonly Tri Tri = tri;
+   class TriVN (Point3f a, Point3f b, Point3f c, bool collides) : VNode {
+      public Point3f A = a, B = b, C = c;
       public bool Collides = collides;
       public Mesh3 Mesh => mMesh ??= BuildMesh ();
       private Mesh3? mMesh;
@@ -176,12 +178,12 @@ class CollisionScene : Scene3 {
 
       public override void Draw () {
          Lux.Mesh (Mesh, EShadeMode.Flat);
-         Lux.Lines ([(Vec3F)Tri.A, (Vec3F)Tri.B, (Vec3F)Tri.B, (Vec3F)Tri.C, (Vec3F)Tri.C, (Vec3F)Tri.A]);
+         Lux.Lines ([(Vec3F)A, (Vec3F)B, (Vec3F)B, (Vec3F)C, (Vec3F)C, (Vec3F)A]);
       }
 
       Mesh3 BuildMesh () {
          List<Mesh3.Node> nodes = [];
-         ReadOnlySpan<Point3f> pts = [Tri.A, Tri.B, Tri.C];
+         ReadOnlySpan<Point3f> pts = [A, B, C];
          for (int i = 0; i < pts.Length; i++) {
             var n = (Vec3H)((pts[(i + 1) % 3] - pts[i]) * (pts[(i + 2) % 3] - pts[i])).Normalized ();
             nodes.Add (new (pts[i], n));
