@@ -381,6 +381,16 @@ public class Matrix3 : IEQuable<Matrix3> {
       double z = v.X * m.M13 + v.Y * m.M23 + v.Z * m.M33;
       return new (x, y, z);
    }
+   /// <summary>
+   /// Multiply a Vector3f by a Matrix
+   /// </summary>
+   public static Vector3f operator * (Vector3f v, Matrix3 m) {
+      if (m.IsIdentity || m.IsTranslation) return v;
+      double x = v.X * m.M11 + v.Y * m.M21 + v.Z * m.M31;
+      double y = v.X * m.M12 + v.Y * m.M22 + v.Z * m.M32;
+      double z = v.X * m.M13 + v.Y * m.M23 + v.Z * m.M33;
+      return new (x, y, z);
+   }
 
    // Nested types -------------------------------------------------------------
    // These are possible values for the Flags enumeration

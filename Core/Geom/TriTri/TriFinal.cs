@@ -1,66 +1,20 @@
 ﻿namespace Nori;
 using static Math;
 
-/// <summary>
-/// Represents a 'collision triangle'
-/// </summary>
-public readonly struct CTri {
-   /// <summary>
-   /// Construct a CTri given a span of floats and indices into that for the 3 corners
-   /// </summary>
-   public unsafe CTri (ReadOnlySpan<Point3f>pf, int a, int b, int c) {
-      A = a; B = b; C = c;
-
-      // Fetch the three vertices
-      Point3f pa = pf[A], pb = pf[B], pc = pf[C];
-
-      // Compute the edges AB and AC, then the normal and the intercept
-      Vector3f e1 = pb - pa, e2 = pc - pa;
-      N = e1 * e2;
-      D = -(N.X * pa.X + N.Y * pa.Y + N.Z * pa.Z);
-
-      K = 0b_0001;  // Assume we're using Xy plane for projecting (00 01)
-      float ax = MathF.Abs (N.X), ay = MathF.Abs (N.Y), az = MathF.Abs (N.Z);
-      if (ax >= ay && ax >= az) K = 0b_0110;         // Use YZ plane (01 10)
-      else if (ay >= ax && ay >= az) K = 0b_0010;    // Use XZ plane (00 10)
-   }
-
-   /// <summary>
-   /// Indices of the points in the Point3f array
-   /// </summary>
-   public readonly int A, B, C;
-   /// <summary>
-   /// Normal vector of the plane
-   /// </summary>
-   public readonly Vector3f N;
-   /// <summary>
-   /// Intercept used for distance checks
-   /// </summary>
-   public readonly float D;
-   /// <summary>
-   /// Encoding of which 2 axes to use for a 2D projection
-   /// </summary>
-   /// Lowest 2 bits encode a K1 value, and next 2 bits encode a K0 value.
-   /// These values are 0,1,2 for X,Y,Z axes. So, if K0=0, and K1=2 then we
-   /// are using the X-Z plane for projection
-   public readonly int K;
-}
-
 public static partial class Tri {
-   public static unsafe bool CollideMollerFast (float* p, ref CTri ta, ref CTri tb) {
+   public static unsafe bool Collide (Point3f* ppa, ref CTri ta, Point3f * ppb, ref CTri tb, Matrix3 xfm) {
       // ---------------------------------------------------
       // 0. Fetch the ordinates of the triangle
       // Get V0, V1, V2 as the vertices of the first triangle
+      float* pa = (float*)ppa;
       int v0 = ta.A * 3, v1 = ta.B * 3, v2 = ta.C * 3;
-      float V0x = p[v0], V0y = p[v0 + 1], V0z = p[v0 + 2];
-      float V1x = p[v1], V1y = p[v1 + 1], V1z = p[v1 + 2];
-      float V2x = p[v2], V2y = p[v2 + 1], V2z = p[v2 + 2];
+      float V0x = pa[v0], V0y = pa[v0 + 1], V0z = pa[v0 + 2];
+      float V1x = pa[v1], V1y = pa[v1 + 1], V1z = pa[v1 + 2];
+      float V2x = pa[v2], V2y = pa[v2 + 1], V2z = pa[v2 + 2];
 
       // Get U0, U1, U2 as the vertices of the second triangle
-      int u0 = tb.A * 3, u1 = tb.B * 3, u2 = tb.C * 3;
-      float U0x = p[u0], U0y = p[u0 + 1], U0z = p[u0 + 2];
-      float U1x = p[u1], U1y = p[u1 + 1], U1z = p[u1 + 2];
-      float U2x = p[u2], U2y = p[u2 + 1], U2z = p[u2 + 2];
+      // int u0 = tb.A * 3, u1 = tb.B * 3, u2 = tb.C * 3;
+      Point3f U0 = ppb[tb.A] * xfm, U1 = ppb[tb.B] * xfm, U2 = ppb[tb.C] * xfm;
 
       // ---------------------------------------------------
       // 1. Check if the points U0,U1 and U2 are all on the same side of the plane formed by V0,V1 and V2
@@ -68,9 +22,9 @@ public static partial class Tri {
       // Put U0,U1 and U2 into plane equation 1 to compute signed distances to the plane.
       const double EPSILON = 0.000001;
       Vector3f N1 = ta.N; float d1 = ta.D;
-      double du0 = N1.X * U0x + N1.Y * U0y + N1.Z * U0z + d1;
-      double du1 = N1.X * U1x + N1.Y * U1y + N1.Z * U1z + d1;
-      double du2 = N1.X * U2x + N1.Y * U2y + N1.Z * U2z + d1;
+      double du0 = N1.X * U0.X + N1.Y * U0.Y + N1.Z * U0.Z + d1;
+      double du1 = N1.X * U1.X + N1.Y * U1.Y + N1.Z * U1.Z + d1;
+      double du2 = N1.X * U2.X + N1.Y * U2.Y + N1.Z * U2.Z + d1;
 
       // Coplanarity robustness check
       if (Abs (du0) < EPSILON) du0 = 0.0;
@@ -87,7 +41,9 @@ public static partial class Tri {
       // E1 = U1 - U0, E2 = U2 - U0, N2 = E1 * E2
       // Now the plane equation 2 is N2.X + d2 = 0
       // Put V0,V1 and V2 into the plane equation to compute signed distances to the plane
-      Vector3f N2 = tb.N; float d2 = tb.D;
+      Vector3f E1 = U1 - U0, E2 = U2 - U0, N2 = E1 * E2;
+      float d2 = -(N2.X * U0.X + N2.Y * U0.Y + N2.Z * U0.Z);
+
       double dv0 = N2.X * V0x + N2.Y * V0y + N2.Z * V0z + d2;
       double dv1 = N2.X * V1x + N2.Y * V1y + N2.Z * V1z + d2;
       double dv2 = N2.X * V2x + N2.Y * V2y + N2.Z * V2z + d2;
@@ -114,9 +70,9 @@ public static partial class Tri {
       // This is the simplified projection onto L
       float vp0, vp1, vp2, up0, up1, up2;
       switch (index) {
-         case 0: vp0 = V0x; vp1 = V1x; vp2 = V2x; up0 = U0x; up1 = U1x; up2 = U2x; break;
-         case 1: vp0 = V0y; vp1 = V1y; vp2 = V2y; up0 = U0y; up1 = U1y; up2 = U2y; break;
-         default: vp0 = V0z; vp1 = V1z; vp2 = V2z; up0 = U0z; up1 = U1z; up2 = U2z; break;
+         case 0: vp0 = V0x; vp1 = V1x; vp2 = V2x; up0 = U0.X; up1 = U1.X; up2 = U2.X; break;
+         case 1: vp0 = V0y; vp1 = V1y; vp2 = V2y; up0 = U0.Y; up1 = U1.Y; up2 = U2.Y; break;
+         default: vp0 = V0z; vp1 = V1z; vp2 = V2z; up0 = U0.Z; up1 = U1.Z; up2 = U2.Z; break;
       }
 
       // ----------------------------------------------------------
@@ -140,7 +96,7 @@ public static partial class Tri {
       } else if (dv2 != 0.0f) {
          a = vp2; b = (vp0 - vp2) * dv2; c = (vp1 - vp2) * dv2;
          x0 = dv2 - dv0; x1 = dv2 - dv1;
-      } else 
+      } else
          goto Coplanar;
 
       // ----------------------------------------------------------
@@ -180,14 +136,20 @@ public static partial class Tri {
       if (isect11 < isect20 + 1e-10 || isect21 < isect10 + 1e-10) return false;
       return true;
 
-    Coplanar:
+      Coplanar:
       // Fetch 2 triangles into 2D space (using only x and z components)
-      if (ta.K == 0b_0110) {  
+      float U0x, U0z, U1x, U1z, U2x, U2z;
+      if (ta.K == 0b_0110) {
          V0x = V0y; V1x = V1y; V2x = V2y;
-         U0x = U0y; U1x = U1y; U2x = U2y;
+         U0x = U0.Y; U1x = U1.Y; U2x = U2.Y;
+         U0z = U0.Z; U1z = U1.Z; U2z = U2.Z;
       } else if (ta.K == 0b_0001) {
          V0z = V0y; V1z = V1y; V2z = V2y;
-         U0z = U0y; U1z = U1y; U2z = U2y;
+         U0x = U0.X; U1x = U1.X; U2x = U2.X;
+         U0z = U0.Y; U1z = U1.Y; U2z = U2.Y;
+      } else {
+         U0x = U0.X; U1x = U1.X; U2x = U2.X;
+         U0z = U0.Z; U1z = U1.Z; U2z = U2.Z;
       }
 
       // Use separating axis theorem and test against 6 possible separation axes,
@@ -217,6 +179,6 @@ public static partial class Tri {
 
          if (t2 < s0 || s2 < t0) return false;
       }
-      return true; 
+      return true;
    }
 }

@@ -15,50 +15,51 @@ public class Tester {
    public Tester () {
       Lib.Init ();
       var lines = File.ReadAllLines ("C:/Dropbox/Nori/TriTri.txt");
+      mXfm = Matrix3.Translation (1, 2, 3) * Matrix3.Rotation (EAxis.X, 45.D2R ()) * Matrix3.Rotation (EAxis.Y, 30.D2R ());
+      mXfm = Matrix3.Identity;
+      mXfmBack = mXfm.GetInverse ();
+
+      List<Point3f> P = [], P2 = [];
       for (int i = 0; i < lines.Length; i++) {
          string line = lines[i];
          if (i % 3 == 2) Crash.Add (line.Trim () == "1");
          else {
             float[] f = [.. line.Split ().Select (float.Parse)];
-            for (int j = 0; j < 9; j += 3)
+            for (int j = 0; j < 9; j += 3) {
                P.Add (new (f[j], f[j + 1], f[j + 2]));
+               P2.Add (P[^1] * mXfmBack);
+            }
          }
       }
+      PT = [.. P]; PT2 = [.. P2];
 
       F = new float[P.Count * 3];
+      F2 = new float[P.Count * 3];
       for (int i = 0; i < P.Count; i++) {
          F[i * 3] = P[i].X; F[i * 3 + 1] = P[i].Y; F[i * 3 + 2] = P[i].Z;
+         F2[i * 3] = P2[i].X; F2[i * 3 + 1] = P2[i].Y; F2[i * 3 + 2] = P2[i].Z;
       }
 
       CT = new CTri[P.Count / 3];
+      CT2 = new CTri[P.Count / 3];
       for (int i = 0; i < CT.Length; i++) {
-         int a = i * 9;
-         CT[i] = new CTri (F, a, a + 3, a + 6);
-      }
-   }
-   List<Point3f> P = [];
-   List<bool> Crash = [];
-   CTri[] CT;
-   float[] F;
-
-   public void CollideMCAM () {
-      int crashes = 0;
-      for (int i = 0; i < 100; i++) {
          int a = i * 3;
-         for (int j = 0; j < 100; j++) {
-            int b = j * 3;
-            bool check = i == j || Tri.CollideMCAM (P[a], P[a + 1], P[a + 2], P[b], P[b + 1], P[b + 2]);
-            if (check) crashes++;
-         }
+         CT[i] = new CTri (PT, a, a + 1, a + 2);
+         CT2[i] = new CTri (PT2, a, a + 1, a + 2);
       }
    }
+   Matrix3 mXfmBack, mXfm;
+   Point3f[] PT, PT2;
+   List<bool> Crash = [];
+   CTri[] CT, CT2;
+   float[] F, F2;
 
    [Benchmark (Baseline = true)]
    public void CollideFlux () {
       int crashes = 0;
       for (int i = 0, n = Crash.Count; i < n; i++) {
          int a = i * 6;
-         bool check = Tri.CollideFlux (P[a], P[a + 1], P[a + 2], P[a + 3], P[a + 4], P[a + 5]);
+         bool check = Tri.CollideFlux (PT[a], PT[a + 1], PT[a + 2], PT[a + 3], PT[a + 4], PT[a + 5]);
          if (check) crashes++;
       }
       if (crashes != 14708) throw new NotImplementedException ();
@@ -80,10 +81,10 @@ public class Tester {
    [Benchmark]
    public unsafe void CollideMollerFast () {
       int crashes = 0;
-      fixed (float* pf = F) {
+      fixed (float* pf1 = F) {
          for (int i = 0, n = Crash.Count; i < n; i++) {
             int a = i * 2;
-            bool check = Tri.CollideMollerFast (pf, ref CT[a], ref CT[a + 1]);
+            bool check = Tri.CollideMollerFast (pf1, ref CT[a], ref CT[a + 1]);
             if (check) crashes++;
          }
       }
@@ -91,12 +92,13 @@ public class Tester {
    }
 
    [Benchmark]
-   public unsafe void CollideMollerFaster () {
+   public unsafe void CollideXformed () {
       int crashes = 0;
-      fixed (float* pf = F) {
+      fixed (Point3f* pp1= PT)
+      fixed (Point3f* pp2= PT2) {
          for (int i = 0, n = Crash.Count; i < n; i++) {
             int a = i * 2;
-            bool check = Tri.CollideMollerFaster (pf, ref CT[a], ref CT[a + 1]);
+            bool check = Tri.Collide (pp1, ref CT[a], pp2, ref CT2[a + 1], mXfm);
             if (check) crashes++;
          }
       }
@@ -106,12 +108,12 @@ public class Tester {
 
 static class Program {
    public static void Main () {
-      // BenchmarkRunner.Run<Tester> ();
+      BenchmarkRunner.Run<Tester> ();
 
-      var t = new Tester ();
-      t.CollideFlux ();
-      t.CollideMoller ();
-      t.CollideMollerFast ();
-      t.CollideMollerFaster ();
+      //var t = new Tester ();
+      //t.CollideFlux ();
+      //t.CollideMoller ();
+      //t.CollideMollerFast ();
+      //t.CollideXformed ();
    }
 }

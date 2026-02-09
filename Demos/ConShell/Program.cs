@@ -73,17 +73,6 @@ class Tester {
       Console.WriteLine ($"Flux: Found {crashes}, Expected {ecrashes}");
    }
 
-   public void TestHeld () {
-      int crashes = 0;
-      for (int i = 0; i < Crash.Count; i++) {
-         int j = i * 6;
-         bool check = Tri.CollideHeld (P[j], P[j + 1], P[j + 2], P[j + 3], P[j + 4], P[j + 5]);
-         if (check) crashes++;
-      }
-      int ecrashes = Crash.Count (b => b);
-      Console.WriteLine ($"Held: Found {crashes}, Expected {ecrashes}");
-   }
-
    public unsafe void TestMoller () {
       int crashes = 0;
       double maxArea = 0; 
@@ -122,7 +111,6 @@ class Program {
       Tester t = new ();
       t.TestMCAM ();
       t.TestFlux ();
-      t.TestHeld ();
       t.TestMoller ();
    }
 }
