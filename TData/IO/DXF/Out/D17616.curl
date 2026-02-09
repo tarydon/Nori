@@ -1,12 +1,7 @@
 (Dwg2){
   Layers:[
     { Name:0 Color:#FFFFFFFF Linetype:Continuous Visible:True }
-    {
-      Name:"���C���[_1"
-      Color:#FF003FFF
-      Linetype:Continuous
-      Visible:True
-    }
+    { Name:"レイヤー_1" Color:#FF003FFF Linetype:Continuous Visible:True }
   ]
   Styles:[
     { Name:STANDARD Font:txt XScale:1 }
@@ -21,7 +16,7 @@
       Base:0,0
       Ents:[
         (E2Spline){
-          Layer:"���C���[_1"
+          Layer:"レイヤー_1"
           Spline:{
             Imp:{
               Nodes:70
@@ -178,7 +173,7 @@
           }
         }
         (E2Spline){
-          Layer:"���C���[_1"
+          Layer:"レイヤー_1"
           Spline:{
             Imp:{
               Nodes:40
@@ -275,7 +270,7 @@
           }
         }
         (E2Spline){
-          Layer:"���C���[_1"
+          Layer:"レイヤー_1"
           Spline:{
             Imp:{ Nodes:13 Knot:[ 0 0 0 0 1 1 1 2 2 2 3 3 3 4 4 4 4 ] }
             Ctrl:[
@@ -297,7 +292,7 @@
           }
         }
         (E2Spline){
-          Layer:"���C���[_1"
+          Layer:"レイヤー_1"
           Spline:{
             Imp:{ Nodes:10 Knot:[ 0 0 0 0 1 1 1 2 2 2 3 3 3 3 ] }
             Ctrl:[
@@ -316,7 +311,7 @@
           }
         }
         (E2Spline){
-          Layer:"���C���[_1"
+          Layer:"レイヤー_1"
           Spline:{
             Imp:{ Nodes:13 Knot:[ 0 0 0 0 1 1 1 2 2 2 3 3 3 4 4 4 4 ] }
             Ctrl:[
@@ -338,7 +333,7 @@
           }
         }
         (E2Spline){
-          Layer:"���C���[_1"
+          Layer:"レイヤー_1"
           Spline:{
             Imp:{ Nodes:25 Knot:[ 0 0 0 0 1 1 1 2 2 2 3 3 3 4 4 4 5 5 5 6 6 6 7 7 7 8 8 8 8 ] }
             Ctrl:[
@@ -376,7 +371,7 @@
   ]
   Ents:[
     (E2Insert){
-      Layer:"���C���[_1"
+      Layer:"レイヤー_1"
       BlockName:AI9-BLK1
       Pt:81.271439,-53.208466
       XScale:1

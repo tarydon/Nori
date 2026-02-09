@@ -1,11 +1,14 @@
 // ────── ╔╗
 // ╔═╦╦═╦╦╬╣ SurfHelper.cs
-// ║║║║╬║╔╣║ <<TODO>>
+// ║║║║╬║╔╣║ Implements SurfaceMesher
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 namespace Nori;
 
 #region class SurfaceMesher ------------------------------------------------------------------------
 /// <summary>This computes a Mesh3 for a surface</summary>
+/// NOTE: This is a placeholder. Since it generates a 2D tessellation and subdivides that to 
+/// create a 3D tessellation, it does not generate high quality meshes in general. We keep this
+/// here for now until we implement this better
 class SurfaceMesher {
    public SurfaceMesher (E3Surface surf) => mSurf = surf;
    readonly E3Surface mSurf;

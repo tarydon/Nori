@@ -9,3 +9,5 @@
 
 [assembly: AssemblyVersion ("2025.08.2.0")]
 [assembly: AssemblyFileVersion ("2025.08.2.0")]
+
+[assembly: InternalsVisibleTo ("Nori.Test")]

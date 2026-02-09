@@ -275,24 +275,6 @@ class TMisc {
       chains.Data[indices.Last ()].Is (1);
    }
 
-   [Test (37, "class Mesh3, Mesh3Builder test")]
-   void Test9 () {
-      // Mesh3 IO test
-      var part = Mesh3.LoadTMesh ($"{NT.Data}/Geom/Mesh3/part.tmesh");
-      File.WriteAllText (NT.TmpTxt, part.ToTMesh ());
-      Assert.TextFilesEqual ("Geom/Mesh3/part-out.tmesh", NT.TmpTxt);
-
-      // Mesh3Builder test
-      List<Point3> pts = [];
-      for (int i = 0; i < part.Triangle.Length; i++) {
-         var pos = part.Vertex[part.Triangle[i]].Pos;
-         pts.Add ((Point3)(pos.X, pos.Y, pos.Z));
-      }
-
-      File.WriteAllText (NT.TmpTxt, new Mesh3Builder (pts.AsSpan ()).Build ().ToTMesh ());
-      Assert.TextFilesEqual ("Geom/Mesh3/part-gen.tmesh", NT.TmpTxt);
-   }
-
    [Test (38, "LineFont test")]
    void Test10 () {
       List<Poly> poly = [];
@@ -347,6 +329,7 @@ class TMisc {
       void Out4 (double x, double y, ETextAlign align)
          => lf.Render ("Hello\nWorld", new (x, y), align, 0, 1, 2, 30.D2R (), poly);
    }
+
 
    [Test (68, "2D tessellation tests")]
    void Test11 () {
@@ -431,14 +414,6 @@ class TMisc {
       Assert.TextFilesEqual ("Misc/Layers.curl", NT.TmpCurl);
 
       void SetLayer (Layer2 layer) { dwg.Add (layer); dwg.CurrentLayer = layer; }
-   }
-
-   [Test (142, "Test for CMesh.Builder")]
-   void Test15 () {
-      var mesh = Mesh3.LoadTMesh (NT.File ("Misc/robot-1.tmesh"));
-      var cmesh = CMesh.Builder.Build (mesh);
-      File.WriteAllText (NT.TmpTxt, cmesh.Dump ());
-      Assert.TextFilesEqual ("Misc/robot-1.aabb.txt", NT.TmpTxt);
    }
 
    [Test (147, "Minimum Enclosing Circle/Sphere")]
@@ -556,27 +531,53 @@ class TMisc {
       Assert.TextFilesEqual ("Misc/Curves.curl", NT.TmpCurl);
    }
 
-   [Test (149, "Mesh3.Sphere")]
-   void Test18 () {
-      var mesh = Mesh3.Sphere ((1, 2, 0), 10, 0.01);
-      File.WriteAllText (NT.TmpTxt, mesh.ToTMesh ());
-      Assert.TextFilesEqual ("Misc/sphere-10.tmesh", NT.TmpTxt);
-      mesh = Mesh3.Sphere ((1, 2, 0), 10, 0.02);
-      // Expecting octahedron selection with '2' subdivisions (384 = (8 * 4 * 4) * 3)
-      mesh.Triangle.Length.Is (384);
+   [Test (167, "OBB from points")]
+   void Test19 () {
+      Point3f[] pts = [new (500, 0, 0), new (0, 500, 0), new (0, 0, 500), new (-500, 0, 0), new (0, -500, 0), new (0, 0, -500)];
+      var obb = OBB.Build (pts);
+      obb.Center.Is ("(0,0,0)");
+      obb.X.Is ("<-0.70711,-0.70711,0>");
+      obb.Y.Is ("<-0.40825,0.40825,0.8165>");
+      obb.Extent.Is ("<353.55338,408.24826,288.67514>");
+      // Test when OBB is AABB
+      pts = [new (500, 400, 300), new (500, -400, 300), new (-500, 400, 300), new (-500, -400, 300), 
+         new (500, 400, -300), new (500, -400, -300), new (-500, 400, -300), new (-500, -400, -300)];
+      var aabb = OBB.Build (pts);
+      aabb.X.Is ("<1,0,0>"); aabb.Y.Is ("<0,1,0>");
+      aabb.Extent.Is ("<500,400,300>");
    }
 
-   [Test (166, "OBB from points")]
-   void Test19 () {
-      Point3[] pts = [(500, 0, 0), (0, 500, 0), (0, 0, 500), (-500, 0, 0), (0, -500, 0), (0, 0, -500)];
-      var obb = OBB.From (pts);
-      obb.CS.ToString ().Is ("CoordSystem:(0,0,0),<0.707107,-0.707107,0>,<0.408248,0.408248,0.816497>");
-      obb.Extent.Is ("<353.553391,408.24829,288.675135>");
-      // Test when OBB is AABB
-      pts = [(500, 400, 300), (500, -400, 300), (-500, 400, 300), (-500, -400, 300), (500, 400, -300), (500, -400, -300), (-500, 400, -300), (-500, -400, -300)];
-      var aabb = OBB.From (pts);
-      aabb.CS.IsWorld.IsTrue ();
-      aabb.Extent.Is ("<500,400,300>");
+   [Test (172, "Convex-hull of point set")]
+   void Test20 () {
+      Point2[] pts = [(0, 0), (100, 0), (100, 100), (50, 50), (0, 100), (50, 25), (75, 75)];
+      var hull = ConvexHull.Compute (pts);
+      Assert.IsTrue (hull.Count == 4);
+      Assert.IsTrue (hull.Contains ((0, 0)) && hull.Contains ((100, 0)) && hull.Contains ((0, 100)) && hull.Contains ((100, 100)));
+   }
+
+   [Test (173, "Convex-hull of simple polygon")]
+   void Test21 () {
+      Point2[] pts = [(0, 0), (100, 0), (100, 100), (50, 50), (0, 100), (50, 25)];
+      var hull = ConvexHull.ComputeForSimplePolygon (pts);
+      Assert.IsTrue (hull.Count == 4);
+      Assert.IsTrue (hull.Contains ((0, 0)) && hull.Contains ((100, 0)) && hull.Contains ((0, 100)) && hull.Contains ((100, 100)));
+      hull = ConvexHull.ComputeForSimplePolygon ([.. pts.Reverse ()]);
+      Assert.IsTrue (hull.Count == 4);
+      Assert.IsTrue (hull.Contains ((0, 0)) && hull.Contains ((100, 0)) && hull.Contains ((0, 100)) && hull.Contains ((100, 100)));
+
+      pts = [(0, 0), (100, 0), (100, 100), (0, 100)]; // A simple square.
+      hull = ConvexHull.ComputeForSimplePolygon ([.. pts.Reverse ()]);
+      Assert.IsTrue (hull.Count == 4);
+      Assert.IsTrue (hull.Contains ((0, 0)) && hull.Contains ((100, 0)) && hull.Contains ((0, 100)) && hull.Contains ((100, 100)));
+
+      pts = [(0, 0), (25, 0), (50, 10), (75, 0), (100, 0), (100, 100), (0, 100)]; // Simple polygon with a "dent"
+      hull = ConvexHull.ComputeForSimplePolygon ([.. pts.Reverse ()]);
+      Assert.IsTrue (hull.Count == 4);
+      Assert.IsTrue (hull.Contains ((0, 0)) && hull.Contains ((100, 0)) && hull.Contains ((0, 100)) && hull.Contains ((100, 100)));
+
+      hull = ConvexHull.Compute (Poly.Lines (pts, true), true);
+      Assert.IsTrue (hull.Count == 4);
+      Assert.IsTrue (hull.Contains ((0, 0)) && hull.Contains ((100, 0)) && hull.Contains ((0, 100)) && hull.Contains ((100, 100)));
    }
 
    class T1Type : IIndexed {

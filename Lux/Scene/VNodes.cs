@@ -15,6 +15,8 @@ public class GroupVN : VNode {
 
    public void Add (VNode child) { mChildren.Add (child); ChildAdded (); }
 
+   public void Remove (VNode child) { if (mChildren.Remove (child)) ChildRemoved (child); }
+
    // Overrides ----------------------------------------------------------------
    // Return the children
    public override VNode? GetChild (int n) => mChildren.SafeGet (n);
@@ -62,6 +64,8 @@ public partial class TraceVN : VNode {
    // Properties ---------------------------------------------------------------
    /// <summary>Text color</summary>
    public static Color4 TextColor = Color4.Blue;
+
+   public static int HoldTime = 7;
 
    // Methods ------------------------------------------------------------------
    /// <summary>Prints text to the TraceVN (this is static, since the class is a singleton)</summary>
@@ -123,7 +127,7 @@ public partial class TraceVN : VNode {
    // Timer handler, removes text that is more than 7 seconds old
    void OnTick (object? s, EventArgs e) {
       int n = mLines.Count;
-      while (mLines.Count > 0 && mLines[0].TS + TimeSpan.FromSeconds (7) < DateTime.Now) mLines.RemoveAt (0);
+      while (mLines.Count > 0 && mLines[0].TS + TimeSpan.FromSeconds (HoldTime) < DateTime.Now) mLines.RemoveAt (0);
       if (n != mLines.Count) Redraw ();
    }
 

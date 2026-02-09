@@ -154,7 +154,7 @@ class PolyTests {
    [Test (73, "Poly.Reversed tests")]
    void Test5 () {
       // Line
-      var p1 = Poly.Lines ([(0,10), (10,20), (20,30)]);
+      var p1 = Poly.Lines ([(0,10), (10,20), (20,30)], true);
       p1.Reversed ().Is ("M20,30L10,20L0,10Z");
       // Arc
       var ccw = true;

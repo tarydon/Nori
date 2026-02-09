@@ -38,6 +38,8 @@ public partial class MainWindow : Window {
    void MinSphereDemo (object s, RoutedEventArgs e) => Display (new MinSphereScene ());
    void T3XReaderDemo (object s, RoutedEventArgs e) => Display (new T3XDemoScene ());
    void SliceMeshDemo (object s, RoutedEventArgs e) => Display (new IntMeshPlaneScene ());
+   void ConvexHullDemo (object sender, RoutedEventArgs e) => Display (new ConvexHullScene ());
+   void BuildOBBDemo (object sender, RoutedEventArgs e) => Display (new BuildOBBScene ());
 
    void Display (Scene scene) {
       mSettings.Children.Clear ();

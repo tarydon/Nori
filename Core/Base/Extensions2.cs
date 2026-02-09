@@ -1,10 +1,10 @@
 // ────── ╔╗
 // ╔═╦╦═╦╦╬╣ Extensions2.cs
-// ║║║║╬║╔╣║ <<TODO>>
+// ║║║║╬║╔╣║ Extension methods on built-in types (defined using extension blocks)
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 namespace Nori;
 
-#region class Extensions ---------------------------------------------------------------------------
+#region class Extensions2 --------------------------------------------------------------------------
 /// <summary>Extension methods, properties on various standard types</summary>
 public static class Extensions2 {
    // Extensions on double -----------------------------------------------------
@@ -12,6 +12,9 @@ public static class Extensions2 {
    extension(double f) {
       /// <summary>Returns true if a double is nan - easier to use than double.IsNaN(f)</summary>
       public bool IsNan => double.IsNaN (f);
+
+      /// <summary>Rounds a double to the nearest integer</summary>
+      public int RInt () => (int)(Math.Round (f) + 0.5);
 
       /// <summary>Transforms a distance by the given transform</summary>
       /// Distance is updated only if the matrix has a scaling component
