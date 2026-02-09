@@ -19,6 +19,11 @@ class AdvancedFace (int[] contours, int face, bool dir) : Entity {
 // Implements the ADVANCED_BREP_SHAPE_REPRESENTATION entity
 class AdvancedBRepShapeRepr (int[] items, int context) : ShapeRepr (items, context);
 
+class Axis (int origin, int direction) : Entity {
+   public readonly int Origin = origin;
+   public readonly int Direction = direction;
+}
+
 // Implements the B_SPLINE_CURVE_WITH_KNOTS entity
 class BSplineCurveWithKnots (int degree, int[] pts, string curveform, bool closed, bool intersect, int[] multiplicities, double[] knots, string knottype) : Entity {
    public readonly int Degree = degree;
@@ -202,6 +207,12 @@ class ShellBasedSurfaceModel (int[] shells) : Entity {
 // Implements the SPHERICAL_SURFACE entity
 class Sphere (int coordsys, double radius) : ElementarySurface (coordsys) {
    public readonly double Radius = radius;
+}
+
+// Implements the SURFACE_OF_REVOLUTION entity
+class SpunSurface (int curve, int axis) : Surface {
+   public readonly int Curve = curve;
+   public readonly int Axis = axis;
 }
 
 // Base class for various types of surfaces

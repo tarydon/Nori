@@ -26,15 +26,26 @@ partial class STEPReader {
       return cp.Pt;
    }
 
+   // Given a cartesian point object, fetches the underlying point
+   Point3 GetCartesianPoint (int nCartesian) =>((Cartesian)D[nCartesian]!).Pt;
+
    CoordSystem GetCoordSys (int nCoordSys) {
       CoordSys cs = (CoordSys)D[nCoordSys]!;
       Point3 org = ((Cartesian)D[cs.Origin]!).Pt;
-      Vector3 zaxis = GetVector (cs.ZAxis), xaxis = GetVector (cs.XAxis);
+      Vector3 zaxis = GetDirection (cs.ZAxis), xaxis = GetDirection (cs.XAxis);
       return new (org, xaxis, zaxis * xaxis);
    }
 
-   Vector3 GetVector (int nVector)
+   // Given the direction object, fetches the underlying Vector3
+   Vector3 GetDirection (int nVector)
       => ((Direction)D[nVector]!).Vec;
+
+   // Given the Vector object, returns a Vector3 of the specified direction and length
+   Vector3 GetVector (int nVector) {
+      Vector v = (Vector)D[nVector]!;
+      var dir = (Direction)D[v.Direction]!;
+      return dir.Vec.Normalized () * v.Length;
+   }
 
    Arc3 MakeArc (int pairId, Circle circle, Point3 start, Point3 end, bool ccw) {
       CoordSystem cs = GetCoordSys (circle.CoordSys);
@@ -74,12 +85,16 @@ partial class STEPReader {
          EdgeCurve ec = (EdgeCurve)D[oe.Edge]!;
          Point3 start = GetPoint (ec.Start), end = GetPoint (ec.End);
          if (!oe.Dir) (start, end) = (end, start);
-         Curve3 edge = D[ec.Basis] switch {
+         Curve3 edge = getEdge (ec.Basis);
+         mEdges.Add (edge);
+
+         // helper function (sometimes called recursively)
+         Curve3 getEdge (int cent) => D[cent] switch {
             Line => new Line3 (oe.Edge, start, end),
             Circle circle => MakeArc (oe.Edge, circle, start, end, !(!ec.SameSense ^ !oe.Dir)),
-            _ => throw new BadCaseException (ec.Basis)
+            SurfaceCurve sc => getEdge (sc.Curve),
+            _ => throw new BadCaseException (cent)
          };
-         mEdges.Add (edge);
       }
       for (int i = 0; i < mEdges.Count; i++)
          Lib.Check (mEdges[i].End.EQ (mEdges[(i + 1) % mEdges.Count].Start), "MakeContour");
@@ -95,6 +110,33 @@ partial class STEPReader {
 
    E3Cylinder MakeCylinder (int id, Cylinder cylinder, ImmutableArray<Contour3> contours, bool aligned)
       => E3Cylinder.Build (id, contours, GetCoordSys (cylinder.CoordSys), cylinder.Radius, !aligned);
+
+   E3Surface MakeSurfaceOfRevolution (int id, SpunSurface spunSurface, ImmutableArray<Contour3> contours, bool aligned) {
+      Axis axis = (Axis)D[spunSurface.Axis]!;
+      Point3 org = GetCartesianPoint (axis.Origin); Vector3 zaxis = GetDirection (axis.Direction).Normalized ();
+
+      Curve3 generatix = D[spunSurface.Curve] switch {
+         Line line => new Line3 (0, GetCartesianPoint (line.Start), GetCartesianPoint (line.Start) + GetVector (line.Ray)),
+         _ => throw new BadCaseException (spunSurface.Curve) // TODO support other curves
+      };
+
+      Vector3 yaxis = (zaxis * ((org.DistToSq (generatix.End) > org.DistToSq (generatix.Start) ? generatix.End : generatix.Start) - org)).Normalized (), xaxis = yaxis * zaxis;
+      var cs = new CoordSystem (org, xaxis, yaxis);
+      generatix *= Matrix3.From (cs); // This is now expected to be a line in the XZ plane.
+
+      if (generatix is Line3 ln && !ln.Start.Z.EQ (ln.End.Z)) {
+         if (ln.Start.X.EQ (ln.End.X)) { // If the line is parallel to the Z axis, then we have a cylinder, otherwise a cone.
+            return E3Cylinder.Build (id, contours, cs, ((Point2)ln.Start).DistTo (Point2.Zero), !aligned);
+         } else { // Cone.
+            var gv = ln.End - ln.Start;
+            return new E3Cone (id, contours, cs, Math.Atan (Math.Abs (gv.X / gv.Z)));
+         }
+      } else {
+         var ret = new E3SpunSurface (id, contours, cs, generatix);
+         if (!aligned) ret.FlipNormal ();
+         return ret;
+      }
+   }
 
    void Process (Manifold m)
       => Process ((Shell)D[m.Outer]!);
@@ -120,6 +162,7 @@ partial class STEPReader {
       Ent3 ent = D[a.Face] switch {
          Plane plane => MakePlane (a.Id, plane, contours, a.Dir),
          Cylinder cylinder => MakeCylinder (a.Id, cylinder, contours, a.Dir),
+         SpunSurface ss => MakeSurfaceOfRevolution (a.Id, ss, contours, a.Dir),
          _ => throw new BadCaseException (a.Face)
       };
       mModel.Ents.Add (ent);

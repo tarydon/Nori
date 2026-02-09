@@ -18,8 +18,14 @@ partial class STEPReader {
          case ElementarySurface e: Check (e); break;
          case BSplineSurfaceWithKnots b: Check (b); break;
          case ExtrudedSurface e: Check (e); break;
+         case SpunSurface s: Check (s); break;
          default: Check (a.Face); break;
       }
+   }
+
+   void Check (Axis a) {
+      Check ((Cartesian)D[a.Origin]!);
+      Check ((Direction)D[a.Direction]!);
    }
 
    static void Check (Cartesian _) { }
@@ -90,6 +96,11 @@ partial class STEPReader {
    void Check (OrientedEdge a) { Check ((EdgeCurve)D[a.Edge]!); }
 
    void Check (ElementarySurface s) { Check ((CoordSys)D[s.CoordSys]!); }
+
+   void Check (SpunSurface e) {
+      Check ((Line)D[e.Curve]!);
+      Check ((Axis)D[e.Axis]!);
+   }
 
    static void Check (SurfaceCurve _) {
       // TODO

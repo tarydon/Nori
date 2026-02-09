@@ -23,6 +23,7 @@ public partial class STEPReader {
          Entity? ent = kw switch {
             "ADVANCED_FACE" => RAdvancedFace (),
             "ADVANCED_BREP_SHAPE_REPRESENTATION" => RAdvancedBRepShapeRepr (),
+            "AXIS1_PLACEMENT" => RAxis (),
             "AXIS2_PLACEMENT_3D" => RCoordSys (),
             "AXIS2_PLACEMENT_2D" => RCoordSys2 (),
             "B_SPLINE_CURVE_WITH_KNOTS" => RBSplineCurveWithKnots (),
@@ -52,6 +53,7 @@ public partial class STEPReader {
             "SPHERICAL_SURFACE" => RSphere (),
             "SURFACE_CURVE" => RSurfaceCurve (),
             "SURFACE_OF_LINEAR_EXTRUSION" => RExtrudedSurface (),
+            "SURFACE_OF_REVOLUTION" => RSpunSurface (),
             "SHAPE_REPRESENTATION" => RShapeRepr (),
             "SHAPE_REPRESENTATION_RELATIONSHIP" => RRepRelationship (),
             "TOROIDAL_SURFACE" => RToroid (),
@@ -239,6 +241,7 @@ public partial class STEPReader {
    // Entity readers -----------------------------------------------------------
    AdvancedFace RAdvancedFace () { RString (); return new (RRefs (), RRef (), RBool ()); }
    AdvancedBRepShapeRepr RAdvancedBRepShapeRepr () { RString (); return new (RRefs (), RRef ()); }
+   Axis RAxis () { RString (); return new (RRef (), RRef ()); }
    BSplineCurveWithKnots RBSplineCurveWithKnots () { RString (); return new (RInt(), RRefs(), REnum (), RBool(), RBool(), RInts(), RDoubles(), REnum ()); }
    BSplineSurfaceWithKnots RBSplineSurfaceWithKnots () { RString (); return new BSplineSurfaceWithKnots (RInt (), RInt (), RRefsList (), REnum (), RBool (), RBool (), RBool (), RInts (), RInts (), RDoubles (), RDoubles (), REnum ()); }
    Cartesian RCartesian () { RString (); return new (RPoint3 ()); }
@@ -268,6 +271,7 @@ public partial class STEPReader {
    Shell RShell () { RString (); return new (RRefs ()); }
    ShellBasedSurfaceModel RShellBasedSurfaceModel () { RString (); return new (RRefs ()); }
    Sphere RSphere () { RString (); return new (RRef (), RDouble ()); }
+   SpunSurface RSpunSurface () { RString (); return new (RRef (), RRef ()); }
    SurfaceCurve RSurfaceCurve () { RString (); return new (RRef (), RRefs (), REnum ()); }
    Toroid RToroid () { RString (); return new Toroid (RRef (), RDouble (), RDouble ()); }
    Vector RVector () { RString (); return new (RRef (), RDouble ()); }
