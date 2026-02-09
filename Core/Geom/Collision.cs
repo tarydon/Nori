@@ -6,7 +6,7 @@ using static System.MathF;
 namespace Nori;
 
 /// <summary>Represents a triangle defined by three points in 3D space.</summary>
-public readonly struct Tri (ReadOnlySpan<Point3f> pts, int a, int b, int c) {
+public readonly struct CTri (ReadOnlySpan<Point3f> pts, int a, int b, int c) {
    public readonly int A = a;
    public readonly int B = b;
    public readonly int C = c;
@@ -17,11 +17,11 @@ public readonly struct Tri (ReadOnlySpan<Point3f> pts, int a, int b, int c) {
 public static class Collision {
    /// <summary>Checks if 'a' Bound3 intersects with another Bound3 'b'</summary>
    [MethodImpl (MethodImplOptions.AggressiveInlining)]
-   public static bool Check (in Bound3 a, in Bound3 b) => Check (a.X, b.X) && Check (a.Y, b.Y) && Check (a.Z, b.Z);
+   public static bool Check (in Bound3 a, in Bound3 b) => Check (in a.X, in b.X) && Check (in a.Y, in b.Y) && Check (in a.Z, in b.Z);
 
    /// <summary>Checks if 'a' Bound2 intersects with another Bound2 'b'</summary>
    [MethodImpl (MethodImplOptions.AggressiveInlining)]
-   public static bool Check (in Bound2 a, in Bound2 b) => Check (a.X, b.X) && Check (a.Y, b.Y);
+   public static bool Check (in Bound2 a, in Bound2 b) => Check (in a.X, in b.X) && Check (in a.Y, in b.Y);
 
    /// <summary>Checks if 'a' Bound1 intersects with another Bound1 'b'</summary>
    [MethodImpl (MethodImplOptions.AggressiveInlining)]
@@ -37,14 +37,14 @@ public static class Collision {
    /// <summary>Checks if two OBBs intersect.</summary>
    [MethodImpl (MethodImplOptions.AggressiveInlining)]
    public static bool Check (in OBB a, in OBB b) =>
-      BoxBox (a.Center, a.X, a.Y, a.Extent, b.Center, b.X, b.Y, b.Extent);
+      BoxBox (in a.Center, in a.X, in a.Y, in a.Extent, in b.Center, in b.X, in b.Y, in b.Extent);
 
    [MethodImpl (MethodImplOptions.AggressiveInlining)]
-   public static bool Check (ReadOnlySpan<Point3f> pts, in Tri a, in OBB b) =>
-      BoxTri (b.Center, b.X, b.Y, b.Extent, pts[a.A], pts[a.B], pts[a.C]);
+   public static bool Check (ReadOnlySpan<Point3f> pts, in CTri a, in OBB b) =>
+      BoxTri (in b.Center, in b.X, in b.Y, in b.Extent, in pts[a.A], in pts[a.B], in pts[a.C]);
 
    [MethodImpl (MethodImplOptions.AggressiveInlining)]
-   public static bool Check (ReadOnlySpan<Point3f> pts, in Tri a, in Tri b) => TriTri (pts, a, b);
+   public static bool Check (ReadOnlySpan<Point3f> pts, in CTri a, in CTri b) => TriTri (pts, in a, in b);
 
    /// <summary>Checks if two OBBs intersect using the Separating Axis Theorem (SAT)</summary>
    /// The algorithm tests 15 potential separating axes, and if no separating axis is found, the 
@@ -57,7 +57,7 @@ public static class Collision {
 
       // Check 1. Test A axes: aX, aY, aZ
       // The translation vector T <t0, t1, t2> from a to b (in a's coordinate system)      
-      var tmp = bC - aC; float t0 = Dot (tmp, aX);
+      var tmp = bC - aC; float t0 = Dot (in tmp, in aX);
       // The rotation matrix R (R00, R01 ... R33) represents 'b' in a's coordinate system.
       // Since the absolute values of R (denoted AR = |R|) are repeatedly used in all tests,
       // we precompute them once for efficiency. A small epsilon is added to handle
@@ -65,17 +65,17 @@ public static class Collision {
       // cross product to approach zero.
       // T, R, and AR are initialized in an interleaved manner to avoid redundant computations,
       // with early termination triggered on detection of a separating axis.
-      float R00 = Dot (aX, bX), R01 = Dot (aX, bY), R02 = Dot (aX, bZ);
+      float R00 = Dot (in aX, in bX), R01 = Dot (in aX, in bY), R02 = Dot (in aX, in bZ);
       float AR00 = Abs (R00) + E, AR01 = Abs (R01) + E, AR02 = Abs (R02) + E;
       if (Abs (t0) > a0 + b0 * AR00 + b1 * AR01 + b2 * AR02) return false;
 
-      float t1 = Dot (tmp, aY);
-      float R10 = Dot (aY, bX), R11 = Dot (aY, bY), R12 = Dot (aY, bZ);
+      float t1 = Dot (in tmp, in aY);
+      float R10 = Dot (in aY, in bX), R11 = Dot (in aY, in bY), R12 = Dot (in aY, in bZ);
       float AR10 = Abs (R10) + E, AR11 = Abs (R11) + E, AR12 = Abs (R12) + E;
       if (Abs (t1) > a1 + b0 * AR10 + b1 * AR11 + b2 * AR12) return false;
 
-      float t2 = Dot (tmp, aZ);
-      float R20 = Dot (aZ, bX), R21 = Dot (aZ, bY), R22 = Dot (aZ, bZ);
+      float t2 = Dot (in tmp, in aZ);
+      float R20 = Dot (in aZ, in bX), R21 = Dot (in aZ, in bY), R22 = Dot (in aZ, in bZ);
       float AR20 = Abs (R20) + E, AR21 = Abs (R21) + E, AR22 = Abs (R22) + E;
       if (Abs (t2) > a2 + b0 * AR20 + b1 * AR21 + b2 * AR22) return false;
 
@@ -117,9 +117,9 @@ public static class Collision {
       // Transform triangle vertices (p0, p1, p2) into box's local space as (a, b, c)
       var bZ = bX * bY;
       Vector3f v0 = p0 - bC, v1 = p1 - bC, v2 = p2 - bC;
-      var a = new Point3f (Dot (v0, bX), Dot (v0, bY), Dot (v0, bZ));
-      var b = new Point3f (Dot (v1, bX), Dot (v1, bY), Dot (v1, bZ));
-      var c = new Point3f (Dot (v2, bX), Dot (v2, bY), Dot (v2, bZ));
+      var a = new Point3f (Dot (in v0, in bX), Dot (in v0, in bY), Dot (in v0, in bZ));
+      var b = new Point3f (Dot (in v1, in bX), Dot (in v1, in bY), Dot (in v1, in bZ));
+      var c = new Point3f (Dot (in v2, in bX), Dot (in v2, in bY), Dot (in v2, in bZ));
 
       // Check 1. Nine edge cross products
       // Following two optimizations are applied to improve performance:
@@ -152,7 +152,7 @@ public static class Collision {
 
       // Check 2. Check Box's AABB vs Triangle's AABB (three face normals of the Box)
       Bound3 b1 = new (-bH.X, -bH.Y, -bH.Z, bH.X, bH.Y, bH.Z), b2 = new (a, b, c);
-      if (!Check (b1, b2)) return false;
+      if (!Check (in b1, in b2)) return false;
 
       // Check 3. Triangle's face normal (basically box to triangle plane)
       var n = ((b - a) * (c - a)).Normalized (); // Triangle normal
@@ -160,7 +160,7 @@ public static class Collision {
       var r = bH.X * Abs (n.X) + bH.Y * Abs (n.Y) + bH.Z * Abs (n.Z);
       // If the distance from the box center to the triangle plane is
       // greater than the projected radius, there is a separating axis.
-      if (Abs (Dot (n, new (a.X, a.Y, a.Z))) > r) return false;
+      if (Abs (Dot (in n, new (a.X, a.Y, a.Z))) > r) return false;
 
       // No separating axis found. The OBB and triangle are intersecting.
       return true;
@@ -191,7 +191,7 @@ public static class Collision {
    /// robust against numerical precision errors.
    // It implements the Devilliers & Guigue algorithm for triangle-triangle intersection.
    // Reference: https://inria.hal.science/inria-00072100/file/RR-4488.pdf
-   public static bool TriTri (ReadOnlySpan<Point3f> pts, in Tri a, in Tri b) {
+   public static bool TriTri (ReadOnlySpan<Point3f> pts, in CTri a, in CTri b) {
       unsafe { 
          fixed (Point3f* p = pts) return TriTri (p, a.A, a.B, a.C, a.N, b.A, b.B, b.C, b.N);
       }
@@ -208,13 +208,13 @@ public static class Collision {
    }
 
    /// <summary>Checks if two triangles intersect in 3D space.</summary>
-   public unsafe static bool TriTri (Point3f* p, int a1, int b1, int c1, in Vector3f n1, int a2, int b2, int c2, in Vector3f n2) {
+   unsafe static bool TriTri (Point3f* p, int a1, int b1, int c1, in Vector3f n1, int a2, int b2, int c2, in Vector3f n2) {
       // Step 1. Plane-side tests
       // 1a. Check if triangle 1 is completely on one side of triangle 2's plane
-      ref var pa2 = ref p[a2]; ref var pa1 = ref p[a1];
-      var sa1 = Sign (Dot (pa1 - pa2, n2));
-      var sb1 = Sign (Dot (p[b1] - pa2, n2));
-      var sc1 = Sign (Dot (p[c1] - pa2, n2));
+      var pa2 = p[a2]; var pa1 = p[a1];
+      var sa1 = Sign (Dot (pa1 - pa2, in n2));
+      var sb1 = Sign (Dot (p[b1] - pa2, in n2));
+      var sc1 = Sign (Dot (p[c1] - pa2, in n2));
       if (SameSign (sa1, sb1, sc1)) return false;
 
       // Step 2. Check for coplanar case. 
@@ -223,22 +223,29 @@ public static class Collision {
          // Instead of mapping points directly onto the triangle’s plane, we project them onto
          // a principal plane that best aligns with the triangle. This approach simplifies
          // the transformation and avoids several costly arithmetic operations.
-         var (nx, ny, nz) = (Abs (n2.X), Abs (n2.Y), Abs (n2.Z));
-         var P2 = XY;
-         if (nx > ny && nx > nz) P2 = YZ;
-         else if (ny > nx && ny > nz) P2 = ZX;
-         Point2* pt2 = stackalloc Point2[] { P2 (p[a1]), P2 (p[b1]), P2 (p[c1]), P2 (p[a2]), P2 (p[b2]), P2 (p[c2]) };
-         return TriTri2D (pt2, 0, 1, 2, 3, 4, 5);
-
-         static Point2 XY (in Point3f p) => new (p.X, p.Y); // Project to XY plane
-         static Point2 YZ (in Point3f p) => new (p.Y, p.Z); // Project to YZ plane
-         static Point2 ZX (in Point3f p) => new (p.X, p.Z); // Project to ZX plane
+         float nx = Abs (n2.X), ny = Abs (n2.Y), nz = Abs (n2.Z);
+         Point2* pt2 = stackalloc Point2[6];
+         Point3f pb1 = p[b1], pc1 = p[c1], pb2 = p[b2], pc2 = p[c2];
+         if (nz > nx && nz > ny) {
+            // Project to XY plane
+            pt2[0] = new (pa1.X, pa1.Y); pt2[1] = new (pb1.X, pb1.Y); pt2[2] = new (pc1.X, pc1.Y);
+            pt2[3] = new (pa2.X, pa2.Y); pt2[4] = new (pb2.X, pb2.Y); pt2[5] = new (pc2.X, pc2.Y);
+         } else if (ny > nx && ny > nz) {
+            // Project to ZX plane
+            pt2[0] = new (pa1.X, pa1.Z); pt2[1] = new (pb1.X, pb1.Z); pt2[2] = new (pc1.X, pc1.Z);
+            pt2[3] = new (pa2.X, pa2.Z); pt2[4] = new (pb2.X, pb2.Z); pt2[5] = new (pc2.X, pc2.Z);
+         } else {
+            // Project to YZ plane
+            pt2[0] = new (pa1.Y, pa1.Z); pt2[1] = new (pb1.Y, pb1.Z); pt2[2] = new (pc1.Y, pc1.Z);
+            pt2[3] = new (pa2.Y, pa2.Z); pt2[4] = new (pb2.Y, pb2.Z); pt2[5] = new (pc2.Y, pc2.Z);
+         }
+         return TriTri (pt2, 0, 1, 2, 3, 4, 5);
       }
 
       // 1b. Check if triangle 2 is completely on one side of triangle 1's plane
-      var sa2 = Sign (Dot (pa2 - pa1, n1));
-      var sb2 = Sign (Dot (p[b2] - pa1, n1));
-      var sc2 = Sign (Dot (p[c2] - pa1, n1));
+      var sa2 = Sign (Dot (pa2 - pa1, in n1));
+      var sb2 = Sign (Dot (p[b2] - pa1, in n1));
+      var sc2 = Sign (Dot (p[c2] - pa1, in n1));
       if (SameSign (sa2, sb2, sc2)) return false;
 
       // Step 3. Convert triangles by reordering vertices in the 'cannonical' form. In this form, vertex 'a'
@@ -255,16 +262,13 @@ public static class Collision {
       // Step 4. Final overlap test on the intersection line
       // After the cannonical reordering, this checks if the 'min' of intersection interval
       // of triangle 1 is less than or equal to the 'max' of triangle 2 and vice-versa.
-      return Side (a1, b1, a2, b2) <= 0 && Side (a1, c1, c2, a2) <= 0;
+      pa1 = p[a1]; pa2 = p[a2]; 
+      return Side (in pa1, in p[b1], in pa2, in p[b2]) <= 0 && Side (in pa1, in p[c1], in p[c2], in pa2) <= 0;
 
       // Gets the orientation of point 'd' with respect to the plane defined by triangle 'abc'
       // +1 = d is on the positive side of the plane, -1 = d is on the negative side, 0 = d is on the plane
       [MethodImpl (MethodImplOptions.AggressiveInlining)]
-      float Side (int a, int b, int c, int d) {
-         ref var pa = ref p[a]; ref var pb = ref p[b];
-         ref var pc = ref p[c]; ref var pd = ref p[d];
-         return Dot (pd - pa, (pb - pa) * (pc - pa));
-      }
+      static float Side (in Point3f a, in Point3f b, in Point3f c, in Point3f d) => Dot (d - a, (b - a) * (c - a));
 
       [MethodImpl (MethodImplOptions.AggressiveInlining)]
       static void ReorderTriangle (ref int sa, ref int sb, ref int sc, ref int a, ref int b, ref int c) {
@@ -290,15 +294,15 @@ public static class Collision {
    /// 2. If edge of first triangle crosses edge of the other
    /// Like the 3D triangle intersection check, the planar variant also uses orientation
    /// tests to determine the intersections. 
-   public static bool TriTri2D (in Point2 a1, in Point2 b1, in Point2 c1, in Point2 a2, in Point2 b2, in Point2 c2) {
+   public static bool TriTri (in Point2 a1, in Point2 b1, in Point2 c1, in Point2 a2, in Point2 b2, in Point2 c2) {
       unsafe {
          Point2 * pts = stackalloc Point2[] { a1, b1, c1, a2, b2, c2 };
-         return TriTri2D (pts, 0, 1, 2, 3, 4, 5);
+         return TriTri (pts, 0, 1, 2, 3, 4, 5);
       }
    }
 
    /// <summary>Tests if two coplanar triangles intersect with each other.</summary>
-   unsafe static bool TriTri2D (Point2* p, int a1, int b1, int c1, int a2, int b2, int c2) {
+   unsafe static bool TriTri (Point2* p, int a1, int b1, int c1, int a2, int b2, int c2) {
       // Step 0: Ensure both triangles are ccw
       if (Side (a1, b1, c1) < 0) (b1, c1) = (c1, b1);
       if (Side (a2, b2, c2) < 0) (b2, c2) = (c2, b2);
@@ -367,7 +371,7 @@ public static class Collision {
       // Gets the orientation of point 'c' with respect to the line defined by points 'a' and 'b'
       // +1 = c is on the left side of the line, -1 = c is on the right side, 0 = c is on the line
       int Side (int a, int b, int c) {
-         ref var pa = ref p[a]; ref var pb = ref p[b]; ref var pc = ref p[c];
+         var pa = p[a]; var pb = p[b]; var pc = p[c];
          return Sign ((pa.X - pc.X) * (pb.Y - pc.Y) - (pa.Y - pc.Y) * (pb.X - pc.X));
       }
    }

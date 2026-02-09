@@ -41,7 +41,7 @@ class CollisionScene : Scene3 {
       }
 
       static Point3f X (Point3f p) => new (p.X, p.Y, 300);
-      Tri[] tris = new Tri[tricnt];
+      CTri[] tris = new CTri[tricnt];
       List<Point3f> pts = [];
       for (int i = 0; i < tris.Length; i++) {
          var a = P () * extent; var b = a + V () * R.Next (200, 300);
