@@ -208,7 +208,7 @@ public partial class Poly {
       // the fillet is to be added is 'node'
       PolyBuilder pb = new ();
 
-      for (int i = 0; i < Count; i++) {
+      for (int i = 0; i < mPts.Length; i++) {
          Point2 pt = mPts[i];
          // If we are going to add the target node, shift it forward by len
          // along the lead-out segment slope (this is the end of the fillet). See the code
