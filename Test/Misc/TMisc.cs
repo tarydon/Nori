@@ -547,7 +547,7 @@ class TMisc {
       aabb.Extent.Is ("<500,400,300>");
    }
 
-   [Test (169, "Convex-hull of point set")]
+   [Test (172, "Convex-hull of point set")]
    void Test20 () {
       Point2[] pts = [(0, 0), (100, 0), (100, 100), (50, 50), (0, 100), (50, 25), (75, 75)];
       var hull = ConvexHull.Compute (pts);
@@ -555,7 +555,7 @@ class TMisc {
       Assert.IsTrue (hull.Contains ((0, 0)) && hull.Contains ((100, 0)) && hull.Contains ((0, 100)) && hull.Contains ((100, 100)));
    }
 
-   [Test (170, "Convex-hull of simple polygon")]
+   [Test (173, "Convex-hull of simple polygon")]
    void Test21 () {
       Point2[] pts = [(0, 0), (100, 0), (100, 100), (50, 50), (0, 100), (50, 25)];
       var hull = ConvexHull.ComputeForSimplePolygon (pts);

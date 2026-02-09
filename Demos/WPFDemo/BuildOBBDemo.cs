@@ -1,14 +1,14 @@
-﻿using Nori;
+﻿using System.Text;
+using Nori;
 namespace WPFDemo;
 
 class BuildOBBScene : Scene3 {
    public BuildOBBScene () {
       Random r = new (1);
       var model = new T3XReader ("C:/Etc/T3/5X-022.t3x").Load ();
-      mSurfaces = [.. model.Ents.OfType<E3Surface> ().OrderByDescending (a => a.Mesh.GetArea ()).Take (20)];
+      mSurfaces = [.. model.Ents.OfType<E3Surface> ().OrderByDescending (a => a.Mesh.GetArea ()).Take (40)];
       mSurfaces.ForEach (a => a.IsTranslucent = a.NoStencil = true);
       Lib.Tracer = TraceVN.Print; TraceVN.TextColor = Color4.Yellow;
-      TraceVN.HoldTime = 12;
 
       Bound3 b = new ();
       List<VNode> vns = [mOBB, mOBBFast, TraceVN.It];
@@ -28,6 +28,43 @@ class BuildOBBScene : Scene3 {
       BgrdColor = new Color4 (128, 96, 64);
       Lib.Trace ("Click to select, Shift+Click to select more");
       Lib.Trace ("Yellow: OBB, White: OBBFast");
+
+      double GetAngle () => (r.NextDouble () - 0.5) * (90.D2R ());
+      Dump ();
+   }
+
+   void Dump () {
+      Random r = new (1);
+      var sb = new StringBuilder ();
+      double v1Total = 0, v2Total = 0; 
+      for (int i = 0; i < mSurfaces.Count; i++) {
+         var surface = mSurfaces[i];
+         double xR = GetAngle (), yR = GetAngle (), zR = GetAngle ();
+         Vector3 mid = (Vector3)surface.Bound.Midpoint;
+         var xfm = Matrix3.Translation (mid)
+                 * Matrix3.Rotation (EAxis.X, xR) * Matrix3.Rotation (EAxis.Y, yR) * Matrix3.Rotation (EAxis.Z, zR)
+                 * Matrix3.Translation (-mid);
+         var pts = surface.Mesh.Vertex.Select (a => a.Pos * xfm).ToList ();
+         var obb1 = OBB.Build (pts.AsSpan ());
+         var obb2 = OBB.BuildFast (pts.AsSpan ());
+         sb.AppendLine ($"{i + 1}, {pts.Count} points");
+         Out ("OBB:  ", obb1);
+         Out ("Fast: ", obb2);
+         double aRatio = obb2.Area / obb1.Area, vRatio = obb2.Volume / obb1.Volume;
+         sb.AppendLine ($"Ratio: V={vRatio.Round (3)}, A={aRatio.Round (3)}");
+         v1Total += obb1.Volume; v2Total += obb2.Volume;
+         sb.AppendLine ();
+      }
+      sb.AppendLine ($"Overall Volumes: {v2Total.Round (0)} / {v1Total.Round (0)}");
+      System.IO.File.WriteAllText ("c:/etc/dump.txt", sb.ToString ());
+
+      void Out (string name, OBB o) {
+         var c = o.Center;
+         var x = o.X; var y = o.Y; var z = o.Z;
+         var e = o.Extent;
+         sb.AppendLine ($"{name} ({c.X.Round (2)},{c.Y.Round (2)},{c.Z.Round (2)})  {e.X.Round (2)}x{e.Y.Round (2)}x{e.Z.Round (2)}");
+         sb.AppendLine ($"       <{x.X.Round (3)},{x.Y.Round (3)},{x.Z.Round (3)}>, <{y.X.Round (3)},{y.Y.Round (3)},{y.Z.Round (3)}>, <{z.X.Round (3)},{z.Y.Round (3)},{z.Z.Round (3)}>");
+      }
 
       double GetAngle () => (r.NextDouble () - 0.5) * (90.D2R ());
    }
