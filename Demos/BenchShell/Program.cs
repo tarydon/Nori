@@ -94,13 +94,24 @@ public class Tester {
    [Benchmark]
    public unsafe void CollideXformed () {
       int crashes = 0;
-      fixed (Point3f* pp1= PT)
-      fixed (Point3f* pp2= PT2) {
+      fixed (Point3f* pp1 = PT)
+      fixed (Point3f* pp2 = PT2) {
          for (int i = 0, n = Crash.Count; i < n; i++) {
             int a = i * 2;
             bool check = Tri.Collide (pp1, ref CT[a], pp2, ref CT2[a + 1], mXfm);
             if (check) crashes++;
          }
+      }
+      if (crashes != 14708) throw new NotImplementedException ();
+   }
+
+   [Benchmark]
+   public void CollideDevillers () {
+      int crashes = 0;
+      for (int i = 0, n = Crash.Count; i < n; i++) {
+         int a = i * 2;
+         bool check = Collision.TriTri (PT, in CT[a], in CT[a + 1]);
+         if (check) crashes++;
       }
       if (crashes != 14708) throw new NotImplementedException ();
    }

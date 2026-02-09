@@ -5,13 +5,6 @@
 using static System.MathF;
 namespace Nori;
 
-/// <summary>Represents a triangle defined by three points in 3D space.</summary>
-public readonly struct CTri (ReadOnlySpan<Point3f> pts, int a, int b, int c) {
-   public readonly int A = a;
-   public readonly int B = b;
-   public readonly int C = c;
-   public readonly Vector3f N = (pts[b] - pts[a]) * (pts[c] - pts[a]);
-}
 
 /// <summary>Provides methods for collision detection between various geometric primitives.</summary>
 public static class Collision {
