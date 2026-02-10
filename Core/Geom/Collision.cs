@@ -2,9 +2,9 @@
 // ╔═╦╦═╦╦╬╣ Collision.cs
 // ║║║║╬║╔╣║ Primitive collision detection methods
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
+using System.Runtime.Intrinsics;
 using static System.MathF;
 namespace Nori;
-
 
 /// <summary>Provides methods for collision detection between various geometric primitives.</summary>
 public static class Collision {
@@ -185,7 +185,7 @@ public static class Collision {
    // It implements the Devilliers & Guigue algorithm for triangle-triangle intersection.
    // Reference: https://inria.hal.science/inria-00072100/file/RR-4488.pdf
    public static bool TriTri (ReadOnlySpan<Point3f> pts, in CTri a, in CTri b) {
-      unsafe { 
+      unsafe {
          fixed (Point3f* p = pts) return TriTri (p, a.A, a.B, a.C, a.N, b.A, b.B, b.C, b.N);
       }
    }
@@ -369,10 +369,175 @@ public static class Collision {
       }
    }
 
+   public unsafe static bool TriTri (ReadOnlySpan<Vector128<float>> pts, in CTri a, in CTri b) {
+      fixed (Vector128<float>* p = pts) {
+         Vector128<float> n1 = Vector128.Create (a.N.X, a.N.Y, a.N.Z, 0), n2 = Vector128.Create (b.N.X, b.N.Y, b.N.Z, 0);
+         int a1 = a.A, b1 = a.B, c1 = a.C, a2 = b.A, b2 = b.B, c2 = b.C;
+
+         // Load triangle points
+         var pa1 = p[a1]; var pb1 = p[b1]; var pc1 = p[c1]; var pa2 = p[a2];
+         var sa1 = Sign (Vector128.Sum ((pa1 - pa2) * n2));
+         var sb1 = Sign (Vector128.Sum ((pb1 - pa2) * n2));
+         var sc1 = Sign (Vector128.Sum ((pc1 - pa2) * n2));
+         if (SameSign (sa1, sb1, sc1)) return false;
+
+         var pb2 = p[b2]; var pc2 = p[c2];
+         // Coplanar case 
+         if (sa1 == 0 && sb1 == 0 && sc1 == 0) {
+            var abs = Vector128.Abs (n2);
+            // Now perform 2D triangle overlap tests by projecting 3D triangle points into 2D space.
+            // Instead of mapping points directly onto the triangle’s plane, we project them onto
+            // a principal plane that best aligns with the triangle. This approach simplifies
+            // the transformation and avoids several costly arithmetic operations.
+            float nx = abs[0], ny = abs[1], nz = abs[2];
+            int x = 1, y = 2;
+            if (nz > ny && nz > nx) {
+               x = 0; y = 1;
+            } else if (ny > nx) {
+               x = 0; y = 2;
+            }
+            Vector128<int> xy = Vector128.Create (x, y, x, y);
+            // Bring the points together in a single array to gain from better cache locality
+            var pt2 = stackalloc Vector128<float>[] { pa1, pb1, pc1, pa2, pb2, pc2 };
+            return TriTri2D (pt2, xy);
+         }
+
+         var sa2 = Sign (Vector128.Sum ((pa2 - pa1) * n1));
+         var sb2 = Sign (Vector128.Sum ((pb2 - pa1) * n1));
+         var sc2 = Sign (Vector128.Sum ((pc2 - pa1) * n1));
+         if (SameSign (sa2, sb2, sc2)) return false;
+
+         // Canonical reordering 
+         ReorderTriangle (ref sa1, ref sb1, ref sc1, ref a1, ref b1, ref c1);
+         ReorderTriangle (ref sa2, ref sb2, ref sc2, ref a2, ref b2, ref c2);
+
+         if (sa1 < 0 || (sa1 == 0 && sb1 > 0)) (b2, c2) = (c2, b2);
+         if (sa2 < 0 || (sa2 == 0 && sb2 > 0)) (b1, c1) = (c1, b1);
+
+         // Load updated points after reordering
+         pa1 = p[a1]; pb1 = p[b1];
+         pa2 = p[a2]; pb2 = p[b2];
+         if (Side (in pa1, in pb1, in pa2, in pb2) > 0) return false;
+
+         pc1 = p[c1]; pc2 = p[c2];
+         return Side (in pa1, in pc1, in pc2, in pa2) <= 0;
+      }
+   }
+
+   /// <summary>Tests if two coplanar triangles intersect with each other.</summary>
+   unsafe static bool TriTri2D (Vector128<float>* p, Vector128<int> xy) {
+      int a1 = 0, b1 = 1, c1 = 2, a2 = 3, b2 = 4, c2 = 5;
+      Vector128<int> yx = Vector128.Create (xy[1], xy[0], 0, 0);
+      // Step 0: Ensure both triangles are ccw
+      if (Side (a1, b1, c1) < 0) (b1, c1) = (c1, b1);
+      if (Side (a2, b2, c2) < 0) (b2, c2) = (c2, b2);
+
+      // Step 1 & 2: Classify point 'a1' wrt the second traingle's edge and test for cases:
+      // a. vertex is fully contained within other triangle
+      // b. vertex lies in region R1 (+ + -) of the triangle plane
+      // c. vertex lies in region R2 (+ - -) of the triangle plane
+      // Permute other cases by aligning them to b or c.
+      return (Side (a2, b2, a1) >= 0, Side (b2, c2, a1) >= 0, Side (c2, a2, a1) >= 0) switch {
+         (true, true, true) => true,      // (+ + +) => vertex 'a1' is inside or on the boundary of the second triangle
+         (true, true, false) => R1 (),    // (+ + -) => vertex 'a1' is in R1 region of the second triangle
+         (true, false, false) => R2 (),   // (+ - -) => vertex 'a1' is in R2 region of the second triangle
+         (true, false, true) => R1 (1),   // (+ - +) => vertex 'a1' is in R1 region of the second triangle after rotating it to the right
+         (false, true, true) => R1 (-1),  // (- + +) => vertex 'a1' is in R1 region of the second triangle after rotating it to the left
+         (false, true, false) => R2 (-1), // (- + -) => vertex 'a1' is in R2 region of the second triangle after rotating it to the left
+         (false, false, true) => R2 (1),  // (- - +) => vertex 'a1' is in R2 region of the second triangle after rotating it to the right
+         _ => false
+      };
+
+      // Step 3: Orientation based decision tree for (+ + -) and (+ - -).
+      // Implements decision tree for configuration (+ + -) from Fig 9.
+      // Depending on 'rotate' flag value -1/+1, it reorders the 'second' triangle
+      // by rotating it to the left/right to bring it to the canonical form.
+      bool R1 (int rotate = 0) {
+         // Rotate second triangle to the left (rotate < 0) or right (rotate > 0)
+         if (rotate != 0) (a2, b2, c2) = rotate < 0 ? (b2, c2, a2) : (c2, a2, b2);
+         if (Side (c2, a2, b1) >= 0) { // I
+            if (Side (c2, a1, b1) >= 0) { // II.a
+               if (Side (a1, a2, b1) >= 0) { // III.a
+                  return true;   // b1 in R13 (Fig 7)
+               } else if (Side (a1, a2, c1) >= 0 && Side (b1, c1, a2) >= 0) { // IV.a
+                  return true;  // V
+               }
+            }
+         } else if (Side (c2, a2, c1) >= 0 && Side (b1, c1, c2) >= 0 && Side (a1, a2, c1) >= 0) { // II.b, III.b
+            return true; // IV.b  
+         }
+         return false;
+      }
+
+      // Implements decision tree for configuration (+ - -) from Fig 10
+      bool R2 (int rotate = 0) {
+         // Rotate second triangle to the left (rotate < 0) or right (rotate > 0)
+         if (rotate != 0) (a2, b2, c2) = rotate < 0 ? (b2, c2, a2) : (c2, a2, b2);
+         if (Side (c2, a2, b1) >= 0) { // I
+            if (Side (c2, b2, b1) <= 0) { // II.a
+               if (Side (a1, a2, b1) > 0) { // III.a
+                  if (Side (a1, b2, b1) <= 0) // IV.a
+                     return true;
+               } else if (Side (a1, a2, c1) >= 0 && Side (b1, c1, a2) >= 0) // IV.b
+                  return true; // V.a
+            } else if (Side (a1, b2, b1) <= 0 && Side (c2, b2, c1) <= 0 && Side (b1, c1, b2) >= 0) // III.b, IV.c
+               return true; // V.b
+         } else if (Side (c2, a2, c1) >= 0) { // II.b
+            if (Side (b1, c1, c2) >= 0) { // III.c
+               if (Side (a1, a2, c1) >= 0) // IV.d
+                  return true;
+            } else if (Side (b1, c1, b2) >= 0 && Side (b2, c2, c1) >= 0) // IV.e
+               return true; // V.c
+         }
+
+         return false;
+      }
+
+      // Gets the orientation of point 'c' with respect to the line defined by points 'a' and 'b'
+      // +1 = c is on the left side of the line, -1 = c is on the right side, 0 = c is on the line
+      int Side (int a, int b, int c) {
+         var pc = p[c];
+         var mul = Vector128.Shuffle (p[a] - pc, xy) * Vector128.Shuffle (p[b] - pc, yx);
+         return Sign (mul[0] - mul[1]);
+      }
+   }
+
+   [MethodImpl (MethodImplOptions.AggressiveInlining)]
+   static Vector128<float> Cross (in Vector128<float> a, in Vector128<float> b) =>
+      Vector128.Shuffle (a, I1) * Vector128.Shuffle (b, I2) - Vector128.Shuffle (a, I2) * Vector128.Shuffle (b, I1);
+
+   static readonly Vector128<int> I1 = Vector128.Create (1, 2, 0, 0); // YZX
+   static readonly Vector128<int> I2 = Vector128.Create (2, 0, 1, 0); // ZXY
+
    [MethodImpl (MethodImplOptions.AggressiveInlining)]
    static float Dot (in Vector3f a, in Vector3f b) => a.X * b.X + a.Y * b.Y + a.Z * b.Z;
+
+   [MethodImpl (MethodImplOptions.AggressiveInlining)]
+   static void ReorderTriangle (ref int sa, ref int sb, ref int sc, ref int a, ref int b, ref int c) {
+      // Rotate until 'b' and 'c' are on the same side and 'a' is the isolated vertex
+      // on the other side of the plane (or on the plane).
+      if (sa == sb) {
+         (sa, sb, sc, a, b, c) = (sc, sa, sb, c, a, b); // Rotate right
+      } else if (sa == sc) {
+         (sa, sb, sc, a, b, c) = (sb, sc, sa, b, c, a); // Rotate left
+      } else if (sb != sc) {
+         if (sb == 0) (sa, sb, sc, a, b, c) = (sc, sa, sb, c, a, b); // Rotate right
+         else (sa, sb, sc, a, b, c) = (sb, sc, sa, b, c, a);         // Rotate left
+      }
+   }
+
+   [MethodImpl (MethodImplOptions.AggressiveInlining)]
+   static bool SameSign (int a, int b, int c) => a == b && b == c && a != 0;
+
+   // Gets the orientation of point 'd' with respect to the plane defined by triangle 'abc'
+   // +1 = d is on the positive side of the plane, -1 = d is on the negative side, 0 = d is on the plane
+   [MethodImpl (MethodImplOptions.AggressiveInlining)]
+   static float Side (in Vector128<float> a, in Vector128<float> b, in Vector128<float> c, in Vector128<float> d)
+      => Vector128.Sum ((d - a) * Cross (b - a, c - a));
+
    [MethodImpl (MethodImplOptions.AggressiveInlining)]
    static int Sign (float d) => d switch { < -ESq => -1, > ESq => 1, _ => 0 };
+
    [MethodImpl (MethodImplOptions.AggressiveInlining)]
    static int Sign (double d) => d switch { < -Lib.EpsilonSq => -1, > Lib.EpsilonSq => 1, _ => 0 };
 
