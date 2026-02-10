@@ -38,6 +38,13 @@ partial class STEPReader {
       Check ((Direction)D[cs.XAxis]!);
    }
 
+   void Check (CompositeCurve cc) {
+      foreach (var n in cc.Segments)
+         Check ((CompositeCurveSegment)D[n]!);
+   }
+
+   void Check (CompositeCurveSegment cs) => CheckCurve (cs.Segment);
+
    void Check (Shell a) {
       foreach (var n in a.Faces)
          Check ((AdvancedFace)D[n]!);
@@ -50,13 +57,18 @@ partial class STEPReader {
    void Check (EdgeCurve a) {
       Check ((VertexPoint)D[a.Start]!);
       Check ((VertexPoint)D[a.End]!);
-      switch (D[a.Basis]!) {
+      CheckCurve (a.Basis);
+   }
+
+   void CheckCurve (int curve) {
+      switch (D[curve]!) {
          case Line l: Check (l); break;
          case Circle c: Check (c); break;
          case Ellipse e: Check (e); break;
          case BSplineCurveWithKnots b: Check (b); break;
          case SurfaceCurve s: Check (s); break;
-         default: Check (a.Basis); break;
+         case TrimmedCurve t: Check (t); break;
+         default: Check (curve); break;
       }
    }
 
@@ -82,8 +94,8 @@ partial class STEPReader {
    }
 
    void Check (ExtrudedSurface e) {
-      Check ((EdgeCurve)D[e.Curve]!);
-      Check ((Direction)D[e.Vector]!);
+      CheckCurve (e.Curve);
+      Check ((Vector)D[e.Vector]!);
    }
 
    void Check (Manifold a) { Check ((Shell)D[a.Outer]!); }
@@ -98,13 +110,21 @@ partial class STEPReader {
    void Check (ElementarySurface s) { Check ((CoordSys)D[s.CoordSys]!); }
 
    void Check (SpunSurface e) {
-      Check ((Line)D[e.Curve]!);
+      CheckCurve (e.Curve);
       Check ((Axis)D[e.Axis]!);
    }
 
    static void Check (SurfaceCurve _) {
       // TODO
    } 
+
+   void Check (TrimmedCurve tc) {
+      CheckCurve (tc.Curve);
+      foreach (var n in tc.TrimStart)
+         Check ((Cartesian)D[n]!); // TODO Could be a double (parameter value) instead of a Cartesian point
+      foreach (var n in tc.TrimEnd)
+         Check ((Cartesian)D[n]!);
+   }
 
    void Check (Vector v) { Check ((Direction)D[v.Direction]!); }
 

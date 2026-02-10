@@ -32,6 +32,7 @@ public partial class STEPReader {
             "CIRCLE" => RCircle (),
             "CLOSED_SHELL" or "OPEN_SHELL" => RShell (),
             "COMPOSITE_CURVE" => RCompositeCurve (),
+            "COMPOSITE_CURVE_SEGMENT" => RCompositeCurveSegment (),
             "CONICAL_SURFACE" => RConicalSurface (),
             "CYLINDRICAL_SURFACE" => RCylinder (),
             "DEFINITIONAL_REPRESENTATION" => RDefinitionalRepr (),
@@ -41,6 +42,7 @@ public partial class STEPReader {
             "ELLIPSE" => REllipse (),
             "FACE_BOUND" => RFaceBound (false),
             "FACE_OUTER_BOUND" => RFaceBound (true),
+            "GEOMETRIC_SET" => RGeomtricSet (),
             "ITEM_DEFINED_TRANSFORMATION" => RItemDefinedXfm (),
             "LINE" => RLine (),
             "MANIFOLD_SOLID_BREP" => RManifold (),
@@ -57,6 +59,7 @@ public partial class STEPReader {
             "SHAPE_REPRESENTATION" => RShapeRepr (),
             "SHAPE_REPRESENTATION_RELATIONSHIP" => RRepRelationship (),
             "TOROIDAL_SURFACE" => RToroid (),
+            "TRIMMED_CURVE" => RTrimmedCurve (),
             "VECTOR" => RVector (),
             "VERTEX_POINT" => RVertexPoint (),
             _ => null
@@ -247,6 +250,7 @@ public partial class STEPReader {
    Cartesian RCartesian () { RString (); return new (RPoint3 ()); }
    Circle RCircle () { RString (); return new (RRef (), RDouble ()); }
    CompositeCurve RCompositeCurve () { RString (); return new (RRefs (), RBool ()); }
+   CompositeCurveSegment RCompositeCurveSegment () { REnum (); return new (RBool (), RRef ()); }
    Cone RConicalSurface () { RString (); return new Cone (RRef (), RDouble (), RDouble ()); }
    CoordSys RCoordSys () { RString (); return new (RRef (), RRef (), RRef ()); }
    CoordSys2 RCoordSys2 () { RString (); return new (RRef (), RRef ()); }
@@ -258,6 +262,7 @@ public partial class STEPReader {
    Ellipse REllipse () { RString (); return new (RRef (), RDouble (), RDouble ()); }
    ExtrudedSurface RExtrudedSurface () { RString (); return new (RRef(), RRef()); }
    FaceBound RFaceBound (bool outer) { RString (); return new (RRef (), RBool (), outer); }
+   GeometricSet RGeomtricSet () { RString (); return new (RRefs ()); }
    ItemDefinedXfm RItemDefinedXfm () { RString (); RString (); return new ItemDefinedXfm (RRef (), RRef ()); }
    Line RLine () { RString (); return new (RRef (), RRef ()); }
    Manifold RManifold () { RString (); return new (RRef ()); }
@@ -274,6 +279,7 @@ public partial class STEPReader {
    SpunSurface RSpunSurface () { RString (); return new (RRef (), RRef ()); }
    SurfaceCurve RSurfaceCurve () { RString (); return new (RRef (), RRefs (), REnum ()); }
    Toroid RToroid () { RString (); return new Toroid (RRef (), RDouble (), RDouble ()); }
+   TrimmedCurve RTrimmedCurve () { RString (); return new (RRef (), RRefs (), RRefs (), RBool (), REnum ()); }
    Vector RVector () { RString (); return new (RRef (), RDouble ()); }
    VertexPoint RVertexPoint () { RString (); return new (RRef ()); }
 

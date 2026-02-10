@@ -13,6 +13,8 @@ partial class STEPReader {
       if (mModel.Ents.Count == 0) {
          Parse ();
          foreach (var m in D.OfType<Manifold> ()) Process (m);
+         foreach (var s in D.OfType<ShellBasedSurfaceModel> ()) Process (s);
+         foreach (var gs in D.OfType<GeometricSet> ()) Process (gs);
       }
       return mModel;
    }
@@ -141,6 +143,9 @@ partial class STEPReader {
    void Process (Manifold m)
       => Process ((Shell)D[m.Outer]!);
 
+   void Process (ShellBasedSurfaceModel s)
+      => s.Shells.ForEach (n => Process ((Shell)D[n]!));
+
    void Process (Shell s)
       => s.Faces.ForEach (f => Process ((AdvancedFace)D[f]!));
 
@@ -166,5 +171,17 @@ partial class STEPReader {
          _ => throw new BadCaseException (a.Face)
       };
       mModel.Ents.Add (ent);
+   }
+
+   void Process (GeometricSet gs) {
+      foreach (var n in gs.Items)
+         if (D[n] is CompositeCurve cc)
+            Process (cc);
+   }
+
+   void Process (CompositeCurve cc) {
+      mEdges.Clear ();
+      // TODO build the segments into mEdges
+      mModel.Ents.Add (new Contour3 ([..mEdges]));
    }
 }

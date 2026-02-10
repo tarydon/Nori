@@ -69,6 +69,11 @@ class CompositeCurve (int[] segments, bool intersect) : Entity {
    public readonly bool Intersect = intersect;
 }
 
+class CompositeCurveSegment (bool sameDirection, int segment) : Entity {
+   public readonly bool SameDirection = sameDirection; // If false, the segment is reversed from the underlying curve
+   public readonly int Segment = segment;
+}
+
 // Implements the AXIS2_PLACEMENT_3D entity
 class CoordSys (int origin, int xaxis, int yaxis) : Entity {
    public readonly int Origin = origin;
@@ -137,6 +142,11 @@ class FaceBound (int edgeloop, bool dir, bool outer) : Entity {
    public readonly int EdgeLoop = edgeloop;
    public readonly bool Dir = dir;
    public readonly bool Outer = outer;
+}
+
+// Implements the GEOMETRIC_SET entity
+class GeometricSet (int[] items) : Entity {
+   public readonly int[] Items = items;
 }
 
 // Implements the ITEM_DEFINED_TRANSFORMATION entity
@@ -229,6 +239,15 @@ class SurfaceCurve (int curve, int[] associated, string repr) : Entity {
 class Toroid (int coordsys, double major, double minor) : ElementarySurface (coordsys) {
    public readonly double MajorRadius = major;
    public readonly double MinorRadius = minor;
+}
+
+// Implementes the TRIMMED_CURVE entity
+class TrimmedCurve (int curve, int[] trimstart, int[] trimend, bool samesense, string masterRepresentation) : Entity {
+   public readonly int Curve = curve;
+   public readonly int[] TrimStart = trimstart; // PARAMETER_VALUE and or CARTESIAN_POINT
+   public readonly int[] TrimEnd = trimend;
+   public readonly bool SameSense = samesense; // If false, the TrimmedCurve is the flip of the underlying curve
+   public readonly bool PreferTrimPts = masterRepresentation == "CARTESIAN_POINT"; // If true, the TrimStart and TrimEnd are CARTESIAN_POINTs, otherwise they are PARAMETER_VALUEs
 }
 
 // Implements the VECTOR entity
