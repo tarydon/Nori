@@ -79,6 +79,18 @@ partial class STEPReader {
       return a3;
    }
 
+   Arc3 MakeArc (int pairId, Circle circle, double startAng, double endAng, bool ccw) {
+      CoordSystem cs = GetCoordSys (circle.CoordSys);
+      if ((startAng < endAng) ^ (!ccw)) {
+         Vector3 zaxis = cs.VecZ, xaxis = cs.VecX.Rotated (zaxis, true, startAng);
+         return new Arc3 (pairId, new CoordSystem (cs.Org, xaxis, zaxis * xaxis), circle.Radius, endAng - startAng);
+      } else {
+         Vector3 zaxis = cs.VecZ, xaxis = cs.VecX.Rotated (zaxis, true, startAng);
+         zaxis = -zaxis; // Flip the z-axis to get the correct direction of rotation
+         return new Arc3 (pairId, new CoordSystem (cs.Org, xaxis, zaxis * xaxis), circle.Radius, Lib.TwoPI - startAng + endAng);
+      }
+   }
+
    Contour3 MakeContour (int edgeLoop, bool dir, bool outer) {
       mEdges.Clear ();
       EdgeLoop el = (EdgeLoop)D[edgeLoop]!;
@@ -181,7 +193,59 @@ partial class STEPReader {
 
    void Process (CompositeCurve cc) {
       mEdges.Clear ();
-      // TODO build the segments into mEdges
+      foreach (var n in cc.Segments) {
+         CompositeCurveSegment seg = (CompositeCurveSegment)D[n]!;
+
+         double t1 = double.NaN, t2 = double.NaN;
+         Point3 p1 = Point3.Nil, p2 = Point3.Nil;
+         bool preferCartesian = false, ccwArc = true;
+
+         int ncurve = seg.Segment; Entity? curveEnt = null;
+         while (curveEnt == null) {
+            switch (D[ncurve]) {
+               case SurfaceCurve sc:
+                  ncurve = sc.Curve;
+                  break;
+               case TrimmedCurve tc:
+                  ncurve = tc.Curve;
+                  t1 = tc.TrimStart.Parameter; t2 = tc.TrimEnd.Parameter;
+                  if (tc.TrimStart.Cartesian > 0) p1 = GetCartesianPoint (tc.TrimStart.Cartesian);
+                  if (tc.TrimEnd.Cartesian > 0) p2 = GetCartesianPoint (tc.TrimEnd.Cartesian);
+                  preferCartesian = tc.PreferCartesianTrim;
+                  if (!tc.SameSense) ccwArc = !ccwArc;
+                  break;
+               default:
+                  curveEnt = D[ncurve];
+                  break;
+            }
+         }
+
+         if (!seg.SameDirection) {
+            (t1, t2) = (t2, t1);
+            (p1, p2) = (p2, p1);
+            ccwArc = !ccwArc;
+         }
+         Curve3 edge = curveEnt switch {
+            Line line => makeLine (line),
+            Circle circle => MakeArc (seg.Id, circle, p1, p2, ccwArc),
+            _ => throw new BadCaseException (ncurve)
+         };
+         mEdges.Add (edge);
+
+         // Helper functions
+         Curve3 makeLine (Line line) {
+            if (!preferCartesian) {
+               Point3 org = GetCartesianPoint (line.Start); Vector3 ray = GetVector (line.Ray);
+               p1 = org + ray * t1; p2 = org + ray * t2;
+            }
+            return new Line3 (0, p1, p2);
+         }
+
+         Curve3 makeArc (Circle circle) {
+            if (!preferCartesian) return MakeArc (0, circle, t1, t2, ccwArc);
+            return MakeArc (0, circle, p1, p2, ccwArc);
+         }
+      }
       mModel.Ents.Add (new Contour3 ([..mEdges]));
    }
 }

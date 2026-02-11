@@ -75,10 +75,10 @@ class CompositeCurveSegment (bool sameDirection, int segment) : Entity {
 }
 
 // Implements the AXIS2_PLACEMENT_3D entity
-class CoordSys (int origin, int xaxis, int yaxis) : Entity {
+class CoordSys (int origin, int zaxis, int xaxis) : Entity {
    public readonly int Origin = origin;
-   public readonly int ZAxis = xaxis;
-   public readonly int XAxis = yaxis;
+   public readonly int ZAxis = zaxis;
+   public readonly int XAxis = xaxis;
 }
 
 // Implements the AXIS2_PLACEMENT_2D entity
@@ -242,12 +242,17 @@ class Toroid (int coordsys, double major, double minor) : ElementarySurface (coo
 }
 
 // Implementes the TRIMMED_CURVE entity
-class TrimmedCurve (int curve, int[] trimstart, int[] trimend, bool samesense, string masterRepresentation) : Entity {
+class TrimmedCurve (int curve, TrimSelect trimstart, TrimSelect trimend, bool samesense, string masterRepresentation) : Entity {
    public readonly int Curve = curve;
-   public readonly int[] TrimStart = trimstart; // PARAMETER_VALUE and or CARTESIAN_POINT
-   public readonly int[] TrimEnd = trimend;
+   public readonly TrimSelect TrimStart = trimstart;
+   public readonly TrimSelect TrimEnd = trimend;
    public readonly bool SameSense = samesense; // If false, the TrimmedCurve is the flip of the underlying curve
-   public readonly bool PreferTrimPts = masterRepresentation == "CARTESIAN_POINT"; // If true, the TrimStart and TrimEnd are CARTESIAN_POINTs, otherwise they are PARAMETER_VALUEs
+   public readonly bool PreferCartesianTrim = masterRepresentation == "CARTESIAN_POINT";
+}
+
+class TrimSelect (int cartesian, double parameter) {
+   public readonly int Cartesian = cartesian;
+   public readonly double Parameter = parameter;
 }
 
 // Implements the VECTOR entity

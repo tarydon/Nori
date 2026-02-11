@@ -120,10 +120,10 @@ partial class STEPReader {
 
    void Check (TrimmedCurve tc) {
       CheckCurve (tc.Curve);
-      foreach (var n in tc.TrimStart)
-         Check ((Cartesian)D[n]!); // TODO Could be a double (parameter value) instead of a Cartesian point
-      foreach (var n in tc.TrimEnd)
-         Check ((Cartesian)D[n]!);
+      if (tc.TrimStart.Cartesian > 0)
+         Check ((Cartesian)D[tc.TrimStart.Cartesian]!);
+      if (tc.TrimEnd.Cartesian > 0)
+         Check ((Cartesian)D[tc.TrimEnd.Cartesian]!);
    }
 
    void Check (Vector v) { Check ((Direction)D[v.Direction]!); }

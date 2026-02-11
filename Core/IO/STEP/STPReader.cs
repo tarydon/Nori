@@ -229,6 +229,19 @@ public partial class STEPReader {
       return S[start..N];
    }
 
+   TrimSelect RTrimSelect () {
+      // A set containing reference to a cartesian point and the 't' parameter on the curve. Both or either of them could be mentioned in any order.
+      RTryMatch (','); RTryMatch ('('); RSpace ();
+      int cartesian = 0; double t = double.NaN;
+      for (int i = 0; i < 2; i++) {
+         if (S[N++] == '#') cartesian = RInt ();
+         else t = RDouble ();
+         RSpace ();
+         if (S[N++] == ')') break;
+      }
+      return new (cartesian, t);
+   }
+
    // Skip past whitespace
    void RSpace () { while (char.IsWhiteSpace (S[N])) N++; }
 
@@ -279,7 +292,7 @@ public partial class STEPReader {
    SpunSurface RSpunSurface () { RString (); return new (RRef (), RRef ()); }
    SurfaceCurve RSurfaceCurve () { RString (); return new (RRef (), RRefs (), REnum ()); }
    Toroid RToroid () { RString (); return new Toroid (RRef (), RDouble (), RDouble ()); }
-   TrimmedCurve RTrimmedCurve () { RString (); return new (RRef (), RRefs (), RRefs (), RBool (), REnum ()); }
+   TrimmedCurve RTrimmedCurve () { RString (); return new (RRef (), RTrimSelect (), RTrimSelect (), RBool (), REnum ()); }
    Vector RVector () { RString (); return new (RRef (), RDouble ()); }
    VertexPoint RVertexPoint () { RString (); return new (RRef ()); }
 
