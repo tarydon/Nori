@@ -641,6 +641,7 @@ public partial class Poly {
       if (width >= (2 * radius) - tolerance) return null; // Check: Slot fits the given seg diameter.
 
       // Computing the four corner points (topLeft, botLeft, botRight and topRight).
+      if ((arcSeg.Flags & EFlags.CW) != 0) isInside = !isInside;
       Point2 cen = arcSeg.Center, tangPt = cen.Polar (radius, angle), botMid = tangPt.Polar (isInside ? -depth : depth, angle);
       Point2 tempPt = botMid.Polar (width / 2, angle), botRight = botMid + (botMid - tempPt).Perpendicular ();
       if (isInside && cen.DistTo (botRight) >= radius) return null;
