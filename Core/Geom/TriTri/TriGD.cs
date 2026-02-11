@@ -5,9 +5,9 @@ public static partial class Tri {
       // Step 1. Check if triangle 1 is completely on one side of triangle 2's plane
       int a1 = t1.A, b1 = t1.B, c1 = t1.C, a2 = t2.A, b2 = t2.B, c2 = t2.C;
       Vector3f N2 = t2.N; float d2 = t2.D;
-      int sa1 = Sign (Dot (in p[a1], in N2) + d2);
-      int sb1 = Sign (Dot (in p[b1], in N2) + d2);
-      int sc1 = Sign (Dot (in p[c1], in N2) + d2);
+      int sa1 = Sign (Dot (p[a1], N2) + d2);
+      int sb1 = Sign (Dot (p[b1], N2) + d2);
+      int sc1 = Sign (Dot (p[c1], N2) + d2);
 
       // If all the signs are equal, triangle 1 is on one side of triangle 2, OR
       // they are coplanar.
@@ -18,9 +18,9 @@ public static partial class Tri {
 
       // Step 2. Check if triangle 2 is completely on one side of triangle 1
       Vector3f N1 = t1.N; float d1 = t1.D;
-      int sa2 = Sign (Dot (in p[a2], in N1) + d1);
-      int sb2 = Sign (Dot (in p[b2], in N1) + d1);
-      int sc2 = Sign (Dot (in p[c2], in N1) + d1);
+      int sa2 = Sign (Dot (p[a2], N1) + d1);
+      int sb2 = Sign (Dot (p[b2], N1) + d1);
+      int sc2 = Sign (Dot (p[c2], N1) + d1);
       if (sa2 == sb2 && sa2 == sc2) {
          if (sa2 == 0) goto Coplanar;     // Defensive check for floating-point tolerance
          return false;
