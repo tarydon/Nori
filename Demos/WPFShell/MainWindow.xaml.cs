@@ -1,4 +1,5 @@
-﻿using System.Windows;
+﻿using System.ComponentModel.DataAnnotations;
+using System.Windows;
 using Nori;
 
 namespace WPFShell;
@@ -15,7 +16,8 @@ public partial class MainWindow : Window {
    void OnLuxReady (int _) {
       var source = PresentationSource.FromVisual (this);
       if (source != null) Lux.DPIScale = (float)source.CompositionTarget.TransformToDevice.M11;
-      TraceVN.TextColor = Color4.Yellow;
+      TraceVN.TextColor = Color4.DarkBlue;
+      Lib.Tracer = TraceVN.Print;
       new SceneManipulator ();
       Lux.UIScene = new DemoScene ();
    }
@@ -23,13 +25,27 @@ public partial class MainWindow : Window {
 
 class DemoScene : Scene2 {
    public DemoScene () {
-      mFace = new (Lib.ReadBytes ("nori:GL/Fonts/Roboto-Regular.ttf"), (int)(48 * Lux.DPIScale));
-      Bound = new Bound2 (0, 0, 100, 50);
-      BgrdColor = new Color4 (128, 96, 64);
-      Root = new SimpleVN (
-         () => (Lux.Color, Lux.TypeFace) = (Color4.White, mFace),
-         () => Lux.TextPx ("Welcome to Nori.", new Vec2S (100, 100))
-      );
+      mDwg = DXFReader.Load ("c:/etc/LongPart.dxf");
+      mDwg.Ents.RemoveIf (a => a is E2Bendline);
+      BgrdColor = new Color4 (192, 196, 200);
+      Bound = mDwg.Bound.InflatedF (1.05);
+      VNode[] vnodes = [new Dwg2VN (mDwg), new DwgFillVN (mDwg), TraceVN.It];
+      Root = new GroupVN (vnodes);
+      Lib.Post (Process);
    }
-   TypeFace mFace;
+
+   void Process () {
+      List<Node> nodes = [];
+      foreach (var p in mDwg.Polys) {
+         var b = p.GetBound ();
+         int x0 = (int)b.X.Min, x1 = (int)b.X.Max + 1;
+         if (x1 - x0 > 1000) continue;
+         int y = (int)b.Y.Mid, len = (int)(p.GetPerimeter () + 0.5);
+         nodes.Add (new (x0, x1, y, len));
+      }
+      Optimizer opt = new (nodes);
+      opt.Process ();
+   }
+
+   Dwg2 mDwg;
 }
