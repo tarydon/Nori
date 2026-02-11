@@ -629,11 +629,11 @@ public partial class Poly {
 
    /// <summary>Inserts key slot on the specific angle (returns null if not possible)</summary>
    /// <param name="seg">Current segment index on the poly</param>
-   /// <param name="isInside">Whether the key slot generate inside of the poly</param>
+   /// <param name="isLeft">Whether the key slot generate left side of the poly</param>
    /// <param name="width">Width of the key slot</param>
    /// <param name="depth">Depth of the key slot</param>
    /// <param name="angle">Orientation of the key slot</param>
-   public Poly? KeySlot (int seg, bool isInside, double width, double depth, double angle) {
+   public Poly? KeySlot (int seg, bool isLeft, double width, double depth, double angle) {
       var arcSeg = this[seg];
       if (!arcSeg.IsArc || width.IsZero () || depth.IsZero ()) return null;
 
@@ -641,10 +641,10 @@ public partial class Poly {
       if (width >= (2 * radius) - tolerance) return null; // Check: Slot fits the given seg diameter.
 
       // Computing the four corner points (topLeft, botLeft, botRight and topRight).
-      if ((arcSeg.Flags & EFlags.CW) != 0) isInside = !isInside;
-      Point2 cen = arcSeg.Center, tangPt = cen.Polar (radius, angle), botMid = tangPt.Polar (isInside ? -depth : depth, angle);
+      if ((arcSeg.Flags & EFlags.CW) != 0) isLeft = !isLeft;
+      Point2 cen = arcSeg.Center, tangPt = cen.Polar (radius, angle), botMid = tangPt.Polar (isLeft ? -depth : depth, angle);
       Point2 tempPt = botMid.Polar (width / 2, angle), botRight = botMid + (botMid - tempPt).Perpendicular ();
-      if (isInside && cen.DistTo (botRight) >= radius) return null;
+      if (isLeft && cen.DistTo (botRight) >= radius) return null;
       Point2 botLeft = botMid + (tempPt - botMid).Perpendicular ();
       // Simple trigonometry function to compute topLeft and topRight for the key slot. file://N:/Doc/Img/KeySlotPoints.png
       double ang = Math.Asin ((width / 2) / radius), dist = (width / 2) / Math.Tan (ang);
