@@ -5,7 +5,7 @@
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-		<Optimize>true</Optimize>
+		<Optimize>false</Optimize>
 		<OutDir>../../Bin</OutDir>
 		<AllowUnsafeBlocks>True</AllowUnsafeBlocks>
   </PropertyGroup>

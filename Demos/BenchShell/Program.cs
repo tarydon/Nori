@@ -54,51 +54,36 @@ public class Tester {
    CTri[] CT, CT2;
    float[] F, F2;
 
-   [Benchmark (Baseline = true)]
-   public void CollideFlux () {
+   public unsafe void CollideMoller () {
+      int crashes = 0;
+      fixed (float* pf1 = F) {
+         for (int i = 0, n = Crash.Count; i < n; i++) {
+            int a = i * 2;
+            bool check = Tri.CollideMoller (pf1, ref CT[a], ref CT[a + 1]);
+            if (check) crashes++;
+         }
+      }
+      if (crashes != 14708) throw new NotImplementedException ();
+   }
+
+   [Benchmark (Baseline =true)]
+   public unsafe void CollideTriTri () {
       int crashes = 0;
       for (int i = 0, n = Crash.Count; i < n; i++) {
-         int a = i * 6;
-         bool check = Tri.CollideFlux (PT[a], PT[a + 1], PT[a + 2], PT[a + 3], PT[a + 4], PT[a + 5]);
+         int a = i * 2;
+         bool check = Tri.TriTri (PT, in CT[a], in CT[a + 1]);
          if (check) crashes++;
       }
       if (crashes != 14708) throw new NotImplementedException ();
    }
 
    [Benchmark]
-   public unsafe void CollideMoller () {
-      int crashes = 0; 
-      fixed (float* pf = F) {
-         for (int i = 0, n = Crash.Count; i < n; i++) {
-            int a = i * 6;
-            bool check = Tri.CollideMoller (pf, a, a + 1, a + 2, a + 3, a + 4, a + 5);
-            if (check) crashes++;
-         }
-      }
-      if (crashes != 14708) throw new NotImplementedException ();
-   }
-
-   [Benchmark]
-   public unsafe void CollideMollerFast () {
+   public unsafe void CollideGD () {
       int crashes = 0;
-      fixed (float* pf1 = F) {
+      fixed (Point3f* pf = PT) {
          for (int i = 0, n = Crash.Count; i < n; i++) {
             int a = i * 2;
-            bool check = Tri.CollideMollerFast (pf1, ref CT[a], ref CT[a + 1]);
-            if (check) crashes++;
-         }
-      }
-      if (crashes != 14708) throw new NotImplementedException ();
-   }
-
-   [Benchmark]
-   public unsafe void CollideXformed () {
-      int crashes = 0;
-      fixed (Point3f* pp1= PT)
-      fixed (Point3f* pp2= PT2) {
-         for (int i = 0, n = Crash.Count; i < n; i++) {
-            int a = i * 2;
-            bool check = Tri.Collide (pp1, ref CT[a], pp2, ref CT2[a + 1], mXfm);
+            bool check = Tri.TriGD (pf, in CT[a], in CT[a + 1]);
             if (check) crashes++;
          }
       }
@@ -110,10 +95,9 @@ static class Program {
    public static void Main () {
       BenchmarkRunner.Run<Tester> ();
 
-      //var t = new Tester ();
-      //t.CollideFlux ();
-      //t.CollideMoller ();
-      //t.CollideMollerFast ();
-      //t.CollideXformed ();
+      var t = new Tester ();
+      t.CollideMoller ();
+      t.CollideTriTri ();
+      t.CollideGD ();
    }
 }

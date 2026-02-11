@@ -187,6 +187,15 @@ public readonly struct Point2 : IEQuable<Point2> {
 }
 #endregion
 
+public readonly struct Point2f {
+   public Point2f (double x, double y) => (X, Y) = ((float)x, (float)y);
+
+   public Point2f (float x, float y) => (X, Y) = (x, y);
+
+   public readonly float X;
+   public readonly float Y;
+}
+
 #region struct Point3f -----------------------------------------------------------------------------
 /// <summary>Point in 3 dimensions, 32-bit float components</summary>
 public readonly struct Point3f {
@@ -206,9 +215,7 @@ public readonly struct Point3f {
 
    /// <summary>The 'Nil' point</summary>
    public static readonly Point3f Nil = new (float.NaN, float.NaN, float.NaN);
-   /// <summary>
-   /// The 'zero' point (origin)
-   /// </summary>
+   /// <summary>The 'zero' point (origin)</summary>
    public static readonly Point3f Zero = new (0, 0, 0);
    /// <summary>Is this point Nil (similar to NaN for double)</summary>
    public bool IsNil => X.IsNaN ();

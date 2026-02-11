@@ -281,6 +281,30 @@ public class Matrix3 : IEQuable<Matrix3> {
       return new (m11 * a, m12 * a, m13 * a, m21 * a, m22 * a, m23 * a, m31 * a, m32 * a, m33 * a, dx * a, dy * a, dz * a, Flags);
    }
 
+   public static Matrix3 Between (in CoordSystem from, in CoordSystem to) {
+      Point3 p0 = from.Org, p1 = to.Org;
+      Vector3 x0 = from.VecX, y0 = from.VecY, z0 = from.VecZ,
+              x1 = to.VecX, y1 = to.VecY, z1 = to.VecZ;
+      var tx = -(x0.X * p0.X + x0.Y * p0.Y + x0.Z * p0.Z);
+      var ty = -(y0.X * p0.X + y0.Y * p0.Y + y0.Z * p0.Z);
+      var tz = -(z0.X * p0.X + z0.Y * p0.Y + z0.Z * p0.Z);
+
+      return new Matrix3 (
+         x0.X * x1.X + y0.X * y1.X + z0.X * z1.X,
+         x0.X * x1.Y + y0.X * y1.Y + z0.X * z1.Y,
+         x0.X * x1.Z + y0.X * y1.Z + z0.X * z1.Z,
+         x0.Y * x1.X + y0.Y * y1.X + z0.Y * z1.X,
+         x0.Y * x1.Y + y0.Y * y1.Y + z0.Y * z1.Y,
+         x0.Y * x1.Z + y0.Y * y1.Z + z0.Y * z1.Z,
+         x0.Z * x1.X + y0.Z * y1.X + z0.Z * z1.X,
+         x0.Z * x1.Y + y0.Z * y1.Y + z0.Z * z1.Y,
+         x0.Z * x1.Z + y0.Z * y1.Z + z0.Z * z1.Z,
+         tx * x1.X + ty * y1.X + tz * z1.X + p1.X,
+         tx * x1.Y + ty * y1.Y + tz * z1.Y + p1.Y,
+         tx * x1.Z + ty * y1.Z + tz * z1.Z + p1.Z
+      );
+   }
+
    /// <summary>Composes a matrix to go TO the given coordinate-system from the World</summary>
    public static Matrix3 To (in CoordSystem cs) {
       Vector3 x = cs.VecX, y = cs.VecY, z = cs.VecZ;
@@ -381,9 +405,7 @@ public class Matrix3 : IEQuable<Matrix3> {
       double z = v.X * m.M13 + v.Y * m.M23 + v.Z * m.M33;
       return new (x, y, z);
    }
-   /// <summary>
-   /// Multiply a Vector3f by a Matrix
-   /// </summary>
+   /// <summary>Multiply a Vector3f by a Matrix</summary>
    public static Vector3f operator * (Vector3f v, Matrix3 m) {
       if (m.IsIdentity || m.IsTranslation) return v;
       double x = v.X * m.M11 + v.Y * m.M21 + v.Z * m.M31;

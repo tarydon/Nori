@@ -1,18 +1,18 @@
-﻿namespace Nori;
+// ────── ╔╗
+// ╔═╦╦═╦╦╬╣ CTri.cs
+// ║║║║╬║╔╣║ <<TODO>>
+// ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
+namespace Nori;
 using static Math;
 
-/// <summary>
-/// Represents a 'collision triangle'
-/// </summary>
+/// <summary>Represents a 'collision triangle'</summary>
 public readonly struct CTri {
-   /// <summary>
-   /// Construct a CTri given a span of floats and indices into that for the 3 corners
-   /// </summary>
-   public unsafe CTri (ReadOnlySpan<Point3f>pf, int a, int b, int c) {
+   /// <summary>Construct a CTri given a span of floats and indices into that for the 3 corners</summary>
+   public unsafe CTri (ReadOnlySpan<Point3f> pts, int a, int b, int c) {
       A = a; B = b; C = c;
 
       // Fetch the three vertices
-      Point3f pa = pf[A], pb = pf[B], pc = pf[C];
+      Point3f pa = pts[A], pb = pts[B], pc = pts[C];
 
       // Compute the edges AB and AC, then the normal and the intercept
       Vector3f e1 = pb - pa, e2 = pc - pa;
@@ -20,26 +20,18 @@ public readonly struct CTri {
       D = -(N.X * pa.X + N.Y * pa.Y + N.Z * pa.Z);
 
       K = 0b_0001;  // Assume we're using Xy plane for projecting (00 01)
-      float ax = MathF.Abs (N.X), ay = MathF.Abs (N.Y), az = MathF.Abs (N.Z);
-      if (ax >= ay && ax >= az) K = 0b_0110;         // Use YZ plane (01 10)
-      else if (ay >= ax && ay >= az) K = 0b_0010;    // Use XZ plane (00 10)
+      float nx = MathF.Abs (N.X), ny = MathF.Abs (N.Y), nz = MathF.Abs (N.Z);
+      if (nx >= ny && nx >= nz) K = 0b_0110;         // Use YZ plane (01 10)
+      else if (ny >= nx && ny >= nz) K = 0b_0010;    // Use XZ plane (00 10)
    }
 
-   /// <summary>
-   /// Indices of the points in the Point3f array
-   /// </summary>
+   /// <summary>Indices of the points in the Point3f array</summary>
    public readonly int A, B, C;
-   /// <summary>
-   /// Normal vector of the plane
-   /// </summary>
+   /// <summary>Normal vector of the plane</summary>
    public readonly Vector3f N;
-   /// <summary>
-   /// Intercept used for distance checks
-   /// </summary>
+   /// <summary>Intercept used for distance checks</summary>
    public readonly float D;
-   /// <summary>
-   /// Encoding of which 2 axes to use for a 2D projection
-   /// </summary>
+   /// <summary>Encoding of which 2 axes to use for a 2D projection</summary>
    /// Lowest 2 bits encode a K1 value, and next 2 bits encode a K0 value.
    /// These values are 0,1,2 for X,Y,Z axes. So, if K0=0, and K1=2 then we
    /// are using the X-Z plane for projection
@@ -47,7 +39,7 @@ public readonly struct CTri {
 }
 
 public static partial class Tri {
-   public static unsafe bool CollideMollerFast (float* p, ref CTri ta, ref CTri tb) {
+   public static unsafe bool CollideMoller (float* p, ref CTri ta, ref CTri tb) {
       // ---------------------------------------------------
       // 0. Fetch the ordinates of the triangle
       // Get V0, V1, V2 as the vertices of the first triangle
@@ -180,7 +172,7 @@ public static partial class Tri {
       if (isect11 < isect20 + 1e-10 || isect21 < isect10 + 1e-10) return false;
       return true;
 
-    Coplanar:
+   Coplanar:
       // Fetch 2 triangles into 2D space (using only x and z components)
       if (ta.K == 0b_0110) {  
          V0x = V0y; V1x = V1y; V2x = V2y;
@@ -188,7 +180,7 @@ public static partial class Tri {
       } else if (ta.K == 0b_0001) {
          V0z = V0y; V1z = V1y; V2z = V2y;
          U0z = U0y; U1z = U1y; U2z = U2y;
-      }
+      } 
 
       // Use separating axis theorem and test against 6 possible separation axes,
       // each axis is the perpendicular to one of the edges from both of the triangles
