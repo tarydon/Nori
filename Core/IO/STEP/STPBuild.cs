@@ -34,7 +34,12 @@ partial class STEPReader {
    CoordSystem GetCoordSys (int nCoordSys) {
       CoordSys cs = (CoordSys)D[nCoordSys]!;
       Point3 org = ((Cartesian)D[cs.Origin]!).Pt;
-      Vector3 zaxis = GetDirection (cs.ZAxis), xaxis = GetDirection (cs.XAxis);
+      Vector3 zaxis = GetDirection (cs.ZAxis), xaxis = Vector3.XAxis;
+      // X-axis can be ommited. In that case, we can choose any arbitrary xAxis,
+      // which is perpendicular to z-axis
+      if (cs.XAxis > 0) xaxis = GetDirection (cs.XAxis);
+      else if (!zaxis.EQ (Vector3.ZAxis)) xaxis = Vector3.ZAxis * zaxis;
+      
       return new (org, xaxis, zaxis * xaxis);
    }
 
@@ -81,13 +86,16 @@ partial class STEPReader {
 
    Arc3 MakeArc (int pairId, Circle circle, double startAng, double endAng, bool ccw) {
       CoordSystem cs = GetCoordSys (circle.CoordSys);
-      if ((startAng < endAng) ^ (!ccw)) {
+      startAng = Lib.NormalizeAngle (startAng); endAng = Lib.NormalizeAngle (endAng);
+      if (endAng < startAng) endAng += Lib.TwoPI;
+      double angleSpan = endAng - startAng;
+      if (ccw) {
          Vector3 zaxis = cs.VecZ, xaxis = cs.VecX.Rotated (zaxis, true, startAng);
-         return new Arc3 (pairId, new CoordSystem (cs.Org, xaxis, zaxis * xaxis), circle.Radius, endAng - startAng);
+         return new Arc3 (pairId, new CoordSystem (cs.Org, xaxis, zaxis * xaxis), circle.Radius, angleSpan);
       } else {
          Vector3 zaxis = cs.VecZ, xaxis = cs.VecX.Rotated (zaxis, true, startAng);
          zaxis = -zaxis; // Flip the z-axis to get the correct direction of rotation
-         return new Arc3 (pairId, new CoordSystem (cs.Org, xaxis, zaxis * xaxis), circle.Radius, Lib.TwoPI - startAng + endAng);
+         return new Arc3 (pairId, new CoordSystem (cs.Org, xaxis, zaxis * xaxis), circle.Radius, Lib.TwoPI - angleSpan);
       }
    }
 
@@ -227,12 +235,13 @@ partial class STEPReader {
          }
          Curve3 edge = curveEnt switch {
             Line line => makeLine (line),
-            Circle circle => MakeArc (seg.Id, circle, p1, p2, ccwArc),
+            Circle circle => makeArc (circle),
+            BSplineCurveWithKnots bspline => makeSpline (bspline),
             _ => throw new BadCaseException (ncurve)
          };
          mEdges.Add (edge);
 
-         // Helper functions
+         // Helper functions -------------------------------------
          Curve3 makeLine (Line line) {
             if (!preferCartesian) {
                Point3 org = GetCartesianPoint (line.Start); Vector3 ray = GetVector (line.Ray);
@@ -245,7 +254,43 @@ partial class STEPReader {
             if (!preferCartesian) return MakeArc (0, circle, t1, t2, ccwArc);
             return MakeArc (0, circle, p1, p2, ccwArc);
          }
+
+         Curve3 makeSpline (BSplineCurveWithKnots bspline) {
+            int nCtrl = bspline.Pts.Length;
+            var ctrl = ImmutableArray.CreateBuilder<Point3> (nCtrl);
+            for (int i = 0; i < nCtrl; i++)
+               ctrl.Add(GetCartesianPoint (bspline.Pts[i]));
+
+            // Expand STEP knot vector (unique knots + multiplicities) into full knot array.
+            var knot = ImmutableArray.CreateBuilder<double> (bspline.Multiplicities.Sum ());
+            for (int i = 0; i < bspline.Knots.Length; i++) {
+               double kv = bspline.Knots[i];
+               for (int k = 0, mult = bspline.Multiplicities[i]; k < mult; k++)
+                  knot.Add(kv);
+            }
+
+            // Non-rational curve: all weights = 1
+            var weight = ImmutableArray.CreateBuilder<double> (nCtrl);
+            for (int i = 0; i < nCtrl; i++)
+               weight.Add (1.0);
+
+            if (!seg.SameDirection) {
+               // We will have to adjust the knot values.
+               double umin = knot[0], umax = knot[^1];
+               var newKnots = ImmutableArray.CreateBuilder<double> (knot.Count);
+
+               for (int i = 0, m = knot.Count; i < m; i++)
+                  newKnots.Add (umin + umax - knot[m - i - 1]);
+               knot = newKnots;
+               ctrl.Reverse (); // Note weights are not reversed as they are all 1.0s
+            }
+
+            if (preferCartesian ? (p1.IsNil || (p1.EQ (ctrl[0]) && p2.EQ (ctrl[^1]))) : (t1.IsNan || (t1.EQ (knot[0]) && t2.EQ (knot[1]))))
+                  return new NurbsCurve3 (0, ctrl.MoveToImmutable (), knot.MoveToImmutable (), weight.MoveToImmutable ());
+            else
+               throw new NotImplementedException ("Trimming of Nurbs curve not yet supported");
+         }
       }
-      mModel.Ents.Add (new Contour3 ([..mEdges]));
+      mModel.Ents.Add (new E3CompositePath (cc.Id, [..mEdges]));
    }
 }

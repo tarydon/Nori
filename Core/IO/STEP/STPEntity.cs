@@ -247,7 +247,7 @@ class TrimmedCurve (int curve, TrimSelect trimstart, TrimSelect trimend, bool sa
    public readonly TrimSelect TrimStart = trimstart;
    public readonly TrimSelect TrimEnd = trimend;
    public readonly bool SameSense = samesense; // If false, the TrimmedCurve is the flip of the underlying curve
-   public readonly bool PreferCartesianTrim = masterRepresentation == "CARTESIAN_POINT";
+   public readonly bool PreferCartesianTrim = masterRepresentation == ".CARTESIAN.";
 }
 
 class TrimSelect (int cartesian, double parameter) {
