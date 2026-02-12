@@ -188,6 +188,17 @@ public readonly struct Point2 : IEQuable<Point2> {
 #endregion
 
 #region struct Point3f -----------------------------------------------------------------------------
+public readonly struct Point2f {
+   public Point2f (double x, double y) => (X, Y) = ((float)x, (float)y);
+
+   public Point2f (float x, float y) => (X, Y) = (x, y);
+
+   public readonly float X;
+   public readonly float Y;
+}
+#endregion
+
+#region struct Point3f -----------------------------------------------------------------------------
 /// <summary>Point in 3 dimensions, 32-bit float components</summary>
 public readonly struct Point3f {
    // Constructors -------------------------------------------------------------

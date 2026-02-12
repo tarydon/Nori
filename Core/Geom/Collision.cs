@@ -5,12 +5,37 @@
 using static System.MathF;
 namespace Nori;
 
-/// <summary>Represents a triangle defined by three points in 3D space.</summary>
-public readonly struct CTri (ReadOnlySpan<Point3f> pts, int a, int b, int c) {
-   public readonly int A = a;
-   public readonly int B = b;
-   public readonly int C = c;
-   public readonly Vector3f N = (pts[b] - pts[a]) * (pts[c] - pts[a]);
+/// <summary>Represents a 'collision triangle'</summary>
+public readonly struct CTri {
+   /// <summary>Construct a CTri given a span of floats and indices into that for the 3 corners</summary>
+   public unsafe CTri (ReadOnlySpan<Point3f> pts, int a, int b, int c) {
+      A = a; B = b; C = c;
+
+      // Fetch the three vertices
+      Point3f pa = pts[A], pb = pts[B], pc = pts[C];
+
+      // Compute the edges AB and AC, then the normal and the intercept
+      Vector3f e1 = pb - pa, e2 = pc - pa;
+      N = e1 * e2;
+      D = -(N.X * pa.X + N.Y * pa.Y + N.Z * pa.Z);
+
+      K = 0b_0001;  // Assume we're using Xy plane for projecting (00 01)
+      float nx = MathF.Abs (N.X), ny = MathF.Abs (N.Y), nz = MathF.Abs (N.Z);
+      if (nx >= ny && nx >= nz) K = 0b_0110;         // Use YZ plane (01 10)
+      else if (ny >= nx && ny >= nz) K = 0b_0010;    // Use XZ plane (00 10)
+   }
+
+   /// <summary>Indices of the points in the Point3f array</summary>
+   public readonly int A, B, C;
+   /// <summary>Normal vector of the plane</summary>
+   public readonly Vector3f N;
+   /// <summary>Intercept used for distance checks</summary>
+   public readonly float D;
+   /// <summary>Encoding of which 2 axes to use for a 2D projection</summary>
+   /// Lowest 2 bits encode a K1 value, and next 2 bits encode a K0 value.
+   /// These values are 0,1,2 for X,Y,Z axes. So, if K0=0, and K1=2 then we
+   /// are using the X-Z plane for projection
+   public readonly int K;
 }
 
 /// <summary>Provides methods for collision detection between various geometric primitives.</summary>
@@ -192,61 +217,34 @@ public static class Collision {
    // It implements the Devilliers & Guigue algorithm for triangle-triangle intersection.
    // Reference: https://inria.hal.science/inria-00072100/file/RR-4488.pdf
    public static bool TriTri (ReadOnlySpan<Point3f> pts, in CTri a, in CTri b) {
-      unsafe { 
-         fixed (Point3f* p = pts) return TriTri (p, a.A, a.B, a.C, a.N, b.A, b.B, b.C, b.N);
-      }
-   }
-
-   /// <summary>Given the vertices of two triangles (a1, b1, c1) and (a2, b2, c2), checks if two triangles intersect in the 3D space.</summary>
-   /// See TriTri (pts, triangleA, triangleB) for detailed comments.
-   /// <remarks>This variant is about 25% slower than the first variant.</remarks>
-   public static bool TriTri (in Point3f a1, in Point3f b1, in Point3f c1, in Point3f a2, in Point3f b2, in Point3f c2) {
-      unsafe {
-         Point3f* pts = stackalloc Point3f[] { a1, b1, c1, a2, b2, c2 };
-         return TriTri (pts, 0, 1, 2, (b1 - a1) * (c1 - a1), 3, 4, 5, (b2 - a2) * (c2 - a2));
-      }
+      unsafe { fixed (Point3f* p = pts) return TriTri (p, a, b); }
    }
 
    /// <summary>Checks if two triangles intersect in 3D space.</summary>
-   unsafe static bool TriTri (Point3f* p, int a1, int b1, int c1, in Vector3f n1, int a2, int b2, int c2, in Vector3f n2) {
-      // Step 1. Plane-side tests
-      // 1a. Check if triangle 1 is completely on one side of triangle 2's plane
-      var pa2 = p[a2]; var pa1 = p[a1];
-      var sa1 = Sign (Dot (pa1 - pa2, in n2));
-      var sb1 = Sign (Dot (p[b1] - pa2, in n2));
-      var sc1 = Sign (Dot (p[c1] - pa2, in n2));
-      if (SameSign (sa1, sb1, sc1)) return false;
+   public unsafe static bool TriTri (Point3f* p, in CTri t1, in CTri t2) {
+      // Step 1. Check if triangle 1 is completely on one side of triangle 2's plane
+      int a1 = t1.A, b1 = t1.B, c1 = t1.C, a2 = t2.A, b2 = t2.B, c2 = t2.C;
+      Vector3f N2 = t2.N; float d2 = t2.D;
+      int sa1 = Sign (Dot (p[a1], N2) + d2);
+      int sb1 = Sign (Dot (p[b1], N2) + d2);
+      int sc1 = Sign (Dot (p[c1], N2) + d2);
 
-      // Step 2. Check for coplanar case. 
-      if (sa1 == sb1 && sb1 == sc1 && sa1 == 0) {
-         // Now perform 2D triangle overlap tests by projecting 3D triangle points into 2D space.
-         // Instead of mapping points directly onto the triangle’s plane, we project them onto
-         // a principal plane that best aligns with the triangle. This approach simplifies
-         // the transformation and avoids several costly arithmetic operations.
-         float nx = Abs (n2.X), ny = Abs (n2.Y), nz = Abs (n2.Z);
-         Point2* pt2 = stackalloc Point2[6];
-         Point3f pb1 = p[b1], pc1 = p[c1], pb2 = p[b2], pc2 = p[c2];
-         if (nz > nx && nz > ny) {
-            // Project to XY plane
-            pt2[0] = new (pa1.X, pa1.Y); pt2[1] = new (pb1.X, pb1.Y); pt2[2] = new (pc1.X, pc1.Y);
-            pt2[3] = new (pa2.X, pa2.Y); pt2[4] = new (pb2.X, pb2.Y); pt2[5] = new (pc2.X, pc2.Y);
-         } else if (ny > nx && ny > nz) {
-            // Project to ZX plane
-            pt2[0] = new (pa1.X, pa1.Z); pt2[1] = new (pb1.X, pb1.Z); pt2[2] = new (pc1.X, pc1.Z);
-            pt2[3] = new (pa2.X, pa2.Z); pt2[4] = new (pb2.X, pb2.Z); pt2[5] = new (pc2.X, pc2.Z);
-         } else {
-            // Project to YZ plane
-            pt2[0] = new (pa1.Y, pa1.Z); pt2[1] = new (pb1.Y, pb1.Z); pt2[2] = new (pc1.Y, pc1.Z);
-            pt2[3] = new (pa2.Y, pa2.Z); pt2[4] = new (pb2.Y, pb2.Z); pt2[5] = new (pc2.Y, pc2.Z);
-         }
-         return TriTri (pt2, 0, 1, 2, 3, 4, 5);
+      // If all the signs are equal, triangle 1 is on one side of triangle 2, OR
+      // they are coplanar.
+      if (sa1 == sb1 && sa1 == sc1) {
+         if (sa1 == 0) goto Coplanar;
+         return false;     // Triangle 1 completely on one side of plane 2
       }
 
-      // 1b. Check if triangle 2 is completely on one side of triangle 1's plane
-      var sa2 = Sign (Dot (pa2 - pa1, in n1));
-      var sb2 = Sign (Dot (p[b2] - pa1, in n1));
-      var sc2 = Sign (Dot (p[c2] - pa1, in n1));
-      if (SameSign (sa2, sb2, sc2)) return false;
+      // Step 2. Check if triangle 2 is completely on one side of triangle 1
+      Vector3f N1 = t1.N; float d1 = t1.D;
+      int sa2 = Sign (Dot (p[a2], N1) + d1);
+      int sb2 = Sign (Dot (p[b2], N1) + d1);
+      int sc2 = Sign (Dot (p[c2], N1) + d1);
+      if (sa2 == sb2 && sa2 == sc2) {
+         if (sa2 == 0) goto Coplanar;     // Defensive check for floating-point tolerance
+         return false;
+      }
 
       // Step 3. Convert triangles by reordering vertices in the 'cannonical' form. In this form, vertex 'a'
       // is the isolated vertex on one side of the plane, and it is in the positive half-space.
@@ -262,13 +260,30 @@ public static class Collision {
       // Step 4. Final overlap test on the intersection line
       // After the cannonical reordering, this checks if the 'min' of intersection interval
       // of triangle 1 is less than or equal to the 'max' of triangle 2 and vice-versa.
-      pa1 = p[a1]; pa2 = p[a2]; 
-      return Side (in pa1, in p[b1], in pa2, in p[b2]) <= 0 && Side (in pa1, in p[c1], in p[c2], in pa2) <= 0;
+      return Side (a1, b1, a2, b2) <= 0 && Side (a1, c1, c2, a2) <= 0;
+
+      Coplanar:
+      // Now perform 2D triangle overlap tests by projecting 3D triangle points into 2D space.
+      // Instead of mapping points directly onto the triangle’s plane, we project them onto
+      // a principal plane that best aligns with the triangle. This approach simplifies
+      // the transformation and avoids several costly arithmetic operations.
+      var P2 = XY;
+      if (t1.K == 0b_0110) P2 = YZ;
+      else if (t1.K == 0b_0010) P2 = XZ;
+      Point2f* pt2 = stackalloc Point2f[] { P2 (p[a1]), P2 (p[b1]), P2 (p[c1]), P2 (p[a2]), P2 (p[b2]), P2 (p[c2]) };
+      return TriTri2D (pt2);
+
+      // Helpers ...........................................
+      static Point2f XY (in Point3f p) => new (p.X, p.Y); // Project to XY plane
+      static Point2f YZ (in Point3f p) => new (p.Y, p.Z); // Project to YZ plane
+      static Point2f XZ (in Point3f p) => new (p.X, p.Z); // Project to XZ plane
 
       // Gets the orientation of point 'd' with respect to the plane defined by triangle 'abc'
       // +1 = d is on the positive side of the plane, -1 = d is on the negative side, 0 = d is on the plane
       [MethodImpl (MethodImplOptions.AggressiveInlining)]
-      static float Side (in Point3f a, in Point3f b, in Point3f c, in Point3f d) => Dot (d - a, (b - a) * (c - a));
+      float Side (int a, int b, int c, int d) {
+         var pa = p[a]; return Dot (p[d] - pa, (p[b] - pa) * (p[c] - pa));
+      }
 
       [MethodImpl (MethodImplOptions.AggressiveInlining)]
       static void ReorderTriangle (ref int sa, ref int sb, ref int sc, ref int a, ref int b, ref int c) {
@@ -283,9 +298,6 @@ public static class Collision {
             else (sa, sb, sc, a, b, c) = (sb, sc, sa, b, c, a);         // Rotate left
          }
       }
-
-      [MethodImpl (MethodImplOptions.AggressiveInlining)]
-      static bool SameSign (int a, int b, int c) => a == b && b == c && a != 0;
    }
 
    /// <summary>Tests if two coplanar triangles intersect with each other.</summary>
@@ -294,15 +306,10 @@ public static class Collision {
    /// 2. If edge of first triangle crosses edge of the other
    /// Like the 3D triangle intersection check, the planar variant also uses orientation
    /// tests to determine the intersections. 
-   public static bool TriTri (in Point2 a1, in Point2 b1, in Point2 c1, in Point2 a2, in Point2 b2, in Point2 c2) {
-      unsafe {
-         Point2 * pts = stackalloc Point2[] { a1, b1, c1, a2, b2, c2 };
-         return TriTri (pts, 0, 1, 2, 3, 4, 5);
-      }
-   }
+   unsafe static bool TriTri2D (Point2f* p) {
+      // Triangle vertices.
+      int a1 = 0, b1 = 1, c1 = 2, a2 = 3, b2 = 4, c2 = 5;
 
-   /// <summary>Tests if two coplanar triangles intersect with each other.</summary>
-   unsafe static bool TriTri (Point2* p, int a1, int b1, int c1, int a2, int b2, int c2) {
       // Step 0: Ensure both triangles are ccw
       if (Side (a1, b1, c1) < 0) (b1, c1) = (c1, b1);
       if (Side (a2, b2, c2) < 0) (b2, c2) = (c2, b2);
@@ -379,9 +386,9 @@ public static class Collision {
    [MethodImpl (MethodImplOptions.AggressiveInlining)]
    static float Dot (in Vector3f a, in Vector3f b) => a.X * b.X + a.Y * b.Y + a.Z * b.Z;
    [MethodImpl (MethodImplOptions.AggressiveInlining)]
-   static int Sign (float d) => d switch { < -ESq => -1, > ESq => 1, _ => 0 };
+   static float Dot (in Point3f a, in Vector3f b) => a.X * b.X + a.Y * b.Y + a.Z * b.Z;
    [MethodImpl (MethodImplOptions.AggressiveInlining)]
-   static int Sign (double d) => d switch { < -Lib.EpsilonSq => -1, > Lib.EpsilonSq => 1, _ => 0 };
+   static int Sign (float d) => d switch { < -ESq => -1, > ESq => 1, _ => 0 };
 
    const float E = (float)Lib.Epsilon;
    const float ESq = (float)Lib.EpsilonSq;
