@@ -10,9 +10,9 @@ namespace Nori;
 public readonly struct Vec2F (float x, float y) : IEQuable<Vec2F> {
    public Vec2F (double x, double y) : this ((float)x, (float)y) { }
    public static implicit operator Vec2F (Point2 pt) => new ((float)pt.X, (float)pt.Y);
-   public static explicit operator Vec2F (Vector2 vec) => new ((float)vec.X, (float)vec.Y);
+   public static implicit operator Vec2F (Vector2 vec) => new ((float)vec.X, (float)vec.Y);
    public bool EQ (Vec2F b) => X.EQ (b.X) && Y.EQ (b.Y);
-   public override string ToString () => $"<{X.R5 ()},{Y.R5 ()}>";
+   public override string ToString () => $"<{X.S5 ()},{Y.S5 ()}>";
    public readonly float X = x, Y = y;
 }
 
@@ -29,11 +29,12 @@ public readonly struct Vec2S (short x, short y) : IEQuable<Vec2S> {
 /// <summary>3D vector of floats (used for passing data to OpenGL)</summary>
 [StructLayout (LayoutKind.Sequential, Pack = 4, Size = 12)]
 public readonly struct Vec3F (float x, float y, float z) : IEQuable<Vec3F> {
-   public static explicit operator Vec3F (Point3 pt) => new ((float)pt.X, (float)pt.Y, (float)pt.Z);
-   public static explicit operator Vec3F (Vector3 vec) => new ((float)vec.X, (float)vec.Y, (float)vec.Z);
-   public static explicit operator Vec3F (Point3f pt) => new (pt.X, pt.Y, pt.Z);
+   public static implicit operator Vec3F (Point3 pt) => new ((float)pt.X, (float)pt.Y, (float)pt.Z);
+   public static implicit operator Vec3F (Point3f pt) => new (pt.X, pt.Y, pt.Z);
+   public static implicit operator Vec3F (Vector3 vec) => new ((float)vec.X, (float)vec.Y, (float)vec.Z);
+   public static implicit operator Vec3F (Vector3f vec) => new (vec.X, vec.Y, vec.Z);
    public bool EQ (Vec3F b) => X.EQ (b.X) && Y.EQ (b.Y) && Z.EQ (b.Z);
-   public override string ToString () => $"<{X.R5 ()},{Y.R5 ()},{Z.R5 ()}>";
+   public override string ToString () => $"<{X.S5 ()},{Y.S5 ()},{Z.S5 ()}>";
    public readonly float X = x, Y = y, Z = z;
 }
 

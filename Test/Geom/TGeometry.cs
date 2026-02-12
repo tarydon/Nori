@@ -250,7 +250,7 @@ class GPUTypesTests {
       a.EQ (new (3.6543f, 2.2f)).IsFalse ();
 
       Vec3F d = new (3.654321f, 2.2f, 1.1f); d.Is ("<3.65432,2.2,1.1>");
-      Vec3F e = (Vec3F)new Vector3 (1, 2, 3); e.Is ("<1,2,3>");
+      Vec3F e = new Vector3 (1, 2, 3); e.Is ("<1,2,3>");
       d.EQ (new (3.65432f, 2.2f, 1.1f)).IsTrue ();
       d.EQ (new (3.6543f, 2.2f, 1.1f)).IsFalse ();
 

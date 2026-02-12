@@ -51,10 +51,7 @@ class IntMeshPlaneScene : Scene3 {
       }
       foreach (var poly in output) {
          vnodes.Add (new Curve3VN (poly));
-         if (!poly.Pts[0].EQ (poly.Pts[^1])) {
-            ends.Add ((Vec3F)poly.Start);
-            ends.Add ((Vec3F)poly.End);
-         }
+         if (!poly.Pts[0].EQ (poly.Pts[^1])) { ends.Add (poly.Start); ends.Add (poly.End); }
       }
 
       vnodes.Add (new SimpleVN (
