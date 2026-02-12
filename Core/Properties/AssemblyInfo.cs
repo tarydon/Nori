@@ -7,7 +7,7 @@
 
 [assembly: ComVisible (false)]
 
-[assembly: AssemblyVersion ("2025.08.2.0")]
-[assembly: AssemblyFileVersion ("2025.08.2.0")]
+[assembly: AssemblyVersion ("2026.02.1.0")]
+[assembly: AssemblyFileVersion ("2026.02.1.0")]
 
 [assembly: InternalsVisibleTo ("Nori.Test")]

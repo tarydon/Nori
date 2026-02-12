@@ -131,8 +131,8 @@ class RBRDebugVN : VNode {
 
    void Draw (Point3 pt, Vector3 x, Vector3 y) {
       List<Vec3F> set = [];
-      set.Add ((Vec3F)pt); set.Add ((Vec3F)(pt + x * 400));
-      set.Add ((Vec3F)pt); set.Add ((Vec3F)(pt + y * 200));
+      set.Add (pt); set.Add (pt + x * 400);
+      set.Add (pt); set.Add (pt + y * 200);
       Lux.Lines (set.AsSpan ());
    }
 }
