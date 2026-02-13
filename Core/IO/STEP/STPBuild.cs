@@ -13,6 +13,8 @@ partial class STEPReader {
       if (mModel.Ents.Count == 0) {
          Parse ();
          foreach (var m in D.OfType<Manifold> ()) Process (m);
+         foreach (var s in D.OfType<ShellBasedSurfaceModel> ()) Process (s);
+         foreach (var gs in D.OfType<GeometricSet> ()) Process (gs);
       }
       return mModel;
    }
@@ -26,15 +28,31 @@ partial class STEPReader {
       return cp.Pt;
    }
 
+   // Given a cartesian point object, fetches the underlying point
+   Point3 GetCartesianPoint (int nCartesian) =>((Cartesian)D[nCartesian]!).Pt;
+
    CoordSystem GetCoordSys (int nCoordSys) {
       CoordSys cs = (CoordSys)D[nCoordSys]!;
       Point3 org = ((Cartesian)D[cs.Origin]!).Pt;
-      Vector3 zaxis = GetVector (cs.ZAxis), xaxis = GetVector (cs.XAxis);
+      Vector3 zaxis = GetDirection (cs.ZAxis), xaxis = Vector3.XAxis;
+      // X-axis can be ommited. In that case, we can choose any arbitrary xAxis,
+      // which is perpendicular to z-axis
+      if (cs.XAxis > 0) xaxis = GetDirection (cs.XAxis);
+      else if (!zaxis.EQ (Vector3.ZAxis)) xaxis = Vector3.ZAxis * zaxis;
+      
       return new (org, xaxis, zaxis * xaxis);
    }
 
-   Vector3 GetVector (int nVector)
+   // Given the direction object, fetches the underlying Vector3
+   Vector3 GetDirection (int nVector)
       => ((Direction)D[nVector]!).Vec;
+
+   // Given the Vector object, returns a Vector3 of the specified direction and length
+   Vector3 GetVector (int nVector) {
+      Vector v = (Vector)D[nVector]!;
+      var dir = (Direction)D[v.Direction]!;
+      return dir.Vec.Normalized () * v.Length;
+   }
 
    Arc3 MakeArc (int pairId, Circle circle, Point3 start, Point3 end, bool ccw) {
       CoordSystem cs = GetCoordSys (circle.CoordSys);
@@ -74,12 +92,16 @@ partial class STEPReader {
          EdgeCurve ec = (EdgeCurve)D[oe.Edge]!;
          Point3 start = GetPoint (ec.Start), end = GetPoint (ec.End);
          if (!oe.Dir) (start, end) = (end, start);
-         Curve3 edge = D[ec.Basis] switch {
+         Curve3 edge = getEdge (ec.Basis);
+         mEdges.Add (edge);
+
+         // helper function (sometimes called recursively)
+         Curve3 getEdge (int cent) => D[cent] switch {
             Line => new Line3 (oe.Edge, start, end),
             Circle circle => MakeArc (oe.Edge, circle, start, end, !(!ec.SameSense ^ !oe.Dir)),
-            _ => throw new BadCaseException (ec.Basis)
+            SurfaceCurve sc => getEdge (sc.Curve),
+            _ => throw new BadCaseException (cent)
          };
-         mEdges.Add (edge);
       }
       for (int i = 0; i < mEdges.Count; i++)
          Lib.Check (mEdges[i].End.EQ (mEdges[(i + 1) % mEdges.Count].Start), "MakeContour");
@@ -96,8 +118,38 @@ partial class STEPReader {
    E3Cylinder MakeCylinder (int id, Cylinder cylinder, ImmutableArray<Contour3> contours, bool aligned)
       => E3Cylinder.Build (id, contours, GetCoordSys (cylinder.CoordSys), cylinder.Radius, !aligned);
 
+   E3Surface MakeSurfaceOfRevolution (int id, SpunSurface spunSurface, ImmutableArray<Contour3> contours, bool aligned) {
+      Axis axis = (Axis)D[spunSurface.Axis]!;
+      Point3 org = GetCartesianPoint (axis.Origin); Vector3 zaxis = GetDirection (axis.Direction).Normalized ();
+
+      Curve3 generatix = D[spunSurface.Curve] switch {
+         Line line => new Line3 (0, GetCartesianPoint (line.Start), GetCartesianPoint (line.Start) + GetVector (line.Ray)),
+         _ => throw new BadCaseException (spunSurface.Curve) // TODO support other curves
+      };
+
+      Vector3 yaxis = (zaxis * ((org.DistToSq (generatix.End) > org.DistToSq (generatix.Start) ? generatix.End : generatix.Start) - org)).Normalized (), xaxis = yaxis * zaxis;
+      var cs = new CoordSystem (org, xaxis, yaxis);
+      generatix *= Matrix3.From (cs); // This is now expected to be a line in the XZ plane.
+
+      if (generatix is Line3 ln && !ln.Start.Z.EQ (ln.End.Z)) {
+         if (ln.Start.X.EQ (ln.End.X)) { // If the line is parallel to the Z axis, then we have a cylinder, otherwise a cone.
+            return E3Cylinder.Build (id, contours, cs, ((Point2)ln.Start).DistTo (Point2.Zero), !aligned);
+         } else { // Cone.
+            var gv = ln.End - ln.Start;
+            return new E3Cone (id, contours, cs, Math.Atan (Math.Abs (gv.X / gv.Z)));
+         }
+      } else {
+         var ret = new E3SpunSurface (id, contours, cs, generatix);
+         if (!aligned) ret.FlipNormal ();
+         return ret;
+      }
+   }
+
    void Process (Manifold m)
       => Process ((Shell)D[m.Outer]!);
+
+   void Process (ShellBasedSurfaceModel s)
+      => s.Shells.ForEach (n => Process ((Shell)D[n]!));
 
    void Process (Shell s)
       => s.Faces.ForEach (f => Process ((AdvancedFace)D[f]!));
@@ -120,8 +172,95 @@ partial class STEPReader {
       Ent3 ent = D[a.Face] switch {
          Plane plane => MakePlane (a.Id, plane, contours, a.Dir),
          Cylinder cylinder => MakeCylinder (a.Id, cylinder, contours, a.Dir),
+         SpunSurface ss => MakeSurfaceOfRevolution (a.Id, ss, contours, a.Dir),
          _ => throw new BadCaseException (a.Face)
       };
       mModel.Ents.Add (ent);
+   }
+
+   void Process (GeometricSet gs) {
+      foreach (var n in gs.Items)
+         if (D[n] is CompositeCurve cc)
+            Process (cc);
+   }
+
+   void Process (CompositeCurve cc) {
+      mEdges.Clear ();
+      foreach (var n in cc.Segments) {
+         CompositeCurveSegment seg = (CompositeCurveSegment)D[n]!;
+
+         // The actual curve could be nested inside a TrimmedCurve.
+         TrimmedCurve? trim = null;
+         int ncurve = seg.Segment; Entity? curveEnt = null;
+         while (curveEnt == null) {
+            switch (D[ncurve]) {
+               case SurfaceCurve sc:
+                  ncurve = sc.Curve;
+                  break;
+               case TrimmedCurve tc:
+                  ncurve = tc.Curve;
+                  trim = tc;
+                  break;
+               default:
+                  curveEnt = D[ncurve];
+                  break;
+            }
+         }
+         
+         // Build the base full curve
+         Curve3 edge = curveEnt switch {
+            Line line => makeLine (line),
+            Circle circle => makeArc (circle),
+            BSplineCurveWithKnots bspline => makeSpline (bspline),
+            _ => throw new BadCaseException (ncurve)
+         };
+         // Trim the base curve if required.
+         if (trim != null) {
+            double t1 = trim.TrimStart.Parameter, t2 = trim.TrimEnd.Parameter;
+            if (trim.PreferCartesianTrim) {
+               Point3 p1 = GetCartesianPoint (trim.TrimStart.Cartesian), p2 = GetCartesianPoint (trim.TrimEnd.Cartesian);
+               (t1, t2) = (edge.GetT (p1), edge.GetT (p2));
+            }
+            edge = edge.Trimmed (t1, t2, !trim.SameSense);
+         }
+         // Flip the final curve if necessary.
+         if (!seg.SameDirection)
+            edge = edge.Flipped ();
+         mEdges.Add (edge);
+
+         // Helper functions -------------------------------------
+         Curve3 makeLine (Line line) {
+            Point3 org = GetCartesianPoint (line.Start); Vector3 ray = GetVector (line.Ray);
+            return new Line3 (0, org, org + ray);
+         }
+
+         Curve3 makeArc (Circle circle) {
+            CoordSystem cs = GetCoordSys (circle.CoordSys);
+            return new Arc3 (0, cs, circle.Radius, Lib.TwoPI);
+         }
+
+         Curve3 makeSpline (BSplineCurveWithKnots bspline) {
+            int nCtrl = bspline.Pts.Length;
+            var ctrl = ImmutableArray.CreateBuilder<Point3> (nCtrl);
+            for (int i = 0; i < nCtrl; i++)
+               ctrl.Add(GetCartesianPoint (bspline.Pts[i]));
+
+            // Expand STEP knot vector (unique knots + multiplicities) into full knot array.
+            var knot = ImmutableArray.CreateBuilder<double> (bspline.Multiplicities.Sum ());
+            for (int i = 0; i < bspline.Knots.Length; i++) {
+               double kv = bspline.Knots[i];
+               for (int k = 0, mult = bspline.Multiplicities[i]; k < mult; k++)
+                  knot.Add(kv);
+            }
+
+            // Non-rational curve: all weights = 1
+            var weight = ImmutableArray.CreateBuilder<double> (nCtrl);
+            for (int i = 0; i < nCtrl; i++)
+               weight.Add (1.0);
+
+            return new NurbsCurve3 (0, ctrl.MoveToImmutable (), knot.MoveToImmutable (), weight.MoveToImmutable ());
+         }
+      }
+      mModel.Ents.Add (new E3CompositePath (cc.Id, [..mEdges]));
    }
 }

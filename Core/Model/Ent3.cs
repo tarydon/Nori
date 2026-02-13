@@ -152,6 +152,31 @@ public sealed class E3Curve : Ent3 {
 }
 #endregion
 
+/// <summary>An entity that represents a free-space composite curve path</summary>
+#region class E3CompositePath : Ent3 ---------------------------------------------------------------
+public sealed class E3CompositePath : Ent3 {
+   public E3CompositePath (int id, ImmutableArray<Curve3> connectedCurves) : base (id) => Curves = connectedCurves;
+
+   public readonly ImmutableArray<Curve3> Curves;
+
+   public override Bound3 Bound => Bound3.Cached (ref mBound, ComputeBound);
+   Bound3 mBound = new ();
+   Bound3 ComputeBound () {
+      List<Bound3> bound3s = new List<Bound3> (Curves.Length);
+      List<Point3> pts = [];
+      foreach (var curve in Curves) {
+         pts.Clear ();
+         curve.Discretize (pts, Lib.CoarseTess, Lib.CoarseTessAngle);
+         pts.Add (curve.End);
+         bound3s.Add (new Bound3 (pts));
+      }
+      return new Bound3 (bound3s);
+   }
+
+   protected override Ent3 Xformed (Matrix3 xfm) => new E3CompositePath (Id, [.. Curves.Select (a => a * xfm)]);
+}
+#endregion
+
 #region class E3Surface ----------------------------------------------------------------------------
 /// <summary>E3Surface is the base class for parametric surfaces with no thickness</summary>
 /// The surfaces are parametric - the 3D points can be unlofted into a UV parameter space 
