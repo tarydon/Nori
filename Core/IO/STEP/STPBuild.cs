@@ -84,21 +84,6 @@ partial class STEPReader {
       return a3;
    }
 
-   Arc3 MakeArc (int pairId, Circle circle, double startAng, double endAng, bool ccw) {
-      CoordSystem cs = GetCoordSys (circle.CoordSys);
-      startAng = Lib.NormalizeAngle (startAng); endAng = Lib.NormalizeAngle (endAng);
-      if (endAng < startAng) endAng += Lib.TwoPI;
-      double angleSpan = endAng - startAng;
-      if (ccw) {
-         Vector3 zaxis = cs.VecZ, xaxis = cs.VecX.Rotated (zaxis, true, startAng);
-         return new Arc3 (pairId, new CoordSystem (cs.Org, xaxis, zaxis * xaxis), circle.Radius, angleSpan);
-      } else {
-         Vector3 zaxis = cs.VecZ, xaxis = cs.VecX.Rotated (zaxis, true, startAng);
-         zaxis = -zaxis; // Flip the z-axis to get the correct direction of rotation
-         return new Arc3 (pairId, new CoordSystem (cs.Org, xaxis, zaxis * xaxis), circle.Radius, Lib.TwoPI - angleSpan);
-      }
-   }
-
    Contour3 MakeContour (int edgeLoop, bool dir, bool outer) {
       mEdges.Clear ();
       EdgeLoop el = (EdgeLoop)D[edgeLoop]!;
@@ -204,10 +189,8 @@ partial class STEPReader {
       foreach (var n in cc.Segments) {
          CompositeCurveSegment seg = (CompositeCurveSegment)D[n]!;
 
-         double t1 = double.NaN, t2 = double.NaN;
-         Point3 p1 = Point3.Nil, p2 = Point3.Nil;
-         bool preferCartesian = false, ccwArc = true;
-
+         // The actual curve could be nested inside a TrimmedCurve.
+         TrimmedCurve? trim = null;
          int ncurve = seg.Segment; Entity? curveEnt = null;
          while (curveEnt == null) {
             switch (D[ncurve]) {
@@ -216,43 +199,44 @@ partial class STEPReader {
                   break;
                case TrimmedCurve tc:
                   ncurve = tc.Curve;
-                  t1 = tc.TrimStart.Parameter; t2 = tc.TrimEnd.Parameter;
-                  if (tc.TrimStart.Cartesian > 0) p1 = GetCartesianPoint (tc.TrimStart.Cartesian);
-                  if (tc.TrimEnd.Cartesian > 0) p2 = GetCartesianPoint (tc.TrimEnd.Cartesian);
-                  preferCartesian = tc.PreferCartesianTrim;
-                  if (!tc.SameSense) ccwArc = !ccwArc;
+                  trim = tc;
                   break;
                default:
                   curveEnt = D[ncurve];
                   break;
             }
          }
-
-         if (!seg.SameDirection) {
-            (t1, t2) = (t2, t1);
-            (p1, p2) = (p2, p1);
-            ccwArc = !ccwArc;
-         }
+         
+         // Build the base full curve
          Curve3 edge = curveEnt switch {
             Line line => makeLine (line),
             Circle circle => makeArc (circle),
             BSplineCurveWithKnots bspline => makeSpline (bspline),
             _ => throw new BadCaseException (ncurve)
          };
+         // Trim the base curve if required.
+         if (trim != null) {
+            double t1 = trim.TrimStart.Parameter, t2 = trim.TrimEnd.Parameter;
+            if (trim.PreferCartesianTrim) {
+               Point3 p1 = GetCartesianPoint (trim.TrimStart.Cartesian), p2 = GetCartesianPoint (trim.TrimEnd.Cartesian);
+               (t1, t2) = (edge.GetT (p1), edge.GetT (p2));
+            }
+            edge = edge.Trimmed (t1, t2, !trim.SameSense);
+         }
+         // Flip the final curve if necessary.
+         if (!seg.SameDirection)
+            edge = edge.Flipped ();
          mEdges.Add (edge);
 
          // Helper functions -------------------------------------
          Curve3 makeLine (Line line) {
-            if (!preferCartesian) {
-               Point3 org = GetCartesianPoint (line.Start); Vector3 ray = GetVector (line.Ray);
-               p1 = org + ray * t1; p2 = org + ray * t2;
-            }
-            return new Line3 (0, p1, p2);
+            Point3 org = GetCartesianPoint (line.Start); Vector3 ray = GetVector (line.Ray);
+            return new Line3 (0, org, org + ray);
          }
 
          Curve3 makeArc (Circle circle) {
-            if (!preferCartesian) return MakeArc (0, circle, t1, t2, ccwArc);
-            return MakeArc (0, circle, p1, p2, ccwArc);
+            CoordSystem cs = GetCoordSys (circle.CoordSys);
+            return new Arc3 (0, cs, circle.Radius, Lib.TwoPI);
          }
 
          Curve3 makeSpline (BSplineCurveWithKnots bspline) {
@@ -274,21 +258,7 @@ partial class STEPReader {
             for (int i = 0; i < nCtrl; i++)
                weight.Add (1.0);
 
-            if (!seg.SameDirection) {
-               // We will have to adjust the knot values.
-               double umin = knot[0], umax = knot[^1];
-               var newKnots = ImmutableArray.CreateBuilder<double> (knot.Count);
-
-               for (int i = 0, m = knot.Count; i < m; i++)
-                  newKnots.Add (umin + umax - knot[m - i - 1]);
-               knot = newKnots;
-               ctrl.Reverse (); // Note weights are not reversed as they are all 1.0s
-            }
-
-            if (preferCartesian ? (p1.IsNil || (p1.EQ (ctrl[0]) && p2.EQ (ctrl[^1]))) : (t1.IsNan || (t1.EQ (knot[0]) && t2.EQ (knot[1]))))
-                  return new NurbsCurve3 (0, ctrl.MoveToImmutable (), knot.MoveToImmutable (), weight.MoveToImmutable ());
-            else
-               throw new NotImplementedException ("Trimming of Nurbs curve not yet supported");
+            return new NurbsCurve3 (0, ctrl.MoveToImmutable (), knot.MoveToImmutable (), weight.MoveToImmutable ());
          }
       }
       mModel.Ents.Add (new E3CompositePath (cc.Id, [..mEdges]));

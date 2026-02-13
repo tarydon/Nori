@@ -52,6 +52,9 @@ public abstract class Curve3 {
    /// Derived classes MUST implement this
    public abstract void Discretize (List<Point3> pts, double tolerance, double maxAngStep);
 
+   /// <summary>Returns a new curve flipped in direction</summary>
+   public abstract Curve3 Flipped ();
+
    /// <summary>Evaluates the point at a given parameter value t</summary>
    /// Derived classes MUST implement this 
    public abstract Point3 GetPoint (double t);
@@ -69,6 +72,14 @@ public abstract class Curve3 {
    /// <summary>Returns the point at a given parameter value T along the curve</summary>
    /// Derived clases MUST implement this
    public abstract double GetT (Point3 pt);
+
+   /// <summary>Trim the curve at the given parameters and return a new curve.</summary>
+   /// <param name="t1">Starting point for the trim</param>
+   /// <param name="t2">Ending point for the trim</param>
+   /// <param name="reverseDir">For cyclical curves (circle, ellipse) indicates if the direction
+   /// sense must be reversed. Ignore for non-cyclical curves.</param>
+   /// <returns>A new trimmed curve.</returns>
+   public abstract Curve3 Trimmed (double t1, double t2, bool reverseDir);
 
    /// <summary>Returns a copy of this curve transformed by the given transform</summary>
    public static Curve3 operator * (Curve3 curve, Matrix3 xfm) => curve.Xformed (xfm);
@@ -142,6 +153,12 @@ public class Arc3 : Curve3 {
       for (int i = 0; i <= n; i++) pts.Add (GetPoint ((double)i / n * AngSpan));
    }
 
+   public override Curve3 Flipped () {
+      Vector3 zaxis = CS.VecZ, xaxis = CS.VecX;
+      xaxis = xaxis.Rotated (zaxis, true, AngSpan); // Alling X axis with the second point.
+      return new Arc3 (PairId, new CoordSystem (CS.Org, xaxis, (-zaxis) * xaxis), Radius, AngSpan); // Flip the zaxis.
+   }
+
    /// <summary>Returns the point at a given lie</summary>
    public override Point3 GetPoint (double t) {
       var (sin, cos) = Math.SinCos (t);
@@ -163,6 +180,29 @@ public class Arc3 : Curve3 {
    }
    Matrix3? _from;
 
+   public override Curve3 Trimmed (double t1, double t2, bool reverseDir) {
+      t1 = Lib.NormalizeAngle (t1); t2 = Lib.NormalizeAngle (t2);
+      if (t1 < 0) t1 += Lib.TwoPI; if (t2 < 0) t2 += Lib.TwoPI;
+      Vector3 zaxis = CS.VecZ, xaxis = CS.VecX;
+      if (reverseDir) {
+         if (t1 < t2) {
+            xaxis = xaxis.Rotated (zaxis, true, t1);
+            return new Arc3 (PairId, new CoordSystem (CS.Org, xaxis, (-zaxis) * xaxis), Radius, Lib.TwoPI - (t2 - t1));
+         } else {
+            xaxis = xaxis.Rotated (zaxis, true, t2);
+            return new Arc3 (PairId, new CoordSystem (CS.Org, xaxis, (-zaxis) * xaxis), Radius, t1 - t2);
+         }
+      } else {
+         if (t1 < t2) {
+            xaxis = xaxis.Rotated (zaxis, true, t1); // Allign X axis with the first point.
+            return new Arc3 (PairId, new CoordSystem (CS.Org, xaxis, zaxis * xaxis), Radius, t2 - t1); // Update angle span.
+         } else {
+            xaxis = xaxis.Rotated (zaxis, true, t2);
+            return new Arc3 (PairId, new CoordSystem (CS.Org, xaxis, zaxis * xaxis), Radius, Lib.TwoPI - (t1 - t2));
+         }
+      }
+   }
+
    // Implementation -----------------------------------------------------------
    public override string ToString ()
       => $"{base.ToString ()} R={Radius.Round (2)} Span={AngSpan.R2D ().Round (1)}\u00b0";
@@ -178,8 +218,8 @@ public sealed class Ellipse3 : Curve3 {
    // Constructors -------------------------------------------------------------
    /// <summary>Constructs an Ellipse3 given X & Y radii, start and end angles</summary>
    /// The ellipse is defined in the XY plane first and then lofted up into the final position
-   /// using the given CS. The Ellipse always goes CCW from ang0 to ang1, which are both in the
-   /// interval 0 .. 2PI
+   /// using the given CS. The Ellipse always goes CCW from ang0 to ang1. To allow wrapping around
+   /// the X axis (say 1.5Pi to 2.5Pi - negative Y to positive Y) ang1 can be greater than Lib.TwoPi.
    public Ellipse3 (int pairId, CoordSystem cs, double xRadius, double yRadius, double ang0, double ang1) : base (pairId) {
       CS = cs; XRadius = xRadius; YRadius = yRadius;
       Debug.Assert (ang1 >= ang0);
@@ -223,6 +263,11 @@ public sealed class Ellipse3 : Curve3 {
       for (int i = 0; i <= n; i++) pts.Add (GetPoint (((double)i / n).Along (mDomain)));
    }
 
+   public override Curve3 Flipped () {
+      var newCS = new CoordSystem (CS.Org, CS.VecX, -CS.VecY);
+      return new Ellipse3 (PairId, newCS, XRadius, YRadius, Lib.TwoPI - mDomain.Max, Lib.TwoPI - mDomain.Min);
+   }
+
    /// <summary>Returns the point at a given parameter value t (which is directly in domains)</summary>
    public override Point3 GetPoint (double t) {
       var (sin, cos) = Math.SinCos (t);
@@ -237,6 +282,13 @@ public sealed class Ellipse3 : Curve3 {
       return ang;
    }
    Matrix3? mFrom;
+
+   public override Curve3 Trimmed (double t1, double t2, bool reverseDir) {
+      t1 = Lib.NormalizeAngle (t1); t2 = Lib.NormalizeAngle (t2);
+      if (t1 < 0) t1 += Lib.TwoPI; if (t2 < 0) t2 += Lib.TwoPI;
+      if (reverseDir) return new Ellipse3 (PairId, CS, XRadius, YRadius, t2, t1).Flipped ();
+      else return new Ellipse3 (PairId, CS, XRadius, YRadius, t1, t2);
+   }
 
    /// <summary>Returns the Ellipse transformed by a given transform</summary>
    protected override Ellipse3 Xformed (Matrix3 xfm)
@@ -278,6 +330,8 @@ public sealed class Line3 : Curve3 {
       pts.Add (mStart); pts.Add (mEnd);
    }
 
+   public override Curve3 Flipped () => new Line3 (PairId, mEnd, mStart);
+
    /// <summary>Gets the point at a given lie</summary>
    public override Point3 GetPoint (double lie) => lie.Along (mStart, mEnd);
 
@@ -286,6 +340,9 @@ public sealed class Line3 : Curve3 {
 
    /// <summary>Returns the T value of a given point</summary>
    public override double GetT (Point3 pt) => pt.GetLieOn (mStart, mEnd);
+
+   public override Curve3 Trimmed (double t1, double t2, bool _) =>
+      new Line3 (PairId, GetPoint (t1), GetPoint (t2));
 
    // Implementation -----------------------------------------------------------
    public override string ToString () => $"{base.ToString ()}, Len={Start.DistTo (End).Round (2)}";
@@ -391,6 +448,16 @@ public class NurbsCurve3 : Curve3 {
       pts.Add (eval.Pop ().Pt);
    }
 
+   public override Curve3 Flipped () {
+      // We will have to adjust the knot values.
+      double umin = Knot[0], umax = Knot[^1];
+      var newKnots = ImmutableArray.CreateBuilder<double> (Knot.Length);
+      for (int i = 0, m = Knot.Length; i < m; i++)
+         newKnots.Add (umin + umax - Knot[m - i - 1]);
+
+      return new NurbsCurve3 (PairId, [.. Ctrl.Reverse ()], newKnots.MoveToImmutable (), [.. Weight.Reverse ()]);
+   }
+
    /// <summary>Evaluates the spline at a given knot value t</summary>
    public override Point3 GetPoint (double t) {
       if (t <= mImp.Knot[0]) return Ctrl[0];
@@ -438,6 +505,10 @@ public class NurbsCurve3 : Curve3 {
       public int Level;
    }
 
+   public override Curve3 Trimmed (double t1, double t2, bool reverseDir) {
+      throw new NotImplementedException ();
+   }
+
    // Implementation -----------------------------------------------------------
    // Transforms the NurbsCurve3 by the given transform
    protected override NurbsCurve3 Xformed (Matrix3 xfm)
@@ -476,6 +547,8 @@ public class Polyline3 : Curve3 {
    public override void Discretize (List<Point3> pts, double _, double __)
       => pts.AddRange (Pts);
 
+   public override Curve3 Flipped () => new Polyline3 (PairId, [.. Pts.Reverse ()]);
+
    /// <summary>Gets the point at a given lie</summary>
    public override Point3 GetPoint (double lie) {
       if (lie < Lib.Epsilon) return Start;
@@ -493,6 +566,10 @@ public class Polyline3 : Curve3 {
          if (d < minDist) (minDist, iBest) = (d, i);
       }
       return pt.GetLieOn (Pts[iBest], Pts[iBest + 1]) + iBest;
+   }
+
+   public override Curve3 Trimmed (double t1, double t2, bool reverseDir) {
+      throw new NotImplementedException ();
    }
 
    // Implementation -----------------------------------------------------------
