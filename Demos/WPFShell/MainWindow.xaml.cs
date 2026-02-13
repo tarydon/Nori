@@ -15,21 +15,23 @@ public partial class MainWindow : Window {
    void OnLuxReady (int _) {
       var source = PresentationSource.FromVisual (this);
       if (source != null) Lux.DPIScale = (float)source.CompositionTarget.TransformToDevice.M11;
-      TraceVN.TextColor = Color4.Yellow;
+      TraceVN.TextColor = Color4.Blue; Lib.Tracer = TraceVN.Print;
+      TraceVN.HoldTime = 20;
       new SceneManipulator ();
-      Lux.UIScene = new DemoScene ();
+      Lux.UIScene = new TessScene ();
    }
 }
 
-class DemoScene : Scene2 {
-   public DemoScene () {
-      mFace = new (Lib.ReadBytes ("nori:GL/Fonts/Roboto-Regular.ttf"), (int)(48 * Lux.DPIScale));
-      Bound = new Bound2 (0, 0, 100, 50);
-      BgrdColor = new Color4 (128, 96, 64);
-      Root = new SimpleVN (
-         () => (Lux.Color, Lux.TypeFace) = (Color4.White, mFace),
-         () => Lux.TextPx ("Welcome to Nori.", new Vec2S (100, 100))
-      );
+class TessScene : Scene2 {
+   public TessScene () {
+      Dwg2 dwg = DXFReader.Load ("c:/etc/Tess0.dxf");
+      Bound = dwg.Bound.InflatedF (1.1);
+      BgrdColor = Color4.Gray (200);
+
+      Triangulator t = new ([..dwg.Ents.OfType<E2Poly> ().Where (a => a.Layer.Name == "0").Select (a => a.Poly)]);
+      t.Process ();
+
+      List<VNode> nodes = [new Dwg2VN (dwg), new DwgFillVN (dwg), TraceVN.It];
+      Root = new GroupVN (nodes);
    }
-   TypeFace mFace;
 }
