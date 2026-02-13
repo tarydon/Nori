@@ -7,7 +7,7 @@ class Triangulator {
    public Triangulator (List<Poly> polys) {
       int max = polys.Sum (a => a.Count);
       mPts = new Point2[max + 4]; mDone = new bool[max];
-      mSegs = new Segment[max + 2]; mShuffle = new int[max + 2];
+      mSegs = new Segment[max + 2]; mShuffle = new int[max];
 
       int n = 0;
       foreach (var poly in polys) {
@@ -42,8 +42,11 @@ class Triangulator {
    public void Process () {
       foreach (var n in mShuffle) {
          var seg = mSegs[mShuffle[n]];
+
+         Point2 pa = mPts[seg.A], pb = mPts[seg.B];
          InsertPoint (seg.A); 
-         InsertPoint (seg.B);
+         var botSlice = InsertPoint (seg.B) ?? FindSlice (pb, false);
+         var topSlice = FindSlice (pa, true);
       }
 
       var sb = new StringBuilder ();
@@ -51,8 +54,18 @@ class Triangulator {
       System.IO.File.WriteAllText ("c:/etc/dump.txt", sb.ToString ());
    }
 
-   void InsertPoint (int n) {
-      if (mDone[n]) return;
+   Trapezoid FindSlice (Point2 p, bool below) {
+      Node node = mRoot;
+      for (; ; ) {
+         // Expecting to find a Y node that has this Y as the split point
+         if (node.Kind == EKind.Leaf) return mTraps[node.Index];
+         if (node.Kind == EKind.Y && p.Y == mPts[node.Index].Y) node = below ? node.First! : node.Second!;
+         else node = node.Find (this, p);
+      }
+   }
+
+   Trapezoid? InsertPoint (int n) {
+      if (mDone[n]) return null;
       mDone[n] = true;
 
       // Fetch the leaf pointing to the trapezoid that
@@ -63,19 +76,25 @@ class Triangulator {
       Lib.Check (pt.Y >= t0.YMin && pt.Y <= t0.YMax, "Fail1");
 
       // We're going to split t0 into two trapezoids (t0 and t1 along the Y).
-      // Create two LeafNode 
+      // Create two LeafNodes to hold onto these new trapezoids (note that t0 is
+      // just being recycled with a new top margin)
       Node n1 = new (++mNodeID, EKind.Leaf, mTraps.Count);
       Trapezoid t1 = new (mTraps.Count, pt.Y, t0.YMax, t0.Left, t0.Right, n1); mTraps.Add (t1);
       Node n0 = new (++mNodeID, EKind.Leaf, leaf.Index);
       t0.YMax = pt.Y; t0.Node = n0;
 
-      // Connect the two trapezoids to each other
-      t0.TopLeft = t1; t1.BotLeft = t0; 
+      // Connect t1 to the previous 'above' neighbors of t0 (bidirectionally), 
+      (t1.TopA = t0.TopA)?.UpdateBottom (t0, t1);
+      (t1.TopB = t0.TopB)?.UpdateBottom (t0, t1);
+      // Connect t0 and t1 to each other. Note that t0 bottom connections are 
+      // already up to date, and don't need to be touched
+      t0.TopA = t1; t0.TopB = null; t1.BotA = t0;
 
       // Connect the two nodes to the leaf, and connect the two newly created
       // trapezoids to each other
       leaf.First = n0; leaf.Second = n1; 
       leaf.Kind = EKind.Y; leaf.Index = n;
+      return t1; 
    }
 
    Node Find (Point2 pt) {
@@ -112,6 +131,8 @@ class Triangulator {
       public int A;                    // Upper point
       public int B;                    // Lower point
       public readonly double Slope;
+
+      public override string ToString () => $"Segment {A} to {B}";
    }
 
    class Trapezoid {
@@ -120,11 +141,17 @@ class Triangulator {
 
       public override string ToString () => $"Trap#{Id} Y:{YMin.R6 ()} to {YMax.R6 ()} Left:{Left} Right:{Right}";
 
+      public void UpdateBottom (Trapezoid old, Trapezoid newT) {
+         if (BotA == old) BotA = newT;
+         else if (BotB == old) BotB = newT;
+         else throw new NotImplementedException (); 
+      }
+
       public readonly int Id;
       public double YMin, YMax;
       public int Left, Right;
       public Node Node;
-      public Trapezoid? BotLeft, BotRight, TopLeft, TopRight;
+      public Trapezoid? BotA, BotB, TopA, TopB;
    }
 
    enum EKind { Y, X, Leaf }
