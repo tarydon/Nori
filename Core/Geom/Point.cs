@@ -188,6 +188,17 @@ public readonly struct Point2 : IEQuable<Point2> {
 #endregion
 
 #region struct Point3f -----------------------------------------------------------------------------
+public readonly struct Point2f {
+   public Point2f (double x, double y) => (X, Y) = ((float)x, (float)y);
+
+   public Point2f (float x, float y) => (X, Y) = (x, y);
+
+   public readonly float X;
+   public readonly float Y;
+}
+#endregion
+
+#region struct Point3f -----------------------------------------------------------------------------
 /// <summary>Point in 3 dimensions, 32-bit float components</summary>
 public readonly struct Point3f {
    // Constructors -------------------------------------------------------------
@@ -245,7 +256,7 @@ public readonly struct Point3f {
    /// <summary>Adds two Point3f together</summary>
    public static Point3f operator + (Point3f p, Point3f q) => new (p.X + q.X, p.Y + q.Y, p.Z + q.Z);
    /// <summary>Scales a Point3f by a given factor</summary>
-   public static Point3f operator * (Point3f a, double f) => new (a.X * f, a.Y * f, a.Z * f);
+   public static Point3f operator * (Point3f a, float f) => new (a.X * f, a.Y * f, a.Z * f);
 
    public override string ToString () => $"({X.S5 ()},{Y.S5 ()},{Z.S5 ()})";
 
