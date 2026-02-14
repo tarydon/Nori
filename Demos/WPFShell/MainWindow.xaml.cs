@@ -46,7 +46,7 @@ class TessScene : Scene2 {
       mDebug = new TriDebug (mT);
       List<VNode> nodes = [new Dwg2VN (dwg), new DwgFillVN (dwg), TraceVN.It, mDebug];
       Root = new GroupVN (nodes);
-      for (int i = 0; i < 21; i++) OnClick ();
+      // for (int i = 0; i < 21; i++) OnClick ();
    }
    Triangulator mT;
    IEnumerator<string> mSteps;
@@ -63,16 +63,17 @@ class TessScene : Scene2 {
 class TriDebug : VNode {
    public TriDebug (Triangulator t) => T = t;
    readonly Triangulator T;
+   readonly TypeFace TF = new (Lib.ReadBytes ("nori:GL/Fonts/Roboto-Regular.ttf"), (int)(12 * Lux.DPIScale + 0.5));
 
-   public void Dirty () {
-      Redraw ();
-   }
+   public void Dirty () => Redraw ();
 
-   public override void SetAttributes () => (Lux.Color, Lux.ZLevel, Lux.LineWidth) = (Color4.Red, -1, 2);
+   public override void SetAttributes () 
+      => (Lux.Color, Lux.ZLevel, Lux.LineWidth, Lux.TypeFace) = (Color4.Red, -1, 5, TF);
+
    public override void Draw () {
       foreach (var t in T.GetTrapezoids ()) {
          Lux.Poly (t.Item2);
-         Lux.Text2D ($"{t.Item1}", (Vec2F)t.Item2.A, ETextAlign.BaseLeft, new Vec2S (5, 5));
+         Lux.Text2D ($"{t.Item1}", (Vec2F)t.Item2.A, ETextAlign.BaseLeft, new Vec2S (12, 8));
       }
    }
 }
