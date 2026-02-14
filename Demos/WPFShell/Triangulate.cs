@@ -103,7 +103,9 @@ class Triangulator {
          else {
             // If the above0 is already full, either t0 or t1 has no top (ends at a point)
             if (t1.NoTop (this, seg.A)) { }
-            else if (t0.NoTop (this, seg.A)) { throw new NotImplementedException (); }
+            else if (t0.NoTop (this, seg.A)) {
+               t0.RemoveTop (above0); t1.AddTop (above0); above0.UpdateBottom (t0, t1);
+            }
             else Unexpected ();
          }
       } else {

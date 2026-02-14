@@ -46,7 +46,7 @@ class TessScene : Scene2 {
       mDebug = new TriDebug (mT);
       List<VNode> nodes = [new Dwg2VN (dwg), new DwgFillVN (dwg), TraceVN.It, mDebug];
       Root = new GroupVN (nodes);
-      for (int i = 0; i < 15; i++) OnClick ();
+      for (int i = 0; i < 21; i++) OnClick ();
    }
    Triangulator mT;
    IEnumerator<string> mSteps;
