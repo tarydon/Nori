@@ -58,9 +58,13 @@ class Triangulator {
 
          var t0 = FindSlice (0.001.Along (pa, pb), true);
          var t1 = FindSlice (0.999.Along (pa, pb), false);
+         bool different = t0.Id != t1.Id;
          Slice (t0, nSeg);
          yield return $"Sliced {t0} with seg {seg}";
-         //Slice (t0, nSeg);
+         if (different) {
+            Slice (t1, nSeg);
+            yield return $"Sliced {t1} with seg {seg}";
+         }
       }
    }
 
@@ -81,7 +85,7 @@ class Triangulator {
       Node n1 = new (++mNodeID, EKind.Leaf, mTraps.Count);
       Trapezoid t1 = new (mTraps.Count, yMin, yMax, nSeg, t0.Right, n1); mTraps.Add (t1);
       Node n0 = new (++mNodeID, EKind.Leaf, leaf.Index);
-      t0.Right = nSeg;
+      t0.Right = nSeg; t0.Node = n0;
 
       // The erstwhile 'leaf' node pointing to this trapezoid will now become an 
       // interior node of type X (meaning it is split by a Segment) and the two new nodes we
@@ -95,7 +99,13 @@ class Triangulator {
       if (t0.TopB == null) {
          // t0 had only one top neighbor. Now that becomes the top neighbor for both 
          // t0 and t1, and t1 gets added to that as a new bottom neighbor
-         t1.AddTop (above0); above0.AddBottom (t1);
+         if (above0.AddBottom1 (t1)) t1.AddTop (above0);
+         else {
+            // If the above0 is already full, either t0 or t1 has no top (ends at a point)
+            if (t1.NoTop (this, seg.A)) { }
+            else if (t0.NoTop (this, seg.A)) { throw new NotImplementedException (); }
+            else Unexpected ();
+         }
       } else {
          // There are two neighbors on the top. After adding this new slice line (marked
          // with the *) three scenarios are possible:
@@ -126,7 +136,13 @@ class Triangulator {
       if (t0.BotB == null) {
          // t0 had only one bottom neighbor. Now that bcomes the bottom neighbor for
          // both t0 and t1, and t1 gets added to that asa a new top neighbor
-         t1.AddBottom (below0); below0.AddTop (t1);
+         if (below0.AddTop1 (t1)) t1.AddBottom (below0);
+         else {
+            // If below0 is already full, either t0 or t1 has no bottom (ends at a point)
+            if (t1.NoBottom (this, seg.B)) { } 
+            else if (t0.NoBottom (this, seg.B)) { throw new NotImplementedException (); } 
+            else Unexpected ();
+         }
       } else {
          // There are two neighbors on the bottom. After adding this new slice line (marked
          // with a *), three scenarios are possible
@@ -158,13 +174,15 @@ class Triangulator {
       if (!condition) throw new Exception ("Coding error in Triangulate.cs");
    }
 
+   void Unexpected () => Check (false);
+
    public List<(int, Poly)> GetTrapezoids () {
       List<(int, Poly)> output = [];
       foreach (var t in mTraps) {
          Segment a = mSegs[t.Left], b = mSegs[t.Right];
-         double e = 0.01, y0 = t.YMin, y1 = t.YMax;
-         Point2 bl = new (a.GetX (mPts, y0) + e, y0 + e), br = new (b.GetX (mPts, y0) - e, y0 + e);
-         Point2 tl = new (a.GetX (mPts, y1) + e, y1 - e), tr = new (b.GetX (mPts, y1) - e, y1 - e);
+         double e = 0.03, y0 = t.YMin, y1 = t.YMax;
+         Point2 bl = new (a.GetX (mPts, y0 + e) + e, y0 + e), br = new (b.GetX (mPts, y0 + e) - e, y0 + e);
+         Point2 tl = new (a.GetX (mPts, y1 - e) + e, y1 - e), tr = new (b.GetX (mPts, y1 - e) - e, y1 - e);
          output.Add ((t.Id, Poly.Lines ([bl, br, tr, tl], true)));
       }
       return output;
@@ -257,13 +275,41 @@ class Triangulator {
 
       public override string ToString () => $"Trap#{Id} Y:{YMin.R6 ()} to {YMax.R6 ()} Left:{Left} Right:{Right}";
 
+      // Returns true if this Trapezoid has no top segment (ends in a single point)
+      public bool NoTop (Triangulator t, int nPt) {
+         // First, a quick check : given that nPt is a top corner of this 
+         // trapezoid, we can quickly check if left and right segments both start at that point
+         ref Segment sa = ref t.mSegs[Left], sb = ref t.mSegs[Right];
+         if (sa.A == nPt && sb.A == nPt) return true;
+         // Slower: we have to evaluate X at both segments and check if they are the same here
+         double xa = sa.GetX (t.mPts, YMax), xb = sb.GetX (t.mPts, YMax);
+         return xa.EQ (xb, FINE);
+      }
+
+      public bool NoBottom (Triangulator t, int nPt) {
+         // First, a quick check : given that nPt is a bottom corner of this 
+         // trapezoid, we can quickly check if left and right segments both end at that point
+         ref Segment sa = ref t.mSegs[Left], sb = ref t.mSegs[Right];
+         if (sa.B == nPt && sb.B == nPt) return true;
+         // Slower: we have to evaluate X at both segments and check if they are the same here
+         double xa = sa.GetX (t.mPts, YMin), xb = sb.GetX (t.mPts, YMin);
+         return xa.EQ (xb, FINE);
+      }
+
       public void UpdateBottom (Trapezoid? old, Trapezoid newT) {
          if (BotA == old) BotA = newT;
          else if (BotB == old) BotB = newT;
          else throw new NotImplementedException (); 
       }
 
-      public void AddBottom (Trapezoid newT) => UpdateBottom (null, newT);
+      public bool AddBottom1 (Trapezoid newT) {
+         if (BotA == null) BotA = newT;
+         else if (BotB == null) BotB = newT;
+         else return false;
+         return true; 
+      }
+
+      public void AddBottom (Trapezoid newT) => AddBottom1 (newT);
 
       public void RemoveBottom (Trapezoid old) {
          if (BotA == old) BotA = BotB;
@@ -275,6 +321,13 @@ class Triangulator {
          if (TopA == old) TopA = newT;
          else if (TopB == old) TopB = newT;
          else throw new NotImplementedException (); 
+      }
+
+      public bool AddTop1 (Trapezoid newT) {
+         if (TopA == null) TopA = newT;
+         else if (TopB == null) TopB = newT;
+         else return false;
+         return true; 
       }
 
       public void AddTop (Trapezoid newT) => UpdateTop (null, newT);
@@ -327,4 +380,5 @@ class Triangulator {
    int[] mShuffle = [];
    List<Trapezoid> mTraps = [];
    Node mRoot;
+   const double FINE = 1e-9;
 }

@@ -41,17 +41,18 @@ class TessScene : Scene2 {
 
       mT = new ([..dwg.Ents.OfType<E2Poly> ().Where (a => a.Layer.Name == "0").Select (a => a.Poly)]);
       mSteps = mT.Process ().GetEnumerator ();
-      HW.MouseClicks.Where (a => a.IsLeftPress).Subscribe (OnClick);
+      HW.MouseClicks.Where (a => a.IsLeftPress).Subscribe (a => OnClick ());
 
       mDebug = new TriDebug (mT);
       List<VNode> nodes = [new Dwg2VN (dwg), new DwgFillVN (dwg), TraceVN.It, mDebug];
       Root = new GroupVN (nodes);
+      for (int i = 0; i < 15; i++) OnClick ();
    }
    Triangulator mT;
    IEnumerator<string> mSteps;
    TriDebug mDebug;
 
-   public void OnClick (MouseClickInfo mi) {
+   public void OnClick () {
       if (!mSteps.MoveNext ()) return;
       Lib.Trace (mSteps.Current);
       mDebug.Dirty ();
@@ -67,7 +68,7 @@ class TriDebug : VNode {
       Redraw ();
    }
 
-   public override void SetAttributes () => (Lux.Color, Lux.ZLevel) = (Color4.Red, -1);
+   public override void SetAttributes () => (Lux.Color, Lux.ZLevel, Lux.LineWidth) = (Color4.Red, -1, 2);
    public override void Draw () {
       foreach (var t in T.GetTrapezoids ()) {
          Lux.Poly (t.Item2);
