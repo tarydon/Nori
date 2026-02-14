@@ -56,8 +56,9 @@ partial class Triangulator {
          InsertPoint (seg.B);
          yield return $"Added end point {pb} of seg {seg}";
 
-         var t0 = FindSlice (0.001.Along (pa, pb), true);
-         var t1 = FindSlice (0.999.Along (pa, pb), false);
+         var t0 = mTraps[Find (0.001.Along (pa, pb)).Index];
+         var t1 = mTraps[Find (0.999.Along (pa, pb)).Index];
+         Lib.Trace ($"{t0.Id} .. {t1.Id}");
          var traps = GatherChain (t0, t1, nSeg);
          foreach (var s in Slice (traps, nSeg)) yield return s; 
       }
@@ -237,6 +238,34 @@ partial class Triangulator {
          output.Add ((t.Id, Poly.Lines ([bl, br, tr, tl], true)));
       }
       return output;
+   }
+
+   public List<Poly> GetLinks (double size) {
+      List<Poly> output = [];
+      foreach (var t in mTraps) {
+         if (t.TopA != null) AddArrow (GetCommon (t.TopA, t), true);
+         if (t.TopB != null) AddArrow (GetCommon (t.TopB, t), true);
+         if (t.BotA != null) AddArrow (GetCommon (t, t.BotA), false);
+         if (t.BotB != null) AddArrow (GetCommon (t, t.BotB), false);
+      }
+      return output;
+
+      void AddArrow (Point2 p, bool up) {
+         double d = size * 0.5;
+         Poly poly = Poly.Lines (Point2.List (0, -size, 0, size, d / 2, size - d, -d / 2, size - d, 0, size), false);
+         if (!up) poly *= Matrix2.VMirror;
+         poly *= Matrix2.Translation (p.X, p.Y);
+         output.Add (poly);
+      }
+
+      Point2 GetCommon (Trapezoid t0, Trapezoid t1) {
+         Check (t0.YMin.EQ (t1.YMax));
+         double x0 = mSegs[t0.Left].GetX (mPts, t0.YMin), x1 = mSegs[t0.Right].GetX (mPts, t0.YMin);
+         Bound1 b0 = new (x0, x1);
+         x0 = mSegs[t1.Left].GetX (mPts, t0.YMin); x1 = mSegs[t1.Right].GetX (mPts, t0.YMin);
+         Bound1 b1 = new (x0, x1);
+         return new ((b0 * b1).Mid, t0.YMin);
+      }
    }
 
    Trapezoid FindSlice (Point2 p, bool below) {

@@ -61,7 +61,7 @@ class TessScene : Scene2 {
 }
 
 class TriDebug : VNode {
-   public TriDebug (Triangulator t) => T = t;
+   public TriDebug (Triangulator t) { T = t; Streaming = true; }
    readonly Triangulator T;
    readonly TypeFace TF = new (Lib.ReadBytes ("nori:GL/Fonts/Roboto-Regular.ttf"), (int)(12 * Lux.DPIScale + 0.5));
 
@@ -75,5 +75,10 @@ class TriDebug : VNode {
          Lux.Poly (t.Item2);
          Lux.Text2D ($"{t.Item1}", (Vec2F)t.Item2.A, ETextAlign.BaseLeft, new Vec2S (12, 8));
       }
+      Lux.LineWidth = 1.5f; Lux.Color = Color4.Blue;
+      foreach (var t in T.GetLinks (0.2))
+         Lux.Poly (t);
    }
+
+
 }
