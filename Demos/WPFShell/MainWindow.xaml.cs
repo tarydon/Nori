@@ -1,4 +1,5 @@
-﻿using System.Windows;
+﻿using System.Reactive.Linq;
+using System.Windows;
 using Nori;
 
 namespace WPFShell;
@@ -25,13 +26,52 @@ public partial class MainWindow : Window {
 class TessScene : Scene2 {
    public TessScene () {
       Dwg2 dwg = DXFReader.Load ("c:/etc/Tess0.dxf");
-      Bound = dwg.Bound.InflatedF (1.1);
+      Bound = dwg.Bound.InflatedL (2);
       BgrdColor = Color4.Gray (200);
 
-      Triangulator t = new ([..dwg.Ents.OfType<E2Poly> ().Where (a => a.Layer.Name == "0").Select (a => a.Poly)]);
-      t.Process ();
+      //List<Point2> tmp = [];
+      //List<Poly> input = [.. dwg.Ents.OfType<E2Poly> ().Where (a => a.Layer.Name == "0").Select (a => a.Poly)];
+      //for (int i = 0; i < input.Count; i++) {
+      //   var poly = input[i];
+      //   if (poly.HasArcs) {
+      //      tmp.Clear (); poly.Discretize (tmp, Lib.FineTess, Lib.FineTessAngle);
+      //      poly = Poly.Lines (tmp, true);
+      //   }
+      //}
 
-      List<VNode> nodes = [new Dwg2VN (dwg), new DwgFillVN (dwg), TraceVN.It];
+      mT = new ([..dwg.Ents.OfType<E2Poly> ().Where (a => a.Layer.Name == "0").Select (a => a.Poly)]);
+      mSteps = mT.Process ().GetEnumerator ();
+      HW.MouseClicks.Where (a => a.IsLeftPress).Subscribe (OnClick);
+
+      mDebug = new TriDebug (mT);
+      List<VNode> nodes = [new Dwg2VN (dwg), new DwgFillVN (dwg), TraceVN.It, mDebug];
       Root = new GroupVN (nodes);
+   }
+   Triangulator mT;
+   IEnumerator<string> mSteps;
+   TriDebug mDebug;
+
+   public void OnClick (MouseClickInfo mi) {
+      if (!mSteps.MoveNext ()) return;
+      Lib.Trace (mSteps.Current);
+      mDebug.Dirty ();
+      mT.DumpNodes ("c:/etc/test.txt");
+   }
+}
+
+class TriDebug : VNode {
+   public TriDebug (Triangulator t) => T = t;
+   readonly Triangulator T;
+
+   public void Dirty () {
+      Redraw ();
+   }
+
+   public override void SetAttributes () => (Lux.Color, Lux.ZLevel) = (Color4.Red, -1);
+   public override void Draw () {
+      foreach (var t in T.GetTrapezoids ()) {
+         Lux.Poly (t.Item2);
+         Lux.Text2D ($"{t.Item1}", (Vec2F)t.Item2.A, ETextAlign.BaseLeft, new Vec2S (5, 5));
+      }
    }
 }
