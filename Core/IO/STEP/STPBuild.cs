@@ -35,11 +35,17 @@ partial class STEPReader {
       CoordSys cs = (CoordSys)D[nCoordSys]!;
       Point3 org = ((Cartesian)D[cs.Origin]!).Pt;
       Vector3 zaxis = GetDirection (cs.ZAxis), xaxis = Vector3.XAxis;
-      // X-axis can be ommited. In that case, we can choose any arbitrary xAxis,
-      // which is perpendicular to z-axis
       if (cs.XAxis > 0) xaxis = GetDirection (cs.XAxis);
-      else if (!zaxis.EQ (Vector3.ZAxis)) xaxis = Vector3.ZAxis * zaxis;
-      
+      else {
+         // X-axis can be ommited. In that case, we can choose any arbitrary xAxis,
+         // which is perpendicular to z-axis. We pick one of the cardinal axis which is least aligned with
+         // the current zaxis and do a cross product with it to select the xaxis.
+         Vector3 z = new Vector3 (Math.Abs (zaxis.X), Math.Abs (zaxis.Y), Math.Abs (zaxis.Z));
+         if (z.Z <= z.X && z.Z <= z.Y) xaxis = Vector3.ZAxis * zaxis;
+         else if (z.Y <= z.Z && z.Y <= z.X) xaxis = Vector3.YAxis * zaxis;
+         else xaxis = Vector3.XAxis * zaxis;
+      }
+
       return new (org, xaxis, zaxis * xaxis);
    }
 

@@ -155,7 +155,7 @@ public class Arc3 : Curve3 {
 
    public override Curve3 Flipped () {
       Vector3 zaxis = CS.VecZ, xaxis = CS.VecX;
-      xaxis = xaxis.Rotated (zaxis, true, AngSpan); // Alling X axis with the second point.
+      xaxis = xaxis.Rotated (zaxis, AngSpan); // Alling X axis with the second point.
       return new Arc3 (PairId, new CoordSystem (CS.Org, xaxis, (-zaxis) * xaxis), Radius, AngSpan); // Flip the zaxis.
    }
 
@@ -185,21 +185,17 @@ public class Arc3 : Curve3 {
       if (t1 < 0) t1 += Lib.TwoPI; if (t2 < 0) t2 += Lib.TwoPI;
       Vector3 zaxis = CS.VecZ, xaxis = CS.VecX;
       if (reverseDir) {
-         if (t1 < t2) {
-            xaxis = xaxis.Rotated (zaxis, true, t1);
+         xaxis = xaxis.Rotated (zaxis, t2);
+         if (t1 < t2)
             return new Arc3 (PairId, new CoordSystem (CS.Org, xaxis, (-zaxis) * xaxis), Radius, Lib.TwoPI - (t2 - t1));
-         } else {
-            xaxis = xaxis.Rotated (zaxis, true, t2);
+         else
             return new Arc3 (PairId, new CoordSystem (CS.Org, xaxis, (-zaxis) * xaxis), Radius, t1 - t2);
-         }
       } else {
-         if (t1 < t2) {
-            xaxis = xaxis.Rotated (zaxis, true, t1); // Allign X axis with the first point.
+         xaxis = xaxis.Rotated (zaxis, t1); // Allign X axis with the first point.
+         if (t1 < t2)
             return new Arc3 (PairId, new CoordSystem (CS.Org, xaxis, zaxis * xaxis), Radius, t2 - t1); // Update angle span.
-         } else {
-            xaxis = xaxis.Rotated (zaxis, true, t2);
+         else
             return new Arc3 (PairId, new CoordSystem (CS.Org, xaxis, zaxis * xaxis), Radius, Lib.TwoPI - (t1 - t2));
-         }
       }
    }
 
@@ -355,13 +351,24 @@ public sealed class Line3 : Curve3 {
 #region class NurbsCurve ---------------------------------------------------------------------------
 /// <summary>Implements a 3 dimensional spline</summary>
 /// This is a generalized spline - any order, rational or irrational
+/// Trimmed version of a spline are created by trimming the Domain.
 public class NurbsCurve3 : Curve3 {
    /// <summary>Construct a 3D spline given the control points, knot vector and the weights</summary>
-   public NurbsCurve3 (int pairId, ImmutableArray<Point3> ctrl, ImmutableArray<double> knot, ImmutableArray<double> weight) : base (pairId) {
+   public NurbsCurve3 (int pairId, ImmutableArray<Point3> ctrl, ImmutableArray<double> knot, ImmutableArray<double> weight) 
+      : this (pairId, ctrl, knot, weight, knot[0], knot[^1]) { }
+
+   public NurbsCurve3 (int pairId, ImmutableArray<Point3> ctrl, ImmutableArray<double> knot, ImmutableArray<double> weight, double tMin, double tMax) : base (pairId) {
       mImp = new SplineImp (ctrl.Length, knot);
       Ctrl = ctrl; Weight = weight;
       Rational = !(weight.IsEmpty || weight.All (a => a.EQ (1)));
+      (mTMin, mTMax) = (tMin, tMax);
       if (!Rational) Weight = [];
+   }
+
+   // Constructor used to create trimmed version of this spline.
+   private NurbsCurve3 (NurbsCurve3 original, double tMin, double tMax) : base (original.PairId) {
+      (mImp, Ctrl, Weight, Rational) = (original.mImp, original.Ctrl, original.Weight, original.Rational);
+      (mTMin, mTMax) = (tMin, tMax);
    }
    NurbsCurve3 () => mImp = null!;
    readonly SplineImp mImp;
@@ -371,10 +378,11 @@ public class NurbsCurve3 : Curve3 {
    public readonly ImmutableArray<Point3> Ctrl;
 
    /// <summary>The domain of the NurbsCurve is just from the first to last knot</summary>
-   public override Bound1 Domain => new (mImp.Knot[0], mImp.Knot[^1]);
+   public override Bound1 Domain => new (mTMin, mTMax);
+   readonly double mTMin, mTMax;
 
    /// <summary>Endpoint of the NurbsCurve</summary>
-   public override Point3 End => Ctrl[^1];
+   public override Point3 End => mTMax == mImp.Knot[^1] ? Ctrl[^1] : GetPoint (mTMax);
 
    /// <summary>Check if the NurbsCurve is on the XY plane</summary>
    public override bool IsOnXYPlane => Ctrl.All (a => a.Z.EQ (0));
@@ -385,7 +393,7 @@ public class NurbsCurve3 : Curve3 {
    public readonly bool Rational;
 
    /// <summary>Start point of the NurbsCurve</summary>
-   public override Point3 Start => Ctrl[0];
+   public override Point3 Start => mTMin == mImp.Knot[0] ? Ctrl[0] : GetPoint (mTMin);
 
    /// <summary>Returns the knot vector of the NurbsCurve</summary>
    public ImmutableArray<double> Knot => mImp.Knot;
@@ -405,12 +413,14 @@ public class NurbsCurve3 : Curve3 {
       // their evaluated points) into a stack of Nodes
       var (knots, errSq, eval) = (mImp.Knot, error * error, new Stack<Node> ());
 
+      eval.Push (new Node { A = mTMax, Pt = GetPoint (mTMax), Level = 0 });
       double done = -1;
-      foreach (var knot in knots.Reverse ()) {
+      foreach (var knot in knots.Reverse ().SkipWhile (a => a >= mTMax).TakeWhile (a => a > mTMin)) {
          if (knot == done) continue;
          eval.Push (new Node { A = knot, Pt = GetPoint (knot), Level = 0 });
          done = knot;
       }
+      eval.Push (new Node { A = mTMin, Pt = GetPoint (mTMin), Level = 0 });
 
       // Now the recursive evaluation part - at each iteration of this loop, we pop off two
       // nodes from this stack to see if that linear span needs to be further subdivided.
@@ -450,18 +460,16 @@ public class NurbsCurve3 : Curve3 {
 
    public override Curve3 Flipped () {
       // We will have to adjust the knot values.
-      double umin = Knot[0], umax = Knot[^1];
+      double uminPlusMax = Knot[0] + Knot[^1];
       var newKnots = ImmutableArray.CreateBuilder<double> (Knot.Length);
       for (int i = 0, m = Knot.Length; i < m; i++)
-         newKnots.Add (umin + umax - Knot[m - i - 1]);
-
-      return new NurbsCurve3 (PairId, [.. Ctrl.Reverse ()], newKnots.MoveToImmutable (), [.. Weight.Reverse ()]);
+         newKnots.Add (uminPlusMax - Knot[m - i - 1]);
+      return new NurbsCurve3 (PairId, [.. Ctrl.Reverse ()], newKnots.MoveToImmutable (), [.. Weight.Reverse ()], uminPlusMax - mTMax, uminPlusMax - mTMin);
    }
 
    /// <summary>Evaluates the spline at a given knot value t</summary>
    public override Point3 GetPoint (double t) {
-      if (t <= mImp.Knot[0]) return Ctrl[0];
-      if (t >= mImp.Knot[^1]) return Ctrl[^1];
+      t = t.Clamp (mTMin, mTMax);
       while (mFactor.Value!.Length < mImp.Order)
          mFactor.Value = new double[mFactor.Value.Length * 2];
 
@@ -505,14 +513,15 @@ public class NurbsCurve3 : Curve3 {
       public int Level;
    }
 
-   public override Curve3 Trimmed (double t1, double t2, bool reverseDir) {
-      throw new NotImplementedException ();
+   public override Curve3 Trimmed (double t1, double t2, bool _) {
+      if (t1 <= t2) return new NurbsCurve3 (this, t1, t2);
+      else return new NurbsCurve3 (this, t2, t1).Flipped ();
    }
 
    // Implementation -----------------------------------------------------------
    // Transforms the NurbsCurve3 by the given transform
    protected override NurbsCurve3 Xformed (Matrix3 xfm)
-      => new (PairId, [.. Ctrl.Select (a => a * xfm)], mImp.Knot, Weight);
+      => new (PairId, [.. Ctrl.Select (a => a * xfm)], mImp.Knot, Weight, mTMin, mTMax);
 }
 #endregion
 
@@ -568,8 +577,25 @@ public class Polyline3 : Curve3 {
       return pt.GetLieOn (Pts[iBest], Pts[iBest + 1]) + iBest;
    }
 
-   public override Curve3 Trimmed (double t1, double t2, bool reverseDir) {
-      throw new NotImplementedException ();
+   public override Curve3 Trimmed (double t1, double t2, bool _) {
+      var d = Domain;
+      (t1, t2) = (t1.Clamp (d.Min, d.Max), t2.Clamp (d.Min, d.Max));
+      bool reversed = false;
+      if (t1 > t2) {
+         reversed = true;
+         (t1, t2) = (t2, t1); // Swap
+      }
+      (int n1, int n2) = ((int)t1, (int)t2);
+      (double f1, double f2) = (t1 - n1, t2 - n2);
+      Polyline3 trimmed = (f1.IsZero (), f2.IsZero ()) switch {
+         (true, true) => new Polyline3 (PairId, Pts[n1..(n2 + 1)]),
+         (true, false) => new Polyline3 (PairId, [.. Pts[n1..(n2 + 1)], f2.Along (Pts[n2], Pts[n2 + 1])]),
+         (false, true) => new Polyline3 (PairId, [f1.Along (Pts[n1], Pts[n1 + 1]),.. Pts[(n1 + 1)..n2]]),
+         _ => new Polyline3 (PairId, [f1.Along (Pts[n1], Pts[n1 + 1]),.. Pts[(n1 + 1)..(n2 + 1)], f2.Along (Pts[n2], Pts[n2 + 1])])
+      };
+
+      if (reversed) return trimmed.Flipped ();
+      else return trimmed;
    }
 
    // Implementation -----------------------------------------------------------
