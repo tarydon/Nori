@@ -142,7 +142,7 @@ public class E2Dimension : Ent2 {
    // The entities making up the dimension (in DXF, this is stored in a block, but since that
    // block is used exactly once, it makes more sense to just store the entities here and create
    // the block on the fly when the dimension is saved)
-   public IReadOnlyList<Ent2> Ents => mEnts;
+   public IReadOnlyList<Ent2> Ents => mEnts.Length == 0 ? [.. MakeDim ()] : mEnts;
    Ent2[] mEnts = [];
 
    // Overrides ----------------------------------------------------------------
@@ -164,6 +164,8 @@ public class E2Dimension : Ent2 {
       }
       return null;
    }
+
+   public virtual IEnumerable<Ent2> MakeDim () => throw new NotImplementedException ("Must override");
 }
 #endregion
 
