@@ -30,4 +30,25 @@ class StepTests {
          Lib.FineTess = old;
       }
    }
+
+   [Test (184, "Import free curve from STEP file")]
+   void Test2 () {
+      var sr = new STEPReader (NT.File ("STEP/5X-039.stp"));
+      var model = sr.Load ();
+
+      var sb = new StringBuilder (); List<Point3> pts = [];
+      foreach (var  cp in model.Ents.OfType<E3CompositePath> ()) {
+         sb.AppendLine ("-----------------");
+         foreach (var curve in cp.Curves) {
+            sb.AppendLine (curve.GetType ().Name);
+            curve.Discretize (pts, Lib.CoarseTess, Lib.CoarseTessAngle);
+            foreach (var pt in pts)
+               sb.AppendLine (pt.ToString ());
+            pts.Clear ();
+         }
+      }
+      
+      File.WriteAllText (NT.TmpTxt, sb.ToString ());
+      Assert.TextFilesEqual (NT.File ("STEP/5X-039Curve.txt"), NT.TmpTxt);
+   }
 }

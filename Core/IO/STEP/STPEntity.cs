@@ -246,7 +246,7 @@ class TrimmedCurve (int curve, TrimSelect trimstart, TrimSelect trimend, bool sa
    public readonly int Curve = curve;
    public readonly TrimSelect TrimStart = trimstart;
    public readonly TrimSelect TrimEnd = trimend;
-   public readonly bool SameSense = samesense; // If false, the TrimmedCurve is the flip of the underlying curve
+   public readonly bool SameSense = samesense; // If false, for cyclic curves like circles/ellipse, connect TrimStart to TrimEnd in the reverse direction.
    public readonly bool PreferCartesianTrim = masterRepresentation == ".CARTESIAN.";
 }
 
