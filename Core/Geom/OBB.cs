@@ -7,7 +7,7 @@ namespace Nori;
 
 #region struct OBB ---------------------------------------------------------------------------------
 /// <summary>Represents a bounding cuboid oriented along an arbitrary axes.</summary>
-public readonly partial struct OBB {
+public partial struct OBB {
    // Constructor --------------------------------------------------------------
    /// <summary>Construct an OBB given the center, X & Y direction vectors, Extent</summary>
    public OBB (Point3f cen, Vector3f x, Vector3f y, Vector3f ext) 
@@ -33,7 +33,17 @@ public readonly partial struct OBB {
 
    /// <summary>Bounding box's co-ordinate axes.</summary>
    public readonly Vector3f X, Y;
-   public Vector3f Z => X * Y;
+   public readonly Vector3f Z => X * Y;
+
+   // Pointers to the left and right children of this OBB node
+   // These are interpreted thus:
+   // - 0 is a null-pointer
+   // - If positive they are pointers to another OBB (index into the OBBTree.OBBs array)
+   // - If negative, they are pointers to leaf triangles (negative index into
+   //   the OBBTree.Tris array)
+   // To support this convention, OBBTree.CTris[0] is not used. (No confusion will arise 
+   // about OBBTree.OBBs[0], which is the root and can never be a Left or Right child). 
+   public int Left, Right;
 
    /// <summary>The box area</summary>
    public readonly double Area => 8 * (Extent.X * Extent.Y + Extent.X * Extent.Z + Extent.Y * Extent.Z);

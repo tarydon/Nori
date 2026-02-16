@@ -254,7 +254,8 @@ public readonly struct Vector3f {
 
    /// <summary>Is a Vector3f zero to within Epsilon</summary>
    public bool IsZero => X.IsZero () && Y.IsZero () && Z.IsZero ();
-   public double Length => Math.Sqrt (X * X + Y * Y + Z * Z);
+   public double Length => Sqrt (LengthSq);
+   public double LengthSq => X * X + Y * Y + Z * Z;
 
    // Methods ------------------------------------------------------------------
    /// <summary>Returns the dot product of this vectorf with another</summary>
