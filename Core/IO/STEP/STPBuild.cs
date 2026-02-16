@@ -13,7 +13,7 @@ partial class STEPReader {
       if (mModel.Ents.Count == 0) {
          Parse ();
          foreach (var m in D.OfType<Manifold> ()) Process (m);
-         foreach (var s in D.OfType<ShellBasedSurfaceModel> ()) Process (s);
+         // foreach (var s in D.OfType<ShellBasedSurfaceModel> ()) Process (s);
          foreach (var gs in D.OfType<GeometricSet> ()) Process (gs);
       }
       return mModel;

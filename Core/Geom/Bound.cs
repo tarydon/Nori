@@ -94,6 +94,90 @@ public readonly struct Bound1 : IEQuable<Bound1> {
 }
 #endregion
 
+#region struct Bound1D -----------------------------------------------------------------------------
+/// <summary>Represents a bound in 1 dimension (simply a Min .. Max value, stored as doubles)</summary>
+public readonly struct Bound1D : IEQuable<Bound1D> {
+   // Constructors -------------------------------------------------------------
+   /// <summary>Constructs an empty Bound1</summary>
+   /// Note that the default for Bound1 (if new is never called to invoke the constructor)
+   /// is a Bound1 that is initialized with all zeroes - which is *not* an empty bound,
+   /// but a valid bound extending from 0 .. 0.
+   public Bound1D () => (Min, Max) = (double.MaxValue, double.MinValue);
+
+   /// <summary>Constructs a non-empty bound that encompasses a single value (Min = Max = v)</summary>
+   public Bound1D (double v) => Min = Max = v;
+
+   /// <summary>Constructs a bound that encompasses a and b (a and b need not be ordered)</summary>
+   public Bound1D (double a, double b) => (Min, Max) = (Min (a, b), Max (a, b));
+
+   /// <summary>Deconstruct a Bound1 into min and max values</summary>
+   public void Deconstruct (out double min, out double max) => (min, max) = (Min, Max);
+
+   public override string ToString () => IsEmpty ? "Empty" : $"{Min.S6 ()}~{Max.S6 ()}";
+
+   // Properties ---------------------------------------------------------------
+   /// <summary>The minimum value of the bound (inclusive)</summary>
+   public readonly double Min;
+   /// <summary>The maximum value of the bound (inclusive)</summary>
+   /// If Max is _less than_ min, that is an empty bound
+   public readonly double Max;
+   /// <summary>Length of the bound (Min .. Max)</summary>
+   public double Length => Max - Min;
+   /// <summary>Is this an empty bound?</summary>
+   public bool IsEmpty => Min > Max;
+   /// <summary>Midpoint value of the Bound1</summary>
+   public double Mid => (Min + Max) / 2;
+
+   // Methods ------------------------------------------------------------------
+   /// <summary>Returns the value clamped to this Bound1</summary>
+   public double Clamp (double f) => f.Clamp (Min, Max);
+   /// <summary>Returns true if f lies within the specific Bound1</summary>
+   public bool Contains (double f) => Min <= f && f <= Max;
+   /// <summary>Returns true if f lies within the specific Bound1 and within specified threshold</summary>
+   public bool Contains (double f, double threshold) => Min - threshold <= f && f <= Max + threshold;
+   /// <summary>Returns true if b lies within the specified Bound1</summary>
+   public bool Contains (Bound1D b) => Contains (b.Min) && Contains (b.Max);
+
+   /// <summary>Compares two Bound1 for equality</summary>
+   public bool EQ (Bound1D other) => Min.EQ (other.Min) && Max.EQ (other.Max);
+
+   /// <summary>Returns a Bound1 inflated by a given factor (about the midpoint)</summary>
+   public Bound1D InflatedF (double factor) {
+      if (IsEmpty) return new ();
+      var (mp, w) = (Mid, factor * Length / 2);
+      return new (mp - w, mp + w);
+   }
+   /// <summary>Returns a Bound1 padded by a given margin on either side</summary>
+   public Bound1D InflatedL (double delta) {
+      if (IsEmpty) return new ();
+      return new (Min - delta, Max + delta);
+   }
+
+   // Operators ----------------------------------------------------------------
+   /// <summary>Implicit conversion from a tuple of two double to a Bound1</summary>
+   /// This makes it much simpler to construct Bound1 objects on the fly where needed by
+   /// just enclosing a pair of numbers in parentheses.
+   public static implicit operator Bound1D ((double Min, double Max) value) => new (value.Min, value.Max);
+
+   /// <summary>Explicitly convert Bound1D to Bound1</summary>
+   public static explicit operator Bound1 (Bound1D b) => new Bound1 (b.Min, b.Max);
+
+   /// <summary>Returns a Bound1 expanded to include the given value</summary>
+   public static Bound1D operator + (Bound1D b, double v) => new (Min (b.Min, v), Max (b.Max, v));
+   /// <summary>Returns the Bound1 expanded to include another Bound1</summary>
+   public static Bound1D operator + (Bound1D a, Bound1D b) {
+      double min = Min (a.Min, b.Min), max = Max (a.Max, b.Max);
+      return new (min, max);
+   }
+
+   /// <summary>Finds the intersection of two Bound1</summary>
+   public static Bound1D operator * (Bound1D a, Bound1D b) {
+      double min = Max (a.Min, b.Min), max = Min (a.Max, b.Max);
+      return min > max ? new () : new (min, max);
+   }
+}
+#endregion
+
 #region struct Bound2 ------------------------------------------------------------------------------
 /// <summary>Represents a bound in 2 dimensions (a bounding rectangle)</summary>
 [AuPrimitive]
