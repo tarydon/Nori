@@ -12,9 +12,12 @@ public abstract class Ent3VN (Ent3 mEnt) : VNode (mEnt) {
 
 public class E3SurfaceVN (E3Surface mSurface) : Ent3VN (mSurface) {
    public override void Draw () {
-      var mode = EShadeMode.Phong;
-      if (mSurface.IsTranslucent) mode = EShadeMode.GlassNoStencil;
-      if (mSurface.NoStencil) mode = EShadeMode.PhongNoStencil;
+      var mode = (mSurface.IsTranslucent, mSurface.NoStencil) switch {
+         (true, true) => EShadeMode.GlassNoStencil,
+         (true, false) => EShadeMode.Glass,
+         (false, true) => EShadeMode.PhongNoStencil,
+         _ => EShadeMode.Phong,
+      };
       Lux.Mesh (mSurface.Mesh, mode);
    }
 }
@@ -25,8 +28,8 @@ class E3CurveVN (E3Curve mCurve) : Ent3VN (mCurve) {
       mCurve.Curve.Discretize (pts, Lib.FineTess, Lib.FineTessAngle);
       pts.Add (mCurve.Curve.End);
 
-      List<Vec3F> vec = [(Vec3F)pts[0]];
-      for (int i = 1; i < pts.Count; i++) { vec.Add ((Vec3F)pts[i]); vec.Add ((Vec3F)pts[i]); }
+      List<Vec3F> vec = [pts[0]];
+      for (int i = 1; i < pts.Count; i++) { vec.Add (pts[i]); vec.Add (pts[i]); }
       vec.RemoveLast ();
       Lux.Lines (vec.AsSpan ());
    }
@@ -37,9 +40,9 @@ public class Curve3VN (Curve3 edge) : VNode (edge) {
       if (mPts.Count == 0) {
          List<Point3> pts = [];
          mEdge.Discretize (pts, Lib.FineTess, Lib.FineTessAngle);
-         mPts.Add ((Vec3F)pts[0]);
-         for (int i = 0; i < pts.Count - 1; i++) { mPts.Add ((Vec3F)pts[i]); mPts.Add ((Vec3F)pts[i]); }
-         mPts.Add ((Vec3F)pts[^1]);
+         mPts.Add (pts[0]);
+         for (int i = 0; i < pts.Count - 1; i++) { mPts.Add (pts[i]); mPts.Add (pts[i]); }
+         mPts.Add (pts[^1]);
       }
       Lux.Lines (mPts.AsSpan ());
    }

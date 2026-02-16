@@ -177,7 +177,7 @@ public partial class SurfaceUnlofter {
 
       // Helpers ...........................................
       void Process (ref Tile tile) {
-         Vec3F cen = (Vec3F)mNodes[tile.Center].Pt;
+         Vec3F cen = mNodes[tile.Center].Pt;
          switch (tile.State) {
             case EState.Raw:
                points.Add (cen);
@@ -186,7 +186,7 @@ public partial class SurfaceUnlofter {
             case EState.Subdivide2 or EState.Subdivide4:
                labels.Add (new Label (cen, $"{tile.Id}"));
                foreach (int n in new int[] { 0, 1, 1, 2, 2, 3, 3, 0 })
-                  lines.Add ((Vec3F)mNodes[tile.Corners[n]].Pt);
+                  lines.Add (mNodes[tile.Corners[n]].Pt);
                for (int i = 0; i < (int)tile.State; i++) {
                   ref Tile child = ref mTiles[tile.Children + i];
                   Process (ref child);
@@ -195,7 +195,7 @@ public partial class SurfaceUnlofter {
             default:
                labels.Add (new Label (cen, $"{tile.Id}"));
                foreach (int n in new int[] { 0, 1, 1, 2, 2, 3, 3, 0 }) 
-                  lines.Add ((Vec3F)mNodes[tile.Corners[n]].Pt);
+                  lines.Add (mNodes[tile.Corners[n]].Pt);
                break;
          }
       }

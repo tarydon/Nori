@@ -37,7 +37,7 @@ class MinSphereScene : Scene3 {
       // OBB demo
       Point3f[] ptsF = [.. pts.Select (x => (Point3f)x)];
       sw.Restart ();
-      var obb = OBB.From (ptsF);
+      var obb = OBB.Build (ptsF);
       sw.Stop ();
       nodes.Add (new BoxVN (obb));
       Bound3 aabb = new (pts);

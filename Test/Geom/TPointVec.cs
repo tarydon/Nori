@@ -190,7 +190,7 @@ class PointTests {
       Point3.Zero.DistTo (pa).Is (9.110434);
 
       // Vector3f tests
-      Vec3F pfa = (Vec3F)pa2; pfa.Is ("<3,5,7>");
+      Vec3F pfa = pa2; pfa.Is ("<3,5,7>");
    }
 
    [Test (21, "More Point3 tests")]
@@ -293,7 +293,7 @@ class VectorTests {
       vec.Opposing (-vec2).Is (true);
       (vec * vec2).Is ("<17,16,-23>");
 
-      Vec3F pfa = (Vec3F)vec; pfa.Is ("<3,4,5>");
+      Vec3F pfa = vec; pfa.Is ("<3,4,5>");
       Vec3F pfb = new (-12.112233f, -13.2f, -14.3f); pfb.Is ("<-12.11223,-13.2,-14.3>");
       Vec3H pfd = new ((Half)(-1.12345f), (Half)(2.27f), (Half)(-3.35f)); pfd.Is ("<-1.123,2.27,-3.35>");
 
