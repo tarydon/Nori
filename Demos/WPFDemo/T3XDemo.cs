@@ -50,8 +50,8 @@ class NormalVN : VNode {
             Mesh3.Node na = nodes[tris[i]], nb = nodes[tris[i + 1]], nc = nodes[tris[i + 2]];
             Point3 mid = ((Point3)na.Pos + (Point3)nb.Pos + (Point3)nc.Pos) * (1 / 3.0);
             Vector3 vec = ((Vector3)na.Vec + (Vector3)nb.Vec + ((Vector3)nc.Vec)).Normalized ();
-            pts.Add ((Vec3F)mid); pts.Add ((Vec3F)(mid + vec * 3));
-            bots.Add ((Vec3F)mid);
+            pts.Add (mid); pts.Add (mid + vec * 3);
+            bots.Add (mid);
          }
          Lux.Lines (pts.AsSpan ());
          Lux.Points (bots.AsSpan ());

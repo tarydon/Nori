@@ -40,9 +40,7 @@ public readonly partial struct OBB {
    /// <summary>The box volume</summary>
    public readonly double Volume => 8 * (Extent.X * Extent.Y * Extent.Z);
 
-   /// <summary>
-   /// A 'zero volume' OBB (useful to initialize OBB structs)
-   /// </summary>
+   /// <summary>A 'zero volume' OBB (useful to initialize OBB structs)</summary>
    public static readonly OBB Zero = new (Point3f.Zero, Vector3f.XAxis, Vector3f.YAxis, Vector3f.Zero);
 
    // Methods ------------------------------------------------------------------
