@@ -20,6 +20,8 @@ public class E2Dim2P : E2Dimension {
    public readonly double Angle;
    public readonly string? Text;
 
+   const double Overhang = 4;
+
    public override IEnumerable<Ent2> MakeDim () {
       if (A.EQ (B)) yield break;
       // Consider an infinite line via A and B, perpendicular to Angle
@@ -30,8 +32,8 @@ public class E2Dim2P : E2Dimension {
       var (pt, pt2) = (Geo.LineXLine (A, A2, C, C2), Geo.LineXLine (B, B2, C, C2));
       Lib.Check (!pt.IsNil && !pt2.IsNil, "Coding error");
       yield return new E2Poly (Layer, Poly.Line (pt, pt2));
-      yield return new E2Poly (Layer, Poly.Line (A, pt));
-      yield return new E2Poly (Layer, Poly.Line (B, pt2));
+      yield return new E2Poly (Layer, Poly.Line (A, pt.Polar (Overhang, A.AngleTo (pt))));
+      yield return new E2Poly (Layer, Poly.Line (B, pt2.Polar (Overhang, B.AngleTo (pt2))));
    }
 }
 #endregion
