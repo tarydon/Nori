@@ -679,7 +679,7 @@ public partial class Poly {
    /// <summary>Gets slice of the poly delimited by the specified range</summary>
    public Poly Sliced (double sliceStartLie, double sliceEndLie) {
       if (IsCircle) {
-         if (sliceStartLie.EQ (sliceEndLie)) return this;
+         if ((sliceEndLie - sliceStartLie).EQ (1)) return this;
          var seg = this[0];
          return Arc (seg.GetPointAt (sliceStartLie), seg.GetSlopeAt (sliceStartLie), seg.GetPointAt (sliceEndLie));
       }
