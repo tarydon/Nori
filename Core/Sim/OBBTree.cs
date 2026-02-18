@@ -1,47 +1,5 @@
 ﻿namespace Nori;
 
-/// <summary>Represents a 'collision triangle'</summary>
-public readonly partial struct CTri {
-   /// <summary>Construct a CTri given a span of floats and indices into that for the 3 corners</summary>
-   public unsafe CTri (ReadOnlySpan<Point3f> pts, int a, int b, int c) {
-      A = a; B = b; C = c;
-
-      // Fetch the three vertices
-      Point3f pa = pts[A], pb = pts[B], pc = pts[C];
-
-      // Initialize triangle centroid
-      Centroid = (pa + pb + pc) * OneThird;
-
-      // Compute the edges AB and AC, then the normal and the intercept
-      Vector3f e1 = pb - pa, e2 = pc - pa;
-      N = e1 * e2;
-      D = -(N.X * pa.X + N.Y * pa.Y + N.Z * pa.Z);
-
-      K = 0b_0001;  // Assume we're using Xy plane for projecting (00 01)
-      float nx = MathF.Abs (N.X), ny = MathF.Abs (N.Y), nz = MathF.Abs (N.Z);
-      if (nx >= ny && nx >= nz) K = 0b_0110;         // Use YZ plane (01 10)
-      else if (ny >= nx && ny >= nz) K = 0b_0010;    // Use XZ plane (00 10)
-   }
-
-   /// <summary>Indices of the points in the Point3f array</summary>
-   public readonly int A, B, C;
-   /// <summary>Normal vector of the plane</summary>
-   public readonly Vector3f N;
-   /// <summary>Intercept used for distance checks</summary>
-   public readonly float D;
-   /// <summary>Encoding of which 2 axes to use for a 2D projection</summary>
-   /// Lowest 2 bits encode a K1 value, and next 2 bits encode a K0 value.
-   /// These values are 0,1,2 for X,Y,Z axes. So, if K0=0, and K1=2 then we
-   /// are using the X-Z plane for projection
-   public readonly int K;
-
-   /// <summary>The centroid of the triangle (computed in constructor, and used during the</summary>
-   public readonly Point3f Centroid;
-
-   const float OneThird = 1f / 3;
-}
-
-
 public class OBBTree {
    // Routine to build an OBBTree from a mesh
    public OBBTree (Mesh3 mesh) {
@@ -220,4 +178,86 @@ public class OBBTree {
    // triangles. At that point, we don't actually build OBBs surronding single triangles,
    // but switch to storing a pointer to the leaf triangle directly in Left/Right. 
    public readonly OBB[] OBBs = [];
+}
+
+// This is the class that implements a complete collision between two OBBTree. There is some
+// useful state to maintain during the collision check so we make this a class. 
+public class OBBCollider {
+   public bool Check (OBBTree ta, in CoordSystem csA, OBBTree tb, in CoordSystem csB, bool oneCrash = true) {
+      // We're going to do the check by projecting all the data from tree B into tree A's
+      // coordinate system. Thus, we want the smaller tree as B (less transformation). 
+      if (ta.Tris.Length < tb.Tris.Length) return Check (tb, in csB, ta, in csA, oneCrash);
+
+      mRung++;
+      mA = ta; mB = tb;
+      mDone = mCrashing = false; mOneCrash = oneCrash;
+      mBtoA = Matrix3.From (in csB) * Matrix3.To (in csA);
+      mATris.Clear (); mBTris.Clear ();
+      Check (1, 1);
+      return mCrashing;
+   }
+
+   // Checks two entities for collision. The entities could be OBBs (if the index is non-negative),
+   // or triangles (if the index is negative). This is a recursive routine that checks one entity
+   // from OBBTree A with an entity from OBBTree b. 
+   void Check (int a, int b) {
+      if (mDone) return;
+      if (a > 0 && b > 0) {
+         // 1. If both a & b are OBBs (a > 0, b >= 0), then:
+         //    Do OBBxOBB collision check, transforming the center, X and Y of OBB B into 
+         //    A's space using mAtoB. If there is no collision return.
+         //    Otherwise, Check (a.Left, b.Left) and likewise a.Left x b.Right, a.Right x b.Left, a.Right x b.Right 
+         //    After each check, if mDone is set, return. 
+         // 
+         OBB boxA = mA.OBBs[a], boxB = mB.OBBs[b];
+         // OBBxOBB collision check
+         if (!(mCrashing = Collision.Check (boxA, boxB))) return;
+         Check (boxA.Left, boxB.Left); if (mDone) return;
+         if (!mCrashing) Check (boxA.Left, boxB.Right); if (mDone) return;
+         if (!mCrashing) Check (boxA.Right, boxB.Left); if (mDone) return;
+         if (!mCrashing) Check (boxA.Right, boxB.Right); if (mDone) return;
+      } else if (a < 0 && b > 0) {
+         // 2. If one is OBB and one is Tri
+         //    Do OBBxTri collision check, transforming whichever is on the right to the left side
+         //    coordinate system using mAtoB. If there is no collision return. 
+         //    Otherwise, assuming a is the OBB, check a.Left x b, a.Right x b (likewise symmetrically
+         //    if b is the OBB). 
+         //    After each check, if mDone is set, return
+         // 
+         OBB boxB = mB.OBBs[b];
+         // OBBxTri collision check, with the OBB on the left and the Tri on the right
+         mCrashing = Collision.Check (mA.Pts, mA.Tris[-a], boxB);
+         if (!mCrashing || mDone) return;
+         Check (a, boxB.Left); if (mDone) return;
+         if (!mCrashing) Check (a, boxB.Right);
+      } else if (a > 0 && b < 0) {
+         OBB boxA = mA.OBBs[a];
+         // OBBxTri collision check, with the OBB on the left and the Tri on the right
+         mCrashing = Collision.Check (mB.Pts, mB.Tris[-b], boxA);
+         if (!mCrashing || mDone) return;
+         Check (boxA.Left, b); if (mDone) return;
+         if (!mCrashing) Check (boxA.Right, b);
+      } else if (a < 0 && b < 0) {
+         // 3. If both are Tri (we will recurse down to this leaf level finally)
+         //    Transform B in to A's coordinates and test. If there is a collision:
+         //    - Set mCrashing
+         //    - If mOneCrash, set mDone (we don't need to continue any further)
+         //    - Add a & b to mATris, mBTris
+         var triA = mA.Tris[-a]; var triB = mB.Tris[-b];
+         // Tri x Tri collision check
+         mCrashing = Collision.TriTri (mA.Pts, triA, mB.Pts, triB);
+         if (mCrashing && mOneCrash) mDone = true;
+      }
+   }
+
+   bool mOneCrash;      // If set, we stop after detecting one crash. Otherwise, we detect all colliding pairs of triangles
+   Matrix3 mBtoA = Matrix3.Identity;   // Matrix to move from B coordinate system to A coordinate system
+   bool mDone, mCrashing;
+   OBBTree mA = null!, mB = null!;
+   List<int> mATris = [], mBTris = []; // Take in pairs, mATris[N] and mBTris[N] are triangles from A and B that crash
+   uint mRung = 0;  // See the OPTIMIZATION section below for details on this
+
+   // We'll use a thread-static singleton of this to avoid re-making the object each time
+   public static OBBCollider It => sIt ??= new ();
+   [ThreadStatic] static OBBCollider? sIt;
 }

@@ -74,7 +74,7 @@ class CollisionScene : Scene3 {
          case 2: case 3:
             for (int i = 0; i < tris.Length - 1; i++)
                for (int j = i + 1; j < tris.Length; j++)
-                  if (Collision.Check (points, tris[i], tris[j]))
+                  if (Collision.Check (points, tris[i], points, tris[j]))
                      tcolls[i] = tcolls[j] = true;
             break;
 

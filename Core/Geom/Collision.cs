@@ -14,6 +14,9 @@ public readonly struct CTri {
       // Fetch the three vertices
       Point3f pa = pts[A], pb = pts[B], pc = pts[C];
 
+      // Initialize triangle centroid
+      Centroid = (pa + pb + pc) * OneThird;
+
       // Compute the edges AB and AC, then the normal and the intercept
       Vector3f e1 = pb - pa, e2 = pc - pa;
       N = e1 * e2;
@@ -36,6 +39,11 @@ public readonly struct CTri {
    /// These values are 0,1,2 for X,Y,Z axes. So, if K0=0, and K1=2 then we
    /// are using the X-Z plane for projection
    public readonly int K;
+
+   /// <summary>The centroid of the triangle (computed in constructor, and used during the</summary>
+   public readonly Point3f Centroid;
+
+   const float OneThird = 1f / 3;
 }
 
 /// <summary>Provides methods for collision detection between various geometric primitives.</summary>
@@ -69,7 +77,7 @@ public static class Collision {
       BoxTri (in b.Center, in b.X, in b.Y, in b.Extent, in pts[a.A], in pts[a.B], in pts[a.C]);
 
    [MethodImpl (MethodImplOptions.AggressiveInlining)]
-   public static bool Check (ReadOnlySpan<Point3f> pts, in CTri a, in CTri b) => TriTri (pts, in a, in b);
+   public static bool Check (ReadOnlySpan<Point3f> ptsA, in CTri a, ReadOnlySpan<Point3f> ptsB, in CTri b) => TriTri (ptsA, in a, ptsB, in b);
 
    /// <summary>Checks if two OBBs intersect using the Separating Axis Theorem (SAT)</summary>
    /// The algorithm tests 15 potential separating axes, and if no separating axis is found, the 
@@ -216,18 +224,18 @@ public static class Collision {
    /// robust against numerical precision errors.
    // It implements the Devilliers & Guigue algorithm for triangle-triangle intersection.
    // Reference: https://inria.hal.science/inria-00072100/file/RR-4488.pdf
-   public static bool TriTri (ReadOnlySpan<Point3f> pts, in CTri a, in CTri b) {
-      unsafe { fixed (Point3f* p = pts) return TriTri (p, a, b); }
+   public static bool TriTri (ReadOnlySpan<Point3f> ptsA, in CTri a, ReadOnlySpan<Point3f> ptsB, in CTri b) {
+      unsafe { fixed (Point3f* pA = ptsA) fixed (Point3f *pB = ptsB) return TriTri (pA, a, pB, b); }
    }
 
    /// <summary>Checks if two triangles intersect in 3D space.</summary>
-   public unsafe static bool TriTri (Point3f* p, in CTri t1, in CTri t2) {
+   public unsafe static bool TriTri (Point3f* p1, in CTri t1, Point3f * p2, in CTri t2) {
       // Step 1. Check if triangle 1 is completely on one side of triangle 2's plane
       int a1 = t1.A, b1 = t1.B, c1 = t1.C, a2 = t2.A, b2 = t2.B, c2 = t2.C;
       Vector3f N2 = t2.N; float d2 = t2.D;
-      int sa1 = Sign (Dot (p[a1], N2) + d2);
-      int sb1 = Sign (Dot (p[b1], N2) + d2);
-      int sc1 = Sign (Dot (p[c1], N2) + d2);
+      int sa1 = Sign (Dot (p1[a1], N2) + d2);
+      int sb1 = Sign (Dot (p1[b1], N2) + d2);
+      int sc1 = Sign (Dot (p1[c1], N2) + d2);
 
       // If all the signs are equal, triangle 1 is on one side of triangle 2, OR
       // they are coplanar.
@@ -238,9 +246,9 @@ public static class Collision {
 
       // Step 2. Check if triangle 2 is completely on one side of triangle 1
       Vector3f N1 = t1.N; float d1 = t1.D;
-      int sa2 = Sign (Dot (p[a2], N1) + d1);
-      int sb2 = Sign (Dot (p[b2], N1) + d1);
-      int sc2 = Sign (Dot (p[c2], N1) + d1);
+      int sa2 = Sign (Dot (p2[a2], N1) + d1);
+      int sb2 = Sign (Dot (p2[b2], N1) + d1);
+      int sc2 = Sign (Dot (p2[c2], N1) + d1);
       if (sa2 == sb2 && sa2 == sc2) {
          if (sa2 == 0) goto Coplanar;     // Defensive check for floating-point tolerance
          return false;
@@ -260,7 +268,8 @@ public static class Collision {
       // Step 4. Final overlap test on the intersection line
       // After the cannonical reordering, this checks if the 'min' of intersection interval
       // of triangle 1 is less than or equal to the 'max' of triangle 2 and vice-versa.
-      return Side (a1, b1, a2, b2) <= 0 && Side (a1, c1, c2, a2) <= 0;
+      Point3f pa1 = p1[a1], pa2 = p2[a2];
+      return Side (pa1, p1[b1], pa2, p2[b2]) <= 0 && Side (pa1, p1[c1], p2[c2], pa2) <= 0;
 
       Coplanar:
       // Now perform 2D triangle overlap tests by projecting 3D triangle points into 2D space.
@@ -270,7 +279,7 @@ public static class Collision {
       var P2 = XY;
       if (t1.K == 0b_0110) P2 = YZ;
       else if (t1.K == 0b_0010) P2 = XZ;
-      Point2f* pt2 = stackalloc Point2f[] { P2 (p[a1]), P2 (p[b1]), P2 (p[c1]), P2 (p[a2]), P2 (p[b2]), P2 (p[c2]) };
+      Point2f* pt2 = stackalloc Point2f[] { P2 (p1[a1]), P2 (p1[b1]), P2 (p1[c1]), P2 (p2[a2]), P2 (p2[b2]), P2 (p2[c2]) };
       return TriTri2D (pt2);
 
       // Helpers ...........................................
@@ -281,9 +290,7 @@ public static class Collision {
       // Gets the orientation of point 'd' with respect to the plane defined by triangle 'abc'
       // +1 = d is on the positive side of the plane, -1 = d is on the negative side, 0 = d is on the plane
       [MethodImpl (MethodImplOptions.AggressiveInlining)]
-      float Side (int a, int b, int c, int d) {
-         var pa = p[a]; return Dot (p[d] - pa, (p[b] - pa) * (p[c] - pa));
-      }
+      static float Side (in Point3f a, in Point3f b, in Point3f c, in Point3f d) => Dot (d - a, (b - a) * (c - a));
 
       [MethodImpl (MethodImplOptions.AggressiveInlining)]
       static void ReorderTriangle (ref int sa, ref int sb, ref int sc, ref int a, ref int b, ref int c) {
