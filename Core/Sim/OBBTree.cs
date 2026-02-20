@@ -1,4 +1,8 @@
-﻿namespace Nori;
+﻿// ────── ╔╗
+// ╔═╦╦═╦╦╬╣ OBBTree.cs
+// ║║║║╬║╔╣║ Represents a collision BVH using OBBs as the bounding primitive
+// ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
+namespace Nori;
 
 public class OBBTree {
    // Routine to build an OBBTree from a mesh
@@ -14,7 +18,7 @@ public class OBBTree {
       Dictionary<Point3f, int> dict = new (Point3fComparer.Epsilon);
       Pts = new Point3f[mesh.Vertex.Length];
       Tris = new CTri[mesh.Triangle.Length / 3 + 1]; // +1 since we are not using Tris[0]
-      //var triangles = mesh.Triangle.Skip (999).Take (999).ToArray ();
+      
       var triangles = mesh.Triangle; int nTris = 0;
       for (int i = 0; i < triangles.Length; i += 3) {
          var pa = mesh.Vertex[triangles[i]].Pos;
@@ -188,10 +192,41 @@ public class OBBCollider {
       // coordinate system. Thus, we want the smaller tree as B (less transformation). 
       if (ta.Tris.Length < tb.Tris.Length) return Check (tb, in csB, ta, in csA, oneCrash);
 
-      mRung++;
       mA = ta; mB = tb;
       mDone = mCrashing = false; mOneCrash = oneCrash;
       mBtoA = Matrix3.From (in csB) * Matrix3.To (in csA);
+      BObb = n => mB.OBBs[n]; BTri = n => mB.Tris[n];
+      // Each time the top level Check routine is called (a fresh collision check is starting), we do
+      // this initialization:
+      // - Grow mBAPts to be at least as big as B.Pts.Length
+      // - Likewise the three rung arrays
+      // - Likewise mBATris and mBAOBBs should be grown so they are at least as big as B.Tris, B.OBBs
+      // - mRung is bumped up - this is effectively like a TimeStamp. 
+      if (!mBtoA.IsIdentity) {
+         mRung++; 
+         if (mRung == 0) {
+            // Rare Edge case: when we bump up mRung, if it is 0, that means we have wrapped around and
+            // done 4 billion collision checks. At this point, all the rung values are no longer reliable 
+            // so: Reset mPtRung, mTriRung, mOBBRung to 0, and set mRung to 1. 
+            mRung = 1; Array.Clear (mTriRung);
+            Array.Clear (mPtRung); Array.Clear (mOBBRung);
+         }
+         BObb = BAObb; BTri = BATri;
+         if (mBAOBBs.Length < mB.OBBs.Length) {
+            Array.Resize (ref mOBBRung, mB.OBBs.Length);
+            Array.Resize (ref mBAOBBs, mB.OBBs.Length);
+         }
+
+         if (mBATris.Length < mB.Tris.Length) {
+            Array.Resize (ref mTriRung, mB.Tris.Length);
+            Array.Resize (ref mBATris, mB.Tris.Length);
+         }
+
+         if (mBAPts.Length < mB.Pts.Length) {
+            Array.Resize (ref mPtRung, mB.Pts.Length);
+            Array.Resize (ref mBAPts, mB.Pts.Length);
+         }
+      }
       mATris.Clear (); mBTris.Clear ();
       Check (1, 1);
       return mCrashing;
@@ -208,14 +243,12 @@ public class OBBCollider {
          //    A's space using mAtoB. If there is no collision return.
          //    Otherwise, Check (a.Left, b.Left) and likewise a.Left x b.Right, a.Right x b.Left, a.Right x b.Right 
          //    After each check, if mDone is set, return. 
-         // 
-         OBB boxA = mA.OBBs[a], boxB = mB.OBBs[b];
-         // OBBxOBB collision check
-         if (!(mCrashing = Collision.Check (boxA, boxB))) return;
+         OBB boxA = mA.OBBs[a], boxB = BObb (b);
+         if (!Collision.Check (boxA, boxB)) return;
          Check (boxA.Left, boxB.Left); if (mDone) return;
-         if (!mCrashing) Check (boxA.Left, boxB.Right); if (mDone) return;
-         if (!mCrashing) Check (boxA.Right, boxB.Left); if (mDone) return;
-         if (!mCrashing) Check (boxA.Right, boxB.Right); if (mDone) return;
+         Check (boxA.Left, boxB.Right); if (mDone) return;
+         Check (boxA.Right, boxB.Left); if (mDone) return;
+         Check (boxA.Right, boxB.Right);
       } else if (a < 0 && b > 0) {
          // 2. If one is OBB and one is Tri
          //    Do OBBxTri collision check, transforming whichever is on the right to the left side
@@ -223,41 +256,106 @@ public class OBBCollider {
          //    Otherwise, assuming a is the OBB, check a.Left x b, a.Right x b (likewise symmetrically
          //    if b is the OBB). 
          //    After each check, if mDone is set, return
-         // 
-         OBB boxB = mB.OBBs[b];
-         // OBBxTri collision check, with the OBB on the left and the Tri on the right
-         mCrashing = Collision.Check (mA.Pts, mA.Tris[-a], boxB);
-         if (!mCrashing || mDone) return;
+         OBB boxB = BObb (b);
+         if (!Collision.Check (mA.Pts, mA.Tris[-a], boxB)) return;
          Check (a, boxB.Left); if (mDone) return;
-         if (!mCrashing) Check (a, boxB.Right);
+         Check (a, boxB.Right);
       } else if (a > 0 && b < 0) {
+         // OBBxTri collision check
          OBB boxA = mA.OBBs[a];
-         // OBBxTri collision check, with the OBB on the left and the Tri on the right
-         mCrashing = Collision.Check (mB.Pts, mB.Tris[-b], boxA);
-         if (!mCrashing || mDone) return;
+         if (!Collision.Check (mBAPts, BTri (-b), boxA)) return;
+         if (mDone) return;
          Check (boxA.Left, b); if (mDone) return;
-         if (!mCrashing) Check (boxA.Right, b);
+         Check (boxA.Right, b);
       } else if (a < 0 && b < 0) {
+         if (mDone) return;
          // 3. If both are Tri (we will recurse down to this leaf level finally)
          //    Transform B in to A's coordinates and test. If there is a collision:
          //    - Set mCrashing
-         //    - If mOneCrash, set mDone (we don't need to continue any further)
          //    - Add a & b to mATris, mBTris
-         var triA = mA.Tris[-a]; var triB = mB.Tris[-b];
-         // Tri x Tri collision check
-         mCrashing = Collision.TriTri (mA.Pts, triA, mB.Pts, triB);
-         if (mCrashing && mOneCrash) mDone = true;
+         if (Collision.TriTri (mA.Pts, mA.Tris[-a], mBAPts, BTri (-b))) {
+            mCrashing = true;
+            mATris.Add (-a); mBTris.Add (-b);
+            // If mOneCrash, set mDone (we don't need to continue any further)
+            if (mOneCrash) mDone = true;
+         }
       }
    }
 
-   bool mOneCrash;      // If set, we stop after detecting one crash. Otherwise, we detect all colliding pairs of triangles
+   OBB BAObb (int n) {
+      if (mRung == mOBBRung[n]) return mBAOBBs[n];
+      mBAOBBs[n] = mB.OBBs[n] * mBtoA;
+      mOBBRung[n] = mRung;
+      return mBAOBBs[n];
+   }
+
+   CTri BATri (int n) {
+      if (mRung == mTriRung[n]) return mBATris[n];
+      var pts = mB.Pts; CTri t = mB.Tris[n];
+      UpdatePt (t.A); UpdatePt (t.B); UpdatePt (t.C);
+      mBATris[n] = new (mBAPts, t.A, t.B, t.C);
+      mTriRung[n] = mRung;
+
+      [MethodImpl (MethodImplOptions.AggressiveInlining)]
+      void UpdatePt (int n) {
+         if (mPtRung[n] != mRung) {
+            mBAPts[n] = pts[n] * mBtoA;
+            mPtRung[n] = mRung;
+         }
+      }
+      return mBATris[n];
+   }
+
+   Func<int, OBB> BObb = null!;        // Given index, returns B's OBB
+   Func<int, CTri> BTri = null!;       // Given index, returns B's triangle
+   bool mOneCrash;                     // If set, we stop after detecting one crash. Otherwise, we detect all colliding pairs of triangles
    Matrix3 mBtoA = Matrix3.Identity;   // Matrix to move from B coordinate system to A coordinate system
-   bool mDone, mCrashing;
-   OBBTree mA = null!, mB = null!;
+   bool mCrashing;                     // Collision result after the check
+   bool mDone;                         // Flag used to intercept and stop the recursive check.
+   OBBTree mA = null!, mB = null!;     // A and B OBB trees
    List<int> mATris = [], mBTris = []; // Take in pairs, mATris[N] and mBTris[N] are triangles from A and B that crash
-   uint mRung = 0;  // See the OPTIMIZATION section below for details on this
+   uint mRung = 0;                     // A timestamp for 'this' collision session.
 
    // We'll use a thread-static singleton of this to avoid re-making the object each time
    public static OBBCollider It => sIt ??= new ();
    [ThreadStatic] static OBBCollider? sIt;
+
+   // OPTIMIZATION: 
+   // In the Check routine above we often need to transform OBBs or triangles from B to A's space.
+   // To keep this less impactful, we have already sorted things so that A has more triangles than B
+   // (and thus presumably fewer OBBs in the tree). 
+   // However, each OBB from B and each triangle from B is potentially used multiple times for collision,
+   // and will undergo this transformation multiple times. It will be worth spending some effort to 
+   // avoid that (effort that MetaCAM / Flux don't do now). 
+   // 
+   // These are the data structures needed to support this optimization:
+   // These 3 arrays contain a 'transformed' version of OBBTree B, transformed into A's space using
+   // mBtoA. Note that we need to transform each of these sets of data: 
+   // - the points obviously need to be transformed
+   // - the CTri contain normal vectors that need to be transformed (I think the D values will not
+   //   change, but let's verify that is the case!)
+   // - the OBBs need to be transformed (Center, X, Y)
+   Point3f[] mBAPts = [];
+   CTri[] mBATris = [];
+   OBB[] mBAOBBs = [];
+
+   // However, naively transforming all the points, tris and OBBs will be very expensive. So we are 
+   // going to do this incrementally. Only when an OBB first appears on the right side of a Check()
+   // call we will transform it and store the copy in the corresponding slot in mBAOBBs. To keep
+   // track of whether a particular OBB / Point3f / CTri has already been transformed and stored in 
+   // one of the 3 arrays above, we will use these sentinels.
+   // Now, if mPtRung[N] != mRung, that means that that particular point has not yet been transformed
+   // from B to A. We transform it, store it in mPtRung and set mPtRung[N] = mRung. 
+   // 
+   // 
+   // With this optimization, each OBB, Tri and finally each Pt will be transformed only once from
+   // B to A's space. And only incrementally - large sections of the tris, OBBs, points wil never
+   // need to be transformed, only the portions of the tree that Check visits. Hopefully this optimization
+   // will make this pretty fast. 
+   //
+   // This means that we will never be operating off B.Pts array, but always only off the mBAPts[]
+   // array during the TriTri collision checks. 
+   // 
+   uint[] mPtRung = [], mTriRung = [], mOBBRung = [];
+   const uint MaxRung = 4_000_000_000;
 }

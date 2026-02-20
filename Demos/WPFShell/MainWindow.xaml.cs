@@ -1,6 +1,5 @@
 ﻿using Nori;
 using System.Diagnostics;
-using System.IO.Compression;
 using System.Reactive.Linq;
 using System.Windows;
 
@@ -30,77 +29,80 @@ public partial class MainWindow : Window {
 class OBBTreeDemo : Scene3 {
    public OBBTreeDemo () {
       var mesh = Mesh3.LoadTMesh ("N:/Demos/Data/suzanne.tmesh");
-      mesh *= Matrix3.Scaling (5 / mesh.Bound.Diagonal); // Scale to normalize
-
+      var vecC = (Vector3)mesh.Bound.Midpoint;
+      mesh *= Matrix3.Translation (-vecC) * Matrix3.Scaling (5 / mesh.Bound.Diagonal); // Scale to normalize
+      vecC = (Vector3)mesh.Bound.Midpoint;
+      CoordSystem csA = //CoordSystem.World;
+         (Matrix3.Identity
+         //* Matrix3.Rotation (EAxis.X, Math.PI / 8)
+         * Matrix3.Rotation (EAxis.Z, -Math.PI / 8)
+         //* Matrix3.Rotation (EAxis.Y, -Math.PI / 8)
+         ).ToCS ();
+      var csA2 = Matrix3.From (csA).ToCS ();
       Lib.Tracer = TraceVN.Print;
       TraceVN.It.Clear ();
-      OBBTree tree = new (mesh);
-      mTreeVN = new OBBTreeVN (tree, true);
-      var meshVN = new MeshVN (mesh) {
+      OBBTree treeA = new (mesh);
+      var treeVN = new XfmVN (Matrix3.From (csA), new OBBTreeVN (treeA, Matrix3.Identity, true));
+      var meshVN = new XfmVN (Matrix3.From (csA), new MeshVN (mesh) {
          Shading = EShadeMode.Phong,
-         Color = new Color4 (128, 128, 128)
-      };
-      List<VNode> vnodes = [];
+         Color = Color4.Gray (245)
+      });
+      List<Mesh3> meshes = [..Enumerable.Range (1, 5).Select (n => Mesh3.Sphere (Point3.Zero, 0.05 + 0.01 * n, 0.01))];
+      OBBTree[] trees = [.. meshes.Select (m => new OBBTree (m))];
+      List<VNode> vnodes = []; 
+      (int NObj, CoordSystem CS) [] objs = [];
       var root = new GroupVN ([meshVN, TraceVN.It]);
-      Root = root; AddNodes ();
+      Root = root; FillNodes ();
       BgrdColor = Color4.Gray (64);
       Bound = mesh.Bound;
-      Viewpoint = new (-65, 135);
-      HW.Keys.Where (a => a.IsPress () && a.Key == EKey.R).Subscribe (_ => AddNodes ());
 
-      void AddNodes () {
+      HW.Keys.Where (a => a.IsPress () && a.Key == EKey.R).Subscribe (_ => FillNodes ());
+
+      void FillNodes () {
          vnodes.ForEach (root.Remove); vnodes.Clear ();
          Random R = new ();
          var cen = mesh.Bound.Midpoint;
-         Mesh3[] objs = [..Enumerable.Repeat (0, 50).Select (_ => Mesh3.Sphere (cen + V (), 0.05 + 0.1 * R.NextDouble (), 0.01))];
+         objs = [..Enumerable.Range (0, 50).Select (_ => (R.Next (meshes.Count), new CoordSystem (cen + V ())))];
          Stopwatch sw = Stopwatch.StartNew ();
-         OBBTree[] trees = [..objs.Select (o => new OBBTree (o))];
          sw.Stop (); var tsBuild = sw.Elapsed; 
-         bool [] collisions = new bool[trees.Length];
+         bool [] collisions = new bool[objs.Length];
          sw.Restart ();
-         for (int i = 0; i < trees.Length; i++)
-            collisions[i] = Collides (trees[i]);
+         for (int i = 0; i < objs.Length; i++) {
+            var (NObj, CS) = objs[i];
+            collisions[i] = OBBCollider.It.Check (treeA, csA, trees[NObj], CS);
+         }
+
          sw.Stop (); 
-         Lib.Trace ($"{trees.Length} objects, {collisions.Count (x => x)} collide. BVH: {tsBuild.TotalMilliseconds:F0} ms, Collision: {sw.Elapsed.TotalMilliseconds:F1} ms");
+         Lib.Trace ($"{objs.Length} objects, {collisions.Count (x => x)} collide. Elapsed: {sw.Elapsed.TotalMilliseconds:F1} ms");
          Lib.Trace ("Press 'R' key to run again");
-         vnodes.AddRange (objs.Select ((o, n) => new BallVN (o, collisions[n])));
-         //vnodes.AddRange (objs.Select ((o, n) => new OBBTreeVN (trees[n])));
+         vnodes.AddRange (objs.Select ((o, n) => new BallVN (meshes[o.NObj], collisions[n], Matrix3.From (o.CS))));
+         // vnodes.AddRange (objs.Select ((o, n) => new OBBTreeVN (trees[o.NObj], Matrix3.From (o.CS))));
          vnodes.ForEach (root.Add);
 
          Vector3 V () => new (Scale () * R.NextDouble (), Scale () * R.NextDouble (), Scale () * R.NextDouble ());
          double Scale () => R.NextDouble () switch { < 0.5 => -1.5, _ => 1.5 };
       }
-
-      bool Collides (OBBTree treeB) {
-         return OBBCollider.It.Check (tree, CoordSystem.World, treeB, CoordSystem.World, true);
-         //foreach (var obbA in tree.EnumBoxes (10)) {
-         //   foreach (var obbB in treeB.EnumBoxes (10)) {
-         //      if (Collision.Check (obbA, obbB))
-         //         return true;
-         //   }
-         //}
-         //return false;
-      }
    }
-
-   OBBTreeVN mTreeVN;
 }
 
 // A colliding ball view node. This is used to show random spheres that
 // may or may not collide with the main mesh.
-class BallVN (Mesh3 mesh, bool collides) : VNode {
+class BallVN (Mesh3 mesh, bool collides, Matrix3 xfm) : VNode {
    readonly bool Collides = collides; 
    readonly Mesh3 Mesh = mesh;
-   public override void SetAttributes () => Lux.Color = Collides ? new Color4 (255, 128, 128) : new Color4 (128, 255, 128);
+   readonly Matrix3 Xfm = xfm;
+   public override void SetAttributes () => 
+      (Lux.Color, Lux.Xfm) = (Collides ? new Color4 (255, 128, 128) : new Color4 (128, 255, 128), Xfm);
    public override void Draw () => Lux.Mesh (Mesh, EShadeMode.Phong);
 }
 
 // This VNode displays one level of the OBB hierarchy (by drawing boxes).
 // This VNode also connects to the keyboard handler.
-class OBBTreeVN (OBBTree tree, bool trace = false) : VNode {
+class OBBTreeVN (OBBTree tree, Matrix3 xfm, bool trace = false) : VNode {
+   Matrix3 Xfm = xfm;
    // Overrides ----------------------------------------------------------------
    public override void Draw () {
-      List<OBB> boxes = [..mTree.EnumBoxes (mLevel)];
+      List<OBB> boxes = [..mTree.EnumBoxes (mLevel).Select (obb => obb * Xfm)];
       Trace ($"Level {mLevel}, {boxes.Count} boxes. Volume: {boxes.Sum (b => b.Volume):F3}, Area: {boxes.Sum (b => b.Area):F3}");
       List<Vec3F> pts = [];
       foreach (var box in boxes) {
