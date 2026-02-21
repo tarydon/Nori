@@ -70,11 +70,15 @@ public static class Collision {
    /// <summary>Checks if two OBBs intersect.</summary>
    [MethodImpl (MethodImplOptions.AggressiveInlining)]
    public static bool Check (in OBB a, in OBB b) =>
-      BoxBox (in a.Center, in a.X, in a.Y, in a.Extent, in b.Center, in b.X, in b.Y, in b.Extent);
+      BoxBox (in a.Center, in a.X, in a.Y, in a.Z, in a.Extent, in b.Center, in b.X, in b.Y, in b.Z, in b.Extent);
 
    [MethodImpl (MethodImplOptions.AggressiveInlining)]
    public static bool Check (ReadOnlySpan<Point3f> pts, in CTri a, in OBB b) =>
-      BoxTri (in b.Center, in b.X, in b.Y, in b.Extent, in pts[a.A], in pts[a.B], in pts[a.C]);
+      BoxTri (in b.Center, in b.X, in b.Y, in b.Z, in b.Extent, in pts[a.A], in pts[a.B], in pts[a.C]);
+
+   [MethodImpl (MethodImplOptions.AggressiveInlining)]
+   unsafe public static bool Check (Point3f* pts, in CTri a, in OBB b) =>
+      BoxTri (in b.Center, in b.X, in b.Y, in b.Z, in b.Extent, in pts[a.A], in pts[a.B], in pts[a.C]);
 
    [MethodImpl (MethodImplOptions.AggressiveInlining)]
    public static bool Check (ReadOnlySpan<Point3f> ptsA, in CTri a, ReadOnlySpan<Point3f> ptsB, in CTri b) => TriTri (ptsA, in a, ptsB, in b);
@@ -84,10 +88,8 @@ public static class Collision {
    /// OBBs are intersecting. The 15 axes are the 3 axes of each OBB (face-face) and the 9 axes 
    /// formed by the cross products of each pair of axes from the two OBBs (edge-edge).
    [MethodImpl (MethodImplOptions.AggressiveInlining)]
-   public static bool BoxBox (in Point3f aC, in Vector3f aX, in Vector3f aY, in Vector3f aR, in Point3f bC, in Vector3f bX, in Vector3f bY, in Vector3f bR) {
-      Vector3f aZ = aX * aY, bZ = bX * bY;
+   public static bool BoxBox (in Point3f aC, in Vector3f aX, in Vector3f aY, in Vector3f aZ, in Vector3f aR, in Point3f bC, in Vector3f bX, in Vector3f bY, in Vector3f bZ, in Vector3f bR) {
       float a0 = aR.X, a1 = aR.Y, a2 = aR.Z, b0 = bR.X, b1 = bR.Y, b2 = bR.Z;
-
       // Check 1. Test A axes: aX, aY, aZ
       // The translation vector T <t0, t1, t2> from a to b (in a's coordinate system)      
       var tmp = bC - aC; float t0 = Dot (in tmp, in aX);
@@ -146,9 +148,8 @@ public static class Collision {
    /// <param name="p1">Triangle vertex 2</param>
    /// <param name="p2">Triangle vertex 3</param>
    /// <returns>True, if there is a collision. False otherwise.</returns>
-   public static bool BoxTri (in Point3f bC, in Vector3f bX, in Vector3f bY, in Vector3f bH, in Point3f p0, in Point3f p1, in Point3f p2) {
+   public static bool BoxTri (in Point3f bC, in Vector3f bX, in Vector3f bY, in Vector3f bZ, in Vector3f bH, in Point3f p0, in Point3f p1, in Point3f p2) {
       // Transform triangle vertices (p0, p1, p2) into box's local space as (a, b, c)
-      var bZ = bX * bY;
       Vector3f v0 = p0 - bC, v1 = p1 - bC, v2 = p2 - bC;
       var a = new Point3f (Dot (in v0, in bX), Dot (in v0, in bY), Dot (in v0, in bZ));
       var b = new Point3f (Dot (in v1, in bX), Dot (in v1, in bY), Dot (in v1, in bZ));

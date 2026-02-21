@@ -2,6 +2,11 @@
 // ╔═╦╦═╦╦╬╣ OBBTree.cs
 // ║║║║╬║╔╣║ Represents a collision BVH using OBBs as the bounding primitive
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
+using JetBrains.Annotations;
+using System.Buffers;
+using System.Drawing;
+using static Nori.CMesh;
+
 namespace Nori;
 
 public class OBBTree {
@@ -191,7 +196,6 @@ public class OBBCollider {
       // We're going to do the check by projecting all the data from tree B into tree A's
       // coordinate system. Thus, we want the smaller tree as B (less transformation). 
       if (ta.Tris.Length < tb.Tris.Length) return Check (tb, in csB, ta, in csA, oneCrash);
-
       mA = ta; mB = tb;
       mDone = mCrashing = false; mOneCrash = oneCrash;
       mBtoA = Matrix3.From (in csB) * Matrix3.To (in csA);
@@ -203,7 +207,7 @@ public class OBBCollider {
       // - Likewise mBATris and mBAOBBs should be grown so they are at least as big as B.Tris, B.OBBs
       // - mRung is bumped up - this is effectively like a TimeStamp. 
       if (!mBtoA.IsIdentity) {
-         mRung++; 
+         mRung++; BTri = BATri; BObb = BAObb;
          if (mRung == 0) {
             // Rare Edge case: when we bump up mRung, if it is 0, that means we have wrapped around and
             // done 4 billion collision checks. At this point, all the rung values are no longer reliable 
@@ -211,7 +215,6 @@ public class OBBCollider {
             mRung = 1; Array.Clear (mTriRung);
             Array.Clear (mPtRung); Array.Clear (mOBBRung);
          }
-         BObb = BAObb; BTri = BATri;
          if (mBAOBBs.Length < mB.OBBs.Length) {
             Array.Resize (ref mOBBRung, mB.OBBs.Length);
             Array.Resize (ref mBAOBBs, mB.OBBs.Length);
@@ -227,61 +230,67 @@ public class OBBCollider {
             Array.Resize (ref mBAPts, mB.Pts.Length);
          }
       }
-      mATris.Clear (); mBTris.Clear ();
-      Check (1, 1);
+      mATris.Clear (); mBTris.Clear (); mDepth = 0;
+      Push (1, 1);
+      Check ();
       return mCrashing;
    }
 
    // Checks two entities for collision. The entities could be OBBs (if the index is non-negative),
    // or triangles (if the index is negative). This is a recursive routine that checks one entity
    // from OBBTree A with an entity from OBBTree b. 
-   void Check (int a, int b) {
-      if (mDone) return;
-      if (a > 0 && b > 0) {
-         // 1. If both a & b are OBBs (a > 0, b >= 0), then:
-         //    Do OBBxOBB collision check, transforming the center, X and Y of OBB B into 
-         //    A's space using mAtoB. If there is no collision return.
-         //    Otherwise, Check (a.Left, b.Left) and likewise a.Left x b.Right, a.Right x b.Left, a.Right x b.Right 
-         //    After each check, if mDone is set, return. 
-         OBB boxA = mA.OBBs[a], boxB = BObb (b);
-         if (!Collision.Check (boxA, boxB)) return;
-         Check (boxA.Left, boxB.Left); if (mDone) return;
-         Check (boxA.Left, boxB.Right); if (mDone) return;
-         Check (boxA.Right, boxB.Left); if (mDone) return;
-         Check (boxA.Right, boxB.Right);
-      } else if (a < 0 && b > 0) {
-         // 2. If one is OBB and one is Tri
-         //    Do OBBxTri collision check, transforming whichever is on the right to the left side
-         //    coordinate system using mAtoB. If there is no collision return. 
-         //    Otherwise, assuming a is the OBB, check a.Left x b, a.Right x b (likewise symmetrically
-         //    if b is the OBB). 
-         //    After each check, if mDone is set, return
-         OBB boxB = BObb (b);
-         if (!Collision.Check (mA.Pts, mA.Tris[-a], boxB)) return;
-         Check (a, boxB.Left); if (mDone) return;
-         Check (a, boxB.Right);
-      } else if (a > 0 && b < 0) {
-         // OBBxTri collision check
-         OBB boxA = mA.OBBs[a];
-         if (!Collision.Check (mBAPts, BTri (-b), boxA)) return;
-         if (mDone) return;
-         Check (boxA.Left, b); if (mDone) return;
-         Check (boxA.Right, b);
-      } else if (a < 0 && b < 0) {
-         if (mDone) return;
-         // 3. If both are Tri (we will recurse down to this leaf level finally)
-         //    Transform B in to A's coordinates and test. If there is a collision:
-         //    - Set mCrashing
-         //    - Add a & b to mATris, mBTris
-         if (Collision.TriTri (mA.Pts, mA.Tris[-a], mBAPts, BTri (-b))) {
-            mCrashing = true;
-            mATris.Add (-a); mBTris.Add (-b);
-            // If mOneCrash, set mDone (we don't need to continue any further)
-            if (mOneCrash) mDone = true;
+   unsafe void Check () {
+      fixed (Point3f* pAPts = mA.Pts) fixed (Point3f* pBPts = mBAPts)
+      fixed (OBB* pABox = mA.OBBs) fixed (CTri* pATri = mA.Tris) {
+         while (Pop (out var a, out var b)) {
+            if (a > 0) {
+               if (b > 0) {
+                  // 1. If both a & b are OBBs (a > 0, b > 0), then:
+                  //    Do OBBxOBB collision check, transforming the center, X and Y of OBB B into 
+                  //    A's space using mAtoB. If there is no collision return.
+                  //    Otherwise, Check (a.Left, b.Left) and likewise a.Left x b.Right, a.Right x b.Left, a.Right x b.Right 
+                  //    After each check, if mDone is set, return. 
+                  ref readonly OBB boxA = ref pABox[a]; var boxB = BObb (b);
+                  if (!Collision.Check (in boxA, in boxB)) continue;
+                  Push (boxA.Left, boxB.Left);
+                  Push (boxA.Left, boxB.Right);
+                  Push (boxA.Right, boxB.Left);
+                  Push (boxA.Right, boxB.Right);
+               } else if (b < 0) {
+                  // 2a. If one is OBB and one is Tri
+                  //    Do OBBxTri collision check, transforming whichever is on the right to the left side
+                  //    coordinate system using mAtoB. If there is no collision return. 
+                  //    Otherwise, assuming a is the OBB, check a.Left x b, a.Right x b (likewise symmetrically
+                  //    if b is the OBB). 
+                  //    After each check, if mDone is set, return
+                  ref readonly OBB boxA = ref pABox[a]; if (!Collision.Check (pBPts, BTri (-b), in boxA)) continue;
+                  Push (boxA.Left, b);
+                  Push (boxA.Right, b);
+               }
+            } else if (a < 0) {
+               if (b > 0) {
+                  // 2b. One is Tri and other is OBB
+                  OBB boxB = BObb (b); if (!Collision.Check (pAPts, in pATri[-a], in boxB)) continue;
+                  Push (a, boxB.Left);
+                  Push (a, boxB.Right);
+               } else if (b < 0) {
+                  // 3. If both are Tri (we will recurse down to this leaf level finally)
+                  //    Transform B in to A's coordinates and test. If there is a collision:
+                  //    - Set mCrashing
+                  //    - Add a & b to mATris, mBTris
+                  if (Collision.TriTri (pAPts, in pATri[-a], pBPts, BTri (-b))) {
+                     mCrashing = true;
+                     mATris.Add (-a); mBTris.Add (-b);
+                     // If mOneCrash, set mDone (we don't need to continue any further)
+                     if (mOneCrash) mDone = true;
+                  }
+               }
+            }
          }
       }
    }
 
+   [MethodImpl (MethodImplOptions.AggressiveInlining)]
    OBB BAObb (int n) {
       if (mRung == mOBBRung[n]) return mBAOBBs[n];
       mBAOBBs[n] = mB.OBBs[n] * mBtoA;
@@ -289,22 +298,43 @@ public class OBBCollider {
       return mBAOBBs[n];
    }
 
+   [MethodImpl (MethodImplOptions.AggressiveInlining)]
    CTri BATri (int n) {
       if (mRung == mTriRung[n]) return mBATris[n];
-      var pts = mB.Pts; CTri t = mB.Tris[n];
+      ref readonly CTri t = ref mB.Tris[n];
       UpdatePt (t.A); UpdatePt (t.B); UpdatePt (t.C);
       mBATris[n] = new (mBAPts, t.A, t.B, t.C);
       mTriRung[n] = mRung;
-
-      [MethodImpl (MethodImplOptions.AggressiveInlining)]
-      void UpdatePt (int n) {
-         if (mPtRung[n] != mRung) {
-            mBAPts[n] = pts[n] * mBtoA;
-            mPtRung[n] = mRung;
-         }
-      }
       return mBATris[n];
    }
+
+   [MethodImpl (MethodImplOptions.AggressiveInlining)]
+   void UpdatePt (int n) {
+      if (mPtRung[n] != mRung) {
+         mBAPts[n] = mB.Pts[n] * mBtoA;
+         mPtRung[n] = mRung;
+      }
+   }
+
+   [MethodImpl (MethodImplOptions.AggressiveInlining)]
+   void Push (int a, int b) {
+      if (mStack.Length == mDepth) Array.Resize (ref mStack, 2 * mDepth);
+      mStack[mDepth] = a; mStack[mDepth + 1] = b;
+      mDepth += 2;
+   }
+
+   [MethodImpl (MethodImplOptions.AggressiveInlining)]
+   bool Pop (out int a, out int b) {
+      if (mDone || mDepth <= 0) {
+         a = b = 0;
+         return false;
+      }
+      mDepth -= 2; a = mStack[mDepth]; b = mStack[mDepth + 1];
+      return true;
+   }
+   // The tree travesal stack and its depth. It contains pair of 
+   // elements from 'A' and 'B' trees.
+   int[] mStack = new int[128]; int mDepth = 0;
 
    Func<int, OBB> BObb = null!;        // Given index, returns B's OBB
    Func<int, CTri> BTri = null!;       // Given index, returns B's triangle
