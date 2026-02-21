@@ -19,7 +19,10 @@ class CollisionScene : Scene3 {
       TraceVN.It.Clear ();
       
       // Load collision models and create entities
-      var mesh = Mesh3.LoadTMesh ("N:/Demos/Data/suzanne.tmesh");
+      var mesh = Mesh3.LoadTMesh ("N:/TData/IO/MESH/cow.tmesh");
+      // The mesh is normalized below to a constant scale and origin. So any mesh can be
+      // plugged to continue the collision testing. Uncomment the line below to experiment.
+      // mesh = Mesh3.LoadTMesh ("N:/TData/IO/MESH/cow.tmesh");
       var vecC = (Vector3)mesh.Bound.Midpoint;
       mesh *= Matrix3.Translation (-vecC) * Matrix3.Scaling (5 / mesh.Bound.Diagonal); // Normalize main mesh
       A = new (new (mesh), Matrix3.Rotation (EAxis.Z, -Math.PI / 8).ToCS ());
