@@ -27,8 +27,8 @@ class CollisionScene : Scene3 {
       mesh *= Matrix3.Translation (-vecC) * Matrix3.Scaling (5 / mesh.Bound.Diagonal); // Normalize main mesh
       A = new (new (mesh), Matrix3.Rotation (EAxis.Z, -Math.PI / 8).ToCS ());
 
-      BModels = [.. Enumerable.Range (1, 5).Select (n => new CModel (Mesh3.Sphere (Point3.Zero, 0.05 + 0.01 * n, 0.01)))];
-      Bs = [.. Enumerable.Range (0, COBJ).Select (_ => new CEnt (BModels[R.Next (BModels.Length)], CS ()))];
+      CModel[] models = [.. Enumerable.Range (1, 5).Select (n => new CModel (Mesh3.Sphere (Point3.Zero, 0.05 + 0.01 * n, 0.01)))];
+      Bs = [.. Enumerable.Range (0, COBJ).Select (_ => new CEnt (models[R.Next (models.Length)], CS ()))];
       CheckCollision ();
 
       // Initialize the scene
@@ -44,11 +44,10 @@ class CollisionScene : Scene3 {
       mDisp = HW.Keys.Where (a => a.IsPress ()).Subscribe (OnKey);
    }
 
+   // Suffles 'other' entities and checks the collision.
    void CheckCollision (bool shuffle = false) {
-      if (shuffle) {
-         foreach (var b in Bs)
-            b.CS = CS ();
-      }
+      if (shuffle) Bs.ForEach (b => b.CS = CS ());
+      
       // Collision check: Check A collision with Bs.
       Stopwatch sw = Stopwatch.StartNew ();
       Bs.ForEach (B => B.Collided = Check (A, B));
@@ -60,8 +59,11 @@ class CollisionScene : Scene3 {
       static bool Check (CEnt a, CEnt b) => OBBCollider.It.Check (a.Model.CTree, a.CS, b.Model.CTree, b.CS);
    }
 
-   CoordSystem CS () => new (new (Scale () * R.NextDouble (), Scale () * R.NextDouble (), Scale () * R.NextDouble ()));
-   double Scale () => R.NextDouble () switch { < 0.5 => -2, _ => 2 };
+   CoordSystem CS () => new (new (D (), D (), D ()));
+   double D () {
+      var val = 2 * R.NextDouble ();
+      return R.NextDouble () switch { < 0.5 => -val, _ => val };
+   }
 
    public override void Detached () {
       base.Detached ();
@@ -77,13 +79,19 @@ class CollisionScene : Scene3 {
             for (int i = 0; ; i++) {
                var child = Root?.GetChild (i);
                if (child == null) break;
-               if (child is CEntVN ent) ent.DrawTree = mDrawTree;
+               // The BVH drawing is restricted to the main entity alone.
+               // Modify the line below to draw it for all.
+               if (child is CEntVN ent && ent.IsMainEnt) {
+                  ent.DrawTree = mDrawTree;
+                  break;
+               }
             }
             mShortcuts.Redraw ();
             break;
       }
    }
 
+   // Renders the shotcut keys used in the demo
    void RenderShortcuts () {
       string str = "Shortcuts\n   C  =  Check Collisions\n   T  =  Toggle Collision Tree";
       if (mDrawTree) {
@@ -99,7 +107,6 @@ class CollisionScene : Scene3 {
 
    // Private data -------------------------------------------------------------
    CEnt A; CEnt[] Bs = [];
-   CModel[] BModels;
    bool mDrawTree = false;
    TypeFace mFont = new (Lib.ReadBytes ("nori:GL/Fonts/Roboto-Regular.ttf"), (int)(11 * Lux.DPIScale));
    VNode mShortcuts;
@@ -133,8 +140,8 @@ class CEnt (CModel model, CoordSystem cs) {
    public bool Collided = false;
 }
 
-// A colliding ball view node. This is used to show random spheres that
-// may or may not collide with the main mesh.
+// The entity view node helps visualize the collision status and underlying
+// bounding volume tree.
 class CEntVN (CEnt ent) : VNode (ent) {
    // The entity we are rendering.
    readonly CEnt Ent = ent;
@@ -167,7 +174,7 @@ class CEntVN (CEnt ent) : VNode (ent) {
 
    // This VNode displays one level of the OBB hierarchy (by drawing boxes).
    // This VNode also connects to the keyboard handler.
-   class TreeVN (OBBTree tree, bool master = false) : VNode {
+   class TreeVN (OBBTree tree, bool mainent = false) : VNode {
       // Overrides ----------------------------------------------------------------
       public override void Draw () {
          List<OBB> boxes = [.. mTree.EnumBoxes (mLevel)];
@@ -206,7 +213,7 @@ class CEntVN (CEnt ent) : VNode (ent) {
          if (!mMainMesh) return;
          Lib.Trace (msg);
       }
-      bool mMainMesh = master;
+      bool mMainMesh = mainent;
 
       // Private data -------------------------------------------------------------
       static int mLevel = 2;
