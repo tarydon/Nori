@@ -14,7 +14,7 @@ public class E2Dim2P : E2Dimension {
    /// <param name="angle">Direction of measurement</param>
    /// <param name="text">Actual text to display (or null if it should be computed)</param>
    public E2Dim2P (Layer2 layer, Point2 a, Point2 b, Point2 pt, double angle, string? text = null)
-      : base (layer) => (A, B, C, Angle, Text) = (a, b, pt, angle, text); 
+      : base (layer) => (A, B, C, Angle, Text) = (a, b, pt, angle, text);
 
    public readonly Point2 A, B, C;
    public readonly double Angle;
@@ -32,8 +32,27 @@ public class E2Dim2P : E2Dimension {
       var (pt, pt2) = (Geo.LineXLine (A, A2, C, C2), Geo.LineXLine (B, B2, C, C2));
       Lib.Check (!pt.IsNil && !pt2.IsNil, "Coding error");
       yield return new E2Poly (Layer, Poly.Line (pt, pt2));
-      yield return new E2Poly (Layer, Poly.Line (A, pt.Polar (Overhang, A.AngleTo (pt))));
-      yield return new E2Poly (Layer, Poly.Line (B, pt2.Polar (Overhang, B.AngleTo (pt2))));
+      yield return new E2Point (Layer, A);
+      yield return new E2Point (Layer, B);
+      yield return new E2Poly (Layer, Poly.Line (A.Polar (Overhang, A.AngleTo (pt)), pt.Polar (Overhang, A.AngleTo (pt))));
+      yield return new E2Poly (Layer, Poly.Line (B.Polar (Overhang, B.AngleTo (pt2)), pt2.Polar (Overhang, B.AngleTo (pt2))));
+      var text = Text ?? pt.DistTo (pt2).Round (2).ToString ();
+      var textAng = pt.AngleTo (pt2);
+      // Fix the textAng to avoid inverted text, etc [Lets limit it to -90, 90 range]
+      bool revDir = textAng is > Lib.HalfPI or < -Lib.HalfPI;
+      if (revDir) textAng += Lib.PI;
+      var (arrowDirA, arrowDirB) = revDir ? (textAng, textAng + Lib.PI) : (textAng + Lib.PI, textAng);
+      yield return MakeArrow (Layer, pt, arrowDirA);
+      yield return MakeArrow (Layer, pt2, arrowDirB);
+      var textPos = pt.Midpoint (pt2).Polar (Overhang / 2, textAng + Lib.HalfPI);
+      yield return new E2Text (Layer, Style2.Default, text, textPos, 10, textAng, 0, 1, ETextAlign.BaseCenter);
+   }
+
+   static E2Solid MakeArrow (Layer2 layer, Point2 tip, double dir, double length = 6, double width = 4) {
+      var pt = tip.Polar (length, dir + Lib.PI);
+      var perp = dir + Lib.HalfPI;
+      var (pt2, pt3) = (pt.Polar (width / 2, perp), pt.Polar (-width / 2, perp));
+      return new E2Solid (layer, [tip, pt2, pt3, tip]);
    }
 }
 #endregion
