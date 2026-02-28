@@ -332,7 +332,7 @@ public partial class Poly {
       if (IsCircle) return this[0].IsCCW ? EWinding.CCW : EWinding.CW;
       int node = mPts.MinIndexBy (pt => pt.Y);
       var pp = this[(node - 1 + Count) % Count].GetPointAt (0.9);
-      var pn = this[(node + 1) % Count].GetPointAt (0.1);
+      var pn = this[node % Count].GetPointAt (0.1);
       if (pp.X.EQ (pn.X)) return EWinding.Indeterminate;
       return pp.X < pn.X ? EWinding.CCW : EWinding.CW;
    }
