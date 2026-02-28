@@ -28,6 +28,7 @@ class TessScene : Scene2 {
    public TessScene () {
       var dwg = DXFReader.Load ("c:/etc/tess0.dxf");
       var xfm = Matrix2.Rotation (0.0812);
+      xfm = Matrix2.Identity;
       List<Poly> polys = [];
       for (int i = dwg.Ents.Count - 1; i >= 0; i--) {
          if (dwg.Ents[i] is not E2Poly e2p || e2p.Layer.Name != "0") dwg.Ents.RemoveAt (i);
@@ -39,7 +40,7 @@ class TessScene : Scene2 {
       }
 
       int n = polys.MaxIndexBy (a => a.GetBound ().Area);
-      List<Point2> pts = new ();
+      List<Point2> pts = [];
       mT = new Triangulator ();
       mT.Reset ();
 
@@ -54,7 +55,7 @@ class TessScene : Scene2 {
       mSteps = mT.Process ().GetEnumerator ();
       HW.MouseClicks.Where (a => a.IsLeftPress).Subscribe (a => OnClick ());    
 
-      Bound = dwg.Bound.InflatedF (1.2);
+      Bound = dwg.Bound.InflatedL (1).InflatedF (1.1f);
       BgrdColor = Color4.Gray (216);
       List<VNode> nodes = [new Dwg2VN (dwg), TraceVN.It, mDebugVN = new TessDebugVN (mT)];
       Root = new GroupVN (nodes);
@@ -77,6 +78,21 @@ class TessDebugVN : VNode {
    readonly Triangulator mT;
 
    public override void Draw () {
+      var dwg = mT.GetDebugDwg ();
+      DrawPoly ("TILE", Color4.Red, 4f);
+      DrawText ("TEXT", Color4.Blue);
 
+      // Helpers ..........................................
+      void DrawPoly (string layer, Color4 color, float lineWidth) {
+         (Lux.Color, Lux.LineWidth) = (color, lineWidth);
+         foreach (var e2p in dwg.Ents.OfType<E2Poly> ()) 
+            if (e2p.Layer.Name == layer) Lux.Poly (e2p.Poly);
+      }
+
+      void DrawText (string layer, Color4 color) {
+         (Lux.Color, Lux.LineWidth) = (color, 1.5f);
+         foreach (var e2t in dwg.Ents.OfType<E2Text> ())
+            if (e2t.Layer.Name == layer) Lux.Polys (e2t.Polys.AsSpan ());
+      }
    }
 }

@@ -14,7 +14,7 @@ namespace NBench;
 public class Tester {
    public Tester () {
       Lib.Init ();
-      Random r = new Random (1);
+      Random r = new (1);
       var model = new T3XReader ("C:/Etc/T3/5X-004.t3x").Load ();
       foreach (var ent in model.Ents.OfType<E3Surface> ()) {
          Point3f[] set = [.. ent.Mesh.Vertex.Select (a => a.Pos)];
