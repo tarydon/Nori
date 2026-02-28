@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.Reactive.Linq;
 using System.Windows;
 using Nori;
 
@@ -16,7 +17,8 @@ public partial class MainWindow : Window {
    void OnLuxReady (int _) {
       var source = PresentationSource.FromVisual (this);
       if (source != null) Lux.DPIScale = (float)source.CompositionTarget.TransformToDevice.M11;
-      TraceVN.TextColor = Color4.Yellow;
+      TraceVN.TextColor = Color4.Blue; Lib.Tracer = TraceVN.Print;
+      TraceVN.HoldTime = 20;
       new SceneManipulator ();
       Lux.UIScene = new TessScene ();
    }
@@ -24,7 +26,7 @@ public partial class MainWindow : Window {
 
 class TessScene : Scene2 {
    public TessScene () {
-      var dwg = DXFReader.Load ("c:/etc/tess2.dxf");
+      var dwg = DXFReader.Load ("c:/etc/tess0.dxf");
       var xfm = Matrix2.Rotation (0.0812);
       List<Poly> polys = [];
       for (int i = dwg.Ents.Count - 1; i >= 0; i--) {
@@ -38,19 +40,43 @@ class TessScene : Scene2 {
 
       int n = polys.MaxIndexBy (a => a.GetBound ().Area);
       List<Point2> pts = new ();
-      List<int> splits = [0];
+      mT = new Triangulator ();
+      mT.Reset ();
+
       for (int i = 0; i < polys.Count; i++) {
          var p = polys[i];
-         if (p.GetWinding () == Poly.EWinding.CCW ^ i == n) p = p.Reversed ();
-         p.Discretize (pts, Lib.CoarseTess, Lib.CoarseTessAngle);
-         splits.Add (pts.Count); 
+         pts.Clear (); p.Discretize (pts, Lib.CoarseTess, Lib.CoarseTessAngle);
+         bool hole = (p.GetWinding () == Poly.EWinding.CCW ^ i == n);
+         if (hole) pts.Reverse ();
+         mT.AddContour (pts.AsSpan (), hole);
       }
 
-      new Triangulator (pts, splits);
+      mSteps = mT.Process ().GetEnumerator ();
+      HW.MouseClicks.Where (a => a.IsLeftPress).Subscribe (a => OnClick ());    
 
       Bound = dwg.Bound.InflatedF (1.2);
       BgrdColor = Color4.Gray (216);
-      Root = new Dwg2VN (dwg);
+      List<VNode> nodes = [new Dwg2VN (dwg), TraceVN.It, mDebugVN = new TessDebugVN (mT)];
+      Root = new GroupVN (nodes);
    }
+   Triangulator mT;
+   IEnumerator<string> mSteps;
+   VNode mDebugVN;
+
+   void OnClick () {
+      if (mSteps.MoveNext ()) {
+         Lib.Trace ($"{++mN}. {mSteps.Current}");
+         mDebugVN.Redraw ();
+      } 
+   }
+   int mN;
 }
 
+class TessDebugVN : VNode {
+   public TessDebugVN (Triangulator mt) => (mT, Streaming) = (mt, true);
+   readonly Triangulator mT;
+
+   public override void Draw () {
+
+   }
+}
