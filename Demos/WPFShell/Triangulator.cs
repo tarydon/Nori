@@ -59,7 +59,37 @@ partial class Triangulator {
          string text = $"{t.Id}"; if (t.Hole) text += "*";
          dwg.Add (new E2Text (dwg.CurrentLayer, dwg.Styles[^1], text, pos, size, 0, 0, 1, ETextAlign.BotCenter));
       }
+
+      dwg.Add (new Layer2 ("LINKS", Color4.Blue, ELineType.Continuous));
+      dwg.CurrentLayer = dwg.Layers[^1];
+      for (int i = 0; i < mTN; i++) {
+         ref Tile t = ref mT[i];
+         for (int j = 0; j < 2; j++) {
+            if (t.Top[j] != -1) AddArrow (GetCommon (ref mT[t.Top[j]], ref t), true, size);
+            if (t.Bot[j] != -1) AddArrow (GetCommon (ref t, ref mT[t.Bot[j]]), false, size);
+         }
+      }
       return dwg;
+
+      // Helpers ...........................................
+      void AddArrow (Point2 p, bool up, double size) {
+         if (p.IsNil) return;
+         double d = size * 0.5;
+         Poly poly = Poly.Lines (Point2.List (0, -size, 0, size, d / 2, size - d, -d / 2, size - d, 0, size), false);
+         if (!up) poly *= Matrix2.VMirror;
+         poly *= Matrix2.Translation (p.X, p.Y);
+         dwg.Add (poly);
+      }
+
+      Point2 GetCommon (ref Tile t0, ref Tile t1) {
+         Check (t0.YMin.EQ (t1.YMax));
+         double x0 = mS[t0.Left].GetX (t0.YMin), x1 = mS[t0.Right].GetX (t0.YMin);
+         Bound1 b0 = new (x0, x1);
+         x0 = mS[t1.Left].GetX (t0.YMin); x1 = mS[t1.Right].GetX (t0.YMin);
+         Bound1 b1 = new (x0, x1);
+         double x = (b0 * b1).Mid;
+         return new (x, t0.YMin);
+      }
    }
 
    public IEnumerable<string> Process () {
@@ -116,12 +146,46 @@ partial class Triangulator {
       ref Vertex v0 = ref Add (ref vBase, seg.A), v1 = ref Add (ref vBase, seg.B);
       Check (v0.Pt.Y > v1.Pt.Y);
 
-      int n0 = InsertPoint (ref v0);
-      int n1 = InsertPoint (ref v1);
-      int t0 = GetTile (n0, true);
-      int t1 = GetTile (n1, false);
-      return $"Tiles {t0} to {t1}";
+      int n0 = InsertPoint (ref v0), n1 = InsertPoint (ref v1);
+      int t0 = GetTile (n0, true), t1 = GetTile (n1, false);
+      GatherTiles (t0, t1, ref seg);
+      return $"Tiles: {mChain.ToCSV ()}";
    }
+
+   void GatherTiles (int t0, int t1, ref Segment seg) {
+      mChain.Clear ();
+      // Trivial case: only one tile
+      mChain.Add (t0); if (t1 == t0) return;
+      ref Tile tBase = ref GetReference (mT);
+      ref Tile tile0 = ref Add (ref tBase, t0);
+      // Simple case: only two tiles
+      if (tile0.Bot[0] == t1 || tile0.Bot[1] == t1) { mChain.Add (t1); return; }
+
+      // Here, handle the more general case where we have to navigate downwards
+      // following one of the BotA/BotB links each time. Sometimes, only one BotA is set, and this 
+      // is trivial. Otherwise, we have to examine both the below tiles to see which one
+      // the given segment passes through
+      ref Segment sBase = ref GetReference (mS);
+      while (t0 != t1) {
+         ref Tile tile = ref Add (ref tBase, t0);
+         if (tile.Bot[1] == -1) t0 = tile.Bot[0];
+         else {
+            // This node has both Bot[0] and Bot[1] set, figure out which one contains
+            // the segment in question
+            ref Tile tBot0 = ref Add (ref tBase, tile.Bot[0]), tBot1 = ref Add (ref tBase, tile.Bot[1]);
+            double yTest = (Math.Max (tBot0.YMin, tBot1.YMin) + tile.YMin) / 2;
+            double x = seg.GetX (yTest);
+            double xL = Add (ref sBase, tBot0.Right).GetX (yTest);
+            if (x < xL) t0 = tile.Bot[0];
+            else {
+               Check (x > Add (ref sBase, tBot1.Left).GetX (yTest)); // REMOVETHIS
+               t0 = tile.Bot[1]; 
+            }
+         }
+         mChain.Add (t0);
+      }
+   }
+   List<int> mChain = [];
 
    // Returns the tile that is just below or just above the given Y split node.   
    int GetTile (int nNode, bool getBelow) {

@@ -81,6 +81,7 @@ class TessDebugVN : VNode {
       var dwg = mT.GetDebugDwg ();
       DrawPoly ("TILE", Color4.Red, 4f);
       DrawText ("TEXT", Color4.Blue);
+      DrawPoly ("LINKS", Color4.Blue, 1.5f);
 
       // Helpers ..........................................
       void DrawPoly (string layer, Color4 color, float lineWidth) {
