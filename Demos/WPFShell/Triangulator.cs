@@ -53,22 +53,24 @@ partial class Triangulator {
       foreach (var t in mT.Take (mTN)) 
          dwg.Add (Poly.Lines (Point2.List (t.LMin, t.YMin, t.RMin, t.YMin, t.RMax, t.YMax, t.LMax, t.YMax), true));
 
-      dwg.Add (new Layer2 ("TEXT", Color4.Blue, ELineType.Continuous));
+      dwg.Add (new Layer2 ("TILETEXT", Color4.Blue, ELineType.Continuous));
       dwg.CurrentLayer = dwg.Layers[^1];
       dwg.Add (new Style2 ("STD", "SIMPLEX", 0, 1, 0));
       double size = mBound.Height / 100;
       for (int i = 1; i < mTN; i++) {
          ref Tile t = ref mT[i];
-         Point2 pos = new (0.25.Along (t.LMin, t.RMin), t.YMin);
+         Point2 pos = new (0.75.Along (t.LMin, t.RMin), t.YMin);
          string text = $"{t.Id}"; if (t.Hole) text += "*";
          if (t.VTop > 0) text += $" T{t.VTop}";
          if (t.VBot > 0) text += $" B{t.VBot}";
          dwg.Add (new E2Text (dwg.CurrentLayer, dwg.Styles[^1], text, pos, size, 0, 0, 1, ETextAlign.BotCenter));
       }
+
+      dwg.Add (new Layer2 ("VERTTEXT", Color4.DarkGreen, ELineType.Continuous));
+      dwg.CurrentLayer = dwg.Layers[^1];
       for (int i = 1; i < mVN - 4; i++) {
          ref Vertex v = ref mV[i];
          string text = $"{v.Kind.ToString ()[0]}{v.Id} T:{v.Tile[0]},{v.Tile[1]}";
-         text = v.Id.ToString ();
          var align = v.Kind switch { EVertex.Mountain => ETextAlign.BotCenter, EVertex.Valley => ETextAlign.TopCenter, _ => ETextAlign.MidLeft };
          dwg.Add (new E2Text (dwg.CurrentLayer, dwg.Styles[^1], text, v.Pt, size, 0, 0, 1, align));
       }

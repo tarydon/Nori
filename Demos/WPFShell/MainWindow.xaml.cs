@@ -80,7 +80,8 @@ class TessDebugVN : VNode {
    public override void Draw () {
       var dwg = mT.GetDebugDwg ();
       DrawPoly ("TILE", Color4.Red, 4f);
-      DrawText ("TEXT", Color4.Blue);
+      DrawText ("TILETEXT", Color4.Blue);
+      DrawText ("VERTTEXT", Color4.DarkGreen);
       DrawPoly ("LINKS", Color4.Blue, 1.5f);
 
       // Helpers ..........................................
