@@ -1,35 +1,29 @@
-﻿using System;
-using System.Collections.Generic;
-using static System.Runtime.InteropServices.MemoryMarshal;
 using static System.Runtime.CompilerServices.Unsafe;
-using System.Text;
-using System.ComponentModel.DataAnnotations;
-using System.Runtime.Intrinsics.X86;
+using static System.Runtime.InteropServices.MemoryMarshal;
 namespace Nori;
 
 partial class Triangulator {
-   public void Reset () {
-      mBound = new ();
-      mVN = mSN = mNN = mTN = 0;
-      if (Lib.Testing) mR = new (42);
-   }
-   Bound2 mBound;
-
+   // Methods ------------------------------------------------------------------
+   /// <summary>Adds a contour to the triangulator</summary>
+   /// The pts list making up the contour should wind CCW if this is an outer contour,
+   /// and should wind CW if this is a hole. In addition, the 'hole' parameter should also
+   /// be set true or false appropriately. 
    public void AddContour (ReadOnlySpan<Point2> pts, bool hole) {
       int n = pts.Length;
 
       // Add the points into the mV array
+      int vStart = mVN;
       Grow (ref mV, mVN, n);
       Point2 prev = pts[n - 1], pt = pts[0];
       for (int i = 0; i < n; i++) {
          Point2 next = pts[(i + 1) % n];
          double dy0 = prev.Y - pt.Y, dy1 = next.Y - pt.Y;
 
-         EVKind kind = EVKind.Regular;
-         if (dy0 > 0 && dy1 > 0) kind = EVKind.Valley;
-         else if (dy0 < 0 && dy1 < 0) kind = EVKind.Mountain;
+         EVertex kind = EVertex.Regular;
+         if (dy0 > 0 && dy1 > 0) kind = EVertex.Valley;
+         else if (dy0 < 0 && dy1 < 0) kind = EVertex.Mountain;
          mV[mVN] = new (mVN, pt, kind);
-         mVN++; mBound += pt; 
+         mVN++; mBound += pt;
          prev = pt; pt = next;
       }
 
@@ -38,11 +32,20 @@ partial class Triangulator {
       ref Vertex vBase = ref GetReference (mV);
       for (int i = 0; i < n; i++) {
          int j = (i + 1) % n;
-         mS[mSN] = new (mSN, ref vBase, i, j);
+         mS[mSN] = new (mSN, ref vBase, i + vStart, j + vStart);
          mSN++;
       }
    }
 
+   /// <summary>Reset should be called to initialize the Triangulator before adding contours</summary>
+   public void Reset () {
+      mBound = new ();
+      mSN = mNN = 0; mTN = mVN = 1;
+      if (Lib.Testing) mR = new (42);
+   }
+   Bound2 mBound;
+
+   /// <summary>Returns a debug drawing showing the current state of the triangulation</summary>
    public Dwg2 GetDebugDwg () {
       Dwg2 dwg = new ();
       dwg.Add (new Layer2 ("TILE", Color4.Red, ELineType.Continuous));
@@ -54,19 +57,27 @@ partial class Triangulator {
       dwg.CurrentLayer = dwg.Layers[^1];
       dwg.Add (new Style2 ("STD", "SIMPLEX", 0, 1, 0));
       double size = mBound.Height / 100;
-      foreach (var t in mT.Take (mTN)) {
+      for (int i = 1; i < mTN; i++) {
+         ref Tile t = ref mT[i];
          Point2 pos = new (0.25.Along (t.LMin, t.RMin), t.YMin);
          string text = $"{t.Id}"; if (t.Hole) text += "*";
+         text += $" VT:{t.VTop} VB:{t.VBot}";
          dwg.Add (new E2Text (dwg.CurrentLayer, dwg.Styles[^1], text, pos, size, 0, 0, 1, ETextAlign.BotCenter));
+      }
+      for (int i = 1; i < mVN - 4; i++) {
+         ref Vertex v = ref mV[i];
+         string text = $"{v.Kind.ToString ()[0]}{v.Id} T:{v.Tile[0]},{v.Tile[1]}";
+         var align = v.Kind switch { EVertex.Mountain => ETextAlign.BotCenter, EVertex.Valley => ETextAlign.TopCenter, _ => ETextAlign.MidLeft };
+         dwg.Add (new E2Text (dwg.CurrentLayer, dwg.Styles[^1], text, v.Pt, size, 0, 0, 1, align));
       }
 
       dwg.Add (new Layer2 ("LINKS", Color4.Blue, ELineType.Continuous));
       dwg.CurrentLayer = dwg.Layers[^1];
-      for (int i = 0; i < mTN; i++) {
+      for (int i = 1; i < mTN; i++) {
          ref Tile t = ref mT[i];
          for (int j = 0; j < 2; j++) {
-            if (t.Top[j] != -1) AddArrow (GetCommon (ref mT[t.Top[j]], ref t), true, size);
-            if (t.Bot[j] != -1) AddArrow (GetCommon (ref t, ref mT[t.Bot[j]]), false, size);
+            if (t.Top[j] > 0) AddArrow (GetCommon (ref mT[t.Top[j]], ref t), true, size);
+            if (t.Bot[j] > 0) AddArrow (GetCommon (ref t, ref mT[t.Bot[j]]), false, size);
          }
       }
       return dwg;
@@ -92,9 +103,9 @@ partial class Triangulator {
       }
    }
 
+   /// <summary>Process is called to actually perform the tessellation</summary>
    public IEnumerable<string> Process () {
       ShuffleSegs ();
-      yield return "Started processing";
       InsertBorder ();
       yield return "Inserted border";
 
@@ -108,6 +119,33 @@ partial class Triangulator {
    }
 
    // Implementation -----------------------------------------------------------
+   // Returns an 'adjacent' tile touching a vertex, through which the vOther
+   // vertex can be reached
+   int GetAdjacentTile (ref Vertex v, ref Vertex vOther) {
+      // We've already inserted this vertex, so try and return the tile through
+      // which we might reach vOther. 
+      if (v.Kind == EVertex.Regular) {
+         // If it's a regular vertex, Tile[0] is the tile below, and Tile[1] is the
+         // tile above. Just return one or the other depending on the position of
+         // vOther relative to v. 
+         return vOther.Pt.Y > v.Pt.Y ? v.Tile[1] : v.Tile[0];
+      } else {
+         // It's a mountain or valley vertex, and the two tiles we've stored here
+         // are both below (if mountain) or both above (if valley). Pick the tile through
+         // which the vOther can be reached. Note that at this point, Tile[0] is the LEFT
+         // tile and Tile[1] is the RIGHT tile.
+         ref Tile tBase = ref GetReference (mT);
+         if (v.Tile[1] == 0) return v.Tile[0];
+         ref Tile tLeft = ref Add (ref tBase, v.Tile[0]);
+         if (Verify) {
+            ref Tile tRight = ref Add (ref tBase, v.Tile[1]);
+            Check (tLeft.Right == tRight.Left);
+         }
+         ref Segment seg = ref Add (ref GetReference (mS), tLeft.Right);
+         return seg.IsLeft (vOther.Pt) ? v.Tile[0] : v.Tile[1];
+      }
+   }
+
    // This inserts the 'border' tile (the root tile) of the tiling. It is large enough
    // to encompass the complete tessellation, and is initially created as a 'hole' tile,
    // but as we add vertices and segments it will keep getting subdivided into smaller and
@@ -119,16 +157,16 @@ partial class Triangulator {
       Point2 p2 = new (b.X.Max, b.Y.Min), p3 = new (b.X.Max, b.Y.Max);
       
       // Add the 4 vertices making up the border
-      ref Vertex v0 = ref GetReference (mV);
-      Add (ref v0, mVN) = new (mVN, p0, EVKind.Regular); Add (ref v0, mVN + 1) = new (mVN + 1, p1, EVKind.Regular);
-      Add (ref v0, mVN + 2) = new (mVN + 2, p2, EVKind.Regular); Add (ref v0, mVN + 3) = new (mVN + 3, p3, EVKind.Regular);
+      ref Vertex vBase = ref GetReference (mV);
+      Add (ref vBase, mVN) = new (mVN, p0); Add (ref vBase, mVN + 1) = new (mVN + 1, p1);
+      Add (ref vBase, mVN + 2) = new (mVN + 2, p2); Add (ref vBase, mVN + 3) = new (mVN + 3, p3);
       // Connect them up with two segments (left goes up, right goes down)
-      ref Segment s0 = ref GetReference (mS);
-      Add (ref s0, mSN + 0) = new (mSN + 0, ref v0, mVN, mVN + 1);
-      Add (ref s0, mSN + 1) = new (mSN + 1, ref v0, mVN + 3, mVN + 2);
-      // Add the root node
-      mN[0] = new (0, EKind.Leaf, 0);
-      mT[0] = new Tile (0, ref s0, p0.Y, p1.Y, mSN, mSN + 1, 0);
+      ref Segment sBase = ref GetReference (mS);
+      Add (ref sBase, mSN + 0) = new (mSN + 0, ref vBase, mVN, mVN + 1);
+      Add (ref sBase, mSN + 1) = new (mSN + 1, ref vBase, mVN + 3, mVN + 2);
+      // Add the root node, and the base tile covering the entire rectangular field
+      mN[0] = new (0, ENode.Leaf, mTN);
+      mT[mTN] = new Tile (mTN, ref sBase, p0.Y, p1.Y, mSN, mSN + 1, 0);
       // Note we don't bump up the mSN counter, we don't want to consider the two most recently
       // added boundary segments into the tessellation - they serve only to create the dummy
       // tile that acts as the root
@@ -146,12 +184,53 @@ partial class Triangulator {
       ref Vertex v0 = ref Add (ref vBase, seg.A), v1 = ref Add (ref vBase, seg.B);
       Check (v0.Pt.Y > v1.Pt.Y);
 
-      int n0 = InsertPoint (ref v0), n1 = InsertPoint (ref v1);
-      int t0 = GetTile (n0, true), t1 = GetTile (n1, false);
+      InsertVertex (ref v0); InsertVertex (ref v1);
+      int t0 = GetAdjacentTile (ref v0, ref v1), t1 = GetAdjacentTile (ref v1, ref v0);
       GatherTiles (t0, t1, ref seg);
       return $"Tiles: {mChain.ToCSV ()}";
    }
 
+   // If the given Vertex has not yet been inserted into the DAG, this inserts
+   // it (by slicing a tile horizontally at v.Y). It returns the adjacent tile 
+   // through which one could reach the other vertex vOther. 
+   void InsertVertex (ref Vertex v) {
+      if (v.Inserted) return; 
+      v.Inserted = true;
+
+      // Fetch the leaf pointing to the trapezoid that contains this vertex 
+      ref Tile t0 = ref Locate (v.Pt);
+      Check (v.Pt.Y > t0.YMin && v.Pt.Y < t0.YMax);
+      // We're going to split t0 into two trapezoids (t0 and t1 along Y). 
+      ref Tile t1 = ref t0.Split (this, ENode.Y, v.Id);
+      switch (v.Kind) {
+         // For a regular vertex, we store the tile below in Tile[0] and 
+         // the one above in Tile[1]. One of these we will return right now (based on vOther), 
+         // and the other will get returned on a later call to InsertVertex (and we know it will
+         // be the other one, since the two neighbors will be on opposite sides of the horizontal 
+         // line at v.Pt.Y). 
+         case EVertex.Regular: v.Tile[0] = t0.Id; v.Tile[1] = t1.Id; break;
+         // For a mountain or valley vertex, we store only the tile below (for mountain), or the
+         // tile above (for valley) and return that. 
+         case EVertex.Mountain: v.Tile[0] = t0.Id; break;
+         default: v.Tile[0] = t1.Id; break;
+      }
+
+      // Update connections: t0 is on the bottom, t1 at the top
+      // So now t1 connects to whatever used to be on t0's top
+      ref Tile tBase = ref GetReference (mT);
+      for (int i = 0; i < 2; i++) {
+         int nTop = t1.Top[i] = t0.Top[i];
+         if (nTop > 0) {
+            ref Tile above = ref Add (ref tBase, nTop);
+            above.UpdateBottom (ref t0, ref t1);
+         }
+      }
+      t0.Top[0] = t1.Id; t0.Top[1] = 0; t1.Bot[0] = t0.Id;
+   }
+
+   // Gather a vertical stack of tiles starting with t0 (at the top) and ending with 
+   // t1 (at the bottom), that are being cut by the given segment seg. Results are 
+   // returned in mChain (which may contain 1, 2 or more tile indices). 
    void GatherTiles (int t0, int t1, ref Segment seg) {
       mChain.Clear ();
       // Trivial case: only one tile
@@ -168,7 +247,7 @@ partial class Triangulator {
       ref Segment sBase = ref GetReference (mS);
       while (t0 != t1) {
          ref Tile tile = ref Add (ref tBase, t0);
-         if (tile.Bot[1] == -1) t0 = tile.Bot[0];
+         if (tile.Bot[1] == 0) t0 = tile.Bot[0];
          else {
             // This node has both Bot[0] and Bot[1] set, figure out which one contains
             // the segment in question
@@ -187,61 +266,19 @@ partial class Triangulator {
    }
    List<int> mChain = [];
 
-   // Returns the tile that is just below or just above the given Y split node.   
-   int GetTile (int nNode, bool getBelow) {
+   // Given a point in space, returns the tile that contains it
+   ref Tile Locate (Point2 pt) {
       ref Node nBase = ref GetReference (mN);
-      ref Node node = ref Add (ref nBase, nNode);
-      Check (node.Kind == EKind.Y);
-      nNode = getBelow ? node.First : node.Second; 
-
-      for (; ; ) {
-         ref Node ntmp = ref Add (ref nBase, nNode); 
-         switch (ntmp.Kind) {
-            case EKind.Leaf: return ntmp.Index;
-            case EKind.Y: nNode = getBelow ? ntmp.Second : ntmp.First; break;
-            default: throw new InvalidOperationException ();
-         }
-      }
-   }
-
-   int InsertPoint (ref Vertex v) {
-      if (v.Node != -1) return v.Node;
-
-      // Fetch the leaf pointing to the trapezoid that contains this vertex 
-      ref Tile t0 = ref Locate (v.Pt, 0);
-      Check (v.Pt.Y > t0.YMin && v.Pt.Y < t0.YMax);
-      // We hold onto the tile t0's node. This is currently a leaf node, but will
-      // shortly become a Y split node created by this vertex
-      v.Node = t0.Node;
-
-      // We're going to split t0 into two trapezoids (t0 and t1 along Y). 
-      ref Tile t1 = ref t0.Split (this, EKind.Y, v.Id);
-
-      // Update connections: t0 is on the bottom, t1 at the top
-      // So now t1 connects to whatever used to be on t0's top
+      ref Vertex vBase = ref GetReference (mV);
+      ref Segment sBase = ref GetReference (mS);
       ref Tile tBase = ref GetReference (mT);
-      for (int i = 0; i < 2; i++) {
-         int nTop = t1.Top[i] = t0.Top[i];
-         if (nTop >= 0) {
-            ref Tile above = ref Add (ref tBase, nTop);
-            above.UpdateBottom (ref t0, ref t1);
-         }
-      }
-      t0.Top[0] = t1.Id; t0.Top[1] = -1; t1.Bot[0] = t0.Id;
-      return v.Node;
-   }
-
-   ref Tile Locate (Point2 pt, int root) {
-      ref Node nBase = ref GetReference (mN);
-      ref Node node = ref Add (ref nBase, root);
-      ref Vertex v0 = ref GetReference (mV);
-      ref Segment s0 = ref GetReference (mS);
+      ref Node node = ref Add (ref nBase, 0);
       for (; ; ) {
          bool first; 
          switch (node.Kind) {
-            case EKind.Y: first = pt.Y < Add (ref v0, node.Index).Pt.Y; break;
-            case EKind.X: first = Add (ref s0, node.Index).IsLeft (pt); break;
-            default: return ref mT[node.Index];
+            case ENode.Y: first = pt.Y < Add (ref vBase, node.Index).Pt.Y; break;
+            case ENode.X: first = Add (ref sBase, node.Index).IsLeft (pt); break;
+            default: return ref Add (ref tBase, node.Index);
          }
          node = ref Add (ref nBase, first ? node.First : node.Second);
       }
@@ -288,4 +325,5 @@ partial class Triangulator {
    int[] mShuffle = new int[32];    // A permutation of the segments
 
    const double FINE = 1e-9;
+   const bool Verify = true;
 }

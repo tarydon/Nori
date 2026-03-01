@@ -6,10 +6,20 @@ using static System.Runtime.CompilerServices.Unsafe;
 using static System.Runtime.InteropServices.MemoryMarshal;
 namespace Nori;
 
+#region class Triangulator : nested types ----------------------------------------------------------
 partial class Triangulator {
-   enum EVKind { Regular, Valley, Mountain };
-   enum EKind { Y, X, Leaf };
+   // Enumerations ---------------------------------------------------------------------------------
+   // EVKind lists the types of vertices
+   enum EVertex { Regular, Valley, Mountain };
+   // EKind lists the types of nodes
+   enum ENode { Y, X, Leaf };
 
+   // struct Segment -------------------------------------------------------------------------------
+   // This represents a segment connecting two vertices a and b. We reorder the segment so that it
+   // always runs from top to bottom (PA.Y > PB.Y internally). In addition, the segment has a 
+   // PartOnLeft flag that indicates if the material lies to the left of the segment (as viewed from
+   // the birds eye view, not from the segment's own perspective). 
+   // We also compute Slope, XPrime etc to make it faster to evaluate the X value at a given Y
    readonly struct Segment {
       public Segment (int id, ref Vertex vBase, int a, int b) {
          Id = id;
@@ -36,33 +46,38 @@ partial class Triangulator {
       public override string ToString ()
          => $"Segment {A}..{B}, Left:{PartOnLeft}";
 
-      public readonly int Id;
-      public readonly int A, B;
-      public readonly Point2 PA, PB;
-      public readonly double XPrime;
-      public readonly double DX, DY;
-      public readonly bool PartOnLeft;
-      public readonly double Slope;
+      public readonly int Id;             // Index of the segment in the mS array
+      public readonly int A, B;           // Indicies of the top and bottom vertex
+      public readonly Point2 PA, PB;      // Actual positions of the top and bottom vertex
+      public readonly double Slope;       // Slope of the segment
+      public readonly double XPrime;      // 'Intercept' used to simplify GetX computation
+      public readonly bool PartOnLeft;    // Does the part lie on the left of the segment (as viewed by user)
    }
 
+   // struct Vertex --------------------------------------------------------------------------------
+   // This represents a Vertex in the tessellation (a node picked from one of the Poly inputs)
+   // Each vertex is classified as Regular, Mountain or Valley. A regular vertex has one neighbor
+   // above and one neighbor below it (in Y). A mountain vertex has both neighbors below it (lower Y).
+   // Because of our constraints, there is only one vertex ever at this given value of Y. 
    struct Vertex {
-      public Vertex (int id, Point2 pt, EVKind kind) 
-         => (Id, Pt, Kind, Node) = (id, pt, kind, -1);
+      public Vertex (int id, Point2 pt, EVertex kind = EVertex.Regular) 
+         => (Id, Pt, Kind) = (id, pt, kind);
 
       public readonly override string ToString ()
-         => $"Vertex {Pt} : {Kind}";
+         => $"Vertex#{Id} {Pt} : {Kind}";
 
-      public readonly int Id;
-      public readonly Point2 Pt;
-      public readonly EVKind Kind;
-      public int Node;
+      public readonly int Id;          // Index of the vertex in the mV array
+      public readonly Point2 Pt;       // Point location of the vertex
+      public readonly EVertex Kind;    // What kind of vertex is this?
+      public InlineArray2<int> Tile;   // Two tiles touching this vertex
+      public bool Inserted;
    }
 
    struct Node {
-      public Node (int id, EKind kind, int index) => (Id, Kind, Index) = (id, kind, index);
+      public Node (int id, ENode kind, int index) => (Id, Kind, Index) = (id, kind, index);
 
       public readonly int Id;    // Index of this node within the mN array
-      public EKind Kind;         // What kind of node is this? (X split / Y split / leaf)
+      public ENode Kind;         // What kind of node is this? (X split / Y split / leaf)
       public int First;          // First child (lower / left)
       public int Second;         // Second child (upper / right)
       public int Index;          // Pointer to a Vertex / Segment / Tile depending on the node type
@@ -75,29 +90,27 @@ partial class Triangulator {
          Hole = L.PartOnLeft; Check (L.PartOnLeft != R.PartOnLeft);
          (LMin, LMax) = L.GetX (yMin, yMax);
          (RMin, RMax) = R.GetX (yMin, yMax);
-         Top[0] = Top[1] = Bot[0] = Bot[1] = -1;
       }
 
       public Tile (int id, Tile t, int node) {
          (Id, YMin, YMax, Left, Right, Node, Hole) = (id, t.YMin, t.YMax, t.Left, t.Right, node, t.Hole);
          (LMin, LMax, RMin, RMax) = (t.LMin, t.LMax, t.RMin, t.RMax);
-         Top[0] = Top[1] = Bot[0] = Bot[1] = -1;
       }
 
       // Splits this tile either vertically or horizontally and returns the new Tile.
       // This also updates the tree structure 
-      public ref Tile Split (Triangulator t, EKind kind, int index) {
+      public ref Tile Split (Triangulator t, ENode kind, int index) {
          // Initially, there is a leaf node pointing to this tile. Update it to become
          // an interior node (with the given kind and index). Depending on the kind, the index
          // points to either a Vertex or a Segment
          ref Node nBase = ref GetReference (t.mN);
-         ref Node leaf = ref Add (ref nBase, Node); Check (leaf.Kind == EKind.Leaf);
+         ref Node leaf = ref Add (ref nBase, Node); Check (leaf.Kind == ENode.Leaf);
          leaf.Kind = kind; leaf.Index = index;
 
          // Next, create two child nodes to point to the two tiles (this tile updated, and
          // another new one we're going to create here)
-         Add (ref nBase, t.mNN) = new (t.mNN, EKind.Leaf, Id);
-         Add (ref nBase, t.mNN + 1) = new (t.mNN + 1, EKind.Leaf, t.mTN);
+         Add (ref nBase, t.mNN) = new (t.mNN, ENode.Leaf, Id);
+         Add (ref nBase, t.mNN + 1) = new (t.mNN + 1, ENode.Leaf, t.mTN);
          Node = leaf.First = t.mNN; leaf.Second = t.mNN + 1;
 
          // Now ready to create the new tile
@@ -107,7 +120,7 @@ partial class Triangulator {
          Add (ref tBase, t.mTN) = new Tile (t.mTN, this, leaf.Second);
          ref Tile t1 = ref Add (ref tBase, t.mTN);
 
-         if (kind == EKind.Y) {
+         if (kind == ENode.Y) {
             // Splitting at a point. The new tile t1 is going to be above
             double y = Add (ref vBase, index).Pt.Y;
             Check (YMin < y && y < YMax);
@@ -115,6 +128,18 @@ partial class Triangulator {
             ref Segment L = ref Add (ref sBase, Left), R = ref Add (ref sBase, Right);
             t1.LMin = LMax = L.GetX (y);
             t1.RMin = RMax = R.GetX (y);
+            t1.VBot = index; t1.VTop = VTop;
+            if (VTop > 0) {
+               // This tile already has a 'top' vertex connected to it (and that top vertex
+               // is holding onto this tile as one of its two neighbor tiles). Update both links
+               ref Vertex vTop = ref Add (ref vBase, VTop);
+               if (vTop.Kind != EVertex.Valley) {
+                  Check (vTop.Tile[0] == Id);
+                  vTop.Tile[0] = t1.Id;
+               }
+               VTop = index;
+            } else 
+               VTop = index;
          } else {
             throw new NotImplementedException ();
          }
@@ -189,7 +214,10 @@ partial class Triangulator {
       public bool Hole;                   // Is this a 'hole' tile?
       public int Node;                    // Index of node pointing to this tile
 
+      public int VTop, VBot;
+
       public readonly double XMin => (LMin + RMin) / 2;
       public readonly double XMax => (LMax + RMax) / 2;
    }
 }
+#endregion
