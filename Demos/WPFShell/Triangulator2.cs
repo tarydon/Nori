@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Text;
+using Microsoft.VisualBasic.Logging;
 using static System.Runtime.CompilerServices.Unsafe;
 using static System.Runtime.InteropServices.MemoryMarshal;
 namespace Nori;
@@ -13,6 +14,41 @@ partial class Triangulator {
    enum EVertex { Regular, Valley, Mountain };
    // EKind lists the types of nodes
    enum ENode { Y, X, Leaf };
+
+   // struct Layer ---------------------------------------------------------------------------------
+   // Represents a Layer in the stitching process
+   class Layer {
+      public void Init (ref Tile left, ref Tile right) {
+         mTiles.Clear (); mTiles.Add (left.Id); mTiles.Add (right.Id);
+         mAbove.Clear (); AddN (mAbove, left.Top[0]); AddN (mAbove, left.Top[1]);
+         mBelow.Clear (); AddN (mBelow, left.Bot[0]); AddN (mBelow, left.Bot[1]);
+      }
+
+      public void AddRights (Layer L1) {
+         L1.mAbove.Add (mTiles[1]); mBelow.Add (L1.mTiles[1]);
+      }
+
+      public void Connect (ref Tile tBase, bool last) {
+         ref Tile left = ref Add (ref tBase, mTiles[0]), right = ref Add (ref tBase, mTiles[1]);
+         foreach (var n in mAbove) {
+            ref Tile above = ref Add (ref tBase, n);
+            above.DisconnectFrom (ref left);
+            above.ConnectTo (ref left); above.ConnectTo (ref right);
+         }
+         if (last) {
+            foreach (var n in mBelow) {
+               ref Tile below = ref Add (ref tBase, n);
+               left.DisconnectFrom (ref below);
+               left.ConnectTo (ref below); right.ConnectTo (ref below);
+            }
+         }
+      }
+      List<int> mTiles = [], mAbove = [], mBelow = [];
+
+      static void AddN (List<int> items, int n) {
+         if (n > 0) items.Add (n); 
+      }
+   }
 
    // struct Segment -------------------------------------------------------------------------------
    // This represents a segment connecting two vertices a and b. We reorder the segment so that it
@@ -97,6 +133,34 @@ partial class Triangulator {
          (LMin, LMax, RMin, RMax) = (t.LMin, t.LMax, t.RMin, t.RMax);
       }
 
+      // Connects the tile t0 (ABOVE) to a tile t1 (BELOW), if they share any common
+      // overlap area
+      public void ConnectTo (ref Tile t1) {
+         Check (YMin.EQ (t1.YMax));
+         if (Bot[0] == t1.Id || Bot[1] == t1.Id) return; // Already connected
+
+         // Set left and right to be the overlapping segment between these two tiles
+         double left = t1.LMax, right = t1.RMax;
+         if (LMin > left) left = LMin;
+         if (RMin < right) right = RMin;
+         if (right < left + FINE) return;
+
+         // We found these two tiles are overlapping, connect them up
+         UpdateBottom (0, ref t1);
+         t1.UpdateTop (0, ref this);
+      }
+
+      // This disconnects this tile (the ABOVE) tile from t1 (the BELOW tile). 
+      // If there are links between these two tiles, those links are set to 0 (which means NIL). 
+      // Note that if only one of Top or Bot is used, we ensure that is Top[0] or Bot[0], and the
+      // other one (Top[1], Bot[1]) is set to null.
+      public void DisconnectFrom (ref Tile t1) {
+         if (Bot[0] == t1.Id) { Bot[0] = Bot[1]; Bot[1] = 0; } 
+         else if (Bot[1] == t1.Id) Bot[1] = 0;
+         if (t1.Top[0] == Id) { t1.Top[0] = t1.Top[1]; t1.Top[1] = 0; } 
+         else if (t1.Top[1] == Id) t1.Top[1] = 0;
+      }
+
       // Splits this tile either vertically or horizontally and returns the new Tile.
       // This also updates the tree structure 
       public ref Tile Split (Triangulator t, ENode kind, int index) {
@@ -126,82 +190,91 @@ partial class Triangulator {
             Check (YMin < y && y < YMax);
             t1.YMin = YMax = y;
             ref Segment L = ref Add (ref sBase, Left), R = ref Add (ref sBase, Right);
-            t1.LMin = LMax = L.GetX (y);
-            t1.RMin = RMax = R.GetX (y);
-            t1.VBot = index; t1.VTop = VTop;
-            if (VTop > 0) {
+            t1.LMin = LMax = L.GetX (y); t1.RMin = RMax = R.GetX (y);
+
+            if ((t1.VTop = VTop) > 0) {
                // This tile already has a 'top' vertex connected to it (and that top vertex
-               // is holding onto this tile as one of its two neighbor tiles). Update both links
+               // could be holding onto this tile as one of its two neighbor tiles). Update both links
                ref Vertex vTop = ref Add (ref vBase, VTop);
                if (vTop.Kind != EVertex.Valley) {
-                  Check (vTop.Tile[0] == Id);
-                  vTop.Tile[0] = t1.Id;
+                  if (vTop.Tile[0] == Id) vTop.Tile[0] = t1.Id;
+                  else if (vTop.Tile[1] == Id) vTop.Tile[1] = t1.Id;
                }
-               VTop = index;
-            } else 
-               VTop = index;
+            }
+            t1.VBot = VTop = index;
          } else {
-            throw new NotImplementedException ();
+            // Splitting at a segment. The new tile t1 is going to be on the right of the segment
+            ref Segment seg = ref Add (ref sBase, index);
+            if (Verify) {
+               double yM = (YMin + YMax) / 2;
+               ref Segment left = ref Add (ref sBase, Left), right = ref Add (ref sBase, Right);
+               double xL = left.GetX (yM), x = seg.GetX (yM), xR = right.GetX (yM);
+               Check (xL < x && x < xR);
+            }
+            t1.Left = Right = index;
+            (RMin, RMax) = (t1.LMin, t1.LMax) = seg.GetX (YMin, YMax);
+            Hole = !seg.PartOnLeft; t1.Hole = seg.PartOnLeft;
+            if (VTop != 0) {
+               // This tile already has a top vertex connected to it, and that top vertex
+               // could be holding onto this tile as one of the two neighbor tiles). 
+               ref Vertex vTop = ref Add (ref vBase, VTop);
+               if (vTop.Kind == EVertex.Mountain) { vTop.Tile[0] = Id; vTop.Tile[1] = t1.Id; }
+
+               // After the split, it's possible that the split line passes through VTop, 
+               // to the left of VTop or the right of VTop. Depending on this, we decide which of the
+               // two children (this + t1) will carry VTop with it
+               if (seg.A == VTop) t1.VTop = VTop;  // Only case where seg passes through VTop
+               else {
+                  // If the VTop point is to the right of the slicing segment, then VTop should
+                  // belong to t1
+                  if (!seg.IsLeft (Add (ref vBase, VTop).Pt)) { t1.VTop = VTop; VTop = 0; }
+               }
+            }
+            if (VBot != 0) {
+               ref Vertex vBot = ref Add (ref vBase, VBot);
+               if (vBot.Kind == EVertex.Valley) { vBot.Tile[0] = Id; vBot.Tile[1] = t1.Id; }
+
+               // Figure out who carries VBot 
+               if (seg.B == VBot) t1.VBot = VBot;  // BOth the tiles touch at VBot
+               else if (!seg.IsLeft (Add (ref vBase, VBot).Pt)) { t1.VBot = VBot; VBot = 0; }
+            }
          }
          t.mNN += 2; t.mTN++;
          return ref t1;
-
-         //// Initially, there is a leaf node pointing to this Tile.
-         //// Update it to become an interior node (with given kind and index)
-         //// Depending on the kind, the index points to a point or a segment
-         //Node leaf = Node; Check (leaf.Kind == EKind.Leaf);
-         //leaf.Kind = kind; leaf.Index = index;
-         //// Next, create two child nodes to point to the two tiles (this tile, updated,
-         //// and another new tile we're going to create here)
-         //Node n0 = new (++t.mNodeID, EKind.Leaf, Id);
-         //Node n1 = new (++t.mNodeID, EKind.Leaf, t.mTile.Count);
-         //Node = leaf.First = n0; leaf.Second = n1;
-
-         //var pts = t.mV;
-         //Tile t1 = new (t.mTile.Count, this, n1);
-         //if (kind == EKind.Y) {
-         //   // Splitting at a Point. The new tile t1 is going to be above
-         //   if (t.Verify) {
-         //      double y = pts[index].Pt.Y;
-         //      Check (YMin < y && y < YMax);
-         //   }
-         //   t1.YMin = YMax = pts[index].Pt.Y;
-         //   ref Segment L = ref t.mS[Left], R = ref t.mS[Right];
-         //   t1.LMin = LMax = L.GetX (YMax);
-         //   t1.RMin = RMax = R.GetX (YMax);
-         //} else {
-         //   // Splitting at a Segment. The new tile t1 is going to be to the 
-         //   // right of the segment
-         //   ref Segment seg = ref t.mS[index];
-         //   if (t.Verify) {
-         //      double yM = (YMin + YMax) / 2;
-         //      double xL = t.mS[Left].GetX (yM), x = seg.GetX (yM), xR = t.mS[Right].GetX (yM);
-         //      Check (xL < x && x < xR);
-         //   }
-         //   t1.Left = Right = index;
-         //   Hole = !seg.PartOnLeft; t1.Hole = seg.PartOnLeft;
-         //   (RMin, RMax) = (t1.LMin, t1.LMax) = seg.GetX (YMin, YMax);
-         //}
-         //t.mTile.Add (t1);
-         //return t1;
       }
 
       // Updates one of the 'bottom' connections of the tile
-      public void UpdateBottom (ref Tile tOld, ref Tile tNew) {
+      public void UpdateBottom (int nOld, ref Tile tNew) {
          for (int i = 0; i < 2; i++)
-            if (Bot[i] == tOld.Id) {
+            if (Bot[i] == nOld) {
                Bot[i] = tNew.Id;
                if (i == 1) {
                   // Ensure the bottom two tiles are 'sorted' (we want Bot[0] to 
                   // be the bottom LEFT neighbor, and Bot[1] to be the bottom RIGHT neighbor)
-                  throw new NotImplementedException (); 
-                  ref Tile tLeft = ref Add (ref tOld, Bot[0] - tOld.Id);
+                  ref Tile tLeft = ref Add (ref tNew, Bot[0] - tNew.Id);
                   if (tLeft.XMax > tNew.XMax) 
                      (Bot[0], Bot[1]) = (Bot[1], Bot[0]);
                }
                return;
             }
          Unexpected ();
+      }
+
+      public void UpdateTop (int nOld, ref Tile tNew) {
+         for (int i = 0; i < 2; i++)
+            if (Top[i] == nOld) {
+               Top[i] = tNew.Id;
+               if (i == 1) {
+                  // Ensure the top two tiles are 'sorted' (we want Top[0] to 
+                  // be the top LEFT neighbor, and Top[1] to be the top RIGHT neighbor)
+                  ref Tile tLeft = ref Add (ref tNew, Top[0] - tNew.Id);
+                  if (tLeft.XMax > tNew.XMax)
+                     (Top[0], Top[1]) = (Top[1], Top[0]);   // REMOVETHIS?
+               }
+               return;
+            }
+         Unexpected ();
+
       }
 
       public readonly int Id;             // Index of this within the mT array

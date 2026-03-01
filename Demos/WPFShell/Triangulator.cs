@@ -61,12 +61,14 @@ partial class Triangulator {
          ref Tile t = ref mT[i];
          Point2 pos = new (0.25.Along (t.LMin, t.RMin), t.YMin);
          string text = $"{t.Id}"; if (t.Hole) text += "*";
-         text += $" VT:{t.VTop} VB:{t.VBot}";
+         if (t.VTop > 0) text += $" T{t.VTop}";
+         if (t.VBot > 0) text += $" B{t.VBot}";
          dwg.Add (new E2Text (dwg.CurrentLayer, dwg.Styles[^1], text, pos, size, 0, 0, 1, ETextAlign.BotCenter));
       }
       for (int i = 1; i < mVN - 4; i++) {
          ref Vertex v = ref mV[i];
          string text = $"{v.Kind.ToString ()[0]}{v.Id} T:{v.Tile[0]},{v.Tile[1]}";
+         text = v.Id.ToString ();
          var align = v.Kind switch { EVertex.Mountain => ETextAlign.BotCenter, EVertex.Valley => ETextAlign.TopCenter, _ => ETextAlign.MidLeft };
          dwg.Add (new E2Text (dwg.CurrentLayer, dwg.Styles[^1], text, v.Pt, size, 0, 0, 1, align));
       }
@@ -110,11 +112,26 @@ partial class Triangulator {
       yield return "Inserted border";
 
       for (int i = 0; i < mSN; i++) {
-         ref Segment s0 = ref GetReference (mS);
-         ref int sh0 = ref GetReference (mShuffle);        
-         ref Segment seg = ref Add (ref s0, Add (ref sh0, i));
-         string s = InsertSeg (ref seg);
-         yield return $"Inserted seg {seg} :: {s}";
+         {
+            ref Segment s0 = ref GetReference (mS);
+            ref int sh0 = ref GetReference (mShuffle);
+            ref Segment seg = ref Add (ref s0, Add (ref sh0, i));
+            yield return $"About to insert {seg}";
+         }
+         {
+            ref Segment s0 = ref GetReference (mS);
+            ref int sh0 = ref GetReference (mShuffle);
+            ref Segment seg = ref Add (ref s0, Add (ref sh0, i));
+            string s = InsertSeg (ref seg);
+            yield return $"Inserted seg {seg} :: {s}";
+         }
+         {
+            ref Segment s0 = ref GetReference (mS);
+            ref int sh0 = ref GetReference (mShuffle);
+            ref Segment seg = ref Add (ref s0, Add (ref sh0, i));
+            SliceTiles (ref seg);
+            yield return $"Sliced tiles";
+         }
       }
    }
 
@@ -222,7 +239,7 @@ partial class Triangulator {
          int nTop = t1.Top[i] = t0.Top[i];
          if (nTop > 0) {
             ref Tile above = ref Add (ref tBase, nTop);
-            above.UpdateBottom (ref t0, ref t1);
+            above.UpdateBottom (t0.Id, ref t1);
          }
       }
       t0.Top[0] = t1.Id; t0.Top[1] = 0; t1.Bot[0] = t0.Id;
@@ -296,9 +313,33 @@ partial class Triangulator {
       }
    }
 
+   // We gathered (in mChain) a list of tiles that need to be sliced by the given segment
+   void SliceTiles (ref Segment seg) {
+      int n = mChain.Count;
+      while (mLayers.Count < n) mLayers.Add (new ());
+      ref Tile tBase = ref GetReference (mT);
+      // First, split every tile in the mChain list. This tile remains as the left tile, 
+      // and we create a new right tile, both separated by the Segment in between them. 
+      // For each layer of tiles that we create, create a Layer object to hold the details
+      // of the tiles in this layer, along with that tile's UP / DOWN connected neighbors
+      for (int i = 0; i < n; i++) {
+         ref Tile left = ref Add (ref tBase, mChain[i]);
+         ref Tile right = ref left.Split (this, ENode.X, seg.Id);
+         mLayers[i].Init (ref left, ref right);
+      }
+
+      // Now adjust the layers by adding in the newly create 'right' tiles into the
+      // appropriate Above/Below lists
+      for (int i = 1; i < n; i++) mLayers[i - 1].AddRights (mLayers[i]);
+      // Finally, connect up the layers
+      for (int i = 0; i < n; i++) mLayers[i].Connect (ref tBase, i == n - 1); 
+   }
+   List<Layer> mLayers = [];
+
    // Helpers ------------------------------------------------------------------
    static void Check (bool condition) {
-      if (!condition) throw new InvalidOperationException ("Triangulator");
+      if (!condition) 
+         throw new InvalidOperationException ("Triangulator");
    }
 
    // Helper to grow an array (more optimized than Array.Resize, since it
