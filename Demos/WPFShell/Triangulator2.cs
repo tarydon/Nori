@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Text;
+using Accessibility;
 using Microsoft.VisualBasic.Logging;
 using static System.Runtime.CompilerServices.Unsafe;
 using static System.Runtime.InteropServices.MemoryMarshal;
@@ -14,16 +15,20 @@ partial class Triangulator {
    enum EVertex { Regular, Valley, Mountain };
    // EKind lists the types of nodes
    enum ENode { Y, X, Leaf };
+   // When a vertex is connected to a tile, which 'chain does it belong to
+   enum EChain { HSlice, Left, Right, Valley, Mountain };
 
    // struct Layer ---------------------------------------------------------------------------------
    // Represents a Layer in the stitching process
    class Layer {
+      // Constructor -----------------------------------------------------------
       public void Init (ref Tile left, ref Tile right) {
          mTiles.Clear (); mTiles.Add (left.Id); mTiles.Add (right.Id);
          mAbove.Clear (); AddN (mAbove, left.Top[0]); AddN (mAbove, left.Top[1]);
          mBelow.Clear (); AddN (mBelow, left.Bot[0]); AddN (mBelow, left.Bot[1]);
       }
 
+      // Methods ---------------------------------------------------------------
       public void AddRights (Layer L1) {
          L1.mAbove.Add (mTiles[1]); mBelow.Add (L1.mTiles[1]);
       }
@@ -43,11 +48,35 @@ partial class Triangulator {
             }
          }
       }
-      List<int> mTiles = [], mAbove = [], mBelow = [];
 
-      static void AddN (List<int> items, int n) {
-         if (n > 0) items.Add (n); 
-      }
+      // Implementation --------------------------------------------------------
+      static void AddN (List<int> items, int n) { if (n > 0) items.Add (n); }
+      List<int> mTiles = [], mAbove = [], mBelow = [];
+   }
+
+   // struct Node ----------------------------------------------------------------------------------
+   // This represents a Node in the DAG that we build to locate the tiles containing particular
+   // points. Nodes are of these types:
+   // - Leaf : a bottom level node in the DAG, and Index points to a Tile
+   // - Y : a node representing a horizontal split line, Index points to a Vertex whose
+   //       Y coordinate guides the search into either the First or Second child node
+   // - X : a node representing a non-horizontal split of a tile by a Segment. Index points to
+   //       a Segment which guides the search into either the First or Second child node, depending
+   //       on whether the search point lies to the left or the right of the segment
+   // Initially we start with a single node that is a Leaf coverting the entire working space (a
+   // dummy tile). Splits happen when we slice a tile horizontally or vertically - that erstwhile
+   // Leaf node pointing to that tile then becomes an X or Y node and gets two children representing
+   // the two smaller tiles that now result from the split. 
+   struct Node {
+      // Constructors ----------------------------------------------------------
+      public Node (int id, ENode kind, int index) => (Id, Kind, Index) = (id, kind, index);
+
+      // Properties ------------------------------------------------------------
+      public readonly int Id;    // Index of this node within the mN array
+      public ENode Kind;         // What kind of node is this? (X split / Y split / leaf)
+      public int First;          // First child (lower / left)
+      public int Second;         // Second child (upper / right)
+      public int Index;          // Pointer to a Vertex / Segment / Tile depending on the node type
    }
 
    // struct Segment -------------------------------------------------------------------------------
@@ -57,6 +86,7 @@ partial class Triangulator {
    // the birds eye view, not from the segment's own perspective). 
    // We also compute Slope, XPrime etc to make it faster to evaluate the X value at a given Y
    readonly struct Segment {
+      // Constructors ----------------------------------------------------------
       public Segment (int id, ref Vertex vBase, int a, int b) {
          Id = id;
          Point2 pa = Add (ref vBase, a).Pt, pb = Add (ref vBase, b).Pt;
@@ -67,59 +97,37 @@ partial class Triangulator {
          XPrime = PB.X - Slope * PB.Y;
       }
 
-      // Get the X value at a given Y 
-      public double GetX (double y) 
-         => XPrime + Slope * y;
-
-      // Get the X values at a couple of Ys
-      public (double, double) GetX (double y1, double y2)
-         => (XPrime + Slope * y1, XPrime + Slope * y2);
-
-      // Is the given point to the 'left' of this segment?
-      public bool IsLeft (Point2 p)
-         => (PA.X - PB.X) * (p.Y - PB.Y) - (PA.Y - PB.Y) * (p.X - PB.X) > 0;
-
-      public override string ToString ()
-         => $"Segment {A}..{B}, Left:{PartOnLeft}";
-
+      // Properties ------------------------------------------------------------
       public readonly int Id;             // Index of the segment in the mS array
       public readonly int A, B;           // Indicies of the top and bottom vertex
       public readonly Point2 PA, PB;      // Actual positions of the top and bottom vertex
       public readonly double Slope;       // Slope of the segment
       public readonly double XPrime;      // 'Intercept' used to simplify GetX computation
       public readonly bool PartOnLeft;    // Does the part lie on the left of the segment (as viewed by user)
+
+      // Methods ---------------------------------------------------------------
+      // Get the X value at a given Y 
+      public double GetX (double y) => XPrime + Slope * y;
+
+      // Get the X values at a couple of Ys
+      public (double, double) GetX (double y1, double y2) => (XPrime + Slope * y1, XPrime + Slope * y2);
+
+      // Is the given point to the 'left' of this segment?
+      public bool IsLeft (Point2 p) => (PA.X - PB.X) * (p.Y - PB.Y) - (PA.Y - PB.Y) * (p.X - PB.X) > 0;
+
+      public override string ToString ()
+         => $"Segment {A}..{B}, Left:{PartOnLeft}";
    }
 
-   // struct Vertex --------------------------------------------------------------------------------
-   // This represents a Vertex in the tessellation (a node picked from one of the Poly inputs)
-   // Each vertex is classified as Regular, Mountain or Valley. A regular vertex has one neighbor
-   // above and one neighbor below it (in Y). A mountain vertex has both neighbors below it (lower Y).
-   // Because of our constraints, there is only one vertex ever at this given value of Y. 
-   struct Vertex {
-      public Vertex (int id, Point2 pt, EVertex kind = EVertex.Regular) 
-         => (Id, Pt, Kind) = (id, pt, kind);
-
-      public readonly override string ToString ()
-         => $"Vertex#{Id} {Pt} : {Kind}";
-
-      public readonly int Id;          // Index of the vertex in the mV array
-      public readonly Point2 Pt;       // Point location of the vertex
-      public readonly EVertex Kind;    // What kind of vertex is this?
-      public InlineArray2<int> Tile;   // Two tiles touching this vertex
-      public bool Inserted;
-   }
-
-   struct Node {
-      public Node (int id, ENode kind, int index) => (Id, Kind, Index) = (id, kind, index);
-
-      public readonly int Id;    // Index of this node within the mN array
-      public ENode Kind;         // What kind of node is this? (X split / Y split / leaf)
-      public int First;          // First child (lower / left)
-      public int Second;         // Second child (upper / right)
-      public int Index;          // Pointer to a Vertex / Segment / Tile depending on the node type
-   }
-
+   // struct Tile ----------------------------------------------------------------------------------
+   // Represents a trapezoid in the Seidel decomposition of the plane. 
+   // Each Tile is a trapezoid with top and bottom edges parallel to the X axis (designated
+   // by YMin and YMax), and left and right edges that are non-horizontal segments (represented
+   // by Left and Right pointers into the mS array). In addition, we maintain some other computed values
+   // that are useful to Connect tiles to neighbors where needed. 
    struct Tile {
+      // Constructors ----------------------------------------------------------
+      // Basic constructor used to make a tile
       public Tile (int id, ref Segment s0, double yMin, double yMax, int left, int right, int node) {
          (Id, YMin, YMax, Left, Right, Node) = (id, yMin, yMax, left, right, node);
          ref Segment L = ref Add (ref s0, left), R = ref Add (ref s0, right);
@@ -128,11 +136,13 @@ partial class Triangulator {
          (RMin, RMax) = R.GetX (yMin, yMax);
       }
 
-      public Tile (int id, Tile t, int node) {
+      // Cloning constructor used when splitting a Tile
+      public Tile (int id, ref Tile t, int node) {
          (Id, YMin, YMax, Left, Right, Node, Hole) = (id, t.YMin, t.YMax, t.Left, t.Right, node, t.Hole);
          (LMin, LMax, RMin, RMax) = (t.LMin, t.LMax, t.RMin, t.RMax);
       }
 
+      // Methods ---------------------------------------------------------------
       // Connects the tile t0 (ABOVE) to a tile t1 (BELOW), if they share any common
       // overlap area
       public void ConnectTo (ref Tile t1) {
@@ -155,10 +165,8 @@ partial class Triangulator {
       // Note that if only one of Top or Bot is used, we ensure that is Top[0] or Bot[0], and the
       // other one (Top[1], Bot[1]) is set to null.
       public void DisconnectFrom (ref Tile t1) {
-         if (Bot[0] == t1.Id) { Bot[0] = Bot[1]; Bot[1] = 0; } 
-         else if (Bot[1] == t1.Id) Bot[1] = 0;
-         if (t1.Top[0] == Id) { t1.Top[0] = t1.Top[1]; t1.Top[1] = 0; } 
-         else if (t1.Top[1] == Id) t1.Top[1] = 0;
+         if (Bot[0] == t1.Id) { Bot[0] = Bot[1]; Bot[1] = 0; } else if (Bot[1] == t1.Id) Bot[1] = 0;
+         if (t1.Top[0] == Id) { t1.Top[0] = t1.Top[1]; t1.Top[1] = 0; } else if (t1.Top[1] == Id) t1.Top[1] = 0;
       }
 
       // Splits this tile either vertically or horizontally and returns the new Tile.
@@ -181,7 +189,7 @@ partial class Triangulator {
          ref Vertex vBase = ref GetReference (t.mV);
          ref Segment sBase = ref GetReference (t.mS);
          ref Tile tBase = ref GetReference (t.mT);
-         Add (ref tBase, t.mTN) = new Tile (t.mTN, this, leaf.Second);
+         Add (ref tBase, t.mTN) = new Tile (t.mTN, ref this, leaf.Second);
          ref Tile t1 = ref Add (ref tBase, t.mTN);
 
          if (kind == ENode.Y) {
@@ -201,7 +209,7 @@ partial class Triangulator {
                   else if (vTop.Tile[1] == Id) vTop.Tile[1] = t1.Id;
                }
             }
-            t1.VBot = VTop = index;
+            t1.VBot = VTop = index;  
          } else {
             // Splitting at a segment. The new tile t1 is going to be on the right of the segment
             ref Segment seg = ref Add (ref sBase, index);
@@ -215,21 +223,38 @@ partial class Triangulator {
             (RMin, RMax) = (t1.LMin, t1.LMax) = seg.GetX (YMin, YMax);
             Hole = !seg.PartOnLeft; t1.Hole = seg.PartOnLeft;
             if (VTop != 0) {
-               // This tile already has a top vertex connected to it, and that top vertex
-               // could be holding onto this tile as one of the two neighbor tiles). 
-               ref Vertex vTop = ref Add (ref vBase, VTop);
-               if (vTop.Kind == EVertex.Mountain) { vTop.Tile[0] = Id; vTop.Tile[1] = t1.Id; }
-
-               // After the split, it's possible that the split line passes through VTop, 
-               // to the left of VTop or the right of VTop. Depending on this, we decide which of the
-               // two children (this + t1) will carry VTop with it
-               if (seg.A == VTop) t1.VTop = VTop;  // Only case where seg passes through VTop
-               else {
-                  // If the VTop point is to the right of the slicing segment, then VTop should
-                  // belong to t1
-                  if (!seg.IsLeft (Add (ref vBase, VTop).Pt)) { t1.VTop = VTop; VTop = 0; }
+               ref Vertex vtop = ref Add (ref vBase, VTop);
+               switch (ETop) {
+                  case EChain.HSlice:        // Case (a)
+                     t1.VTop = VTop; ETop = EChain.Right; t1.ETop = EChain.Left;
+                     if (vtop.Kind == EVertex.Mountain) { Check (vtop.Tile[0] == Id); vtop.Tile[1] = t1.Id; }
+                     break;
+                  case EChain.Left:
+                     if (seg.A == VTop) {    // Case (b)
+                        t1.VTop = VTop; ETop = EChain.Mountain; t1.ETop = EChain.Left;
+                        Check (vtop.Kind == EVertex.Mountain); vtop.Tile[0] = vtop.Tile[1] = 0;    // UNNECESSARY
+                     } else {                // Case (c)
+                        Check (vtop.Tile[1] == Id);   
+                     }
+                     break;
+                  case EChain.Right:
+                     if (seg.A == VTop) {    // Case (d)
+                        t1.VTop = VTop; t1.ETop = EChain.Mountain;
+                        Check (vtop.Kind == EVertex.Mountain); vtop.Tile[0] = vtop.Tile[1] = 0;    // UNNECESSARY
+                     } else {                // Case (e)
+                        t1.VTop = VTop; t1.ETop = EChain.Right; VTop = 0; 
+                        Check (vtop.Tile[0] == Id); vtop.Tile[0] = t1.Id;
+                     }
+                     break;
                }
             }
+            if (VBot != 0) {
+               ref Vertex vbot = ref Add (ref vBase, VBot);
+               switch (EBot) {
+
+               }
+            }
+
             if (VBot != 0) {
                ref Vertex vBot = ref Add (ref vBase, VBot);
                if (vBot.Kind == EVertex.Valley) { vBot.Tile[0] = Id; vBot.Tile[1] = t1.Id; }
@@ -245,36 +270,31 @@ partial class Triangulator {
 
       // Updates one of the 'bottom' connections of the tile
       public void UpdateBottom (int nOld, ref Tile tNew) {
-         for (int i = 0; i < 2; i++)
-            if (Bot[i] == nOld) {
-               Bot[i] = tNew.Id;
-               if (i == 1) {
-                  // Ensure the bottom two tiles are 'sorted' (we want Bot[0] to 
-                  // be the bottom LEFT neighbor, and Bot[1] to be the bottom RIGHT neighbor)
-                  ref Tile tLeft = ref Add (ref tNew, Bot[0] - tNew.Id);
-                  if (tLeft.XMax > tNew.XMax) 
-                     (Bot[0], Bot[1]) = (Bot[1], Bot[0]);
-               }
-               return;
-            }
+         for (int i = 0; i < 2; i++) {
+            if (Bot[i] != nOld) continue;
+            Bot[i] = tNew.Id;
+            if (i == 1) {
+               // Ensure that the two tiles Bot[0] and Bot[1] are sorted so that Bot[0]
+               // is to the LEFT
+               ref Tile tLeft = ref Add (ref tNew, Bot[0] - tNew.Id);
+               if (tLeft.XMax > tNew.XMax) (Bot[0], Bot[1]) = (Bot[1], Bot[0]);  // CHECKTHIS - is this even important?
+            } else Check (Bot[1] == 0);
+            return; 
+         }
          Unexpected ();
       }
 
       public void UpdateTop (int nOld, ref Tile tNew) {
-         for (int i = 0; i < 2; i++)
-            if (Top[i] == nOld) {
-               Top[i] = tNew.Id;
-               if (i == 1) {
-                  // Ensure the top two tiles are 'sorted' (we want Top[0] to 
-                  // be the top LEFT neighbor, and Top[1] to be the top RIGHT neighbor)
-                  ref Tile tLeft = ref Add (ref tNew, Top[0] - tNew.Id);
-                  if (tLeft.XMax > tNew.XMax)
-                     (Top[0], Top[1]) = (Top[1], Top[0]);   // REMOVETHIS?
-               }
-               return;
-            }
+         for (int i = 0; i < 2; i++) {
+            if (Top[i] != nOld) continue;
+            Top[i] = tNew.Id;
+            if (i == 1) {
+               ref Tile tLeft = ref Add (ref tNew, Top[0] - tNew.Id);
+               if (tLeft.XMax > tNew.XMax) (Top[0], Top[1]) = (Top[1], Top[0]);
+            } else Check (Top[1] == 0);
+            return;
+         }
          Unexpected ();
-
       }
 
       public readonly int Id;             // Index of this within the mT array
@@ -288,9 +308,29 @@ partial class Triangulator {
       public int Node;                    // Index of node pointing to this tile
 
       public int VTop, VBot;
+      public EChain ETop, EBot;
 
       public readonly double XMin => (LMin + RMin) / 2;
       public readonly double XMax => (LMax + RMax) / 2;
+   }
+
+   // struct Vertex --------------------------------------------------------------------------------
+   // This represents a Vertex in the tessellation (a node picked from one of the Poly inputs)
+   // Each vertex is classified as Regular, Mountain or Valley. A regular vertex has one neighbor
+   // above and one neighbor below it (in Y). A mountain vertex has both neighbors below it (lower Y).
+   // Because of our constraints, there is only one vertex ever at this given value of Y. 
+   struct Vertex {
+      public Vertex (int id, Point2 pt, EVertex kind = EVertex.Regular) 
+         => (Id, Pt, Kind) = (id, pt, kind);
+
+      public readonly override string ToString ()
+         => $"Vertex#{Id} {Pt} : {Kind}";
+
+      public readonly int Id;          // Index of the vertex in the mV array
+      public readonly Point2 Pt;       // Point location of the vertex
+      public readonly EVertex Kind;    // What kind of vertex is this?
+      public InlineArray2<int> Tile;   // Two tiles touching this vertex
+      public bool Inserted;
    }
 }
 #endregion

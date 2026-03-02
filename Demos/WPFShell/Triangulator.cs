@@ -4,108 +4,50 @@ namespace Nori;
 
 partial class Triangulator {
    // Methods ------------------------------------------------------------------
-   /// <summary>Adds a contour to the triangulator</summary>
-   /// The pts list making up the contour should wind CCW if this is an outer contour,
-   /// and should wind CW if this is a hole. In addition, the 'hole' parameter should also
-   /// be set true or false appropriately. 
-   public void AddContour (ReadOnlySpan<Point2> pts, bool hole) {
-      int n = pts.Length;
+   /// <summary>
+   /// Adds a contour for tessellation
+   /// </summary>
+   public void AddPoly (Poly poly, bool hole) {
+      // First, if we need to reverse the order of points, or to discretize a Poly
+      // with curves, make a copy
+      int start = mInput.Count;
+      poly.Discretize (mInput, Lib.CoarseTess, Lib.CoarseTessAngle);
+      if (poly.GetWinding () == Poly.EWinding.CW ^ hole) mInput.Reverse (start, mInput.Count - start);
+      ReadOnlySpan<Point2> pts = mInput.AsSpan ()[start..];
 
-      // Add the points into the mV array
-      int vStart = mVN;
+      // Now, add the contour into the mV array, and create segments from this in
+      // the mS array
+      int n = pts.Length, vStart = mVN;
       Grow (ref mV, mVN, n);
-      Point2 prev = pts[n - 1], pt = pts[0];
-      for (int i = 0; i < n; i++) {
-         Point2 next = pts[(i + 1) % n];
+      Point2 prev = Rotate (pts[n - 1]), pt = Rotate (pts[0]);
+      for (int i = 0; i < n; i++, mVN++) {
+         Point2 next = Rotate (pts[(i + 1) % n]);
          double dy0 = prev.Y - pt.Y, dy1 = next.Y - pt.Y;
 
          EVertex kind = EVertex.Regular;
          if (dy0 > 0 && dy1 > 0) kind = EVertex.Valley;
          else if (dy0 < 0 && dy1 < 0) kind = EVertex.Mountain;
-         mV[mVN] = new (mVN, pt, kind);
-         mVN++; mBound += pt;
-         prev = pt; pt = next;
+         mV[mVN] = new Vertex (mVN, pt, kind);
+         mBound += pt; prev = pt; pt = next;
       }
 
-      // Now, add the segments into the mS array
+      // Now, add the segments corresponding to this newly added contour
       Grow (ref mS, mSN, n);
       ref Vertex vBase = ref GetReference (mV);
-      for (int i = 0; i < n; i++) {
+      for (int i = 0; i < n; i++, mSN++) {
          int j = (i + 1) % n;
-         mS[mSN] = new (mSN, ref vBase, i + vStart, j + vStart);
-         mSN++;
+         mS[mSN] = new Segment (mSN, ref vBase, i + vStart, j + vStart);
       }
    }
+   List<Point2> mInput = [];
 
    /// <summary>Reset should be called to initialize the Triangulator before adding contours</summary>
    public void Reset () {
-      mBound = new ();
+      mBound = new (); mInput.Clear (); 
       mSN = mNN = 0; mTN = mVN = 1;
       if (Lib.Testing) mR = new (42);
    }
    Bound2 mBound;
-
-   /// <summary>Returns a debug drawing showing the current state of the triangulation</summary>
-   public Dwg2 GetDebugDwg () {
-      Dwg2 dwg = new ();
-      dwg.Add (new Layer2 ("TILE", Color4.Red, ELineType.Continuous));
-      dwg.CurrentLayer = dwg.Layers[^1];
-      foreach (var t in mT.Take (mTN)) 
-         dwg.Add (Poly.Lines (Point2.List (t.LMin, t.YMin, t.RMin, t.YMin, t.RMax, t.YMax, t.LMax, t.YMax), true));
-
-      dwg.Add (new Layer2 ("TILETEXT", Color4.Blue, ELineType.Continuous));
-      dwg.CurrentLayer = dwg.Layers[^1];
-      dwg.Add (new Style2 ("STD", "SIMPLEX", 0, 1, 0));
-      double size = mBound.Height / 100;
-      for (int i = 1; i < mTN; i++) {
-         ref Tile t = ref mT[i];
-         Point2 pos = new (0.75.Along (t.LMin, t.RMin), t.YMin);
-         string text = $"{t.Id}"; if (t.Hole) text += "*";
-         if (t.VTop > 0) text += $" T{t.VTop}";
-         if (t.VBot > 0) text += $" B{t.VBot}";
-         dwg.Add (new E2Text (dwg.CurrentLayer, dwg.Styles[^1], text, pos, size, 0, 0, 1, ETextAlign.BotCenter));
-      }
-
-      dwg.Add (new Layer2 ("VERTTEXT", Color4.DarkGreen, ELineType.Continuous));
-      dwg.CurrentLayer = dwg.Layers[^1];
-      for (int i = 1; i < mVN - 4; i++) {
-         ref Vertex v = ref mV[i];
-         string text = $"{v.Kind.ToString ()[0]}{v.Id} T:{v.Tile[0]},{v.Tile[1]}";
-         var align = v.Kind switch { EVertex.Mountain => ETextAlign.BotCenter, EVertex.Valley => ETextAlign.TopCenter, _ => ETextAlign.MidLeft };
-         dwg.Add (new E2Text (dwg.CurrentLayer, dwg.Styles[^1], text, v.Pt, size, 0, 0, 1, align));
-      }
-
-      dwg.Add (new Layer2 ("LINKS", Color4.Blue, ELineType.Continuous));
-      dwg.CurrentLayer = dwg.Layers[^1];
-      for (int i = 1; i < mTN; i++) {
-         ref Tile t = ref mT[i];
-         for (int j = 0; j < 2; j++) {
-            if (t.Top[j] > 0) AddArrow (GetCommon (ref mT[t.Top[j]], ref t), true, size);
-            if (t.Bot[j] > 0) AddArrow (GetCommon (ref t, ref mT[t.Bot[j]]), false, size);
-         }
-      }
-      return dwg;
-
-      // Helpers ...........................................
-      void AddArrow (Point2 p, bool up, double size) {
-         if (p.IsNil) return;
-         double d = size * 0.5;
-         Poly poly = Poly.Lines (Point2.List (0, -size, 0, size, d / 2, size - d, -d / 2, size - d, 0, size), false);
-         if (!up) poly *= Matrix2.VMirror;
-         poly *= Matrix2.Translation (p.X, p.Y);
-         dwg.Add (poly);
-      }
-
-      Point2 GetCommon (ref Tile t0, ref Tile t1) {
-         Check (t0.YMin.EQ (t1.YMax));
-         double x0 = mS[t0.Left].GetX (t0.YMin), x1 = mS[t0.Right].GetX (t0.YMin);
-         Bound1 b0 = new (x0, x1);
-         x0 = mS[t1.Left].GetX (t0.YMin); x1 = mS[t1.Right].GetX (t0.YMin);
-         Bound1 b1 = new (x0, x1);
-         double x = (b0 * b1).Mid;
-         return new (x, t0.YMin);
-      }
-   }
 
    /// <summary>Process is called to actually perform the tessellation</summary>
    public IEnumerable<string> Process () {
@@ -138,6 +80,8 @@ partial class Triangulator {
    }
 
    // Implementation -----------------------------------------------------------
+   public Triangulator () => (mSin, mCos) = Math.SinCos (mRotate = 0);
+
    // Returns an 'adjacent' tile touching a vertex, through which the vOther
    // vertex can be reached
    int GetAdjacentTile (ref Vertex v, ref Vertex vOther) {
@@ -222,20 +166,16 @@ partial class Triangulator {
       // We're going to split t0 into two trapezoids (t0 and t1 along Y). 
       ref Tile t1 = ref t0.Split (this, ENode.Y, v.Id);
       switch (v.Kind) {
-         // For a regular vertex, we store the tile below in Tile[0] and 
-         // the one above in Tile[1]. One of these we will return right now (based on vOther), 
-         // and the other will get returned on a later call to InsertVertex (and we know it will
-         // be the other one, since the two neighbors will be on opposite sides of the horizontal 
-         // line at v.Pt.Y). 
+         // For a regular vertex, we store the tile below in Tile[0], and the one above in 
+         // Tile[1], since both will get Split later by Segments
          case EVertex.Regular: v.Tile[0] = t0.Id; v.Tile[1] = t1.Id; break;
          // For a mountain or valley vertex, we store only the tile below (for mountain), or the
-         // tile above (for valley) and return that. 
-         case EVertex.Mountain: v.Tile[0] = t0.Id; break;
-         default: v.Tile[0] = t1.Id; break;
+         // tile above (for valley), since that is the only tile that will get split later (twice)
+         case EVertex.Mountain: v.Tile[0] = t0.Id; break; 
+         default: v.Tile[0] = t1.Id; break;               
       }
 
-      // Update connections: t0 is on the bottom, t1 at the top
-      // So now t1 connects to whatever used to be on t0's top
+      // Update connections: whoever used to be t0's above neighbor now becomes t1's neighbor
       ref Tile tBase = ref GetReference (mT);
       for (int i = 0; i < 2; i++) {
          int nTop = t1.Top[i] = t0.Top[i];
@@ -303,6 +243,10 @@ partial class Triangulator {
       }
    }
 
+   // Rotate a point through the bias angle
+   Point2 Rotate (Point2 pt) 
+      => new (pt.X * mCos - pt.Y * mSin, pt.X * mSin + pt.Y * mCos);
+
    // Computes (in mShuffle) a random permutation of the segments. This is
    // critical to achieve good performance from the Seidel algorithm
    void ShuffleSegs () {
@@ -366,6 +310,7 @@ partial class Triangulator {
    int mVN, mSN, mNN, mTN;          // Usage counts (Vertices, Segments, Nodes, Tiles)
    Rand mR = new (42);              // Used for random insertion of segments
    int[] mShuffle = new int[32];    // A permutation of the segments
+   double mRotate, mSin, mCos;
 
    const double FINE = 1e-9;
    const bool Verify = true;

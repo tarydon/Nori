@@ -27,31 +27,15 @@ public partial class MainWindow : Window {
 class TessScene : Scene2 {
    public TessScene () {
       var dwg = DXFReader.Load ("c:/etc/tess0.dxf");
-      var xfm = Matrix2.Rotation (0.0812);
-      xfm = Matrix2.Identity;
-      List<Poly> polys = [];
-      for (int i = dwg.Ents.Count - 1; i >= 0; i--) {
-         if (dwg.Ents[i] is not E2Poly e2p || e2p.Layer.Name != "0") dwg.Ents.RemoveAt (i);
-         else {
-            e2p = (E2Poly)(e2p * xfm);
-            dwg.Ents[i] = e2p;
-            polys.Add (e2p.Poly);
-         }
-      }
+      var polys = dwg.Ents.OfType<E2Poly> ()
+                     .Where (a => a.Layer.Name == "0" && a.Poly.IsClosed)
+                     .Select (a => a.Poly)
+                     .ToList ();
+      int nOuter = polys.MaxIndexBy (a => a.GetBound ().Area);
 
-      int n = polys.MaxIndexBy (a => a.GetBound ().Area);
-      List<Point2> pts = [];
       mT = new Triangulator ();
       mT.Reset ();
-
-      for (int i = 0; i < polys.Count; i++) {
-         var p = polys[i];
-         pts.Clear (); p.Discretize (pts, Lib.CoarseTess, Lib.CoarseTessAngle);
-         bool hole = (p.GetWinding () == Poly.EWinding.CCW ^ i == n);
-         if (hole) pts.Reverse ();
-         mT.AddContour (pts.AsSpan (), hole);
-      }
-
+      for (int i = 0; i < polys.Count; i++) mT.AddPoly (polys[i], i != nOuter);
       mSteps = mT.Process ().GetEnumerator ();
       HW.MouseClicks.Where (a => a.IsLeftPress).Subscribe (a => OnClick ());    
 
@@ -60,16 +44,16 @@ class TessScene : Scene2 {
       List<VNode> nodes = [new Dwg2VN (dwg), TraceVN.It, mDebugVN = new TessDebugVN (mT)];
       Root = new GroupVN (nodes);
    }
+
+   void OnClick () {
+      if (!mSteps.MoveNext ()) return;
+      Lib.Trace ($"{++mN}. {mSteps.Current}");
+      mDebugVN.Redraw ();
+   }
+
    Triangulator mT;
    IEnumerator<string> mSteps;
    VNode mDebugVN;
-
-   void OnClick () {
-      if (mSteps.MoveNext ()) {
-         Lib.Trace ($"{++mN}. {mSteps.Current}");
-         mDebugVN.Redraw ();
-      } 
-   }
    int mN;
 }
 
