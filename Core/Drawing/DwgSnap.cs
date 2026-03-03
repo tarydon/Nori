@@ -201,7 +201,7 @@ public class DwgSnap {
       mSegs.Clear ();
       var (ptRaw, aperture) = (mptRaw, mAperture);
       foreach (var ent in mDwg.Ents) {
-         if (!ent.Bound.Contains (mptRaw, mAperture)) continue;
+         if (ent.Layer.Name == "CleanupMarker" || !ent.Bound.Contains (mptRaw, mAperture)) continue;
          switch (ent) {
             case E2Poly e2p:
                foreach (var seg in e2p.Poly.Segs) {
