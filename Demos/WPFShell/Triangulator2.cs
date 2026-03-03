@@ -231,7 +231,8 @@ partial class Triangulator {
                      if (seg.A == VTop) {    // Case (a)
                         ETop = EChain.Right; t1.VTop = VTop; t1.ETop = EChain.Left;
                         if (vtop.Kind == EVertex.Mountain) { Check (vtop.Tile[0] == Id); vtop.Tile[1] = t1.Id; }
-                     }
+                     } else
+                        if (!seg.IsLeft (vtop.Pt)) { t1.VTop = VTop; t1.ETop = ETop; VTop = 0; }
                      break;
                   case EChain.Left:
                      if (seg.A == VTop) {    // Case (b)
@@ -256,11 +257,12 @@ partial class Triangulator {
             if (VBot != 0) {
                ref Vertex vbot = ref Add (ref vBase, VBot);
                switch (EBot) {
-                  case EChain.HSlice:        
+                  case EChain.HSlice:
                      if (seg.B == VBot) {    // Case (f)
                         t1.VBot = VBot; EBot = EChain.Right; t1.EBot = EChain.Left;
                         if (vbot.Kind == EVertex.Valley) { Check (vbot.Tile[0] == Id); vbot.Tile[1] = t1.Id; }
-                     }
+                     } else 
+                        if (!seg.IsLeft (vbot.Pt)) { t1.VBot = VBot; t1.EBot = EBot; VBot = 0; }
                      break;
                   case EChain.Left:
                      if (seg.B == VBot) {    // Case (g)
@@ -292,12 +294,11 @@ partial class Triangulator {
          for (int i = 0; i < 2; i++) {
             if (Bot[i] != nOld) continue;
             Bot[i] = tNew.Id;
-            if (i == 1) {
-               // Ensure that the two tiles Bot[0] and Bot[1] are sorted so that Bot[0]
-               // is to the LEFT
+            if (Bot[0] != 0 && Bot[1] != 0) {
                ref Tile tLeft = ref Add (ref tNew, Bot[0] - tNew.Id);
-               if (tLeft.XMax > tNew.XMax) (Bot[0], Bot[1]) = (Bot[1], Bot[0]);  // CHECKTHIS - is this even important?
-            } else Check (Bot[1] == 0);
+               ref Tile tRight = ref Add (ref tNew, Bot[1] - tNew.Id);
+               if (tLeft.XMax > tRight.XMax) (Bot[0], Bot[1]) = (Bot[1], Bot[0]);
+            }
             return; 
          }
          Unexpected ();
@@ -307,10 +308,11 @@ partial class Triangulator {
          for (int i = 0; i < 2; i++) {
             if (Top[i] != nOld) continue;
             Top[i] = tNew.Id;
-            if (i == 1) {
+            if (Top[0] != 0 && Top[1] != 0) {
                ref Tile tLeft = ref Add (ref tNew, Top[0] - tNew.Id);
-               if (tLeft.XMax > tNew.XMax) (Top[0], Top[1]) = (Top[1], Top[0]);
-            } else Check (Top[1] == 0);
+               ref Tile tRight = ref Add (ref tNew, Top[1] - tNew.Id);
+               if (tLeft.XMin > tRight.XMin) (Top[0], Top[1]) = (Top[1], Top[0]);
+            } 
             return;
          }
          Unexpected ();
