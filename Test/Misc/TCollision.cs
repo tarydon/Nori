@@ -103,4 +103,44 @@ class TCollision {
 
       static Vector3f V (float x,  float y, float z) => new Vector3f (x, y, z).Normalized ();
    }
+
+   [Test (1002, "OBB x Tri collision checks")]
+   void Test3 () {
+      Vector3f ext = new (20, 20, 20);
+      Span<Point3f> pts = [new (20, 20, 20), new (-20, 20, -20), new (20, -20, -20)];
+      Span<Vector3f> axes = [Vector3f.XAxis, Vector3f.YAxis, Vector3f.ZAxis];
+
+      CTri a = new (pts, 0, 1, 2);
+      var b = new OBB (Point3f.Zero, Vector3f.XAxis, Vector3f.YAxis, ext);
+      Collision.Check (pts, a, b).IsTrue (); // Fully intersecting.
+
+      for (int i = 0; i < pts.Length; i++) pts[i] += ext;
+      Collision.Check (pts, a, b).IsTrue (); // Just brushing
+
+      // Nudge a little away from box center for edge-edge tests
+      for (int i = 0; i < pts.Length; i++) pts[i] *= 1.001f;
+      // 9 box-edge x tri-edge tests
+      for (int i = 0; i < 3; i++) {
+         a = new (pts, i, (i + 1) % 3, (i + 2) % 3);
+         for (int j = 0; j < 3; j++) {
+            b = new (Point3f.Zero, axes[j], axes[(j + 1) % 3], ext);
+            Collision.Check (pts, a, b).IsFalse ();
+         }
+      }
+
+      // Separating axis is along the triangle normal
+      pts = [new (20, 20, 20), new (-20, 20, -20), new (20, -20, -20)];
+      Vector3f dv = new (-30, -30, 30);
+      for (int i = 0; i < pts.Length; i++) pts[i] += dv;
+      a = new (pts, 0, 1, 2);
+      Collision.Check (pts, a, b).IsFalse ();
+
+      // Separating axis is along the face normals
+      b = new (new (0.9, -0.5, 0.6), new (-0.24945, -0.91593, -0.31441), new (0.24941, 0.25295, -0.93478), new (0.254, 0.345, 0.045));
+      //var b = new OBB (cen, v1, v2, ext);
+      pts = [new (1.0171, -0.55381, 0.30545), new (1.00904, -0.55962, 0.28594), new (1.00279, -0.54027, 0.29408)];
+      //for (int i = 0; i < pts.Length; i++) pts[i] += dv;
+      a = new (pts, 0, 1, 2);
+      Collision.Check (pts, a, b).IsFalse ();
+   }
 }
