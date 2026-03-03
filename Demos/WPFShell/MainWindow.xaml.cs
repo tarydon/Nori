@@ -26,7 +26,7 @@ public partial class MainWindow : Window {
 
 class TessScene : Scene2 {
    public TessScene () {
-      var dwg = DXFReader.Load ("c:/etc/tess1.dxf");
+      var dwg = DXFReader.Load ("c:/etc/tess2.dxf");
       var polys = dwg.Ents.OfType<E2Poly> ()
                      .Where (a => a.Layer.Name == "0" && a.Poly.IsClosed)
                      .Select (a => a.Poly)
@@ -43,6 +43,8 @@ class TessScene : Scene2 {
       BgrdColor = Color4.Gray (216);
       List<VNode> nodes = [new Dwg2VN (dwg), TraceVN.It, mDebugVN = new TessDebugVN (mT)];
       Root = new GroupVN (nodes);
+
+      // for (int i = 0; i < 32; i++) OnClick ();
    }
 
    void OnClick () {

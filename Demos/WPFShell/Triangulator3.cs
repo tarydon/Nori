@@ -36,6 +36,7 @@ partial class Triangulator {
          List<int> tiles = [v.Tile[0], v.Tile[1]]; tiles.RemoveIf (a => a == 0);
          string text = $"{v.Kind.ToString ()[0]}{v.Id}";
          if (tiles.Count > 0) text += $"/{tiles.ToCSV ()}";
+         if (mTriangulated) text = $"{v.Id}";
          var align = v.Kind switch { EVertex.Mountain => ETextAlign.BotCenter, EVertex.Valley => ETextAlign.TopCenter, _ => ETextAlign.MidLeft };
          dwg.Add (new E2Text (dwg.CurrentLayer, dwg.Styles[^1], text, v.Pt, size, 0, 0, 1, align));
       }
@@ -44,7 +45,6 @@ partial class Triangulator {
       dwg.CurrentLayer = dwg.Layers[^1];
       for (int i = 1; i < mTN; i++) {
          ref Tile t = ref mT[i];
-         if (mTriangulated && t.Hole) continue; 
          for (int j = 0; j < 2; j++) {
             if (t.Top[j] > 0) AddArrow (GetCommon (ref mT[t.Top[j]], ref t), true, size);
             if (t.Bot[j] > 0) AddArrow (GetCommon (ref t, ref mT[t.Bot[j]]), false, size);
@@ -64,6 +64,7 @@ partial class Triangulator {
 
       Point2 GetCommon (ref Tile t0, ref Tile t1) {
          Check (t0.YMin.EQ (t1.YMax));
+         if (mTriangulated && (t0.Hole || t1.Hole)) return Point2.Nil;
          double x0 = mS[t0.Left].GetX (t0.YMin), x1 = mS[t0.Right].GetX (t0.YMin);
          Bound1 b0 = new (x0, x1);
          x0 = mS[t1.Left].GetX (t0.YMin); x1 = mS[t1.Right].GetX (t0.YMin);

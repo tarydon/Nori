@@ -282,7 +282,7 @@ partial class Triangulator {
       // appropriate Above/Below lists
       for (int i = 1; i < n; i++) mLayers[i - 1].AddRights (mLayers[i]);
       // Finally, connect up the layers
-      for (int i = 0; i < n; i++) mLayers[i].Connect (ref tBase, i == n - 1); 
+      for (int i = 0; i < n; i++) mLayers[i].Connect (ref tBase); 
    }
    List<Layer> mLayers = [];
 

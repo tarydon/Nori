@@ -33,19 +33,17 @@ partial class Triangulator {
          L1.mAbove.Add (mTiles[1]); mBelow.Add (L1.mTiles[1]);
       }
 
-      public void Connect (ref Tile tBase, bool last) {
+      public void Connect (ref Tile tBase) {
          ref Tile left = ref Add (ref tBase, mTiles[0]), right = ref Add (ref tBase, mTiles[1]);
          foreach (var n in mAbove) {
             ref Tile above = ref Add (ref tBase, n);
             above.DisconnectFrom (ref left);
             above.ConnectTo (ref left); above.ConnectTo (ref right);
          }
-         if (last) {
-            foreach (var n in mBelow) {
-               ref Tile below = ref Add (ref tBase, n);
-               left.DisconnectFrom (ref below);
-               left.ConnectTo (ref below); right.ConnectTo (ref below);
-            }
+         foreach (var n in mBelow) {
+            ref Tile below = ref Add (ref tBase, n);
+            left.DisconnectFrom (ref below);
+            left.ConnectTo (ref below); right.ConnectTo (ref below);
          }
       }
 
@@ -231,15 +229,16 @@ partial class Triangulator {
                      if (seg.A == VTop) {    // Case (a)
                         ETop = EChain.Right; t1.VTop = VTop; t1.ETop = EChain.Left;
                         if (vtop.Kind == EVertex.Mountain) { Check (vtop.Tile[0] == Id); vtop.Tile[1] = t1.Id; }
-                     } else
-                        if (!seg.IsLeft (vtop.Pt)) { t1.VTop = VTop; t1.ETop = ETop; VTop = 0; }
+                     } else if (!seg.IsLeft (vtop.Pt)) { 
+                        t1.VTop = VTop; t1.ETop = ETop; VTop = 0;
+                        vtop.ReplaceTile (Id, t1.Id);
+                     }
                      break;
                   case EChain.Left:
                      if (seg.A == VTop) {    // Case (b)
                         ETop = EChain.Mountain; t1.VTop = VTop; t1.ETop = EChain.Left;
                         Check (vtop.Kind == EVertex.Mountain); vtop.Tile[0] = vtop.Tile[1] = 0;    // UNNECESSARY
                      } else {                // Case (c)
-                        Check (vtop.Tile[1] == Id || vtop.Tile[1] == 0);   
                      }
                      break;
                   case EChain.Right:
@@ -247,9 +246,8 @@ partial class Triangulator {
                         t1.VTop = VTop; t1.ETop = EChain.Mountain;
                         Check (vtop.Kind == EVertex.Mountain); vtop.Tile[0] = vtop.Tile[1] = 0;    // UNNECESSARY
                      } else {                // Case (e)
-                        t1.VTop = VTop; VTop = 0; t1.ETop = EChain.Right; 
-                        Check (vtop.Tile[0] == Id || vtop.Tile[0] == 0); 
-                        if (vtop.Tile[0] == Id) vtop.Tile[0] = t1.Id;
+                        t1.VTop = VTop; VTop = 0; t1.ETop = EChain.Right;
+                        vtop.ReplaceTile (Id, t1.Id);
                      }
                      break;
                }
@@ -261,15 +259,16 @@ partial class Triangulator {
                      if (seg.B == VBot) {    // Case (f)
                         t1.VBot = VBot; EBot = EChain.Right; t1.EBot = EChain.Left;
                         if (vbot.Kind == EVertex.Valley) { Check (vbot.Tile[0] == Id); vbot.Tile[1] = t1.Id; }
-                     } else 
-                        if (!seg.IsLeft (vbot.Pt)) { t1.VBot = VBot; t1.EBot = EBot; VBot = 0; }
+                     } else if (!seg.IsLeft (vbot.Pt)) { 
+                        t1.VBot = VBot; t1.EBot = EBot; VBot = 0;
+                        vbot.ReplaceTile (Id, t1.Id);
+                     }
                      break;
                   case EChain.Left:
                      if (seg.B == VBot) {    // Case (g)
                         EBot = EChain.Valley; t1.VBot = VBot; t1.EBot = EChain.Left;
                         Check (vbot.Kind == EVertex.Valley); vbot.Tile[0] = vbot.Tile[1] = 0;   // UNNECESSARY
                      } else {                // Case (h)
-                        Check (vbot.Tile[1] == Id || vbot.Tile[1] == 0);
                      }
                      break;
                   case EChain.Right:
@@ -278,8 +277,7 @@ partial class Triangulator {
                         Check (vbot.Kind == EVertex.Valley); vbot.Tile[0] = vbot.Tile[1] = 0;   // UNNECESSARY
                      } else {                // Case (j)
                         t1.VBot = VBot; VBot = 0; t1.EBot = EChain.Right;
-                        Check (vbot.Tile[0] == Id || vbot.Tile[0] == 0); 
-                        if (vbot.Tile[0] == Id) vbot.Tile[0] = t1.Id;
+                        vbot.ReplaceTile (Id, t1.Id);
                      }
                      break;
                }
@@ -346,6 +344,11 @@ partial class Triangulator {
 
       public readonly override string ToString ()
          => $"Vertex#{Id} {Pt} : {Kind}";
+
+      public void ReplaceTile (int nOld, int nNew) {
+         if (Tile[0] == nOld) Tile[0] = nNew;
+         else if (Tile[1] == nOld) Tile[1] = nNew;
+      }
 
       public readonly int Id;          // Index of the vertex in the mV array
       public readonly Point2 Pt;       // Point location of the vertex
