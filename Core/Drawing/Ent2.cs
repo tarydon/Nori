@@ -2,8 +2,6 @@
 // ╔═╦╦═╦╦╬╣ Ent2.cs
 // ║║║║╬║╔╣║ Implements various types of Ent2 (2D entities in a drawing)
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
-using System.Collections;
-
 namespace Nori;
 
 #region class Ent2 ---------------------------------------------------------------------------------
