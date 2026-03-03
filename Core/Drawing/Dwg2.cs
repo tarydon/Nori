@@ -193,8 +193,6 @@ public partial class Dwg2 {
       return e2p;
    }
 
-
-
    public void RemoveBlocks (IEnumerable<Block2> blocks)
       => blocks.ForEach (b => mBlocks?.Remove (b));
 
