@@ -22,8 +22,9 @@ public class E2Dim2P : E2Dimension {
 
    const double Overhang = 4;
 
-   public override IEnumerable<Ent2> MakeDim () {
-      if (A.EQ (B)) yield break;
+   public override IReadOnlyList<Ent2> MakeDim () {
+      List<Ent2> ents = [];
+      if (A.EQ (B)) return ents;
       // Consider an infinite line via A and B, perpendicular to Angle
       var (A2, B2) = (A.Polar (100, Angle + Lib.HalfPI), B.Polar (100, Angle + Lib.HalfPI));
       // Consider another infinite line via C, parallel to Angle
@@ -31,21 +32,20 @@ public class E2Dim2P : E2Dimension {
       // Dimension line points
       var (pt, pt2) = (Geo.LineXLine (A, A2, C, C2), Geo.LineXLine (B, B2, C, C2));
       Lib.Check (!pt.IsNil && !pt2.IsNil, "Coding error");
-      yield return new E2Poly (Layer, Poly.Line (pt, pt2));
-      yield return new E2Point (Layer, A);
-      yield return new E2Point (Layer, B);
-      yield return new E2Poly (Layer, Poly.Line (A.Polar (Overhang, A.AngleTo (pt)), pt.Polar (Overhang, A.AngleTo (pt))));
-      yield return new E2Poly (Layer, Poly.Line (B.Polar (Overhang, B.AngleTo (pt2)), pt2.Polar (Overhang, B.AngleTo (pt2))));
+      ents.AddM (new E2Poly (Layer, Poly.Line (pt, pt2))
+         , new E2Point (Layer, A), new E2Point (Layer, B)
+         , new E2Poly (Layer, Poly.Line (A.Polar (Overhang, A.AngleTo (pt)), pt.Polar (Overhang, A.AngleTo (pt))))
+         , new E2Poly (Layer, Poly.Line (B.Polar (Overhang, B.AngleTo (pt2)), pt2.Polar (Overhang, B.AngleTo (pt2)))));
       var text = Text ?? pt.DistTo (pt2).Round (2).ToString ();
       var textAng = pt.AngleTo (pt2);
       // Fix the textAng to avoid inverted text, etc [Lets limit it to -90, 90 range]
       bool revDir = textAng is > Lib.HalfPI or < -Lib.HalfPI;
       if (revDir) textAng += Lib.PI;
       var (arrowDirA, arrowDirB) = revDir ? (textAng, textAng + Lib.PI) : (textAng + Lib.PI, textAng);
-      yield return MakeArrow (Layer, pt, arrowDirA);
-      yield return MakeArrow (Layer, pt2, arrowDirB);
+      ents.AddM (MakeArrow (Layer, pt, arrowDirA), MakeArrow (Layer, pt2, arrowDirB));
       var textPos = pt.Midpoint (pt2).Polar (Overhang / 2, textAng + Lib.HalfPI);
-      yield return new E2Text (Layer, Style2.Default, text, textPos, 10, textAng, 0, 1, ETextAlign.BaseCenter);
+      ents.Add (new E2Text (Layer, Style2.Default, text, textPos, 10, textAng, 0, 1, ETextAlign.BaseCenter));
+      return ents;
    }
 
    static E2Solid MakeArrow (Layer2 layer, Point2 tip, double dir, double length = 6, double width = 4) {

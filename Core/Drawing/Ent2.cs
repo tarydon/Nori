@@ -2,6 +2,8 @@
 // ╔═╦╦═╦╦╬╣ Ent2.cs
 // ║║║║╬║╔╣║ Implements various types of Ent2 (2D entities in a drawing)
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
+using System.Collections;
+
 namespace Nori;
 
 #region class Ent2 ---------------------------------------------------------------------------------
@@ -170,7 +172,7 @@ public class E2Dimension : Ent2 {
       return null;
    }
 
-   public virtual IEnumerable<Ent2> MakeDim () => throw new NotImplementedException ("Must override");
+   public virtual IReadOnlyList<Ent2> MakeDim () => throw new NotImplementedException ("Must override");
 }
 #endregion
 
