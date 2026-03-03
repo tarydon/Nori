@@ -64,5 +64,10 @@ public partial struct OBB {
    /// <summary>Transforms the OBB by a given matrix.</summary>
    public static OBB operator * (OBB box, Matrix3 xfm)
       => new (box.Center * xfm, box.X * xfm, box.Y * xfm, box.Z * xfm, box.Extent) { Left = box.Left, Right = box.Right };
+
+   readonly public override string ToString ()
+      => $"OBB: ({Center.X.Round (2)},{Center.Y.Round (2)},{Center.Z.Round (2)})" +
+      $"  {Extent.X.Round (2)}x{Extent.Y.Round (2)}x{Extent.Z.Round (2)}" +
+      $"  <<{X.X.Round (3)},{X.Y.Round (3)},{X.Z.Round (3)}> <{Y.X.Round (3)},{Y.Y.Round (3)},{Y.Z.Round (3)}> <{Z.X.Round (3)},{Z.Y.Round (3)},{Z.Z.Round (3)}>>";
 }
 #endregion
