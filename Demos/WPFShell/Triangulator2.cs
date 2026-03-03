@@ -203,13 +203,15 @@ partial class Triangulator {
             if ((t1.VTop = VTop) > 0) {
                // This tile already has a 'top' vertex connected to it (and that top vertex
                // could be holding onto this tile as one of its two neighbor tiles). Update both links
+               t1.ETop = ETop;
                ref Vertex vTop = ref Add (ref vBase, VTop);
                if (vTop.Kind != EVertex.Valley) {
                   if (vTop.Tile[0] == Id) vTop.Tile[0] = t1.Id;
                   else if (vTop.Tile[1] == Id) vTop.Tile[1] = t1.Id;
                }
             }
-            t1.VBot = VTop = index;  
+            t1.VBot = VTop = index;
+            t1.EBot = ETop = EChain.HSlice;
          } else {
             // Splitting at a segment. The new tile t1 is going to be on the right of the segment
             ref Segment seg = ref Add (ref sBase, index);
@@ -225,16 +227,18 @@ partial class Triangulator {
             if (VTop != 0) {
                ref Vertex vtop = ref Add (ref vBase, VTop);
                switch (ETop) {
-                  case EChain.HSlice:        // Case (a)
-                     t1.VTop = VTop; ETop = EChain.Right; t1.ETop = EChain.Left;
-                     if (vtop.Kind == EVertex.Mountain) { Check (vtop.Tile[0] == Id); vtop.Tile[1] = t1.Id; }
+                  case EChain.HSlice:
+                     if (seg.A == VTop) {    // Case (a)
+                        ETop = EChain.Right; t1.VTop = VTop; t1.ETop = EChain.Left;
+                        if (vtop.Kind == EVertex.Mountain) { Check (vtop.Tile[0] == Id); vtop.Tile[1] = t1.Id; }
+                     }
                      break;
                   case EChain.Left:
                      if (seg.A == VTop) {    // Case (b)
-                        t1.VTop = VTop; ETop = EChain.Mountain; t1.ETop = EChain.Left;
+                        ETop = EChain.Mountain; t1.VTop = VTop; t1.ETop = EChain.Left;
                         Check (vtop.Kind == EVertex.Mountain); vtop.Tile[0] = vtop.Tile[1] = 0;    // UNNECESSARY
                      } else {                // Case (c)
-                        Check (vtop.Tile[1] == Id);   
+                        Check (vtop.Tile[1] == Id || vtop.Tile[1] == 0);   
                      }
                      break;
                   case EChain.Right:
@@ -242,8 +246,9 @@ partial class Triangulator {
                         t1.VTop = VTop; t1.ETop = EChain.Mountain;
                         Check (vtop.Kind == EVertex.Mountain); vtop.Tile[0] = vtop.Tile[1] = 0;    // UNNECESSARY
                      } else {                // Case (e)
-                        t1.VTop = VTop; t1.ETop = EChain.Right; VTop = 0; 
-                        Check (vtop.Tile[0] == Id); vtop.Tile[0] = t1.Id;
+                        t1.VTop = VTop; VTop = 0; t1.ETop = EChain.Right; 
+                        Check (vtop.Tile[0] == Id || vtop.Tile[0] == 0); 
+                        if (vtop.Tile[0] == Id) vtop.Tile[0] = t1.Id;
                      }
                      break;
                }
@@ -251,17 +256,31 @@ partial class Triangulator {
             if (VBot != 0) {
                ref Vertex vbot = ref Add (ref vBase, VBot);
                switch (EBot) {
-
+                  case EChain.HSlice:        
+                     if (seg.B == VBot) {    // Case (f)
+                        t1.VBot = VBot; EBot = EChain.Right; t1.EBot = EChain.Left;
+                        if (vbot.Kind == EVertex.Valley) { Check (vbot.Tile[0] == Id); vbot.Tile[1] = t1.Id; }
+                     }
+                     break;
+                  case EChain.Left:
+                     if (seg.B == VBot) {    // Case (g)
+                        EBot = EChain.Valley; t1.VBot = VBot; t1.EBot = EChain.Left;
+                        Check (vbot.Kind == EVertex.Valley); vbot.Tile[0] = vbot.Tile[1] = 0;   // UNNECESSARY
+                     } else {                // Case (h)
+                        Check (vbot.Tile[1] == Id || vbot.Tile[1] == 0);
+                     }
+                     break;
+                  case EChain.Right:
+                     if (seg.B == VBot) {    // Case (i)
+                        t1.VBot = VBot; t1.EBot = EChain.Valley;
+                        Check (vbot.Kind == EVertex.Valley); vbot.Tile[0] = vbot.Tile[1] = 0;   // UNNECESSARY
+                     } else {                // Case (j)
+                        t1.VBot = VBot; VBot = 0; t1.EBot = EChain.Right;
+                        Check (vbot.Tile[0] == Id || vbot.Tile[0] == 0); 
+                        if (vbot.Tile[0] == Id) vbot.Tile[0] = t1.Id;
+                     }
+                     break;
                }
-            }
-
-            if (VBot != 0) {
-               ref Vertex vBot = ref Add (ref vBase, VBot);
-               if (vBot.Kind == EVertex.Valley) { vBot.Tile[0] = Id; vBot.Tile[1] = t1.Id; }
-
-               // Figure out who carries VBot 
-               if (seg.B == VBot) t1.VBot = VBot;  // BOth the tiles touch at VBot
-               else if (!seg.IsLeft (Add (ref vBase, VBot).Pt)) { t1.VBot = VBot; VBot = 0; }
             }
          }
          t.mNN += 2; t.mTN++;

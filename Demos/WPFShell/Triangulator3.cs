@@ -9,8 +9,11 @@ partial class Triangulator {
       Dwg2 dwg = new ();
       dwg.Add (new Layer2 ("TILE", Color4.Red, ELineType.Continuous));
       dwg.CurrentLayer = dwg.Layers[^1];
-      foreach (var t in mT.Take (mTN))
+      for (int i = 1; i < mTN; i++) {
+         ref var t = ref mT[i];
+         if (mTriangulated && t.Hole) continue; 
          dwg.Add (Poly.Lines (Point2.List (t.LMin, t.YMin, t.RMin, t.YMin, t.RMax, t.YMax, t.LMax, t.YMax), true));
+      }
 
       dwg.Add (new Layer2 ("TILETEXT", Color4.Blue, ELineType.Continuous));
       dwg.CurrentLayer = dwg.Layers[^1];
@@ -18,6 +21,7 @@ partial class Triangulator {
       double size = mBound.Height / 100;
       for (int i = 1; i < mTN; i++) {
          ref Tile t = ref mT[i];
+         if (mTriangulated && t.Hole) continue; 
          Point2 pos = new (0.75.Along (t.LMin, t.RMin), t.YMin);
          string text = $"{t.Id}"; if (t.Hole) text += "*";
          if (t.VTop > 0) text += $" T{t.VTop}{t.ETop.ToString ()[0]}";
@@ -40,6 +44,7 @@ partial class Triangulator {
       dwg.CurrentLayer = dwg.Layers[^1];
       for (int i = 1; i < mTN; i++) {
          ref Tile t = ref mT[i];
+         if (mTriangulated && t.Hole) continue; 
          for (int j = 0; j < 2; j++) {
             if (t.Top[j] > 0) AddArrow (GetCommon (ref mT[t.Top[j]], ref t), true, size);
             if (t.Bot[j] > 0) AddArrow (GetCommon (ref t, ref mT[t.Bot[j]]), false, size);

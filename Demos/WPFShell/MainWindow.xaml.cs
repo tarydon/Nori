@@ -63,6 +63,7 @@ class TessDebugVN : VNode {
 
    public override void Draw () {
       var dwg = mT.GetDebugDwg ();
+      DXFWriter.Save (dwg, "c:/etc/test.dxf");
       DrawPoly ("TILE", Color4.Red, 4f);
       DrawText ("TILETEXT", Color4.Blue);
       DrawText ("VERTTEXT", Color4.DarkGreen);

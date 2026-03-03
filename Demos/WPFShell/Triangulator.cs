@@ -43,7 +43,7 @@ partial class Triangulator {
 
    /// <summary>Reset should be called to initialize the Triangulator before adding contours</summary>
    public void Reset () {
-      mBound = new (); mInput.Clear (); 
+      mBound = new (); mInput.Clear (); mTriangulated = false;
       mSN = mNN = 0; mTN = mVN = 1;
       if (Lib.Testing) mR = new (42);
    }
@@ -77,7 +77,10 @@ partial class Triangulator {
             yield return $"Sliced tiles";
          }
       }
+      mTriangulated = true;
+      yield return "Removed holes";
    }
+   bool mTriangulated;
 
    // Implementation -----------------------------------------------------------
    public Triangulator () => (mSin, mCos) = Math.SinCos (mRotate = 0);
@@ -141,8 +144,8 @@ partial class Triangulator {
    // each time), and then slices all the trapezoids between the start and end vertically by the
    // segment line
    string InsertSeg (ref Segment seg) {
-      // To insert top and bottom points, we could need 2 new tiles (and 2 new nodes)
-      Grow (ref mT, mTN, 2); Grow (ref mN, mNN, 2);
+      // To insert top and bottom points, we could need 2 new tiles (and 4 new nodes)
+      Grow (ref mT, mTN, 2); Grow (ref mN, mNN, 4);
       ref Vertex vBase = ref GetReference (mV);
       ref Vertex v0 = ref Add (ref vBase, seg.A), v1 = ref Add (ref vBase, seg.B);
       Check (v0.Pt.Y > v1.Pt.Y);
@@ -262,6 +265,7 @@ partial class Triangulator {
    // We gathered (in mChain) a list of tiles that need to be sliced by the given segment
    void SliceTiles (ref Segment seg) {
       int n = mChain.Count;
+      Grow (ref mT, mTN, n); Grow (ref mN, mNN, n * 2);
       while (mLayers.Count < n) mLayers.Add (new ());
       ref Tile tBase = ref GetReference (mT);
       // First, split every tile in the mChain list. This tile remains as the left tile, 
