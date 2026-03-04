@@ -11,7 +11,7 @@ partial class Triangulator {
       dwg.CurrentLayer = dwg.Layers[^1];
       for (int i = 1; i < mTN; i++) {
          ref var t = ref mT[i];
-         if (mTriangulated && t.Hole) continue; 
+         if (t.Id == 0) continue; 
          dwg.Add (Poly.Lines (Point2.List (t.LMin, t.YMin, t.RMin, t.YMin, t.RMax, t.YMax, t.LMax, t.YMax), true));
       }
 
@@ -20,10 +20,13 @@ partial class Triangulator {
       dwg.Add (new Style2 ("STD", "SIMPLEX", 0, 1, 0));
       double size = mBound.Height / 100;
       for (int i = 1; i < mTN; i++) {
-         ref Tile t = ref mT[i];
-         if (mTriangulated && t.Hole) continue; 
+         ref Tile t = ref mT[i]; if (t.Id == 0) continue; 
          Point2 pos = new (0.75.Along (t.LMin, t.RMin), t.YMin);
          string text = $"{t.Id}"; if (t.Hole) text += "*";
+         if (mMerged) {
+            bool pass = (t.VTop != 0 && t.ETop == EChain.HSlice) || (t.VBot != 0 && t.EBot == EChain.HSlice);
+            if (!pass) continue; 
+         }
          if (t.VTop > 0) text += $" T{t.VTop}{t.ETop.ToString ()[0]}";
          if (t.VBot > 0) text += $" B{t.VBot}{t.EBot.ToString ()[0]}";
          dwg.Add (new E2Text (dwg.CurrentLayer, dwg.Styles[^1], text, pos, size, 0, 0, 1, ETextAlign.BotCenter));
@@ -36,7 +39,7 @@ partial class Triangulator {
          List<int> tiles = [v.Tile[0], v.Tile[1]]; tiles.RemoveIf (a => a == 0);
          string text = $"{v.Kind.ToString ()[0]}{v.Id}";
          if (tiles.Count > 0) text += $"/{tiles.ToCSV ()}";
-         if (mTriangulated) text = $"{v.Id}";
+         if (mMerged) text = $"{v.Id}";
          var align = v.Kind switch { EVertex.Mountain => ETextAlign.BotCenter, EVertex.Valley => ETextAlign.TopCenter, _ => ETextAlign.MidLeft };
          dwg.Add (new E2Text (dwg.CurrentLayer, dwg.Styles[^1], text, v.Pt, size, 0, 0, 1, align));
       }
@@ -63,8 +66,8 @@ partial class Triangulator {
       }
 
       Point2 GetCommon (ref Tile t0, ref Tile t1) {
+         if (t0.Id == 0 || t1.Id == 0) return Point2.Nil;
          Check (t0.YMin.EQ (t1.YMax));
-         if (mTriangulated && (t0.Hole || t1.Hole)) return Point2.Nil;
          double x0 = mS[t0.Left].GetX (t0.YMin), x1 = mS[t0.Right].GetX (t0.YMin);
          Bound1 b0 = new (x0, x1);
          x0 = mS[t1.Left].GetX (t0.YMin); x1 = mS[t1.Right].GetX (t0.YMin);

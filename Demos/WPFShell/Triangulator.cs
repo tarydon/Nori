@@ -42,10 +42,11 @@ partial class Triangulator {
    List<Point2> mInput = [];
 
    /// <summary>Reset should be called to initialize the Triangulator before adding contours</summary>
-   public void Reset () {
-      mBound = new (); mInput.Clear (); mTriangulated = false;
+   public void Reset (int seed = 42, double rotAngle = 0.0812) {
+      mBound = new (); mInput.Clear (); mMerged = false;
       mSN = mNN = 0; mTN = mVN = 1;
-      if (Lib.Testing) mR = new (42);
+      if (mRotate != rotAngle) (mSin, mCos) = Math.SinCos (mRotate = rotAngle);
+      mR = new ((uint)seed);
    }
    Bound2 mBound;
 
@@ -77,10 +78,37 @@ partial class Triangulator {
             yield return $"Sliced tiles";
          }
       }
-      mTriangulated = true;
-      yield return "Removed holes";
+      yield return "Ready to merge";
+      MergeTiles ();
+      yield return "Merged tiles";
    }
-   bool mTriangulated;
+   bool mMerged;
+
+   void MergeTiles () {
+      ref Tile tBase = ref GetReference (mT);
+      for (int i = 1; i < mTN; i++) {
+         ref Tile t = ref Add (ref tBase, i);
+         if (t.Hole) { t.Id = 0; continue; }
+         if (t.VTop == 0) {
+            Check (t.Top[0] != 0 && t.Top[1] == 0);
+            ref Tile t1 = ref Add (ref tBase, t.Top[0]);
+            Check (!t1.Hole);
+            t.YMax = t1.YMax; t.LMax = t1.LMax; t.RMax = t1.RMax;
+            t.VTop = t1.VTop; t.ETop = t1.ETop;
+            if ((t.Top[0] = t1.Top[0]) != 0) {
+               ref Tile tab = ref Add (ref tBase, t.Top[0]);
+               tab.UpdateBottom (t1.Id, ref t);
+            }
+            if ((t.Top[1] = t1.Top[1]) != 0) {
+               ref Tile tab = ref Add (ref tBase, t.Top[1]);
+               tab.UpdateBottom (t1.Id, ref t);
+            }
+            t1.Id = 0;
+            i--;
+         }
+      }
+      mMerged = true; 
+   }
 
    // Implementation -----------------------------------------------------------
    public Triangulator () => (mSin, mCos) = Math.SinCos (mRotate = 0);

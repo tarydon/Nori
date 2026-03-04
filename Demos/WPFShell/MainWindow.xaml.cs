@@ -26,7 +26,7 @@ public partial class MainWindow : Window {
 
 class TessScene : Scene2 {
    public TessScene () {
-      var dwg = DXFReader.Load ("c:/etc/tess2.dxf");
+      var dwg = DXFReader.Load ("c:/etc/tess/E.dxf");
       var polys = dwg.Ents.OfType<E2Poly> ()
                      .Where (a => a.Layer.Name == "0" && a.Poly.IsClosed)
                      .Select (a => a.Poly)
@@ -34,7 +34,7 @@ class TessScene : Scene2 {
       int nOuter = polys.MaxIndexBy (a => a.GetBound ().Area);
 
       mT = new Triangulator ();
-      mT.Reset ();
+      mT.Reset (41, 0.0);
       for (int i = 0; i < polys.Count; i++) mT.AddPoly (polys[i], i != nOuter);
       mSteps = mT.Process ().GetEnumerator ();
       HW.MouseClicks.Where (a => a.IsLeftPress).Subscribe (a => OnClick ());    
@@ -44,13 +44,14 @@ class TessScene : Scene2 {
       List<VNode> nodes = [new Dwg2VN (dwg), TraceVN.It, mDebugVN = new TessDebugVN (mT)];
       Root = new GroupVN (nodes);
 
-      // for (int i = 0; i < 32; i++) OnClick ();
+      for (; ; ) { string s = OnClick (); if (s == "Ready to merge") break; }
    }
 
-   void OnClick () {
-      if (!mSteps.MoveNext ()) return;
+   string OnClick () {
+      if (!mSteps.MoveNext ()) return "";
       Lib.Trace ($"{++mN}. {mSteps.Current}");
       mDebugVN.Redraw ();
+      return mSteps.Current;
    }
 
    Triangulator mT;

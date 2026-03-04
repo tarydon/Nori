@@ -316,7 +316,7 @@ partial class Triangulator {
          Unexpected ();
       }
 
-      public readonly int Id;             // Index of this within the mT array
+      public int Id;                      // Index of this within the mT array
       public double YMin, YMax;           // Range of Y values spanned by this tile
       public double LMin, LMax;           // Min & Max X on the left side
       public double RMin, RMax;           // Min & Max X on the right side
