@@ -1,3 +1,4 @@
+using System.Windows.Documents;
 using static System.Runtime.CompilerServices.Unsafe;
 using static System.Runtime.InteropServices.MemoryMarshal;
 namespace Nori;
@@ -82,19 +83,42 @@ partial class Triangulator {
       yield return "Ready to merge";
       MergeTiles ();
       yield return $"Merged. Valleys:{mValleyTiles.ToCSV ()} Diags:{mDiagTiles.ToCSV ()}";
-      foreach (var s in AddDiagonals ()) yield return s;
+      AddDiagonals ();
       yield return $"Added. Valleys:{mValleyTiles.ToCSV ()}";
+      foreach (var s in ExtractMonotones ()) yield return s; 
    }
    bool mMerged;
 
-   IEnumerable<string> AddDiagonals () {
-      foreach (var n in mDiagTiles) {
-         yield return $"About to add diagonals: {mT[n]}";
-
-         Grow (ref mS, mSN, 1);
+   IEnumerable<string> ExtractMonotones () {
+      foreach (var n in mValleyTiles) {
          ref Tile tBase = ref GetReference (mT);
-         ref Segment sBase = ref GetReference (mS);
          ref Vertex vBase = ref GetReference (mV);
+         List<int> left = [], right = [];
+         Lib.Trace ($"{n}");
+         ref Tile t = ref Add (ref tBase, n); if (t.Id == 0) continue;
+         left.Add (t.VBot); t.Id = 0;
+         for (; ; ) { 
+            if (t.VTop != 0) {
+               switch (t.ETop) {
+                  case EChain.Left or EChain.Mountain: left.Add (t.VTop); break;
+                  case EChain.Right: right.Add (t.VTop); break;
+                  default: throw new NotImplementedException (); 
+               }
+               if (t.ETop == EChain.Mountain) break;
+            }
+            Check (t.Top[0] != 0 && t.Top[1] == 0);
+            t = ref Add (ref tBase, t.Top[0]); t.Id = 0; 
+         }
+         yield return $"Left:{left.ToCSV ()}, Right:{right.ToCSV ()}";
+      }
+   }
+
+   void AddDiagonals () {
+      Grow (ref mS, mSN, mDiagTiles.Count);
+      ref Tile tBase = ref GetReference (mT);
+      ref Segment sBase = ref GetReference (mS);
+      ref Vertex vBase = ref GetReference (mV);
+      foreach (var n in mDiagTiles) {
          ref Tile t = ref Add (ref tBase, n); if (t.Id == 0) continue;
          mS[mSN] = new (mSN, ref vBase, t.VTop, t.VBot, true);
          ref Segment seg = ref Add (ref sBase, mSN); mSN++;
@@ -103,7 +127,6 @@ partial class Triangulator {
          ref Tile t1 = ref Add (ref tBase, mTN - 1);
          if (t.VBot != 0 && t.EBot == EChain.Valley) mValleyTiles.Add (t.Id);
          if (t1.VBot != 0 && t1.EBot == EChain.Valley) mValleyTiles.Add (t1.Id);
-         yield return "Sliced";
       }
    }
 

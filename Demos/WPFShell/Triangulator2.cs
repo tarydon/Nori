@@ -141,7 +141,7 @@ partial class Triangulator {
          (LMin, LMax, RMin, RMax) = (t.LMin, t.LMax, t.RMin, t.RMax);
       }
 
-      public override string ToString () {
+      public readonly override string ToString () {
          string text = $"{Id}"; if (Hole) text += "*";
          if (VTop > 0) text += $" T{VTop}{ETop.ToString ()[0]}";
          if (VBot > 0) text += $" B{VBot}{EBot.ToString ()[0]}";
