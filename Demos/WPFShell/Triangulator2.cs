@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Runtime.CompilerServices;
-using System.Text;
-using Accessibility;
-using Microsoft.VisualBasic.Logging;
+﻿using System.Runtime.CompilerServices;
 using static System.Runtime.CompilerServices.Unsafe;
 using static System.Runtime.InteropServices.MemoryMarshal;
 namespace Nori;
@@ -261,6 +256,10 @@ partial class Triangulator {
                         if (!diagonal) vtop.ReplaceTile (Id, t1.Id);
                      }
                      break;
+                  case EChain.Mountain:
+                     Check (diagonal); t1.VTop = VTop; t1.ETop = ETop;
+                     break;
+                  default: throw new NotImplementedException ();                     
                }
             }
             if (VBot != 0) {
@@ -291,6 +290,10 @@ partial class Triangulator {
                         if (!diagonal) vbot.ReplaceTile (Id, t1.Id);
                      }
                      break;
+                  case EChain.Valley:
+                     Check (diagonal); t1.VBot = VBot; t1.EBot = EBot;
+                     break;
+                  default: throw new NotImplementedException ();                     
                }
             }
          }

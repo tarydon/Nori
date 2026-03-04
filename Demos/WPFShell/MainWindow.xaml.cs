@@ -26,7 +26,7 @@ public partial class MainWindow : Window {
 
 class TessScene : Scene2 {
    public TessScene () {
-      var dwg = DXFReader.Load ("c:/etc/tess20.dxf");
+      var dwg = DXFReader.Load ("c:/etc/tess15.dxf");
       var polys = dwg.Ents.OfType<E2Poly> ()
                      .Where (a => a.Layer.Name == "0" && a.Poly.IsClosed)
                      .Select (a => a.Poly)
@@ -34,10 +34,13 @@ class TessScene : Scene2 {
       int nOuter = polys.MaxIndexBy (a => a.GetBound ().Area);
 
       mT = new Triangulator ();
-      mT.Reset (41, 0.0);
+      mT.Reset (41, 0.081 * 2);
       for (int i = 0; i < polys.Count; i++) mT.AddPoly (polys[i], i != nOuter);
       mSteps = mT.Process ().GetEnumerator ();
-      HW.MouseClicks.Where (a => a.IsLeftPress).Subscribe (a => OnClick ());    
+      HW.MouseClicks.Where (a => a.IsLeftPress).Subscribe (a => OnClick ());
+
+      var xfm = Matrix2.Rotation (mT.BiasAngle);
+      for (int i = 0; i < dwg.Ents.Count; i++) dwg.Ents[i] *= xfm;
 
       Bound = dwg.Bound.InflatedL (1).InflatedF (1.1f);
       BgrdColor = Color4.Gray (216);

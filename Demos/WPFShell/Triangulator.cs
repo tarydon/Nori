@@ -4,6 +4,9 @@ using static System.Runtime.InteropServices.MemoryMarshal;
 namespace Nori;
 
 partial class Triangulator {
+   // Properties ---------------------------------------------------------------
+   public double BiasAngle => mBiasAngle;
+
    // Methods ------------------------------------------------------------------
    /// <summary>
    /// Adds a contour for tessellation
@@ -47,7 +50,7 @@ partial class Triangulator {
       mBound = new (); mInput.Clear (); mMerged = false;
       mDiagTiles.Clear (); mValleyTiles.Clear (); 
       mSN = mNN = 0; mTN = mVN = 1;
-      if (mRotate != rotAngle) (mSin, mCos) = Math.SinCos (mRotate = rotAngle);
+      if (mBiasAngle != rotAngle) (mSin, mCos) = Math.SinCos (mBiasAngle = rotAngle);
       mR = new ((uint)seed);
    }
    Bound2 mBound;
@@ -96,7 +99,8 @@ partial class Triangulator {
          List<int> left = [], right = [];
          Lib.Trace ($"{n}");
          ref Tile t = ref Add (ref tBase, n); if (t.Id == 0) continue;
-         left.Add (t.VBot); t.Id = 0;
+         left.Add (t.VBot);
+         int nOldID = t.Id; t.Id = 0; 
          for (; ; ) { 
             if (t.VTop != 0) {
                switch (t.ETop) {
@@ -106,8 +110,9 @@ partial class Triangulator {
                }
                if (t.ETop == EChain.Mountain) break;
             }
-            Check (t.Top[0] != 0 && t.Top[1] == 0);
-            t = ref Add (ref tBase, t.Top[0]); t.Id = 0; 
+            if (t.Top[0] == 0 || t.Top[1] != 0) Check (false);
+            t = ref Add (ref tBase, t.Top[0]);
+            nOldID = t.Id; t.Id = 0; 
          }
          yield return $"Left:{left.ToCSV ()}, Right:{right.ToCSV ()}";
       }
@@ -131,7 +136,7 @@ partial class Triangulator {
    }
 
    // Implementation -----------------------------------------------------------
-   public Triangulator () => (mSin, mCos) = Math.SinCos (mRotate = 0);
+   public Triangulator () => (mSin, mCos) = Math.SinCos (mBiasAngle = 0);
 
    // Returns an 'adjacent' tile touching a vertex, through which the vOther
    // vertex can be reached
@@ -300,7 +305,7 @@ partial class Triangulator {
       ref Tile tBase = ref GetReference (mT);
       for (int i = 1; i < mTN; i++) {
          ref Tile t = ref Add (ref tBase, i);
-         if (t.Hole) { t.Id = 0; continue; }
+         if (t.Hole || t.Id == 0) { t.Id = 0; continue; }
          if (t.VTop == 0) {
             // Basically, if t.VTop is zero, it means this tile has no vertex points on either
             // the top left or top right (and that means it's 'continuous' with the tile above,
@@ -395,7 +400,7 @@ partial class Triangulator {
    int[] mShuffle = new int[32];    // A permutation of the segments
    List<int> mDiagTiles = [];       // Tiles where diagonals need to be drawn
    List<int> mValleyTiles = [];     // Valley tiles, from which we start monotone polygons
-   double mRotate, mSin, mCos;
+   double mBiasAngle, mSin, mCos;
 
    const double FINE = 1e-9;
    const bool Verify = true;
