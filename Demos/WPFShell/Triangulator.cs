@@ -120,10 +120,10 @@ partial class Triangulator {
 
    void AddDiagonals () {
       Grow (ref mS, mSN, mDiagTiles.Count);
-      ref Tile tBase = ref GetReference (mT);
       ref Segment sBase = ref GetReference (mS);
       ref Vertex vBase = ref GetReference (mV);
       foreach (var n in mDiagTiles) {
+         ref Tile tBase = ref GetReference (mT);
          ref Tile t = ref Add (ref tBase, n); if (t.Id == 0) continue;
          mS[mSN] = new (mSN, ref vBase, t.VTop, t.VBot, true);
          ref Segment seg = ref Add (ref sBase, mSN); mSN++;
