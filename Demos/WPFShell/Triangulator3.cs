@@ -22,14 +22,8 @@ partial class Triangulator {
       for (int i = 1; i < mTN; i++) {
          ref Tile t = ref mT[i]; if (t.Id == 0) continue; 
          Point2 pos = new (0.75.Along (t.LMin, t.RMin), t.YMin);
-         string text = $"{t.Id}"; if (t.Hole) text += "*";
-         if (mMerged) {
-            bool pass = (t.VTop != 0 && t.ETop == EChain.HSlice) || (t.VBot != 0 && t.EBot == EChain.HSlice);
-            if (!pass) continue; 
-         }
-         if (t.VTop > 0) text += $" T{t.VTop}{t.ETop.ToString ()[0]}";
-         if (t.VBot > 0) text += $" B{t.VBot}{t.EBot.ToString ()[0]}";
-         dwg.Add (new E2Text (dwg.CurrentLayer, dwg.Styles[^1], text, pos, size, 0, 0, 1, ETextAlign.BotCenter));
+         //if (mMerged && !mDiagTiles.Contains (t.Id)) continue;
+         dwg.Add (new E2Text (dwg.CurrentLayer, dwg.Styles[^1], t.ToString (), pos, size, 0, 0, 1, ETextAlign.BotCenter));
       }
 
       dwg.Add (new Layer2 ("VERTTEXT", Color4.DarkGreen, ELineType.Continuous));

@@ -44,6 +44,7 @@ partial class Triangulator {
    /// <summary>Reset should be called to initialize the Triangulator before adding contours</summary>
    public void Reset (int seed = 42, double rotAngle = 0.0812) {
       mBound = new (); mInput.Clear (); mMerged = false;
+      mDiagTiles.Clear (); mValleyTiles.Clear (); 
       mSN = mNN = 0; mTN = mVN = 1;
       if (mRotate != rotAngle) (mSin, mCos) = Math.SinCos (mRotate = rotAngle);
       mR = new ((uint)seed);
@@ -80,34 +81,30 @@ partial class Triangulator {
       }
       yield return "Ready to merge";
       MergeTiles ();
-      yield return "Merged tiles";
+      yield return $"Merged. Valleys:{mValleyTiles.ToCSV ()} Diags:{mDiagTiles.ToCSV ()}";
+      foreach (var s in AddDiagonals ()) yield return s;
+      yield return $"Added. Valleys:{mValleyTiles.ToCSV ()}";
    }
    bool mMerged;
 
-   void MergeTiles () {
-      ref Tile tBase = ref GetReference (mT);
-      for (int i = 1; i < mTN; i++) {
-         ref Tile t = ref Add (ref tBase, i);
-         if (t.Hole) { t.Id = 0; continue; }
-         if (t.VTop == 0) {
-            Check (t.Top[0] != 0 && t.Top[1] == 0);
-            ref Tile t1 = ref Add (ref tBase, t.Top[0]);
-            Check (!t1.Hole);
-            t.YMax = t1.YMax; t.LMax = t1.LMax; t.RMax = t1.RMax;
-            t.VTop = t1.VTop; t.ETop = t1.ETop;
-            if ((t.Top[0] = t1.Top[0]) != 0) {
-               ref Tile tab = ref Add (ref tBase, t.Top[0]);
-               tab.UpdateBottom (t1.Id, ref t);
-            }
-            if ((t.Top[1] = t1.Top[1]) != 0) {
-               ref Tile tab = ref Add (ref tBase, t.Top[1]);
-               tab.UpdateBottom (t1.Id, ref t);
-            }
-            t1.Id = 0;
-            i--;
-         }
+   IEnumerable<string> AddDiagonals () {
+      foreach (var n in mDiagTiles) {
+         yield return $"About to add diagonals: {mT[n]}";
+
+         Grow (ref mS, mSN, 1);
+         ref Tile tBase = ref GetReference (mT);
+         ref Segment sBase = ref GetReference (mS);
+         ref Vertex vBase = ref GetReference (mV);
+         ref Tile t = ref Add (ref tBase, n); if (t.Id == 0) continue;
+         mS[mSN] = new (mSN, ref vBase, t.VTop, t.VBot, true);
+         ref Segment seg = ref Add (ref sBase, mSN); mSN++;
+         mChain.Clear (); mChain.Add (n);
+         SliceTiles (ref seg);
+         ref Tile t1 = ref Add (ref tBase, mTN - 1);
+         if (t.VBot != 0 && t.EBot == EChain.Valley) mValleyTiles.Add (t.Id);
+         if (t1.VBot != 0 && t1.EBot == EChain.Valley) mValleyTiles.Add (t1.Id);
+         yield return "Sliced";
       }
-      mMerged = true; 
    }
 
    // Implementation -----------------------------------------------------------
@@ -139,6 +136,44 @@ partial class Triangulator {
          return seg.IsLeft (vOther.Pt) ? v.Tile[0] : v.Tile[1];
       }
    }
+
+   // Gather a vertical stack of tiles starting with t0 (at the top) and ending with 
+   // t1 (at the bottom), that are being cut by the given segment seg. Results are 
+   // returned in mChain (which may contain 1, 2 or more tile indices). 
+   void GatherTiles (int t0, int t1, ref Segment seg) {
+      mChain.Clear ();
+      // Trivial case: only one tile
+      mChain.Add (t0); if (t1 == t0) return;
+      ref Tile tBase = ref GetReference (mT);
+      ref Tile tile0 = ref Add (ref tBase, t0);
+      // Simple case: only two tiles
+      if (tile0.Bot[0] == t1 || tile0.Bot[1] == t1) { mChain.Add (t1); return; }
+
+      // Here, handle the more general case where we have to navigate downwards
+      // following one of the BotA/BotB links each time. Sometimes, only one BotA is set, and this 
+      // is trivial. Otherwise, we have to examine both the below tiles to see which one
+      // the given segment passes through
+      ref Segment sBase = ref GetReference (mS);
+      while (t0 != t1) {
+         ref Tile tile = ref Add (ref tBase, t0);
+         if (tile.Bot[1] == 0) t0 = tile.Bot[0];
+         else {
+            // This node has both Bot[0] and Bot[1] set, figure out which one contains
+            // the segment in question
+            ref Tile tBot0 = ref Add (ref tBase, tile.Bot[0]), tBot1 = ref Add (ref tBase, tile.Bot[1]);
+            double yTest = (Math.Max (tBot0.YMin, tBot1.YMin) + tile.YMin) / 2;
+            double x = seg.GetX (yTest);
+            double xL = Add (ref sBase, tBot0.Right).GetX (yTest);
+            if (x < xL) t0 = tile.Bot[0];
+            else {
+               Check (x > Add (ref sBase, tBot1.Left).GetX (yTest)); // REMOVETHIS
+               t0 = tile.Bot[1];
+            }
+         }
+         mChain.Add (t0);
+      }
+   }
+   List<int> mChain = [];
 
    // This inserts the 'border' tile (the root tile) of the tiling. It is large enough
    // to encompass the complete tessellation, and is initially created as a 'hole' tile,
@@ -218,44 +253,6 @@ partial class Triangulator {
       t0.Top[0] = t1.Id; t0.Top[1] = 0; t1.Bot[0] = t0.Id;
    }
 
-   // Gather a vertical stack of tiles starting with t0 (at the top) and ending with 
-   // t1 (at the bottom), that are being cut by the given segment seg. Results are 
-   // returned in mChain (which may contain 1, 2 or more tile indices). 
-   void GatherTiles (int t0, int t1, ref Segment seg) {
-      mChain.Clear ();
-      // Trivial case: only one tile
-      mChain.Add (t0); if (t1 == t0) return;
-      ref Tile tBase = ref GetReference (mT);
-      ref Tile tile0 = ref Add (ref tBase, t0);
-      // Simple case: only two tiles
-      if (tile0.Bot[0] == t1 || tile0.Bot[1] == t1) { mChain.Add (t1); return; }
-
-      // Here, handle the more general case where we have to navigate downwards
-      // following one of the BotA/BotB links each time. Sometimes, only one BotA is set, and this 
-      // is trivial. Otherwise, we have to examine both the below tiles to see which one
-      // the given segment passes through
-      ref Segment sBase = ref GetReference (mS);
-      while (t0 != t1) {
-         ref Tile tile = ref Add (ref tBase, t0);
-         if (tile.Bot[1] == 0) t0 = tile.Bot[0];
-         else {
-            // This node has both Bot[0] and Bot[1] set, figure out which one contains
-            // the segment in question
-            ref Tile tBot0 = ref Add (ref tBase, tile.Bot[0]), tBot1 = ref Add (ref tBase, tile.Bot[1]);
-            double yTest = (Math.Max (tBot0.YMin, tBot1.YMin) + tile.YMin) / 2;
-            double x = seg.GetX (yTest);
-            double xL = Add (ref sBase, tBot0.Right).GetX (yTest);
-            if (x < xL) t0 = tile.Bot[0];
-            else {
-               Check (x > Add (ref sBase, tBot1.Left).GetX (yTest)); // REMOVETHIS
-               t0 = tile.Bot[1]; 
-            }
-         }
-         mChain.Add (t0);
-      }
-   }
-   List<int> mChain = [];
-
    // Given a point in space, returns the tile that contains it
    ref Tile Locate (Point2 pt) {
       ref Node nBase = ref GetReference (mN);
@@ -272,6 +269,37 @@ partial class Triangulator {
          }
          node = ref Add (ref nBase, first ? node.First : node.Second);
       }
+   }
+
+   // This removes hole tiles, and vertically merges together tiles that share the same
+   // Left and Right edges
+   void MergeTiles () {
+      ref Tile tBase = ref GetReference (mT);
+      for (int i = 1; i < mTN; i++) {
+         ref Tile t = ref Add (ref tBase, i);
+         if (t.Hole) { t.Id = 0; continue; }
+         if (t.VTop == 0) {
+            // Basically, if t.VTop is zero, it means this tile has no vertex points on either
+            // the top left or top right (and that means it's 'continuous' with the tile above,
+            // and can be merged with it)
+            Check (t.Top[0] != 0 && t.Top[1] == 0);
+            ref Tile t1 = ref Add (ref tBase, t.Top[0]);
+            Check (!t1.Hole);
+            t.YMax = t1.YMax; t.LMax = t1.LMax; t.RMax = t1.RMax;
+            t.VTop = t1.VTop; t.ETop = t1.ETop;
+            for (int j = 0; j < 2; j++) {
+               if ((t.Top[j] = t1.Top[j]) == 0) continue;
+               ref Tile tAbove = ref Add (ref tBase, t.Top[j]);
+               tAbove.UpdateBottom (t1.Id, ref t);
+            }
+            t1.Id = 0;
+            i--;
+         } else {
+            if (t.VBot != 0 && t.EBot == EChain.Valley) mValleyTiles.Add (t.Id);
+            if (t.VBot != 0 && t.EBot == EChain.HSlice || t.VTop != 0 && t.ETop == EChain.HSlice) mDiagTiles.Add (t.Id);
+         }
+      }
+      mMerged = true;
    }
 
    // Rotate a point through the bias angle
@@ -342,6 +370,8 @@ partial class Triangulator {
    int mVN, mSN, mNN, mTN;          // Usage counts (Vertices, Segments, Nodes, Tiles)
    Rand mR = new (42);              // Used for random insertion of segments
    int[] mShuffle = new int[32];    // A permutation of the segments
+   List<int> mDiagTiles = [];       // Tiles where diagonals need to be drawn
+   List<int> mValleyTiles = [];     // Valley tiles, from which we start monotone polygons
    double mRotate, mSin, mCos;
 
    const double FINE = 1e-9;

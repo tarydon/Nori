@@ -85,8 +85,8 @@ partial class Triangulator {
    // We also compute Slope, XPrime etc to make it faster to evaluate the X value at a given Y
    readonly struct Segment {
       // Constructors ----------------------------------------------------------
-      public Segment (int id, ref Vertex vBase, int a, int b) {
-         Id = id;
+      public Segment (int id, ref Vertex vBase, int a, int b, bool diagonal = false) {
+         Id = id; Diagonal = diagonal;
          Point2 pa = Add (ref vBase, a).Pt, pb = Add (ref vBase, b).Pt;
          if (pa.EQ (pb, FINE)) throw new InvalidOperationException ();
          if (pa.Y < pb.Y) (A, B, PA, PB, PartOnLeft) = (b, a, pb, pa, true);
@@ -102,6 +102,7 @@ partial class Triangulator {
       public readonly double Slope;       // Slope of the segment
       public readonly double XPrime;      // 'Intercept' used to simplify GetX computation
       public readonly bool PartOnLeft;    // Does the part lie on the left of the segment (as viewed by user)
+      public readonly bool Diagonal;      // Interior diagonal with a tile (material exists on both sides)
 
       // Methods ---------------------------------------------------------------
       // Get the X value at a given Y 
@@ -138,6 +139,13 @@ partial class Triangulator {
       public Tile (int id, ref Tile t, int node) {
          (Id, YMin, YMax, Left, Right, Node, Hole) = (id, t.YMin, t.YMax, t.Left, t.Right, node, t.Hole);
          (LMin, LMax, RMin, RMax) = (t.LMin, t.LMax, t.RMin, t.RMax);
+      }
+
+      public override string ToString () {
+         string text = $"{Id}"; if (Hole) text += "*";
+         if (VTop > 0) text += $" T{VTop}{ETop.ToString ()[0]}";
+         if (VBot > 0) text += $" B{VBot}{EBot.ToString ()[0]}";
+         return text;
       }
 
       // Methods ---------------------------------------------------------------
@@ -213,6 +221,7 @@ partial class Triangulator {
          } else {
             // Splitting at a segment. The new tile t1 is going to be on the right of the segment
             ref Segment seg = ref Add (ref sBase, index);
+            bool diagonal = seg.Diagonal;
             if (Verify) {
                double yM = (YMin + YMax) / 2;
                ref Segment left = ref Add (ref sBase, Left), right = ref Add (ref sBase, Right);
@@ -221,33 +230,35 @@ partial class Triangulator {
             }
             t1.Left = Right = index;
             (RMin, RMax) = (t1.LMin, t1.LMax) = seg.GetX (YMin, YMax);
-            Hole = !seg.PartOnLeft; t1.Hole = seg.PartOnLeft;
+            if (!diagonal) { Hole = !seg.PartOnLeft; t1.Hole = seg.PartOnLeft; }
             if (VTop != 0) {
                ref Vertex vtop = ref Add (ref vBase, VTop);
                switch (ETop) {
                   case EChain.HSlice:
                      if (seg.A == VTop) {    // Case (a)
                         ETop = EChain.Right; t1.VTop = VTop; t1.ETop = EChain.Left;
-                        if (vtop.Kind == EVertex.Mountain) { Check (vtop.Tile[0] == Id); vtop.Tile[1] = t1.Id; }
+                        if (!diagonal && vtop.Kind == EVertex.Mountain) { Check (vtop.Tile[0] == Id); vtop.Tile[1] = t1.Id; }
                      } else if (!seg.IsLeft (vtop.Pt)) { 
                         t1.VTop = VTop; t1.ETop = ETop; VTop = 0;
-                        vtop.ReplaceTile (Id, t1.Id);
+                        if (!diagonal) vtop.ReplaceTile (Id, t1.Id);
                      }
                      break;
                   case EChain.Left:
                      if (seg.A == VTop) {    // Case (b)
                         ETop = EChain.Mountain; t1.VTop = VTop; t1.ETop = EChain.Left;
-                        Check (vtop.Kind == EVertex.Mountain); vtop.Tile[0] = vtop.Tile[1] = 0;    // UNNECESSARY
+                        if (!diagonal) {
+                           Check (vtop.Kind == EVertex.Mountain); vtop.Tile[0] = vtop.Tile[1] = 0;    // UNNECESSARY
+                        }
                      } else {                // Case (c)
                      }
                      break;
                   case EChain.Right:
                      if (seg.A == VTop) {    // Case (d)
                         t1.VTop = VTop; t1.ETop = EChain.Mountain;
-                        Check (vtop.Kind == EVertex.Mountain); vtop.Tile[0] = vtop.Tile[1] = 0;    // UNNECESSARY
+                        if (!diagonal) { Check (vtop.Kind == EVertex.Mountain); vtop.Tile[0] = vtop.Tile[1] = 0; }    // UNNECESSARY
                      } else {                // Case (e)
                         t1.VTop = VTop; VTop = 0; t1.ETop = EChain.Right;
-                        vtop.ReplaceTile (Id, t1.Id);
+                        if (!diagonal) vtop.ReplaceTile (Id, t1.Id);
                      }
                      break;
                }
@@ -258,26 +269,26 @@ partial class Triangulator {
                   case EChain.HSlice:
                      if (seg.B == VBot) {    // Case (f)
                         t1.VBot = VBot; EBot = EChain.Right; t1.EBot = EChain.Left;
-                        if (vbot.Kind == EVertex.Valley) { Check (vbot.Tile[0] == Id); vbot.Tile[1] = t1.Id; }
+                        if (!diagonal && vbot.Kind == EVertex.Valley) { Check (vbot.Tile[0] == Id); vbot.Tile[1] = t1.Id; } 
                      } else if (!seg.IsLeft (vbot.Pt)) { 
                         t1.VBot = VBot; t1.EBot = EBot; VBot = 0;
-                        vbot.ReplaceTile (Id, t1.Id);
+                        if (!diagonal) vbot.ReplaceTile (Id, t1.Id);
                      }
                      break;
                   case EChain.Left:
                      if (seg.B == VBot) {    // Case (g)
                         EBot = EChain.Valley; t1.VBot = VBot; t1.EBot = EChain.Left;
-                        Check (vbot.Kind == EVertex.Valley); vbot.Tile[0] = vbot.Tile[1] = 0;   // UNNECESSARY
+                        if (!diagonal) { Check (vbot.Kind == EVertex.Valley); vbot.Tile[0] = vbot.Tile[1] = 0; }  // UNNECESSARY
                      } else {                // Case (h)
                      }
                      break;
                   case EChain.Right:
                      if (seg.B == VBot) {    // Case (i)
                         t1.VBot = VBot; t1.EBot = EChain.Valley;
-                        Check (vbot.Kind == EVertex.Valley); vbot.Tile[0] = vbot.Tile[1] = 0;   // UNNECESSARY
+                        if (!diagonal) { Check (vbot.Kind == EVertex.Valley); vbot.Tile[0] = vbot.Tile[1] = 0; }   // UNNECESSARY
                      } else {                // Case (j)
                         t1.VBot = VBot; VBot = 0; t1.EBot = EChain.Right;
-                        vbot.ReplaceTile (Id, t1.Id);
+                        if (!diagonal) vbot.ReplaceTile (Id, t1.Id);
                      }
                      break;
                }
