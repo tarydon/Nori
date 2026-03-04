@@ -18,7 +18,7 @@ partial class Triangulator {
       dwg.Add (new Layer2 ("TILETEXT", Color4.Blue, ELineType.Continuous));
       dwg.CurrentLayer = dwg.Layers[^1];
       dwg.Add (new Style2 ("STD", "SIMPLEX", 0, 1, 0));
-      double size = mBound.Height / 200;
+      double size = mBound.Height / 100;
       for (int i = 1; i < mTN; i++) {
          ref Tile t = ref mT[i]; if (t.Id == 0) continue; 
          Point2 pos = new (0.75.Along (t.LMin, t.RMin), t.YMin);

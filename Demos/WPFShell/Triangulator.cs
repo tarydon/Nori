@@ -1,4 +1,5 @@
 using System.Windows.Documents;
+using System.Windows.Markup.Localizer;
 using static System.Runtime.CompilerServices.Unsafe;
 using static System.Runtime.InteropServices.MemoryMarshal;
 namespace Nori;
@@ -47,7 +48,8 @@ partial class Triangulator {
 
    /// <summary>Reset should be called to initialize the Triangulator before adding contours</summary>
    public void Reset (int seed = 42, double rotAngle = 0.0812) {
-      mBound = new (); mInput.Clear (); mMerged = false;
+      mBound = new (); mMerged = false;
+      mInput.Clear (); mTriangles.Clear (); 
       mDiagTiles.Clear (); mValleyTiles.Clear (); 
       mSN = mNN = 0; mTN = mVN = 1;
       if (mBiasAngle != rotAngle) (mSin, mCos) = Math.SinCos (mBiasAngle = rotAngle);
@@ -88,36 +90,90 @@ partial class Triangulator {
       yield return $"Merged. Valleys:{mValleyTiles.ToCSV ()} Diags:{mDiagTiles.ToCSV ()}";
       AddDiagonals ();
       yield return $"Added. Valleys:{mValleyTiles.ToCSV ()}";
-      foreach (var s in ExtractMonotones ()) yield return s; 
+      foreach (var n in mValleyTiles) {
+         yield return ExtractTriangles (n);
+      }
    }
    bool mMerged;
 
-   IEnumerable<string> ExtractMonotones () {
-      foreach (var n in mValleyTiles) {
-         ref Tile tBase = ref GetReference (mT);
-         ref Vertex vBase = ref GetReference (mV);
-         List<int> left = [], right = [];
-         Lib.Trace ($"{n}");
-         ref Tile t = ref Add (ref tBase, n); if (t.Id == 0) continue;
-         left.Add (t.VBot);
-         int nOldID = t.Id; t.Id = 0; 
-         for (; ; ) { 
-            if (t.VTop != 0) {
-               switch (t.ETop) {
-                  case EChain.Left or EChain.Mountain: left.Add (t.VTop); break;
-                  case EChain.Right: right.Add (t.VTop); break;
-                  default: throw new NotImplementedException (); 
+   string ExtractTriangles (int n) {
+      mStack.Clear (); 
+      ref Tile tBase = ref GetReference (mT);
+      ref Tile t = ref Add (ref tBase, n); if (t.Id == 0) return "";
+      t.Id = 0; 
+      ref Vertex vBase = ref GetReference (mV);
+      mStack.Push ((t.VBot, Add (ref vBase, t.VBot).Pt, true));
+      for (; ; ) {
+         if (t.VTop != 0) {
+            Point2 pt = Add (ref vBase, t.VTop).Pt;
+            bool left = t.ETop == EChain.Left;
+            if (mStack.Count < 2) mStack.Push ((t.VTop, pt, left));
+            else {
+               if (mStack.Peek ().Left == left) {
+                  // The newly seen vertex is on the same chain as the set of reflex
+                  // vertices on the stack already
+                  var v0 = mStack.Pop ();
+                  while (mStack.Count > 0) {
+                     var v1 = mStack.Pop ();
+                     if (v1.Pt.LeftOf (pt, v0.Pt) == left) {
+                        // We can add a triangle
+                        if (v0.Left) mTriangles.AddM (t.VTop, v0.Id, v1.Id);
+                        else mTriangles.AddM (t.VTop, v1.Id, v0.Id);
+                        v0 = v1;
+                     } else {
+                        mStack.Push (v1);
+                        break;
+                     }
+                  }
+                  mStack.Push ((t.VTop, pt, left));
+               } else {
+                  // ...
                }
-               if (t.ETop == EChain.Mountain) break;
             }
-            if (t.Top[0] == 0 || t.Top[1] != 0) Check (false);
-            t = ref Add (ref tBase, t.Top[0]);
-            nOldID = t.Id; t.Id = 0; 
+            if (t.ETop == EChain.Mountain) break;
          }
-         yield return $"Left:{left.ToCSV ()}, Right:{right.ToCSV ()}";
+         Check (t.Top[0] != 0 && t.Top[1] == 0);
+         t = ref Add (ref tBase, t.Top[0]);
       }
+      return "GOT";
    }
+   Stack<(int Id, Point2 Pt, bool Left)> mStack = [];
+   List<int> mTriangles = [];
 
+   //IEnumerable<string> ExtractMonotones () {
+   //   foreach (var n in mValleyTiles) {
+   //      ref Tile tBase = ref GetReference (mT);
+   //      ref Vertex vBase = ref GetReference (mV);
+   //      List<int> left = [], right = [];
+   //      ref Tile t = ref Add (ref tBase, n); if (t.Id == 0) continue;
+   //      left.Add (t.VBot);
+   //      int nOldID = t.Id; t.Id = 0; 
+   //      for (; ; ) { 
+   //         if (t.VTop != 0) {
+   //            switch (t.ETop) {
+   //               case EChain.Left or EChain.Mountain: left.Add (t.VTop); break;
+   //               case EChain.Right: right.Add (t.VTop); break;
+   //               default: throw new NotImplementedException (); 
+   //            }
+   //            if (t.ETop == EChain.Mountain) break;
+   //         }
+   //         if (t.Top[0] == 0 || t.Top[1] != 0) Check (false);
+   //         t = ref Add (ref tBase, t.Top[0]);
+   //         nOldID = t.Id; t.Id = 0; 
+   //      }
+   //      yield return $"Left:{left.ToCSV ()}, Right:{right.ToCSV ()}";
+   //   }
+   //}
+
+   // Implementation -----------------------------------------------------------
+   public Triangulator () => (mSin, mCos) = Math.SinCos (mBiasAngle = 0);
+
+   // This adds diagonals to partition the tiles into a set of monotone polygons
+   // that can then be easily triangulated. We walk through the non-hole tiles, and 
+   // add a diagonal where needed. A diagonal is needed when the tile has either a 
+   // top vertex, or a bottom vertex (or both) of type HSlice. Suppose there is a HSLice vertex
+   // at the top. It is then a 'reflex' vertex that needs to be connected to a corner (or another
+   // reflex vertex) to split the stack into two monotones. 
    void AddDiagonals () {
       Grow (ref mS, mSN, mDiagTiles.Count);
       ref Segment sBase = ref GetReference (mS);
@@ -134,9 +190,6 @@ partial class Triangulator {
          if (t1.VBot != 0 && t1.EBot == EChain.Valley) mValleyTiles.Add (t1.Id);
       }
    }
-
-   // Implementation -----------------------------------------------------------
-   public Triangulator () => (mSin, mCos) = Math.SinCos (mBiasAngle = 0);
 
    // Returns an 'adjacent' tile touching a vertex, through which the vOther
    // vertex can be reached
