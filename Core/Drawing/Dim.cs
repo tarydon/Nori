@@ -42,13 +42,14 @@ public class E2Dim2P : E2Dimension {
       bool revDir = textAng is > Lib.HalfPI or < -Lib.HalfPI;
       if (revDir) textAng += Lib.PI;
       var (arrowDirA, arrowDirB) = revDir ? (textAng, textAng + Lib.PI) : (textAng + Lib.PI, textAng);
-      ents.AddM (MakeArrow (Layer, pt, arrowDirA), MakeArrow (Layer, pt2, arrowDirB));
+      ents.AddM (MakeArrow (Layer, pt, arrowDirA, dim.DimArrowSize), MakeArrow (Layer, pt2, arrowDirB, dim.DimArrowSize));
       var textPos = pt.Midpoint (pt2).Polar (dim.DimTxtSize / 5, textAng + Lib.HalfPI); // Magic: Gap b/w dim-line & dim-text
       ents.Add (new E2Text (Layer, dim.DimTextStyle, text, textPos, dim.DimTxtSize, textAng, 0, 1, dim.DimTxtAlign));
       return ents;
    }
 
-   static E2Solid MakeArrow (Layer2 layer, Point2 tip, double dir, double length = 6, double width = 4) {
+   static E2Solid MakeArrow (Layer2 layer, Point2 tip, double dir, double length) {
+      double width = length * 0.67;
       var pt = tip.Polar (length, dir + Lib.PI);
       var perp = dir + Lib.HalfPI;
       var (pt2, pt3) = (pt.Polar (width / 2, perp), pt.Polar (-width / 2, perp));
@@ -60,7 +61,7 @@ public class E2Dim2P : E2Dimension {
 #region class DimSettings --------------------------------------------------------------------------
 public class DimSettings {
    /// <summary>Dimension arrow size</summary>
-   public float DimArrowSize;
+   public float DimArrowSize = 6;
    /// <summary>Gap between actual reference point and start of the extension line</summary>
    public float DimOffset = 4;
    /// <summary>Extension line length</summary>
