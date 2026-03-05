@@ -21,7 +21,9 @@ E2Solid
 E2Insert
   -Block ^Dwg BlockName Pt Angle XScale YScale -Bound
 E2Dimension
-  -Bound Ents
+  -Bound -DimSettings Ents
+E2Dim2P
+   A B C Angle Text
 E2Spline
   -Bound Spline -Pts
 Mechanism

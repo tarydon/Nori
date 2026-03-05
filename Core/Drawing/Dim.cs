@@ -6,6 +6,8 @@ namespace Nori;
 
 #region class E2Dim2P ------------------------------------------------------------------------------
 public class E2Dim2P : E2Dimension {
+   E2Dim2P () { }
+
    /// <summary>Aligned dimension c'tor</summary>
    /// <param name="layer">Provide drawing layer to place it in</param>
    /// <param name="a">Start point of measurement</param>

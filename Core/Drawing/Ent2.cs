@@ -145,7 +145,7 @@ public class E2Bendline : Ent2 {
 #region class E2Dimension --------------------------------------------------------------------------
 /// <summary>Represents a dimension entity</summary>
 public class E2Dimension : Ent2 {
-   E2Dimension () { }
+   protected E2Dimension () { }
    public E2Dimension (Layer2 layer) : base (layer) { }
 
    // Properties ---------------------------------------------------------------
