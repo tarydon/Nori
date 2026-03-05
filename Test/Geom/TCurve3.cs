@@ -8,7 +8,7 @@ namespace Nori.Testing;
 
 [Fixture (36, "Curve3 tests", "Geom")]
 class Curve3Tests {
-   [Test (175, "Flipping Arc3")]
+   [Test (196, "Flipping Arc3")]
    void Test1 () {
       Arc3 arc = new Arc3 (0, new CoordSystem (new Point3 (5, 0, 5), Vector3.XAxis, Vector3.ZAxis), 5, Lib.PI);
       var flipped = arc.Flipped ();
@@ -23,7 +23,7 @@ class Curve3Tests {
          pts1[i].EQ (pts2[i]).IsTrue ();
    }
 
-   [Test (176, "Flipping Ellipse3")]
+   [Test (197, "Flipping Ellipse3")]
    void Test2 () {
       Ellipse3 ellipse = new Ellipse3 (0, new CoordSystem (new Point3 (0, 0, 0), Vector3.XAxis, Vector3.YAxis), 8, 4, Lib.HalfPI, Lib.PI);
       var flipped = ellipse.Flipped ();
@@ -38,7 +38,7 @@ class Curve3Tests {
          pts1[i].EQ (pts2[i]).IsTrue ();
    }
 
-   [Test (177, "Flipping Ellipse3 - wrapping around xaxis")]
+   [Test (198, "Flipping Ellipse3 - wrapping around xaxis")]
    void Test3 () {
       Ellipse3 ellipse = new Ellipse3 (0, new CoordSystem (new Point3 (0, 0, 0), Vector3.XAxis, Vector3.YAxis), 8, 4, Lib.HalfPI, Lib.TwoPI + 1.D2R ());
       var flipped = ellipse.Flipped ();

@@ -436,36 +436,36 @@ class GeoTests {
 
 }
 
-[Fixture (36, "Triangulator tests", "Geom")]
+[Fixture (37, "Triangulator tests", "Geom")]
 class TessTests {
-   [Test (175, "A.dxf - 5 triangles")]
+   [Test (186, "A.dxf - 5 triangles")]
    void Test1 () => Test ("A");
 
-   [Test (176, "B.dxf - 13 triangles")]
+   [Test (187, "B.dxf - 13 triangles")]
    void Test2 () => Test ("B");
 
-   [Test (177, "C.dxf - 17 triangles")]
+   [Test (188, "C.dxf - 17 triangles")]
    void Test3 () => Test ("C");
 
-   [Test (178, "D.dxf - 28 triangles")]
+   [Test (189, "D.dxf - 28 triangles")]
    void Test4 () => Test ("D");
 
-   [Test (179, "E.dxf - 30 triangles")]
+   [Test (190, "E.dxf - 30 triangles")]
    void Test5 () => Test ("E");
 
-   [Test (180, "F.dxf - 36 triangles")]
+   [Test (191, "F.dxf - 36 triangles")]
    void Test6 () => Test ("F");
 
-   [Test (181, "G.dxf - 25 triangles")]
+   [Test (192, "G.dxf - 25 triangles")]
    void Test7 () => Test ("G");
    
-   [Test (182, "H.dxf - 154 triangles")]
+   [Test (193, "H.dxf - 154 triangles")]
    void Test8 () => Test ("H");
    
-   [Test (183, "I.dxf - 273 triangles")]
+   [Test (194, "I.dxf - 273 triangles")]
    void Test9 () => Test ("I");
    
-   [Test (184, "J.dxf - 948 triangles")]
+   [Test (195, "J.dxf - 948 triangles")]
    void Test10 () => Test ("J");
 
    [Test (185, "H with 100 different rand-seeds, bias-angles")]
