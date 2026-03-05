@@ -229,9 +229,7 @@ public partial class Poly {
       }
    }
 
-   /// <summary>
-   /// Returns the area of a Poly
-   /// </summary>
+   /// <summary>Returns the area of a Poly</summary>
    /// Results are meaningful only for closed Poly
    public double GetArea () {
       if (IsCircle) {

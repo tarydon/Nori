@@ -1,11 +1,15 @@
-﻿using System.Runtime.CompilerServices;
+// ────── ╔╗
+// ╔═╦╦═╦╦╬╣ Triangulator2.cs
+// ║║║║╬║╔╣║ <<TODO>>
+// ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
+using System.Runtime.CompilerServices;
 using static System.Runtime.CompilerServices.Unsafe;
 using static System.Runtime.InteropServices.MemoryMarshal;
 namespace Nori;
 
 #region class Triangulator : nested types ----------------------------------------------------------
 public partial class Triangulator {
-   // Enumerations ---------------------------------------------------------------------------------
+   // Enumerations ═════════════════════════════════════════════════════════════════════════════════
    // EVKind lists the types of vertices
    enum EVertex { Regular, Valley, Mountain };
    // EKind lists the types of nodes
@@ -13,7 +17,7 @@ public partial class Triangulator {
    // When a vertex is connected to a tile, which 'chain does it belong to
    enum EChain { HSlice, Left, Right, Valley, Mountain };
 
-   // struct Layer ---------------------------------------------------------------------------------
+   // struct Layer ═════════════════════════════════════════════════════════════════════════════════
    // Represents a Layer in the stitching process
    class Layer {
       // Constructor -----------------------------------------------------------
@@ -47,7 +51,7 @@ public partial class Triangulator {
       List<int> mTiles = [], mAbove = [], mBelow = [];
    }
 
-   // struct Node ----------------------------------------------------------------------------------
+   // struct Node ══════════════════════════════════════════════════════════════════════════════════
    // This represents a Node in the DAG that we build to locate the tiles containing particular
    // points. Nodes are of these types:
    // - Leaf : a bottom level node in the DAG, and Index points to a Tile
@@ -113,7 +117,7 @@ public partial class Triangulator {
          => $"Segment {A}..{B}, Left:{PartOnLeft}";
    }
 
-   // struct Tile ----------------------------------------------------------------------------------
+   // struct Tile ══════════════════════════════════════════════════════════════════════════════════
    // Represents a trapezoid in the Seidel decomposition of the plane. 
    // Each Tile is a trapezoid with top and bottom edges parallel to the X axis (designated
    // by YMin and YMax), and left and right edges that are non-horizontal segments (represented
@@ -142,6 +146,23 @@ public partial class Triangulator {
          if (VBot > 0) text += $" B{VBot}{EBot.ToString ()[0]}";
          return text;
       }
+
+      // Properties ------------------------------------------------------------
+      public int Id;                      // Index of this within the mT array
+      public double YMin, YMax;           // Range of Y values spanned by this tile
+      public double LMin, LMax;           // Min & Max X on the left side
+      public double RMin, RMax;           // Min & Max X on the right side
+      public int Left, Right;             // Left and Right segment indices
+      public InlineArray2<int> Top;       // Neighbors on the top
+      public InlineArray2<int> Bot;       // Neighbors on the bottom
+      public bool Hole;                   // Is this a 'hole' tile?
+      public int Node;                    // Index of node pointing to this tile
+
+      public int VTop, VBot;              // If non-zero, the node touching the top/bottom line
+      public EChain ETop, EBot;           // Where that does node touch the top/bottom line?
+
+      public readonly double XMin => (LMin + RMin) / 2;  // X value in the middle of the YMin line
+      public readonly double XMax => (LMax + RMax) / 2;  // X value in the middle of the YMax line
 
       // Methods ---------------------------------------------------------------
       // Connects the tile t0 (ABOVE) to a tile t1 (BELOW), if they share any common
@@ -241,16 +262,13 @@ public partial class Triangulator {
                   case EChain.Left:
                      if (seg.A == VTop) {    // Case (b)
                         ETop = EChain.Mountain; t1.VTop = VTop; t1.ETop = EChain.Left;
-                        if (!diagonal) {
-                           Check (vtop.Kind == EVertex.Mountain); vtop.Tile[0] = vtop.Tile[1] = 0;    // UNNECESSARY
-                        }
-                     } else {                // Case (c)
-                     }
+                        if (!diagonal) Check (vtop.Kind == EVertex.Mountain);
+                     }                       // Case (c) - nothing to do
                      break;
                   case EChain.Right:
                      if (seg.A == VTop) {    // Case (d)
                         t1.VTop = VTop; t1.ETop = EChain.Mountain;
-                        if (!diagonal) { Check (vtop.Kind == EVertex.Mountain); vtop.Tile[0] = vtop.Tile[1] = 0; }    // UNNECESSARY
+                        if (!diagonal) Check (vtop.Kind == EVertex.Mountain); 
                      } else {                // Case (e)
                         t1.VTop = VTop; VTop = 0; t1.ETop = EChain.Right;
                         if (!diagonal) vtop.ReplaceTile (Id, t1.Id);
@@ -277,14 +295,13 @@ public partial class Triangulator {
                   case EChain.Left:
                      if (seg.B == VBot) {    // Case (g)
                         EBot = EChain.Valley; t1.VBot = VBot; t1.EBot = EChain.Left;
-                        if (!diagonal) { Check (vbot.Kind == EVertex.Valley); vbot.Tile[0] = vbot.Tile[1] = 0; }  // UNNECESSARY
-                     } else {                // Case (h)
-                     }
+                        if (!diagonal) Check (vbot.Kind == EVertex.Valley); 
+                     }                       // Case (h) - nothing to do
                      break;
                   case EChain.Right:
                      if (seg.B == VBot) {    // Case (i)
                         t1.VBot = VBot; t1.EBot = EChain.Valley;
-                        if (!diagonal) { Check (vbot.Kind == EVertex.Valley); vbot.Tile[0] = vbot.Tile[1] = 0; }   // UNNECESSARY
+                        if (!diagonal) Check (vbot.Kind == EVertex.Valley); 
                      } else {                // Case (j)
                         t1.VBot = VBot; VBot = 0; t1.EBot = EChain.Right;
                         if (!diagonal) vbot.ReplaceTile (Id, t1.Id);
@@ -329,46 +346,32 @@ public partial class Triangulator {
          }
          Unexpected ();
       }
-
-      public int Id;                      // Index of this within the mT array
-      public double YMin, YMax;           // Range of Y values spanned by this tile
-      public double LMin, LMax;           // Min & Max X on the left side
-      public double RMin, RMax;           // Min & Max X on the right side
-      public int Left, Right;             // Left and Right segment indices
-      public InlineArray2<int> Top;       // Neighbors on the top
-      public InlineArray2<int> Bot;       // Neighbors on the bottom
-      public bool Hole;                   // Is this a 'hole' tile?
-      public int Node;                    // Index of node pointing to this tile
-
-      public int VTop, VBot;
-      public EChain ETop, EBot;
-
-      public readonly double XMin => (LMin + RMin) / 2;
-      public readonly double XMax => (LMax + RMax) / 2;
    }
 
-   // struct Vertex --------------------------------------------------------------------------------
+   // struct Vertex ════════════════════════════════════════════════════════════════════════════════
    // This represents a Vertex in the tessellation (a node picked from one of the Poly inputs)
    // Each vertex is classified as Regular, Mountain or Valley. A regular vertex has one neighbor
    // above and one neighbor below it (in Y). A mountain vertex has both neighbors below it (lower Y).
    // Because of our constraints, there is only one vertex ever at this given value of Y. 
    struct Vertex {
+      // Constructors ----------------------------------------------------------
       public Vertex (int id, Point2 pt, EVertex kind = EVertex.Regular) 
          => (Id, Pt, Kind) = (id, pt, kind);
 
-      public readonly override string ToString ()
-         => $"Vertex#{Id} {Pt} : {Kind}";
-
-      public void ReplaceTile (int nOld, int nNew) {
-         if (Tile[0] == nOld) Tile[0] = nNew;
-         else if (Tile[1] == nOld) Tile[1] = nNew;
-      }
-
+      // Properties ------------------------------------------------------------
       public readonly int Id;          // Index of the vertex in the mV array
       public readonly Point2 Pt;       // Point location of the vertex
       public readonly EVertex Kind;    // What kind of vertex is this?
       public InlineArray2<int> Tile;   // Two tiles touching this vertex
       public bool Inserted;
+
+      // Methods ---------------------------------------------------------------
+      public void ReplaceTile (int nOld, int nNew) {
+         if (Tile[0] == nOld) Tile[0] = nNew;
+         else if (Tile[1] == nOld) Tile[1] = nNew;
+      }
+
+      public readonly override string ToString () => $"Vertex#{Id} {Pt} : {Kind}";
    }
 }
 #endregion

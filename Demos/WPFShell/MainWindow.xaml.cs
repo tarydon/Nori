@@ -26,7 +26,7 @@ public partial class MainWindow : Window {
 
 class TessScene : Scene2 {
    public TessScene () {
-      var dwg = DXFReader.Load ("N:/TData/Geom/Tess/J.dxf");
+      var dwg = DXFReader.Load ("N:/TData/Geom/Tess/B.dxf");
       var polys = dwg.Ents.OfType<E2Poly> ()
                      .Where (a => a.Layer.Name == "0" && a.Poly.IsClosed)
                      .Select (a => a.Poly)
@@ -51,7 +51,7 @@ class TessScene : Scene2 {
       List<VNode> nodes = [new Dwg2VN (dwg), TraceVN.It, mDebugVN = new TessDebugVN (mT)];
       Root = new GroupVN (nodes);
 
-      for (; ; ) { string s = OnClick (); if (s == "Ready to merge") break; }
+//      for (; ; ) { string s = OnClick (); if (s == "Ready to merge") break; }
    }
    double mDwgArea;
 

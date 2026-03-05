@@ -1,3 +1,7 @@
+// ────── ╔╗
+// ╔═╦╦═╦╦╬╣ Triangulator.cs
+// ║║║║╬║╔╣║ <<TODO>>
+// ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 using static System.Runtime.CompilerServices.Unsafe;
 using static System.Runtime.InteropServices.MemoryMarshal;
 namespace Nori;
@@ -11,9 +15,7 @@ public partial class Triangulator {
    public ReadOnlySpan<Point2> Pts => mInput.AsSpan ();
 
    // Methods ------------------------------------------------------------------
-   /// <summary>
-   /// Adds a contour for tessellation
-   /// </summary>
+   /// <summary>Adds a contour for tessellation</summary>
    public void AddPoly (Poly poly, bool hole) {
       // First, if we need to reverse the order of points, or to discretize a Poly
       // with curves, make a copy
