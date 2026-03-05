@@ -1,5 +1,6 @@
 using System.Windows.Documents;
 using System.Windows.Markup.Localizer;
+using System.Windows.Media;
 using static System.Runtime.CompilerServices.Unsafe;
 using static System.Runtime.InteropServices.MemoryMarshal;
 namespace Nori;
@@ -103,67 +104,55 @@ partial class Triangulator {
       t.Id = 0; 
       ref Vertex vBase = ref GetReference (mV);
       mStack.Push ((t.VBot, Add (ref vBase, t.VBot).Pt, true));
+      (int, Point2, bool) vPrev = (0, Point2.Nil, false);
       for (; ; ) {
          if (t.VTop != 0) {
             Point2 pt = Add (ref vBase, t.VTop).Pt;
             bool left = t.ETop == EChain.Left;
             if (mStack.Count < 2) mStack.Push ((t.VTop, pt, left));
             else {
-               if (mStack.Peek ().Left == left) {
+               var v0 = mStack.Pop ();
+               if (v0.Left == left) {
                   // The newly seen vertex is on the same chain as the set of reflex
                   // vertices on the stack already
-                  var v0 = mStack.Pop ();
                   while (mStack.Count > 0) {
-                     var v1 = mStack.Pop ();
+                     var v1 = mStack.Peek ();
                      if (v1.Pt.LeftOf (pt, v0.Pt) == left) {
                         // We can add a triangle
-                        if (v0.Left) mTriangles.AddM (t.VTop, v0.Id, v1.Id);
-                        else mTriangles.AddM (t.VTop, v1.Id, v0.Id);
-                        v0 = v1;
+                        if (v0.Left) AddTri (t.VTop, v0.Id, v1.Id);
+                        else AddTri (t.VTop, v1.Id, v0.Id);
+                        if (mStack.Count == 1) break;
+                        else v0 = mStack.Pop ();
                      } else {
-                        mStack.Push (v1);
                         break;
                      }
                   }
-                  mStack.Push ((t.VTop, pt, left));
                } else {
-                  // ...
+                  // Newly seen vertex is on the opposite side
+                  while (mStack.Count > 0) {
+                     var v1 = mStack.Pop ();
+                     if (v0.Left) AddTri (t.VTop, v0.Id, v1.Id);
+                     else AddTri (t.VTop, v1.Id, v0.Id);
+                  }
+                  mStack.Push (vPrev);
                }
+               vPrev = (t.VTop, pt, left); mStack.Push (vPrev);
             }
             if (t.ETop == EChain.Mountain) break;
          }
          Check (t.Top[0] != 0 && t.Top[1] == 0);
          t = ref Add (ref tBase, t.Top[0]);
       }
-      return "GOT";
+      if (mStack.Count > 2) throw new NotImplementedException (); 
+      return "---";
+
+      void AddTri (int a, int b, int c) {
+         Lib.Trace ($"Tri: {a} {b} {c}");
+         mTriangles.Add (a - 1); mTriangles.Add (b - 1); mTriangles.Add (c - 1);
+      }
    }
    Stack<(int Id, Point2 Pt, bool Left)> mStack = [];
    List<int> mTriangles = [];
-
-   //IEnumerable<string> ExtractMonotones () {
-   //   foreach (var n in mValleyTiles) {
-   //      ref Tile tBase = ref GetReference (mT);
-   //      ref Vertex vBase = ref GetReference (mV);
-   //      List<int> left = [], right = [];
-   //      ref Tile t = ref Add (ref tBase, n); if (t.Id == 0) continue;
-   //      left.Add (t.VBot);
-   //      int nOldID = t.Id; t.Id = 0; 
-   //      for (; ; ) { 
-   //         if (t.VTop != 0) {
-   //            switch (t.ETop) {
-   //               case EChain.Left or EChain.Mountain: left.Add (t.VTop); break;
-   //               case EChain.Right: right.Add (t.VTop); break;
-   //               default: throw new NotImplementedException (); 
-   //            }
-   //            if (t.ETop == EChain.Mountain) break;
-   //         }
-   //         if (t.Top[0] == 0 || t.Top[1] != 0) Check (false);
-   //         t = ref Add (ref tBase, t.Top[0]);
-   //         nOldID = t.Id; t.Id = 0; 
-   //      }
-   //      yield return $"Left:{left.ToCSV ()}, Right:{right.ToCSV ()}";
-   //   }
-   //}
 
    // Implementation -----------------------------------------------------------
    public Triangulator () => (mSin, mCos) = Math.SinCos (mBiasAngle = 0);
