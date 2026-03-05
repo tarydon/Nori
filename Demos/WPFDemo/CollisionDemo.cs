@@ -98,10 +98,10 @@ class CollisionScene : Scene3 {
          str += "\n   Right Click  =  Increase Tree Level\n   Shift+Right Click  =  Decrease Tree Level";
       }
       var lines = str.Split ('\n');
-      int x = 20, y = lines.Length * 22;
+      int x = 20, y = lines.Length * mFont.LineHeight;
       foreach (var line in lines) {
          Lux.TextPx (line, new Vec2S (x, y));
-         y -= 22;
+         y -= mFont.LineHeight;
       }
    }
 
