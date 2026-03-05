@@ -11,7 +11,19 @@ namespace Nori;
 /// (See Tessellators and Quadrics in "The Red Book" for more details on using tessellation sub-API)
 /// <param name="pts">Set of all contour points</param>
 /// <param name="splits">Contour indices in the points array. E.g: [0, 10, 14] has two contours [0, 10) and [10, 14)</param>
-public class Tess2D (List<Point2> pts, IReadOnlyList<int> splits) {
+public class Tess2D {
+   public Tess2D (List<Point2> pts, IReadOnlyList<int> splits) {
+      mPts = pts; mSplit = splits;
+      sBegin = TessBegin; sVertex = TessVertex;
+      sCombine = TessCombine; sError = TessError;
+      sEdgeFlag = TessEdgeFlag;
+   }
+   GLUtessBeginProc sBegin;
+   GLUtessVertexDataProc sVertex;
+   GLUtessCombineProc sCombine;
+   GLUtessErrorProc sError;
+   GLUtessEdgeFlagProc sEdgeFlag;
+
    /// <summary>Error results after tessellation (if any)</summary>
    public string Error => mError;
    string mError = string.Empty;
@@ -44,9 +56,9 @@ public class Tess2D (List<Point2> pts, IReadOnlyList<int> splits) {
       // Initialize tessellator the first time we are called
       var tess = sTess == HTesselator.Zero ? (sTess = NewTess ()) : sTess;
       // Setup tessellation callbacks
-      tess.SetCallback (TessBegin).SetCallback (TessVertex)
-         .SetCallback (TessCombine).SetCallback (TessError)
-         .SetCallback (NeedEdgeFlags ? TessEdgeFlag : null!)
+      tess.SetCallback (sBegin).SetCallback (sVertex)
+         .SetCallback (sCombine).SetCallback (sError)
+         .SetCallback (NeedEdgeFlags ? sEdgeFlag : null!)
          // Set up the tessellation properties
          .SetWinding (WindingRule);
 
@@ -129,9 +141,9 @@ public class Tess2D (List<Point2> pts, IReadOnlyList<int> splits) {
 
    // Private data -------------------------------------------------------------
    // Polygon to tessellate.
-   readonly List<Point2> mPts = pts;
+   readonly List<Point2> mPts;
    // Polygon outer/inner contour boundaries.
-   readonly IReadOnlyList<int> mSplit = splits;
+   readonly IReadOnlyList<int> mSplit;
 
    // Values shared between TessBegin and TessVertex callbacks
    int mnVerts, mnTriangles;

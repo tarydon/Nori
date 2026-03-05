@@ -8,11 +8,13 @@ namespace Nori;
 
 public partial class Triangulator {
    // Properties ---------------------------------------------------------------
-   public double BiasAngle => mBiasAngle;
-
-   public ReadOnlySpan<int> Tris => mTriangles.AsSpan ();
-
+   /// <summary>List of all the points gathered from all the input Poly</summary>
    public ReadOnlySpan<Point2> Pts => mInput.AsSpan ();
+   List<Point2> mInput = [];
+
+   /// <summary>Indices pointing into the Pts array - taken 3 at a time, these are the output triangles</summary>
+   public ReadOnlySpan<int> Tris => mTris.AsSpan ();
+   List<int> mTris = [];
 
    // Methods ------------------------------------------------------------------
    /// <summary>Adds a contour for tessellation</summary>
@@ -48,12 +50,11 @@ public partial class Triangulator {
          mS[mSN] = new Segment (mSN, ref vBase, i + vStart, j + vStart);
       }
    }
-   List<Point2> mInput = [];
 
    /// <summary>Reset should be called to initialize the Triangulator before adding contours</summary>
    public void Reset (int seed = 42, double rotAngle = 0.1624) {
-      mBound = new (); mMerged = false;
-      mInput.Clear (); mTriangles.Clear (); 
+      mBound = new (); 
+      mInput.Clear (); mTris.Clear (); 
       mDiagTiles.Clear (); mValleyTiles.Clear (); 
       mSN = mNN = 0; mTN = mVN = 1;
       if (mBiasAngle != rotAngle) (mSin, mCos) = Math.SinCos (mBiasAngle = rotAngle);
@@ -62,49 +63,55 @@ public partial class Triangulator {
    Bound2 mBound;
 
    /// <summary>Process is called to actually perform the tessellation</summary>
-   public IEnumerable<string> Process () {
+   public void Process () {
       ShuffleSegs ();
       InsertBorder ();
-      yield return "Inserted border";
 
       for (int i = 0; i < mSN; i++) {
-         {
-            ref Segment s0 = ref GetReference (mS);
-            ref int sh0 = ref GetReference (mShuffle);
-            ref Segment seg = ref Add (ref s0, Add (ref sh0, i));
-            yield return $"About to insert {seg}";
-         }
-         {
-            ref Segment s0 = ref GetReference (mS);
-            ref int sh0 = ref GetReference (mShuffle);
-            ref Segment seg = ref Add (ref s0, Add (ref sh0, i));
-            string s = InsertSeg (ref seg);
-            yield return $"Inserted seg {seg} :: {s}";
-         }
-         {
-            ref Segment s0 = ref GetReference (mS);
-            ref int sh0 = ref GetReference (mShuffle);
-            ref Segment seg = ref Add (ref s0, Add (ref sh0, i));
-            SliceTiles (ref seg);
-            yield return $"Sliced tiles";
-         }
+         ref Segment s0 = ref GetReference (mS);
+         ref int sh0 = ref GetReference (mShuffle);
+         ref Segment seg = ref Add (ref s0, Add (ref sh0, i));
+         InsertSeg (ref seg);
+         SliceTiles (ref seg);
       }
-      yield return "Ready to merge";
       MergeTiles ();
-      yield return $"Merged. Valleys:{mValleyTiles.ToCSV ()} Diags:{mDiagTiles.ToCSV ()}";
       AddDiagonals ();
-      yield return $"Added. Valleys:{mValleyTiles.ToCSV ()}";
-      foreach (var n in mValleyTiles) {
-         yield return ExtractTriangles (n);
+      foreach (var n in mValleyTiles) ExtractTriangles (n);
+   }
+
+   // Implementation -----------------------------------------------------------
+   // This adds diagonals to partition the tiles into a set of monotone polygons
+   // that can then be easily triangulated. We walk through the non-hole tiles, and 
+   // add a diagonal where needed. A diagonal is needed when the tile has either a 
+   // top vertex, or a bottom vertex (or both) of type HSlice. Suppose there is a HSLice vertex
+   // at the top. It is then a 'reflex' vertex that needs to be connected to a corner (or another
+   // reflex vertex) to split the stack into two monotones. 
+   void AddDiagonals () {
+      Grow (ref mS, mSN, mDiagTiles.Count);
+      ref Segment sBase = ref GetReference (mS);
+      ref Vertex vBase = ref GetReference (mV);
+      foreach (var n in mDiagTiles) {
+         ref Tile tBase = ref GetReference (mT);
+         ref Tile t = ref Add (ref tBase, n); if (t.Id == 0) continue;
+         mS[mSN] = new (mSN, ref vBase, t.VTop, t.VBot, true);
+         ref Segment seg = ref Add (ref sBase, mSN); mSN++;
+         mChain.Clear (); mChain.Add (n);
+         SliceTiles (ref seg);
+         ref Tile t1 = ref Add (ref tBase, mTN - 1);
+         if (t.VBot != 0 && t.EBot == EChain.Valley) mValleyTiles.Add (t.Id);
+         if (t1.VBot != 0 && t1.EBot == EChain.Valley) mValleyTiles.Add (t1.Id);
       }
    }
-   bool mMerged;
 
-   string ExtractTriangles (int n) {
-      mStack.Clear (); 
+   // Given a monotone polygon, extracts the triangles from it using DeBerg's algorithm.
+   // The indices of the triangles are added into the mTriangles output array. Note that the indices
+   // here are offset by 1 from the mV[] array (since mV[0] is not used). These indices in mTriangles
+   // point into the points in the mInput array (which are the original input points, unrotated)
+   void ExtractTriangles (int n) {
+      mStack.Clear ();
       ref Tile tBase = ref GetReference (mT);
-      ref Tile t = ref Add (ref tBase, n); if (t.Id == 0) return "";
-      t.Id = 0; 
+      ref Tile t = ref Add (ref tBase, n); if (t.Id == 0) return;
+      t.Id = 0;
       ref Vertex vBase = ref GetReference (mV);
       mStack.Push ((t.VBot, Add (ref vBase, t.VBot).Pt, true));
       (int, Point2, bool) vPrev = (0, Point2.Nil, false);
@@ -121,11 +128,11 @@ public partial class Triangulator {
                   // The newly seen vertex is on the same chain as the set of reflex
                   // vertices on the stack already
                   while (mStack.Count > 0) {
-                     var v1 = mStack.Peek ();
-                     if (v1.Pt.LeftOf (pt, v0.Pt) == left) {
+                     var (Id, Pt, _) = mStack.Peek ();
+                     if (Pt.LeftOf (pt, v0.Pt) == left) {
                         // We can add a triangle
-                        if (v0.Left) AddTri (t.VTop, v0.Id, v1.Id);
-                        else AddTri (t.VTop, v1.Id, v0.Id);
+                        if (v0.Left) AddTri (t.VTop, v0.Id, Id);
+                        else AddTri (t.VTop, Id, v0.Id);
                         if (mStack.Count == 1) break;
                         else v0 = mStack.Pop ();
                      } else {
@@ -150,42 +157,14 @@ public partial class Triangulator {
          Check (t.Top[0] != 0 && t.Top[1] == 0);
          t = ref Add (ref tBase, t.Top[0]);
       }
-      if (mStack.Count > 2) throw new NotImplementedException (); 
-      return "---";
+      if (mStack.Count > 2) throw new NotImplementedException ();
 
+      // Helper ............................................
       void AddTri (int a, int b, int c) {
-         Lib.Trace ($"Tri: {a} {b} {c}");
-         mTriangles.Add (a - 1); mTriangles.Add (b - 1); mTriangles.Add (c - 1);
+         mTris.Add (a - 1); mTris.Add (b - 1); mTris.Add (c - 1);
       }
    }
    Stack<(int Id, Point2 Pt, bool Left)> mStack = [];
-   List<int> mTriangles = [];
-
-   // Implementation -----------------------------------------------------------
-   public Triangulator () => (mSin, mCos) = Math.SinCos (mBiasAngle = 0);
-
-   // This adds diagonals to partition the tiles into a set of monotone polygons
-   // that can then be easily triangulated. We walk through the non-hole tiles, and 
-   // add a diagonal where needed. A diagonal is needed when the tile has either a 
-   // top vertex, or a bottom vertex (or both) of type HSlice. Suppose there is a HSLice vertex
-   // at the top. It is then a 'reflex' vertex that needs to be connected to a corner (or another
-   // reflex vertex) to split the stack into two monotones. 
-   void AddDiagonals () {
-      Grow (ref mS, mSN, mDiagTiles.Count);
-      ref Segment sBase = ref GetReference (mS);
-      ref Vertex vBase = ref GetReference (mV);
-      foreach (var n in mDiagTiles) {
-         ref Tile tBase = ref GetReference (mT);
-         ref Tile t = ref Add (ref tBase, n); if (t.Id == 0) continue;
-         mS[mSN] = new (mSN, ref vBase, t.VTop, t.VBot, true);
-         ref Segment seg = ref Add (ref sBase, mSN); mSN++;
-         mChain.Clear (); mChain.Add (n);
-         SliceTiles (ref seg);
-         ref Tile t1 = ref Add (ref tBase, mTN - 1);
-         if (t.VBot != 0 && t.EBot == EChain.Valley) mValleyTiles.Add (t.Id);
-         if (t1.VBot != 0 && t1.EBot == EChain.Valley) mValleyTiles.Add (t1.Id);
-      }
-   }
 
    // Returns an 'adjacent' tile touching a vertex, through which the vOther
    // vertex can be reached
@@ -205,10 +184,10 @@ public partial class Triangulator {
          ref Tile tBase = ref GetReference (mT);
          if (v.Tile[1] == 0) return v.Tile[0];
          ref Tile tLeft = ref Add (ref tBase, v.Tile[0]);
-         if (Verify) {
+         #if VERIFY
             ref Tile tRight = ref Add (ref tBase, v.Tile[1]);
             Check (tLeft.Right == tRight.Left);
-         }
+         #endif
          ref Segment seg = ref Add (ref GetReference (mS), tLeft.Right);
          return seg.IsLeft (vOther.Pt) ? v.Tile[0] : v.Tile[1];
       }
@@ -376,7 +355,6 @@ public partial class Triangulator {
             if (t.VBot != 0 && t.EBot == EChain.HSlice || t.VTop != 0 && t.ETop == EChain.HSlice) mDiagTiles.Add (t.Id);
          }
       }
-      mMerged = true;
    }
 
    // Rotate a point through the bias angle
@@ -420,10 +398,11 @@ public partial class Triangulator {
    List<Layer> mLayers = [];
 
    // Helpers ------------------------------------------------------------------
-   static void Check (bool condition) {
-      if (!condition) 
-         throw new InvalidOperationException ("Triangulator");
-   }
+   static partial void Check (bool condition);
+   //static partial void Check (bool condition) {
+   //   if (!condition) 
+   //      throw new InvalidOperationException ("Triangulator");
+   //}
 
    // Helper to grow an array (more optimized than Array.Resize, since it
    // copies only the 'used' elements, not all the elements currently in the array)
@@ -452,5 +431,4 @@ public partial class Triangulator {
    double mBiasAngle, mSin, mCos;
 
    const double FINE = 1e-9;
-   const bool Verify = true;
 }

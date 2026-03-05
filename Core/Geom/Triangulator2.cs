@@ -238,12 +238,12 @@ public partial class Triangulator {
             // Splitting at a segment. The new tile t1 is going to be on the right of the segment
             ref Segment seg = ref Add (ref sBase, index);
             bool diagonal = seg.Diagonal;
-            if (Verify) {
+            #if VERIFY
                double yM = (YMin + YMax) / 2;
                ref Segment left = ref Add (ref sBase, Left), right = ref Add (ref sBase, Right);
                double xL = left.GetX (yM), x = seg.GetX (yM), xR = right.GetX (yM);
                Check (xL < x && x < xR);
-            }
+            #endif
             t1.Left = Right = index;
             (RMin, RMax) = (t1.LMin, t1.LMax) = seg.GetX (YMin, YMax);
             if (!diagonal) { Hole = !seg.PartOnLeft; t1.Hole = seg.PartOnLeft; }

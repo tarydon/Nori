@@ -433,7 +433,6 @@ class GeoTests {
          if (!center.IsNil) dwg.Add (new E2Poly (layer2, Poly.Circle (center, r)));
       }
    }
-
 }
 
 [Fixture (37, "Triangulator tests", "Geom")]
@@ -478,7 +477,7 @@ class TessTests {
          mT.Reset (i, 0.08642 * i);
          for (int j = 0; j < input.Count; j++)
             mT.AddPoly (input[j], j != outer);
-         var output = mT.Process ().ToList ();
+         mT.Process ();
 
          double triArea = 0; 
          var verts = mT.Pts; var tris = mT.Tris;
@@ -502,7 +501,7 @@ class TessTests {
          mT.AddPoly (input[i], i != outer);
          dwgArea += input[i].GetArea () * (i == outer ? 1 : -1);
       }
-      var output = mT.Process ().ToList ();
+      mT.Process (); 
 
       List<Point2> pts = [];
       var sb = new StringBuilder ();
