@@ -200,34 +200,10 @@ public readonly struct Vector3 : IEQuable<Vector3> {
    }
 
    /// <summary>Rotates a vector about the given arbitrary axis, and returns a copy</summary>
-   /// <param name="axis">The axis about which to rotate - already normalized.</param>
+   /// <param name="axis">The axis about which to rotate.</param>
    /// <param name="angle">The angle to rotate, in radians</param>
    /// <returns>The rotated copy of the input vector</returns>
-   /// https://en.wikipedia.org/wiki/Rodrigues%27_rotation_formula
-   public Vector3 Rotated (Vector3 axis, double angle) {
-      var (sin, cos) = SinCos (angle);
-      double oneMinusCos = 1 - cos;
-
-      double nx = axis.X, ny = axis.Y, nz = axis.Z;
-
-      // Rodrigues rotation formula
-      var m = new Matrix3 (
-         cos + nx * nx * oneMinusCos,
-         ny * nx * oneMinusCos + nz * sin,
-         nz * nx * oneMinusCos - ny * sin,
-
-         nx * ny * oneMinusCos - nz * sin,
-         cos + ny * ny * oneMinusCos,
-         nz * ny * oneMinusCos + nx * sin,
-
-         nx * nz * oneMinusCos + ny * sin,
-         ny * nz * oneMinusCos - nx * sin,
-         cos + nz * nz * oneMinusCos,
-         0, 0, 0
-      );
-
-      return this * m;
-   }
+   public Vector3 Rotated (Vector3 axis, double angle) => this * Matrix3.Rotation (axis, angle);
 
    /// <summary>Returns the Vector3 with components rounded off to 6 decimals</summary>
    public Vector3 R6 () => new (X.R6 (), Y.R6 (), Z.R6 ());

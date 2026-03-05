@@ -60,5 +60,5 @@ E3Plane
   CS
 Polyline3
   Pts
-E3CompositePath
+E3Contour
   Curves

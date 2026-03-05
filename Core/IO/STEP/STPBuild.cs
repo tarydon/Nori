@@ -267,6 +267,6 @@ partial class STEPReader {
             return new NurbsCurve3 (0, ctrl.MoveToImmutable (), knot.MoveToImmutable (), weight.MoveToImmutable ());
          }
       }
-      mModel.Ents.Add (new E3CompositePath (cc.Id, [..mEdges]));
+      mModel.Ents.Add (new E3Contour (cc.Id, [..mEdges]));
    }
 }

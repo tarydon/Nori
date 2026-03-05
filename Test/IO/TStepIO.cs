@@ -37,7 +37,7 @@ class StepTests {
       var model = sr.Load ();
 
       var sb = new StringBuilder (); List<Point3> pts = [];
-      foreach (var  cp in model.Ents.OfType<E3CompositePath> ()) {
+      foreach (var cp in model.Ents.OfType<E3Contour> ()) {
          sb.AppendLine ("-----------------");
          foreach (var curve in cp.Curves) {
             sb.AppendLine (curve.GetType ().Name);

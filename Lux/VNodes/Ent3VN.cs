@@ -50,7 +50,7 @@ public class Curve3VN (Curve3 edge) : VNode (edge) {
    List<Vec3F> mPts = [];
 }
 
-public class E3CompositePathVN (E3CompositePath cp) : VNode (cp) {
+public class E3ContourVN (E3Contour cp) : VNode (cp) {
    public override VNode? GetChild (int n) {
       if (n < mCurves.Count) return mCurves[n];
       else return null;
