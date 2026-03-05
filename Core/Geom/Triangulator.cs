@@ -246,7 +246,7 @@ public partial class Triangulator {
    // It inserts the two endpoints of the seg (dividing the corresponding trapezoids horizontally
    // each time), and then slices all the trapezoids between the start and end vertically by the
    // segment line
-   string InsertEndpoints (ref Segment seg) {
+   void InsertEndpoints (ref Segment seg) {
       // To insert top and bottom points, we could need 2 new tiles (and 4 new nodes)
       Grow (ref mT, mTN, 2); Grow (ref mN, mNN, 4);
       ref Vertex v0 = ref mV[seg.A], v1 = ref mV[seg.B];
@@ -255,7 +255,6 @@ public partial class Triangulator {
       InsertVertex (ref v0); InsertVertex (ref v1);
       int t0 = GetAdjacentTile (ref v0, ref v1), t1 = GetAdjacentTile (ref v1, ref v0);
       GatherTiles (t0, t1, ref seg);
-      return $"Tiles: {mChain.ToCSV ()}";
    }
 
    // If the given Vertex has not yet been inserted into the DAG, this inserts

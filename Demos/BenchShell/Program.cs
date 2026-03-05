@@ -47,19 +47,23 @@ public class Tester {
 
    [Benchmark (Baseline = true)]
    public void GLUTess () {
-      for (int i = 0; i < mPts.Count; i++) {
-         int tris = Tess2D.Process (mPts[i], mSplits[i]).Count / 3;
+      for (int k = 0; k < 100; k++) {
+         for (int i = 0; i < mPts.Count; i++) {
+            int tris = Tess2D.Process (mPts[i], mSplits[i]).Count / 3;
+         }
       }
    }
 
    [Benchmark]
    public void Tessellate () {
-      for (int i = 0; i < mPolys.Count; i++) {
-         var polys = mPolys[i];
-         int outer = mOuter[i];
-         mT.Reset ();
-         for (int j = 0; j < polys.Count; j++) mT.AddPoly (polys[j], j != outer);
-         mT.Process ();
+      for (int k = 0; k < 100; k++) {
+         for (int i = 0; i < mPolys.Count; i++) {
+            var polys = mPolys[i];
+            int outer = mOuter[i];
+            mT.Reset ();
+            for (int j = 0; j < polys.Count; j++) mT.AddPoly (polys[j], j != outer);
+            mT.Process ();
+         }
       }
    }
    Triangulator mT = new ();
@@ -68,9 +72,8 @@ public class Tester {
 static class Program {
    public static void Main () {
       BenchmarkRunner.Run<Tester> ();
-      //var t = new Tester ();
-      //t.GLUTess ();
-      //t.Tessellate ();
-      //t.TessellateAlt ();
+      // var t = new Tester ();
+      ////t.GLUTess ();
+      // t.Tessellate ();
    }
 }
