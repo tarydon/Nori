@@ -35,6 +35,7 @@ namespace Nori;
 ///   E3Sheet             - Thick planar surface (equivalent of Flux E3Plane)
 ///   E3Flex              - Represents a deforming area of the sheet (bend line)
 /// E3Curve               - Curves in space
+/// E3Contour             - Contour in space - not bound to any surface
 /// E3Surface             - Basis for BRep model (parametric surface with trimming curves, connectivity)
 ///   E3CSSurface         - Surfaces defined in a canonical world space and lofted up using a CS
 ///     E3Cylinder        - Cylindrical surface (canonical definition with base center at origin, axis along +Z)
@@ -143,12 +144,35 @@ public sealed class E3Curve : Ent3 {
    Bound3 ComputeBound () {
       List<Point3> pts = [];
       Curve.Discretize (pts, Lib.CoarseTess, Lib.CoarseTessAngle);
-      pts.Add (Curve.End);
       return new (pts);
    }
 
    // Transform the E3Curve by the given transform
    protected override Ent3 Xformed (Matrix3 xfm) => new E3Curve (Curve * xfm);
+}
+#endregion
+
+/// <summary>An entity that represents a free-space composite curve path</summary>
+#region class E3Contour : Ent3 ---------------------------------------------------------------------
+public sealed class E3Contour : Ent3 {
+   public E3Contour (int id, ImmutableArray<Curve3> connectedCurves) : base (id) => Curves = connectedCurves;
+
+   public readonly ImmutableArray<Curve3> Curves;
+
+   public override Bound3 Bound => Bound3.Cached (ref mBound, ComputeBound);
+   Bound3 mBound = new ();
+   Bound3 ComputeBound () {
+      Bound3 b = new Bound3 ();
+      List<Point3> pts = [];
+      foreach (var curve in Curves) {
+         curve.Discretize (pts, Lib.CoarseTess, Lib.CoarseTessAngle);
+         b += new Bound3 (pts);
+         pts.Clear ();
+      }
+      return b;
+   }
+
+   protected override Ent3 Xformed (Matrix3 xfm) => new E3Contour (Id, [.. Curves.Select (a => a * xfm)]);
 }
 #endregion
 

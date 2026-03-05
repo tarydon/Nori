@@ -199,6 +199,12 @@ public readonly struct Vector3 : IEQuable<Vector3> {
       };
    }
 
+   /// <summary>Rotates a vector about the given arbitrary axis, and returns a copy</summary>
+   /// <param name="axis">The axis about which to rotate.</param>
+   /// <param name="angle">The angle to rotate, in radians</param>
+   /// <returns>The rotated copy of the input vector</returns>
+   public Vector3 Rotated (Vector3 axis, double angle) => this * Matrix3.Rotation (axis, angle);
+
    /// <summary>Returns the Vector3 with components rounded off to 6 decimals</summary>
    public Vector3 R6 () => new (X.R6 (), Y.R6 (), Z.R6 ());
 
@@ -254,7 +260,8 @@ public readonly struct Vector3f {
 
    /// <summary>Is a Vector3f zero to within Epsilon</summary>
    public bool IsZero => X.IsZero () && Y.IsZero () && Z.IsZero ();
-   public double Length => Math.Sqrt (X * X + Y * Y + Z * Z);
+   public double Length => Sqrt (LengthSq);
+   public double LengthSq => X * X + Y * Y + Z * Z;
 
    // Methods ------------------------------------------------------------------
    /// <summary>Returns the dot product of this vectorf with another</summary>

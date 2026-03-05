@@ -49,3 +49,11 @@ public class Curve3VN (Curve3 edge) : VNode (edge) {
    readonly Curve3 mEdge = edge;
    List<Vec3F> mPts = [];
 }
+
+public class E3ContourVN (E3Contour cp) : VNode (cp) {
+   public override VNode? GetChild (int n) {
+      if (n < mCurves.Count) return mCurves[n];
+      else return null;
+   }
+   readonly List<Curve3VN> mCurves = [.. cp.Curves.Select (a => new Curve3VN (a))];
+}
