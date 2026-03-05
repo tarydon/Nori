@@ -3,8 +3,6 @@
 // ║║║║╬║╔╣║ <<TODO>>
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 using System.Runtime.CompilerServices;
-using static System.Runtime.CompilerServices.Unsafe;
-using static System.Runtime.InteropServices.MemoryMarshal;
 namespace Nori;
 
 #region class Triangulator : nested types ----------------------------------------------------------
@@ -32,17 +30,17 @@ public partial class Triangulator {
          L1.mAbove.Add (mTiles[1]); mBelow.Add (L1.mTiles[1]);
       }
 
-      public void Connect (ref Tile tBase) {
-         ref Tile left = ref Add (ref tBase, mTiles[0]), right = ref Add (ref tBase, mTiles[1]);
+      public void Connect (Tile[] mT) {
+         ref Tile left = ref mT[mTiles[0]], right = ref mT[mTiles[1]];
          foreach (var n in mAbove) {
-            ref Tile above = ref Add (ref tBase, n);
+            ref Tile above = ref mT[n];
             above.DisconnectFrom (ref left);
-            above.ConnectTo (ref left); above.ConnectTo (ref right);
+            above.ConnectTo (mT, ref left); above.ConnectTo (mT, ref right);
          }
          foreach (var n in mBelow) {
-            ref Tile below = ref Add (ref tBase, n);
+            ref Tile below = ref mT[n];
             left.DisconnectFrom (ref below);
-            left.ConnectTo (ref below); right.ConnectTo (ref below);
+            left.ConnectTo (mT, ref below); right.ConnectTo (mT, ref below);
          }
       }
 
@@ -84,9 +82,9 @@ public partial class Triangulator {
    // We also compute Slope, XPrime etc to make it faster to evaluate the X value at a given Y
    readonly struct Segment {
       // Constructors ----------------------------------------------------------
-      public Segment (int id, ref Vertex vBase, int a, int b, bool diagonal = false) {
+      public Segment (int id, Vertex[] vN, int a, int b, bool diagonal = false) {
          Id = id; Diagonal = diagonal;
-         Point2 pa = Add (ref vBase, a).Pt, pb = Add (ref vBase, b).Pt;
+         Point2 pa = vN[a].Pt, pb = vN[b].Pt;
          if (pa.EQ (pb, FINE)) throw new InvalidOperationException ();
          if (pa.Y < pb.Y) (A, B, PA, PB, PartOnLeft) = (b, a, pb, pa, true);
          else (A, B, PA, PB, PartOnLeft) = (a, b, pa, pb, false);
@@ -126,9 +124,9 @@ public partial class Triangulator {
    struct Tile {
       // Constructors ----------------------------------------------------------
       // Basic constructor used to make a tile
-      public Tile (int id, ref Segment s0, double yMin, double yMax, int left, int right, int node) {
+      public Tile (int id, Segment[] mS, double yMin, double yMax, int left, int right, int node) {
          (Id, YMin, YMax, Left, Right, Node) = (id, yMin, yMax, left, right, node);
-         ref Segment L = ref Add (ref s0, left), R = ref Add (ref s0, right);
+         ref Segment L = ref mS[left], R = ref mS[right];
          Hole = L.PartOnLeft; Check (L.PartOnLeft != R.PartOnLeft);
          (LMin, LMax) = L.GetX (yMin, yMax);
          (RMin, RMax) = R.GetX (yMin, yMax);
@@ -167,7 +165,7 @@ public partial class Triangulator {
       // Methods ---------------------------------------------------------------
       // Connects the tile t0 (ABOVE) to a tile t1 (BELOW), if they share any common
       // overlap area
-      public void ConnectTo (ref Tile t1) {
+      public void ConnectTo (Tile[] mT, ref Tile t1) {
          Check (YMin.EQ (t1.YMax));
          if (Bot[0] == t1.Id || Bot[1] == t1.Id) return; // Already connected
 
@@ -178,8 +176,8 @@ public partial class Triangulator {
          if (right < left + FINE) return;
 
          // We found these two tiles are overlapping, connect them up
-         UpdateBottom (0, ref t1);
-         t1.UpdateTop (0, ref this);
+         UpdateBottom (mT, 0, ref t1);
+         t1.UpdateTop (mT, 0, ref this);
       }
 
       // This disconnects this tile (the ABOVE) tile from t1 (the BELOW tile). 
@@ -197,36 +195,32 @@ public partial class Triangulator {
          // Initially, there is a leaf node pointing to this tile. Update it to become
          // an interior node (with the given kind and index). Depending on the kind, the index
          // points to either a Vertex or a Segment
-         ref Node nBase = ref GetReference (t.mN);
-         ref Node leaf = ref Add (ref nBase, Node); Check (leaf.Kind == ENode.Leaf);
+         ref Node leaf = ref t.mN[Node]; Check (leaf.Kind == ENode.Leaf);
          leaf.Kind = kind; leaf.Index = index;
 
          // Next, create two child nodes to point to the two tiles (this tile updated, and
          // another new one we're going to create here)
-         Add (ref nBase, t.mNN) = new (t.mNN, ENode.Leaf, Id);
-         Add (ref nBase, t.mNN + 1) = new (t.mNN + 1, ENode.Leaf, t.mTN);
+         t.mN[t.mNN] = new (t.mNN, ENode.Leaf, Id);
+         t.mN[t.mNN + 1] = new (t.mNN + 1, ENode.Leaf, t.mTN);
          Node = leaf.First = t.mNN; leaf.Second = t.mNN + 1;
 
          // Now ready to create the new tile
-         ref Vertex vBase = ref GetReference (t.mV);
-         ref Segment sBase = ref GetReference (t.mS);
-         ref Tile tBase = ref GetReference (t.mT);
-         Add (ref tBase, t.mTN) = new Tile (t.mTN, ref this, leaf.Second);
-         ref Tile t1 = ref Add (ref tBase, t.mTN);
+         t.mT[t.mTN] = new Tile (t.mTN, ref this, leaf.Second);
+         ref Tile t1 = ref t.mT[t.mTN];
 
          if (kind == ENode.Y) {
             // Splitting at a point. The new tile t1 is going to be above
-            double y = Add (ref vBase, index).Pt.Y;
+            double y = t.mV[index].Pt.Y;
             Check (YMin < y && y < YMax);
             t1.YMin = YMax = y;
-            ref Segment L = ref Add (ref sBase, Left), R = ref Add (ref sBase, Right);
+            ref Segment L = ref t.mS[Left], R = ref t.mS[Right];
             t1.LMin = LMax = L.GetX (y); t1.RMin = RMax = R.GetX (y);
 
             if ((t1.VTop = VTop) > 0) {
                // This tile already has a 'top' vertex connected to it (and that top vertex
                // could be holding onto this tile as one of its two neighbor tiles). Update both links
                t1.ETop = ETop;
-               ref Vertex vTop = ref Add (ref vBase, VTop);
+               ref Vertex vTop = ref t.mV[VTop];
                if (vTop.Kind != EVertex.Valley) {
                   if (vTop.Tile[0] == Id) vTop.Tile[0] = t1.Id;
                   else if (vTop.Tile[1] == Id) vTop.Tile[1] = t1.Id;
@@ -236,7 +230,7 @@ public partial class Triangulator {
             t1.EBot = ETop = EChain.HSlice;
          } else {
             // Splitting at a segment. The new tile t1 is going to be on the right of the segment
-            ref Segment seg = ref Add (ref sBase, index);
+            ref Segment seg = ref t.mS[index];
             bool diagonal = seg.Diagonal;
             #if VERIFY
                double yM = (YMin + YMax) / 2;
@@ -248,7 +242,7 @@ public partial class Triangulator {
             (RMin, RMax) = (t1.LMin, t1.LMax) = seg.GetX (YMin, YMax);
             if (!diagonal) { Hole = !seg.PartOnLeft; t1.Hole = seg.PartOnLeft; }
             if (VTop != 0) {
-               ref Vertex vtop = ref Add (ref vBase, VTop);
+               ref Vertex vtop = ref t.mV[VTop];
                switch (ETop) {
                   case EChain.HSlice:
                      if (seg.A == VTop) {    // Case (a)
@@ -281,7 +275,7 @@ public partial class Triangulator {
                }
             }
             if (VBot != 0) {
-               ref Vertex vbot = ref Add (ref vBase, VBot);
+               ref Vertex vbot = ref t.mV[VBot];
                switch (EBot) {
                   case EChain.HSlice:
                      if (seg.B == VBot) {    // Case (f)
@@ -319,13 +313,12 @@ public partial class Triangulator {
       }
 
       // Updates one of the 'bottom' connections of the tile
-      public void UpdateBottom (int nOld, ref Tile tNew) {
+      public void UpdateBottom (Tile[] mT, int nOld, ref Tile tNew) {
          for (int i = 0; i < 2; i++) {
             if (Bot[i] != nOld) continue;
             Bot[i] = tNew.Id;
             if (Bot[0] != 0 && Bot[1] != 0) {
-               ref Tile tLeft = ref Add (ref tNew, Bot[0] - tNew.Id);
-               ref Tile tRight = ref Add (ref tNew, Bot[1] - tNew.Id);
+               ref Tile tLeft = ref mT[Bot[0]], tRight = ref mT[Bot[1]];
                if (tLeft.XMax > tRight.XMax) (Bot[0], Bot[1]) = (Bot[1], Bot[0]);
             }
             return; 
@@ -333,13 +326,12 @@ public partial class Triangulator {
          Unexpected ();
       }
 
-      public void UpdateTop (int nOld, ref Tile tNew) {
+      public void UpdateTop (Tile[] mT, int nOld, ref Tile tNew) {
          for (int i = 0; i < 2; i++) {
             if (Top[i] != nOld) continue;
             Top[i] = tNew.Id;
             if (Top[0] != 0 && Top[1] != 0) {
-               ref Tile tLeft = ref Add (ref tNew, Top[0] - tNew.Id);
-               ref Tile tRight = ref Add (ref tNew, Top[1] - tNew.Id);
+               ref Tile tLeft = ref mT[Top[0]], tRight = ref mT[Top[1]];
                if (tLeft.XMin > tRight.XMin) (Top[0], Top[1]) = (Top[1], Top[0]);
             } 
             return;

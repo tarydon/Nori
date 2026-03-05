@@ -67,15 +67,10 @@ public class Tester {
 
 static class Program {
    public static void Main () {
-      var config = DefaultConfig.Instance
-          .AddJob (Job
-               .MediumRun
-               .WithLaunchCount (1)
-               .WithToolchain (InProcessNoEmitToolchain.Instance));
       BenchmarkRunner.Run<Tester> ();
-
       //var t = new Tester ();
-      //t.Tessellate ();
       //t.GLUTess ();
+      //t.Tessellate ();
+      //t.TessellateAlt ();
    }
 }
