@@ -124,6 +124,16 @@ public class E2Bendline : Ent2 {
    public override Bound2 Bound => new (Pts);
    public override Bound2 GetBound (Matrix2 xfm) => new (Pts.Select (a => a * xfm));
 
+   public override bool IsCloser (Point2 pt, ref double threshold) {
+      // For each pair of points (representing a bend line), measure the distance to the given point
+      var oldThreshold = threshold;
+      for (int i = 0; i < Pts.Length; i += 2) {
+         var dist = pt.DistToLineSeg (Pts[i], Pts[i + 1]);
+         if (dist < threshold) { threshold = dist; }
+      }
+      return threshold < oldThreshold;
+   }
+
    protected override E2Bendline Xformed (Matrix2 m)
       => new (mDwg, Pts.Select (a => a * m), Angle, Radius, KFactor, Thickness);
 
@@ -152,6 +162,13 @@ public class E2Dimension : Ent2 {
 
    public override Bound2 GetBound (Matrix2 xfm)
       => new (mEnts.Select (a => a.GetBound (xfm)));
+
+   public override bool IsCloser (Point2 pt, ref double threshold) {
+      if (!Bound.Contains (pt, threshold)) return false;
+      foreach (var ent in Ents)
+         if (ent.IsCloser (pt, ref threshold)) return true;
+      return false;
+   }
 
    protected override E2Dimension Xformed (Matrix2 m)
       => new (Layer) { mEnts = [.. mEnts.Select (a => a * m)], Color = Color };
@@ -322,6 +339,14 @@ public class E2Solid : Ent2 {
 
    public override Bound2 GetBound (Matrix2 xfm)
       => new (mPts.Select (a => a * xfm));
+
+   public override bool IsCloser (Point2 pt, ref double threshold) {
+      if (!Bound.Contains (pt, threshold)) return false;
+      var p = Poly.Lines (mPts, closed: true);
+      (double dist, int _) = p.GetDistance (pt);
+      if (dist < threshold) { threshold = dist; return true; }
+      return false;
+   }
 
    protected override E2Solid Xformed (Matrix2 m) => new (Layer, mPts.Select (a => a * m)) { Color = Color };
 
