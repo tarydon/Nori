@@ -18,107 +18,24 @@ public partial class MainWindow : Window {
    void OnLuxReady (int _) {
       var source = PresentationSource.FromVisual (this);
       if (source != null) Lux.DPIScale = (float)source.CompositionTarget.TransformToDevice.M11;
-      TraceVN.TextColor = Color4.Blue; Lib.Tracer = TraceVN.Print;
+      TraceVN.TextColor = Color4.Yellow ; Lib.Tracer = TraceVN.Print;
       new SceneManipulator ();
-      Lux.UIScene = new TessScene ();
+      Lux.UIScene = new DemoScene ();
    }
 }
 
-class TessScene : Scene2 {
-   public TessScene () {
-      var dwg = DXFReader.Load ("N:/TData/Geom/Tess/B.dxf");
-      var polys = dwg.Ents.OfType<E2Poly> ()
-                     .Where (a => a.Layer.Name == "0" && a.Poly.IsClosed)
-                     .Select (a => a.Poly)
-                     .ToList ();
-      int nOuter = polys.MaxIndexBy (a => a.GetBound ().Area);
-
-      mT = new Triangulator ();
-      mT.Reset ();
-      for (int i = 0; i < polys.Count; i++) {
-         double area = polys[i].GetArea ();
-         if (i == nOuter) mDwgArea += area; else mDwgArea -= area;
-         mT.AddPoly (polys[i], i != nOuter);
-      }
-      mSteps = mT.Process ().GetEnumerator ();
-      HW.MouseClicks.Where (a => a.IsLeftPress).Subscribe (a => OnClick ());
-
-      var xfm = Matrix2.Rotation (mT.BiasAngle);
-      for (int i = 0; i < dwg.Ents.Count; i++) dwg.Ents[i] *= xfm;
-
-      Bound = dwg.Bound.InflatedL (1).InflatedF (1.1f);
-      BgrdColor = Color4.Gray (216);
-      List<VNode> nodes = [new Dwg2VN (dwg), TraceVN.It, mDebugVN = new TessDebugVN (mT)];
-      Root = new GroupVN (nodes);
-
-//      for (; ; ) { string s = OnClick (); if (s == "Ready to merge") break; }
+class DemoScene : Scene2 {
+   public DemoScene () {
+      mFace = new (Lib.ReadBytes ("nori:GL/Fonts/Roboto-Regular.ttf"), (int)(48 * Lux.DPIScale));
+      Bound = new Bound2 (0, 0, 100, 50);
+      BgrdColor = new Color4 (128, 96, 64);
+      var contentVN = new SimpleVN (
+         () => (Lux.Color, Lux.TypeFace) = (Color4.White, mFace),
+         () => Lux.TextPx ("Welcome to Nori.", new Vec2S (100, 100))
+      );
+      Root = new GroupVN ([contentVN, TraceVN.It]);
+      Lib.Trace ("TraceVN output...");
+      Lib.Trace ($"Started at {DateTime.Now}");
    }
-   double mDwgArea;
-
-   string OnClick () {
-      if (!mSteps.MoveNext ()) {
-         double area = 0; 
-         var pts = mT.Pts; var tris = mT.Tris;
-         for (int i = 0; i < tris.Length; i += 3) {
-            List<Point2> nodes = [];
-            for (int j = 0; j < 3; j++) nodes.Add (pts[tris[i + j]]);
-            area += Poly.Lines (nodes, true).GetArea ();
-         }
-         double error = Math.Abs ((area - mDwgArea) / mDwgArea * 100);
-         Lib.Trace ($"Dwg:{mDwgArea} Tris:{area} Error:{error}%");
-      }
-      Lib.Trace ($"{++mN}. {mSteps.Current}");
-      mDebugVN.Redraw ();
-      return mSteps.Current;
-   }
-
-   Triangulator mT;
-   IEnumerator<string> mSteps;
-   VNode mDebugVN;
-   int mN;
-}
-
-class TessDebugVN : VNode {
-   public TessDebugVN (Triangulator mt) => (mT, Streaming) = (mt, true);
-   readonly Triangulator mT;
-
-   public override void Draw () {
-      var dwg = mT.GetDebugDwg ();
-      DXFWriter.Save (dwg, "c:/etc/test.dxf");
-      DrawPoly ("TILE", Color4.Red, 4f);
-      DrawText ("TILETEXT", Color4.Blue);
-      DrawText ("VERTTEXT", Color4.DarkGreen);
-      DrawPoly ("LINKS", Color4.Blue, 1.5f);
-      DrawPoly ("TRIANGLES", Color4.Blue, 3f);
-      DrawPoints ("TRIANGLES", Color4.Blue);
-      FillTris ("TRIANGLES", new Color4 (128, 255, 255, 0));
-
-      // Helpers ..........................................
-      void DrawPoly (string layer, Color4 color, float lineWidth) {
-         (Lux.Color, Lux.LineWidth) = (color, lineWidth);
-         foreach (var e2p in dwg.Ents.OfType<E2Poly> ()) 
-            if (e2p.Layer.Name == layer) Lux.Poly (e2p.Poly);
-      }
-
-      void DrawPoints (string layer, Color4 color) {
-         (Lux.Color, Lux.PointSize) = (color, 4f);
-         foreach (var e2p in dwg.Ents.OfType<E2Point> ())
-            if (e2p.Layer.Name == layer) Lux.Points ([e2p.Pt]);
-      }
-
-      void DrawText (string layer, Color4 color) {
-         (Lux.Color, Lux.LineWidth) = (color, 1.5f);
-         foreach (var e2t in dwg.Ents.OfType<E2Text> ())
-            if (e2t.Layer.Name == layer) Lux.Polys (e2t.Polys.AsSpan ());
-      }
-
-      void FillTris (string layer, Color4 color) {
-         (Lux.Color, Lux.ZLevel) = (color, -100);
-         List<Vec2F> pts = [];
-         foreach (var e2p in dwg.Ents.OfType<E2Poly> ())
-            if (e2p.Layer.Name == layer) 
-               for (int i = 0; i < 3; i++) pts.Add (e2p.Poly.Pts[i]);
-         Lux.Triangles (pts.AsSpan ());
-      }
-   }
+   TypeFace mFace;
 }
