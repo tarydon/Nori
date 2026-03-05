@@ -251,7 +251,7 @@ unsafe readonly struct OBBDitoBuilder {
    readonly OBB CreateBox (in Vector3f u, in Vector3f v, in Vector3f w) {
       var cen = u * ((mE[7] + mE[0]) * 0.5f) + v * ((mE[8] + mE[1]) * 0.5f) + w * ((mE[9] + mE[2]) * 0.5f);
       var ext = new Vector3f ((mE[7] - mE[0]) * 0.5f, (mE[8] - mE[1]) * 0.5f, (mE[9] - mE[2]) * 0.5f);
-      return new (new (cen.X, cen.Y, cen.Z), u, v, ext);
+      return new (new (cen.X, cen.Y, cen.Z), u, v, w, ext);
    }
 
    // Private data -------------------------------------------------------------
@@ -341,7 +341,7 @@ readonly struct OBBPCABuilder {
          cen += axis[i] * ((min[i] + max[i]) / 2f);
 
       // Now, return the OBB
-      OBB = new (cen, axis[0], axis[1], ext);
+      OBB = new (cen, axis[0], axis[1], axis[2], ext);
    }
 
    // Properties ---------------------------------------------------------------
@@ -478,7 +478,7 @@ unsafe ref struct OBBDitoBuilderArchived (ReadOnlySpan<Point3f> pts) {
    readonly OBB CreateBox (in Vector3f u, in Vector3f v, in Vector3f w) {
       var cen = (u * (Max[0] + Min[0]) + v * (Max[1] + Min[1]) + w * (Max[2] + Min[2])) * 0.5f;
       var ext = new Vector3f (Max[0] - Min[0], Max[1] - Min[1], Max[2] - Min[2]) * 0.5f;
-      return new (new (cen.X, cen.Y, cen.Z), u, v, ext);
+      return new (new (cen.X, cen.Y, cen.Z), u, v, w, ext);
    }
 
    // Given the 'base triangle' (a, b, c), searches for the apex points (p, q) in the given point 'set'

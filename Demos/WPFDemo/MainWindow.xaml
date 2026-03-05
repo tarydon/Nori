@@ -10,6 +10,7 @@
       <Style TargetType="Button">
          <Setter Property="Margin" Value="4,0,4,4" />
          <Setter Property="Padding" Value="7,1,7,1" />
+         <Setter Property="Focusable" Value="False"/>
       </Style>
    </Window.Resources>
    <DockPanel>
