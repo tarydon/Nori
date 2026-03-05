@@ -44,7 +44,7 @@ class CMeshVN (CMesh cm) : VNode {
    // Overrides ----------------------------------------------------------------
    public override void Draw () {
       var boxes = mCM.EnumBoxes (mLevel).ToList ();
-      Lib.Trace ($"Level {mLevel}, {boxes.Count} boxes");
+      Lib.Trace ($"Level {mLevel}, {boxes.Count} boxes, Volume: {boxes.Sum (b => b.Width * b.Height * b.Depth):F3}");
       List<Vec3F> pts = [];
       foreach (var box in boxes) {
          var (x, y, z) = (box.X, box.Y, box.Z);
