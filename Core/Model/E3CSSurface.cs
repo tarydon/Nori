@@ -453,7 +453,7 @@ public sealed class E3SpunSurface : E3CSSurface {
 
    // Domain in u is 0..360 degrees, and in V is just the domain of the Generatrix curve
    protected override Bound2 ComputeDomain () 
-      => new (new Bound1 (0, Lib.TwoPI), Generatrix.Domain);
+      => new (new Bound1 (0, Lib.TwoPI), (Bound1)Generatrix.Domain);
 
    // Returns a transformed copy of this SpunSurface
    protected override E3SpunSurface Xformed (Matrix3 xfm) {
@@ -501,7 +501,7 @@ public sealed class E3SweptSurface : E3CSSurface {
             foreach (var pt in pts) u += GetUV (pt).X;
          }
       }
-      return new (u, Generatrix.Domain);
+      return new (u, (Bound1)Generatrix.Domain);
    }
 
    // Computing a point on the surface by taking the point on the Generatrix,

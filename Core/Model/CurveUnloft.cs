@@ -32,7 +32,7 @@ public class CurveUnlofter {
       }
    }
    readonly Curve3 mCurve;    // The curve we're working with
-   readonly Bound1 mDomain;   // The domain of that curve
+   readonly Bound1D mDomain;   // The domain of that curve
    const int mRootSegs = 4;   // Initial number of segments
 
    // Methods ------------------------------------------------------------------

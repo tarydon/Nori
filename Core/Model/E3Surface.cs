@@ -150,7 +150,7 @@ public sealed class E3RuledSurface : E3Surface {
    // The u-span is the average distance between the bottom and top curves,
    // and the v-span is domain of the bottom or top curves (both are equal)
    protected override Bound2 ComputeDomain ()
-      => new (new (0, mUSpan), Bottom.Domain);
+      => new (new (0, mUSpan), (Bound1)Bottom.Domain);
 
    // Compute the 'v' points on both the bottom and top curves and linear
    // interpolate between them

@@ -18,8 +18,14 @@ partial class STEPReader {
          case ElementarySurface e: Check (e); break;
          case BSplineSurfaceWithKnots b: Check (b); break;
          case ExtrudedSurface e: Check (e); break;
+         case SpunSurface s: Check (s); break;
          default: Check (a.Face); break;
       }
+   }
+
+   void Check (Axis a) {
+      Check ((Cartesian)D[a.Origin]!);
+      Check ((Direction)D[a.Direction]!);
    }
 
    static void Check (Cartesian _) { }
@@ -31,6 +37,13 @@ partial class STEPReader {
       Check ((Direction)D[cs.ZAxis]!);
       Check ((Direction)D[cs.XAxis]!);
    }
+
+   void Check (CompositeCurve cc) {
+      foreach (var n in cc.Segments)
+         Check ((CompositeCurveSegment)D[n]!);
+   }
+
+   void Check (CompositeCurveSegment cs) => CheckCurve (cs.Segment);
 
    void Check (Shell a) {
       foreach (var n in a.Faces)
@@ -44,13 +57,18 @@ partial class STEPReader {
    void Check (EdgeCurve a) {
       Check ((VertexPoint)D[a.Start]!);
       Check ((VertexPoint)D[a.End]!);
-      switch (D[a.Basis]!) {
+      CheckCurve (a.Basis);
+   }
+
+   void CheckCurve (int curve) {
+      switch (D[curve]!) {
          case Line l: Check (l); break;
          case Circle c: Check (c); break;
          case Ellipse e: Check (e); break;
          case BSplineCurveWithKnots b: Check (b); break;
          case SurfaceCurve s: Check (s); break;
-         default: Check (a.Basis); break;
+         case TrimmedCurve t: Check (t); break;
+         default: Check (curve); break;
       }
    }
 
@@ -76,8 +94,8 @@ partial class STEPReader {
    }
 
    void Check (ExtrudedSurface e) {
-      Check ((EdgeCurve)D[e.Curve]!);
-      Check ((Direction)D[e.Vector]!);
+      CheckCurve (e.Curve);
+      Check ((Vector)D[e.Vector]!);
    }
 
    void Check (Manifold a) { Check ((Shell)D[a.Outer]!); }
@@ -91,9 +109,22 @@ partial class STEPReader {
 
    void Check (ElementarySurface s) { Check ((CoordSys)D[s.CoordSys]!); }
 
+   void Check (SpunSurface e) {
+      CheckCurve (e.Curve);
+      Check ((Axis)D[e.Axis]!);
+   }
+
    static void Check (SurfaceCurve _) {
       // TODO
    } 
+
+   void Check (TrimmedCurve tc) {
+      CheckCurve (tc.Curve);
+      if (tc.TrimStart.Cartesian > 0)
+         Check ((Cartesian)D[tc.TrimStart.Cartesian]!);
+      if (tc.TrimEnd.Cartesian > 0)
+         Check ((Cartesian)D[tc.TrimEnd.Cartesian]!);
+   }
 
    void Check (Vector v) { Check ((Direction)D[v.Direction]!); }
 
