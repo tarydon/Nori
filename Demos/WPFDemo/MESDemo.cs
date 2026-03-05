@@ -77,20 +77,19 @@ class MinSphereScene : Scene3 {
 
    // View Nodes
    // Draw axis lines.
-   internal class AxesVN (double extent = 100) : VNode {
-      public override VNode? GetChild (int n) => Axes.SafeGet (n);
+   internal class AxesVN : VNode {
+      public AxesVN (double extent = 100) 
+         => (X, Y, Z, Streaming) = (Vector3.XAxis * extent, Vector3.YAxis * extent, Vector3.ZAxis * extent, true);
 
-      readonly AxisVN[] Axes = [
-         new (Vector3.XAxis * extent, Color4.Red), new (Vector3.YAxis * extent, Color4.Green), new (Vector3.ZAxis * extent, Color4.Blue)
-      ];
-      readonly static Vec3F Org = new ();
-      // A single axis node
-      class AxisVN (Vector3 axis, Color4 clr) : VNode () {
-         readonly Vec3F Vec = (Vec3F)axis;
-         readonly Color4 Clr = clr;
-         public override void SetAttributes () => (Lux.Color, Lux.LineWidth) = (Clr, 3);
-         public override void Draw () => Lux.Lines ([Org, Vec]);
+      public override void Draw () {
+         Lux.LineWidth = 3;
+         Lux.Color = Color4.Red; Lux.Lines ([Org, X]);
+         Lux.Color = Color4.Green; Lux.Lines ([Org, Y]);
+         Lux.Color = Color4.Blue; Lux.Lines ([Org, Z]);
       }
+
+      readonly Vec3F X, Y, Z;
+      readonly static Vec3F Org = new ();
    }
 
    // Draw OBB.
