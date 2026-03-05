@@ -37,6 +37,9 @@ public partial class Dwg2 {
    }
    Layer2? mCurrentLayer;
 
+   /// <summary>Dimensioning settings for this drawing</summary>
+   public DimSettings DimSettings => new ();
+
    /// <summary>The list of entities in the drawing (active list, implements Observable(ListChange)</summary>
    public AList <Ent2> Ents => mEnts;
    AList<Ent2> mEnts = [];

@@ -20,9 +20,7 @@ public class E2Dim2P : E2Dimension {
    public readonly double Angle;
    public readonly string? Text;
 
-   const double Overhang = 4;
-
-   public override IReadOnlyList<Ent2> MakeDim () {
+   public override IReadOnlyList<Ent2> MakeDim (DimSettings dim) {
       List<Ent2> ents = [];
       if (A.EQ (B)) return ents;
       // Consider an infinite line via A and B, perpendicular to Angle
@@ -34,17 +32,17 @@ public class E2Dim2P : E2Dimension {
       Lib.Check (!pt.IsNil && !pt2.IsNil, "Coding error");
       ents.AddM (new E2Poly (Layer, Poly.Line (pt, pt2))
          , new E2Point (Layer, A), new E2Point (Layer, B)
-         , new E2Poly (Layer, Poly.Line (A.Polar (Overhang, A.AngleTo (pt)), pt.Polar (Overhang, A.AngleTo (pt))))
-         , new E2Poly (Layer, Poly.Line (B.Polar (Overhang, B.AngleTo (pt2)), pt2.Polar (Overhang, B.AngleTo (pt2)))));
-      var text = Text ?? pt.DistTo (pt2).Round (2).ToString ();
+         , new E2Poly (Layer, Poly.Line (A.Polar (dim.DimOffset, A.AngleTo (pt)), pt.Polar (dim.DimExtend, A.AngleTo (pt))))
+         , new E2Poly (Layer, Poly.Line (B.Polar (dim.DimOffset, B.AngleTo (pt2)), pt2.Polar (dim.DimExtend, B.AngleTo (pt2)))));
+      var text = Text ?? pt.DistTo (pt2).Round (dim.DimLinDecimals).ToString ();
       var textAng = pt.AngleTo (pt2);
       // Fix the textAng to avoid inverted text, etc [Lets limit it to -90, 90 range]
       bool revDir = textAng is > Lib.HalfPI or < -Lib.HalfPI;
       if (revDir) textAng += Lib.PI;
       var (arrowDirA, arrowDirB) = revDir ? (textAng, textAng + Lib.PI) : (textAng + Lib.PI, textAng);
       ents.AddM (MakeArrow (Layer, pt, arrowDirA), MakeArrow (Layer, pt2, arrowDirB));
-      var textPos = pt.Midpoint (pt2).Polar (Overhang / 2, textAng + Lib.HalfPI);
-      ents.Add (new E2Text (Layer, Style2.Default, text, textPos, 10, textAng, 0, 1, ETextAlign.BaseCenter));
+      var textPos = pt.Midpoint (pt2).Polar (dim.DimTxtSize / 5, textAng + Lib.HalfPI); // Magic: Gap b/w dim-line & dim-text
+      ents.Add (new E2Text (Layer, dim.DimTextStyle, text, textPos, dim.DimTxtSize, textAng, 0, 1, dim.DimTxtAlign));
       return ents;
    }
 
@@ -54,5 +52,26 @@ public class E2Dim2P : E2Dimension {
       var (pt2, pt3) = (pt.Polar (width / 2, perp), pt.Polar (-width / 2, perp));
       return new E2Solid (layer, [tip, pt2, pt3, tip]);
    }
+}
+#endregion
+
+#region class DimSettings --------------------------------------------------------------------------
+public class DimSettings {
+   /// <summary>Dimension arrow size</summary>
+   public float DimArrowSize;
+   /// <summary>Gap between actual reference point and start of the extension line</summary>
+   public float DimOffset = 4;
+   /// <summary>Extension line length</summary>
+   public float DimExtend = 4;
+   /// <summary>How many decimal places in linear dimensions</summary>
+   public short DimLinDecimals = 2;
+   /// <summary>How many decimal places in angular dimensions</summary>
+   public short DimAngDecimals = 2;
+   /// <summary>Text height for dimensioning</summary>
+   public float DimTxtSize = 10;
+   /// <summary>Text alignment for dimensioning</summary>
+   public ETextAlign DimTxtAlign = ETextAlign.BaseCenter;
+   /// <summary>Font/text style for dimensioning</summary>
+   public Style2 DimTextStyle = Style2.Default;
 }
 #endregion

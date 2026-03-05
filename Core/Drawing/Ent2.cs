@@ -144,11 +144,15 @@ public class E2Dimension : Ent2 {
    // the block on the fly when the dimension is saved)
    public IReadOnlyList<Ent2> Ents {
       get {
-         if (mEnts.Length == 0) mEnts = [.. MakeDim ()];
+         if (mEnts.Length == 0) mEnts = [.. MakeDim (mDimSettings!)];
          return mEnts;
       }
    }
    Ent2[] mEnts = [];
+
+   // Methods
+   public void SetDimSettings (DimSettings dimSettings) => mDimSettings = dimSettings;
+   DimSettings? mDimSettings;
 
    // Overrides ----------------------------------------------------------------
    public override Bound2 Bound
@@ -170,7 +174,7 @@ public class E2Dimension : Ent2 {
       return null;
    }
 
-   public virtual IReadOnlyList<Ent2> MakeDim () => throw new NotImplementedException ("Must override");
+   public virtual IReadOnlyList<Ent2> MakeDim (DimSettings dim) => throw new NotImplementedException ("Must override");
 }
 #endregion
 
