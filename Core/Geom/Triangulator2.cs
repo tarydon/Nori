@@ -4,7 +4,7 @@ using static System.Runtime.InteropServices.MemoryMarshal;
 namespace Nori;
 
 #region class Triangulator : nested types ----------------------------------------------------------
-partial class Triangulator {
+public partial class Triangulator {
    // Enumerations ---------------------------------------------------------------------------------
    // EVKind lists the types of vertices
    enum EVertex { Regular, Valley, Mountain };

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 namespace Nori;
 
-partial class Triangulator {
+public partial class Triangulator {
    /// <summary>Returns a debug drawing showing the current state of the triangulation</summary>
    public Dwg2 GetDebugDwg () {
       Dwg2 dwg = new ();

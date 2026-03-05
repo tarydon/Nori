@@ -432,3 +432,81 @@ class GeoTests {
    }
 
 }
+
+[Fixture (36, "Triangulator tests", "Geom")]
+class TessTests {
+   [Test (175, "A.dxf - 5 triangles")]
+   void Test1 () => Test ("A");
+
+   [Test (176, "B.dxf - 13 triangles")]
+   void Test2 () => Test ("B");
+
+   [Test (177, "C.dxf - 17 triangles")]
+   void Test3 () => Test ("C");
+
+   [Test (178, "D.dxf - 28 triangles")]
+   void Test4 () => Test ("D");
+
+   [Test (179, "E.dxf - 30 triangles")]
+   void Test5 () => Test ("E");
+
+   [Test (180, "F.dxf - 36 triangles")]
+   void Test6 () => Test ("F");
+
+   [Test (181, "G.dxf - 25 triangles")]
+   void Test7 () => Test ("G");
+   
+   [Test (182, "H.dxf - 154 triangles")]
+   void Test8 () => Test ("H");
+   
+   [Test (183, "I.dxf - 273 triangles")]
+   void Test9 () => Test ("I");
+   
+   [Test (184, "J.dxf - 948 triangles")]
+   void Test10 () => Test ("J");
+
+   void Test (string file) {
+      var dwg = DXFReader.Load (NT.File ($"Geom/Tess/{file}.dxf"));
+      List<Poly> input = []; List<Point2> pts = [];
+      foreach (var e2p in dwg.Ents.OfType<E2Poly> ().Where (a => a.Layer.Name == "0")) {
+         var poly = e2p.Poly;
+         if (poly.HasArcs) {
+            pts.Clear ();
+            poly.Discretize (pts, Lib.CoarseTess, Lib.CoarseTessAngle);
+            poly = Poly.Lines (pts, true);
+         }
+         input.Add (poly);
+      }
+      int outer = input.MaxIndexBy (a => a.GetBound ().Area);
+
+      double dwgArea = 0;
+      Triangulator t = new ();
+      t.Reset ();
+      for (int i = 0; i < input.Count; i++) {
+         t.AddPoly (input[i], i != outer);
+         dwgArea += input[i].GetArea () * (i == outer ? 1 : -1);
+      }
+      var output = t.Process ().ToList ();
+
+      double triArea = 0;
+      var sb = new StringBuilder ();
+      int sum = input.Sum (a => a.Count);
+      sb.AppendLine ($"Triangulation: {file}, {input.Count} polys, {sum} nodes");
+      var verts = t.Pts; var tris = t.Tris;
+      sb.AppendLine ($"{tris.Length / 3} triangles:");
+      for (int i = 0; i < tris.Length; i += 3) {
+         pts.Clear ();
+         for (int j = 0; j < 3; j++) {
+            sb.Append ($" {tris[i + j]}");
+            pts.Add (verts[tris[i + j]]);
+         }
+         sb.AppendLine ();
+         triArea += Poly.Lines (pts, true).GetArea ();
+      }
+      dwgArea.Is (triArea);
+      sb.AppendLine ($"DwgArea: {dwgArea.Round (3)}");
+      sb.AppendLine ($"TriArea: {triArea.Round (3)}");
+      File.WriteAllText (NT.TmpTxt, sb.ToString ());
+      Assert.TextFilesEqual (NT.File ($"Geom/Tess/{file}.txt"), NT.TmpTxt);
+   }
+}

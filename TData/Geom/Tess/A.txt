@@ -1,0 +1,9 @@
+Triangulation: A, 1 polys, 7 nodes
+5 triangles:
+ 5 0 1
+ 6 0 5
+ 5 1 2
+ 3 5 2
+ 4 5 3
+DwgArea: 33
+TriArea: 33

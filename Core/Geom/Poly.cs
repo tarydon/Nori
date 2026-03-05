@@ -229,6 +229,34 @@ public partial class Poly {
       }
    }
 
+   /// <summary>
+   /// Returns the area of a Poly
+   /// </summary>
+   /// Results are meaningful only for closed Poly
+   public double GetArea () {
+      if (IsCircle) {
+         double radius = Extra[0].Center.DistTo (Pts[0]);
+         return Lib.PI * radius * radius;
+      }
+      if (HasArcs) {
+         List<Point2> pts = [];
+         Discretize (pts, Lib.FineTess, Lib.FineTessAngle);
+         return GetArea (pts.AsSpan ());
+      } else {
+         return GetArea (Pts.AsSpan ());
+      }
+
+      // Helper ............................................
+      static double GetArea (ReadOnlySpan<Point2> pts) {
+         double area = 0; 
+         Point2 a = pts[^1];
+         for (int i = 0; i < pts.Length; i++) {
+            Point2 b = pts[i]; area += (b.X * a.Y - a.X * b.Y); a = b;
+         }
+         return Math.Abs (area / 2);
+      }
+   }
+
    /// <summary>Returns the index of the closest node</summary>
    public int GetClosestNode (Point2 pt) => mPts.MinIndexBy (a => a.DistToSq (pt));
 

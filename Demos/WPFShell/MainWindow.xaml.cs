@@ -1,6 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.Reactive.Linq;
 using System.Windows;
+using System.Windows.Media.Animation;
 using Nori;
 
 namespace WPFShell;
@@ -18,7 +19,6 @@ public partial class MainWindow : Window {
       var source = PresentationSource.FromVisual (this);
       if (source != null) Lux.DPIScale = (float)source.CompositionTarget.TransformToDevice.M11;
       TraceVN.TextColor = Color4.Blue; Lib.Tracer = TraceVN.Print;
-      TraceVN.HoldTime = 20;
       new SceneManipulator ();
       Lux.UIScene = new TessScene ();
    }
@@ -26,7 +26,7 @@ public partial class MainWindow : Window {
 
 class TessScene : Scene2 {
    public TessScene () {
-      var dwg = DXFReader.Load ("c:/etc/tess/E.dxf");
+      var dwg = DXFReader.Load ("N:/TData/Geom/Tess/J.dxf");
       var polys = dwg.Ents.OfType<E2Poly> ()
                      .Where (a => a.Layer.Name == "0" && a.Poly.IsClosed)
                      .Select (a => a.Poly)
@@ -34,8 +34,12 @@ class TessScene : Scene2 {
       int nOuter = polys.MaxIndexBy (a => a.GetBound ().Area);
 
       mT = new Triangulator ();
-      mT.Reset (41, 0.0812 * 2);
-      for (int i = 0; i < polys.Count; i++) mT.AddPoly (polys[i], i != nOuter);
+      mT.Reset ();
+      for (int i = 0; i < polys.Count; i++) {
+         double area = polys[i].GetArea ();
+         if (i == nOuter) mDwgArea += area; else mDwgArea -= area;
+         mT.AddPoly (polys[i], i != nOuter);
+      }
       mSteps = mT.Process ().GetEnumerator ();
       HW.MouseClicks.Where (a => a.IsLeftPress).Subscribe (a => OnClick ());
 
@@ -49,9 +53,20 @@ class TessScene : Scene2 {
 
       for (; ; ) { string s = OnClick (); if (s == "Ready to merge") break; }
    }
+   double mDwgArea;
 
    string OnClick () {
-      if (!mSteps.MoveNext ()) return "";
+      if (!mSteps.MoveNext ()) {
+         double area = 0; 
+         var pts = mT.Pts; var tris = mT.Tris;
+         for (int i = 0; i < tris.Length; i += 3) {
+            List<Point2> nodes = [];
+            for (int j = 0; j < 3; j++) nodes.Add (pts[tris[i + j]]);
+            area += Poly.Lines (nodes, true).GetArea ();
+         }
+         double error = Math.Abs ((area - mDwgArea) / mDwgArea * 100);
+         Lib.Trace ($"Dwg:{mDwgArea} Tris:{area} Error:{error}%");
+      }
       Lib.Trace ($"{++mN}. {mSteps.Current}");
       mDebugVN.Redraw ();
       return mSteps.Current;

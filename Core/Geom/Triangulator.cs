@@ -1,13 +1,14 @@
-using System.Windows.Documents;
-using System.Windows.Markup.Localizer;
-using System.Windows.Media;
 using static System.Runtime.CompilerServices.Unsafe;
 using static System.Runtime.InteropServices.MemoryMarshal;
 namespace Nori;
 
-partial class Triangulator {
+public partial class Triangulator {
    // Properties ---------------------------------------------------------------
    public double BiasAngle => mBiasAngle;
+
+   public ReadOnlySpan<int> Tris => mTriangles.AsSpan ();
+
+   public ReadOnlySpan<Point2> Pts => mInput.AsSpan ();
 
    // Methods ------------------------------------------------------------------
    /// <summary>
@@ -48,7 +49,7 @@ partial class Triangulator {
    List<Point2> mInput = [];
 
    /// <summary>Reset should be called to initialize the Triangulator before adding contours</summary>
-   public void Reset (int seed = 42, double rotAngle = 0.0812) {
+   public void Reset (int seed = 42, double rotAngle = 0.1624) {
       mBound = new (); mMerged = false;
       mInput.Clear (); mTriangles.Clear (); 
       mDiagTiles.Clear (); mValleyTiles.Clear (); 
