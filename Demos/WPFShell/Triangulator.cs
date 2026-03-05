@@ -109,8 +109,10 @@ partial class Triangulator {
          if (t.VTop != 0) {
             Point2 pt = Add (ref vBase, t.VTop).Pt;
             bool left = t.ETop == EChain.Left;
-            if (mStack.Count < 2) mStack.Push ((t.VTop, pt, left));
-            else {
+            if (mStack.Count < 2) {
+               vPrev = (t.VTop, pt, left);
+               mStack.Push ((t.VTop, pt, left));
+            } else {
                var v0 = mStack.Pop ();
                if (v0.Left == left) {
                   // The newly seen vertex is on the same chain as the set of reflex
@@ -124,6 +126,7 @@ partial class Triangulator {
                         if (mStack.Count == 1) break;
                         else v0 = mStack.Pop ();
                      } else {
+                        mStack.Push (v0);
                         break;
                      }
                   }
@@ -133,6 +136,7 @@ partial class Triangulator {
                      var v1 = mStack.Pop ();
                      if (v0.Left) AddTri (t.VTop, v0.Id, v1.Id);
                      else AddTri (t.VTop, v1.Id, v0.Id);
+                     v0 = v1;
                   }
                   mStack.Push (vPrev);
                }

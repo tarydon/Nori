@@ -26,7 +26,7 @@ public partial class MainWindow : Window {
 
 class TessScene : Scene2 {
    public TessScene () {
-      var dwg = DXFReader.Load ("c:/etc/tess/C.dxf");
+      var dwg = DXFReader.Load ("c:/etc/tess/E.dxf");
       var polys = dwg.Ents.OfType<E2Poly> ()
                      .Where (a => a.Layer.Name == "0" && a.Poly.IsClosed)
                      .Select (a => a.Poly)
@@ -76,6 +76,7 @@ class TessDebugVN : VNode {
       DrawPoly ("LINKS", Color4.Blue, 1.5f);
       DrawPoly ("TRIANGLES", Color4.Blue, 3f);
       DrawPoints ("TRIANGLES", Color4.Blue);
+      FillTris ("TRIANGLES", new Color4 (128, 255, 255, 0));
 
       // Helpers ..........................................
       void DrawPoly (string layer, Color4 color, float lineWidth) {
@@ -94,6 +95,15 @@ class TessDebugVN : VNode {
          (Lux.Color, Lux.LineWidth) = (color, 1.5f);
          foreach (var e2t in dwg.Ents.OfType<E2Text> ())
             if (e2t.Layer.Name == layer) Lux.Polys (e2t.Polys.AsSpan ());
+      }
+
+      void FillTris (string layer, Color4 color) {
+         (Lux.Color, Lux.ZLevel) = (color, -100);
+         List<Vec2F> pts = [];
+         foreach (var e2p in dwg.Ents.OfType<E2Poly> ())
+            if (e2p.Layer.Name == layer) 
+               for (int i = 0; i < 3; i++) pts.Add (e2p.Poly.Pts[i]);
+         Lux.Triangles (pts.AsSpan ());
       }
    }
 }
