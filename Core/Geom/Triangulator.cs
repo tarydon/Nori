@@ -60,17 +60,30 @@ public partial class Triangulator {
    Bound2 mBound;
 
    /// <summary>Process is called to actually perform the tessellation</summary>
-   public void Process () {
+   public IEnumerable<string> Process () {
       ShuffleSegs ();
       InsertBorder ();
+      yield return "Added border";
       for (int i = 0; i < mSN; i++) {
-         ref Segment seg = ref mS[mShuffle[i]];
-         InsertEndpoints (ref seg);
-         SliceTiles (ref seg);
+         yield return $"About to insert {mS[mShuffle[i]]}";
+         {
+            ref Segment seg = ref mS[mShuffle[i]];
+            InsertEndpoints (ref seg);
+         }
+         {
+            yield return $"Added endpoints";
+            ref Segment seg = ref mS[mShuffle[i]];
+            SliceTiles (ref seg);
+         }
+         yield return $"Sliced";
       }
+      yield return "About to merge";
       MergeTiles ();
+      yield return "Merged tiles";
       AddDiagonals ();
+      yield return "Added diagonals";
       foreach (var n in mValleyTiles) ExtractTriangles (n);
+      yield return "Extracted triangles";
    }
 
    // Implementation -----------------------------------------------------------
