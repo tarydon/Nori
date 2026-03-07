@@ -47,7 +47,7 @@ public class Tester {
 
    [Benchmark (Baseline = true)]
    public void GLUTess () {
-      for (int k = 0; k < 100; k++) {
+      for (int k = 0; k < Iter; k++) {
          for (int i = 0; i < mPts.Count; i++) {
             int tris = Tess2D.Process (mPts[i], mSplits[i]).Count / 3;
          }
@@ -55,8 +55,8 @@ public class Tester {
    }
 
    [Benchmark]
-   public void Tessellate () {
-      for (int k = 0; k < 100; k++) {
+   public void NoriTess () {
+      for (int k = 0; k < Iter; k++) {
          for (int i = 0; i < mPolys.Count; i++) {
             var polys = mPolys[i];
             int outer = mOuter[i];
@@ -67,13 +67,29 @@ public class Tester {
       }
    }
    Triangulator mT = new ();
+
+   [Benchmark]
+   public void NoriTessNew () {
+      for (int k = 0; k < Iter; k++) {
+         for (int i = 0; i < mPolys.Count; i++) {
+            var polys = mPolys[i];
+            int outer = mOuter[i];
+            mT2.Reset ();
+            for (int j = 0; j < polys.Count; j++) mT2.AddPoly (polys[j], j != outer);
+            mT2.Process ();
+         }
+      }
+   }
+   Nori.Alt.Triangulator mT2 = new ();
+   const int Iter = 100; 
 }
 
 static class Program {
    public static void Main () {
       BenchmarkRunner.Run<Tester> ();
-      // var t = new Tester ();
-      ////t.GLUTess ();
-      // t.Tessellate ();
+      //var t = new Tester ();
+      //t.GLUTess ();
+      //t.NoriTess ();
+      //t.NoriTessNew ();
    }
 }
