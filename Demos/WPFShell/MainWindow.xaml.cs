@@ -27,7 +27,7 @@ public partial class MainWindow : Window {
 class TessScene : Scene2 {
    public TessScene () {
       List<Poly> poly = [];
-      Dwg2 dwg = DXFReader.Load ("c:/etc/tess0.dxf");
+      Dwg2 dwg = DXFReader.Load ("N:/TData/Geom/Tess/D.dxf");
       for (int i = 0; i < dwg.Ents.Count; i++) {
          if (dwg.Ents[i] is not E2Poly e2p) continue;
          if (e2p.Layer.Name != "0" || e2p.Poly.IsOpen) continue;
@@ -38,27 +38,17 @@ class TessScene : Scene2 {
       mT = new Triangulator ();
       mT.Reset ();
       for (int i = 0; i < poly.Count; i++) mT.AddPoly (poly[i], i != n);
-      mSteps = mT.Process ().GetEnumerator ();
-      HW.MouseClicks.Where (a => a.IsLeftPress).Subscribe (a => OnClick ());
+      mT.Process (); 
 
       mDebug = new TriangulatorDebug (mT);
       List<VNode> nodes = [TraceVN.It, mDebug];
 
-      Bound = new Bound2 (poly.Select (a => a.GetBound ())).InflatedL (2);
+      Bound = mT.Bound.InflatedL (1).InflatedF (1.05);
       BgrdColor = Color4.Gray (200);
       Root = new GroupVN (nodes);
-      // for (int i = 0; i < 82; i++) OnClick ();
    }
    Triangulator mT;
-   IEnumerator<string> mSteps;
    VNode mDebug;
-
-   public void OnClick () {
-      if (!mSteps.MoveNext ()) return;
-      Lib.Trace ($"{++mN}) {mSteps.Current}");
-      mDebug.Redraw ();
-   }
-   int mN;
 }
 
 class TriangulatorDebug : VNode {
@@ -68,30 +58,31 @@ class TriangulatorDebug : VNode {
    public override void Draw () {
       Dwg2 dwg = T.GetDebugDwg ();
       DXFWriter.Save (dwg, "c:/etc/test.dxf");
-      var set = dwg.Ents.OfType<E2Poly> ().ToList ();
-      var set1 = set.Where (a => a.Layer.Name == "MARKER").Select (a => a.Poly).ToList ();
-      (Lux.ZLevel, Lux.Color, Lux.LineWidth) = (0, Color4.DarkBlue, 2f);
-      Lux.Polys (set1.AsSpan ());
 
-      set1 = [.. set.Where (a => a.Layer.Name == "0").Select (a => a.Poly)];
-      (Lux.ZLevel, Lux.Color, Lux.LineWidth) = (0, Color4.Black, 2f);
-      Lux.Polys (set1.AsSpan ());
+      DrawPoly ("OUTLINE", Color4.Black, 2f);
+      DrawPoly ("TILE", Color4.Red, 3f);
+      DrawText ("VERTNO", Color4.DarkGreen);
+      DrawText ("TILETEXT", Color4.Black);
+      DrawPoly ("LINKS", Color4.Blue, 1.5f);
+      DrawPoly ("TRIS", Color4.Gray (144), 1.5f);
+      DrawPoints ("TRIS", Color4.Gray (144));
 
-      set1 = [.. set.Where (a => a.Layer.Name == "TILE").Select (a => a.Poly)];
-      (Lux.ZLevel, Lux.Color, Lux.LineWidth) = (-1, Color4.Red, 5f);
-      Lux.Polys (set1.AsSpan ());
+      void DrawPoly (string layer, Color4 color, float lineWidth) {
+         (Lux.Color, Lux.LineWidth) = (color, lineWidth);
+         foreach (var e2p in dwg.Ents.OfType<E2Poly> ().Where (a => a.Layer.Name == layer))
+            Lux.Poly (e2p.Poly);
+      }
 
-      set1 = [.. set.Where (a => a.Layer.Name == "LINKS").Select (a => a.Poly)];
-      (Lux.ZLevel, Lux.Color, Lux.LineWidth) = (1, Color4.Blue, 1.2f);
-      Lux.Polys (set1.AsSpan ());
+      void DrawText (string layer, Color4 color) {
+         (Lux.Color, Lux.LineWidth) = (color, 1.5f);
+         foreach (var e2t in dwg.Ents.OfType<E2Text> ().Where (a => a.Layer.Name == layer))
+            Lux.Polys (e2t.Polys.AsSpan ());
+      }
 
-      set1 = [.. set.Where (a => a.Layer.Name == "DIAG").Select (a => a.Poly)];
-      (Lux.ZLevel, Lux.Color, Lux.LineWidth) = (2, Color4.DarkGreen, 3f);
-      Lux.Polys (set1.AsSpan ());
-
-      var texts = dwg.Ents.OfType<E2Text> ().ToList ();
-      var polys = texts.SelectMany (a => a.Polys).ToList ();
-      (Lux.ZLevel, Lux.Color, Lux.LineWidth) = (1, Color4.DarkGreen, 1.2f);
-      Lux.Polys (polys.AsSpan ());
+      void DrawPoints (string layer, Color4 color) {
+         (Lux.Color, Lux.PointSize) = (color, 4f);
+         foreach (var e2p in dwg.Ents.OfType<E2Point> ().Where (a => a.Layer.Name == layer))
+            Lux.Points ([e2p.Pt]);
+      }
    }
 }
