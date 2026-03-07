@@ -11,43 +11,9 @@ public partial class Triangulator {
    // EVKind lists the types of vertices
    enum EVertex { Regular, Valley, Mountain };
    // EKind lists the types of nodes
-   enum ENode { Y, X, Leaf };
+   enum ENode { Y, X, Leaf, Redirect };
    // When a vertex is connected to a tile, which 'chain does it belong to
    enum EChain { HSlice, Left, Right, Valley, Mountain };
-
-   // struct Layer ═════════════════════════════════════════════════════════════════════════════════
-   // Represents a Layer in the stitching process
-   class Layer {
-      // Constructor -----------------------------------------------------------
-      public void Init (ref Tile left, ref Tile right) {
-         mTiles.Clear (); mTiles.Add (left.Id); mTiles.Add (right.Id);
-         mAbove.Clear (); AddN (mAbove, left.Top[0]); AddN (mAbove, left.Top[1]);
-         mBelow.Clear (); AddN (mBelow, left.Bot[0]); AddN (mBelow, left.Bot[1]);
-      }
-
-      // Methods ---------------------------------------------------------------
-      public void AddRights (Layer L1) {
-         L1.mAbove.Add (mTiles[1]); mBelow.Add (L1.mTiles[1]);
-      }
-
-      public void Connect (Tile[] mT) {
-         ref Tile left = ref mT[mTiles[0]], right = ref mT[mTiles[1]];
-         foreach (var n in mAbove) {
-            ref Tile above = ref mT[n];
-            above.DisconnectFrom (ref left);
-            above.ConnectTo (mT, ref left); above.ConnectTo (mT, ref right);
-         }
-         foreach (var n in mBelow) {
-            ref Tile below = ref mT[n];
-            left.DisconnectFrom (ref below);
-            left.ConnectTo (mT, ref below); right.ConnectTo (mT, ref below);
-         }
-      }
-
-      // Implementation --------------------------------------------------------
-      static void AddN (List<int> items, int n) { if (n > 0) items.Add (n); }
-      List<int> mTiles = [], mAbove = [], mBelow = [];
-   }
 
    // struct Node ══════════════════════════════════════════════════════════════════════════════════
    // This represents a Node in the DAG that we build to locate the tiles containing particular
@@ -105,14 +71,10 @@ public partial class Triangulator {
       // Get the X value at a given Y 
       public double GetX (double y) => XPrime + Slope * y;
 
-      // Get the X values at a couple of Ys
-      public (double, double) GetX (double y1, double y2) => (XPrime + Slope * y1, XPrime + Slope * y2);
-
       // Is the given point to the 'left' of this segment?
       public bool IsLeft (Point2 p) => (PA.X - PB.X) * (p.Y - PB.Y) - (PA.Y - PB.Y) * (p.X - PB.X) > 0;
 
-      public override string ToString ()
-         => $"Segment {A}..{B}, Left:{PartOnLeft}";
+      public override string ToString () => $"Segment {A}..{B}, Left:{PartOnLeft}";
    }
 
    // struct Tile ══════════════════════════════════════════════════════════════════════════════════
@@ -128,215 +90,191 @@ public partial class Triangulator {
          (Id, YMin, YMax, Left, Right, Node) = (id, yMin, yMax, left, right, node);
          ref Segment L = ref mS[left], R = ref mS[right];
          Hole = L.PartOnLeft; Check (L.PartOnLeft != R.PartOnLeft);
-         (LMin, LMax) = L.GetX (yMin, yMax);
-         (RMin, RMax) = R.GetX (yMin, yMax);
       }
 
       // Cloning constructor used when splitting a Tile
-      public Tile (int id, ref Tile t, int node) {
-         (Id, YMin, YMax, Left, Right, Node, Hole) = (id, t.YMin, t.YMax, t.Left, t.Right, node, t.Hole);
-         (LMin, LMax, RMin, RMax) = (t.LMin, t.LMax, t.RMin, t.RMax);
-      }
+      public Tile (int id, ref Tile t, int node) 
+         => (Id, YMin, YMax, Left, Right, Node, Hole) = (id, t.YMin, t.YMax, t.Left, t.Right, node, t.Hole);
 
       public readonly override string ToString () {
          string text = $"{Id}"; if (Hole) text += "*";
-         if (VTop > 0) text += $" T{VTop}{ETop.ToString ()[0]}";
-         if (VBot > 0) text += $" B{VBot}{EBot.ToString ()[0]}";
+         text += $"|{VTop}"; if (VTop != 0) text += ETop.ToString ()[0];
+         text += $"|{VBot}"; if (VBot != 0) text += EBot.ToString ()[0];
          return text;
       }
 
       // Properties ------------------------------------------------------------
       public int Id;                      // Index of this within the mT array
       public double YMin, YMax;           // Range of Y values spanned by this tile
-      public double LMin, LMax;           // Min & Max X on the left side
-      public double RMin, RMax;           // Min & Max X on the right side
       public int Left, Right;             // Left and Right segment indices
-      public InlineArray2<int> Top;       // Neighbors on the top
-      public InlineArray2<int> Bot;       // Neighbors on the bottom
       public bool Hole;                   // Is this a 'hole' tile?
       public int Node;                    // Index of node pointing to this tile
-
       public int VTop, VBot;              // If non-zero, the node touching the top/bottom line
       public EChain ETop, EBot;           // Where that does node touch the top/bottom line?
 
-      public readonly double XMin => (LMin + RMin) / 2;  // X value in the middle of the YMin line
-      public readonly double XMax => (LMax + RMax) / 2;  // X value in the middle of the YMax line
-
       // Methods ---------------------------------------------------------------
-      // Connects the tile t0 (ABOVE) to a tile t1 (BELOW), if they share any common
-      // overlap area
-      public void ConnectTo (Tile[] mT, ref Tile t1) {
-         Check (YMin.EQ (t1.YMax));
-         if (Bot[0] == t1.Id || Bot[1] == t1.Id) return; // Already connected
-
-         // Set left and right to be the overlapping segment between these two tiles
-         double left = t1.LMax, right = t1.RMax;
-         if (LMin > left) left = LMin;
-         if (RMin < right) right = RMin;
-         if (right < left + FINE) return;
-
-         // We found these two tiles are overlapping, connect them up
-         UpdateBottom (mT, 0, ref t1);
-         t1.UpdateTop (mT, 0, ref this);
+      // Gets the one or two bottom tiles that connect to this
+      public readonly (int B1, int B2) GetBottom (Vertex[] mV) {
+         int b1 = 0, b2 = 0;
+         if (VBot > 0) {
+            ref Vertex v = ref mV[VBot];
+            switch (EBot) {
+               case EChain.HSlice: (b1, b2) = (v.BL, v.BR); break;
+               case EChain.Left: b1 = v.BR; break;
+               case EChain.Right: b1 = v.BL; break;
+               case EChain.Valley: break;
+               default: throw new NotImplementedException ();
+            }
+            if (b2 == b1) b2 = 0;
+         }
+         return (b1, b2);
       }
 
-      // This disconnects this tile (the ABOVE) tile from t1 (the BELOW tile). 
-      // If there are links between these two tiles, those links are set to 0 (which means NIL). 
-      // Note that if only one of Top or Bot is used, we ensure that is Top[0] or Bot[0], and the
-      // other one (Top[1], Bot[1]) is set to null.
-      public void DisconnectFrom (ref Tile t1) {
-         if (Bot[0] == t1.Id) { Bot[0] = Bot[1]; Bot[1] = 0; } else if (Bot[1] == t1.Id) Bot[1] = 0;
-         if (t1.Top[0] == Id) { t1.Top[0] = t1.Top[1]; t1.Top[1] = 0; } else if (t1.Top[1] == Id) t1.Top[1] = 0;
+      // Gets the one or two top tiles that connect to this
+      public readonly (int T1, int T2) GetTop (Vertex[] mV) {
+         int t1 = 0, t2 = 0;
+         if (VTop > 0) {
+            ref Vertex v = ref mV[VTop];
+            switch (ETop) {
+               case EChain.HSlice: (t1, t2) = (v.TL, v.TR); break;
+               // Logic below is correct: if the vertex is on our LEFT chain, our top neighbor
+               // is the top-right tile touching the vertex
+               case EChain.Left: t1 = v.TR; break;
+               case EChain.Right: t1 = v.TL; break;
+               case EChain.Mountain: break;
+               default: throw new NotImplementedException ();
+            }
+            if (t2 == t1) t2 = 0;
+         }
+         return (t1, t2);
       }
 
-      // Splits this tile either vertically or horizontally and returns the new Tile.
-      // This also updates the tree structure 
-      public ref Tile Split (Triangulator t, ENode kind, int index) {
-         // Initially, there is a leaf node pointing to this tile. Update it to become
-         // an interior node (with the given kind and index). Depending on the kind, the index
-         // points to either a Vertex or a Segment
+      // Core routine used by both SplitY and SplitX
+      // This assumes that the mN and mT arrays have already been grown by the required numbers
+      ref Tile SplitBase (Triangulator t, ENode kind, int index) {
+         // Create 2 new leaf nodes pointing to the two split tiles (one of them is just this tile
+         // and the other will be created at mT[t.mTN]
          ref Node leaf = ref t.mN[Node]; Check (leaf.Kind == ENode.Leaf);
          leaf.Kind = kind; leaf.Index = index;
-
-         // Next, create two child nodes to point to the two tiles (this tile updated, and
-         // another new one we're going to create here)
-         t.mN[t.mNN] = new (t.mNN, ENode.Leaf, Id);
-         t.mN[t.mNN + 1] = new (t.mNN + 1, ENode.Leaf, t.mTN);
+         t.mN[t.mNN] = new (t.mNN, ENode.Leaf, Id);                  // Below
+         t.mN[t.mNN + 1] = new (t.mNN + 1, ENode.Leaf, t.mTN);       // Above
          Node = leaf.First = t.mNN; leaf.Second = t.mNN + 1;
 
-         // Now ready to create the new tile
+         // Create the new tile by cloning this one
          t.mT[t.mTN] = new Tile (t.mTN, ref this, leaf.Second);
          ref Tile t1 = ref t.mT[t.mTN];
-
-         if (kind == ENode.Y) {
-            // Splitting at a point. The new tile t1 is going to be above
-            double y = t.mV[index].Pt.Y;
-            Check (YMin < y && y < YMax);
-            t1.YMin = YMax = y;
-            ref Segment L = ref t.mS[Left], R = ref t.mS[Right];
-            t1.LMin = LMax = L.GetX (y); t1.RMin = RMax = R.GetX (y);
-
-            if ((t1.VTop = VTop) > 0) {
-               // This tile already has a 'top' vertex connected to it (and that top vertex
-               // could be holding onto this tile as one of its two neighbor tiles). Update both links
-               t1.ETop = ETop;
-               ref Vertex vTop = ref t.mV[VTop];
-               if (vTop.Kind != EVertex.Valley) {
-                  if (vTop.Tile[0] == Id) vTop.Tile[0] = t1.Id;
-                  else if (vTop.Tile[1] == Id) vTop.Tile[1] = t1.Id;
-               }
-            }
-            t1.VBot = VTop = index;
-            t1.EBot = ETop = EChain.HSlice;
-         } else {
-            // Splitting at a segment. The new tile t1 is going to be on the right of the segment
-            ref Segment seg = ref t.mS[index];
-            bool diagonal = seg.Diagonal;
-            #if VERIFY
-               double yM = (YMin + YMax) / 2;
-               ref Segment left = ref Add (ref sBase, Left), right = ref Add (ref sBase, Right);
-               double xL = left.GetX (yM), x = seg.GetX (yM), xR = right.GetX (yM);
-               Check (xL < x && x < xR);
-            #endif
-            t1.Left = Right = index;
-            (RMin, RMax) = (t1.LMin, t1.LMax) = seg.GetX (YMin, YMax);
-            if (!diagonal) { Hole = !seg.PartOnLeft; t1.Hole = seg.PartOnLeft; }
-            if (VTop != 0) {
-               ref Vertex vtop = ref t.mV[VTop];
-               switch (ETop) {
-                  case EChain.HSlice:
-                     if (seg.A == VTop) {    // Case (a)
-                        ETop = EChain.Right; t1.VTop = VTop; t1.ETop = EChain.Left;
-                        if (!diagonal && vtop.Kind == EVertex.Mountain) { Check (vtop.Tile[0] == Id); vtop.Tile[1] = t1.Id; }
-                     } else if (!seg.IsLeft (vtop.Pt)) { 
-                        t1.VTop = VTop; t1.ETop = ETop; VTop = 0;
-                        if (!diagonal) vtop.ReplaceTile (Id, t1.Id);
-                     }
-                     break;
-                  case EChain.Left:
-                     if (seg.A == VTop) {    // Case (b)
-                        ETop = EChain.Mountain; t1.VTop = VTop; t1.ETop = EChain.Left;
-                        if (!diagonal) Check (vtop.Kind == EVertex.Mountain);
-                     }                       // Case (c) - nothing to do
-                     break;
-                  case EChain.Right:
-                     if (seg.A == VTop) {    // Case (d)
-                        t1.VTop = VTop; t1.ETop = EChain.Mountain;
-                        if (!diagonal) Check (vtop.Kind == EVertex.Mountain); 
-                     } else {                // Case (e)
-                        t1.VTop = VTop; VTop = 0; t1.ETop = EChain.Right;
-                        if (!diagonal) vtop.ReplaceTile (Id, t1.Id);
-                     }
-                     break;
-                  case EChain.Mountain:
-                     Check (diagonal); t1.VTop = VTop; t1.ETop = ETop;
-                     break;
-                  default: throw new NotImplementedException ();                     
-               }
-            }
-            if (VBot != 0) {
-               ref Vertex vbot = ref t.mV[VBot];
-               switch (EBot) {
-                  case EChain.HSlice:
-                     if (seg.B == VBot) {    // Case (f)
-                        t1.VBot = VBot; EBot = EChain.Right; t1.EBot = EChain.Left;
-                        if (!diagonal && vbot.Kind == EVertex.Valley) { Check (vbot.Tile[0] == Id); vbot.Tile[1] = t1.Id; } 
-                     } else if (!seg.IsLeft (vbot.Pt)) { 
-                        t1.VBot = VBot; t1.EBot = EBot; VBot = 0;
-                        if (!diagonal) vbot.ReplaceTile (Id, t1.Id);
-                     }
-                     break;
-                  case EChain.Left:
-                     if (seg.B == VBot) {    // Case (g)
-                        EBot = EChain.Valley; t1.VBot = VBot; t1.EBot = EChain.Left;
-                        if (!diagonal) Check (vbot.Kind == EVertex.Valley); 
-                     }                       // Case (h) - nothing to do
-                     break;
-                  case EChain.Right:
-                     if (seg.B == VBot) {    // Case (i)
-                        t1.VBot = VBot; t1.EBot = EChain.Valley;
-                        if (!diagonal) Check (vbot.Kind == EVertex.Valley); 
-                     } else {                // Case (j)
-                        t1.VBot = VBot; VBot = 0; t1.EBot = EChain.Right;
-                        if (!diagonal) vbot.ReplaceTile (Id, t1.Id);
-                     }
-                     break;
-                  case EChain.Valley:
-                     Check (diagonal); t1.VBot = VBot; t1.EBot = EBot;
-                     break;
-                  default: throw new NotImplementedException ();                     
-               }
-            }
-         }
          t.mNN += 2; t.mTN++;
          return ref t1;
       }
 
-      // Updates one of the 'bottom' connections of the tile
-      public void UpdateBottom (Tile[] mT, int nOld, ref Tile tNew) {
-         for (int i = 0; i < 2; i++) {
-            if (Bot[i] != nOld) continue;
-            Bot[i] = tNew.Id;
-            if (Bot[0] != 0 && Bot[1] != 0) {
-               ref Tile tLeft = ref mT[Bot[0]], tRight = ref mT[Bot[1]];
-               if (tLeft.XMax > tRight.XMax) (Bot[0], Bot[1]) = (Bot[1], Bot[0]);
+      // Splits the tile into two by a given vertex.
+      // This is horizontal split of the tile - this tile continues on as the 'bottom' tile,
+      // while the newly created tile becomes the top tile
+      public void SplitY (Triangulator t, ref Vertex v) {
+         ref Tile t1 = ref SplitBase (t, ENode.Y, v.Id);
+         double y = v.Pt.Y; Check (YMin < y && y < YMax);
+         t1.YMin = YMax = y; 
+
+         // Link the vertex to the 4 neighboring tiles (BL and BR are same, TL and TR are same)
+         // At this point, this newly added vertex appears as a HSlice vertex in both the tiles
+         v.BL = v.BR = Id; v.TL = v.TR = t1.Id;
+
+         // At this point, t0's bottom links are fine. However t0's top links should be
+         // relinked to t1 (both Tile->Vertex, and Vertex->Tile links)
+         if (VTop != 0) {
+            ref Vertex vt = ref t.mV[VTop];
+            t1.VTop = VTop; t1.ETop = ETop;
+            switch (ETop) {
+               case EChain.HSlice: Check (vt.BL == Id && vt.BR == Id); vt.BL = vt.BR = t1.Id; break;
+               case EChain.Left: Check (vt.BR == Id); vt.BR = t1.Id; break;
+               case EChain.Right: Check (vt.BL == Id); vt.BL = t1.Id; break;
+               case EChain.Mountain: break;
+               default: Unexpected (); break;
             }
-            return; 
          }
-         Unexpected ();
+         VTop = t1.VBot = v.Id; ETop = t1.EBot = EChain.HSlice;
       }
 
-      public void UpdateTop (Tile[] mT, int nOld, ref Tile tNew) {
-         for (int i = 0; i < 2; i++) {
-            if (Top[i] != nOld) continue;
-            Top[i] = tNew.Id;
-            if (Top[0] != 0 && Top[1] != 0) {
-               ref Tile tLeft = ref mT[Top[0]], tRight = ref mT[Top[1]];
-               if (tLeft.XMin > tRight.XMin) (Top[0], Top[1]) = (Top[1], Top[0]);
-            } 
-            return;
+      // Splits the tile into two left/right by a given segment
+      public ref Tile SplitX (Triangulator t, int segment) {
+         ref Tile t1 = ref SplitBase (t, ENode.X, segment);
+         #if VERIFY
+            double yM = (YMin + YMax) / 2;
+            ref Segment S = ref t.mS[segment];
+            ref Segment L = ref t.mS[Left], R = ref t.mS[Right];
+            double xL = L.GetX (yM), x = S.GetX (yM), xR = R.GetX (yM);
+            Check (xL < x && x < xR);
+         #endif
+         Right = t1.Left = segment;
+         Check (VTop != 0 && VBot != 0);
+         ref Segment seg = ref t.mS[segment]; bool diagonal = seg.Diagonal;
+         if (!diagonal) { Hole = !seg.PartOnLeft; t1.Hole = seg.PartOnLeft; }
+         ref Vertex vt = ref t.mV[VTop], vb = ref t.mV[VBot];
+         switch (ETop) {
+            case EChain.HSlice:
+               if (seg.A == VTop) {             // Case (a)
+                  ETop = EChain.Right; t1.VTop = VTop; t1.ETop = EChain.Left;
+                  Check (vt.BR == Id); vt.BR = t1.Id;
+               } else {
+                  if (!seg.IsLeft (vt.Pt)) {    // Case (c)
+                     t1.VTop = VTop; t1.ETop = EChain.HSlice; VTop = 0;
+                     vt.ReplaceBottom (Id, t1.Id);
+                  }                             // Case (b) - no-op
+               }
+               break;
+            case EChain.Left:
+               if (seg.A == VTop) {             // Case (d)
+                  ETop = EChain.Mountain; t1.VTop = VTop; t1.ETop = EChain.Left;
+                  Check (vt.BR == Id && (diagonal || vt.Kind == EVertex.Mountain)); vt.BR = t1.Id;
+               }                                // Case (e) - no-op
+               break;
+            case EChain.Right:                  
+               if (seg.A == VTop) {             // Case (f)
+                  t1.VTop = VTop; t1.ETop = EChain.Mountain;
+                  Check (vt.BL == Id && (diagonal || vt.Kind == EVertex.Mountain));
+               } else {                         // Case (g)
+                  t1.VTop = VTop; t1.ETop = EChain.Right; VTop = 0;
+                  vt.ReplaceBottom (Id, t1.Id);
+               }
+               break;
+            case EChain.Mountain:
+               Check (diagonal); t1.VTop = VTop; t1.ETop = ETop;
+               break;
+            default: Unexpected (); break;
          }
-         Unexpected ();
+         switch (EBot) {
+            case EChain.HSlice:
+               if (seg.B == VBot) {             // Case (k)
+                  EBot = EChain.Right; t1.VBot = VBot; t1.EBot = EChain.Left;
+                  Check (vb.TR == Id); vb.TR = t1.Id;
+               } else {
+                  if (!seg.IsLeft (vb.Pt)) {    // Case (m) 
+                     t1.VBot = VBot; t1.EBot = EChain.HSlice; VBot = 0;
+                     vb.ReplaceTop (Id, t1.Id);
+                  }                             // Case (l) - no-op
+               }
+               break;
+            case EChain.Left:                   // Case (n)
+               if (seg.B == VBot) {
+                  EBot = EChain.Valley; t1.VBot = VBot; t1.EBot = EChain.Left;
+                  Check (vb.TR == Id && (diagonal || vb.Kind == EVertex.Valley)); vb.TR = t1.Id;
+               }                                // Case (o) - no-op
+               break;
+            case EChain.Right:
+               if (seg.B == VBot) {             // Case (p)
+                  t1.VBot = VBot; t1.EBot = EChain.Valley;
+                  Check (vb.TL == Id && (diagonal || vb.Kind == EVertex.Valley));
+               } else {                         // Case (q)
+                  t1.VBot = VBot; t1.EBot = EChain.Right; VBot = 0;
+                  vb.ReplaceTop (Id, t1.Id);
+               }
+               break;
+            case EChain.Valley:
+               Check (diagonal); t1.VBot = VBot; t1.EBot = EBot;
+               break;
+            default: Unexpected (); break;
+         }
+         return ref t1;
       }
    }
 
@@ -354,16 +292,26 @@ public partial class Triangulator {
       public readonly int Id;          // Index of the vertex in the mV array
       public readonly Point2 Pt;       // Point location of the vertex
       public readonly EVertex Kind;    // What kind of vertex is this?
-      public InlineArray2<int> Tile;   // Two tiles touching this vertex
       public bool Inserted;
+      public int TL, TR, BL, BR;       // Neighbor tiles in the 4 directions
 
       // Methods ---------------------------------------------------------------
-      public void ReplaceTile (int nOld, int nNew) {
-         if (Tile[0] == nOld) Tile[0] = nNew;
-         else if (Tile[1] == nOld) Tile[1] = nNew;
+      public void ReplaceTop (int nOld, int nNew) {
+         Check (TL == nOld || TR == nOld);
+         if (TL == nOld) TL = nNew; if (TR == nOld) TR = nNew;
       }
 
-      public readonly override string ToString () => $"Vertex#{Id} {Pt} : {Kind}";
+      public void ReplaceBottom (int nOld, int nNew) {
+         Check (BL == nOld || BR == nOld);
+         if (BL == nOld) BL = nNew; if (BR == nOld) BR = nNew;
+      }
+
+      public readonly override string ToString () {
+         string text = $"{Kind.ToString ()[0]}{Id}|{TL}"; if (TR != TL) text += $",{TR}";
+         text += $"|{BL}"; if (BR != BL) text += $",{BR}";
+         if (text.EndsWith ("|0|0")) text = text[..^4];
+         return text;
+      }
    }
 }
 #endregion

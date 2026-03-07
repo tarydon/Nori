@@ -67,20 +67,6 @@ public class Tester {
       }
    }
    Triangulator mT = new ();
-
-   [Benchmark]
-   public void NoriTessNew () {
-      for (int k = 0; k < Iter; k++) {
-         for (int i = 0; i < mPolys.Count; i++) {
-            var polys = mPolys[i];
-            int outer = mOuter[i];
-            mT2.Reset ();
-            for (int j = 0; j < polys.Count; j++) mT2.AddPoly (polys[j], j != outer);
-            mT2.Process ();
-         }
-      }
-   }
-   Nori.Alt.Triangulator mT2 = new ();
    const int Iter = 100; 
 }
 
