@@ -227,6 +227,7 @@ public class OBBCollider {
       mA = ta; mB = tb;
       mDone = mCrashing = false; mOneCrash = oneCrash;
       mBtoA = Matrix3.From (in csB) * Matrix3.To (in csA);
+      mBPts = mB.Pts;
       BObb = n => mB.OBBs[n]; BTri = n => mB.Tris[n];
       // Each time the top level Check routine is called (a fresh collision check is starting), we do
       // this initialization:
@@ -257,6 +258,7 @@ public class OBBCollider {
             Array.Resize (ref mPtRung, mB.Pts.Length);
             Array.Resize (ref mBAPts, mB.Pts.Length);
          }
+         mBPts = mBAPts;
       }
       mATris.Clear (); mBTris.Clear (); mDepth = 0;
       Push (1, 1);
@@ -268,7 +270,7 @@ public class OBBCollider {
    // or triangles (if the index is negative). This is a recursive routine that checks one entity
    // from OBBTree A with an entity from OBBTree b. 
    unsafe void Check () {
-      fixed (Point3f* pAPts = mA.Pts) fixed (Point3f* pBPts = mBAPts)
+      fixed (Point3f* pAPts = mA.Pts) fixed (Point3f* pBPts = mBPts)
       fixed (OBB* pABox = mA.OBBs) fixed (CTri* pATri = mA.Tris) {
          while (Pop (out var a, out var b)) {
             if (a > 0) {
@@ -396,7 +398,7 @@ public class OBBCollider {
    // - the CTri contain normal vectors that need to be transformed (I think the D values will not
    //   change, but let's verify that is the case!)
    // - the OBBs need to be transformed (Center, X, Y)
-   Point3f[] mBAPts = [];
+   Point3f[] mBAPts = [], mBPts = [];
    CTri[] mBATris = [];
    OBB[] mBAOBBs = [];
 
@@ -418,5 +420,4 @@ public class OBBCollider {
    // array during the TriTri collision checks. 
    // 
    uint[] mPtRung = [], mTriRung = [], mOBBRung = [];
-   const uint MaxRung = 4_000_000_000;
 }

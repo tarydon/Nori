@@ -580,6 +580,23 @@ class TMisc {
       Assert.IsTrue (hull.Contains ((0, 0)) && hull.Contains ((100, 0)) && hull.Contains ((0, 100)) && hull.Contains ((100, 100)));
    }
 
+   [Test (190, "Sphere x Sphere intersection test")]
+   public void Test22 () {
+      var a = MinSphere.From ([(-10, 0, 0), (10, 0, 0)]);
+      // Intersecting
+      var b = MinSphere.From ([(0, 8, 0), (0, 30, 0)]);
+      a.Intersects (b).IsTrue ();
+      // Fully contained
+      b = MinSphere.From ([(0, 0, -5), (0, 0, 5)]);
+      a.Intersects (b).IsTrue ();
+      // Touching at one point
+      b = MinSphere.From ([(0, 10, 0), (0, 30, 0)]);
+      a.Intersects (b).IsTrue ();
+      // Just outside
+      b = MinSphere.From ([(0, 0, 10.001), (0, 0, 30)]);
+      a.Intersects (b).IsFalse ();
+   }
+
    class T1Type : IIndexed {
       public override string ToString () => $"T{Idx}";
       public int Idx { get; set; }
