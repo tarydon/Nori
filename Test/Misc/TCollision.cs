@@ -179,18 +179,18 @@ class TCollision {
       Dump (1, 0, EDir.Root);
       sb.Insert (0, $"Nodes: {tree.OBBs.Length + tree.Tris.Length - 2}. LeftH: {leftH}, RightH: {rightH}, Area = {area.R6 ()}\n");
       File.WriteAllText (NT.TmpTxt, sb.ToString ());
-      Assert.TextFilesEqual ("Sim/OBBTree.txt", NT.TmpTxt);
+      Assert.TextFilesEqual (NT.File ("Sim/OBBTree.txt"), NT.TmpTxt);
 
       void Dump (int id, int level, EDir dir) {
-         string indent = new (' ', level);
+         string indent = new ('\t', level);
          var node = tree.OBBs[id];
          if (node.Left > 0) Dump (node.Left, level + 1, EDir.Left);
-         else if (node.Left < 0) sb.AppendLine ($"{indent} LT{-node.Left}");
+         else if (node.Left < 0) sb.AppendLine ($"{indent}\tLT{-node.Left}");
          string pre = dir == 0 ? "" : dir < 0 ? "L" : "R";
          area += node.Area;
          sb.AppendLine ($"{indent}{pre}B{id} ");
          if (node.Right > 0) Dump (node.Right, level + 1, EDir.Right);
-         else if (node.Right < 0) sb.AppendLine ($"{indent} RT{-node.Right}");
+         else if (node.Right < 0) sb.AppendLine ($"{indent}\tRT{-node.Right}");
       }
 
       int GetHeight (int id) {
@@ -241,7 +241,7 @@ class TCollision {
       }
 
       File.WriteAllText (NT.TmpTxt, sb.ToString ());
-      Assert.TextFilesEqual ("Sim/OBBCollider.txt", NT.TmpTxt);
+      Assert.TextFilesEqual (NT.File ("Sim/OBBCollider.txt"), NT.TmpTxt);
 
       CoordSystem CS () {
          var vX = new Vector3 (D (), D (), D ()).Normalized ();
