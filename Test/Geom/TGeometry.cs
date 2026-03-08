@@ -474,15 +474,14 @@ class TessTests {
       int outer = input.MaxIndexBy (a => a.GetBound ().Area);
 
       for (int i = 1; i < 100; i++) {
-         mT.Reset (i, 0.08642 * i);
+         using var td = Triangulator.Borrow (out var tess, seed: i, rotAngle: 0.08642 * i);
          for (int j = 0; j < input.Count; j++)
-            mT.AddPoly (input[j], j != outer);
-         mT.Process ();
-
-         double triArea = 0; 
-         var verts = mT.Pts; var tris = mT.Tris;
-         (tris.Length / 3).Is (154);
-         for (int j = 0; j < tris.Length; j += 3) {
+            tess.AddPoly (input[j], j != outer);
+         tess.Process ();
+         var verts = tess.Pts; var tris = tess.Tris;
+         double triArea = 0;
+         (tris.Count / 3).Is (154);
+         for (int j = 0; j < tris.Count; j += 3) {
             pts.Clear ();
             for (int k = 0; k < 3; k++) pts.Add (verts[tris[j + k]]);
             triArea += Poly.Lines (pts, true).GetArea ();
@@ -495,21 +494,22 @@ class TessTests {
       var input = LoadPolys (file);
       int outer = input.MaxIndexBy (a => a.GetBound ().Area);
 
-      double dwgArea = 0, triArea = 0; 
-      mT.Reset ();
+      double dwgArea = 0, triArea = 0;
+      using var td = Triangulator.Borrow (out var tess);
       for (int i = 0; i < input.Count; i++) {
-         mT.AddPoly (input[i], i != outer);
+         tess.AddPoly (input[i], i != outer);
          dwgArea += input[i].GetArea () * (i == outer ? 1 : -1);
       }
-      mT.Process (); 
+      tess.Process ();
+      var verts = tess.Pts; List<int> tris = [.. tess.Tris];
 
       List<Point2> pts = [];
       var sb = new StringBuilder ();
       int sum = input.Sum (a => a.Count);
       sb.AppendLine ($"Triangulation: {file}, {input.Count} polys, {sum} nodes");
-      var verts = mT.Pts; var tris = mT.Tris;
-      sb.AppendLine ($"{tris.Length / 3} triangles:");
-      for (int i = 0; i < tris.Length; i += 3) {
+      tris = SortTris (tris);
+      sb.AppendLine ($"{tris.Count / 3} triangles:");
+      for (int i = 0; i < tris.Count; i += 3) {
          pts.Clear ();
          for (int j = 0; j < 3; j++) {
             sb.Append ($" {tris[i + j]}");
@@ -525,6 +525,25 @@ class TessTests {
       Assert.TextFilesEqual (NT.File ($"Geom/Tess/{file}.txt"), NT.TmpTxt);
    }
 
+   List<int> SortTris (List<int> tris) {
+      List<int> idx = [];
+      for (int i = 0; i < tris.Count; i += 3) idx.Add (i);
+      idx.Sort (CompareTri);
+
+      List<int> tmp = [];
+      for (int i = 0; i < idx.Count; i++) {
+         int n = idx[i];
+         tmp.Add (tris[n]); tmp.Add (tris[n + 1]); tmp.Add (tris[n + 2]);
+      }
+      return tmp;
+
+      int CompareTri (int a, int b) {
+         int n = tris[a].CompareTo (tris[b]); if (n != 0) return n;
+         n = tris[a + 1].CompareTo (tris[b + 1]); if (n != 0) return n;
+         return tris[a + 2].CompareTo (tris[b + 2]);
+      }
+   }
+
    List<Poly> LoadPolys (string file) {
       List<Poly> input = []; List<Point2> pts = [];
       var dwg = DXFReader.Load (NT.File ($"Geom/Tess/{file}.dxf"));
@@ -538,5 +557,4 @@ class TessTests {
       }
       return input;
    }
-   Triangulator mT = new ();
 }

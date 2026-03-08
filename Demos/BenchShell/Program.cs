@@ -37,7 +37,7 @@ public class Tester {
       foreach (var e2p in dwg.Ents.OfType<E2Poly> ().Where (a => a.Layer.Name == "0")) {
          var poly = e2p.Poly;
          if (poly.HasArcs) {
-            pts.Clear (); poly.Discretize (pts, Lib.CoarseTess, Lib.CoarseTessAngle);
+            pts.Clear (); poly.Discretize (pts, Lib.FineTess, Lib.FineTessAngle);
             input.Add (Poly.Lines (pts, true));
          } else
             input.Add (poly);
@@ -49,7 +49,7 @@ public class Tester {
    public void GLUTess () {
       for (int k = 0; k < Iter; k++) {
          for (int i = 0; i < mPts.Count; i++) {
-            int tris = Tess2D.Process (mPts[i], mSplits[i]).Count / 3;
+            int n = Tess2D.Process (mPts[i], mSplits[i]).Count / 3;
          }
       }
    }
@@ -60,14 +60,14 @@ public class Tester {
          for (int i = 0; i < mPolys.Count; i++) {
             var polys = mPolys[i];
             int outer = mOuter[i];
-            mT.Reset ();
-            for (int j = 0; j < polys.Count; j++) mT.AddPoly (polys[j], j != outer);
-            mT.Process ();
+            using var td = Triangulator.Borrow (out var tess);
+            for (int j = 0; j < polys.Count; j++) tess.AddPoly (polys[j], j != outer);
+            tess.Process ();
          }
       }
    }
-   Triangulator mT = new ();
-   const int Iter = 100; 
+
+   const int Iter = 100;
 }
 
 static class Program {
@@ -76,6 +76,5 @@ static class Program {
       //var t = new Tester ();
       //t.GLUTess ();
       //t.NoriTess ();
-      //t.NoriTessNew ();
    }
 }

@@ -1,9 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Reflection.Emit;
-using System.Text;
+// ────── ╔╗
+// ╔═╦╦═╦╦╬╣ Triangulator3.cs
+// ║║║║╬║╔╣║ Debug code for Triangulator 
+// ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 namespace Nori;
 
+#region class Triangulator : debug code ------------------------------------------------------------
+#if DEBUG_TRIANGULATOR
 public partial class Triangulator {
    public string GetNodeGraph () {
       StringBuilder sb = new ();
@@ -32,9 +34,7 @@ public partial class Triangulator {
       return sb.ToString (); 
    }
 
-   /// <summary>
-   /// Returns a debug drawing
-   /// </summary>
+   /// <summary>Returns a debug drawing</summary>
    public Dwg2 GetDebugDwg () {
       Dwg2 dwg = new ();
       double size = Bound.Diagonal / 150.0;
@@ -62,7 +62,7 @@ public partial class Triangulator {
       AddLayer ("TILE", Color4.Red);
       List<(Point2, string)> tileText = [];
       Dictionary<int, Bound1> tileTop = [], tileBot = [];
-      for (int i = 1; i < mTN; i++) {
+      for (int i = 1; i < mTN_; i++) {
          ref Tile t = ref mT[i]; if (t.Id == 0) continue;
          if (mMerged && t.Hole) continue;
          double y0 = t.YMin, y1 = t.YMax;
@@ -97,7 +97,7 @@ public partial class Triangulator {
          dwg.Add (new E2Text (dwg.CurrentLayer, dwg.Styles[^1], s, pt, size, 0, 0, 1, ETextAlign.MidCenter));
 
       AddLayer ("LINKS", Color4.Blue);
-      for (int i = 1; i < mTN; i++) {
+      for (int i = 1; i < mTN_; i++) {
          if (mAddedDiagonals) continue; 
          ref Tile t = ref mT[i]; if (t.Id == 0) continue;
          (int top1, int top2) = t.GetTop (mV);
@@ -135,3 +135,5 @@ public partial class Triangulator {
       }
    }
 }
+#endif
+#endregion

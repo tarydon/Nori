@@ -1,13 +1,12 @@
 // ────── ╔╗
-// ╔═╦╦═╦╦╬╣ Triangulator2.cs
-// ║║║║╬║╔╣║ <<TODO>>
-// ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
-using System.Runtime.CompilerServices;
+// ╔-╦╦-╦╦╬╣ Triangulator2.cs
+// ║║║║╬║╔╣║ Nested types for the Triangulator class
+// ╚╩-╩-╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 namespace Nori;
 
 #region class Triangulator : nested types ----------------------------------------------------------
 public partial class Triangulator {
-   // Enumerations ═════════════════════════════════════════════════════════════════════════════════
+   // Enumerations ---------------------------------------------------------------------------------
    // EVKind lists the types of vertices
    enum EVertex { Regular, Valley, Mountain };
    // EKind lists the types of nodes
@@ -15,7 +14,13 @@ public partial class Triangulator {
    // When a vertex is connected to a tile, which 'chain does it belong to
    enum EChain { HSlice, Left, Right, Valley, Mountain };
 
-   // struct Node ══════════════════════════════════════════════════════════════════════════════════
+   // struct Disposer ------------------------------------------------------------------------------
+   // Helper used to call Release on a triangulator after we've finished using it
+   readonly struct Disposer (Triangulator mT) : IDisposable {
+      public readonly void Dispose () => mT.mInUse = false;
+   }
+
+   // struct Node ----------------------------------------------------------------------------------
    // This represents a Node in the DAG that we build to locate the tiles containing particular
    // points. Nodes are of these types:
    // - Leaf : a bottom level node in the DAG, and Index points to a Tile
@@ -77,7 +82,7 @@ public partial class Triangulator {
       public override string ToString () => $"Segment {A}..{B}, Left:{PartOnLeft}";
    }
 
-   // struct Tile ══════════════════════════════════════════════════════════════════════════════════
+   // struct Tile ----------------------------------------------------------------------------------
    // Represents a trapezoid in the Seidel decomposition of the plane. 
    // Each Tile is a trapezoid with top and bottom edges parallel to the X axis (designated
    // by YMin and YMax), and left and right edges that are non-horizontal segments (represented
@@ -156,14 +161,15 @@ public partial class Triangulator {
          // and the other will be created at mT[t.mTN]
          ref Node leaf = ref t.mN[Node]; Check (leaf.Kind == ENode.Leaf);
          leaf.Kind = kind; leaf.Index = index;
+         int nNew = t.AllocTile ();
          t.mN[t.mNN] = new (t.mNN, ENode.Leaf, Id);                  // Below
-         t.mN[t.mNN + 1] = new (t.mNN + 1, ENode.Leaf, t.mTN);       // Above
+         t.mN[t.mNN + 1] = new (t.mNN + 1, ENode.Leaf, nNew);    // Above
          Node = leaf.First = t.mNN; leaf.Second = t.mNN + 1;
+         t.mNN += 2;
 
          // Create the new tile by cloning this one
-         t.mT[t.mTN] = new Tile (t.mTN, ref this, leaf.Second);
-         ref Tile t1 = ref t.mT[t.mTN];
-         t.mNN += 2; t.mTN++;
+         t.mT[nNew] = new Tile (nNew, ref this, leaf.Second);
+         ref Tile t1 = ref t.mT[nNew];
          return ref t1;
       }
 
@@ -278,7 +284,7 @@ public partial class Triangulator {
       }
    }
 
-   // struct Vertex ════════════════════════════════════════════════════════════════════════════════
+   // struct Vertex --------------------------------------------------------------------------------
    // This represents a Vertex in the tessellation (a node picked from one of the Poly inputs)
    // Each vertex is classified as Regular, Mountain or Valley. A regular vertex has one neighbor
    // above and one neighbor below it (in Y). A mountain vertex has both neighbors below it (lower Y).

@@ -1,26 +1,36 @@
 // ────── ╔╗
 // ╔═╦╦═╦╦╬╣ Triangulator.cs
-// ║║║║╬║╔╣║ <<TODO>>
+// ║║║║╬║╔╣║ Implements a Triangulator that can handle non-intersecting simple polygons
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 namespace Nori;
 
+#region class Triangulator -------------------------------------------------------------------------
+/// <summary>Implements a performant tessellator that can handle non-intersecting simple polygons</summary>
+/// This can handle only non-intersecting polygons, including polygons with holes. It is designed
+/// for the common use-case of tessellating parametric surfaces where the contours are non-intersecting,
+/// and it is easy to determine which are the outer contours, and which are the holes. 
 public partial class Triangulator {
    // Properties ---------------------------------------------------------------
-   /// <summary>List of all the points gathered from all the input Poly</summary>
-   public ReadOnlySpan<Point2> Pts => mInput.AsSpan ();
+   /// <summary>The total set of points (obtained by discretizing the polys)</summary>
+   /// This is the set of points into which the Tris array indexes. 
+   /// Caution: Don't hold onto this while you are adding polys - the list may grow, and
+   /// the span may become stale. 
+   public List<Point2> Pts => mInput;
    List<Point2> mInput = [];
 
-   /// <summary>Indices pointing into the Pts array - taken 3 at a time, these are the output triangles</summary>
-   public ReadOnlySpan<int> Tris => mTris.AsSpan ();
+   /// <summary>The set of integers making up the triangles</summary>
+   /// These integers, taken 3 at a time, point into the Pts array
+   public List<int> Tris => mTris;
    List<int> mTris = [];
 
    // Methods ------------------------------------------------------------------
    /// <summary>Adds a contour for tessellation</summary>
-   public void AddPoly (Poly poly, bool hole) {
+   /// Returns the number of points added into the tessellation for this contour
+   public int AddPoly (Poly poly, bool hole) {
       // First, if we need to reverse the order of points, or to discretize a Poly
       // with curves, make a copy
       int start = mInput.Count;
-      poly.Discretize (mInput, Lib.CoarseTess, Lib.CoarseTessAngle);
+      poly.Discretize (mInput, mTolerance, mAngTolerance);
       if (poly.GetWinding () == Poly.EWinding.CW ^ hole) mInput.Reverse (start, mInput.Count - start);
       ReadOnlySpan<Point2> pts = mInput.AsSpan ()[start..];
 
@@ -46,20 +56,40 @@ public partial class Triangulator {
          int j = (i + 1) % n;
          mS[mSN] = new Segment (mSN, mV, i + vStart, j + vStart);
       }
+      return n; 
    }
 
-   /// <summary>Reset should be called to initialize the Triangulator before adding contours</summary>
-   public void Reset (int seed = 42, double rotAngle = 0.1624) {
-      mBound = new (); mMerged = mAddedDiagonals = false;
-      mInput.Clear (); mTris.Clear (); 
-      mDiagTiles.Clear (); mValleyTiles.Clear (); 
-      mSN = mNN = 0; mTN = mVN = 1;
-      if (mBiasAngle != rotAngle) (mSin, mCos) = Math.SinCos (mBiasAngle = rotAngle);
-      mR = new ((uint)seed);
+   /// <summary>This is used to borrow a Triangulator for use</summary>
+   /// The usage is like this:
+   /// <code>
+   /// using var disp = Triangulator.Borrow (out var tess);
+   /// tess.AddPoly (...); tess.AddPoly (...); tess.AddPoly (...);
+   /// tess.Process ();
+   /// var pts = tess.Pts;          // Set of points gathered from all the poly
+   /// var triangles = tess.Tris;   // Integers combining those pts into triangles (take 3 at a time)
+   /// </code>
+   ///
+   /// Triangulator.Borrow returns a triangulator (from a pool of triangulators that is maintained),
+   /// and also an IDisposable that must be disposed to release the triangulator back into the pool.
+   /// So make sure to put the return value into a using statement so this happens automatically. 
+   /// <param name="etol">Tolerance used when discretizing Poly with curves</param>
+   /// <param name="rotAngle">Internal rotation bias angle (use only if default throws an exception)</param>
+   /// <param name="seed">Random seed - typically used for testing</param>
+   public static IDisposable Borrow (out Triangulator tOut, ETolerance etol = ETolerance.Coarse, double rotAngle = 0.1624, int seed = 42) {
+      Triangulator? t;
+      lock (mAll) {
+         t = mAll.FirstOrDefault (a => !a.mInUse);
+         if (t == null) {
+            mAll.Add (t = new ());
+            if (mMaxCount == 0) mMaxCount = 2 * Environment.ProcessorCount;
+            if (mAll.Count > mMaxCount) throw new Exception ("Too many triangulators borrowed!");
+         }
+      }
+      t.Reset (seed, rotAngle, etol);
+      return new Disposer (tOut = t);
    }
-
-   public Bound2 Bound => mBound;
-   Bound2 mBound;
+   static List<Triangulator> mAll = [];
+   static int mMaxCount;
 
    /// <summary>Process is called to actually perform the tessellation</summary>
    public void Process () {
@@ -70,11 +100,9 @@ public partial class Triangulator {
          InsertEndpoints (ref seg);
          SliceTiles (ref seg);
       }
-      mMerged = true; 
-      AddDiagonals (); mAddedDiagonals = true; 
+      AddDiagonals (); 
       foreach (var n in mValleyTiles) ExtractTriangles (n);
    }
-   bool mMerged, mAddedDiagonals;
 
    // Implementation -----------------------------------------------------------
    // This adds diagonals to partition the tiles into a set of monotone polygons
@@ -84,7 +112,7 @@ public partial class Triangulator {
    // at the top. It is then a 'reflex' vertex that needs to be connected to a corner (or another
    // reflex vertex) to split the stack into two monotones. 
    void AddDiagonals () {
-      for (int i = mTN - 1; i > 0; i--) {
+      for (int i = mTN_ - 1; i > 0; i--) {
          ref Tile t = ref mT[i];
          if (t.Id == 0 || t.Hole) continue;
          if (t.VBot != 0 && t.EBot == EChain.HSlice || t.VTop != 0 && t.ETop == EChain.HSlice) mDiagTiles.Add (t.Id);
@@ -96,11 +124,17 @@ public partial class Triangulator {
          mS[mSN] = new (mSN, mV, t0.VTop, t0.VBot, true);
          ref Segment seg = ref mS[mSN]; mSN++;
          mLefts.Clear (); mLefts.Add (n);
-         SliceTiles (ref seg);
-         ref Tile t1 = ref mT[mTN - 1];
+         int nNewTile = SliceTiles (ref seg);
+         ref Tile t1 = ref mT[nNewTile];
          if (t0.VBot != 0 && t0.EBot == EChain.Valley) mValleyTiles.Add (t0.Id);
          if (t1.VBot != 0 && t1.EBot == EChain.Valley) mValleyTiles.Add (t1.Id);
       }
+   }
+
+   // Allocates a new tile ID
+   int AllocTile () {
+      if (mFreeTile.Count > 0) return mFreeTile.Pop ();
+      Grow (ref mT, mTN_, 1); return mTN_++;
    }
 
    // Given a monotone polygon, extracts the triangles from it using DeBerg's algorithm.
@@ -200,7 +234,7 @@ public partial class Triangulator {
    // smaller trapezoids
    void InsertBorder () {
       var b = mBound.InflatedL (1);
-      Grow (ref mV, mVN, 4); Grow (ref mS, mSN, 2);
+      Grow (ref mV, mVN, 4); Grow (ref mS, mSN, 2); 
       Point2 p0 = new (b.X.Min, b.Y.Min), p1 = new (b.X.Min, b.Y.Max);
       Point2 p2 = new (b.X.Max, b.Y.Min), p3 = new (b.X.Max, b.Y.Max);
       
@@ -211,12 +245,13 @@ public partial class Triangulator {
       mS[mSN + 0] = new (mSN + 0, mV, mVN, mVN + 1);
       mS[mSN + 1] = new (mSN + 1, mV, mVN + 3, mVN + 2);
       // Add the root node, and the base tile covering the entire rectangular field
-      mN[0] = new (0, ENode.Leaf, mTN);
-      mT[mTN] = new Tile (mTN, mS, p0.Y, p1.Y, mSN, mSN + 1, 0);
+      int nNew = AllocTile ();
+      mN[0] = new (0, ENode.Leaf, nNew);
+      mT[nNew] = new Tile (nNew, mS, p0.Y, p1.Y, mSN, mSN + 1, 0);
       // Note we don't bump up the mSN counter, we don't want to consider the two most recently
       // added boundary segments into the tessellation - they serve only to create the dummy
       // tile that acts as the root
-      mVN += 4; mNN++; mTN++;
+      mVN += 4; mNN++;
    }
 
    // This is called to insert a segment into the trapezoid map. 
@@ -226,7 +261,7 @@ public partial class Triangulator {
    // would be cut by the segment and adds them to the mLefts array
    void InsertEndpoints (ref Segment seg) {
       // To insert top and bottom points, we could need 2 new tiles (and 4 new nodes)
-      Grow (ref mT, mTN, 2); Grow (ref mN, mNN, 4);
+      Grow (ref mT, mTN_, 2); Grow (ref mN, mNN, 4);
       ref Vertex v0 = ref mV[seg.A], v1 = ref mV[seg.B];
       if (!v0.Inserted) InsertVertex (ref v0);
       if (!v1.Inserted) InsertVertex (ref v1);
@@ -283,7 +318,23 @@ public partial class Triangulator {
       ref Node n0 = ref mN[t0.Node];
       Check (n0.Index == t0.Id);
       n0.Kind = ENode.Redirect; n0.First = t1.Node;
-      t0.Id = 0;
+      mFreeTile.Push (t0.Id); t0.Id = 0;
+   }
+
+   // Reset is be called at the beginning initialize the Triangulator before adding contours
+   void Reset (int seed, double rotAngle, ETolerance etol) {
+      mBound = new ();
+      mInput.Clear (); mTris.Clear ();
+      switch (etol) {
+         case ETolerance.Fine: mTolerance = Lib.FineTess; mAngTolerance = Lib.FineTessAngle; break;
+         case ETolerance.Coarse: mTolerance = Lib.CoarseTess; mAngTolerance = Lib.CoarseTessAngle; break;
+         default: throw new BadCaseException (etol);
+      }
+      mDiagTiles.Clear (); mValleyTiles.Clear (); mFreeTile.Clear ();
+      mSN = mNN = 0; mTN_ = mVN = 1;
+      if (mBiasAngle != rotAngle) (mSin, mCos) = Math.SinCos (mBiasAngle = rotAngle);
+      mR = new ((uint)seed);
+      mInUse = true;
    }
 
    // Rotate a point through the bias angle
@@ -301,11 +352,12 @@ public partial class Triangulator {
       }
    }
 
-   // We gathered (in mChain) a list of tiles that need to be sliced by the given segment
-   void SliceTiles (ref Segment seg) {
+   // We gathered (in mChain) a list of tiles that need to be sliced by the given segment.
+   // This returns the last tile sliced.
+   int SliceTiles (ref Segment seg) {
       mRights.Clear ();
       int n = mLefts.Count;
-      Grow (ref mT, mTN, n); Grow (ref mN, mNN, n * 2);
+      Grow (ref mT, mTN_, n); Grow (ref mN, mNN, n * 2);
       // First, split every tile in the mChain list. This tile remains as the left tile, 
       // and we create a new right tile, both separated by the Segment in between them. 
       // For each layer of tiles that we create, create a Layer object to hold the details
@@ -317,13 +369,14 @@ public partial class Triangulator {
          if (left.VTop == 0) MergeTiles (ref mT[mLefts[i - 1]], ref left);
          if (right.VTop == 0) MergeTiles (ref mT[mRights[i - 1]], ref right);
       }
+      return mRights[^1];
    }
 
    // Helpers ------------------------------------------------------------------
    static partial void Check (bool condition);
-   //static partial void Check (bool condition) {
-   //   if (!condition) throw new InvalidOperationException ("Triangulator");
-   //}
+   // static partial void Check (bool condition) {
+   //    if (!condition) throw new InvalidOperationException ("Triangulator");
+   // }
 
    // Helper to grow an array (more optimized than Array.Resize, since it
    // copies only the 'used' elements, not all the elements currently in the array)
@@ -345,11 +398,16 @@ public partial class Triangulator {
    Segment[] mS = new Segment[32];  // List of all segments
    Node[] mN = new Node[32];        // Nodes making up the tree
    Tile[] mT = new Tile[32];        // Trapezoidal tiles covering the plane
-   int mVN, mSN, mNN, mTN;          // Usage counts (Vertices, Segments, Nodes, Tiles)
+   int mVN, mSN, mNN, mTN_;          // Usage counts (Vertices, Segments, Nodes, Tiles)
    Rand mR = new (42);              // Used for random insertion of segments
    int[] mShuffle = new int[32];    // A permutation of the segments
    List<int> mDiagTiles = [];       // Tiles where diagonals need to be drawn
    List<int> mValleyTiles = [];     // Valley tiles, from which we start monotone polygons
+   Stack<int> mFreeTile = [];       // Tiles that are free for reuse
+   Bound2 mBound;                   // Bound of poly added so far (in rotated coordinates)
+   bool mInUse;                     // Is this triangulator in use (borrowed)
    double mBiasAngle, mSin, mCos;
+   double mTolerance, mAngTolerance;
    const double FINE = 1e-9;
 }
+#endregion

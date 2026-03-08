@@ -296,6 +296,7 @@ public sealed class E3Cylinder : E3CSSurface {
 public sealed class E3Plane : E3CSSurface {
    // Constructors -------------------------------------------------------------
    /// <summary>Construct a Plane, given the target CoordSystem</summary>
+   /// trims[0] should be the outer contour, the rest are holes
    public E3Plane (int id, ImmutableArray<Contour3> trims, CoordSystem cs) : base (id, trims, cs) 
       => mFlags |= (E3Flags.ULinear | E3Flags.VLinear);
    E3Plane () { }
@@ -303,7 +304,30 @@ public sealed class E3Plane : E3CSSurface {
    // Overrides ----------------------------------------------------------------
    // The mesh for the E3Plane can be built with just a simple 2D tessellation,
    // lofted up into the final space of the plane
-   protected override Mesh3 BuildMesh (double tolerance, double maxAngStep) {
+   protected override Mesh3 BuildMesh (double tol, double angTol) {
+      List<int> wires = []; int a = 0;
+      using var td = Triangulator.Borrow (out var tess, ETolerance.Fine);
+      for (int i = 0; i < Contours.Length; i++) {
+         int b = a + tess.AddPoly (Contours[i].Flatten (CS), i > 0);
+         wires.Add (b - 1);
+         for (int j = a; j < b; j++) { wires.Add (j); wires.Add (j); }
+         wires.RemoveLast ();
+         a = b; 
+      }
+      tess.Process ();
+
+      var xfm = ToXfm;
+      var pts = tess.Pts; var tris = tess.Tris;
+      var normal = (Vec3H)(IsNormalFlipped ? -CS.VecZ : CS.VecZ);
+      List<Mesh3.Node> nodes = [];
+      foreach (var pt in pts) {
+         Point3 pt3 = (Point3)(pt * xfm);
+         nodes.Add (new (new Point3f (pt3.X, pt3.Y, pt3.Z), normal));
+      }
+      Mesh3 mesh = new ([.. nodes], [.. tris], [.. wires]);
+      return mesh;
+
+      /*
       List<Point2> pts = [];
       List<int> splits = [0], wires = [];
       foreach (var poly in Contours.Select (a => a.Flatten (CS))) {
@@ -324,6 +348,7 @@ public sealed class E3Plane : E3CSSurface {
          nodes.Add (new (new Point3f (pt3.X, pt3.Y, pt3.Z), normal));
       }
       return new ([.. nodes], [.. tries], [.. wires]);
+      */
    }
 
    // The domain of the plane can be computed using only Contours[0], since that
