@@ -1,11 +1,11 @@
 // ────── ╔╗
-// ╔-╦╦-╦╦╬╣ Triangulator2.cs
-// ║║║║╬║╔╣║ Nested types for the Triangulator class
+// ╔-╦╦-╦╦╬╣ Tessellator2.cs
+// ║║║║╬║╔╣║ Nested types for the Tessellator class
 // ╚╩-╩-╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 namespace Nori;
 
-#region class Triangulator : nested types ----------------------------------------------------------
-public partial class Triangulator {
+#region class Tessellator : nested types ----------------------------------------------------------
+public partial class Tessellator {
    // Enumerations ---------------------------------------------------------------------------------
    // EVKind lists the types of vertices
    enum EVertex { Regular, Valley, Mountain };
@@ -15,8 +15,8 @@ public partial class Triangulator {
    enum EChain { HSlice, Left, Right, Valley, Mountain };
 
    // struct Disposer ------------------------------------------------------------------------------
-   // Helper used to call Release on a triangulator after we've finished using it
-   readonly struct Disposer (Triangulator mT) : IDisposable {
+   // Helper used to call Release on a Tessellator after we've finished using it
+   readonly struct Disposer (Tessellator mT) : IDisposable {
       public readonly void Dispose () => mT.mInUse = false;
    }
 
@@ -156,7 +156,7 @@ public partial class Triangulator {
 
       // Core routine used by both SplitY and SplitX
       // This assumes that the mN and mT arrays have already been grown by the required numbers
-      ref Tile SplitBase (Triangulator t, ENode kind, int index) {
+      ref Tile SplitBase (Tessellator t, ENode kind, int index) {
          // Create 2 new leaf nodes pointing to the two split tiles (one of them is just this tile
          // and the other will be created at mT[t.mTN]
          ref Node leaf = ref t.mN[Node]; Check (leaf.Kind == ENode.Leaf);
@@ -176,7 +176,7 @@ public partial class Triangulator {
       // Splits the tile into two by a given vertex.
       // This is horizontal split of the tile - this tile continues on as the 'bottom' tile,
       // while the newly created tile becomes the top tile
-      public void SplitY (Triangulator t, ref Vertex v) {
+      public void SplitY (Tessellator t, ref Vertex v) {
          ref Tile t1 = ref SplitBase (t, ENode.Y, v.Id);
          double y = v.Pt.Y; Check (YMin < y && y < YMax);
          t1.YMin = YMax = y; 
@@ -202,7 +202,7 @@ public partial class Triangulator {
       }
 
       // Splits the tile into two left/right by a given segment
-      public ref Tile SplitX (Triangulator t, int segment) {
+      public ref Tile SplitX (Tessellator t, int segment) {
          ref Tile t1 = ref SplitBase (t, ENode.X, segment);
          #if VERIFY
             double yM = (YMin + YMax) / 2;

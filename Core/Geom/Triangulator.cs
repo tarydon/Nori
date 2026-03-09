@@ -1,15 +1,15 @@
 // ────── ╔╗
-// ╔═╦╦═╦╦╬╣ Triangulator.cs
-// ║║║║╬║╔╣║ Implements a Triangulator that can handle non-intersecting simple polygons
+// ╔═╦╦═╦╦╬╣ Tessellator.cs
+// ║║║║╬║╔╣║ Implements a Tessellator that can handle non-intersecting simple polygons
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 namespace Nori;
 
-#region class Triangulator -------------------------------------------------------------------------
+#region class Tessellator --------------------------------------------------------------------------
 /// <summary>Implements a performant tessellator that can handle non-intersecting simple polygons</summary>
 /// This can handle only non-intersecting polygons, including polygons with holes. It is designed
 /// for the common use-case of tessellating parametric surfaces where the contours are non-intersecting,
 /// and it is easy to determine which are the outer contours, and which are the holes. 
-public partial class Triangulator {
+public partial class Tessellator {
    // Properties ---------------------------------------------------------------
    /// <summary>The total set of points (obtained by discretizing the polys)</summary>
    /// This is the set of points into which the Tris array indexes. 
@@ -75,8 +75,8 @@ public partial class Triangulator {
    /// <param name="etol">Tolerance used when discretizing Poly with curves</param>
    /// <param name="rotAngle">Internal rotation bias angle (use only if default throws an exception)</param>
    /// <param name="seed">Random seed - typically used for testing</param>
-   public static IDisposable Borrow (out Triangulator tOut, ETolerance etol = ETolerance.Coarse, double rotAngle = 0.1624, int seed = 42) {
-      Triangulator? t;
+   public static IDisposable Borrow (out Tessellator tOut, ETolerance etol = ETolerance.Coarse, double rotAngle = 0.1624, int seed = 42) {
+      Tessellator? t;
       lock (mAll) {
          t = mAll.FirstOrDefault (a => !a.mInUse);
          if (t == null) {
@@ -88,7 +88,7 @@ public partial class Triangulator {
       t.Reset (seed, rotAngle, etol);
       return new Disposer (tOut = t);
    }
-   static List<Triangulator> mAll = [];
+   static List<Tessellator> mAll = [];
    static int mMaxCount;
 
    /// <summary>Process is called to actually perform the tessellation</summary>

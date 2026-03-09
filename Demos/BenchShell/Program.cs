@@ -60,7 +60,7 @@ public class Tester {
          for (int i = 0; i < mPolys.Count; i++) {
             var polys = mPolys[i];
             int outer = mOuter[i];
-            using var td = Triangulator.Borrow (out var tess);
+            using var td = Tessellator.Borrow (out var tess);
             for (int j = 0; j < polys.Count; j++) tess.AddPoly (polys[j], j != outer);
             tess.Process ();
          }

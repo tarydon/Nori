@@ -29,7 +29,7 @@ class MeshScene : Scene3 {
 
       List<int> splits = [0];
       List<Point2> tmp = [];
-      using var td = Triangulator.Borrow (out var tess, ETolerance.Fine);
+      using var td = Tessellator.Borrow (out var tess, ETolerance.Fine);
       Random r = new ();
       for (int i = 0; i < polys.Count; i++) {
          tmp.Clear (); 
