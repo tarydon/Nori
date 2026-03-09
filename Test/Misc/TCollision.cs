@@ -48,7 +48,7 @@ class TCollision {
       double GetAngle () => (r.NextDouble () - 0.5) * (90.D2R ());
    }
 
-   [Test (1001, "OBB x OBB collision checks")]
+   [Test (175, "OBB x OBB collision checks")]
    void Test2 () {
       Vector3f ext = new (30, 20, 10);
       var a = new OBB (Point3f.Zero, Vector3f.XAxis, Vector3f.YAxis, ext);
@@ -104,7 +104,7 @@ class TCollision {
       static Vector3f V (float x,  float y, float z) => new Vector3f (x, y, z).Normalized ();
    }
 
-   [Test (1002, "OBB x Tri collision checks")]
+   [Test (176, "OBB x Tri collision checks")]
    void Test3 () {
       Vector3f ext = new (20, 20, 20);
       Span<Point3f> pts = [new (20, 20, 20), new (-20, 20, -20), new (20, -20, -20)];
@@ -142,5 +142,32 @@ class TCollision {
       //for (int i = 0; i < pts.Length; i++) pts[i] += dv;
       a = new (pts, 0, 1, 2);
       Collision.Check (pts, a, b).IsFalse ();
+   }
+
+   [Test (177, "Tri x Tri collision checks")]
+   void Test4 () {
+      var lines = File.ReadAllLines (NT.File ("Sim/TriTri.txt"));
+      List<bool> crashes = [];
+      List<Point3f> list = [];
+      for (int i = 0; i < lines.Length; i++) {
+         string line = lines[i];
+         if (i % 3 == 2) crashes.Add (line.Trim () == "1");
+         else {
+            float[] f = [.. line.Split ().Select (float.Parse)];
+            for (int j = 0; j < 9; j += 3) {
+               list.Add (new (f[j], f[j + 1], f[j + 2]));
+            }
+         }
+      }
+      var pts = list.AsSpan ();
+      var tris = new CTri[list.Count / 3];
+      for (int i = 0; i < tris.Length; i++) {
+         int j = i * 3;
+         tris[i] = new CTri (pts, j, j + 1, j + 2);
+      }
+      for (int i = 0; i < crashes.Count; i++) {
+         int j = i * 2;
+         Collision.Check (pts, tris[j], pts, tris[j + 1]).Is (crashes[i]);
+      }
    }
 }

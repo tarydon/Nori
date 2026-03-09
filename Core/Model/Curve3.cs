@@ -19,7 +19,7 @@ public abstract class Curve3 {
 
    // Properties ---------------------------------------------------------------
    /// <summary>Returns the domain of the Curve</summary>
-   public abstract Bound1 Domain { get; }
+   public abstract Bound1D Domain { get; }
 
    /// <summary>Get the end point of the curve</summary>
    public abstract Point3 End { get; }
@@ -52,6 +52,9 @@ public abstract class Curve3 {
    /// Derived classes MUST implement this
    public abstract void Discretize (List<Point3> pts, double tolerance, double maxAngStep);
 
+   /// <summary>Returns a new curve flipped in direction</summary>
+   public abstract Curve3 Flipped ();
+
    /// <summary>Evaluates the point at a given parameter value t</summary>
    /// Derived classes MUST implement this 
    public abstract Point3 GetPoint (double t);
@@ -69,6 +72,14 @@ public abstract class Curve3 {
    /// <summary>Returns the point at a given parameter value T along the curve</summary>
    /// Derived clases MUST implement this
    public abstract double GetT (Point3 pt);
+
+   /// <summary>Trim the curve at the given parameters and return a new curve.</summary>
+   /// <param name="t1">Starting point for the trim</param>
+   /// <param name="t2">Ending point for the trim</param>
+   /// <param name="reverseDir">For cyclical curves (circle, ellipse) indicates if the direction
+   /// sense must be reversed. Ignore for non-cyclical curves.</param>
+   /// <returns>A new trimmed curve.</returns>
+   public abstract Curve3 Trimmed (double t1, double t2, bool reverseDir);
 
    /// <summary>Returns a copy of this curve transformed by the given transform</summary>
    public static Curve3 operator * (Curve3 curve, Matrix3 xfm) => curve.Xformed (xfm);
@@ -113,7 +124,7 @@ public class Arc3 : Curve3 {
    public Point3 Center => CS.Org;
 
    /// <summary>The domain of an arc is always in radians</summary>
-   public override Bound1 Domain => new (0, AngSpan);
+   public override Bound1D Domain => new (0, AngSpan);
 
    /// <summary>Get the endpoint of the Arc</summary>
    public override Point3 End => GetPoint (AngSpan);
@@ -142,6 +153,12 @@ public class Arc3 : Curve3 {
       for (int i = 0; i <= n; i++) pts.Add (GetPoint ((double)i / n * AngSpan));
    }
 
+   public override Curve3 Flipped () {
+      Vector3 zaxis = CS.VecZ, xaxis = CS.VecX;
+      xaxis = xaxis.Rotated (zaxis, AngSpan); // Alling X axis with the second point.
+      return new Arc3 (PairId, new CoordSystem (CS.Org, xaxis, (-zaxis) * xaxis), Radius, AngSpan); // Flip the zaxis.
+   }
+
    /// <summary>Returns the point at a given lie</summary>
    public override Point3 GetPoint (double t) {
       var (sin, cos) = Math.SinCos (t);
@@ -163,6 +180,25 @@ public class Arc3 : Curve3 {
    }
    Matrix3? _from;
 
+   public override Curve3 Trimmed (double t1, double t2, bool reverseDir) {
+      t1 = Lib.NormalizeAngle (t1); t2 = Lib.NormalizeAngle (t2);
+      if (t1 < 0) t1 += Lib.TwoPI; if (t2 < 0) t2 += Lib.TwoPI;
+      Vector3 zaxis = CS.VecZ, xaxis = CS.VecX;
+      if (reverseDir) {
+         xaxis = xaxis.Rotated (zaxis, t1);
+         if (t1 < t2)
+            return new Arc3 (PairId, new CoordSystem (CS.Org, xaxis, (-zaxis) * xaxis), Radius, Lib.TwoPI - (t2 - t1));
+         else
+            return new Arc3 (PairId, new CoordSystem (CS.Org, xaxis, (-zaxis) * xaxis), Radius, t1 - t2);
+      } else {
+         xaxis = xaxis.Rotated (zaxis, t1); // Allign X axis with the first point.
+         if (t1 < t2)
+            return new Arc3 (PairId, new CoordSystem (CS.Org, xaxis, zaxis * xaxis), Radius, t2 - t1); // Update angle span.
+         else
+            return new Arc3 (PairId, new CoordSystem (CS.Org, xaxis, zaxis * xaxis), Radius, Lib.TwoPI - (t1 - t2));
+      }
+   }
+
    // Implementation -----------------------------------------------------------
    public override string ToString ()
       => $"{base.ToString ()} R={Radius.Round (2)} Span={AngSpan.R2D ().Round (1)}\u00b0";
@@ -178,8 +214,8 @@ public sealed class Ellipse3 : Curve3 {
    // Constructors -------------------------------------------------------------
    /// <summary>Constructs an Ellipse3 given X & Y radii, start and end angles</summary>
    /// The ellipse is defined in the XY plane first and then lofted up into the final position
-   /// using the given CS. The Ellipse always goes CCW from ang0 to ang1, which are both in the
-   /// interval 0 .. 2PI
+   /// using the given CS. The Ellipse always goes CCW from ang0 to ang1. To allow wrapping around
+   /// the X axis (say 1.5Pi to 2.5Pi - negative Y to positive Y) ang1 can be greater than Lib.TwoPi.
    public Ellipse3 (int pairId, CoordSystem cs, double xRadius, double yRadius, double ang0, double ang1) : base (pairId) {
       CS = cs; XRadius = xRadius; YRadius = yRadius;
       Debug.Assert (ang1 >= ang0);
@@ -195,8 +231,8 @@ public sealed class Ellipse3 : Curve3 {
 
    /// <summary>The domain of an Ellipse3 is in radians</summary>
    [Radian]
-   public override Bound1 Domain => mDomain;
-   Bound1 mDomain;
+   public override Bound1D Domain => mDomain;
+   Bound1D mDomain;
 
    /// <summary>End is the curve evaluated at the max limit of the domain</summary>
    public override Point3 End => GetPoint (mDomain.Max);
@@ -223,6 +259,11 @@ public sealed class Ellipse3 : Curve3 {
       for (int i = 0; i <= n; i++) pts.Add (GetPoint (((double)i / n).Along (mDomain)));
    }
 
+   public override Curve3 Flipped () {
+      var newCS = new CoordSystem (CS.Org, CS.VecX, -CS.VecY);
+      return new Ellipse3 (PairId, newCS, XRadius, YRadius, Lib.TwoPI - mDomain.Max, Lib.TwoPI - mDomain.Min);
+   }
+
    /// <summary>Returns the point at a given parameter value t (which is directly in domains)</summary>
    public override Point3 GetPoint (double t) {
       var (sin, cos) = Math.SinCos (t);
@@ -237,6 +278,13 @@ public sealed class Ellipse3 : Curve3 {
       return ang;
    }
    Matrix3? mFrom;
+
+   public override Curve3 Trimmed (double t1, double t2, bool reverseDir) {
+      t1 = Lib.NormalizeAngle (t1); t2 = Lib.NormalizeAngle (t2);
+      if (t1 < 0) t1 += Lib.TwoPI; if (t2 < 0) t2 += Lib.TwoPI;
+      if (reverseDir) return new Ellipse3 (PairId, CS, XRadius, YRadius, t2, t1 < t2 ? t1 + Lib.TwoPI : t1).Flipped ();
+      else return new Ellipse3 (PairId, CS, XRadius, YRadius, t1, t2 < t1 ? t2 + Lib.TwoPI : t2);
+   }
 
    /// <summary>Returns the Ellipse transformed by a given transform</summary>
    protected override Ellipse3 Xformed (Matrix3 xfm)
@@ -253,7 +301,7 @@ public sealed class Line3 : Curve3 {
 
    // Properties ---------------------------------------------------------------
    /// <summary>Domain of a Line is 0..1</summary>
-   public override Bound1 Domain => new (0, 1);
+   public override Bound1D Domain => new (0, 1);
 
    /// <summary>End point of the line</summary>
    public override Point3 End => mEnd;
@@ -278,6 +326,8 @@ public sealed class Line3 : Curve3 {
       pts.Add (mStart); pts.Add (mEnd);
    }
 
+   public override Curve3 Flipped () => new Line3 (PairId, mEnd, mStart);
+
    /// <summary>Gets the point at a given lie</summary>
    public override Point3 GetPoint (double lie) => lie.Along (mStart, mEnd);
 
@@ -286,6 +336,9 @@ public sealed class Line3 : Curve3 {
 
    /// <summary>Returns the T value of a given point</summary>
    public override double GetT (Point3 pt) => pt.GetLieOn (mStart, mEnd);
+
+   public override Curve3 Trimmed (double t1, double t2, bool _) =>
+      new Line3 (PairId, GetPoint (t1), GetPoint (t2));
 
    // Implementation -----------------------------------------------------------
    public override string ToString () => $"{base.ToString ()}, Len={Start.DistTo (End).Round (2)}";
@@ -298,13 +351,24 @@ public sealed class Line3 : Curve3 {
 #region class NurbsCurve ---------------------------------------------------------------------------
 /// <summary>Implements a 3 dimensional spline</summary>
 /// This is a generalized spline - any order, rational or irrational
+/// Trimmed version of a spline are created by trimming the Domain.
 public class NurbsCurve3 : Curve3 {
    /// <summary>Construct a 3D spline given the control points, knot vector and the weights</summary>
-   public NurbsCurve3 (int pairId, ImmutableArray<Point3> ctrl, ImmutableArray<double> knot, ImmutableArray<double> weight) : base (pairId) {
+   public NurbsCurve3 (int pairId, ImmutableArray<Point3> ctrl, ImmutableArray<double> knot, ImmutableArray<double> weight) 
+      : this (pairId, ctrl, knot, weight, new (knot[0], knot[^1])) { }
+
+   public NurbsCurve3 (int pairId, ImmutableArray<Point3> ctrl, ImmutableArray<double> knot, ImmutableArray<double> weight, Bound1D domain) : base (pairId) {
       mImp = new SplineImp (ctrl.Length, knot);
       Ctrl = ctrl; Weight = weight;
       Rational = !(weight.IsEmpty || weight.All (a => a.EQ (1)));
+      mDomain = domain;
       if (!Rational) Weight = [];
+   }
+
+   // Constructor used to create trimmed version of this spline.
+   private NurbsCurve3 (NurbsCurve3 original, Bound1D domain) : base (original.PairId) {
+      (mImp, Ctrl, Weight, Rational) = (original.mImp, original.Ctrl, original.Weight, original.Rational);
+      mDomain = domain;
    }
    NurbsCurve3 () => mImp = null!;
    readonly SplineImp mImp;
@@ -314,10 +378,11 @@ public class NurbsCurve3 : Curve3 {
    public readonly ImmutableArray<Point3> Ctrl;
 
    /// <summary>The domain of the NurbsCurve is just from the first to last knot</summary>
-   public override Bound1 Domain => new (mImp.Knot[0], mImp.Knot[^1]);
+   public override Bound1D Domain => mDomain;
+   readonly Bound1D mDomain;
 
    /// <summary>Endpoint of the NurbsCurve</summary>
-   public override Point3 End => Ctrl[^1];
+   public override Point3 End => mDomain.Max == mImp.Knot[^1] ? Ctrl[^1] : GetPoint (mDomain.Max);
 
    /// <summary>Check if the NurbsCurve is on the XY plane</summary>
    public override bool IsOnXYPlane => Ctrl.All (a => a.Z.EQ (0));
@@ -328,7 +393,7 @@ public class NurbsCurve3 : Curve3 {
    public readonly bool Rational;
 
    /// <summary>Start point of the NurbsCurve</summary>
-   public override Point3 Start => Ctrl[0];
+   public override Point3 Start => mDomain.Min == mImp.Knot[0] ? Ctrl[0] : GetPoint (mDomain.Min);
 
    /// <summary>Returns the knot vector of the NurbsCurve</summary>
    public ImmutableArray<double> Knot => mImp.Knot;
@@ -348,12 +413,15 @@ public class NurbsCurve3 : Curve3 {
       // their evaluated points) into a stack of Nodes
       var (knots, errSq, eval) = (mImp.Knot, error * error, new Stack<Node> ());
 
+      (double tmin, double tmax) = mDomain;
+      eval.Push (new Node { A = tmax, Pt = GetPoint (tmax), Level = 0 });
       double done = -1;
-      foreach (var knot in knots.Reverse ()) {
+      foreach (var knot in knots.Reverse ().SkipWhile (a => a >= tmax).TakeWhile (a => a > tmin)) {
          if (knot == done) continue;
          eval.Push (new Node { A = knot, Pt = GetPoint (knot), Level = 0 });
          done = knot;
       }
+      eval.Push (new Node { A = tmin, Pt = GetPoint (tmin), Level = 0 });
 
       // Now the recursive evaluation part - at each iteration of this loop, we pop off two
       // nodes from this stack to see if that linear span needs to be further subdivided.
@@ -391,10 +459,18 @@ public class NurbsCurve3 : Curve3 {
       pts.Add (eval.Pop ().Pt);
    }
 
+   public override Curve3 Flipped () {
+      // We will have to adjust the knot values.
+      double uminPlusMax = Knot[0] + Knot[^1];
+      var newKnots = ImmutableArray.CreateBuilder<double> (Knot.Length);
+      for (int i = 0, m = Knot.Length; i < m; i++)
+         newKnots.Add (uminPlusMax - Knot[m - i - 1]);
+      return new NurbsCurve3 (PairId, [.. Ctrl.Reverse ()], newKnots.MoveToImmutable (), [.. Weight.Reverse ()], new Bound1D (uminPlusMax - mDomain.Max, uminPlusMax - mDomain.Min));
+   }
+
    /// <summary>Evaluates the spline at a given knot value t</summary>
    public override Point3 GetPoint (double t) {
-      if (t <= mImp.Knot[0]) return Ctrl[0];
-      if (t >= mImp.Knot[^1]) return Ctrl[^1];
+      t = mDomain.Clamp (t);
       while (mFactor.Value!.Length < mImp.Order)
          mFactor.Value = new double[mFactor.Value.Length * 2];
 
@@ -438,10 +514,15 @@ public class NurbsCurve3 : Curve3 {
       public int Level;
    }
 
+   public override Curve3 Trimmed (double t1, double t2, bool _) {
+      if (t1 <= t2) return new NurbsCurve3 (this, new (t1, t2));
+      else return new NurbsCurve3 (this, new (t2, t1)).Flipped ();
+   }
+
    // Implementation -----------------------------------------------------------
    // Transforms the NurbsCurve3 by the given transform
    protected override NurbsCurve3 Xformed (Matrix3 xfm)
-      => new (PairId, [.. Ctrl.Select (a => a * xfm)], mImp.Knot, Weight);
+      => new (PairId, [.. Ctrl.Select (a => a * xfm)], mImp.Knot, Weight, mDomain);
 }
 #endregion
 
@@ -455,7 +536,7 @@ public class Polyline3 : Curve3 {
 
    // Properties ---------------------------------------------------------------
    /// <summary>The domain of the Polyline3 is 0 .. Pts.Length-1</summary>
-   public override Bound1 Domain => new (0, Pts.Length - 1);
+   public override Bound1D Domain => new (0, Pts.Length - 1);
 
    /// <summary>The end of the Polyline3</summary>
    public override Point3 End => Pts[^1];
@@ -476,6 +557,8 @@ public class Polyline3 : Curve3 {
    public override void Discretize (List<Point3> pts, double _, double __)
       => pts.AddRange (Pts);
 
+   public override Curve3 Flipped () => new Polyline3 (PairId, [.. Pts.Reverse ()]);
+
    /// <summary>Gets the point at a given lie</summary>
    public override Point3 GetPoint (double lie) {
       if (lie < Lib.Epsilon) return Start;
@@ -493,6 +576,27 @@ public class Polyline3 : Curve3 {
          if (d < minDist) (minDist, iBest) = (d, i);
       }
       return pt.GetLieOn (Pts[iBest], Pts[iBest + 1]) + iBest;
+   }
+
+   public override Curve3 Trimmed (double t1, double t2, bool _) {
+      var d = Domain;
+      (t1, t2) = (t1.Clamp (d.Min, d.Max), t2.Clamp (d.Min, d.Max));
+      bool reversed = false;
+      if (t1 > t2) {
+         reversed = true;
+         (t1, t2) = (t2, t1); // Swap
+      }
+      (int n1, int n2) = ((int)t1, (int)t2);
+      (double f1, double f2) = (t1 - n1, t2 - n2);
+      Polyline3 trimmed = (f1.IsZero (), f2.IsZero ()) switch {
+         (true, true) => new Polyline3 (PairId, Pts[n1..(n2 + 1)]),
+         (true, false) => new Polyline3 (PairId, [.. Pts[n1..(n2 + 1)], f2.Along (Pts[n2], Pts[n2 + 1])]),
+         (false, true) => new Polyline3 (PairId, [f1.Along (Pts[n1], Pts[n1 + 1]),.. Pts[(n1 + 1)..n2]]),
+         _ => new Polyline3 (PairId, [f1.Along (Pts[n1], Pts[n1 + 1]),.. Pts[(n1 + 1)..(n2 + 1)], f2.Along (Pts[n2], Pts[n2 + 1])])
+      };
+
+      if (reversed) return trimmed.Flipped ();
+      else return trimmed;
    }
 
    // Implementation -----------------------------------------------------------

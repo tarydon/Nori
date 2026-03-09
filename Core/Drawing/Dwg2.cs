@@ -243,7 +243,7 @@ public partial class Dwg2 {
          case ListChange.E.Removing:
             // When removing an entity, if that entity lies on the 'edge' of the
             // drawing, reset the bound for recompute
-            var bound = mEnts[ch.Index].Bound.InflatedF (1);
+            var bound = mEnts[ch.Index].Bound.InflatedL (1);
             if (!mBound.Contains (bound)) mBound = new ();
             break;
          default: mBound = new (); break;

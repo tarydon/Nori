@@ -62,3 +62,5 @@ E3Plane
   CS
 Polyline3
   Pts
+E3Contour
+  Curves
