@@ -31,7 +31,8 @@ public partial class Tessellator {
       // with curves, make a copy
       int start = mInput.Count;
       poly.Discretize (mInput, mTolerance, mAngTolerance);
-      if (poly.GetWinding () == Poly.EWinding.CW ^ hole) mInput.Reverse (start, mInput.Count - start);
+      if (poly.GetWinding () == Poly.EWinding.CW ^ hole) mInput.Reverse (start, mInput.Count - start); 
+      // OPTIMIZE: Instead of mInput.Reverse, perhaps just walk through the list in reverse?
       ReadOnlySpan<Point2> pts = mInput.AsSpan ()[start..];
 
       // Now, add the contour into the mV array, and create segments from this in
@@ -226,7 +227,7 @@ public partial class Tessellator {
          mLefts.Add (t0 = a); 
       }
    }
-   List<int> mLefts = [], mRights = [];
+   List<int> mLefts = [], mRights = [];   // OPTIMIZE: convert to arrays, or use CollectionsMarshal.SetCount?
 
    // This inserts the 'border' tile (the root tile) of the tiling. It is large enough
    // to encompass the complete tessellation, and is initially created as a 'hole' tile,
