@@ -16,10 +16,14 @@ public class Dwg2VN : VNode {
 /// <summary>DwgFillVN is used to fill the interior closed polylines of a drawing</summary>
 public class DwgFillVN : VNode {
    // Constructors -------------------------------------------------------------
-   public DwgFillVN (Dwg2 dwg, Predicate<E2Poly>? filter = null) : base (dwg)
-      => (mDwg, mFilter) = (dwg, filter);
+   public DwgFillVN (Dwg2 dwg, Predicate<E2Poly>? filter = null) : base (dwg) {
+      (mDwg, mFilter) = (dwg, filter);
+      It = this;
+   }
    readonly Predicate<E2Poly>? mFilter;
    readonly Dwg2 mDwg;
+
+   public static DwgFillVN It = null!;
 
    // Overrides ----------------------------------------------------------------
    // See the Lux.FillPath routine for more details on the input required for this shader.
