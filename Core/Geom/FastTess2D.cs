@@ -353,8 +353,9 @@ public partial class FastTess2D : IBorrowable<FastTess2D> {
    void ShuffleSegs () {
       Grow (ref mShuffle, 0, mSN);
       for (int i = 0; i < mSN; i++) mShuffle[i] = i;
-      for (int i = 0; i < mSN; i++) {
-         int j = mR.Next (mSN);
+      // This is a simple Fisher-Yates shuffle:
+      for (int i = mSN - 1; i >= 0; i--) {
+         int j = mR.Next (i + 1);
          (mShuffle[i], mShuffle[j]) = (mShuffle[j], mShuffle[i]);
       }
    }
