@@ -11,9 +11,7 @@ namespace Nori;
 /// and it is easy to determine which are the outer contours, and which are the holes. 
 public partial class FastTess2D : IBorrowable<FastTess2D> {
    // Properties ---------------------------------------------------------------
-   /// <summary>
-   /// Sets the rotation bias angle to avoid horizontal lines (don't set this to any round number of degrees!)
-   /// </summary>
+   /// <summary>Sets the rotation bias angle to avoid horizontal lines (don't set this to any round number of degrees!)</summary>
    /// Normally, you never need to set this - it exists more as a debugging / testing aid
    public double BiasAngle {
       get => mBiasAngle;
@@ -27,9 +25,7 @@ public partial class FastTess2D : IBorrowable<FastTess2D> {
    public List<Point2> Pts => mInput;
    List<Point2> mInput = [];
 
-   /// <summary>
-   /// The discretization tolerance
-   /// </summary>
+   /// <summary>The discretization tolerance</summary>
    public ETolerance Tolerance {
       set {
          if (value == mETol) return;
