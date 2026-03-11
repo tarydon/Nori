@@ -2,6 +2,7 @@
 // ╔═╦╦═╦╦╬╣ Structs.cs
 // ║║║║╬║╔╣║ Various Miscellaneous structs used by the Nori application
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
+using System.Numerics;
 using static System.Math;
 namespace Nori;
 
@@ -358,5 +359,51 @@ public readonly struct Quaternion : IEQuable<Quaternion> {
       double w = a.W * b.W - a.X * b.X - a.Y * b.Y - a.Z * b.Z;
       return new (x, y, z, w);
    }
+}
+#endregion
+
+#region struct Rand --------------------------------------------------------------------------------
+/// <summary>Implements a fast random number generator</summary>
+/// This implements the same Xoshiro128** algorithm that is used in the .Net framework.
+/// This implementation is about twice as fast, since it avoids some of the complexities 
+/// built into the .Net framework, and is implemented as a struct. Also, it is statistically
+/// slightly better since it uses Lemire's reduction to return a range of values in [0 .. max)
+/// rather than the more conventional modulo operator (%). That makes it both faster since there
+/// are no division/remainder operations, and also avoids the bunching bias that can happen with
+/// modulo. Use this rather than System.Random in performance critical code.  
+public struct Rand {
+   // Constructors -------------------------------------------------------------
+   /// <summary>Initialise Rand with a random seed</summary>
+   public Rand () : this ((uint)Random.Shared.Next ()) { }
+
+   /// <summary>Initialize Rand with a deterministic seed</summary>
+   public Rand (uint seed) {
+      // Expand the 32-bit seed into the 128-bit state required by Xoshiro128
+      m0 = SplitMix32 (ref seed); m1 = SplitMix32 (ref seed);
+      m2 = SplitMix32 (ref seed); m3 = SplitMix32 (ref seed);
+      if ((m0 | m1 | m2 | m3) == 0) m3 = 1;  // Catch very rare zero state
+   }
+
+   /// <summary>Returns the next integer in the semi-open range [0 .. max)</summary>
+   [MethodImpl (MethodImplOptions.AggressiveInlining)]
+   public int Next (int max) {
+      // Core of Xoshiro 128
+      uint result = BitOperations.RotateLeft (m1 * 5, 7) * 9, t = m1 << 9;
+      m2 ^= m0; m3 ^= m1; m1 ^= m2; m0 ^= m3; m2 ^= t;
+      m3 = BitOperations.RotateLeft (m3, 11);
+
+      // Lemire reduction for unbiased [0 .. max)
+      return (int)(((ulong)result * (uint)max) >> 32);
+   }
+
+   // Implementation -----------------------------------------------------------
+   static uint SplitMix32 (ref uint x) {
+      x += 0x9E3779B9u;
+      uint z = x;
+      z = (z ^ (z >> 16)) * 0x85EBCA6Bu;
+      z = (z ^ (z >> 13)) * 0xC2B2AE35u;
+      return z ^ (z >> 16);
+   }
+   uint m0, m1, m2, m3;
 }
 #endregion

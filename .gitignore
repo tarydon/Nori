@@ -12,3 +12,4 @@ Demos/Pentax
 **/obj/*
 TData/tmpfile.*
 **/BenchmarkDotNet.Artifacts/*
+.claude/**

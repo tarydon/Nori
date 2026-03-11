@@ -2,6 +2,9 @@
 // ╔═╦╦═╦╦╬╣ TGeometry.cs
 // ║║║║╬║╔╣║ Various geometry tests
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
+using System.Diagnostics;
+using System.Windows.Media.Effects;
+
 namespace Nori.Testing;
 
 [Fixture (1, "Bound tests", "Geom")]
@@ -430,5 +433,129 @@ class GeoTests {
          if (!center.IsNil) dwg.Add (new E2Poly (layer2, Poly.Circle (center, r)));
       }
    }
+}
 
+[Fixture (37, "Triangulator tests", "Geom")]
+class TessTests {
+   [Test (186, "A.dxf - 5 triangles")]
+   void Test1 () => Test ("A");
+
+   [Test (187, "B.dxf - 13 triangles")]
+   void Test2 () => Test ("B");
+
+   [Test (188, "C.dxf - 17 triangles")]
+   void Test3 () => Test ("C");
+
+   [Test (189, "D.dxf - 28 triangles")]
+   void Test4 () => Test ("D");
+
+   [Test (190, "E.dxf - 30 triangles")]
+   void Test5 () => Test ("E");
+
+   [Test (191, "F.dxf - 36 triangles")]
+   void Test6 () => Test ("F");
+
+   [Test (192, "G.dxf - 25 triangles")]
+   void Test7 () => Test ("G");
+   
+   [Test (193, "H.dxf - 154 triangles")]
+   void Test8 () => Test ("H");
+   
+   [Test (194, "I.dxf - 273 triangles")]
+   void Test9 () => Test ("I");
+   
+   [Test (195, "J.dxf - 948 triangles")]
+   void Test10 () => Test ("J");
+
+   [Test (185, "H with 100 different rand-seeds, bias-angles")]
+   void Test11 () {
+      List<Point2> pts = [];
+      var input = LoadPolys ("H");
+      int outer = input.MaxIndexBy (a => a.GetBound ().Area);
+
+      for (int i = 1; i < 100; i++) {
+         using var tess = FastTess2D.Borrow ();
+         tess.BiasAngle = 0.08642 * i;
+         for (int j = 0; j < input.Count; j++)
+            tess.AddPoly (input[j], j != outer);
+         tess.Process ();
+         var verts = tess.Pts; var tris = tess.Tris;
+         double triArea = 0;
+         (tris.Count / 3).Is (154);
+         for (int j = 0; j < tris.Count; j += 3) {
+            pts.Clear ();
+            for (int k = 0; k < 3; k++) pts.Add (verts[tris[j + k]]);
+            triArea += Poly.Lines (pts, true).GetArea ();
+         }
+         triArea.R6 ().Is (84550.839797);
+      }
+   }
+
+   void Test (string file) {
+      var input = LoadPolys (file);
+      int outer = input.MaxIndexBy (a => a.GetBound ().Area);
+
+      double dwgArea = 0, triArea = 0;
+      using var tess = FastTess2D.Borrow ();
+      for (int i = 0; i < input.Count; i++) {
+         tess.AddPoly (input[i], i != outer);
+         dwgArea += input[i].GetArea () * (i == outer ? 1 : -1);
+      }
+      tess.Process ();
+      var verts = tess.Pts; List<int> tris = [.. tess.Tris];
+
+      List<Point2> pts = [];
+      var sb = new StringBuilder ();
+      int sum = input.Sum (a => a.Count);
+      sb.AppendLine ($"Triangulation: {file}, {input.Count} polys, {sum} nodes");
+      tris = SortTris (tris);
+      sb.AppendLine ($"{tris.Count / 3} triangles:");
+      for (int i = 0; i < tris.Count; i += 3) {
+         pts.Clear ();
+         for (int j = 0; j < 3; j++) {
+            sb.Append ($" {tris[i + j]}");
+            pts.Add (verts[tris[i + j]]);
+         }
+         sb.AppendLine ();
+         triArea += Poly.Lines (pts, true).GetArea ();
+      }
+      dwgArea.Is (triArea);
+      sb.AppendLine ($"DwgArea: {dwgArea.Round (3)}");
+      sb.AppendLine ($"TriArea: {triArea.Round (3)}");
+      File.WriteAllText (NT.TmpTxt, sb.ToString ());
+      Assert.TextFilesEqual (NT.File ($"Geom/Tess/{file}.txt"), NT.TmpTxt);
+   }
+
+   List<int> SortTris (List<int> tris) {
+      List<int> idx = [];
+      for (int i = 0; i < tris.Count; i += 3) idx.Add (i);
+      idx.Sort (CompareTri);
+
+      List<int> tmp = [];
+      for (int i = 0; i < idx.Count; i++) {
+         int n = idx[i];
+         tmp.Add (tris[n]); tmp.Add (tris[n + 1]); tmp.Add (tris[n + 2]);
+      }
+      return tmp;
+
+      int CompareTri (int a, int b) {
+         int n = tris[a].CompareTo (tris[b]); if (n != 0) return n;
+         n = tris[a + 1].CompareTo (tris[b + 1]); if (n != 0) return n;
+         return tris[a + 2].CompareTo (tris[b + 2]);
+      }
+   }
+
+   List<Poly> LoadPolys (string file) {
+      List<Poly> input = []; List<Point2> pts = [];
+      var dwg = DXFReader.Load (NT.File ($"Geom/Tess/{file}.dxf"));
+      foreach (var e2p in dwg.Ents.OfType<E2Poly> ().Where (a => a.Layer.Name == "0")) {
+         var poly = e2p.Poly;
+         if (poly.HasArcs) {
+            pts.Clear (); poly.Discretize (pts, Lib.CoarseTess, Lib.CoarseTessAngle);
+            input.Add (Poly.Lines (pts, true));
+         } else
+            input.Add (poly);
+      }
+      return input;
+   }
 }
