@@ -474,7 +474,8 @@ class TessTests {
       int outer = input.MaxIndexBy (a => a.GetBound ().Area);
 
       for (int i = 1; i < 100; i++) {
-         using var td = Tessellator.Borrow (out var tess, seed: i, rotAngle: 0.08642 * i);
+         using var tess = FastTess2D.Borrow ();
+         tess.BiasAngle = 0.08642 * i;
          for (int j = 0; j < input.Count; j++)
             tess.AddPoly (input[j], j != outer);
          tess.Process ();
@@ -495,7 +496,7 @@ class TessTests {
       int outer = input.MaxIndexBy (a => a.GetBound ().Area);
 
       double dwgArea = 0, triArea = 0;
-      using var td = Tessellator.Borrow (out var tess);
+      using var tess = FastTess2D.Borrow ();
       for (int i = 0; i < input.Count; i++) {
          tess.AddPoly (input[i], i != outer);
          dwgArea += input[i].GetArea () * (i == outer ? 1 : -1);

@@ -306,7 +306,8 @@ public sealed class E3Plane : E3CSSurface {
    // lofted up into the final space of the plane
    protected override Mesh3 BuildMesh (double tol, double angTol) {
       List<int> wires = []; int a = 0;
-      using var td = Tessellator.Borrow (out var tess, ETolerance.Fine);
+      using var tess = FastTess2D.Borrow ();
+      tess.Tolerance = ETolerance.Fine;
       for (int i = 0; i < Contours.Length; i++) {
          int b = a + tess.AddPoly (Contours[i].Flatten (CS), i > 0);
          wires.Add (b - 1);

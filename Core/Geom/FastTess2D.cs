@@ -1,16 +1,25 @@
 // ────── ╔╗
-// ╔═╦╦═╦╦╬╣ Tessellator.cs
+// ╔═╦╦═╦╦╬╣ FastTess2D.cs
 // ║║║║╬║╔╣║ Implements a Tessellator that can handle non-intersecting simple polygons
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 namespace Nori;
 
-#region class Tessellator --------------------------------------------------------------------------
+#region class FastTess2D ---------------------------------------------------------------------------
 /// <summary>Implements a performant tessellator that can handle non-intersecting simple polygons</summary>
 /// This can handle only non-intersecting polygons, including polygons with holes. It is designed
 /// for the common use-case of tessellating parametric surfaces where the contours are non-intersecting,
 /// and it is easy to determine which are the outer contours, and which are the holes. 
-public partial class Tessellator {
+public partial class FastTess2D : IBorrowable<FastTess2D> {
    // Properties ---------------------------------------------------------------
+   /// <summary>
+   /// Sets the rotation bias angle to avoid horizontal lines (don't set this to any round number of degrees!)
+   /// </summary>
+   /// Normally, you never need to set this - it exists more as a debugging / testing aid
+   public double BiasAngle {
+      get => mBiasAngle;
+      set { if (mBiasAngle != value) (mSin, mCos) = Math.SinCos (mBiasAngle = value); }
+   }
+
    /// <summary>The total set of points (obtained by discretizing the polys)</summary>
    /// This is the set of points into which the Tris array indexes. 
    /// Caution: Don't hold onto this while you are adding polys - the list may grow, and
@@ -18,12 +27,46 @@ public partial class Tessellator {
    public List<Point2> Pts => mInput;
    List<Point2> mInput = [];
 
+   /// <summary>
+   /// The discretization tolerance
+   /// </summary>
+   public ETolerance Tolerance {
+      set {
+         if (value == mETol) return;
+         switch (mETol = value) {
+            case ETolerance.Fine: mTolerance = Lib.FineTess; mAngTolerance = Lib.FineTessAngle; break;
+            case ETolerance.Coarse: mTolerance = Lib.CoarseTess; mAngTolerance = Lib.CoarseTessAngle; break;
+            default: throw new BadCaseException (value);
+         }
+      }
+   }
+   ETolerance mETol;
+
    /// <summary>The set of integers making up the triangles</summary>
    /// These integers, taken 3 at a time, point into the Pts array
    public List<int> Tris => mTris;
    List<int> mTris = [];
 
    // Methods ------------------------------------------------------------------
+   /// <summary>This is used to borrow a Triangulator for use</summary>
+   /// The usage is like this:
+   /// <code>
+   /// using var tess = FastTess2D.Borrow ();
+   /// tess.AddPoly (...); tess.AddPoly (...); tess.AddPoly (...);
+   /// tess.Process ();
+   /// var pts = tess.Pts;          // Set of points gathered from all the poly
+   /// var triangles = tess.Tris;   // Integers combining those pts into triangles (take 3 at a time)
+   /// </code>
+   ///
+   /// Triangulator.Borrow returns a triangulator (from a pool of triangulators that is maintained),
+   /// and also an IDisposable that must be disposed to release the triangulator back into the pool.
+   /// So make sure to put the return value into a using statement so this happens automatically. 
+   public static FastTess2D Borrow () {
+      var tess = BorrowPool<FastTess2D>.Borrow ();
+      tess.Reset ();
+      return tess;
+   }
+
    /// <summary>Adds a contour for tessellation</summary>
    /// Returns the number of points added into the tessellation for this contour
    public int AddPoly (Poly poly, bool hole) {
@@ -32,7 +75,6 @@ public partial class Tessellator {
       int start = mInput.Count;
       poly.Discretize (mInput, mTolerance, mAngTolerance);
       if (poly.GetWinding () == Poly.EWinding.CW ^ hole) mInput.Reverse (start, mInput.Count - start); 
-      // OPTIMIZE: Instead of mInput.Reverse, perhaps just walk through the list in reverse?
       ReadOnlySpan<Point2> pts = mInput.AsSpan ()[start..];
 
       // Now, add the contour into the mV array, and create segments from this in
@@ -60,38 +102,6 @@ public partial class Tessellator {
       return n; 
    }
 
-   /// <summary>This is used to borrow a Triangulator for use</summary>
-   /// The usage is like this:
-   /// <code>
-   /// using var disp = Triangulator.Borrow (out var tess);
-   /// tess.AddPoly (...); tess.AddPoly (...); tess.AddPoly (...);
-   /// tess.Process ();
-   /// var pts = tess.Pts;          // Set of points gathered from all the poly
-   /// var triangles = tess.Tris;   // Integers combining those pts into triangles (take 3 at a time)
-   /// </code>
-   ///
-   /// Triangulator.Borrow returns a triangulator (from a pool of triangulators that is maintained),
-   /// and also an IDisposable that must be disposed to release the triangulator back into the pool.
-   /// So make sure to put the return value into a using statement so this happens automatically. 
-   /// <param name="etol">Tolerance used when discretizing Poly with curves</param>
-   /// <param name="rotAngle">Internal rotation bias angle (use only if default throws an exception)</param>
-   /// <param name="seed">Random seed - typically used for testing</param>
-   public static IDisposable Borrow (out Tessellator tOut, ETolerance etol = ETolerance.Coarse, double rotAngle = 0.1624, int seed = 42) {
-      Tessellator? t;
-      lock (mAll) {
-         t = mAll.FirstOrDefault (a => !a.mInUse);
-         if (t == null) {
-            mAll.Add (t = new ());
-            if (mMaxCount == 0) mMaxCount = 2 * Environment.ProcessorCount;
-            if (mAll.Count > mMaxCount) throw new Exception ("Too many triangulators borrowed!");
-         }
-      }
-      t.Reset (seed, rotAngle, etol);
-      return new Disposer (tOut = t);
-   }
-   static List<Tessellator> mAll = [];
-   static int mMaxCount;
-
    /// <summary>Process is called to actually perform the tessellation</summary>
    public void Process () {
       ShuffleSegs ();
@@ -106,6 +116,8 @@ public partial class Tessellator {
    }
 
    // Implementation -----------------------------------------------------------
+   FastTess2D () { }
+
    // This adds diagonals to partition the tiles into a set of monotone polygons
    // that can then be easily triangulated. We walk through the non-hole tiles, and 
    // add a diagonal where needed. A diagonal is needed when the tile has either a 
@@ -227,7 +239,7 @@ public partial class Tessellator {
          mLefts.Add (t0 = a); 
       }
    }
-   List<int> mLefts = [], mRights = [];   // OPTIMIZE: convert to arrays, or use CollectionsMarshal.SetCount?
+   List<int> mLefts = [], mRights = []; 
 
    // This inserts the 'border' tile (the root tile) of the tiling. It is large enough
    // to encompass the complete tessellation, and is initially created as a 'hole' tile,
@@ -323,18 +335,12 @@ public partial class Tessellator {
    }
 
    // Reset is be called at the beginning initialize the Triangulator before adding contours
-   void Reset (int seed, double rotAngle, ETolerance etol) {
+   void Reset () {
       mBound = new ();
       mInput.Clear (); mTris.Clear ();
-      switch (etol) {
-         case ETolerance.Fine: mTolerance = Lib.FineTess; mAngTolerance = Lib.FineTessAngle; break;
-         case ETolerance.Coarse: mTolerance = Lib.CoarseTess; mAngTolerance = Lib.CoarseTessAngle; break;
-         default: throw new BadCaseException (etol);
-      }
       mDiagTiles.Clear (); mValleyTiles.Clear (); mFreeTile.Clear ();
+      mR = new Rand (42); Tolerance = ETolerance.Coarse; BiasAngle = 0.1642;
       mSN = mNN = 0; mTN_ = mVN = 1;
-      if (mBiasAngle != rotAngle) (mSin, mCos) = Math.SinCos (mBiasAngle = rotAngle);
-      mR = new ((uint)seed);
       mInUse = true;
    }
 
@@ -393,6 +399,14 @@ public partial class Tessellator {
 
    static void Unexpected () 
       => throw new InvalidOperationException ("Triangulator.Unexpected");
+
+   // IBorrowable<T> implementation --------------------------------------------
+   static FastTess2D IBorrowable<FastTess2D>.Make () => new ();
+
+   static ref FastTess2D? IBorrowable<FastTess2D>.Next (FastTess2D item) => ref item.mNext;
+   FastTess2D? mNext;
+
+   void IDisposable.Dispose () => BorrowPool<FastTess2D>.Return (this);
 
    // Private data -------------------------------------------------------------
    Vertex[] mV = new Vertex[32];    // List of all vertices
