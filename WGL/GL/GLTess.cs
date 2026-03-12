@@ -29,7 +29,7 @@ public class Tess2D {
    string mError = string.Empty;
 
    /// <summary>What is the minimum area of triangles below which they are rejected?</summary>
-   public double MinArea { get; set; } = 1E-12;
+   public double MinArea = 1e-12;
 
    /// <summary>Tessellates the polygons with outer and inner contours into triangles</summary>
    /// <param name="pts">List of all contour points.</param>
@@ -45,11 +45,11 @@ public class Tess2D {
    /// is set, bit 30 (0x40000000) of each integer is set if the edge leading out from this
    /// vertex is a tagged with the 'edge flag'. That is, that edge was part of the original
    /// outer boundary of one of the polygons supplied, and not an 'inner' edge.
-   public bool NeedEdgeFlags { protected get; set; }
+   public bool NeedEdgeFlags;
 
    /// <summary>Set the winding rule to use for computing the tessellation.</summary>
    /// See the documentation for gluTessProperty to understand about the winding rule
-   public EWindingRule WindingRule { protected get; set; } = EWindingRule.Odd;
+   public EWindingRule WindingRule = EWindingRule.Odd;
 
    // Implementation -----------------------------------------------------------
    public unsafe List<int> Process () {

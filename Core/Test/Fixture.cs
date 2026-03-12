@@ -48,7 +48,7 @@ public class Fixture {
    readonly List<Test> mTests = [];
 
    // Implementation -----------------------------------------------------------
-   internal ConstructorInfo Constructor;
+   internal readonly ConstructorInfo Constructor;
    internal readonly bool Skip;
 }
 #endregion

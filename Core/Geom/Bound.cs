@@ -307,7 +307,7 @@ public readonly struct Bound2 : IEQuable<Bound2> {
    }
 
    /// <summary>Determines whether this Bound2 intersects with the specified Bound2.</summary>
-   /// <remarks>Two bounds intersect if they overlap along both axes.</returns>
+   /// Two bounds intersect if they overlap along both axes
    [MethodImpl (MethodImplOptions.AggressiveInlining)]
    public bool Intersects (Bound2 b) => X.Intersects (b.X) && Y.Intersects (b.Y);
 
@@ -430,7 +430,7 @@ public readonly struct Bound3 : IEQuable<Bound3> {
    public Bound3 InflatedL (double delta) => new (X.InflatedL (delta), Y.InflatedL (delta), Z.InflatedL (delta));
 
    /// <summary>Determines whether this Bound3 intersects with the specified Bound3.</summary>
-   /// <remarks>Two bounds intersect if they overlap along all axes..</returns>
+   /// Two bounds intersect if they overlap along all axes.. 
    [MethodImpl (MethodImplOptions.AggressiveInlining)]
    public bool Intersects (in Bound3 b) => X.Intersects (b.X) && Y.Intersects (b.Y) && Z.Intersects (b.Z);
 

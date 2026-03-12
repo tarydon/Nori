@@ -13,7 +13,7 @@ public class IniFile {
       mLines = [.. File.ReadAllLines (filename)];
       Section = section;
    }
-   List<string> mLines;
+   readonly List<string> mLines;
 
    // Properties ---------------------------------------------------------------
    /// <summary>The current section</summary>

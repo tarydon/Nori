@@ -12,13 +12,13 @@ public readonly struct MinCircle {
    MinCircle (double radius, Point2 center) { 
       Radius = radius; 
       Center = center; 
-      RSqr = radius > 0 ? (radius * radius) + Epsilon : 0;
+      RSqr = radius > 0 ? radius * radius + Epsilon : 0;
    }
 
    /// <summary>Center of the circle.</summary>
-   readonly public Point2 Center;
+   public readonly Point2 Center;
    /// <summary>Radius of the circle.</summary>
-   readonly public double Radius;
+   public readonly double Radius;
    /// <summary>Is this a valid circle?</summary>
    public bool OK => Radius > Epsilon;
    /// <summary>Checks if a circle contains a given point </summary>
@@ -104,7 +104,7 @@ public readonly struct MinCircle {
       }
    }
    /// <summary>The uninitialized 'Nil' circle.</summary>
-   public readonly static MinCircle Nil = new (-1, Point2.Nil);
+   public static readonly MinCircle Nil = new (-1, Point2.Nil);
    readonly double RSqr;
 }
 #endregion
@@ -120,9 +120,9 @@ public readonly struct MinSphere {
    }
 
    /// <summary>Center of the sphere.</summary>
-   readonly public Point3 Center;
+   public readonly Point3 Center;
    /// <summary>Radius of the sphere.</summary>
-   readonly public double Radius;
+   public readonly double Radius;
    /// <summary>Is this a valid sphere?</summary>
    public bool OK => Radius > Epsilon;
    /// <summary>Checks if a sphere contains a given point.</summary>
@@ -339,7 +339,7 @@ public readonly struct MinSphere {
       }
    }
    /// <summary>The uninitialized 'Nil' sphere.</summary>
-   public readonly static MinSphere Nil = new (-1, Point3.Nil);
+   public static readonly MinSphere Nil = new (-1, Point3.Nil);
    readonly double RSqr;
 }
 #endregion

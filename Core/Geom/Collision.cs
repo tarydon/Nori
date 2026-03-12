@@ -23,7 +23,7 @@ public readonly struct CTri {
       D = -(N.X * pa.X + N.Y * pa.Y + N.Z * pa.Z);
 
       K = 0b_0001;  // Assume we're using Xy plane for projecting (00 01)
-      float nx = MathF.Abs (N.X), ny = MathF.Abs (N.Y), nz = MathF.Abs (N.Z);
+      float nx = Abs (N.X), ny = Abs (N.Y), nz = Abs (N.Z);
       if (nx >= ny && nx >= nz) K = 0b_0110;         // Use YZ plane (01 10)
       else if (ny >= nx && ny >= nz) K = 0b_0010;    // Use XZ plane (00 10)
    }
@@ -58,7 +58,7 @@ public static class Collision {
       BoxTri (in b.Center, in b.X, in b.Y, in b.Z, in b.Extent, in pts[a.A], in pts[a.B], in pts[a.C]);
 
    [MethodImpl (MethodImplOptions.AggressiveInlining)]
-   unsafe public static bool Check (Point3f* pts, in CTri a, in OBB b) =>
+   public static unsafe bool Check (Point3f* pts, in CTri a, in OBB b) =>
       BoxTri (in b.Center, in b.X, in b.Y, in b.Z, in b.Extent, in pts[a.A], in pts[a.B], in pts[a.C]);
 
    [MethodImpl (MethodImplOptions.AggressiveInlining)]
@@ -211,7 +211,7 @@ public static class Collision {
    }
 
    /// <summary>Checks if two triangles intersect in 3D space.</summary>
-   public unsafe static bool TriTri (Point3f* p1, in CTri t1, Point3f * p2, in CTri t2) {
+   public static unsafe bool TriTri (Point3f* p1, in CTri t1, Point3f * p2, in CTri t2) {
       // Step 1. Check if triangle 1 is completely on one side of triangle 2's plane
       int a1 = t1.A, b1 = t1.B, c1 = t1.C, a2 = t2.A, b2 = t2.B, c2 = t2.C;
       Vector3f N2 = t2.N; float d2 = t2.D;
@@ -295,9 +295,9 @@ public static class Collision {
    /// 2. If edge of first triangle crosses edge of the other
    /// Like the 3D triangle intersection check, the planar variant also uses orientation
    /// tests to determine the intersections. 
-   unsafe static bool TriTri2D (Point2f* p) {
+   static unsafe bool TriTri2D (Point2f* p) {
       // Triangle vertices.
-      int a1 = 0, b1 = 1, c1 = 2, a2 = 3, b2 = 4, c2 = 5;
+      const int a1 = 0; int b1 = 1, c1 = 2, a2 = 3, b2 = 4, c2 = 5;
 
       // Step 0: Ensure both triangles are ccw
       if (Side (a1, b1, c1) < 0) (b1, c1) = (c1, b1);

@@ -75,7 +75,7 @@ public partial class Mechanism {
       }
    }
    Mesh3? _mesh;
-   static ConcurrentDictionary<string, Mesh3?> sMeshCache = [];
+   static readonly ConcurrentDictionary<string, Mesh3?> sMeshCache = [];
 
    /// <summary>What's the name of this mechanism (or sub-mechanism)</summary>
    public readonly string Name = string.Empty;

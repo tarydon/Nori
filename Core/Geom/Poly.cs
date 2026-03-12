@@ -234,11 +234,11 @@ public partial class Poly {
    public double GetArea () {
       if (IsCircle) {
          double radius = Extra[0].Center.DistTo (Pts[0]);
-         return Lib.PI * radius * radius;
+         return PI * radius * radius;
       }
       if (HasArcs) {
          List<Point2> pts = [];
-         Discretize (pts, Lib.FineTess, Lib.FineTessAngle);
+         Discretize (pts, FineTess, FineTessAngle);
          return GetArea (pts.AsSpan ());
       } else {
          return GetArea (Pts.AsSpan ());
@@ -251,7 +251,7 @@ public partial class Poly {
          for (int i = 0; i < pts.Length; i++) {
             Point2 b = pts[i]; area += (b.X * a.Y - a.X * b.Y); a = b;
          }
-         return Math.Abs (area / 2);
+         return Abs (area / 2);
       }
    }
 
@@ -613,8 +613,8 @@ public class PolyBuilder {
       // Expecting a double, prefixed possibly by whitespace
       double GetD () { R.Skip (sSpaceAndComma).Read (out double v); return v; }
    }
-   static SearchValues<byte> sSpaceAndComma = SearchValues.Create (" \r\n\f\t,"u8);
-   static SearchValues<byte> sCurlSpl = SearchValues.Create (" }]"u8);
+   static readonly SearchValues<byte> sSpaceAndComma = SearchValues.Create (" \r\n\f\t,"u8);
+   static readonly SearchValues<byte> sCurlSpl = SearchValues.Create (" }]"u8);
 
    /// <summary>Marks the Pline as closed</summary>
    public PolyBuilder Close () { mClosed = true; return this; }

@@ -136,13 +136,11 @@ public class CurveUnlofter {
    Node[] mNodes = new Node[8];
 
    struct Seg {
-      public Seg (int id, int center, double dt) {
-         Center = center; DT = dt;
-      }
-      public int Center;
+      public Seg (int id, int center, double dt) => (Center, DT) = (center, dt);
+      public readonly int Center;
       public int Left, Right;
       public int Children;
-      public double DT;
+      public readonly double DT;
 
       public (double T, EOverrun Overrun) GetT (CurveUnlofter owner, Point3 pt) {
          ref Node left = ref owner.mNodes[Left], right = ref owner.mNodes[Right];

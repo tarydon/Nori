@@ -113,7 +113,7 @@ public sealed class E3Cylinder : E3CSSurface {
       }
       if (angSpan.Length < Lib.TwoPI - Lib.Epsilon)
          cs *= Matrix3.Rotation (cs.Org, cs.Org + cs.VecZ, -(angSpan.Mid + Lib.PI));
-    Done:
+      Done:
       return new (id, trims, cs, radius, infacing);
 
       void Adjust (Point3 pt) {

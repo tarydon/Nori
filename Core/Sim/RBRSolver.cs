@@ -16,7 +16,7 @@ public class RBRSolver {
    }
 
    public IReadOnlyList<Soln> Solutions => mSolutions;
-   Soln[] mSolutions = new Soln[8];
+   readonly Soln[] mSolutions = new Soln[8];
 
    // Methods ------------------------------------------------------------------
    /// <summary>For a given end-effector orientation, this return all possible valid stances of the robot</summary>
@@ -193,11 +193,11 @@ public class RBRSolver {
    const double alpha12 = 3 * Lib.HalfPI; // 270 degrees)
 
    // The limits of the 6 axes (mMin[0] and mMax[0] are not used)
-   double[] mMin = new double[7], mMax = new double[7];
+   readonly double[] mMin = new double[7], mMax = new double[7];
 
    public class Soln {
       public Soln (double[] min, double[] max) { mMin = min; mMax = max; }
-      double[] mMin, mMax;
+      readonly double[] mMin, mMax;
 
       public bool OK { get => mOK; internal set => mOK = value; }
       bool mOK = true;

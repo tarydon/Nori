@@ -116,7 +116,8 @@ public class LineFont {
          foreach (var ch in line) {
             // As we output each character, adjust posChar by the horizontal advance of this character
             if (Glyphs.TryGetValue (ch, out var g)) {
-               output.AddRange (g.Polys.Select (a => a * xfm * Matrix2.Translation (posChar.X, posChar.Y)));
+               var xfm2 = xfm * Matrix2.Translation (posChar.X, posChar.Y);
+               output.AddRange (g.Polys.Select (a => a * xfm2));
                posChar += across * g.HAdvance;
             }
          }

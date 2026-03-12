@@ -260,7 +260,7 @@ public readonly struct Seg {
    public double GetSlopeAt (double lie) {
       if (IsArc2 (out var cen, out var flags)) {
          var (sa, ea) = GetStartAndEndAngles (cen, flags);
-         return lie.Along (sa, ea) + Lib.HalfPI * (((flags & Poly.EFlags.CCW) != 0) ? 1 : -1);
+         return lie.Along (sa, ea) + Lib.HalfPI * ((flags & Poly.EFlags.CCW) != 0 ? 1 : -1);
       }
       return A.AngleTo (B);
    }
@@ -270,11 +270,8 @@ public readonly struct Seg {
    /// - For a circle, this returns (0, 2*PI)
    /// - For a CCW arc this ensures end greater-than start
    /// - For a CW arc, this ensures end less-than start
-   public (double Start, double End) GetStartAndEndAngles () {
-      if (IsArc2 (out var cen, out var flags))
-         return GetStartAndEndAngles (cen, flags);
-      return (0, 0);
-   }
+   public (double Start, double End) GetStartAndEndAngles () 
+      => IsArc2 (out var cen, out var flags) ? GetStartAndEndAngles (cen, flags) : (0, 0);
 
    /// <summary>Coputes the intersection between this segment and an infinite line</summary>
    /// <param name="a">Start point of the infinite line</param>

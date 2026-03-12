@@ -134,7 +134,7 @@ public class DwgSnap {
             mCons.RemoveAt (0);
       }
    }
-   List<ConsLine> mCons = [];    // List of all construction lines
+   readonly List<ConsLine> mCons = [];    // List of all construction lines
 
    // Helper used to check if a given point is closer to the input point than the
    // closest point we have so far
@@ -183,8 +183,8 @@ public class DwgSnap {
       }
       return mSnap != ESnap.None;
    }
-   List<ConsLine> mActive = [];  // List of construction lines we're close to
-   List<ConsLine> mVisible = []; // List of construction lines that are visible
+   readonly List<ConsLine> mActive = [];  // List of construction lines we're close to
+   readonly List<ConsLine> mVisible = []; // List of construction lines that are visible
 
    // This checks for hard snaps (like endpoint, midpoint, center, quadrant) etc.
    // Segments of Polys are checked, and also nodes of inserts, dimensions, text etc are checked.
@@ -258,9 +258,10 @@ public class DwgSnap {
       if (mSnap != ESnap.None) {
          AddConsLine (mPtSnap, [mTangent, mTangent + Lib.HalfPI, 0, Lib.HalfPI, mTangent2, mTangent2 + Lib.HalfPI]);
          return true;
-      } else return false;
+      } 
+      return false;
    }
-   List<Seg> mSegs = [];         // List of segs we're close to
+   readonly List<Seg> mSegs = [];         // List of segs we're close to
 
    // Check if the given input point is ON any of the construction lines
    bool OnCons () {
@@ -288,10 +289,8 @@ public class DwgSnap {
       public double DistTo (Point2 pt)
          => pt.DistToLine (Anchor, Anchor.Polar (10, Slope));
 
-      public bool EQ (Point2 pt, double ang) {
-         if (!ang.EQ (Slope, 0.001)) return false;
-         return pt.DistToLine (Anchor, Anchor.Polar (10, Slope)).IsZero (0.001);
-      }
+      public bool EQ (Point2 pt, double ang) 
+         => ang.EQ (Slope, 0.001) && pt.DistToLine (Anchor, Anchor.Polar (10, Slope)).IsZero (0.001);
 
       public Point2 GetIntersection (ConsLine other)
          => Geo.LineXLine (Anchor, Anchor.Polar (10, Slope), other.Anchor, other.Anchor.Polar (10, other.Slope));

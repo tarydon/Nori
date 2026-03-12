@@ -67,7 +67,7 @@ public class OBBTree {
       OBBs = new OBB[Tris.Length];
       // The root OBB is at index 1, so we start building children from index 2 (nNext = 2)
       OBBs[0] = OBB.Zero; OBBs[1] = OBB.Build (Pts);
-      int nOBB = 0, nNext = 2, nPts; 
+      int nOBB = 0, nNext = 2;
       // Reserve max storage. 
       if (TmpPts.Length < Pts.Length) TmpPts = new Point3f[Pts.Length];
       Span<Vector3f> axes = stackalloc Vector3f[4];
@@ -75,7 +75,7 @@ public class OBBTree {
       while (Todo.Count > 0) {
          var (start, count) = Todo.Dequeue ();
          int end = start + count;
-         TmpSet.Clear (); nPts = 0;
+         TmpSet.Clear (); int nPts = 0;
          ref OBB box = ref OBBs[++nOBB];
          if (nOBB > 1) {
             for (int i = start; i < end; i++) {
@@ -155,7 +155,7 @@ public class OBBTree {
 
    // Given the 'spread' vector, it retuns an encoded order in which
    // the split should be attempted.
-   int GetAxisOrder (Vector3f vec) {
+   static int GetAxisOrder (Vector3f vec) {
       if (vec.X > vec.Y) {
          if (vec.Z < vec.Y) return 321;         // ZYX
          if (vec.Z > vec.X) return 213;         // YXZ
@@ -409,7 +409,6 @@ public class OBBCollider {
    // one of the 3 arrays above, we will use these sentinels.
    // Now, if mPtRung[N] != mRung, that means that that particular point has not yet been transformed
    // from B to A. We transform it, store it in mPtRung and set mPtRung[N] = mRung. 
-   // 
    // 
    // With this optimization, each OBB, Tri and finally each Pt will be transformed only once from
    // B to A's space. And only incrementally - large sections of the tris, OBBs, points wil never

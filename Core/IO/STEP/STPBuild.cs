@@ -18,7 +18,7 @@ partial class STEPReader {
       }
       return mModel;
    }
-   Model3 mModel = new ();
+   readonly Model3 mModel = new ();
 
    // Implementation -----------------------------------------------------------
    // Given a vertex point object, fetches the underlying point
@@ -34,7 +34,7 @@ partial class STEPReader {
    CoordSystem GetCoordSys (int nCoordSys) {
       CoordSys cs = (CoordSys)D[nCoordSys]!;
       Point3 org = ((Cartesian)D[cs.Origin]!).Pt;
-      Vector3 zaxis = GetDirection (cs.ZAxis), xaxis = Vector3.XAxis;
+      Vector3 zaxis = GetDirection (cs.ZAxis), xaxis;
       if (cs.XAxis > 0) xaxis = GetDirection (cs.XAxis);
       else {
          // X-axis can be ommited. In that case, we can choose any arbitrary xAxis,
@@ -113,7 +113,7 @@ partial class STEPReader {
          Lib.Check (mEdges[i].End.EQ (mEdges[(i + 1) % mEdges.Count].Start), "MakeContour");
       return new Contour3 ([..mEdges]);
    }
-   List<Curve3> mEdges = [];
+   readonly List<Curve3> mEdges = [];
 
    E3Plane MakePlane (int id, Plane plane, ImmutableArray<Contour3> contours, bool aligned) {
       var cs = GetCoordSys (plane.CoordSys);

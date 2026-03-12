@@ -356,7 +356,7 @@ public class T3XReader : IDisposable {
    string RWord () { var (a, b) = Slice (); return T[a..b]; }
    bool RDone () { SkipSpace (); if (T[N] == '*') { N++; return true; } else return false; }
    (int A, int B) Slice () { SkipSpace (); int a = N; ToSpace (); return (a, N); }
-   (int A, int B) SliceTo (char ch) { int a = N; while (T[N++] != ch) { }; return (a, N - 1); } 
+   (int A, int B) SliceTo (char ch) { int a = N; while (T[N++] != ch) { } return (a, N - 1); } 
    void SkipSpace () { while (char.IsWhiteSpace (T[N])) N++; }
    void ToSpace () { while (!char.IsWhiteSpace (T[N])) N++; }
 
@@ -373,7 +373,7 @@ public class T3XReader : IDisposable {
    }
 
    // Private data -------------------------------------------------------------
-   string T = "";                      // Text of the T3X file
+   readonly string T;                  // Text of the T3X file
    int N = 0;                          // Character position within the file
    readonly Model3 mModel = new ();    // The model we're constructing
    readonly ZipArchive mZip;           // Zip file we're loading from 

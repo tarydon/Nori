@@ -97,7 +97,7 @@ public class MeshSlicer {
       }
       return total;
    }
-   List<Point3> mTemp = [];
+   readonly List<Point3> mTemp = [];
 
    // This gathers closed cuts into the output. 
    // Since this is always called after GatherOpenCuts, we can assume that any unvisited
@@ -145,7 +145,7 @@ public class MeshSlicer {
       // map is about 7% faster, and is therefore worth the bother. 
       int idx;
       if (mBigMesh) {
-         long key = a < b ? (((long)a) << 32) + b : (((long)b) << 32) + a;
+         long key = a < b ? ((long)a << 32) + b : ((long)b << 32) + a;
          if (mBigEdgeMap.TryGetValue (key, out idx)) return idx;
          mBigEdgeMap.Add (key, mUsedNodes);
       } else {
@@ -243,22 +243,22 @@ public class MeshSlicer {
    }
 
    // Private data -------------------------------------------------------------
-   PlaneDef mDef;                         // The PlaneDef we're working with
-   Vector3 mAbsNormal;                    // The absolute value of the plane normal   
-   ImmutableArray<Mesh3> mMeshes;         // List of meshes to test against
-   ImmutableArray<Mesh3.Node> mVertex;    // List of vertices of the current mesh
-   double[] mDist = [];                   // Signed distances of these nodes from the plane (for current mesh)
-   Node[] mNodes = new Node[8];           // Intersections of triangle edges with the plane (across all meshes)
-   int mUsedNodes = 0;                    // How many of these nodes have we used
+   PlaneDef mDef;                            // The PlaneDef we're working with
+   Vector3 mAbsNormal;                       // The absolute value of the plane normal   
+   readonly ImmutableArray<Mesh3> mMeshes;   // List of meshes to test against
+   ImmutableArray<Mesh3.Node> mVertex;       // List of vertices of the current mesh
+   double[] mDist = [];                      // Signed distances of these nodes from the plane (for current mesh)
+   Node[] mNodes = new Node[8];              // Intersections of triangle edges with the plane (across all meshes)
+   int mUsedNodes = 0;                       // How many of these nodes have we used
 
    // Dictionary that maps edges of the triangles from the current mesh to 
    // Node objects that hold these intersections. If there are two edges from A..B and from
    // B..A, both of them hash to the same entry in this dictionary (this is the adjacency
    // information we gather)
-   Dictionary<long, int> mBigEdgeMap = [];
-   Dictionary<uint, int> mSmallEdgeMap = [];
+   readonly Dictionary<long, int> mBigEdgeMap = [];
+   readonly Dictionary<uint, int> mSmallEdgeMap = [];
    // Dictionary that maps geometric points (rounded to three decimals)
    // to mNode entries (used to do the second level of connectivity)
-   Dictionary<Point3f, int> mNodeMap = new (Point3fComparer.Delta);
+   readonly Dictionary<Point3f, int> mNodeMap = new (Point3fComparer.Delta);
 }
 #endregion

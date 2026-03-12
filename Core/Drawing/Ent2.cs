@@ -195,23 +195,23 @@ public class E2Insert : Ent2 {
    // Properties ---------------------------------------------------------------
    /// <summary>Rotation angle of the block, in radians</summary>
    public double Angle => mAngle;
-   [Radian] double mAngle;
+   [Radian] readonly double mAngle;
 
    /// <summary>The Block this E2Insert is referencing</summary>
    public Block2 Block => mBlock ??= mDwg.GetBlock (mBlockName) ?? throw new Exception ($"Block {mBlockName} not found");
    Block2? mBlock;
-   Dwg2 mDwg;
+   readonly Dwg2 mDwg;
 
    /// <summary>Name of the block</summary>
    public string BlockName => mBlockName;
-   string mBlockName;
+   readonly string mBlockName;
 
    /// <summary>X and Y scaling factors for the block</summary>
    public readonly double XScale, YScale;
 
    /// <summary>Insertion position of the block</summary>
    public Point2 Pt => mPt;
-   Point2 mPt;
+   readonly Point2 mPt;
 
    /// <summary>Computes the Xfm for the block (based on scale, rotation etc)</summary>
    public Matrix2 Xfm {
@@ -387,7 +387,7 @@ public class E2Spline : Ent2 {
          return mPts;
       }
    }
-   List<Point2> mPts = [];
+   readonly List<Point2> mPts = [];
 
    public override Bound2 Bound => Bound2.Cached (ref mBound, () => new (Pts));
    Bound2 mBound = new ();

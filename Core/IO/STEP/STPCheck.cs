@@ -136,5 +136,5 @@ partial class STEPReader {
       } else
          throw new Exception ($"Implement check for {D[n]!.GetType ().Name}");
    }
-   HashSet<string> mReported = [];
+   readonly HashSet<string> mReported = [];
 }

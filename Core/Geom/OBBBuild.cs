@@ -2,7 +2,6 @@
 // ╔═╦╦═╦╦╬╣ OBBBuild
 // ║║║║╬║╔╣║ Implements OBB builder (OBBDitoBuilder, OBBPCABuilder)
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
-using Nori;
 namespace Nori.Internal;
 
 #region struct OBBDitoBuilder ----------------------------------------------------------------------
@@ -34,7 +33,7 @@ namespace Nori.Internal;
 /// implementation is highly tuned. The code is verbose since a lot of it has been 'unrolled'
 /// for better performance. Also, it is unsafe since it uses pointers extensively (rather 
 /// than spans or arrays which are bounds checked). 
-unsafe readonly struct OBBDitoBuilder {
+readonly unsafe struct OBBDitoBuilder {
    // Constructors -------------------------------------------------------------
    /// <summary>Initialize the OBB builder with a set of Point3f</summary>
    /// Note that this 'constructor' actually completes the entire building of the
@@ -213,7 +212,7 @@ unsafe readonly struct OBBDitoBuilder {
          }
       }
    }
-   static int[] mRefine = [0, 1, 2, 0, 1, 3, 1, 2, 3, 2, 0, 3, 0, 1, 4, 1, 2, 4, 2, 0, 4];
+   static readonly int[] mRefine = [0, 1, 2, 0, 1, 3, 1, 2, 3, 2, 0, 3, 0, 1, 4, 1, 2, 4, 2, 0, 4];
 
    // Helpers ------------------------------------------------------------------
    // Computes the surface area of an OBB given the extent vector
@@ -225,10 +224,9 @@ unsafe readonly struct OBBDitoBuilder {
    // projections. It also returns the 'area' of the 
    static float ComputeProjection (Point3f* P, int count, in Vector3f u, in Vector3f v, in Vector3f w, float* E) {
       Point3f p = P[0];
-      float u0, u1, v0, v1, w0, w1;
-      u0 = u1 = p.X * u.X + p.Y * u.Y + p.Z * u.Z;
-      v0 = v1 = p.X * v.X + p.Y * v.Y + p.Z * v.Z;
-      w0 = w1 = p.X * w.X + p.Y * w.Y + p.Z * w.Z;
+      float u0 = p.X * u.X + p.Y * u.Y + p.Z * u.Z, u1 = u0;
+      float v0 = p.X * v.X + p.Y * v.Y + p.Z * v.Z, v1 = v0;
+      float w0 = p.X * w.X + p.Y * w.Y + p.Z * w.Z, w1 = w0;
       for (int j = 1; j < count; j++) {
          p = P[j];
          // Projection on u axis (Dot(p,axis))
@@ -459,18 +457,18 @@ unsafe ref struct OBBDitoBuilderArchived (ReadOnlySpan<Point3f> pts) {
          ref Point3f p = ref P[n];
          // Compute projection of point 'p' on axes (basically Dot (p, axis)
          var d = p.X * u.X + p.Y * u.Y + p.Z * u.Z;
-         if (d < (Min[0] - Epsilon)) Min[0] = d;
-         if (d > (Max[0] + Epsilon)) Max[0] = d;
+         if (d < Min[0] - Epsilon) Min[0] = d;
+         if (d > Max[0] + Epsilon) Max[0] = d;
 
          // Compute projection of point 'p' on v axis
          d = p.X * v.X + p.Y * v.Y + p.Z * v.Z;
-         if (d < (Min[1] - Epsilon)) Min[1] = d;
-         if (d > (Max[1] + Epsilon)) Max[1] = d;
+         if (d < Min[1] - Epsilon) Min[1] = d;
+         if (d > Max[1] + Epsilon) Max[1] = d;
 
          // Compute projection of point 'p' on w axis
          d = p.X * w.X + p.Y * w.Y + p.Z * w.Z;
-         if (d < (Min[2] - Epsilon)) Min[2] = d;
-         if (d > (Max[2] + Epsilon)) Max[2] = d;
+         if (d < Min[2] - Epsilon) Min[2] = d;
+         if (d > Max[2] + Epsilon) Max[2] = d;
       }
    }
 
@@ -519,7 +517,7 @@ unsafe ref struct OBBDitoBuilderArchived (ReadOnlySpan<Point3f> pts) {
          var half = new Vector3f (Max[0] - Min[0], Max[1] - Min[1], Max[2] - Min[2]) * 0.5f;
          if (Volume (half).IsZero ()) continue;
          var area = Area (half);
-         if (area < (BestScore - Epsilon)) (Box, BestScore) = (CreateBox (u, v, w), area);
+         if (area < BestScore - Epsilon) (Box, BestScore) = (CreateBox (u, v, w), area);
       }
    }
 
@@ -540,6 +538,6 @@ unsafe ref struct OBBDitoBuilderArchived (ReadOnlySpan<Point3f> pts) {
    // First half of H belong to the min projections whereas second half are max projections.
    // And elements 'i' and '7 + i' belong to the same axis.
    int* H; float* Min, Max;
-   readonly static Vector3f X = new (1, 0, 0), Y = new (0, 1, 0), Z = new (0, 0, 1);
+   static readonly Vector3f X = new (1, 0, 0), Y = new (0, 1, 0), Z = new (0, 0, 1);
    const float Epsilon = 1E-6f;
 }

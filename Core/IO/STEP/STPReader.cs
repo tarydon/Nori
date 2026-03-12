@@ -170,7 +170,7 @@ public partial class STEPReader {
       }
       return [.. mDoubles];
    }
-   List<double> mDoubles = [];
+   readonly List<double> mDoubles = [];
 
    // Reads a 'reference' (an integer prefixed with a hash), after skipping past a leading comma
    int RRef () {
@@ -189,7 +189,7 @@ public partial class STEPReader {
       }
       return [.. mInts];
    }
-   List<int> mInts = [];
+   readonly List<int> mInts = [];
 
    // Reads a two-dimensionsl array of references
    int[][] RRefsList () {
@@ -201,7 +201,7 @@ public partial class STEPReader {
       }
       return [.. mRefsList];
    }
-   List<int[]> mRefsList = [];
+   readonly List<int[]> mRefsList = [];
 
    // Search forward until the given character is found (this steps past any strings.
    // The given character is consumed, and N points to the next character after that
@@ -325,13 +325,13 @@ public partial class STEPReader {
    }
 
    // Private data -------------------------------------------------------------
-   int Id;                                   // ID of the entity we're loading in
-   List<Entity?> D = [];                     // List of entities we've read in
-   Dictionary<int, string> Unread = [];      // List of entities we could not read from this file
-   static HashSet<string> mUnsupported = []; // List of 'unsupported' entities
-   static HashSet<string> sIgnore = [.. Lib.ReadLines ("nori:Core/STEPIgnore.txt")];
-   readonly string mFile;                    // Name of the file we're loading from
-   readonly string S;                        // The full text of the file (loaded into a string)
-   int N;                                    // Cursor of next char into S
+   int Id;                                            // ID of the entity we're loading in
+   readonly List<Entity?> D = [];                     // List of entities we've read in
+   readonly Dictionary<int, string> Unread = [];      // List of entities we could not read from this file
+   static readonly HashSet<string> mUnsupported = []; // List of 'unsupported' entities
+   static readonly HashSet<string> sIgnore = [.. Lib.ReadLines ("nori:Core/STEPIgnore.txt")];
+   readonly string mFile;                             // Name of the file we're loading from
+   readonly string S;                                 // The full text of the file (loaded into a string)
+   int N;                                             // Cursor of next char into S
 }
 #endregion

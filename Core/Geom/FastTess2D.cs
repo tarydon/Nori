@@ -24,7 +24,7 @@ public partial class FastTess2D : IBorrowable<FastTess2D> {
    /// Caution: Don't hold onto this while you are adding polys - the list may grow, and
    /// the span may become stale. 
    public List<Point2> Pts => mInput;
-   List<Point2> mInput = [];
+   readonly List<Point2> mInput = [];
 
    /// <summary>The discretization tolerance</summary>
    public ETolerance Tolerance {
@@ -42,7 +42,7 @@ public partial class FastTess2D : IBorrowable<FastTess2D> {
    /// <summary>The set of integers making up the triangles</summary>
    /// These integers, taken 3 at a time, point into the Pts array
    public List<int> Tris => mTris;
-   List<int> mTris = [];
+   readonly List<int> mTris = [];
 
    // Methods ------------------------------------------------------------------
    /// <summary>This is used to borrow a Triangulator for use</summary>
@@ -207,13 +207,13 @@ public partial class FastTess2D : IBorrowable<FastTess2D> {
          mTris.Add (a - 1); mTris.Add (b - 1); mTris.Add (c - 1);
       }
    }
-   Stack<(int Id, Point2 Pt, bool Left)> mStack = [];
+   readonly Stack<(int Id, Point2 Pt, bool Left)> mStack = [];
 
    // Returns an 'adjacent' tile touching a vertex, through which the vOther
    // vertex can be reached
    int GetAdjacentTile (ref Vertex v, ref Vertex vOther) {
       // Pick a tile from either TL,TR or from BL,BR
-      var (L, R) = (vOther.Pt.Y > v.Pt.Y) ? (v.TL, v.TR) : (v.BL, v.BR);
+      var (L, R) = vOther.Pt.Y > v.Pt.Y ? (v.TL, v.TR) : (v.BL, v.BR);
       if (L == R) return L;
       ref Tile tLeft = ref mT[L];
       ref Segment sRight = ref mS[tLeft.Right];
@@ -237,7 +237,7 @@ public partial class FastTess2D : IBorrowable<FastTess2D> {
          mLefts.Add (t0 = a); 
       }
    }
-   List<int> mLefts = [], mRights = []; 
+   readonly List<int> mLefts = [], mRights = []; 
 
    // This inserts the 'border' tile (the root tile) of the tiling. It is large enough
    // to encompass the complete tessellation, and is initially created as a 'hole' tile,
@@ -339,7 +339,6 @@ public partial class FastTess2D : IBorrowable<FastTess2D> {
       mDiagTiles.Clear (); mValleyTiles.Clear (); mFreeTile.Clear ();
       mR = new Rand (42); Tolerance = ETolerance.Coarse; BiasAngle = 0.1642;
       mSN = mNN = 0; mTN_ = mVN = 1;
-      mInUse = true;
    }
 
    // Rotate a point through the bias angle
@@ -408,18 +407,17 @@ public partial class FastTess2D : IBorrowable<FastTess2D> {
    void IDisposable.Dispose () => BorrowPool<FastTess2D>.Return (this);
 
    // Private data -------------------------------------------------------------
-   Vertex[] mV = new Vertex[32];    // List of all vertices
-   Segment[] mS = new Segment[32];  // List of all segments
-   Node[] mN = new Node[32];        // Nodes making up the tree
-   Tile[] mT = new Tile[32];        // Trapezoidal tiles covering the plane
-   int mVN, mSN, mNN, mTN_;          // Usage counts (Vertices, Segments, Nodes, Tiles)
-   Rand mR = new (42);              // Used for random insertion of segments
-   int[] mShuffle = new int[32];    // A permutation of the segments
-   List<int> mDiagTiles = [];       // Tiles where diagonals need to be drawn
-   List<int> mValleyTiles = [];     // Valley tiles, from which we start monotone polygons
-   Stack<int> mFreeTile = [];       // Tiles that are free for reuse
-   Bound2 mBound;                   // Bound of poly added so far (in rotated coordinates)
-   bool mInUse;                     // Is this triangulator in use (borrowed)
+   Vertex[] mV = new Vertex[32];          // List of all vertices
+   Segment[] mS = new Segment[32];        // List of all segments
+   Node[] mN = new Node[32];              // Nodes making up the tree
+   Tile[] mT = new Tile[32];              // Trapezoidal tiles covering the plane
+   int mVN, mSN, mNN, mTN_;               // Usage counts (Vertices, Segments, Nodes, Tiles)
+   Rand mR = new (42);                    // Used for random insertion of segments
+   int[] mShuffle = new int[32];          // A permutation of the segments
+   readonly List<int> mDiagTiles = [];    // Tiles where diagonals need to be drawn
+   readonly List<int> mValleyTiles = [];  // Valley tiles, from which we start monotone polygons
+   readonly Stack<int> mFreeTile = [];    // Tiles that are free for reuse
+   Bound2 mBound;                         // Bound of poly added so far (in rotated coordinates)
    double mBiasAngle, mSin, mCos;
    double mTolerance, mAngTolerance;
    const double FINE = 1e-9;

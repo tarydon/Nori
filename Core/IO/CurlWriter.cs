@@ -105,7 +105,6 @@ public class CurlWriter {
          default: throw new NotImplementedException ();
       }
    }
-
-   UTFWriter B = new ();
+   readonly UTFWriter B = new ();
 }
 #endregion

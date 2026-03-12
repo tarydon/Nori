@@ -39,7 +39,7 @@ public partial class Dwg2 {
 
    /// <summary>The list of entities in the drawing (active list, implements Observable(ListChange)</summary>
    public AList <Ent2> Ents => mEnts;
-   AList<Ent2> mEnts = [];
+   readonly AList<Ent2> mEnts = [];
 
    /// <summary>Should the interior of the drawing be filled or not?</summary>
    public bool FillInterior {
@@ -54,7 +54,7 @@ public partial class Dwg2 {
 
    /// <summary>The list of layers in the drawing</summary>
    public IReadOnlyList <Layer2> Layers => mLayers;
-   List<Layer2> mLayers = [];
+   readonly List<Layer2> mLayers = [];
 
    /// <summary>The list of blocks in the drawing</summary>
    /// New blocks are added by calling Add(Block2)

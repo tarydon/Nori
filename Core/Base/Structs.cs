@@ -21,7 +21,7 @@ public readonly struct BlockTimer : IDisposable {
       if (mIterations > 1) 
          Lib.Trace ($"  {FmtTime (mSW, mIterations)} per iteration\n");
 
-      string FmtTime (Stopwatch sw, int iterations) {
+      static string FmtTime (Stopwatch sw, int iterations) {
          double t = sw.Elapsed.TotalMilliseconds / iterations;
          var (value, suffix) = (t, "ms");
          if (value < 2) { value = sw.Elapsed.TotalMicroseconds / iterations; suffix = "\u00b5s"; }

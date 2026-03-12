@@ -228,7 +228,7 @@ public class Matrix3 : IEQuable<Matrix3> {
    public Matrix3 ExtractRotation () => new (M11, M12, M13, M21, M22, M23, M31, M32, M33, 0, 0, 0);
 
    public Matrix3 ExtractAbs () {
-      double e = 1e-6;
+      const double e = 1e-6;
       return new (Abs (M11) + e, Abs (M12) + e, Abs (M13) + e,
                   Abs (M21) + e, Abs (M22) + e, Abs (M23) + e,
                   Abs (M31) + e, Abs (M32) + e, Abs (M33) + e,
@@ -361,7 +361,7 @@ public class Matrix3 : IEQuable<Matrix3> {
 
    /// <summary>Multiply a Point2 by a Matrix, resulting in a Matrix3</summary>
    public static Point3 operator * (Point2 p, Matrix3 m) 
-      => ((Point3)p) * m;
+      => (Point3)p * m;
 
    /// <summary>Multiple a Point3f by a Matrix</summary>
    public static Point3f operator * (Point3f p, Matrix3 m) {

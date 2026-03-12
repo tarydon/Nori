@@ -10,10 +10,9 @@ public class STLReader {
    public STLReader (byte[] data) => mData = data;
 
    /// <summary>Gets the triangle triplets defined in the STL file</summary>
-   public List<Point3> GetTriangles () {
-      if (mData.Take (5).SequenceEqual (_HeaderWord)) return ReadASCII ();
-      else return ReadBinary ();
-   }
+   public List<Point3> GetTriangles () 
+      => mData.Take (5).SequenceEqual (_HeaderWord) ? ReadASCII () : ReadBinary ();
+
    /// <summary>Builds a mesh with smoothened normals using Mesh3Builder</summary>
    public Mesh3 BuildMesh () => new Mesh3Builder (GetTriangles ().AsSpan ()).Build ();
 

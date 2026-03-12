@@ -153,7 +153,7 @@ public partial class Poly {
          // along the lead-out segment slope (this is the end of the in-fillet). See the code
          // below that would have already added the beginning of the in-fillet (the
          // i == node - 1 check)
-         if (i == node) pt = pt.Polar ((onSameSide || nearLeadOut) ? dist2 : -dist2, s2.Slope);
+         if (i == node) pt = pt.Polar (onSameSide || nearLeadOut ? dist2 : -dist2, s2.Slope);
 
          // This code adds all the other nodes (they could be the starts of line or arc
          // segments, and we handle both by looking through the mExtra array). Note that
@@ -169,9 +169,9 @@ public partial class Poly {
          // If we are heading towards the target node, add an new node for the beginning
          // of the step, by moving backwards or forwards depending on the pick point by dist1 along the lead-in segment slope
          if (i == node - 1) {
-            var st = s2.A.Polar ((onSameSide || !nearLeadOut) ? -dist1 : dist1, s1.Slope);
+            var st = s2.A.Polar (onSameSide || !nearLeadOut ? -dist1 : dist1, s1.Slope);
             pb.Line (st);
-            pb.Line (st.Polar ((onSameSide || nearLeadOut) ? dist2 : -dist2, s2.Slope));
+            pb.Line (st.Polar (onSameSide || nearLeadOut ? dist2 : -dist2, s2.Slope));
          }
       }
       // Done, close the poly if needed and return it
@@ -253,7 +253,7 @@ public partial class Poly {
       PolyBuilder pb = new ();
       // Precompute values now, and keep the loop below clean.
       (double slope, double slope2) = (s.Slope, s.Slope + (depth > 0 ? Lib.HalfPI : -Lib.HalfPI));
-      double offset = centerOffset - (width / 2); // Portion of seg leading upto notch
+      double offset = centerOffset - width / 2; // Portion of seg leading upto notch
 
       for (int i = 0; i < Count; i++) {
          Point2 pt = mPts[i];
@@ -293,7 +293,7 @@ public partial class Poly {
       PolyBuilder pb = new ();
       // Precompute values now, and keep the loop below clean.
       (double slope, double slope2) = (s.Slope, s.Slope + (left ? Lib.HalfPI : -Lib.HalfPI));
-      double offset = centerOffset - (width / 2); // Portion of seg leading upto notch
+      double offset = centerOffset - width / 2; // Portion of seg leading upto notch
       double offset2 = s.Length - (offset + width); // Portion of seg remaining after the notch
 
       for (int i = 0; i < Count; i++) {
@@ -505,7 +505,7 @@ public partial class Poly {
       // Open poly...
       // First fragmented poly
       pts.AddRange (Pts[..(segIdx + 1)]);
-      extra.AddRange (Extra[..(Math.Min (segIdx, Extra.Length))]);
+      extra.AddRange (Extra[..Math.Min (segIdx, Extra.Length)]);
       if (hFrag) {
          pts.Add (seg.GetPointAt (fromLie));
          if ((segExtra.Flags & EFlags.Arc) != 0) {
@@ -560,18 +560,14 @@ public partial class Poly {
          foreach (var s in polySoup.SelectMany (p => p.Segs)) {
             foreach (var pt in seg.Intersect (s, buffer, finite: true)) {
                double lie = GetLieOnCircle (seg.Center, pt);
-               // Trim section start lie
-               if (lie < refLie) sLie = Math.Max (sLie, lie);
-               else sLie = Math.Max (sLie, lie - 1);
-               // Trim section end lie
-               if (lie > refLie) eLie = Math.Min (eLie, lie);
-               else eLie = Math.Min (eLie, lie + 1);
+               // Trim start and end lies
+               sLie = Math.Max (sLie, lie < refLie ? lie : lie - 1);
+               eLie = Math.Min (eLie, lie > refLie ? lie : lie + 1);
             }
          }
-         if (sLie == double.MinValue)
-            return (0, 1); // No intersections; Fully trim'd
-          // Lie may be out of range, to accommodate section containing knot point
-          return seg.IsCCW ? (sLie, eLie) : (1 - eLie, 1 - sLie);
+         if (sLie < -1e99) return (0, 1); // No intersections; Fully trim'd
+         // Lie may be out of range, to accommodate section containing knot point
+         return seg.IsCCW ? (sLie, eLie) : (1 - eLie, 1 - sLie);
 
          static double GetLieOnCircle (Point2 center, Point2 liePt) { // Assuming CCW Circle!
             double lie = center.AngleTo (liePt) / Lib.TwoPI; // Half-open range [0.5, -0.5)
@@ -637,7 +633,7 @@ public partial class Poly {
       var arcSeg = this[seg];
       if (!arcSeg.IsArc || width.IsZero () || depth.IsZero ()) return null;
 
-      double radius = arcSeg.Radius, tolerance = 6 * Lib.Epsilon; // 6 is a magic number
+      double radius = arcSeg.Radius; const double tolerance = 6 * Lib.Epsilon; // 6 is a magic number
       if (width >= (2 * radius) - tolerance) return null; // Check: Slot fits the given seg diameter.
 
       // Computing the four corner points (topLeft, botLeft, botRight and topRight).
