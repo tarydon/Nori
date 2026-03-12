@@ -2,6 +2,7 @@
 // ╔═╦╦═╦╦╬╣ FastTess2D.cs
 // ║║║║╬║╔╣║ Implements a Tessellator that can handle non-intersecting simple polygons
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
+using JetBrains.Annotations;
 namespace Nori;
 
 #region class FastTess2D ---------------------------------------------------------------------------
@@ -56,7 +57,8 @@ public partial class FastTess2D : IBorrowable<FastTess2D> {
    ///
    /// Triangulator.Borrow returns a triangulator (from a pool of triangulators that is maintained),
    /// and also an IDisposable that must be disposed to release the triangulator back into the pool.
-   /// So make sure to put the return value into a using statement so this happens automatically. 
+   /// So make sure to put the return value into a using statement so this happens automatically.
+   [MustDisposeResource]
    public static FastTess2D Borrow () {
       var tess = BorrowPool<FastTess2D>.Borrow ();
       tess.Reset ();
