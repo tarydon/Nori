@@ -2,9 +2,6 @@
 // ╔═╦╦═╦╦╬╣ TGeometry.cs
 // ║║║║╬║╔╣║ Various geometry tests
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
-using System.Diagnostics;
-using System.Windows.Media.Effects;
-
 namespace Nori.Testing;
 
 [Fixture (1, "Bound tests", "Geom")]

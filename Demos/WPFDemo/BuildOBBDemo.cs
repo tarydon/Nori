@@ -1,5 +1,4 @@
-﻿using System.Text;
-using Nori;
+﻿using Nori;
 namespace WPFDemo;
 
 class BuildOBBScene : Scene3 {

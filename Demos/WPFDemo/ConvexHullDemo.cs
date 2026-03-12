@@ -3,9 +3,7 @@
 // ║║║║╬║╔╣║ Demonstrates the convex-hull computation algorithm
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 using Nori;
-using System.Diagnostics;
 using System.Reactive.Linq;
-using System.Windows;
 
 namespace WPFDemo;
 
