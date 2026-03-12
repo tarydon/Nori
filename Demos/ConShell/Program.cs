@@ -4,7 +4,6 @@
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 using System.Diagnostics;
 using System.Threading;
-using JetBrains.Annotations;
 using Nori;
 namespace ConShell;
 
