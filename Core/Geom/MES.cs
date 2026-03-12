@@ -141,6 +141,13 @@ public readonly struct MinSphere {
    /// <summary>Is this sphere equal the other sphere?</summary>
    public bool EQ (in MinSphere other) => Radius.EQ (other.Radius) && Center.EQ (other.Center);
 
+   /// <summary>Checks if 'this' sphere intersects with another sphere 'b'</summary>
+   [MethodImpl (MethodImplOptions.AggressiveInlining)]
+   public bool Intersects (in MinSphere b) {
+      var r = Radius + b.Radius;
+      return (Center - b.Center).LengthSq <= r * r;
+   }
+
    public override string ToString () => $"{Radius.R6 ()}, {Center}";
 
    /// <summary>Constructs a mimimum-enclosing-cicle from a given set of points.</summary>

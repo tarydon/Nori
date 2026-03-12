@@ -48,25 +48,6 @@ public readonly struct CTri {
 
 /// <summary>Provides methods for collision detection between various geometric primitives.</summary>
 public static class Collision {
-   /// <summary>Checks if 'a' Bound3 intersects with another Bound3 'b'</summary>
-   [MethodImpl (MethodImplOptions.AggressiveInlining)]
-   public static bool Check (in Bound3 a, in Bound3 b) => Check (in a.X, in b.X) && Check (in a.Y, in b.Y) && Check (in a.Z, in b.Z);
-
-   /// <summary>Checks if 'a' Bound2 intersects with another Bound2 'b'</summary>
-   [MethodImpl (MethodImplOptions.AggressiveInlining)]
-   public static bool Check (in Bound2 a, in Bound2 b) => Check (in a.X, in b.X) && Check (in a.Y, in b.Y);
-
-   /// <summary>Checks if 'a' Bound1 intersects with another Bound1 'b'</summary>
-   [MethodImpl (MethodImplOptions.AggressiveInlining)]
-   public static bool Check (in Bound1 a, in Bound1 b) => a.Min <= b.Max && a.Max >= b.Min;
-
-   /// <summary>Checks if 'a' sphere intersects with another sphere 'b'</summary>
-   [MethodImpl (MethodImplOptions.AggressiveInlining)]
-   public static bool Check (in MinSphere A, in MinSphere B) {
-      var r = A.Radius + B.Radius;
-      return (A.Center - B.Center).LengthSq <= r * r;
-   }
-
    /// <summary>Checks if two OBBs intersect.</summary>
    [MethodImpl (MethodImplOptions.AggressiveInlining)]
    public static bool Check (in OBB a, in OBB b) =>
@@ -186,7 +167,7 @@ public static class Collision {
 
       // Check 2. Check Box's AABB vs Triangle's AABB (three face normals of the Box)
       Bound3 b1 = new (-bH.X, -bH.Y, -bH.Z, bH.X, bH.Y, bH.Z), b2 = new (a, b, c);
-      if (!Check (in b1, in b2)) return false;
+      if (!b1.Intersects (in b2)) return false;
 
       // Check 3. Triangle's face normal (basically box to triangle plane)
       var n = ((b - a) * (c - a)).Normalized (); // Triangle normal

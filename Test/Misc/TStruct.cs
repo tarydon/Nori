@@ -152,4 +152,53 @@ class StructTests {
       (b1 + b2).Is ("(1~20,2~30,4~10)");
       (b1 * b2).Is ("(5~10,10~20,4.5~5)");
    }
+
+   [Test (191, "Bound intersection checks")]
+   public void Test9 () {
+      // Bound1 intersection checks
+      Bound1 b1 = new (10, 20);
+      // Self-intersection
+      b1.Intersects (b1).IsTrue ();
+      b1.Intersects (new (15, 25)).IsTrue ();
+      // Fully contained
+      var b12 = new Bound1 (12, 18);
+      b1.Contains (b12).IsTrue ();
+      b1.Intersects (b12).IsTrue ();
+      // To the right
+      b1.Intersects (new (20.01, 30)).IsFalse ();
+      // To the left
+      b1.Intersects (new (0, 9.99)).IsFalse ();
+
+      // Bound2 intersection checks
+      Bound2 b2 = new (new Point2 (5, 10), new (10, 20));
+      // Self-intersection
+      b2.Intersects (b2).IsTrue ();
+      // Intersections
+      b2.Intersects (new (new Point2 (3, 8), new (6, 12))).IsTrue ();
+      // Fully contained
+      Bound2 b22 = new (new Point2 (7, 15), new (9, 19));
+      b2.Contains (b22).IsTrue ();
+      b2.Intersects (b22).IsTrue ();
+      // Clear in X
+      b2.Intersects (new (new Point2 (10.01, 10), new (15, 20))).IsFalse ();
+      // Clear in Y
+      b2.Intersects (new (new Point2f (5f, 5f), new (10f, 9.99f))).IsFalse ();
+
+      // Bound3 intersection checks
+      Bound3 b3 = new (new Point3 (5, 10, 15), new (10, 20, 25));
+      // Self-intersection
+      b3.Intersects (b3).IsTrue ();
+      // Intersections
+      b3.Intersects (new (new Point3 (3, 8, 13), new (6, 12, 15))).IsTrue ();
+      // Fully contained
+      Bound3 b32 = new (new Point3 (7, 15, 17), new (9, 19, 22));
+      b3.Contains (b32).IsTrue ();
+      b3.Intersects (b32).IsTrue ();
+      // Clear in X
+      b3.Intersects (new (new Point3 (10.01, 10, 15), new (15, 20, 25))).IsFalse ();
+      // Clear in Y
+      b3.Intersects (new (new Point3 (5, 5, 15), new (10, 9.99, 25))).IsFalse ();
+      // Clear in Z
+      b3.Intersects (new (new Point3f (5, 10, 25.01), new (10, 20, 30))).IsFalse ();
+   }
 }
