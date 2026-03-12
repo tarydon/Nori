@@ -124,8 +124,8 @@ public class CurveUnlofter {
       if (mUsedSegs + 2 >= mSegs.Length) Array.Resize (ref mSegs, mSegs.Length * 2);
    }
 
-   enum EState { Raw, Divided, Leaf };
-   enum EOverrun { Nil, Left, Right };
+   enum EState { Raw, Divided, Leaf }
+   enum EOverrun { Nil, Left, Right }
 
    readonly struct Node {
       public Node (Curve3 curve, double t) 

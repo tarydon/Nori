@@ -269,7 +269,7 @@ public partial class SurfaceUnlofter {
    enum EState { 
       Raw = 0, Leaf = 1, Subdivide2 = 2, Subdivide4 = 4,
       LeafXY = 5, LeafYZ = 6, LeafXZ = 7  
-   };
+   }
 
    struct Tile {
       public Tile (int id, int parent, int center, double du, double dv, EDir location) {

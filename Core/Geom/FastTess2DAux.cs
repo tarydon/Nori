@@ -8,11 +8,11 @@ namespace Nori;
 public partial class FastTess2D {
    // Enumerations ---------------------------------------------------------------------------------
    // EVKind lists the types of vertices
-   enum EVertex { Regular, Valley, Mountain };
+   enum EVertex { Regular, Valley, Mountain }
    // EKind lists the types of nodes
-   enum ENode { Y, X, Leaf, Redirect };
+   enum ENode { Y, X, Leaf, Redirect }
    // When a vertex is connected to a tile, which 'chain does it belong to
-   enum EChain { HSlice, Left, Right, Valley, Mountain };
+   enum EChain { HSlice, Left, Right, Valley, Mountain }
 
    // struct Node ----------------------------------------------------------------------------------
    // This represents a Node in the DAG that we build to locate the tiles containing particular

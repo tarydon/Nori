@@ -49,7 +49,7 @@ public abstract class UndoStep {
 
 #region enum EUndo ---------------------------------------------------------------------------------
 /// <summary>Direction to go - Undo or Redo</summary>
-public enum EUndoDir { Undo, Redo };
+public enum EUndoDir { Undo, Redo }
 #endregion
 
 #region class UndoStack ----------------------------------------------------------------------------
