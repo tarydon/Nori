@@ -68,19 +68,10 @@ public static class ConvexHull {
       Span<Point2> dq = n <= 256 ? stackalloc Point2[2 * (n + 1)] : new Point2[2 * (n + 1)];
       int bot = n, top = bot + 3;
 
-      if (c > 0) {
-         // CCW: p2, p0, p1, p2
-         dq[bot] = p2;
-         dq[bot + 1] = p0;
-         dq[bot + 2] = p1;
-         dq[bot + 3] = p2;
-      } else {
-         // CW: reverse middle two
-         dq[bot] = p2;
-         dq[bot + 1] = p1;
-         dq[bot + 2] = p0;
-         dq[bot + 3] = p2;
-      }
+      dq[bot] = p2;
+      if (c > 0) { dq[bot + 1] = p0; dq[bot + 2] = p1; }   // CCW: p2, p0, p1, p2
+      else { dq[bot + 1] = p1; dq[bot + 2] = p0; }         // CW: reverse middle two
+      dq[bot + 3] = p2;
 
       for (int i = 3; i < n; i++) {
          Point2 p = polygon[i];

@@ -27,8 +27,8 @@ public readonly struct MinCircle {
    /// Like Contains (Point2), it avoid Sqrt for better performance.
    public bool Contains (ReadOnlySpan<Point2> pts) {
       if (!OK) return false;
-      for (int i = 0; i < pts.Length; i++)
-         if (Center.DistToSq (pts[i]) > RSqr)
+      foreach (var pt in pts)
+         if (Center.DistToSq (pt) > RSqr)
             return false;
       return true;
    }
@@ -132,8 +132,8 @@ public readonly struct MinSphere {
    /// Like Contains (Point3), it avoids Sqrt for better performance.
    public bool Contains (ReadOnlySpan<Point3> pts) {
       if (!OK) return false;
-      for (int i = 0; i < pts.Length; i++)
-         if (Center.DistToSq (pts[i]) > RSqr)
+      foreach (var pt in pts)
+         if (Center.DistToSq (pt) > RSqr)
             return false;
       return true;
    }
@@ -259,8 +259,7 @@ public readonly struct MinSphere {
       double r = s.Radius, r2 = r * r;
 
       // 5) Grow sphere to include all points (no shrinking => quick but not optimal).
-      for (int i = 0; i < pts.Length; i++) {
-         var p = pts[i];
+      foreach (var p in pts) {
          double d2 = c.DistToSq (p);
          if (d2 <= r2) continue;
          double d = Math.Sqrt (d2);

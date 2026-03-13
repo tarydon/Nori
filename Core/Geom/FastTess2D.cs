@@ -72,7 +72,7 @@ public partial class FastTess2D : IBorrowable<FastTess2D> {
       // with curves, make a copy
       int start = mInput.Count;
       poly.Discretize (mInput, mTolerance, mAngTolerance);
-      if (poly.GetWinding () == Poly.EWinding.CW ^ hole) mInput.Reverse (start, mInput.Count - start); 
+      if ((poly.GetWinding () == Poly.EWinding.CW) ^ hole) mInput.Reverse (start, mInput.Count - start); 
       ReadOnlySpan<Point2> pts = mInput.AsSpan ()[start..];
 
       // Now, add the contour into the mV array, and create segments from this in
@@ -126,7 +126,7 @@ public partial class FastTess2D : IBorrowable<FastTess2D> {
       for (int i = mTN_ - 1; i > 0; i--) {
          ref Tile t = ref mT[i];
          if (t.Id == 0 || t.Hole) continue;
-         if (t.VBot != 0 && t.EBot == EChain.HSlice || t.VTop != 0 && t.ETop == EChain.HSlice) mDiagTiles.Add (t.Id);
+         if ((t.VBot != 0 && t.EBot == EChain.HSlice) || (t.VTop != 0 && t.ETop == EChain.HSlice)) mDiagTiles.Add (t.Id);
          if (t.VBot != 0 && t.EBot == EChain.Valley) mValleyTiles.Add (t.Id);
       }
       Grow (ref mS, mSN, mDiagTiles.Count);
