@@ -70,9 +70,9 @@ public class CMesh {
          if (tup.Level <= maxLevel) {
             // Output boxes at maxLevel. Also output leaf boxes from 
             // earlier levels (ones that don't have two boxes as children)
-            if (tup.Level == maxLevel || (b.Left >= 0 && b.Right >= 0)) {
+            if (tup.Level == maxLevel || b is { Left: >= 0, Right: >= 0 }) {
                Point3f min = b.Center - b.Extent, max = b.Center + b.Extent;
-               yield return new Bound3 ([min, max]);
+               yield return new Bound3 (min, max);
             }
             if (b.Left < 0) todo.Enqueue ((-b.Left, tup.Level + 1));
             if (b.Right < 0) todo.Enqueue ((-b.Right, tup.Level + 1));
@@ -191,7 +191,7 @@ public class CMesh {
          int nodeIdx = ++mBoxesUsed;
          var box = new Box {
             Center = (Point3f)bound.Midpoint,
-            Extent = new (bound.X.Length / 2, bound.Y.Length / 2, bound.Z.Length / 2),
+            Extent = new (bound.X.Length / 2, bound.Y.Length / 2, bound.Z.Length / 2)
          };
 
          // Now, if this box has 2 or more triangles, we have to create a split by 

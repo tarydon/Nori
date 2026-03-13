@@ -66,7 +66,7 @@ public class DwgStitcher {
       if (!mStitched) return;
       mDwg.Ents.Clear (); mDwg.Add (mDone);
    }
-   bool mStitched = false;
+   bool mStitched;
 
    // Implementation -----------------------------------------------------------
    void AddEnds (E2Poly ent) {

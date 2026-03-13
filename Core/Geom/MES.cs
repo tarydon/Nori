@@ -90,9 +90,9 @@ public readonly struct MinCircle {
       return best;
 
       // Considers a candidate circle for being the minimum enclosing circle.
-      void Consider (in MinCircle c, ReadOnlySpan<Point2> pts) {
-         if ((!best.OK || c.Radius < (best.Radius - Epsilon)) && c.Contains (pts))
-            best = c;
+      void Consider (in MinCircle c1, ReadOnlySpan<Point2> pts) {
+         if ((!best.OK || c1.Radius < (best.Radius - Epsilon)) && c1.Contains (pts))
+            best = c1;
       }
       // Computes the center of the circum-circle from three points (with 'a' at origin).
       Point2 GetCenter (double bx, double by, double cx, double cy) {
@@ -231,7 +231,6 @@ public readonly struct MinSphere {
          case 2: return From (pts[0], pts[1]);
          case 3: return From (pts[0], pts[1], pts[2]);
          case 4: return From (pts[0], pts[1], pts[2], pts[3]);
-         default: break;
       }
 
       // 1) Pick an arbitrary point p0.

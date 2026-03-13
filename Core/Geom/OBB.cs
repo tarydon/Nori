@@ -7,7 +7,7 @@ namespace Nori;
 
 #region struct OBB ---------------------------------------------------------------------------------
 /// <summary>Represents a bounding cuboid oriented along an arbitrary axes.</summary>
-public partial struct OBB {
+public struct OBB {
    // Constructor --------------------------------------------------------------
    /// <summary>Construct an OBB given the center, X & Y direction vectors, Extent</summary>
    public OBB (Point3f cen, Vector3f x, Vector3f y, Vector3f ext)

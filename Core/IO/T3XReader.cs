@@ -152,7 +152,7 @@ public class T3XReader : IDisposable {
          "NURBSCURVE" => LoadNurbsCurve (),
          "POLYLINE" => LoadPolyline (),
          "*" => null,
-         _ => throw new BadCaseException (type),
+         _ => throw new BadCaseException (type)
       };
    }
 
@@ -346,7 +346,7 @@ public class T3XReader : IDisposable {
 
    // Low level routines -------------------------------------------------------
    public void Dispose () => mZip.Dispose ();
-   void Fatal (string s) => throw new Exception (s);
+   static void Fatal (string s) => throw new Exception (s);
    void Fatal () => Fatal ($"Error on line {N}");
    CoordSystem RCS () => new (RPoint (), RVector (), RVector ());
    double RDouble () { var (a, b) = Slice (); return double.Parse (T.AsSpan (a, b - a)); }
@@ -374,7 +374,7 @@ public class T3XReader : IDisposable {
 
    // Private data -------------------------------------------------------------
    readonly string T;                  // Text of the T3X file
-   int N = 0;                          // Character position within the file
+   int N;                              // Character position within the file
    readonly Model3 mModel = new ();    // The model we're constructing
    readonly ZipArchive mZip;           // Zip file we're loading from 
 }

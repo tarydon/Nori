@@ -386,7 +386,7 @@ public partial class FastTess2D : IBorrowable<FastTess2D> {
 
    // Helper to grow an array (more optimized than Array.Resize, since it
    // copies only the 'used' elements, not all the elements currently in the array)
-   void Grow<T> (ref T[] array, int used, int delta) {
+   static void Grow<T> (ref T[] array, int used, int delta) {
       int size = array.Length, total = used + delta;
       while (size <= total) size *= 2;
       if (size > array.Length) {

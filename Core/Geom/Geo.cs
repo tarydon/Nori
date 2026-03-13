@@ -146,22 +146,22 @@ public static class Geo {
       return ((pts[b] - pts[a]) * (pts[c] - pts[a])).Normalized ();
 
       // Helper ............................................
-      void GetBasisPoints (out int a, out int b, out int c) {
+      void GetBasisPoints (out int a1, out int b1, out int c1) {
          if (pts.Count < 3) throw new ArgumentException ("Need 3 points for GetNormal");
-         a = 0; b = 1; c = 2; if (pts.Count == 3) return;
+         a1 = 0; b1 = 1; c1 = 2; if (pts.Count == 3) return;
 
          double fMax = double.MinValue;
          Point3 pa = pts[0], pb = pa;
          for (int i = pts.Count - 1; i >= 1; i--) {
             double fDist = pts[i].DistToSq (pa);
-            if (fDist > fMax) (fMax, pb) = (fDist, pts[b = i]); 
+            if (fDist > fMax) (fMax, pb) = (fDist, pts[b1 = i]); 
          }
          fMax = double.MinValue;
          for (int i = pts.Count - 1; i >= 1; i--) {
             double fDist = pts[i].DistToLineSq (pa, pb);
-            if (fDist > fMax) (fMax, c) = (fDist, i);
+            if (fDist > fMax) (fMax, c1) = (fDist, i);
          }
-         if (b > c) (b, c) = (c, b);
+         if (b1 > c1) (b1, c1) = (c1, b1);
       }
    }
 

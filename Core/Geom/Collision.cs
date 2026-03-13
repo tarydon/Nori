@@ -8,7 +8,7 @@ namespace Nori;
 /// <summary>Represents a 'collision triangle'</summary>
 public readonly struct CTri {
    /// <summary>Construct a CTri given a span of floats and indices into that for the 3 corners</summary>
-   public unsafe CTri (ReadOnlySpan<Point3f> pts, int a, int b, int c) {
+   public CTri (ReadOnlySpan<Point3f> pts, int a, int b, int c) {
       A = a; B = b; C = c;
 
       // Fetch the three vertices
@@ -124,6 +124,7 @@ public static class Collision {
    /// <param name="bC">Box center.</param>
    /// <param name="bX">Box X-axis</param>
    /// <param name="bY">Box Y-axis</param>
+   /// <param name="bZ">Box Z-axis</param>
    /// <param name="bH">Box half extents</param>
    /// <param name="p0">Triangle vertex 1</param>
    /// <param name="p1">Triangle vertex 2</param>

@@ -60,9 +60,7 @@ class AuType {
          // For an AuPrimitive field, we find the reader and writer methods using
          // reflection and hold onto them
          case EAuTypeKind.AuPrimitive:
-            switch (Lib.NiceName (type)) {
-               case "Color4": mSkipValue = Color4.Nil; break;
-            }
+            if (Lib.NiceName (type) == "Color4") mSkipValue = Color4.Nil;
             break;
 
          // For .Net primitive types, we set up the 'skip value' (the default value
@@ -483,6 +481,7 @@ class AuField {
    public static bool SkipMetadata (FieldInfo fi) {
       if (fi.Name.StartsWith ('_')) return true;
       if (fi.FieldType.Name == "Subject`1") return true;
+      if (fi.Name.Contains ("__")) return true; 
       return false;
    }
 

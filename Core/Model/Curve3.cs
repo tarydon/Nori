@@ -503,7 +503,7 @@ public class NurbsCurve3 : Curve3 {
    static readonly ThreadLocal<double[]> mFactor = new (() => new double[8]);
 
    /// <summary>Return the T value corresponding to the given pt</summary>
-   public override double GetT (Point3 pt) => (_unlofter = new CurveUnlofter (this)).GetT (pt);
+   public override double GetT (Point3 pt) => (_unlofter ??= new CurveUnlofter (this)).GetT (pt);
    CurveUnlofter? _unlofter;
 
    // Nested types -------------------------------------------------------------

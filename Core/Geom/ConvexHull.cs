@@ -14,7 +14,7 @@ public static class ConvexHull {
       if (points.Count > 100)
          points = PreTrimPts (points) ?? points;
 
-      List<Point2> pts = new List<Point2> (points.Count), lower = new List<Point2> ();
+      List<Point2> pts = new (points.Count), lower = [];
       foreach (var p in points.OrderBy (p => p.X).ThenBy (p => p.Y)) {
          pts.Add (p);
          while (lower.Count >= 2 && Cross (lower[^2], lower[^1], p) <= 0)
@@ -44,7 +44,7 @@ public static class ConvexHull {
    /// simple polygon (no self-intersections). In such cases, convex-hull can be computed faster.</param>
    /// Real world 2D part contours are usually guaranteed to be simple polygons.
    public static List<Point2> Compute (Poly poly, bool isSimplePolygon) {
-      List<Point2> pts = new List<Point2> (poly.Count);
+      List<Point2> pts = new (poly.Count);
       poly.Discretize (pts, Lib.FineTess, Lib.FineTessAngle);
       return isSimplePolygon ? ComputeForSimplePolygon (pts) : Compute (pts);
    }

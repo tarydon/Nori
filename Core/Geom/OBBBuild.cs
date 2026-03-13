@@ -96,7 +96,7 @@ readonly unsafe struct OBBDitoBuilder {
    //
    // This uses the mE array as a temporary storage to do computations, and stores 
    // the final result (the 14 extremal points) in the array mQ. 
-   readonly void ComputeExtremalPoints (int count) {
+   void ComputeExtremalPoints (int count) {
       Point3f p0 = mP[0];
       Point3f* a = mP, q = mQ;
       int g0 = 0, g1 = 0, g2 = 0, g3 = 0, g4 = 0, g5 = 0, g6 = 0;
@@ -146,7 +146,7 @@ readonly unsafe struct OBBDitoBuilder {
    // Implements Step 4. Given the 14 extremal points (in mQ), this computes the 
    // di-tetrahedron and stores the 5 points in mR (0,1,2 are the base triangle and 
    // 4 and 5 are the apex points on either side of this base triangle)
-   readonly void BuildDiTetrahedron () {
+   void BuildDiTetrahedron () {
       // First, compute the longest axis among the 7, and we then call 
       // these two points P0..P1 (these are finally saved as mR[0] and mR[1])
       int n = 0;
@@ -188,7 +188,7 @@ readonly unsafe struct OBBDitoBuilder {
    // perpendicular axes (and using a cross product to compute the third). We test each of these
    // 21 possible OBB orientations to pick the one that generates the smallest surface area
    // (testing with only the 14 shortlisted points in mQ)
-   readonly void RefineOBB (ref OBB best, ref float bestScore) {
+   void RefineOBB (ref OBB best, ref float bestScore) {
       Point3f* r = mR;
       fixed (int* pr = mRefine) {
          for (int n = 0; n < 21; n += 3) {
@@ -246,7 +246,7 @@ readonly unsafe struct OBBDitoBuilder {
    }
 
    // Given three orthogonal axes and the projection lengths along them, creates the respective OBB.
-   readonly OBB CreateBox (in Vector3f u, in Vector3f v, in Vector3f w) {
+   OBB CreateBox (in Vector3f u, in Vector3f v, in Vector3f w) {
       var cen = u * ((mE[7] + mE[0]) * 0.5f) + v * ((mE[8] + mE[1]) * 0.5f) + w * ((mE[9] + mE[2]) * 0.5f);
       var ext = new Vector3f ((mE[7] - mE[0]) * 0.5f, (mE[8] - mE[1]) * 0.5f, (mE[9] - mE[2]) * 0.5f);
       return new (new (cen.X, cen.Y, cen.Z), u, v, w, ext);

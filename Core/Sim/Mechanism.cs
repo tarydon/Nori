@@ -19,8 +19,7 @@ public partial class Mechanism {
 
    // Properties --------------------------------------------------------------
    /// <summary>Returns the bound of this mechanism</summary>
-   public Bound3 Bound => Bound3.Cached (ref _bound, ComputeBound);
-   Bound3 _bound = new ();
+   public Bound3 Bound { get => Bound3.Cached (ref field, ComputeBound); } = new ();
 
    /// <summary>These are the children of this mechanism</summary>
    public IReadOnlyList<Mechanism> Children => mChildren ?? [];
@@ -64,17 +63,16 @@ public partial class Mechanism {
    /// <summary>The mesh used to render this Mechanism (could be null)</summary>
    public Mesh3? Mesh {
       get {
-         if (_mesh == null) {
+         if (field == null) {
             string name = FullName;
-            if (!sMeshCache.TryGetValue (name, out _mesh)) {
-               _mesh = Geometry?.GetMesh (RootDir);
-               sMeshCache.TryAdd (name, _mesh);
+            if (!sMeshCache.TryGetValue (name, out field)) {
+               field = Geometry?.GetMesh (RootDir);
+               sMeshCache.TryAdd (name, field);
             }
          }
-         return _mesh;
+         return field;
       }
    }
-   Mesh3? _mesh;
    static readonly ConcurrentDictionary<string, Mesh3?> sMeshCache = [];
 
    /// <summary>What's the name of this mechanism (or sub-mechanism)</summary>

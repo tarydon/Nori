@@ -188,12 +188,12 @@ public class OBBTree {
    }
 
    /// <summary>Raw list of points. These are referenced by triangles.</summary>
-   public readonly Point3f[] Pts = [];
+   public readonly Point3f[] Pts;
    /// <summary>Set of triangles in the mesh.</summary>
    /// These contain indices pointing into the Pts array (along with normal, points etc). 
    /// Note that Tris[0] is not used, to avoid ambiguity in the meaning of 0 being used 
    /// for an OBB Left/Right pointer
-   public readonly CTri[] Tris = [];
+   public readonly CTri[] Tris;
    /// <summary>The hierarchy of oriented bounding boxes.</summary>
    /// OBBs[1] is the root OBB of the entire mesh and will contain all the N 
    /// triangles in the mesh. The left and right children will contain a (close to equal) 
@@ -201,7 +201,7 @@ public class OBBTree {
    /// tree keeps going down until we finally reach individual triangles. At that point, 
    /// we don't actually build OBBs surronding single triangles, but switch to storing a 
    /// pointer to the leaf triangle directly in Left/Right. 
-   public readonly OBB[] OBBs = [];
+   public readonly OBB[] OBBs;
 
    static OBBTree () {
       Todo = new (256);
@@ -367,7 +367,7 @@ public class OBBCollider {
    }
    // The tree travesal stack and its depth. It contains pair of 
    // elements from 'A' and 'B' trees.
-   int[] mStack = new int[128]; int mDepth = 0;
+   int[] mStack = new int[128]; int mDepth;
 
    Func<int, OBB> BObb = null!;        // Given index, returns B's OBB
    Func<int, CTri> BTri = null!;       // Given index, returns B's triangle
@@ -377,7 +377,7 @@ public class OBBCollider {
    bool mDone;                         // Flag used to intercept and stop the recursive check.
    OBBTree mA = null!, mB = null!;     // A and B OBB trees
    List<int> mATris = [], mBTris = []; // Take in pairs, mATris[N] and mBTris[N] are triangles from A and B that crash
-   uint mRung = 0;                     // A timestamp for 'this' collision session.
+   uint mRung;                         // A timestamp for 'this' collision session.
 
    // We'll use a thread-static singleton of this to avoid re-making the object each time
    public static OBBCollider It => sIt ??= new ();

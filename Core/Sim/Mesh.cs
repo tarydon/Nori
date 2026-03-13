@@ -136,8 +136,7 @@ public partial class Mesh3 {
 
    // Properties ---------------------------------------------------------------
    /// <summary>Returns the bounding cuboid of this Mesh3</summary>
-   public Bound3 Bound => Bound3.Cached (ref _bound, () => new (Vertex.Select (a => a.Pos)));
-   Bound3 _bound = new ();
+   public Bound3 Bound { get => Bound3.Cached (ref field, () => new(Vertex.Select (a => a.Pos))); } = new ();
 
    /// <summary>Is this an empty mesh3 (no triangles)</summary>
    public bool IsEmpty => Triangle.Length == 0;
