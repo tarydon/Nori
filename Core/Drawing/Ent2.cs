@@ -145,15 +145,24 @@ public class E2Bendline : Ent2 {
 #region class E2Dimension --------------------------------------------------------------------------
 /// <summary>Represents a dimension entity</summary>
 public class E2Dimension : Ent2 {
-   E2Dimension () { }
+   protected E2Dimension () { }
    public E2Dimension (Layer2 layer) : base (layer) { }
 
    // Properties ---------------------------------------------------------------
    // The entities making up the dimension (in DXF, this is stored in a block, but since that
    // block is used exactly once, it makes more sense to just store the entities here and create
    // the block on the fly when the dimension is saved)
-   public IReadOnlyList<Ent2> Ents => mEnts;
+   public IReadOnlyList<Ent2> Ents {
+      get {
+         if (mEnts.Length == 0) mEnts = [.. MakeDim (mDimSettings!)];
+         return mEnts;
+      }
+   }
    Ent2[] mEnts = [];
+
+   // Methods
+   public void SetDimSettings (DimSettings dimSettings) => mDimSettings = dimSettings;
+   DimSettings? mDimSettings;
 
    // Overrides ----------------------------------------------------------------
    public override Bound2 Bound
@@ -181,6 +190,8 @@ public class E2Dimension : Ent2 {
       }
       return null;
    }
+
+   public virtual IReadOnlyList<Ent2> MakeDim (DimSettings dim) => throw new NotImplementedException ("Must override");
 }
 #endregion
 

@@ -315,6 +315,7 @@ public class DXFReader {
 
             case "DIMENSION":
                var dim = new E2Dimension (Layer);
+               dim.SetDimSettings (mDwg.DimSettings);
                mDimBlocks.Add (dim, Name);
                Add (dim);
                break;
