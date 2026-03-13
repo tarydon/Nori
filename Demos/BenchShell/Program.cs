@@ -40,7 +40,7 @@ public class Tester {
       return input;
    }
 
-   [Benchmark (Baseline = true)]
+   [Benchmark]
    public void GLUTess () {
       for (int k = 0; k < Iter; k++) {
          for (int i = 0; i < mPts.Count; i++) {
@@ -49,13 +49,39 @@ public class Tester {
       }
    }
 
-   [Benchmark]
+   [Benchmark (Baseline = true)]
    public void NoriTess () {
       for (int k = 0; k < Iter; k++) {
          for (int i = 0; i < mPolys.Count; i++) {
             var polys = mPolys[i];
             int outer = mOuter[i];
             using var tess = FastTess2D.Borrow ();
+            for (int j = 0; j < polys.Count; j++) tess.AddPoly (polys[j], j != outer);
+            tess.Process ();
+         }
+      }
+   }
+
+   [Benchmark]
+   public void NoriTessRef () {
+      for (int k = 0; k < Iter; k++) {
+         for (int i = 0; i < mPolys.Count; i++) {
+            var polys = mPolys[i];
+            int outer = mOuter[i];
+            using var tess = Nori.Ref.FastTess2D.Borrow ();
+            for (int j = 0; j < polys.Count; j++) tess.AddPoly (polys[j], j != outer);
+            tess.Process ();
+         }
+      }
+   }
+
+   [Benchmark]
+   public void NoriTessPin () {
+      for (int k = 0; k < Iter; k++) {
+         for (int i = 0; i < mPolys.Count; i++) {
+            var polys = mPolys[i];
+            int outer = mOuter[i];
+            using var tess = Nori.Pin.FastTess2D.Borrow ();
             for (int j = 0; j < polys.Count; j++) tess.AddPoly (polys[j], j != outer);
             tess.Process ();
          }
