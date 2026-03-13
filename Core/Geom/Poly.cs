@@ -248,9 +248,7 @@ public partial class Poly {
       static double GetArea (ReadOnlySpan<Point2> pts) {
          double area = 0; 
          Point2 a = pts[^1];
-         for (int i = 0; i < pts.Length; i++) {
-            Point2 b = pts[i]; area += (b.X * a.Y - a.X * b.Y); a = b;
-         }
+         foreach (var b in pts) { area += (b.X * a.Y - a.X * b.Y); a = b; }
          return Abs (area / 2);
       }
    }

@@ -72,7 +72,7 @@ public partial class FastTess2D : IBorrowable<FastTess2D> {
       // with curves, make a copy
       int start = mInput.Count;
       poly.Discretize (mInput, mTolerance, mAngTolerance);
-      if (poly.GetWinding () == Poly.EWinding.CW ^ hole) mInput.Reverse (start, mInput.Count - start); 
+      if ((poly.GetWinding () == Poly.EWinding.CW) ^ hole) mInput.Reverse (start, mInput.Count - start); 
       ReadOnlySpan<Point2> pts = mInput.AsSpan ()[start..];
 
       // Now, add the contour into the mV array, and create segments from this in
@@ -126,7 +126,7 @@ public partial class FastTess2D : IBorrowable<FastTess2D> {
       for (int i = mTN - 1; i > 0; i--) {
          ref Tile t = ref mT[i];
          if (t.Id == 0 || t.Hole) continue;
-         if (t.VBot != 0 && t.EBot == EChain.HSlice || t.VTop != 0 && t.ETop == EChain.HSlice) mDiagTiles.Add (t.Id);
+         if ((t.VBot != 0 && t.EBot == EChain.HSlice) || (t.VTop != 0 && t.ETop == EChain.HSlice)) mDiagTiles.Add (t.Id);
          if (t.VBot != 0 && t.EBot == EChain.Valley) mValleyTiles.Add (t.Id);
       }
       int nDiag = mDiagTiles.Count;
@@ -386,7 +386,7 @@ public partial class FastTess2D : IBorrowable<FastTess2D> {
 
    // Helper to grow an array (more optimized than Array.Resize, since it
    // copies only the 'used' elements, not all the elements currently in the array)
-   void Grow<T> (ref T[] array, int used, int delta) {
+   static void Grow<T> (ref T[] array, int used, int delta) {
       int size = array.Length, total = used + delta;
       while (size <= total) size *= 2;
       if (size > array.Length) {

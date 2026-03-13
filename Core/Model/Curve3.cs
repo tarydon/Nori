@@ -184,14 +184,14 @@ public class Arc3 : Curve3 {
       t1 = Lib.NormalizeAngle (t1); t2 = Lib.NormalizeAngle (t2);
       if (t1 < 0) t1 += Lib.TwoPI; if (t2 < 0) t2 += Lib.TwoPI;
       Vector3 zaxis = CS.VecZ, xaxis = CS.VecX;
+      xaxis = xaxis.Rotated (zaxis, t1);
       if (reverseDir) {
-         xaxis = xaxis.Rotated (zaxis, t1);
          if (t1 < t2)
             return new Arc3 (PairId, new CoordSystem (CS.Org, xaxis, -zaxis * xaxis), Radius, Lib.TwoPI - (t2 - t1));
          else
             return new Arc3 (PairId, new CoordSystem (CS.Org, xaxis, -zaxis * xaxis), Radius, t1 - t2);
       } else {
-         xaxis = xaxis.Rotated (zaxis, t1); // Allign X axis with the first point.
+         // Allign X axis with the first point.
          if (t1 < t2)
             return new Arc3 (PairId, new CoordSystem (CS.Org, xaxis, zaxis * xaxis), Radius, t2 - t1); // Update angle span.
          else
@@ -503,7 +503,7 @@ public class NurbsCurve3 : Curve3 {
    static readonly ThreadLocal<double[]> mFactor = new (() => new double[8]);
 
    /// <summary>Return the T value corresponding to the given pt</summary>
-   public override double GetT (Point3 pt) => (_unlofter = new CurveUnlofter (this)).GetT (pt);
+   public override double GetT (Point3 pt) => (_unlofter ??= new CurveUnlofter (this)).GetT (pt);
    CurveUnlofter? _unlofter;
 
    // Nested types -------------------------------------------------------------

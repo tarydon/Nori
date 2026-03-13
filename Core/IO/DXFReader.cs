@@ -31,7 +31,7 @@ public class DXFReader {
       if (!acadver.IsBlank () && !codepage.IsBlank () && string.CompareOrdinal (acadver, "AC1021") < 0) {
          encodingToUse = codepage switch {
             "dos932" => Encoding.GetEncoding (932), // Shift-JIS
-            _ => Encoding.GetEncoding (int.TryParse (codepage.Split ('_').Last (), out int cp) ? cp : 1252),
+            _ => Encoding.GetEncoding (int.TryParse (codepage.Split ('_').Last (), out int cp) ? cp : 1252)
          };
       }
       stm.Position = 0;
@@ -274,9 +274,7 @@ public class DXFReader {
 
    /// <summary>Used to process a header variable</summary>
    void HeaderVar (string key) {
-      switch (key) {
-         case "$MEASUREMENT": Scale = Vn == 0 ? 25.4 : 1; break;
-      }
+      if (key == "$MEASUREMENT") Scale = Vn == 0 ? 25.4 : 1;
    }
 
    // Reads the next group into mGroup and the value into mValue

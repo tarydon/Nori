@@ -24,14 +24,14 @@ public partial class Mesh3 {
       for (int i = 0; i < n; i++) raw.Add (((Point3)pts[i]).Moved (0, 0, thickness));  
       // Bottom plane triangles are already added, add the top plane triangles as well
       for (int i = 0, max = tris.Count; i < max; i += 3)
-         tris.AddM ([tris[i + 2] + n, tris[i + 1] + n, tris[i] + n]);
+         tris.AddM (tris[i + 2] + n, tris[i + 1] + n, tris[i] + n);
 
       // Now, the sidewalls
       for (int c = 0; c < splits.Count - 1; c++) {
          int start = splits[c], count = splits[c + 1] - start;
          for (int p = 0; p < count; p++) {
             int i = p + start, j = (p + 1) % count + start;
-            tris.AddM ([i, j, j + n, i, j + n, i + n]);
+            tris.AddM (i, j, j + n, i, j + n, i + n);
          }
       }
 
@@ -73,7 +73,7 @@ public partial class Mesh3 {
       return new ([.. sphere.Select (Node)], [.. tries], []);
 
       // Create a mesh node from a position-vector on the unit sphere
-      Mesh3.Node Node (Vector3 v) => new (center + v * radius, v);
+      Node Node (Vector3 v) => new (center + v * radius, v);
 
       // Add a position-vector to the node list if not already present, and return its index.
       int Add (Vector3 pos) {

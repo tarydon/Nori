@@ -65,7 +65,7 @@ public partial class STEPReader {
             _ => null
          };
          if (ent == null) {
-            if (mUnsupported.Add (kw) && !sIgnore!.Contains (kw))
+            if (mUnsupported.Add (kw) && !sIgnore.Contains (kw))
                throw new Exception ($"Unsupported: {kw}");
             Unread[Id] = kw;
          } else {

@@ -27,8 +27,8 @@ public readonly struct MinCircle {
    /// Like Contains (Point2), it avoid Sqrt for better performance.
    public bool Contains (ReadOnlySpan<Point2> pts) {
       if (!OK) return false;
-      for (int i = 0; i < pts.Length; i++)
-         if (Center.DistToSq (pts[i]) > RSqr)
+      foreach (var pt in pts)
+         if (Center.DistToSq (pt) > RSqr)
             return false;
       return true;
    }
@@ -90,9 +90,9 @@ public readonly struct MinCircle {
       return best;
 
       // Considers a candidate circle for being the minimum enclosing circle.
-      void Consider (in MinCircle c, ReadOnlySpan<Point2> pts) {
-         if ((!best.OK || c.Radius < (best.Radius - Epsilon)) && c.Contains (pts))
-            best = c;
+      void Consider (in MinCircle c1, ReadOnlySpan<Point2> pts) {
+         if ((!best.OK || c1.Radius < (best.Radius - Epsilon)) && c1.Contains (pts))
+            best = c1;
       }
       // Computes the center of the circum-circle from three points (with 'a' at origin).
       Point2 GetCenter (double bx, double by, double cx, double cy) {
@@ -132,8 +132,8 @@ public readonly struct MinSphere {
    /// Like Contains (Point3), it avoids Sqrt for better performance.
    public bool Contains (ReadOnlySpan<Point3> pts) {
       if (!OK) return false;
-      for (int i = 0; i < pts.Length; i++)
-         if (Center.DistToSq (pts[i]) > RSqr)
+      foreach (var pt in pts)
+         if (Center.DistToSq (pt) > RSqr)
             return false;
       return true;
    }
@@ -231,7 +231,6 @@ public readonly struct MinSphere {
          case 2: return From (pts[0], pts[1]);
          case 3: return From (pts[0], pts[1], pts[2]);
          case 4: return From (pts[0], pts[1], pts[2], pts[3]);
-         default: break;
       }
 
       // 1) Pick an arbitrary point p0.
@@ -259,8 +258,7 @@ public readonly struct MinSphere {
       double r = s.Radius, r2 = r * r;
 
       // 5) Grow sphere to include all points (no shrinking => quick but not optimal).
-      for (int i = 0; i < pts.Length; i++) {
-         var p = pts[i];
+      foreach (var p in pts) {
          double d2 = c.DistToSq (p);
          if (d2 <= r2) continue;
          double d = Math.Sqrt (d2);

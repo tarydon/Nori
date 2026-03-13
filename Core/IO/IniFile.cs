@@ -62,7 +62,7 @@ public class IniFile {
    public string GetS (string key) => GetS (key, "");
 
    /// <summary>Gets a string value from the current section, returning the fallback value if not found</summary>
-   public string GetS (string key, string fallback = "") {
+   public string GetS (string key, string fallback) {
       if (mSecStart != -1) {
          string key1 = $"{key}=", key2 = $"{key} =";
          for (int i = mSecStart + 1; i < mLines.Count; i++) {
@@ -72,7 +72,7 @@ public class IniFile {
                var value = s[(s.IndexOf ('=') + 1)..].TrimStart ();
                int n = value.IndexOf (';');
                if (n != -1) value = value[..n];
-               n = value.IndexOf ("//");
+               n = value.IndexOf ("//", StringComparison.Ordinal);
                if (n != -1) value = value[..n];
                return value.Trim ().Unquote ();
             }

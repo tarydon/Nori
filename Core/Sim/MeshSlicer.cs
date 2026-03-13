@@ -249,7 +249,7 @@ public class MeshSlicer {
    ImmutableArray<Mesh3.Node> mVertex;       // List of vertices of the current mesh
    double[] mDist = [];                      // Signed distances of these nodes from the plane (for current mesh)
    Node[] mNodes = new Node[8];              // Intersections of triangle edges with the plane (across all meshes)
-   int mUsedNodes = 0;                       // How many of these nodes have we used
+   int mUsedNodes;                           // How many of these nodes have we used
 
    // Dictionary that maps edges of the triangles from the current mesh to 
    // Node objects that hold these intersections. If there are two edges from A..B and from

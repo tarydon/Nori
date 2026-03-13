@@ -41,7 +41,6 @@ class SurfaceMesher (E3Surface surf) {
          Point2 uv = uvs[i];
          mNodes.Add (new (uv, (Point3f)pts[i], (Vec3H)mSurf.GetNormal (uv.X, uv.Y)));
       }
-      Dictionary<Point2, int> cache = new (new PointComparer (1e-6));
       for (int i = 0; i < tris.Count; i += 3)
          AddTriangle (tris[i], tris[i + 1], tris[i + 2], 0);
 

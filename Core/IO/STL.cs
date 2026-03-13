@@ -19,7 +19,7 @@ public class STLReader {
    // Implementation -----------------------------------------------------------
    List<Point3> ReadASCII () {
       List<Point3> pts = [];
-      UTFReader r = new UTFReader (mData);
+      UTFReader r = new (mData);
       r.SkipToLineEnd ().SkipSpace (); // Skip the first line which is in the format 'solid xxxx'
       while (r.Peek == 102) { // The next character must be 'f' from "facet normal x y z" phrase. Otherwise, we are done.
          r.SkipToLineEnd (); // Skip the normal "facet normal ..."
@@ -49,12 +49,12 @@ public class STLReader {
        */
       int n = 76; // Skip past the first 80 bytes.
       int cTriangles = BitConverter.ToInt32 (mData, n += 4);
-      List<Point3> pts = new List<Point3> (cTriangles * 3);
+      List<Point3> pts = new (cTriangles * 3);
       for (int i = 0; i < cTriangles; i++) {
          n += 12; // Skip the normal part. We can always build it from the 3 vertices of the triangle
-         pts.Add (new Point3 ((double)BitConverter.ToSingle (mData, n += 4), (double)BitConverter.ToSingle (mData, n += 4), (double)BitConverter.ToSingle (mData, n += 4)));
-         pts.Add (new Point3 ((double)BitConverter.ToSingle (mData, n += 4), (double)BitConverter.ToSingle (mData, n += 4), (double)BitConverter.ToSingle (mData, n += 4)));
-         pts.Add (new Point3 ((double)BitConverter.ToSingle (mData, n += 4), (double)BitConverter.ToSingle (mData, n += 4), (double)BitConverter.ToSingle (mData, n += 4)));
+         pts.Add (new Point3 (BitConverter.ToSingle (mData, n += 4), BitConverter.ToSingle (mData, n += 4), BitConverter.ToSingle (mData, n += 4)));
+         pts.Add (new Point3 (BitConverter.ToSingle (mData, n += 4), BitConverter.ToSingle (mData, n += 4), BitConverter.ToSingle (mData, n += 4)));
+         pts.Add (new Point3 (BitConverter.ToSingle (mData, n += 4), BitConverter.ToSingle (mData, n += 4), BitConverter.ToSingle (mData, n += 4)));
          n += 2; // Skip the attribute part.
       }
       return pts;
@@ -62,7 +62,7 @@ public class STLReader {
    
    // Private data ---------------------------------------------------
    readonly byte[] mData;
-   static readonly byte[] _HeaderWord = [115, 111, 108, 105, 100]; // word "solid"
+   static readonly byte[] _HeaderWord = [.."solid"u8];
 }
 
 /// <summary>Class to write meshes to STL files.</summary>
@@ -99,7 +99,7 @@ public static class STLWriter {
    public static void WriteBinary (Mesh3 mesh, Stream stm) {
       var bw = new BinaryWriter (stm);
       // Write the 80 byte header.
-      byte[] header = Encoding.ASCII.GetBytes ("Exported from Nori");
+      byte[] header = [.."Exported from Nori"u8];
       bw.Write (header);
       for (int i = header.Length; i < 80; i++)
          bw.Write ((byte)0);

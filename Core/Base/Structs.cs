@@ -16,7 +16,6 @@ public readonly struct BlockTimer : IDisposable {
 
    public void Dispose () {
       mSW.Stop ();
-      double time = mSW.Elapsed.TotalMilliseconds;
       Lib.Trace ($"{mText}: {FmtTime (mSW, 1)}\n");
       if (mIterations > 1) 
          Lib.Trace ($"  {FmtTime (mSW, mIterations)} per iteration\n");

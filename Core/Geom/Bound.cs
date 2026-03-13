@@ -167,7 +167,7 @@ public readonly struct Bound1D : IEQuable<Bound1D> {
    public static implicit operator Bound1D ((double Min, double Max) value) => new (value.Min, value.Max);
 
    /// <summary>Explicitly convert Bound1D to Bound1</summary>
-   public static explicit operator Bound1 (Bound1D b) => new Bound1 (b.Min, b.Max);
+   public static explicit operator Bound1 (Bound1D b) => new (b.Min, b.Max);
 
    /// <summary>Returns a Bound1 expanded to include the given value</summary>
    public static Bound1D operator + (Bound1D b, double v) => new (Min (b.Min, v), Max (b.Max, v));

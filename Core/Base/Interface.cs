@@ -12,7 +12,7 @@ public interface IEQuable<in T> {
 #endregion
 
 #region interface IIndexed -------------------------------------------------------------------------
-/// <summary>IIndexed implements a class that has an unsigned 16-bit index</summary>
+/// <summary>IIndexed implements a class that has a 32-bit index</summary>
 public interface IIndexed {
    int Idx { get; set; }
 }
