@@ -123,13 +123,14 @@ public partial class FastTess2D : IBorrowable<FastTess2D> {
    // at the top. It is then a 'reflex' vertex that needs to be connected to a corner (or another
    // reflex vertex) to split the stack into two monotones. 
    void AddDiagonals () {
-      for (int i = mTN_ - 1; i > 0; i--) {
+      for (int i = mTN - 1; i > 0; i--) {
          ref Tile t = ref mT[i];
          if (t.Id == 0 || t.Hole) continue;
          if (t.VBot != 0 && t.EBot == EChain.HSlice || t.VTop != 0 && t.ETop == EChain.HSlice) mDiagTiles.Add (t.Id);
          if (t.VBot != 0 && t.EBot == EChain.Valley) mValleyTiles.Add (t.Id);
       }
-      Grow (ref mS, mSN, mDiagTiles.Count);
+      int nDiag = mDiagTiles.Count;
+      Grow (ref mS, mSN, nDiag); GrowTN (nDiag);
       foreach (var n in mDiagTiles) {
          ref Tile t0 = ref mT[n]; if (t0.Id == 0) continue;
          mS[mSN] = new (mSN, mV, t0.VTop, t0.VBot, true);
@@ -145,7 +146,7 @@ public partial class FastTess2D : IBorrowable<FastTess2D> {
    // Allocates a new tile ID
    int AllocTile () {
       if (mFreeTile.Count > 0) return mFreeTile.Pop ();
-      Grow (ref mT, mTN_, 1); return mTN_++;
+      Grow (ref mT, mTN, 1); return mTN++;
    }
 
    // Given a monotone polygon, extracts the triangles from it using DeBerg's algorithm.
@@ -272,7 +273,7 @@ public partial class FastTess2D : IBorrowable<FastTess2D> {
    // would be cut by the segment and adds them to the mLefts array
    void InsertEndpoints (ref Segment seg) {
       // To insert top and bottom points, we could need 2 new tiles (and 4 new nodes)
-      Grow (ref mT, mTN_, 2); Grow (ref mN, mNN, 4);
+      GrowTN (2);
       ref Vertex v0 = ref mV[seg.A], v1 = ref mV[seg.B];
       if (!v0.Inserted) InsertVertex (ref v0);
       if (!v1.Inserted) InsertVertex (ref v1);
@@ -338,7 +339,7 @@ public partial class FastTess2D : IBorrowable<FastTess2D> {
       mInput.Clear (); mTris.Clear ();
       mDiagTiles.Clear (); mValleyTiles.Clear (); mFreeTile.Clear ();
       mR = new Rand (42); Tolerance = ETolerance.Coarse; BiasAngle = 0.1642;
-      mSN = mNN = 0; mTN_ = mVN = 1;
+      mSN = mNN = 0; mTN = mVN = 1;
    }
 
    // Rotate a point through the bias angle
@@ -362,7 +363,7 @@ public partial class FastTess2D : IBorrowable<FastTess2D> {
    int SliceTiles (ref Segment seg) {
       mRights.Clear ();
       int n = mLefts.Count;
-      Grow (ref mT, mTN_, n); Grow (ref mN, mNN, n * 2);
+      GrowTN (n);
       // First, split every tile in the mChain list. This tile remains as the left tile, 
       // and we create a new right tile, both separated by the Segment in between them. 
       // For each layer of tiles that we create, create a Layer object to hold the details
@@ -395,6 +396,12 @@ public partial class FastTess2D : IBorrowable<FastTess2D> {
       }
    }
 
+   // Grows mT and mN arrays, accounting for free tiles that won't need new slots
+   void GrowTN (int tiles) {
+      Grow (ref mT, mTN, tiles - mFreeTile.Count);
+      Grow (ref mN, mNN, tiles * 2);
+   }
+
    static void Unexpected () 
       => throw new InvalidOperationException ("Triangulator.Unexpected");
 
@@ -411,7 +418,7 @@ public partial class FastTess2D : IBorrowable<FastTess2D> {
    Segment[] mS = new Segment[32];        // List of all segments
    Node[] mN = new Node[32];              // Nodes making up the tree
    Tile[] mT = new Tile[32];              // Trapezoidal tiles covering the plane
-   int mVN, mSN, mNN, mTN_;               // Usage counts (Vertices, Segments, Nodes, Tiles)
+   int mVN, mSN, mNN, mTN;               // Usage counts (Vertices, Segments, Nodes, Tiles)
    Rand mR = new (42);                    // Used for random insertion of segments
    int[] mShuffle = new int[32];          // A permutation of the segments
    readonly List<int> mDiagTiles = [];    // Tiles where diagonals need to be drawn
