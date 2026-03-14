@@ -162,6 +162,9 @@ class TCollision {
       for (int i = 0, j = 0; i < tris.Length; i++, j += 3)
          tris[i] = new CTri (pts, j, j + 1, j + 2);
 
+      // Self-collision check should report a collision
+      Collision.Check (pts, tris[0], pts, tris[0]).IsTrue ();
+
       for (int i = 0, j = 0; i < crashes.Count; i++, j += 2)
          Collision.Check (pts, tris[j], pts, tris[j + 1]).Is (crashes[i]);
    }
