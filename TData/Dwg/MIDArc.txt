@@ -1,0 +1,3 @@
+Title = MID snap on arc
+Pt = (126.955181,54.692663), ESnap=Midpoint
+Label = ("midpoint", (126.955181,54.692663), False)

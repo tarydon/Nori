@@ -1,0 +1,5 @@
+Title = CON-Perpendicular1
+Pt = (164.219332,214.653426), ESnap=On
+Line = ((190,170), 120
+Label = ("on", (164.219332,214.653426), False)
+Label = ("perp:120°", (190,170), True)

@@ -1,0 +1,3 @@
+Title = NODE snap on text
+Pt = (-110,20), ESnap=Node
+Label = ("node", (-110,20), False)

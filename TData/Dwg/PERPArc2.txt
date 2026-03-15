@@ -1,0 +1,3 @@
+Title = Perpendicular arc snap-2
+Pt = (208.284271,41.715729), ESnap=Perp
+Label = ("perp", (208.284271,41.715729), False)

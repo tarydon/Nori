@@ -1,0 +1,5 @@
+Title = CON-Tangent1
+Pt = (163.231604,154.54526), ESnap=On
+Line = ((190,170), 30
+Label = ("on", (163.231604,154.54526), False)
+Label = ("align:30°", (190,170), True)

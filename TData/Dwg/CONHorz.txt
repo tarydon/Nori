@@ -1,0 +1,5 @@
+Title = CON horizontal
+Pt = (55.1,60), ESnap=On
+Line = ((50,60), 0
+Label = ("on", (55.1,60), False)
+Label = ("horz", (50,60), True)

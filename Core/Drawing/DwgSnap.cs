@@ -69,11 +69,12 @@ public class DwgSnap {
       }
    }
 
+   /// <summary>Sets the last-clicked point (acts as a source for horizontal / vertical construction lines)</summary>
+   public Point2 LastClickedPt = Point2.Nil;
+
    /// <summary>The set of construction lines to be drawn (these are active construction lines the mouse is close to)</summary>
    public IEnumerable<(Point2 Pt, double Angle)> Lines 
       => mVisible.Select(con => (con.Anchor, con.Slope));
-
-   public Point2 LastClickedPt = Point2.Nil;
 
    /// <summary>The recent snap point that we computed</summary>
    public Point2 PtSnap => mPtSnap;
@@ -86,6 +87,11 @@ public class DwgSnap {
    /// value to ptRaw are considered for snapping. This value is typically set to a fixed number of
    /// device-independent pixels, so you have to scale it by the current pixel-to-world scaling
    /// for consistency.</param>
+   /// This returns the snapped point, and also sets the following state:
+   /// - PtSnap (the snapped point, same as the return value of this method)
+   /// - ESnap (the type of snap that we computed, could be ESnap.None, and then PtSnap is same as ptRaw)
+   /// - Lines (the set of construction lines we need to render)
+   /// - Labels (the set of label text we need to render)
    public Point2 Snap (Point2 ptRaw, double aperture) {
       // Prepare for the snapping
       (mptRaw, mAperture) = (ptRaw, aperture);
@@ -116,8 +122,20 @@ public class DwgSnap {
    //   could be multiple construction lines with the same anchor point, at different
    //   angles).
    // - No more than 12 construction lines in all
+   // 
    // The 'different angles' needs some explanation. Suppose we have an 'endpoint' snap at the
-   // end of a line, then the
+   // end of an inclined line, let's say at a slope of 35 degrees. Then, we add the following 
+   // construction lines from that endpoint:
+   // - horizontal
+   // - vertical
+   // - going through that endpoint, and at an angle of 35 (tangent)
+   // - going through that endpoint, and at an angle of 125 (perpendicular)
+   // 
+   // In practice, suppose we are have snapped (end-point snap) to some interior node in a 
+   // Poly, there are two segments touching there - one leading in, the other leading out. Each
+   // will generate a tangent, and a perpendicular snap through that point. Including the
+   // horizontal and vertical snaps, this will result in upto 6 different angles through this
+   // point (the code below removes duplicates). 
    void AddConsLine (Point2 pt, IList<double> angles) {
       for (int i = 0; i < angles.Count; i++) {
          // If this same infinite line does not exist already, add it
@@ -158,9 +176,8 @@ public class DwgSnap {
          for (int j = 0; j < i; j++) {
             var con2 = mActive[j];
             Point2 c = con2.Anchor, d = c.Polar (10, con2.Slope);
-            if (Check (Geo.LineXLine (a, b, c, d), ESnap.Intersection, 0)) {
-               mVisible.Clear (); mVisible.Add (con1); mVisible.Add (con2);
-            }
+            if (!Check (Geo.LineXLine (a, b, c, d), ESnap.Intersection, 0)) continue;
+            mVisible.Clear (); mVisible.Add (con1); mVisible.Add (con2);
          }
       }
       return mSnap != ESnap.None;
@@ -196,7 +213,7 @@ public class DwgSnap {
       // Firstly, consider the last clicked point as a hard snap. So that, when the mouse position
       // aligns horizontally or vertically w.r.t to this point, construction line will be formed
       // even when the entity is under creation.
-      Check (LastClickedPt, ESnap.On);
+      Check (LastClickedPt, ESnap.Node);
 
       mSegs.Clear ();
       var (ptRaw, aperture) = (mptRaw, mAperture);
@@ -219,7 +236,25 @@ public class DwgSnap {
                            Check (seg.B, ESnap.Endpoint, seg.GetSlopeAt (1));
                            Check (seg.Midpoint, ESnap.Midpoint, 0);
                         }
-                        if (seg.GetDist (ptRaw, aperture) <= aperture) mSegs.Add (seg);
+                        if (seg.GetDist (ptRaw, aperture) <= aperture) {
+                           if (!LastClickedPt.IsNil) {
+                              // Check perpendicular snap to this arc/circle
+                              double angle = center.AngleTo (LastClickedPt);
+                              if ((LastClickedPt - center).Opposing (ptRaw - center)) angle += Lib.PI;
+                              Point2 perp = center.Polar (radius, angle);
+                              Check (perp, ESnap.Perp);
+
+                              // Check tangent snap to this arc/circle
+                              double slope = LastClickedPt.AngleTo (center), dist = LastClickedPt.DistTo (center);
+                              if (dist > 1.05 * radius) {
+                                 double delta = Math.Asin (radius / dist), adjacent = Math.Sqrt (dist * dist - radius * radius);
+                                 Point2 pa = LastClickedPt.Polar (adjacent, slope - delta), pb = LastClickedPt.Polar (adjacent, slope + delta);
+                                 if (ptRaw.DistToSq (pa) < ptRaw.DistToSq (pb)) Check (pa, ESnap.Tangent);
+                                 else Check (pb, ESnap.Tangent);
+                              }
+                           }                                 
+                           mSegs.Add (seg);
+                        }
                      }
                   } else {
                      if (seg.GetDist (ptRaw, aperture) <= aperture) {
@@ -229,13 +264,15 @@ public class DwgSnap {
                         Check (seg.Midpoint, ESnap.Midpoint, 0);
                         if (Check (seg.B, ESnap.Endpoint, seg.Slope))
                            if (seg.Next is { } seg2) mTangent2 = seg2.GetSlopeAt (0);
+                        if (!LastClickedPt.IsNil) {
+                           Point2 perp = LastClickedPt.SnappedToLine (seg.A, seg.B);
+                           Check (perp, ESnap.Perp);
+                        }
                      }
                   }
                }
                break;
-            case E2Solid e2s:
-               foreach (var pt in e2s.Pts) Check (pt, ESnap.Endpoint, 0);
-               break;
+            case E2Solid e2s: foreach (var pt in e2s.Pts) Check (pt, ESnap.Endpoint, 0); break;
             case E2Text e2t: Check (e2t.Pt, ESnap.Node, 0); break;
             case E2Insert e2i: Check (e2i.Pt, ESnap.Node, 0); break;
             case E2Point e2e: Check (e2e.Pt, ESnap.Node, 0); break;
@@ -292,9 +329,6 @@ public class DwgSnap {
       public bool EQ (Point2 pt, double ang) 
          => ang.EQ (Slope, 0.001) && pt.DistToLine (Anchor, Anchor.Polar (10, Slope)).IsZero (0.001);
 
-      public Point2 GetIntersection (ConsLine other)
-         => Geo.LineXLine (Anchor, Anchor.Polar (10, Slope), other.Anchor, other.Anchor.Polar (10, other.Slope));
-
       public readonly Point2 Anchor;
       public readonly double Slope;
       public readonly bool Perpendicular;
@@ -312,6 +346,10 @@ public enum ESnap {
    Intersection,
    /// <summary>Quadrant of a segment</summary>
    Quadrant,
+   /// <summary>Perpendicular to a segment</summary>
+   Perp,
+   /// <summary>Tangent to a segment</summary>
+   Tangent,
    /// <summary>Midpoint of a segment</summary>
    Midpoint,
    /// <summary>Center of an arc or circle</summary>
