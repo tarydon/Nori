@@ -105,3 +105,93 @@ class DwgSnapTests {
    Dwg2 mDwg;
    DwgSnap mSnap;
 }
+
+[Fixture (39, "Miscellaneous drawing tests", "Dwg")]
+class DwgMiscTests {
+   [Test (213, "Test of Ent2.IsSelected, InBlock")]
+   void Test1 () {
+      Dwg2 dwg = DXFReader.Load (NT.File ("IO/DXF/Block01.dxf"));
+      var ent = dwg.Ents[0];
+      // Check InBlock is set only for entities in a block
+      dwg.Blocks[0].Ents[0].InBlock.IsTrue ();
+      ent.InBlock.IsFalse ();
+      // Toggle IsSelected, and make sure the notification is fired
+      ent.IsSelected.IsFalse ();
+      List<EProp> fired = [];
+      IDisposable disp = ent.Subscribe (fired.Add);
+      ent.IsSelected = true;
+      ent.IsSelected.IsTrue ();
+      fired.Count.Is (1); fired[0].Is (EProp.Selected);
+      // After disposing the watcher, it should no longer fire
+      disp.Dispose ();
+      ent.IsSelected = false;
+      fired.Count.Is (1);
+   }
+
+   [Test (214, "Test of IsCloser, GetBound for all Ent2")]
+   void Test2 () {
+      Dwg2 dwg = DXFReader.Load (NT.File ("IO/DXF/AllEnt.dxf"));
+      var bound = dwg.Bound; bound.Is ("(0~400,0~200)");
+      Matrix2 xfm = Matrix2.Rotation (Lib.HalfPI);
+      Point2 far = new (1000, 1000);
+      // Poly
+      var poly = dwg.Ents.OfType<E2Poly> ().Single ();
+      double t = 2; poly.IsCloser (new (-1, 100), ref t).Is (true); t.Is (1);
+      t = 2; poly.IsCloser (new (-3, 100), ref t).Is (false);
+      poly.IsCloser (far, ref t).Is (false);
+      poly.GetBound (xfm).Is ("(-200~0,0~400)");
+      // Point
+      var point = dwg.Ents.OfType<E2Point> ().Single ();
+      t = 2; point.IsCloser (new (9, 10), ref t).Is (true); t.Is (1);
+      t = 2; point.IsCloser (new (7, 10), ref t).Is (false);
+      point.IsCloser (far, ref t).Is (false);
+      point.GetBound (xfm).Is ("(-10~-10,10~10)");
+      // Bendline
+      var bend = dwg.Ents.OfType<E2Bendline> ().Single ();
+      t = 2; bend.IsCloser (new (20, 29), ref t).Is (true); t.Is (1);
+      t = 2; bend.IsCloser (new (-3, 30), ref t).Is (false);
+      bend.IsCloser (far, ref t).Is (false);
+      bend.GetBound (xfm).Is ("(-30~-30,0~400)");
+      // Solid
+      var solid = dwg.Ents.OfType<E2Solid> ().Single ();
+      t = 2; solid.IsCloser (new (149, 65), ref t).Is (true); t.Is (1);
+      t = 2; solid.IsCloser (new (147, 65), ref t).Is (false);
+      solid.IsCloser (far, ref t).Is (false);
+      solid.GetBound (xfm).Is ("(-75~-60,150~170)");
+      // Spline
+      var spline = dwg.Ents.OfType<E2Spline> ().Single ();
+      t = 2; spline.IsCloser (new (40, 85), ref t).Is (true); Math.Round (t, 2).Is (0.23);
+      t = 2; spline.IsCloser (new (40, 89), ref t).Is (false);
+      spline.IsCloser (far, ref t).Is (false);
+      spline.GetBound (xfm).Is ("(-110~-50,10~110)");
+      // Insert
+      var insert = dwg.Ents.OfType<E2Insert> ().Single ();
+      t = 2; insert.IsCloser (new (141, 70), ref t).Is (true); t.Is (1);
+      t = 2; insert.IsCloser (new (141.5, 71.5), ref t).Is (false);
+      insert.IsCloser (far, ref t).Is (false);
+      insert.GetBound (xfm).Is ("(-70~-60,120~140)");
+      // Text
+      var text = dwg.Ents.OfType<E2Text> ().Single ();
+      t = 2; text.IsCloser (new (199, 110), ref t).Is (true); t.Is (0.8);
+      t = 2; text.IsCloser (new (197, 110), ref t).Is (false);
+      text.IsCloser (far, ref t).Is (false);
+      text.GetBound (xfm).Is ("(-110~-98.1,150~240.39999)");
+      // Dimension
+      dwg = DXFReader.Load (NT.File ("IO/DXF/AllEnts.dxf"));
+      var dim = dwg.Ents.OfType<E2Dimension> ().Single ();
+      t = 2; dim.IsCloser (new (65, 56), ref t).Is (true); Math.Round (t, 2).Is (0.21);
+      t = 2; dim.IsCloser (new (65, 53), ref t).Is (false);
+      dim.IsCloser (far, ref t).Is (false);
+      dim.GetBound (xfm).Is ("(-59.33142~-50,0~90)");
+   }
+
+   [Test (215, "Curl round-trip of all Ent2")]
+   void Test3 () {
+      Dwg2 dwg = DXFReader.Load (NT.File ("IO/DXF/AllEnts.dxf"));
+      CurlWriter.Save (dwg, NT.TmpTxt, "All-Ents");
+      Assert.TextFilesEqual ("IO/DXF/AllEnts.curl", NT.TmpTxt);
+      Dwg2 dwg2 = (Dwg2)CurlReader.Load (NT.File ("IO/DXF/AllEnts.curl"));
+      CurlWriter.Save (dwg2, NT.TmpTxt, "All-Ents");
+      Assert.TextFilesEqual ("IO/DXF/AllEnts.curl", NT.TmpTxt);
+   }
+}

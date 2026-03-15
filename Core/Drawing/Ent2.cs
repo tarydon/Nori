@@ -248,7 +248,7 @@ public class E2Insert : Ent2 {
    Bound2 mBound = new ();
 
    public override Bound2 GetBound (Matrix2 xfm) {
-      var final = xfm * Xfm;
+      var final = Xfm * xfm;
       return new (Block.Ents.Select (a => a.GetBound (final)));
    }
 
@@ -353,10 +353,15 @@ public class E2Solid : Ent2 {
 
    public override bool IsCloser (Point2 pt, ref double threshold) {
       if (!Bound.Contains (pt, threshold)) return false;
-      var p = Poly.Lines (mPts, closed: true);
+      Swap (); var p = Poly.Lines (mPts, closed: true); Swap ();
       (double dist, int _) = p.GetDistance (pt);
       if (dist < threshold) { threshold = dist; return true; }
       return false;
+
+      // Helper
+      void Swap () {
+         if (mPts.Length == 4) (mPts[3], mPts[2]) = (mPts[2], mPts[3]);
+      }
    }
 
    protected override E2Solid Xformed (Matrix2 m) => new (Layer, mPts.Select (a => a * m)) { Color = Color };
