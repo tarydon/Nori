@@ -434,22 +434,22 @@ class GeoTests {
 
 [Fixture (37, "Triangulator tests", "Geom")]
 class TessTests {
-   [Test (186, "A.dxf - 5 triangles")]
+   [Test (202, "A.dxf - 5 triangles")]
    void Test1 () => Test ("A");
 
-   [Test (187, "B.dxf - 13 triangles")]
+   [Test (203, "B.dxf - 13 triangles")]
    void Test2 () => Test ("B");
 
-   [Test (188, "C.dxf - 17 triangles")]
+   [Test (204, "C.dxf - 17 triangles")]
    void Test3 () => Test ("C");
 
-   [Test (189, "D.dxf - 28 triangles")]
+   [Test (205, "D.dxf - 28 triangles")]
    void Test4 () => Test ("D");
 
-   [Test (190, "E.dxf - 30 triangles")]
+   [Test (199, "E.dxf - 30 triangles")]
    void Test5 () => Test ("E");
 
-   [Test (191, "F.dxf - 36 triangles")]
+   [Test (200, "F.dxf - 36 triangles")]
    void Test6 () => Test ("F");
 
    [Test (192, "G.dxf - 25 triangles")]
@@ -464,7 +464,7 @@ class TessTests {
    [Test (195, "J.dxf - 948 triangles")]
    void Test10 () => Test ("J");
 
-   [Test (185, "H with 100 different rand-seeds, bias-angles")]
+   [Test (201, "H with 100 different rand-seeds, bias-angles")]
    void Test11 () {
       List<Point2> pts = [];
       var input = LoadPolys ("H");

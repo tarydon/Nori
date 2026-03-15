@@ -1,0 +1,3 @@
+Title = Tangent snap-2
+Pt = (201.393877,103.797959), ESnap=Tangent
+Label = ("tangent", (201.393877,103.797959), False)

@@ -1,0 +1,3 @@
+Title = NODE snap on insert
+Pt = (-110,30), ESnap=Node
+Label = ("node", (-110,30), False)

@@ -1,0 +1,3 @@
+Title = QUAD snap on arc
+Pt = (280,70), ESnap=Quadrant
+Label = ("quadrant", (280,70), False)

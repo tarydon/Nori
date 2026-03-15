@@ -1,0 +1,5 @@
+Title = CONS-Seg intersection
+Pt = (237.353397,197.339496), ESnap=Intersection
+Line = ((271.234752,154.987802), 128.66
+Label = ("intersection", (237.353397,197.339496), False)
+Label = ("align:128.7°", (271.234752,154.987802), True)

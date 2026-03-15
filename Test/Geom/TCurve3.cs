@@ -10,7 +10,7 @@ namespace Nori.Testing;
 class Curve3Tests {
    [Test (196, "Flipping Arc3")]
    void Test1 () {
-      Arc3 arc = new Arc3 (0, new CoordSystem (new Point3 (5, 0, 5), Vector3.XAxis, Vector3.ZAxis), 5, Lib.PI);
+      Arc3 arc = new (0, new CoordSystem (new Point3 (5, 0, 5), Vector3.XAxis, Vector3.ZAxis), 5, Lib.PI);
       var flipped = arc.Flipped ();
       arc.Start.EQ (flipped.End).IsTrue ();
       arc.End.EQ (flipped.Start).IsTrue ();
@@ -25,7 +25,7 @@ class Curve3Tests {
 
    [Test (197, "Flipping Ellipse3")]
    void Test2 () {
-      Ellipse3 ellipse = new Ellipse3 (0, new CoordSystem (new Point3 (0, 0, 0), Vector3.XAxis, Vector3.YAxis), 8, 4, Lib.HalfPI, Lib.PI);
+      Ellipse3 ellipse = new (0, new CoordSystem (new Point3 (0, 0, 0), Vector3.XAxis, Vector3.YAxis), 8, 4, Lib.HalfPI, Lib.PI);
       var flipped = ellipse.Flipped ();
       ellipse.Start.EQ (flipped.End).IsTrue ();
       ellipse.End.EQ (flipped.Start).IsTrue ();
@@ -40,7 +40,7 @@ class Curve3Tests {
 
    [Test (198, "Flipping Ellipse3 - wrapping around xaxis")]
    void Test3 () {
-      Ellipse3 ellipse = new Ellipse3 (0, new CoordSystem (new Point3 (0, 0, 0), Vector3.XAxis, Vector3.YAxis), 8, 4, Lib.HalfPI, Lib.TwoPI + 1.D2R ());
+      Ellipse3 ellipse = new (0, new CoordSystem (new Point3 (0, 0, 0), Vector3.XAxis, Vector3.YAxis), 8, 4, Lib.HalfPI, Lib.TwoPI + 1.D2R ());
       var flipped = ellipse.Flipped ();
       ellipse.Start.EQ (flipped.End).IsTrue ();
       ellipse.End.EQ (flipped.Start).IsTrue ();
@@ -63,7 +63,7 @@ class Curve3Tests {
       ];
       ImmutableArray<double> weights = [1, 1, 1, 1];
       ImmutableArray<double> knots = [0, 0, 0, 0, 1, 1, 1, 1];
-      NurbsCurve3 spline = new NurbsCurve3 (0, controlPoints, knots, weights);
+      NurbsCurve3 spline = new (0, controlPoints, knots, weights);
       var flipped = spline.Flipped ();
       spline.Start.EQ (flipped.End).IsTrue ();
       spline.End.EQ (flipped.Start).IsTrue ();
@@ -84,7 +84,7 @@ class Curve3Tests {
          new Point3 (4, 0, 1),
          new Point3 (6, -1, 2)
       ];
-      Polyline3 polyline = new Polyline3 (0, pts);
+      Polyline3 polyline = new (0, pts);
       var flipped = polyline.Flipped ();
       polyline.Start.EQ (flipped.End).IsTrue ();
       polyline.End.EQ (flipped.Start).IsTrue ();
@@ -99,7 +99,7 @@ class Curve3Tests {
 
    [Test (180, "Trimming of Circle")]
    void Test6 () {
-      Arc3 arc = new Arc3 (0, new CoordSystem (new Point3 (5, 0, 5), Vector3.XAxis, Vector3.ZAxis), 5, Lib.TwoPI); // Full circle
+      Arc3 arc = new (0, new CoordSystem (new Point3 (5, 0, 5), Vector3.XAxis, Vector3.ZAxis), 5, Lib.TwoPI); // Full circle
       var trimmed = arc.Trimmed (Lib.HalfPI, Lib.PI, false);
       trimmed.Start.EQ (new Point3 (5, 0, 10)).IsTrue ();
       trimmed.End.EQ (new Point3 (0, 0, 5)).IsTrue ();
@@ -118,7 +118,7 @@ class Curve3Tests {
 
    [Test (181, "Trimming of Ellipse")]
    void Test7 () {
-      Ellipse3 ellipse = new Ellipse3 (0, new CoordSystem (Point3.Zero, Vector3.XAxis, Vector3.YAxis), 8, 4, 0, Lib.TwoPI);
+      Ellipse3 ellipse = new (0, new CoordSystem (Point3.Zero, Vector3.XAxis, Vector3.YAxis), 8, 4, 0, Lib.TwoPI);
       var trimmed = ellipse.Trimmed (Lib.HalfPI, Lib.PI, false);
       trimmed.Start.EQ (new Point3 (0, 4, 0)).IsTrue ();
       trimmed.End.EQ (new Point3 (-8, 0, 0)).IsTrue ();
@@ -146,7 +146,7 @@ class Curve3Tests {
       ];
       ImmutableArray<double> weights = [1, 1, 1, 1];
       ImmutableArray<double> knots = [0, 0, 0, 0, 1, 1, 1, 1];
-      NurbsCurve3 spline = new NurbsCurve3 (0, controlPoints, knots, weights);
+      NurbsCurve3 spline = new (0, controlPoints, knots, weights);
 
       double t1 = 0.25, t2 = 0.75;
       Point3 expectedStart = spline.GetPoint (t1);
@@ -186,7 +186,7 @@ class Curve3Tests {
          new Point3 (4, 4, 0),
          new Point3 (8, 4, 2)
       ];
-      Polyline3 polyline = new Polyline3 (0, pts);
+      Polyline3 polyline = new (0, pts);
 
       double t1 = 0.5, t2 = 2.25;
       Point3 expectedStart = polyline.GetPoint (t1);

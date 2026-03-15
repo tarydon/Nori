@@ -1,0 +1,7 @@
+Title = CONS lines intersect
+Pt = (20,70), ESnap=Intersection
+Line = ((130,70), 0
+Line = ((20,30), 90
+Label = ("intersection", (20,70), False)
+Label = ("horz", (130,70), True)
+Label = ("vert", (20,30), True)

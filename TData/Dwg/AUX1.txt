@@ -1,0 +1,3 @@
+Title = Snap on LastClickedPoint
+Pt = (50,60), ESnap=Node
+Label = ("node", (50,60), False)
