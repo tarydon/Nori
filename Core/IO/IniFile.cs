@@ -10,10 +10,11 @@ public class IniFile {
    // Constructors -------------------------------------------------------------
    /// <summary>Open an IniFile, given the filename and the section name</summary>
    public IniFile (string filename, string section) {
-      mLines = [.. File.ReadAllLines (filename)];
+      if (File.Exists (mFilename = filename)) mLines = [.. File.ReadAllLines (filename)];
       Section = section;
    }
-   readonly List<string> mLines;
+   readonly string mFilename;
+   readonly List<string> mLines = [];
 
    // Properties ---------------------------------------------------------------
    /// <summary>The current section</summary>
@@ -79,6 +80,28 @@ public class IniFile {
          }
       }
       return fallback;
+   }
+
+   /// <summary>Writes a value to a key in the current section</summary>
+   public IniFile Set (string key, string value) {
+      if (mSecStart == -1) {
+         if (mLines.Count > 0 && !mLines[^1].IsBlank ()) mLines.Add ("");
+         mSecStart = mLines.Count;
+         mLines.Add ($"[{mSection}]");
+      }
+
+      bool done = false;
+      int iInsertAfter = mSecStart;
+      string key2 = key.ToUpper () + "=", line = $"{key}={value}";
+      for (int i = mSecStart + 1; i < mLines.Count; i++) {
+         string s = mLines[i].ToUpper ().Replace (" =", "=");
+         if (s.StartsWith ('[')) break;
+         if (s.StartsWith (key2)) { mLines[i] = line; done = true; break; }
+         if (!string.IsNullOrWhiteSpace (s)) iInsertAfter = i; 
+      }
+      if (!done) mLines.Insert (iInsertAfter + 1, line);
+      File.WriteAllLines (mFilename, mLines);
+      return this;
    }
 }
 #endregion
