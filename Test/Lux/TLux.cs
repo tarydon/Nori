@@ -28,7 +28,7 @@ class TLux {
 
    [Test (49, "Truetype Font rendering")]
    void Test2 () {
-      var scene = new Scene2 (Color4.Black, new (-10, -10, 110, 110), new SimpleVN (Draw));
+      var scene = new Scene2 (Color4.Black, new (-10, -10, 110, 110), new SimpleVN (Draw) { Streaming = true });
       TestPNG (scene, new (160, 160), DIBitmap.EFormat.Gray8, "TrueType");
 
       void Draw () {
@@ -38,6 +38,7 @@ class TLux {
          TypeFace = mFace2;
          TextPx ("An example", new (10, 65));
          TextPx ("of TrueType", new (10, 40));
+         Color = Color4.Yellow;
          TextPx ("text.", new (10, 15));
       }
    }
@@ -189,10 +190,65 @@ class TLux {
       TestPNG (scene, new Vec2S (240, 120), DIBitmap.EFormat.Gray8, "FillPoly");
    }
 
+   [Test (222, "Points, Triangles, Text in 2D")]
+   void Test11 () {
+      var scene = new Scene2 (Color4.Black, new (0, 0, 100, 50), new SimpleVN (Draw) { Streaming = true });
+      TestPNG (scene, new (200, 100), DIBitmap.EFormat.Gray8, "PtsTris");
+
+      void Draw () {
+         Color = Color4.Gray (128); 
+         List<Vec2F> pts = [new (5, 5), new (90, 5), new (90, 15)];
+         Triangles (pts.AsSpan ());
+         Color = Color4.Gray (158);
+         pts = [new (5, 10), new (90, 20), new (5, 20)];
+         Triangles (pts.AsSpan ());
+
+         (Color, PointSize) = (Color4.Gray (188), 4f);
+         pts = [new (5, 30), new (20, 30), new (35, 30)];
+         Points (pts.AsSpan ());
+         (Color, PointSize) = (Color4.Gray (218), 8f);
+         pts = [new (10, 40), new (25, 40), new (40, 40)];
+         Points (pts.AsSpan ());
+         Color = Color4.Gray (248);
+         pts = [new (15, 45), new (30, 45)];
+         Points (pts.AsSpan ());
+
+         TypeFace = mFace2;
+         Text2D ("ABC", new (50, 25), ETextAlign.BaseLeft, Vec2S.Zero);
+         Color = Color4.Gray (128);
+         Text2D ("def", new (50, 37), ETextAlign.BaseLeft, Vec2S.Zero);
+         Xfm = Matrix3.Translation (22, 12, 0);
+         Text2D ("123", new (50, 25), ETextAlign.BaseLeft, Vec2S.Zero);
+      }
+
+      [Test (223, "Points in 3D")]
+      void Test12 () {
+         var scene = new Scene3 (Color4.Gray (64), new (0, 0, 0, 10, 20, 1), new SimpleVN (Draw) { Streaming = true });
+         TestPNG (scene, new (160, 100), DIBitmap.EFormat.RGB8, "Pts3D");
+
+         void Draw () {
+            (Color, PointSize) = (Color4.Gray (192), 4f);
+            List<Vec3F> pts = [new (2, 2, 2), new (5, 2, 2), new (8, 2, 2)];
+            Points (pts.AsSpan ());
+            (Color, PointSize) = (Color4.Yellow, 7f);
+            pts = [new (2, 5, 2), new (5, 5, 2), new (8, 5, 2)];
+            Points (pts.AsSpan ());
+            (Color, PointSize) = (Color4.Red, 10f);
+            pts = [new (2, 8, 2), new (5, 8, 2), new (8, 8, 2)];
+            Points (pts.AsSpan ());
+
+            (Color, TypeFace) = (Color4.Yellow, mFace2);
+            Text3D ("ABC", new (5, 11, 2), ETextAlign.BaseCenter, Vec2S.Zero);
+            Color = Color4.Cyan;
+            Text3D ("012", new (5, 16, 2), ETextAlign.BaseCenter, Vec2S.Zero);
+         }
+      }
+   }
+
    void TestPNG (Scene scene, Vec2S size, DIBitmap.EFormat format, string file) {
       var dib = RenderToImage (scene, size, format);
       new PNGWriter (dib).Write (NT.TmpPNG);
-      // Assert.PNGFilesEqual ($"{NT.Data}/Lux/{file}", NT.TmpPNG);
+      Assert.PNGFilesEqual ($"{NT.Data}/Lux/{file}.png", NT.TmpPNG);
    }
 
    TypeFace mFace = new (Lib.ReadBytes ("nori:GL/Fonts/Roboto-Regular.ttf"), 28);
