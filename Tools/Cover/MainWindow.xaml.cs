@@ -15,6 +15,7 @@ public partial class MainWindow : Window {
    public MainWindow () {
       FontSize = 13;
       InitializeComponent ();
+      mIni = new IniFile (Lib.GetLocalFile ("Nori.Cover.ini"), "Basic");
       LoadCoverage ();
    }
 
@@ -53,6 +54,7 @@ public partial class MainWindow : Window {
       Append (text.Length, Brushes.Transparent);
       fd.Blocks.Add (para);
       mText.Document = fd;
+      mIni.Set ("RecentFile", file);
 
       // Helpers .................................
       void Append (int end, Brush brush) {
@@ -101,14 +103,22 @@ public partial class MainWindow : Window {
       Dictionary<string, TreeViewItem> paths = new () { [@"N:\"] = tvi };
       mTree.Items.Add (tvi);
 
+      TreeViewItem? toSelect = null; 
+      string recent = mIni.GetS ("RecentFile");
       foreach (var file in Directory.EnumerateFiles (@"N:\", "*.cs", SearchOption.AllDirectories)) {
          bool include = mCoverage!.Files.Any (s =>  s.Equals (file, StringComparison.OrdinalIgnoreCase));
          if (include) {
             mAllFiles.Add (file);
             string path = SPath.GetDirectoryName (file)!;
             var parent = GetItem (path);
-            parent.Items.Add (new TreeViewItem { Header = SPath.GetFileName (file), Tag = file });
+            var tvFile = new TreeViewItem { Header = SPath.GetFileName (file), Tag = file };
+            if (recent.EqIC (file)) toSelect = tvFile;
+            parent.Items.Add (tvFile);
          }
+      }
+      if (toSelect != null) {
+         toSelect.BringIntoView ();
+         toSelect.IsSelected = true; 
       }
 
       // Helper ...............................
@@ -122,4 +132,5 @@ public partial class MainWindow : Window {
       }
    }
    List<string> mAllFiles = [];
+   IniFile mIni;
 }

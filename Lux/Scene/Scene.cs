@@ -99,9 +99,7 @@ public abstract class Scene {
    }
    protected double mZoomFactor = 1;
 
-   /// <summary>
-   /// Zoom about the center of the viewport
-   /// </summary>
+   /// <summary>Zoom about the center of the viewport</summary>
    public void Zoom (double factor) {
       double oldZoom = mZoomFactor;
       mZoomFactor = (oldZoom * factor).Clamp (0.01, 100);

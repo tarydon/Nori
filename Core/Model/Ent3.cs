@@ -225,7 +225,7 @@ public abstract class E3Surface : Ent3 {
    /// <summary>The tessellation of the surface is computed on demand by BuildMesh (which can be overridden)</summary>
    [DebuggerBrowsable (DebuggerBrowsableState.Never)]
    public Mesh3 Mesh {
-      get => _mesh ??= BuildMesh (Lib.FineTess, Lib.FineTessAngle);
+      get => _mesh ??= BuildMesh (Lib.CoarseTess, Lib.CoarseTessAngle);
       set {
          _mesh = value;
          if (_mesh.Triangle.Length > 0) {

@@ -3,25 +3,29 @@ namespace WPFDemo;
 
 class T3XDemoScene : Scene3 {
    public T3XDemoScene () {
-      var blank = new T3XReader ("N:/Demos/Data/5x-043-blank.t3x").Load ();
+      // var blank = new T3XReader ("N:/Demos/Data/5x-043-blank.t3x").Load ();
+      mBlank = new T3XReader ("N:/TData/IO/T3X/5X-022.t3x").Load ();
       var part = mModel = new T3XReader ("N:/Demos/Data/5x-043.t3x").Load ();
-      foreach (var ent in blank.Ents) ent.IsTranslucent = true;
+      foreach (var ent in mBlank.Ents) ent.IsTranslucent = true;
       TraceVN.It.Clear ();
-      Lib.Tracer = TraceVN.Print;
+      Lib.Tracer = TraceVN.Print; TraceVN.HoldTime = 20;
       BgrdColor = new Color4 (80, 84, 88);
-      Bound = blank.Bound;
-      Root = new GroupVN ([new Model3VN (blank), new Model3VN (part), TraceVN.It, mHairs]);
+      Bound = mBlank.Bound;
+      Root = new GroupVN ([new Model3VN (mBlank), /*new Model3VN (part),*/ TraceVN.It, mHairs]);
    }
    NormalVN mHairs = new ();
-   Model3? mModel;
+   Model3? mModel, mBlank;
 
    public override void Picked (object obj) {
+      if (mModel == null) return;
       if (!HW.IsShiftDown)
-         mModel!.Ents.ForEach (a => a.IsSelected = false);
-      if (obj is E3Surface ent) {
+         mModel.Ents.ForEach (a => a.IsSelected = false);
+      if (obj is E3Surface ent && mBlank != null) {
          Lib.Trace ($"Picked: {ent.GetType ().Name} #{ent.Id}");
          ent.IsSelected = true;
-         mHairs.Surface = ent;
+         // mHairs.Surface = ent;
+         var neighbors = mBlank.GetNeighbors (ent).Select (a => a.Id).Order ().ToCSV ();
+         Lib.Trace ($"Neighbors: {neighbors}");
       }
    }
 }

@@ -19,20 +19,16 @@ public class Model3 {
    public AList<Ent3> Ents => mEnts;
    readonly AList<Ent3> mEnts = [];
 
+   /// <summary>Returns the 'neighbors' of the given entity (all entities that share a common edge)</summary>
    public IReadOnlyList<E3Surface> GetNeighbors (E3Surface ent) {
       if (_neighbors == null) {
          _neighbors = [];
-         Dictionary<int, E3Surface> unpaired = [];
+         HashSet<E3Surface> nearby = [];
          foreach (var ent1 in Ents.OfType<E3Surface> ()) {
-            foreach (var edge in ent1.Contours.SelectMany (a => a.Curves)) {
-               if (unpaired.TryGetValue (edge.PairId, out var ent2)) {
-                  if (!_neighbors.TryGetValue (ent1, out var list1)) _neighbors[ent1] = list1 = [];
-                  list1.Add (ent2);
-                  if (!_neighbors.TryGetValue (ent2, out var list2)) _neighbors[ent2] = list2 = [];
-                  list2.Add (ent1);
-               } else
-                  unpaired.Add (edge.PairId, ent1);
-            }
+            nearby.Clear (); 
+            foreach (var edge in ent1.Contours.SelectMany (a => a.Curves)) 
+               if (GetCoedge (edge, out var ent2, out _)) nearby.Add (ent2);
+            _neighbors.Add (ent1, [.. nearby]);
          }
       }
       return _neighbors.TryGetValue (ent, out var list) ? list : [];
@@ -50,6 +46,7 @@ public class Model3 {
          Dictionary<int, (E3Surface S, Curve3 C)> unpaired = [];
          foreach (var s1 in Ents.OfType<E3Surface> ()) {
             foreach (var c1 in s1.Contours.SelectMany (con => con.Curves)) {
+               if (c1.PairId == 0) continue;
                if (unpaired.TryGetValue (c1.PairId, out var tuple))
                   _coedges.Add (c1.PairId, (tuple.S, tuple.C, s1, c1));
                else
@@ -69,6 +66,7 @@ public class Model3 {
    }
    Dictionary<int, (E3Surface S1, Curve3 C1, E3Surface S2, Curve3 C2)>? _coedges;
 
+   /// <summary>Returns the list of all entities that are connected</summary>
    public List<E3Surface> GetConnected (E3Surface seed) {
       HashSet<E3Surface> seen = [seed];
       Queue<E3Surface> todo = []; todo.Enqueue (seed);
@@ -80,6 +78,7 @@ public class Model3 {
       return [.. seen];
    }
 
+   /// <summary>Partitions the model by connectivity</summary>
    public List<List<E3Surface>> PartitionByConnectivity () {
       HashSet<E3Surface> done = [];
       List<List<E3Surface>> sets = [];
@@ -108,7 +107,7 @@ public class Model3 {
          case ListChange.E.Removing:
             // When removing an entity, if that entity lies on the 'edge' of the
             // drawing, reset the bound for recompute
-            var bound = mEnts[ch.Index].Bound.InflatedF (1);
+            var bound = mEnts[ch.Index].Bound.InflatedF (1.01);
             if (!mBound.Contains (bound)) mBound = new ();
             break;
          default: mBound = new (); break;
