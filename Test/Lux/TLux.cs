@@ -220,28 +220,28 @@ class TLux {
          Xfm = Matrix3.Translation (22, 12, 0);
          Text2D ("123", new (50, 25), ETextAlign.BaseLeft, Vec2S.Zero);
       }
+   }
 
-      [Test (223, "Points in 3D")]
-      void Test12 () {
-         var scene = new Scene3 (Color4.Gray (64), new (0, 0, 0, 10, 20, 1), new SimpleVN (Draw) { Streaming = true });
-         TestPNG (scene, new (160, 100), DIBitmap.EFormat.RGB8, "Pts3D");
+   [Test (223, "Points in 3D")]
+   void Test12 () {
+      var scene = new Scene3 (Color4.Gray (64), new (0, 0, 0, 10, 20, 1), new SimpleVN (Draw) { Streaming = true });
+      TestPNG (scene, new (160, 100), DIBitmap.EFormat.RGB8, "Pts3D");
 
-         void Draw () {
-            (Color, PointSize) = (Color4.Gray (192), 4f);
-            List<Vec3F> pts = [new (2, 2, 2), new (5, 2, 2), new (8, 2, 2)];
-            Points (pts.AsSpan ());
-            (Color, PointSize) = (Color4.Yellow, 7f);
-            pts = [new (2, 5, 2), new (5, 5, 2), new (8, 5, 2)];
-            Points (pts.AsSpan ());
-            (Color, PointSize) = (Color4.Red, 10f);
-            pts = [new (2, 8, 2), new (5, 8, 2), new (8, 8, 2)];
-            Points (pts.AsSpan ());
+      void Draw () {
+         (Color, PointSize) = (Color4.Gray (192), 4f);
+         List<Vec3F> pts = [new (2, 2, 2), new (5, 2, 2), new (8, 2, 2)];
+         Points (pts.AsSpan ());
+         (Color, PointSize) = (Color4.Yellow, 7f);
+         pts = [new (2, 5, 2), new (5, 5, 2), new (8, 5, 2)];
+         Points (pts.AsSpan ());
+         (Color, PointSize) = (Color4.Red, 10f);
+         pts = [new (2, 8, 2), new (5, 8, 2), new (8, 8, 2)];
+         Points (pts.AsSpan ());
 
-            (Color, TypeFace) = (Color4.Yellow, mFace2);
-            Text3D ("ABC", new (5, 11, 2), ETextAlign.BaseCenter, Vec2S.Zero);
-            Color = Color4.Cyan;
-            Text3D ("012", new (5, 16, 2), ETextAlign.BaseCenter, Vec2S.Zero);
-         }
+         (Color, TypeFace) = (Color4.Yellow, mFace2);
+         Text3D ("ABC", new (5, 11, 2), ETextAlign.BaseCenter, Vec2S.Zero);
+         Color = Color4.Cyan;
+         Text3D ("012", new (5, 16, 2), ETextAlign.BaseCenter, Vec2S.Zero);
       }
    }
 
