@@ -92,6 +92,28 @@ class TLux {
       void Draw3 () => Lux.Text2D ("Hello, World!", new (0, 15), ETextAlign.MidLeft, Vec2S.Zero);
    }
 
+   [Test (216, "ZLevel with Streaming")]
+   void Test5 () {
+      var scene = new Scene2 (Color4.Red, new (-8.5, -8.5, 203.5, 203.5), new SimpleVN (Draw) { Streaming = true });
+      TestPNG (scene, new (212, 212), DIBitmap.EFormat.RGB8, "ZLevel2.png");
+
+      void Draw () {
+         Rand r = new (42);
+         int[] iter = new int[25];
+         for (int i = 0; i < 25; i++) iter[i] = i;
+         for (int i = 24; i >= 0; i--) {
+            int j = r.Next (i + 1);
+            (iter[i], iter[j]) = (iter[j], iter[i]);
+         }
+         foreach (var n in iter) {
+            Lux.ZLevel = n;
+            Lux.Color = Color4.Gray (n * 10);
+            int x = n * 4, y = x;
+            Lux.Quads ([new (x, y), new (x + 98, y), new (x + 98, y + 98), new (x, y + 98)]);
+         }
+      }
+   }
+
    void TestPNG (Scene scene, Vec2S size, DIBitmap.EFormat format, string file) {
       var dib = Lux.RenderToImage (scene, size, format);
       new PNGWriter (dib).Write (NT.TmpPNG);
