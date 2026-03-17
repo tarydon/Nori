@@ -99,6 +99,13 @@ public abstract class Scene {
    }
    protected double mZoomFactor = 1;
 
+   /// <summary>Zoom about the center of the viewport</summary>
+   public void Zoom (double factor) {
+      double oldZoom = mZoomFactor;
+      mZoomFactor = (oldZoom * factor).Clamp (0.01, 100);
+      XfmChanged ();
+   }
+
    // Called when the root transform is changed
    protected void XfmChanged () {
       Lux.FlushPickBuffer ();
@@ -163,7 +170,11 @@ public class Scene2 : Scene {
 /// <summary>Represents a 3D scene (override Draw in derived classes)</summary>
 /// - The world extent is expressed as a Bound3
 /// - The 'viewpoint' is expressed using an X + Z turntable convention
-public abstract class Scene3 : Scene {
+public class Scene3 : Scene {
+   public Scene3 () { }
+   public Scene3 (Color4 bgrd, Bound3 bound, VNode root)
+      => (BgrdColor, Bound, Root) = (bgrd, bound, root);
+
    // Properties ---------------------------------------------------------------
    /// <summary>The bounding cuboid of the model</summary>
    public Bound3 Bound {

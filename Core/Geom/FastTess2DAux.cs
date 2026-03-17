@@ -8,17 +8,11 @@ namespace Nori;
 public partial class FastTess2D {
    // Enumerations ---------------------------------------------------------------------------------
    // EVKind lists the types of vertices
-   enum EVertex { Regular, Valley, Mountain };
+   enum EVertex { Regular, Valley, Mountain }
    // EKind lists the types of nodes
-   enum ENode { Y, X, Leaf, Redirect };
+   enum ENode { Y, X, Leaf, Redirect }
    // When a vertex is connected to a tile, which 'chain does it belong to
-   enum EChain { HSlice, Left, Right, Valley, Mountain };
-
-   // struct Disposer ------------------------------------------------------------------------------
-   // Helper used to call Release on a Tessellator after we've finished using it
-   readonly struct Disposer (FastTess2D mT) : IDisposable {
-      public readonly void Dispose () => mT.mInUse = false;
-   }
+   enum EChain { HSlice, Left, Right, Valley, Mountain }
 
    // struct Node ----------------------------------------------------------------------------------
    // This represents a Node in the DAG that we build to locate the tiles containing particular
@@ -33,16 +27,13 @@ public partial class FastTess2D {
    // dummy tile). Splits happen when we slice a tile horizontally or vertically - that erstwhile
    // Leaf node pointing to that tile then becomes an X or Y node and gets two children representing
    // the two smaller tiles that now result from the split. 
-   struct Node {
-      // Constructors ----------------------------------------------------------
-      public Node (int id, ENode kind, int index) => (Id, Kind, Index) = (id, kind, index);
-
+   struct Node (int id, ENode kind, int index) {
       // Properties ------------------------------------------------------------
-      public readonly int Id;    // Index of this node within the mN array
-      public ENode Kind;         // What kind of node is this? (X split / Y split / leaf)
-      public int First;          // First child (lower / left)
-      public int Second;         // Second child (upper / right)
-      public int Index;          // Pointer to a Vertex / Segment / Tile depending on the node type
+      public readonly int Id = id;  // Index of this node within the mN array
+      public ENode Kind = kind;     // What kind of node is this? (X split / Y split / leaf)
+      public int First;             // First child (lower / left)
+      public int Second;            // Second child (upper / right)
+      public int Index = index;     // Pointer to a Vertex / Segment / Tile depending on the node type
    }
 
    // struct Segment -------------------------------------------------------------------------------
@@ -57,18 +48,15 @@ public partial class FastTess2D {
          Id = id; Diagonal = diagonal;
          Point2 pa = vN[a].Pt, pb = vN[b].Pt;
          if (pa.EQ (pb, FINE)) throw new InvalidOperationException ();
-         if (pa.Y < pb.Y) (A, B, PA, PB, PartOnLeft) = (b, a, pb, pa, true);
-         else (A, B, PA, PB, PartOnLeft) = (a, b, pa, pb, false);
-         Slope = (pa.X - pb.X) / (pa.Y - pb.Y);
-         XPrime = PB.X - Slope * PB.Y;
+         if (pa.Y < pb.Y) (A, B, pa, pb, PartOnLeft) = (b, a, pb, pa, true);
+         else (A, B, PartOnLeft) = (a, b, false);
+         DX = pa.X - pb.X; DY = pa.Y - pb.Y; PB = pb;
+         Slope = DX / DY; XPrime = pb.X - Slope * pb.Y;
       }
 
       // Properties ------------------------------------------------------------
       public readonly int Id;             // Index of the segment in the mS array
-      public readonly int A, B;           // Indicies of the top and bottom vertex
-      public readonly Point2 PA, PB;      // Actual positions of the top and bottom vertex
-      public readonly double Slope;       // Slope of the segment
-      public readonly double XPrime;      // 'Intercept' used to simplify GetX computation
+      public readonly int A, B;           // Indices of the top and bottom vertex
       public readonly bool PartOnLeft;    // Does the part lie on the left of the segment (as viewed by user)
       public readonly bool Diagonal;      // Interior diagonal with a tile (material exists on both sides)
 
@@ -77,9 +65,14 @@ public partial class FastTess2D {
       public double GetX (double y) => XPrime + Slope * y;
 
       // Is the given point to the 'left' of this segment?
-      public bool IsLeft (Point2 p) => (PA.X - PB.X) * (p.Y - PB.Y) - (PA.Y - PB.Y) * (p.X - PB.X) > 0;
+      public bool IsLeft (Point2 p) => DX * (p.Y - PB.Y) - DY * (p.X - PB.X) > 0;
 
       public override string ToString () => $"Segment {A}..{B}, Left:{PartOnLeft}";
+
+      // Private data ----------------------------------------------------------
+      readonly double Slope, XPrime;      // Slope of the segment, 'intercept' used to simplify GetX
+      readonly double DX, DY;             // PA.X - PB.X, PA.Y - PB.Y
+      readonly Point2 PB;
    }
 
    // struct Tile ----------------------------------------------------------------------------------

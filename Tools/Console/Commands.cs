@@ -31,16 +31,17 @@ static class ComputeCoverage {
       }
       data = [.. data.OrderBy (a => a.Uncovered)];
 
-      Console.WriteLine ("                             File  Blocks  Covered Uncovered       %");
+      Console.WriteLine ("                             File   Blocks  Covered Uncovered       %");
       Console.WriteLine ("-----------------------------------------------------------------------");
       foreach (var datum in data)
-         Console.WriteLine ($"{datum.File,33}{datum.Blocks,8}{datum.Covered,9}{datum.Uncovered,9}{datum.Percent,8:F1}");
+         Console.WriteLine ($"{datum.File,33}{datum.Blocks,9}{datum.Covered,9}{datum.Uncovered,9}{datum.Percent,8:F1}");
 
       int cBlocks = c.Blocks.Count, cCovered = c.Blocks.Count (a => a.Covered), cUncovered = cBlocks - cCovered;
       double fPercent = Math.Round (100.0 * cCovered / cBlocks, 2);
       Console.WriteLine ("----------------------------------------------------------------------");
       Console.ForegroundColor = ConsoleColor.Yellow;
-      Console.WriteLine ($"{data.Count,33}{cBlocks,8}{cCovered,9}{cUncovered,9}{fPercent,9:F2} %");
+      Console.WriteLine ($"{data.Count,33}{cBlocks,9}{cCovered,9}{cUncovered,9}{fPercent,9:F2} %");
+      Console.WriteLine ("                             Files  Blocks   Covered  Uncovered");
       Console.ResetColor ();
    }
 

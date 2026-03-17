@@ -1,11 +1,12 @@
-﻿using System.Diagnostics;
+// ────── ╔╗
+// ╔═╦╦═╦╦╬╣ BorrowPool.cs
+// ║║║║╬║╔╣║ <<TODO>>
+// ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 using System.Threading;
 namespace Nori;
 
 #region interface IBorrowable<T> -------------------------------------------------------------------
-/// <summary>
-/// Borrowable objects implement this interface
-/// </summary>
+/// <summary>Borrowable objects implement this interface</summary>
 public interface IBorrowable<T> : IDisposable where T : class {
    static abstract T Make ();
    static abstract ref T? Next (T item);
@@ -13,9 +14,7 @@ public interface IBorrowable<T> : IDisposable where T : class {
 #endregion
 
 #region BorrowPool<T> ------------------------------------------------------------------------------
-/// <summary>
-/// Implements a pool from which objects can be borrowed, used, and returned
-/// </summary>
+/// <summary>Implements a pool from which objects can be borrowed, used, and returned</summary>
 /// Typically this is used to store algorithm objects like PolyBuilder, MeshSlicer etc. 
 /// We don't want to keep re-creating those kinds of objects for each poly-build or mesh-slice
 /// operation, but would like to reuse one that we create. There are different solutions to 
@@ -121,7 +120,8 @@ static partial class BorrowPool<T> {
    static partial void TrackBorrow (T item) {
       // First, we ensure that we are not having too many objects in-flight. This almost always
       // means that somewhere we forgot to Return() the objects we are borrowing
-      Debug.Assert (sBorrowed <= 4 * Environment.ProcessorCount, "Pool: too many rented, probable leak");
+      Debug.Assert (sBorrowed <= 4 * Environment.ProcessorCount, 
+                    $"Pool: too many {typeof (T).Name} rented, probable leak");
       // Then, we set item.Next=item as a Sentinel. (When the item is returned, that will get 
       // reset to null). This serves two purposes:
       // 1. We ensure only objects that are Borrowed() are ever Returned(). 

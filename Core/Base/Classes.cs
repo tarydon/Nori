@@ -50,7 +50,7 @@ public class MultiDispose : IDisposable {
    // Constructors -------------------------------------------------------------
    /// <summary>Construct a MultiDispose with zero or more disposables to hold on to</summary>
    public MultiDispose (params IDisposable?[] disps) => mDisposables.AddRange (disps);
-   List<IDisposable?> mDisposables = [];
+   readonly List<IDisposable?> mDisposables = [];
 
    // Methods ------------------------------------------------------------------
    /// <summary>Add an additional disposable</summary>

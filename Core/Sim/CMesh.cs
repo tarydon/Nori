@@ -70,9 +70,9 @@ public class CMesh {
          if (tup.Level <= maxLevel) {
             // Output boxes at maxLevel. Also output leaf boxes from 
             // earlier levels (ones that don't have two boxes as children)
-            if (tup.Level == maxLevel || (b.Left >= 0 && b.Right >= 0)) {
+            if (tup.Level == maxLevel || b is { Left: >= 0, Right: >= 0 }) {
                Point3f min = b.Center - b.Extent, max = b.Center + b.Extent;
-               yield return new Bound3 ([min, max]);
+               yield return new Bound3 (min, max);
             }
             if (b.Left < 0) todo.Enqueue ((-b.Left, tup.Level + 1));
             if (b.Right < 0) todo.Enqueue ((-b.Right, tup.Level + 1));
@@ -191,7 +191,7 @@ public class CMesh {
          int nodeIdx = ++mBoxesUsed;
          var box = new Box {
             Center = (Point3f)bound.Midpoint,
-            Extent = new (bound.X.Length / 2, bound.Y.Length / 2, bound.Z.Length / 2),
+            Extent = new (bound.X.Length / 2, bound.Y.Length / 2, bound.Z.Length / 2)
          };
 
          // Now, if this box has 2 or more triangles, we have to create a split by 
@@ -306,18 +306,18 @@ public class CMesh {
 
       // Private data ----------------------------------------------------------
       // List of vertices
-      List<Point3f> mPts = [];         // List of vertices
-      List<int> mIndex = [];           // List of indices, taken 3 at a time, making the triangles
-      List<Point3f> mTriCen = [];      // Center points of the N triangles
-      List<Bound3> mTriBound = [];     // Bounds of the N triangles
-      Box[] mBoxes = [];               // List of boxes forming the BVH tree
-      int mBoxesUsed;                  // How many of those slots have we used
+      readonly List<Point3f> mPts = [];      // List of vertices
+      readonly List<int> mIndex = [];        // List of indices, taken 3 at a time, making the triangles
+      readonly List<Point3f> mTriCen = [];   // Center points of the N triangles
+      readonly List<Bound3> mTriBound = [];  // Bounds of the N triangles
+      Box[] mBoxes = [];                     // List of boxes forming the BVH tree
+      int mBoxesUsed;                        // How many of those slots have we used
       // mPermute contains a permutation of all the triangles. Initially, this is 0...N where
       // and as we create the BVH, we rearrange here the triangle. Suppose, for example, we do
       // the first split along X at some particular Xmid. Then, all the triangles with centroids
       // less than Xmid will go into the first half of this mPermute array, while the rest
       // are in the second half. This is used during the building of the BVH.
-      List<int> mPermute = [];         
+      readonly List<int> mPermute = [];         
    }
    #endregion
 }

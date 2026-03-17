@@ -98,7 +98,7 @@ public static partial class Lux {
    /// This effectively returns the VNode that lies underneat the current mouse position.
    public static VNode? Pick (Vec2S pos) {
       // If we're doign any simulation, return null
-      if (sRenderCompletes.Count > 0 || mRendering || !mReady || mUIScene == null) return null;
+      if (sRenderCompletes.Count > 0 || mRendering || !(mReady || Lib.Testing) || mUIScene == null) return null;
       if (!mPickBufferValid) {
          mPickBufferValid = true;
          var tup = ((byte[], float[]))Render (mUIScene, mViewport, ETarget.Pick, DIBitmap.EFormat.Unknown)!;

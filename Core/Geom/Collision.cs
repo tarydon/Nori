@@ -8,7 +8,7 @@ namespace Nori;
 /// <summary>Represents a 'collision triangle'</summary>
 public readonly struct CTri {
    /// <summary>Construct a CTri given a span of floats and indices into that for the 3 corners</summary>
-   public unsafe CTri (ReadOnlySpan<Point3f> pts, int a, int b, int c) {
+   public CTri (ReadOnlySpan<Point3f> pts, int a, int b, int c) {
       A = a; B = b; C = c;
 
       // Fetch the three vertices
@@ -23,7 +23,7 @@ public readonly struct CTri {
       D = -(N.X * pa.X + N.Y * pa.Y + N.Z * pa.Z);
 
       K = 0b_0001;  // Assume we're using Xy plane for projecting (00 01)
-      float nx = MathF.Abs (N.X), ny = MathF.Abs (N.Y), nz = MathF.Abs (N.Z);
+      float nx = Abs (N.X), ny = Abs (N.Y), nz = Abs (N.Z);
       if (nx >= ny && nx >= nz) K = 0b_0110;         // Use YZ plane (01 10)
       else if (ny >= nx && ny >= nz) K = 0b_0010;    // Use XZ plane (00 10)
    }
@@ -48,25 +48,6 @@ public readonly struct CTri {
 
 /// <summary>Provides methods for collision detection between various geometric primitives.</summary>
 public static class Collision {
-   /// <summary>Checks if 'a' Bound3 intersects with another Bound3 'b'</summary>
-   [MethodImpl (MethodImplOptions.AggressiveInlining)]
-   public static bool Check (in Bound3 a, in Bound3 b) => Check (in a.X, in b.X) && Check (in a.Y, in b.Y) && Check (in a.Z, in b.Z);
-
-   /// <summary>Checks if 'a' Bound2 intersects with another Bound2 'b'</summary>
-   [MethodImpl (MethodImplOptions.AggressiveInlining)]
-   public static bool Check (in Bound2 a, in Bound2 b) => Check (in a.X, in b.X) && Check (in a.Y, in b.Y);
-
-   /// <summary>Checks if 'a' Bound1 intersects with another Bound1 'b'</summary>
-   [MethodImpl (MethodImplOptions.AggressiveInlining)]
-   public static bool Check (in Bound1 a, in Bound1 b) => a.Min <= b.Max && a.Max >= b.Min;
-
-   /// <summary>Checks if 'a' sphere intersects with another sphere 'b'</summary>
-   [MethodImpl (MethodImplOptions.AggressiveInlining)]
-   public static bool Check (in MinSphere A, in MinSphere B) {
-      var r = A.Radius + B.Radius;
-      return (A.Center - B.Center).LengthSq <= r * r;
-   }
-
    /// <summary>Checks if two OBBs intersect.</summary>
    [MethodImpl (MethodImplOptions.AggressiveInlining)]
    public static bool Check (in OBB a, in OBB b) =>
@@ -77,7 +58,7 @@ public static class Collision {
       BoxTri (in b.Center, in b.X, in b.Y, in b.Z, in b.Extent, in pts[a.A], in pts[a.B], in pts[a.C]);
 
    [MethodImpl (MethodImplOptions.AggressiveInlining)]
-   unsafe public static bool Check (Point3f* pts, in CTri a, in OBB b) =>
+   public static unsafe bool Check (Point3f* pts, in CTri a, in OBB b) =>
       BoxTri (in b.Center, in b.X, in b.Y, in b.Z, in b.Extent, in pts[a.A], in pts[a.B], in pts[a.C]);
 
    [MethodImpl (MethodImplOptions.AggressiveInlining)]
@@ -143,6 +124,7 @@ public static class Collision {
    /// <param name="bC">Box center.</param>
    /// <param name="bX">Box X-axis</param>
    /// <param name="bY">Box Y-axis</param>
+   /// <param name="bZ">Box Z-axis</param>
    /// <param name="bH">Box half extents</param>
    /// <param name="p0">Triangle vertex 1</param>
    /// <param name="p1">Triangle vertex 2</param>
@@ -186,7 +168,7 @@ public static class Collision {
 
       // Check 2. Check Box's AABB vs Triangle's AABB (three face normals of the Box)
       Bound3 b1 = new (-bH.X, -bH.Y, -bH.Z, bH.X, bH.Y, bH.Z), b2 = new (a, b, c);
-      if (!Check (in b1, in b2)) return false;
+      if (!b1.Intersects (in b2)) return false;
 
       // Check 3. Triangle's face normal (basically box to triangle plane)
       var n = ((b - a) * (c - a)).Normalized (); // Triangle normal
@@ -230,7 +212,7 @@ public static class Collision {
    }
 
    /// <summary>Checks if two triangles intersect in 3D space.</summary>
-   public unsafe static bool TriTri (Point3f* p1, in CTri t1, Point3f * p2, in CTri t2) {
+   public static unsafe bool TriTri (Point3f* p1, in CTri t1, Point3f * p2, in CTri t2) {
       // Step 1. Check if triangle 1 is completely on one side of triangle 2's plane
       int a1 = t1.A, b1 = t1.B, c1 = t1.C, a2 = t2.A, b2 = t2.B, c2 = t2.C;
       Vector3f N2 = t2.N; float d2 = t2.D;
@@ -314,9 +296,9 @@ public static class Collision {
    /// 2. If edge of first triangle crosses edge of the other
    /// Like the 3D triangle intersection check, the planar variant also uses orientation
    /// tests to determine the intersections. 
-   unsafe static bool TriTri2D (Point2f* p) {
+   static unsafe bool TriTri2D (Point2f* p) {
       // Triangle vertices.
-      int a1 = 0, b1 = 1, c1 = 2, a2 = 3, b2 = 4, c2 = 5;
+      const int a1 = 0; int b1 = 1, c1 = 2, a2 = 3, b2 = 4, c2 = 5;
 
       // Step 0: Ensure both triangles are ccw
       if (Side (a1, b1, c1) < 0) (b1, c1) = (c1, b1);

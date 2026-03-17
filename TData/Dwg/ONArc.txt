@@ -1,0 +1,3 @@
+Title = ON snap on arc
+Pt = (120.270659,43.852587), ESnap=On
+Label = ("on", (120.270659,43.852587), False)

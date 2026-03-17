@@ -23,16 +23,15 @@ namespace Nori;
 public class CurveUnlofter {
    // Constructors -------------------------------------------------------------
    public CurveUnlofter (Curve3 curve) {
-      mDomain = (mCurve = curve).Domain;
+      Bound1D domain = (mCurve = curve).Domain;
       // Create an initial subdivision with 4 segs
-      double dt = mDomain.Length / mRootSegs;
+      double dt = domain.Length / mRootSegs;
       for (int i = 0; i <  mRootSegs; i++) {
-         AddNode (dt * (i + 0.5) + mDomain.Min);
+         AddNode (dt * (i + 0.5) + domain.Min);
          AddSeg (i, dt / 2);
       }
    }
    readonly Curve3 mCurve;    // The curve we're working with
-   readonly Bound1D mDomain;   // The domain of that curve
    const int mRootSegs = 4;   // Initial number of segments
 
    // Methods ------------------------------------------------------------------
@@ -124,8 +123,8 @@ public class CurveUnlofter {
       if (mUsedSegs + 2 >= mSegs.Length) Array.Resize (ref mSegs, mSegs.Length * 2);
    }
 
-   enum EState { Raw, Divided, Leaf };
-   enum EOverrun { Nil, Left, Right };
+   enum EState { Raw, Divided, Leaf }
+   enum EOverrun { Nil, Left, Right }
 
    readonly struct Node {
       public Node (Curve3 curve, double t) 
@@ -136,13 +135,11 @@ public class CurveUnlofter {
    Node[] mNodes = new Node[8];
 
    struct Seg {
-      public Seg (int id, int center, double dt) {
-         Center = center; DT = dt;
-      }
-      public int Center;
+      public Seg (int id, int center, double dt) => (Center, DT) = (center, dt);
+      public readonly int Center;
       public int Left, Right;
       public int Children;
-      public double DT;
+      public readonly double DT;
 
       public (double T, EOverrun Overrun) GetT (CurveUnlofter owner, Point3 pt) {
          ref Node left = ref owner.mNodes[Left], right = ref owner.mNodes[Right];

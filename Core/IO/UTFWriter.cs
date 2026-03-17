@@ -123,7 +123,7 @@ public class UTFWriter {
       while (!Utf8Formatter.TryFormat (value, D.AsSpan (N), out mDelta, sDateFmt)) Grow ();
       return Bump ();
    }
-   static StandardFormat sDateFmt = new ('O');
+   static readonly StandardFormat sDateFmt = new ('O');
 
    /// <summary>Write a double to a UTF8 stream using default formatting</summary>
    public UTFWriter Write (double value) => Write (value, default);
@@ -183,7 +183,7 @@ public class UTFWriter {
       int cb = Encoding.UTF8.GetBytes (s, D.AsSpan (N));
       N += cb; return this;
    }
-   static SearchValues<char> mSpl = SearchValues.Create (" \'\":[{(<>)}]=");
+   static readonly SearchValues<char> mSpl = SearchValues.Create (" \'\":[{(<>)}]=");
 
    /// <summary>Write a TimeSpan to a UTF8 stream using default formatting</summary>
    public UTFWriter Write (TimeSpan value) {
@@ -198,7 +198,7 @@ public class UTFWriter {
       while (!Utf8Formatter.TryFormat (n, D.AsSpan (N), out mDelta, hex ? sHexFormat : default)) Grow ();
       return Bump ();
    }
-   static StandardFormat sHexFormat = new ('X');
+   static readonly StandardFormat sHexFormat = new ('X');
 
    /// <summary>Write a 16-bit unsigned integer to a UTF8 stream using default formatting</summary>
    public UTFWriter Write (ushort value) {
@@ -215,11 +215,7 @@ public class UTFWriter {
    // Implementation -----------------------------------------------------------
    // Called to bump up the write pointer by the variable mDelta (which is set
    // by most of the Write routines to indicate how many bytes have been written)
-   UTFWriter Bump () {
-      N += mDelta;
-      if (N > D.Length) throw new NotImplementedException ();
-      return this;
-   }
+   UTFWriter Bump () => (N += mDelta) <= D.Length ? this : throw new NotImplementedException ();
    int mDelta;
 
    // Grows the buffer if the required number of bytes is not available

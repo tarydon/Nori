@@ -215,13 +215,13 @@ public class LFF2LFontConverter {
       public FontChar? ReuseKey { get; set; }
 
       // Strokes (lines/arcs) defining this character
-      public List<Poly> Strokes { get; set; } = [];
+      public List<Poly> Strokes { get; } = [];
 
       // Width of the glyph
       public double Width => Strokes.Count == 0 ? 0 : Strokes.Max (a => a.GetBound ().X.Max);
 
       // List of vector drawing commands used to render the character
-      public List<string> PenMoves { get; set; } = [];
+      public List<string> PenMoves { get; } = [];
    }
 }
 #endregion

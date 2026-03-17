@@ -1,0 +1,5 @@
+Title = CON vertical
+Pt = (50,65.1), ESnap=On
+Line = ((50,60), 90
+Label = ("on", (50,65.1), False)
+Label = ("vert", (50,60), True)

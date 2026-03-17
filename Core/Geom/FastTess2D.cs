@@ -2,6 +2,7 @@
 // ╔═╦╦═╦╦╬╣ FastTess2D.cs
 // ║║║║╬║╔╣║ Implements a Tessellator that can handle non-intersecting simple polygons
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
+using JetBrains.Annotations;
 namespace Nori;
 
 #region class FastTess2D ---------------------------------------------------------------------------
@@ -11,9 +12,7 @@ namespace Nori;
 /// and it is easy to determine which are the outer contours, and which are the holes. 
 public partial class FastTess2D : IBorrowable<FastTess2D> {
    // Properties ---------------------------------------------------------------
-   /// <summary>
-   /// Sets the rotation bias angle to avoid horizontal lines (don't set this to any round number of degrees!)
-   /// </summary>
+   /// <summary>Sets the rotation bias angle to avoid horizontal lines (don't set this to any round number of degrees!)</summary>
    /// Normally, you never need to set this - it exists more as a debugging / testing aid
    public double BiasAngle {
       get => mBiasAngle;
@@ -25,11 +24,9 @@ public partial class FastTess2D : IBorrowable<FastTess2D> {
    /// Caution: Don't hold onto this while you are adding polys - the list may grow, and
    /// the span may become stale. 
    public List<Point2> Pts => mInput;
-   List<Point2> mInput = [];
+   readonly List<Point2> mInput = [];
 
-   /// <summary>
-   /// The discretization tolerance
-   /// </summary>
+   /// <summary>The discretization tolerance</summary>
    public ETolerance Tolerance {
       set {
          if (value == mETol) return;
@@ -45,7 +42,7 @@ public partial class FastTess2D : IBorrowable<FastTess2D> {
    /// <summary>The set of integers making up the triangles</summary>
    /// These integers, taken 3 at a time, point into the Pts array
    public List<int> Tris => mTris;
-   List<int> mTris = [];
+   readonly List<int> mTris = [];
 
    // Methods ------------------------------------------------------------------
    /// <summary>This is used to borrow a Triangulator for use</summary>
@@ -60,7 +57,8 @@ public partial class FastTess2D : IBorrowable<FastTess2D> {
    ///
    /// Triangulator.Borrow returns a triangulator (from a pool of triangulators that is maintained),
    /// and also an IDisposable that must be disposed to release the triangulator back into the pool.
-   /// So make sure to put the return value into a using statement so this happens automatically. 
+   /// So make sure to put the return value into a using statement so this happens automatically.
+   [MustDisposeResource]
    public static FastTess2D Borrow () {
       var tess = BorrowPool<FastTess2D>.Borrow ();
       tess.Reset ();
@@ -74,7 +72,7 @@ public partial class FastTess2D : IBorrowable<FastTess2D> {
       // with curves, make a copy
       int start = mInput.Count;
       poly.Discretize (mInput, mTolerance, mAngTolerance);
-      if (poly.GetWinding () == Poly.EWinding.CW ^ hole) mInput.Reverse (start, mInput.Count - start); 
+      if ((poly.GetWinding () == Poly.EWinding.CW) ^ hole) mInput.Reverse (start, mInput.Count - start); 
       ReadOnlySpan<Point2> pts = mInput.AsSpan ()[start..];
 
       // Now, add the contour into the mV array, and create segments from this in
@@ -125,13 +123,14 @@ public partial class FastTess2D : IBorrowable<FastTess2D> {
    // at the top. It is then a 'reflex' vertex that needs to be connected to a corner (or another
    // reflex vertex) to split the stack into two monotones. 
    void AddDiagonals () {
-      for (int i = mTN_ - 1; i > 0; i--) {
+      for (int i = mTN - 1; i > 0; i--) {
          ref Tile t = ref mT[i];
          if (t.Id == 0 || t.Hole) continue;
-         if (t.VBot != 0 && t.EBot == EChain.HSlice || t.VTop != 0 && t.ETop == EChain.HSlice) mDiagTiles.Add (t.Id);
+         if ((t.VBot != 0 && t.EBot == EChain.HSlice) || (t.VTop != 0 && t.ETop == EChain.HSlice)) mDiagTiles.Add (t.Id);
          if (t.VBot != 0 && t.EBot == EChain.Valley) mValleyTiles.Add (t.Id);
       }
-      Grow (ref mS, mSN, mDiagTiles.Count);
+      int nDiag = mDiagTiles.Count;
+      Grow (ref mS, mSN, nDiag); GrowTN (nDiag);
       foreach (var n in mDiagTiles) {
          ref Tile t0 = ref mT[n]; if (t0.Id == 0) continue;
          mS[mSN] = new (mSN, mV, t0.VTop, t0.VBot, true);
@@ -147,7 +146,7 @@ public partial class FastTess2D : IBorrowable<FastTess2D> {
    // Allocates a new tile ID
    int AllocTile () {
       if (mFreeTile.Count > 0) return mFreeTile.Pop ();
-      Grow (ref mT, mTN_, 1); return mTN_++;
+      Grow (ref mT, mTN, 1); return mTN++;
    }
 
    // Given a monotone polygon, extracts the triangles from it using DeBerg's algorithm.
@@ -209,13 +208,13 @@ public partial class FastTess2D : IBorrowable<FastTess2D> {
          mTris.Add (a - 1); mTris.Add (b - 1); mTris.Add (c - 1);
       }
    }
-   Stack<(int Id, Point2 Pt, bool Left)> mStack = [];
+   readonly Stack<(int Id, Point2 Pt, bool Left)> mStack = [];
 
    // Returns an 'adjacent' tile touching a vertex, through which the vOther
    // vertex can be reached
    int GetAdjacentTile (ref Vertex v, ref Vertex vOther) {
       // Pick a tile from either TL,TR or from BL,BR
-      var (L, R) = (vOther.Pt.Y > v.Pt.Y) ? (v.TL, v.TR) : (v.BL, v.BR);
+      var (L, R) = vOther.Pt.Y > v.Pt.Y ? (v.TL, v.TR) : (v.BL, v.BR);
       if (L == R) return L;
       ref Tile tLeft = ref mT[L];
       ref Segment sRight = ref mS[tLeft.Right];
@@ -239,7 +238,7 @@ public partial class FastTess2D : IBorrowable<FastTess2D> {
          mLefts.Add (t0 = a); 
       }
    }
-   List<int> mLefts = [], mRights = []; 
+   readonly List<int> mLefts = [], mRights = []; 
 
    // This inserts the 'border' tile (the root tile) of the tiling. It is large enough
    // to encompass the complete tessellation, and is initially created as a 'hole' tile,
@@ -274,7 +273,7 @@ public partial class FastTess2D : IBorrowable<FastTess2D> {
    // would be cut by the segment and adds them to the mLefts array
    void InsertEndpoints (ref Segment seg) {
       // To insert top and bottom points, we could need 2 new tiles (and 4 new nodes)
-      Grow (ref mT, mTN_, 2); Grow (ref mN, mNN, 4);
+      GrowTN (2);
       ref Vertex v0 = ref mV[seg.A], v1 = ref mV[seg.B];
       if (!v0.Inserted) InsertVertex (ref v0);
       if (!v1.Inserted) InsertVertex (ref v1);
@@ -340,8 +339,7 @@ public partial class FastTess2D : IBorrowable<FastTess2D> {
       mInput.Clear (); mTris.Clear ();
       mDiagTiles.Clear (); mValleyTiles.Clear (); mFreeTile.Clear ();
       mR = new Rand (42); Tolerance = ETolerance.Coarse; BiasAngle = 0.1642;
-      mSN = mNN = 0; mTN_ = mVN = 1;
-      mInUse = true;
+      mSN = mNN = 0; mTN = mVN = 1;
    }
 
    // Rotate a point through the bias angle
@@ -353,8 +351,9 @@ public partial class FastTess2D : IBorrowable<FastTess2D> {
    void ShuffleSegs () {
       Grow (ref mShuffle, 0, mSN);
       for (int i = 0; i < mSN; i++) mShuffle[i] = i;
-      for (int i = 0; i < mSN; i++) {
-         int j = mR.Next (mSN);
+      // This is a simple Fisher-Yates shuffle:
+      for (int i = mSN - 1; i >= 0; i--) {
+         int j = mR.Next (i + 1);
          (mShuffle[i], mShuffle[j]) = (mShuffle[j], mShuffle[i]);
       }
    }
@@ -364,7 +363,7 @@ public partial class FastTess2D : IBorrowable<FastTess2D> {
    int SliceTiles (ref Segment seg) {
       mRights.Clear ();
       int n = mLefts.Count;
-      Grow (ref mT, mTN_, n); Grow (ref mN, mNN, n * 2);
+      GrowTN (n);
       // First, split every tile in the mChain list. This tile remains as the left tile, 
       // and we create a new right tile, both separated by the Segment in between them. 
       // For each layer of tiles that we create, create a Layer object to hold the details
@@ -387,7 +386,7 @@ public partial class FastTess2D : IBorrowable<FastTess2D> {
 
    // Helper to grow an array (more optimized than Array.Resize, since it
    // copies only the 'used' elements, not all the elements currently in the array)
-   void Grow<T> (ref T[] array, int used, int delta) {
+   static void Grow<T> (ref T[] array, int used, int delta) {
       int size = array.Length, total = used + delta;
       while (size <= total) size *= 2;
       if (size > array.Length) {
@@ -395,6 +394,12 @@ public partial class FastTess2D : IBorrowable<FastTess2D> {
          if (used > 0) Array.Copy (array, final, used);
          array = final;
       }
+   }
+
+   // Grows mT and mN arrays, accounting for free tiles that won't need new slots
+   void GrowTN (int tiles) {
+      Grow (ref mT, mTN, tiles - mFreeTile.Count);
+      Grow (ref mN, mNN, tiles * 2);
    }
 
    static void Unexpected () 
@@ -409,18 +414,17 @@ public partial class FastTess2D : IBorrowable<FastTess2D> {
    void IDisposable.Dispose () => BorrowPool<FastTess2D>.Return (this);
 
    // Private data -------------------------------------------------------------
-   Vertex[] mV = new Vertex[32];    // List of all vertices
-   Segment[] mS = new Segment[32];  // List of all segments
-   Node[] mN = new Node[32];        // Nodes making up the tree
-   Tile[] mT = new Tile[32];        // Trapezoidal tiles covering the plane
-   int mVN, mSN, mNN, mTN_;          // Usage counts (Vertices, Segments, Nodes, Tiles)
-   Rand mR = new (42);              // Used for random insertion of segments
-   int[] mShuffle = new int[32];    // A permutation of the segments
-   List<int> mDiagTiles = [];       // Tiles where diagonals need to be drawn
-   List<int> mValleyTiles = [];     // Valley tiles, from which we start monotone polygons
-   Stack<int> mFreeTile = [];       // Tiles that are free for reuse
-   Bound2 mBound;                   // Bound of poly added so far (in rotated coordinates)
-   bool mInUse;                     // Is this triangulator in use (borrowed)
+   Vertex[] mV = new Vertex[32];          // List of all vertices
+   Segment[] mS = new Segment[32];        // List of all segments
+   Node[] mN = new Node[32];              // Nodes making up the tree
+   Tile[] mT = new Tile[32];              // Trapezoidal tiles covering the plane
+   int mVN, mSN, mNN, mTN;               // Usage counts (Vertices, Segments, Nodes, Tiles)
+   Rand mR = new (42);                    // Used for random insertion of segments
+   int[] mShuffle = new int[32];          // A permutation of the segments
+   readonly List<int> mDiagTiles = [];    // Tiles where diagonals need to be drawn
+   readonly List<int> mValleyTiles = [];  // Valley tiles, from which we start monotone polygons
+   readonly Stack<int> mFreeTile = [];    // Tiles that are free for reuse
+   Bound2 mBound;                         // Bound of poly added so far (in rotated coordinates)
    double mBiasAngle, mSin, mCos;
    double mTolerance, mAngTolerance;
    const double FINE = 1e-9;

@@ -11,20 +11,20 @@ public class Block2 {
    /// <summary>Construct a Block</summary>
    public Block2 (string name, Point2 p, IEnumerable<Ent2> ents)
       => (mName, mBase, mEnts) = (name, p, [.. ents]);
-   Block2 () => (mName, mEnts) = ("", []);
+   [Used] Block2 () => (mName, mEnts) = ("", []);
 
    // Properties ---------------------------------------------------------------
    /// <summary>Set of entities in this block</summary>
    public IReadOnlyList<Ent2> Ents => mEnts;
-   List<Ent2> mEnts;
+   readonly List<Ent2> mEnts;
 
    /// <summary>Base point of the block (this maps to the insertion point of the INSERT)</summary>
    public Point2 Base => mBase;
-   Point2 mBase;
+   readonly Point2 mBase;
 
    /// <summary>Name of the block</summary>
    public string Name => mName;
-   string mName;
+   readonly string mName;
 
    /// <summary>The VNode for this Block2 (if one has been created)</summary>
    public object? VNode { get => _vnode; set => _vnode = value; }

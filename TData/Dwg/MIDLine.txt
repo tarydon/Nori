@@ -1,0 +1,3 @@
+Title = MID snap on line
+Pt = (55,30), ESnap=Midpoint
+Label = ("midpoint", (55,30), False)

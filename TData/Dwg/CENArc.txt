@@ -1,0 +1,3 @@
+Title = CEN snap on arc
+Pt = (240,70), ESnap=Center
+Label = ("center", (240,70), False)

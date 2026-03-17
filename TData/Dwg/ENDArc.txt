@@ -1,0 +1,3 @@
+Title = END snap on arc
+Pt = (118.284271,98.284271), ESnap=Endpoint
+Label = ("endpoint", (118.284271,98.284271), False)

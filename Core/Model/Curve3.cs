@@ -156,7 +156,7 @@ public class Arc3 : Curve3 {
    public override Curve3 Flipped () {
       Vector3 zaxis = CS.VecZ, xaxis = CS.VecX;
       xaxis = xaxis.Rotated (zaxis, AngSpan); // Alling X axis with the second point.
-      return new Arc3 (PairId, new CoordSystem (CS.Org, xaxis, (-zaxis) * xaxis), Radius, AngSpan); // Flip the zaxis.
+      return new Arc3 (PairId, new CoordSystem (CS.Org, xaxis, -zaxis * xaxis), Radius, AngSpan); // Flip the zaxis.
    }
 
    /// <summary>Returns the point at a given lie</summary>
@@ -184,14 +184,14 @@ public class Arc3 : Curve3 {
       t1 = Lib.NormalizeAngle (t1); t2 = Lib.NormalizeAngle (t2);
       if (t1 < 0) t1 += Lib.TwoPI; if (t2 < 0) t2 += Lib.TwoPI;
       Vector3 zaxis = CS.VecZ, xaxis = CS.VecX;
+      xaxis = xaxis.Rotated (zaxis, t1);
       if (reverseDir) {
-         xaxis = xaxis.Rotated (zaxis, t1);
          if (t1 < t2)
-            return new Arc3 (PairId, new CoordSystem (CS.Org, xaxis, (-zaxis) * xaxis), Radius, Lib.TwoPI - (t2 - t1));
+            return new Arc3 (PairId, new CoordSystem (CS.Org, xaxis, -zaxis * xaxis), Radius, Lib.TwoPI - (t2 - t1));
          else
-            return new Arc3 (PairId, new CoordSystem (CS.Org, xaxis, (-zaxis) * xaxis), Radius, t1 - t2);
+            return new Arc3 (PairId, new CoordSystem (CS.Org, xaxis, -zaxis * xaxis), Radius, t1 - t2);
       } else {
-         xaxis = xaxis.Rotated (zaxis, t1); // Allign X axis with the first point.
+         // Allign X axis with the first point.
          if (t1 < t2)
             return new Arc3 (PairId, new CoordSystem (CS.Org, xaxis, zaxis * xaxis), Radius, t2 - t1); // Update angle span.
          else
@@ -231,8 +231,8 @@ public sealed class Ellipse3 : Curve3 {
 
    /// <summary>The domain of an Ellipse3 is in radians</summary>
    [Radian]
-   public override Bound1D Domain => mDomain;
-   Bound1D mDomain;
+   public override Bound1D Domain => mDomain;   // CLEANUP: Replace Bound1D with 'Domain' type
+   readonly Bound1D mDomain;
 
    /// <summary>End is the curve evaluated at the max limit of the domain</summary>
    public override Point3 End => GetPoint (mDomain.Max);
@@ -503,7 +503,7 @@ public class NurbsCurve3 : Curve3 {
    static readonly ThreadLocal<double[]> mFactor = new (() => new double[8]);
 
    /// <summary>Return the T value corresponding to the given pt</summary>
-   public override double GetT (Point3 pt) => (_unlofter = new CurveUnlofter (this)).GetT (pt);
+   public override double GetT (Point3 pt) => (_unlofter ??= new CurveUnlofter (this)).GetT (pt);
    CurveUnlofter? _unlofter;
 
    // Nested types -------------------------------------------------------------
@@ -594,7 +594,6 @@ public class Polyline3 : Curve3 {
          (false, true) => new Polyline3 (PairId, [f1.Along (Pts[n1], Pts[n1 + 1]),.. Pts[(n1 + 1)..n2]]),
          _ => new Polyline3 (PairId, [f1.Along (Pts[n1], Pts[n1 + 1]),.. Pts[(n1 + 1)..(n2 + 1)], f2.Along (Pts[n2], Pts[n2 + 1])])
       };
-
       if (reversed) return trimmed.Flipped ();
       else return trimmed;
    }

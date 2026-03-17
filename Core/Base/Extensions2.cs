@@ -48,10 +48,8 @@ public static class Extensions2 {
       public double ToDouble () => ToDouble (s, 0.0);
 
       /// <summary>Convert a string to a double, returning the given fallback value if conversion fails</summary>
-      public double ToDouble (double fallback) {
-         if (double.TryParse (s, NumberStyles.Float, NumberFormatInfo.InvariantInfo, out var f)) return f;
-         return fallback;
-      }
+      public double ToDouble (double fallback) 
+         => double.TryParse (s, NumberStyles.Float, NumberFormatInfo.InvariantInfo, out var f) ? f : fallback;
 
       /// <summary>Unquotes a string by removing the enveloping "" or '', if any</summary>
       /// This converts <tt>"Hello"</tt> to <tt>Hello</tt> or <tt>'Dolly'</tt> to <tt>Dolly</tt>. If the start

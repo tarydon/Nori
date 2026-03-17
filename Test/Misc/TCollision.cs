@@ -48,7 +48,7 @@ class TCollision {
       double GetAngle () => (r.NextDouble () - 0.5) * (90.D2R ());
    }
 
-   [Test (175, "OBB x OBB collision checks")]
+   [Test (185, "OBB x OBB collision checks")]
    void Test2 () {
       Vector3f ext = new (30, 20, 10);
       var a = new OBB (Point3f.Zero, Vector3f.XAxis, Vector3f.YAxis, ext);
@@ -101,10 +101,10 @@ class TCollision {
       b = new OBB (cen, (v1 * v2).Normalized (), v1, v2, ext);
       Collision.Check (b, a).IsFalse ();  // aZ x bZ
 
-      static Vector3f V (float x,  float y, float z) => new Vector3f (x, y, z).Normalized ();
+      static Vector3f V (float x, float y, float z) => new Vector3f (x, y, z).Normalized ();
    }
 
-   [Test (176, "OBB x Tri collision checks")]
+   [Test (186, "OBB x Tri collision checks")]
    void Test3 () {
       Vector3f ext = new (20, 20, 20);
       Span<Point3f> pts = [new (20, 20, 20), new (-20, 20, -20), new (20, -20, -20)];
@@ -137,14 +137,12 @@ class TCollision {
 
       // Separating axis is along the face normals
       b = new (new (0.9, -0.5, 0.6), new (-0.24945, -0.91593, -0.31441), new (0.24941, 0.25295, -0.93478), new (0.254, 0.345, 0.045));
-      //var b = new OBB (cen, v1, v2, ext);
       pts = [new (1.0171, -0.55381, 0.30545), new (1.00904, -0.55962, 0.28594), new (1.00279, -0.54027, 0.29408)];
-      //for (int i = 0; i < pts.Length; i++) pts[i] += dv;
       a = new (pts, 0, 1, 2);
       Collision.Check (pts, a, b).IsFalse ();
    }
 
-   [Test (177, "Tri x Tri collision checks")]
+   [Test (187, "Tri x Tri collision checks")]
    void Test4 () {
       var lines = File.ReadAllLines (NT.File ("Sim/TriTri.txt"));
       List<bool> crashes = [];
@@ -161,13 +159,99 @@ class TCollision {
       }
       var pts = list.AsSpan ();
       var tris = new CTri[list.Count / 3];
-      for (int i = 0; i < tris.Length; i++) {
-         int j = i * 3;
+      for (int i = 0, j = 0; i < tris.Length; i++, j += 3)
          tris[i] = new CTri (pts, j, j + 1, j + 2);
-      }
-      for (int i = 0; i < crashes.Count; i++) {
-         int j = i * 2;
+
+      for (int i = 0, j = 0; i < crashes.Count; i++, j += 2)
          Collision.Check (pts, tris[j], pts, tris[j + 1]).Is (crashes[i]);
+   }
+
+   enum EDir { Left = -1, Root = 0, Right = 1 }
+
+   [Test (188, "OBBTree test")]
+   void Test5 () {
+      var mesh = Mesh3.LoadTMesh (NT.File ("Geom/Mesh3/part.tmesh"));
+      var tree = new OBBTree (mesh);
+      tree.EnumBoxes (5).Count ().Is (32);
+      int leftH = GetHeight (tree.OBBs[1].Left), rightH = GetHeight (tree.OBBs[1].Right);
+      double area = 0;
+      var sb = new StringBuilder ();
+      Dump (1, 0, EDir.Root);
+      sb.Insert (0, $"Nodes: {tree.OBBs.Length + tree.Tris.Length - 2}. LeftH: {leftH}, RightH: {rightH}, Area = {area.R6 ()}\n");
+      File.WriteAllText (NT.TmpTxt, sb.ToString ());
+      Assert.TextFilesEqual (NT.File ("Sim/OBBTree.txt"), NT.TmpTxt);
+
+      void Dump (int id, int level, EDir dir) {
+         string indent = new ('\t', level);
+         var node = tree.OBBs[id];
+         if (node.Left > 0) Dump (node.Left, level + 1, EDir.Left);
+         else if (node.Left < 0) sb.AppendLine ($"{indent}\tLT{-node.Left}");
+         string pre = dir == 0 ? "" : dir < 0 ? "L" : "R";
+         area += node.Area;
+         sb.AppendLine ($"{indent}{pre}B{id} ");
+         if (node.Right > 0) Dump (node.Right, level + 1, EDir.Right);
+         else if (node.Right < 0) sb.AppendLine ($"{indent}\tRT{-node.Right}");
+      }
+
+      int GetHeight (int id) {
+         var node = tree.OBBs[id];
+         int leftH = node.Left > 0 ? GetHeight (node.Left) : 0;
+         int rightH = node.Right > 0 ? GetHeight (node.Right) : 0;
+         return 1 + Math.Max (leftH, rightH);
+      }
+   }
+
+   [Test (189, "OBBCollider test")]
+   void Test6 () {
+      Random R = new (1);
+      
+      var meshA = Mesh3.LoadTMesh (NT.File ("Geom/Mesh3/part.tmesh"));
+      var treeA = new OBBTree (meshA); var csA = CoordSystem.World;
+
+      var meshB = Mesh3.LoadTMesh (NT.File ("Sim/MeshB.tmesh"));
+      meshB *= Matrix3.Translation (-(Vector3)meshB.Bound.Midpoint) * Matrix3.Scaling (0.025);
+      var treeB = new OBBTree (meshB);
+      var coords = Enumerable.Range (0, 50).Select (i => CS ()).ToArray (); coords[0] = CoordSystem.World;
+
+      var sb = new StringBuilder ();
+      sb.AppendLine ("Collisions");
+      // A with Bs and Bs with each other
+      // Coordinates: World x World, Bi x World, World (B0) x Bj, Bi x Bj
+      sb.Append (" A: ");
+      var crashes = coords.Select (_ => new List<string> ()).ToArray ();
+      for (int i = 0; i < coords.Length; i++) {
+         var csB = coords[i];
+         if (OBBCollider.It.Check (treeB, csB, treeA, csA)) {
+            sb.Append ($"B{i} ");
+            crashes[i].Add ("A");
+         }
+         for (int j = i + 1; j < coords.Length; j++) {
+            // Same tree, different coordinates. 
+            if (OBBCollider.It.Check (treeB, csB, treeB, coords[j])) {
+               crashes[i].Add ($"B{j}"); 
+               crashes[j].Add ($"B{i}");
+            }
+         }
+      }
+      sb.AppendLine ();
+
+      for (int i = 0; i < crashes.Length; i++) {
+         if (crashes[i].Count == 0) continue;
+         sb.AppendLine ($" B{i}: {string.Join (" ", crashes[i])}");
+      }
+
+      File.WriteAllText (NT.TmpTxt, sb.ToString ());
+      Assert.TextFilesEqual (NT.File ("Sim/OBBCollider.txt"), NT.TmpTxt);
+
+      CoordSystem CS () {
+         var vX = new Vector3 (D (), D (), D ()).Normalized ();
+         var vY = vX * new Vector3 (D (), D (), D ()).Normalized ();
+         return new (new (D (), D (), D ()), vX, vY);
+      }
+
+      double D () {
+         var val = R.Next (10, 100) * R.NextDouble ();
+         return R.NextDouble () switch { < 0.5 => -val, _ => val };
       }
    }
 }

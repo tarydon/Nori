@@ -60,9 +60,7 @@ class AuType {
          // For an AuPrimitive field, we find the reader and writer methods using
          // reflection and hold onto them
          case EAuTypeKind.AuPrimitive:
-            switch (Lib.NiceName (type)) {
-               case "Color4": mSkipValue = Color4.Nil; break;
-            }
+            if (Lib.NiceName (type) == "Color4") mSkipValue = Color4.Nil;
             break;
 
          // For .Net primitive types, we set up the 'skip value' (the default value
@@ -116,7 +114,7 @@ class AuType {
       if (!Lib.Assemblies.Any ()) throw new AuException ("Nori.Lib.init() not called");
       throw new AuException ($"No metadata for '{sname}'");
    }
-   static SymTable<AuType> mByName = new ();
+   static readonly SymTable<AuType> mByName = new ();
 
    /// <summary>Get an AuType given the System.Type</summary>
    /// We maintain a static dictionary so each AuType is constructed only once during the
@@ -129,7 +127,7 @@ class AuType {
       }
       return aut;
    }
-   static Dictionary<Type, AuType> mDict = [];
+   static readonly Dictionary<Type, AuType> mDict = [];
 
    // Properties --------------------------------------------------------------
    /// <summary>Set of fields in this type</summary>
@@ -148,7 +146,7 @@ class AuType {
 
    /// <summary>The default value for this type (if field value equals this, we don't need to write it out)</summary>
    public object? SkipValue => mSkipValue;
-   object? mSkipValue;     // If set, the 'default' value that we can skip writing out
+   readonly object? mSkipValue;     // If set, the 'default' value that we can skip writing out
 
    /// <summary>The list of all 'uplink' fields of this type</summary>
    public IReadOnlyList<AuField> Uplinks => mUplinks ??= [.. mFields.Where (a => a.Tactic == ECurlTactic.Uplink)];
@@ -483,6 +481,7 @@ class AuField {
    public static bool SkipMetadata (FieldInfo fi) {
       if (fi.Name.StartsWith ('_')) return true;
       if (fi.FieldType.Name == "Subject`1") return true;
+      if (fi.Name.Contains ("__")) return true; 
       return false;
    }
 
@@ -492,7 +491,7 @@ class AuField {
    public bool SkipWriting ([NotNullWhen (false)] object? value) {
       if (value == null || Tactic == ECurlTactic.Uplink) return true;
       if (Equals (value, mFieldType.SkipValue)) return true;
-      if (value is double d && d.IsNan) return true; 
+      if (value is double { IsNan: true }) return true; 
       return false;
    }
 

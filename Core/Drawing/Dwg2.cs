@@ -37,9 +37,12 @@ public partial class Dwg2 {
    }
    Layer2? mCurrentLayer;
 
+   /// <summary>Dimensioning settings for this drawing</summary>
+   public DimSettings DimSettings => new ();
+
    /// <summary>The list of entities in the drawing (active list, implements Observable(ListChange)</summary>
    public AList <Ent2> Ents => mEnts;
-   AList<Ent2> mEnts = [];
+   readonly AList<Ent2> mEnts = [];
 
    /// <summary>Should the interior of the drawing be filled or not?</summary>
    public bool FillInterior {
@@ -54,7 +57,7 @@ public partial class Dwg2 {
 
    /// <summary>The list of layers in the drawing</summary>
    public IReadOnlyList <Layer2> Layers => mLayers;
-   List<Layer2> mLayers = [];
+   readonly List<Layer2> mLayers = [];
 
    /// <summary>The list of blocks in the drawing</summary>
    /// New blocks are added by calling Add(Block2)
@@ -216,7 +219,7 @@ public partial class Dwg2 {
    public void Select (Ent2? ent, bool deselectOthers) {
       if (deselectOthers)
          mEnts.Where (a => a.IsSelected).ForEach (a => a.IsSelected = false);
-      if (ent != null) ent.IsSelected ^= true; // Toggle selection
+      ent?.IsSelected ^= true; // Toggle selection
    }
 
    // Implementation -----------------------------------------------------------
@@ -240,7 +243,7 @@ public partial class Dwg2 {
          case ListChange.E.Removing:
             // When removing an entity, if that entity lies on the 'edge' of the
             // drawing, reset the bound for recompute
-            var bound = mEnts[ch.Index].Bound.InflatedL (1);
+            var bound = mEnts[ch.Index].Bound.InflatedF (1.001);
             if (!mBound.Contains (bound)) mBound = new ();
             break;
          default: mBound = new (); break;

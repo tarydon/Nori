@@ -159,7 +159,7 @@ public sealed class E3RuledSurface : E3Surface {
 
    // Unlofting a RuledSurface requires a general-purpose SurfaceUnlofter
    public override Point2 GetUV (Point3 pt3d)
-      => (_unlofter = new (this)).GetUV (pt3d);
+      => (_unlofter ??= new (this)).GetUV (pt3d);
    SurfaceUnlofter? _unlofter;
 
    // Returns a copy of the RuledSurface, transformed by the given matrix

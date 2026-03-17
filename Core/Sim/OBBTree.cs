@@ -67,7 +67,7 @@ public class OBBTree {
       OBBs = new OBB[Tris.Length];
       // The root OBB is at index 1, so we start building children from index 2 (nNext = 2)
       OBBs[0] = OBB.Zero; OBBs[1] = OBB.Build (Pts);
-      int nOBB = 0, nNext = 2, nPts; 
+      int nOBB = 0, nNext = 2;
       // Reserve max storage. 
       if (TmpPts.Length < Pts.Length) TmpPts = new Point3f[Pts.Length];
       Span<Vector3f> axes = stackalloc Vector3f[4];
@@ -75,7 +75,7 @@ public class OBBTree {
       while (Todo.Count > 0) {
          var (start, count) = Todo.Dequeue ();
          int end = start + count;
-         TmpSet.Clear (); nPts = 0;
+         TmpSet.Clear (); int nPts = 0;
          ref OBB box = ref OBBs[++nOBB];
          if (nOBB > 1) {
             for (int i = start; i < end; i++) {
@@ -155,7 +155,7 @@ public class OBBTree {
 
    // Given the 'spread' vector, it retuns an encoded order in which
    // the split should be attempted.
-   int GetAxisOrder (Vector3f vec) {
+   static int GetAxisOrder (Vector3f vec) {
       if (vec.X > vec.Y) {
          if (vec.Z < vec.Y) return 321;         // ZYX
          if (vec.Z > vec.X) return 213;         // YXZ
@@ -188,12 +188,12 @@ public class OBBTree {
    }
 
    /// <summary>Raw list of points. These are referenced by triangles.</summary>
-   public readonly Point3f[] Pts = [];
+   public readonly Point3f[] Pts;
    /// <summary>Set of triangles in the mesh.</summary>
    /// These contain indices pointing into the Pts array (along with normal, points etc). 
    /// Note that Tris[0] is not used, to avoid ambiguity in the meaning of 0 being used 
    /// for an OBB Left/Right pointer
-   public readonly CTri[] Tris = [];
+   public readonly CTri[] Tris;
    /// <summary>The hierarchy of oriented bounding boxes.</summary>
    /// OBBs[1] is the root OBB of the entire mesh and will contain all the N 
    /// triangles in the mesh. The left and right children will contain a (close to equal) 
@@ -201,7 +201,7 @@ public class OBBTree {
    /// tree keeps going down until we finally reach individual triangles. At that point, 
    /// we don't actually build OBBs surronding single triangles, but switch to storing a 
    /// pointer to the leaf triangle directly in Left/Right. 
-   public readonly OBB[] OBBs = [];
+   public readonly OBB[] OBBs;
 
    static OBBTree () {
       Todo = new (256);
@@ -227,6 +227,7 @@ public class OBBCollider {
       mA = ta; mB = tb;
       mDone = mCrashing = false; mOneCrash = oneCrash;
       mBtoA = Matrix3.From (in csB) * Matrix3.To (in csA);
+      mBPts = mB.Pts;
       BObb = n => mB.OBBs[n]; BTri = n => mB.Tris[n];
       // Each time the top level Check routine is called (a fresh collision check is starting), we do
       // this initialization:
@@ -257,6 +258,7 @@ public class OBBCollider {
             Array.Resize (ref mPtRung, mB.Pts.Length);
             Array.Resize (ref mBAPts, mB.Pts.Length);
          }
+         mBPts = mBAPts;
       }
       mATris.Clear (); mBTris.Clear (); mDepth = 0;
       Push (1, 1);
@@ -268,7 +270,7 @@ public class OBBCollider {
    // or triangles (if the index is negative). This is a recursive routine that checks one entity
    // from OBBTree A with an entity from OBBTree b. 
    unsafe void Check () {
-      fixed (Point3f* pAPts = mA.Pts) fixed (Point3f* pBPts = mBAPts)
+      fixed (Point3f* pAPts = mA.Pts) fixed (Point3f* pBPts = mBPts)
       fixed (OBB* pABox = mA.OBBs) fixed (CTri* pATri = mA.Tris) {
          while (Pop (out var a, out var b)) {
             if (a > 0) {
@@ -365,7 +367,7 @@ public class OBBCollider {
    }
    // The tree travesal stack and its depth. It contains pair of 
    // elements from 'A' and 'B' trees.
-   int[] mStack = new int[128]; int mDepth = 0;
+   int[] mStack = new int[128]; int mDepth;
 
    Func<int, OBB> BObb = null!;        // Given index, returns B's OBB
    Func<int, CTri> BTri = null!;       // Given index, returns B's triangle
@@ -375,7 +377,7 @@ public class OBBCollider {
    bool mDone;                         // Flag used to intercept and stop the recursive check.
    OBBTree mA = null!, mB = null!;     // A and B OBB trees
    List<int> mATris = [], mBTris = []; // Take in pairs, mATris[N] and mBTris[N] are triangles from A and B that crash
-   uint mRung = 0;                     // A timestamp for 'this' collision session.
+   uint mRung;                         // A timestamp for 'this' collision session.
 
    // We'll use a thread-static singleton of this to avoid re-making the object each time
    public static OBBCollider It => sIt ??= new ();
@@ -396,7 +398,7 @@ public class OBBCollider {
    // - the CTri contain normal vectors that need to be transformed (I think the D values will not
    //   change, but let's verify that is the case!)
    // - the OBBs need to be transformed (Center, X, Y)
-   Point3f[] mBAPts = [];
+   Point3f[] mBAPts = [], mBPts = [];
    CTri[] mBATris = [];
    OBB[] mBAOBBs = [];
 
@@ -408,7 +410,6 @@ public class OBBCollider {
    // Now, if mPtRung[N] != mRung, that means that that particular point has not yet been transformed
    // from B to A. We transform it, store it in mPtRung and set mPtRung[N] = mRung. 
    // 
-   // 
    // With this optimization, each OBB, Tri and finally each Pt will be transformed only once from
    // B to A's space. And only incrementally - large sections of the tris, OBBs, points wil never
    // need to be transformed, only the portions of the tree that Check visits. Hopefully this optimization
@@ -418,5 +419,4 @@ public class OBBCollider {
    // array during the TriTri collision checks. 
    // 
    uint[] mPtRung = [], mTriRung = [], mOBBRung = [];
-   const uint MaxRung = 4_000_000_000;
 }

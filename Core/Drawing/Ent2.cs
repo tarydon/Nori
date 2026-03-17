@@ -145,15 +145,24 @@ public class E2Bendline : Ent2 {
 #region class E2Dimension --------------------------------------------------------------------------
 /// <summary>Represents a dimension entity</summary>
 public class E2Dimension : Ent2 {
-   E2Dimension () { }
+   protected E2Dimension () { }
    public E2Dimension (Layer2 layer) : base (layer) { }
 
    // Properties ---------------------------------------------------------------
    // The entities making up the dimension (in DXF, this is stored in a block, but since that
    // block is used exactly once, it makes more sense to just store the entities here and create
    // the block on the fly when the dimension is saved)
-   public IReadOnlyList<Ent2> Ents => mEnts;
+   public IReadOnlyList<Ent2> Ents {
+      get {
+         if (mEnts.Length == 0) mEnts = [.. MakeDim (mDimSettings!)];
+         return mEnts;
+      }
+   }
    Ent2[] mEnts = [];
+
+   // Methods
+   public void SetDimSettings (DimSettings dimSettings) => mDimSettings = dimSettings;
+   DimSettings? mDimSettings;
 
    // Overrides ----------------------------------------------------------------
    public override Bound2 Bound
@@ -181,6 +190,8 @@ public class E2Dimension : Ent2 {
       }
       return null;
    }
+
+   public virtual IReadOnlyList<Ent2> MakeDim (DimSettings dim) => throw new NotImplementedException ("Must override");
 }
 #endregion
 
@@ -195,23 +206,23 @@ public class E2Insert : Ent2 {
    // Properties ---------------------------------------------------------------
    /// <summary>Rotation angle of the block, in radians</summary>
    public double Angle => mAngle;
-   [Radian] double mAngle;
+   [Radian] readonly double mAngle;
 
    /// <summary>The Block this E2Insert is referencing</summary>
    public Block2 Block => mBlock ??= mDwg.GetBlock (mBlockName) ?? throw new Exception ($"Block {mBlockName} not found");
    Block2? mBlock;
-   Dwg2 mDwg;
+   readonly Dwg2 mDwg;
 
    /// <summary>Name of the block</summary>
    public string BlockName => mBlockName;
-   string mBlockName;
+   readonly string mBlockName;
 
    /// <summary>X and Y scaling factors for the block</summary>
    public readonly double XScale, YScale;
 
    /// <summary>Insertion position of the block</summary>
    public Point2 Pt => mPt;
-   Point2 mPt;
+   readonly Point2 mPt;
 
    /// <summary>Computes the Xfm for the block (based on scale, rotation etc)</summary>
    public Matrix2 Xfm {
@@ -237,7 +248,7 @@ public class E2Insert : Ent2 {
    Bound2 mBound = new ();
 
    public override Bound2 GetBound (Matrix2 xfm) {
-      var final = xfm * Xfm;
+      var final = Xfm * xfm;
       return new (Block.Ents.Select (a => a.GetBound (final)));
    }
 
@@ -342,10 +353,15 @@ public class E2Solid : Ent2 {
 
    public override bool IsCloser (Point2 pt, ref double threshold) {
       if (!Bound.Contains (pt, threshold)) return false;
-      var p = Poly.Lines (mPts, closed: true);
+      Swap (); var p = Poly.Lines (mPts, closed: true); Swap ();
       (double dist, int _) = p.GetDistance (pt);
       if (dist < threshold) { threshold = dist; return true; }
       return false;
+
+      // Helper
+      void Swap () {
+         if (mPts.Length == 4) (mPts[3], mPts[2]) = (mPts[2], mPts[3]);
+      }
    }
 
    protected override E2Solid Xformed (Matrix2 m) => new (Layer, mPts.Select (a => a * m)) { Color = Color };
@@ -387,7 +403,7 @@ public class E2Spline : Ent2 {
          return mPts;
       }
    }
-   List<Point2> mPts = [];
+   readonly List<Point2> mPts = [];
 
    public override Bound2 Bound => Bound2.Cached (ref mBound, () => new (Pts));
    Bound2 mBound = new ();

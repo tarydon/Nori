@@ -30,6 +30,10 @@ public class T3XReader : IDisposable {
       T = mZip.ReadAllText ("Data");
    }
 
+   // Properties ---------------------------------------------------------------
+   /// <summary>If set, prevents meshes from being loaded</summary>
+   public bool NoMeshes;
+
    // Methods ------------------------------------------------------------------
    /// <summary>Constructs the Model3 and returns it</summary>
    public Model3 Load () {
@@ -56,7 +60,7 @@ public class T3XReader : IDisposable {
          if (ent == null) break;
          // It's possible the mesh for this entity might also be stored in the
          // file, so attempt to load it and attach it to the entity
-         ent.Mesh = LoadMesh (ent.Id);
+         if (!NoMeshes) ent.Mesh = LoadMesh (ent.Id);
          mModel.Ents.Add (ent);
       }
       mZip.Dispose (); 
@@ -152,7 +156,7 @@ public class T3XReader : IDisposable {
          "NURBSCURVE" => LoadNurbsCurve (),
          "POLYLINE" => LoadPolyline (),
          "*" => null,
-         _ => throw new BadCaseException (type),
+         _ => throw new BadCaseException (type)
       };
    }
 
@@ -346,7 +350,7 @@ public class T3XReader : IDisposable {
 
    // Low level routines -------------------------------------------------------
    public void Dispose () => mZip.Dispose ();
-   void Fatal (string s) => throw new Exception (s);
+   static void Fatal (string s) => throw new Exception (s);
    void Fatal () => Fatal ($"Error on line {N}");
    CoordSystem RCS () => new (RPoint (), RVector (), RVector ());
    double RDouble () { var (a, b) = Slice (); return double.Parse (T.AsSpan (a, b - a)); }
@@ -356,7 +360,7 @@ public class T3XReader : IDisposable {
    string RWord () { var (a, b) = Slice (); return T[a..b]; }
    bool RDone () { SkipSpace (); if (T[N] == '*') { N++; return true; } else return false; }
    (int A, int B) Slice () { SkipSpace (); int a = N; ToSpace (); return (a, N); }
-   (int A, int B) SliceTo (char ch) { int a = N; while (T[N++] != ch) { }; return (a, N - 1); } 
+   (int A, int B) SliceTo (char ch) { int a = N; while (T[N++] != ch) { } return (a, N - 1); } 
    void SkipSpace () { while (char.IsWhiteSpace (T[N])) N++; }
    void ToSpace () { while (!char.IsWhiteSpace (T[N])) N++; }
 
@@ -373,8 +377,8 @@ public class T3XReader : IDisposable {
    }
 
    // Private data -------------------------------------------------------------
-   string T = "";                      // Text of the T3X file
-   int N = 0;                          // Character position within the file
+   readonly string T;                  // Text of the T3X file
+   int N;                              // Character position within the file
    readonly Model3 mModel = new ();    // The model we're constructing
    readonly ZipArchive mZip;           // Zip file we're loading from 
 }

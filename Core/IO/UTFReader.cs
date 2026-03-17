@@ -20,7 +20,7 @@ public class UTFReader {
 
    /// <summary>Construct a UTFReader by reading data from a file</summary>
    public UTFReader (string file) : this (File.ReadAllBytes (file)) => mFile = file;
-   string? mFile;
+   readonly string? mFile;
 
    // Properties ---------------------------------------------------------------
    /// <summary>Matches and discards a given byte</summary>

@@ -113,7 +113,7 @@ public sealed class E3Cylinder : E3CSSurface {
       }
       if (angSpan.Length < Lib.TwoPI - Lib.Epsilon)
          cs *= Matrix3.Rotation (cs.Org, cs.Org + cs.VecZ, -(angSpan.Mid + Lib.PI));
-    Done:
+      Done:
       return new (id, trims, cs, radius, infacing);
 
       void Adjust (Point3 pt) {
@@ -322,7 +322,7 @@ public sealed class E3Plane : E3CSSurface {
       var normal = (Vec3H)(IsNormalFlipped ? -CS.VecZ : CS.VecZ);
       List<Mesh3.Node> nodes = [];
       foreach (var pt in pts) {
-         Point3 pt3 = (Point3)(pt * xfm);
+         Point3 pt3 = pt * xfm;
          nodes.Add (new (new Point3f (pt3.X, pt3.Y, pt3.Z), normal));
       }
       Mesh3 mesh = new ([.. nodes], [.. tris], [.. wires]);

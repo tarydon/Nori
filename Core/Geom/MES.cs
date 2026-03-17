@@ -12,13 +12,13 @@ public readonly struct MinCircle {
    MinCircle (double radius, Point2 center) { 
       Radius = radius; 
       Center = center; 
-      RSqr = radius > 0 ? (radius * radius) + Epsilon : 0;
+      RSqr = radius > 0 ? radius * radius + Epsilon : 0;
    }
 
    /// <summary>Center of the circle.</summary>
-   readonly public Point2 Center;
+   public readonly Point2 Center;
    /// <summary>Radius of the circle.</summary>
-   readonly public double Radius;
+   public readonly double Radius;
    /// <summary>Is this a valid circle?</summary>
    public bool OK => Radius > Epsilon;
    /// <summary>Checks if a circle contains a given point </summary>
@@ -27,8 +27,8 @@ public readonly struct MinCircle {
    /// Like Contains (Point2), it avoid Sqrt for better performance.
    public bool Contains (ReadOnlySpan<Point2> pts) {
       if (!OK) return false;
-      for (int i = 0; i < pts.Length; i++)
-         if (Center.DistToSq (pts[i]) > RSqr)
+      foreach (var pt in pts)
+         if (Center.DistToSq (pt) > RSqr)
             return false;
       return true;
    }
@@ -90,9 +90,9 @@ public readonly struct MinCircle {
       return best;
 
       // Considers a candidate circle for being the minimum enclosing circle.
-      void Consider (in MinCircle c, ReadOnlySpan<Point2> pts) {
-         if ((!best.OK || c.Radius < (best.Radius - Epsilon)) && c.Contains (pts))
-            best = c;
+      void Consider (in MinCircle c1, ReadOnlySpan<Point2> pts) {
+         if ((!best.OK || c1.Radius < (best.Radius - Epsilon)) && c1.Contains (pts))
+            best = c1;
       }
       // Computes the center of the circum-circle from three points (with 'a' at origin).
       Point2 GetCenter (double bx, double by, double cx, double cy) {
@@ -104,7 +104,7 @@ public readonly struct MinCircle {
       }
    }
    /// <summary>The uninitialized 'Nil' circle.</summary>
-   public readonly static MinCircle Nil = new (-1, Point2.Nil);
+   public static readonly MinCircle Nil = new (-1, Point2.Nil);
    readonly double RSqr;
 }
 #endregion
@@ -120,9 +120,9 @@ public readonly struct MinSphere {
    }
 
    /// <summary>Center of the sphere.</summary>
-   readonly public Point3 Center;
+   public readonly Point3 Center;
    /// <summary>Radius of the sphere.</summary>
-   readonly public double Radius;
+   public readonly double Radius;
    /// <summary>Is this a valid sphere?</summary>
    public bool OK => Radius > Epsilon;
    /// <summary>Checks if a sphere contains a given point.</summary>
@@ -132,14 +132,21 @@ public readonly struct MinSphere {
    /// Like Contains (Point3), it avoids Sqrt for better performance.
    public bool Contains (ReadOnlySpan<Point3> pts) {
       if (!OK) return false;
-      for (int i = 0; i < pts.Length; i++)
-         if (Center.DistToSq (pts[i]) > RSqr)
+      foreach (var pt in pts)
+         if (Center.DistToSq (pt) > RSqr)
             return false;
       return true;
    }
 
    /// <summary>Is this sphere equal the other sphere?</summary>
    public bool EQ (in MinSphere other) => Radius.EQ (other.Radius) && Center.EQ (other.Center);
+
+   /// <summary>Checks if 'this' sphere intersects with another sphere 'b'</summary>
+   [MethodImpl (MethodImplOptions.AggressiveInlining)]
+   public bool Intersects (in MinSphere b) {
+      var r = Radius + b.Radius;
+      return (Center - b.Center).LengthSq <= r * r;
+   }
 
    public override string ToString () => $"{Radius.R6 ()}, {Center}";
 
@@ -224,7 +231,6 @@ public readonly struct MinSphere {
          case 2: return From (pts[0], pts[1]);
          case 3: return From (pts[0], pts[1], pts[2]);
          case 4: return From (pts[0], pts[1], pts[2], pts[3]);
-         default: break;
       }
 
       // 1) Pick an arbitrary point p0.
@@ -252,8 +258,7 @@ public readonly struct MinSphere {
       double r = s.Radius, r2 = r * r;
 
       // 5) Grow sphere to include all points (no shrinking => quick but not optimal).
-      for (int i = 0; i < pts.Length; i++) {
-         var p = pts[i];
+      foreach (var p in pts) {
          double d2 = c.DistToSq (p);
          if (d2 <= r2) continue;
          double d = Math.Sqrt (d2);
@@ -332,7 +337,7 @@ public readonly struct MinSphere {
       }
    }
    /// <summary>The uninitialized 'Nil' sphere.</summary>
-   public readonly static MinSphere Nil = new (-1, Point3.Nil);
+   public static readonly MinSphere Nil = new (-1, Point3.Nil);
    readonly double RSqr;
 }
 #endregion

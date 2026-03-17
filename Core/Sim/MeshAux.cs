@@ -24,14 +24,14 @@ public partial class Mesh3 {
       for (int i = 0; i < n; i++) raw.Add (((Point3)pts[i]).Moved (0, 0, thickness));  
       // Bottom plane triangles are already added, add the top plane triangles as well
       for (int i = 0, max = tris.Count; i < max; i += 3)
-         tris.AddM ([tris[i + 2] + n, tris[i + 1] + n, tris[i] + n]);
+         tris.AddM (tris[i + 2] + n, tris[i + 1] + n, tris[i] + n);
 
       // Now, the sidewalls
       for (int c = 0; c < splits.Count - 1; c++) {
          int start = splits[c], count = splits[c + 1] - start;
          for (int p = 0; p < count; p++) {
-            int i = p + start, j = ((p + 1) % count) + start;
-            tris.AddM ([i, j, j + n, i, j + n, i + n]);
+            int i = p + start, j = (p + 1) % count + start;
+            tris.AddM (i, j, j + n, i, j + n, i + n);
          }
       }
 
@@ -39,7 +39,7 @@ public partial class Mesh3 {
       return new Mesh3Builder (vertex).Build ();
    }
 
-   /// <summary>Builds a sphere mesh centered at 'center' with the specified 'radius'/>.
+   /// <summary>Builds a sphere mesh centered at 'center' with the specified 'radius'</summary>
    /// The generated sphere mesh consists of triangles of uniform size. The number of output 
    /// triangles, and the accuracy of the mesh relative to the spherical surface, are determined 
    /// by the 'tolerance' parameter, which defines the allowable _relative deviation_ of a 
@@ -73,7 +73,7 @@ public partial class Mesh3 {
       return new ([.. sphere.Select (Node)], [.. tries], []);
 
       // Create a mesh node from a position-vector on the unit sphere
-      Mesh3.Node Node (Vector3 v) => new (center + v * radius, v);
+      Node Node (Vector3 v) => new (center + v * radius, v);
 
       // Add a position-vector to the node list if not already present, and return its index.
       int Add (Vector3 pos) {
@@ -153,11 +153,11 @@ public partial class Mesh3 {
    //  Sqr (a) + Sqr (b) = 1 
    //  a = b * (golden ratio)
    //  Golden ratio = (1 + Math.Sqrt (5)) / 2 
-   readonly static double _GR = (1 + Math.Sqrt (5)) * 0.5;
-   readonly static double _B = Math.Sqrt (1 / (1 + _GR * _GR));
-   readonly static double _A = _B * _GR;
+   static readonly double _GR = (1 + Math.Sqrt (5)) * 0.5;
+   static readonly double _B = Math.Sqrt (1 / (1 + _GR * _GR));
+   static readonly double _A = _B * _GR;
    // The 'known' sphere approximations with equilaterial triangles.
-   readonly static (ImmutableArray<Vector3> Vertices, ImmutableArray<int> Faces)[] _SphereData = [
+   static readonly (ImmutableArray<Vector3> Vertices, ImmutableArray<int> Faces)[] _SphereData = [
       // Octahedron vertices and triangles (6 and 8)
       ([Vector3.ZAxis, -Vector3.ZAxis, Vector3.XAxis, -Vector3.XAxis, Vector3.YAxis, -Vector3.YAxis],
       [0,2,4, 0,4,3, 0,3,5, 0,5,2, 1,4,2, 1,2,5, 1,5,3, 1,3,4]), 

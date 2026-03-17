@@ -9,12 +9,8 @@ namespace Nori;
 /// NOTE: This is a placeholder. Since it generates a 2D tessellation and subdivides that to 
 /// create a 3D tessellation, it does not generate high quality meshes in general. We keep this
 /// here for now until we implement this better
-class SurfaceMesher {
-   public SurfaceMesher (E3Surface surf) => mSurf = surf;
-   readonly E3Surface mSurf;
-
-   public bool FullStencil = false;
-
+class SurfaceMesher (E3Surface surf) {
+   // Methods ------------------------------------------------------------------
    public Mesh3 Build (double tolerance, double maxAngStep) {
       // First, we flatten each trimming curve into the UV space, and compute a
       // 2D triangular tessellation in the UV space. At this point, we compute the
@@ -45,8 +41,6 @@ class SurfaceMesher {
          Point2 uv = uvs[i];
          mNodes.Add (new (uv, (Point3f)pts[i], (Vec3H)mSurf.GetNormal (uv.X, uv.Y)));
       }
-      if (FullStencil) mWires.Clear ();
-      Dictionary<Point2, int> cache = new (new PointComparer (1e-6));
       for (int i = 0; i < tris.Count; i += 3)
          AddTriangle (tris[i], tris[i + 1], tris[i + 2], 0);
 
@@ -60,12 +54,8 @@ class SurfaceMesher {
       var mnodes = mNodes.Select (a => new Mesh3.Node (a.Pos, a.Normal)).ToImmutableArray ();
       return new Mesh3 (mnodes, [.. mTris], [.. mWires]);
    }
-   readonly List<Node> mNodes = [];
-   readonly List<int> mTris = [];
-   readonly List<int> mWires = [];
-   double mTolerance;
-   const int MAXLEVEL = 100;
 
+   // Implementation -----------------------------------------------------------
    void AddTriangle (int a, int b, int c, int level) {
       // Take each of the midpoints and see which one has the worst deviation,
       // that will be where we split
@@ -95,11 +85,9 @@ class SurfaceMesher {
             AddTriangle (a, b, n, level + 1); AddTriangle (n, b, c, level + 1);
          } else {       // No splitting required, triangle is flat enough to add
             mTris.Add (a); mTris.Add (b); mTris.Add (c);
-            if (FullStencil) mWires.AddM ([a, b, b, c, c, a]);
          }
       } else {
          mTris.Add (a); mTris.Add (b); mTris.Add (c);
-         if (FullStencil) mWires.AddM ([a, b, b, c, c, a]);
       }
 
       static double Dist (Point3 pt, Point3f a, Point3f b)
@@ -112,12 +100,20 @@ class SurfaceMesher {
       mCache.Add (uv, n = mNodes.Count - 1);
       return n;
    }
-   Dictionary<Point2, int> mCache = new (new PointComparer (1e-6));
+   readonly Dictionary<Point2, int> mCache = new (new PointComparer (1e-6));
 
    struct Node (Point2 uv, Point3f pos, Vec3H normal) {
       public readonly Point2 UV = uv;
       public readonly Point3f Pos = pos;
       public readonly Vec3H Normal = normal;
    }
+
+   // Private data -------------------------------------------------------------
+   readonly List<Node> mNodes = [];
+   readonly List<int> mTris = [];
+   readonly List<int> mWires = [];
+   const int MAXLEVEL = 100;
+   readonly E3Surface mSurf = surf;
+   double mTolerance;
 }
 #endregion

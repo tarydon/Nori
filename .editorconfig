@@ -102,3 +102,14 @@ dotnet_diagnostic.IDE0022.severity = None     # Use block body for methods
 
 # Resharper ----------------------------------------------------------
 resharper_separate_local_functions_with_jump_statement_highlighting = none
+resharper_misleading_body_like_statement_highlighting = none
+resharper_member_can_be_private_global_highlighting = none
+resharper_member_can_be_private_local_highlighting = none
+resharper_arrange_redundant_parentheses_highlighting = none
+resharper_unused_auto_property_accessor_global_highlighting = none
+resharper_suggest_var_or_type_deconstruction_declarations_highlighting = none
+resharper_unused_method_return_value_global_highlighting = none
+resharper_redundant_if_else_block_highlighting = none
+resharper_switch_statement_handles_some_known_enum_values_with_default_highlighting = none
+resharper_switch_expression_handles_some_known_enum_values_with_exception_in_default_highlighting = none
+resharper_unused_member_global_highlighting = none

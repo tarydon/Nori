@@ -75,6 +75,10 @@ public readonly struct Bound1 : IEQuable<Bound1> {
       return new (Min - delta, Max + delta);
    }
 
+   /// <summary>Checks if this Bound1 intersects with another Bound1.</summary>
+   [MethodImpl (MethodImplOptions.AggressiveInlining)]
+   public bool Intersects (Bound1 b) => Max >= b.Min && Min <= b.Max;
+
    // Operators ----------------------------------------------------------------
    /// <summary>Implicit conversion from a tuple of two double to a Bound1</summary>
    /// This makes it much simpler to construct Bound1 objects on the fly where needed by
@@ -163,7 +167,7 @@ public readonly struct Bound1D : IEQuable<Bound1D> {
    public static implicit operator Bound1D ((double Min, double Max) value) => new (value.Min, value.Max);
 
    /// <summary>Explicitly convert Bound1D to Bound1</summary>
-   public static explicit operator Bound1 (Bound1D b) => new Bound1 (b.Min, b.Max);
+   public static explicit operator Bound1 (Bound1D b) => new (b.Min, b.Max);
 
    /// <summary>Returns a Bound1 expanded to include the given value</summary>
    public static Bound1D operator + (Bound1D b, double v) => new (Min (b.Min, v), Max (b.Max, v));
@@ -208,6 +212,18 @@ public readonly struct Bound2 : IEQuable<Bound2> {
 
    /// <summary>Construct a Bound2 that encompasses all the given points</summary>
    public Bound2 (IEnumerable<Point2> pts) {
+      (X, Y) = (new (), new ());
+      foreach (var p in pts) { X += p.X; Y += p.Y; }
+   }
+
+   /// <summary>Construct a Bound2 that encompasses all the given points</summary>
+   public Bound2 (params ReadOnlySpan<Point2> pts) {
+      (X, Y) = (new (), new ());
+      foreach (var p in pts) { X += p.X; Y += p.Y; }
+   }
+
+   /// <summary>Construct a Bound2 that encompasses all the given points</summary>
+   public Bound2 (params ReadOnlySpan<Point2f> pts) {
       (X, Y) = (new (), new ());
       foreach (var p in pts) { X += p.X; Y += p.Y; }
    }
@@ -289,6 +305,11 @@ public readonly struct Bound2 : IEQuable<Bound2> {
       double top = (Y.Max - pm.Y) * factor, bottom = (Y.Min - pm.Y) * factor;
       return new (pm.X + left, pm.Y + bottom, pm.X + right, pm.Y + top);
    }
+
+   /// <summary>Determines whether this Bound2 intersects with the specified Bound2.</summary>
+   /// Two bounds intersect if they overlap along both axes
+   [MethodImpl (MethodImplOptions.AggressiveInlining)]
+   public bool Intersects (Bound2 b) => X.Intersects (b.X) && Y.Intersects (b.Y);
 
    /// <summary>Computes a Bound2 (by calling the given delegate) if it is not already computed</summary>
    /// If the given Bound2 is empty, then the provided computer function is c alled
@@ -407,6 +428,11 @@ public readonly struct Bound3 : IEQuable<Bound3> {
    public Bound3 InflatedF (double factor) => new (X.InflatedF (factor), Y.InflatedF (factor), Z.InflatedF (factor));
    /// <summary>Returns a Bound3 padded by a given linear margin on all sides</summary>
    public Bound3 InflatedL (double delta) => new (X.InflatedL (delta), Y.InflatedL (delta), Z.InflatedL (delta));
+
+   /// <summary>Determines whether this Bound3 intersects with the specified Bound3.</summary>
+   /// Two bounds intersect if they overlap along all axes.. 
+   [MethodImpl (MethodImplOptions.AggressiveInlining)]
+   public bool Intersects (in Bound3 b) => X.Intersects (b.X) && Y.Intersects (b.Y) && Z.Intersects (b.Z);
 
    /// <summary>Computes a Bound3 (by calling the given delegate) if it is not already computed</summary>
    /// If the given Bound3 is empty, then the provided computer function is c alled

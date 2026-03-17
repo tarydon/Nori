@@ -162,7 +162,7 @@ public sealed class E3Contour : Ent3 {
    public override Bound3 Bound => Bound3.Cached (ref mBound, ComputeBound);
    Bound3 mBound = new ();
    Bound3 ComputeBound () {
-      Bound3 b = new Bound3 ();
+      Bound3 b = new ();
       List<Point3> pts = [];
       foreach (var curve in Curves) {
          curve.Discretize (pts, Lib.CoarseTess, Lib.CoarseTessAngle);
@@ -225,7 +225,7 @@ public abstract class E3Surface : Ent3 {
    /// <summary>The tessellation of the surface is computed on demand by BuildMesh (which can be overridden)</summary>
    [DebuggerBrowsable (DebuggerBrowsableState.Never)]
    public Mesh3 Mesh {
-      get => _mesh ??= BuildMesh (Lib.FineTess, Lib.FineTessAngle);
+      get => _mesh ??= BuildMesh (Lib.CoarseTess, Lib.CoarseTessAngle);
       set {
          _mesh = value;
          if (_mesh.Triangle.Length > 0) {
@@ -327,7 +327,7 @@ public abstract class E3CSSurface : E3Surface {
    // Several surfaces use the U value as a rotation about Z axis - this function
    // computes that U axis value, and also rotates the input point by -U to bring it
    // into the XZ plane
-   protected double GetUAxis (ref Point3 pt, bool rotate = true) {
+   protected static double GetUAxis (ref Point3 pt, bool rotate = true) {
       double u = Math.Atan2 (pt.Y, pt.X); if (u < 0) u += Lib.TwoPI;
       if (rotate) pt = pt.Rotated (EAxis.Z, -u);
       return u;

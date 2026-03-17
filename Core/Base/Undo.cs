@@ -17,7 +17,7 @@ namespace Nori;
 /// human-readable name to be used in the UI (for the Undo/Redo menus).
 public abstract class UndoStep {
    /// <summary>Construct an UndoStep, given a 'document' it is working with, and a description</summary>
-   public UndoStep (object document, string description) => (Doc, mDescription) = (document, description);
+   protected UndoStep (object document, string description) => (Doc, mDescription) = (document, description);
    public readonly object Doc;
 
    // Properties ---------------------------------------------------------------
@@ -49,7 +49,7 @@ public abstract class UndoStep {
 
 #region enum EUndo ---------------------------------------------------------------------------------
 /// <summary>Direction to go - Undo or Redo</summary>
-public enum EUndoDir { Undo, Redo };
+public enum EUndoDir { Undo, Redo }
 #endregion
 
 #region class UndoStack ----------------------------------------------------------------------------

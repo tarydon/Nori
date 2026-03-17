@@ -18,7 +18,7 @@ partial class STEPReader {
       }
       return mModel;
    }
-   Model3 mModel = new ();
+   readonly Model3 mModel = new ();
 
    // Implementation -----------------------------------------------------------
    // Given a vertex point object, fetches the underlying point
@@ -34,13 +34,13 @@ partial class STEPReader {
    CoordSystem GetCoordSys (int nCoordSys) {
       CoordSys cs = (CoordSys)D[nCoordSys]!;
       Point3 org = ((Cartesian)D[cs.Origin]!).Pt;
-      Vector3 zaxis = GetDirection (cs.ZAxis), xaxis = Vector3.XAxis;
+      Vector3 zaxis = GetDirection (cs.ZAxis), xaxis;
       if (cs.XAxis > 0) xaxis = GetDirection (cs.XAxis);
       else {
          // X-axis can be ommited. In that case, we can choose any arbitrary xAxis,
          // which is perpendicular to z-axis. We pick one of the cardinal axis which is least aligned with
          // the current zaxis and do a cross product with it to select the xaxis.
-         Vector3 z = new Vector3 (Math.Abs (zaxis.X), Math.Abs (zaxis.Y), Math.Abs (zaxis.Z));
+         Vector3 z = new (Math.Abs (zaxis.X), Math.Abs (zaxis.Y), Math.Abs (zaxis.Z));
          if (z.Z <= z.X && z.Z <= z.Y) xaxis = Vector3.ZAxis * zaxis;
          else if (z.Y <= z.Z && z.Y <= z.X) xaxis = Vector3.YAxis * zaxis;
          else xaxis = Vector3.XAxis * zaxis;
@@ -113,7 +113,7 @@ partial class STEPReader {
          Lib.Check (mEdges[i].End.EQ (mEdges[(i + 1) % mEdges.Count].Start), "MakeContour");
       return new Contour3 ([..mEdges]);
    }
-   List<Curve3> mEdges = [];
+   readonly List<Curve3> mEdges = [];
 
    E3Plane MakePlane (int id, Plane plane, ImmutableArray<Contour3> contours, bool aligned) {
       var cs = GetCoordSys (plane.CoordSys);
@@ -163,7 +163,7 @@ partial class STEPReader {
    void Process (AdvancedFace a) {
       Lib.Check (a.Contours.Length > 0, "Contours.Length > 0");
       var fb0 = (FaceBound)D[a.Contours[0]]!; 
-      Lib.Check (fb0.Outer == true, "First contour is FaceOuterBound");
+      Lib.Check (fb0.Outer, "First contour is FaceOuterBound");
 
       List<Contour3> cons = [];
       foreach (var n in a.Contours) {

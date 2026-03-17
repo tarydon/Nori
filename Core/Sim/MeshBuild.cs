@@ -159,7 +159,7 @@ public class Mesh3Builder {
       return true;
    }
 
-   public bool Wireframe = false;
+   public bool Wireframe;
 
    // This is the list of faces at this vertex (a temporary used only by GroupFaces)
    readonly List<int> mVF = [];

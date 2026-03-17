@@ -90,7 +90,7 @@ public class CurlReader {
       // Pop off the stack of partially read objects and return
       return mStack.RemoveLast ();
    }
-   List<object> mStack = [];
+   readonly List<object> mStack = [];
 
    // Reads a list (or any one-dimensional collection) from the curl file
    object? ReadList (AuType auType) {

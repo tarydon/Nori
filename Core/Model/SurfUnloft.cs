@@ -7,11 +7,10 @@ namespace Nori;
 
 public partial class SurfaceUnlofter {
    public SurfaceUnlofter (E3Surface surf) {
-      mDomain = (mSurf = surf).Domain;
-
+      Bound2 domain = (mSurf = surf).Domain;
       // Create the initial subdivision of 4 x 4 tiles
-      double du = mDomain.X.Length / mUDivs, dv = mDomain.Y.Length / mVDivs;
-      double uMin = mDomain.X.Min, vMin = mDomain.Y.Min;
+      double du = domain.X.Length / mUDivs, dv = domain.Y.Length / mVDivs;
+      double uMin = domain.X.Min, vMin = domain.Y.Min;
       for (int j = 0; j < mVDivs; j++) {
          double v = vMin + (j + 0.5) * dv;          // Center V of the tile
          for (int i = 0; i < mUDivs; i++) {
@@ -23,9 +22,9 @@ public partial class SurfaceUnlofter {
       mSubject?.OnNext (this);
       mRootTiles = mUsedTiles;
    }
-   int mUDivs = 4, mVDivs = 4;
+   const int mUDivs = 4, mVDivs = 4;
 
-   public static long Interpolate = 0; 
+   public static long Interpolate; 
 
    public void DumpStats () {
       int cb = mNodes.Length * Marshal.SizeOf<Node> ();
@@ -71,8 +70,8 @@ public partial class SurfaceUnlofter {
       }
       return uvBest;
    }
-   Queue<int> mQueue = [];
-   List<Point2> mUVAlts = [];
+   readonly Queue<int> mQueue = [];
+   readonly List<Point2> mUVAlts = [];
    int mRung;
 
    void AddNeighbors (int n, EDir dir) {
@@ -185,7 +184,7 @@ public partial class SurfaceUnlofter {
                break;
             case EState.Subdivide2 or EState.Subdivide4:
                labels.Add (new Label (cen, $"{tile.Id}"));
-               foreach (int n in new int[] { 0, 1, 1, 2, 2, 3, 3, 0 })
+               foreach (int n in new[] { 0, 1, 1, 2, 2, 3, 3, 0 })
                   lines.Add (mNodes[tile.Corners[n]].Pt);
                for (int i = 0; i < (int)tile.State; i++) {
                   ref Tile child = ref mTiles[tile.Children + i];
@@ -194,7 +193,7 @@ public partial class SurfaceUnlofter {
                break;
             default:
                labels.Add (new Label (cen, $"{tile.Id}"));
-               foreach (int n in new int[] { 0, 1, 1, 2, 2, 3, 3, 0 }) 
+               foreach (int n in new[] { 0, 1, 1, 2, 2, 3, 3, 0 }) 
                   lines.Add (mNodes[tile.Corners[n]].Pt);
                break;
          }
@@ -202,7 +201,7 @@ public partial class SurfaceUnlofter {
    }
 
    // Properties ---------------------------------------------------------------
-   public static IObservable<SurfaceUnlofter> NewTile => (mSubject ??= new ());
+   public static IObservable<SurfaceUnlofter> NewTile => mSubject ??= new ();
    static Subject<SurfaceUnlofter>? mSubject;
 
    // Implementation -----------------------------------------------------------
@@ -241,6 +240,7 @@ public partial class SurfaceUnlofter {
 
    // Nested types -------------------------------------------------------------
    // Used to indicate one of the 8 cardinal directions
+   [Flags]
    enum EDir {
       Nil, W = 1, E = 2, S = 4, N = 8, SW = 5, SE = 6, NE = 10, NW = 9, Root = 100
    }
@@ -260,7 +260,7 @@ public partial class SurfaceUnlofter {
    Node[] mNodes = new Node[16];
    int mUsedNodes;
 
-   List<Point2> mProjNodes = [];
+   readonly List<Point2> mProjNodes = [];
 
    [InlineArray (4)]
    struct FourInts { int _elem0; }
@@ -268,7 +268,7 @@ public partial class SurfaceUnlofter {
    enum EState { 
       Raw = 0, Leaf = 1, Subdivide2 = 2, Subdivide4 = 4,
       LeafXY = 5, LeafYZ = 6, LeafXZ = 7  
-   };
+   }
 
    struct Tile {
       public Tile (int id, int parent, int center, double du, double dv, EDir location) {
@@ -276,12 +276,12 @@ public partial class SurfaceUnlofter {
          for (int i = 0; i < 4; i++) Corners[i] = -1; Children = -1;
       }
 
-      public Bound2 GetUVBound (SurfaceUnlofter owner) {
+      public readonly Bound2 GetUVBound (SurfaceUnlofter owner) {
          ref Node center = ref owner.mNodes[Center];
          return new (center.U - DU, center.V - DV, center.U + DU, center.V + DV);
       }
 
-      public override string ToString () => $"Tile#{Id} State:{State} Loc:{Location}";
+      public readonly override string ToString () => $"Tile#{Id} State:{State} Loc:{Location}";
 
       public int Rung;
 
@@ -470,7 +470,6 @@ public partial class SurfaceUnlofter {
             owner.AddTile (Id, nCenter, DU, vStep, nLeft, nRight, Corners[2], Corners[3], EDir.N);
          }
          mSubject?.OnNext (owner);
-         return;
       }
 
       public EState State;
@@ -484,9 +483,9 @@ public partial class SurfaceUnlofter {
       public readonly EDir Location;   // Position of this tile within the parent's set of children
    }
    Tile[] mTiles = new Tile[16];
-   int mUsedTiles, mRootTiles;
+   readonly int mRootTiles;
+   int mUsedTiles;
 
    // Private data -------------------------------------------------------------
    readonly E3Surface mSurf;
-   readonly Bound2 mDomain;
 }

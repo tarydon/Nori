@@ -1,0 +1,3 @@
+Title = INT snap line-line
+Pt = (52.307692,146.153846), ESnap=Intersection
+Label = ("intersection", (52.307692,146.153846), False)

@@ -9,9 +9,7 @@ namespace Nori;
 public class ByteStm {
    // Constructors -------------------------------------------------------------
    /// <summary>Construct a ByteStm, given the raw array of bytes to work with</summary>
-   public ByteStm (byte[] data) {
-      mData = data; ReadPtr = 0;
-   }
+   public ByteStm (byte[] data) { mData = data; ReadPtr = 0; }
    #endregion
 
    #region Read .Net primitives -----------------------------------
@@ -82,7 +80,7 @@ public class ByteStm {
    #endregion
 
    // Private data -------------------------------------------------------------
-   byte[] mData;
+   readonly byte[] mData;
    int ReadPtr;
 
    #region Implementation -----------------------------------------

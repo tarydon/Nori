@@ -66,13 +66,8 @@ public class SymTable<T> {
       => Add (Encoding.UTF8.GetBytes (key), value);
 
    /// <summary>Get the value stored with a particular key (or throws a KeyNotFound exception)</summary>
-   public T this[ReadOnlySpan<byte> key] {
-      get {
-         if (!TryGetValue (key, out var v))
-            throw new KeyNotFoundException ($"The given key {Encoding.UTF8.GetString (key)} was not found");
-         return v;
-      }
-   }
+   public T this[ReadOnlySpan<byte> key] 
+      => TryGetValue (key, out var v) ? v : throw new KeyNotFoundException ($"The given key {Encoding.UTF8.GetString (key)} was not found");
 
    /// <summary>Gets the value stored with a particular key (key passed as string)</summary>
    /// Note: this is not as efficient as passing the key as a ReadOnlySpan(byte)
@@ -120,11 +115,11 @@ public class SymTable<T> {
 
    // This dictionary stores hashcode-value pairs as long as a hash collision does not
    // occur for a given hash value
-   Dictionary<int, Entry> mDict0 = [];
+   readonly Dictionary<int, Entry> mDict0 = [];
    // Once a hash collision occurs, the hashcode and its now multiplicity of values are
    // moved to this dictionary, that maintains a list for each hash code (open-hashing).
    // This two-tier structure is a bit wasteful of memory, perhaps, but is optimized for
    // the common case happy-path that hash collisions are rare.
-   Dictionary<int, List<Entry>> mDict1 = [];
+   readonly Dictionary<int, List<Entry>> mDict1 = [];
 }
 #endregion

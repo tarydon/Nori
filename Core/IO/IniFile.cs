@@ -2,8 +2,6 @@
 // ╔═╦╦═╦╦╬╣ IniFile.cs
 // ║║║║╬║╔╣║ <<TODO>>
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
-using System.Globalization;
-using System.IO;
 namespace Nori;
 
 #region class IniFile ------------------------------------------------------------------------------
@@ -12,10 +10,11 @@ public class IniFile {
    // Constructors -------------------------------------------------------------
    /// <summary>Open an IniFile, given the filename and the section name</summary>
    public IniFile (string filename, string section) {
-      mLines = [.. File.ReadAllLines (filename)];
+      if (File.Exists (mFilename = filename)) mLines = [.. File.ReadAllLines (filename)];
       Section = section;
    }
-   List<string> mLines;
+   readonly string mFilename;
+   readonly List<string> mLines = [];
 
    // Properties ---------------------------------------------------------------
    /// <summary>The current section</summary>
@@ -64,7 +63,7 @@ public class IniFile {
    public string GetS (string key) => GetS (key, "");
 
    /// <summary>Gets a string value from the current section, returning the fallback value if not found</summary>
-   public string GetS (string key, string fallback = "") {
+   public string GetS (string key, string fallback) {
       if (mSecStart != -1) {
          string key1 = $"{key}=", key2 = $"{key} =";
          for (int i = mSecStart + 1; i < mLines.Count; i++) {
@@ -74,13 +73,35 @@ public class IniFile {
                var value = s[(s.IndexOf ('=') + 1)..].TrimStart ();
                int n = value.IndexOf (';');
                if (n != -1) value = value[..n];
-               n = value.IndexOf ("//");
+               n = value.IndexOf ("//", StringComparison.Ordinal);
                if (n != -1) value = value[..n];
                return value.Trim ().Unquote ();
             }
          }
       }
       return fallback;
+   }
+
+   /// <summary>Writes a value to a key in the current section</summary>
+   public IniFile Set (string key, string value) {
+      if (mSecStart == -1) {
+         if (mLines.Count > 0 && !mLines[^1].IsBlank ()) mLines.Add ("");
+         mSecStart = mLines.Count;
+         mLines.Add ($"[{mSection}]");
+      }
+
+      bool done = false;
+      int iInsertAfter = mSecStart;
+      string key2 = key.ToUpper () + "=", line = $"{key}={value}";
+      for (int i = mSecStart + 1; i < mLines.Count; i++) {
+         string s = mLines[i].ToUpper ().Replace (" =", "=");
+         if (s.StartsWith ('[')) break;
+         if (s.StartsWith (key2)) { mLines[i] = line; done = true; break; }
+         if (!string.IsNullOrWhiteSpace (s)) iInsertAfter = i; 
+      }
+      if (!done) mLines.Insert (iInsertAfter + 1, line);
+      File.WriteAllLines (mFilename, mLines);
+      return this;
    }
 }
 #endregion

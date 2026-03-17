@@ -26,7 +26,7 @@ public static class Lib {
    /// <summary>Square of the tessellation error</summary>
    public static double FineTessSq = FineTess * FineTess;
    /// <summary>Fine tessellation angle tolerance (~ 31 degrees)</summary>
-   public static double FineTessAngle = 0.5411;
+   public const double FineTessAngle = 0.5411;
    /// <summary>TwoPI = 360 degrees, in radians</summary>
    public const double TwoPI = 2 * Math.PI;
    /// <summary>HalfPI = 90 degrees, in radians</summary>
@@ -39,7 +39,7 @@ public static class Lib {
    // Properties ---------------------------------------------------------------
    /// <summary>The list of known assemblies</summary>
    public static IEnumerable<Assembly> Assemblies => mAssemblies;
-   static HashSet<Assembly> mAssemblies = [];
+   static readonly HashSet<Assembly> mAssemblies = [];
 
    /// <summary>The root of Nori projects on developer machines</summary>
    public static string DevRoot {
@@ -58,7 +58,7 @@ public static class Lib {
    /// Lib.GetNiceName, these namespace prefixes are removed. So we will get
    /// "Point2" rather than "Nori.Point2"
    public static IEnumerable<string> Namespaces => mNamespaces;
-   static HashSet<string> mNamespaces = [];
+   static readonly HashSet<string> mNamespaces = [];
 
    /// <summary>Are we in 'testing' mode?</summary>
    public static bool Testing { get; set; }

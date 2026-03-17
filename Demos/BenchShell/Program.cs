@@ -2,13 +2,8 @@
 // ╔═╦╦═╦╦╬╣ Program.cs
 // ║║║║╬║╔╣║ Shell for various Nori benchmarking tests
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
-using System;
-using System.Text;
 using BenchmarkDotNet.Attributes;
-using BenchmarkDotNet.Configs;
-using BenchmarkDotNet.Jobs;
 using BenchmarkDotNet.Running;
-using BenchmarkDotNet.Toolchains.InProcess.NoEmit;
 using Nori;
 
 namespace NBench;

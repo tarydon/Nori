@@ -88,7 +88,7 @@ public class Eval {
       static double D2R (double f) => f * Math.PI / 180;
    }
 
-   static Dictionary<string, EOperation>.AlternateLookup<ReadOnlySpan<char>> sOperationMap = new Dictionary<string, EOperation> {
+   static readonly Dictionary<string, EOperation>.AlternateLookup<ReadOnlySpan<char>> sOperationMap = new Dictionary<string, EOperation> {
       ["+"] = EOperation.Add, ["-"] = EOperation.Sub, ["*"] = EOperation.Mul, ["/"] = EOperation.Div,
       ["sin"] = EOperation.Sin, ["cos"] = EOperation.Cos, ["tan"] = EOperation.Tan,
       ["asin"] = EOperation.Asin, ["acos"] = EOperation.Acos, ["atan"] = EOperation.Atan, ["atan2"] = EOperation.Atan2,
@@ -107,21 +107,19 @@ public class Eval {
    class EvalException (string message) : Exception (message);
 
    // Operator info pushed onto operator stack, or applied to modify operand stack
-   readonly struct Operator {
-      public Operator (EOperation op, int basePrecedence = 0)
-         => (Op, Precedence, COperands) = (op, basePrecedence + sPrecedence[(int)op], sCOperands[(int)op]);
-      public EOperation Op { get; }
-      public int Precedence { get; }
-      public int COperands { get; }
+   readonly struct Operator (EOperation op, int basePrecedence = 0) {
+      public readonly EOperation Op = op;
+      public readonly int Precedence = basePrecedence + sPrecedence[(int)op];
+      public readonly int COperands = sCOperands[(int)op];
 
       // Specifies precedence of each operation
-      static int[] sPrecedence = [
+      static readonly int[] sPrecedence = [
          1, 1, 2, 2, 4,
          3, 3, 3, 3, 3, 3, 3,
          3, 3, 3, 3, 3
       ];
       // Specifies number of operands for each operation
-      static int[] sCOperands = [
+      static readonly int[] sCOperands = [
          2, 2, 2, 2, 1,
          1, 1, 1, 1, 1, 1, 2,
          1, 1, 1, 1, 1
@@ -150,10 +148,10 @@ public class Eval {
       // Gets current token's text span
       public ReadOnlySpan<char> GetLiteral () => mExpr.AsSpan (mTokenStart, mN - mTokenStart);
       // Gets current token's text span, parsed as a double value
-      public double GetF () {
-         if (double.TryParse (GetLiteral (), out double res)) return res;
-         throw new EvalException ($"Invalid numeric input : {GetLiteral ()}");
-      }
+      public double GetF () 
+         => double.TryParse (GetLiteral (), out double res) ? res 
+            : throw new EvalException ($"Invalid numeric input : {GetLiteral ()}");
+
       // Gets current token's text span's first character
       public char CurrentChar => mExpr[mTokenStart];
 

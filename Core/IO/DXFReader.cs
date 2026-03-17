@@ -31,7 +31,7 @@ public class DXFReader {
       if (!acadver.IsBlank () && !codepage.IsBlank () && string.CompareOrdinal (acadver, "AC1021") < 0) {
          encodingToUse = codepage switch {
             "dos932" => Encoding.GetEncoding (932), // Shift-JIS
-            _ => Encoding.GetEncoding (int.TryParse (codepage.Split ('_').Last (), out int cp) ? cp : 1252),
+            _ => Encoding.GetEncoding (int.TryParse (codepage.Split ('_').Last (), out int cp) ? cp : 1252)
          };
       }
       stm.Position = 0;
@@ -198,7 +198,7 @@ public class DXFReader {
    // markers (\P) and the style code-blocks ({...}) are left unidentified and are
    // processed after the text extraction.
    [SuppressMessage ("Performance", "SYSLIB1045")]
-   static Regex sRxMText = new (
+   static readonly Regex sRxMText = new (
      @"(\\[Ff][^|;]+((\|([bicp])\d+)+)?;)|" +   // Font name & style (e.g., \fTimes New Roman|b1|i0;)
      @"(\\[AHWCT](\d*?(\.\d+)?x?));|" +         // Height, Width, Alignment, Color codes like: \H3x; \H12.500; \W0.8x;
      @"(\\[LlOoKk])|" +                         // Underline, Overstrike, Strikethrough: \L \l \O \K
@@ -211,7 +211,7 @@ public class DXFReader {
       if (mVertex.Count > 0) {
          // If there are curve-fit vertices, remove the others
          if (mVertex.Any (a => (a.Flags & 8) != 0))
-            mVertex = mVertex.Where (a => (a.Flags & 8) != 0).ToList ();
+            mVertex = [..mVertex.Where (a => (a.Flags & 8) != 0)];
          for (int i = 0; i < mVertex.Count; i++) {
             if (mVertex[i].Bulge > 1e6 || mVertex[i].Bulge.IsZero ()) mPolyBuilder.Line (mVertex[i].Pt);
             else mPolyBuilder.Arc (mVertex[i].Pt, mVertex[i].Bulge);
@@ -270,13 +270,11 @@ public class DXFReader {
       } else
          S[G] = name;
    }
-   static HashSet<string> sSections = ["TABLES", "HEADER", "BLOCKS", "ENTITIES"];
+   static readonly HashSet<string> sSections = ["TABLES", "HEADER", "BLOCKS", "ENTITIES"];
 
    /// <summary>Used to process a header variable</summary>
    void HeaderVar (string key) {
-      switch (key) {
-         case "$MEASUREMENT": Scale = Vn == 0 ? 25.4 : 1; break;
-      }
+      if (key == "$MEASUREMENT") Scale = Vn == 0 ? 25.4 : 1;
    }
 
    // Reads the next group into mGroup and the value into mValue
@@ -317,6 +315,7 @@ public class DXFReader {
 
             case "DIMENSION":
                var dim = new E2Dimension (Layer);
+               dim.SetDimSettings (mDwg.DimSettings);
                mDimBlocks.Add (dim, Name);
                Add (dim);
                break;
@@ -418,8 +417,8 @@ public class DXFReader {
          D0Set.Clear (); D1Set.Clear (); D2Set.Clear ();
       }
    }
-   Dictionary<E2Dimension, string> mDimBlocks = [];
-   static HashSet<string> mUnsupported = [];
+   readonly Dictionary<E2Dimension, string> mDimBlocks = [];
+   static readonly HashSet<string> mUnsupported = [];
    bool miMultiVertex;
 
    // Load the dimensions
@@ -467,10 +466,10 @@ public class DXFReader {
 
    // DXF group value storage --------------------------------------------------
    // These variables store the values read in from the DXF groups
-   string[] S = new string[10];
-   double[] D = new double[53];
-   List<double> X0Set = [], Y0Set = [];
-   List<double> D0Set = [], D1Set = [], D2Set = [];
+   readonly string[] S = new string[10];
+   readonly double[] D = new double[53];
+   readonly List<double> X0Set = [], Y0Set = [];
+   readonly List<double> D0Set = [], D1Set = [], D2Set = [];
    bool Invisible;
    int ColorNo;                        // Group 62 value
 
@@ -529,7 +528,7 @@ public class DXFReader {
    // A StringBuilder member used in various text compositions.
    readonly StringBuilder mSB = new ();
    // Raw 1000 group code strings from DXF (e.g., "BEND_ANGLE:90")
-   List<string> mXData = [];
+   readonly List<string> mXData = [];
    // Aliases for the group codes (for better readability)
    int Flags => I0;
    double Bulge => D2Set.SafeGet (0);
@@ -545,10 +544,10 @@ public class DXFReader {
    static readonly Regex sBend = new (@"A([-+]?[0-9]*\.?[0-9]+)\s*R([0-9]*\.?[0-9]+)\s*K([0-9]*\.?[0-9]+)",
                                       RegexOptions.Compiled | RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
 
-   int G; string V = "";         // Current Group-Code and Group-Value (updated by Next())
-   readonly Dwg2 mDwg = new ();   // The drawing we are building;
-   readonly string mFile;        // The file we're reading from
-   StreamReader mReader;         // Reader we're loading from
+   int G; string V = "";               // Current Group-Code and Group-Value (updated by Next())
+   readonly Dwg2 mDwg = new ();        // The drawing we are building;
+   readonly string mFile;              // The file we're reading from
+   readonly StreamReader mReader;      // Reader we're loading from
    static readonly HashSet<string> sSkipBlocks = [
       "*Model_Space", "*Paper_Space", "*Paper_Space0", "*MODEL_SPACE", "*PAPER_SPACE", "*PAPER_SPACE0"
    ];
