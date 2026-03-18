@@ -110,6 +110,21 @@ public static class Lib {
    }
    static string? sCodeBase;
 
+   /// <summary>
+   /// Helper to grow an array 
+   /// </summary>
+   /// This is a bit more optimized than Array.Resize, since it copies only the
+   /// 'used' elements of the array, not all the elements
+   public static void Grow<T> (ref T[] array, int used, int delta) {
+      int size = array.Length, total = used + delta;
+      while (size <= total) size *= 2;
+      if (size > array.Length) {
+         var final = new T[size];
+         if (used > 0) Array.Copy (array, final, used);
+         array = final;
+      }
+   }
+
    /// <summary>This should be called to initialize Nori.Core before use</summary>
    public static void Init () {
       if (!sInited) {
