@@ -41,14 +41,14 @@ public class OBBTree {
       Dictionary<Point3f, int> dict = new (Point3fComparer.Epsilon);
       Pts = new Point3f[mesh.Vertex.Length];
       Tris = new CTri[mesh.Triangle.Length / 3 + 1]; // +1 since we are not using Tris[0]
-      
+
       var triangles = mesh.Triangle; int nTris = 0;
       for (int i = 0; i < triangles.Length; i += 3) {
          var pa = mesh.Vertex[triangles[i]].Pos;
          var pb = mesh.Vertex[triangles[i + 1]].Pos;
          var pc = mesh.Vertex[triangles[i + 2]].Pos;
          // Skip zero area triangles 
-         if (((pb - pa) * (pc - pa)).LengthSq.IsZero (1E-10)) continue; 
+         if (((pb - pa) * (pc - pa)).LengthSq.IsZero (1E-10)) continue;
          Tris[++nTris] = new (Pts, Idx (pa), Idx (pb), Idx (pc));
 
          int Idx (Point3f pt) {
@@ -63,6 +63,7 @@ public class OBBTree {
       Array.Resize (ref Tris, nTris + 1); // +1 since we are not using Tris[0]
 
       // Stemp 3 & 4: Initialize queue with full-set and process.
+      Todo ??= new (256); TmpSet ??= new (256); TmpPts ??= new Point3f[256];
       Todo.Clear (); Todo.Enqueue ((1, Tris.Length - 1));
       OBBs = new OBB[Tris.Length];
       // The root OBB is at index 1, so we start building children from index 2 (nNext = 2)
@@ -87,7 +88,7 @@ public class OBBTree {
          }
          if (count <= 2) {
             // Too few triangles to create OBB from. Make a leaf node and continue.
-            box.Left = -start; box.Right = -(end - 1); 
+            box.Left = -start; box.Right = -(end - 1);
             continue;
          }
 
@@ -203,18 +204,12 @@ public class OBBTree {
    /// pointer to the leaf triangle directly in Left/Right. 
    public readonly OBB[] OBBs;
 
-   static OBBTree () {
-      Todo = new (256);
-      TmpSet = new (256);
-      TmpPts = new Point3f[256];
-   }
-
    // This queue maintains the list of OBBs we need to create. Each entry in this queue contains
    // a range of triangles (within the Tris array) that need to be built into an OBB. 
-   [ThreadStatic] static Queue<(int Start, int Count)> Todo;
+   [ThreadStatic] static Queue<(int Start, int Count)>? Todo;
    // Temporary data structures used for creating child OBBs
-   [ThreadStatic] static HashSet<int> TmpSet;
-   [ThreadStatic] static Point3f[] TmpPts;
+   [ThreadStatic] static HashSet<int>? TmpSet;
+   [ThreadStatic] static Point3f[]? TmpPts;
 }
 
 // This is the class that implements a complete collision between two OBBTree. There is some
