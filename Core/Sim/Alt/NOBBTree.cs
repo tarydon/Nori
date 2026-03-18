@@ -7,6 +7,20 @@ namespace Nori.Alt;
 #region class OBBTree ------------------------------------------------------------------------------
 /// <summary>Represents a collision hierarchy where each node is an Oriented Bounding Box</summary>
 public class OBBTree {
+   // Constructors -------------------------------------------------------------
+   /// <summary>Construct an OBBTree from a mesh</summary>
+   public static OBBTree From (Mesh3 mesh, string? tag = null) {
+      var mb = OBBTreeBuilder.Borrow ();
+      mb.AddMesh (mesh);
+      return mb.Build (tag);
+   }
+
+   /// <summary>Create a copy of this OBBTree with a new transform</summary>
+   public OBBTree With (Matrix3 xfm) => new (Pts, Tris, OBBs, mTag) { mXfm = xfm };
+
+   /// <summary>An 'empty' OBBTree (to represent no collisions)</summary>
+   public static readonly OBBTree Empty = new ([], [], [], "EMPTY");
+
    // Properties ---------------------------------------------------------------
    /// <summary>The hierarchy of oriented bounding boxes</summary>
    /// OBBs[1] is the root OBB of the entire mesh and will contain all the N 
@@ -26,17 +40,21 @@ public class OBBTree {
    /// positive indices to point to sub-OBBs), and we don't want any confusion about the index 0
    public readonly CTri[] Tris;
 
+   /// <summary>Is this an 'empty' OBBTree?</summary>
+   public bool IsEmpty => Tris.Length == 0;
+
    /// <summary>A tag we attach to an OBBTree (useful for tracing/debugging)</summary>
-   public readonly string Tag;
+   public string Tag => mTag ?? string.Empty;
+   string? mTag = null;
+
+   /// <summary>The transformation matrix for this OBBTree</summary>
+   public Matrix3 Xfm => mXfm ?? Matrix3.Identity;
+   Matrix3? mXfm;
+   /// <summary>Inverse-transformation matrix for this OBBTree</summary>
+   public Matrix3 InvXfm => mInvXfm ??= Xfm.GetInverse ();
+   Matrix3? mInvXfm;
 
    // Methods ------------------------------------------------------------------
-   /// <summary>Construct an OBBTree from a mesh</summary>
-   public static OBBTree From (Mesh3 mesh, string? tag = null) {
-      var mb = OBBTreeBuilder.Borrow ();
-      mb.AddMesh (mesh);
-      return mb.Build (tag ?? string.Empty);
-   }
-
    /// <summary>Outputs OBBs a given heirarchy level.</summary>
    /// It also includes the leaf nodes to reflect a realistic 
    /// collision complexity contributed by that level.
@@ -56,8 +74,11 @@ public class OBBTree {
    }
 
    // Implementation -----------------------------------------------------------
-   internal OBBTree (ReadOnlySpan<Point3f> pts, ReadOnlySpan<CTri> tris, ReadOnlySpan<OBB> obbs, string tag)
-      => (Pts, Tris, OBBs, Tag) = ([.. pts], [.. tris], [.. obbs], tag);
+   internal OBBTree (ReadOnlySpan<Point3f> pts, ReadOnlySpan<CTri> tris, ReadOnlySpan<OBB> obbs, string? tag)
+      => (Pts, Tris, OBBs, mTag) = ([..pts], [..tris], [..obbs], tag);
+
+   internal OBBTree (Point3f[] pts, CTri[] tris, OBB[] obbs, string? tag)
+      => (Pts, Tris, OBBs, mTag) = (pts, tris, obbs, tag);
 }
 #endregion
 
@@ -120,7 +141,7 @@ public class OBBTreeBuilder : IBorrowable<OBBTreeBuilder> {
    /// Since the CTri struct is not trivially small, we don't actually keep shuffling the CTri
    /// during this build process - we maintain a permutation of CTri called mTriMap (just an array
    /// of integers) and shuffle those integers around. This speeds up the process consderably.
-   public OBBTree Build (string tag) {
+   public OBBTree Build (string? tag) {
       Lib.Grow (ref mTriMap, 0, mTriN);
       Lib.Grow (ref mPtRung, 0, mPtN); Lib.Grow (ref mPtSubset, 0, mPtN);
       for (int i = 0; i < mTriN; i++) mTriMap[i] = i;
