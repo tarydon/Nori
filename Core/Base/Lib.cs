@@ -117,6 +117,7 @@ public static class Lib {
    /// 'used' elements of the array, not all the elements
    public static void Grow<T> (ref T[] array, int used, int delta) {
       int size = array.Length, total = used + delta;
+      if (size == 0) size = 8;
       while (size <= total) size *= 2;
       if (size > array.Length) {
          var final = new T[size];

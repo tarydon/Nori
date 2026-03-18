@@ -42,7 +42,7 @@ static class Program {
    public static void Main () {
       BenchmarkRunner.Run<Tester> ();
       //var t = new Tester ();
-      //t.GLUTess ();
-      //t.NoriTess ();
+      //t.OldMesh ();
+      //t.NewMesh ();
    }
 }
