@@ -12,57 +12,30 @@ namespace NBench;
 public class Tester {
    public Tester () {
       Lib.Init ();
-      for (char ch = 'A'; ch <= 'J'; ch++) {
-         var polys = LoadPolys (ch);
-         mPolys.Add (polys); mOuter.Add (polys.MaxIndexBy (a => a.GetBound ().Area));
-
-         List<Point2> pts = []; List<int> splits = [0];
-         foreach (var p in polys) { pts.AddRange (p.Pts); splits.Add (pts.Count); }
-         mPts.Add (pts); mSplits.Add (splits);
-      }
+      var model = new T3XReader ("N:/Demos/Data/5X-024-Blank.t3x").Load ();
+      mMeshes = [.. model.Ents.OfType<E3Surface> ().Select (a => a.Mesh)];
    }
-   List<List<Poly>> mPolys = [];
-   List<int> mOuter = [];
-   List<List<Point2>> mPts = [];
-   List<List<int>> mSplits = [];
-
-   List<Poly> LoadPolys (char ch) {
-      List<Poly> input = []; List<Point2> pts = [];
-      var dwg = DXFReader.Load ($"N:/TData/Geom/Tess/{ch}.dxf");
-      foreach (var e2p in dwg.Ents.OfType<E2Poly> ().Where (a => a.Layer.Name == "0")) {
-         var poly = e2p.Poly;
-         if (poly.HasArcs) {
-            pts.Clear (); poly.Discretize (pts, Lib.FineTess, Lib.FineTessAngle);
-            input.Add (Poly.Lines (pts, true));
-         } else
-            input.Add (poly);
-      }
-      return input;
-   }
+   List<Mesh3> mMeshes;
 
    [Benchmark (Baseline = true)]
-   public void GLUTess () {
-      for (int k = 0; k < Iter; k++) {
-         for (int i = 0; i < mPts.Count; i++) {
-            int n = Tess2D.Process (mPts[i], mSplits[i]).Count / 3;
-         }
-      }
+   public void OldMesh () {
+      mOldTrees.Clear ();
+      for (int k = 0; k < Iter; k++)
+         foreach (var mesh in mMeshes)
+            mOldTrees.Add (new Nori.OBBTree (mesh));
    }
+   List<OBBTree> mOldTrees = [];
 
    [Benchmark]
-   public void NoriTess () {
-      for (int k = 0; k < Iter; k++) {
-         for (int i = 0; i < mPolys.Count; i++) {
-            var polys = mPolys[i];
-            int outer = mOuter[i];
-            using var tess = FastTess2D.Borrow ();
-            for (int j = 0; j < polys.Count; j++) tess.AddPoly (polys[j], j != outer);
-            tess.Process ();
-         }
-      }
+   public void NewMesh () {
+      mNewTrees.Clear ();
+      for (int k = 0; k < Iter; k++)
+         foreach (var mesh in mMeshes)
+            mNewTrees.Add (Nori.Alt.OBBTree.From (mesh));
    }
+   List<Nori.Alt.OBBTree> mNewTrees = [];
 
-   const int Iter = 100;
+   const int Iter = 10;
 }
 
 static class Program {
