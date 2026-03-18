@@ -110,9 +110,7 @@ public static class Lib {
    }
    static string? sCodeBase;
 
-   /// <summary>
-   /// Helper to grow an array 
-   /// </summary>
+   /// <summary>Helper to grow an array</summary>
    /// This is a bit more optimized than Array.Resize, since it copies only the
    /// 'used' elements of the array, not all the elements
    public static void Grow<T> (ref T[] array, int used, int delta) {

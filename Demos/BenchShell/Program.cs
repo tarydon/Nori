@@ -5,7 +5,6 @@
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Running;
 using Nori;
-
 namespace NBench;
 
 [MemoryDiagnoser]
@@ -35,14 +34,16 @@ public class Tester {
    }
    List<Nori.Alt.OBBTree> mNewTrees = [];
 
-   const int Iter = 10;
+   const int Iter = 30;
 }
 
 static class Program {
    public static void Main () {
-      BenchmarkRunner.Run<Tester> ();
-      //var t = new Tester ();
+      //BenchmarkRunner.Run<Tester> ();
+      var t = new Tester ();
       //t.OldMesh ();
-      //t.NewMesh ();
+      //Console.WriteLine ("");
+      //Console.WriteLine ("");
+      t.NewMesh ();
    }
 }

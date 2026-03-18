@@ -1,23 +1,14 @@
-﻿namespace Nori.Alt;
+// ────── ╔╗
+// ╔═╦╦═╦╦╬╣ OBBTree.cs
+// ║║║║╬║╔╣║ Implements OBBTree (bounding-box hierarchy using OBB primitives), OBBTreeBuilder
+// ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
+namespace Nori.Alt;
 
+#region class OBBTree ------------------------------------------------------------------------------
+/// <summary>Represents a collision hierarchy where each node is an Oriented Bounding Box</summary>
 public class OBBTree {
    // Properties ---------------------------------------------------------------
-   /// <summary>
-   /// List of points, referenced by triangle indices
-   /// </summary>
-   /// These are typically obtained from a mesh, but are de-duplicated with a resolution 1e-3
-   public readonly Point3f[] Pts;
-   /// <summary>
-   /// Set of triangles in the OBB
-   /// </summary>
-   /// Each triangle points to 3 indices from the Pts array defining the endpoints, and
-   /// also stores some cached values like the normal vector, predominant projection direction etc.
-   /// Tris[0] is not used, since the OBBs use negative indices to point to triangles (while using
-   /// positive indices to point to sub-OBBs), and we don't want any confusion about the index 0
-   public readonly CTri[] Tris;
-   /// <summary>
-   /// The hierarchy of oriented bounding boxes
-   /// </summary>
+   /// <summary>The hierarchy of oriented bounding boxes</summary>
    /// OBBs[1] is the root OBB of the entire mesh and will contain all the N 
    /// triangles in the mesh. The left and right children will contain a (close to equal) partition 
    /// of these children with A and B triangles such that A+B = N. The binary tree keeps going 
@@ -25,15 +16,25 @@ public class OBBTree {
    /// OBBs surronding single triangles, but switch to storing a pointer to the leaf triangle 
    /// directly in Left/Right (these are stored as negative values)
    public readonly OBB[] OBBs;
+   /// <summary>List of points, referenced by triangle indices</summary>
+   /// These are typically obtained from a mesh, but are de-duplicated with a resolution 1e-3
+   public readonly Point3f[] Pts;
+   /// <summary>Set of triangles in the OBB</summary>
+   /// Each triangle points to 3 indices from the Pts array defining the endpoints, and
+   /// also stores some cached values like the normal vector, predominant projection direction etc.
+   /// Tris[0] is not used, since the OBBs use negative indices to point to triangles (while using
+   /// positive indices to point to sub-OBBs), and we don't want any confusion about the index 0
+   public readonly CTri[] Tris;
+
+   /// <summary>A tag we attach to an OBBTree (useful for tracing/debugging)</summary>
+   public readonly string Tag;
 
    // Methods ------------------------------------------------------------------
-   /// <summary>
-   /// Construct an OBBTree from a mesh
-   /// </summary>
-   public static OBBTree From (Mesh3 mesh) {
-      using var mb = OBBTreeBuilder.Borrow ();
+   /// <summary>Construct an OBBTree from a mesh</summary>
+   public static OBBTree From (Mesh3 mesh, string? tag = null) {
+      var mb = OBBTreeBuilder.Borrow ();
       mb.AddMesh (mesh);
-      return mb.Build ();
+      return mb.Build (tag ?? string.Empty);
    }
 
    /// <summary>Outputs OBBs a given heirarchy level.</summary>
@@ -55,21 +56,23 @@ public class OBBTree {
    }
 
    // Implementation -----------------------------------------------------------
-   internal OBBTree (ReadOnlySpan<Point3f> pts, ReadOnlySpan<CTri> tris, ReadOnlySpan<OBB> obbs)
-      => (Pts, Tris, OBBs) = ([.. pts], [.. tris], [.. obbs]);
+   internal OBBTree (ReadOnlySpan<Point3f> pts, ReadOnlySpan<CTri> tris, ReadOnlySpan<OBB> obbs, string tag)
+      => (Pts, Tris, OBBs, Tag) = ([.. pts], [.. tris], [.. obbs], tag);
 }
+#endregion
 
+#region class OBBTreeBuilder -----------------------------------------------------------------------
+/// <summary>OBBTreeBuilder is used to build OBBTree hierarchies from one or more Mesh3</summary>
 public class OBBTreeBuilder : IBorrowable<OBBTreeBuilder> {
    // Methods ------------------------------------------------------------------
-   /// <summary>
-   /// Borrow a Builder from the pool of builders
-   /// </summary>
+   /// <summary>Borrow a Builder from the pool of builders</summary>
    public static OBBTreeBuilder Borrow () {
       var builder = BorrowPool<OBBTreeBuilder>.Borrow ();
       builder.Reset ();
       return builder;
    }
 
+   /// <summary>Adds a Mesh into the OBBTreeBuilder (multiple meshes can be added before a collider is built)</summary>
    public void AddMesh (Mesh3 mesh) {
       var (v, t) = (mesh.Vertex, mesh.Triangle);
       Lib.Grow (ref mPt, mPtN, v.Length); Lib.Grow (ref mPtMap, 0, v.Length);
@@ -102,13 +105,25 @@ public class OBBTreeBuilder : IBorrowable<OBBTreeBuilder> {
    // - because we de-duplicate vertex points (using mPtDict)
    int[] mPtMap = new int[8];                
 
-   public OBBTree Build () {
-      // Generate a basic permutation of the triangles, which is just (0,1,2 .. mTN-1). 
-      // As we build the tree, we will shuffle sections of this so that each OBB node in the
-      // tree can refer to a consecutive set of triangles
-      Lib.Grow (ref mTMap, 0, mTriN);
+   /// <summary>Builds an OBBTree hierarchy</summary>
+   /// The input (composed by AddMesh calls) is:
+   /// - mPt : A list of de-duplicated points
+   /// - mTri : A set of CTri structs that index into these mPt 
+   /// The top level OBB is built with the complete set of mPt, and stored in mBox[0]. Starting
+   /// with that, we keep subdividing the set of triangles into two each time, picking a suitable
+   /// partition axis (aligning with one of the axes of the OBB, and starting with the axis with
+   /// the highest variance). 
+   /// This will create two child OBBs (a 'left' and a 'right' one). We will then permute the
+   /// mTri so that all the triangles in the left child come first, followed by all the triangles
+   /// in the right child. Each of these smaller OBBs (with a smaller range of triangles) is 
+   /// again recursively subdivided. 
+   /// Since the CTri struct is not trivially small, we don't actually keep shuffling the CTri
+   /// during this build process - we maintain a permutation of CTri called mTriMap (just an array
+   /// of integers) and shuffle those integers around. This speeds up the process consderably.
+   public OBBTree Build (string tag) {
+      Lib.Grow (ref mTriMap, 0, mTriN);
       Lib.Grow (ref mPtRung, 0, mPtN); Lib.Grow (ref mPtSubset, 0, mPtN);
-      for (int i = 0; i < mTriN; i++) mTMap[i] = i;
+      for (int i = 0; i < mTriN; i++) mTriMap[i] = i;
       mBox[mBoxN] = OBB.Build (mPt.AsSpan (0, mPtN));
       mTodo.Enqueue ((mBoxN, 0, mTriN)); mBoxN++;
       Span<Vector3f> axes = stackalloc Vector3f[3];
@@ -126,15 +141,17 @@ public class OBBTreeBuilder : IBorrowable<OBBTreeBuilder> {
          // array. We are going to split them by the median cut method. 
          // 1. Compute the mean
          var mean = Point3f.Zero;
-         for (int i = start; i < end; i++) mean += mTri[mTMap[i]].Centroid;
+         for (int i = start; i < end; i++) mean += mTri[mTriMap[i]].Centroid;
          mean *= 1f / count;
+
          // 2. Compute their spread within this OBB
          var variance = Vector3f.Zero;
          for (int i = start; i < end; i++) {
-            var d = mTri[mTMap[i]].Centroid - mean;
+            var d = mTri[mTriMap[i]].Centroid - mean;
             var (x, y, z) = (box.X.Dot (d), box.Y.Dot (d), box.Z.Dot (d));
             variance += new Vector3f (x * x, y * y, z * z);
          }
+
          // 3. Try the split in decreasing order of axis variance
          bool ok = false; int split = 0;
          int order = GetAxisOrder (variance);
@@ -165,16 +182,14 @@ public class OBBTreeBuilder : IBorrowable<OBBTreeBuilder> {
       // Remove that level of indirection here
       for (int i = 0; i < mBoxN; i++) {
          ref OBB box = ref mBox[i];
-         if (box.Left < 0) box.Left = -mTMap[-box.Left];
-         if (box.Right < 0) box.Right = -mTMap[-box.Right];
+         if (box.Left < 0) box.Left = -mTriMap[-box.Left];
+         if (box.Right < 0) box.Right = -mTriMap[-box.Right];
       }
-      return new OBBTree (mPt.AsSpan (0, mPtN), mTri.AsSpan (0, mTriN), mBox.AsSpan (0, mBoxN));
+      return new OBBTree (mPt.AsSpan (0, mPtN), mTri.AsSpan (0, mTriN), mBox.AsSpan (0, mBoxN), tag);
    }
    Queue<(int Box, int Start, int Count)> mTodo = [];
 
-   /// <summary>
-   /// Return a borrowed builder back to the pool
-   /// </summary>
+   /// <summary>Return a borrowed builder back to the pool</summary>
    public void Dispose () => BorrowPool<OBBTreeBuilder>.Return (this);
 
    // Implementation -----------------------------------------------------------
@@ -192,31 +207,17 @@ public class OBBTreeBuilder : IBorrowable<OBBTreeBuilder> {
       }
    }
 
-   // Helper to grow an array (more optimized than Array.Resize, since it
-   // copies only the 'used' elements, not all the elements currently in the array)
-   void Grow<T> (ref T[] array, int used, int delta) {
-      int size = array.Length, total = used + delta;
-      if (size == 0) size = 8;
-      while (size <= total) size *= 2;
-      if (size > array.Length) {
-         var final = new T[size];
-         if (used > 0) Array.Copy (array, final, used);
-         array = final;
-      }
-   }
-
    // Given a range of triangles (indices into the mPermute array), creates an OBB
    // from the points referenced in them. Note that we have to de-duplicate the points
    // and we use the mPtRung array for that
    int MakeOBB (int start, int end) {
-      Lib.Check (end > start + 1, "OBBTree.MakeOBB");
       // For each child OBB we are building, we are going to gather a subset of points
       // into mPtSubset (only the points referenced by the points from the triangles 
       // from start..end). Note that we have to de-duplicate these points and we use 
       // a rung mechanism for that (rather than the more expensive HashSet)
       mRung++; int cPts = 0;
       for (int i = start; i < end; i++) {
-         ref CTri t = ref mTri[mTMap[i]];
+         ref CTri t = ref mTri[mTriMap[i]];
          int a = t.A, b = t.B, c = t.C;
          if (mPtRung[a] != mRung) { mPtRung[a] = mRung; mPtSubset[cPts++] = mPt[a]; }
          if (mPtRung[b] != mRung) { mPtRung[b] = mRung; mPtSubset[cPts++] = mPt[b]; }
@@ -225,8 +226,8 @@ public class OBBTreeBuilder : IBorrowable<OBBTreeBuilder> {
       mBox[mBoxN] = OBB.Build (mPtSubset.AsSpan (0, cPts));
       return mBoxN++;
    }
-   Point3f[] mPtSubset = [];
    uint[] mPtRung = []; uint mRung;
+   Point3f[] mPtSubset = [];
 
    // Tries to partition the triangle subrange from start..end along a given 
    // direction, about the given mean point. Note that just does a shuffling of
@@ -235,16 +236,17 @@ public class OBBTreeBuilder : IBorrowable<OBBTreeBuilder> {
       int split = start;
       var fMean = mean.X * dir.X + mean.Y * dir.Y + mean.Z * dir.Z;
       for (int i = start; i < end; i++) {
-         var pt = mTri[mTMap[i]].Centroid;
-         var f = pt.X * dir.X + pt.Y * dir.Y + pt.X * dir.Z;
+         var pt = mTri[mTriMap[i]].Centroid;
+         var f = pt.X * dir.X + pt.Y * dir.Y + pt.Z * dir.Z;
          if (f < fMean) {
-            (mTMap[i], mTMap[split]) = (mTMap[split], mTMap[i]);
+            (mTriMap[i], mTriMap[split]) = (mTriMap[split], mTriMap[i]);
             split++;
          }
       }
       return split;
    }
 
+   // Reset is called before each build cycle
    void Reset () {
       mPDict.Clear (); mTodo.Clear (); 
       mPtN = mBoxN = mTriN = 0;
@@ -262,10 +264,11 @@ public class OBBTreeBuilder : IBorrowable<OBBTreeBuilder> {
    Point3f[] mPt = []; int mPtN;    // Set of all points, and count of how many of those are used
    CTri[] mTri = []; int mTriN;     // Set of all CTri, and count of how many of those are used
    OBB[] mBox = []; int mBoxN;      // Set of all OBB, and count of how many of those are used
-   // mTMap is a permutation of the mTriN triangles. Initially this is an 'identity' permutation
+   // mTriMap is a permutation of the mTriN triangles. Initially this is an 'identity' permutation
    // which is (0,1,2,...mTriN-1). As we subdivide this set of triangles into two (partitioning
    // along an axis), we shuffle this so all the triangles belonging to the first sub-OBB appear
    // first, followed by all those belonging to the second. It is faster to shuffle these 
    // 'permutation' indices rather than shuffling actual CTri objects
-   int[] mTMap = [];         
+   int[] mTriMap = [];         
 }
+#endregion
