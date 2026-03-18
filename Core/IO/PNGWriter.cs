@@ -184,3 +184,97 @@ public class PNGWriter : PNGCore {
    void U32 (EChunk v) => U32 ((uint)v);
 }
 #endregion
+
+#region class PNGReader ----------------------------------------------------------------------------
+/// <summary>PNGReader reads a bitmap written in PNG format</summary>
+/// <remarks>Not a generic PNG reader - this is just meant to read PNG files that were written by our PNGWriter.</remarks>
+public class PNGReader : PNGCore {
+   // Constructors -------------------------------------------------------------
+   /// <summary>Construct a PNGReader, given a DIBitmap to read</summary>
+   public PNGReader () => mStm = null!;
+   ByteStm mStm;
+   int Width, Height;
+   DIBitmap.EFormat Fmt;
+
+   // Methods ------------------------------------------------------------------
+   public DIBitmap? Read (string file) {
+      if (file.IsBlank () || !File.Exists (file)) return null;
+      mStm = new (File.ReadAllBytes (file));
+      if (mSign.Any (b => b != mStm.ReadByte ())) {
+         throw new Exception ("Not a valid PNG file");
+      }
+      ReadIHDR ();
+      return new (Width, Height, Fmt, ReadIDAT ());
+   }
+
+   // Chunk readers ------------------------------------------------------------
+   // Read an IHDR chunk (specifies width, height, format etc)
+   void ReadIHDR () {
+      U32 (); // Length of IHDR is always 13 bytes
+      Expecting (EChunk.IHDR);
+      Width = I32 (); Height = I32 (); U8 ();
+      var fmt = (EFormat)U8 ();
+      Fmt = fmt switch {
+         EFormat.Color => DIBitmap.EFormat.RGB8,
+         EFormat.Color | EFormat.Alpha => DIBitmap.EFormat.RGBA8,
+         EFormat.Gray => DIBitmap.EFormat.Gray8,
+         _ => throw new BadCaseException (fmt)
+      };
+      U8 (); U8 (); U8 ();
+      // CRC - skipped validation for now
+      U32 (); 
+   }
+
+   // Read the IDAT chunk and returns the raw bitmap data.
+   // See WriteIDAT for details on the format of this chunk. The code here is basically the
+   // reverse of the code in WriteIDAT, except that we don't have to worry about filter 
+   // selection since the filter type is stored in the data. 
+   byte[] ReadIDAT () {
+      // We don't know the actual length (of the compressed data), so just write some
+      // dummy value now - we'll come back and update this at the end of this function
+      var len = U32 ();
+      Expecting (EChunk.IDAT);
+      U8 (); // 24 : Compresstion method, Deflate 
+      U8 (); // 87 : Compression flag
+
+      int bpp = Fmt.BytesPerPixel (), stride = Width * bpp, size = 4 + stride;
+      byte[] prior = new byte[size], current = new byte[size];
+      var buffer = new byte[len];
+      unsafe {
+         fixed (byte* p = buffer) mStm.Read (p, (int)len);
+      }
+      using var ds = new DeflateStream (new MemoryStream (buffer), CompressionMode.Decompress);
+      byte[] data = new byte[stride * Height]; // Raw data 
+      for (int i = 0; i < Height; i++) {
+         int idx = Height - 1 - i;
+         // Read one row of data into 'current' (starting at offset 4, so that we don't have to
+         // do any special case handling for the leftmost pixel)
+         var filter = ds.ReadByte ();
+         ds.ReadExactly (current, 4, stride);
+
+         switch (filter) {
+            case 0: break; // NONE
+            case 1: for (int x = 4; x < size; x++) current[x] += current[x - bpp]; break; // SUB
+            case 2: for (int x = 4; x < size; x++) current[x] += prior[x]; break; // UP
+            default: throw new BadCaseException (filter);
+         }
+
+         for (int x = 4; x < size; x++) data[idx * stride + x - 4] = current[x];
+
+         // Now store the 'current' row as the 'prior' row and continue
+         (prior, current) = (current, prior);
+      }
+      return data;
+   }
+
+   // Implementation -----------------------------------------------------------
+   uint U8 () => mStm.ReadByte ();
+   uint U32 () => (U8 () << 24) | (U8 () << 16) | (U8 () << 8) | U8 ();
+   int I32 () => (int)U32 ();
+
+   void Expecting (EChunk c) {
+      if (c != (EChunk)U32 ())
+         throw new Exception ($"Expecting chunk {c}");
+   }
+}
+#endregion
