@@ -40,12 +40,13 @@ public partial class MainWindow : Window {
    void SliceMeshDemo (object s, RoutedEventArgs e) => Display (new IntMeshPlaneScene ());
    void ConvexHullDemo (object sender, RoutedEventArgs e) => Display (new ConvexHullScene ());
    void BuildOBBDemo (object sender, RoutedEventArgs e) => Display (new BuildOBBScene ());
-   void CollisionDemo (object s, RoutedEventArgs e) => Display (new CollisionScene ());
+   void CollisionDemo (object s, RoutedEventArgs e) => Display (new OBBCrashScene ());
 
    void Display (Scene scene) {
       mSettings.Children.Clear ();
       Lux.UIScene = scene;
       if (scene is RobotScene rs) rs.CreateUI (mSettings.Children);
       if (scene is STPScene or T3XDemoScene) Lux.BackFacesPink = true;
+      if (scene is OBBCrashScene cs) cs.CreateUI (mSettings.Children);
    }
 }

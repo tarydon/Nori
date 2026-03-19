@@ -226,7 +226,7 @@ public class OBBCollider {
       if (ta.Tris.Length < tb.Tris.Length) return Check (tb, in csB, ta, in csA, oneCrash);
       mA = ta; mB = tb;
       mDone = mCrashing = false; mOneCrash = oneCrash;
-      mBtoA = Matrix3.From (in csB) * Matrix3.To (in csA);
+      mBtoA = Matrix3.To (in csB) * Matrix3.From (in csA);
       mBPts = mB.Pts;
       BObb = n => mB.OBBs[n]; BTri = n => mB.Tris[n];
       // Each time the top level Check routine is called (a fresh collision check is starting), we do

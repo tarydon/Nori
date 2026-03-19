@@ -173,10 +173,10 @@ class TCollision {
       var mesh = Mesh3.LoadTMesh (NT.File ("Geom/Mesh3/part.tmesh"));
       var tree = Nori.Alt.OBBTree.From (mesh);
       tree.EnumBoxes (5).Count ().Is (32);
-      int leftH = GetHeight (tree.OBBs[0].Left), rightH = GetHeight (tree.OBBs[0].Right);
+      int leftH = GetHeight (tree.OBBs[1].Left), rightH = GetHeight (tree.OBBs[1].Right);
       double area = 0;
       var sb = new StringBuilder ();
-      Dump (0, 0, EDir.Root);
+      Dump (1, 0, EDir.Root);
       sb.Insert (0, $"Nodes: {tree.OBBs.Length + tree.Tris.Length - 2}. LeftH: {leftH}, RightH: {rightH}, Area = {area.R6 ()}\n");
       File.WriteAllText (NT.TmpTxt, sb.ToString ());
       Assert.TextFilesEqual (NT.File ("Sim/OBBTree.txt"), NT.TmpTxt);
@@ -186,7 +186,7 @@ class TCollision {
          string indent = new ('\t', level);
          var node = tree.OBBs[id];
          if (node.Left > 0) Dump (node.Left, level + 1, EDir.Left);
-         else if (node.Left < 0) sb.AppendLine ($"{indent}\tLT{-node.Left}");
+         else sb.AppendLine ($"{indent}\tLT{-node.Left}");
          string pre = dir == 0 ? "" : dir < 0 ? "L" : "R";
          area += node.Area;
          sb.AppendLine ($"{indent}{pre}B{id} ");

@@ -37,7 +37,8 @@ public class OBBTree {
    /// Each triangle points to 3 indices from the Pts array defining the endpoints, and
    /// also stores some cached values like the normal vector, predominant projection direction etc.
    /// Tris[0] is not used, since the OBBs use negative indices to point to triangles (while using
-   /// positive indices to point to sub-OBBs), and we don't want any confusion about the index 0
+   /// 0 or positive indices to point to sub-OBBs), and we don't want any confusion about the 
+   /// index 0
    public readonly CTri[] Tris;
 
    /// <summary>Is this an 'empty' OBBTree?</summary>
@@ -60,7 +61,7 @@ public class OBBTree {
    /// collision complexity contributed by that level.
    public IEnumerable<OBB> EnumBoxes (int maxLevel) {
       Queue<(int NBox, int Level)> todo = [];
-      todo.Enqueue ((0, 0));
+      todo.Enqueue ((1, 0));
       while (todo.TryDequeue (out var tup)) {
          OBB b = OBBs[tup.NBox];
          if (tup.Level <= maxLevel) {
@@ -201,7 +202,7 @@ public class OBBTreeBuilder : IBorrowable<OBBTreeBuilder> {
       // be negative - this means they are pointing to a triangle. The code below has
       // set these up to point to triangles indirectly (via the mPermute permutation).
       // Remove that level of indirection here
-      for (int i = 0; i < mBoxN; i++) {
+      for (int i = 1; i < mBoxN; i++) {
          ref OBB box = ref mBox[i];
          if (box.Left < 0) box.Left = -mTriMap[-box.Left];
          if (box.Right < 0) box.Right = -mTriMap[-box.Right];
@@ -270,7 +271,7 @@ public class OBBTreeBuilder : IBorrowable<OBBTreeBuilder> {
    // Reset is called before each build cycle
    void Reset () {
       mPDict.Clear (); mTodo.Clear (); 
-      mPtN = mBoxN = mTriN = 0;
+      mPtN = mTriN = 0; mBoxN = 1; 
    }
 
    // IBorrowable implementation -----------------------------------------------
@@ -282,9 +283,9 @@ public class OBBTreeBuilder : IBorrowable<OBBTreeBuilder> {
 
    // Private data -------------------------------------------------------------
    Dictionary<Point3f, int> mPDict = new (Point3fComparer.Delta);
-   Point3f[] mPt = []; int mPtN;    // Set of all points, and count of how many of those are used
-   CTri[] mTri = []; int mTriN;     // Set of all CTri, and count of how many of those are used
-   OBB[] mBox = []; int mBoxN;      // Set of all OBB, and count of how many of those are used
+   Point3f[] mPt = []; int mPtN;          // Set of all points, and count of how many of those are used
+   CTri[] mTri = []; int mTriN;           // Set of all CTri, and count of how many of those are used
+   OBB[] mBox = new OBB [8]; int mBoxN;   // Set of all OBB, and count of how many of those are used
    // mTriMap is a permutation of the mTriN triangles. Initially this is an 'identity' permutation
    // which is (0,1,2,...mTriN-1). As we subdivide this set of triangles into two (partitioning
    // along an axis), we shuffle this so all the triangles belonging to the first sub-OBB appear
