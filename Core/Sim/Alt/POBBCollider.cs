@@ -1,22 +1,19 @@
 // ────── ╔╗
 // ╔═╦╦═╦╦╬╣ OBBCollider.cs
-// ║║║║╬║╔╣║ <<TODO>>
+// ║║║║╬║╔╣║ Implements OBBCollider - collision checker for OBBTrees
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 namespace Nori.Alt;
 
+/// <summary>Implements a collision-check between two OBBTree</summary>
 public class OBBCollider : IBorrowable<OBBCollider> {
-   /// <summary>
-   /// Borrows an OBBCollider from the borrow-pool
-   /// </summary>
+   // Methods ------------------------------------------------------------------
+   /// <summary>Borrows an OBBCollider for use</summary>
    public static OBBCollider Borrow () => BorrowPool<OBBCollider>.Borrow ();
 
-   /// <summary>
-   /// Checks two OBBTree for collisions (returns at the first collision)
-   /// </summary>
+   /// <summary>Checks two OBBTree for collisions (returns at the first collision)</summary>
    public bool Check (OBBTree a, OBBTree b) {
-      // First, try to rearrange things so that b has a smaller number of triangles.
-      // We do this because we are going to transform OBBs, Triangles, Pts from B to
-      // A's space, and the fewer we have to transform, the better
+      // We're going to do the check by projecting all the data from tree B into tree A's
+      // coordinate system. Thus, we want the smaller tree as B (less transformation). 
       if (a.Tris.Length < b.Tris.Length) return Check (b, a);
       if (b.IsEmpty) return false;
 
@@ -25,61 +22,73 @@ public class OBBCollider : IBorrowable<OBBCollider> {
       // - Grow the mBAPts array to be as long as the mBPts array
       mBtoA = (mB = b).Xfm * (mA = a).InvXfm;
 
-      Lib.Grow (ref mBAPts, 0, b.Pts.Length);
-      if (++mRung == 0) {
-         // Rare edge case - we've bumped up Rung 4 billion times, and wrapped around, so
-         // all existing rung numbers will be bad
+      // Each time the top level Check routine is called (a fresh collision check is starting), we do
+      // this initialization:
+      // - Grow mBAPts to be at least as big as B.Pts.Length
+      // - Likewise the three rung arrays
+      // - Likewise mBATris and mBAOBBs should be grown so they are at least as big as B.Tris, B.OBBs
+      // - mRung is bumped up - this is effectively like a TimeStamp. 
+      mRung++;
+      if (mRung == 0) {
+         // Rare Edge case: when we bump up mRung, if it is 0, that means we have wrapped around and
+         // done 4 billion collision checks. At this point, all the rung values are no longer reliable 
+         // so: Reset mPtRung, mTriRung, mOBBRung to 0, and set mRung to 1. 
          mRung = 1; mTriRung = mPtRung = mOBBRung = [];
       }
-      // Grow the B-to-A arrays 
-      Lib.Grow (ref mBAPts, 0, b.Pts.Length); Lib.Grow (ref mPtRung, 0, b.Pts.Length);
-      Lib.Grow (ref mBATris, 0, b.Tris.Length); Lib.Grow (ref mTriRung, 0, b.Tris.Length);
+      // Grow the B to A arrays
       Lib.Grow (ref mBAOBBs, 0, b.OBBs.Length); Lib.Grow (ref mOBBRung, 0, b.OBBs.Length);
+      Lib.Grow (ref mBATris, 0, b.Tris.Length); Lib.Grow (ref mTriRung, 0, b.Tris.Length);
+      Lib.Grow (ref mBAPts, 0, b.Pts.Length); Lib.Grow (ref mPtRung, 0, b.Pts.Length);
 
-      mStack.Push ((1, 1));
-      mATri.Clear (); mBTri.Clear ();
-      mOneCrash = true; mCrashing = mDone = false;
-      Process (); 
+      // Do a top level check (fast exit path) whether the outermost bounding boxes collide
+      ref readonly OBB boxA = ref mA.OBBs[0], boxB = ref GetBBox (0);
+      if (!Collision.Check (in boxA, in boxB)) return false;
+
+      // Otherwise, recurse in 
+      mDone = mCrashing = false; mOneCrash = true;
+      mATris.Clear (); mBTris.Clear (); mDepth = 0;
+      Push (boxA.Left, boxB.Left); Push (boxA.Left, boxB.Right);
+      Push (boxA.Right, boxB.Left); Push (boxA.Right, boxB.Right);
+      Process ();
       return mCrashing;
    }
 
    public void Dispose () => BorrowPool<OBBCollider>.Return (this);
 
    // Implementation -----------------------------------------------------------
-   // Returns a particular OBB from B, transformed into A's space
+   // Returns an OBB from B, transformed into A's space
    ref OBB GetBBox (int n) {
       if (mRung != mOBBRung[n]) {
-         mBAOBBs[n] = mB.OBBs[n] * mBtoA;
          mOBBRung[n] = mRung;
+         mBAOBBs[n] = mB.OBBs[n] * mBtoA;
       }
       return ref mBAOBBs[n];
    }
 
-   // Returns a particular triangle from B, transformed into A's space
+   // Returns a Tri from B, transformed into A's space
    ref CTri GetBTri (int n) {
       if (mRung != mTriRung[n]) {
+         mTriRung[n] = mRung;
          ref readonly CTri t = ref mB.Tris[n];
          GetBPt (t.A); GetBPt (t.B); GetBPt (t.C);
          mBATris[n] = new (mBAPts, t.A, t.B, t.C);
-         mTriRung[n] = mRung;
       }
       return ref mBATris[n];
    }
 
-   // Copy a point from B, transformed into A's space
-   [MethodImpl (MethodImplOptions.AggressiveInlining)]
+   // Transforms a point from B to A's space.
    void GetBPt (int n) {
-      if (mRung != mPtRung[n]) {
-         mBAPts[n] = mB.Pts[n] * mBtoA;
-         mPtRung[n] = mRung;
-      }
+      if (mPtRung[n] == mRung) return;
+      mBAPts[n] = mB.Pts[n] * mBtoA;
+      mPtRung[n] = mRung;
    }
 
+   // Checks two entities for collision. The entities could be OBBs (if the index is non-negative),
+   // or triangles (if the index is negative). This is a recursive routine that checks one entity
+   // from OBBTree A with an entity from OBBTree b. 
    void Process () {
-      Pts.Clear (); 
       var (aBoxes, aTris, aPts) = (mA.OBBs, mA.Tris, mA.Pts);
-      while (mStack.TryPop (out var tup) && !mDone) {
-         int a = tup.A, b = tup.B;
+      while (Pop (out var a, out var b)) {
          if (a > 0) {
             if (b > 0) {
                // If both a and b are > 0, then they are both OBBs. 
@@ -87,20 +96,20 @@ public class OBBCollider : IBorrowable<OBBCollider> {
                // - If there is no collision, we are done with this pair
                // - Otherwise, check each combination of (a.Left, a.Right) with (b.Left, b.Right)
                ref readonly OBB boxA = ref aBoxes[a], boxB = ref GetBBox (b);
-               if (!Collision.Check (in boxA, in boxB)) continue;    // No collision, skip this subtree
-               mStack.Push ((boxA.Left, boxB.Left)); mStack.Push ((boxA.Left, boxB.Right));
-               mStack.Push ((boxA.Right, boxB.Left)); mStack.Push ((boxA.Right, boxB.Right));
-            } else {
+               if (!Collision.Check (in boxA, in boxB)) continue;
+               Push (boxA.Left, boxB.Left); Push (boxA.Left, boxB.Right);
+               Push (boxA.Right, boxB.Left); Push (boxA.Right, boxB.Right);
+            } else if (b < 0) {
                // a is an OBB index, b is a triangle index.
                // - Do an OBBxTri check after transforming the triangle into A's space
                // - If there is no collision, we are done with this pair
                // - Otherwise, check each of (a.Left, a.Right) with the triangle b
                ref readonly OBB boxA = ref aBoxes[a];
                ref readonly CTri triB = ref GetBTri (-b);
-               if (!Collision.Check (mBAPts, in triB, in boxA)) continue;   // No collision, skip this subtree
-               mStack.Push ((boxA.Left, b)); mStack.Push ((boxA.Right, b));
+               if (!Collision.Check (mBAPts, in triB, in boxA)) continue;
+               Push (boxA.Left, b); Push (boxA.Right, b);
             }
-         } else {
+         } else if (a < 0) {
             if (b > 0) {
                // a is a TRI index, b is an OBB
                // - Do an OBBxTri check after transforming the OBB into A's space
@@ -108,43 +117,49 @@ public class OBBCollider : IBorrowable<OBBCollider> {
                // - Otherwise, check each of (b.Left, b.Right) with the triangle a
                ref readonly CTri triA = ref aTris[-a];
                ref readonly OBB boxB = ref GetBBox (b);
-               if (!Collision.Check (aPts, in triA, in boxB)) continue;  // No collision, skip this subtree
-               mStack.Push ((a, boxB.Left)); mStack.Push ((a, boxB.Right));
-            } else {
+               if (!Collision.Check (aPts, in triA, in boxB)) continue;
+               Push (a, boxB.Left); Push (a, boxB.Right);
+            } else if (b < 0) {
                // Both are tris - do the lowest level check at which collisions are
                // actually detected!
                ref readonly CTri triA = ref aTris[-a], triB = ref GetBTri (-b);
-               if (!Collision.Check (aPts, in triA, mBAPts, in triB)) continue;
-               AddTri (mA, -a); AddTri (mB, -b);
-               mATri.Add (-a); mBTri.Add (-b);
-               if (mOneCrash) mDone = true; 
+               if (!Collision.TriTri (aPts, in triA, mBAPts, in triB)) continue;
+               if (mOneCrash) mDone = true;
+               else { mATris.Add (-a); mBTris.Add (-b); }
                mCrashing = true;
             }
          }
       }
    }
 
-   void AddTri (OBBTree tree, int ntri) {
-      var xfm = tree.Xfm;
-      CTri tri = tree.Tris[ntri];
-      Point3f pa = tree.Pts[tri.A] * xfm, pb = tree.Pts[tri.B] * xfm, pc = tree.Pts[tri.C] * xfm;
-      Pts.AddM (pa, pb, pb, pc, pc, pa);
+   [MethodImpl (MethodImplOptions.AggressiveInlining)]
+   void Push (int a, int b) {
+      if (mStack.Length == mDepth) Array.Resize (ref mStack, 2 * mDepth);
+      mStack[mDepth] = a; mStack[mDepth + 1] = b;
+      mDepth += 2;
    }
 
-   static public List<Point3f> Pts = [];
+   [MethodImpl (MethodImplOptions.AggressiveInlining)]
+   bool Pop (out int a, out int b) {
+      if (mDone || mDepth <= 0) { a = b = 0; return false; }
+      mDepth -= 2; a = mStack[mDepth]; b = mStack[mDepth + 1];
+      return true;
+   }
 
    // IBorrowable implementation -----------------------------------------------
+   OBBCollider () { }
    static OBBCollider IBorrowable<OBBCollider>.Make () => new ();
    static ref OBBCollider? IBorrowable<OBBCollider>.Next (OBBCollider item) => ref item.mNext;
    OBBCollider? mNext;
 
    // Private data -------------------------------------------------------------
-   // Core data - the two OBBTree, the transform from B..A, and the original copy
-   // of B's points   
-   OBBTree mA = OBBTree.Empty, mB = OBBTree.Empty; // The OBBTree we are testing
-   Matrix3 mBtoA = Matrix3.Identity;   // Transform from B to A's space
-   Stack<(int A, int B)> mStack = [];  // Stack of checks to do 
-   List<int> mATri = [], mBTri = [];   // Taken in pairs, mATri[N] and mBTri[N] are the pairs of triangles crashing
+   // The tree travesal stack and its depth. It contains pair of 
+   // elements from 'A' and 'B' trees.
+   OBBTree mA = OBBTree.Empty, mB = OBBTree.Empty;    // OBBTrees we're testing
+   Matrix3 mBtoA = Matrix3.Identity;      // Transform from B to A's space
+   int[] mStack = new int[32];            // Tree traversal stack (pairs of elements from A, B)
+   int mDepth;                            // Depth of that stack
+   List<int> mATris = [], mBTris = []; // Take in pairs, mATris[N] and mBTris[N] are triangles from A and B that crash
    bool mCrashing, mOneCrash, mDone;
 
    // Optimization notes.

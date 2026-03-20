@@ -1,7 +1,9 @@
-﻿using System.Windows;
+﻿using System.IO.Compression;
+using System.Windows;
 using System.Windows.Controls;
+using System.IO;
 using Nori;
-using NOBBTree = Nori.Alt.OBBTree;
+using NOBBTree = Nori.OBBTree;
 
 namespace WPFDemo;
 
@@ -9,21 +11,27 @@ class OBBCrashScene : Scene3 {
    public OBBCrashScene () {
       Lib.Tracer = TraceVN.Print;
       TraceVN.TextColor = Color4.Yellow;
-      
-      mMesh1 = Mesh3.LoadObj ("c://etc//horse//cow.obj");
+
+      var zar = new ZipArchive (File.OpenRead ("N:/TData/IO/MESH/cow.zip"));
+      var ze = zar.GetEntry ("cow.obj")!;
+      var zstm = new ZipReadStream (ze.Open (), ze.Length);
+      mMesh1 = Mesh3.LoadObj (zstm.ReadAllLines ());
       mMesh1 *= Matrix3.Scaling (100);
       mVN1 = new Mesh3VN (mMesh1) { Mode = EShadeMode.GlassNoStencil, Color = Color4.Blue };
       Lib.Trace ($"Cow: {mMesh1.Triangle.Length / 3} triangles");
       using (new BlockTimer ("Collider.Cow build"))
-         mColl1 = NOBBTree.From (mMesh1, "cow");
+         mColl1 = new NOBBTree (mMesh1);
       mXfm1 = new XfmVN (Matrix3.Identity, mVN1);
 
-      mMesh2 = Mesh3.LoadObj ("c://etc//horse//hand.obj");
-      Lib.Trace ($"Hand: {mMesh2.Triangle.Length / 3} triangles");
+      zar = new ZipArchive (File.OpenRead ("N:/TData/IO/MESH/hand.zip"));
+      ze = zar.GetEntry ("hand.obj")!;
+      zstm = new ZipReadStream (ze.Open (), ze.Length);
+      mMesh2 = Mesh3.LoadObj (zstm.ReadAllLines ());
       mMesh2 *= Matrix3.Scaling (70);
       mVN2 = new Mesh3VN (mMesh2) { Mode = EShadeMode.GlassNoStencil, Color = Color4.Green };
+      Lib.Trace ($"Hand: {mMesh2.Triangle.Length / 3} triangles");
       using (new BlockTimer ("Collider.Hand build"))
-         mColl2 = NOBBTree.From (mMesh2, "hand");
+         mColl2 = new NOBBTree (mMesh2);
       mXfm2 = new XfmVN (Matrix3.Identity, mVN2);
 
       mDebug = new CollViewNode ();
@@ -92,7 +100,7 @@ class OBBCrashScene : Scene3 {
 
       void Set (string s, double f) => mSliders[s].Value = f;
    }
-   Random mR = new ();
+   Rand mR = new Rand (42);
 
    void Update (bool timing = false) {
       if (mPause) return;
@@ -111,13 +119,11 @@ class OBBCrashScene : Scene3 {
       mXfm2.Xfm = xfm2;
 
       bool crash;
-      using var bc = Nori.Alt.OBBCollider.Borrow ();
-      var coll1 = mColl1.With (xfm1);
-      var coll2 = mColl2.With (xfm2);
       if (timing) {
-         using (var bt = new BlockTimer ("Collision check")) crash = bc.Check (coll1, coll2);
-      } else 
-         crash = bc.Check (coll1, coll2);
+         using (var bt = new BlockTimer ("Collision check"))
+            crash = OBBCollider.It.Check (mColl1, xfm1.ToCS (), mColl2, xfm2.ToCS ());
+      } else
+         crash = OBBCollider.It.Check (mColl1, xfm1.ToCS (), mColl2, xfm2.ToCS ());
       mVN2.Color = crash ? Color4.Red : Color4.Green;
       mDebug.Redraw ();
    }
@@ -125,6 +131,6 @@ class OBBCrashScene : Scene3 {
 
    class CollViewNode : VNode {
       public override void SetAttributes () { Lux.Color = Color4.Yellow; }
-      public override void Draw () => Lux.Lines (Nori.Alt.OBBCollider.Pts.Select (a => (Vec3F)a).ToArray ());
+      public override void Draw () { }// => Lux.Lines (Nori.Alt.OBBCollider.Pts.Select (a => (Vec3F)a).ToArray ());
    }
 }

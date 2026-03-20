@@ -23,7 +23,7 @@ public class OBBTree {
 
    // Properties ---------------------------------------------------------------
    /// <summary>The hierarchy of oriented bounding boxes</summary>
-   /// OBBs[1] is the root OBB of the entire mesh and will contain all the N 
+   /// OBBs[0] is the root OBB of the entire mesh and will contain all the N 
    /// triangles in the mesh. The left and right children will contain a (close to equal) partition 
    /// of these children with A and B triangles such that A+B = N. The binary tree keeps going 
    /// down until we finally reach individual triangles. At that point, we don't actually build 
@@ -61,7 +61,7 @@ public class OBBTree {
    /// collision complexity contributed by that level.
    public IEnumerable<OBB> EnumBoxes (int maxLevel) {
       Queue<(int NBox, int Level)> todo = [];
-      todo.Enqueue ((1, 0));
+      todo.Enqueue ((0, 0));
       while (todo.TryDequeue (out var tup)) {
          OBB b = OBBs[tup.NBox];
          if (tup.Level <= maxLevel) {
@@ -271,7 +271,7 @@ public class OBBTreeBuilder : IBorrowable<OBBTreeBuilder> {
    // Reset is called before each build cycle
    void Reset () {
       mPDict.Clear (); mTodo.Clear (); 
-      mPtN = mTriN = 0; mBoxN = 1; 
+      mPtN = mTriN = mBoxN = 0;
    }
 
    // IBorrowable implementation -----------------------------------------------

@@ -395,6 +395,12 @@ public struct Rand {
       return (int)(((ulong)result * (uint)max) >> 32);
    }
 
+   /// <summary>Returns the next integer in the range [min .. max)</summary>
+   /// <param name="min"></param>
+   /// <param name="max"></param>
+   /// <returns></returns>
+   public int Next (int min, int max) => Next (max - min) + min;
+
    // Implementation -----------------------------------------------------------
    static uint SplitMix32 (ref uint x) {
       x += 0x9E3779B9u;
