@@ -1,4 +1,5 @@
 Nodes: 1037. LeftH: 9, RightH: 10, Area = 739188.013088
+									LT0
 								LB246 
 									RT429
 							LB127 
@@ -504,6 +505,7 @@ B0
 							RB186 
 									LT341
 								RB331 
+										LT0
 									RB466 
 										RT391
 				LB23 

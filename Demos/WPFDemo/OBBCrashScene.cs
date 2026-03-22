@@ -1,9 +1,7 @@
-﻿using System.IO.Compression;
+﻿using System.Text;
 using System.Windows;
 using System.Windows.Controls;
-using System.IO;
 using Nori;
-using NOBBTree = Nori.Alt.OBBTree;
 
 namespace WPFDemo;
 
@@ -12,45 +10,32 @@ class OBBCrashScene : Scene3 {
       Lib.Tracer = TraceVN.Print;
       TraceVN.TextColor = Color4.Yellow;
 
-      var zar = new ZipArchive (File.OpenRead ("N:/TData/IO/MESH/cow.zip"));
-      var ze = zar.GetEntry ("cow.obj")!;
-      var zstm = new ZipReadStream (ze.Open (), ze.Length);
-      mMesh1 = Mesh3.LoadObj (zstm.ReadAllLines ());
-      mMesh1 *= Matrix3.Scaling (100);
-      // mMesh1 = Mesh3.Extrude ([Poly.Rectangle (-20, -20, 20, 20)], 40, Matrix3.Translation (0, 0, -20));
+      mCow = Mesh3.LoadObj (Lib.ReadLinesFromZip ("N:/TData/IO/MESH/cow.zip", "cow.obj"));
+      mCow *= Matrix3.Scaling (100);
+      mCowVN = new Mesh3VN (mCow) { Mode = EShadeMode.Glass, Color = Color4.Blue };
+      Lib.Trace ($"Cow: {mCow.Triangle.Length / 3} triangles");
+      using (new BlockTimer ("Collider.Cow build")) mCowOBB = OBBTree.From (mCow);
+      mCowXfm = new XfmVN (Matrix3.Identity, mCowVN);
 
-      mVN1 = new Mesh3VN (mMesh1) { Mode = EShadeMode.Glass, Color = Color4.Blue };
-      Lib.Trace ($"Cow: {mMesh1.Triangle.Length / 3} triangles");
-      using (new BlockTimer ("Collider.Cow build"))
-         mColl1 = NOBBTree.From (mMesh1);
-      mXfm1 = new XfmVN (Matrix3.Identity, mVN1);
-
-      zar = new ZipArchive (File.OpenRead ("N:/TData/IO/MESH/hand.zip"));
-      ze = zar.GetEntry ("hand.obj")!;
-      zstm = new ZipReadStream (ze.Open (), ze.Length);
-      mMesh2 = Mesh3.LoadObj (zstm.ReadAllLines ());
-      mMesh2 *= Matrix3.Scaling (70);
-      // mMesh2 = Mesh3.Extrude ([Poly.Rectangle (-30, -30, 30, 30)], 60, Matrix3.Translation (0, 0, -30));
-
-      mVN2 = new Mesh3VN (mMesh2) { Mode = EShadeMode.Glass, Color = Color4.Green };
-      Lib.Trace ($"Hand: {mMesh2.Triangle.Length / 3} triangles");
-      using (new BlockTimer ("Collider.Hand build"))
-         mColl2 = NOBBTree.From (mMesh2);
-      mXfm2 = new XfmVN (Matrix3.Identity, mVN2);
+      mHand = Mesh3.LoadObj (Lib.ReadLinesFromZip ("N:/TData/IO/MESH/hand.zip", "hand.obj"));
+      mHand *= Matrix3.Scaling (70);
+      mHandVN = new Mesh3VN (mHand) { Mode = EShadeMode.Glass, Color = Color4.Green };
+      Lib.Trace ($"Hand: {mHand.Triangle.Length / 3} triangles");
+      using (new BlockTimer ("Collider.Hand build")) mHandOBB = OBBTree.From (mHand);
+      mHandXfm = new XfmVN (Matrix3.Identity, mHandVN);
 
       mDebug = new CollViewNode ();
       Update ();
 
-      Root = new GroupVN ([mXfm1, mXfm2, mDebug, TraceVN.It]);
+      Root = new GroupVN ([mCowXfm, mHandXfm, mDebug, TraceVN.It]);
       Bound = new Bound3 (-100, -100, -100, 100, 100, 100);
       BgrdColor = Color4.Gray (64);
    }
-   Mesh3 mMesh1;
-   Mesh3 mMesh2;
-   Mesh3VN mVN1, mVN2;
-   NOBBTree mColl1, mColl2;
-   CollViewNode mDebug;
-   XfmVN mXfm2, mXfm1;
+   Mesh3 mCow, mHand;            // The two meshes: Cow and Hand
+   Mesh3VN mCowVN, mHandVN;      // MeshVN for rendering each of these (we'll set both to red when colliding)
+   OBBTree mCowOBB, mHandOBB;    // Colliders for Cow and Hand
+   XfmVN mHandXfm, mCowXfm;      // XfmVN for moving the meshes around in space
+   CollViewNode mDebug;          // VN for drawing the collision trace
 
    public void CreateUI (UIElementCollection ui) {
       ui.Clear ();
@@ -104,7 +89,7 @@ class OBBCrashScene : Scene3 {
 
       void Set (string s, double f) => mSliders[s].Value = f;
    }
-   Rand mR = new Rand (42);
+   Rand mR = new (42);
 
    void Update (bool timing = false) {
       if (mPause) return;
@@ -113,30 +98,41 @@ class OBBCrashScene : Scene3 {
       xfm1 *= Matrix3.Rotation (EAxis.Y, mRy.D2R ());
       xfm1 *= Matrix3.Rotation (EAxis.Z, mRz.D2R ());
       xfm1 *= Matrix3.Translation (mX, mY, mZ);
-      mXfm1.Xfm = xfm1;
+      mCowXfm.Xfm = xfm1;
 
       var xfm2 = Matrix3.Identity;
       xfm2 *= Matrix3.Rotation (EAxis.X, mRx2.D2R ());
       xfm2 *= Matrix3.Rotation (EAxis.Y, mRy2.D2R ());
       xfm2 *= Matrix3.Rotation (EAxis.Z, mRz2.D2R ());
       xfm2 *= Matrix3.Translation (mX2, mY2, mZ2);
-      mXfm2.Xfm = xfm2;
+      mHandXfm.Xfm = xfm2;
 
       bool crash;
-      using var bc = Nori.Alt.OBBCollider.Borrow ();
-      var coll1 = mColl1.With (xfm1); var coll2 = mColl2.With (xfm2);
+      using var bc = OBBCollider.Borrow ();
+      var obb1 = mCowOBB.With (xfm1); var obb2 = mHandOBB.With (xfm2);
       if (timing) {
          using (var bt = new BlockTimer ("Collision check"))
-            crash = bc.Check (coll1, coll2);
+            crash = bc.Check (obb1, obb2);
+
+         var s = $"{++nn}\n";
+         s += $"Cow : ({mX},{mY},{mZ}) <{mRx},{mRy},{mRz}>)\n";
+         s += $"Hand: ({mX2},{mY2},{mZ2}) <{mRx2},{mRy2},{mRz2}>)\n";
+         s += crash ? "CRASH" : ".....";
+         s += "\n\n";
+         System.IO.File.AppendAllText ("c:/etc/output.txt", s);
       } else
-         crash = bc.Check (coll1, coll2);
+         crash = bc.Check (obb1, obb2);
 
-      if (crash) mDebug.Pts = bc.GetChalk ();
-      else mDebug.Pts = [];
+      if (crash) {
+         var pts = bc.GetChalk ().ToArray ();
+         if (nn == 9) System.IO.File.WriteAllLines ("c:/etc/obb-trace.txt", pts.Select (a => a.ToString ()));
+         mDebug.Pts = bc.GetChalk ();
+      } else mDebug.Pts = [];
 
-         mVN2.Color = crash ? Color4.Red : Color4.Green;
+      mHandVN.Color = crash ? Color4.Red : Color4.Green;
       mDebug.Redraw ();
    }
+   int nn = 0; 
    bool mPause;
 
    class CollViewNode : VNode {

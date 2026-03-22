@@ -2,6 +2,7 @@
 // ╔═╦╦═╦╦╬╣ Lib.cs
 // ║║║║╬║╔╣║ Implements the Lib module class that has a number of global functions
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
+using System.IO.Compression;
 using System.Threading;
 using static System.Math;
 namespace Nori;
@@ -213,6 +214,14 @@ public static class Lib {
    /// <summary>Reads a set of lines from a stream opened by the IStmLocator service</summary>
    public static string[] ReadLines (string file)
       => ReadText (file).Split ('\n');
+
+   /// <summary>Reads a set of lines from a stream inside a Zip archive</summary>
+   public static List<string> ReadLinesFromZip (string zipfile, string stream) {
+      var zar = new ZipArchive (File.OpenRead (zipfile));
+      var ze = zar.GetEntry (stream)!;
+      var zstm = new ZipReadStream (ze.Open (), ze.Length);
+      return [.. zstm.ReadAllLines ()];
+   }
 
    /// <summary>Register a stream locator</summary>
    public static void Register (IStmLocator locator) => sLocators.Add (locator);

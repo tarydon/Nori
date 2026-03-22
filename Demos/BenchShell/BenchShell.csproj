@@ -18,13 +18,4 @@
     <ProjectReference Include="..\..\WGL\Nori.WGL.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Reference Include="Flux.Base">
-      <HintPath>X:\Src\bin\Flux.Base.dll</HintPath>
-    </Reference>
-    <Reference Include="Flux.Core">
-      <HintPath>X:\Src\bin\Flux.Core.dll</HintPath>
-    </Reference>
-  </ItemGroup>
-
 </Project>

@@ -171,12 +171,12 @@ class TCollision {
    [Test (188, "OBBTree test")]
    void Test5 () {
       var mesh = Mesh3.LoadTMesh (NT.File ("Geom/Mesh3/part.tmesh"));
-      var tree = Nori.Alt.OBBTree.From (mesh);
+      var tree = OBBTree.From (mesh);
       tree.EnumBoxes (5).Count ().Is (32);
-      int leftH = GetHeight (tree.OBBs[1].Left), rightH = GetHeight (tree.OBBs[1].Right);
+      int leftH = GetHeight (tree.OBBs[0].Left), rightH = GetHeight (tree.OBBs[0].Right);
       double area = 0;
       var sb = new StringBuilder ();
-      Dump (1, 0, EDir.Root);
+      Dump (0, 0, EDir.Root);
       sb.Insert (0, $"Nodes: {tree.OBBs.Length + tree.Tris.Length - 2}. LeftH: {leftH}, RightH: {rightH}, Area = {area.R6 ()}\n");
       File.WriteAllText (NT.TmpTxt, sb.ToString ());
       Assert.TextFilesEqual (NT.File ("Sim/OBBTree.txt"), NT.TmpTxt);
@@ -204,55 +204,54 @@ class TCollision {
 
    [Test (189, "OBBCollider test")]
    void Test6 () {
-      Random R = new (1);
-      
-      var meshA = Mesh3.LoadTMesh (NT.File ("Geom/Mesh3/part.tmesh"));
-      var treeA = new OBBTree (meshA); var csA = CoordSystem.World;
+      var cow = Mesh3.LoadObj (Lib.ReadLinesFromZip (NT.File ("IO/MESH/cow.zip"), "cow.obj"));
+      cow *= Matrix3.Scaling (100);
+      var cowOBB = OBBTree.From (cow);
+      var hand = Mesh3.LoadObj (Lib.ReadLinesFromZip (NT.File ("IO/MESH/hand.zip"), "hand.obj"));
+      hand *= Matrix3.Scaling (70);
+      var handOBB = OBBTree.From (hand);
 
-      var meshB = Mesh3.LoadTMesh (NT.File ("Sim/MeshB.tmesh"));
-      meshB *= Matrix3.Translation (-(Vector3)meshB.Bound.Midpoint) * Matrix3.Scaling (0.025);
-      var treeB = new OBBTree (meshB);
-      var coords = Enumerable.Range (0, 50).Select (i => CS ()).ToArray (); coords[0] = CoordSystem.World;
+      int s = 50; string txt = "";
+      var mR = new Rand (42);
+      StringBuilder trace = new ();
 
-      var sb = new StringBuilder ();
-      sb.AppendLine ("Collisions");
-      // A with Bs and Bs with each other
-      // Coordinates: World x World, Bi x World, World (B0) x Bj, Bi x Bj
-      sb.Append (" A: ");
-      var crashes = coords.Select (_ => new List<string> ()).ToArray ();
-      for (int i = 0; i < coords.Length; i++) {
-         var csB = coords[i];
-         if (OBBCollider.It.Check (treeB, csB, treeA, csA)) {
-            sb.Append ($"B{i} ");
-            crashes[i].Add ("A");
+      for (int i = 1; i <= 10; i++) {
+         int mX = mR.Next (-s, s), mY = mR.Next (-s, s), mZ = mR.Next (-s, s);
+         int mX2 = mR.Next (-s, s), mY2 = mR.Next (-s, s), mZ2 = mR.Next (-s, s);
+         int mRx = mR.Next (-180, 180), mRy = mR.Next (-180, 180), mRz = mR.Next (-180, 180);
+         int mRx2 = mR.Next (-180, 180), mRy2 = mR.Next (-180, 180), mRz2 = mR.Next (-180, 180);
+
+         var xfm1 = Matrix3.Identity;
+         xfm1 *= Matrix3.Rotation (EAxis.X, mRx.D2R ());
+         xfm1 *= Matrix3.Rotation (EAxis.Y, mRy.D2R ());
+         xfm1 *= Matrix3.Rotation (EAxis.Z, mRz.D2R ());
+         xfm1 *= Matrix3.Translation (mX, mY, mZ);
+         var cowTest = cowOBB.With (xfm1);
+
+         var xfm2 = Matrix3.Identity;
+         xfm2 *= Matrix3.Rotation (EAxis.X, mRx2.D2R ());
+         xfm2 *= Matrix3.Rotation (EAxis.Y, mRy2.D2R ());
+         xfm2 *= Matrix3.Rotation (EAxis.Z, mRz2.D2R ());
+         xfm2 *= Matrix3.Translation (mX2, mY2, mZ2);
+         var handTest = handOBB.With (xfm2);
+
+         using var bc = OBBCollider.Borrow ();
+         var crash = bc.Check (cowTest, handTest);
+
+         txt += $"{i}\n";
+         txt += $"Cow : ({mX},{mY},{mZ}) <{mRx},{mRy},{mRz}>)\n";
+         txt += $"Hand: ({mX2},{mY2},{mZ2}) <{mRx2},{mRy2},{mRz2}>)\n";
+         txt += crash ? "CRASH" : ".....";
+         txt += "\n\n";
+
+         if (i == 9) {
+            var pts = bc.GetChalk ().ToArray ();
+            pts.Select (a => a.ToString () + "\r\n").ForEach (s => trace.Append (s));
          }
-         for (int j = i + 1; j < coords.Length; j++) {
-            // Same tree, different coordinates. 
-            if (OBBCollider.It.Check (treeB, csB, treeB, coords[j])) {
-               crashes[i].Add ($"B{j}"); 
-               crashes[j].Add ($"B{i}");
-            }
-         }
       }
-      sb.AppendLine ();
-
-      for (int i = 0; i < crashes.Length; i++) {
-         if (crashes[i].Count == 0) continue;
-         sb.AppendLine ($" B{i}: {string.Join (" ", crashes[i])}");
-      }
-
-      File.WriteAllText (NT.TmpTxt, sb.ToString ());
-      Assert.TextFilesEqual (NT.File ("Sim/OBBCollider.txt"), NT.TmpTxt);
-
-      CoordSystem CS () {
-         var vX = new Vector3 (D (), D (), D ()).Normalized ();
-         var vY = vX * new Vector3 (D (), D (), D ()).Normalized ();
-         return new (new (D (), D (), D ()), vX, vY);
-      }
-
-      double D () {
-         var val = R.Next (10, 100) * R.NextDouble ();
-         return R.NextDouble () switch { < 0.5 => -val, _ => val };
-      }
+      File.WriteAllText (NT.TmpTxt, txt);
+      Assert.TextFilesEqual ("Sim/OBBCollide.txt", NT.TmpTxt);
+      File.WriteAllText (NT.TmpTxt, trace.ToString ());
+      Assert.TextFilesEqual ("Sim/OBBTrace.txt", NT.TmpTxt);
    }
 }

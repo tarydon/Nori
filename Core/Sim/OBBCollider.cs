@@ -2,7 +2,7 @@
 // ╔═╦╦═╦╦╬╣ OBBCollider.cs
 // ║║║║╬║╔╣║ Implements OBBCollider - collision checker for OBBTrees
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
-namespace Nori.Alt;
+namespace Nori;
 
 /// <summary>Implements a collision-check between two OBBTree</summary>
 public class OBBCollider : IBorrowable<OBBCollider> {
