@@ -45,7 +45,9 @@ public class Mesh3VN : VNode {
 
    // Properties ---------------------------------------------------------------
    /// <summary>Color for the Mesh (set to Color4.Nil to inherit parent color)</summary>
-   public Color4 Color = Color4.Yellow;
+   public Color4 Color { get => mColor; set { mColor = value; Lux.Redraw (); } }
+   Color4 mColor = Color4.Yellow;
+
    /// <summary>Shade mode for this mesh</summary>
    public EShadeMode Mode = EShadeMode.Phong;
 

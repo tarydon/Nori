@@ -383,8 +383,7 @@ public struct Rand {
       if ((m0 | m1 | m2 | m3) == 0) m3 = 1;  // Catch very rare zero state
    }
 
-   /// <summary>Returns the next integer in the semi-open range [0 .. max)</summary>
-   [MethodImpl (MethodImplOptions.AggressiveInlining)]
+   /// <summary>Returns a random integer in the semi-open range [0 .. max)</summary>
    public int Next (int max) {
       // Core of Xoshiro 128
       uint result = BitOperations.RotateLeft (m1 * 5, 7) * 9, t = m1 << 9;
@@ -394,6 +393,9 @@ public struct Rand {
       // Lemire reduction for unbiased [0 .. max)
       return (int)(((ulong)result * (uint)max) >> 32);
    }
+
+   /// <summary>Returns a random integer in the range [min .. max)</summary>
+   public int Next (int min, int max) => Next (max - min) + min;
 
    // Implementation -----------------------------------------------------------
    static uint SplitMix32 (ref uint x) {

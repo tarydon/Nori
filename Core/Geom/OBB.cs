@@ -44,8 +44,8 @@ public struct OBB {
    /// - If positive they are pointers to another OBB (index into the OBBTree.OBBs array)
    /// - If negative, they are pointers to leaf triangles (negative index into
    ///   the OBBTree.Tris array)
-   // To support this convention, OBBTree.CTris[0] is not used. (No confusion will arise 
-   // about OBBTree.OBBs[0], which is the root and can never be a Left or Right child). 
+   /// To support this convention, OBBTree.CTris[0] is not used. (No confusion will arise 
+   /// about OBBTree.OBBs[0], which is the root and can never be a Left or Right child). 
    public int Left, Right;
 
    /// <summary>The box area</summary>

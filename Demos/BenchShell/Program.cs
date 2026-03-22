@@ -5,71 +5,54 @@
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Running;
 using Nori;
-
 namespace NBench;
 
 [MemoryDiagnoser]
 public class Tester {
    public Tester () {
       Lib.Init ();
-      for (char ch = 'A'; ch <= 'J'; ch++) {
-         var polys = LoadPolys (ch);
-         mPolys.Add (polys); mOuter.Add (polys.MaxIndexBy (a => a.GetBound ().Area));
-
-         List<Point2> pts = []; List<int> splits = [0];
-         foreach (var p in polys) { pts.AddRange (p.Pts); splits.Add (pts.Count); }
-         mPts.Add (pts); mSplits.Add (splits);
-      }
-   }
-   List<List<Poly>> mPolys = [];
-   List<int> mOuter = [];
-   List<List<Point2>> mPts = [];
-   List<List<int>> mSplits = [];
-
-   List<Poly> LoadPolys (char ch) {
-      List<Poly> input = []; List<Point2> pts = [];
-      var dwg = DXFReader.Load ($"N:/TData/Geom/Tess/{ch}.dxf");
-      foreach (var e2p in dwg.Ents.OfType<E2Poly> ().Where (a => a.Layer.Name == "0")) {
-         var poly = e2p.Poly;
-         if (poly.HasArcs) {
-            pts.Clear (); poly.Discretize (pts, Lib.FineTess, Lib.FineTessAngle);
-            input.Add (Poly.Lines (pts, true));
-         } else
-            input.Add (poly);
-      }
-      return input;
+      var cow = Mesh3.LoadObj (Lib.ReadLinesFromZip ("N:/TData/IO/MESH/cow.zip", "cow.obj"));
+      cow *= Matrix3.Scaling (100);
+      mCow = OBBTree.From (cow);
+      var hand = Mesh3.LoadObj (Lib.ReadLinesFromZip ("N:/TData/IO/MESH/hand.zip", "hand.obj"));
+      hand *= Matrix3.Scaling (70);
+      mHand = OBBTree.From (hand);
    }
 
    [Benchmark (Baseline = true)]
-   public void GLUTess () {
-      for (int k = 0; k < Iter; k++) {
-         for (int i = 0; i < mPts.Count; i++) {
-            int n = Tess2D.Process (mPts[i], mSplits[i]).Count / 3;
-         }
+   public void OBBCrash () {
+      Rand r = new (42);
+      int s = 50;
+      for (int i = 0; i < Iter; i++) {
+         int x1 = r.Next (-s, s), y1 = r.Next (-s, s), z1 = r.Next (-s, s);
+         int x2 = r.Next (-s, s), y2 = r.Next (-s, s), z2 = r.Next (-s, s);
+         int rx1 = r.Next (-180, 180), ry1 = r.Next (-180, 180), rz1 = r.Next (-180, 180);
+         int rx2 = r.Next (-180, 180), ry2 = r.Next (-180, 180), rz2 = r.Next (-180, 180);
+
+         var xfm1 = Matrix3.Identity;
+         xfm1 *= Matrix3.Rotation (EAxis.X, rx1.D2R ());
+         xfm1 *= Matrix3.Rotation (EAxis.Y, ry1.D2R ());
+         xfm1 *= Matrix3.Rotation (EAxis.Z, rz1.D2R ());
+         xfm1 *= Matrix3.Translation (x1, y1, z1);
+
+         var xfm2 = Matrix3.Identity;
+         xfm2 *= Matrix3.Rotation (EAxis.X, rx2.D2R ());
+         xfm2 *= Matrix3.Rotation (EAxis.Y, ry2.D2R ());
+         xfm2 *= Matrix3.Rotation (EAxis.Z, rz2.D2R ());
+         xfm2 *= Matrix3.Translation (x2, y2, z2);
+
+         var cow = mCow.With (xfm1); var hand = mHand.With (xfm2);
+         using var bc = OBBCollider.Borrow ();
+         bool crash = bc.Check (cow, hand);
       }
    }
 
-   [Benchmark]
-   public void NoriTess () {
-      for (int k = 0; k < Iter; k++) {
-         for (int i = 0; i < mPolys.Count; i++) {
-            var polys = mPolys[i];
-            int outer = mOuter[i];
-            using var tess = FastTess2D.Borrow ();
-            for (int j = 0; j < polys.Count; j++) tess.AddPoly (polys[j], j != outer);
-            tess.Process ();
-         }
-      }
-   }
-
-   const int Iter = 100;
+   OBBTree mCow, mHand;
+   const int Iter = 100; 
 }
 
 static class Program {
    public static void Main () {
       BenchmarkRunner.Run<Tester> ();
-      //var t = new Tester ();
-      //t.GLUTess ();
-      //t.NoriTess ();
    }
 }

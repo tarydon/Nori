@@ -121,7 +121,7 @@ static partial class BorrowPool<T> {
       // First, we ensure that we are not having too many objects in-flight. This almost always
       // means that somewhere we forgot to Return() the objects we are borrowing
       Debug.Assert (sBorrowed <= 4 * Environment.ProcessorCount, 
-                    $"Pool: too many {typeof (T).Name} rented, probable leak");
+                    $"BorrowPool<{typeof (T).Name}>: too many rented, probable leak");
       // Then, we set item.Next=item as a Sentinel. (When the item is returned, that will get 
       // reset to null). This serves two purposes:
       // 1. We ensure only objects that are Borrowed() are ever Returned(). 
