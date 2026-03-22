@@ -3,7 +3,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.IO;
 using Nori;
-using NOBBTree = Nori.OBBTree;
+using NOBBTree = Nori.Alt.OBBTree;
 
 namespace WPFDemo;
 
@@ -17,10 +17,12 @@ class OBBCrashScene : Scene3 {
       var zstm = new ZipReadStream (ze.Open (), ze.Length);
       mMesh1 = Mesh3.LoadObj (zstm.ReadAllLines ());
       mMesh1 *= Matrix3.Scaling (100);
-      mVN1 = new Mesh3VN (mMesh1) { Mode = EShadeMode.GlassNoStencil, Color = Color4.Blue };
+      // mMesh1 = Mesh3.Extrude ([Poly.Rectangle (-20, -20, 20, 20)], 40, Matrix3.Translation (0, 0, -20));
+
+      mVN1 = new Mesh3VN (mMesh1) { Mode = EShadeMode.Glass, Color = Color4.Blue };
       Lib.Trace ($"Cow: {mMesh1.Triangle.Length / 3} triangles");
       using (new BlockTimer ("Collider.Cow build"))
-         mColl1 = new NOBBTree (mMesh1);
+         mColl1 = NOBBTree.From (mMesh1);
       mXfm1 = new XfmVN (Matrix3.Identity, mVN1);
 
       zar = new ZipArchive (File.OpenRead ("N:/TData/IO/MESH/hand.zip"));
@@ -28,10 +30,12 @@ class OBBCrashScene : Scene3 {
       zstm = new ZipReadStream (ze.Open (), ze.Length);
       mMesh2 = Mesh3.LoadObj (zstm.ReadAllLines ());
       mMesh2 *= Matrix3.Scaling (70);
-      mVN2 = new Mesh3VN (mMesh2) { Mode = EShadeMode.GlassNoStencil, Color = Color4.Green };
+      // mMesh2 = Mesh3.Extrude ([Poly.Rectangle (-30, -30, 30, 30)], 60, Matrix3.Translation (0, 0, -30));
+
+      mVN2 = new Mesh3VN (mMesh2) { Mode = EShadeMode.Glass, Color = Color4.Green };
       Lib.Trace ($"Hand: {mMesh2.Triangle.Length / 3} triangles");
       using (new BlockTimer ("Collider.Hand build"))
-         mColl2 = new NOBBTree (mMesh2);
+         mColl2 = NOBBTree.From (mMesh2);
       mXfm2 = new XfmVN (Matrix3.Identity, mVN2);
 
       mDebug = new CollViewNode ();
@@ -119,18 +123,27 @@ class OBBCrashScene : Scene3 {
       mXfm2.Xfm = xfm2;
 
       bool crash;
+      using var bc = Nori.Alt.OBBCollider.Borrow ();
+      var coll1 = mColl1.With (xfm1); var coll2 = mColl2.With (xfm2);
       if (timing) {
          using (var bt = new BlockTimer ("Collision check"))
-            crash = OBBCollider.It.Check (mColl1, xfm1.ToCS (), mColl2, xfm2.ToCS ());
+            crash = bc.Check (coll1, coll2);
       } else
-         crash = OBBCollider.It.Check (mColl1, xfm1.ToCS (), mColl2, xfm2.ToCS ());
-      mVN2.Color = crash ? Color4.Red : Color4.Green;
+         crash = bc.Check (coll1, coll2);
+
+      if (crash) mDebug.Pts = bc.GetChalk ();
+      else mDebug.Pts = [];
+
+         mVN2.Color = crash ? Color4.Red : Color4.Green;
       mDebug.Redraw ();
    }
    bool mPause;
 
    class CollViewNode : VNode {
       public override void SetAttributes () { Lux.Color = Color4.Yellow; }
-      public override void Draw () { }// => Lux.Lines (Nori.Alt.OBBCollider.Pts.Select (a => (Vec3F)a).ToArray ());
+      public override void Draw () => Lux.Lines (mPts.AsSpan ());
+
+      public ReadOnlySpan<Vec3F> Pts { set { mPts.Clear (); mPts.AddRange (value); Redraw (); } }      
+      public List<Vec3F> mPts = [];
    }
 }
