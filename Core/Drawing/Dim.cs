@@ -36,7 +36,7 @@ public class E2Dim2P : E2Dimension {
          , new E2Point (Layer, A), new E2Point (Layer, B)
          , new E2Poly (Layer, Poly.Line (A.Polar (dim.DimOffset, A.AngleTo (pt)), pt.Polar (dim.DimExtend, A.AngleTo (pt))))
          , new E2Poly (Layer, Poly.Line (B.Polar (dim.DimOffset, B.AngleTo (pt2)), pt2.Polar (dim.DimExtend, B.AngleTo (pt2)))));
-      var text = Text ?? pt.DistTo (pt2).Round (dim.DimLinDecimals).ToString ();
+      var text = PrepareDimText (Text, pt.DistTo (pt2).Round (dim.DimLinDecimals));
       var textAng = pt.AngleTo (pt2);
       // Fix the textAng to avoid inverted text, etc [Lets limit it to -90, 90 range]
       bool revDir = textAng is > Lib.HalfPI or < -Lib.HalfPI;
@@ -46,14 +46,6 @@ public class E2Dim2P : E2Dimension {
       var textPos = pt.Midpoint (pt2).Polar (dim.DimTxtSize / 5, textAng + Lib.HalfPI); // Magic: Gap b/w dim-line & dim-text
       ents.Add (new E2Text (Layer, dim.DimTextStyle, text, textPos, dim.DimTxtSize, textAng, 0, 1, dim.DimTxtAlign));
       return ents;
-   }
-
-   static E2Solid MakeArrow (Layer2 layer, Point2 tip, double dir, double length) {
-      double width = length * 0.67;
-      var pt = tip.Polar (length, dir + Lib.PI);
-      var perp = dir + Lib.HalfPI;
-      var (pt2, pt3) = (pt.Polar (width / 2, perp), pt.Polar (-width / 2, perp));
-      return new E2Solid (layer, [tip, pt2, pt3, tip]);
    }
 }
 #endregion

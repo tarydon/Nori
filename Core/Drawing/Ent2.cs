@@ -192,6 +192,23 @@ public class E2Dimension : Ent2 {
    }
 
    public virtual IReadOnlyList<Ent2> MakeDim (DimSettings dim) => throw new NotImplementedException ("Must override");
+
+   // Internal -----------------------------------------------------------------
+   protected static string PrepareDimText (string? hintText, double measurement) {
+      if (hintText is null) return measurement.ToString ();
+      // Hint-text == override-text ± tolerance
+      if (hintText[0] == '±')
+         return measurement.ToString () + hintText;
+      return hintText;
+   }
+
+   protected static E2Solid MakeArrow (Layer2 layer, Point2 tip, double dir, double length) {
+      double width = length * 0.67;
+      var pt = tip.Polar (length, dir + Lib.PI);
+      var perp = dir + Lib.HalfPI;
+      var (pt2, pt3) = (pt.Polar (width / 2, perp), pt.Polar (-width / 2, perp));
+      return new E2Solid (layer, [tip, pt2, pt3, tip]);
+   }
 }
 #endregion
 
