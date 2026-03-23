@@ -183,7 +183,7 @@ public class FileGeometry : GeometrySource {
 
    // If abc.mesh is the rendering mesh, then abcCrash.mesh must be the collision mesh.
    public override Mesh3? GetCMesh (string rootDir) {
-      string ext = Path.GetExtension (rootDir);
+      string ext = Path.GetExtension (File);
       string file = string.Concat (File.AsSpan (0, File.Length - ext.Length), "Crash", ext);
       if (System.IO.File.Exists (file)) return LoadMesh (file, rootDir);
       return null;
