@@ -34,6 +34,8 @@ public enum EProp {
    Selected,
    /// <summary>The joint value of a mechanism</summary>
    JValue,
+   /// <summary>This entity is 'colliding'</summary>
+   Colliding,
 
    Grid, FillInterior, CurrentLayer
 }

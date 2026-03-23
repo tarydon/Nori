@@ -69,6 +69,12 @@ public abstract partial class Ent3 {
    /// <summary>Is the Genetrix lying in the XY or XZ plane</summary>
    public bool IsGeneratrixFlat => Get (E3Flags.GeneratrixFlat);
 
+   /// <summary>Is this entity colliding with something else?</summary>
+   public bool IsColliding {
+      get => Get (E3Flags.Colliding);
+      set { if (Set (E3Flags.Colliding, value)) Notify (EProp.Colliding); }
+   }
+
    /// <summary>Is this entity selected?</summary>
    public bool IsSelected {
       get => Get (E3Flags.Selected);
@@ -120,7 +126,7 @@ public abstract partial class Ent3 {
 [Flags]
 public enum E3Flags {
    Selected = 0x1, Translucent = 0x2, FlipNormal = 0x4, GeneratrixFlat = 0x8,
-   ULinear = 0x10, VLinear = 0x20, NoStencil = 0x40
+   ULinear = 0x10, VLinear = 0x20, NoStencil = 0x40, Colliding = 0x80,
 }
 #endregion
 

@@ -60,6 +60,7 @@ public class OBBCollider : IBorrowable<OBBCollider> {
       mPts.Clear (); 
       Check (mA, mB, false);
       List<Point3> P = [], Ap = [], Bp = []; List<double> D = [];
+      PlaneDef A, B;
       for (int i = 0; i < mATris.Count; i++) {
          P.Clear (); Ap.Clear (); Bp.Clear (); D.Clear (); 
          // P[0,1,2] are vertices of first triangle, P[3,4,5] of the second triangle
@@ -69,7 +70,7 @@ public class OBBCollider : IBorrowable<OBBCollider> {
          P.AddM (GetPt (mB, tb.A), GetPt (mB, tb.B), GetPt (mB, tb.C));
          // Compute A,B the planes of these two triangles, and the signed distances
          // of P[0,1,2] against B and P[3,4,5] against A
-         PlaneDef A = new (P[0], P[1], P[2]), B = new (P[3], P[4], P[5]);
+         try { A = new (P[0], P[1], P[2]); B = new (P[3], P[4], P[5]); } catch { continue; }
          for (int j = 0; j < 3; j++) D.Add (B.SignedDist (P[j]));
          for (int j = 3; j < 6; j++) D.Add (A.SignedDist (P[j]));
          for (int j = 0; j < 3; j++) {

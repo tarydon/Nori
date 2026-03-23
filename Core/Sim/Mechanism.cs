@@ -54,6 +54,12 @@ public partial class Mechanism {
    }
    double mJValue;
 
+   public bool IsColliding {
+      get => _isColliding;
+      set { if (Lib.Set (ref _isColliding, value)) Notify (EProp.Colliding); }
+   }
+   bool _isColliding;
+
    /// <summary>The definition vector for the joint</summary>
    /// - For a translation joint, this is the direction of translation
    /// - For a rotation joint, this is the direction of the rotation axis. The

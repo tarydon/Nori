@@ -19,14 +19,14 @@ public readonly struct BlockTimer : IDisposable {
       Lib.Trace ($"{mText}: {FmtTime (mSW, 1)}\n");
       if (mIterations > 1) 
          Lib.Trace ($"  {FmtTime (mSW, mIterations)} per iteration\n");
+   }
 
-      static string FmtTime (Stopwatch sw, int iterations) {
-         double t = sw.Elapsed.TotalMilliseconds / iterations;
-         var (value, suffix) = (t, "ms");
-         if (value < 2) { value = sw.Elapsed.TotalMicroseconds / iterations; suffix = "\u00b5s"; }
-         if (value < 2) { value = sw.Elapsed.TotalNanoseconds / iterations; suffix = "ns"; }
-         return $"{value:F2} {suffix}";
-      }
+   public static string FmtTime (Stopwatch sw, int iterations = 1) {
+      double t = sw.Elapsed.TotalMilliseconds / iterations;
+      var (value, suffix) = (t, "ms");
+      if (value < 2) { value = sw.Elapsed.TotalMicroseconds / iterations; suffix = "\u00b5s"; }
+      if (value < 2) { value = sw.Elapsed.TotalNanoseconds / iterations; suffix = "ns"; }
+      return $"{value:F2} {suffix}";
    }
 
    readonly Stopwatch mSW;

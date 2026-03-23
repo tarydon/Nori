@@ -9,7 +9,7 @@ public class MechanismVN (Mechanism mMech) : VNode (mMech) {
       => n < mMech.Children.Count ? new MechanismVN (mMech.Children[n]) : null;
 
    public override void SetAttributes () {
-      Lux.Color = mMech.Color;
+      Lux.Color = mMech.IsColliding ? new Color4 (255, 64, 32) : mMech.Color;
       Lux.Xfm = mMech.RelativeXfm;
    }
 
