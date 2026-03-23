@@ -248,7 +248,7 @@ class TLux {
    void TestPNG (Scene scene, Vec2S size, DIBitmap.EFormat format, string file) {
       var dib = RenderToImage (scene, size, format);
       new PNGWriter (dib).Write (NT.TmpPNG);
-      Assert.PNGFilesEqual ($"{NT.Data}/Lux/{file}.png", NT.TmpPNG);
+      Assert.PNGFilesEqual ($"{NT.Data}/Lux/{file}.png", NT.TmpPNG, dib);
    }
 
    TypeFace mFace = new (Lib.ReadBytes ("nori:GL/Fonts/Roboto-Regular.ttf"), 28);

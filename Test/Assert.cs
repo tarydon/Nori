@@ -75,12 +75,13 @@ static class Assert {
    }
 
    /// <summary>Checks if two PNG files are equal</summary>
-   public static void PNGFilesEqual (string reference, string test) {
+   public static void PNGFilesEqual (string reference, string test, DIBitmap dib) {
       if (!File.Exists (reference)) { File.Copy (test, reference, true); return; }
+      if (new PNGReader ().Read (reference) is DIBitmap dib2 && dib.Identical (dib2, 1)) return;
+      new PNGWriter (dib).Write (test);
       byte[] data2 = File.ReadAllBytes (test);
-      for (int i = 0; ; i++) {
-         string reffile = reference;
-         if (i > 0) reffile = reference[..^3] + $"({i}).png";
+      for (int i = 1; ; i++) {
+         var reffile = reference[..^3] + $"({i}).png";
          var fi = new FileInfo (reffile);
          if (!fi.Exists) break;
          if (fi.Length == data2.Length) {

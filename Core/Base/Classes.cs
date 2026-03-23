@@ -31,6 +31,19 @@ public class DIBitmap {
    /// <summary>Raw data of the bitmap</summary>
    public readonly byte[] Data;
 
+   /// <summary>Checks if this bitmap is identical to another, within a given threshold</summary>
+   public bool Identical (DIBitmap other, byte threshold = 0) {
+      if (Width != other.Width || Height != other.Height || Fmt != other.Fmt || Data.Length != other.Data.Length)
+         return false;
+
+      for (int i = 0; i < Data.Length; i++) {
+         byte a = Data[i], b = other.Data[i];
+         if (a == b) continue;
+         if (threshold == 0 || Math.Abs (a - b) > threshold) return false;
+      }
+      return true;
+   }
+
    /// <summary>Format of the bitmap</summary>
    public enum EFormat {
       Unknown,
