@@ -8,7 +8,7 @@ namespace Nori;
 public class E2Dim2P : E2Dimension {
    E2Dim2P () { }
 
-   /// <summary>Aligned dimension c'tor</summary>
+   /// <summary>Aligned linear measurement dimension</summary>
    /// <param name="layer">Provide drawing layer to place it in</param>
    /// <param name="a">Start point of measurement</param>
    /// <param name="b">End point of measurement</param>
@@ -45,6 +45,54 @@ public class E2Dim2P : E2Dimension {
       ents.AddM (MakeArrow (Layer, pt, arrowDirA, dim.DimArrowSize), MakeArrow (Layer, pt2, arrowDirB, dim.DimArrowSize));
       var textPos = pt.Midpoint (pt2).Polar (dim.DimTxtSize / 5, textAng + Lib.HalfPI); // Magic: Gap b/w dim-line & dim-text
       ents.Add (new E2Text (Layer, dim.DimTextStyle, text, textPos, dim.DimTxtSize, textAng, 0, 1, dim.DimTxtAlign));
+      return ents;
+   }
+}
+#endregion
+
+#region E2DimAngle ---------------------------------------------------------------------------------
+public class E2DimAngle : E2Dimension {
+   E2DimAngle () { }
+
+   /// <summary>Angle measurement dimension</summary>
+   /// <param name="pc"></param>
+   /// <param name="p1"></param>
+   /// <param name="p2"></param>
+   /// <param name="pd"></param>
+   /// <param name="text"></param>
+   public E2DimAngle (Layer2 layer, Point2 pc, Point2 p1, Point2 p2, Point2 pd, bool reflexAngle, string? text = null)
+      : base (layer) => (Corner, A, B, C, ReflexAngle, Text) = (pc, p1, p2, pd, reflexAngle, text);
+
+   public readonly Point2 Corner, A, B, C;
+   readonly string? Text;
+   readonly bool ReflexAngle;
+
+   public override IReadOnlyList<Ent2> MakeDim (DimSettings dim) {
+      // Measurement ref points,
+      double r = Corner.DistTo (C);
+      var (angA, angB) = (Corner.AngleTo (A), Corner.AngleTo (B));
+      var (A2, B2) = (Corner.Polar (r, angA), Corner.Polar (r, angB));
+
+      var (angle, ccw) = ((A - Corner).AngleTo (B - Corner), B2.Side (Corner, A2) == 1);
+      if (ReflexAngle) { angle = Lib.TwoPI - angle; ccw ^= true; }
+      var arc = Poly.Arc (Corner, r, angA, angB, ccw);
+
+      List<Ent2> ents = [
+         new E2Point (Layer, A), new E2Point (Layer, B),
+         new E2Poly (Layer, Poly.Line (A.Polar (dim.DimOffset, angA), A2.Polar (dim.DimExtend, angA))),
+         new E2Poly (Layer, Poly.Line (B.Polar (dim.DimOffset, angB), B2.Polar (dim.DimExtend, angB))),
+         new E2Poly (Layer, arc)
+      ];
+      // Dim text
+      var text = PrepareDimText (Text, angle.R2D ().Round (dim.DimAngDecimals));
+      var aseg = arc[0];
+      var textPosAng = Corner.AngleTo (aseg.GetPointAt (0.5));
+      var textPos = Corner.Polar (r + dim.DimTxtSize / 5, textPosAng); // Magic: Gap b/w dim-line & dim-text
+      var textAng = textPosAng - Lib.HalfPI;
+      ents.Add (new E2Text (Layer, dim.DimTextStyle, text, textPos, dim.DimTxtSize, textAng, 0, 1, dim.DimTxtAlign));
+      // Arrows
+      var (arrowDirA, arrowDirB) = (aseg.GetSlopeAt (0) + Lib.PI, aseg.GetSlopeAt (1));
+      ents.AddM (MakeArrow (Layer, A2, arrowDirA, dim.DimArrowSize), MakeArrow (Layer, B2, arrowDirB, dim.DimArrowSize));
       return ents;
    }
 }
