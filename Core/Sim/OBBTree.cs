@@ -98,7 +98,7 @@ public class OBBTreeBuilder : IBorrowable<OBBTreeBuilder> {
    public void AddMesh (Mesh3 mesh) {
       var (v, t) = (mesh.Vertex, mesh.Triangle);
       Lib.Grow (ref mPt, mPtN, v.Length); Lib.Grow (ref mPtMap, 0, v.Length);
-      Lib.Grow (ref mTri, mTriN, t.Length); Lib.Grow (ref mBox, mBoxN, t.Length);
+      Lib.Grow (ref mTri, mTriN, t.Length / 3); 
 
       // First add all the unique points from this mesh's vertex set into mP, and
       // build the vertex map (mPMap) that maps vertex numbers in the mesh to points
@@ -142,10 +142,11 @@ public class OBBTreeBuilder : IBorrowable<OBBTreeBuilder> {
    /// Since the CTri struct is not trivially small, we don't actually keep shuffling the CTri
    /// during this build process - we maintain a permutation of CTri called mTriMap (just an array
    /// of integers) and shuffle those integers around. This speeds up the process consderably.
-   public OBBTree Build (string? tag) {
+   public OBBTree Build (string? tag = null) {
       Lib.Grow (ref mTriMap, 0, mTriN);
       Lib.Grow (ref mPtRung, 0, mPtN); Lib.Grow (ref mPtSubset, 0, mPtN);
       for (int i = 0; i < mTriN; i++) mTriMap[i] = i;
+      Lib.Grow (ref mBox, mBoxN, mTriN);
       mBox[mBoxN] = OBB.Build (mPt.AsSpan (0, mPtN));
       mTodo.Enqueue ((mBoxN, 0, mTriN)); mBoxN++;
       Span<Vector3f> axes = stackalloc Vector3f[3];
