@@ -113,21 +113,11 @@ class OBBCrashScene : Scene3 {
       if (timing) {
          using (var bt = new BlockTimer ("Collision check"))
             crash = bc.Check (obb1, obb2);
-
-         var s = $"{++nn}\n";
-         s += $"Cow : ({mX},{mY},{mZ}) <{mRx},{mRy},{mRz}>)\n";
-         s += $"Hand: ({mX2},{mY2},{mZ2}) <{mRx2},{mRy2},{mRz2}>)\n";
-         s += crash ? "CRASH" : ".....";
-         s += "\n\n";
-         System.IO.File.AppendAllText ("c:/etc/output.txt", s);
       } else
          crash = bc.Check (obb1, obb2);
 
-      if (crash) {
-         var pts = bc.GetChalk ().ToArray ();
-         if (nn == 9) System.IO.File.WriteAllLines ("c:/etc/obb-trace.txt", pts.Select (a => a.ToString ()));
-         mDebug.Pts = bc.GetChalk ();
-      } else mDebug.Pts = [];
+      if (crash) mDebug.Pts = bc.GetChalk ();
+      else mDebug.Pts = [];
 
       mHandVN.Color = crash ? Color4.Red : Color4.Green;
       mDebug.Redraw ();
