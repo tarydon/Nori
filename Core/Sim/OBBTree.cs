@@ -10,7 +10,7 @@ public class OBBTree {
    // Constructors -------------------------------------------------------------
    /// <summary>Construct an OBBTree from a mesh</summary>
    public static OBBTree From (Mesh3 mesh, string? tag = null) {
-      var mb = OBBTreeBuilder.Borrow ();
+      using var mb = OBBTreeBuilder.Borrow ();
       mb.AddMesh (mesh);
       return mb.Build (tag);
    }
