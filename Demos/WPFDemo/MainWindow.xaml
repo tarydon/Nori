@@ -25,7 +25,6 @@
          <Button Click="RobotDemo">Robot IK/FK</Button>
          <Button Click="STPDemo">Load STEP</Button>
          <Button Click="StreamDemo">Streaming</Button>
-         <Button Click="AABBTreeDemo">AABB Tree</Button>
          <Button Click="MinSphereDemo">Min. Sphere</Button>
          <Button Click="T3XReaderDemo">Load T3X File</Button>
          <Button Click="SliceMeshDemo">Slice Mesh</Button>
