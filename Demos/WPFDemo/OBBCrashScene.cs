@@ -122,7 +122,6 @@ class OBBCrashScene : Scene3 {
       mHandVN.Color = crash ? Color4.Red : Color4.Green;
       mDebug.Redraw ();
    }
-   int nn = 0; 
    bool mPause;
 
    class CollViewNode : VNode {

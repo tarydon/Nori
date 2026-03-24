@@ -176,7 +176,7 @@ public static class Lib {
    /// Sys.OpenRead ("nori:GL/point.frag");
    public static Stream OpenRead (string name) =>
                sLocators.Select (locator => locator.Open (name)).FirstOrDefault (stm => stm != null)
-               ?? throw new Exception ($"Could not open {name}");
+               ?? File.OpenRead (name);
 
    /// <summary>Calls a function asynchronously on the current thread</summary>
    public static void Post (Action act) {

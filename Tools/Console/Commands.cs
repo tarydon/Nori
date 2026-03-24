@@ -101,7 +101,7 @@ static class GetNextId {
       int maxTest = tests.Max (a => a.Id), maxFixture = fixtures.Max (a => a.Id);
       Console.WriteLine ($"Next Fixture: {maxFixture + 1}, Next Test: {maxTest + 1}");
 
-      List<int> ids = tests.Select (a => a.Id).Distinct ().ToList ();
+      List<int> ids = [.. tests.Select (a => a.Id).Distinct ()];
       if (ids.Count != tests.Count) {
          Console.WriteLine ("\nDuplicate test Ids:");
          foreach (var id in ids) {
@@ -117,7 +117,7 @@ static class GetNextId {
             }
          }
       }
-      ids = fixtures.Select (a => a.Id).Distinct ().ToList ();
+      ids = [.. fixtures.Select (a => a.Id).Distinct ()];
       if (ids.Count != fixtures.Count) {
          Console.WriteLine ("\nDuplicate fixture Ids:");
          foreach (var id in ids) {
@@ -206,6 +206,7 @@ static class SrcClean {
       if (file.Contains ("/obj/")) return true;
       if (file.Contains ("GeneratedFile")) return true;
       if (file.StartsWith ($"{Lib.DevRoot}/Scratch/")) return true;
+      if (file.StartsWith ($"{Lib.DevRoot}/Attic/")) return true; 
       return false;
    }
 

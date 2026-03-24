@@ -48,7 +48,7 @@ class TRBRSolver {
       cs *= Matrix3.Rotation (EAxis.X, rx.D2R ());
       cs *= Matrix3.Rotation (EAxis.Y, ry.D2R ());
       cs *= Matrix3.Rotation (EAxis.Z, rz.D2R ());
-      cs = cs * Matrix3.Translation ((Vector3)(mHome.Org + new Vector3 (x, y, z)));
+      cs *= Matrix3.Translation ((Vector3)(mHome.Org + new Vector3 (x, y, z)));
       mSolver.ComputeStances (cs.Org, cs.VecZ, cs.VecX);
       var sb = new StringBuilder ();
       sb.Append ($"X={x.R6 ()} Y={y.R6 ()} Z={z.R6 ()}\n");
@@ -88,14 +88,6 @@ class TMesh3Build {
 
       File.WriteAllText (NT.TmpTxt, new Mesh3Builder (pts.AsSpan ()).Build ().ToTMesh ());
       Assert.TextFilesEqual ("Geom/Mesh3/part-gen.tmesh", NT.TmpTxt);
-   }
-
-   [Test (142, "Test for CMesh.Builder")]
-   void Test2 () {
-      var mesh = Mesh3.LoadTMesh (NT.File ("Misc/robot-1.tmesh"));
-      var cmesh = CMesh.Builder.Build (mesh);
-      File.WriteAllText (NT.TmpTxt, cmesh.Dump ());
-      Assert.TextFilesEqual ("Misc/robot-1.aabb.txt", NT.TmpTxt);
    }
 
    [Test (149, "Mesh3.Sphere")]

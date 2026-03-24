@@ -34,7 +34,6 @@ public partial class MainWindow : Window {
    void RobotDemo (object s, RoutedEventArgs e) => Display (new RobotScene ());
    void STPDemo (object s, RoutedEventArgs e) => Display (new STPScene ());
    void StreamDemo (object s, RoutedEventArgs e) => Display (new StreamDemoScene ());
-   void AABBTreeDemo (object s, RoutedEventArgs e) => Display (new AABBTreeDemo ());
    void MinSphereDemo (object s, RoutedEventArgs e) => Display (new MinSphereScene ());
    void T3XReaderDemo (object s, RoutedEventArgs e) => Display (new T3XDemoScene ());
    void SliceMeshDemo (object s, RoutedEventArgs e) => Display (new IntMeshPlaneScene ());
