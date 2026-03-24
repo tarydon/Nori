@@ -2,6 +2,9 @@
 // ╔═╦╦═╦╦╬╣ Extensions2.cs
 // ║║║║╬║╔╣║ Extension methods on built-in types (defined using extension blocks)
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
+using System.Buffers;
+using System.Buffers.Text;
+
 namespace Nori;
 
 #region class Extensions2 --------------------------------------------------------------------------
@@ -34,6 +37,24 @@ public static class Extensions2 {
    extension(ImmutableArray<Contour3> contours) {
       public static ImmutableArray<Contour3> operator * (ImmutableArray<Contour3> cons, Matrix3 xfm)
          => [.. cons.Select (a => a * xfm)];
+   }
+
+   extension(ReadOnlySpan<byte> s) {
+      /// <summary>
+      /// Converts a ReadOnlySpan(byte) to double, returning 0 if the conversion fails
+      /// </summary>
+      public double ToDouble () => Utf8Parser.TryParse (Trim (s), out double f, out _) ? f : 0;
+
+      /// <summary>
+      /// Converts a ReadOnlySpan(byte) to int, returning 0 if the conversion fails
+      /// </summary>
+      public int ToInt () => Utf8Parser.TryParse (Trim (s), out int n, out _) ? n : 0;
+
+      public ReadOnlySpan<byte> Trim () {
+         var space = UTFReader.SpaceChars;
+         while (s.Length > 0 && space.Contains (s[0])) s = s[1..];
+         return s; 
+      }
    }
 
    // Extensions on string -----------------------------------------------------
