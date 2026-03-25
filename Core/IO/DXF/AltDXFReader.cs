@@ -1,19 +1,21 @@
-﻿using System.Buffers;
-using System.Buffers.Text;
+// ────── ╔╗
+// ╔═╦╦═╦╦╬╣ AltDXFReader.cs
+// ║║║║╬║╔╣║ <<TODO>>
+// ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
+using System.Buffers;
 using Nori.Internal;
 namespace Nori.Alt;
 using static EDXF;
 
 public class DXFReader {
    // Constructors -------------------------------------------------------------
+   /// <summary>Initialize a DXFReader with a byte-array containing DXF data</summary>
    public DXFReader (byte[] data) => R = new (D = data);
+   /// <summary>Initialize a DXFReader form a file</summary>
    public DXFReader (string file) : this (Lib.ReadBytes (file)) { }
-   static DXFReader () => Encoding.RegisterProvider (CodePagesEncodingProvider.Instance);
 
    // Properties ---------------------------------------------------------------
-   /// <summary>
-   /// The Standard 256 ACAD colors
-   /// </summary>
+   /// <summary>The Standard 256 ACAD colors</summary>
    public static Color4[] ACADColors
       => sACADColors ??= [..Lib.ReadLines("nori:DXF/color.txt")
                           .Select(a => new Color4(uint.Parse(a, NumberStyles.HexNumber) | 0xff000000))];
@@ -33,9 +35,7 @@ public class DXFReader {
    public bool WhiteToBlack;
 
    // Methods ------------------------------------------------------------------
-   /// <summary>
-   /// Parse the file, build the DXF and return it
-   /// </summary>
+   /// <summary>Parse the file, build the DXF and return it</summary>
    public Dwg2 Load () {
       // In general, we have a 'backing variable' for each group code, like
       // 1=>Text, 62=>ColorNo, 2=>Name, 10=>X0 etc
@@ -46,19 +46,38 @@ public class DXFReader {
       while (Next ()) {
          switch (G) {
             case 0: Type = E; break;
+            case 1: Text = ""; break;
+            case 8: LayerName = V; break;
+            case 6: LTName = V; break;
+            case 7: StyleName = V; break;
             case 9: HeaderVar (E); break;
             case 10: X0 = Vf; break; case 20: Y0 = Vf; break;
-            case 70: I0 = Vn; break; case 71: I1 = Vn; break; 
-            case 72: I2 = Vn; break; case 73: I3 = Vn; break;
-            case 40: D0 = Vn; break; case 41: D1 = Vn; break; case 42: D2 = Vn; break;
+            case 11: X1 = Vf; break; case 21: Y1 = Vf; break;
+            case 12: X2 = Vf; break; case 22: Y2 = Vf; break;
+            case 13: X3 = Vf; break; case 23: Y3 = Vf; break;
+            case 14: X4 = Vf; break; case 24: Y4 = Vf; break;
+            case 15: X5 = Vf; break; case 25: Y5 = Vf; break;
+            case 16: X6 = Vf; break; 
+            case 26: Y6 = Vf; break;
+            case 40: D0 = Vf; break; case 41: D1 = Vf; break; case 42: D2 = Vf; break;
+            case 43: D3 = Vf; break; case 44: D4 = Vf; break; case 45: D5 = Vf; break;
+            case 46: D6 = Vf; break; case 47: D7 = Vf; break; case 48: D8 = Vf; break; 
+            case 50: Ang0 = Vf; break; case 51: Ang1 = Vf; break; 
+            case 70: I0 = Vn; break; case 71: I1 = Vn; break; case 72: I2 = Vn; break; 
+            case 73: I3 = Vn; break; case 74: I4 = Vn; break; case 77: I7 = Vn; break;
             case 62: ColorNo = E switch { BYLAYER => 256, BYBLOCK => 257, _ => Vn }; break;
+            case 67: PaperSpace = Vn > 0; break;
+            case 141: DimCen = Vf; break;
+            case 147: DimGap = Vf; break;
+            case 230: ZFlip = Vf < -0.999; break;
 
             case 2:
                switch (mType) {
                   case SECTION: HandleSection (E); break;
                   case TABLE: HandleTable (E); break;
-                  case LTYPE or LAYER: Name = V; break;
-                  default: Fatal ("Unexpected 2 code"); break;
+                  case LTYPE or LAYER or BLOCK or STYLE or DIMSTYLE or DIMENSION or INSERT: Name = V; break;
+                  case ATTDEF or ATTRIB: Name = V; break;
+                  default: Fatal ($"Unexpected 2 code (mType = {mType})"); break;
                }
                break;
 
@@ -69,6 +88,32 @@ public class DXFReader {
    }
 
    // Implementation -----------------------------------------------------------
+   static DXFReader () {
+      Encoding.RegisterProvider (CodePagesEncodingProvider.Instance);
+      sTypeIgnore = [.. Lib.ReadLines ("nori:DXF/entity-ignore.txt").Select (Enum.Parse<EDXF>)];
+   }
+
+   // Builds an entity
+   void BuildEnt (EDXF type) {
+      if (type > _LASTENT) return;
+      switch (type) {
+         case LAYER:
+
+
+
+            var layer = new Layer2 (Name, GetColor (), GetLType (LTypeName)) { IsVisible = (Flags & 1) != 1 };
+            if (mLayers.TryAdd (Name, layer)) mDwg.Add (layer);
+            break;
+
+
+
+         case LAYER or STYLE or BLOCK or LINE or SOLID or MTEXT or LINE or ARC or CIRCLE: break;
+         case POINT or LWPOLYLINE or TEXT or DIMENSION or INSERT or SPLINE or POLYLINE: break;
+         case VERTEX or SEQEND or ATTDEF or ATTRIB or LEADER or TRACE or ELLIPSE or XLINE: break;
+         default: Fatal ($"Unhandled entity {type}"); break;
+      } // TODO: Handle HATCH
+   }
+
    // Called when we read a header variable
    void HeaderVar (EDXF key) {
       if (key == NIL) { UnknownHeaderVar (V); Next (); return; }
@@ -113,34 +158,36 @@ public class DXFReader {
    // don't care about, we will simply skip the section (by running forward to the next ENDSEC)
    void HandleSection (EDXF s) {
       if (!sHandle.Contains (s)) {
-         if (!sIgnore.Contains (s)) Warn ($"Unhandled SECTION: {V}");
+         if (!sIgnore.Contains (s)) Fatal ($"Unhandled SECTION: {V}");
          while (Next ()) { if (G == 0 && E == ENDSEC) break; }
-      } else
-         mSection = s;
+      } 
    }
    // These are the stuff we handle, and the stuff we knowingly ignore
-   static readonly HashSet<EDXF> sHandle = [HEADER, TABLES, BLOCKS, ENTITIES, LTYPE, LAYER],
-      sIgnore = [CLASSES, VPORT, UCS];
-   EDXF mSection, mTable;
+   static readonly HashSet<EDXF> 
+      sHandle = [HEADER, TABLES, BLOCKS, ENTITIES, LTYPE, LAYER, STYLE, DIMSTYLE],
+      sIgnore = [CLASSES, VPORT, UCS, APPID, VIEW, BLOCK_RECORD, OBJECTS, ACDSDATA, THUMBNAILIMAGE, 
+                 DWGMGR, LAYERS];
 
    // This is called at the start of each table
    void HandleTable (EDXF t) {
       if (!sHandle.Contains (t)) {
-         if (!sIgnore.Contains (t)) Warn ($"Unhandled TABLE: {V}");
+         if (!sIgnore.Contains (t)) Fatal ($"Unhandled TABLE: {V}");
          while (Next ()) { if (G == 0 && E == ENDTAB) break; }
-      } else
-         mTable = t;
+      } 
    }
 
    // Reads the next group into mGroup and the value into mValue
    bool Next () {
-      R.Read (out G).SkipToNextLine ();      // Read the group code
-      R.ReadLineRange (out mSt, out mLen);   // Read the value
-      if (mLen == 3 && D[mSt] == 'E' && D[mSt + 1] == 'O' && D[mSt + 2] == 'F') return false;
-      return true; 
+      for (; ; ) {
+         if (R.AtEndOfFile) return false;
+         R.Read (out G).SkipToNextLine ();      // Read the group code
+         R.ReadLineRange (out mSt, out mLen);   // Read the value
+         if (mLen == 3 && D[mSt] == 'E' && D[mSt + 1] == 'O' && D[mSt + 2] == 'F') return false;
+         if (G == 0 || !mSkipForward) { mSkipForward = false; return true; }
+      }
    }
+   bool mSkipForward;
 
-   // Write-to properties ------------------------------------------------------
    // This is written to each time we see a 0 group, and effectively this ends up 'making' a
    // new object of that type. However, since a type descriptor (0 group) is _followed_ by the 
    // paramters requried for that object, we cannot actually make an object when we see a 0 group.
@@ -150,19 +197,31 @@ public class DXFReader {
    // variables like D, Color, N, LTypeName etc. 
    EDXF Type {
       set {
-         switch (mType) {
-         }
+         // First, construct the previous entity, if it is not a skipped entity         
+         if (mType != SKIPPEDENT) BuildEnt (mType);
 
-         // Now that we've constructed the previous object, we can store the incoming Type value
-         // to start preparing for the next
+         // Now that we've constructed the previous object, we can store the incoming Type
+         // value to start preparing for the next
          if ((mType = value) == NIL) Fatal ($"Unknown: {V}");
 
-         // The reset we do after completing each entity
-         mX0.Clear (); mY0.Clear ();
-         I0 = I1 = I2 = I3 = 0;
+         // If the entity we are just starting is one that we are not going to actually process,
+         // then we set the mType to SKIPPEDENT and return. Otherwise, we do a cleanup
+         if (value is > _FIRSTENT and < _LASTAUX) {
+            // Reset all buffers in preparation for reading this entity
+            I0 = I1 = I2 = I3 = I4 = I7 = 0; D2 = 0; Ang0 = 0; 
+            mX0.ClearFast (); mY0.ClearFast ();
+            mD0.ClearFast (); mD1.ClearFast (); mD2.ClearFast ();
+            PaperSpace = ZFlip = false; ColorNo = 256;
+            // TODO: Reset ColorNo if not VERTEX / SEQEND
+         } else {
+            if (value is > _FIRSTIGNORE and < _LASTIGNORE) mType = SKIPPEDENT;
+            else Fatal ($"Unclassified Type {value}");
+            mSkipForward = true;
+         }
       }
    }
-   EDXF mType;
+   static HashSet<EDXF> sTypeIgnore;
+   EDXF mType = SKIPPEDENT;
 
    // Computed properties ------------------------------------------------------
    EDXF E => DXFCore.Dict.GetValueOrDefault (D.AsSpan (mSt, mLen));  // Current value, as an EDXF enumeration
@@ -173,14 +232,21 @@ public class DXFReader {
    int Vn => SP.ToInt ();
 
    // Storage properties -------------------------------------------------------
-   int I0, I1, I2, I3;
    int ColorNo;
-   double X0 { get => field; set => mX0.Add (field = value); } 
-   double Y0 { get => field; set => mY0.Add (field = value); }
+   bool PaperSpace;
+   double Ang0, Ang1;
+   int I0, I1, I2, I3, I4, I7;
+   double D3, D4, D5, D6, D7, D8;
+   double X1, Y1, X2, X4, X5, X6, Y2, X3, Y3, Y4, Y5, Y6;
+   double DimCen, DimGap;
    double D0 { get => field; set => mD0.Add (field = value); }
    double D1 { get => field; set => mD1.Add (field = value); }
+   double X0 { get => field; set => mX0.Add (field = value); } 
+   double Y0 { get => field; set => mY0.Add (field = value); }
    List<double> mX0 = [], mY0 = [], mD0 = [], mD1 = [], mD2 = [];
-   string Name = "", LTName = "", StyleName = "";
+   string Name = "", LTName = "", StyleName = "", LayerName = "";
+   string Text = "";
+   bool ZFlip;
 
    double D2 {
       get => field;
@@ -197,14 +263,14 @@ public class DXFReader {
    void UnhandledGroup (int g) {
       sGroupIgnore ??= [.. Lib.ReadLines ("nori:DXF/group-ignore.txt").Select (a => a.ToInt ())];
       if (sGroupIgnore.Contains (g)) return;
-      Fatal ($"Unhandled Group {g}");
+      Fatal ($"Unhandled Group {g}, {mType} entity");
    }
    static HashSet<int>? sGroupIgnore;
 
    void UnknownHeaderVar (string s) {
       sHeaderIgnore ??= [.. Lib.ReadLines ("nori:DXF/header-ignore.txt")];
       if (sHeaderIgnore.Contains (s)) return; 
-      Warn ($"Unknown header var: {s}");
+      Fatal ($"Unknown header var: {s}");
    }
    HashSet<string>? sHeaderIgnore;
 
@@ -219,5 +285,6 @@ public class DXFReader {
    int mLineNo;                  // The line number
    int mSt, mLen;             // Start and length of the current line
    static SearchValues<byte> sCRLF = SearchValues.Create (13, 10);
-   Encoding mEncoding = Encoding.UTF8;    // The encoding we're using
+   Encoding mEncoding = Encoding.UTF8;       // The encoding we're using
+   Dictionary<string, Layer2> mLayers = [];  // Dictionary mapping names to layers
 }

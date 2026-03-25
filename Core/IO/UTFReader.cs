@@ -23,6 +23,8 @@ public class UTFReader {
    readonly string? mFile;
 
    // Properties ---------------------------------------------------------------
+   public bool AtEndOfFile => mN >= D.Length;
+
    /// <summary>Matches and discards a given byte</summary>
    /// If the given byte is not found as the next character, throws an exception
    public UTFReader Match (char b) {
@@ -270,7 +272,13 @@ public class UTFReader {
       throw new ParseException (sb.ToString ());
    }
 
-   public int LineNo => D.Take (mN).Count (a => a == '\n') + 1; 
+   public int LineNo {
+      get {
+         int n = D.Take (mN).Count (a => a == '\n');
+         if (n == 0) n = D.Take (mN).Count (a => a == '\r');
+         return n + 1;
+      }
+   }
 
    public override string ToString () {
       int length = Math.Min (Max - mN - 1, 100);

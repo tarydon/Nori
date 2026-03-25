@@ -2,9 +2,7 @@
 // ╔═╦╦═╦╦╬╣ Extensions2.cs
 // ║║║║╬║╔╣║ Extension methods on built-in types (defined using extension blocks)
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
-using System.Buffers;
 using System.Buffers.Text;
-
 namespace Nori;
 
 #region class Extensions2 --------------------------------------------------------------------------
@@ -39,15 +37,18 @@ public static class Extensions2 {
          => [.. cons.Select (a => a * xfm)];
    }
 
+   // Extensions on List<T> ----------------------------------------------------
+   extension<T> (List<T> list) where T:struct {
+      /// <summary>Fast clear of the list (does not write zeroes)</summary>
+      public void ClearFast () => CollectionsMarshal.SetCount (list, 0);
+   }
+
+   // Extensions on ReadOnlySpan<byte> -----------------------------------------
    extension(ReadOnlySpan<byte> s) {
-      /// <summary>
-      /// Converts a ReadOnlySpan(byte) to double, returning 0 if the conversion fails
-      /// </summary>
+      /// <summary>Converts a ReadOnlySpan(byte) to double, returning 0 if the conversion fails</summary>
       public double ToDouble () => Utf8Parser.TryParse (Trim (s), out double f, out _) ? f : 0;
 
-      /// <summary>
-      /// Converts a ReadOnlySpan(byte) to int, returning 0 if the conversion fails
-      /// </summary>
+      /// <summary>Converts a ReadOnlySpan(byte) to int, returning 0 if the conversion fails</summary>
       public int ToInt () => Utf8Parser.TryParse (Trim (s), out int n, out _) ? n : 0;
 
       public ReadOnlySpan<byte> Trim () {
