@@ -14,23 +14,16 @@ public class Tester {
    }
 
    [Benchmark (Baseline = true)]
-   public void TextRead () {
+   public void OldDXF () {
       foreach (var file in Directory.GetFiles ("W:/DXF", "*.dxf").Take (MAX)) {
-         string s = File.ReadAllText (file);
+         var dwg = Nori.Old.DXFReader.Load (file);
       }
    }
 
    [Benchmark]
-   public void ByteRead () {
+   public void NewDXF () {
       foreach (var file in Directory.GetFiles ("W:/DXF", "*.dxf").Take (MAX)) {
-         byte[] data = File.ReadAllBytes (file);
-      }
-   }
-
-   [Benchmark]
-   public void LibRead () {
-      foreach (var file in Directory.GetFiles ("W:/DXF", "*.dxf").Take (MAX)) {
-         byte[] data = Lib.ReadBytes (file);
+         var dwg = Nori.DXFReader.Load (file);
       }
    }
 

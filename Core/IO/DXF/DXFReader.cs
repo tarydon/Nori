@@ -1,13 +1,15 @@
 // ────── ╔╗
-// ╔═╦╦═╦╦╬╣ AltDXFReader.cs
-// ║║║║╬║╔╣║ <<TODO>>
+// ╔═╦╦═╦╦╬╣ DXFReader.cs
+// ║║║║╬║╔╣║ Implements a DXF reader that reads directly from Span<byte>
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 using System.Buffers;
-using Nori.Internal;
-namespace Nori.Alt;
+namespace Nori;
 using static EDXF;
 
-public class DXFReader {
+/// <summary>
+/// DXFReader is used to read in a DXF file into a Dwg2
+/// </summary>
+public partial class DXFReader {
    // Constructors -------------------------------------------------------------
    /// <summary>Initialize a DXFReader with a byte-array containing DXF data</summary>
    public DXFReader (byte[] data) => R = new (D = data);
@@ -78,17 +80,22 @@ public class DXFReader {
                switch (mType) {
                   case SECTION: HandleSection (E); break;
                   case TABLE: HandleTable (E); break;
-                  case LTYPE or LAYER or BLOCK or STYLE or DIMSTYLE or DIMENSION or INSERT: Name = V; break;
-                  case ATTDEF or ATTRIB: Name = V; break;
-                  default: Fatal ($"Unexpected 2 code (mType = {mType})"); break;
+                  default: Name = V; break;
                }
                break;
 
             default: UnhandledGroup (G); break;
          }
       }
+
+      LinkDimensions ();
+      ProcessBendText ();
+      StitchDrawing ();
       return mDwg;
    }
+
+   /// <summary>Helper to load a DXF file, given the filename</summary>
+   public static Dwg2 Load (string file) => new DXFReader (file).Load ();
 
    // Implementation -----------------------------------------------------------
    static DXFReader () {
@@ -100,12 +107,15 @@ public class DXFReader {
    void Add (Poly poly) => Add (new E2Poly (Layer, poly));
 
    // Adds an Ent2 to the drawing (after setting Color)
-   void Add (Ent2 ent) {
+   void Add (Ent2 ent, bool setColor = true) {
       if (Invisible) return;
-      ent.Color = GetColor (ColorNo);
+      if (setColor) ent.Color = GetColor (ColorNo);
       if (mBlockEnts != null) { ent.InBlock = true; mBlockEnts.Add (ent); }
       else mDwg.Add (ent);
    }
+
+   // Add a set of ent2 to the drawing
+   void Add (IEnumerable<Ent2> ents) => ents.ForEach (a => Add (a));
 
    // Make an ellipse and adds it
    void AddEllipse (Point2 cen, Vector2 major, double ratio, (double, double) aRange) {
@@ -150,7 +160,7 @@ public class DXFReader {
       switch (type) {
          case ARC: Add (Poly.Arc (Pt0, Radius, D50.D2R (), D51.D2R (), true)); break;
          case BLOCK: (mBlockEnts, mBlockName, mBlockPt) = ([], Name, Pt0); break;
-         case CIRCLE: Add (Poly.Circle (Pt0, Radius)); break;
+         case CIRCLE: Add (Poly.Circle (new (X0 * Scale * ZDir, Y0 * Scale), Radius)); break;
          case ELLIPSE: AddEllipse (Pt0, (Vector2)Pt1, D40, new (D41, D42)); break;
          case POINT: Add (new E2Point (Layer, Pt0)); break;
          case POLYLINE: mClosedPoly = (Flags & 1) != 0; break;
@@ -159,11 +169,26 @@ public class DXFReader {
          case TRACE or SOLID: Add (new E2Solid (Layer, [Pt0, Pt1, Pt2, Pt3])); break;
          case VERTEX: Vertex.Add ((Pt0, Flags, Bulge)); break;
 
+         case ATTRIB:
+            if ((Flags & 1) != 0) break;
+            goto case TEXT;
+
+         case DIMENSION:
+            var dim = new E2Dimension (Layer);
+            dim.SetDimSettings (mDwg.DimSettings);
+            mDimBlocks.Add (dim, Name); Add (dim, false);
+            break;
+
          case ENDBLK:
             // Safe to add this to mDwg since blocks cannot contain nested blocks
             if (!sSkipBlocks.Contains (mBlockName))
                mDwg.Add (new Block2 (mBlockName, mBlockPt, mBlockEnts ?? []));
             mBlockEnts = null;
+            break;
+
+         case INSERT:
+            if (!sSkipBlocks.Contains (Name))
+               Add (new E2Insert (mDwg, Layer, Name, Pt0, Angle, XScale, YScale), false);
             break;
 
          case LAYER:
@@ -182,7 +207,7 @@ public class DXFReader {
                else if (s.StartsWith ("K_FACTOR:")) kfactor = s[9..].ToDouble ();
             }
             if (!ba.IsNan) {
-               Add (new E2Bendline (mDwg, line.Pts, ba, radius, kfactor));
+               Add (new E2Bendline (mDwg, line.Pts, ba, radius, kfactor), false);
                mXData.Clear ();
             } else Add (line);
             break;
@@ -196,16 +221,33 @@ public class DXFReader {
             AddPolyline ();
             break;
 
+         case MTEXT:
+            ETextAlign align = (ETextAlign)(I1 >= 7 ? I1 + 3 : I1);
+            double angle = (X1.IsZero () && Y1.IsZero ()) ? Angle : Math.Atan2 (Y1, X1);
+            Add (MakeMText (Layer, Style, Text, Pt0, Height, angle, align));
+            break;
+
+         case SPLINE:
+            if (mX0.Count > 0 && mD40.Count > 0) {
+               E2Flags flags = 0;
+               var pts = mX0.Zip (mY0).Select (a => new Point2 (a.First * Scale, a.Second * Scale)).ToImmutableArray ();
+               var knots = mD40.ToImmutableArray ();
+               var weights = mD41.Count > 0 ? mD41.ToImmutableArray () : [];
+               var spline = new Spline2 (pts, knots, weights);
+               if ((Flags & 1) > 0) flags |= E2Flags.Closed;
+               if ((Flags & 2) > 0) flags |= E2Flags.Periodic;
+               Add (new E2Spline (Layer, spline, flags));
+            }
+            break;
+
          case TEXT:
             int hAlign = I2 > 2 ? 0 : I2.Clamp (0, 2), vAlign = 3 - I3.Clamp (0, 3);
-            ETextAlign align = (ETextAlign)(vAlign * 3 + hAlign + 1);
+            align = (ETextAlign)(vAlign * 3 + hAlign + 1);
             Point2 pos = align == ETextAlign.BaseLeft ? Pt0 : Pt1;
             Add (new E2Text (Layer, Style, Clean (Text, mSB), pos, Height, Angle, Oblique, XScale, align));
             break;
 
-         case BLOCK or SOLID or MTEXT: break;
-         case DIMENSION or INSERT or SPLINE: break;
-         case ATTDEF or ATTRIB or LEADER or TRACE or XLINE: break;
+         case ATTRIB or ATTDEF or LEADER or TRACE or XLINE: break;
          default: Fatal ($"Unhandled entity {type}"); break;
       } // TODO: Handle HATCH
    }
@@ -230,7 +272,7 @@ public class DXFReader {
    }
 
    /// <summary>Convert an AutoCAD color to a Color4</summary>
-   Color4 GetColor (int index) {
+   public Color4 GetColor (int index) {
       if (index == 256) return Color4.Nil;
       var color = ACADColors[index.Clamp (0, 255)];
       if (WhiteToBlack && color.EQ (Color4.White)) color = Color4.Black;
@@ -296,28 +338,94 @@ public class DXFReader {
    // don't care about, we will simply skip the section (by running forward to the next ENDSEC)
    void HandleSection (EDXF s) {
       if (!sHandle.Contains (s)) {
-         if (!sIgnore.Contains (s)) Fatal ($"Unhandled SECTION: {V}");
+         Skipping (s, "SECTION");
          while (Next ()) { if (G == 0 && E == ENDSEC) break; }
       } 
    }
-   // These are the stuff we handle, and the stuff we knowingly ignore
-   static readonly HashSet<EDXF> 
-      sHandle = [HEADER, TABLES, BLOCKS, ENTITIES, LTYPE, LAYER, STYLE, DIMSTYLE, LAYERS],
-      sIgnore = [CLASSES, VPORT, UCS, APPID, VIEW, BLOCK_RECORD, OBJECTS, ACDSDATA, THUMBNAILIMAGE, 
-                 DWGMGR];
 
    // This is called at the start of each table
    void HandleTable (EDXF t) {
       if (!sHandle.Contains (t)) {
-         if (!sIgnore.Contains (t)) Fatal ($"Unhandled TABLE: {V}");
+         Skipping (t, "TABLE");
          while (Next ()) { if (G == 0 && E == ENDTAB) break; }
       } 
    }
+   // These are the stuff we handle, and the stuff we knowingly ignore
+   static readonly HashSet<EDXF>
+      sHandle = [HEADER, TABLES, BLOCKS, ENTITIES, LTYPE, LAYER, STYLE, DIMSTYLE, LAYERS];
+
+   // Load the dimensions
+   void LinkDimensions () {
+      List<Block2> blocks = [];
+      foreach (var (dim, name) in mDimBlocks)
+         if (dim.LoadEnts (mDwg, name) is { } block) blocks.Add (block);
+      mDwg.RemoveBlocks (blocks);
+   }
+
+   // Extracts text from the encoded MTEXT string and returns the corresponding E2Text entities.
+   IEnumerable<E2Text> MakeMText (Layer2 layer, Style2 style, string text, Point2 pos, double height, double angle, ETextAlign align) {
+      var matches = sRxMText.Matches (text);
+      if (matches.Count > 0) {
+         mSB.Clear ();
+         int last = 0; var tspan = text.AsSpan ();
+         foreach (Match M in matches) {
+            // Extract the raw-text1 from the given string.
+            if (M.Index > last) Append2 (tspan[last..M.Index]);
+            if (M.Groups.TryGetValue ("fract", out var fract) && fract.ValueSpan.Length > 0) {
+               // No special fraction rendering is supported. Just concatenate using the division '/' symbol.
+               Append (fract.Value.Replace ("^", "/").Replace ("#", "/"));
+            }
+            if (M.Groups.TryGetValue ("hex4", out var hex4) && hex4.ValueSpan.Length > 0) {
+               // Replace the 4 hex digits with the corresponding unicode character
+               int uni = int.Parse (hex4.Value, NumberStyles.HexNumber);
+               Append (((char)uni).ToString ());
+            }
+            last = M.Index + M.Length;
+         }
+         if (last < text.Length) Append2 (tspan[last..]);
+         text = mSB.ToString ();
+
+         // Helpers ........................................
+         void Append (string text1) => mSB.Append (text1);
+         void Append2 (ReadOnlySpan<char> text2) => mSB.Append (text2);
+      }
+
+      // Now cleanup the raw-string by removing code-blocks ({...}) and split
+      // them into multiple lines by the line-break (\P).
+      string[] lines = text.Replace ("{", "").Replace ("}", "").Split ("\\P");
+      // Output a text entity for each line.
+      double dyLine = 0;
+      var mat = Matrix2.Rotation (pos, angle);
+      foreach (var line in lines) {
+         var pt = pos;
+         if (!dyLine.IsZero ()) {
+            pt = new (pt.X, pt.Y - dyLine);
+            if (!angle.IsZero ()) pt *= mat;
+         }
+         var ent = new E2Text (layer, style, Clean (line, mSB), pt, height, angle, style.Oblique, style.XScale, align);
+         dyLine += ent.DYLine;
+         yield return ent;
+      }
+   }
+   // The RegEx used to parse various escape-sequences in MText (See Doc\MText-Codes.pdf for a reference).
+   // A MTEXT text entity can specify inline text styles and formatting. The Regex below identifies
+   // the format strings and extracts the raw-text out of them. Multiple patterns are supported, and
+   // each is on a separate line. These patterns are combined using the OR operator. The paragraph
+   // markers (\P) and the style code-blocks ({...}) are left unidentified and are
+   // processed after the text extraction.
+   [SuppressMessage ("Performance", "SYSLIB1045")]
+   static readonly Regex sRxMText = new (
+     @"(\\[Ff][^|;]+((\|([bicp])\d+)+)?;)|" +   // Font name & style (e.g., \fTimes New Roman|b1|i0;)
+     @"(\\[AHWCT](\d*?(\.\d+)?x?));|" +         // Height, Width, Alignment, Color codes like: \H3x; \H12.500; \W0.8x;
+     @"(\\[LlOoKk])|" +                         // Underline, Overstrike, Strikethrough: \L \l \O \K
+     @"\\U\+(?<hex4>[0-9A-Fa-f]{4})|" +         // Match 4 hex digits prefixed with \U+
+     @"(\\S(?<fract>[^;]+[#/\^][^;]+);)",       // Stacking fractions like: \S+0.8^+0.1; \S+0.8#+0.1;
+     RegexOptions.Compiled);
 
    // Reads the next group into mGroup and the value into mValue
    bool Next () {
       for (; ; ) {
-         // if (R.AtEndOfFile) return false;
+         if (R.AtEndOfFile) return false;
          R.Read (out G).SkipToNextLine ();      // Read the group code
          R.ReadLineRange (out mSt, out mLen);   // Read the value
          if (mLen == 3 && D[mSt] == 'E' && D[mSt + 1] == 'O' && D[mSt + 2] == 'F') return false;
@@ -325,6 +433,34 @@ public class DXFReader {
       }
    }
    bool mSkipForward;
+
+   // Convert the special text in the DXF to a bend line, unless is match with the sBend format
+   void ProcessBendText () {
+      var ents = mDwg.Ents;
+      List<Ent2> bend = [], rmv = [];
+      foreach (var e2t in ents.OfType<E2Text> ()) {
+         var match = sBend.Match (e2t.Text);
+         if (!match.Success) continue;
+         var e2p = ents.OfType<E2Poly> ().Where (a => a.Poly.IsLine).MinBy (a => a.Poly.GetDistance (e2t.Pt).Dist);
+         if (e2p == null) continue;
+         rmv.AddRange (e2t, e2p);
+         double angle = match.Groups[1].Value.ToDouble ().D2R ().Clamp (-Lib.PI, Lib.PI);
+         double radius = match.Groups[2].Value.ToDouble ();
+         double kfactor = match.Groups[3].Value.ToDouble ();
+         if (kfactor > 0.501) kfactor /= 2;
+         bend.Add (new E2Bendline (mDwg, e2p.Poly.Pts, angle, radius, kfactor));
+      }
+      foreach (var a in rmv) ents.Remove (a);
+      foreach (var b in bend) ents.Add (b);
+   }
+   static readonly Regex sBend = new (@"A([-+]?[0-9]*\.?[0-9]+)\s*R([0-9]*\.?[0-9]+)\s*K([0-9]*\.?[0-9]+)",
+      RegexOptions.Compiled | RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+
+   void StitchDrawing () {
+      if (StitchThreshold <= 0) return;
+      if (StitchThreshold > 0.009) new DwgStitcher (mDwg, 0.0001).Process ();
+      new DwgStitcher (mDwg, StitchThreshold).Process ();
+   }
 
    // This is written to each time we see a 0 group, and effectively this ends up 'making' a
    // new object of that type. However, since a type descriptor (0 group) is _followed_ by the 
@@ -346,10 +482,10 @@ public class DXFReader {
          // then we set the mType to SKIPPEDENT and return. Otherwise, we do a cleanup
          if (value is > _FIRSTENT and < _LASTAUX) {
             // Reset all buffers in preparation for reading this entity
-            I0 = I1 = I2 = I3 = I4 = I7 = 0; D42 = 0; D50 = D51 = 0; 
+            I0 = I1 = I2 = I3 = I4 = I7 = 0; D41 = D42 = D50 = D51 = X1 = Y1 = 0; 
             mX0.ClearFast (); mY0.ClearFast (); mXData.Clear ();
             mD40.ClearFast (); mD41.ClearFast (); mD42.ClearFast ();
-            PaperSpace = Invisible = false; ZDir = 1; 
+            PaperSpace = Invisible = false; ZDir = 1; StyleName = "";
             if (mClosedPoly == null) ColorNo = 256;
          } else {
             if (value is > _FIRSTIGNORE and < _LASTIGNORE) mType = SKIPPEDENT;
@@ -418,33 +554,21 @@ public class DXFReader {
    [DoesNotReturn] void Fatal (string s) => throw new ($"At line {R.LineNo - 2}: {s}");
    [DoesNotReturn] void Unexpected () => Fatal ("Unexpected");
 
-   void UnhandledGroup (int g) {
-      sGroupIgnore ??= [.. Lib.ReadLines ("nori:DXF/group-ignore.txt").Select (a => a.ToInt ())];
-      if (sGroupIgnore.Contains (g)) return;
-      Fatal ($"Unhandled Group {g}, {mType} entity");
-   }
-   static HashSet<int>? sGroupIgnore;
-
-   void UnknownHeaderVar (string s) {
-      sHeaderIgnore ??= [.. Lib.ReadLines ("nori:DXF/header-ignore.txt")];
-      if (sHeaderIgnore.Contains (s)) return; 
-      Fatal ($"Unknown header var: {s}");
-   }
-   HashSet<string>? sHeaderIgnore;
-
-   void Warn (string s) { if ((sWarnings ??= []).Add (s)) Lib.Trace (s); }
-   HashSet<string>? sWarnings; 
+   partial void Skipping (EDXF e, string name);
+   partial void UnhandledGroup (int g);
+   partial void UnknownHeaderVar (string s);
+   partial void Warn (string s);
 
    // Private data -------------------------------------------------------------
    readonly Dwg2 mDwg = new ();  // The drawing we're building
    readonly byte[] D;            // The raw data of the line
    readonly UTFReader R;         // The UTFReader used to read the file
    int G;                        // Group code
-   int mLineNo;                  // The line number
    int mSt, mLen;                // Start and length of the current line
    static SearchValues<byte> sCRLF = SearchValues.Create (13, 10);
    Encoding mEncoding = Encoding.UTF8;    // The encoding we're using
    List<string> mXData = [];     // Strings loaded from 1000 group (used for bend-data)
+   readonly Dictionary<E2Dimension, string> mDimBlocks = [];   // Dimension blocks
    readonly StringBuilder mSB = new ();   // StringBuilder used in multiple contexts
    readonly PolyBuilder mPB = new ();     // PolyBuilder used in multiple contexts
    List<Ent2>? mBlockEnts;       // Entities in block

@@ -2,7 +2,7 @@
 // ╔═╦╦═╦╦╬╣ DXFReader.cs
 // ║║║║╬║╔╣║ Implements DXFReader: reads in a Dwg2 from a DXF file
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
-namespace Nori;
+namespace Nori.Old;
 
 /// <summary>DXFReader is used to read a DXF file into a Dwg2</summary>
 public class DXFReader {
@@ -377,7 +377,7 @@ public class DXFReader {
                   E2Flags flags = 0;
                   if ((Flags & 1) > 0) flags |= E2Flags.Closed;
                   if ((Flags & 2) > 0) flags |= E2Flags.Periodic;
-                  Add (new E2Spline (Layer, spline, flags));
+                  Add (new E2Spline (Layer, spline, flags) { Color = GetColor () });
                }
                break;
 
@@ -520,7 +520,7 @@ public class DXFReader {
    bool? mClosedPoly;               // NULL=not reading polyline, true=reading closed poly, false=reading open poly
 
    string? mType;                   // The _previous_ Type (0 group entity) that we saw
-   readonly Dictionary<string, Layer2> mLayers = [];  // Dictionary mapping layer names to layer objects
+   readonly Dictionary<string, Layer2> mLayers = new (StringComparer.OrdinalIgnoreCase);  // Dictionary mapping layer names to layer objects
    readonly PolyBuilder mPolyBuilder = new ();
 
    // Storage area for group codes
