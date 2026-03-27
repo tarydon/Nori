@@ -46,9 +46,9 @@ public class DXFReader {
       while (Next ()) {
          switch (G) {
             case 0: Type = E; break;
-            case 1: Text = ""; break;
+            case 1: Text = V; break;
             case 3: FontName = V; break;
-            case 8: LayerName = V; break;
+            case 8: if (mClosedPoly == null) LayerName = V; break;
             case 6: LTName = V; break;
             case 7: StyleName = V; break;
             case 9: HeaderVar (E); break;
@@ -96,20 +96,75 @@ public class DXFReader {
       sTypeIgnore = [.. Lib.ReadLines ("nori:DXF/entity-ignore.txt").Select (Enum.Parse<EDXF>)];
    }
 
+   // Add a Poly (wrapping it in an E2Poly)
    void Add (Poly poly) => Add (new E2Poly (Layer, poly));
 
+   // Adds an Ent2 to the drawing (after setting Color)
    void Add (Ent2 ent) {
       if (Invisible) return;
-      ent.Color = GetColor (ColorNo); mDwg.Add (ent);
+      ent.Color = GetColor (ColorNo);
+      if (mBlockEnts != null) { ent.InBlock = true; mBlockEnts.Add (ent); }
+      else mDwg.Add (ent);
+   }
+
+   // Make an ellipse and adds it
+   void AddEllipse (Point2 cen, Vector2 major, double ratio, (double, double) aRange) {
+      Point2 east = cen + major;
+      var (aStart, aEnd) = aRange;
+      while (aEnd < aStart) aEnd += Lib.TwoPI;
+      double R = major.Length, r = R * ratio, aSpan = aEnd - aStart;
+      // Figure out the number of steps for discretization (5 degrees per step)
+      int c = (int)Math.Max (4.0, (aSpan / (Math.PI / 36)).Round (0));
+      double aStep = aSpan / c, rot = cen.AngleTo (east);
+      bool closed = aSpan.EQ (2 * Math.PI);
+      if (closed) c--;
+
+      for (int i = 0; i <= c; i++) {
+         var (sin, cos) = Math.SinCos (aStart + i * aStep);
+         var node = new Point2 (R * cos, r * sin * ZDir).Rotated (rot);
+         mPB.Line (node.Moved (cen.X, cen.Y));
+      }
+      if (closed) mPB.Close ();
+      Add (mPB.Build ());
+   }
+
+   void AddPolyline () {
+      if (Vertex.Count > 0) {
+         // If there are curve-fit vertices, remove the others
+         if (Vertex.Any (a => (a.Flags & 8) != 0))
+            Vertex = [.. Vertex.Where (a => (a.Flags & 8) != 0)];
+         foreach (var (Pt, Flags, Bulge) in Vertex) {
+            if (Bulge > 1e6 || Bulge.IsZero ()) mPB.Line (Pt);
+            else mPB.Arc (Pt, Bulge);
+         }
+         if (mClosedPoly == true) mPB.Close ();
+         Add (mPB.Build ());
+         Vertex.Clear (); 
+      }
+      mClosedPoly = null;
    }
 
    // Builds an entity
    void BuildEnt (EDXF type) {
       if (type > _LASTENT) return;
       switch (type) {
+         case ARC: Add (Poly.Arc (Pt0, Radius, D50.D2R (), D51.D2R (), true)); break;
+         case BLOCK: (mBlockEnts, mBlockName, mBlockPt) = ([], Name, Pt0); break;
          case CIRCLE: Add (Poly.Circle (Pt0, Radius)); break;
+         case ELLIPSE: AddEllipse (Pt0, (Vector2)Pt1, D40, new (D41, D42)); break;
+         case POINT: Add (new E2Point (Layer, Pt0)); break;
+         case POLYLINE: mClosedPoly = (Flags & 1) != 0; break;
+         case SEQEND: AddPolyline (); break;
          case STYLE: mDwg.Add (new Style2 (Name, FontName, D40 * Scale, D41 == 0 ? 1 : D41, D50.D2R ())); break;
          case TRACE or SOLID: Add (new E2Solid (Layer, [Pt0, Pt1, Pt2, Pt3])); break;
+         case VERTEX: Vertex.Add ((Pt0, Flags, Bulge)); break;
+
+         case ENDBLK:
+            // Safe to add this to mDwg since blocks cannot contain nested blocks
+            if (!sSkipBlocks.Contains (mBlockName))
+               mDwg.Add (new Block2 (mBlockName, mBlockPt, mBlockEnts ?? []));
+            mBlockEnts = null;
+            break;
 
          case LAYER:
             bool visible = (I0 & 1) != 1;
@@ -132,6 +187,15 @@ public class DXFReader {
             } else Add (line);
             break;
 
+         case LWPOLYLINE:
+            // mClosedPoly is used by AddPolyline, and writing to D42 below
+            // will ensure the mD42 array has at least as many elements as mD40/mD41
+            mClosedPoly = (Flags & 1) > 0; D42 = 0;  
+            for (int i = 0; i < mX0.Count; i++)
+               Vertex.Add (new (new (mX0[i] * Scale, mY0[i] * Scale), 0, mD42[i]));
+            AddPolyline ();
+            break;
+
          case TEXT:
             int hAlign = I2 > 2 ? 0 : I2.Clamp (0, 2), vAlign = 3 - I3.Clamp (0, 3);
             ETextAlign align = (ETextAlign)(vAlign * 3 + hAlign + 1);
@@ -139,9 +203,9 @@ public class DXFReader {
             Add (new E2Text (Layer, Style, Clean (Text, mSB), pos, Height, Angle, Oblique, XScale, align));
             break;
 
-         case BLOCK or SOLID or MTEXT or LINE or ARC : break;
-         case POINT or LWPOLYLINE or DIMENSION or INSERT or SPLINE or POLYLINE: break;
-         case VERTEX or SEQEND or ATTDEF or ATTRIB or LEADER or TRACE or ELLIPSE or XLINE: break;
+         case BLOCK or SOLID or MTEXT: break;
+         case DIMENSION or INSERT or SPLINE: break;
+         case ATTDEF or ATTRIB or LEADER or TRACE or XLINE: break;
          default: Fatal ($"Unhandled entity {type}"); break;
       } // TODO: Handle HATCH
    }
@@ -282,11 +346,11 @@ public class DXFReader {
          // then we set the mType to SKIPPEDENT and return. Otherwise, we do a cleanup
          if (value is > _FIRSTENT and < _LASTAUX) {
             // Reset all buffers in preparation for reading this entity
-            I0 = I1 = I2 = I3 = I4 = I7 = 0; D42 = 0; D50 = 0; 
+            I0 = I1 = I2 = I3 = I4 = I7 = 0; D42 = 0; D50 = D51 = 0; 
             mX0.ClearFast (); mY0.ClearFast (); mXData.Clear ();
-            mD0.ClearFast (); mD1.ClearFast (); mD2.ClearFast ();
-            PaperSpace = Invisible = false; ZDir = 1; ColorNo = 256;
-            // TODO: Reset ColorNo if not VERTEX / SEQEND
+            mD40.ClearFast (); mD41.ClearFast (); mD42.ClearFast ();
+            PaperSpace = Invisible = false; ZDir = 1; 
+            if (mClosedPoly == null) ColorNo = 256;
          } else {
             if (value is > _FIRSTIGNORE and < _LASTIGNORE) mType = SKIPPEDENT;
             else Fatal ($"Unclassified Type {value}");
@@ -302,6 +366,7 @@ public class DXFReader {
 
    int Flags => I0;
    double Angle => D50.D2R ();
+   double Bulge => D42;
    double Height => D40 * Scale;
    double Oblique => D51.D2R ();
    Point2 Pt0 => new (X0 * Scale, Y0 * Scale);
@@ -320,24 +385,26 @@ public class DXFReader {
    // Storage properties -------------------------------------------------------
    int ColorNo;
    double D50, D51;
+   double DimCen, DimGap;
    bool PaperSpace, Invisible;
    int I0, I1, I2, I3, I4, I7;
    double D43, D44, D45, D46, D47, D48;
    double X1, Y1, X2, X4, X5, X6, Y2, X3, Y3, Y4, Y5, Y6;
-   double DimCen, DimGap;
-   double D40 { get => field; set => mD0.Add (field = value); }
-   double D41 { get => field; set => mD1.Add (field = value); }
+   double D40 { get => field; set => mD40.Add (field = value); }
+   double D41 { get => field; set => mD41.Add (field = value); }
    double X0 { get => field; set => mX0.Add (field = value); } 
    double Y0 { get => field; set => mY0.Add (field = value); }
-   List<double> mX0 = [], mY0 = [], mD0 = [], mD1 = [], mD2 = [];
+   List<double> mX0 = [], mY0 = [], mD40 = [], mD41 = [], mD42 = [];
    string Name = "", LTName = "", StyleName = "", FontName = "", Text = "";
+   List<(Point2 Pt, int Flags, double Bulge)> Vertex = [];
+   bool? mClosedPoly;   // NULL=not making POLYLINE, true/false=making polyline
    double ZDir = 1;
 
    double D42 {
       get => field;
       set {
-         while (mD2.Count < mX0.Count - 1) mD2.Add (0);
-         mD2.Add (field = value);
+         while (mD42.Count < mX0.Count - 1) mD42.Add (0);
+         mD42.Add (field = value);
       }
    }
 
@@ -376,7 +443,16 @@ public class DXFReader {
    int mLineNo;                  // The line number
    int mSt, mLen;                // Start and length of the current line
    static SearchValues<byte> sCRLF = SearchValues.Create (13, 10);
-   Encoding mEncoding = Encoding.UTF8;       // The encoding we're using
+   Encoding mEncoding = Encoding.UTF8;    // The encoding we're using
    List<string> mXData = [];     // Strings loaded from 1000 group (used for bend-data)
-   readonly StringBuilder mSB = new ();      
+   readonly StringBuilder mSB = new ();   // StringBuilder used in multiple contexts
+   readonly PolyBuilder mPB = new ();     // PolyBuilder used in multiple contexts
+   List<Ent2>? mBlockEnts;       // Entities in block
+   string mBlockName = "";       // Name of block we're reading
+   Point2 mBlockPt;              // Block reference point
+
+   // Blocks that can be ignored
+   static readonly HashSet<string> sSkipBlocks = new (StringComparer.OrdinalIgnoreCase) {
+      "*Model_Space", "*Paper_Space", "*Paper_Space0", "*MODEL_SPACE", "*PAPER_SPACE", "*PAPER_SPACE0"
+   };
 }

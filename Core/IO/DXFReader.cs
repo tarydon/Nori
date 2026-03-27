@@ -218,8 +218,9 @@ public class DXFReader {
          }
          if (mClosedPoly == true) mPolyBuilder.Close ();
          Add (mPolyBuilder.Build ());
-         mVertex.Clear (); mClosedPoly = null;
+         mVertex.Clear ();
       }
+      mClosedPoly = null;
    }
 
    // Implementation -----------------------------------------------------------
@@ -395,8 +396,8 @@ public class DXFReader {
                break;
 
             default:
-               if (!Lib.Testing && mType != null && mUnsupported.Add (mType))
-                  Lib.Trace ($"DXFReader: {mType} unsupported in {mFile}\n");
+               //if (!Lib.Testing && mType != null && mUnsupported.Add (mType))
+               //   Lib.Trace ($"DXFReader: {mType} unsupported in {mFile}\n");
                break;
          }
 
