@@ -375,6 +375,7 @@
       ]
     }
   ]
+  CurrentLayer:0
   Ents:[
     (E2Insert){
       Layer:"レイヤー_1"

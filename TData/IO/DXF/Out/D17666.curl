@@ -3372,6 +3372,7 @@
       ]
     }
   ]
+  CurrentLayer:0
   Ents:[
     (E2Insert){ Layer:0 BlockName:SE1 Pt:0,0 XScale:1 YScale:1 }
     (E2Insert){ Layer:0 BlockName:SE0 Pt:0,0 XScale:1 YScale:1 }
