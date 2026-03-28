@@ -10,11 +10,9 @@ class Program {
       Lib.Init ();
       Lib.Tracer = Console.WriteLine;
 
-      var files = Directory.GetFiles ("W:\\DXF", "*.dxf");
-      for (int i = 0; i < files.Length; i++) {
-         Console.Write ('.');
-         if ((i % 1000) == 0) Console.Write ($" {i} ");
-         var dwg = DXFReader.Load (files[i]);
-      }
+      var dwg = DXFReader.Load ("c:/etc/FOLD.01.dxf");
+      var folder = new Folder (dwg);
+      folder.Process ();
+      folder.Dump ("c:/etc/test.dxf");
    }
 }
