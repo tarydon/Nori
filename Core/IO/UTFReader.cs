@@ -23,6 +23,8 @@ public class UTFReader {
    readonly string? mFile;
 
    // Properties ---------------------------------------------------------------
+   public bool AtEndOfFile => mN >= D.Length;
+
    /// <summary>Matches and discards a given byte</summary>
    /// If the given byte is not found as the next character, throws an exception
    public UTFReader Match (char b) {
@@ -30,6 +32,8 @@ public class UTFReader {
       if (D[mN++] != b) Fatal ($"Expecting '{b}', found '{(char)D[--mN]}'");
       return this;
    }
+
+   public int Pos => mN;
 
    /// <summary>Gets a span of bytes (starting at the given position, and of given length)</summary>
    public ReadOnlySpan<byte> GetSpan (int start, int length) => D.AsSpan (start, length);
@@ -200,6 +204,8 @@ public class UTFReader {
       while (mN < Max && sSpace.Contains (D[mN])) mN++;
       return this;
    }
+
+   public static SearchValues<byte> SpaceChars => sSpace;
    static readonly SearchValues<byte> sSpace = SearchValues.Create (9, 10, 11, 13, 32);
 
    /// <summary>SKips until the given character is found (and consumes that character)</summary>
@@ -226,6 +232,24 @@ public class UTFReader {
       return D.AsSpan (start, --mN - start);
    }
 
+   public void ReadLineRange (out int start, out int length) {
+      start = mN;
+      while (mN < Max && !sCRLF.Contains (D[mN])) mN++;
+      length = mN - start;
+      while (mN < Max && sCRLF.Contains (D[mN])) mN++;
+   }
+   static SearchValues<byte> sCRLF = SearchValues.Create (13, 10);
+
+   public UTFReader SkipToNextLine () {
+      while (mN < Max && !sCRLF.Contains (D[mN])) mN++;
+      // There are 3 possible line endings: 0A | 0D 0A | 0D
+      if (D[mN] == 13) {
+         if (mN < Max && D[mN + 1] == 10) mN++;
+      }
+      mN++;
+      return this; 
+   }
+
    /// <summary>This reads characters until the given stop character is found</summary>
    /// This returns the set of characters as a ReadOnlySpan. Unlike the other
    /// TakeUntil method, this consumes the stop character itself.
@@ -246,6 +270,14 @@ public class UTFReader {
       if (mFile != null) sb.Append ($" of {mFile}");
       sb.Append ($": {s}");
       throw new ParseException (sb.ToString ());
+   }
+
+   public int LineNo {
+      get {
+         int n = D.Take (mN).Count (a => a == '\n');
+         if (n == 0) n = D.Take (mN).Count (a => a == '\r');
+         return n + 1;
+      }
    }
 
    public override string ToString () {

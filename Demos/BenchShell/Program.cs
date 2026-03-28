@@ -9,32 +9,16 @@ namespace NBench;
 
 [MemoryDiagnoser]
 public class Tester {
-   public Tester () {
-      Lib.Init ();
-   }
-
-   [Benchmark (Baseline = true)]
-   public void TextRead () {
-      foreach (var file in Directory.GetFiles ("W:/DXF", "*.dxf").Take (MAX)) {
-         string s = File.ReadAllText (file);
-      }
-   }
+   public Tester () => Lib.Init ();
 
    [Benchmark]
-   public void ByteRead () {
+   public void NewDXF () {
       foreach (var file in Directory.GetFiles ("W:/DXF", "*.dxf").Take (MAX)) {
-         byte[] data = File.ReadAllBytes (file);
+         var _ = DXFReader.Load (file);
       }
    }
 
-   [Benchmark]
-   public void LibRead () {
-      foreach (var file in Directory.GetFiles ("W:/DXF", "*.dxf").Take (MAX)) {
-         byte[] data = Lib.ReadBytes (file);
-      }
-   }
-
-   int MAX = 10000;
+   int MAX = 1000;
 }
 
 static class Program {

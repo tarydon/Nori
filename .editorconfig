@@ -74,6 +74,7 @@ dotnet_diagnostic.SYSLIB1054.severity = None  # Use 'LibraryImportAttribute' rat
 dotnet_diagnostic.IDE0065.severity = None     # Using directives must be placed outside of a namespace declaration
 dotnet_diagnostic.IDE0130.severity = None     # Namespace 'N' does not match folder structure
 dotnet_diagnostic.IDE0290.severity = None     # Use primary constructor
+dotnet_diagnostic.SYSLIB1045.severity = None  # Use '[GeneratedRegex]' to generate this regex at compile-time
 
 # Diagnostics related to XML documentation
 dotnet_diagnostic.CS1591.severity = None      # Missing XML comment for publicly visible type or member

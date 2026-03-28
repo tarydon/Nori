@@ -212,8 +212,14 @@ public static class Lib {
    }
 
    /// <summary>Reads a set of lines from a stream opened by the IStmLocator service</summary>
-   public static string[] ReadLines (string file)
-      => ReadText (file).Split ('\n');
+   public static string[] ReadLines (string file) {
+      string? line;
+      List<string> lines = [];
+      using var stm = OpenRead (file);
+      using (var reader = new StreamReader (stm))
+         while ((line = reader.ReadLine ()) != null) lines.Add (line);
+      return [.. lines];
+   }
 
    /// <summary>Reads a set of lines from a stream inside a Zip archive</summary>
    public static List<string> ReadLinesFromZip (string zipfile, string stream) {
