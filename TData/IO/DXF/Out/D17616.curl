@@ -17,6 +17,7 @@
       Ents:[
         (E2Spline){
           Layer:"レイヤー_1"
+          Color:#FFFFFFFF
           Spline:{
             Imp:{
               Nodes:70
@@ -174,6 +175,7 @@
         }
         (E2Spline){
           Layer:"レイヤー_1"
+          Color:#FFFFFFFF
           Spline:{
             Imp:{
               Nodes:40
@@ -271,6 +273,7 @@
         }
         (E2Spline){
           Layer:"レイヤー_1"
+          Color:#FFFFFFFF
           Spline:{
             Imp:{ Nodes:13 Knot:[ 0 0 0 0 1 1 1 2 2 2 3 3 3 4 4 4 4 ] }
             Ctrl:[
@@ -293,6 +296,7 @@
         }
         (E2Spline){
           Layer:"レイヤー_1"
+          Color:#FFFFFFFF
           Spline:{
             Imp:{ Nodes:10 Knot:[ 0 0 0 0 1 1 1 2 2 2 3 3 3 3 ] }
             Ctrl:[
@@ -312,6 +316,7 @@
         }
         (E2Spline){
           Layer:"レイヤー_1"
+          Color:#FFFFFFFF
           Spline:{
             Imp:{ Nodes:13 Knot:[ 0 0 0 0 1 1 1 2 2 2 3 3 3 4 4 4 4 ] }
             Ctrl:[
@@ -334,6 +339,7 @@
         }
         (E2Spline){
           Layer:"レイヤー_1"
+          Color:#FFFFFFFF
           Spline:{
             Imp:{ Nodes:25 Knot:[ 0 0 0 0 1 1 1 2 2 2 3 3 3 4 4 4 5 5 5 6 6 6 7 7 7 8 8 8 8 ] }
             Ctrl:[

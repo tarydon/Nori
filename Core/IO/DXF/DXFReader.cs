@@ -413,7 +413,6 @@ public partial class DXFReader {
    // each is on a separate line. These patterns are combined using the OR operator. The paragraph
    // markers (\P) and the style code-blocks ({...}) are left unidentified and are
    // processed after the text extraction.
-   [SuppressMessage ("Performance", "SYSLIB1045")]
    static readonly Regex sRxMText = new (
      @"(\\[Ff][^|;]+((\|([bicp])\d+)+)?;)|" +   // Font name & style (e.g., \fTimes New Roman|b1|i0;)
      @"(\\[AHWCT](\d*?(\.\d+)?x?));|" +         // Height, Width, Alignment, Color codes like: \H3x; \H12.500; \W0.8x;

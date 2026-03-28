@@ -9,25 +9,16 @@ namespace NBench;
 
 [MemoryDiagnoser]
 public class Tester {
-   public Tester () {
-      Lib.Init ();
-   }
-
-   [Benchmark (Baseline = true)]
-   public void OldDXF () {
-      foreach (var file in Directory.GetFiles ("W:/DXF", "*.dxf").Take (MAX)) {
-         var dwg = Nori.Old.DXFReader.Load (file);
-      }
-   }
+   public Tester () => Lib.Init ();
 
    [Benchmark]
    public void NewDXF () {
       foreach (var file in Directory.GetFiles ("W:/DXF", "*.dxf").Take (MAX)) {
-         var dwg = Nori.DXFReader.Load (file);
+         var _ = DXFReader.Load (file);
       }
    }
 
-   int MAX = 10000;
+   int MAX = 1000;
 }
 
 static class Program {

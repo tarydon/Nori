@@ -18,6 +18,7 @@
         (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2292.449152,1851.009421V1846.871132 }
         (E2Spline){
           Layer:DV1_MARK
+          Color:#FFFFFFFF
           Spline:{
             Imp:{
               Nodes:20
@@ -76,6 +77,7 @@
         (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2292.449152,1846.871132H2269.33022 }
         (E2Spline){
           Layer:DV1_MARK
+          Color:#FFFFFFFF
           Spline:{
             Imp:{
               Nodes:22
@@ -144,6 +146,7 @@
         (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2302.344055,1851.009421H2319.521422 }
         (E2Spline){
           Layer:DV1_MARK
+          Color:#FFFFFFFF
           Spline:{
             Imp:{
               Nodes:20
@@ -202,6 +205,7 @@
         (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2319.521422,1846.871132H2296.425608 }
         (E2Spline){
           Layer:DV1_MARK
+          Color:#FFFFFFFF
           Spline:{
             Imp:{
               Nodes:23
@@ -270,6 +274,7 @@
         }
         (E2Spline){
           Layer:DV1_MARK
+          Color:#FFFFFFFF
           Spline:{
             Imp:{
               Nodes:20
@@ -328,6 +333,7 @@
         (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2328.21414,1864.742067H2328.329735 }
         (E2Spline){
           Layer:DV1_MARK
+          Color:#FFFFFFFF
           Spline:{
             Imp:{
               Nodes:9
@@ -349,6 +355,7 @@
         }
         (E2Spline){
           Layer:DV1_MARK
+          Color:#FFFFFFFF
           Spline:{
             Imp:{
               Nodes:26
@@ -424,6 +431,7 @@
         (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2367.192659,1881.803838V1846.871132 }
         (E2Spline){
           Layer:DV1_MARK
+          Color:#FFFFFFFF
           Spline:{
             Imp:{ Nodes:7 Knot:[ 0 0 0 0 0.000544 0.000544 0.000544 1 1 1 1 ] }
             Ctrl:[
@@ -452,6 +460,7 @@
         (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2380.324213,1846.871132V1851.749227 }
         (E2Spline){
           Layer:DV1_MARK
+          Color:#FFFFFFFF
           Spline:{
             Imp:{
               Nodes:20
@@ -510,6 +519,7 @@
         (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2395.767659,1864.742067H2395.860135 }
         (E2Spline){
           Layer:DV1_MARK
+          Color:#FFFFFFFF
           Spline:{
             Imp:{
               Nodes:9
@@ -531,6 +541,7 @@
         }
         (E2Spline){
           Layer:DV1_MARK
+          Color:#FFFFFFFF
           Spline:{
             Imp:{
               Nodes:27
@@ -612,6 +623,7 @@
         }
         (E2Spline){
           Layer:DV1_MARK
+          Color:#FFFFFFFF
           Spline:{
             Imp:{
               Nodes:20
@@ -684,6 +696,7 @@
         }
         (E2Spline){
           Layer:DV1_MARK
+          Color:#FFFFFFFF
           Spline:{
             Imp:{
               Nodes:21
@@ -757,6 +770,7 @@
         (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2231.207101,1804.771557H2218.191142 }
         (E2Spline){
           Layer:DV1_MARK
+          Color:#FFFFFFFF
           Spline:{
             Imp:{
               Nodes:25
@@ -824,6 +838,7 @@
         }
         (E2Spline){
           Layer:DV1_MARK
+          Color:#FFFFFFFF
           Spline:{
             Imp:{
               Nodes:15
@@ -894,6 +909,7 @@
         (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2275.641689,1822.180113H2275.549213 }
         (E2Spline){
           Layer:DV1_MARK
+          Color:#FFFFFFFF
           Spline:{
             Imp:{ Nodes:7 Knot:[ 0 0 0 0 0.000544 0.000544 0.000544 1 1 1 1 ] }
             Ctrl:[
@@ -921,6 +937,7 @@
         (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2332.12124,1829.277625V1794.344919 }
         (E2Spline){
           Layer:DV1_MARK
+          Color:#FFFFFFFF
           Spline:{
             Imp:{ Nodes:7 Knot:[ 0 0 0 0 0.000544 0.000544 0.000544 1 1 1 1 ] }
             Ctrl:[
@@ -948,6 +965,7 @@
         (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2355.517599,1804.771557H2342.50164 }
         (E2Spline){
           Layer:DV1_MARK
+          Color:#FFFFFFFF
           Spline:{
             Imp:{
               Nodes:26
@@ -1017,6 +1035,7 @@
         }
         (E2Spline){
           Layer:DV1_MARK
+          Color:#FFFFFFFF
           Spline:{
             Imp:{
               Nodes:16
@@ -1071,6 +1090,7 @@
         }
         (E2Spline){
           Layer:DV1_MARK
+          Color:#FFFFFFFF
           Spline:{
             Imp:{
               Nodes:16
@@ -1120,6 +1140,7 @@
         }
         (E2Spline){
           Layer:DV1_MARK
+          Color:#FFFFFFFF
           Spline:{
             Imp:{
               Nodes:26
@@ -1189,6 +1210,7 @@
         }
         (E2Spline){
           Layer:DV1_MARK
+          Color:#FFFFFFFF
           Spline:{
             Imp:{
               Nodes:38
@@ -1312,6 +1334,7 @@
         (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2461.633497,1828.607176V1824.445768 }
         (E2Spline){
           Layer:DV1_MARK
+          Color:#FFFFFFFF
           Spline:{
             Imp:{
               Nodes:25
@@ -1379,6 +1402,7 @@
         }
         (E2Spline){
           Layer:DV1_MARK
+          Color:#FFFFFFFF
           Spline:{
             Imp:{
               Nodes:20
@@ -1450,6 +1474,7 @@
         }
         (E2Spline){
           Layer:DV1_MARK
+          Color:#FFFFFFFF
           Spline:{
             Imp:{
               Nodes:10
@@ -1503,6 +1528,7 @@
         (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2224.040232,1774.601351V1739.668644 }
         (E2Spline){
           Layer:DV1_MARK
+          Color:#FFFFFFFF
           Spline:{
             Imp:{ Nodes:7 Knot:[ 0 0 0 0 0.000543 0.000543 0.000543 1 1 1 1 ] }
             Ctrl:[
@@ -1527,6 +1553,7 @@
         }
         (E2Spline){
           Layer:DV1_MARK
+          Color:#FFFFFFFF
           Spline:{
             Imp:{
               Nodes:21
@@ -1586,6 +1613,7 @@
         }
         (E2Spline){
           Layer:DV1_MARK
+          Color:#FFFFFFFF
           Spline:{
             Imp:{
               Nodes:21
@@ -1645,6 +1673,7 @@
         }
         (E2Spline){
           Layer:DV1_MARK
+          Color:#FFFFFFFF
           Spline:{
             Imp:{
               Nodes:19
@@ -1700,6 +1729,7 @@
         }
         (E2Spline){
           Layer:DV1_MARK
+          Color:#FFFFFFFF
           Spline:{
             Imp:{
               Nodes:21
@@ -1763,6 +1793,7 @@
         (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2274.53198,1750.118402H2261.516021 }
         (E2Spline){
           Layer:DV1_MARK
+          Color:#FFFFFFFF
           Spline:{
             Imp:{
               Nodes:22
@@ -1824,6 +1855,7 @@
         }
         (E2Spline){
           Layer:DV1_MARK
+          Color:#FFFFFFFF
           Spline:{
             Imp:{
               Nodes:22
@@ -1885,6 +1917,7 @@
         }
         (E2Spline){
           Layer:DV1_MARK
+          Color:#FFFFFFFF
           Spline:{
             Imp:{
               Nodes:19
@@ -1940,6 +1973,7 @@
         }
         (E2Spline){
           Layer:DV1_MARK
+          Color:#FFFFFFFF
           Spline:{
             Imp:{
               Nodes:21
@@ -2029,6 +2063,7 @@
         (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2353.55249,1773.930902V1769.792613 }
         (E2Spline){
           Layer:DV1_MARK
+          Color:#FFFFFFFF
           Spline:{
             Imp:{
               Nodes:19
@@ -2084,6 +2119,7 @@
         }
         (E2Spline){
           Layer:DV1_MARK
+          Color:#FFFFFFFF
           Spline:{
             Imp:{
               Nodes:27
@@ -2161,6 +2197,7 @@
         }
         (E2Spline){
           Layer:DV1_MARK
+          Color:#FFFFFFFF
           Spline:{
             Imp:{ Nodes:4 Knot:[ 0 0 0 0 1 1 1 1 ] }
             Ctrl:[
@@ -2174,6 +2211,7 @@
         }
         (E2Spline){
           Layer:DV1_MARK
+          Color:#FFFFFFFF
           Spline:{
             Imp:{ Nodes:4 Knot:[ 0 0 0 0 1 1 1 1 ] }
             Ctrl:[
@@ -2201,6 +2239,7 @@
         (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2371.770208,1750.118402H2358.754249 }
         (E2Spline){
           Layer:DV1_MARK
+          Color:#FFFFFFFF
           Spline:{
             Imp:{
               Nodes:20
@@ -2258,6 +2297,7 @@
         }
         (E2Spline){
           Layer:DV1_MARK
+          Color:#FFFFFFFF
           Spline:{
             Imp:{
               Nodes:10
@@ -2286,6 +2326,7 @@
         }
         (E2Spline){
           Layer:DV1_MARK
+          Color:#FFFFFFFF
           Spline:{
             Imp:{
               Nodes:32
@@ -2370,6 +2411,7 @@
         (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2402.772696,1769.792613V1773.930902 }
         (E2Spline){
           Layer:DV1_MARK
+          Color:#FFFFFFFF
           Spline:{
             Imp:{
               Nodes:10
@@ -2400,6 +2442,7 @@
         (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2434.861773,1743.830052H2452.03914 }
         (E2Spline){
           Layer:DV1_MARK
+          Color:#FFFFFFFF
           Spline:{
             Imp:{
               Nodes:20
@@ -2463,6 +2506,7 @@
         (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2452.03914,1739.668644H2428.920208 }
         (E2Spline){
           Layer:DV1_MARK
+          Color:#FFFFFFFF
           Spline:{
             Imp:{
               Nodes:22
@@ -2524,6 +2568,7 @@
         }
         (E2Spline){
           Layer:DV1_MARK
+          Color:#FFFFFFFF
           Spline:{
             Imp:{
               Nodes:25
@@ -2591,6 +2636,7 @@
         }
         (E2Spline){
           Layer:DV1_MARK
+          Color:#FFFFFFFF
           Spline:{
             Imp:{
               Nodes:16
@@ -2653,6 +2699,7 @@
         }
         (E2Spline){
           Layer:DV1_MARK
+          Color:#FFFFFFFF
           Spline:{
             Imp:{
               Nodes:21
@@ -2712,6 +2759,7 @@
         }
         (E2Spline){
           Layer:DV1_MARK
+          Color:#FFFFFFFF
           Spline:{
             Imp:{
               Nodes:27
@@ -2783,6 +2831,7 @@
         }
         (E2Spline){
           Layer:DV1_MARK
+          Color:#FFFFFFFF
           Spline:{
             Imp:{
               Nodes:33
@@ -2866,6 +2915,7 @@
         }
         (E2Spline){
           Layer:DV1_MARK
+          Color:#FFFFFFFF
           Spline:{
             Imp:{
               Nodes:17
@@ -2919,6 +2969,7 @@
         (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2318.044543,1957.40237H2325.766653 }
         (E2Spline){
           Layer:DV1_MARK
+          Color:#FFFFFFFF
           Spline:{
             Imp:{
               Nodes:18
@@ -3033,6 +3084,7 @@
         (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2445.767826,1939.852118V1932.619288 }
         (E2Spline){
           Layer:DV1_MARK
+          Color:#FFFFFFFF
           Spline:{
             Imp:{
               Nodes:20
@@ -3091,6 +3143,7 @@
         (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2490.483739,1936.533525V1929.428333 }
         (E2Spline){
           Layer:DV1_MARK
+          Color:#FFFFFFFF
           Spline:{
             Imp:{
               Nodes:30
@@ -3180,6 +3233,7 @@
         (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2516.3092,1926.875569V1939.2352 }
         (E2Spline){
           Layer:DV1_MARK
+          Color:#FFFFFFFF
           Spline:{
             Imp:{
               Nodes:23
@@ -3243,6 +3297,7 @@
         }
         (E2Spline){
           Layer:DV1_MARK
+          Color:#FFFFFFFF
           Spline:{
             Imp:{
               Nodes:20
