@@ -24,6 +24,8 @@ E2Dimension
   -Bound -DimSettings Ents
 E2Dim2P
    A B C Angle Text
+E2DimAngle
+   Corner A B C Angle Text ReflexAngle
 E2Spline
   -Bound Spline -Pts
 Mechanism
