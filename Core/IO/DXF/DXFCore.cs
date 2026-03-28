@@ -14,8 +14,7 @@ enum EDXF {
    // as the TABLES section)
    _FIRSTENT,
    LAYER, STYLE, BLOCK, LINE, SOLID, MTEXT, POINT, ARC, CIRCLE, LWPOLYLINE, TEXT, DIMENSION,
-   INSERT, SPLINE, POLYLINE, VERTEX, SEQEND, ATTDEF, ATTRIB, LEADER, TRACE, ELLIPSE, XLINE,
-   ENDBLK,
+   INSERT, SPLINE, POLYLINE, VERTEX, SEQEND, ATTRIB, LEADER, TRACE, ELLIPSE, XLINE, ENDBLK,
    _LASTENT,
 
    // These are the other objects (not entities) that we are going to not skip over
@@ -27,11 +26,11 @@ enum EDXF {
    _FIRSTIGNORE,
    CLASS, LTYPE, VIEWPORT, IMAGE, HATCH, TOLERANCE, ACAD_CIRCLE, ACAD_LINE, _3DFACE, _3DSOLID,
    ACAD_TABLE, OLE2FRAME, OLEFRAME, ACAD_PROXY_ENTITY, REGION, TCPOINTENTITY, ASSURFACE, WIPEOUT,
-   Point2, BODY, SURFACE, LIGHT,
+   Point2, BODY, SURFACE, LIGHT, ATTDEF,
    _LASTIGNORE,
 
    // Header values we are going to read
-   _ACADVER, _DWGCODEPAGE, _MEASUREMENT, _EXTMIN, _EXTMAX, _CLAYER, _LTSCALE,
+   _ACADVER, _DWGCODEPAGE, _MEASUREMENT, _CLAYER,
 
    // Miscellaneous
    APPID, BLOCK_RECORD, HELIX, MESH, SUN, UCS, UNDERLAY, VIEW, VPORT, OBJECTS, 
@@ -49,7 +48,7 @@ public class DXFCore {
       get {
          if (sDict == null) {
             sDict = new ();
-            for (var ed = EDXF._FIRSTENT; ed <= EDXF.EOF; ed++) {
+            for (var ed = _FIRSTENT; ed <= EOF; ed++) {
                var s = ed.ToString ();
                if (s.StartsWith ("_3")) s = s[1..];
                else if (s[0] == '_') s = s.Replace ('_', '$');

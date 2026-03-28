@@ -6,9 +6,7 @@ using System.Buffers;
 namespace Nori;
 using static EDXF;
 
-/// <summary>
-/// DXFReader is used to read in a DXF file into a Dwg2
-/// </summary>
+/// <summary>DXFReader is used to read in a DXF file into a Dwg2</summary>
 public partial class DXFReader {
    // Constructors -------------------------------------------------------------
    /// <summary>Initialize a DXFReader with a byte-array containing DXF data</summary>
@@ -58,21 +56,12 @@ public partial class DXFReader {
             case 11: X1 = Vf; break; case 21: Y1 = Vf; break;
             case 12: X2 = Vf; break; case 22: Y2 = Vf; break;
             case 13: X3 = Vf; break; case 23: Y3 = Vf; break;
-            case 14: X4 = Vf; break; case 24: Y4 = Vf; break;
-            case 15: X5 = Vf; break; case 25: Y5 = Vf; break;
-            case 16: X6 = Vf; break; 
-            case 26: Y6 = Vf; break;
             case 40: D40 = Vf; break; case 41: D41 = Vf; break; case 42: D42 = Vf; break;
-            case 43: D43 = Vf; break; case 44: D44 = Vf; break; case 45: D45 = Vf; break;
-            case 46: D46 = Vf; break; case 47: D47 = Vf; break; case 48: D48 = Vf; break; 
             case 50: D50 = Vf; break; case 51: D51 = Vf; break;
             case 60: Invisible = Vn == 1; break;
-            case 70: I0 = Vn; break; case 71: I1 = Vn; break; case 72: I2 = Vn; break; 
-            case 73: I3 = Vn; break; case 74: I4 = Vn; break; case 77: I7 = Vn; break;
+            case 70: I0 = Vn; break; case 71: I1 = Vn; break; 
+            case 72: I2 = Vn; break; case 73: I3 = Vn; break; 
             case 62: ColorNo = E switch { BYLAYER => 256, BYBLOCK => 257, _ => Vn }; break;
-            case 67: PaperSpace = Vn > 0; break;
-            case 141: DimCen = Vf; break;
-            case 147: DimGap = Vf; break;
             case 230: ZDir = Vf < -0.999 ? -1 : 1; break;
             case 1000: if (mType == LINE) mXData.Add (V); break;
 
@@ -91,6 +80,8 @@ public partial class DXFReader {
       LinkDimensions ();
       ProcessBendText ();
       StitchDrawing ();
+      if (mDwg.Layers.FirstOrDefault (a => a.Name == mCurrentLayer) is { } layer)
+         mDwg.CurrentLayer = layer;
       return mDwg;
    }
 
@@ -247,9 +238,10 @@ public partial class DXFReader {
             Add (new E2Text (Layer, Style, Clean (Text, mSB), pos, Height, Angle, Oblique, XScale, align));
             break;
 
-         case ATTRIB or ATTDEF or LEADER or TRACE or XLINE: break;
+         case LEADER or XLINE: break;
+
          default: Fatal ($"Unhandled entity {type}"); break;
-      } // TODO: Handle HATCH
+      }
    }
 
    // Parses the encoded characters in the text to the corresponding special characters
@@ -301,7 +293,6 @@ public partial class DXFReader {
       switch (key) {
          case _ACADVER: mACADVer = V; break;
          case _CLAYER: mCurrentLayer = V; break;
-         case _LTSCALE: mLTScale = Vf; break;
          case _MEASUREMENT: Scale = Vn == 0 ? 25.4 : 1; break;
 
          case _DWGCODEPAGE:
@@ -313,9 +304,6 @@ public partial class DXFReader {
                }
                mEncoding = Encoding.GetEncoding (GetCodePage (mCodePage)) ?? Encoding.UTF8;
             }
-            break;
-         case _EXTMIN: case _EXTMAX: 
-            double x = Vf; Next (); double y = Vf; Next (); mExtent += new Point2 (x, y); 
             break;
 
          default: throw new BadCaseException (key);
@@ -330,8 +318,7 @@ public partial class DXFReader {
    }
    static bool mEncodingsRegistered;
    string mACADVer = "", mCodePage = "", mCurrentLayer = "";
-   Bound2 mExtent = new ();
-   double mLTScale = 1, Scale = 1; 
+   double Scale = 1; 
 
    // This is called at the start of each section. 
    // For the HEADER section, this will read in a few variables. For other sections that we 
@@ -481,10 +468,10 @@ public partial class DXFReader {
          // then we set the mType to SKIPPEDENT and return. Otherwise, we do a cleanup
          if (value is > _FIRSTENT and < _LASTAUX) {
             // Reset all buffers in preparation for reading this entity
-            I0 = I1 = I2 = I3 = I4 = I7 = 0; D41 = D42 = D50 = D51 = X1 = Y1 = 0; 
+            I0 = I1 = I2 = I3 = 0; D41 = D42 = D50 = D51 = X1 = Y1 = 0; 
             mX0.ClearFast (); mY0.ClearFast (); mXData.Clear ();
             mD40.ClearFast (); mD41.ClearFast (); mD42.ClearFast ();
-            PaperSpace = Invisible = false; ZDir = 1; StyleName = "";
+            Invisible = false; ZDir = 1; StyleName = "";
             if (mClosedPoly == null) ColorNo = 256;
          } else {
             if (value is > _FIRSTIGNORE and < _LASTIGNORE) mType = SKIPPEDENT;
@@ -520,11 +507,9 @@ public partial class DXFReader {
    // Storage properties -------------------------------------------------------
    int ColorNo;
    double D50, D51;
-   double DimCen, DimGap;
-   bool PaperSpace, Invisible;
-   int I0, I1, I2, I3, I4, I7;
-   double D43, D44, D45, D46, D47, D48;
-   double X1, Y1, X2, X4, X5, X6, Y2, X3, Y3, Y4, Y5, Y6;
+   bool Invisible;
+   int I0, I1, I2, I3;
+   double X1, Y1, X2, Y2, X3, Y3;
    double D40 { get => field; set => mD40.Add (field = value); }
    double D41 { get => field; set => mD41.Add (field = value); }
    double X0 { get => field; set => mX0.Add (field = value); } 
