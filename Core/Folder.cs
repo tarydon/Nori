@@ -12,33 +12,53 @@ public class Folder {
       if (!GatherContours ()) return false;
       SnapBendlines ();
       for (int i = 0; i < mNode.Length; i++) MakeFace (i);
+      AssignHoles ();
       return false;
    }
 
    public void Dump (string file) {
       Dwg2 dwg = new ();
       foreach (var con in mPolys) dwg.Add (con.Poly);
+      List<Point2> pts = [];
       foreach (var bend in mBends) {
+         pts.Clear ();
          var bl1 = bend.BLine;
-         var bl2 = new E2Bendline (dwg, bend.Pts, bl1.Angle, bl1.Radius, bl1.KFactor, bl1.Thickness);
-         dwg.Add (bl2);
-         for (int k = 0; k < bend.Pts.Length; k++) {
+         for (int k = 0; k < bl1.Pts.Length; k++) {
             ref Node node = ref mNode[bend.NBase + k];
-            var poly = mPolys[node.NPoly].Poly;
-            var seg = poly[node.NSeg];
-            var pt = seg.GetPointAt (node.Lie);
-            dwg.Add (pt); dwg.Add (Poly.Circle (pt, 2));
+            pts.Add (node.GetPos (mPolys));
          }
+         var bl2 = new E2Bendline (dwg, pts, bl1.Angle, bl1.Radius, bl1.KFactor, bl1.Thickness);
+         dwg.Add (bl2);
       }
 
-      foreach (var n in mSorted) {
-         var node = mNode[n];
-         Console.WriteLine ($"{node.NPoly,4} {node.NSeg,4}  {node.Lie.Round (2)}");
+      double height = dwg.Bound.Diagonal / 200;
+      for (int i = 0; i < mNode.Length; i++) {
+         ref Node node = ref mNode[i];
+         Point2 pt = node.GetPos (mPolys);
+         dwg.Add (new E2Text (dwg.CurrentLayer, dwg.GetStyle ("STANDARD")!, i.ToString (), pt, height, 0, 0, 1, ETextAlign.BotCenter));
+      }
+
+      var xfm = Matrix2.Translation (dwg.Bound.Width + 10, 0);
+      for (int i = 0; i < mNFace; i++) {
+         ref Face face = ref mFaces[i];
+         dwg.Add (face.Outer * xfm);
+         foreach (var hole in face.Holes) dwg.Add (hole * xfm);
       }
       DXFWriter.Save (dwg, file);
    }
 
    // Implementation -----------------------------------------------------------
+   // Adds holes into their owner faces
+   void AssignHoles () {
+      for (int i = 0; i < mPolys.Length; i++) {
+         ref CPoly cp = ref mPolys[i]; if (cp.Used) continue;
+         for (int j = 0; j < mFaces.Length; j++) {
+            ref Face face = ref mFaces[j];
+            if (face.Bound.Contains (cp.Bound)) { face.Holes.Add (cp.Poly); break; }
+         }
+      }
+   }
+
    // Gathers all the contours, and bend-lines
    bool GatherContours () {
       // Gather all the closed poly, with the outer one being at 0. The outer poly
@@ -59,11 +79,11 @@ public class Folder {
       }
 
       // Gather all the bendlines
-      List<E2Bendline> tmp2 = [.. mDwg.Ents.OfType<E2Bendline> ()];
-      mBends = new Bend[tmp2.Count]; int nBase = 0; 
-      for (int i = 0; i < tmp2.Count; i++) {
-         mBends[i] = new Bend (tmp2[i], nBase);
-         nBase += mBends[i].Pts.Length;
+      List<E2Bendline> bends = [.. mDwg.Ents.OfType<E2Bendline> ()];
+      mBends = new Bend[bends.Count]; int nBase = 0; 
+      for (int i = 0; i < bends.Count; i++) {
+         mBends[i] = new Bend (bends[i], nBase);
+         nBase += bends[i].Pts.Length;
       }
       mNode = new Node[nBase];
       return true;
@@ -74,19 +94,32 @@ public class Folder {
    }
 
    // Create faces from the nodes
-   void MakeFace (int n) {
-      ref Node node = ref mNode[n]; if (node.Used) return;
+   void MakeFace (int a) {
+      ref Node node = ref mNode[a]; if (node.Used) return;
 
       // We're going to start building a face
       PolyBuilder pb = new ();
-      bool bend = node.Used = true;
+      bool bend = true;    // true=traverse a bendline, false=traverse across contour
       for (; ; ) {
          if (bend) {
-            // We travel along the bendline
+            // Travel along the bendline - this just adds a single line starting
+            // at this point (and which will end at the other end of the bendline)
+            if (node.Used) break;
+            (node.Used, node.NFace) = (true, mNFace);
+            pb.Line (node.GetPos (mPolys));
+            node = ref mNode[a ^= 1];
          } else {
-            // We travel along the contour
+            // We travel along the contour, from between the start point and the
+            // end point
+            ref Node next = ref mNode[a = node.Next];
+            ref var cpoly = ref mPolys[node.NPoly]; cpoly.Used = true; 
+            pb.AddSlice (cpoly.Poly, node.NSeg, node.Lie, next.NSeg, next.Lie, false);
+            node = ref next;
          }
+         bend = !bend;
       }
+      Lib.Grow (ref mFaces, mNFace, 1); 
+      mFaces[mNFace++] = new Face (pb.Close ().Build ());
    }
 
    // Snaps bend-lines to begin/end exactly on contours (by trimming / extending) them
@@ -95,7 +128,7 @@ public class Folder {
       Span<Point2> buffer = stackalloc Point2[2];
       for (int i = 0; i < mBends.Length; i++) {
          ref Bend bend = ref mBends[i];
-         var pts = bend.Pts; Point2 a = pts[0], b = pts[^1];
+         var pts = bend.BLine.Pts; Point2 a = pts[0], b = pts[^1];
          // Mark the set of contours this bend-line intersects
          for (int j = 0; j < mPolys.Length; j++) {
             ref CPoly con = ref mPolys[j];
@@ -133,16 +166,27 @@ public class Folder {
             }
             // Copy the position and location into index k
             (node.NPoly, node.NSeg) = (nPoly, nSeg);
-            node.Lie = mPolys[nPoly].Poly[nSeg].GetLie (bend.Pts[k] = pBest);
+            node.Lie = mPolys[nPoly].Poly[nSeg].GetLie (pBest);
          }
       }
-      mSorted = [.. Enumerable.Range (0, mNode.Length)];
-      mSorted.Sort (CompareNode);
-      for (int i = 0; i < mSorted.Length; i++) {
-         int j = mSorted[(i + 1) % mSorted.Length];
-         ref Node node = ref mNode[mSorted[i]];
-         node.Next = j; 
+
+      // Set up the Next pointer in each node to point to the next node within the
+      // same polyline (going in lie order)
+      int nStart = 0, nLastPoly = -1;
+      var sorted = Enumerable.Range (0, mNode.Length).ToList ();
+      sorted.Sort (CompareNode); sorted.Add (sorted[0]);
+      for (int i = 0; i < sorted.Count - 1; i++) {
+         int a = sorted[i], b = sorted[i + 1];
+         ref Node n0 = ref mNode[a], n1 = ref mNode[b];
+         if (n0.NPoly != nLastPoly) { nStart = a; nLastPoly = n0.NPoly; }
+         n0.Next = (n0.NPoly == n1.NPoly) ? b : nStart;
       }
+      sorted.RemoveLast ();
+
+      //foreach (var n in sorted) { REMOVETHIS
+      //   ref Node node = ref mNode[n];
+      //   Console.WriteLine ($"{n,3} {node.NPoly,3} {node.NSeg,3} {node.Next,3}");
+      //}
 
       // Helpers ...........................................
       int CompareNode (int a, int b) {
@@ -160,13 +204,19 @@ public class Folder {
       public readonly Poly Poly = poly;
       public readonly Bound2 Bound = bound;
       public bool Intersects;
+      public bool Used;
    }
 
    // Node is a junction between a poly and bendline.
    // This is a location where a bendline touches a poly (at its endpoint). 
    struct Node {
+      public readonly Point2 GetPos (CPoly[] polys) => polys[NPoly].Poly[NSeg].GetPointAt (Lie);
+      public readonly override string ToString () => $"Node  Poly:{NPoly}  Lie:{NSeg + Lie.Round (3)}";
+
       public int NBend;    // Index of the bendline (within the mBends array)
       public int NPt;      // Index within the Pts array of that bendline
+      public int NFace;    // Face attached to the left of this bend 
+
       public int NPoly;    // Index of poly (with the mPolys array)
       public int NSeg;     // Segment number within that poly
       public double Lie;   // Lie within that segment
@@ -174,20 +224,25 @@ public class Folder {
       public bool Used;    // Have we used this already
    }
    Node[] mNode = [];
-   int[] mSorted = [];
 
    // Represents a bend-line 
    readonly struct Bend {
-      public Bend (E2Bendline bend, int nBase) {
-         Pts = [..(BLine = bend).Pts];
-         NBase = nBase;
-      }
+      public Bend (E2Bendline bend, int nBase) => (BLine, NBase) = (bend, nBase);
       public readonly E2Bendline BLine;
-      public readonly Point2[] Pts;    // REMOVETHIS
-      public readonly int NBase;
+      public readonly int NBase;    // Nodes of this Bend start at this location
+   }
+
+   // Represents a plane with some holes
+   struct Face (Poly outer) {
+      public readonly Poly Outer = outer;
+      public readonly Bound2 Bound = outer.GetBound ();
+      public readonly List<Poly> Holes = [];
+      public bool Used; 
    }
 
    // Private data -------------------------------------------------------------
    CPoly[] mPolys = [];
    Bend[] mBends = [];
+   Face[] mFaces = []; int mNFace;
+   List<Poly> mOutput = [];
 }

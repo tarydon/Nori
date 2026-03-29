@@ -10,7 +10,7 @@ class Program {
       Lib.Init ();
       Lib.Tracer = Console.WriteLine;
 
-      var dwg = DXFReader.Load ("c:/etc/FOLD.01.dxf");
+      var dwg = DXFReader.Load ("c:/etc/FOLD.00.dxf");
       var folder = new Folder (dwg);
       folder.Process ();
       folder.Dump ("c:/etc/test.dxf");

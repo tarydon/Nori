@@ -523,6 +523,23 @@ public partial class Poly {
 /// <summary>Helper used to build Poly objects (since they are immutable once created)</summary>
 public class PolyBuilder {
    // Methods ------------------------------------------------------------------
+   /// <summary>Adds a slice of the Poly</summary>
+   public PolyBuilder AddSlice (Poly poly, int a, double aLie, int b, double bLie, bool addLast) {
+      int n = poly.Count;
+      for (; ; ) {
+         var seg = poly[a];
+         Point2 pt = aLie == 0 ? seg.A : seg.GetPointAt (aLie);
+         if (seg.IsArc) Arc (pt, seg.Center, seg.Flags & ~Poly.EFlags.Circle);
+         else Line (pt);
+         if (a == b) {
+            if (addLast) Line (seg.GetPointAt (bLie));
+            break; 
+         }
+         a = (a + 1) % n; aLie = 0; 
+      }
+      return this; 
+   }
+
    /// <summary>Adds an Arc starting at the given point a and with center cen</summary>
    public PolyBuilder Arc (Point2 a, Point2 cen, Poly.EFlags flags) {
       PopBulge (a);
