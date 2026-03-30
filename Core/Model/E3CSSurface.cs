@@ -301,6 +301,12 @@ public sealed class E3Plane : E3CSSurface {
       => mFlags |= (E3Flags.ULinear | E3Flags.VLinear);
    E3Plane () { }
 
+   public static E3Plane Build (int id, IEnumerable<Poly> polys, CoordSystem cs) {
+      var xfm = Matrix3.To (cs);
+      var curves = polys.Select (a => new Contour3 (a, xfm));
+      return new E3Plane (id, [..curves], cs);
+   }
+
    // Overrides ----------------------------------------------------------------
    // The mesh for the E3Plane can be built with just a simple 2D tessellation,
    // lofted up into the final space of the plane

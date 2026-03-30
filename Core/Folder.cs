@@ -13,6 +13,8 @@ public class Folder {
       SnapBendlines ();
       for (int i = 0; i < mNode.Length; i++) MakeFace (i);
       AssignHoles ();
+      CreateTree ();
+      DumpTree (mRootFace, 0); 
       return false;
    }
 
@@ -59,6 +61,45 @@ public class Folder {
       }
    }
 
+   // This creates a tree starting with a 'baseplane' and picking up adjacent planes
+   // by connectivity. Each segment of each bendline is represented by two nodes on 
+   // the two endpoints (consider them like two half-edges running in opposite directions)
+   // These two half-edges point to the faces on opposite sides of the bendline, and thus
+   // can be used to link them up
+   void CreateTree () {
+      Queue<int> todo = [];
+      mRootFace = mFaces.MaxIndexBy (a => a.Bound.Area);
+      mFaces[mRootFace].UsedInModel = true; 
+      todo.Enqueue (mRootFace);
+      while (todo.TryDequeue (out int nFace)) {
+         ref Face face = ref mFaces[nFace]; 
+         // 1. Go through each of the half-edges connected to this face
+         // 2. Get the paired half-edge on the other side (n0 ^ 1 does this)
+         // 3. Get the face on the other side (mNode[n0 ^ 1].NFace)
+         // 4. If not reached yet, add that face to the queue
+         for (int i = 0; i < face.Edges.Length; i++) {
+            int n0 = face.Edges[i], nFace2 = mNode[n0 ^ 1].NFace;
+            ref Face face2 = ref mFaces[nFace2];
+            if (face2.UsedInModel) face.Children[i] = -1;
+            else { 
+               face.Children[i] = nFace2; face2.UsedInModel = true; 
+               todo.Enqueue (nFace2); 
+            }
+         }
+      }
+      // At the end of this loop, we've built a tree (via the Face.Children list), starting
+      // with mFace[mRootFace]. 
+   }
+
+   void DumpTree (int nFace, int level) {
+      ref Face face = ref mFaces[nFace];
+      Console.WriteLine ($"{new string (' ', level * 3)}{nFace} Bound:{face.Bound.Width.Round (0)}x{face.Bound.Height.Round (0)} Holes:{face.Holes.Count}");
+      for (int i = 0; i < face.Children.Length; i++) {
+         int a = face.Children[i];
+         if (a != -1) DumpTree (a, level + 1);
+      }
+   }
+
    // Gathers all the contours, and bend-lines
    bool GatherContours () {
       // Gather all the closed poly, with the outer one being at 0. The outer poly
@@ -95,18 +136,20 @@ public class Folder {
 
    // Create faces from the nodes
    void MakeFace (int a) {
-      ref Node node = ref mNode[a]; if (node.Used) return;
+      ref Node node = ref mNode[a]; if (node.UsedInFace) return;
 
       // We're going to start building a face
       PolyBuilder pb = new ();
       bool bend = true;    // true=traverse a bendline, false=traverse across contour
+      mNodeId.ClearFast ();
       for (; ; ) {
          if (bend) {
             // Travel along the bendline - this just adds a single line starting
             // at this point (and which will end at the other end of the bendline)
-            if (node.Used) break;
-            (node.Used, node.NFace) = (true, mNFace);
+            if (node.UsedInFace) break;
+            (node.UsedInFace, node.NFace) = (true, mNFace);
             pb.Line (node.GetPos (mPolys));
+            mNodeId.Add (a);
             node = ref mNode[a ^= 1];
          } else {
             // We travel along the contour, from between the start point and the
@@ -119,8 +162,10 @@ public class Folder {
          bend = !bend;
       }
       Lib.Grow (ref mFaces, mNFace, 1); 
-      mFaces[mNFace++] = new Face (pb.Close ().Build ());
+      mFaces[mNFace++] = new Face (pb.Close ().Build (), [.. mNodeId]);
    }
+   // Temporary used to hold the list of bends connected to the face we are building
+   List<int> mNodeId = [];
 
    // Snaps bend-lines to begin/end exactly on contours (by trimming / extending) them
    void SnapBendlines () {
@@ -213,15 +258,16 @@ public class Folder {
       public readonly Point2 GetPos (CPoly[] polys) => polys[NPoly].Poly[NSeg].GetPointAt (Lie);
       public readonly override string ToString () => $"Node  Poly:{NPoly}  Lie:{NSeg + Lie.Round (3)}";
 
-      public int NBend;    // Index of the bendline (within the mBends array)
-      public int NPt;      // Index within the Pts array of that bendline
-      public int NFace;    // Face attached to the left of this bend 
-
-      public int NPoly;    // Index of poly (with the mPolys array)
-      public int NSeg;     // Segment number within that poly
-      public double Lie;   // Lie within that segment
-      public int Next;     // Next node within this Poly
-      public bool Used;    // Have we used this already
+      // Index of the bendline (within mBends), and the point (with Bend.Pts array)
+      public int NBend, NPt;
+      // Index of Poly, segment within that poly, and lie within that segment
+      public int NPoly, NSeg;
+      public double Lie;
+      // Next node within this poly (circular linked list)
+      public int Next;
+      // Face connected to the half-edge starting at this node
+      public int NFace; 
+      public bool UsedInFace;    // Already used to build a face
    }
    Node[] mNode = [];
 
@@ -233,11 +279,19 @@ public class Folder {
    }
 
    // Represents a plane with some holes
-   struct Face (Poly outer) {
-      public readonly Poly Outer = outer;
+   struct Face (Poly outer, int[] edges) {
+      public readonly Poly Outer = outer;       // Outer poly of this face
       public readonly Bound2 Bound = outer.GetBound ();
-      public readonly List<Poly> Holes = [];
-      public bool Used; 
+      public readonly List<Poly> Holes = [];    // Hole polys of this face
+      public bool UsedInModel;      // Already used this face to build the model
+
+      // Edges is the list of half-bends touching this face, and Children is a parallel
+      // list of faces on the 'other side' of these bends. Some of these might be -1
+      // (since the face on the other side is already reached via another bend). We
+      // build the Bends list when building the faces, and the Children list later when
+      // traversing the tree
+      public readonly int[] Edges = edges;
+      public readonly int[] Children = new int[edges.Length];
    }
 
    // Private data -------------------------------------------------------------
@@ -245,4 +299,5 @@ public class Folder {
    Bend[] mBends = [];
    Face[] mFaces = []; int mNFace;
    List<Poly> mOutput = [];
+   int mRootFace;
 }

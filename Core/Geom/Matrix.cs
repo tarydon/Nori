@@ -359,7 +359,7 @@ public class Matrix3 : IEQuable<Matrix3> {
       return new (x, y, z);
    }
 
-   /// <summary>Multiply a Point2 by a Matrix, resulting in a Matrix3</summary>
+   /// <summary>Multiply a Point2 by a Matrix, resulting in a Point3</summary>
    public static Point3 operator * (Point2 p, Matrix3 m) 
       => (Point3)p * m;
 
@@ -381,6 +381,12 @@ public class Matrix3 : IEQuable<Matrix3> {
       double z = v.X * m.M13 + v.Y * m.M23 + v.Z * m.M33;
       return new (x, y, z);
    }
+
+   /// <summary>
+   /// Multiply a Vector2 by a matrix, resulting in a Vector3
+   /// </summary>
+   public static Vector3 operator * (Vector2 v, Matrix3 m)
+      => (Vector3)v * m;
 
    /// <summary>Multiply a Vector3f by a Matrix</summary>
    public static Vector3f operator * (Vector3f v, Matrix3 m) {

@@ -367,6 +367,20 @@ public readonly struct Seg {
       }
    }
 
+   /// <summary>
+   /// Converts a Seg to a Curve3 by lofting it into space
+   /// </summary>
+   public static Curve3 operator * (Seg seg, Matrix3 xfm) {
+      if (seg.IsArc) {
+         var cen2 = seg.Center; var cen3 = cen2 * xfm; 
+         var xaxis = (seg.A - cen2).Normalized () * xfm;
+         var zaxis = (seg.IsCCW ? Vector3.ZAxis : -Vector3.ZAxis) * xfm;
+         var cs = new CoordSystem (cen3, xaxis, zaxis * xaxis);
+         return new Arc3 (0, cs, seg.Radius, Abs (seg.AngSpan));
+      } else
+         return new Line3 (0, seg.A * xfm, seg.B * xfm);
+   }
+
    // Implementation -----------------------------------------------------------
    // Get the start and end angles of an arc (this ensures that end > start if
    // CCW, and end < start if CW)
