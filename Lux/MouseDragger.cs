@@ -116,7 +116,12 @@ class SceneRotator (Scene3 mScene, Vec2S anchor) : MouseDragger (anchor) {
    // Subsequently, adjust the viewpoint based on the vector from AnchorPt to
    // the current mouse Pt
    protected override void Move (Vec2S pt) {
-      double x = mx0 + (pt.Y - Anchor.Y), z = mz0 + (pt.X - Anchor.X);
+      double dx = pt.Y - Anchor.Y, dz = pt.X - Anchor.X;
+      double rScale = 4 * (mScene.ZoomFactor.GetLieOn (1, 200).Clamp () * 20 + 1);
+      double x = Lib.NormalizeAngle ((mx0 + dx / rScale).D2R ()).R2D ();
+      double sign = x > 0 ? -1 : 1;
+      double z = Lib.NormalizeAngle ((mz0 + sign * dz / rScale).D2R ()).R2D ();
+
       // If we are close to any of the orthogonal views (view along left-view, right-view or top-view),
       // snap to that view precisely. This will enable us to rotate the view to a required 'side-view'.
       var (xSnap, zSnap) = (x.Round (90.0), z.Round (90.0));

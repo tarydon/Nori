@@ -21,15 +21,22 @@ public partial class MainWindow : Window {
    }
 }
 
-class DemoScene : Scene2 {
+class DemoScene : Scene3 {
    public DemoScene () {
-      mFace = new (Lib.ReadBytes ("nori:GL/Fonts/Roboto-Regular.ttf"), (int)(48 * Lux.DPIScale));
-      Bound = new Bound2 (0, 0, 100, 50);
-      BgrdColor = new Color4 (128, 96, 64);
-      Root = new SimpleVN (
-         () => (Lux.Color, Lux.TypeFace) = (Color4.White, mFace),
-         () => Lux.TextPx ("Welcome to Nori.", new Vec2S (100, 100))
-      );
+      var dwg = DXFReader.Load (System.IO.Directory.GetFiles ("C:\\etc\\Fold", "*.dxf")[0]);
+      var folder = new Folder (dwg);
+      mModel = folder.Process ();
+
+      Bound = mModel.Bound;
+      Root = new Model3VN (mModel);
+      BgrdColor = new Color4 (80, 100, 120);
    }
-   TypeFace mFace;
+   Model3 mModel;
+
+   public override void Picked (object obj) {
+      if (obj is Ent3 ent) {
+         ent.IsSelected = true;
+         if (HW.IsCtrlDown) mModel.Ents.Remove (ent);
+      }
+   }
 }

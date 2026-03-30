@@ -613,9 +613,7 @@ public class Contour3 {
    public Contour3 (ImmutableArray<Curve3> edges) => mCurves = edges;
    Contour3 () { }
 
-   /// <summary>
-   /// Create a Contour3 by transforming a Poly into space
-   /// </summary>
+   /// <summary>Create a Contour3 by transforming a Poly into space</summary>
    public Contour3 (Poly poly, Matrix3 xfm) => mCurves = [.. poly.Segs.Select (a => a * xfm)];
 
    // Properties ---------------------------------------------------------------

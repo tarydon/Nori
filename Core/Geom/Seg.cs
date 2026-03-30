@@ -367,9 +367,7 @@ public readonly struct Seg {
       }
    }
 
-   /// <summary>
-   /// Converts a Seg to a Curve3 by lofting it into space
-   /// </summary>
+   /// <summary>Converts a Seg to a Curve3 by lofting it into space</summary>
    public static Curve3 operator * (Seg seg, Matrix3 xfm) {
       if (seg.IsArc) {
          var cen2 = seg.Center; var cen3 = cen2 * xfm; 

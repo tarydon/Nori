@@ -18,7 +18,7 @@ public enum EJoint { None, Translate, Rotate }
 public enum ELineType { Continuous, Dot, Dash, DashDot, DashDotDot, Center, Border, Hidden, Dash2, Phantom }
 
 /// <summary>Tessellation tolerances</summary>
-public enum ETolerance { Unknown, Coarse, Fine }
+public enum ETolerance { Unknown, VeryCoarse, Coarse, Fine }
 
 /// <summary>Various 'well-known' properties</summary>
 public enum EProp {

@@ -10,9 +10,17 @@ class Program {
       Lib.Init ();
       Lib.Tracer = Console.WriteLine;
 
-      var dwg = DXFReader.Load ("c:/etc/FOLD.00.dxf");
+      var dwg = DXFReader.Load ("c:/etc/FOLD/24.dxf");
       var folder = new Folder (dwg);
-      folder.Process ();
-      folder.Dump ("c:/etc/test.dxf");
+      var model = folder.Process ();
+      foreach (var ep in model.Ents.OfType<E3Plane> ()) {
+         if (ep.Id != 10) continue; 
+         Console.WriteLine ($"{ep.Id}");
+         var dwg2 = new Dwg2 ();
+         foreach (var con in ep.Contours)
+            dwg2.Add (con.Flatten (ep.CS));
+         DXFWriter.Save (dwg2, "c:/etc/tessinput.dxf");
+         var mesh = ep.Mesh;
+      }
    }
 }

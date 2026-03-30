@@ -8,14 +8,14 @@ public class Folder {
    public Folder (Dwg2 dwg) => mDwg = dwg;
    readonly Dwg2 mDwg;
 
-   public bool Process () {
-      if (!GatherContours ()) return false;
+   public Model3 Process () {
+      if (!GatherContours ()) throw new InvalidOperationException ("Ill-formed drawing");
       SnapBendlines ();
       for (int i = 0; i < mNode.Length; i++) MakeFace (i);
       AssignHoles ();
       CreateTree ();
-      DumpTree (mRootFace, 0); 
-      return false;
+      // DumpTree (mRootFace, 0);
+      return CreateModel (); 
    }
 
    public void Dump (string file) {
@@ -89,6 +89,35 @@ public class Folder {
       }
       // At the end of this loop, we've built a tree (via the Face.Children list), starting
       // with mFace[mRootFace]. 
+   }
+
+   Model3 CreateModel () {
+      Model3 model = new ();
+      Queue<(int Face, Matrix3 Xfm)> todo = [];
+      todo.Enqueue ((mRootFace, Matrix3.Identity));
+      List<Poly> polys = [];
+      while (todo.TryDequeue (out var tup)) {
+         // First, create a plane with this plane's outer contour and holes
+         var xfm = tup.Xfm;
+         ref Face face1 = ref mFaces[tup.Face];
+         polys.Clear (); polys.Add (face1.Outer); polys.AddRange (face1.Holes);
+         model.Ents.Add (E3Plane.Build (model.Ents.Count, polys, xfm.ToCS ()));
+
+         // Next, visit each of the children that have not already been queued up, and
+         // compute the transform for that child, and enqueue it
+         for (int i = 0; i < face1.Children.Length; i++) {
+            var (nFace2, nEdge) = (face1.Children[i], face1.Edges[i]);
+            if (nFace2 == -1) continue;
+
+            ref Face face2 = ref mFaces[nFace2];
+            var bend = mBends[mNode[nEdge].NBend].BLine;
+            double angle = bend.Angle; if ((nEdge & 1) == 1) angle = -angle;
+            Point2 pa = bend.Pts[0], pb = bend.Pts[^1];
+            var xfm1 = Matrix3.Rotation ((Point3)pa, (Point3)pb, angle);
+            todo.Enqueue ((nFace2, xfm1 * xfm)); 
+         }
+      }
+      return model; 
    }
 
    void DumpTree (int nFace, int level) {
@@ -172,13 +201,28 @@ public class Folder {
       int nSeg = 0, nPoly = 0; double dist;
       Span<Point2> buffer = stackalloc Point2[2];
       for (int i = 0; i < mBends.Length; i++) {
-         ref Bend bend = ref mBends[i];
+         ref Bend bend = ref mBends[i]; mInters.Clear (); 
          var pts = bend.BLine.Pts; Point2 a = pts[0], b = pts[^1];
          // Mark the set of contours this bend-line intersects
          for (int j = 0; j < mPolys.Length; j++) {
             ref CPoly con = ref mPolys[j];
             con.Intersects = con.Bound.Intersects (a, b);
+            if (!con.Intersects) continue;
+            foreach (var seg in con.Poly.Segs) {
+               var ints = seg.Intersect (a, b, buffer, true);
+               foreach (var pt in ints) mInters.Add (new (pt, j, seg.N));
+            }
          }
+
+         // Take each of the bend-line endpoints and snap those to the closest intersection
+         // point we've got
+         for (int k = 0; k < pts.Length; k++) {
+            Point2 pt = pts[k];
+            int n = mInters.MinIndexBy (a => a.Pt.DistToSq (pt));
+
+
+         }
+
 
          for (int k = 0; k < pts.Length; k++) {
             // Take each segment of the bend-line, and if necessary, trim/extend the segments.
@@ -187,15 +231,6 @@ public class Folder {
             Point2 pt = pts[k];
             ref Node node = ref mNode[bend.NBase + k];
             (node.NBend, node.NPt) = (i, k);
-            for (int j = 0; j < mPolys.Length; j++) {
-               ref CPoly con = ref mPolys[j]; if (!con.Intersects) continue;
-               (dist, nSeg) = con.Poly.GetDistance (pt);
-               if (dist.IsZero ()) {
-                  (node.NPoly, node.NSeg, node.Lie) = (j, nSeg, con.Poly[nSeg].GetLie (pt));
-                  break;
-               }
-            }
-            if (node.NPoly == -1) continue; 
 
             // Otherwise, snap the bendline to the closest intersection of any of the poly
             double distMin = 1e99; Point2 pBest = pt;
@@ -241,6 +276,8 @@ public class Folder {
          return na.Lie.CompareTo (nb.Lie);
       }
    }
+   // All intersections between the current bendline and the contours
+   List<Inter> mInters = [];
 
    // Nested types -------------------------------------------------------------
    // Represents an outer / inner contour of the poly.
@@ -250,6 +287,13 @@ public class Folder {
       public readonly Bound2 Bound = bound;
       public bool Intersects;
       public bool Used;
+   }
+
+   // Represents an intersection point
+   readonly struct Inter (Point2 pt, int poly, int seg) {
+      public readonly Point2 Pt = pt;
+      public readonly int Poly = poly;
+      public readonly int Seg = seg;
    }
 
    // Node is a junction between a poly and bendline.

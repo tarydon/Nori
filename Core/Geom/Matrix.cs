@@ -382,9 +382,7 @@ public class Matrix3 : IEQuable<Matrix3> {
       return new (x, y, z);
    }
 
-   /// <summary>
-   /// Multiply a Vector2 by a matrix, resulting in a Vector3
-   /// </summary>
+   /// <summary>Multiply a Vector2 by a matrix, resulting in a Vector3</summary>
    public static Vector3 operator * (Vector2 v, Matrix3 m)
       => (Vector3)v * m;
 

@@ -97,6 +97,9 @@ public abstract class Scene {
 
       XfmChanged ();
    }
+
+   /// <summary>The current zoom factor of the scene</summary>
+   public double ZoomFactor => mZoomFactor;
    protected double mZoomFactor = 1;
 
    /// <summary>Zoom about the center of the viewport</summary>

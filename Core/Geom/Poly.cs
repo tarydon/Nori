@@ -354,11 +354,19 @@ public partial class Poly {
    public EWinding GetWinding () {
       if (IsOpen) return EWinding.Indeterminate;
       if (IsCircle) return this[0].IsCCW ? EWinding.CCW : EWinding.CW;
-      int node = mPts.MinIndexBy (pt => pt.Y);
-      var pp = this[(node - 1 + Count) % Count].GetPointAt (0.9);
-      var pn = this[node % Count].GetPointAt (0.1);
-      if (pp.X.EQ (pn.X)) return EWinding.Indeterminate;
-      return pp.X < pn.X ? EWinding.CCW : EWinding.CW;
+      bool fastPath = !HasArcs || GetBound ().EQ (new Bound2 (mPts));
+      if (fastPath) {
+         int node = mPts.MinIndexBy (pt => pt.Y);
+         var pp = this[(node - 1 + Count) % Count].GetPointAt (0.9);
+         var pn = this[node % Count].GetPointAt (0.1);
+         if (pp.X.EQ (pn.X)) return EWinding.Indeterminate;
+         return pp.X < pn.X ? EWinding.CCW : EWinding.CW;
+      } else {
+         // OPTIMIZE: This is very expensive
+         List<Point2> pts = [];
+         Discretize (pts, VeryCoarseTess, VeryCoarseTessAngle);
+         return Lines (pts, true).GetWinding ();
+      }
    }
 
    /// <summary>Checks for a rectangular Poly</summary>
