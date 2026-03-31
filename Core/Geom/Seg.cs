@@ -260,7 +260,7 @@ public readonly struct Seg {
    public double GetSlopeAt (double lie) {
       if (IsArc2 (out var cen, out var flags)) {
          var (sa, ea) = GetStartAndEndAngles (cen, flags);
-         return lie.Along (sa, ea) + Lib.HalfPI * ((flags & Poly.EFlags.CCW) != 0 ? 1 : -1);
+         return Lib.NormalizeAngle (lie.Along (sa, ea) + Lib.HalfPI * ((flags & Poly.EFlags.CCW) != 0 ? 1 : -1));
       }
       return A.AngleTo (B);
    }

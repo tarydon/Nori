@@ -350,23 +350,52 @@ public partial class Poly {
       return NormalizeAngle (outAngle - inAngle);
    }
 
-   /// <summary>Returns the winding of the Poly</summary>
    public EWinding GetWinding () {
       if (IsOpen) return EWinding.Indeterminate;
       if (IsCircle) return this[0].IsCCW ? EWinding.CCW : EWinding.CW;
-      bool fastPath = !HasArcs || GetBound ().EQ (new Bound2 (mPts));
-      if (fastPath) {
-         int node = mPts.MinIndexBy (pt => pt.Y);
-         var pp = this[(node - 1 + Count) % Count].GetPointAt (0.9);
-         var pn = this[node % Count].GetPointAt (0.1);
-         if (pp.X.EQ (pn.X)) return EWinding.Indeterminate;
-         return pp.X < pn.X ? EWinding.CCW : EWinding.CW;
-      } else {
-         // OPTIMIZE: This is very expensive
-         List<Point2> pts = [];
-         Discretize (pts, VeryCoarseTess, VeryCoarseTessAngle);
-         return Lines (pts, true).GetWinding ();
+      // Compute the segment at the bottom
+      int nMinSeg = 0, cSegs = Count; double yMin = double.MaxValue;
+      foreach (var seg in Segs) {
+         double yBot;
+         if (seg.IsArc) {
+            if (seg.Center.Y - seg.Radius > yMin) continue;
+            yBot = seg.Bound.Y.Min;
+         } else 
+            yBot = Min (seg.A.Y, seg.B.Y);
+         if (yBot < yMin) (nMinSeg, yMin) = (seg.N, yBot); 
       }
+
+      var sg = this[nMinSeg];
+      // If the lowest segment is an arc that passes through this bottom point (does not start
+      // or end there), then its winding is the Poly's winding
+      if (sg.IsArc && sg.A.Y > yMin && sg.B.Y > yMin) return sg.IsCCW ? EWinding.CCW : EWinding.CW;
+      // If the lowest segment is a horizontal line, then we can figure out based on the direction
+      // of travel
+      if (sg.IsLine && sg.A.Y.EQ (sg.B.Y)) return sg.B.X > sg.A.X ? EWinding.CCW : EWinding.CW;
+
+      // Otherwise, we are going to have to do a slope-based computation
+      Seg sgPrev;
+      if (yMin.EQ (sg.A.Y)) {
+         sgPrev = this[(nMinSeg + cSegs - 1) % cSegs];
+      } else {
+         sgPrev = sg; sg = this[(nMinSeg + 1) % cSegs];
+      }
+      if (sgPrev.IsLine && sg.IsLine) {
+         // Both are lines: take x0,y0 as the delta from bottom-point to the left point, 
+         // and x1,y1 as the delta from bottom-point to the right point. We can just compare the
+         // inverse-slopes: x0/y0 :: x1/y1. 
+         // Since y0 or y1 could both be zero, we cross-multiply, and
+         // check these instead: x0*y1 :: x1*y0
+         // (This whole computation is to avoid trignometric functions for this case)
+         Vector2 v0 = sgPrev.A - sg.A, v1 = sg.B - sg.A;
+         return v0.X * v1.Y < v1.X * v0.Y ? EWinding.CCW : EWinding.CW;
+      }
+      // Final fallback: use actual slope values
+      double slope0 = NormalizeAngle (sgPrev.GetSlopeAt (0.999) + PI), slope1 = sg.GetSlopeAt (0.001);
+      if (slope0 < -HalfPI) slope0 += TwoPI;
+      if (slope1 < -HalfPI) slope1 += TwoPI;
+      if (slope0.EQ (slope1)) return EWinding.Indeterminate;
+      return slope0 < slope1 ? EWinding.CCW : EWinding.CW;
    }
 
    /// <summary>Checks for a rectangular Poly</summary>

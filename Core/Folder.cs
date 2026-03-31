@@ -75,7 +75,7 @@ public class Folder {
             // p is the index into b0 points, while q us the index into b1 points
             for (int p = 0; p < bL0.Pts.Length; p += 2) {
                Point2 s0 = bL0.Pts[p] + b0.Delta, e0 = bL0.Pts[p + 1] - b0.Delta;
-               for (int q = 0; q < bL1.Pts.Length; p += 2) {
+               for (int q = 0; q < bL1.Pts.Length; q += 2) {
                   Point2 s1 = bL1.Pts[q] + b1.Delta, e1 = bL1.Pts[q + 1] - b1.Delta;
                   if (!Geo.LineSegXLineSeg (s0, e0, s1, e1).IsNil) return false;
                }
