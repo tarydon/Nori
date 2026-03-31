@@ -12,6 +12,7 @@ public class Folder {
       if (!GatherContours ()) throw new InvalidOperationException ("Ill-formed drawing");
       for (int i = 0; i < mBends.Length; i++)
          if (!SnapBendline (i)) throw new InvalidOperationException ("Incorrect bend-line");
+      if (!CheckBendIntersections ()) throw new InvalidOperationException ("Intersecting bend lines");
       LinkNodesPerPoly ();
       for (int i = 0; i < mNNode; i++) MakeFace (i);
       AssignHoles ();
@@ -60,6 +61,28 @@ public class Folder {
             if (face.Bound.Contains (cp.Bound)) { face.Holes.Add (cp.Poly); break; }
          }
       }
+   }
+
+   // Checks every pair of bend lines for intersections
+   bool CheckBendIntersections () {
+      for (int i = 0; i < mBends.Length; i++) {
+         // Take each bend line b1
+         ref Bend b1 = ref mBends[i]; var bL1 = b1.BLine;
+         b1.Delta = (bL1.Pts[^1] - bL1.Pts[0]).Normalized () * 0.0001;
+         // And check it with each other bend line b0
+         for (int j = 0; j < i; j++) {
+            ref Bend b0 = ref mBends[j]; var bL0 = b0.BLine;
+            // p is the index into b0 points, while q us the index into b1 points
+            for (int p = 0; p < bL0.Pts.Length; p += 2) {
+               Point2 s0 = bL0.Pts[p] + b0.Delta, e0 = bL0.Pts[p + 1] - b0.Delta;
+               for (int q = 0; q < bL1.Pts.Length; p += 2) {
+                  Point2 s1 = bL1.Pts[q] + b1.Delta, e1 = bL1.Pts[q + 1] - b1.Delta;
+                  if (!Geo.LineSegXLineSeg (s0, e0, s1, e1).IsNil) return false;
+               }
+            }
+         }
+      }
+      return true; 
    }
 
    // This creates a tree starting with a 'baseplane' and picking up adjacent planes
@@ -230,10 +253,18 @@ public class Folder {
             }
             // Now, we should have an even number of intersections along this segment. Otherwise,
             // the drawing is ill-formed in some way
+            if (((nNext - n) & 1) == 0) {
+               // Let's try by removing any intersections that are just 'grazing contacts'
+               for (int m = nNext - 1; m > n; m--) {
+                  Bound2 bound = mPolys[mInters[m].NPoly].Bound.InflatedL (-0.0001);
+                  if (!bound.Intersects (a, b)) { mInters.RemoveAt (m); nNext--; }
+               }
+            }
             if (((nNext - n) & 1) == 0) return false;
          }
          // If this is the first point on the bendline, discard all points before this
-         if (k == 0) mInters.RemoveRange (0, n); 
+         if (k == 0) mInters.RemoveRange (0, n);
+         bend.BLine.Pts = [.. mInters.Select (a => a.Pt)];
          nNext = n; 
       }
 
@@ -319,6 +350,7 @@ public class Folder {
       public Bend (E2Bendline bend) => BLine = bend;
       public readonly E2Bendline BLine;
       public int NBase;          // Nodes of this Bend start at this location
+      public Vector2 Delta;
    }
 
    // Represents a plane with some holes
