@@ -2,6 +2,7 @@
 // ╔═╦╦═╦╦╬╣ Program.cs
 // ║║║║╬║╔╣║ Shell for Nori console scratch applications
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
+using System.Diagnostics;
 using Nori;
 namespace ConShell;
 
@@ -9,15 +10,35 @@ class Program {
    static void Main () {
       Lib.Init ();
       Lib.Tracer = Console.WriteLine;
+      CheckWinding (); 
 
-      foreach (var file in Directory.GetFiles ("C:\\etc\\fold", "*.dxf")) {
+      //foreach (var file in Directory.GetFiles ("C:\\etc\\fold", "*.dxf")) {
+      //   var dwg = DXFReader.Load (file);
+      //   foreach (var e2p in dwg.Ents.OfType<E2Poly> ()) Save (e2p.Poly);
+
+      //   var folder = new Folder (dwg);
+      //   var model = folder.Process ();
+      //   foreach (var e3p in model.Ents.OfType<E3Plane> ()) {
+      //      e3p.Contours.Select (a => a.Flatten (e3p.CS)).ForEach (Save);
+      //   }
+      //}
+   }
+
+   static void CheckWinding () {
+      foreach (var file in Directory.GetFiles ("c:\\etc\\wind", "*.dxf")) {
          var dwg = DXFReader.Load (file);
-         foreach (var e2p in dwg.Ents.OfType<E2Poly> ()) Save (e2p.Poly);
-
-         var folder = new Folder (dwg);
-         var model = folder.Process ();
-         foreach (var e3p in model.Ents.OfType<E3Plane> ()) {
-            e3p.Contours.Select (a => a.Flatten (e3p.CS)).ForEach (Save);
+         var poly = ((E2Poly)dwg.Ents[0]).Poly;
+         string wfile = file.Replace (".dxf", ".txt");
+         var wind1 = poly.GetWinding ();
+         var wind2 = Enum.Parse<Poly.EWinding> (File.ReadAllText (wfile).Trim ());
+         if (wind1 != wind2) {
+            var seg = poly.Segs.MaxBy (a => a.Length);
+            Console.WriteLine (seg);
+            Console.WriteLine ($"{wind1} {wind2} {file}");
+            wind1 = poly.GetWinding (); 
+            Process.Start ("flux.exe", file);
+            Console.ReadKey ();
+            Console.WriteLine ();
          }
       }
    }
@@ -45,7 +66,7 @@ class Program {
 
    static void F1 () {
       var dwg = DXFReader.Load ("c:/etc/FOLD/08.dxf");
-      var folder = new Folder (dwg);
+      var folder = new PaperFolder (dwg);
       var model = folder.Process ();
       foreach (var ep in model.Ents.OfType<E3Plane> ()) {
          Console.WriteLine ($"{ep.Id}");

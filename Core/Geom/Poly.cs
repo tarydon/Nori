@@ -368,14 +368,14 @@ public partial class Poly {
       var sg = this[nMinSeg];
       // If the lowest segment is an arc that passes through this bottom point (does not start
       // or end there), then its winding is the Poly's winding
-      if (sg.IsArc && sg.A.Y > yMin && sg.B.Y > yMin) return sg.IsCCW ? EWinding.CCW : EWinding.CW;
+      if (sg.IsArc && sg.A.Y > yMin + Lib.Delta && sg.B.Y > yMin + Lib.Delta) return sg.IsCCW ? EWinding.CCW : EWinding.CW;
       // If the lowest segment is a horizontal line, then we can figure out based on the direction
       // of travel
       if (sg.IsLine && sg.A.Y.EQ (sg.B.Y)) return sg.B.X > sg.A.X ? EWinding.CCW : EWinding.CW;
 
       // Otherwise, we are going to have to do a slope-based computation
       Seg sgPrev;
-      if (yMin.EQ (sg.A.Y)) {
+      if (Abs (sg.A.Y - yMin) < Abs (sg.B.Y - yMin)) { 
          sgPrev = this[(nMinSeg + cSegs - 1) % cSegs];
       } else {
          sgPrev = sg; sg = this[(nMinSeg + 1) % cSegs];
@@ -395,7 +395,7 @@ public partial class Poly {
       if (slope0 < -HalfPI) slope0 += TwoPI;
       if (slope1 < -HalfPI) slope1 += TwoPI;
       if (slope0.EQ (slope1)) return EWinding.Indeterminate;
-      return slope0 < slope1 ? EWinding.CCW : EWinding.CW;
+      return slope0 > slope1 ? EWinding.CCW : EWinding.CW;
    }
 
    /// <summary>Checks for a rectangular Poly</summary>

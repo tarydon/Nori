@@ -1,13 +1,19 @@
 // ────── ╔╗
-// ╔═╦╦═╦╦╬╣ Folder.cs
-// ║║║║╬║╔╣║ <<TODO>>
+// ╔═╦╦═╦╦╬╣ PaperFolder.cs
+// ║║║║╬║╔╣║ Implements a 'paper' model folder (no thickness)
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 namespace Nori;
 
-public class Folder {
-   public Folder (Dwg2 dwg) => mDwg = dwg;
+#region class PaperFolder --------------------------------------------------------------------------
+/// <summary>PaperFolder can fold drawings with bend-lines into paper-models (no thickness)</summary>
+public class PaperFolder {
+   // Constructors -------------------------------------------------------------
+   /// <summary>Construct a PaperFolder from a model</summary>
+   public PaperFolder (Dwg2 dwg) => mDwg = dwg;
    readonly Dwg2 mDwg;
 
+   // Methods ------------------------------------------------------------------
+   /// <summary>Construct the Model3 from the drawing</summary>
    public Model3 Process () {
       if (!GatherContours ()) throw new InvalidOperationException ("Ill-formed drawing");
       for (int i = 0; i < mBends.Length; i++)
@@ -377,3 +383,4 @@ public class Folder {
    List<Poly> mOutput = [];
    int mRootFace;
 }
+#endregion
