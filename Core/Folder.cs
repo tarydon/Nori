@@ -28,7 +28,7 @@ public class PaperFolder {
 
    public void Dump (string file) {
       Dwg2 dwg = new ();
-      foreach (var con in mPolys) dwg.Add (con.Poly);
+      foreach (var con in mPolys.Take (mNPoly)) dwg.Add (con.Poly);
       List<Point2> pts = [];
       foreach (var bend in mBends) {
          pts.Clear ();
@@ -42,10 +42,11 @@ public class PaperFolder {
       }
 
       double height = dwg.Bound.Diagonal / 200;
+      var style = dwg.GetStyle ("STANDARD")!;
       for (int i = 0; i < mNNode; i++) {
          ref Node node = ref mNode[i];
          Point2 pt = node.GetPos (mPolys);
-         dwg.Add (new E2Text (dwg.CurrentLayer, dwg.GetStyle ("STANDARD")!, i.ToString (), pt, height, 0, 0, 1, ETextAlign.BotCenter));
+         dwg.Add (new E2Text (dwg.CurrentLayer, style, i.ToString (), pt, height, 0, 0, 1, ETextAlign.BotCenter));
       }
 
       var xfm = Matrix2.Translation (dwg.Bound.Width + 10, 0);
@@ -60,13 +61,78 @@ public class PaperFolder {
    // Implementation -----------------------------------------------------------
    // Adds holes into their owner faces
    void AssignHoles () {
-      for (int i = 0; i < mPolys.Length; i++) {
-         ref CPoly cp = ref mPolys[i]; if (cp.Used) continue;
-         for (int j = 0; j < mFaces.Length; j++) {
-            ref Face face = ref mFaces[j];
-            if (face.Bound.Contains (cp.Bound)) { face.Holes.Add (cp.Poly); break; }
+      // If we have not yet made a Face out of the 'outer' poly (this will happen if there are 
+      // no bendlines touching that outer poly), make it now. 
+      if (!mPolys[0].UsedInFace) {
+         Lib.Grow (ref mFaces, mNFace, 1);
+         mFaces[mNFace++] = new Face (mPolys[0].Poly, [], -1);
+         mPolys[0].UsedInFace = true;
+      }
+
+      // There will be some faces that only touch one single 'hole' poly. For each such
+      // hole, gather all the faces
+      List<int> faces = [];
+      for (int i = 0; i < mNFace; i++) {
+         ref Face face = ref mFaces[i];
+         if (face.NHole > 0) {
+            faces.Clear (); faces.Add (i);
+            for (int j = i + 1; j < mNFace; j++)
+               if (mFaces[j].NHole == face.NHole) faces.Add (j);
+
+            if (IsIsolatedHole (face.NHole)) {
+               // We've found a set of faces that are linked only to this hole.
+               // The largest of them is actually the 'hole' so we add this as a hole into the 
+               // containing Face. The rest of them are faces that we add as Children into the
+               // containing face. First, create the 'hole poly'
+               Lib.Grow (ref mPolys, mNPoly, 1);
+               int kBiggest = faces.MaxBy (a => mFaces[a].Bound.Area);
+               ref Face biggest = ref mFaces[kBiggest]; biggest.Used = true; 
+               int nEnclosing = GetFaceEnclosing (biggest.Bound);
+               if (nEnclosing != -1) {
+                  ref Face enclosing = ref mFaces[nEnclosing];
+                  mPolys[mNPoly++] = new (biggest.Outer, biggest.Outer.GetBound ());
+
+                  // Next, add the other faces as children here - all we have to do first is to
+                  // add this edge into the list of edges of the enclosing face. During the CreateTree
+                  // phase, these will then get added as children
+                  for (int k = 0; k < faces.Count; k++) {
+                     ref Face hface = ref mFaces[k];
+                     hface.NHole = 0;
+                     if (k == kBiggest) continue;
+                     foreach (var edge in hface.Edges) enclosing.Edges.Add (edge ^ 1);
+                  }
+               } else
+                  biggest.Used = false;
+            }
+            faces.ForEach (a => mFaces[a].NHole = 0);
          }
       }
+
+      // Now, we can take all the holes and move them into the smallest enclosing face
+      for (int i = 0; i < mNPoly; i++) {
+         ref CPoly cp = ref mPolys[i]; if (cp.UsedInFace) continue;
+         int nEnclosing = GetFaceEnclosing (cp.Bound);
+         if (nEnclosing != -1) mFaces[nEnclosing].Holes.Add (cp.Poly);
+      }
+   }
+
+   bool IsIsolatedHole (int cPoly) {
+      for (int i = 0; i < mNNode; i++) {
+         if (mNode[i].NPoly != cPoly) continue;
+         if (mNode[i ^ 1].NPoly != cPoly) return false;
+      }
+      return true; 
+   }
+
+   int GetFaceEnclosing (Bound2 bound) {
+      int iBest = -1; 
+      for (int i = 0; i < mNFace; i++) {
+         ref Face face = ref mFaces[i];
+         if (face.Used || !face.Bound.Contains (bound)) continue;
+         if (iBest == -1 || face.Bound.Area < mFaces[iBest].Bound.Area)
+            iBest = i; 
+      }
+      return iBest;
    }
 
    // Checks every pair of bend lines for intersections
@@ -98,23 +164,21 @@ public class PaperFolder {
    // can be used to link them up
    void CreateTree () {
       Queue<int> todo = [];
-      mRootFace = mFaces.MaxIndexBy (a => a.Bound.Area);
-      mFaces[mRootFace].UsedInModel = true; 
+      mRootFace = mFaces.Take (mNFace).MaxIndexBy (a => a.Bound.Area * (a.Used ? -1 : 1));
+      mFaces[mRootFace].Used = true; 
       todo.Enqueue (mRootFace);
       while (todo.TryDequeue (out int nFace)) {
-         ref Face face = ref mFaces[nFace]; 
+         ref Face face = ref mFaces[nFace];
          // 1. Go through each of the half-edges connected to this face
          // 2. Get the paired half-edge on the other side (n0 ^ 1 does this)
          // 3. Get the face on the other side (mNode[n0 ^ 1].NFace)
          // 4. If not reached yet, add that face to the queue
-         for (int i = 0; i < face.Edges.Length; i++) {
+         for (int i = 0; i < face.Edges.Count; i++) {
             int n0 = face.Edges[i], nFace2 = mNode[n0 ^ 1].NFace;
             ref Face face2 = ref mFaces[nFace2];
-            if (face2.UsedInModel) face.Children[i] = -1;
-            else { 
-               face.Children[i] = nFace2; face2.UsedInModel = true; 
-               todo.Enqueue (nFace2); 
-            }
+            if (face2.Used) { face.Children.Add (-1); continue; }
+            face.Children.Add (nFace2); face2.Used = true;
+            todo.Enqueue (nFace2);
          }
       }
       // At the end of this loop, we've built a tree (via the Face.Children list), starting
@@ -136,13 +200,13 @@ public class PaperFolder {
 
          // Next, visit each of the children that have not already been queued up, and
          // compute the transform for that child, and enqueue it
-         for (int i = 0; i < face1.Children.Length; i++) {
+         for (int i = 0; i < face1.Children.Count; i++) {
             var (nFace2, nEdge) = (face1.Children[i], face1.Edges[i]);
             if (nFace2 == -1) continue;
 
             ref Face face2 = ref mFaces[nFace2];
             var bend = mBends[mNode[nEdge].NBend].BLine;
-            double angle = bend.Angle; if ((nEdge & 1) == 1) angle = -angle;
+            double angle = bend.Angle; if ((nEdge & 1) == 0) angle = -angle;
             Point2 pa = bend.Pts[0], pb = bend.Pts[^1];
             var xfm1 = Matrix3.Rotation ((Point3)pa, (Point3)pb, angle);
             todo.Enqueue ((nFace2, xfm1 * xfm)); 
@@ -166,8 +230,8 @@ public class PaperFolder {
          var e2p = tmp[i];
          var poly = e2p.Poly;
          var wind = poly.GetWinding ();
-         if (e2p.IsOuter ^ wind == Poly.EWinding.CW) poly = poly.Reversed ();
-         mPolys[i] = new (poly, e2p.Bound);
+         if (e2p.IsOuter ^ (wind == Poly.EWinding.CCW)) poly = poly.Reversed ();
+         mPolys[mNPoly++] = new (poly, e2p.Bound);
       }
 
       // Gather all the bendlines
@@ -193,6 +257,11 @@ public class PaperFolder {
       PolyBuilder pb = new ();
       bool bend = true;    // true=traverse a bendline, false=traverse across contour
       mNodeId.ClearFast ();
+      // This tracks the nPoly segments used in this face
+      // -1: not yet decided
+      // -2: multiple nPoly used
+      // >= 0 : only one nPoly used
+      int nHole = -1;      
       for (; ; ) {
          if (bend) {
             // Travel along the bendline - this just adds a single line starting
@@ -206,14 +275,16 @@ public class PaperFolder {
             // We travel along the contour, from between the start point and the
             // end point
             ref Node next = ref mNode[a = node.Next];
-            ref var cpoly = ref mPolys[node.NPoly]; cpoly.Used = true; 
+            if (nHole == -1) nHole = node.NPoly;
+            else if (nHole != node.NPoly) nHole = -2;
+            ref var cpoly = ref mPolys[node.NPoly]; cpoly.UsedInFace = true; 
             pb.AddSlice (cpoly.Poly, node.NSeg, node.Lie, next.NSeg, next.Lie, false);
             node = ref next;
          }
          bend = !bend;
       }
       Lib.Grow (ref mFaces, mNFace, 1); 
-      mFaces[mNFace++] = new Face (pb.Close ().Build (), [.. mNodeId]);
+      mFaces[mNFace++] = new Face (pb.Close ().Build (), [.. mNodeId], nHole);
    }
    // Temporary used to hold the list of bends connected to the face we are building
    List<int> mNodeId = [];
@@ -229,7 +300,7 @@ public class PaperFolder {
       Span<Point2> buffer = stackalloc Point2[2];
       var pts = bend.BLine.Pts; int nLastPt = pts.Length - 1;
       Point2 a = pts[0], b = pts[nLastPt];
-      for (int nPoly = 0; nPoly < mPolys.Length; nPoly++) {
+      for (int nPoly = 0; nPoly < mNPoly; nPoly++) {
          ref CPoly con = ref mPolys[nPoly];
          con.Intersects = con.Bound.Intersects (a, b);
          foreach (var seg in con.Poly.Segs) {
@@ -320,7 +391,7 @@ public class PaperFolder {
       public readonly Poly Poly = poly;
       public readonly Bound2 Bound = bound;
       public bool Intersects;
-      public bool Used;
+      public bool UsedInFace;    // Has this Poly been used to build a Face?
    }
 
    // Represents an intersection point
@@ -360,23 +431,24 @@ public class PaperFolder {
    }
 
    // Represents a plane with some holes
-   struct Face (Poly outer, int[] edges) {
+   struct Face (Poly outer, int[] edges, int nHole) {
       public readonly Poly Outer = outer;       // Outer poly of this face
       public readonly Bound2 Bound = outer.GetBound ();
       public readonly List<Poly> Holes = [];    // Hole polys of this face
-      public bool UsedInModel;      // Already used this face to build the model
+      public int NHole = nHole;     // If > 0, this face is connected to this hole
+      public bool Used;             // This face is dead - don't consider it
 
       // Edges is the list of half-bends touching this face, and Children is a parallel
       // list of faces on the 'other side' of these bends. Some of these might be -1
       // (since the face on the other side is already reached via another bend). We
       // build the Bends list when building the faces, and the Children list later when
       // traversing the tree
-      public readonly int[] Edges = edges;
-      public readonly int[] Children = new int[edges.Length];
+      public readonly List<int> Edges = [.. edges];
+      public readonly List<int> Children = [];
    }
 
    // Private data -------------------------------------------------------------
-   CPoly[] mPolys = [];
+   CPoly[] mPolys = []; int mNPoly;
    Node[] mNode = []; int mNNode;
    Bend[] mBends = [];
    Face[] mFaces = []; int mNFace;

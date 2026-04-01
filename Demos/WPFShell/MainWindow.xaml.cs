@@ -18,18 +18,6 @@ public partial class MainWindow : Window {
       TraceVN.TextColor = Color4.Yellow;
       new SceneManipulator ();
       Lux.UIScene = new DemoScene ();
-      Lib.Post (SavePNG);
-   }
-
-   void SavePNG () {
-      var dwg = DXFReader.Load (System.IO.Directory.GetFiles ("C:\\etc\\Fold", "*.dxf")[0]);
-      var folder = new PaperFolder (dwg);
-      var model = folder.Process ();
-
-      var scene = new Scene3 { Bound = model.Bound, BgrdColor = Color4.White, Root = new Model3VN (model) };
-      scene.Viewpoint = new (-60, -45);
-      var dib = scene.RenderZoomedImage (new Vec2S (600, 400), DIBitmap.EFormat.Gray8, out int yIdeal);
-      new PNGWriter (dib).Write ("c:/etc/test.png");
    }
 }
 
@@ -38,6 +26,7 @@ class DemoScene : Scene3 {
       var dwg = DXFReader.Load (System.IO.Directory.GetFiles ("C:\\etc\\Fold", "*.dxf")[0]);
       var folder = new PaperFolder (dwg);
       mModel = folder.Process ();
+      folder.Dump ("c:/etc/test.dxf");
 
       Bound = mModel.Bound;
       Root = new Model3VN (mModel);
