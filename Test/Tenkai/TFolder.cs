@@ -24,6 +24,9 @@ class PaperFolderTests {
    [Test (234, "Fold F.dxf : Flanges in holes")]
    void Test6 () => Process ("F", 600, 352, -45, 15);
 
+   [Test (235, "Fold G.dxf : Flange on flange")]
+   void Test7 () => Process ("G", 600, 292, -60, 45);
+
    static void Process (string file, int cx, int cy, int xRot, int yRot) {
       var dwg = DXFReader.Load (NT.File ($"Tenkai/Fold/{file}.dxf"));
       var folder = new PaperFolder (dwg); var model = folder.Process ();
@@ -31,7 +34,7 @@ class PaperFolderTests {
       // Render the scene, measure it and crop the image as needed
       var scene = new Scene3 { Bound = model.Bound, BgrdColor = Color4.White, 
                                Root = new Model3VN (model), Viewpoint = new (xRot, yRot) };
-      var dib = scene.RenderZoomedImage (new (cx, cy), DIBitmap.EFormat.Gray8, out int _);
+      var dib = scene.RenderZoomedImage (new (cx, cy), DIBitmap.EFormat.Gray8, out _);
       new PNGWriter (dib).Write (NT.TmpPNG);
       Assert.PNGFilesEqual (NT.File ($"Tenkai/Fold/{file}.png"), NT.TmpPNG, dib);
    }
