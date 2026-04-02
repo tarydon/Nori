@@ -87,7 +87,7 @@ public class PaperFolder {
                Lib.Grow (ref mPolys, mNPoly, 1);
                int kBiggest = faces.MaxBy (a => mFaces[a].Bound.Area);
                ref Face biggest = ref mFaces[kBiggest]; biggest.Used = true; 
-               int nEnclosing = GetFaceEnclosing (biggest.Bound);
+               int nEnclosing = GetFaceEnclosing (biggest.Bound, biggest.Outer);
                if (nEnclosing != -1) {
                   ref Face enclosing = ref mFaces[nEnclosing];
                   mPolys[mNPoly++] = new (biggest.Outer, biggest.Outer.GetBound ());
@@ -111,7 +111,7 @@ public class PaperFolder {
       // Now, we can take all the holes and move them into the smallest enclosing face
       for (int i = 0; i < mNPoly; i++) {
          ref CPoly cp = ref mPolys[i]; if (cp.UsedInFace) continue;
-         int nEnclosing = GetFaceEnclosing (cp.Bound);
+         int nEnclosing = GetFaceEnclosing (cp.Bound, cp.Poly);
          if (nEnclosing != -1) mFaces[nEnclosing].Holes.Add (cp.Poly);
       }
    }
@@ -124,11 +124,19 @@ public class PaperFolder {
       return true; 
    }
 
-   int GetFaceEnclosing (Bound2 bound) {
+   int GetFaceEnclosing (Bound2 bound, Poly poly) {
       int iBest = -1; 
       for (int i = 0; i < mNFace; i++) {
          ref Face face = ref mFaces[i];
          if (face.Used || !face.Bound.Contains (bound)) continue;
+         var (outer, inside) = (face.Outer, false);
+         for (double lie = 0; lie < poly.Count - 0.001; lie += poly.Count / 17.0) {
+            int n = (int)lie;
+            int code = outer.Contains (poly[n].GetPointAt (lie - n));
+            if (code == -1) continue;
+            inside = code == 1; break;
+         }
+         if (!inside) continue; 
          if (iBest == -1 || face.Bound.Area < mFaces[iBest].Bound.Area)
             iBest = i; 
       }

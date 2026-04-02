@@ -174,6 +174,32 @@ public partial class Poly {
    public Poly Clean ()
       => TryCleanup (out var tmp) ? tmp : this;
 
+   /// <summary>Checks if a point is contained within a Poly</summary>
+   /// This is not fully deterministic. It uses a simple ray-tracing towards the right,
+   /// and if the ray passes through any of the nodes in the poly, it will return -1. 
+   /// In other words, be prepared for this to return 'I don't know'. It also return this
+   /// if the point lies ON any of the segments
+   /// Returns 0: not contained, 1: contained, -1: ambiguous / on 
+   public int Contains (Point2 pt) {
+      int inters = 0; 
+      const double e = Epsilon;
+      Point2 ptRight = new (pt.X + 10, pt.Y);
+      Span<Point2> buffer = stackalloc Point2[2];
+      foreach (var seg in Segs) {
+         var b = seg.Bound;
+         // Quickly skip segments that are definitely to the left, above, or below
+         if (b.X.Max < pt.X - e || b.Y.Max < pt.Y - e || b.Y.Min > pt.Y + e) continue;
+         if (pt.Y.EQ (seg.A.Y)) return -1;
+         var pints = seg.Intersect (pt, ptRight, buffer, true);
+         foreach (var pint in pints) {
+            if (pint.X.EQ (pt.X)) return -1;
+            if (pint.X > pt.X) inters++;
+         }
+      }
+      // Finally, if we have an odd number of intersections the point is inside
+      return inters & 1;
+   }
+
    /// <summary>Returns a 'closed' version of this Poly</summary>
    /// If the start and end points are touching (within 1e-6), the end point is 'merged' with
    /// the start point. Otherwise, a line segment is drawn from the end point to the start point
