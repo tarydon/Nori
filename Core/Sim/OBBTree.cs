@@ -2,6 +2,8 @@
 // ╔═╦╦═╦╦╬╣ OBBTree.cs
 // ║║║║╬║╔╣║ Implements OBBTree (bounding-box hierarchy using OBB primitives), OBBTreeBuilder
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
+using System.Threading;
+
 namespace Nori;
 
 #region class OBBTree ------------------------------------------------------------------------------
@@ -16,7 +18,7 @@ public class OBBTree {
    }
 
    /// <summary>Create a copy of this OBBTree with a new transform</summary>
-   public OBBTree With (Matrix3 xfm) => new (Pts, Tris, OBBs, mTag) { mXfm = xfm };
+   public OBBTree With (Matrix3 xfm) => new (Pts, Tris, OBBs, mTag, UID) { mXfm = xfm };
 
    /// <summary>An 'empty' OBBTree (to represent no collisions)</summary>
    public static readonly OBBTree Empty = new ([], [], [], "EMPTY");
@@ -55,6 +57,11 @@ public class OBBTree {
    public Matrix3 InvXfm => mInvXfm ??= Xfm.GetInverse ();
    Matrix3? mInvXfm;
 
+   /// <summary>Uinique Id for this OBBTree which will remain constant even when spatially transformed
+   /// variants are created.</summary>
+   internal readonly int UID;
+   static int sNextUID = 0;
+
    // Methods ------------------------------------------------------------------
    /// <summary>Outputs OBBs a given heirarchy level.</summary>
    /// It also includes the leaf nodes to reflect a realistic 
@@ -76,10 +83,10 @@ public class OBBTree {
 
    // Implementation -----------------------------------------------------------
    internal OBBTree (ReadOnlySpan<Point3f> pts, ReadOnlySpan<CTri> tris, ReadOnlySpan<OBB> obbs, string? tag)
-      => (Pts, Tris, OBBs, mTag) = ([..pts], [..tris], [..obbs], tag);
+      => (Pts, Tris, OBBs, mTag, UID) = ([..pts], [..tris], [..obbs], tag, Interlocked.Increment (ref sNextUID));
 
-   internal OBBTree (Point3f[] pts, CTri[] tris, OBB[] obbs, string? tag)
-      => (Pts, Tris, OBBs, mTag) = (pts, tris, obbs, tag);
+   internal OBBTree (Point3f[] pts, CTri[] tris, OBB[] obbs, string? tag, int uid)
+      => (Pts, Tris, OBBs, mTag, UID) = (pts, tris, obbs, tag, uid);
 }
 #endregion
 
