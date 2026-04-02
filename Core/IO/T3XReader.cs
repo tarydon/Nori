@@ -30,6 +30,10 @@ public class T3XReader : IDisposable {
       T = mZip.ReadAllText ("Data");
    }
 
+   // Properties ---------------------------------------------------------------
+   /// <summary>If set, prevents meshes from being loaded</summary>
+   public bool NoMeshes;
+
    // Methods ------------------------------------------------------------------
    /// <summary>Constructs the Model3 and returns it</summary>
    public Model3 Load () {
@@ -56,7 +60,7 @@ public class T3XReader : IDisposable {
          if (ent == null) break;
          // It's possible the mesh for this entity might also be stored in the
          // file, so attempt to load it and attach it to the entity
-         ent.Mesh = LoadMesh (ent.Id);
+         if (!NoMeshes) ent.Mesh = LoadMesh (ent.Id);
          mModel.Ents.Add (ent);
       }
       mZip.Dispose (); 

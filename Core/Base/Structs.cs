@@ -19,14 +19,14 @@ public readonly struct BlockTimer : IDisposable {
       Lib.Trace ($"{mText}: {FmtTime (mSW, 1)}\n");
       if (mIterations > 1) 
          Lib.Trace ($"  {FmtTime (mSW, mIterations)} per iteration\n");
+   }
 
-      static string FmtTime (Stopwatch sw, int iterations) {
-         double t = sw.Elapsed.TotalMilliseconds / iterations;
-         var (value, suffix) = (t, "ms");
-         if (value < 2) { value = sw.Elapsed.TotalMicroseconds / iterations; suffix = "\u00b5s"; }
-         if (value < 2) { value = sw.Elapsed.TotalNanoseconds / iterations; suffix = "ns"; }
-         return $"{value:F2} {suffix}";
-      }
+   public static string FmtTime (Stopwatch sw, int iterations = 1) {
+      double t = sw.Elapsed.TotalMilliseconds / iterations;
+      var (value, suffix) = (t, "ms");
+      if (value < 2) { value = sw.Elapsed.TotalMicroseconds / iterations; suffix = "\u00b5s"; }
+      if (value < 2) { value = sw.Elapsed.TotalNanoseconds / iterations; suffix = "ns"; }
+      return $"{value:F2} {suffix}";
    }
 
    readonly Stopwatch mSW;
@@ -383,8 +383,7 @@ public struct Rand {
       if ((m0 | m1 | m2 | m3) == 0) m3 = 1;  // Catch very rare zero state
    }
 
-   /// <summary>Returns the next integer in the semi-open range [0 .. max)</summary>
-   [MethodImpl (MethodImplOptions.AggressiveInlining)]
+   /// <summary>Returns a random integer in the semi-open range [0 .. max)</summary>
    public int Next (int max) {
       // Core of Xoshiro 128
       uint result = BitOperations.RotateLeft (m1 * 5, 7) * 9, t = m1 << 9;
@@ -394,6 +393,9 @@ public struct Rand {
       // Lemire reduction for unbiased [0 .. max)
       return (int)(((ulong)result * (uint)max) >> 32);
    }
+
+   /// <summary>Returns a random integer in the range [min .. max)</summary>
+   public int Next (int min, int max) => Next (max - min) + min;
 
    // Implementation -----------------------------------------------------------
    static uint SplitMix32 (ref uint x) {

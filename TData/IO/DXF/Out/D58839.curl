@@ -418,6 +418,7 @@
       ]
     }
   ]
+  CurrentLayer:dimension
   Ents:[
     (E2Insert){ Layer:0 BlockName:ISO_A3 Pt:0,0 XScale:1 YScale:1 }
     (E2Insert){ Layer:0 BlockName:ISO_TITLEB Pt:410,10 XScale:1 YScale:1 }

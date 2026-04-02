@@ -142,6 +142,8 @@ public class Layer2 {
          if (stack[i] is Dwg2 dwg) return dwg.Layers.FirstOrDefault (a => a.Name == name);
       return null;
    }
+
+   public override string ToString () => $"Layer \"{mName}\" {mColor} {mLinetype}";
 }
 #endregion
 

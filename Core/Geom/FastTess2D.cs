@@ -78,7 +78,7 @@ public partial class FastTess2D : IBorrowable<FastTess2D> {
       // Now, add the contour into the mV array, and create segments from this in
       // the mS array
       int n = pts.Length, vStart = mVN;
-      Grow (ref mV, mVN, n);
+      Lib.Grow (ref mV, mVN, n);
       Point2 prev = Rotate (pts[n - 1]), pt = Rotate (pts[0]);
       for (int i = 0; i < n; i++, mVN++) {
          Point2 next = Rotate (pts[(i + 1) % n]);
@@ -92,7 +92,7 @@ public partial class FastTess2D : IBorrowable<FastTess2D> {
       }
 
       // Now, add the segments corresponding to this newly added contour
-      Grow (ref mS, mSN, n);
+      Lib.Grow (ref mS, mSN, n);
       for (int i = 0; i < n; i++, mSN++) {
          int j = (i + 1) % n;
          mS[mSN] = new Segment (mSN, mV, i + vStart, j + vStart);
@@ -130,7 +130,7 @@ public partial class FastTess2D : IBorrowable<FastTess2D> {
          if (t.VBot != 0 && t.EBot == EChain.Valley) mValleyTiles.Add (t.Id);
       }
       int nDiag = mDiagTiles.Count;
-      Grow (ref mS, mSN, nDiag); GrowTN (nDiag);
+      Lib.Grow (ref mS, mSN, nDiag); GrowTN (nDiag);
       foreach (var n in mDiagTiles) {
          ref Tile t0 = ref mT[n]; if (t0.Id == 0) continue;
          mS[mSN] = new (mSN, mV, t0.VTop, t0.VBot, true);
@@ -146,7 +146,7 @@ public partial class FastTess2D : IBorrowable<FastTess2D> {
    // Allocates a new tile ID
    int AllocTile () {
       if (mFreeTile.Count > 0) return mFreeTile.Pop ();
-      Grow (ref mT, mTN, 1); return mTN++;
+      Lib.Grow (ref mT, mTN, 1); return mTN++;
    }
 
    // Given a monotone polygon, extracts the triangles from it using DeBerg's algorithm.
@@ -246,7 +246,7 @@ public partial class FastTess2D : IBorrowable<FastTess2D> {
    // smaller trapezoids
    void InsertBorder () {
       var b = mBound.InflatedL (1);
-      Grow (ref mV, mVN, 4); Grow (ref mS, mSN, 2); 
+      Lib.Grow (ref mV, mVN, 4); Lib.Grow (ref mS, mSN, 2); 
       Point2 p0 = new (b.X.Min, b.Y.Min), p1 = new (b.X.Min, b.Y.Max);
       Point2 p2 = new (b.X.Max, b.Y.Min), p3 = new (b.X.Max, b.Y.Max);
       
@@ -349,7 +349,7 @@ public partial class FastTess2D : IBorrowable<FastTess2D> {
    // Computes (in mShuffle) a random permutation of the segments. This is
    // critical to achieve good performance from the Seidel algorithm
    void ShuffleSegs () {
-      Grow (ref mShuffle, 0, mSN);
+      Lib.Grow (ref mShuffle, 0, mSN);
       for (int i = 0; i < mSN; i++) mShuffle[i] = i;
       // This is a simple Fisher-Yates shuffle:
       for (int i = mSN - 1; i >= 0; i--) {
@@ -384,22 +384,10 @@ public partial class FastTess2D : IBorrowable<FastTess2D> {
    //    if (!condition) throw new InvalidOperationException ("Triangulator");
    // }
 
-   // Helper to grow an array (more optimized than Array.Resize, since it
-   // copies only the 'used' elements, not all the elements currently in the array)
-   static void Grow<T> (ref T[] array, int used, int delta) {
-      int size = array.Length, total = used + delta;
-      while (size <= total) size *= 2;
-      if (size > array.Length) {
-         var final = new T[size];
-         if (used > 0) Array.Copy (array, final, used);
-         array = final;
-      }
-   }
-
    // Grows mT and mN arrays, accounting for free tiles that won't need new slots
    void GrowTN (int tiles) {
-      Grow (ref mT, mTN, tiles - mFreeTile.Count);
-      Grow (ref mN, mNN, tiles * 2);
+      Lib.Grow (ref mT, mTN, tiles - mFreeTile.Count);
+      Lib.Grow (ref mN, mNN, tiles * 2);
    }
 
    static void Unexpected () 

@@ -245,7 +245,8 @@ public abstract class VNode {
    protected virtual void OnChanged (EProp prop) {
       switch (prop) {
          case EProp.Geometry: Redraw (); break;
-         case EProp.Attributes or EProp.Xfm or EProp.Selected or EProp.JValue: Lux.Redraw (); break;
+         case EProp.Attributes or EProp.Xfm or EProp.Selected 
+         or EProp.JValue or EProp.Colliding: Lux.Redraw (); break;
       }
    }
 

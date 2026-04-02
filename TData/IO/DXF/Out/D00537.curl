@@ -660,6 +660,7 @@
       ]
     }
   ]
+  CurrentLayer:T_02
   Ents:[
     (E2Poly){ Layer:4 Poly:M73.318207,611.561582V323.061582 }
     (E2Poly){ Layer:4 Poly:M73.318207,323.061582H81.318207 }

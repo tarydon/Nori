@@ -625,6 +625,7 @@
       ]
     }
   ]
+  CurrentLayer:0
   Ents:[
     (E2Poly){ Layer:KADER Color:#FFFFFFFF Poly:M415,284.010649H13.004662 }
     (E2Poly){ Layer:KADER Color:#FFFFFFFF Poly:M13.004662,284.010649V5 }

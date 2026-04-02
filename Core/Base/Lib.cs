@@ -2,6 +2,7 @@
 // ╔═╦╦═╦╦╬╣ Lib.cs
 // ║║║║╬║╔╣║ Implements the Lib module class that has a number of global functions
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
+using System.IO.Compression;
 using System.Threading;
 using static System.Math;
 namespace Nori;
@@ -110,6 +111,20 @@ public static class Lib {
    }
    static string? sCodeBase;
 
+   /// <summary>Helper to grow an array</summary>
+   /// This is a bit more optimized than Array.Resize, since it copies only the
+   /// 'used' elements of the array, not all the elements
+   public static void Grow<T> (ref T[] array, int used, int delta) {
+      int size = array.Length, total = used + delta;
+      if (size == 0) size = 8;
+      while (size <= total) size *= 2;
+      if (size > array.Length) {
+         var final = new T[size];
+         if (used > 0) Array.Copy (array, final, used);
+         array = final;
+      }
+   }
+
    /// <summary>This should be called to initialize Nori.Core before use</summary>
    public static void Init () {
       if (!sInited) {
@@ -161,7 +176,7 @@ public static class Lib {
    /// Sys.OpenRead ("nori:GL/point.frag");
    public static Stream OpenRead (string name) =>
                sLocators.Select (locator => locator.Open (name)).FirstOrDefault (stm => stm != null)
-               ?? throw new Exception ($"Could not open {name}");
+               ?? File.OpenRead (name);
 
    /// <summary>Calls a function asynchronously on the current thread</summary>
    public static void Post (Action act) {
@@ -197,8 +212,22 @@ public static class Lib {
    }
 
    /// <summary>Reads a set of lines from a stream opened by the IStmLocator service</summary>
-   public static string[] ReadLines (string file)
-      => ReadText (file).Split ('\n');
+   public static string[] ReadLines (string file) {
+      string? line;
+      List<string> lines = [];
+      using var stm = OpenRead (file);
+      using (var reader = new StreamReader (stm))
+         while ((line = reader.ReadLine ()) != null) lines.Add (line);
+      return [.. lines];
+   }
+
+   /// <summary>Reads a set of lines from a stream inside a Zip archive</summary>
+   public static List<string> ReadLinesFromZip (string zipfile, string stream) {
+      var zar = new ZipArchive (File.OpenRead (zipfile));
+      var ze = zar.GetEntry (stream)!;
+      var zstm = new ZipReadStream (ze.Open (), ze.Length);
+      return [.. zstm.ReadAllLines ()];
+   }
 
    /// <summary>Register a stream locator</summary>
    public static void Register (IStmLocator locator) => sLocators.Add (locator);

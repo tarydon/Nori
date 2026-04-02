@@ -6,7 +6,8 @@ namespace Nori;
 
 public abstract class Ent3VN (Ent3 mEnt) : VNode (mEnt) {
    public override void SetAttributes () {
-      Lux.Color = mEnt.IsSelected ? new Color4 (128, 192, 255) : Color4.White;
+      Lux.Color = mEnt.IsColliding ? new Color4 (255, 64, 32) :
+                  mEnt.IsSelected ? new Color4 (128, 192, 255) : Color4.White;
    }
 }
 
