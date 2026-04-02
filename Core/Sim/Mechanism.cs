@@ -191,7 +191,7 @@ public class FileGeometry : GeometrySource {
    public override Mesh3? GetCMesh (string rootDir) {
       string ext = Path.GetExtension (File);
       string file = string.Concat (File.AsSpan (0, File.Length - ext.Length), "Crash", ext);
-      if (System.IO.File.Exists (file)) return LoadMesh (file, rootDir);
+      if (System.IO.File.Exists (Path.Combine (rootDir, file))) return LoadMesh (file, rootDir);
       return null;
    }
 
