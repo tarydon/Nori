@@ -21,23 +21,16 @@ public partial class MainWindow : Window {
    }
 }
 
-class DemoScene : Scene3 {
+class DemoScene : Scene2 {
    public DemoScene () {
       var dwg = DXFReader.Load (System.IO.Directory.GetFiles ("C:\\etc\\Fold", "*.dxf")[0]);
       var folder = new PaperFolder (dwg);
-      mModel = folder.Process ();
+      folder.Process ();
       folder.Dump ("c:/etc/test.dxf");
+      var dwg2 = DXFReader.Load ("c:/etc/test.dxf");
 
-      Bound = mModel.Bound;
-      Root = new Model3VN (mModel);
-      BgrdColor = new Color4 (80, 100, 120);
-   }
-   Model3 mModel;
-
-   public override void Picked (object obj) {
-      if (obj is Ent3 ent) {
-         ent.IsSelected = true;
-         if (HW.IsCtrlDown) mModel.Ents.Remove (ent);
-      }
+      Bound = dwg2.Bound.InflatedF (1.05);
+      Root = new Dwg2VN (dwg2);
+      BgrdColor = new Color4 (200, 208, 216);
    }
 }
