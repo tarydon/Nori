@@ -29,7 +29,6 @@ class DemoScene : Scene3 {
       System.IO.File.Move (file, "c:\\etc\\fold\\good\\" + Path.GetFileName (file));
       var folder = new PaperFolder (dwg);
       if (folder.Process (out var model) != true) throw new NotImplementedException (); 
-      folder.Dump ("c:/etc/test.dxf");
 
       Bound = model.Bound.InflatedF (1.05);
       Root = new Model3VN (model);
