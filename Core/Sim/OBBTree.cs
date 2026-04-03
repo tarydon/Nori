@@ -57,10 +57,9 @@ public class OBBTree {
    public Matrix3 InvXfm => mInvXfm ??= Xfm.GetInverse ();
    Matrix3? mInvXfm;
 
-   /// <summary>Uinique Id for this OBBTree which will remain constant even when spatially transformed
-   /// variants are created.</summary>
-   internal readonly int UID;
-   static int sNextUID = 0;
+   /// <summary>Uinique Id for this OBBTree which will remain constant even when transformed</summary>
+   internal readonly uint UID;
+   static uint sUIDCounter = 0;
 
    // Methods ------------------------------------------------------------------
    /// <summary>Outputs OBBs a given heirarchy level.</summary>
@@ -83,9 +82,9 @@ public class OBBTree {
 
    // Implementation -----------------------------------------------------------
    internal OBBTree (ReadOnlySpan<Point3f> pts, ReadOnlySpan<CTri> tris, ReadOnlySpan<OBB> obbs, string? tag)
-      => (Pts, Tris, OBBs, mTag, UID) = ([..pts], [..tris], [..obbs], tag, Interlocked.Increment (ref sNextUID));
+      => (Pts, Tris, OBBs, mTag, UID) = ([..pts], [..tris], [..obbs], tag, Interlocked.Increment (ref sUIDCounter));
 
-   internal OBBTree (Point3f[] pts, CTri[] tris, OBB[] obbs, string? tag, int uid)
+   internal OBBTree (Point3f[] pts, CTri[] tris, OBB[] obbs, string? tag, uint uid)
       => (Pts, Tris, OBBs, mTag, UID) = (pts, tris, obbs, tag, uid);
 }
 #endregion
