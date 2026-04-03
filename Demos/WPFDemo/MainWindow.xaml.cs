@@ -40,6 +40,7 @@ public partial class MainWindow : Window {
    void ConvexHullDemo (object sender, RoutedEventArgs e) => Display (new ConvexHullScene ());
    void BuildOBBDemo (object sender, RoutedEventArgs e) => Display (new BuildOBBScene ());
    void CollisionDemo (object s, RoutedEventArgs e) => Display (new OBBCrashScene ());
+   void PaperFolderDemo (object s, RoutedEventArgs e) => Display (new PaperFolderScene ());
 
    void Display (Scene scene) {
       mSettings.Children.Clear ();
@@ -47,5 +48,6 @@ public partial class MainWindow : Window {
       if (scene is RobotScene rs) rs.CreateUI (mSettings.Children);
       if (scene is STPScene or T3XDemoScene) Lux.BackFacesPink = true;
       if (scene is OBBCrashScene cs) cs.CreateUI (mSettings.Children);
+      if (scene is PaperFolderScene ps) ps.CreateUI (mSettings.Children);
    }
 }
