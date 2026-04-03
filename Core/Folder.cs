@@ -20,12 +20,60 @@ public class PaperFolder {
          if (!SnapBendline (i)) throw new InvalidOperationException ("Incorrect bend-line");
       if (!CheckBendIntersections ()) throw new InvalidOperationException ("Intersecting bend lines");
       LinkNodesPerPoly ();
-      for (int i = 0; i < mNNode; i++) MakeFaceN (i);
+      for (int i = 0; i < mNNode; i++) MakeFace (i);
       MakeOuterFace ();
-      return null!;
+      GatherClusters ();
+      ReparentClusters (); 
       AssignHoles ();
       CreateTree ();
       return CreateModel (); 
+   }
+
+   // Now all the faces have been created. We can gather 'clusters' of connected faces. 
+   // Two faces are 'connected' if they share a common bendline between them. The resulting
+   // clusters list is sorted biggest to smallest
+   void GatherClusters () {
+      Queue<int> todo = [];
+      List<int> faces = [];
+      Gather (mRootFace);
+      for (int i = 0; i < mNFace; i++) if (!mFaces[i].Tagged) Gather (i);
+      mClusters.Sort ((a, b) => b.Bound.Area.CompareTo (a.Bound.Area));
+
+      void Gather (int seed) {
+         mFaces[seed].Tagged = true;
+         todo.Enqueue (seed); faces.Clear (); 
+         while (todo.TryDequeue (out int nFace)) {
+            ref Face face = ref mFaces[nFace]; faces.Add (nFace);
+            foreach (var nNode in face.HBends) {
+               ref Node pair = ref mNode[nNode ^ 1];
+               ref Face oface = ref mFaces[pair.NFace];
+               if (!oface.Tagged) { oface.Tagged = true; todo.Enqueue (pair.NFace); }
+            }
+         }
+         mClusters.Add (new Cluster (faces, mFaces));
+      }
+   }
+   List<Cluster> mClusters = [];
+
+   void ReparentClusters () {
+      // For each cluster other than the largest, we have to 'reparent' them. 
+      // These clusters are islands essentially flanges inside a hole of some other
+      // plane.
+      var span = mClusters.AsSpan (); 
+      for (int i = 1; i < span.Length; i++) {
+         // Take the list of faces in the cluster. The largest one of these is basically
+         // the 'hole', and the rest are flanges in the hole. Find the smallest enclosing
+         // face that holds these. 
+         ref readonly Cluster cluster = ref span[i];
+         int largest = cluster.Faces.MaxBy (a => mFaces[a].Bound.Area); 
+         ref Face hole = ref mFaces[largest]; hole.Used = true; 
+         ref Face enclosing = ref mFaces[GetFaceEnclosing (hole.Bound, hole.Outer)];
+
+         // All the half-bends owned by this hole - transfer them to the enclosing face,
+         // and also add this hole as a hole into the enclosing face
+         enclosing.HBends.AddRange (hole.HBends);
+         enclosing.Holes.Add (hole.Outer);
+      }
    }
 
    public void Dump (string file) {
@@ -68,67 +116,12 @@ public class PaperFolder {
    // Implementation -----------------------------------------------------------
    // Adds holes into their owner faces
    void AssignHoles () {
-      // If we have not yet made a Face out of the 'outer' poly (this will happen if there are 
-      // no bendlines touching that outer poly), make it now. 
-      if (!mPolys[0].UsedInFace) {
-         Lib.Grow (ref mFaces, mNFace, 1);
-         mFaces[mNFace++] = new Face (mPolys[0].Poly, [], -1);
-         mPolys[0].UsedInFace = true;
-      }
-
-      // There will be some faces that only touch one single 'hole' poly. For each such
-      // hole, gather all the faces
-      List<int> faces = [];
-      for (int i = 0; i < mNFace; i++) {
-         ref Face face = ref mFaces[i];
-         if (face.NHole > 0) {
-            faces.Clear (); faces.Add (i);
-            for (int j = i + 1; j < mNFace; j++)
-               if (mFaces[j].NHole == face.NHole) faces.Add (j);
-
-            if (IsIsolatedHole (face.NHole)) {
-               // We've found a set of faces that are linked only to this hole.
-               // The largest of them is actually the 'hole' so we add this as a hole into the 
-               // containing Face. The rest of them are faces that we add as Children into the
-               // containing face. First, create the 'hole poly'
-               Lib.Grow (ref mPolys, mNPoly, 1);
-               int kBiggest = faces.MaxBy (a => mFaces[a].Bound.Area);
-               ref Face biggest = ref mFaces[kBiggest]; biggest.Used = true; 
-               int nEnclosing = GetFaceEnclosing (biggest.Bound, biggest.Outer);
-               if (nEnclosing != -1) {
-                  ref Face enclosing = ref mFaces[nEnclosing];
-                  mPolys[mNPoly++] = new (biggest.Outer, biggest.Outer.GetBound ());
-
-                  // Next, add the other faces as children here - all we have to do first is to
-                  // add this edge into the list of edges of the enclosing face. During the CreateTree
-                  // phase, these will then get added as children
-                  for (int k = 0; k < faces.Count; k++) {
-                     ref Face hface = ref mFaces[k];
-                     hface.NHole = 0;
-                     if (k == kBiggest) continue;
-                     foreach (var edge in hface.HBends) enclosing.HBends.Add (edge ^ 1);
-                  }
-               } else
-                  biggest.Used = false;
-            }
-            faces.ForEach (a => mFaces[a].NHole = 0);
-         }
-      }
-
       // Now, we can take all the holes and move them into the smallest enclosing face
       for (int i = 0; i < mNPoly; i++) {
          ref CPoly cp = ref mPolys[i]; if (cp.UsedInFace) continue;
          int nEnclosing = GetFaceEnclosing (cp.Bound, cp.Poly);
          if (nEnclosing != -1) mFaces[nEnclosing].Holes.Add (cp.Poly);
       }
-   }
-
-   bool IsIsolatedHole (int cPoly) {
-      for (int i = 0; i < mNNode; i++) {
-         if (mNode[i].NPoly != cPoly) continue;
-         if (mNode[i ^ 1].NPoly != cPoly) return false;
-      }
-      return true; 
    }
 
    int GetFaceEnclosing (Bound2 bound, Poly poly) {
@@ -179,7 +172,6 @@ public class PaperFolder {
    // can be used to link them up
    void CreateTree () {
       Queue<int> todo = [];
-      mRootFace = mFaces.Take (mNFace).MaxIndexBy (a => a.Bound.Area * (a.Used ? -1 : 1));
       mFaces[mRootFace].Used = true; 
       todo.Enqueue (mRootFace);
       while (todo.TryDequeue (out int nFace)) {
@@ -264,8 +256,8 @@ public class PaperFolder {
          => e2p.Poly.IsClosed && e2p.Poly.GetWinding () != Poly.EWinding.Indeterminate;
    }
 
-   // Makes a face, starting at the given node
-   void MakeFaceN (int nNode) {
+   // Makes a face, starting at the given node (this node is the start of a bendline)
+   void MakeFace (int nNode) {
       ref Node node = ref mNode[nNode]; 
       if (node.UsedInFace) return;
 
@@ -305,55 +297,22 @@ public class PaperFolder {
       Lib.Grow (ref mFaces, mNFace, 1);
       mFaces[mNFace++] = new Face (pb.Close ().Build (), [.. mHBends], -1);
    }
-
-   // If the 'outer poly' has no bendlines connected to it, it will not get converted
-   // to a Face at all. Handle that special case here
-   void MakeOuterFace () {
-      if (mPolys[0].UsedInFace) return;
-      Lib.Grow (ref mFaces, mNFace, 1);
-      mFaces[mNFace++] = new Face (mPolys[0].Poly, [], -1);
-      mPolys[0].UsedInFace = true;
-   }
-
-   // Create faces from the nodes
-   void MakeFace (int a) {
-      ref Node node = ref mNode[a]; if (node.UsedInFace) return;
-
-      // We're going to start building a face
-      PolyBuilder pb = new ();
-      bool bend = true;    // true=traverse a bendline, false=traverse across contour
-      mHBends.ClearFast ();
-      // This tracks the nPoly segments used in this face
-      // -1: not yet decided
-      // -2: multiple nPoly used
-      // >= 0 : only one nPoly used
-      int nHole = -1;      
-      for (; ; ) {
-         if (bend) {
-            // Travel along the bendline - this just adds a single line starting
-            // at this point (and which will end at the other end of the bendline)
-            if (node.UsedInFace) break;
-            (node.UsedInFace, node.NFace) = (true, mNFace);
-            pb.Line (node.GetPos (mPolys));
-            mHBends.Add (a);
-            node = ref mNode[a ^= 1];
-         } else {
-            // We travel along the contour, from between the start point and the
-            // end point
-            ref Node next = ref mNode[a = node.Next];
-            if (nHole == -1) nHole = node.NPoly;
-            else if (nHole != node.NPoly) nHole = -2;
-            ref var cpoly = ref mPolys[node.NPoly]; cpoly.UsedInFace = true; 
-            pb.AddSlice (cpoly.Poly, node.NSeg, node.Lie, next.NSeg, next.Lie, false);
-            node = ref next;
-         }
-         bend = !bend;
-      }
-      Lib.Grow (ref mFaces, mNFace, 1); 
-      mFaces[mNFace++] = new Face (pb.Close ().Build (), [.. mHBends], nHole);
-   }
    // Temporary used to hold the list of bends connected to the face we are building
    List<int> mHBends = [];
+
+   // If the 'outer poly' has no bendlines connected to it, it will not get converted
+   // to a Face at all. Handle that special case here. Also, this computes the 
+   // 'root face' - the largest face
+   void MakeOuterFace () {
+      if (!mPolys[0].UsedInFace) {
+         // If the outer poly has no bendlines touching it, the face we create from it
+         // is the root face
+         Lib.Grow (ref mFaces, mRootFace = mNFace, 1);
+         mFaces[mNFace++] = new Face (mPolys[0].Poly, [], -1);
+         mPolys[0].UsedInFace = true;
+      } else 
+         mRootFace = mFaces.Take (mNFace).MaxIndexBy (a => a.Bound.Area);
+   }
 
    // Snaps bend-lines to begin/end exactly on contours (by trimming/extending them as
    // needed). We also detect here when bend-line spans cross polylines, and cut them up
@@ -451,6 +410,19 @@ public class PaperFolder {
    }
 
    // Nested types -------------------------------------------------------------
+   // Represents a cluster of faces that are connected together 
+   readonly struct Cluster {
+      public Cluster (IList<int> ids, Face[] faces) {
+         Faces = [.. ids];
+         Bound = new (ids.Select (a => faces[a].Bound));
+      }
+      public override string ToString ()
+         => $"Cluster {Faces.ToCSV ()} {(int)Bound.Width}x{(int)Bound.Height}";
+
+      public readonly int[] Faces;
+      public readonly Bound2 Bound;
+   }
+
    // Represents an outer / inner contour of the poly.
    // The outer contour is CCW, while the rest are CW
    struct CPoly (Poly poly, Bound2 bound) {
@@ -503,6 +475,7 @@ public class PaperFolder {
       public readonly Bound2 Bound = outer.GetBound ();
       public readonly List<Poly> Holes = [];    // Hole polys of this face
       public int NHole = nHole;     // If > 0, this face is connected to this hole
+      public bool Tagged;           // Marker used in various algorithms
       public bool Used;             // This face is dead - don't consider it
 
       // HBends is the list of half-bends touching this face, and Children is a parallel

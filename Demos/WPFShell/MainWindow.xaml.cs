@@ -1,4 +1,5 @@
-﻿using System.Windows;
+﻿using System.IO;
+using System.Windows;
 using Nori;
 
 namespace WPFShell;
@@ -21,16 +22,18 @@ public partial class MainWindow : Window {
    }
 }
 
-class DemoScene : Scene2 {
+class DemoScene : Scene3 {
    public DemoScene () {
-      var dwg = DXFReader.Load (System.IO.Directory.GetFiles ("C:\\etc\\Fold", "*.dxf")[0]);
+      var file = System.IO.Directory.GetFiles ("C:\\etc\\Fold", "*.dxf")[0];
+      var dwg = DXFReader.Load (file);
+      System.IO.File.Move (file, "c:\\etc\\fold\\good\\" + Path.GetFileName (file));
       var folder = new PaperFolder (dwg);
-      folder.Process ();
+      var model = folder.Process ();
       folder.Dump ("c:/etc/test.dxf");
       var dwg2 = DXFReader.Load ("c:/etc/test.dxf");
 
-      Bound = dwg2.Bound.InflatedF (1.05);
-      Root = new Dwg2VN (dwg2);
+      Bound = model.Bound.InflatedF (1.05);
+      Root = new Model3VN (model);
       BgrdColor = new Color4 (200, 208, 216);
    }
 }
