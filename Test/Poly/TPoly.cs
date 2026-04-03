@@ -302,4 +302,16 @@ class PolyTests {
          Assert.TextFilesEqual ($"Poly/{file}.txt", NT.TmpTxt);
       }
    }
+
+   [Test (228, "Poly.GetWinding additional")]
+   void Test13 () {
+      Check ("479.dxf", Poly.EWinding.CW);
+      Check ("492.dxf", Poly.EWinding.CW);
+
+      static void Check (string file, Poly.EWinding wind) {
+         var dwg = DXFReader.Load (NT.File ($"Poly/Winding/{file}"));
+         var poly = dwg.Ents.OfType<E2Poly> ().Single ().Poly;
+         poly.GetWinding ().Is (wind);
+      }
+   }
 }

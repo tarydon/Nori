@@ -42,7 +42,7 @@ public class Block2 {
 /// <summary>Bitflags for Ent2</summary>
 [Flags]
 public enum E2Flags {
-   Selected = 0x1, InBlock = 0x2, Closed = 0x4, Periodic = 0x8
+   Selected = 0x1, InBlock = 0x2, Closed = 0x4, Periodic = 0x8, Outer = 0x10, IsError = 0x20,
 }
 #endregion
 

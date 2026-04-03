@@ -33,6 +33,7 @@ public partial class FastTess2D : IBorrowable<FastTess2D> {
          switch (mETol = value) {
             case ETolerance.Fine: mTolerance = Lib.FineTess; mAngTolerance = Lib.FineTessAngle; break;
             case ETolerance.Coarse: mTolerance = Lib.CoarseTess; mAngTolerance = Lib.CoarseTessAngle; break;
+            case ETolerance.VeryCoarse: mTolerance = Lib.VeryCoarseTess; mAngTolerance = Lib.VeryCoarseTessAngle; break;
             default: throw new BadCaseException (value);
          }
       }
@@ -235,6 +236,7 @@ public partial class FastTess2D : IBorrowable<FastTess2D> {
             ref Vertex vb = ref mV[tile.VBot];
             if (seg.IsLeft (vb.Pt)) a = b; 
          }
+         if (a == 0) throw new InvalidOperationException ();
          mLefts.Add (t0 = a); 
       }
    }
@@ -319,7 +321,7 @@ public partial class FastTess2D : IBorrowable<FastTess2D> {
    // Merges together two tiles t0 & t1. We keep t1 (the bottom tile), and kill t0
    void MergeTiles (ref Tile t0, ref Tile t1) {
       Check (t0.YMin.EQ (t1.YMax));
-      Check (t0.Left == t1.Left && t0.Right == t1.Right);
+      if (t0.Left != t1.Left || t0.Right != t1.Right) Unexpected ();
       t1.YMax = t0.YMax; t1.VTop = t0.VTop; t1.ETop = t0.ETop;
       if (t1.ETop != EChain.Mountain) {
          ref Vertex vt = ref mV[t0.VTop];
@@ -380,9 +382,9 @@ public partial class FastTess2D : IBorrowable<FastTess2D> {
 
    // Helpers ------------------------------------------------------------------
    static partial void Check (bool condition);
-   // static partial void Check (bool condition) {
-   //    if (!condition) throw new InvalidOperationException ("Triangulator");
-   // }
+   static partial void Check (bool condition) {
+       if (!condition) throw new InvalidOperationException ("Triangulator");
+   }
 
    // Grows mT and mN arrays, accounting for free tiles that won't need new slots
    void GrowTN (int tiles) {
