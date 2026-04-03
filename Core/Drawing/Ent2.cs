@@ -39,6 +39,9 @@ public abstract partial class Ent2 {
       internal set => Set (E2Flags.InBlock, value);
    }
 
+   /// <summary>This entity is in an error state</summary>
+   public bool IsError { get => Get (E2Flags.IsError); set => Set (E2Flags.IsError, value); }
+
    /// <summary>Is this entity selected?</summary>
    public bool IsSelected {
       get => Get (E2Flags.Selected);

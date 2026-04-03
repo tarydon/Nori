@@ -28,9 +28,8 @@ class DemoScene : Scene3 {
       var dwg = DXFReader.Load (file);
       System.IO.File.Move (file, "c:\\etc\\fold\\good\\" + Path.GetFileName (file));
       var folder = new PaperFolder (dwg);
-      var model = folder.Process ();
+      if (folder.Process (out var model) != true) throw new NotImplementedException (); 
       folder.Dump ("c:/etc/test.dxf");
-      var dwg2 = DXFReader.Load ("c:/etc/test.dxf");
 
       Bound = model.Bound.InflatedF (1.05);
       Root = new Model3VN (model);

@@ -27,12 +27,36 @@ class PaperFolderTests {
    [Test (235, "Fold G.dxf : Flange on flange")]
    void Test7 () => Process ("G", 600, 292, -60, 45);
 
+   [Test (236, "Fold H.dxf: Complex box")]
+   void Test8 () => Process ("H", 600, 448, -60, 45);
+
+   [Test (237, "Fold I.dxf: Simple double-flange")]
+   void Test9 () => Process ("I", 600, 302, -60, 45);
+
+   [Test (238, "Fold J.dxf: Flange-in-flange-in-flange")]
+   void Test10 () => Process ("J", 600, 402, -60, 105);
+
+   [Test (239, "Various error returns")]
+   void Test11 () {
+      Error ("BAD.1", EResult.NoOuterContour);
+      Error ("BAD.2", EResult.IntersectingBendlines);
+      Error ("BAD.3", EResult.IllFormedDrawing);
+   }
+
+   static void Error (string file, EResult result) {
+      var dwg = DXFReader.Load (NT.File ($"Tenkai/Fold/{file}.dxf"));
+      var folder = new PaperFolder (dwg);
+      folder.Process (out var _).IsFalse ();
+      folder.Result.Is (result);
+   }
+
    static void Process (string file, int cx, int cy, int xRot, int yRot) {
       var dwg = DXFReader.Load (NT.File ($"Tenkai/Fold/{file}.dxf"));
-      var folder = new PaperFolder (dwg); var model = folder.Process ();
+      var folder = new PaperFolder (dwg);
+      folder.Process (out var model).IsTrue (); 
 
       // Render the scene, measure it and crop the image as needed
-      var scene = new Scene3 { Bound = model.Bound, BgrdColor = Color4.White, 
+      var scene = new Scene3 { Bound = model!.Bound, BgrdColor = Color4.White, 
                                Root = new Model3VN (model), Viewpoint = new (xRot, yRot) };
       var dib = scene.RenderZoomedImage (new (cx, cy), DIBitmap.EFormat.Gray8, out _);
       new PNGWriter (dib).Write (NT.TmpPNG);

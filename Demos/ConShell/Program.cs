@@ -16,7 +16,7 @@ class Program {
    static void F1 () {
       var dwg = DXFReader.Load ("c:/etc/FOLD/17.dxf");
       var folder = new PaperFolder (dwg);
-      var model = folder.Process ();
+      if (!folder.Process (out var model)) throw new NotImplementedException (); 
       foreach (var ep in model.Ents.OfType<E3Plane> ()) {
          Console.WriteLine ($"{ep.Id}");
          var dwg2 = new Dwg2 ();
