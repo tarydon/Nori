@@ -1,13 +1,10 @@
-﻿using System.IO;
-using System.Windows;
+﻿using System.Windows;
 using Nori;
-
 namespace WPFShell;
 
 public partial class MainWindow : Window {
    public MainWindow () {
-      Lib.Init ();
-      Lux2.Init ();  // REMOVETHIS later
+      Lib.Init (); Lux2.Init ();
       InitializeComponent ();
       Content = (UIElement)Lux.CreatePanel ();
       Lux.OnReady.Subscribe (OnLuxReady);
@@ -22,16 +19,15 @@ public partial class MainWindow : Window {
    }
 }
 
-class DemoScene : Scene3 {
+class DemoScene : Scene2 {
    public DemoScene () {
-      var file = System.IO.Directory.GetFiles ("C:\\etc\\Fold", "*.dxf")[0];
-      var dwg = DXFReader.Load (file);
-      System.IO.File.Move (file, "c:\\etc\\fold\\good\\" + Path.GetFileName (file));
-      var folder = new PaperFolder (dwg);
-      if (folder.Process (out var model) != true) throw new NotImplementedException (); 
-
-      Bound = model.Bound.InflatedF (1.05);
-      Root = new Model3VN (model);
-      BgrdColor = new Color4 (200, 208, 216);
+      mFace = new (Lib.ReadBytes ("nori:GL/Fonts/Roboto-Regular.ttf"), (int)(48 * Lux.DPIScale));
+      Bound = new Bound2 (0, 0, 100, 50);
+      BgrdColor = new Color4 (128, 96, 64);
+      Root = new SimpleVN (
+         () => (Lux.Color, Lux.TypeFace) = (Color4.White, mFace),
+         () => Lux.TextPx ("Welcome to Nori.", new Vec2S (100, 100))
+      );
    }
+   TypeFace mFace;
 }

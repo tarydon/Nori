@@ -16,7 +16,7 @@ class PaperFolderScene : Scene3 {
       var color = Color.FromRgb (232, 236, 240);
       var brush = new SolidColorBrush (color); brush.Freeze ();
 
-      var b1 = new Border { Child = mLB, Margin = new Thickness (4),
+      var b1 = new Border { Child = mLB, Margin = new Thickness (6, 6, 6, 0),
                             CornerRadius = new CornerRadius (8), Background = brush };
       mLB.ItemsSource = Directory.GetFiles ("N:/Demos/Data/Folder", "*.dxf")
                                 .Select (a => Path.GetFileName (a)).ToList ();
@@ -24,7 +24,7 @@ class PaperFolderScene : Scene3 {
       mLB.Background = brush;
       ui.Add (b1);
 
-      var b2 = new Border { Child = mIM, Margin = new Thickness (4), Padding = new Thickness (8), 
+      var b2 = new Border { Child = mIM, Margin = new Thickness (6), Padding = new Thickness (8), 
                             CornerRadius = new CornerRadius (8), Background = brush };
       ui.Add (b2);
       Lib.Post (() => mLB.SelectedIndex = 0);
@@ -53,7 +53,7 @@ class PaperFolderScene : Scene3 {
       cx = (cx >> 2) << 2;
 
       var group = new GroupVN ([new Dwg2VN (dwg), new DwgFillVN (dwg) { Color = new Color4 (192, 196, 200) }]);
-      var scene = new Scene2 { Root = group, Bound = dwg.Bound.InflatedF (1.1),
+      var scene = new Scene2 { Root = group, Bound = dwg.Bound.InflatedF (1.05),
                                BgrdColor = new Color4 (232, 236, 240) };
       var dib = scene.RenderImage (new (cx, cy), DIBitmap.EFormat.RGB8);
       mIM.Source = GetBitmap (dib);

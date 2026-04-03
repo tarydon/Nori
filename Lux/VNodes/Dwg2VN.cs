@@ -22,9 +22,7 @@ public class DwgFillVN : VNode {
    readonly Dwg2 mDwg;
 
    // Properties ---------------------------------------------------------------
-   /// <summary>
-   /// Fill color
-   /// </summary>
+   /// <summary>Fill color</summary>
    public Color4 Color = new (240, 240, 248);
 
    // Overrides ----------------------------------------------------------------
