@@ -45,7 +45,7 @@ public class OBBCollider : IBorrowable<OBBCollider> {
       if (!Collision.Check (in boxA, in boxB)) return false;
 
       // Try the triangles that collided last between these two OBBTrees.
-      if (mOneCrash && mAUID == mA.UID && mBUID == mB.UID && mACollidingTri >= 0 && 
+      if (oneCrash && mAUID == mA.UID && mBUID == mB.UID && mACollidingTri >= 0 && 
          Collision.TriTri (mA.Pts, in mA.Tris[mACollidingTri], mBAPts, in GetBTri (mBCollidingTri))) {
          return true;
       }
