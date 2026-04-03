@@ -107,6 +107,19 @@ public partial class Dwg2 {
       (mStyles ??= []).Add (style); _styleMap = null;
    }
 
+   /// <summary>Marks the inner/outer polylines of the drawing</summary>
+   public bool MarkInOut () {
+      if (Ents.OfType<E2Poly> ().MaxBy (a => a.Bound.Area) is not { } outer) return false;
+      if (!outer.Poly.IsClosed) return false;
+      outer.IsOuter = true; var bound = outer.Bound;
+      foreach (var inner in Ents.OfType<E2Poly> ()) {
+         if (inner == outer) continue;
+         if (!bound.Contains (inner.Bound)) return false;
+         inner.IsOuter = false;
+      }
+      return true; 
+   }
+
    /// <summary>Removes an "existing" entity from the drawing</summary>
    public void Remove (Ent2 ent) => Lib.Check (mEnts.Remove (ent), "Coding Error");
 
@@ -223,7 +236,6 @@ public partial class Dwg2 {
    }
 
    // Implementation -----------------------------------------------------------
-
    // Injects new layer object at specified layers index, and updates the affected entities
    void UpdateLayer (int idx, Layer2 layer) {
       var oldLayer = mLayers [idx];

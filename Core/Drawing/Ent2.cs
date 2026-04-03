@@ -30,16 +30,22 @@ public abstract partial class Ent2 {
    public Layer2 Layer { get => mLayer; set => mLayer = value; }
    Layer2 mLayer;
 
-   /// <summary>Is this entity selected?</summary>
-   public bool IsSelected {
-      get => Get (E2Flags.Selected);
-      set { if (Set (E2Flags.Selected, value)) Notify (EProp.Selected); }
-   }
+   /// <summary>Is this the outer polyline of a drawing?</summary>
+   public bool IsOuter { get => Get (E2Flags.Outer); set => Set (E2Flags.Outer, value);  }
 
    /// <summary>Is this entity part of a block definition?</summary>
    public bool InBlock {
       get => Get (E2Flags.InBlock);
       internal set => Set (E2Flags.InBlock, value);
+   }
+
+   /// <summary>This entity is in an error state</summary>
+   public bool IsError { get => Get (E2Flags.IsError); set => Set (E2Flags.IsError, value); }
+
+   /// <summary>Is this entity selected?</summary>
+   public bool IsSelected {
+      get => Get (E2Flags.Selected);
+      set { if (Set (E2Flags.Selected, value)) Notify (EProp.Selected); }
    }
 
    // Methods ------------------------------------------------------------------

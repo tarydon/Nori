@@ -246,7 +246,7 @@ class TLux {
    }
 
    void TestPNG (Scene scene, Vec2S size, DIBitmap.EFormat format, string file) {
-      var dib = RenderToImage (scene, size, format);
+      var dib = scene.RenderImage (size, format);
       new PNGWriter (dib).Write (NT.TmpPNG);
       Assert.PNGFilesEqual ($"{NT.Data}/Lux/{file}.png", NT.TmpPNG, dib);
    }

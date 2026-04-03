@@ -86,6 +86,7 @@ public static partial class Lux {
    static bool mPickBufferValid;
 
    /// <summary>Render a Scene to an image (for example, to generate a thumbnail)</summary>
+   [Obsolete ("Use Scene.RenderToImage")]
    public static DIBitmap RenderToImage (Scene scene, Vec2S size, DIBitmap.EFormat fmt) {
       if (size.X % 4 != 0) throw new ArgumentException ("Lux.RenderToImage: image width must be a multiple of 4");
       if (scene != Lux.UIScene) scene.Attach ();

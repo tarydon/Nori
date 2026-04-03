@@ -58,29 +58,58 @@ public abstract class Scene {
    readonly List<XfmEntry> mXfms = [];
 
    // Methods ------------------------------------------------------------------
-   internal Point3 Unproject (Vec2S pos, float depth) {
-      var vp = Lux.Viewport;
-      double x = 2.0 * pos.X / vp.X - 1;
-      double y = -(2.0 * pos.Y / vp.Y - 1);
-      double z = 2 * depth - 1;
-      return new Point3 (x, y, z) * mXfms[0].InvXfm;
-   }
-
-   public void Render (Vec2S viewport) {
-      Lux.Scene = this;
-      if (Lib.Set (ref mViewport, viewport)) XfmChanged ();
-      Xfms.RemoveRange (1, Xfms.Count - 1);
-      mRoot?.Render ();
-      RBatch.IssueAll ();
-      Lux.Scene = null;
-   }
-   protected Vec2S mViewport;
-
    internal void Attach () { miAttached = true; mRoot?.Register (); }
    bool miAttached = false;
 
    /// <summary>Called when the scene is detached from the Lux renderer</summary>
    internal void Detach () { Detached (); mRoot?.Deregister (); miAttached = false; }
+
+   /// <summary>Render a scene to an image (for example, to generate a thumbnail)</summary>
+   public DIBitmap RenderImage (Vec2S size, DIBitmap.EFormat fmt) {
+      if (size.X % 4 != 0) throw new ArgumentException ("Lux.RenderToImage: image width must be a multiple of 4");
+      if (this != Lux.UIScene) Attach ();
+      var dib = (DIBitmap)Lux.Render (this, size, ETarget.Image, fmt)!;
+      if (this != Lux.UIScene) Detach ();
+      return dib;
+   }
+
+   /// <summary>Renders the scene to an image, zooming in to avoid wasted whitespace</summary>
+   public DIBitmap RenderZoomedImage (Vec2S size, DIBitmap.EFormat fmt, out int yIdeal) {
+      if (size.X % 4 != 0) throw new ArgumentException ("Lux.RenderToImage: image width must be a multiple of 4");
+      if (this != Lux.UIScene) Attach ();
+
+      // Save some state
+      var (zoom, pan, bgrd) = (mZoomFactor, PanVector, BgrdColor);
+
+      // First, render default image, and then measure the background color 'margins' around
+      // the image so we can compute a zoom factor
+      BgrdColor = Color4.White; 
+      var dib = (DIBitmap)Lux.Render (this, size, ETarget.Image, DIBitmap.EFormat.Gray8)!;
+      var (data, xMin, yMin, xMax, yMax) = (dib.Data, dib.Width, -1, -1, -1);
+      for (int y = 0; y < dib.Height; y++) {
+         var row = data.AsSpan (y * dib.Stride, dib.Width);
+         int left = row.IndexOfAnyExcept ((byte)255);
+         if (left < 0) continue;   // Fully white row
+         int right = row.LastIndexOfAnyExcept ((byte)255);
+
+         // Update the min/max in X and Y
+         if (yMin < 0) yMin = y; yMax = y;
+         if (left < xMin) xMin = left; if (right > xMax) xMax = right;
+      }
+
+      BgrdColor = bgrd;
+      double aspect = (xMax - xMin) / (double)(yMax - yMin); yIdeal = (int)(dib.Width / aspect + 0.5);
+      double xScale = (double)dib.Width / (xMax - xMin), yScale = (double)dib.Height / (yMax - yMin);
+      double scale = Math.Min (xScale, yScale) * 0.99;
+      double xCen = (xMax + xMin - dib.Width) * scale, yCen = (yMax + yMin - dib.Height) * scale;
+
+      // Zoom/Pan to crop the image correctly and render.
+      // Then restore the previous zoom/scale and return the dib
+      Zoom (scale); PanVector = new (-xCen / dib.Width, -yCen / dib.Height);
+      dib = (DIBitmap)Lux.Render (this, size, ETarget.Image, fmt)!;
+      mZoomFactor = zoom; PanVector = pan; XfmChanged ();
+      return dib; 
+   }
 
    /// <summary>Override this to zoom in or out about the given position (in pixels)</summary>
    public void Zoom (Vec2S pos, double factor) {
@@ -97,6 +126,9 @@ public abstract class Scene {
 
       XfmChanged ();
    }
+
+   /// <summary>The current zoom factor of the scene</summary>
+   public double ZoomFactor => mZoomFactor;
    protected double mZoomFactor = 1;
 
    /// <summary>Zoom about the center of the viewport</summary>
@@ -116,6 +148,25 @@ public abstract class Scene {
    public virtual void ZoomExtents () {
       mZoomFactor = 1; mPanVector = Vector2.Zero;
       XfmChanged ();
+   }
+
+   // Implementation -----------------------------------------------------------
+   internal void Render (Vec2S viewport) {
+      Lux.Scene = this;
+      if (Lib.Set (ref mViewport, viewport)) XfmChanged ();
+      Xfms.RemoveRange (1, Xfms.Count - 1);
+      mRoot?.Render ();
+      RBatch.IssueAll ();
+      Lux.Scene = null;
+   }
+   protected Vec2S mViewport = new (804, 603);
+
+   internal Point3 Unproject (Vec2S pos, float depth) {
+      var vp = Lux.Viewport;
+      double x = 2.0 * pos.X / vp.X - 1;
+      double y = -(2.0 * pos.Y / vp.Y - 1);
+      double z = 2 * depth - 1;
+      return new Point3 (x, y, z) * mXfms[0].InvXfm;
    }
 
    // Overrides ----------------------------------------------------------------
