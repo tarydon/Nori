@@ -142,7 +142,8 @@ class ScenePanner (Scene mScene, Vec2S anchor) : MouseDragger (anchor) {
    // where we assume the window extents goes from (-1,-1) at the bottom left to
    // (+1,+1) at top right
    protected override void Move (Vec2S pt) {
-      double dx = 2.0 * (pt.X - Anchor.X) / Lux.Viewport.X, dy = 2.0 * (Anchor.Y - pt.Y) / Lux.Viewport.Y;
+      var vport = mScene.Rect.Size;
+      double dx = 2.0 * (pt.X - Anchor.X) / vport.X, dy = 2.0 * (Anchor.Y - pt.Y) / vport.Y;
       mScene.PanVector = mPan0 + new Vector2 (dx, dy);
    }
 }

@@ -45,27 +45,20 @@ public static partial class Lux {
             value.Attach ();
             mViewBound.OnNext (0);
             HW.CursorVisible = value.CursorVisible;
-            mScenes.Add ((value, new (0, 0, 1, 1), new (0, 0, mPanelSize.X, mPanelSize.Y));
+            value.Rect = new (0, 0, mPanelSize.X, mPanelSize.Y);
+            mScenes.Add ((value, new (0, 0, 1, 1)));
          } else
             HW.CursorVisible = true;
          Redraw (); 
       }
    }
 
-   public static RectS GetRect (Scene scene) {
-      for (int i = 1; i < mScenes.Count; i++) 
-         if (mScenes[i].Scene == scene) return mScenes[i].Rect;
-      return new RectS (0, 0, mPanelSize.X, mPanelSize.Y);
-   }
-
    public static void AddScene (Scene scene, Bound2 bound) {
       Lib.Check (mScenes.None (a => a.Scene == scene), "Duplicate scene");
-      int x0 = (int)(bound.X.Min * mPanelSize.X), x1 = (int)(bound.X.Max * mPanelSize.X);
-      int y0 = (int)(bound.Y.Min * mPanelSize.Y), y1 = (int)(bound.Y.Max * mPanelSize.Y);
-      mScenes.Add ((scene, bound, new (x0, y0, x1, y1))); 
+      mScenes.Add ((scene, bound));
       Redraw (); 
    }
-   static readonly List<(Scene Scene, Bound2 Bound, RectS Rect)> mScenes = [];
+   static readonly List<(Scene Scene, Bound2 Bound)> mScenes = [];
 
    public static void RemoveScene (Scene scene) {
       for (int i = mScenes.Count - 1; i > 0; i--)
@@ -120,17 +113,29 @@ public static partial class Lux {
       return dib;
    }
 
+   public static Scene? PickScene (Vec2S pos) {
+      for (int i = mScenes.Count - 1; i >= 1; i--) {
+         var scene = mScenes[i].Scene;
+         if (scene.Rect.Contains (pos)) return scene;
+      }
+      return UIScene;
+   }
+
    /// <summary>This does a 'pick' operation on the current UIScene</summary>
    /// This effectively returns the VNode that lies underneat the current mouse position.
    public static VNode? Pick (Vec2S pos) {
       // If we're doign any simulation, return null
-      if (sRenderCompletes.Count > 0 || mRendering || !(mReady || Lib.Testing) || mUIScene == null) return null;
+      var scene = PickScene (pos);
+      if (sRenderCompletes.Count > 0 || mRendering || !(mReady || Lib.Testing) || scene == null) return null;
+      var viewport = scene.Rect.Size;
       if (!mPickBufferValid) {
          mPickBufferValid = true;
-         var tup = ((byte[], float[]))Render (mUIScene, mViewport, ETarget.Pick, DIBitmap.EFormat.Unknown)!;
+         var tup = ((byte[], float[]))Render (scene, viewport, ETarget.Pick, DIBitmap.EFormat.Unknown)!;
          mPickPixel = tup.Item1; mPickDepth = tup.Item2;
       }
-      int index = (mViewport.Y - pos.Y - 1) * mViewport.X + pos.X;
+
+      Vec2S local = new (pos.X - scene.Rect.Left, pos.Y - scene.Rect.Bottom);
+      int index = (viewport.Y - local.Y - 1) * viewport.X + local.X;
       if (index < 0 || index >= mPickDepth.Length) return null;
       float fDepth = mPickDepth[index];
 
@@ -140,7 +145,7 @@ public static partial class Lux {
       int b = mPickPixel[index] >> 2, g = mPickPixel[index + 1] >> 2, r = mPickPixel[index + 2] >> 2;
       int vnodeId = r + (g << 6) + (b << 12);
       VNode? node = VNode.SafeGet (vnodeId);
-      if (node != null) PickPos = mUIScene.Unproject (pos, fDepth);
+      if (node != null) PickPos = scene.Unproject (pos, fDepth);
       return node;
    }
 
@@ -150,15 +155,10 @@ public static partial class Lux {
    static bool mReady;
 
    /// <summary>Converts a pixel coordinate to world coordinates</summary>
+   [Obsolete ("Use Scene.PixelToWorld instead")]
    public static Point3 PixelToWorld (Vec2S pix) {
-      if (mUIScene == null) return new (pix.X, pix.Y, 0);
-      // Convert pixel coordinate to OpenGL clip space coordinates.
-      Vec2S vp = mViewport;
-      Point3 clip = new (2.0 * pix.X / vp.X - 1, 1.0 - 2.0 * pix.Y / vp.Y, 0);
-      clip *= mUIScene.Xfms[0].InvXfm;
-      int d = PixelScale switch { > 1 => 0, > 0.1 => 1, > 0.01 => 2, > 0.001 => 3, _ => 4 };
-      clip = new (Math.Round (clip.X, d), Math.Round (clip.Y, d), Math.Round (clip.Z, d));
-      return clip;
+      if (UIScene is not Scene scene) return new (pix.X, pix.Y, 0);
+      return scene.PixelToWorld (pix);
    }
 
    /// <summary>Stub for the Render method that is called when each frame has to be painted</summary>
@@ -170,22 +170,31 @@ public static partial class Lux {
 
       var vp = new RectS (0, 0, viewport.X, viewport.Y);
       BeginRender (viewport, target);
+      mPanelSize = viewport;  // Set only when rendering the root scene
       StartFrame (viewport);
       Color4 bgrdColor = mIsPicking ? Color4.White : (scene?.BgrdColor ?? Color4.Gray (96));
       GLState.StartFrame (Vec2S.Zero, viewport, bgrdColor);
       RBatch.StartFrame ();
       Shader.StartFrame ();
-      scene?.Render (viewport);
-
-      if (mSecondScene != null && target == ETarget.Screen) {
-         BeginRender (viewport, target);  // Don't worry about viewport - it is not used when target == Screen
-         Vec2S offset = new Vec2S (viewport.X / 8, viewport.Y / 8);
-         Vec2S size = new Vec2S (viewport.X / 4, viewport.Y / 4);
-         StartFrame (size);
-         GLState.StartFrame (offset, size, mSecondScene.BgrdColor);
-         RBatch.StartFrame ();
-         Shader.StartFrame ();
-         mSecondScene.Render (size);
+      if (scene != null) {
+         scene.Rect = vp;
+         scene.Render (viewport);
+         if (target == ETarget.Screen) {
+            for (int i = 1; i < mScenes.Count; i++) {
+               var (scene2, bound2) = mScenes[i];
+               var (cx, cy, DX, DY) = (mPanelSize.X, mPanelSize.Y, bound2.X, bound2.Y);
+               int x0 = (int)(DX.Min * cx + 0.5), x1 = (int)(DX.Max * cx + 0.5);
+               int y0 = (int)(DY.Min * cy + 0.5), y1 = (int)(DY.Max * cy + 0.5);
+               var rect = scene2.Rect = new (x0, y0, x1, y1);
+               var vport = rect.Size;
+               BeginRender (vport, target);  // Don't worry about viewport - it
+               StartFrame (vport);
+               GLState.StartFrame (new Vec2S (rect.Left, rect.Bottom), vport, scene2.BgrdColor);
+               RBatch.StartFrame ();
+               Shader.StartFrame ();
+               scene2.Render (vport);
+            }
+         }
       }
       object? obj = EndRender (target, fmt);
 
@@ -387,7 +396,6 @@ public static partial class Lux {
    /// <summary>This is called at the start of every frame to reset to known</summary>
    static void StartFrame (Vec2S viewport) {
       mcFillPaths = 0;
-      mViewport = viewport;
       VPScale = new Vec2F (2.0 / viewport.X, 2.0 / viewport.Y);
       mColors.Clear (); mColor = Color4.White;
       mLineWidths.Clear (); mLineWidth = 2;     // Multiplied by DPIScale before it is used

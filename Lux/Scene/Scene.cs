@@ -24,12 +24,18 @@ public abstract class Scene {
    Vector2 mPanVector = Vector2.Zero;
 
    /// <summary>
+   /// The extent of this scene in pixels, (0,0) being bottom left
+   /// </summary>
+   /// Left,Bottom are inclusive while Right,Top are exclusive. So on a panel 640x480,
+   /// the UIScene will have Left=0, Bottom=0, Right=640, Top=480
+   public RectS Rect;
+
+   /// <summary>
    /// How many world units does one pixel correspond to for this scene?
    /// </summary>
    public double PixelScale {
       get {
-         var rect = Lux.GetRect (this);
-         var (xfm, dx) = (Xfms[0].InvXfm, 2.0 / rect.Height);
+         var (xfm, dx) = (Xfms[0].InvXfm, 2.0 / Rect.Height);
          Point3 pa = Point3.Zero * xfm, pb = new Point3 (dx, 0, 0) * xfm;
          return pa.DistTo (pb);
       }
@@ -129,7 +135,10 @@ public abstract class Scene {
       mZoomFactor = (oldZoom * factor).Clamp (0.01, 100);
       factor = mZoomFactor / oldZoom;
 
-      var vp = Lux.Viewport;
+      // Use the local viewport, and convert pos to coordinates relative to the
+      // bottom-left of this Scene
+      var vp = Rect.Size;
+      pos = new Vec2S (pos.X - Rect.Left, pos.Y - Rect.Bottom);
       Point3 mid = Midpoint * (WorldXfm * ProjectionXfm);
       Point2 pmid = new (vp.X * (mid.X + 1) / 2, vp.Y * (1 - mid.Y) / 2);
       Point2 pt = new (pos.X, pos.Y), pmouse2 = pmid + (pt - pmid) * factor;
@@ -157,6 +166,19 @@ public abstract class Scene {
       Lux.mViewBound.OnNext (0); Lux.Redraw ();
    }
 
+   /// <summary>Converts a pixel coordinate to world coordinates</summary>
+   /// The pixel coordinates are in screen coordinates
+   public Point3 PixelToWorld (Vec2S pix) {
+      // Convert to OpenGL clip-space coordinates
+      Vec2S vp = Rect.Size;
+      pix = new (pix.X - Rect.Left, pix.Y - Rect.Bottom);
+      Point3 clip = new (2.0 * pix.X / vp.X - 1, 1.0 - 2.0 * pix.Y / vp.Y, 0);
+      clip *= Xfms[0].InvXfm;
+      int d = PixelScale switch { > 1 => 0, > 0.1 => 1, > 0.01 => 2, > 0.001 => 3, _ => 4 };
+      clip = new (Math.Round (clip.X, d), Math.Round (clip.Y, d), Math.Round (clip.Z, d));
+      return clip;
+   }
+
    public virtual void ZoomExtents () {
       mZoomFactor = 1; mPanVector = Vector2.Zero;
       XfmChanged ();
@@ -174,7 +196,8 @@ public abstract class Scene {
    protected Vec2S mViewport = new (804, 603);
 
    internal Point3 Unproject (Vec2S pos, float depth) {
-      var vp = Lux.Viewport;
+      Vec2S vp = Rect.Size;
+      pos = new (pos.X - Rect.Left, pos.Y - Rect.Bottom);
       double x = 2.0 * pos.X / vp.X - 1;
       double y = -(2.0 * pos.Y / vp.Y - 1);
       double z = 2 * depth - 1;
