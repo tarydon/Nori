@@ -163,7 +163,7 @@ class TLux {
       var scene = new Scene3 (Color4.Gray (128), mCube.Bound, new Mesh3VN (mCube) { Color = Color4.White });
       UIScene = scene;
       var vn1 = Pick (new (1, 1)); (vn1 == null).IsTrue ();
-      var vn2 = Pick (new (Viewport.X / 2, Viewport.Y / 2)); (vn2 is Mesh3VN).IsTrue ();
+      var vn2 = Pick (new (PanelSize.X / 2, PanelSize.Y / 2)); (vn2 is Mesh3VN).IsTrue ();
    }
 
    [Test (220, "Line3D render")]

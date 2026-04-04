@@ -53,14 +53,14 @@ public static partial class Lux {
       }
    }
 
-   public static void AddScene (Scene scene, Bound2 bound) {
+   public static void AddSubScene (Scene scene, Bound2 bound) {
       Lib.Check (mScenes.None (a => a.Scene == scene), "Duplicate scene");
       mScenes.Add ((scene, bound));
       Redraw (); 
    }
    static readonly List<(Scene Scene, Bound2 Bound)> mScenes = [];
 
-   public static void RemoveScene (Scene scene) {
+   public static void RemoveSubScene (Scene scene) {
       for (int i = mScenes.Count - 1; i > 0; i--)
          if (mScenes[i].Scene == scene) { mScenes.RemoveAt (i); Redraw (); }
    }

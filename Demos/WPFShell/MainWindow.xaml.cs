@@ -16,7 +16,7 @@ public partial class MainWindow : Window {
       TraceVN.TextColor = Color4.Yellow;
       new SceneManipulator ();
       Lux.UIScene = new FirstScene ();
-      Lux.AddScene (new SecondScene (), new Bound2 (0.725, 0.725, 0.975, 0.975));
+      Lux.AddSubScene (new SecondScene (), new Bound2 (0.625, 0.625, 0.975, 0.975));
    }
 }
 
@@ -25,7 +25,7 @@ class FirstScene : Scene2 {
       Dwg2 dwg = DXFReader.Load ("N:/TData/Tenkai/Fold/A.dxf");
       Bound = dwg.Bound.InflatedF (1.1);
       BgrdColor = Color4.Gray (216);
-      Root = new GroupVN ([new Dwg2VN (dwg), new DwgFillVN (dwg) { Color = Color4.White }]);
+      // Root = new GroupVN ([new Dwg2VN (dwg), new DwgFillVN (dwg) { Color = Color4.White }]);
    }
 }
 
@@ -33,8 +33,10 @@ class SecondScene : Scene3 {
    public SecondScene () {
       Dwg2 dwg = DXFReader.Load ("N:/TData/Tenkai/Fold/A.dxf");
       new PaperFolder (dwg).Process (out var model);
-      Bound = model!.Bound;
+
       BgrdColor = new Color4 (128, 160, 192);
+      Bound = model!.Bound;
       Root = new Model3VN (model);
+      // Root = new GroupVN ([new Model3VN (model)]);
    }
 }

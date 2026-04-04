@@ -23,16 +23,12 @@ public abstract class Scene {
    }
    Vector2 mPanVector = Vector2.Zero;
 
-   /// <summary>
-   /// The extent of this scene in pixels, (0,0) being bottom left
-   /// </summary>
+   /// <summary>The extent of this scene in pixels, (0,0) being bottom left</summary>
    /// Left,Bottom are inclusive while Right,Top are exclusive. So on a panel 640x480,
    /// the UIScene will have Left=0, Bottom=0, Right=640, Top=480
    public RectS Rect;
 
-   /// <summary>
-   /// How many world units does one pixel correspond to for this scene?
-   /// </summary>
+   /// <summary>How many world units does one pixel correspond to for this scene?</summary>
    public double PixelScale {
       get {
          var (xfm, dx) = (Xfms[0].InvXfm, 2.0 / Rect.Height);

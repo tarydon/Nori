@@ -39,7 +39,7 @@ class HullNode : VNode {
    }
 
    void OnMouse (Vec2S pix) {
-      Point2 pt = (Point2)Lux.PixelToWorld (pix);
+      Point2 pt = (Point2)Lux.UIScene!.PixelToWorld (pix);
       if (mLast.DistTo (pt) < 10) return;
       mPts.Add (mLast = pt);
       for (int i = 0; i < 10; i++)

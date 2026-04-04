@@ -82,11 +82,11 @@ class BooleanRootVN (List<List<Poly>> polys, Bound2 bound) : VNode {
 
    static Vector2 GetOffset (EPane pane, Bound2 bound) {
       double dx = bound.Width * 0.02, dy = bound.Height * 0.02;
-      var (sx, sy) = (Lux.Viewport.X / bound.Width, Lux.Viewport.Y / bound.Height);
+      var (sx, sy) = (Lux.PanelSize.X / bound.Width, Lux.PanelSize.Y / bound.Height);
       if (sy < sx) {
-         dx += (Lux.Viewport.X / sy - bound.Width) / 2;
+         dx += (Lux.PanelSize.X / sy - bound.Width) / 2;
       } else {
-         dy += (Lux.Viewport.Y / sx - bound.Height) / 2;
+         dy += (Lux.PanelSize.Y / sx - bound.Height) / 2;
       }
       Vector2 vec = new (dx, dy);
       if (pane >= 0) {
