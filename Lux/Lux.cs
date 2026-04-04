@@ -46,6 +46,15 @@ public static partial class Lux {
    }
    static Scene? mUIScene;
 
+   public static Scene? SecondScene {
+      get => mSecondScene;
+      set {
+         mSecondScene?.Detach ();
+         (mSecondScene = value)?.Attach (); Redraw ();
+      }
+   }
+   static Scene? mSecondScene;
+
    /// <summary>How many world units does one pixel correspond to (for the current scene)</summary>
    public static double PixelScale {
       get {
@@ -142,13 +151,26 @@ public static partial class Lux {
       mIsPicking = target == ETarget.Pick;
       if (mRendering) throw new InvalidOperationException ();
       mRendering = true;
+
+      var vp = new RectS (0, 0, viewport.X, viewport.Y);
       BeginRender (viewport, target);
       StartFrame (viewport);
       Color4 bgrdColor = mIsPicking ? Color4.White : (scene?.BgrdColor ?? Color4.Gray (96));
-      GLState.StartFrame (viewport, bgrdColor);
+      GLState.StartFrame (Vec2S.Zero, viewport, bgrdColor);
       RBatch.StartFrame ();
       Shader.StartFrame ();
       scene?.Render (viewport);
+
+      if (mSecondScene != null && target == ETarget.Screen) {
+         BeginRender (viewport, target);  // Don't worry about viewport - it is not used when target == Screen
+         Vec2S offset = new Vec2S (viewport.X / 8, viewport.Y / 8);
+         Vec2S size = new Vec2S (viewport.X / 4, viewport.Y / 4);
+         StartFrame (size);
+         GLState.StartFrame (offset, size, mSecondScene.BgrdColor);
+         RBatch.StartFrame ();
+         Shader.StartFrame ();
+         mSecondScene.Render (size);
+      }
       object? obj = EndRender (target, fmt);
 
       // Various post-processing after frame render

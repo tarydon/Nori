@@ -3,7 +3,6 @@
 // ║║║║╬║╔╣║ Implements hardware events (keyboard, mouse) in a platform independent manner
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 namespace Nori;
-
 using GLPanel = UserControl;
 
 #region class EventWrapper<T> ----------------------------------------------------------------------

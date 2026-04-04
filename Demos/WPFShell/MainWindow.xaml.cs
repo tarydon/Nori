@@ -15,19 +15,26 @@ public partial class MainWindow : Window {
       if (source != null) Lux.DPIScale = (float)source.CompositionTarget.TransformToDevice.M11;
       TraceVN.TextColor = Color4.Yellow;
       new SceneManipulator ();
-      Lux.UIScene = new DemoScene ();
+      Lux.UIScene = new FirstScene ();
+     // Lux.SecondScene = new SecondScene ();
    }
 }
 
-class DemoScene : Scene2 {
-   public DemoScene () {
-      mFace = new (Lib.ReadBytes ("nori:GL/Fonts/Roboto-Regular.ttf"), (int)(48 * Lux.DPIScale));
-      Bound = new Bound2 (0, 0, 100, 50);
-      BgrdColor = new Color4 (128, 96, 64);
-      Root = new SimpleVN (
-         () => (Lux.Color, Lux.TypeFace) = (Color4.White, mFace),
-         () => Lux.TextPx ("Welcome to Nori.", new Vec2S (100, 100))
-      );
+class FirstScene : Scene2 {
+   public FirstScene () {
+      Dwg2 dwg = DXFReader.Load ("N:/TData/Tenkai/Fold/A.dxf");
+      Bound = dwg.Bound.InflatedF (1.1);
+      BgrdColor = Color4.Gray (216);
+      Root = new GroupVN ([new Dwg2VN (dwg), new DwgFillVN (dwg) { Color = Color4.White }]);
    }
-   TypeFace mFace;
+}
+
+class SecondScene : Scene3 {
+   public SecondScene () {
+      Dwg2 dwg = DXFReader.Load ("N:/TData/Tenkai/Fold/A.dxf");
+      new PaperFolder (dwg).Process (out var model);
+      Bound = model!.Bound;
+      BgrdColor = new Color4 (128, 160, 192);
+      Root = new Model3VN (model);
+   }
 }
