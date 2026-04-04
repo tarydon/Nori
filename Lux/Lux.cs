@@ -40,6 +40,7 @@ public static partial class Lux {
       set {
          UIScene?.Detach ();
          BackFacesPink = false;
+         mScenes.Skip (1).ForEach (a => a.Scene.Detach ());
          mScenes.Clear (); 
          if (value != null) {
             value.Attach ();
@@ -55,6 +56,7 @@ public static partial class Lux {
 
    public static void AddSubScene (Scene scene, Bound2 bound) {
       Lib.Check (mScenes.None (a => a.Scene == scene), "Duplicate scene");
+      scene.Attach (); 
       mScenes.Add ((scene, bound));
       Redraw (); 
    }
@@ -62,7 +64,10 @@ public static partial class Lux {
 
    public static void RemoveSubScene (Scene scene) {
       for (int i = mScenes.Count - 1; i > 0; i--)
-         if (mScenes[i].Scene == scene) { mScenes.RemoveAt (i); Redraw (); }
+         if (mScenes[i].Scene == scene) {
+            scene.Detach (); mScenes.RemoveAt (i);
+            Redraw ();
+         }
    }
 
    /// <summary>How many world units does one pixel correspond to (for the current scene)</summary>

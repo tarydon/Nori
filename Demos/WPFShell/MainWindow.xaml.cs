@@ -25,7 +25,7 @@ class FirstScene : Scene2 {
       Dwg2 dwg = DXFReader.Load ("N:/TData/Tenkai/Fold/A.dxf");
       Bound = dwg.Bound.InflatedF (1.1);
       BgrdColor = Color4.Gray (216);
-      // Root = new GroupVN ([new Dwg2VN (dwg), new DwgFillVN (dwg) { Color = Color4.White }]);
+      Root = new GroupVN ([new Dwg2VN (dwg), new DwgFillVN (dwg) { Color = Color4.White }]);
    }
 }
 
@@ -37,6 +37,5 @@ class SecondScene : Scene3 {
       BgrdColor = new Color4 (128, 160, 192);
       Bound = model!.Bound;
       Root = new Model3VN (model);
-      // Root = new GroupVN ([new Model3VN (model)]);
    }
 }
