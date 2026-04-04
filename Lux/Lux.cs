@@ -36,33 +36,49 @@ public static partial class Lux {
 
    /// <summary>The current scene that is bound to the visible viewport</summary>
    public static Scene? UIScene {
-      get => mUIScene;
+      get => mScenes.Count > 0 ? mScenes[0].Scene : null;
       set {
-         mUIScene?.Detach ();
+         UIScene?.Detach ();
          BackFacesPink = false;
-         mUIScene = value; mUIScene?.Attach (); mViewBound.OnNext (0); Redraw ();
-         HW.CursorVisible = mUIScene?.CursorVisible ?? true;
+         mScenes.Clear (); 
+         if (value != null) {
+            value.Attach ();
+            mViewBound.OnNext (0);
+            HW.CursorVisible = value.CursorVisible;
+            mScenes.Add ((value, new (0, 0, 1, 1), new (0, 0, mPanelSize.X, mPanelSize.Y));
+         } else
+            HW.CursorVisible = true;
+         Redraw (); 
       }
    }
-   static Scene? mUIScene;
 
-   public static Scene? SecondScene {
-      get => mSecondScene;
-      set {
-         mSecondScene?.Detach ();
-         (mSecondScene = value)?.Attach (); Redraw ();
-      }
+   public static RectS GetRect (Scene scene) {
+      for (int i = 1; i < mScenes.Count; i++) 
+         if (mScenes[i].Scene == scene) return mScenes[i].Rect;
+      return new RectS (0, 0, mPanelSize.X, mPanelSize.Y);
    }
-   static Scene? mSecondScene;
+
+   public static void AddScene (Scene scene, Bound2 bound) {
+      Lib.Check (mScenes.None (a => a.Scene == scene), "Duplicate scene");
+      int x0 = (int)(bound.X.Min * mPanelSize.X), x1 = (int)(bound.X.Max * mPanelSize.X);
+      int y0 = (int)(bound.Y.Min * mPanelSize.Y), y1 = (int)(bound.Y.Max * mPanelSize.Y);
+      mScenes.Add ((scene, bound, new (x0, y0, x1, y1))); 
+      Redraw (); 
+   }
+   static readonly List<(Scene Scene, Bound2 Bound, RectS Rect)> mScenes = [];
+
+   public static void RemoveScene (Scene scene) {
+      for (int i = mScenes.Count - 1; i > 0; i--)
+         if (mScenes[i].Scene == scene) { mScenes.RemoveAt (i); Redraw (); }
+   }
 
    /// <summary>How many world units does one pixel correspond to (for the current scene)</summary>
+   [Obsolete ("Use Scene.PixelScale")]
    public static double PixelScale {
       get {
-         if (mUIScene == null || mViewport.X == 0) return 1;
-         var xfm = mUIScene.Xfms[0].InvXfm;
-         double dx = 2.0 / mViewport.X;   //
-         Point3 pa = Point3.Zero * xfm, pb = new Point3 (dx, 0, 0) * xfm;
-         return pa.DistTo (pb);
+         var scene = UIScene;
+         if (scene == null || mPanelSize.X == 0) return 1;
+         return scene.PixelScale;
       }
    }
 
@@ -70,9 +86,9 @@ public static partial class Lux {
    public static IObservable<int> ViewBound => mViewBound;
    internal static Subject<int> mViewBound = new ();
 
-   /// <summary>The viewport size (in pixels) of the Lux rendering panel</summary>
-   public static Vec2S Viewport => mViewport;
-   static Vec2S mViewport;
+   /// <summary>The panel size of the Lux rendering panel</summary>
+   public static Vec2S PanelSize => mPanelSize;
+   static Vec2S mPanelSize;
 
    // Methods ------------------------------------------------------------------
    /// <summary>Creates the Lux rendering panel</summary>

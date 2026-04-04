@@ -23,6 +23,18 @@ public abstract class Scene {
    }
    Vector2 mPanVector = Vector2.Zero;
 
+   /// <summary>
+   /// How many world units does one pixel correspond to for this scene?
+   /// </summary>
+   public double PixelScale {
+      get {
+         var rect = Lux.GetRect (this);
+         var (xfm, dx) = (Xfms[0].InvXfm, 2.0 / rect.Height);
+         Point3 pa = Point3.Zero * xfm, pb = new Point3 (dx, 0, 0) * xfm;
+         return pa.DistTo (pb);
+      }
+   }
+
    /// <summary>The Projection transform (transforms world coordinates to OpenGL clip space)</summary>
    internal Matrix3 ProjectionXfm { get { _ = WorldXfm; return mProjectionXfm; } }
    Matrix3 mProjectionXfm = Matrix3.Identity;

@@ -16,7 +16,7 @@ public partial class MainWindow : Window {
       TraceVN.TextColor = Color4.Yellow;
       new SceneManipulator ();
       Lux.UIScene = new FirstScene ();
-     // Lux.SecondScene = new SecondScene ();
+      Lux.SecondScene = new SecondScene ();
    }
 }
 
