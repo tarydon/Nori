@@ -60,6 +60,8 @@ public static partial class Lux {
       mScenes.Add ((scene, bound));
       Redraw (); 
    }
+
+   public static IEnumerable<Scene> SubScenes => mScenes.Select (a => a.Scene).Skip (1);
    static readonly List<(Scene Scene, Bound2 Bound)> mScenes = [];
 
    public static void RemoveSubScene (Scene scene) {
