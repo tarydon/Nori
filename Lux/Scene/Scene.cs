@@ -81,22 +81,19 @@ public abstract class Scene {
    /// <summary>Render a scene to an image (for example, to generate a thumbnail)</summary>
    public DIBitmap RenderImage (Vec2S size, DIBitmap.EFormat fmt) {
       if (size.X % 4 != 0) throw new ArgumentException ("Lux.RenderToImage: image width must be a multiple of 4");
-      if (this != Lux.UIScene) Attach ();
+      bool unattached = !miAttached;
+      if (unattached) Attach ();
       var dib = (DIBitmap)Lux.Render (this, size, ETarget.Image, fmt)!;
-      if (this != Lux.UIScene) Detach ();
+      if (unattached) Detach ();
       return dib;
    }
 
-   /// <summary>Renders the scene to an image, zooming in to avoid wasted whitespace</summary>
-   public DIBitmap RenderZoomedImage (Vec2S size, DIBitmap.EFormat fmt, out int yIdeal) {
+   void ZoomToContent (Vec2S size, out int yIdeal) {
       if (size.X % 4 != 0) throw new ArgumentException ("Lux.RenderToImage: image width must be a multiple of 4");
-      if (this != Lux.UIScene) Attach ();
-
-      // Save some state
-      var (zoom, pan, bgrd) = (mZoomFactor, PanVector, BgrdColor);
 
       // First, render default image, and then measure the background color 'margins' around
       // the image so we can compute a zoom factor
+      var bgrd = BgrdColor;
       BgrdColor = Color4.White; 
       var dib = (DIBitmap)Lux.Render (this, size, ETarget.Image, DIBitmap.EFormat.Gray8)!;
       var (data, xMin, yMin, xMax, yMax) = (dib.Data, dib.Width, -1, -1, -1);
@@ -120,8 +117,26 @@ public abstract class Scene {
       // Zoom/Pan to crop the image correctly and render.
       // Then restore the previous zoom/scale and return the dib
       Zoom (scale); PanVector = new (-xCen / dib.Width, -yCen / dib.Height);
-      dib = (DIBitmap)Lux.Render (this, size, ETarget.Image, fmt)!;
+   }
+
+   public void ZoomToContent () {
+      bool unattached = !miAttached;
+      if (unattached) Attach ();
+      ZoomToContent (Rect.Size, out _);
+      if (unattached) Detach (); 
+   }
+
+   /// <summary>Renders the scene to an image, zooming in to avoid wasted whitespace</summary>
+   public DIBitmap RenderZoomedImage (Vec2S size, DIBitmap.EFormat fmt, out int yIdeal) {
+      bool unattached = !miAttached;
+      if (unattached) Attach ();
+
+      // Save some state
+      var (zoom, pan) = (mZoomFactor, PanVector);
+      ZoomToContent (Rect.Size, out yIdeal);
+      var dib = (DIBitmap)Lux.Render (this, size, ETarget.Image, fmt)!;
       mZoomFactor = zoom; PanVector = pan; XfmChanged ();
+      if (unattached) Detach (); 
       return dib; 
    }
 

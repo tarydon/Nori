@@ -112,9 +112,10 @@ public static partial class Lux {
    [Obsolete ("Use Scene.RenderToImage")]
    public static DIBitmap RenderToImage (Scene scene, Vec2S size, DIBitmap.EFormat fmt) {
       if (size.X % 4 != 0) throw new ArgumentException ("Lux.RenderToImage: image width must be a multiple of 4");
-      if (scene != Lux.UIScene) scene.Attach ();
+      bool unAttached = mScenes.None (a => a.Scene == scene);
+      if (unAttached) scene.Attach ();
       var dib =  (DIBitmap)Render (scene, size, ETarget.Image, fmt)!;
-      if (scene != Lux.UIScene) scene.Detach ();
+      if (unAttached) scene.Detach ();
       return dib;
    }
 
@@ -182,7 +183,9 @@ public static partial class Lux {
       RBatch.StartFrame ();
       Shader.StartFrame ();
       if (scene != null) {
-         scene.Rect = vp;
+         int yMax = mPanelSize.Y - 1;
+         if (target == ETarget.Screen)
+            scene.Rect = new (vp.Left, yMax - vp.Top, vp.Right, yMax - vp.Bottom);
          scene.Render (viewport);
          if (target == ETarget.Screen) {
             for (int i = 1; i < mScenes.Count; i++) {
@@ -190,7 +193,9 @@ public static partial class Lux {
                var (cx, cy, DX, DY) = (mPanelSize.X, mPanelSize.Y, bound2.X, bound2.Y);
                int x0 = (int)(DX.Min * cx + 0.5), x1 = (int)(DX.Max * cx + 0.5);
                int y0 = (int)(DY.Min * cy + 0.5), y1 = (int)(DY.Max * cy + 0.5);
-               var rect = scene2.Rect = new (x0, y0, x1, y1);
+               var rect = new RectS (x0, y0, x1, y1);
+               if (target == ETarget.Screen)
+                  scene2.Rect = new (x0, yMax - y1, x1, yMax - y0);
                var vport = rect.Size;
                BeginRender (vport, target);  // Don't worry about viewport - it
                StartFrame (vport);

@@ -4,7 +4,6 @@
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 using Nori;
 using System.Reactive.Linq;
-
 namespace WPFDemo;
 
 class ConvexHullScene : Scene2 {
