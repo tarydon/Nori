@@ -65,15 +65,16 @@ class BaseVN : VNode {
 
 class DwgScene : Scene2 {
    public DwgScene (Dwg2 dwg) {
-      Bound = dwg.Bound.InflatedF (1.1);
+      Bound = dwg.Bound.InflatedF (1.25);
       BgrdColor = new Color4 (232, 236, 240);
       TraceVN.HoldTime = 20; TraceVN.TextColor = Color4.Blue;
       Root = new GroupVN ([new Dwg2VN (dwg), new DwgFillVN (dwg) { Color = Color4.White }, TraceVN.It]);
       Lib.Tracer = TraceVN.Print;
       Lib.Trace ("Click on planes in bottom right to select them.");
-      Lib.Trace ("Use mouse-wheel in any scene to zoom in/out.");
+      Lib.Trace ("Use Mouse-Wheel in any scene to zoom in/out.");
       Lib.Trace ("Use LeftClick + Drag in 3D scenes to rotate.");
       Lib.Trace ("Use MiddleClick + Drag in any scene to pan.");
+      Lib.Trace ("Ctrl+E does a ZoomExtents on the scene under the cursor.");
    }
 }
 
