@@ -161,20 +161,20 @@ public class TypeFace {
    public RectS Measure (string text, bool exact = false) {
       uint idx0 = 0;
       int x = 0, y = 0;
-      int xMin = 9999, yMin = 0, xMax = 0, yMax = 0;
+      int left = 9999, top = 0, right = 0, bottom = 0;
       foreach (var ch in text) {
          uint idx1 = GetGlyphIndex (ch);
          var metric = GetMetrics (idx1);
          int kern = GetKerning (idx0, idx1);
          int xChar = x + metric.LeftBearing + kern, yChar = y + metric.TopBearing;
-         xMin = Math.Min (xMin, xChar); yMin = Math.Min (yMin, yChar - metric.Rows);
-         xMax = Math.Max (xMax, xChar + metric.Columns); yMax = Math.Max (yMax, yChar);
+         left = Math.Min (left, xChar); top = Math.Min (top, yChar - metric.Rows);
+         right = Math.Max (right, xChar + metric.Columns); bottom = Math.Max (bottom, yChar);
          x += metric.Advance + kern;
          idx0 = idx1;
       }
-      if (!exact) { yMax = mAscender; yMin = -mDescender; }
-      if (xMax == 0) xMin = 0;
-      return new (xMin, yMin, xMax, yMax);
+      if (!exact) { bottom = mAscender; top = -mDescender; }
+      if (right == 0) left = 0;
+      return new (left, top, right, bottom);
    }
 
    /// <summary>Measures each character of the text and stores the potential cursor positions in xpos</summary>

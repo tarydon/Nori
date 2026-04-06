@@ -69,6 +69,10 @@ public static class Lib {
    public static bool Testing { get; set; }
 
    // Methods ------------------------------------------------------------------
+   public static void Assert (bool condition) {
+      if (!condition) throw new Exception ("Lib.Assert failed");
+   }     
+
    /// <summary>Returns the cos-inverse of the given value</summary>
    /// This clamps values beyond the range -1 .. +1 to lie within that range
    public static double Acos (double f) => Math.Acos (f.Clamp (-1, 1));

@@ -120,10 +120,58 @@ public readonly struct Mat4F {
          X == b.X && Y == b.Y && Z == b.Z && M44 == b.M44;
 }
 
+#region struct RectS -------------------------------------------------------------------------------
+/// <summary>An axis-aligned pixel-rectangle (components are shorts)</summary>
+/// This follows the Nori pixel-coordinate conventions: (0,0) is the top left corner of the
+/// screen, and +X is RIGHT, +Y is DOWN. The bottom-right corner pixel of the screen has 
+/// pixel coordinates (Lux.PanelSize.X - 1, Lux.PanelSize.Y - 1)
+[StructLayout (LayoutKind.Sequential, Pack = 2, Size = 8)]
+public readonly struct ARectS : IEQuable<ARectS> {
+   // Constructors -------------------------------------------------------------
+   public ARectS (int left, int top, int right, int bottom) {
+      (Left, Top, Right, Bottom) = ((short)left, (short)top, (short)right, (short)bottom);
+      Lib.Assert (right >= left && bottom >= top);
+   }
+
+   // Properties ---------------------------------------------------------------
+   /// <summary>Is this an 'empty' RectS</summary>
+   public bool IsEmpty => Right == -32768;
+
+   /// <summary>Left edge of the RectS (in pixels)</summary>
+   public readonly short Left;
+   /// <summary>Top edge of the RectS (in pixels) - screen top is at Y = 0 pixels</summary>
+   public readonly short Top;
+   /// <summary>Right edge of the RectS (in pixels) : Right >= Left always</summary>
+   public readonly short Right;
+   /// <summary>Bottom edge of the RectS (in pixels) : Bottom >= Top always</summary>
+   public readonly short Bottom;
+
+   /// <summary>The height of the RectS</summary>
+   public int Height => Bottom - Top;
+   /// <summary>The width of the RectS</summary>
+   public int Width => Right - Left;
+
+   /// <summary>Special 'empty' RectS</summary>
+   public static readonly ARectS Empty = new (-32768, -32768, -32768, -32768);
+
+   // Methods ------------------------------------------------------------------
+   /// <summary>Implementation of IEQable</summary>
+   public bool EQ (ARectS b)
+      => Left == b.Left && Top == b.Top && Right == b.Right && Bottom == b.Bottom;
+
+   /// <summary>Checks if this RectS contains a given Vec2S</summary>
+   public bool Contains (Vec2S p)
+      => Left <= p.X && p.X <= Right && Top <= p.Y && p.Y <= Bottom;
+
+   // Implementation -----------------------------------------------------------
+   public override string ToString () => $"RectS {Width}x{Height} @ {Left},{Top}";
+}
+#endregion
+
 /// <summary>An axis-aligned pixel-rectangle (components are shorts)</summary>
 /// This follows OpenGL sign conventions : (0,0) is the bottom left corner of the screen,
 /// and +X is right, +Y is up
-[StructLayout (LayoutKind.Sequential, Pack = 2, Size = 8)]
+[StructLayout (LayoutKind.Sequential, Pack = 2, Size = 8), Obsolete]
 public readonly struct RectS : IEQuable<RectS> {
    public RectS (int left, int bottom, int right, int top) {
       (Left, Bottom, Right, Top) = ((short)left, (short)bottom, (short)right, (short)top);
