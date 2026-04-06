@@ -11,7 +11,13 @@ namespace Nori;
 public static partial class Lux {
    // Properties ---------------------------------------------------------------
    /// <summary>If set, back faces are colored pink (useful for debugging) when using the Phong shader</summary>
+   /// This gets reset any time a new UIScene is set
    public static bool BackFacesPink;
+
+   /// <summary>Sets whether the cursor is visible or not when it is over the panel</summary>
+   /// If this is set to false, then the current scene must 'paint' a cursor that follows
+   /// the mouse movement
+   public static bool CursorVisible { set => HW.CursorVisible = value; }
 
    /// <summary>Subscribe to this to get a FPS (frames-per-second) report each second</summary>
    public static IObservable<int> FPS => mFPS;
@@ -29,47 +35,13 @@ public static partial class Lux {
    public static IObservable<int> OnReady => mOnReady;
    internal static Subject<int> mOnReady = new ();
 
-   /// <summary>Sets whether the cursor is visible or not when it is over the panel</summary>
-   /// If this is set to false, then the current scene must 'paint' a cursor that follows
-   /// the mouse movement
-   public static bool CursorVisible { set => HW.CursorVisible = value; }
+   /// <summary>The panel size of the Lux rendering panel</summary>
+   public static Vec2S PanelSize => mPanelSize;
+   static Vec2S mPanelSize;
 
-   /// <summary>The current scene that is bound to the visible viewport</summary>
-   public static Scene? UIScene {
-      get => mScenes.Count > 0 ? mScenes[0].Scene : null;
-      set {
-         BackFacesPink = false;
-         mScenes.ForEach (a => a.Scene.Detach ());
-         mScenes.Clear (); 
-         if (value != null) {
-            value.Attach ();
-            mViewBound.OnNext (0);
-            HW.CursorVisible = value.CursorVisible;
-            value.Rect = new (0, 0, mPanelSize.X, mPanelSize.Y);
-            mScenes.Add ((value, new (0, 0, 1, 1)));
-         } else
-            HW.CursorVisible = true;
-         Redraw (); 
-      }
-   }
-
-   public static void AddSubScene (Scene scene, Bound2 bound) {
-      Lib.Check (mScenes.None (a => a.Scene == scene), "Duplicate scene");
-      scene.Attach (); 
-      mScenes.Add ((scene, bound));
-      Redraw (); 
-   }
-
-   public static IEnumerable<Scene> SubScenes => mScenes.Select (a => a.Scene).Skip (1);
-   static readonly List<(Scene Scene, Bound2 Bound)> mScenes = [];
-
-   public static void RemoveSubScene (Scene scene) {
-      for (int i = mScenes.Count - 1; i > 0; i--)
-         if (mScenes[i].Scene == scene) {
-            scene.Detach (); mScenes.RemoveAt (i);
-            Redraw ();
-         }
-   }
+   /// <summary>This is set after a Pick operation, and returns the 3D pick position</summary>
+   public static Point3 PickPos => mPickPos;
+   static Point3 mPickPos;
 
    /// <summary>How many world units does one pixel correspond to (for the current scene)</summary>
    [Obsolete ("Use Scene.PixelScale")]
@@ -81,15 +53,57 @@ public static partial class Lux {
       }
    }
 
+   /// <summary>Returns true if Lux is ready to use</summary>
+   public static bool Ready => mReady;
+   static bool mReady;
+
+   /// <summary>Enumerates all the sub-scenes (use Scene.Rect to get the pixel-area it uses)</summary>
+   public static IEnumerable<Scene> SubScenes => mScenes.Select (a => a.Scene).Skip (1);
+   static readonly List<(Scene Scene, Bound2 Bound)> mScenes = [];
+
+   /// <summary>The current scene that is bound to the visible viewport</summary>
+   public static Scene? UIScene {
+      get => mScenes.Count > 0 ? mScenes[0].Scene : null;
+      set {
+         BackFacesPink = false;
+         mScenes.ForEach (a => a.Scene.Detach ());
+         mScenes.Clear ();
+         if (value != null) {
+            value.Attach ();
+            mViewBound.OnNext (0);
+            HW.CursorVisible = value.CursorVisible;
+            value.Rect = new (0, 0, mPanelSize.X, mPanelSize.Y);
+            mScenes.Add ((value, new (0, 0, 1, 1)));
+         } else
+            HW.CursorVisible = true;
+         Redraw ();
+      }
+   }
+
    /// <summary>Subscribe to this to know when the 'View-Bound' changes (view is zoomed, panned or rotated)</summary>
    public static IObservable<int> ViewBound => mViewBound;
    internal static Subject<int> mViewBound = new ();
 
-   /// <summary>The panel size of the Lux rendering panel</summary>
-   public static Vec2S PanelSize => mPanelSize;
-   static Vec2S mPanelSize;
+   [Obsolete ("Use Lux.PanelSize instead")]
+   public static Vec2S Viewport => PanelSize;
 
    // Methods ------------------------------------------------------------------
+   /// <summary>Adds a sub-scene to the current render set</summary>
+   /// <param name="scene">The scene to add</param>
+   /// <param name="bound">The bound occupied by the scene, in normalized coordinates where
+   /// (0,0) is the top left corner, and (1,1) the bottom right.</param>
+   /// Note that you cannot add the same scene multiple times (nor can you add the UIScene
+   /// again as a SubScene). If you want to display the same content in multiple viewports,
+   /// (for example, with different view-points), create multiple scenes that all share the 
+   /// same Root VNode. 
+   /// Mounting a new UIScene will remove all the sub-scenes. 
+   public static void AddSubScene (Scene scene, Bound2 bound) {
+      Lib.Check (mScenes.None (a => a.Scene == scene), "Duplicate scene");
+      scene.Attach ();
+      mScenes.Add ((scene, bound));
+      Redraw ();
+   }
+
    /// <summary>Creates the Lux rendering panel</summary>
    public static object CreatePanel (bool createHost = false) {
       return WinGL.Create (OnReady, OnPaint, createHost);
@@ -108,25 +122,6 @@ public static partial class Lux {
    /// pick buffer
    public static void FlushPickBuffer () => mPickBufferValid = false;
    static bool mPickBufferValid;
-
-   /// <summary>Render a Scene to an image (for example, to generate a thumbnail)</summary>
-   [Obsolete ("Use Scene.RenderToImage")]
-   public static DIBitmap RenderToImage (Scene scene, Vec2S size, DIBitmap.EFormat fmt) {
-      if (size.X % 4 != 0) throw new ArgumentException ("Lux.RenderToImage: image width must be a multiple of 4");
-      bool unAttached = mScenes.None (a => a.Scene == scene);
-      if (unAttached) scene.Attach ();
-      var dib =  (DIBitmap)Render (scene, size, ETarget.Image, fmt)!;
-      if (unAttached) scene.Detach ();
-      return dib;
-   }
-
-   public static Scene? PickScene (Vec2S pos) {
-      for (int i = mScenes.Count - 1; i >= 1; i--) {
-         var scene = mScenes[i].Scene;
-         if (scene.Rect.Contains (pos)) return scene;
-      }
-      return UIScene;
-   }
 
    /// <summary>This does a 'pick' operation on the current UIScene</summary>
    /// This effectively returns the VNode that lies underneat the current mouse position.
@@ -153,20 +148,48 @@ public static partial class Lux {
       int b = mPickPixel[index] >> 2, g = mPickPixel[index + 1] >> 2, r = mPickPixel[index + 2] >> 2;
       int vnodeId = r + (g << 6) + (b << 12);
       VNode? node = VNode.SafeGet (vnodeId);
-      if (node != null) PickPos = scene.Unproject (pos, fDepth);
+      if (node != null) mPickPos = scene.Unproject (pos, fDepth);
       return node;
    }
 
-   public static Point3 PickPos;
-
-   public static bool Ready => mReady;
-   static bool mReady;
+   /// <summary>Picks the scene that lies at the given pixel coordinates</summary>
+   /// The pixel coordinates start at (0,0) at the top left of the screen and have an
+   /// extent of Lux.PanelSize. If there are multiple scenes overlapping at the given
+   /// pixel position, the last one is returned (last one added by AddSubScene). 
+   public static Scene? PickScene (Vec2S pix) {
+      for (int i = mScenes.Count - 1; i >= 1; i--) {
+         var scene = mScenes[i].Scene;
+         if (scene.Rect.Contains (pix)) return scene;
+      }
+      return UIScene;
+   }
 
    /// <summary>Converts a pixel coordinate to world coordinates</summary>
    [Obsolete ("Use Scene.PixelToWorld instead")]
    public static Point3 PixelToWorld (Vec2S pix) {
       if (UIScene is not Scene scene) return new (pix.X, pix.Y, 0);
       return scene.PixelToWorld (pix);
+   }
+
+   /// <summary>Render a Scene to an image (for example, to generate a thumbnail)</summary>
+   [Obsolete ("Use Scene.RenderToImage")]
+   public static DIBitmap RenderToImage (Scene scene, Vec2S size, DIBitmap.EFormat fmt) {
+      if (size.X % 4 != 0) throw new ArgumentException ("Lux.RenderToImage: image width must be a multiple of 4");
+      bool unAttached = mScenes.None (a => a.Scene == scene);
+      if (unAttached) scene.Attach ();
+      var dib = (DIBitmap)Render (scene, size, ETarget.Image, fmt)!;
+      if (unAttached) scene.Detach ();
+      return dib;
+   }
+
+   /// <summary>Removes a SubScene from the list of scenes</summary>
+   /// Note that mounting a new UIScene will automatically remove _all_ subscenes
+   public static void RemoveSubScene (Scene scene) {
+      for (int i = mScenes.Count - 1; i > 0; i--)
+         if (mScenes[i].Scene == scene) {
+            scene.Detach (); mScenes.RemoveAt (i);
+            Redraw (); 
+         }
    }
 
    /// <summary>Stub for the Render method that is called when each frame has to be painted</summary>
@@ -242,67 +265,6 @@ public static partial class Lux {
    static int mcFPSFrames;          // Frames rendered since that time
    static bool mRendering;          // Currently rendering a frame
 
-   static void BeginRender (Vec2S viewport, ETarget target) {
-      if (target is ETarget.Image or ETarget.Pick) {
-         mFBViewport = viewport;
-         if (mFrameBuffer == 0) {
-            mFrameBuffer = GL.GenFrameBuffer ();
-            mColorBuffer = GL.GenRenderBuffer (); mDepthBuffer = GL.GenRenderBuffer ();
-         }
-         GL.BindFrameBuffer (EFrameBufferTarget.DrawAndRead, mFrameBuffer);
-         if (viewport.X > mFBSize.X || viewport.Y > mFBSize.Y) {
-            mFBSize = viewport;
-            GL.BindRenderBuffer (ERenderBufferTarget.RenderBuffer, mColorBuffer);
-            GL.RenderBufferStorage (ERenderBufferFormat.RGBA8, viewport.X, viewport.Y);
-            GL.BindRenderBuffer (ERenderBufferTarget.RenderBuffer, mDepthBuffer);
-            GL.RenderBufferStorage (ERenderBufferFormat.Depth24Stencil8, viewport.X, viewport.Y);
-            GL.FrameBufferRenderBuffer (EFrameBufferTarget.DrawAndRead, EFrameBufferAttachment.Color0, mColorBuffer);
-            GL.FrameBufferRenderBuffer (EFrameBufferTarget.DrawAndRead, EFrameBufferAttachment.DepthStencil, mDepthBuffer);
-            if (GL.CheckFrameBufferStatus (EFrameBufferTarget.Draw) != EFrameBufferStatus.Complete)
-               throw new NotImplementedException ();
-         }
-      } else
-         GL.BindFrameBuffer (EFrameBufferTarget.DrawAndRead, 0);
-   }
-   static Vec2S mFBViewport;            // Viewport size, when rendering to a frame-buffer
-   static HFrameBuffer mFrameBuffer;    // Frame-buffer for image rendering
-   static HRenderBuffer mColorBuffer, mDepthBuffer;    // Render buffers for the same
-   static Vec2S mFBSize;                // The size of the frame-buffer
-   static float[] mPickDepth = [];      // The depth buffer, obtained during a Pick render
-   // This buffer contains the raw pixel-data obtained from a pick operation.
-   // Since the models are drawn in 'false-color' mode during a pick operation, this buffer
-   // effectively contains indices into the VModels list. Some finagling is required, such
-   // as discarding the least signifcant bits of each color component etc (see the code in
-   // Lux.Pick which reads and interprets these buffers)
-   static byte[] mPickPixel = [];
-
-   static object? EndRender (ETarget target, DIBitmap.EFormat fmt) {
-      switch (target) {
-         case ETarget.Image:
-            GL.Finish ();
-            int x = mFBViewport.X, y = mFBViewport.Y, bpp = fmt.BytesPerPixel ();
-            var pxfmt = fmt switch {
-               DIBitmap.EFormat.RGBA8 => EPixelFormat.RGBA,
-               DIBitmap.EFormat.RGB8 => EPixelFormat.RGB,
-               DIBitmap.EFormat.Gray8 => EPixelFormat.Red,
-               _ => throw new BadCaseException (fmt)
-            };
-            GL.PixelStore (EPixelStoreParam.PackAlignment, 4);
-            byte[] data = new byte[bpp * x * y];
-            GL.ReadPixels (0, 0, x, y, pxfmt, EPixelType.UByte, data);
-            return new DIBitmap (x, y, fmt, data);
-         case ETarget.Pick:
-            GL.Finish ();
-            int size = (x = mFBViewport.X) * (y = mFBViewport.Y);
-            if (size > mPickDepth.Length)
-               (mPickPixel, mPickDepth) = (new byte[size * 4], new float[size]);
-            GL.PixelStore (EPixelStoreParam.PackAlignment, 4);
-            GL.ReadPixels (0, 0, x, y, EPixelFormat.BGRA, EPixelType.UByte, mPickPixel);
-            GL.ReadPixels (0, 0, x, y, EPixelFormat.DepthComponent, EPixelType.Float, mPickDepth);
-            return (mPickPixel, mPickDepth);
-      }
-      return null;
-   }
 
    /// <summary>Prompts the Lux system to redraw the screen (asynchronous)</summary>
    public static void Redraw () => HW.Redraw ();
@@ -378,6 +340,41 @@ public static partial class Lux {
    internal static Scene? Scene;
 
    // Internal methods ---------------------------------------------------------
+   // Begins a render operation
+   static void BeginRender (Vec2S viewport, ETarget target) {
+      if (target is ETarget.Image or ETarget.Pick) {
+         mFBViewport = viewport;
+         if (mFrameBuffer == 0) {
+            mFrameBuffer = GL.GenFrameBuffer ();
+            mColorBuffer = GL.GenRenderBuffer (); mDepthBuffer = GL.GenRenderBuffer ();
+         }
+         GL.BindFrameBuffer (EFrameBufferTarget.DrawAndRead, mFrameBuffer);
+         if (viewport.X > mFBSize.X || viewport.Y > mFBSize.Y) {
+            mFBSize = viewport;
+            GL.BindRenderBuffer (ERenderBufferTarget.RenderBuffer, mColorBuffer);
+            GL.RenderBufferStorage (ERenderBufferFormat.RGBA8, viewport.X, viewport.Y);
+            GL.BindRenderBuffer (ERenderBufferTarget.RenderBuffer, mDepthBuffer);
+            GL.RenderBufferStorage (ERenderBufferFormat.Depth24Stencil8, viewport.X, viewport.Y);
+            GL.FrameBufferRenderBuffer (EFrameBufferTarget.DrawAndRead, EFrameBufferAttachment.Color0, mColorBuffer);
+            GL.FrameBufferRenderBuffer (EFrameBufferTarget.DrawAndRead, EFrameBufferAttachment.DepthStencil, mDepthBuffer);
+            if (GL.CheckFrameBufferStatus (EFrameBufferTarget.Draw) != EFrameBufferStatus.Complete)
+               throw new NotImplementedException ();
+         }
+      } else
+         GL.BindFrameBuffer (EFrameBufferTarget.DrawAndRead, 0);
+   }
+   static Vec2S mFBViewport;            // Viewport size, when rendering to a frame-buffer
+   static HFrameBuffer mFrameBuffer;    // Frame-buffer for image rendering
+   static HRenderBuffer mColorBuffer, mDepthBuffer;    // Render buffers for the same
+   static Vec2S mFBSize;                // The size of the frame-buffer
+   static float[] mPickDepth = [];      // The depth buffer, obtained during a Pick render
+   // This buffer contains the raw pixel-data obtained from a pick operation.
+   // Since the models are drawn in 'false-color' mode during a pick operation, this buffer
+   // effectively contains indices into the VModels list. Some finagling is required, such
+   // as discarding the least signifcant bits of each color component etc (see the code in
+   // Lux.Pick which reads and interprets these buffers)
+   static byte[] mPickPixel = [];
+
    /// <summary>Called when we start rendering a VNode (and it's subtree)</summary>
    /// The corresponding EndNode is called after the entire subtree under
    /// this VNode is completed rendering. Because of this, there could be multiple
@@ -392,6 +389,35 @@ public static partial class Lux {
    internal static void EndNode () {
       if (PopAttr (mChanged)) Rung++;
       (mVNode, mChanged) = mNodeStack.Pop ();
+   }
+
+   // Ends the current render operation
+   static object? EndRender (ETarget target, DIBitmap.EFormat fmt) {
+      switch (target) {
+         case ETarget.Image:
+            GL.Finish ();
+            int x = mFBViewport.X, y = mFBViewport.Y, bpp = fmt.BytesPerPixel ();
+            var pxfmt = fmt switch {
+               DIBitmap.EFormat.RGBA8 => EPixelFormat.RGBA,
+               DIBitmap.EFormat.RGB8 => EPixelFormat.RGB,
+               DIBitmap.EFormat.Gray8 => EPixelFormat.Red,
+               _ => throw new BadCaseException (fmt)
+            };
+            GL.PixelStore (EPixelStoreParam.PackAlignment, 4);
+            byte[] data = new byte[bpp * x * y];
+            GL.ReadPixels (0, 0, x, y, pxfmt, EPixelType.UByte, data);
+            return new DIBitmap (x, y, fmt, data);
+         case ETarget.Pick:
+            GL.Finish ();
+            int size = (x = mFBViewport.X) * (y = mFBViewport.Y);
+            if (size > mPickDepth.Length)
+               (mPickPixel, mPickDepth) = (new byte[size * 4], new float[size]);
+            GL.PixelStore (EPixelStoreParam.PackAlignment, 4);
+            GL.ReadPixels (0, 0, x, y, EPixelFormat.BGRA, EPixelType.UByte, mPickPixel);
+            GL.ReadPixels (0, 0, x, y, EPixelFormat.DepthComponent, EPixelType.Float, mPickDepth);
+            return (mPickPixel, mPickDepth);
+      }
+      return null;
    }
 
    /// <summary>Used internally to reset some set of attributes to the previous values</summary>
