@@ -131,9 +131,13 @@ static class GLState {
 
    // Methods ------------------------------------------------------------------
    /// <summary>Resets everything to a known state (at the start of every frame)</summary>
-   public static void StartFrame (Vec2S size, Color4 bgrdColor) {
-      GL.Viewport (0, 0, size.X, size.Y);
-      // GL.Enable (ECap.ScissorTest);
+   public static void StartFrame (Vec2S offset, Vec2S size, Color4 bgrdColor) {
+      GL.Viewport (offset.X, offset.Y, size.X, size.Y);
+      if (!offset.EQ (Vec2S.Zero)) {
+         GL.Enable (ECap.ScissorTest);
+         GL.Scissor (offset.X, offset.Y, size.X, size.Y);
+      } else
+         GL.Disable (ECap.ScissorTest);
       GL.BlendFunc (EBlendFactor.SrcAlpha, EBlendFactor.OneMinusSrcAlpha);
       GL.PatchParameter (EPatchParam.PatchVertices, 4);
       GL.PrimitiveRestartIndex (0xFFFFFFFF);

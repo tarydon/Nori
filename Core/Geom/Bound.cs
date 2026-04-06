@@ -311,6 +311,17 @@ public readonly struct Bound2 : IEQuable<Bound2> {
    [MethodImpl (MethodImplOptions.AggressiveInlining)]
    public bool Intersects (Bound2 b) => X.Intersects (b.X) && Y.Intersects (b.Y);
 
+   /// <summary>Check if the infinite line a..b intersects the Bound2</summary>
+   public bool Intersects (Point2 a, Point2 b) {
+      // We check the 'side' of each of the 4 corner points. If any two of them lie on 
+      // opposite sides of the line, the bound is intersected
+      int d0 = new Point2 (X.Min, Y.Min).Side (a, b);
+      int d1 = new Point2 (X.Max, Y.Min).Side (a, b); if (d0 * d1 < 0) return true;
+      int d2 = new Point2 (X.Max, Y.Max).Side (a, b); if (d1 * d2 < 0) return true;
+      int d3 = new Point2 (X.Min, Y.Max).Side (a, b); if (d2 * d3 < 0) return true;
+      return false;
+   }
+
    /// <summary>Computes a Bound2 (by calling the given delegate) if it is not already computed</summary>
    /// If the given Bound2 is empty, then the provided computer function is c alled
    /// to compute the bound. This is a convenience function that makes it easy to

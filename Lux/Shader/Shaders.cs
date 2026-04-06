@@ -133,6 +133,20 @@ partial class Line3DShader : Shader<Vec3F, Seg2DShader.Settings> {
 }
 #endregion
 
+#region class LinePxShader -------------------------------------------------------------------------
+/// <summary>Draws lines in pixel space</summary>
+[Singleton]
+partial class LinePxShader : Shader<Vec2F, Color4> {
+   LinePxShader () : base (ShaderImp.LinePx) => Bind ();
+   int muVPScale = 0, muDrawColor = 0;
+
+   protected override void ApplyUniformsImp (ref readonly Color4 color) => Pgm.Set (muDrawColor, color);
+   protected override int OrderUniformsImp (ref readonly Color4 a, ref readonly Color4 b) => (int)(a.Value - b.Value);
+   protected override void SetConstantsImp () => Pgm.Set (muVPScale, Lux.VPScale);
+   protected override Color4 SnapUniformsImp () => Lux.Color;
+}
+#endregion
+
 #region class PhongShader --------------------------------------------------------------------------
 /// <summary>3D shader using the Phong shading model (normal vector interpolation)</summary>
 [Singleton]

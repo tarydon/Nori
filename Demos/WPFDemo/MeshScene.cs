@@ -10,8 +10,8 @@ using Nori;
 class MeshScene : Scene3 {
    public MeshScene (bool tessdemo = false) {
       TessDemo = tessdemo;
-      Lib.Tracer = TraceVN.Print;
-      TraceVN.HoldTime = 20;
+      Lib.Tracer = TraceVN.Print; 
+      TraceVN.HoldTime = 20; TraceVN.TextColor = Color4.Yellow;
       Root = new GroupVN ([new MeshVN (mMesh = MakeMesh ()), TraceVN.It]);
       BgrdColor = Color4.Gray (96);
       Bound = mMesh.Bound;

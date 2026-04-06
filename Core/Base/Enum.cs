@@ -18,7 +18,7 @@ public enum EJoint { None, Translate, Rotate }
 public enum ELineType { Continuous, Dot, Dash, DashDot, DashDotDot, Center, Border, Hidden, Dash2, Phantom }
 
 /// <summary>Tessellation tolerances</summary>
-public enum ETolerance { Unknown, Coarse, Fine }
+public enum ETolerance { Unknown, VeryCoarse, Coarse, Fine }
 
 /// <summary>Various 'well-known' properties</summary>
 public enum EProp {
@@ -38,6 +38,16 @@ public enum EProp {
    Colliding,
 
    Grid, FillInterior, CurrentLayer
+}
+
+/// <summary>Result enumeration (returned by several algorithms)</summary>
+public enum EResult {
+   OK = 0, 
+   NoBendLines = 1,           // No bend lines found
+   BadBendline = 2,           // Invalid bend line found
+   NoOuterContour = 3,        // Single outer contour required
+   IllFormedDrawing = 4,      // Ill-formed drawing
+   IntersectingBendlines = 5, // Bendlines intersecting
 }
 
 /// <summary>The possible values for text-alignment within a box</summary>

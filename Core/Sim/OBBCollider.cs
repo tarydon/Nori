@@ -44,11 +44,18 @@ public class OBBCollider : IBorrowable<OBBCollider> {
       ref readonly OBB boxA = ref mA.OBBs[0], boxB = ref GetBBox (0);
       if (!Collision.Check (in boxA, in boxB)) return false;
 
+      // Try the triangles that collided last between these two OBBTrees.
+      if (oneCrash && mAUID == mA.UID && mBUID == mB.UID && mACollidingTri >= 0 && 
+         Collision.TriTri (mA.Pts, in mA.Tris[mACollidingTri], mBAPts, in GetBTri (mBCollidingTri))) {
+         return true;
+      }
+
       // Otherwise, recurse in 
       mDone = mCrashing = false; mOneCrash = oneCrash;
-      mATris.Clear (); mBTris.Clear (); mDepth = 0;
+      mATris.Clear (); mBTris.Clear (); mDepth = 0; mACollidingTri = mBCollidingTri = -1;
       Push (boxA.Left, boxB.Left); Push (boxA.Left, boxB.Right);
       Push (boxA.Right, boxB.Left); Push (boxA.Right, boxB.Right);
+      (mAUID, mBUID) = (mA.UID, mB.UID);
       Process ();
       return mCrashing;
    }
@@ -176,7 +183,7 @@ public class OBBCollider : IBorrowable<OBBCollider> {
                // actually detected!
                ref readonly CTri triA = ref aTris[-a], triB = ref GetBTri (-b);
                if (!Collision.TriTri (aPts, in triA, mBAPts, in triB)) continue;
-               if (mOneCrash) mDone = true;
+               if (mOneCrash) { mDone = true; mACollidingTri = -a; mBCollidingTri = -b; }
                else { mATris.Add (-a); mBTris.Add (-b); }
                mCrashing = true;
             }
@@ -236,4 +243,11 @@ public class OBBCollider : IBorrowable<OBBCollider> {
    // rung to mRung so it will never get transformed another time during this Check cycle. 
    uint[] mPtRung = [], mTriRung = [], mOBBRung = [];
    uint mRung;
+
+   // For mOneCrash = true scenario, we store the IDs of the last OBBTrees (A and B)
+   // and the triangles which collided. If in the next collision test they do not move much,
+   // or only incrementally, it is likely that the same triangles still collide. So we store
+   // them here and check those triangles first before anything else.
+   uint mAUID = 0, mBUID = 0;
+   int mACollidingTri = -1, mBCollidingTri = -1;
 }

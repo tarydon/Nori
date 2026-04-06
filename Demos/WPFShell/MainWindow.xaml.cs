@@ -1,12 +1,10 @@
 ﻿using System.Windows;
 using Nori;
-
 namespace WPFShell;
 
 public partial class MainWindow : Window {
    public MainWindow () {
-      Lib.Init ();
-      Lux2.Init ();  // REMOVETHIS later
+      Lib.Init (); Lux2.Init ();
       InitializeComponent ();
       Content = (UIElement)Lux.CreatePanel ();
       Lux.OnReady.Subscribe (OnLuxReady);
