@@ -80,14 +80,14 @@ public class SceneManipulator {
    // Implementation -----------------------------------------------------------
    // When Ctrl+E is pressed, do a zoom-extents
    void OnKey (KeyInfo ki) {
-      if (ki.Key == EKey.E && ki.Modifier == EKeyModifier.Control)
-         Lux.UIScene?.ZoomExtents ();
+      if (ki.Key == EKey.E && ki.Modifier == EKeyModifier.Control) 
+         Lux.PickScene (HW.MousePos)?.ZoomExtents ();
    }
 
    // Start rotating when the left mouse button is clicked (if the current scene is 3D)
    // Start panning when the middle mouse button is clicked
    void OnMouseClick (MouseClickInfo mi) {
-      if (Lux.UIScene is { } sc) {
+      if (Lux.PickScene (mi.Position) is { } sc) {
          if (mi.Button == EMouseButton.Left && sc is Scene3 sc3) {
             if (Lux.Pick (mi.Position) is { } vnode) {
                if (vnode.Obj != null) sc.Picked (vnode.Obj);
@@ -101,7 +101,7 @@ public class SceneManipulator {
 
    // Zoom in/out when the mouse wheel is rotated
    void OnMouseWheel (MouseWheelInfo mw)
-      => Lux.UIScene?.Zoom (mw.Position, mw.Delta < 0 ? 0.95 : (1 / 0.95));
+      => Lux.PickScene (mw.Position)?.Zoom (mw.Position, mw.Delta < 0 ? 0.95 : (1 / 0.95));
 }
 #endregion
 
@@ -116,7 +116,11 @@ class SceneRotator (Scene3 mScene, Vec2S anchor) : MouseDragger (anchor) {
    // Subsequently, adjust the viewpoint based on the vector from AnchorPt to
    // the current mouse Pt
    protected override void Move (Vec2S pt) {
-      double x = mx0 + (pt.Y - Anchor.Y), z = mz0 + (pt.X - Anchor.X);
+      double dx = pt.Y - Anchor.Y, dz = pt.X - Anchor.X;
+      double rScale = 4 * (mScene.ZoomFactor.GetLieOn (1, 200).Clamp () * 20 + 1);
+      double x = Lib.NormalizeAngle ((mx0 + dx / rScale).D2R ()).R2D ();
+      double z = Lib.NormalizeAngle ((mz0 + dz / rScale).D2R ()).R2D ();
+
       // If we are close to any of the orthogonal views (view along left-view, right-view or top-view),
       // snap to that view precisely. This will enable us to rotate the view to a required 'side-view'.
       var (xSnap, zSnap) = (x.Round (90.0), z.Round (90.0));
@@ -138,7 +142,8 @@ class ScenePanner (Scene mScene, Vec2S anchor) : MouseDragger (anchor) {
    // where we assume the window extents goes from (-1,-1) at the bottom left to
    // (+1,+1) at top right
    protected override void Move (Vec2S pt) {
-      double dx = 2.0 * (pt.X - Anchor.X) / Lux.Viewport.X, dy = 2.0 * (Anchor.Y - pt.Y) / Lux.Viewport.Y;
+      var vport = mScene.Rect.Size;
+      double dx = 2.0 * (pt.X - Anchor.X) / vport.X, dy = 2.0 * (Anchor.Y - pt.Y) / vport.Y;
       mScene.PanVector = mPan0 + new Vector2 (dx, dy);
    }
 }

@@ -23,6 +23,20 @@ public abstract class Scene {
    }
    Vector2 mPanVector = Vector2.Zero;
 
+   /// <summary>The extent of this scene in pixels, (0,0) being bottom left</summary>
+   /// Left,Bottom are inclusive while Right,Top are exclusive. So on a panel 640x480,
+   /// the UIScene will have Left=0, Bottom=0, Right=640, Top=480
+   public RectS Rect;
+
+   /// <summary>How many world units does one pixel correspond to for this scene?</summary>
+   public double PixelScale {
+      get {
+         var (xfm, dx) = (Xfms[0].InvXfm, 2.0 / Rect.Height);
+         Point3 pa = Point3.Zero * xfm, pb = new Point3 (dx, 0, 0) * xfm;
+         return pa.DistTo (pb);
+      }
+   }
+
    /// <summary>The Projection transform (transforms world coordinates to OpenGL clip space)</summary>
    internal Matrix3 ProjectionXfm { get { _ = WorldXfm; return mProjectionXfm; } }
    Matrix3 mProjectionXfm = Matrix3.Identity;
@@ -58,29 +72,73 @@ public abstract class Scene {
    readonly List<XfmEntry> mXfms = [];
 
    // Methods ------------------------------------------------------------------
-   internal Point3 Unproject (Vec2S pos, float depth) {
-      var vp = Lux.Viewport;
-      double x = 2.0 * pos.X / vp.X - 1;
-      double y = -(2.0 * pos.Y / vp.Y - 1);
-      double z = 2 * depth - 1;
-      return new Point3 (x, y, z) * mXfms[0].InvXfm;
-   }
-
-   public void Render (Vec2S viewport) {
-      Lux.Scene = this;
-      if (Lib.Set (ref mViewport, viewport)) XfmChanged ();
-      Xfms.RemoveRange (1, Xfms.Count - 1);
-      mRoot?.Render ();
-      RBatch.IssueAll ();
-      Lux.Scene = null;
-   }
-   protected Vec2S mViewport;
-
    internal void Attach () { miAttached = true; mRoot?.Register (); }
    bool miAttached = false;
 
    /// <summary>Called when the scene is detached from the Lux renderer</summary>
    internal void Detach () { Detached (); mRoot?.Deregister (); miAttached = false; }
+
+   /// <summary>Render a scene to an image (for example, to generate a thumbnail)</summary>
+   public DIBitmap RenderImage (Vec2S size, DIBitmap.EFormat fmt) {
+      if (size.X % 4 != 0) throw new ArgumentException ("Lux.RenderToImage: image width must be a multiple of 4");
+      bool unattached = !miAttached;
+      if (unattached) Attach ();
+      var dib = (DIBitmap)Lux.Render (this, size, ETarget.Image, fmt)!;
+      if (unattached) Detach ();
+      return dib;
+   }
+
+   void ZoomToContent (Vec2S size, out int yIdeal) {
+      if (size.X % 4 != 0) throw new ArgumentException ("Lux.RenderToImage: image width must be a multiple of 4");
+
+      // First, render default image, and then measure the background color 'margins' around
+      // the image so we can compute a zoom factor
+      var bgrd = BgrdColor;
+      BgrdColor = Color4.White; 
+      var dib = (DIBitmap)Lux.Render (this, size, ETarget.Image, DIBitmap.EFormat.Gray8)!;
+      var (data, xMin, yMin, xMax, yMax) = (dib.Data, dib.Width, -1, -1, -1);
+      for (int y = 0; y < dib.Height; y++) {
+         var row = data.AsSpan (y * dib.Stride, dib.Width);
+         int left = row.IndexOfAnyExcept ((byte)255);
+         if (left < 0) continue;   // Fully white row
+         int right = row.LastIndexOfAnyExcept ((byte)255);
+
+         // Update the min/max in X and Y
+         if (yMin < 0) yMin = y; yMax = y;
+         if (left < xMin) xMin = left; if (right > xMax) xMax = right;
+      }
+
+      BgrdColor = bgrd;
+      double aspect = (xMax - xMin) / (double)(yMax - yMin); yIdeal = (int)(dib.Width / aspect + 0.5);
+      double xScale = (double)dib.Width / (xMax - xMin), yScale = (double)dib.Height / (yMax - yMin);
+      double scale = Math.Min (xScale, yScale) * 0.99;
+      double xCen = (xMax + xMin - dib.Width) * scale, yCen = (yMax + yMin - dib.Height) * scale;
+
+      // Zoom/Pan to crop the image correctly and render.
+      // Then restore the previous zoom/scale and return the dib
+      Zoom (scale); PanVector = new (-xCen / dib.Width, -yCen / dib.Height);
+   }
+
+   public void ZoomToContent () {
+      bool unattached = !miAttached;
+      if (unattached) Attach ();
+      ZoomToContent (Rect.Size, out _);
+      if (unattached) Detach (); 
+   }
+
+   /// <summary>Renders the scene to an image, zooming in to avoid wasted whitespace</summary>
+   public DIBitmap RenderZoomedImage (Vec2S size, DIBitmap.EFormat fmt, out int yIdeal) {
+      bool unattached = !miAttached;
+      if (unattached) Attach ();
+
+      // Save some state
+      var (zoom, pan) = (mZoomFactor, PanVector);
+      ZoomToContent (size, out yIdeal);
+      var dib = (DIBitmap)Lux.Render (this, size, ETarget.Image, fmt)!;
+      mZoomFactor = zoom; PanVector = pan; XfmChanged ();
+      if (unattached) Detach (); 
+      return dib; 
+   }
 
    /// <summary>Override this to zoom in or out about the given position (in pixels)</summary>
    public void Zoom (Vec2S pos, double factor) {
@@ -88,7 +146,10 @@ public abstract class Scene {
       mZoomFactor = (oldZoom * factor).Clamp (0.01, 100);
       factor = mZoomFactor / oldZoom;
 
-      var vp = Lux.Viewport;
+      // Use the local viewport, and convert pos to coordinates relative to the
+      // bottom-left of this Scene
+      var vp = Rect.Size;
+      pos = new Vec2S (pos.X - Rect.Left, pos.Y - Rect.Bottom);
       Point3 mid = Midpoint * (WorldXfm * ProjectionXfm);
       Point2 pmid = new (vp.X * (mid.X + 1) / 2, vp.Y * (1 - mid.Y) / 2);
       Point2 pt = new (pos.X, pos.Y), pmouse2 = pmid + (pt - pmid) * factor;
@@ -97,6 +158,9 @@ public abstract class Scene {
 
       XfmChanged ();
    }
+
+   /// <summary>The current zoom factor of the scene</summary>
+   public double ZoomFactor => mZoomFactor;
    protected double mZoomFactor = 1;
 
    /// <summary>Zoom about the center of the viewport</summary>
@@ -113,9 +177,42 @@ public abstract class Scene {
       Lux.mViewBound.OnNext (0); Lux.Redraw ();
    }
 
+   /// <summary>Converts a pixel coordinate to world coordinates</summary>
+   /// The pixel coordinates are in screen coordinates
+   public Point3 PixelToWorld (Vec2S pix) {
+      // Convert to OpenGL clip-space coordinates
+      Vec2S vp = Rect.Size;
+      pix = new (pix.X - Rect.Left, pix.Y - Rect.Bottom);
+      Point3 clip = new (2.0 * pix.X / vp.X - 1, 1.0 - 2.0 * pix.Y / vp.Y, 0);
+      clip *= Xfms[0].InvXfm;
+      int d = PixelScale switch { > 1 => 0, > 0.1 => 1, > 0.01 => 2, > 0.001 => 3, _ => 4 };
+      clip = new (Math.Round (clip.X, d), Math.Round (clip.Y, d), Math.Round (clip.Z, d));
+      return clip;
+   }
+
    public virtual void ZoomExtents () {
       mZoomFactor = 1; mPanVector = Vector2.Zero;
       XfmChanged ();
+   }
+
+   // Implementation -----------------------------------------------------------
+   internal void Render (Vec2S viewport) {
+      Lux.Scene = this;
+      if (Lib.Set (ref mViewport, viewport)) XfmChanged ();
+      Xfms.RemoveRange (1, Xfms.Count - 1);
+      mRoot?.Render ();
+      RBatch.IssueAll ();
+      Lux.Scene = null;
+   }
+   protected Vec2S mViewport = new (804, 603);
+
+   internal Point3 Unproject (Vec2S pos, float depth) {
+      Vec2S vp = Rect.Size;
+      pos = new (pos.X - Rect.Left, pos.Y - Rect.Bottom);
+      double x = 2.0 * pos.X / vp.X - 1;
+      double y = -(2.0 * pos.Y / vp.Y - 1);
+      double z = 2 * depth - 1;
+      return new Point3 (x, y, z) * mXfms[0].InvXfm;
    }
 
    // Overrides ----------------------------------------------------------------

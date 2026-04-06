@@ -21,6 +21,10 @@ public class DwgFillVN : VNode {
    readonly Predicate<E2Poly>? mFilter;
    readonly Dwg2 mDwg;
 
+   // Properties ---------------------------------------------------------------
+   /// <summary>Fill color</summary>
+   public Color4 Color = new (240, 240, 248);
+
    // Overrides ----------------------------------------------------------------
    // See the Lux.FillPath routine for more details on the input required for this shader.
    // Basically we rasterize all the closed polylines in the drawing and use that to fill
@@ -52,7 +56,7 @@ public class DwgFillVN : VNode {
 
    // Color used for filling, and ZLevel to place it below the drawing
    public override void SetAttributes ()
-      => (Lux.ZLevel, Lux.Color) = (-10, new (240, 240, 248));
+      => (Lux.ZLevel, Lux.Color) = (-10, Color);
 
    // Implementation -----------------------------------------------------------
    // We watch the list of entities in the drawing - when a closed Polyline is added

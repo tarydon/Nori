@@ -260,7 +260,7 @@ public readonly struct Seg {
    public double GetSlopeAt (double lie) {
       if (IsArc2 (out var cen, out var flags)) {
          var (sa, ea) = GetStartAndEndAngles (cen, flags);
-         return lie.Along (sa, ea) + Lib.HalfPI * ((flags & Poly.EFlags.CCW) != 0 ? 1 : -1);
+         return Lib.NormalizeAngle (lie.Along (sa, ea) + Lib.HalfPI * ((flags & Poly.EFlags.CCW) != 0 ? 1 : -1));
       }
       return A.AngleTo (B);
    }
@@ -365,6 +365,18 @@ public readonly struct Seg {
          pts.Add (pa); pts.Add (pa.Polar (dist, ang1));
          pts.Add (pb.Polar (-dist, ang2)); pts.Add (pb);
       }
+   }
+
+   /// <summary>Converts a Seg to a Curve3 by lofting it into space</summary>
+   public static Curve3 operator * (Seg seg, Matrix3 xfm) {
+      if (seg.IsArc) {
+         var cen2 = seg.Center; var cen3 = cen2 * xfm; 
+         var xaxis = (seg.A - cen2).Normalized () * xfm;
+         var zaxis = (seg.IsCCW ? Vector3.ZAxis : -Vector3.ZAxis) * xfm;
+         var cs = new CoordSystem (cen3, xaxis, zaxis * xaxis);
+         return new Arc3 (0, cs, seg.Radius, Abs (seg.AngSpan));
+      } else
+         return new Line3 (0, seg.A * xfm, seg.B * xfm);
    }
 
    // Implementation -----------------------------------------------------------

@@ -11,7 +11,13 @@ namespace Nori;
 public static partial class Lux {
    // Properties ---------------------------------------------------------------
    /// <summary>If set, back faces are colored pink (useful for debugging) when using the Phong shader</summary>
+   /// This gets reset any time a new UIScene is set
    public static bool BackFacesPink;
+
+   /// <summary>Sets whether the cursor is visible or not when it is over the panel</summary>
+   /// If this is set to false, then the current scene must 'paint' a cursor that follows
+   /// the mouse movement
+   public static bool CursorVisible { set => HW.CursorVisible = value; }
 
    /// <summary>Subscribe to this to get a FPS (frames-per-second) report each second</summary>
    public static IObservable<int> FPS => mFPS;
@@ -29,31 +35,48 @@ public static partial class Lux {
    public static IObservable<int> OnReady => mOnReady;
    internal static Subject<int> mOnReady = new ();
 
-   /// <summary>Sets whether the cursor is visible or not when it is over the panel</summary>
-   /// If this is set to false, then the current scene must 'paint' a cursor that follows
-   /// the mouse movement
-   public static bool CursorVisible { set => HW.CursorVisible = value; }
+   /// <summary>The panel size of the Lux rendering panel</summary>
+   public static Vec2S PanelSize => mPanelSize;
+   static Vec2S mPanelSize;
+
+   /// <summary>This is set after a Pick operation, and returns the 3D pick position</summary>
+   public static Point3 PickPos => mPickPos;
+   static Point3 mPickPos;
+
+   /// <summary>How many world units does one pixel correspond to (for the current scene)</summary>
+   [Obsolete ("Use Scene.PixelScale")]
+   public static double PixelScale {
+      get {
+         var scene = UIScene;
+         if (scene == null || mPanelSize.X == 0) return 1;
+         return scene.PixelScale;
+      }
+   }
+
+   /// <summary>Returns true if Lux is ready to use</summary>
+   public static bool Ready => mReady;
+   static bool mReady;
+
+   /// <summary>Enumerates all the sub-scenes (use Scene.Rect to get the pixel-area it uses)</summary>
+   public static IEnumerable<Scene> SubScenes => mScenes.Select (a => a.Scene).Skip (1);
+   static readonly List<(Scene Scene, Bound2 Bound)> mScenes = [];
 
    /// <summary>The current scene that is bound to the visible viewport</summary>
    public static Scene? UIScene {
-      get => mUIScene;
+      get => mScenes.Count > 0 ? mScenes[0].Scene : null;
       set {
-         mUIScene?.Detach ();
          BackFacesPink = false;
-         mUIScene = value; mUIScene?.Attach (); mViewBound.OnNext (0); Redraw ();
-         HW.CursorVisible = mUIScene?.CursorVisible ?? true;
-      }
-   }
-   static Scene? mUIScene;
-
-   /// <summary>How many world units does one pixel correspond to (for the current scene)</summary>
-   public static double PixelScale {
-      get {
-         if (mUIScene == null || mViewport.X == 0) return 1;
-         var xfm = mUIScene.Xfms[0].InvXfm;
-         double dx = 2.0 / mViewport.X;   //
-         Point3 pa = Point3.Zero * xfm, pb = new Point3 (dx, 0, 0) * xfm;
-         return pa.DistTo (pb);
+         mScenes.ForEach (a => a.Scene.Detach ());
+         mScenes.Clear ();
+         if (value != null) {
+            value.Attach ();
+            mViewBound.OnNext (0);
+            HW.CursorVisible = value.CursorVisible;
+            value.Rect = new (0, 0, mPanelSize.X, mPanelSize.Y);
+            mScenes.Add ((value, new (0, 0, 1, 1)));
+         } else
+            HW.CursorVisible = true;
+         Redraw ();
       }
    }
 
@@ -61,11 +84,26 @@ public static partial class Lux {
    public static IObservable<int> ViewBound => mViewBound;
    internal static Subject<int> mViewBound = new ();
 
-   /// <summary>The viewport size (in pixels) of the Lux rendering panel</summary>
-   public static Vec2S Viewport => mViewport;
-   static Vec2S mViewport;
+   [Obsolete ("Use Lux.PanelSize instead")]
+   public static Vec2S Viewport => PanelSize;
 
    // Methods ------------------------------------------------------------------
+   /// <summary>Adds a sub-scene to the current render set</summary>
+   /// <param name="scene">The scene to add</param>
+   /// <param name="bound">The bound occupied by the scene, in normalized coordinates where
+   /// (0,0) is the top left corner, and (1,1) the bottom right.</param>
+   /// Note that you cannot add the same scene multiple times (nor can you add the UIScene
+   /// again as a SubScene). If you want to display the same content in multiple viewports,
+   /// (for example, with different view-points), create multiple scenes that all share the 
+   /// same Root VNode. 
+   /// Mounting a new UIScene will remove all the sub-scenes. 
+   public static void AddSubScene (Scene scene, Bound2 bound) {
+      Lib.Check (mScenes.None (a => a.Scene == scene), "Duplicate scene");
+      scene.Attach ();
+      mScenes.Add ((scene, bound));
+      Redraw ();
+   }
+
    /// <summary>Creates the Lux rendering panel</summary>
    public static object CreatePanel (bool createHost = false) {
       return WinGL.Create (OnReady, OnPaint, createHost);
@@ -85,26 +123,22 @@ public static partial class Lux {
    public static void FlushPickBuffer () => mPickBufferValid = false;
    static bool mPickBufferValid;
 
-   /// <summary>Render a Scene to an image (for example, to generate a thumbnail)</summary>
-   public static DIBitmap RenderToImage (Scene scene, Vec2S size, DIBitmap.EFormat fmt) {
-      if (size.X % 4 != 0) throw new ArgumentException ("Lux.RenderToImage: image width must be a multiple of 4");
-      if (scene != Lux.UIScene) scene.Attach ();
-      var dib =  (DIBitmap)Render (scene, size, ETarget.Image, fmt)!;
-      if (scene != Lux.UIScene) scene.Detach ();
-      return dib;
-   }
-
    /// <summary>This does a 'pick' operation on the current UIScene</summary>
    /// This effectively returns the VNode that lies underneat the current mouse position.
    public static VNode? Pick (Vec2S pos) {
       // If we're doign any simulation, return null
-      if (sRenderCompletes.Count > 0 || mRendering || !(mReady || Lib.Testing) || mUIScene == null) return null;
+      if (!(mReady || Lib.Testing) || mRendering) return null;
+      var scene = PickScene (pos);
+      if (scene == null || sRenderCompletes.Any (a => a.Scene == scene)) return null;
+      var viewport = scene.Rect.Size;
       if (!mPickBufferValid) {
          mPickBufferValid = true;
-         var tup = ((byte[], float[]))Render (mUIScene, mViewport, ETarget.Pick, DIBitmap.EFormat.Unknown)!;
+         var tup = ((byte[], float[]))Render (scene, viewport, ETarget.Pick, DIBitmap.EFormat.Unknown)!;
          mPickPixel = tup.Item1; mPickDepth = tup.Item2;
       }
-      int index = (mViewport.Y - pos.Y - 1) * mViewport.X + pos.X;
+
+      Vec2S local = new (pos.X - scene.Rect.Left, pos.Y - scene.Rect.Bottom);
+      int index = (viewport.Y - local.Y - 1) * viewport.X + local.X;
       if (index < 0 || index >= mPickDepth.Length) return null;
       float fDepth = mPickDepth[index];
 
@@ -114,25 +148,48 @@ public static partial class Lux {
       int b = mPickPixel[index] >> 2, g = mPickPixel[index + 1] >> 2, r = mPickPixel[index + 2] >> 2;
       int vnodeId = r + (g << 6) + (b << 12);
       VNode? node = VNode.SafeGet (vnodeId);
-      if (node != null) PickPos = mUIScene.Unproject (pos, fDepth);
+      if (node != null) mPickPos = scene.Unproject (pos, fDepth);
       return node;
    }
 
-   public static Point3 PickPos;
-
-   public static bool Ready => mReady;
-   static bool mReady;
+   /// <summary>Picks the scene that lies at the given pixel coordinates</summary>
+   /// The pixel coordinates start at (0,0) at the top left of the screen and have an
+   /// extent of Lux.PanelSize. If there are multiple scenes overlapping at the given
+   /// pixel position, the last one is returned (last one added by AddSubScene). 
+   public static Scene? PickScene (Vec2S pix) {
+      for (int i = mScenes.Count - 1; i >= 1; i--) {
+         var scene = mScenes[i].Scene;
+         if (scene.Rect.Contains (pix)) return scene;
+      }
+      return UIScene;
+   }
 
    /// <summary>Converts a pixel coordinate to world coordinates</summary>
+   [Obsolete ("Use Scene.PixelToWorld instead")]
    public static Point3 PixelToWorld (Vec2S pix) {
-      if (mUIScene == null) return new (pix.X, pix.Y, 0);
-      // Convert pixel coordinate to OpenGL clip space coordinates.
-      Vec2S vp = mViewport;
-      Point3 clip = new (2.0 * pix.X / vp.X - 1, 1.0 - 2.0 * pix.Y / vp.Y, 0);
-      clip *= mUIScene.Xfms[0].InvXfm;
-      int d = PixelScale switch { > 1 => 0, > 0.1 => 1, > 0.01 => 2, > 0.001 => 3, _ => 4 };
-      clip = new (Math.Round (clip.X, d), Math.Round (clip.Y, d), Math.Round (clip.Z, d));
-      return clip;
+      if (UIScene is not Scene scene) return new (pix.X, pix.Y, 0);
+      return scene.PixelToWorld (pix);
+   }
+
+   /// <summary>Render a Scene to an image (for example, to generate a thumbnail)</summary>
+   [Obsolete ("Use Scene.RenderToImage")]
+   public static DIBitmap RenderToImage (Scene scene, Vec2S size, DIBitmap.EFormat fmt) {
+      if (size.X % 4 != 0) throw new ArgumentException ("Lux.RenderToImage: image width must be a multiple of 4");
+      bool unAttached = mScenes.None (a => a.Scene == scene);
+      if (unAttached) scene.Attach ();
+      var dib = (DIBitmap)Render (scene, size, ETarget.Image, fmt)!;
+      if (unAttached) scene.Detach ();
+      return dib;
+   }
+
+   /// <summary>Removes a SubScene from the list of scenes</summary>
+   /// Note that mounting a new UIScene will automatically remove _all_ subscenes
+   public static void RemoveSubScene (Scene scene) {
+      for (int i = mScenes.Count - 1; i > 0; i--)
+         if (mScenes[i].Scene == scene) {
+            scene.Detach (); mScenes.RemoveAt (i);
+            Redraw (); 
+         }
    }
 
    /// <summary>Stub for the Render method that is called when each frame has to be painted</summary>
@@ -141,13 +198,39 @@ public static partial class Lux {
       mIsPicking = target == ETarget.Pick;
       if (mRendering) throw new InvalidOperationException ();
       mRendering = true;
+
+      var vp = new RectS (0, 0, viewport.X, viewport.Y);
       BeginRender (viewport, target);
+      mPanelSize = viewport;  // Set only when rendering the root scene
       StartFrame (viewport);
       Color4 bgrdColor = mIsPicking ? Color4.White : (scene?.BgrdColor ?? Color4.Gray (96));
-      GLState.StartFrame (viewport, bgrdColor);
+      GLState.StartFrame (Vec2S.Zero, viewport, bgrdColor);
       RBatch.StartFrame ();
       Shader.StartFrame ();
-      scene?.Render (viewport);
+      if (scene != null) {
+         int yMax = mPanelSize.Y - 1;
+         if (target == ETarget.Screen)
+            scene.Rect = new (vp.Left, yMax - vp.Top, vp.Right, yMax - vp.Bottom);
+         scene.Render (viewport);
+         if (target == ETarget.Screen) {
+            for (int i = 1; i < mScenes.Count; i++) {
+               var (scene2, bound2) = mScenes[i];
+               var (cx, cy, DX, DY) = (mPanelSize.X, mPanelSize.Y, bound2.X, bound2.Y);
+               int x0 = (int)(DX.Min * cx + 0.5), x1 = (int)(DX.Max * cx + 0.5);
+               int y0 = (int)(DY.Min * cy + 0.5), y1 = (int)(DY.Max * cy + 0.5);
+               var rect = new RectS (x0, y0, x1, y1);
+               if (target == ETarget.Screen)
+                  scene2.Rect = new (x0, yMax - y1, x1, yMax - y0);
+               var vport = rect.Size;
+               BeginRender (vport, target);  // Don't worry about viewport - it
+               StartFrame (vport);
+               GLState.StartFrame (new Vec2S (rect.Left, rect.Bottom), vport, scene2.BgrdColor);
+               RBatch.StartFrame ();
+               Shader.StartFrame ();
+               scene2.Render (vport);
+            }
+         }
+      }
       object? obj = EndRender (target, fmt);
 
       // Various post-processing after frame render
@@ -172,7 +255,7 @@ public static partial class Lux {
       // Helpers ...........................................
       static void NextFrame () {
          for (int i = sRenderCompletes.Count - 1; i >= 0; i--)
-            sRenderCompletes[i] (mLastFrameTime);
+            sRenderCompletes[i].Tick (mLastFrameTime);
          Redraw ();
       }
    }
@@ -182,6 +265,82 @@ public static partial class Lux {
    static int mcFPSFrames;          // Frames rendered since that time
    static bool mRendering;          // Currently rendering a frame
 
+
+   /// <summary>Prompts the Lux system to redraw the screen (asynchronous)</summary>
+   public static void Redraw () => HW.Redraw ();
+
+   /// <summary>This is called to initiate 'continuous rendering'</summary>
+   /// This function takes a 'callback' that will be invoked after each frame is rendered. Once
+   /// this is started, Lux renders frames continuously, attempting to render at the monitor
+   /// refresh rate (60 fps) if the hardware is fast enough. If Lux.VSync is turned off, then
+   /// it renders at the maximum possible rate (regardless of monitor refresh rate).
+   ///
+   /// The 'elapsed-time' since the last time the callback was called (in seconds) is passed as
+   /// a parameter to the callback, which can use this parameter to adjust the positions
+   /// of objects in the scene. Thus, it is possible to create simulation where the simulation
+   /// speed is not dependent on the number of frames we render per second.
+   ///
+   /// It is possible to call StartContinuousRender any number of times, attaching different
+   /// callbacks. The continuous-render goes on as long as at least one such callback is attached,
+   /// and after each frame is rendered, all these callbacks are invoked. Once all these callbacks
+   /// retire (by calling StopContinuousRender), we stop the render pump, and subsequent renders
+   /// happen only on-demand (when the VNode tree changes, or the window size changes etc)
+   /// 
+   /// If you are animating a 'subscene' that was activated using AddSubScene, use the variant
+   /// of StartContinousRender that takes a Scene parameter. This is important since 'pick' 
+   /// functionality is disabled on that scene while the animation is running. 
+   public static void StartContinuousRender (Action<double> renderComplete) {
+      if (UIScene is { } scene) StartContinuousRender (scene, renderComplete);
+   }
+   static DateTime sLastFrametime;
+   static readonly List<(Scene Scene, Action<double> Tick)> sRenderCompletes = [];
+   static DispatcherTimer? sTimer;
+
+   /// <summary>A variant of StartContinuousRender used to start animation on a sub-scene</summary>
+   /// The default version of StartContinuousRender assumes that the animation is happening
+   /// on the UIScene (main scene). Sometimes, if you want to run an animation loop on a different
+   /// subscene (or even on multiple sub-scenes), use this variant. 
+   /// 
+   /// During each frame of the animation the compelete screen is redrawn, of course (as is the
+   /// case with all OpenGL rendering). However, all 'pick' functionality is disabled on the 
+   /// scene associated with the animation until the animation is complete. So to ensure that 
+   /// pick is disabled only on the target scene, use this variant. 
+   public static void StartContinuousRender (Scene subScene, Action<double> renderComplete) {
+      sRenderCompletes.Add ((subScene, renderComplete));
+      if (sRenderCompletes.Count == 1) {
+         // If this is the first render-complete function, start the backup timer running.
+         // We need this backup timer because the RenderComplete event is not always dependable.
+         // Normally, if we are running at 60 fps, we should hit the render-complete each 16.66 ms,
+         // and the timer would never fire.
+         if (sTimer == null) {
+            sTimer = new () { Interval = TimeSpan.FromMilliseconds (40), IsEnabled = true };
+            sTimer.Tick += (_, _) => Redraw ();
+         }
+         // Issue one redraw to prime things off
+         sTimer.Start ();
+         sLastFrametime = DateTime.Now;
+         Redraw ();
+      }
+   }
+
+   /// <summary>This detaches a callback from the continous-render loop</summary>
+   /// This is the opposite of StartContinuousRender above. Once all the callbacks have
+   /// retired, we stop the loop.
+   public static void StopContinuousRender (Action<double> renderComplete) {
+      sRenderCompletes.RemoveIf (a => a.Tick == renderComplete);
+      if (sRenderCompletes.Count == 0 && sTimer != null)
+         sTimer.Stop ();
+   }
+
+   // Internal properties ------------------------------------------------------
+   /// <summary>Bumped up whenever any Lux draw property is changed (used for shader optimizations)</summary>
+   internal static int Rung;
+
+   /// <summary>The scene that is currently being rendered (set only during a Render() call)</summary>
+   internal static Scene? Scene;
+
+   // Internal methods ---------------------------------------------------------
+   // Begins a render operation
    static void BeginRender (Vec2S viewport, ETarget target) {
       if (target is ETarget.Image or ETarget.Pick) {
          mFBViewport = viewport;
@@ -216,6 +375,23 @@ public static partial class Lux {
    // Lux.Pick which reads and interprets these buffers)
    static byte[] mPickPixel = [];
 
+   /// <summary>Called when we start rendering a VNode (and it's subtree)</summary>
+   /// The corresponding EndNode is called after the entire subtree under
+   /// this VNode is completed rendering. Because of this, there could be multiple
+   /// open 'BeginNode' calls whose EndNode is pending
+   internal static void BeginNode (VNode node) {
+      mNodeStack.Push ((mVNode, mChanged));
+      (mVNode, mChanged) = (node, ELuxAttr.None);
+   }
+   static readonly Stack<(VNode?, ELuxAttr)> mNodeStack = [];
+
+   /// <summary>Called when a node is finished drawing</summary>
+   internal static void EndNode () {
+      if (PopAttr (mChanged)) Rung++;
+      (mVNode, mChanged) = mNodeStack.Pop ();
+   }
+
+   // Ends the current render operation
    static object? EndRender (ETarget target, DIBitmap.EFormat fmt) {
       switch (target) {
          case ETarget.Image:
@@ -242,79 +418,6 @@ public static partial class Lux {
             return (mPickPixel, mPickDepth);
       }
       return null;
-   }
-
-   /// <summary>Prompts the Lux system to redraw the screen (asynchronous)</summary>
-   public static void Redraw () => HW.Redraw ();
-
-   /// <summary>This is called to initiate 'continuous rendering'</summary>
-   /// This function takes a 'callback' that will be invoked after each frame is rendered. Once
-   /// this is started, Lux renders frames continuously, attempting to render at the monitor
-   /// refresh rate (60 fps) if the hardware is fast enough. If Lux.VSync is turned off, then
-   /// it renders at the maximum possible rate (regardless of monitor refresh rate).
-   ///
-   /// The 'elapsed-time' since the last time the callback was called (in seconds) is passed as
-   /// a parameter to the callback, which can use this parameter to adjust the positions
-   /// of objects in the scene. Thus, it is possible to create simulation where the simulation
-   /// speed is not dependent on the number of frames we render per second.
-   ///
-   /// It is possible to call StartContinuousRender any number of times, attaching different
-   /// callbacks. The continuous-render goes on as long as at least one such callback is attached,
-   /// and after each frame is rendered, all these callbacks are invoked. Once all these callbacks
-   /// retire (by calling StopContinuousRender), we stop the render pump, and subsequent renders
-   /// happen only on-demand (when the VNode tree changes, or the window size changes etc)
-   public static void StartContinuousRender (Action<double> renderComplete) {
-      sRenderCompletes.Add (renderComplete);
-      if (sRenderCompletes.Count == 1) {
-         // If this is the first render-complete function, start the backup timer running.
-         // We need this backup timer because the RenderComplete event is not always dependable.
-         // Normally, if we are running at 60 fps, we should hit the render-complete each 16.66 ms,
-         // and the timer would never fire.
-         if (sTimer == null) {
-            sTimer = new () { Interval = TimeSpan.FromMilliseconds (40), IsEnabled = true };
-            sTimer.Tick += (_, _) => Redraw ();
-         }
-         // Issue one redraw to prime things off
-         sTimer.Start ();
-         sLastFrametime = DateTime.Now;
-         Redraw ();
-      }
-   }
-   static DateTime sLastFrametime;
-   static readonly List<Action<double>> sRenderCompletes = [];
-   static DispatcherTimer? sTimer;
-
-   /// <summary>This detaches a callback from the continous-render loop</summary>
-   /// This is the opposite of StartContinuousRender above. Once all the callbacks have
-   /// retired, we stop the loop.
-   public static void StopContinuousRender (Action<double> renderComplete) {
-      sRenderCompletes.Remove (renderComplete);
-      if (sRenderCompletes.Count == 0 && sTimer != null)
-         sTimer.Stop ();
-   }
-
-   // Internal properties ------------------------------------------------------
-   /// <summary>Bumped up whenever any Lux draw property is changed (used for shader optimizations)</summary>
-   internal static int Rung;
-
-   /// <summary>The scene that is currently being rendered (set only during a Render() call)</summary>
-   internal static Scene? Scene;
-
-   // Internal methods ---------------------------------------------------------
-   /// <summary>Called when we start rendering a VNode (and it's subtree)</summary>
-   /// The corresponding EndNode is called after the entire subtree under
-   /// this VNode is completed rendering. Because of this, there could be multiple
-   /// open 'BeginNode' calls whose EndNode is pending
-   internal static void BeginNode (VNode node) {
-      mNodeStack.Push ((mVNode, mChanged));
-      (mVNode, mChanged) = (node, ELuxAttr.None);
-   }
-   static readonly Stack<(VNode?, ELuxAttr)> mNodeStack = [];
-
-   /// <summary>Called when a node is finished drawing</summary>
-   internal static void EndNode () {
-      if (PopAttr (mChanged)) Rung++;
-      (mVNode, mChanged) = mNodeStack.Pop ();
    }
 
    /// <summary>Used internally to reset some set of attributes to the previous values</summary>
@@ -348,7 +451,6 @@ public static partial class Lux {
    /// <summary>This is called at the start of every frame to reset to known</summary>
    static void StartFrame (Vec2S viewport) {
       mcFillPaths = 0;
-      mViewport = viewport;
       VPScale = new Vec2F (2.0 / viewport.X, 2.0 / viewport.Y);
       mColors.Clear (); mColor = Color4.White;
       mLineWidths.Clear (); mLineWidth = 2;     // Multiplied by DPIScale before it is used
