@@ -88,10 +88,10 @@ class Overlay : VNode {
    IDisposable? mMouse;
 
    void OnMouseMove (Vec2S pt) {
-      mPt = (Point2)Lux.PixelToWorld (pt);
+      mPt = (Point2)Lux.UIScene!.PixelToWorld (pt);
       Redraw ();
    }
-   Point2 mPt = new Point2 (-1000, 0);
+   Point2 mPt = new (-1000, 0);
 
    public override void SetAttributes () {
       Lux.Color = Color4.DarkGreen; Lux.ZLevel = 20;

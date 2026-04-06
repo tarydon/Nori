@@ -93,7 +93,7 @@ public class E2Bendline : Ent2 {
    // Properties ---------------------------------------------------------------
    /// <summary>The exterior angle (turn angle) in radians. A hem will have an angle of +PI or -PI.</summary>
    [Radian]
-   public readonly double Angle;
+   public double Angle;
 
    /// <summary>The K-factor (neutral axis) of the bend, as a fraction from 0 (inner surface) to 1 (outer surface)</summary>
    public double KFactor;
