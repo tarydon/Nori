@@ -134,9 +134,7 @@ partial class Line3DShader : Shader<Vec3F, Seg2DShader.Settings> {
 #endregion
 
 #region class LinePxShader -------------------------------------------------------------------------
-/// <summary>
-/// Draws lines in pixel space
-/// </summary>
+/// <summary>Draws lines in pixel space</summary>
 [Singleton]
 partial class LinePxShader : Shader<Vec2F, Color4> {
    LinePxShader () : base (ShaderImp.LinePx) => Bind ();

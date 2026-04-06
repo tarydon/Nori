@@ -1,29 +1,15 @@
-﻿using System.Reactive.Linq;
-using System.Windows;
-using Nori;
-namespace WPFShell;
+﻿using Nori;
+namespace WPFDemo;
 
-public partial class MainWindow : Window {
-   public MainWindow () {
-      Lib.Init (); Lux2.Init ();
-      InitializeComponent ();
-      Content = (UIElement)Lux.CreatePanel ();
-      Lux.OnReady.Subscribe (OnLuxReady);
-   }
-
-   void OnLuxReady (int _) {
-      var source = PresentationSource.FromVisual (this);
-      if (source != null) Lux.DPIScale = (float)source.CompositionTarget.TransformToDevice.M11;
-      Lib.Tracer = TraceVN.Print;
-      TraceVN.TextColor = Color4.Blue;
-      new SceneManipulator ();
-
-      Lux.UIScene = new Scene2 { BgrdColor = new Color4 (244, 248, 252), Root = new BaseVN () };
+class SubSceneDemo : Scene2 {
+   public SubSceneDemo () {
+      BgrdColor = new Color4 (244, 248, 252);
+      Root = new BaseVN ();
    }
 }
 
 class BaseVN : VNode {
-   public BaseVN () => Streaming = true;   
+   public BaseVN () => Streaming = true;
 
    public override void Draw () {
       if (!mCreated) CreateSubscenes ();
@@ -53,18 +39,17 @@ class BaseVN : VNode {
 
          Color4 color = new (200, 208, 216);
          var dwg = DXFReader.Load ("N:/Demos/Data/Folder/02.dxf");
-         Lux.AddSubScene (new DwgScene (dwg), new (xGutter, yGutter, xMid, 1 - yGutter));
-         Lux.AddSubScene (new ModelScene (dwg), new (xMid + xGutter, yGutter, 1 - xGutter, yMid - yGutter));
-         Lux.AddSubScene (new FoldScene (dwg), new (xMid + xGutter, yMid, 1 - xGutter, 1 - yGutter));
+         Lux.AddSubScene (new DwgSubScene (dwg), new (xGutter, yGutter, xMid, 1 - yGutter));
+         Lux.AddSubScene (new ModelSubScene (dwg), new (xMid + xGutter, yGutter, 1 - xGutter, yMid - yGutter));
+         Lux.AddSubScene (new FoldSubScene (dwg), new (xMid + xGutter, yMid, 1 - xGutter, 1 - yGutter));
          Lib.Post (Redraw);
       }
    }
-
    bool mCreated;
 }
 
-class DwgScene : Scene2 {
-   public DwgScene (Dwg2 dwg) {
+class DwgSubScene : Scene2 {
+   public DwgSubScene (Dwg2 dwg) {
       Bound = dwg.Bound.InflatedF (1.1);
       BgrdColor = new Color4 (232, 236, 240);
       TraceVN.HoldTime = 20; TraceVN.TextColor = Color4.Blue;
@@ -77,8 +62,8 @@ class DwgScene : Scene2 {
    }
 }
 
-class ModelScene : Scene3 {
-   public ModelScene (Dwg2 dwg) {
+class ModelSubScene : Scene3 {
+   public ModelSubScene (Dwg2 dwg) {
       var pf = new PaperFolder (dwg);
       if (pf.Process (out mModel)) {
          Bound = mModel.Bound;
@@ -94,8 +79,8 @@ class ModelScene : Scene3 {
    }
 }
 
-class FoldScene : Scene3 {
-   public FoldScene (Dwg2 dwg) {
+class FoldSubScene : Scene3 {
+   public FoldSubScene (Dwg2 dwg) {
       mDwg = dwg;
       mBends = [.. dwg.Ents.OfType<E2Bendline> ()];
       mAngles = [.. mBends.Select (a => a.Angle)];
@@ -107,11 +92,11 @@ class FoldScene : Scene3 {
    void Animate (double f) {
       mFoldAng += f * 40; if (mFoldAng > 360) mFoldAng = 0;
       mLie = (1 + Math.Sin (mFoldAng.D2R ())) / 2;
-      for (int i = 0; i < mBends.Length; i++) 
+      for (int i = 0; i < mBends.Length; i++)
          mBends[i].Angle = mAngles[i] * mLie;
       if (!new PaperFolder (mDwg).Process (out var model)) return;
       Root = new Model3VN (model);
-      Bound = model.Bound; 
+      Bound = model.Bound;
    }
    Dwg2 mDwg;
    E2Bendline[] mBends;

@@ -77,9 +77,7 @@ public static class HW {
    /// <summary>Is the SHIFT key currently pressed?</summary>
    public static bool IsShiftDown => (GetKeyState (VK_SHIFT) & PRESSED) != 0;
 
-   /// <summary>
-   /// Mouse position in pixel coordinates (within the panel)
-   /// </summary>
+   /// <summary>Mouse position in pixel coordinates (within the panel)</summary>
    public static Vec2S MousePos {
       get {
          if (Panel is not { } panel) return Vec2S.Zero;

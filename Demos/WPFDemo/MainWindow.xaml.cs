@@ -41,6 +41,7 @@ public partial class MainWindow : Window {
    void BuildOBBDemo (object sender, RoutedEventArgs e) => Display (new BuildOBBScene ());
    void CollisionDemo (object s, RoutedEventArgs e) => Display (new OBBCrashScene ());
    void PaperFolderDemo (object s, RoutedEventArgs e) => Display (new PaperFolderScene ());
+   void SubScene (object s, RoutedEventArgs e) => Display (new SubSceneDemo ());
 
    void Display (Scene scene) {
       mSettings.Children.Clear ();

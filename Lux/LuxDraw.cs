@@ -196,9 +196,7 @@ public static partial class Lux {
       else DashLine2DShader.It.Draw (pts);
    }
 
-   /// <summary>
-   /// Draws 2D lines (in pixel coordinates)
-   /// </summary>
+   /// <summary>Draws 2D lines (in pixel coordinates)</summary>
    public static void PxLines (ReadOnlySpan<Vec2F> pts) => LinePxShader.It.Draw (pts);
 
    /// <summary>Draws a 2D line-strip (an open polyline made up of the given set of points)</summary>

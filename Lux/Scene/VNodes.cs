@@ -85,8 +85,9 @@ public partial class TraceVN : VNode {
    // Overrides ----------------------------------------------------------------
    // Draw the lines, starting from the top left corner of the screen
    public override void Draw () {
-      mcLines = Math.Max (Lux.PanelSize.Y / mDYLine - 2, 10);
-      int y = Lux.PanelSize.Y - mDYLine;
+      if (Lux.Scene is not { } scene) return;
+      mcLines = Math.Max (scene.Rect.Height / mDYLine - 2, 10);
+      int y = scene.Rect.Height - mDYLine;
       for (int i = 0; i < mLines.Count; i++) {
          Lux.TextPx (mLines[i].Text, new (mDYLine / 2, y));
          y -= mDYLine;

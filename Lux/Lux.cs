@@ -38,9 +38,8 @@ public static partial class Lux {
    public static Scene? UIScene {
       get => mScenes.Count > 0 ? mScenes[0].Scene : null;
       set {
-         UIScene?.Detach ();
          BackFacesPink = false;
-         mScenes.Skip (1).ForEach (a => a.Scene.Detach ());
+         mScenes.ForEach (a => a.Scene.Detach ());
          mScenes.Clear (); 
          if (value != null) {
             value.Attach ();
@@ -133,8 +132,9 @@ public static partial class Lux {
    /// This effectively returns the VNode that lies underneat the current mouse position.
    public static VNode? Pick (Vec2S pos) {
       // If we're doign any simulation, return null
+      if (!(mReady || Lib.Testing) || mRendering) return null;
       var scene = PickScene (pos);
-      if (sRenderCompletes.Count > 0 || mRendering || !(mReady || Lib.Testing) || scene == null) return null;
+      if (scene == null || sRenderCompletes.Any (a => a.Scene == scene)) return null;
       var viewport = scene.Rect.Size;
       if (!mPickBufferValid) {
          mPickBufferValid = true;
@@ -232,7 +232,7 @@ public static partial class Lux {
       // Helpers ...........................................
       static void NextFrame () {
          for (int i = sRenderCompletes.Count - 1; i >= 0; i--)
-            sRenderCompletes[i] (mLastFrameTime);
+            sRenderCompletes[i].Tick (mLastFrameTime);
          Redraw ();
       }
    }
@@ -323,8 +323,28 @@ public static partial class Lux {
    /// and after each frame is rendered, all these callbacks are invoked. Once all these callbacks
    /// retire (by calling StopContinuousRender), we stop the render pump, and subsequent renders
    /// happen only on-demand (when the VNode tree changes, or the window size changes etc)
+   /// 
+   /// If you are animating a 'subscene' that was activated using AddSubScene, use the variant
+   /// of StartContinousRender that takes a Scene parameter. This is important since 'pick' 
+   /// functionality is disabled on that scene while the animation is running. 
    public static void StartContinuousRender (Action<double> renderComplete) {
-      sRenderCompletes.Add (renderComplete);
+      if (UIScene is { } scene) StartContinuousRender (scene, renderComplete);
+   }
+   static DateTime sLastFrametime;
+   static readonly List<(Scene Scene, Action<double> Tick)> sRenderCompletes = [];
+   static DispatcherTimer? sTimer;
+
+   /// <summary>A variant of StartContinuousRender used to start animation on a sub-scene</summary>
+   /// The default version of StartContinuousRender assumes that the animation is happening
+   /// on the UIScene (main scene). Sometimes, if you want to run an animation loop on a different
+   /// subscene (or even on multiple sub-scenes), use this variant. 
+   /// 
+   /// During each frame of the animation the compelete screen is redrawn, of course (as is the
+   /// case with all OpenGL rendering). However, all 'pick' functionality is disabled on the 
+   /// scene associated with the animation until the animation is complete. So to ensure that 
+   /// pick is disabled only on the target scene, use this variant. 
+   public static void StartContinuousRender (Scene subScene, Action<double> renderComplete) {
+      sRenderCompletes.Add ((subScene, renderComplete));
       if (sRenderCompletes.Count == 1) {
          // If this is the first render-complete function, start the backup timer running.
          // We need this backup timer because the RenderComplete event is not always dependable.
@@ -340,15 +360,12 @@ public static partial class Lux {
          Redraw ();
       }
    }
-   static DateTime sLastFrametime;
-   static readonly List<Action<double>> sRenderCompletes = [];
-   static DispatcherTimer? sTimer;
 
    /// <summary>This detaches a callback from the continous-render loop</summary>
    /// This is the opposite of StartContinuousRender above. Once all the callbacks have
    /// retired, we stop the loop.
    public static void StopContinuousRender (Action<double> renderComplete) {
-      sRenderCompletes.Remove (renderComplete);
+      sRenderCompletes.RemoveIf (a => a.Tick == renderComplete);
       if (sRenderCompletes.Count == 0 && sTimer != null)
          sTimer.Stop ();
    }

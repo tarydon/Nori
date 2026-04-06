@@ -80,17 +80,14 @@ public class SceneManipulator {
    // Implementation -----------------------------------------------------------
    // When Ctrl+E is pressed, do a zoom-extents
    void OnKey (KeyInfo ki) {
-      if (ki.Key == EKey.E && ki.Modifier == EKeyModifier.Control) {
-         Lib.Trace (HW.MousePos);
+      if (ki.Key == EKey.E && ki.Modifier == EKeyModifier.Control) 
          Lux.PickScene (HW.MousePos)?.ZoomExtents ();
-      }
    }
 
    // Start rotating when the left mouse button is clicked (if the current scene is 3D)
    // Start panning when the middle mouse button is clicked
    void OnMouseClick (MouseClickInfo mi) {
       if (Lux.PickScene (mi.Position) is { } sc) {
-         Lib.Trace (mi.Position);
          if (mi.Button == EMouseButton.Left && sc is Scene3 sc3) {
             if (Lux.Pick (mi.Position) is { } vnode) {
                if (vnode.Obj != null) sc.Picked (vnode.Obj);
