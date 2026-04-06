@@ -133,7 +133,7 @@ public abstract class Scene {
 
       // Save some state
       var (zoom, pan) = (mZoomFactor, PanVector);
-      ZoomToContent (Rect.Size, out yIdeal);
+      ZoomToContent (size, out yIdeal);
       var dib = (DIBitmap)Lux.Render (this, size, ETarget.Image, fmt)!;
       mZoomFactor = zoom; PanVector = pan; XfmChanged ();
       if (unattached) Detach (); 

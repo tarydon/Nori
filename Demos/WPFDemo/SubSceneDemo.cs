@@ -1,4 +1,8 @@
-﻿using Nori;
+﻿// ────── ╔╗
+// ╔═╦╦═╦╦╬╣ SubSceneDemo.cs
+// ║║║║╬║╔╣║ Creates multiple sub-scenes hosted on top of the main scene
+// ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
+using Nori;
 namespace WPFDemo;
 
 class SubSceneDemo : Scene2 {
@@ -8,6 +12,11 @@ class SubSceneDemo : Scene2 {
    }
 }
 
+// This VN is the root scene in which the other scenes are housed. 
+// This does not draw anything other than the thick 'borders' around the other 3
+// scenes. These are drawn using the PxLines shader (drawing lines in pixel-specific
+// coordinates) using the Scene.Rect to figure out the extents of the sub-scenes in 
+// pixel coordinates. 
 class BaseVN : VNode {
    public BaseVN () => Streaming = true;
 
@@ -48,9 +57,14 @@ class BaseVN : VNode {
    bool mCreated;
 }
 
+// The first subscene (using the left of the screen) displays the drawing that we
+// are going to fold. The following interactions are supported:
+// - Mouse-wheel zooms in/out
+// - MiddleClick + Drag pans
+// - Ctrl+E 
 class DwgSubScene : Scene2 {
    public DwgSubScene (Dwg2 dwg) {
-      Bound = dwg.Bound.InflatedF (1.1);
+      Bound = dwg.Bound.InflatedF (1.25);
       BgrdColor = new Color4 (232, 236, 240);
       TraceVN.HoldTime = 20; TraceVN.TextColor = Color4.Blue;
       Root = new GroupVN ([new Dwg2VN (dwg), new DwgFillVN (dwg) { Color = Color4.White }, TraceVN.It]);
@@ -59,9 +73,12 @@ class DwgSubScene : Scene2 {
       Lib.Trace ("Use mouse-wheel in any scene to zoom in/out.");
       Lib.Trace ("Use LeftClick + Drag in 3D scenes to rotate.");
       Lib.Trace ("Use MiddleClick + Drag in any scene to pan.");
+      Lib.Trace ("Ctrl+E does a zoom-extent of the scene under the cursor.");
    }
 }
 
+// The second sub-scene (bottom right) displays the drawing folded to a model, and can 
+// be used to test interactions:
 class ModelSubScene : Scene3 {
    public ModelSubScene (Dwg2 dwg) {
       var pf = new PaperFolder (dwg);

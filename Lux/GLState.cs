@@ -2,8 +2,6 @@
 // ╔═╦╦═╦╦╬╣ GLState.cs
 // ║║║║╬║╔╣║ Class GLState - used to effect changes to OpenGL state (write only on change)
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
-using System.Windows.Controls;
-
 namespace Nori;
 
 #region class GLState ------------------------------------------------------------------------------
