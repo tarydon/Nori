@@ -1,4 +1,5 @@
-﻿using System.Windows;
+﻿using System.Reactive.Linq;
+using System.Windows;
 using Nori;
 namespace WPFShell;
 
@@ -24,55 +25,52 @@ class DemoScene : Scene2 {
       Bound = new Bound2 (0, 0, 100, 50);
       BgrdColor = new Color4 (128, 96, 64);
       TraceVN.TextColor = Color4.Yellow; Lib.Tracer = TraceVN.Print;
-      Root = new GroupVN([new Demo2D (), TraceVN.It]);
+      Root = new GroupVN([new DemoVN (Pts), TraceVN.It]);
+
+      HW.MouseClicks.Where (a => a.IsLeftPress).Subscribe (OnClick);
+      HW.MouseClicks.Where (a => a.Button == EMouseButton.Left && a.IsRelease).Subscribe (OnRelease);
+      HW.MouseMoves.Subscribe (OnMove);
+   }
+   AList<Vec2S> Pts = [];
+
+   void OnClick (MouseClickInfo mi) {
+      if (HW.CaptureMouse (true)) {
+         Pts.Add (mi.Position); Pts.Add (mi.Position);
+         mDragging = true;
+      }
+   }
+   bool mDragging;
+
+   void OnMove (Vec2S pt) {
+      if (mDragging) { Pts[^1] = pt; }
+   }
+
+   void OnRelease (MouseClickInfo mi) {
+      if (mDragging) { mDragging = false; HW.CaptureMouse (false); }
    }
 }
 
-class DemoPx : VNode {
-   public DemoPx () {
-      mFace = new (Lib.ReadBytes ("nori:GL/Fonts/Roboto-Regular.ttf"), (int)(96 * Lux.DPIScale));
-      Streaming = true;
+class DemoVN : VNode {
+   public DemoVN (AList<Vec2S> pts) {
+      (mPts = pts).Subscribe (a => Redraw ());
+      Streaming = true; 
    }
 
-   public override void SetAttributes () 
-      => (Lux.Color, Lux.TypeFace) = (Color4.White, mFace);
+   public override void SetAttributes () => Lux.Color = Color4.White;
 
    public override void Draw () {
-      List<Vec2F> vecs = [];
-      // Lux.PxLines (vecs);
+      var pts = mPts.Select (a => new Vec2F (a.X, a.Y)).ToList ();
+      Lux.PxLines (pts.AsSpan ());
 
-      Vec2S p = new (100, 400);
-      string text = "Ha";
-      Lux.TextPx (text, p);
-      var r = mFace.Measure (text, true);
-
-      Vec2F a = new (p.X + r.Left, p.Y + r.Bottom), b = new (p.X + r.Right, p.Y + r.Bottom);
-      Vec2F c = new (p.X + r.Right, p.Y + r.Top), d = new (p.X + r.Left, p.Y + r.Top);
-      vecs.AddM ([a, b, b, c, c, d, d, a]);
-      Lux.PxLines (vecs.AsSpan ());
+      if (mPts.Count > 0) {
+         TypeFace tf = TypeFace.Default;
+         Vec2S a = mPts[^2], b = mPts[^1];
+         string text = $"({b.X},{b.Y})";
+         RectS rect = tf.Measure (text, true);
+         if (b.X >= a.X) Lux.TextPx (text, new Vec2S (b.X + rect.Height / 2, b.Y + rect.Height / 2));
+         else Lux.TextPx (text, new Vec2S (b.X - rect.Width - rect.Height / 2, b.Y + rect.Height / 2));
+      }
    }
 
-   TypeFace mFace;
-}
-
-class Demo2D : VNode {
-   public Demo2D () {
-      mFace = new (Lib.ReadBytes ("nori:GL/Fonts/Roboto-Regular.ttf"), (int)(96 * Lux.DPIScale));
-      Streaming = true;
-   }
-
-   public override void SetAttributes ()
-      => (Lux.Color, Lux.TypeFace) = (Color4.White, mFace);
-
-   public override void Draw () {
-      List<Vec2F> vecs = [];
-      vecs.AddM ([new (10, 10), new (90, 10), new (90, 10), new (90, 40),
-                  new (90, 40), new (10, 40), new (10, 40), new (10, 10),
-                  new (50, 10), new (50, 40), new (10, 25), new (90, 25)]);
-      Lux.Lines (vecs.AsSpan ());
-
-      Lux.Text2D ("Ha", new (50, 25), ETextAlign.BotLeft, Vec2S.Zero);
-   }
-
-   TypeFace mFace;
+   AList<Vec2S> mPts;
 }
