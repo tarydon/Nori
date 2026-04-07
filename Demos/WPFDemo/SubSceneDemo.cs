@@ -24,11 +24,10 @@ class BaseVN : VNode {
       if (!mCreated) CreateSubscenes ();
       else {
          List<Vec2F> a = [];
-         var size = Lux.PanelSize;
          foreach (var scene in Lux.SubScenes) {
             var r = scene.Rect;
-            for (int i = 1; i < 6; i++) {
-               int x0 = r.Left - i, x1 = r.Right + i - 1, y0 = size.Y - r.Top - i - 1, y1 = size.Y - r.Bottom + i - 2;
+            for (int i = 1; i < 7; i++) {
+               int x0 = r.Left - i, x1 = r.Right + i - 1, y0 = r.Top - i, y1 = r.Bottom + i;
                Add (x0, y0); Add (x1, y0, 2); Add (x1, y1, 2); Add (x0, y1, 2); Add (x0, y0);
             }
          }
@@ -44,7 +43,7 @@ class BaseVN : VNode {
       if (!mCreated) {
          mCreated = true;
          var size = Lux.PanelSize;
-         double xGutter = 18.0 / size.X, yGutter = 18.0 / size.Y, xMid = 0.5, yMid = 0.5;
+         double xGutter = 18.0 / size.X, yGutter = 18.0 / size.Y, xMid = 0.5, yMid = 0.66;
 
          Color4 color = new (200, 208, 216);
          var dwg = DXFReader.Load ("N:/Demos/Data/Folder/02.dxf");

@@ -120,15 +120,14 @@ public readonly struct Mat4F {
          X == b.X && Y == b.Y && Z == b.Z && M44 == b.M44;
 }
 
-#region struct RectS -------------------------------------------------------------------------------
 /// <summary>An axis-aligned pixel-rectangle (components are shorts)</summary>
 /// This follows the Nori pixel-coordinate conventions: (0,0) is the top left corner of the
 /// screen, and +X is RIGHT, +Y is DOWN. The bottom-right corner pixel of the screen has 
 /// pixel coordinates (Lux.PanelSize.X - 1, Lux.PanelSize.Y - 1)
 [StructLayout (LayoutKind.Sequential, Pack = 2, Size = 8)]
-public readonly struct ARectS : IEQuable<ARectS> {
+public readonly struct RectS : IEQuable<RectS> {
    // Constructors -------------------------------------------------------------
-   public ARectS (int left, int top, int right, int bottom) {
+   public RectS (int left, int top, int right, int bottom) {
       (Left, Top, Right, Bottom) = ((short)left, (short)top, (short)right, (short)bottom);
       Lib.Assert (right >= left && bottom >= top);
    }
@@ -156,11 +155,11 @@ public readonly struct ARectS : IEQuable<ARectS> {
    public Vec2S Size => new (Right - Left, Bottom - Top);
 
    /// <summary>Special 'empty' RectS</summary>
-   public static readonly ARectS Empty = new (-32768, -32768, -32768, -32768);
+   public static readonly RectS Empty = new (-32768, -32768, -32768, -32768);
 
    // Methods ------------------------------------------------------------------
    /// <summary>Implementation of IEQable</summary>
-   public bool EQ (ARectS b)
+   public bool EQ (RectS b)
       => Left == b.Left && Top == b.Top && Right == b.Right && Bottom == b.Bottom;
 
    /// <summary>Checks if this RectS contains a given Vec2S</summary>
@@ -169,50 +168,5 @@ public readonly struct ARectS : IEQuable<ARectS> {
 
    // Implementation -----------------------------------------------------------
    public override string ToString () => $"RectS {Width}x{Height} @ {Left},{Top}";
-}
-#endregion
-
-/// <summary>An axis-aligned pixel-rectangle (components are shorts)</summary>
-/// This follows OpenGL sign conventions : (0,0) is the bottom left corner of the screen,
-/// and +X is right, +Y is up
-[StructLayout (LayoutKind.Sequential, Pack = 2, Size = 8), Obsolete ("REMOVETHIS")]
-public readonly struct RectS : IEQuable<RectS> {
-   public RectS (int left, int bottom, int right, int top) {
-      (Left, Bottom, Right, Top) = ((short)left, (short)bottom, (short)right, (short)top);
-      if (right < left || top < bottom) throw new NotImplementedException ();
-   }
-
-   public RectS (float left, float bottom, float right, float top) {
-      (Left, Bottom, Right, Top) = ((short)(left + 0.5f), (short)(bottom + 0.5f), (short)(right + 0.5f), (short)(top + 0.5f));
-      if (right < left || top < bottom) throw new NotImplementedException ();
-   }
-
-   public RectS Shifted (int x, int y) => new (Left + x, Bottom + y, Right + x, Top + y);
-
-   public static readonly RectS Empty = new (32767, 32767, 32767, 32767);
-   public bool IsEmpty => Left == 32767;
-
-   public bool Contains (Vec2S p)
-      => Left <= p.X && p.X <= Right && Bottom <= p.Y && p.Y <= Top;
-
-   public int Width => Right - Left;
-   public int Height => Top - Bottom;
-   public Vec2S Midpoint => new ((Left + Right) / 2, (Top + Bottom) / 2);
-   public Vec2S BottomLeft => new (Left, Bottom);
-   public Vec2S TopRight => new (Right, Top);
-   public Vec2S Size => new (Right - Left, Top - Bottom);
-   public override string ToString () => $"[{Width}x{Height} @ {Left},{Bottom}]";
-
-   public int CompareTo (RectS b) {
-      int n = Left.CompareTo (b.Left); if (n != 0) return n;
-      n = Bottom.CompareTo (b.Bottom); if (n != 0) return n;
-      n = Right.CompareTo (b.Right); if (n != 0) return n;
-      return Top.CompareTo (b.Top);
-   }
-
-   public bool EQ (RectS b)
-      => Left == b.Left && Bottom == b.Bottom && Right == b.Right && Top == b.Top;
-
-   public readonly short Left, Bottom, Right, Top;
 }
 #endregion

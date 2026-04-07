@@ -42,7 +42,7 @@ public abstract class Scene {
    /// The extent of this scene, in pixels - (0,0) being top left corner
    /// </summary>
    /// On a panel 640x480, the UIScene will have Left=0, Top=0, Right=640, Bottom=480
-   public ARectS Rect {
+   public RectS Rect {
       get => field;
       set { if (Lib.Set (ref field, value)) XfmChanged (); }
    }
@@ -155,7 +155,7 @@ public abstract class Scene {
       // Use the local viewport, and convert pos to coordinates relative to the
       // bottom-left of this Scene
       var vp = Rect.Size;
-      pos = new Vec2S (pos.X - Rect.Left, pos.Y - Rect.Bottom);
+      pos = new Vec2S (pos.X - Rect.Left, pos.Y - Rect.Top);
       Point3 mid = Midpoint * (WorldXfm * ProjectionXfm);
       Point2 pmid = new (vp.X * (mid.X + 1) / 2, vp.Y * (1 - mid.Y) / 2);
       Point2 pt = new (pos.X, pos.Y), pmouse2 = pmid + (pt - pmid) * factor;
@@ -214,7 +214,7 @@ public abstract class Scene {
 
    internal Point3 Unproject (Vec2S pos, float depth) {
       Vec2S vp = Rect.Size;
-      pos = new (pos.X - Rect.Left, pos.Y - Rect.Bottom);
+      pos = new (pos.X - Rect.Left, pos.Y - Rect.Top);
       double x = 2.0 * pos.X / vp.X - 1;
       double y = -(2.0 * pos.Y / vp.Y - 1);
       double z = 2 * depth - 1;

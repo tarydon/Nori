@@ -137,7 +137,7 @@ public static partial class Lux {
          mPickPixel = tup.Item1; mPickDepth = tup.Item2;
       }
 
-      Vec2S local = new (pos.X - scene.Rect.Left, pos.Y - scene.Rect.Bottom);
+      Vec2S local = new (pos.X - scene.Rect.Left, pos.Y - scene.Rect.Top);
       int index = (viewport.Y - local.Y - 1) * viewport.X + local.X;
       if (index < 0 || index >= mPickDepth.Length) return null;
       float fDepth = mPickDepth[index];
@@ -199,7 +199,7 @@ public static partial class Lux {
       if (mRendering) throw new InvalidOperationException ();
       mRendering = true;
 
-      var vp = new ARectS (0, 0, viewport.X, viewport.Y);
+      var vp = new RectS (0, 0, viewport.X, viewport.Y);
       BeginRender (viewport, target);
       mPanelSize = viewport;  // Set only when rendering the root scene
       StartFrame (viewport);
@@ -217,13 +217,13 @@ public static partial class Lux {
                var (cx, cy, DX, DY) = (mPanelSize.X, mPanelSize.Y, bound2.X, bound2.Y);
                int x0 = (int)(DX.Min * cx + 0.5), x1 = (int)(DX.Max * cx + 0.5);
                int y0 = (int)(DY.Min * cy + 0.5), y1 = (int)(DY.Max * cy + 0.5);
-               var rect = new ARectS (x0, y0, x1, y1);
+               var rect = new RectS (x0, y0, x1, y1);
                if (target == ETarget.Screen)
                   scene2.Rect = new (x0, yMax - y1, x1, yMax - y0);
                var vport = rect.Size;
                BeginRender (vport, target);  // Don't worry about viewport - it
                StartFrame (vport);
-               GLState.StartFrame (new Vec2S (rect.Left, rect.Bottom), vport, scene2.BgrdColor);
+               GLState.StartFrame (new Vec2S (rect.Left, rect.Top), vport, scene2.BgrdColor);
                RBatch.StartFrame ();
                Shader.StartFrame ();
                scene2.Render (vport);

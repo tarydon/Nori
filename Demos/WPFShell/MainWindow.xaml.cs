@@ -44,7 +44,7 @@ class DemoPx : VNode {
       Vec2S p = new (100, 400);
       string text = "Ha";
       Lux.TextPx (text, p);
-      var r = mFace.AMeasure (text, true);
+      var r = mFace.Measure (text, true);
 
       Vec2F a = new (p.X + r.Left, p.Y + r.Bottom), b = new (p.X + r.Right, p.Y + r.Bottom);
       Vec2F c = new (p.X + r.Right, p.Y + r.Top), d = new (p.X + r.Left, p.Y + r.Top);
@@ -65,7 +65,7 @@ class Demo2D : VNode {
       => (Lux.Color, Lux.TypeFace) = (Color4.White, mFace);
 
    public override void Draw () {
-      List<Vec2F> vecs = new List<Vec2F> ();
+      List<Vec2F> vecs = [];
       vecs.AddM ([new (10, 10), new (90, 10), new (90, 10), new (90, 40),
                   new (90, 40), new (10, 40), new (10, 40), new (10, 10),
                   new (50, 10), new (50, 40), new (10, 25), new (90, 25)]);

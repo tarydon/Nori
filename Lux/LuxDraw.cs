@@ -327,7 +327,7 @@ public static partial class Lux {
       // parameter from above will get added to each cell position). However, if we want
       // other alignments like TopRight or MidCenter, we need to adjust all these cells.
       // Let's compute the dx and dy for that adjustment here:
-      var cellM = face.AMeasure ("M", true);
+      var cellM = face.Measure ("M", true);
       short dx = 0, dy = 0, nAlign = (short)(align - 1);
       Span<Text2DShader.Args> output = stackalloc Text2DShader.Args[text.Length];
 
@@ -375,7 +375,7 @@ public static partial class Lux {
       // parameter from above will get added to each cell position). However, if we want
       // other alignments like TopRight or MidCenter, we need to adjust all these cells.
       // Let's compute the dx and dy for that adjustment here:
-      var cellM = face.AMeasure ("M", true);
+      var cellM = face.Measure ("M", true);
       short dx = 0, dy = 0, nAlign = (short)(align - 1);
       Span<Text3DShader.Args> output = stackalloc Text3DShader.Args[text.Length];
 

@@ -150,34 +150,6 @@ public class TypeFace {
    /// <summary>Get metrics data for a given glyph index</summary>
    public ref Metrics GetMetrics (uint n) => ref Notes[n];
 
-   /// <summary>This 'measures' the text and returns the bounding box of it</summary>
-   /// This assumes we are drawing the text with the baseline-start at (0,0). As with
-   /// all pixel coordinates, the top left of the screen is 0,0 and +Y goes downwards. 
-   /// This returns the bounding rectangle of such a text. 
-   /// <param name="text">The text to measure</param>
-   /// <param name="exact">If set, the Y extents are tightly aligned to the extents of the
-   /// given text. Otherwise, they are set to the general ascender / descender of this font,
-   /// and thus more useful for alignment, planning and positioning</param>
-   [Obsolete ("REMOVETHIS")]
-   public RectS Measure (string text, bool exact = false) {
-      uint idx0 = 0;
-      int x = 0, y = 0;
-      int left = 9999, top = 0, right = 0, bottom = 0;
-      foreach (var ch in text) {
-         uint idx1 = GetGlyphIndex (ch);
-         var metric = GetMetrics (idx1);
-         int kern = GetKerning (idx0, idx1);
-         int xChar = x + metric.LeftBearing + kern, yChar = y + metric.TopBearing;
-         left = Math.Min (left, xChar); top = Math.Min (top, yChar - metric.Rows);
-         right = Math.Max (right, xChar + metric.Columns); bottom = Math.Max (bottom, yChar);
-         x += metric.Advance + kern;
-         idx0 = idx1;
-      }
-      if (!exact) { bottom = mAscender; top = -mDescender; }
-      if (right == 0) left = 0;
-      return new (left, top, right, bottom);
-   }
-
    /// <summary>
    /// This 'measures' some text and returns the bounding box of it
    /// </summary>
@@ -190,7 +162,7 @@ public class TypeFace {
    /// <param name="exact">If set, the Y extents are tightly aligned to the extents of the
    /// given string of text. Otherwise, they are set to the general ascender / descender of this
    /// font, and are thus more useful for alignment, polanning and positioning</param>
-   public ARectS AMeasure (string text, bool exact = false) {
+   public RectS Measure (string text, bool exact = false) {
       uint idx0 = 0;
       int x = 0, y = 0, left = 9999, top = 0, right = 0, bottom = 0;
       foreach (var ch in text) {
