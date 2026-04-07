@@ -17,7 +17,7 @@ public readonly struct Vec2F (float x, float y) : IEQuable<Vec2F> {
 }
 
 /// <summary>2D vector of short-ints (used to represent viewport sizes etc)</summary>
-[StructLayout (LayoutKind.Sequential, Pack = 4, Size = 8)]
+[StructLayout (LayoutKind.Sequential, Pack = 2, Size = 4)]
 public readonly struct Vec2S (short x, short y) : IEQuable<Vec2S> {
    public Vec2S (int x, int y) : this ((short)x, (short)y) { }
    public bool EQ (Vec2S b) => X == b.X && Y == b.Y;

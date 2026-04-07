@@ -25,52 +25,34 @@ class DemoScene : Scene2 {
       Bound = new Bound2 (0, 0, 100, 50);
       BgrdColor = new Color4 (128, 96, 64);
       TraceVN.TextColor = Color4.Yellow; Lib.Tracer = TraceVN.Print;
-      Root = new GroupVN([new DemoVN (Pts), TraceVN.It]);
-
-      HW.MouseClicks.Where (a => a.IsLeftPress).Subscribe (OnClick);
-      HW.MouseClicks.Where (a => a.Button == EMouseButton.Left && a.IsRelease).Subscribe (OnRelease);
-      HW.MouseMoves.Subscribe (OnMove);
-   }
-   AList<Vec2S> Pts = [];
-
-   void OnClick (MouseClickInfo mi) {
-      if (HW.CaptureMouse (true)) {
-         Pts.Add (mi.Position); Pts.Add (mi.Position);
-         mDragging = true;
-      }
-   }
-   bool mDragging;
-
-   void OnMove (Vec2S pt) {
-      if (mDragging) { Pts[^1] = pt; }
-   }
-
-   void OnRelease (MouseClickInfo mi) {
-      if (mDragging) { mDragging = false; HW.CaptureMouse (false); }
+      Root = new GroupVN([new DemoVN (), TraceVN.It]);
    }
 }
 
 class DemoVN : VNode {
-   public DemoVN (AList<Vec2S> pts) {
-      (mPts = pts).Subscribe (a => Redraw ());
-      Streaming = true; 
-   }
+   public DemoVN () { }
 
-   public override void SetAttributes () => Lux.Color = Color4.White;
+   public override void SetAttributes () 
+      => Lux.Color = Color4.White;
 
    public override void Draw () {
-      var pts = mPts.Select (a => new Vec2F (a.X, a.Y)).ToList ();
-      Lux.PxLines (pts.AsSpan ());
+      byte[] D = Lib.ReadBytesFromZip ("c:/etc/Logo.zip", "Logo.bmp");
+      for (int y = 0; y < 128; y++)
+         for (int x = 0; x < 128; x++) {
+            int n = 150 + y * 512 + x * 4;
+            byte b = D[n], g = D[n + 1], r = D[n + 2], a = D[n + 3];
+            Lux.PxPoint (new (x + 10, 138 - y), new Color4 (a, r, g, b));
+         }
 
-      if (mPts.Count > 0) {
-         TypeFace tf = TypeFace.Default;
-         Vec2S a = mPts[^2], b = mPts[^1];
-         string text = $"({b.X},{b.Y})";
-         RectS rect = tf.Measure (text, true);
-         if (b.X >= a.X) Lux.TextPx (text, new Vec2S (b.X + rect.Height / 2, b.Y + rect.Height / 2));
-         else Lux.TextPx (text, new Vec2S (b.X - rect.Width - rect.Height / 2, b.Y + rect.Height / 2));
+      List<Vec2S> pts = [];
+      for (int i = 0; i <= 100; i += 10) {
+         pts.Add (new (140 + i, 20));
+         pts.Add (new (140, 120 - i));
       }
-   }
+      Lux.Lines (pts.AsSpan ());
 
-   AList<Vec2S> mPts;
+      pts.Clear ();
+      pts.AddM (new (280, 20), new (380, 20));
+      Lux.Lines (pts.AsSpan ());
+   }
 }

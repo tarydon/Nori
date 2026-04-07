@@ -197,7 +197,17 @@ public static partial class Lux {
    }
 
    /// <summary>Draws 2D lines (in pixel coordinates)</summary>
-   public static void PxLines (ReadOnlySpan<Vec2F> pts) => LinePxShader.It.Draw (pts);
+   public static void Lines (ReadOnlySpan<Vec2S> pts) {
+      mBuf.Clear ();
+      foreach (var pt in pts) mBuf.Add (new (pt.X, pt.Y));
+      LinePxShader.It.Draw (pts);
+   } 
+
+   public static void PxPoint (Vec2S pix, Color4 color) {
+      Span<PointPxShader.Arg> pts = stackalloc PointPxShader.Arg[1];
+      pts[0] = new (pix, (Vec4F)color);
+      PointPxShader.It.Draw (pts);
+   }
 
    /// <summary>Draws a 2D line-strip (an open polyline made up of the given set of points)</summary>
    public static void LineStrip (IReadOnlyList<Point2> pts) {

@@ -229,9 +229,20 @@ public static class Lib {
       return [.. lines];
    }
 
+   /// <summary>
+   /// Reads all the bytes from a stream inside a Zip archive
+   /// </summary>
+   public static byte[] ReadBytesFromZip (string zipfile, string stream) {
+      using var zar = new ZipArchive (File.OpenRead (zipfile));
+      var ze = zar.GetEntry (stream)!;
+      var zstm = new ZipReadStream (ze.Open (), ze.Length);
+      byte[] data = new byte[ze.Length]; zstm.ReadExactly (data);
+      return data;
+   }
+
    /// <summary>Reads a set of lines from a stream inside a Zip archive</summary>
    public static List<string> ReadLinesFromZip (string zipfile, string stream) {
-      var zar = new ZipArchive (File.OpenRead (zipfile));
+      using var zar = new ZipArchive (File.OpenRead (zipfile));
       var ze = zar.GetEntry (stream)!;
       var zstm = new ZipReadStream (ze.Open (), ze.Length);
       return [.. zstm.ReadAllLines ()];

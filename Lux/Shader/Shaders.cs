@@ -2,6 +2,8 @@
 // ╔═╦╦═╦╦╬╣ Shaders.cs
 // ║║║║╬║╔╣║ Final Shader classes, all inherited from Shader<Vertex, UBlock>
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
+using System.Reactive;
+
 namespace Nori;
 
 #region class Bezier2DShader -----------------------------------------------------------------------
@@ -133,10 +135,29 @@ partial class Line3DShader : Shader<Vec3F, Seg2DShader.Settings> {
 }
 #endregion
 
+#region class PointPxShader ------------------------------------------------------------------------
+/// <summary>
+/// Takes point (in pixel space) + color as input and plots one pixel
+/// </summary>
+/// The color is not a uniform but part of the vertex data passed in with each point
+[Singleton]
+partial class PointPxShader : Shader<PointPxShader.Arg, Color4> {
+   PointPxShader () : base (ShaderImp.PointPx) => Bind ();
+   int muVPScale = 0, muDrawColor = 0;
+
+   protected override void ApplyUniformsImp (ref readonly Color4 a) => Pgm.Set (muDrawColor, a);
+   protected override int OrderUniformsImp (ref readonly Color4 a, ref readonly Color4 b) => (int)(a.Value - b.Value);
+   protected override void SetConstantsImp () => Pgm.Set (muVPScale, Lux.VPScale);
+   protected override Color4 SnapUniformsImp () => Lux.Color;
+
+   public record struct Arg (Vec2S Pixel, Vec4F Color);
+}
+#endregion
+
 #region class LinePxShader -------------------------------------------------------------------------
 /// <summary>Draws lines in pixel space</summary>
 [Singleton]
-partial class LinePxShader : Shader<Vec2F, Color4> {
+partial class LinePxShader : Shader<Vec2S, Color4> {
    LinePxShader () : base (ShaderImp.LinePx) => Bind ();
    int muVPScale = 0, muDrawColor = 0;
 
