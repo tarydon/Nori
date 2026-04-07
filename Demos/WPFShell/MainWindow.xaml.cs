@@ -21,13 +21,58 @@ public partial class MainWindow : Window {
 
 class DemoScene : Scene2 {
    public DemoScene () {
-      mFace = new (Lib.ReadBytes ("nori:GL/Fonts/Roboto-Regular.ttf"), (int)(48 * Lux.DPIScale));
       Bound = new Bound2 (0, 0, 100, 50);
       BgrdColor = new Color4 (128, 96, 64);
-      Root = new SimpleVN (
-         () => (Lux.Color, Lux.TypeFace) = (Color4.White, mFace),
-         () => Lux.TextPx ("Welcome to Nori.", new Vec2S (100, 100))
-      );
+      TraceVN.TextColor = Color4.Yellow; Lib.Tracer = TraceVN.Print;
+      Root = new GroupVN([new Demo2D (), TraceVN.It]);
    }
+}
+
+class DemoPx : VNode {
+   public DemoPx () {
+      mFace = new (Lib.ReadBytes ("nori:GL/Fonts/Roboto-Regular.ttf"), (int)(96 * Lux.DPIScale));
+      Streaming = true;
+   }
+
+   public override void SetAttributes () 
+      => (Lux.Color, Lux.TypeFace) = (Color4.White, mFace);
+
+   public override void Draw () {
+      List<Vec2F> vecs = [];
+      // Lux.PxLines (vecs);
+
+      Vec2S p = new (100, 400);
+      string text = "Ha";
+      Lux.TextPx (text, p);
+      var r = mFace.AMeasure (text, true);
+
+      Vec2F a = new (p.X + r.Left, p.Y + r.Bottom), b = new (p.X + r.Right, p.Y + r.Bottom);
+      Vec2F c = new (p.X + r.Right, p.Y + r.Top), d = new (p.X + r.Left, p.Y + r.Top);
+      vecs.AddM ([a, b, b, c, c, d, d, a]);
+      Lux.PxLines (vecs.AsSpan ());
+   }
+
+   TypeFace mFace;
+}
+
+class Demo2D : VNode {
+   public Demo2D () {
+      mFace = new (Lib.ReadBytes ("nori:GL/Fonts/Roboto-Regular.ttf"), (int)(96 * Lux.DPIScale));
+      Streaming = true;
+   }
+
+   public override void SetAttributes ()
+      => (Lux.Color, Lux.TypeFace) = (Color4.White, mFace);
+
+   public override void Draw () {
+      List<Vec2F> vecs = new List<Vec2F> ();
+      vecs.AddM ([new (10, 10), new (90, 10), new (90, 10), new (90, 40),
+                  new (90, 40), new (10, 40), new (10, 40), new (10, 10),
+                  new (50, 10), new (50, 40), new (10, 25), new (90, 25)]);
+      Lux.Lines (vecs.AsSpan ());
+
+      Lux.Text2D ("Ha", new (50, 25), ETextAlign.BotLeft, Vec2S.Zero);
+   }
+
    TypeFace mFace;
 }

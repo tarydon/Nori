@@ -327,7 +327,7 @@ public static partial class Lux {
       // parameter from above will get added to each cell position). However, if we want
       // other alignments like TopRight or MidCenter, we need to adjust all these cells.
       // Let's compute the dx and dy for that adjustment here:
-      var cellM = face.Measure ("M", true);
+      var cellM = face.AMeasure ("M", true);
       short dx = 0, dy = 0, nAlign = (short)(align - 1);
       Span<Text2DShader.Args> output = stackalloc Text2DShader.Args[text.Length];
 
@@ -342,7 +342,7 @@ public static partial class Lux {
       switch (nAlign / 3) {
          case 0: dy = (short)(-cellM.Top); break;        // Top alignment
          case 1: dy = (short)(-cellM.Top / 2); break;    // Center alignment
-         case 2: dy = (short)face.Descender; break;      // Bottom alignment (based on face bounding box)
+         case 2: dy = (short)(-face.Descender); break;      // Bottom alignment (based on face bounding box)
       }
       for (int i = 0; i < cells.Length; i++) {
          ref TextPxShader.Args input = ref cells[i];
@@ -375,7 +375,7 @@ public static partial class Lux {
       // parameter from above will get added to each cell position). However, if we want
       // other alignments like TopRight or MidCenter, we need to adjust all these cells.
       // Let's compute the dx and dy for that adjustment here:
-      var cellM = face.Measure ("M", true);
+      var cellM = face.AMeasure ("M", true);
       short dx = 0, dy = 0, nAlign = (short)(align - 1);
       Span<Text3DShader.Args> output = stackalloc Text3DShader.Args[text.Length];
 
@@ -390,7 +390,7 @@ public static partial class Lux {
       switch (nAlign / 3) {
          case 0: dy = (short)(-cellM.Top); break;        // Top alignment
          case 1: dy = (short)(-cellM.Top / 2); break;    // Center alignment
-         case 2: dy = (short)face.Descender; break;      // Bottom alignment (based on face bounding box)
+         case 2: dy = (short)(-face.Descender); break;      // Bottom alignment (based on face bounding box)
       }
       for (int i = 0; i < cells.Length; i++) {
          ref TextPxShader.Args input = ref cells[i];
@@ -433,13 +433,13 @@ public static partial class Lux {
          uint idx1 = face.GetGlyphIndex (ch);         // Get glyph index for the character
          var metric = face.GetMetrics (idx1);         // Get the metrics for this character
          int kern = face.GetKerning (idx0, idx1);     // Then, the kerning adjustment between the previous character and this one
-         short xChar = (short)(x + metric.LeftBearing + kern), yChar = (short)(y + metric.TopBearing);
+         short xChar = (short)(x + metric.LeftBearing + kern), yChar = (short)(y - metric.TopBearing);
          // We are using a Vec4S to store a 'cell' in pixels where the character is to be drawn.
          // It has lower left corner at (X,Y) of the Vec4S and the top right corner at (Z,W) of the
          // Vec4S. The other bit of data is the offset into the font texture for this glyph
          // (a single number suffices since we store the texture in a linear-unpacked format,
          // not as a 2D bitmap).
-         var vec = new Vec4S (xChar, yChar - metric.Rows, xChar + metric.Columns, yChar);
+         var vec = new Vec4S (xChar, yChar, xChar + metric.Columns, yChar + metric.Rows);
          cells[n++] = new (vec, metric.TexOffset);
          x += metric.Advance + kern;
          idx0 = idx1;

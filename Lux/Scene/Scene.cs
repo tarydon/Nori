@@ -12,8 +12,10 @@ namespace Nori;
 public abstract class Scene {
    // Properties ---------------------------------------------------------------
    /// <summary>Background color (clear color) for this scene</summary>
-   public Color4 BgrdColor { get => mBgrdColor; set { mBgrdColor = value; Lux.Redraw (); } }
-   Color4 mBgrdColor = Color4.Gray (128);
+   public Color4 BgrdColor {
+      get => field;
+      set { if (Lib.Set (ref field, value)) Lux.Redraw (); }
+   } = Color4.Gray (128);
 
    /// <summary>The pan-vector (0,0) means centered</summary>
    /// This is in OpenGL clip-space coordinates
@@ -22,11 +24,6 @@ public abstract class Scene {
       set { if (Lib.Set (ref mPanVector, value)) XfmChanged (); }
    }
    Vector2 mPanVector = Vector2.Zero;
-
-   /// <summary>The extent of this scene in pixels, (0,0) being bottom left</summary>
-   /// Left,Bottom are inclusive while Right,Top are exclusive. So on a panel 640x480,
-   /// the UIScene will have Left=0, Bottom=0, Right=640, Top=480
-   public RectS Rect;
 
    /// <summary>How many world units does one pixel correspond to for this scene?</summary>
    public double PixelScale {
@@ -40,6 +37,15 @@ public abstract class Scene {
    /// <summary>The Projection transform (transforms world coordinates to OpenGL clip space)</summary>
    internal Matrix3 ProjectionXfm { get { _ = WorldXfm; return mProjectionXfm; } }
    Matrix3 mProjectionXfm = Matrix3.Identity;
+
+   /// <summary>
+   /// The extent of this scene, in pixels - (0,0) being top left corner
+   /// </summary>
+   /// On a panel 640x480, the UIScene will have Left=0, Top=0, Right=640, Bottom=480
+   public ARectS Rect {
+      get => field;
+      set { if (Lib.Set (ref field, value)) XfmChanged (); }
+   }
 
    /// <summary>The root VNode of this Scene</summary>
    public VNode? Root {
@@ -182,7 +188,7 @@ public abstract class Scene {
    public Point3 PixelToWorld (Vec2S pix) {
       // Convert to OpenGL clip-space coordinates
       Vec2S vp = Rect.Size;
-      pix = new (pix.X - Rect.Left, pix.Y - Rect.Bottom);
+      pix = new (pix.X - Rect.Left, pix.Y - Rect.Top);
       Point3 clip = new (2.0 * pix.X / vp.X - 1, 1.0 - 2.0 * pix.Y / vp.Y, 0);
       clip *= Xfms[0].InvXfm;
       int d = PixelScale switch { > 1 => 0, > 0.1 => 1, > 0.01 => 2, > 0.001 => 3, _ => 4 };

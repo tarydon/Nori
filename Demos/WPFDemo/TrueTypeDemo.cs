@@ -15,10 +15,10 @@ class TrueTypeScene : Scene2 {
 class TextNode : VNode {
    public override void SetAttributes () => Lux.TypeFace = mFace;
    public override void Draw () {
-      int y = Lux.PanelSize.Y - 200;
+      int y = 200;
       foreach (var line in mText.Split ('\n')) {
          Lux.TextPx (line, new Vec2S (60, y));
-         y -= 35;
+         y += 35;
       }
    }
 
@@ -50,10 +50,7 @@ class TextNode : VNode {
 
 class BigTextNode : VNode {
    public override void SetAttributes () => Lux.TypeFace = mFace;
-   public override void Draw () {
-      int y = Lux.PanelSize.Y;
-      Lux.TextPx ("Chapter 1.", new Vec2S (60, y - 100));
-   }
+   public override void Draw () => Lux.TextPx ("Chapter 1.", new Vec2S (60, 100));
 
    TypeFace mFace = new ("c:/Windows/fonts/constan.ttf", 40);
 }

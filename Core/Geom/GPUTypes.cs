@@ -150,6 +150,10 @@ public readonly struct ARectS : IEQuable<ARectS> {
    public int Height => Bottom - Top;
    /// <summary>The width of the RectS</summary>
    public int Width => Right - Left;
+   /// <summary>
+   /// The size of this RectS in pixels (width,height)
+   /// </summary>
+   public Vec2S Size => new (Right - Left, Bottom - Top);
 
    /// <summary>Special 'empty' RectS</summary>
    public static readonly ARectS Empty = new (-32768, -32768, -32768, -32768);
@@ -171,7 +175,7 @@ public readonly struct ARectS : IEQuable<ARectS> {
 /// <summary>An axis-aligned pixel-rectangle (components are shorts)</summary>
 /// This follows OpenGL sign conventions : (0,0) is the bottom left corner of the screen,
 /// and +X is right, +Y is up
-[StructLayout (LayoutKind.Sequential, Pack = 2, Size = 8), Obsolete]
+[StructLayout (LayoutKind.Sequential, Pack = 2, Size = 8), Obsolete ("REMOVETHIS")]
 public readonly struct RectS : IEQuable<RectS> {
    public RectS (int left, int bottom, int right, int top) {
       (Left, Bottom, Right, Top) = ((short)left, (short)bottom, (short)right, (short)top);

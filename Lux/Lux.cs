@@ -199,7 +199,7 @@ public static partial class Lux {
       if (mRendering) throw new InvalidOperationException ();
       mRendering = true;
 
-      var vp = new RectS (0, 0, viewport.X, viewport.Y);
+      var vp = new ARectS (0, 0, viewport.X, viewport.Y);
       BeginRender (viewport, target);
       mPanelSize = viewport;  // Set only when rendering the root scene
       StartFrame (viewport);
@@ -209,8 +209,7 @@ public static partial class Lux {
       Shader.StartFrame ();
       if (scene != null) {
          int yMax = mPanelSize.Y - 1;
-         if (target == ETarget.Screen)
-            scene.Rect = new (vp.Left, yMax - vp.Top, vp.Right, yMax - vp.Bottom);
+         if (target == ETarget.Screen) scene.Rect = vp;
          scene.Render (viewport);
          if (target == ETarget.Screen) {
             for (int i = 1; i < mScenes.Count; i++) {
@@ -218,7 +217,7 @@ public static partial class Lux {
                var (cx, cy, DX, DY) = (mPanelSize.X, mPanelSize.Y, bound2.X, bound2.Y);
                int x0 = (int)(DX.Min * cx + 0.5), x1 = (int)(DX.Max * cx + 0.5);
                int y0 = (int)(DY.Min * cy + 0.5), y1 = (int)(DY.Max * cy + 0.5);
-               var rect = new RectS (x0, y0, x1, y1);
+               var rect = new ARectS (x0, y0, x1, y1);
                if (target == ETarget.Screen)
                   scene2.Rect = new (x0, yMax - y1, x1, yMax - y0);
                var vport = rect.Size;
@@ -264,7 +263,6 @@ public static partial class Lux {
    static DateTime mFPSReportTS;    // When did we last issue an FPS report
    static int mcFPSFrames;          // Frames rendered since that time
    static bool mRendering;          // Currently rendering a frame
-
 
    /// <summary>Prompts the Lux system to redraw the screen (asynchronous)</summary>
    public static void Redraw () => HW.Redraw ();
