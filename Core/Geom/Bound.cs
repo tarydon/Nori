@@ -52,7 +52,7 @@ public readonly struct Bound1 : IEQuable<Bound1> {
    public float Clamp (float f) => f.Clamp (Min, Max);
 
    /// <summary>Returns true if f lies within the specific Bound1</summary>
-   public bool Contains (double f) => Min <= f && f <= Max;
+   public bool Contains (double f) => Min <= (float)f && (float)f <= Max;
    /// <summary>Returns true if f lies within the specific Bound1 and within specified threshold</summary>
    public bool Contains (double f, double threshold) => Min - threshold <= f && f <= Max + threshold;
    /// <summary>Returns true if f lies within the specific Bound1</summary>
