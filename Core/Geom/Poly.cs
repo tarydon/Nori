@@ -255,6 +255,15 @@ public partial class Poly {
       }
    }
 
+   /// <summary>
+   /// Discretizes the given Poly into another Poly
+   /// </summary>
+   public Poly DiscretizeP (double threshold, double angleLimit) {
+      List<Point2> pts = [];
+      Discretize (pts, threshold, angleLimit);
+      return Lines (pts, IsClosed);
+   }
+
    /// <summary>Returns the area of a Poly</summary>
    /// Results are meaningful only for closed Poly
    public double GetArea () {

@@ -19,15 +19,21 @@ public partial class MainWindow : Window {
    }
 }
 
-class DemoScene : Scene2 {
+class DemoScene : Scene3 {
    public DemoScene () {
-      mFace = new (Lib.ReadBytes ("nori:GL/Fonts/Roboto-Regular.ttf"), (int)(48 * Lux.DPIScale));
-      Bound = new Bound2 (0, 0, 100, 50);
-      BgrdColor = new Color4 (128, 96, 64);
-      Root = new SimpleVN (
-         () => (Lux.Color, Lux.TypeFace) = (Color4.White, mFace),
-         () => Lux.TextPx ("Welcome to Nori.", new Vec2S (100, 100))
-      );
+      var dwg = DXFReader.Load ("c:/etc/project.dxf");
+      var plines = dwg.Ents.OfType<E2Poly> ().Select (a => a.Poly).ToList ();
+      var side = plines[0]; var front = plines[1];
+
+      var dwg2 = new Dwg2 ();
+      dwg2.Add (side.DiscretizeP (Lib.CoarseTess, Lib.CoarseTessAngle));
+      dwg2.Add (front.DiscretizeP (Lib.CoarseTess, Lib.CoarseTessAngle));
+      DXFWriter.Save (dwg2, "c:/etc/discrete.dxf");
+
+      var mesh = Mesh3.Extrude ([side, front], 100, Matrix3.Rotation (EAxis.X, Lib.HalfPI));
+
+      Bound = mesh.Bound;
+      BgrdColor = new Color4 (64, 96, 128);
+      Root = new Mesh3VN (mesh) { Color = Color4.White };
    }
-   TypeFace mFace;
 }
