@@ -32,7 +32,7 @@ class BaseVN : VNode {
             }
          }
          Lux.Color = new Color4 (144, 148, 152);
-         Lux.PxLines (a.AsSpan ());
+         // Lux.PxLines (a.AsSpan ());
 
          // Helpers .......................................
          void Add (int x, int y, int n = 1) { for (int i = 0; i < n; i++) a.Add (new (x, y)); }
