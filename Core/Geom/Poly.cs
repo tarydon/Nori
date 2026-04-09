@@ -259,6 +259,7 @@ public partial class Poly {
    /// Discretizes the given Poly into another Poly
    /// </summary>
    public Poly DiscretizeP (double threshold, double angleLimit) {
+      if (!HasArcs) return this; 
       List<Point2> pts = [];
       Discretize (pts, threshold, angleLimit);
       return Lines (pts, IsClosed);
