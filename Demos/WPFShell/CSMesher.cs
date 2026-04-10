@@ -1,62 +1,219 @@
 ﻿namespace Nori;
+using static Math;
 
 /// <summary>
 /// This class is used to create a mesh from 2 cross-sections (front & side views)
 /// </summary>
 public class CSMesher {
+   // Constructor --------------------------------------------------------------
    public CSMesher (IEnumerable<Poly> front, IEnumerable<Poly> side) {
-      const double t = Lib.CoarseTess, a = Lib.CoarseTessAngle;
-      mFront = [.. front.SelectMany (p => p.DiscretizeP (t, a).Segs).Select (s => new CSeg (s)).Order ()];
-      mSide = [.. side.SelectMany (p => p.DiscretizeP (t, a).Segs).Select (s => new CSeg (s)).Order ()];
-      mSplit.AddRange (mFront.Select (a => a.A.Y)); mSplit.AddRange (mFront.Select (a => a.B.Y));
-      mSplit.AddRange (mSide.Select (a => a.A.Y)); mSplit.AddRange (mSide.Select (a => a.B.Y));
-      mSplit = [.. mSplit.Order ().Distinct ()];
-   }
-   CSeg[] mFront, mSide;
-   List<double> mSplit = [];
+      mNSeg = 1; 
+      AddSegs (front, true); AddSegs (side, false);
 
-   public void Build () {
-      for (int i = 0; i < mFront.Length; i++) {
-         ref CSeg front = ref mFront[i];
-         mOverlap.Clear ();
-         for (int j = 0; j < mSide.Length; j++) {
-            ref CSeg side = ref mSide[j];
-            if (!front.Overlaps (ref side)) continue;
-            mOverlap.Add (j);
+      // Now, add the events (segment enter, segment leave). +ve integers are segments
+      // entering, and -ve integers are segments leaving. 
+      int cEv = 2 * (mNSeg - 1); mNEv = 0; 
+      Lib.Grow (ref mEvent, 0, cEv);
+      for (int i = 1; i < mNSeg; i++) {
+         ref CSeg seg = ref mSeg[i];
+         mEvent[mNEv++] = new (i, seg.A.Y - Lib.Epsilon);
+         mEvent[mNEv++] = new (-i, seg.B.Y + Lib.Epsilon);
+      }
+      mEvent.AsSpan (0, cEv).Sort ();      
+
+      // Helper ............................................
+      void AddSegs (IEnumerable<Poly> polys, bool fview) {
+         foreach (var p0 in polys) {
+            mTmp1.ClearFast ();
+            p0.Discretize (mTmp1, Lib.CoarseTess, Lib.CoarseTessAngle);
+            for (int i = 0; i < mTmp1.Count; i++) mTmp1[i] = mTmp1[i].R3 ();
+            Lib.Grow (ref mSeg, mNSeg, mTmp1.Count); mTmp1.Add (mTmp1[0]);
+            for (int i = 0; i < mTmp1.Count - 1; i++)
+               mSeg[mNSeg++] = new CSeg (mTmp1[i], mTmp1[i + 1], fview);
          }
       }
    }
-   List<int> mOverlap = [];
+   List<Point2> mTmp1 = [];
+   CSeg[] mSeg = new CSeg[8]; int mNSeg;              // mSeg[0] is not used
+   Event[] mEvent = []; int mNEv;
+   Model3 mModel = new ();
+   
+   public Mesh3 Build () {
+      int max = 0; 
+      for (int i = 0; i < mNEv; i++) {
+         int n = mEvent[i].N;
+         if (n > 0) {
+            // Adding a new segment into the active list
+            mActive.Add (n); max = Max (max, mActive.Count);
+         } else {
 
-   readonly struct CSeg : IComparable<CSeg> {
-      public CSeg (Seg s) {
-         bool flip;
-         if (s.A.Y.EQ (s.B.Y)) flip = s.A.X > s.B.X;
-         else flip = s.A.Y > s.B.Y;
-         (A, B) = (Flip = flip) ? (s.B.R6 (), s.A.R6 ()) : (s.A.R6 (), s.B.R6 ());
-         DY = B.Y - A.Y;
+            var dwg = new Dwg2 ();
+            var cl = dwg.CurrentLayer;
+            dwg.Add (new Layer2 ("Alt", Color4.Red, ELineType.Continuous));
+            foreach (var na in mActive) {
+               ref CSeg seg = ref mSeg[na];
+               Point2 pa = seg.A, pb = seg.B;
+               if (seg.Front) { pa = pa.Moved (100, 0); pb = pb.Moved (100, 0); }
+               if (na == -n) dwg.CurrentLayer = dwg.Layers[1];
+               else dwg.CurrentLayer = dwg.Layers[0];
+               dwg.Add (Poly.Line (pa, pb));
+            }
+            if (++mIter == 17) {
+               DXFWriter.Save (dwg, "c:/etc/test.dxf");
+               // System.Diagnostics.Process.Start ("flux.exe", "c:/etc/test.dxf");
+            }
+
+            // Removing an existing segment from the active list
+            ProcessSeg (-n);
+            bool ok = mActive.Remove (-n); Lib.Check (ok, "Invalid event sorting");
+         }         
       }
-      public override string ToString () => $"{(Flip ? '-' : '+')} {A} .. {B}";
+      return new Mesh3Builder (mPts.AsSpan ()).Build ();
+   }
+   int mIter;
+   List<int> mActive = [];
 
-      public bool Overlaps (ref CSeg other) {
-         if (other.A.Y > B.Y - Lib.Delta) return false;
-         if (A.Y > other.B.Y - Lib.Delta) return false;
-         return true; 
+   // Implementation -----------------------------------------------------------
+   void ProcessSeg (int n) {
+      // This is called just before a segment is removed from the active list, and we
+      // use this time to create all the planes that this segment contributes to.
+      ref CSeg seg = ref mSeg[n];
+      if (seg.IsHorizontal) {
+         foreach (var a in mActive) {
+            ref CSeg s2 = ref mSeg[a];
+            if (s2.Front == seg.Front || !s2.IsHorizontal) continue;
+            if (seg.A.Y.EQ (s2.A.Y, 0.001)) AddHorizontalFace (ref seg, ref s2);
+         }
+         return;
+      }
+
+      // First, gather all the 'other view' segments that this intersects with, and 
+      mOverlaps.Clear ();
+      foreach (var a in mActive) {
+         ref CSeg s2 = ref mSeg[a];
+         if (s2.Front == seg.Front || !seg.YOverlap (ref s2) || seg.IsHorizontal) continue;
+         mOverlaps.Add (a);
+      }
+      double yMax = seg.B.Y;
+      if (mOverlaps.Count >= 2) {
+         mOverlaps.Sort ((a, b) => mSeg[a].GetX (yMax).CompareTo (mSeg[b].GetX (yMax)));
+         for (int i = 1; i < mOverlaps.Count; i++) {
+            ref CSeg left = ref mSeg[mOverlaps[i - 1]]; if (!left.Reverse) continue; 
+            ref CSeg right = ref mSeg[mOverlaps[i]]; if (right.Reverse) continue;
+            AddFace (ref seg, ref left, ref right);
+         }
+      }
+
+      // Then, for each of the 'other view' segments currently active, gather the overlaps,
+      // and process the pairs that this segment participates in
+      foreach (var aOther in mActive) {
+         ref CSeg segOther = ref mSeg[aOther];
+         if (segOther.Front == seg.Front) continue;
+         mOverlaps.Clear ();
+         foreach (var a in mActive) {
+            ref CSeg segHere = ref mSeg[a];
+            if (segHere.Front != seg.Front || segHere.IsHorizontal) continue; 
+            if (segHere.YOverlap (ref seg) && segHere.YOverlap (ref segOther))
+               mOverlaps.Add (a);
+         }
+         if (mOverlaps.Count < 2) continue; 
+         mOverlaps.Sort ((a, b) => mSeg[a].GetX (yMax).CompareTo (mSeg[b].GetX (yMax)));
+         for (int i = 0; i < mOverlaps.Count; i++) {
+            int nref = mOverlaps[i]; if (nref != n) continue;
+            ref CSeg sref = ref mSeg[nref];
+            if (sref.Reverse) {
+               if (i == mOverlaps.Count - 1) break;
+               ref CSeg snext = ref mSeg[mOverlaps[i + 1]];
+               if (!snext.Reverse) AddFace (ref segOther, ref sref, ref snext);
+            } else {
+               if (i == 0) break;
+               ref CSeg sprev = ref mSeg[mOverlaps[i - 1]];
+               if (sprev.Reverse) AddFace (ref segOther, ref sprev, ref sref);
+            }
+            break;
+         }
+      }
+   }
+   List<int> mOverlaps = [];
+
+   void AddHorizontalFace (ref CSeg s1, ref CSeg s2) {
+      double z = s1.A.Y;
+      if (s1.Front) {
+         Point3 pa = new (s1.A.X, s2.A.X, z), pb = new Point3 (s1.B.X, s2.A.X, z);
+         Point3 pc = new (s1.A.X, s2.B.X, z), pd = new Point3 (s1.B.X, s2.B.X, z);
+         mPts.AddM (pa, pb, pd, pa, pd, pc);
+      } else {
+         Point3 pa = new (s2.A.X, s1.A.X, z), pb = new Point3 (s1.A.X, s1.B.X, z);
+         Point3 pc = new (s2.B.X, s1.A.X, z), pd = new Point3 (s2.B.X, s1.B.X, z);
+         mPts.AddM (pa, pd, pb, pa, pc, pd);
+      }
+   }
+
+   void AddFace (ref CSeg seg, ref CSeg L, ref CSeg R) {
+      double z0 = Max (seg.A.Y, Max (L.A.Y, R.A.Y)), z1 = Min (seg.B.Y, Min (L.B.Y, R.B.Y));
+      if (z0 >= z1 - Lib.Epsilon) return;
+
+      double x0 = seg.GetX (z0), x1 = seg.GetX (z1);
+      double yL0 = L.GetX (z0), yL1 = L.GetX (z1);
+      double yR0 = R.GetX (z0), yR1 = R.GetX (z1);
+      if (seg.Front) {
+         Point3 pa = new (x0, yL0, z0), pb = new (x0, yR0, z0);
+         Point3 pc = new (x1, yL1, z1), pd = new (x1, yR1, z1);
+         mPts.AddM (pa, pb, pd, pa, pd, pc);
+      } else {
+         Point3 pa = new (yL0, x0, z0), pb = new (yR0, x0, z0);
+         Point3 pc = new (yL1, x1, z1), pd = new (yR1, x1, z1);
+         mPts.AddM (pa, pb, pd, pa, pd, pc);
+      }
+      Console.WriteLine ("X");
+   }
+   List<Point3> mPts = [];
+
+   // Nested types -------------------------------------------------------------
+   readonly struct CSeg {
+      // Constructor -------------------------------------------------
+      public CSeg (Point2 a, Point2 b, bool front) {
+         bool flip;
+         if (a.Y == b.Y) flip = a.X > b.X;
+         else flip = a.Y > b.Y;
+         (Reverse, Front) = (flip, front);
+         (A, B) = flip ? (b, a) : (a, b);
+      }
+
+      // Properties --------------------------------------------------
+      public readonly Point2 A;        // Bottom point of segment
+      public readonly Point2 B;        // Top point of segment
+      public readonly bool Reverse;    // Does this segment go in 'reverse' (to original Poly.Seg)
+      public readonly bool Front;      // Is this from the front view
+
+      public bool IsHorizontal => A.Y == B.Y;
+
+      // Methods -----------------------------------------------------
+      public bool YOverlap (ref CSeg other) {
+         if (other.A.Y >= B.Y - Lib.Epsilon) return false;
+         if (A.Y >= other.B.Y - Lib.Epsilon) return false;
+         return true;
       }
 
       public double GetX (double y) {
-         double lie = (y - A.Y) / DY;
+         double lie = (y - A.Y) / (B.Y - A.Y);
          return lie.Along (A.X, B.X);
       }
 
-      public int CompareTo (CSeg other) {
-         if (!A.Y.EQ (other.A.Y)) return A.Y.CompareTo (other.A.Y);
-         return B.Y.CompareTo (other.B.Y);
+      public override string ToString () 
+         => $"CSeg {(Front ? 'F' : 'S')}{(Reverse ? '-' : '+')} {A} .. {B}";
+   }
+
+   readonly struct Event (int n, double y) : IComparable<Event> {
+      public readonly int N = n;
+      public readonly double Y = y;
+
+      // Methods -----------------------------------------------------
+      public int CompareTo (Event other) {
+         if (Y == other.Y) return other.N - N;  // Enter events before leave events
+         return Y.CompareTo (other.Y);
       }
 
-      public readonly Point2 A;  // Lower point A
-      public readonly Point2 B;  // Upper point B
-      public readonly bool Flip; // Direction opposing original seg
-      public readonly double DY;
+      public override string ToString () => $"Event {N} @ {Y}";
    }
 }

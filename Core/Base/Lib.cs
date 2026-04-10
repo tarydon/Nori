@@ -28,6 +28,10 @@ public static class Lib {
    public static double FineTessSq = FineTess * FineTess;
    /// <summary>Fine tessellation angle tolerance (~ 31 degrees)</summary>
    public const double FineTessAngle = 0.5411;
+
+   public const double MediumTess = 0.1;
+   public const double MediumTessAngle = 0.803;
+
    /// <summary>TwoPI = 360 degrees, in radians</summary>
    public const double TwoPI = 2 * Math.PI;
    /// <summary>HalfPI = 90 degrees, in radians</summary>

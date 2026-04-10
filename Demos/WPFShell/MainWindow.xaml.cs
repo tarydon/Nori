@@ -28,11 +28,11 @@ class DemoScene : Scene3 {
       side *= Matrix2.Translation (-side.GetBound ().X.Mid, 0);
       front *= Matrix2.Translation (-front.GetBound ().X.Mid, 0);
       var csm = new CSMesher ([front], [side]);
-      csm.Build ();
+      var mesh = csm.Build ().Wireframed ();
 
-      var mesh = Mesh3.Extrude ([side], 100, Matrix3.Rotation (EAxis.X, Lib.HalfPI));
+      // var mesh = Mesh3.Extrude ([side], 100, Matrix3.Rotation (EAxis.X, Lib.HalfPI));
       Bound = mesh.Bound;
       BgrdColor = new Color4 (64, 96, 128);
-      Root = new Mesh3VN (mesh) { Color = Color4.White };
+      Root = new Mesh3VN (mesh) { Color = Color4.White, Mode = EShadeMode.Gourad };
    }
 }

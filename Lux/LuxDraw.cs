@@ -250,6 +250,26 @@ public static partial class Lux {
             default: BlackLineShader.It.Draw (nodes, wires); break;
          }
       }
+
+      /*
+      mHairs.ClearFast ();
+      for (int i = 0; i < tris.Length; i += 3) {
+         Mesh3.Node n0 = nodes[tris[i]], n1 = nodes[tris[i + 1]], n2 = nodes[tris[i + 2]];
+         var pos = (Point3)n0.Pos + (Point3)n1.Pos + (Point3)n2.Pos; pos *= 1 / 3.0;
+         var vec = (Vector3)n0.Vec + (Vector3)n1.Vec + (Vector3)n2.Vec;
+         mHairs.Add (pos); mHairs.Add ((Vec3F)(pos + vec * 2));
+      }
+      // Lux.Lines (mHairs.AsSpan ());
+
+      mHairs.ClearFast ();
+      for (int i = 0; i < tris.Length; i++) {
+         Mesh3.Node n0 = nodes[tris[i]];
+         var pos = (Point3)n0.Pos;
+         var vec = (Vector3)n0.Vec;
+         mHairs.Add (pos); mHairs.Add ((Vec3F)(pos + vec * 6));
+      }
+      Lux.Lines (mHairs.AsSpan ());
+      */
    }
    static List<Vec3F> mHairs = [];
 
