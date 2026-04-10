@@ -17,7 +17,7 @@ public partial class MainWindow : Window {
       if (source != null) Lux.DPIScale = (float)source.CompositionTarget.TransformToDevice.M11;
       TraceVN.TextColor = Color4.Yellow;
       new SceneManipulator ();
-      Lux.UIScene = new DemoScene2 ();
+      Lux.UIScene = new DemoScene ();
    }
 }
 
@@ -37,22 +37,17 @@ class DemoScene2 : Scene3 {
 
 class DemoScene : Scene3 {
    public DemoScene () {
-      var dwg = DXFReader.Load ("c:/etc/project.dxf");
-      var plines = dwg.Ents.OfType<E2Poly> ().Select (a => a.Poly).ToList ();
-      var side = plines[0]; var front = plines[1];
+      var dwg = DXFReader.Load ("N:/TData/Misc/csmesher.dxf");
+      var sPt = dwg.Ents.OfType<E2Point> ().Single (e => e.LayerName == "SIDE").Pt;
+      var fPt = dwg.Ents.OfType<E2Point> ().Single (e => e.LayerName == "FRONT").Pt;
+      var sPoly = dwg.Ents.OfType<E2Poly> ().Single (e => e.LayerName == "SIDE").Poly;
+      var fPoly = dwg.Ents.OfType<E2Poly> ().Single (e => e.LayerName == "FRONT").Poly;
+      sPoly *= Matrix2.Translation (-sPt.X, -sPt.Y);
+      fPoly *= Matrix2.Translation (-fPt.X, -fPt.Y);
+      var mesh = new CSMesher ([fPoly], [sPoly]).Build ();
+      File.WriteAllText ("c:/etc/test.tmesh", mesh.ToTMesh ());
 
-      var dwg2 = new Dwg2 ();
-      dwg2.Add (front.DiscretizeP (ETess.Coarse));
-      DXFWriter.Save (dwg2, "c:/etc/test.dxf");
-
-      side *= Matrix2.Translation (-side.GetBound ().X.Mid, 0);
-      front *= Matrix2.Translation (-front.GetBound ().X.Mid, 0);
-      var csm = new CSMesher ([front], [side]);
-      var mesh = csm.Build ();
-
-      // var mesh = Mesh3.Extrude ([side], 100, Matrix3.Rotation (EAxis.X, Lib.HalfPI));
       Bound = mesh.Bound;
-      BgrdColor = new Color4 (64, 96, 128);
       Root = new Mesh3VN (mesh) { Color = Color4.White };
-   } 
+   }
 }

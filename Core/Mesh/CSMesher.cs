@@ -1,3 +1,7 @@
+// ────── ╔╗
+// ╔═╦╦═╦╦╬╣ CSMesher.cs
+// ║║║║╬║╔╣║ <<TODO>>
+// ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 namespace Nori;
 using static Math;
 
@@ -24,7 +28,7 @@ public class CSMesher {
       void AddSegs (IEnumerable<Poly> polys, bool fview) {
          foreach (var p0 in polys) {
             mTmp.ClearFast ();
-            p0.Discretize (mTmp, ETess.Coarse);
+            p0.Discretize (mTmp, ETess.Medium);
             for (int i = 0; i < mTmp.Count; i++) mTmp[i] = mTmp[i].R3 ();
             var b = new Bound2 (mTmp);
             for (int i = 1; i < mTmp.Count; i++) {

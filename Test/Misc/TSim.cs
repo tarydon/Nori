@@ -108,4 +108,18 @@ class TMesh3Build {
       File.WriteAllText (NT.TmpTxt, mesh.ToTMesh ());
       Assert.TextFilesEqual ("Geom/Mesh3/extrude.tmesh", NT.TmpTxt);
    }
+
+   [Test (240, "Basic test for CSMesher")]
+   void Test5 () {
+      var dwg = DXFReader.Load (NT.File ("Misc/csmesher.dxf"));
+      var sPt = dwg.Ents.OfType<E2Point> ().Single (e => e.LayerName == "SIDE").Pt;
+      var fPt = dwg.Ents.OfType<E2Point> ().Single (e => e.LayerName == "FRONT").Pt;
+      var sPoly = dwg.Ents.OfType<E2Poly> ().Single (e => e.LayerName == "SIDE").Poly;
+      var fPoly = dwg.Ents.OfType<E2Poly> ().Single (e => e.LayerName == "FRONT").Poly;
+      sPoly *= Matrix2.Translation (-sPt.X, -sPt.Y);
+      fPoly *= Matrix2.Translation (-fPt.X, -fPt.Y);
+      var mesh = new CSMesher ([fPoly], [sPoly]).Build ();
+      File.WriteAllText (NT.TmpTxt, mesh.ToTMesh ());
+      Assert.TextFilesEqual ("Geom/Mesh3/cross-section.tmesh", NT.TmpTxt);
+   }
 }

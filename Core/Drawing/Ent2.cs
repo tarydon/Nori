@@ -30,6 +30,9 @@ public abstract partial class Ent2 {
    public Layer2 Layer { get => mLayer; set => mLayer = value; }
    Layer2 mLayer;
 
+   /// <summary>The name of the layer</summary>
+   public string LayerName => mLayer.Name;
+
    /// <summary>Is this the outer polyline of a drawing?</summary>
    public bool IsOuter { get => Get (E2Flags.Outer); set => Set (E2Flags.Outer, value);  }
 
