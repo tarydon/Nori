@@ -424,7 +424,8 @@ public static partial class Lux {
    internal static bool PopAttr (ELuxAttr flags) {
       flags &= mChanged;
       if (flags != ELuxAttr.None) {
-         if ((flags & ELuxAttr.Color) != 0) mColor = mColors.Pop ();
+         if ((flags & ELuxAttr.SColor) != 0) mColor = mColors.Pop ();
+         if ((flags & ELuxAttr.BorderColor) != 0) mBorderColor = mBorderColors.Pop ();
          if ((flags & ELuxAttr.LineType) != 0) mLineType = mLineTypes.Pop ();
          if ((flags & ELuxAttr.LineWidth) != 0) mLineWidth = mLineWidths.Pop ();
          if ((flags & ELuxAttr.LTScale) != 0) mLTScale = mLTScales.Pop ();
@@ -451,6 +452,7 @@ public static partial class Lux {
       mcFillPaths = 0;
       VPScale = new Vec2F (2.0 / viewport.X, 2.0 / viewport.Y);
       mColors.Clear (); mColor = Color4.White;
+      mBorderColors.Clear (); mBorderColor = Color4.Yellow;
       mLineWidths.Clear (); mLineWidth = 2;     // Multiplied by DPIScale before it is used
       mPointSizes.Clear (); mPointSize = 4;     // Multiplied by DPIScale before it is used
       mLineTypes.Clear (); mLineType = ELineType.Continuous;

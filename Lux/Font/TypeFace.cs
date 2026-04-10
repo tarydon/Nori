@@ -150,9 +150,7 @@ public class TypeFace {
    /// <summary>Get metrics data for a given glyph index</summary>
    public ref Metrics GetMetrics (uint n) => ref Notes[n];
 
-   /// <summary>
-   /// This 'measures' some text and returns the bounding box of it
-   /// </summary>
+   /// <summary>This 'measures' some text and returns the bounding box of it</summary>
    /// This assumes that we are drawing the text with a baseline-start at (0,0). As with all
    /// pixel coordinates, +Y goes downwards. So the 'top' of this returned rectangle will be
    /// a negative value (which is how many pixels the top of text extends above the baseline),

@@ -30,7 +30,7 @@ class DemoScene : Scene2 {
 }
 
 class DemoVN : VNode {
-   public DemoVN () { }
+   public DemoVN () => Streaming = true;
 
    public override void SetAttributes () 
       => Lux.Color = Color4.White;
@@ -41,18 +41,35 @@ class DemoVN : VNode {
          for (int x = 0; x < 128; x++) {
             int n = 150 + y * 512 + x * 4;
             byte b = D[n], g = D[n + 1], r = D[n + 2], a = D[n + 3];
-            Lux.PxPoint (new (x + 10, 138 - y), new Color4 (a, r, g, b));
+            Lux.PxPoint ((x + 10, 138 - y), new Color4 (a, r, g, b));
          }
 
       List<Vec2S> pts = [];
-      for (int i = 0; i <= 100; i += 10) {
-         pts.Add (new (140 + i, 20));
-         pts.Add (new (140, 120 - i));
-      }
+      for (int i = 0; i <= 100; i += 10) 
+         pts.AddM ((140 + i, 20), (140, 120 - i));
       Lux.Lines (pts.AsSpan ());
 
       pts.Clear ();
-      pts.AddM (new (280, 20), new (380, 20));
-      Lux.Lines (pts.AsSpan ());
+      pts.AddM ((270, 20), (370, 20), (270, 120),
+                (280, 120), (320, 120), (370, 30),
+                (330, 120), (370, 120), (370, 40));
+      Lux.Triangles (pts.AsSpan ());
+
+      pts.Clear ();
+      pts.AddM ((400, 20), (500, 20), (500, 65), (400, 65),
+                (400, 120), (442, 120), (462, 72), (400, 72),
+                (450, 120), (500, 120), (500, 72), (470, 72));
+      Lux.Quads (pts.AsSpan ());
+
+      Lux.BorderColor = Color4.Gray (32);
+      Lux.Rect (new (20, 150, 120, 250));
+      Lux.RRect (new RectS (150, 150, 250, 250), 20);
+      Lux.RectBorder (new RectS (280, 150, 380, 250), 10);
+      Lux.RRectBorder (new RectS (410, 150, 510, 250), 30, 15);
+
+      Lux.Dee (new (20, 280, 120, 380), 30, 0);
+      Lux.Dee (new (150, 280, 250, 380), 30, 1);
+      Lux.Dee (new (280, 280, 380, 380), 30, 2);
+      Lux.Dee (new (410, 280, 510, 380), 30, 3);
    }
 }

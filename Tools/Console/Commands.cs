@@ -58,7 +58,9 @@ static class LineCount {
       var (prevDir, nFiles, nLines, nComments) = ("", 0, 0, 0);
       Console.WriteLine ("  No                    Path File                   Lines Comments       %");
       Console.WriteLine ("---------------------------------------------------------------------------");
-      foreach (var file in Directory.EnumerateFiles ("N:\\", "*.cs", SearchOption.AllDirectories)) {
+      foreach (var file in Directory.EnumerateFiles ("N:\\", "*.*", SearchOption.AllDirectories)) {
+         string ext = Path.GetExtension (file).ToLower ();
+         if (ext is not (".cs" or ".vert" or ".geom" or ".tctrl" or ".teval" or ".frag")) continue; 
          if (SrcClean.ExcludeFile (file)) continue;
          var code = File.ReadAllLines (file);
          int comments = code.Count (a => a.TrimStart ().StartsWith ("//"));

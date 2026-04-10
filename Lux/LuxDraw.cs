@@ -7,20 +7,35 @@ namespace Nori;
 [Flags]
 public enum ELuxAttr {
    None = 0,
-   Color = 1 << 0, LineWidth = 1 << 1, LineType = 1 << 2, LTScale = 1 << 3,
-   Xfm = 1 << 4, PointSize = 1 << 5, TypeFace = 1 << 6, ZLevel = 1 << 7
+   SColor = 1 << 0, LineWidth = 1 << 1, LineType = 1 << 2, LTScale = 1 << 3,
+   Xfm = 1 << 4, PointSize = 1 << 5, TypeFace = 1 << 6, ZLevel = 1 << 7,
+   BorderColor = 1 << 8,
 }
 
 #region class Lux ----------------------------------------------------------------------------------
 /// <summary>The public interface to the Lux renderer</summary>
 public static partial class Lux {
    // Properties ---------------------------------------------------------------
+   /// <summary>
+   /// Current border color
+   /// </summary>
+   public static Color4 BorderColor {
+      get => mBorderColor;
+      set {
+         if (mBorderColor.EQ (value) || value.IsNil) return;
+         if (Set (ELuxAttr.BorderColor)) mBorderColors.Push (mBorderColor);
+         mBorderColor = value; Rung++;
+      }
+   }
+   static Color4 mBorderColor;
+   static readonly Stack<Color4> mBorderColors = [];
+
    /// <summary>The current drawing color (default = white)</summary>
    public static Color4 Color {
       get => mColor;
       set {
          if (mColor.EQ (value) || value.IsNil) return;
-         if (Set (ELuxAttr.Color)) mColors.Push (mColor);
+         if (Set (ELuxAttr.SColor)) mColors.Push (mColor);
          mColor = value; Rung++;
       }
    }
@@ -146,6 +161,12 @@ public static partial class Lux {
    public static void Beziers (ReadOnlySpan<Vec2F> pts)
       => Bezier2DShader.It.Draw (pts);
 
+   /// <summary>
+   /// Draws a Dee
+   /// </summary>
+   public static void Dee (RectS rect, int radius, int side)
+      => DeePxShader.It.Draw ([new (rect, (short)radius, (short)side)]);
+
    /// <summary>This fills a set of closed paths (made of line segments) with the current Color</summary>
    /// The input to this function is a set of triangle-fans representing the closed paths.
    /// pts[0] is, by convention, some arbitrary point in the 2D space that acts as the tip
@@ -197,11 +218,16 @@ public static partial class Lux {
    }
 
    /// <summary>Draws 2D lines (in pixel coordinates)</summary>
-   public static void Lines (ReadOnlySpan<Vec2S> pts) {
-      mBuf.Clear ();
-      foreach (var pt in pts) mBuf.Add (new (pt.X, pt.Y));
-      LinePxShader.It.Draw (pts);
-   } 
+   public static void Lines (ReadOnlySpan<Vec2S> pts) 
+      => LinePxShader.It.Draw (pts);
+
+   /// <summary>Draws triangles in pixel coordinates</summary>
+   public static void Triangles (ReadOnlySpan<Vec2S> pts)
+      => TrianglePxShader.It.Draw (pts);
+
+   /// <summary>Draws quads in pixel coordinates</summary>
+   public static void Quads (ReadOnlySpan<Vec2S> pts)
+      => QuadPxShader.It.Draw (pts);
 
    public static void PxPoint (Vec2S pix, Color4 color) {
       Span<PointPxShader.Arg> pts = stackalloc PointPxShader.Arg[1];
@@ -303,6 +329,29 @@ public static partial class Lux {
       for (int i = 0; i < a.Length; i += 4)
          Line2DShader.It.Draw ([a[i], a[i + 1], a[i + 1], a[i + 2], a[i + 2], a[i + 3], a[i + 3], a[i]]);
    }
+
+   /// <summary>
+   /// Fills a pixel-coordinate rectangle with Color
+   /// </summary>
+   public static void Rect (RectS rect) => RectPxShader.It.Draw ([rect]);
+
+   /// <summary>
+   /// Fills a pixel-coordinate rectangle with Color, outlined with BorderColor
+   /// </summary>
+   public static void RectBorder (RectS rect, int border) 
+      => RectBorderPxShader.It.Draw ([new (rect, (short)border)]);
+
+   /// <summary>
+   /// Fills a pixel-coordinate rounded rectangle with Color
+   /// </summary>
+   public static void RRect (RectS rect, int radius) 
+      => RRectPxShader.It.Draw ([new (rect, (short)radius)]);
+
+   /// <summary>
+   /// Fills a pixel-coordinate rounded rectangle with Color, outlined with BorderColor
+   /// </summary>
+   public static void RRectBorder (RectS rect, int radius, int border) 
+      => RRectBorderPxShader.It.Draw ([new (rect, (short)radius, (short)border)]);
 
    /// <summary>Draws 2D triangles in world coordinates, with Z = 0</summary>
    /// The triangles are drawn with smoothed (anti-aliased) edges.

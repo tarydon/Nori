@@ -85,7 +85,7 @@ class TLux {
       TestPNG (scene, new (264, 144), DIBitmap.EFormat.Gray8, "ZLevel");
 
       void SetAttributes1 () { Color = Color4.Gray (160); LineWidth = 4; }
-      void Draw1 () => Quads ([new (20, 0), new (40, 0), new (20, 20), new (0, 20)]);
+      void Draw1 () => Quads ([new Vec2F (20, 0), new (40, 0), new (20, 20), new (0, 20)]);
 
       void SetAttributes2 () { Color = Color4.Black; TypeFace = mFace; ZLevel = -1; }
       void Draw2 () => Text2D ("Hello, World!", new (0, 5), ETextAlign.MidLeft, Vec2S.Zero);
@@ -110,7 +110,7 @@ class TLux {
          foreach (var n in iter) {
             (ZLevel, Color) = (n, Color4.Gray (n * 10));
             int x = n * 4, y = x;
-            Quads ([new (x, y), new (x + 98, y), new (x + 98, y + 98), new (x, y + 98)]);
+            Quads ([new Vec2F (x, y), new (x + 98, y), new (x + 98, y + 98), new (x, y + 98)]);
          }
       }
    }

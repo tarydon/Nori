@@ -133,7 +133,16 @@ class ShaderImp {
 
    public static ShaderImp LinePx => mLinePx ??= Load ();
    public static ShaderImp PointPx => mPointPx ??= Load ();
-   static ShaderImp? mLinePx, mPointPx;
+   public static ShaderImp TrianglePx => mTrianglePx ??= Load ();
+   public static ShaderImp QuadPx => mQuadPx ??= Load ();
+   static ShaderImp? mLinePx, mPointPx, mTrianglePx, mQuadPx;
+
+   public static ShaderImp RectPx => mRectPx ??= Load ();
+   public static ShaderImp RRectPx => mRRectPx ??= Load ();
+   public static ShaderImp RectBorderPx => mRectBorderPx ??= Load ();
+   public static ShaderImp RRectBorderPx => mRRectBorderPx ??= Load ();
+   public static ShaderImp DeePx => mDeePx ??= Load ();
+   static ShaderImp? mRectPx, mRRectPx, mRectBorderPx, mRRectBorderPx, mDeePx;
 
    public static ShaderImp BlackLine => mBlackLine ??= Load ();
    public static ShaderImp GlassLine => mGlassLine ??= Load ();
@@ -288,12 +297,15 @@ readonly record struct Attrib (int Dims, EDataType Type, int Size, bool Integral
          EVertexSpec.Vec2S => [AVec2s],
          EVertexSpec.Vec2S_Vec4F => [AVec2s, AVec4f],
          EVertexSpec.Vec2F_Vec4F => [AVec2f, AVec4f],
+         EVertexSpec.Vec4S => [AVec4s],
+         EVertexSpec.Vec4S_Short => [AVec4s, AShort],
+         EVertexSpec.Vec4S_Short_Short => [AVec4s, AShort, AShort],
          _ => throw new BadCaseException (spec)
       };
 
    public static int GetSize (EVertexSpec spec) => 
       spec switch {
-         EVertexSpec.Vec2F => 8,
+         EVertexSpec.Vec2F => 8, 
          EVertexSpec.Vec3F => 12,
          EVertexSpec.Vec3F_Vec3H => 20,
          EVertexSpec.Vec4S_Int => 12,
@@ -302,6 +314,9 @@ readonly record struct Attrib (int Dims, EDataType Type, int Size, bool Integral
          EVertexSpec.Vec2S => 4,
          EVertexSpec.Vec2S_Vec4F => 20,
          EVertexSpec.Vec2F_Vec4F => 24,
+         EVertexSpec.Vec4S => 8,
+         EVertexSpec.Vec4S_Short => 10,
+         EVertexSpec.Vec4S_Short_Short => 12,
          _ => throw new BadCaseException (spec)
       };
 }
@@ -310,7 +325,8 @@ readonly record struct Attrib (int Dims, EDataType Type, int Size, bool Integral
 #region enum EVertexSpec ---------------------------------------------------------------------------
 // The various Vertex specifications used by OpenGL shaders
 enum EVertexSpec { Vec2F, Vec3F, Vec3F_Vec3H, Vec4S_Int, Vec2F_Vec4S_Int, Vec3F_Vec4S_Int, 
-                   Vec2S, Vec2S_Vec4F, Vec2F_Vec4F, _Last }
+                   Vec2S, Vec2S_Vec4F, Vec2F_Vec4F, Vec4S, Vec4S_Short, Vec4S_Short_Short, 
+                   _Last }
 #endregion
 
 #region enum EStencilBehavior ----------------------------------------------------------------------

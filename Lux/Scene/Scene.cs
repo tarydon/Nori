@@ -38,9 +38,7 @@ public abstract class Scene {
    internal Matrix3 ProjectionXfm { get { _ = WorldXfm; return mProjectionXfm; } }
    Matrix3 mProjectionXfm = Matrix3.Identity;
 
-   /// <summary>
-   /// The extent of this scene, in pixels - (0,0) being top left corner
-   /// </summary>
+   /// <summary>The extent of this scene, in pixels - (0,0) being top left corner</summary>
    /// On a panel 640x480, the UIScene will have Left=0, Top=0, Right=640, Bottom=480
    public RectS Rect {
       get => field;
