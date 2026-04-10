@@ -174,6 +174,32 @@ public partial class Poly {
    public Poly Clean ()
       => TryCleanup (out var tmp) ? tmp : this;
 
+   /// <summary>Checks if a point is contained within a Poly</summary>
+   /// This is not fully deterministic. It uses a simple ray-tracing towards the right,
+   /// and if the ray passes through any of the nodes in the poly, it will return -1. 
+   /// In other words, be prepared for this to return 'I don't know'. It also return this
+   /// if the point lies ON any of the segments
+   /// Returns 0: not contained, 1: contained, -1: ambiguous / on 
+   public int Contains (Point2 pt) {
+      int inters = 0; 
+      const double e = Epsilon;
+      Point2 ptRight = new (pt.X + 10, pt.Y);
+      Span<Point2> buffer = stackalloc Point2[2];
+      foreach (var seg in Segs) {
+         var b = seg.Bound;
+         // Quickly skip segments that are definitely to the left, above, or below
+         if (b.X.Max < pt.X - e || b.Y.Max < pt.Y - e || b.Y.Min > pt.Y + e) continue;
+         if (pt.Y.EQ (seg.A.Y)) return -1;
+         var pints = seg.Intersect (pt, ptRight, buffer, true);
+         foreach (var pint in pints) {
+            if (pint.X.EQ (pt.X)) return -1;
+            if (pint.X > pt.X) inters++;
+         }
+      }
+      // Finally, if we have an odd number of intersections the point is inside
+      return inters & 1;
+   }
+
    /// <summary>Returns a 'closed' version of this Poly</summary>
    /// If the start and end points are touching (within 1e-6), the end point is 'merged' with
    /// the start point. Otherwise, a line segment is drawn from the end point to the start point
@@ -350,15 +376,52 @@ public partial class Poly {
       return NormalizeAngle (outAngle - inAngle);
    }
 
-   /// <summary>Returns the winding of the Poly</summary>
    public EWinding GetWinding () {
       if (IsOpen) return EWinding.Indeterminate;
       if (IsCircle) return this[0].IsCCW ? EWinding.CCW : EWinding.CW;
-      int node = mPts.MinIndexBy (pt => pt.Y);
-      var pp = this[(node - 1 + Count) % Count].GetPointAt (0.9);
-      var pn = this[node % Count].GetPointAt (0.1);
-      if (pp.X.EQ (pn.X)) return EWinding.Indeterminate;
-      return pp.X < pn.X ? EWinding.CCW : EWinding.CW;
+      // Compute the segment at the bottom
+      int nMinSeg = 0, cSegs = Count; double yMin = double.MaxValue;
+      foreach (var seg in Segs) {
+         double yBot;
+         if (seg.IsArc) {
+            if (seg.Center.Y - seg.Radius > yMin) continue;
+            yBot = seg.Bound.Y.Min;
+         } else 
+            yBot = Min (seg.A.Y, seg.B.Y);
+         if (yBot < yMin) (nMinSeg, yMin) = (seg.N, yBot); 
+      }
+
+      var sg = this[nMinSeg];
+      // If the lowest segment is an arc that passes through this bottom point (does not start
+      // or end there), then its winding is the Poly's winding
+      if (sg.IsArc && sg.A.Y > yMin + Lib.Delta && sg.B.Y > yMin + Lib.Delta) return sg.IsCCW ? EWinding.CCW : EWinding.CW;
+      // If the lowest segment is a horizontal line, then we can figure out based on the direction
+      // of travel
+      if (sg.IsLine && sg.A.Y.EQ (sg.B.Y)) return sg.B.X > sg.A.X ? EWinding.CCW : EWinding.CW;
+
+      // Otherwise, we are going to have to do a slope-based computation
+      Seg sgPrev;
+      if (Abs (sg.A.Y - yMin) < Abs (sg.B.Y - yMin)) { 
+         sgPrev = this[(nMinSeg + cSegs - 1) % cSegs];
+      } else {
+         sgPrev = sg; sg = this[(nMinSeg + 1) % cSegs];
+      }
+      if (sgPrev.IsLine && sg.IsLine) {
+         // Both are lines: take x0,y0 as the delta from bottom-point to the left point, 
+         // and x1,y1 as the delta from bottom-point to the right point. We can just compare the
+         // inverse-slopes: x0/y0 :: x1/y1. 
+         // Since y0 or y1 could both be zero, we cross-multiply, and
+         // check these instead: x0*y1 :: x1*y0
+         // (This whole computation is to avoid trignometric functions for this case)
+         Vector2 v0 = sgPrev.A - sg.A, v1 = sg.B - sg.A;
+         return v0.X * v1.Y < v1.X * v0.Y ? EWinding.CCW : EWinding.CW;
+      }
+      // Final fallback: use actual slope values
+      double slope0 = NormalizeAngle (sgPrev.GetSlopeAt (0.999) + PI), slope1 = sg.GetSlopeAt (0.001);
+      if (slope0 < -HalfPI) slope0 += TwoPI;
+      if (slope1 < -HalfPI) slope1 += TwoPI;
+      if (slope0.EQ (slope1)) return EWinding.Indeterminate;
+      return slope0 > slope1 ? EWinding.CCW : EWinding.CW;
    }
 
    /// <summary>Checks for a rectangular Poly</summary>
@@ -394,14 +457,13 @@ public partial class Poly {
       List<ArcInfo> extra = [];
       if (HasArcs) { // Cleanup the zero-length seg's extras
          foreach (var idx in Enumerable.Range (0, Extra.Length)) {
-            if (idx >= Extra.Length) break;
             if (skipIdxs.Contains (idx)) continue;
             extra.Add (Extra[idx]);
          }
       }
-      var flags = mFlags;
-      if (extra.Count == 0 || extra.Any (e => (e.Flags & EFlags.Arc) != 0))
-         flags &= ~EFlags.HasArcs;
+      var flags = extra.Count == 0 ? mFlags & ~EFlags.HasArcs : mFlags;
+      if (extra.Any (e => (e.Flags & EFlags.Arc) != 0))
+         flags |= EFlags.HasArcs;
       // Remove dup points
       var pts = mPts.Select ((pt, idx) => (pt, idx)).Where (a => !skipIdxs.Contains (a.idx)).Select (a => a.pt);
       result = new ([.. pts], [.. extra], flags);
@@ -523,6 +585,23 @@ public partial class Poly {
 /// <summary>Helper used to build Poly objects (since they are immutable once created)</summary>
 public class PolyBuilder {
    // Methods ------------------------------------------------------------------
+   /// <summary>Adds a slice of the Poly</summary>
+   public PolyBuilder AddSlice (Poly poly, int a, double aLie, int b, double bLie, bool addLast) {
+      int n = poly.Count;
+      for (; ; ) {
+         var seg = poly[a];
+         Point2 pt = aLie == 0 ? seg.A : seg.GetPointAt (aLie);
+         if (seg.IsArc) Arc (pt, seg.Center, seg.Flags & ~Poly.EFlags.Circle);
+         else Line (pt);
+         if (a == b) {
+            if (addLast) Line (seg.GetPointAt (bLie));
+            break; 
+         }
+         a = (a + 1) % n; aLie = 0; 
+      }
+      return this; 
+   }
+
    /// <summary>Adds an Arc starting at the given point a and with center cen</summary>
    public PolyBuilder Arc (Point2 a, Point2 cen, Poly.EFlags flags) {
       PopBulge (a);

@@ -3,7 +3,6 @@
 // ║║║║╬║╔╣║ Implements hardware events (keyboard, mouse) in a platform independent manner
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 namespace Nori;
-
 using GLPanel = UserControl;
 
 #region class EventWrapper<T> ----------------------------------------------------------------------
@@ -78,9 +77,18 @@ public static class HW {
    /// <summary>Is the SHIFT key currently pressed?</summary>
    public static bool IsShiftDown => (GetKeyState (VK_SHIFT) & PRESSED) != 0;
 
+   /// <summary>Mouse position in pixel coordinates (within the panel)</summary>
+   public static Vec2S MousePos {
+      get {
+         if (Panel is not { } panel) return Vec2S.Zero;
+         var pt = panel.PointToClient (System.Windows.Forms.Cursor.Position);
+         return new (pt.X, pt.Y);
+      }
+   }
+
    // Methods ------------------------------------------------------------------
    public static bool CaptureMouse (bool capture) {
-      var panel = Panel; if (panel == null) return false;
+      if (Panel is not { } panel) return false;
       panel.Capture = capture;
       return panel.Capture;
    }

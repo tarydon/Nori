@@ -36,6 +36,10 @@ public static class Lib {
    public const double QuarterPI = Math.PI / 4;
    /// <summary>The constant square-root-of-2</summary>
    public const double Root2 = 1.4142135623730950488016887242097;
+   /// <summary>Very coarse tessellation threshold</summary>
+   public const double VeryCoarseTess = 1;
+   /// <summary>Very coarse tessellation angle tolerance (~ 61 degrees)</summary>
+   public const double VeryCoarseTessAngle = 1.065;
 
    // Properties ---------------------------------------------------------------
    /// <summary>The list of known assemblies</summary>

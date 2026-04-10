@@ -16,6 +16,7 @@ class Program {
    // The constructor gathers all the tests, and also parses the command line arguments
    Program (string[] args) {
       Lib.Init ();
+      Lux2.Init (); 
       Lux.CreatePanel (true);
       foreach (var arg in args) {
          if (int.TryParse (arg, out int n)) {

@@ -231,7 +231,7 @@ public readonly struct Bound2 : IEQuable<Bound2> {
    /// <summary>Construct a Bound2  that encompasses all the given Bound2 (union)</summary>
    public Bound2 (IEnumerable<Bound2> bounds) {
       (X, Y) = (new (), new ());
-      foreach (var b in bounds) { X += b.X; Y += b.Y; }
+      foreach (var b in bounds.Where (a => !a.IsEmpty)) { X += b.X; Y += b.Y; }
    }
 
    public override string ToString () => IsEmpty ? "Empty" : $"({X},{Y})";
@@ -310,6 +310,17 @@ public readonly struct Bound2 : IEQuable<Bound2> {
    /// Two bounds intersect if they overlap along both axes
    [MethodImpl (MethodImplOptions.AggressiveInlining)]
    public bool Intersects (Bound2 b) => X.Intersects (b.X) && Y.Intersects (b.Y);
+
+   /// <summary>Check if the infinite line a..b intersects the Bound2</summary>
+   public bool Intersects (Point2 a, Point2 b) {
+      // We check the 'side' of each of the 4 corner points. If any two of them lie on 
+      // opposite sides of the line, the bound is intersected
+      int d0 = new Point2 (X.Min, Y.Min).Side (a, b);
+      int d1 = new Point2 (X.Max, Y.Min).Side (a, b); if (d0 * d1 < 0) return true;
+      int d2 = new Point2 (X.Max, Y.Max).Side (a, b); if (d1 * d2 < 0) return true;
+      int d3 = new Point2 (X.Min, Y.Max).Side (a, b); if (d2 * d3 < 0) return true;
+      return false;
+   }
 
    /// <summary>Computes a Bound2 (by calling the given delegate) if it is not already computed</summary>
    /// If the given Bound2 is empty, then the provided computer function is c alled

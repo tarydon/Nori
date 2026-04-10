@@ -81,6 +81,22 @@ public partial class Mechanism {
    }
    static readonly ConcurrentDictionary<string, Mesh3?> sMeshCache = [];
 
+   /// <summary>The mesh to use for collision testing. If a separate collision mesh is not defined,
+   /// it returns the rendering mesh (if the rendering mesh exists)</summary>
+   public Mesh3? CMesh {
+      get {
+         if (field == null) {
+            string name = FullName;
+            if (!sCrashMeshCache.TryGetValue (name, out field)) {
+               field = Geometry?.GetCMesh (RootDir) ?? Mesh;
+               sCrashMeshCache.TryAdd (name, field);
+            }
+         }
+         return field;
+      }
+   }
+   static readonly ConcurrentDictionary<string, Mesh3?> sCrashMeshCache = [];
+
    /// <summary>What's the name of this mechanism (or sub-mechanism)</summary>
    public readonly string Name = string.Empty;
 
@@ -163,17 +179,30 @@ public partial class Mechanism {
 
 public abstract class GeometrySource {
    public abstract Mesh3 GetMesh (string rootDir);
+   /// <summary>Gets the special mesh to use for collision testing, if one exists. Null if
+   /// the mesh for rendering must be used for collision testing too.</summary>
+   public abstract Mesh3? GetCMesh (string rootDir);
 }
 
 public class FileGeometry : GeometrySource {
-   public override Mesh3 GetMesh (string rootDir) {
-      string file = Path.Combine (rootDir, File);
-      Matrix3 xfm = Rotate.IsIdentity ? Matrix3.Identity : Matrix3.Rotation (Rotate);
-      xfm *= Matrix3.Translation (Shift);
-      return Mesh3.LoadFluxMesh (file) * xfm;
+   public override Mesh3 GetMesh (string rootDir) => LoadMesh (File, rootDir);
+
+   // If abc.mesh is the rendering mesh, then abcCrash.mesh must be the collision mesh.
+   public override Mesh3? GetCMesh (string rootDir) {
+      string ext = Path.GetExtension (File);
+      string file = string.Concat (File.AsSpan (0, File.Length - ext.Length), "Crash", ext);
+      if (System.IO.File.Exists (Path.Combine (rootDir, file))) return LoadMesh (file, rootDir);
+      return null;
    }
 
    public readonly string File = string.Empty;
    public readonly Quaternion Rotate = Quaternion.Identity;
    public readonly Vector3 Shift = Vector3.Zero;
+
+   Mesh3 LoadMesh (string file, string rootDir) {
+      file = Path.Combine (rootDir, file);
+      Matrix3 xfm = Rotate.IsIdentity ? Matrix3.Identity : Matrix3.Rotation (Rotate);
+      xfm *= Matrix3.Translation (Shift);
+      return Mesh3.LoadFluxMesh (file) * xfm;
+   }
 }
