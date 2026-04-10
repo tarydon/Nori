@@ -148,6 +148,7 @@ public readonly struct RectS : IEQuable<RectS> {
    public Vec2S Midpoint => new ((Left + Right) / 2, (Top + Bottom) / 2);
    public Vec2S BottomLeft => new (Left, Bottom);
    public Vec2S TopRight => new (Right, Top);
+   public Vec2S Size => new (Right - Left, Top - Bottom);
    public override string ToString () => $"[{Width}x{Height} @ {Left},{Bottom}]";
 
    public int CompareTo (RectS b) {

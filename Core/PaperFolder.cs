@@ -270,7 +270,7 @@ public class PaperFolder {
             onBend = !onBend;
          }
          Lib.Grow (ref mFaces, mNFace, 1);
-         mFaces[mNFace++] = new Face (pb.Close ().Build (), [.. mHBends], -1);
+         mFaces[mNFace++] = new Face (pb.Close ().Build (), [.. mHBends]);
       }
 
       // If the 'outer poly' has no bendlines connected to it, it will not get converted
@@ -280,7 +280,7 @@ public class PaperFolder {
          // If the outer poly has no bendlines touching it, the face we create from it
          // is the root face
          Lib.Grow (ref mFaces, mRootFace = mNFace, 1);
-         mFaces[mNFace++] = new Face (mPolys[0].Poly, [], -1);
+         mFaces[mNFace++] = new Face (mPolys[0].Poly, []);
          mPolys[0].UsedInFace = true;
       } else
          mRootFace = mFaces.Take (mNFace).MaxIndexBy (a => a.Bound.Area);
@@ -296,8 +296,7 @@ public class PaperFolder {
    //   the other faces are to be housed. That is colored blue in the image above. 
    // - Find the smallest face that fully 'encloses' this hole - this is the large rectangular
    //   plane in the 1st cluster in the image above. Call this 'enclosing'
-   // - Add all the faces (other than the largest one we found) as holes inside the 'enclosing'
-   //   face
+   // - Add the largest face as a hole inside the 'enclosing' face
    // - For each half-bend in the largest face, find the corresponding co-bend, and add that
    //   to the HBends list of the enclosing face. 
    // This last step ensures that when we are gathering all the children of the enclosing face,
@@ -480,11 +479,10 @@ public class PaperFolder {
    }
 
    // Represents a plane with some holes
-   struct Face (Poly outer, int[] hbends, int nHole) {
+   struct Face (Poly outer, int[] hbends) {
       public readonly Poly Outer = outer;       // Outer poly of this face
       public readonly Bound2 Bound = outer.GetBound ();
       public readonly List<Poly> Holes = [];    // Hole polys of this face
-      public int NHole = nHole;     // If > 0, this face is connected to this hole
       public bool Tagged;           // Marker used in various algorithms
       public bool Used;             // This face is dead - don't consider it
 
