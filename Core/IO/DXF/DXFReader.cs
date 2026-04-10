@@ -139,7 +139,11 @@ public partial class DXFReader {
             else mPB.Arc (Pt, Bulge);
          }
          if (mClosedPoly == true) mPB.Close ();
-         Add (mPB.Build ());
+         var p = mPB.Build ();
+         // Pix#351 Poly with extraordinary extents (eg E+78) [Bound uses float and this value becomes INF there]
+         var b = p.GetBound ();
+         if (double.IsFinite (b.Width) && double.IsFinite (b.Height))
+            Add (p);
          Vertex.Clear (); 
       }
       mClosedPoly = null;
