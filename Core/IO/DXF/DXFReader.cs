@@ -236,7 +236,6 @@ public partial class DXFReader {
             break;
 
          case TEXT:
-            if (Text.Length == 0) break;
             int hAlign = I2 > 2 ? 0 : I2.Clamp (0, 2), vAlign = 3 - I3.Clamp (0, 3);
             align = (ETextAlign)(vAlign * 3 + hAlign + 1);
             Point2 pos = align == ETextAlign.BaseLeft ? Pt0 : Pt1;
