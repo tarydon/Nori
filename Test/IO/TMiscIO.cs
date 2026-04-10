@@ -136,7 +136,7 @@ class T3XTests {
       foreach (var con in surf.Contours) {
          var curves = con.Curves;
          foreach (var c in curves) {
-            c.Discretize (pts, Lib.FineTess, Lib.FineTessAngle); pts.RemoveLast ();
+            c.Discretize (pts, ETess.Fine); pts.RemoveLast ();
             if (c is Line3) pts.Add (c.Start.Midpoint (c.End));
          }
       }

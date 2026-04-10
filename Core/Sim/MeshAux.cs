@@ -11,7 +11,7 @@ public partial class Mesh3 {
       List<Point2> pts = [];
       List<int> splits = [0];
       foreach (var p in poly) {
-         p.Discretize (pts, Lib.CoarseTess, Lib.CoarseTess);
+         p.Discretize (pts, ETess.Medium);
          splits.Add (pts.Count);
       }
       var tris = Lib.Tessellate (pts, splits);

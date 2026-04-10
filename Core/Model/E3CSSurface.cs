@@ -38,7 +38,7 @@ public sealed class E3Cone : E3CSSurface {
       Bound1 v = new (); var xfm = FromXfm;
       foreach (var c in Contours.SelectMany (a => a.Curves)) {
          pts.Clear ();
-         c.Discretize (pts, Lib.CoarseTess, Lib.CoarseTessAngle);
+         c.Discretize (pts, ETess.Coarse);
          foreach (var pt in pts) v += (pt * xfm).Z / _cos;
       }
       return new (new (0, Lib.TwoPI), v);
@@ -142,10 +142,10 @@ public sealed class E3Cylinder : E3CSSurface {
    // - A full cylinder (a through-hole through a sheet metal thick plane, for example
    // - A partial cylinder - like the inner/outer surface of a bend line in a sheet metal
    //   model, where the trimming curve is a perfect rectangle
-   protected override Mesh3 BuildMesh (double tolerance, double maxAngStep)
-      => BuildFullCylinderMesh (tolerance, maxAngStep) ??
-         BuildPartCylinderMesh (tolerance, maxAngStep) ??
-         base.BuildMesh (tolerance, maxAngStep);
+   protected override Mesh3 BuildMesh (ETess eTess)
+      => BuildFullCylinderMesh (eTess) ??
+         BuildPartCylinderMesh (eTess) ??
+         base.BuildMesh (eTess);
 
    // Computes the domain of the cylinder 
    protected override Bound2 ComputeDomain () {
@@ -153,7 +153,7 @@ public sealed class E3Cylinder : E3CSSurface {
       Bound1 v = new (); var xfm = FromXfm;
       foreach (var c in Contours.SelectMany (a => a.Curves)) {
          pts.Clear ();
-         c.Discretize (pts, Lib.CoarseTess, Lib.CoarseTessAngle);
+         c.Discretize (pts, ETess.Coarse);
          foreach (var pt in pts) v += (pt * xfm).Z;
       }
       return new (new (0, Lib.TwoPI), v);
@@ -189,7 +189,7 @@ public sealed class E3Cylinder : E3CSSurface {
 
    // Implementation -----------------------------------------------------------
    // Computes the mesh for a full cylinder, like a through hole in a sheet metal model.
-   Mesh3? BuildFullCylinderMesh (double tolerance, double maxAngStep) {
+   Mesh3? BuildFullCylinderMesh (ETess eTess) {
       // There should be two trimming contours - top hole and bottom hole.
       // Both should be circles, with their normal axes aligned ot the axis of the cylinder
       if (Contours.Length != 2 || Contours.Any (a => a.Curves.Length != 1)) return null;
@@ -208,7 +208,7 @@ public sealed class E3Cylinder : E3CSSurface {
       List<Point3> pts = [];
       List<Mesh3.Node> nodes = [];
       List<int> wires = [], tris = [];
-      arcs[0].Discretize (pts, tolerance, maxAngStep); int n = pts.Count;
+      arcs[0].Discretize (pts, eTess); int n = pts.Count;
       foreach (var pt in pts) {
          Vector3 vec = (pt.SnappedToUnitLine (cen0, cenLift) - pt).Normalized ();
          if (!IsNormalFlipped) vec = -vec;
@@ -229,7 +229,7 @@ public sealed class E3Cylinder : E3CSSurface {
    // Computes the mesh for a partial cylinder (like the inner or outer surface of 
    // a sheet-metal bend). We handle here only the common case where the trimming curve
    // in 2D would be a full rectangle
-   Mesh3? BuildPartCylinderMesh (double tolerance, double maxAngStep) {
+   Mesh3? BuildPartCylinderMesh (ETess eTess) {
       // There should be a single trimming curve - should be made of Line-Arc-Line-Arc,
       // where both the lines should be parallel to the cylinder axes, and the arcs have
       // normals aligned to the cylinder axis.
@@ -255,9 +255,9 @@ public sealed class E3Cylinder : E3CSSurface {
       Vector3 vecZ0 = arcs[1].Center - cen0;
       Point3 cenLift = cen0 + vecZ0.Normalized ();
       List<Point3> pts = [];
-      arcs[0].Discretize (pts, tolerance, maxAngStep); pts.Add (arcs[0].End); int n = pts.Count;
+      arcs[0].Discretize (pts, eTess); int n = pts.Count;
       pts.Reverse ();
-      arcs[1].Discretize (pts, tolerance, maxAngStep); pts.Add (arcs[1].End);
+      arcs[1].Discretize (pts, eTess);
       List<Mesh3.Node> nodes = [];
       foreach (var pt in pts) {
          Vector3 vec = (pt.SnappedToUnitLine (cen0, cenLift) - pt).Normalized ();
@@ -310,9 +310,10 @@ public sealed class E3Plane : E3CSSurface {
    // Overrides ----------------------------------------------------------------
    // The mesh for the E3Plane can be built with just a simple 2D tessellation,
    // lofted up into the final space of the plane
-   protected override Mesh3 BuildMesh (double tol, double angTol) {
+   protected override Mesh3 BuildMesh (ETess eTess) {
       List<int> wires = []; int a = 0;
       using var tess = FastTess2D.Borrow ();
+      tess.Tolerance = eTess;
       for (int i = 0; i < Contours.Length; i++) {
          int b = a + tess.AddPoly (Contours[i].Flatten (CS), i > 0);
          wires.Add (b - 1);
@@ -364,7 +365,7 @@ public sealed class E3Plane : E3CSSurface {
       Bound2 dom = new (); var xfm = FromXfm;
       foreach (var c in Contours[0].Curves) {
          pts.Clear ();
-         c.Discretize (pts, Lib.CoarseTess, Lib.CoarseTessAngle);
+         c.Discretize (pts, ETess.Coarse);
          foreach (var pt in pts) dom += (Point2)(pt * xfm);
       }
       return dom;
@@ -525,7 +526,7 @@ public sealed class E3SweptSurface : E3CSSurface {
       Bound1 u = new (); var xfm = FromXfm;
       foreach (var c in Contours.SelectMany (a => a.Curves)) {
          pts.Clear ();
-         c.Discretize (pts, Lib.CoarseTess, Lib.CoarseTessAngle);
+         c.Discretize (pts, ETess.Coarse);
          if (IsGeneratrixFlat) {
             foreach (var pt in pts) u += pt.Z;
          } else {

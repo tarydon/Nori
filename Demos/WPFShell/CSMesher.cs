@@ -1,9 +1,8 @@
-﻿namespace Nori;
+namespace Nori;
 using static Math;
 
-/// <summary>
-/// This class is used to create a mesh from 2 cross-sections (front & side views)
-/// </summary>
+#region class CSMesher -----------------------------------------------------------------------------
+/// <summary>This class is used to create a mesh from 2 cross-sections (front & side views)</summary>
 public class CSMesher {
    // Constructor --------------------------------------------------------------
    public CSMesher (IEnumerable<Poly> front, IEnumerable<Poly> side) {
@@ -24,20 +23,31 @@ public class CSMesher {
       // Helper ............................................
       void AddSegs (IEnumerable<Poly> polys, bool fview) {
          foreach (var p0 in polys) {
-            mTmp1.ClearFast ();
-            p0.Discretize (mTmp1, Lib.CoarseTess, Lib.CoarseTessAngle);
-            for (int i = 0; i < mTmp1.Count; i++) mTmp1[i] = mTmp1[i].R3 ();
-            Lib.Grow (ref mSeg, mNSeg, mTmp1.Count); mTmp1.Add (mTmp1[0]);
-            for (int i = 0; i < mTmp1.Count - 1; i++)
-               mSeg[mNSeg++] = new CSeg (mTmp1[i], mTmp1[i + 1], fview);
+            mTmp.ClearFast ();
+            p0.Discretize (mTmp, ETess.Coarse);
+            for (int i = 0; i < mTmp.Count; i++) mTmp[i] = mTmp[i].R3 ();
+            var b = new Bound2 (mTmp);
+            for (int i = 1; i < mTmp.Count; i++) {
+               if (mTmp[i].Y == mTmp[i - 1].Y) {
+                  // Avoid horizontal segments except at top or bottom of the bound.
+                  if (mTmp[i].Y.EQ (b.Y.Min) || mTmp[i].Y.EQ (b.Y.Max)) continue;
+                  // In other situations move one of the two ends up by 0.1 mm. 
+                  if (mTmp[i - 1].Y < mTmp[(i + 1) % mTmp.Count].Y)
+                     mTmp[i] = mTmp[i].Moved (0, 0.1);
+                  else
+                     mTmp[i] = mTmp[i].Moved (0, -0.1);
+               }
+            }
+            Lib.Grow (ref mSeg, mNSeg, mTmp.Count); mTmp.Add (mTmp[0]);
+            for (int i = 0; i < mTmp.Count - 1; i++)
+               mSeg[mNSeg++] = new CSeg (mTmp[i], mTmp[i + 1], fview);
          }
       }
    }
-   List<Point2> mTmp1 = [];
-   CSeg[] mSeg = new CSeg[8]; int mNSeg;              // mSeg[0] is not used
+   List<Point2> mTmp = [];
+   CSeg[] mSeg = new CSeg[8]; int mNSeg;        // mSeg[0] is not used
    Event[] mEvent = []; int mNEv;
-   Model3 mModel = new ();
-   
+
    public Mesh3 Build () {
       int max = 0; 
       for (int i = 0; i < mNEv; i++) {
@@ -48,7 +58,7 @@ public class CSMesher {
          } else {
 
             var dwg = new Dwg2 ();
-            var cl = dwg.CurrentLayer;
+            var _ = dwg.CurrentLayer;
             dwg.Add (new Layer2 ("Alt", Color4.Red, ELineType.Continuous));
             foreach (var na in mActive) {
                ref CSeg seg = ref mSeg[na];
@@ -58,11 +68,6 @@ public class CSMesher {
                else dwg.CurrentLayer = dwg.Layers[0];
                dwg.Add (Poly.Line (pa, pb));
             }
-            if (++mIter == 17) {
-               DXFWriter.Save (dwg, "c:/etc/test.dxf");
-               // System.Diagnostics.Process.Start ("flux.exe", "c:/etc/test.dxf");
-            }
-
             // Removing an existing segment from the active list
             ProcessSeg (-n);
             bool ok = mActive.Remove (-n); Lib.Check (ok, "Invalid event sorting");
@@ -70,7 +75,6 @@ public class CSMesher {
       }
       return new Mesh3Builder (mPts.AsSpan ()).Build ();
    }
-   int mIter;
    List<int> mActive = [];
 
    // Implementation -----------------------------------------------------------
@@ -139,12 +143,12 @@ public class CSMesher {
    void AddHorizontalFace (ref CSeg s1, ref CSeg s2) {
       double z = s1.A.Y;
       if (s1.Front) {
-         Point3 pa = new (s1.A.X, s2.A.X, z), pb = new Point3 (s1.B.X, s2.A.X, z);
-         Point3 pc = new (s1.A.X, s2.B.X, z), pd = new Point3 (s1.B.X, s2.B.X, z);
+         Point3 pa = new (s1.A.X, s2.A.X, z), pb = new (s1.B.X, s2.A.X, z);
+         Point3 pc = new (s1.A.X, s2.B.X, z), pd = new (s1.B.X, s2.B.X, z);
          mPts.AddM (pa, pb, pd, pa, pd, pc);
       } else {
-         Point3 pa = new (s2.A.X, s1.A.X, z), pb = new Point3 (s1.A.X, s1.B.X, z);
-         Point3 pc = new (s2.B.X, s1.A.X, z), pd = new Point3 (s2.B.X, s1.B.X, z);
+         Point3 pa = new (s2.A.X, s1.A.X, z), pb = new (s1.A.X, s1.B.X, z);
+         Point3 pc = new (s2.B.X, s1.A.X, z), pd = new (s2.B.X, s1.B.X, z);
          mPts.AddM (pa, pd, pb, pa, pc, pd);
       }
    }
@@ -159,13 +163,14 @@ public class CSMesher {
       if (seg.Front) {
          Point3 pa = new (x0, yL0, z0), pb = new (x0, yR0, z0);
          Point3 pc = new (x1, yL1, z1), pd = new (x1, yR1, z1);
-         mPts.AddM (pa, pb, pd, pa, pd, pc);
+         if (seg.Reverse) mPts.AddM (pa, pd, pb, pa, pc, pd);
+         else mPts.AddM (pa, pb, pd, pa, pd, pc);
       } else {
          Point3 pa = new (yL0, x0, z0), pb = new (yR0, x0, z0);
          Point3 pc = new (yL1, x1, z1), pd = new (yR1, x1, z1);
-         mPts.AddM (pa, pb, pd, pa, pd, pc);
+         if (seg.Reverse) mPts.AddM (pa, pb, pd, pa, pd, pc);
+         else mPts.AddM (pa, pd, pb, pa, pc, pd);
       }
-      Console.WriteLine ("X");
    }
    List<Point3> mPts = [];
 
@@ -199,9 +204,6 @@ public class CSMesher {
          double lie = (y - A.Y) / (B.Y - A.Y);
          return lie.Along (A.X, B.X);
       }
-
-      public override string ToString () 
-         => $"CSeg {(Front ? 'F' : 'S')}{(Reverse ? '-' : '+')} {A} .. {B}";
    }
 
    readonly struct Event (int n, double y) : IComparable<Event> {
@@ -213,7 +215,6 @@ public class CSMesher {
          if (Y == other.Y) return other.N - N;  // Enter events before leave events
          return Y.CompareTo (other.Y);
       }
-
-      public override string ToString () => $"Event {N} @ {Y}";
    }
 }
+#endregion

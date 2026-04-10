@@ -39,7 +39,7 @@ public class DwgFillVN : VNode {
          polys.Add (e2p.Poly);
       }
       foreach (var poly in polys) {
-         mPts.Clear (); poly.Discretize (mPts, 0.05, Lib.FineTessAngle);
+         mPts.Clear (); poly.Discretize (mPts, ETess.Medium);
          mIdx.Add (0); int idx0 = mVec.Count;
          mVec.AddRange (mPts.Select (a => (Vec2F)a));
          for (int i = 0; i < mPts.Count; i++) mIdx.Add (idx0 + i);

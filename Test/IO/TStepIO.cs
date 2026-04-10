@@ -8,27 +8,21 @@ namespace Nori.Testing;
 class StepTests {
    [Test (135, "Basic STEP file import test")]
    void Test1 () {
-      double old = Lib.FineTess;
-      try {
-         Lib.FineTess = 0.2;
-         var sr = new STEPReader (NT.File ("STEP/S00178.stp"));
-         var model = sr.Load ();
-         var b = model.Bound;
-         CurlWriter.Save (model, NT.TmpCurl, "S00178.stp");
-         Assert.TextFilesEqual (NT.File ("STEP/S00178.curl"), NT.TmpCurl);
+      var sr = new STEPReader (NT.File ("STEP/S00178.stp"));
+      var model = sr.Load ();
+      model.Bound.IsEmpty.IsFalse ();
+      CurlWriter.Save (model, NT.TmpCurl, "S00178.stp");
+      Assert.TextFilesEqual (NT.File ("STEP/S00178.curl"), NT.TmpCurl);
 
-         var sb = new StringBuilder ();
-         foreach (var e3s in model.Ents.OfType<E3Surface> ()) {
-            var mesh = e3s.Mesh;
-            sb.AppendLine ($"Entity: {e3s.GetType ().Name} #{e3s.Id}");
-            sb.Append (mesh.ToTMesh ());
-            sb.AppendLine ("----------------");
-         }
-         File.WriteAllText (NT.TmpTxt, sb.ToString ());
-         Assert.TextFilesEqual (NT.File ("STEP/S00178.txt"), NT.TmpTxt);
-      } finally {
-         Lib.FineTess = old;
+      var sb = new StringBuilder ();
+      foreach (var e3s in model.Ents.OfType<E3Surface> ()) {
+         var mesh = e3s.Mesh;
+         sb.AppendLine ($"Entity: {e3s.GetType ().Name} #{e3s.Id}");
+         sb.Append (mesh.ToTMesh ());
+         sb.AppendLine ("----------------");
       }
+      File.WriteAllText (NT.TmpTxt, sb.ToString ());
+      Assert.TextFilesEqual (NT.File ("STEP/S00178.txt"), NT.TmpTxt);
    }
 
    [Test (184, "Import free curve from STEP file")]
@@ -41,7 +35,7 @@ class StepTests {
          sb.AppendLine ("-----------------");
          foreach (var curve in cp.Curves) {
             sb.AppendLine (curve.GetType ().Name);
-            curve.Discretize (pts, Lib.CoarseTess, Lib.CoarseTessAngle);
+            curve.Discretize (pts, ETess.Coarse);
             foreach (var pt in pts)
                sb.AppendLine (pt.ToString ());
             pts.Clear ();

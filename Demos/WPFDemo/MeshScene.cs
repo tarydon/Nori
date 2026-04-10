@@ -30,11 +30,11 @@ class MeshScene : Scene3 {
       List<int> splits = [0];
       List<Point2> tmp = [];
       using var tess = FastTess2D.Borrow ();
-      tess.Tolerance = ETolerance.Fine;
+      tess.Tolerance = ETess.Fine;
       Random r = new ();
       for (int i = 0; i < polys.Count; i++) {
          tmp.Clear (); 
-         polys[i].Discretize (tmp, Lib.FineTess, Lib.FineTessAngle);
+         polys[i].Discretize (tmp, ETess.Fine);
          for (int j = 0; j < tmp.Count; j++) 
             tmp[j] = tmp[j].Moved (r.NextDouble () * 1e-5, r.NextDouble () * 1e-5);
          polys[i] = Poly.Lines (tmp, true);

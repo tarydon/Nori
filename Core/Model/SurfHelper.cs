@@ -11,16 +11,16 @@ namespace Nori;
 /// here for now until we implement this better
 class SurfaceMesher (E3Surface surf) {
    // Methods ------------------------------------------------------------------
-   public Mesh3 Build (double tolerance, double maxAngStep) {
+   public Mesh3 Build (ETess eTess) {
       // First, we flatten each trimming curve into the UV space, and compute a
       // 2D triangular tessellation in the UV space. At this point, we compute the
       // following set of data:
-      mTolerance = tolerance;
+      mTolerance = Lib.TessChord[(int)eTess];
       List<Point3> pts = [];  // Discretization of all the trimming curves of the surface
       List<int> splits = [0]; // Split points that divide pts into individual contours
       foreach (var contour in mSurf.Contours) {
          int a = pts.Count;
-         contour.Discretize (pts, tolerance, maxAngStep);
+         contour.Discretize (pts, eTess);
          int b = pts.Count; splits.Add (b);
          mWires.Add (b - 1);
          for (int i = a; i < b; i++) { mWires.Add (i); mWires.Add (i); }
@@ -102,7 +102,7 @@ class SurfaceMesher (E3Surface surf) {
    }
    readonly Dictionary<Point2, int> mCache = new (new PointComparer (1e-6));
 
-   struct Node (Point2 uv, Point3f pos, Vec3H normal) {
+   readonly struct Node (Point2 uv, Point3f pos, Vec3H normal) {
       public readonly Point2 UV = uv;
       public readonly Point3f Pos = pos;
       public readonly Vec3H Normal = normal;

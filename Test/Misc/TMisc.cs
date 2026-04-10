@@ -330,7 +330,6 @@ class TMisc {
          => lf.Render ("Hello\nWorld", new (x, y), align, 0, 1, 2, 30.D2R (), poly);
    }
 
-
    [Test (68, "2D tessellation tests")]
    void Test11 () {
       // Create poly with holes
@@ -353,7 +352,7 @@ class TMisc {
       // Make tessellation inputs
       List<Point2> pts = []; List<int> splits = [0];
       foreach (var poly in polys) {
-         poly.Discretize (pts, 0.1, 0.5411);
+         poly.Discretize (pts, ETess.Medium);
          splits.Add (pts.Count);
       }
 

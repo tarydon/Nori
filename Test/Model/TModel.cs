@@ -11,7 +11,10 @@ class TModel {
       var reader = new T3XReader (NT.File ("IO/T3X/NURB.t3x")) { NoMeshes = true };
       var model = reader.Load ();
       var nurb = model.Ents.OfType<E3NurbsSurface> ().Single ();
+      var old = E3Surface.MeshQuality;
+      E3Surface.MeshQuality = ETess.Coarse;
       var mesh = nurb.Mesh;
+      E3Surface.MeshQuality = old;
       mesh.Vertex.Length.Is (926);
       mesh.Wire.Length.Is (364);
       mesh.Triangle.Length.Is (10692);

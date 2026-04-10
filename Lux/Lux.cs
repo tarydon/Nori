@@ -265,7 +265,6 @@ public static partial class Lux {
    static int mcFPSFrames;          // Frames rendered since that time
    static bool mRendering;          // Currently rendering a frame
 
-
    /// <summary>Prompts the Lux system to redraw the screen (asynchronous)</summary>
    public static void Redraw () => HW.Redraw ();
 

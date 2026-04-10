@@ -149,7 +149,7 @@ public sealed class E3Curve : Ent3 {
    // Computes the bound of the curve
    Bound3 ComputeBound () {
       List<Point3> pts = [];
-      Curve.Discretize (pts, Lib.CoarseTess, Lib.CoarseTessAngle);
+      Curve.Discretize (pts, ETess.Coarse);
       return new (pts);
    }
 
@@ -171,7 +171,7 @@ public sealed class E3Contour : Ent3 {
       Bound3 b = new ();
       List<Point3> pts = [];
       foreach (var curve in Curves) {
-         curve.Discretize (pts, Lib.CoarseTess, Lib.CoarseTessAngle);
+         curve.Discretize (pts, ETess.Coarse);
          b += new Bound3 (pts);
          pts.Clear ();
       }
@@ -231,7 +231,7 @@ public abstract class E3Surface : Ent3 {
    /// <summary>The tessellation of the surface is computed on demand by BuildMesh (which can be overridden)</summary>
    [DebuggerBrowsable (DebuggerBrowsableState.Never)]
    public Mesh3 Mesh {
-      get => _mesh ??= BuildMesh (Lib.CoarseTess, Lib.CoarseTessAngle);
+      get => _mesh ??= BuildMesh (MeshQuality);
       set {
          _mesh = value;
          if (_mesh.Triangle.Length > 0) {
@@ -245,6 +245,8 @@ public abstract class E3Surface : Ent3 {
       }
    }
    Mesh3? _mesh;
+
+   public static ETess MeshQuality = ETess.Medium;
 
    // Overrides ----------------------------------------------------------------
    /// <summary>BuildMesh is called to compute a tessellated mesh for this surface</summary>
@@ -260,8 +262,8 @@ public abstract class E3Surface : Ent3 {
    /// cylinders, torus etc where the 3D surface often does not have any 'edges' in one or
    /// both of the parameter directions. The UV parametrization in such cases needs to introduce
    /// a 'seam' and all that logic is not yet handled by SurfaceMesher. 
-   protected virtual Mesh3 BuildMesh (double tolerance, double maxAngStep) 
-      => new SurfaceMesher (this).Build (tolerance, maxAngStep);
+   protected virtual Mesh3 BuildMesh (ETess eTess) 
+      => new SurfaceMesher (this).Build (eTess);
 
    /// <summary>Override this to compute the domain of the surface</summary>
    protected abstract Bound2 ComputeDomain ();
@@ -299,7 +301,7 @@ public abstract class E3Surface : Ent3 {
    Bound3 ComputeBound () {
       if (_mesh != null) return _mesh.Bound;
       List<Point3> pts = [];
-      Contours[0].Discretize (pts, Lib.CoarseTess, Lib.CoarseTessAngle);
+      Contours[0].Discretize (pts, ETess.Coarse);
       return new (pts);
    }
 

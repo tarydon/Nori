@@ -109,9 +109,7 @@ public readonly struct Point2 : IEQuable<Point2> {
       return new (X + r * cos, Y + r * sin);
    }
 
-   /// <summary>
-   /// Returns the point with ordinates rounded off to 3 decimals
-   /// </summary>
+   /// <summary>Returns the point with ordinates rounded off to 3 decimals</summary>
    /// <returns></returns>
    public Point2 R3 () => new (X.R3 (), Y.R3 ());
 

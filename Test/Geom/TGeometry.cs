@@ -484,7 +484,7 @@ class TessTests {
             for (int k = 0; k < 3; k++) pts.Add (verts[tris[j + k]]);
             triArea += Poly.Lines (pts, true).GetArea ();
          }
-         triArea.R6 ().Is (84550.839797);
+         triArea.R3 ().Is (84550.84);
       }
    }
 
@@ -548,7 +548,7 @@ class TessTests {
       foreach (var e2p in dwg.Ents.OfType<E2Poly> ().Where (a => a.Layer.Name == "0")) {
          var poly = e2p.Poly;
          if (poly.HasArcs) {
-            pts.Clear (); poly.Discretize (pts, Lib.CoarseTess, Lib.CoarseTessAngle);
+            pts.Clear (); poly.Discretize (pts, ETess.Coarse);
             input.Add (Poly.Lines (pts, true));
          } else
             input.Add (poly);

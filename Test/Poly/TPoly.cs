@@ -47,7 +47,7 @@ class PolyTests {
       Assert.TextFilesEqual ("Misc/poly.txt", NT.TmpTxt);
 
       List<Point2> pts = [];
-      p.Discretize (pts, 0.05, 0.5411);
+      p.Discretize (pts, ETess.Medium);
       sb.Clear ();
       sb.Append ($"Discretization of {p}:\n");
       foreach (var pt in pts) sb.Append (pt.ToString () + "\n");
@@ -55,7 +55,7 @@ class PolyTests {
       Assert.TextFilesEqual ("Misc/poly2.txt", NT.TmpTxt);
 
       pts.Clear ();
-      Poly.Line (1, 2, 3, 4).Discretize (pts, 0.1, 0.5411);
+      Poly.Line (1, 2, 3, 4).Discretize (pts, ETess.Medium);
       pts.Count.Is (2);
 
       Poly p1 = p * Matrix2.Translation (2, 1); p1.Is ("M2,1H12V4Q10,6,1H4Q2,4,-1Z");
@@ -208,7 +208,7 @@ class PolyTests {
 
       // Segment folds back on itself
       Poly.Parse ("M0,0H10H5").TryCleanup (out poly); poly!.Is ("M0,0H5");
-      Poly.Parse ("M0,0H10H0").TryCleanup (out poly).Is (false); // Slit is not processed
+      Poly.Parse ("M0,0H10H0").TryCleanup (out _).Is (false); // Slit is not processed
       Poly.Parse ("M0,0Q0,20,2Q10,10,-1").TryCleanup (out poly); poly!.Is ("M0,0Q10,10,1"); // Folds back on itself; Gets truncated.
 
       // Multiple split segs (instead of one single seg) (w/o fold-back)
