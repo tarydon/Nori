@@ -330,7 +330,7 @@ public partial class FastTess2D : IBorrowable<FastTess2D> {
       mBound = new ();
       mInput.Clear (); mTris.Clear ();
       mDiagTiles.Clear (); mValleyTiles.Clear (); mFreeTile.Clear ();
-      mR = new Rand (42); Tolerance = ETess.Coarse; BiasAngle = 0.1642;
+      mR = new Rand (42); Tolerance = ETess.Medium; BiasAngle = 0.1642;
       mSN = mNN = 0; mTN = mVN = 1;
    }
 

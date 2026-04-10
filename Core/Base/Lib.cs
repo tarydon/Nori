@@ -18,8 +18,6 @@ public static class Lib {
    public const double EpsilonSq = Epsilon * Epsilon;
    /// <summary>PI = 180 degrees, in radians</summary>
    public const double PI = Math.PI;
-   /// <summary>Square of the tessellation error</summary>
-   public static double FineTessSq = 0.0001;
 
    /// <summary>TwoPI = 360 degrees, in radians</summary>
    public const double TwoPI = 2 * Math.PI;
@@ -30,11 +28,13 @@ public static class Lib {
    /// <summary>The constant square-root-of-2</summary>
    public const double Root2 = 1.4142135623730950488016887242097;
 
-   public readonly static ImmutableArray<double> TessChord = [0.1, 1, 0.2, 0.1, 0.01];
-   public readonly static ImmutableArray<double> TessAngle = [0.803, 1.065, 1.065, 0.803, 0.5411];
+   /// <summary>Chordal deviations for discretization / tessellation (index using an ETess value)</summary>
+   public readonly static ImmutableArray<double> TessChord = [0.1, 1, 0.2, 0.1, 0.05, 0.01];
+   /// <summary>Max-angle-step for discretization / tessellation (index using an ETess value)</summary>
+   public readonly static ImmutableArray<double> TessAngle = [0.803, 1.065, 1.065, 0.803, 0.6562, 0.5411];
    
    // Properties ---------------------------------------------------------------
-      /// <summary>The list of known assemblies</summary>
+   /// <summary>The list of known assemblies</summary>
    public static IEnumerable<Assembly> Assemblies => mAssemblies;
    static readonly HashSet<Assembly> mAssemblies = [];
 

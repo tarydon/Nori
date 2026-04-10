@@ -9,7 +9,7 @@ using static Lux;
 class TLux {
    TLux () {
       var poly = Nori.Poly.Rectangle (0, 0, 10, 10);
-      mCube = Mesh3.Extrude ([poly], 6, Matrix3.Identity);
+      mCube = Mesh3.Extrude ([poly], 6, Matrix3.Identity, ETess.Medium);
    }
 
    [Test (48, "Lines, Bezier, Points rendering")]
@@ -186,7 +186,7 @@ class TLux {
       Dwg2 dwg = new ();
       dwg.Add (Nori.Poly.Parse ("M0,0H100V25Q75,50,1H0Z"));
       dwg.Add (Nori.Poly.Circle (new (75, 25), 20));
-      var scene = new Scene2 (Color4.Gray (128), new (-5, -5, 105, 55), new DwgFillVN (dwg));
+      var scene = new Scene2 (Color4.Gray (128), new (-5, -5, 105, 55), new DwgFillVN (dwg, ETess.Medium));
       TestPNG (scene, new Vec2S (240, 120), DIBitmap.EFormat.Gray8, "FillPoly");
    }
 

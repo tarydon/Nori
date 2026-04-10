@@ -124,9 +124,9 @@ public abstract partial class Ent3 {
 #region enum E3Flags -------------------------------------------------------------------------------
 /// <summary>Bitflags for Ent3</summary>
 [Flags]
-public enum E3Flags {
-   Selected = 0x1, Translucent = 0x2, FlipNormal = 0x4, GeneratrixFlat = 0x8,
-   ULinear = 0x10, VLinear = 0x20, NoStencil = 0x40, Colliding = 0x80,
+public enum E3Flags : uint {
+   Selected = 1 << 0, Translucent = 1 << 1, FlipNormal = 1 << 2, GeneratrixFlat = 1 << 3,
+   ULinear = 1 << 4, VLinear = 1 << 5, NoStencil = 1 << 6, Colliding = 1 << 7,
 }
 #endregion
 

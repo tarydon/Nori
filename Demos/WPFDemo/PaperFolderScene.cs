@@ -52,7 +52,7 @@ class PaperFolderScene : Scene3 {
       int cx = (int)(mIM.Width * Lux.DPIScale * 1.5), cy = (int)(mIM.Height * Lux.DPIScale * 1.5);
       cx = (cx >> 2) << 2;
 
-      var group = new GroupVN ([new Dwg2VN (dwg), new DwgFillVN (dwg) { Color = new Color4 (192, 196, 200) }]);
+      var group = new GroupVN ([new Dwg2VN (dwg), new DwgFillVN (dwg, ETess.Medium) { Color = new (192, 196, 200) }]);
       var scene = new Scene2 { Root = group, Bound = dwg.Bound.InflatedF (1.05),
                                BgrdColor = new Color4 (232, 236, 240) };
       var dib = scene.RenderImage (new (cx, cy), DIBitmap.EFormat.RGB8);
@@ -65,6 +65,6 @@ class PaperFolderScene : Scene3 {
 
    // Private data -------------------------------------------------------------
    string mDir = "N:/Demos/Data/Folder";
-   Image mIM = new Image { Width = 300, Height = 300, Stretch = Stretch.Fill };
+   Image mIM = new () { Width = 300, Height = 300, Stretch = Stretch.Fill };
    ListBox mLB = new () { Margin = new Thickness (4), MaxHeight = 200, BorderThickness = new Thickness (0) };
 }

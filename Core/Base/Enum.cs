@@ -26,8 +26,10 @@ public enum ETess {
    Coarse,
    /// <summary>Linear tolerance (chord): 0.1mm, Angular tolerance: 45°</summary>
    Medium,
+   /// <summary>Linear tolerance (chord): 0.05mm, Angular tolerance: 37.5°</summary>
+   Fine,
    /// <summary>Linear tolerance (chord): 0.01mm, Angular tolerance: 30°</summary>
-   Fine
+   VeryFine
 }
 
 /// <summary>Various 'well-known' properties</summary>

@@ -16,9 +16,10 @@ public class Dwg2VN : VNode {
 /// <summary>DwgFillVN is used to fill the interior closed polylines of a drawing</summary>
 public class DwgFillVN : VNode {
    // Constructors -------------------------------------------------------------
-   public DwgFillVN (Dwg2 dwg, Predicate<E2Poly>? filter = null) : base (dwg)
-      => (mDwg, mFilter) = (dwg, filter);
+   public DwgFillVN (Dwg2 dwg, ETess tess, Predicate<E2Poly>? filter = null) : base (dwg)
+      => (mDwg, mETess, mFilter) = (dwg, tess, filter);
    readonly Predicate<E2Poly>? mFilter;
+   readonly ETess mETess;
    readonly Dwg2 mDwg;
 
    // Properties ---------------------------------------------------------------
@@ -39,7 +40,7 @@ public class DwgFillVN : VNode {
          polys.Add (e2p.Poly);
       }
       foreach (var poly in polys) {
-         mPts.Clear (); poly.Discretize (mPts, ETess.Medium);
+         mPts.Clear (); poly.Discretize (mPts, mETess);
          mIdx.Add (0); int idx0 = mVec.Count;
          mVec.AddRange (mPts.Select (a => (Vec2F)a));
          for (int i = 0; i < mPts.Count; i++) mIdx.Add (idx0 + i);
