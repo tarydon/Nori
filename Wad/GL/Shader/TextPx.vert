@@ -11,5 +11,7 @@ out int vTexOffset;
 void main () {
    vCellSize = ivec2 (CharBoxN.z - CharBoxN.x, CharBoxN.w - CharBoxN.y);
    vTexOffset = TexOffset;
-   gl_Position = vec4 (CharBoxN.xy * VPScale, CharBoxN.zw * VPScale) - vec4 (1, 1, 1, 1);
+   vec2 pix1 = (CharBoxN.xw + vec2 (0.01, 0.01)) * VPScale;
+   vec2 pix2 = (CharBoxN.zy + vec2 (0.01, 0.01)) * VPScale;
+   gl_Position = vec4 (pix1.x - 1, 1 - pix1.y, pix2.x - 1, 1 - pix2.y);
 }

@@ -182,6 +182,10 @@ abstract class Shader<TVertex, TUniform> : Shader, IComparer<TUniform> where TVe
       }
    }
 
+   /// <summary>A variant that is used to add a single vertex for drawing</summary>
+   public void Draw (TVertex datum) 
+      => Draw (MemoryMarshal.CreateReadOnlySpan (ref datum, 1));
+
    /// <summary>Adds vertices and element indices into our local data array, and creates an RBatch pointing to them</summary>
    /// Since we have vertices and indices, we are going to later use this for a DrawElements call,
    /// while the version of Draw above results in a RBatch that uses no 'indices' and is a simple

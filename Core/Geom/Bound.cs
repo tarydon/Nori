@@ -231,7 +231,7 @@ public readonly struct Bound2 : IEQuable<Bound2> {
    /// <summary>Construct a Bound2  that encompasses all the given Bound2 (union)</summary>
    public Bound2 (IEnumerable<Bound2> bounds) {
       (X, Y) = (new (), new ());
-      foreach (var b in bounds) { X += b.X; Y += b.Y; }
+      foreach (var b in bounds.Where (a => !a.IsEmpty)) { X += b.X; Y += b.Y; }
    }
 
    public override string ToString () => IsEmpty ? "Empty" : $"({X},{Y})";

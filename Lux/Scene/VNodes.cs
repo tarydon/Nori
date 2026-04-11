@@ -77,20 +77,17 @@ public partial class TraceVN : VNode {
    public static void Print (string s) => It.Add (s);
 
    /// <summary>Clears all the text from the display.</summary>
-   public void Clear () {
-      mLines.Clear ();
-      Redraw ();
-   }
+   public void Clear () { mLines.Clear (); Redraw (); }
 
    // Overrides ----------------------------------------------------------------
    // Draw the lines, starting from the top left corner of the screen
    public override void Draw () {
       if (Lux.Scene is not { } scene) return;
       mcLines = Math.Max (scene.Rect.Height / mDYLine - 2, 10);
-      int y = scene.Rect.Height - mDYLine;
+      int y = (int)(mDYLine * 1.15);
       for (int i = 0; i < mLines.Count; i++) {
-         Lux.TextPx (mLines[i].Text, new (mDYLine / 2, y));
-         y -= mDYLine;
+         Lux.Text (mLines[i].Text, new (mDYLine / 2, y));
+         y += mDYLine;
       }
    }
 

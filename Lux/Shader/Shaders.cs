@@ -136,15 +136,7 @@ partial class Line3DShader : Shader<Vec3F, Seg2DShader.Settings> {
 #region class LinePxShader -------------------------------------------------------------------------
 /// <summary>Draws lines in pixel space</summary>
 [Singleton]
-partial class LinePxShader : Shader<Vec2F, Color4> {
-   LinePxShader () : base (ShaderImp.LinePx) => Bind ();
-   int muVPScale = 0, muDrawColor = 0;
-
-   protected override void ApplyUniformsImp (ref readonly Color4 color) => Pgm.Set (muDrawColor, color);
-   protected override int OrderUniformsImp (ref readonly Color4 a, ref readonly Color4 b) => (int)(a.Value - b.Value);
-   protected override void SetConstantsImp () => Pgm.Set (muVPScale, Lux.VPScale);
-   protected override Color4 SnapUniformsImp () => Lux.Color;
-}
+partial class LinePxShader () : PxShader<Vec2S> (ShaderImp.LinePx) { }
 #endregion
 
 #region class PhongShader --------------------------------------------------------------------------
@@ -227,10 +219,108 @@ partial class Point3DShader : Shader<Vec3F, Point3DShader.Settings> {
 }
 #endregion
 
+#region class PointPxShader ------------------------------------------------------------------------
+/// <summary>Takes point (in pixel space) + color as input and plots one pixel</summary>
+/// The color is not a uniform but part of the vertex data passed in with each point
+[Singleton]
+partial class PointPxShader : PxShader<PointPxShader.Arg> {
+   PointPxShader () : base (ShaderImp.PointPx) { }
+
+   public readonly record struct Arg (Vec2S Pixel, Vec4F Color);
+}
+#endregion
+
+#region class PxShader -----------------------------------------------------------------------------
+/// <summary>Base class for various shaders using pixels (Vec2S)</summary>
+class PxShader<TVertex> : Shader<TVertex, Color4> where TVertex : unmanaged {
+   // Constructors -------------------------------------------------------------
+   protected PxShader (ShaderImp imp) : base (imp) => Bind ();
+   protected int muVPScale = 0, muDrawColor = 0;
+
+   // Methods ------------------------------------------------------------------
+   protected override void ApplyUniformsImp (ref readonly Color4 color) => Pgm.Set (muDrawColor, color);
+   protected override int OrderUniformsImp (ref readonly Color4 a, ref readonly Color4 b) => (int)(a.Value - b.Value);
+   protected override void SetConstantsImp () => Pgm.Set (muVPScale, Lux.VPScale);
+   protected override Color4 SnapUniformsImp () => Lux.Color;
+}
+#endregion
+
+#region class PxShader -----------------------------------------------------------------------------
+/// <summary>Base class for various shaders using pixels (Vec2S)</summary>
+class PxBorderShader<TVertex> : Shader<TVertex, PxBorderShader<TVertex>.Settings> where TVertex : unmanaged {
+   // Constructors -------------------------------------------------------------
+   protected PxBorderShader (ShaderImp imp) : base (imp) => Bind ();
+   protected int muVPScale = 0, muDrawColor = 0, muBorderColor = 0;
+
+   // Methods ------------------------------------------------------------------
+   protected override void ApplyUniformsImp (ref readonly Settings a) 
+      => Pgm.Set (muDrawColor, a.Color).Set (muBorderColor, a.BorderColor);
+
+   protected override int OrderUniformsImp (ref readonly Settings a, ref readonly Settings b) {
+      int n = (int)(a.Color.Value - b.Color.Value); if (n != 0) return n;
+      return (int)(a.BorderColor.Value - b.BorderColor.Value);
+   }
+
+   protected override Settings SnapUniformsImp () => new (Lux.Color, Lux.BorderColor);
+   protected override void SetConstantsImp () => Pgm.Set (muVPScale, Lux.VPScale);
+
+   // Nested types -------------------------------------------------------------
+   public readonly record struct Settings (Color4 Color, Color4 BorderColor);
+}
+#endregion
+
 #region class Quad2DShader -------------------------------------------------------------------------
 /// <summary>Shader to draw simple quads in 2D (specified in world space, no anti-aliasing)</summary>
 [Singleton]
 partial class Quad2DShader () : TriQuad2DShader (ShaderImp.Quad2D);
+#endregion
+
+#region class QuadPxShader -------------------------------------------------------------------------
+/// <summary>Draws quads in pixel space</summary>
+[Singleton]
+partial class QuadPxShader () : PxShader<Vec2S> (ShaderImp.QuadPx) { }
+#endregion
+
+#region class RectPxShader -------------------------------------------------------------------------
+/// <summary>Draws axis-aligned rectangles in pixel space</summary>
+[Singleton]
+partial class RectPxShader () : PxShader<RectS> (ShaderImp.RectPx) { }
+#endregion
+
+#region class RRectPxShader ------------------------------------------------------------------------
+/// <summary>Draws axis-aligned rounded-rectangles in pixel space</summary>
+[Singleton]
+partial class RRectPxShader () : PxShader<RRectPxShader.Args> (ShaderImp.RRectPx) {
+   [StructLayout (LayoutKind.Sequential, Pack = 2, Size = 10)]
+   public readonly record struct Args (RectS Box, short Radius);
+}
+#endregion
+
+#region class RectBorderPxShader -------------------------------------------------------------------
+/// <summary>Draws axis-aligned rectangles in pixel space, with a border (drawn in BorderColor)</summary>
+[Singleton]
+partial class RectBorderPxShader () : PxBorderShader<RectBorderPxShader.Args> (ShaderImp.RectBorderPx) {
+   [StructLayout (LayoutKind.Sequential, Pack = 2, Size = 10)]
+   public readonly record struct Args (RectS Box, short Border);
+}
+#endregion
+
+#region class RRectBorderPxShader ------------------------------------------------------------------
+/// <summary>Draws axis-aligned rounded-rectangles in pixel space, with a border (drawn in BorderColor)</summary>
+[Singleton]
+partial class RRectBorderPxShader () : PxBorderShader<RRectBorderPxShader.Args> (ShaderImp.RRectBorderPx) {
+   [StructLayout (LayoutKind.Sequential, Pack = 2, Size = 12)]
+   public readonly record struct Args (RectS Box, short Radius, short Border);
+}
+#endregion
+
+#region class DeePxShader --------------------------------------------------------------------------
+/// <summary>Draws a Dee (rounded rectangle with rounding on one side only) in pixel space</summary>
+[Singleton]
+partial class DeePxShader () : PxShader<DeePxShader.Args> (ShaderImp.DeePx) {
+   [StructLayout (LayoutKind.Sequential, Pack = 2, Size = 12)]
+   public readonly record struct Args (RectS Box, short Radius, short Side);
+}
 #endregion
 
 #region class Seg2DShader --------------------------------------------------------------------------
@@ -381,6 +471,12 @@ partial class Text3DShader : Shader<Text3DShader.Args, Text2DShader.Settings> {
 /// <summary>Shader to draw simple triangles in 2D (specified in world space, no anti-aliasing)</summary>
 [Singleton]
 partial class Triangle2DShader () : TriQuad2DShader (ShaderImp.Triangle2D);
+#endregion
+
+#region class TrianglePxShader ---------------------------------------------------------------------
+/// <summary>Draws triangles in pixel space</summary>
+[Singleton]
+partial class TrianglePxShader () : PxShader<Vec2S> (ShaderImp.TrianglePx) { }
 #endregion
 
 #region class TriFanStencilShader ------------------------------------------------------------------

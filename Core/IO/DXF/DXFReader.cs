@@ -139,7 +139,11 @@ public partial class DXFReader {
             else mPB.Arc (Pt, Bulge);
          }
          if (mClosedPoly == true) mPB.Close ();
-         Add (mPB.Build ());
+         var p = mPB.Build ();
+         // Pix#351 Poly with extraordinary extents (eg E+78) [Bound uses float and this value becomes INF there]
+         var b = p.GetBound ();
+         if (double.IsFinite (b.Width) && double.IsFinite (b.Height))
+            Add (p);
          Vertex.Clear (); 
       }
       mClosedPoly = null;
@@ -293,7 +297,8 @@ public partial class DXFReader {
       switch (key) {
          case _ACADVER: mACADVer = V; break;
          case _CLAYER: mCurrentLayer = V; break;
-         case _MEASUREMENT: Scale = Vn == 0 ? 25.4 : 1; break;
+         case _MEASUREMENT: if (!mGotInsUnits) Scale = Vn == 0 ? 25.4 : 1; break;
+         case _INSUNITS: if (Vn is 1 or 4) { Scale = Vn == 1 ? 25.4 : 1; mGotInsUnits = true; } break;
 
          case _DWGCODEPAGE:
             mCodePage = V;
@@ -318,6 +323,7 @@ public partial class DXFReader {
    }
    static bool mEncodingsRegistered;
    string mACADVer = "", mCodePage = "", mCurrentLayer = "";
+   bool mGotInsUnits = false; // Accords higher priority to $INSUNITS over $MEASUREMENT
    double Scale = 1; 
 
    // This is called at the start of each section. 

@@ -34,7 +34,7 @@ class HullNode : VNode {
       var pts = mPts.Select (a => (Vec2F)a).ToList ();
       Lux.Points (pts.AsSpan ());
       var hull = ConvexHull.Compute (mPts).ToList ();
-      Lux.LineLoop (hull);
+      Lux.LineLoop (hull.AsSpan ());
    }
 
    void OnMouse (Vec2S pix) {
