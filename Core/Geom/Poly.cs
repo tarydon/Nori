@@ -457,14 +457,13 @@ public partial class Poly {
       List<ArcInfo> extra = [];
       if (HasArcs) { // Cleanup the zero-length seg's extras
          foreach (var idx in Enumerable.Range (0, Extra.Length)) {
-            if (idx >= Extra.Length) break;
             if (skipIdxs.Contains (idx)) continue;
             extra.Add (Extra[idx]);
          }
       }
-      var flags = mFlags;
-      if (extra.Count == 0 || extra.Any (e => (e.Flags & EFlags.Arc) != 0))
-         flags &= ~EFlags.HasArcs;
+      var flags = extra.Count == 0 ? mFlags & ~EFlags.HasArcs : mFlags;
+      if (extra.Any (e => (e.Flags & EFlags.Arc) != 0))
+         flags |= EFlags.HasArcs;
       // Remove dup points
       var pts = mPts.Select ((pt, idx) => (pt, idx)).Where (a => !skipIdxs.Contains (a.idx)).Select (a => a.pt);
       result = new ([.. pts], [.. extra], flags);

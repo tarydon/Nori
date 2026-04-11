@@ -219,6 +219,10 @@ class PolyTests {
       // Mergeable last and first segs
       Poly.Parse ("M10,0H20V5H0V0H10Z").TryCleanup (out poly); poly!.Is ("M20,0V5H0V0Z");
       Poly.Parse ("M0,0Q10,-10,1V10Q0,0,1Z").TryCleanup (out poly); poly!.Is ("M10,-10V10Q10,-10,2Z");
+
+      // Circle - defined as 4 arcs interspersed with zero-length segs! [Pix#416]
+      Poly.Parse ("M-106.041834,326.551172V326.551172Q-103.541834,329.051172,1V329.051172Q-106.041834,331.551172,1V331.551172Q-108.541834,329.051172,1V329.051172Q-106.041834,326.551172,1Z")
+         .TryCleanup (out poly); poly!.Is ("C-106.041834,329.051172,2.5");
    }
 
    [Test (59, "Poly.Append tests")]
