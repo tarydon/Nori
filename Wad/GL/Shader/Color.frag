@@ -6,5 +6,5 @@ in vec4 vColor;
 out vec4 gFragColor;
 
 void main (void) {
-    gFragColor = vColor;
+   gFragColor = vColor;
 }

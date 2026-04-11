@@ -1,7 +1,8 @@
 #version 330
 
 uniform vec4 DrawColor;
+out vec4 gFragColor;
 
 void main () {
-   gl_FragColor = DrawColor;
+   gFragColor = DrawColor;
 }

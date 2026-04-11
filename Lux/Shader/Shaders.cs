@@ -282,17 +282,13 @@ partial class QuadPxShader () : PxShader<Vec2S> (ShaderImp.QuadPx) { }
 #endregion
 
 #region class RectPxShader -------------------------------------------------------------------------
-/// <summary>
-/// Draws axis-aligned rectangles in pixel space
-/// </summary>
+/// <summary>Draws axis-aligned rectangles in pixel space</summary>
 [Singleton]
 partial class RectPxShader () : PxShader<RectS> (ShaderImp.RectPx) { }
 #endregion
 
 #region class RRectPxShader ------------------------------------------------------------------------
-/// <summary>
-/// Draws axis-aligned rounded-rectangles in pixel space
-/// </summary>
+/// <summary>Draws axis-aligned rounded-rectangles in pixel space</summary>
 [Singleton]
 partial class RRectPxShader () : PxShader<RRectPxShader.Args> (ShaderImp.RRectPx) {
    [StructLayout (LayoutKind.Sequential, Pack = 2, Size = 10)]
@@ -301,9 +297,7 @@ partial class RRectPxShader () : PxShader<RRectPxShader.Args> (ShaderImp.RRectPx
 #endregion
 
 #region class RectBorderPxShader -------------------------------------------------------------------
-/// <summary>
-/// Draws axis-aligned rectangles in pixel space, with a border (drawn in BorderColor)
-/// </summary>
+/// <summary>Draws axis-aligned rectangles in pixel space, with a border (drawn in BorderColor)</summary>
 [Singleton]
 partial class RectBorderPxShader () : PxBorderShader<RectBorderPxShader.Args> (ShaderImp.RectBorderPx) {
    [StructLayout (LayoutKind.Sequential, Pack = 2, Size = 10)]
@@ -312,9 +306,7 @@ partial class RectBorderPxShader () : PxBorderShader<RectBorderPxShader.Args> (S
 #endregion
 
 #region class RRectBorderPxShader ------------------------------------------------------------------
-/// <summary>
-/// Draws axis-aligned rounded-rectangles in pixel space, with a border (drawn in BorderColor)
-/// </summary>
+/// <summary>Draws axis-aligned rounded-rectangles in pixel space, with a border (drawn in BorderColor)</summary>
 [Singleton]
 partial class RRectBorderPxShader () : PxBorderShader<RRectBorderPxShader.Args> (ShaderImp.RRectBorderPx) {
    [StructLayout (LayoutKind.Sequential, Pack = 2, Size = 12)]
@@ -323,9 +315,7 @@ partial class RRectBorderPxShader () : PxBorderShader<RRectBorderPxShader.Args> 
 #endregion
 
 #region class DeePxShader --------------------------------------------------------------------------
-/// <summary>
-/// Draws a Dee (rounded rectangle with rounding on one side only) in pixel space
-/// </summary>
+/// <summary>Draws a Dee (rounded rectangle with rounding on one side only) in pixel space</summary>
 [Singleton]
 partial class DeePxShader () : PxShader<DeePxShader.Args> (ShaderImp.DeePx) {
    [StructLayout (LayoutKind.Sequential, Pack = 2, Size = 12)]

@@ -420,10 +420,10 @@ public class E2Spline : Ent2 {
       return false;
    }
 
-   public IReadOnlyList<Point2> Pts {
+   public ReadOnlySpan<Point2> Pts {
       get {
          if (mPts.Count == 0) Spline.Discretize (mPts, 0.05);
-         return mPts;
+         return mPts.AsSpan ();
       }
    }
    readonly List<Point2> mPts = [];
@@ -431,7 +431,10 @@ public class E2Spline : Ent2 {
    public override Bound2 Bound => Bound2.Cached (ref mBound, () => new (Pts));
    Bound2 mBound = new ();
 
-   public override Bound2 GetBound (Matrix2 xfm) => new (Pts.Select (a => a * xfm));
+   public override Bound2 GetBound (Matrix2 xfm) {
+      var _ = Pts;
+      return new (mPts.Select (a => a * xfm));
+   }
 
    protected override E2Spline Xformed (Matrix2 m) => new (Layer, mSpline * m, mFlags) { Color = Color };
 

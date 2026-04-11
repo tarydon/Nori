@@ -16,14 +16,48 @@ public partial class MainWindow : Window {
       if (source != null) Lux.DPIScale = (float)source.CompositionTarget.TransformToDevice.M11;
       TraceVN.TextColor = Color4.Yellow;
       new SceneManipulator ();
-      Lux.UIScene = new DemoScene ();
+      Lux.UIScene = new Demo3Scene ();
    }
+}
+
+class Demo3Scene : Scene3 {
+   public Demo3Scene () {
+      Poly poly = Poly.Rectangle (new (0, 0, 100, 50));
+      var mesh = Mesh3.Extrude ([poly], 25, Matrix3.Identity);
+      Bound = mesh.Bound;
+      var svn = new SimpleVN (SetAttr, Draw) { Streaming = true };
+      Root = new GroupVN ([new Mesh3VN (mesh), svn]);
+   }
+
+   void SetAttr () {
+      Lux.TypeFace = face;
+   }
+   TypeFace face = new TypeFace ("n:/wad/gl/fonts/Roboto-Regular.ttf", 48);
+
+   void Draw () {
+      Lux.Text3D ("ABC", new (0, 0, 25), ETextAlign.TopLeft, Vec2S.Zero);
+   }
+}
+
+class Demo2Scene : Scene2 {
+   public Demo2Scene () {
+      Bound = new (-50, -50, 150, 100);
+      Root = new SimpleVN (Draw) { Streaming = true };
+   }
+
+   void Draw () {
+      Lux.TypeFace = face;
+      Lux.Poly (Poly.Rectangle (0, 0, 100, 50));
+      Lux.Color = Color4.Yellow;
+      Lux.Text2D ("ABC", new (100, 50), ETextAlign.TopRight, new (0, 0));
+   }
+   TypeFace face = new TypeFace ("n:/wad/gl/fonts/Roboto-Regular.ttf", 48);
 }
 
 class DemoScene : Scene2 {
    public DemoScene () {
       Bound = new Bound2 (0, 0, 100, 50);
-      BgrdColor = new Color4 (128, 96, 64);
+      BgrdColor = Color4.Gray (128);
       TraceVN.TextColor = Color4.Yellow; Lib.Tracer = TraceVN.Print;
       Root = new GroupVN([new DemoVN (), TraceVN.It]);
    }
@@ -41,7 +75,7 @@ class DemoVN : VNode {
          for (int x = 0; x < 128; x++) {
             int n = 150 + y * 512 + x * 4;
             byte b = D[n], g = D[n + 1], r = D[n + 2], a = D[n + 3];
-            Lux.PxPoint ((x + 10, 138 - y), new Color4 (a, r, g, b));
+            Lux.Point ((x + 10, 138 - y), new Color4 (a, r, g, b));
          }
 
       List<Vec2S> pts = [];
@@ -65,11 +99,13 @@ class DemoVN : VNode {
       Lux.Rect (new (20, 150, 120, 250));
       Lux.RRect (new RectS (150, 150, 250, 250), 20);
       Lux.RectBorder (new RectS (280, 150, 380, 250), 10);
-      Lux.RRectBorder (new RectS (410, 150, 510, 250), 30, 15);
+      Lux.RRectBorder (new RectS (410, 150, 510, 250), 30, 10);
 
       Lux.Dee (new (20, 280, 120, 380), 30, 0);
       Lux.Dee (new (150, 280, 250, 380), 30, 1);
       Lux.Dee (new (280, 280, 380, 380), 30, 2);
       Lux.Dee (new (410, 280, 510, 380), 30, 3);
+
+      Lux.RRectBorder (new RectS (20, 400, 300, 550), 40, 50);
    }
 }

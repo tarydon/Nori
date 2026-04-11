@@ -18,8 +18,10 @@ void main () {
    vClipSpaceZ = xyzClip.z;
    vec2 xyref = xyzClip.xy;                            // xy0 now in clip space
    xyref = floor (xyref / VPScale);                    // now in pixel coordinates
-   xyref = xyref + vec2 (0.01, 0.01);                  // delta to avoid truncation errors
-   vec2 xy0 = (xyref + CharBoxN.xy); 
-   vec2 xy1 = (xyref + CharBoxN.zw);
-   gl_Position = vec4 (xy0 * VPScale, xy1 * VPScale);
+   xyref = xyref + vec2 (0.01, 0.01);
+   xyref *= VPScale;
+   vec2 pix1 = CharBoxN.xw * VPScale;
+   vec2 pix2 = CharBoxN.zy * VPScale;
+   gl_Position = vec4 (pix1.x + xyref.x, -pix1.y + xyref.y,
+                       pix2.x + xyref.x, -pix2.y + xyref.y);
 }

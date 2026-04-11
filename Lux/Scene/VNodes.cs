@@ -86,7 +86,7 @@ public partial class TraceVN : VNode {
       mcLines = Math.Max (scene.Rect.Height / mDYLine - 2, 10);
       int y = (int)(mDYLine * 1.15);
       for (int i = 0; i < mLines.Count; i++) {
-         Lux.TextPx (mLines[i].Text, new (mDYLine / 2, y));
+         Lux.Text (mLines[i].Text, new (mDYLine / 2, y));
          y += mDYLine;
       }
    }
