@@ -1,4 +1,4 @@
-﻿// ────── ╔╗                                                                                    WGL
+// ────── ╔╗                                                                                    WGL
 // ╔═╦╦═╦╦╬╣ GLTypes.cs
 // ║║║║╬║╔╣║ Support types used for OpenGL
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
@@ -60,7 +60,20 @@ public enum EMode : uint {
 }
 
 /// <summary>Various shading modes to pass to Lux.Mesh(...)</summary>
-public enum EShadeMode { Flat, Gourad, Phong, PhongNoStencil, Glass, GlassNoStencil }
+public enum EShadeMode { 
+   /// <summary>Flat shading (no color interpolation between vertices)</summary>
+   Flat, 
+   /// <summary>Gourad shading (compute color at vertices and interpolate)</summary>
+   Gourad, 
+   /// <summary>Phong shading (interpolate normal across face, and compute color at each pixel)</summary>
+   Phong, 
+   /// <summary>Phong shading, but no stencil lines are drawn</summary>
+   PhongNoStencil, 
+   /// <summary>Like phong shading, but using stipple-transparency (50% opacity)</summary>
+   Glass, 
+   /// <summary>Glass shading, but no stencil lines are drawn</summary>
+   GlassNoStencil 
+}
 
 // Pixel storage formats
 public enum EPixelFormat : uint { 

@@ -7,20 +7,34 @@ namespace Nori;
 [Flags]
 public enum ELuxAttr {
    None = 0,
-   Color = 1 << 0, LineWidth = 1 << 1, LineType = 1 << 2, LTScale = 1 << 3,
-   Xfm = 1 << 4, PointSize = 1 << 5, TypeFace = 1 << 6, ZLevel = 1 << 7
+   SColor = 1 << 0, LineWidth = 1 << 1, LineType = 1 << 2, LTScale = 1 << 3,
+   Xfm = 1 << 4, PointSize = 1 << 5, TypeFace = 1 << 6, ZLevel = 1 << 7,
+   BorderColor = 1 << 8,
 }
 
 #region class Lux ----------------------------------------------------------------------------------
 /// <summary>The public interface to the Lux renderer</summary>
 public static partial class Lux {
    // Properties ---------------------------------------------------------------
+   /// <summary>Current border color</summary>
+   /// This is used by a few pixel-accurate drawing routines like RectBorder, RRectBorder etc. 
+   public static Color4 BorderColor {
+      get => mBorderColor;
+      set {
+         if (mBorderColor.EQ (value) || value.IsNil) return;
+         if (Set (ELuxAttr.BorderColor)) mBorderColors.Push (mBorderColor);
+         mBorderColor = value; Rung++;
+      }
+   }
+   static Color4 mBorderColor;
+   static readonly Stack<Color4> mBorderColors = [];
+
    /// <summary>The current drawing color (default = white)</summary>
    public static Color4 Color {
       get => mColor;
       set {
          if (mColor.EQ (value) || value.IsNil) return;
-         if (Set (ELuxAttr.Color)) mColors.Push (mColor);
+         if (Set (ELuxAttr.SColor)) mColors.Push (mColor);
          mColor = value; Rung++;
       }
    }
@@ -140,11 +154,28 @@ public static partial class Lux {
    // Methods ------------------------------------------------------------------
    /// <summary>Draws beziers in world coordinates, with Z = 0</summary>
    /// Every set of 4 points in the list creates one bezier curve so n / 4
-   /// beziers are drawn. The following Lux properties are used:
+   /// beziers are drawn. 
+   /// 
+   /// The following Lux properties are used:
    /// - LineWidth : the width of the beziers, in device independent pixels
-   /// - DrawColor : color of the lines being drawn
+   /// - Color : color of the lines being drawn
    public static void Beziers (ReadOnlySpan<Vec2F> pts)
       => Bezier2DShader.It.Draw (pts);
+
+   /// <summary>Draws a Dee (rectangle with rounding on one side)</summary>
+   /// See the Rect routine for an explanation of how the coordinates are interpreted.
+   /// <param name="rect">The rectangle occupied by the Dee</param>
+   /// <param name="radius">Radius at the corresponding side</param>
+   /// <param name="side">Side that is radiused (0=left, 1=top, 2=right, 3=bottom)</param>
+   /// If the side is set to 0=left, for example, the top-left and bottom-left corners
+   /// are radiused, while the other two are sharp. The image below shows the 4 orientations
+   /// of the 'side' parameter:
+   /// file://N:/Doc/Img/DeeSide.png
+   /// 
+   /// The following Lux properties are used:
+   /// - Color: the color the Dee is filled with
+   public static void Dee (RectS rect, int radius, int side)
+      => DeePxShader.It.Draw ([new (rect, (short)radius, (short)side)]);
 
    /// <summary>This fills a set of closed paths (made of line segments) with the current Color</summary>
    /// The input to this function is a set of triangle-fans representing the closed paths.
@@ -168,6 +199,10 @@ public static partial class Lux {
    /// caller). We need this bound to figure out a minimal covering rectangle to apply the paint
    /// through, after the stencil is prepared. See the notes on TriFanStencilShader for more
    /// details on the algorithm.
+   ///
+   /// The following Lux properties are used:
+   /// - Color : The color for the fill
+   /// - Xfm : Transformation matrix
    public static void FillPath (ReadOnlySpan<Vec2F> pts, ReadOnlySpan<int> indices, Bound2 bound) {
       // We do this hacking of ZLevels because we have some very specific sequencing requirements
       // for the stencil RBatch and the cover RBatch. They should be drawn one immediately after the
@@ -188,49 +223,74 @@ public static partial class Lux {
 
    /// <summary>Draws 2D lines in world coordinates, with Z = 0</summary>
    /// Every pair of Vec2F in the list creates one line, so with n points,
-   /// n / 2 lines are drawn. The following Lux properties are used:
+   /// n / 2 lines are drawn. 
+   /// 
+   /// The following Lux properties are used:
+   /// - Color : color of the lines being drawn
    /// - LineWidth : the width of the beziers, in device independent pixels
-   /// - DrawColor : color of the lines being drawn
+   /// - Xfm : current transformation matrix
    public static void Lines (ReadOnlySpan<Vec2F> pts) {
       if (LineType == ELineType.Continuous) Line2DShader.It.Draw (pts);
       else DashLine2DShader.It.Draw (pts);
    }
 
+   /// <summary>Draws 3D lines</summary>
+   /// Each pair of Vec3F creates one line, so with n points, n / 2 lines 
+   /// are drawn.
+   /// 
+   /// The following Lux properties are used:
+   /// - Color: draw color
+   /// - LineWidth: the width of the line
+   /// - Xfm: current transformation matrix
+   public static void Lines (ReadOnlySpan<Vec3F> pts)
+      => Line3DShader.It.Draw (pts);
+
    /// <summary>Draws 2D lines (in pixel coordinates)</summary>
-   public static void PxLines (ReadOnlySpan<Vec2F> pts) => LinePxShader.It.Draw (pts);
+   /// The top left corner pixel is (0,0) and +X goes towards the right, +Y
+   /// towards the bottom. The line is exactly 1 pixel wide, and is not anti-aliased.
+   /// 
+   /// The following Lux properties are used:
+   /// - Color: color for the pixels
+   public static void Lines (ReadOnlySpan<Vec2S> pts) 
+      => LinePxShader.It.Draw (pts);
+
+   /// <summary>Draws a 2D line-loop (closed polyline made up of the given set of points)</summary>
+   /// The loop is closed by connecting the last point in the list to the first one. With
+   /// N points, N lines are drawn.
+   /// 
+   /// The following Lux properties are used:
+   /// - Color: draw color
+   /// - LineWidth: the width of the line
+   /// - Xfm: current transformation matrix
+   public static void LineLoop (ReadOnlySpan<Point2> pts) {
+      mBuf.Clear (); mBuf.Add (pts[0]);
+      for (int i = 1; i < pts.Length; i++) { mBuf.Add (pts[i]); mBuf.Add (pts[i]); }
+      mBuf.Add (pts[0]);
+      Lines (mBuf.AsSpan ());
+   }
 
    /// <summary>Draws a 2D line-strip (an open polyline made up of the given set of points)</summary>
-   public static void LineStrip (IReadOnlyList<Point2> pts) {
+   /// This connects each successive pair of points with a line segment. With N points, 
+   /// N-1 lines are drawn. 
+   /// 
+   /// The following Lux properties are used:
+   /// - Color: draw color
+   /// - LineWidth: the width of the line
+   /// - Xfm: current transformation matrix
+   public static void LineStrip (ReadOnlySpan<Point2> pts) {
       mBuf.Clear (); mBuf.Add (pts[0]);
-      for (int i = 1; i < pts.Count- 1; i++) { mBuf.Add (pts[i]); mBuf.Add (pts[i]); }
+      for (int i = 1; i < pts.Length - 1; i++) { mBuf.Add (pts[i]); mBuf.Add (pts[i]); }
       mBuf.Add (pts[^1]);
       Lines (mBuf.AsSpan ());
    }
    static readonly List<Vec2F> mBuf = [];
 
-   /// <summary>Draws a 2D line-loop (closed polyline made up of the given set of points)</summary>
-   public static void LineLoop (IReadOnlyList<Point2> pts) {
-      mBuf.Clear (); mBuf.Add (pts[0]);
-      for (int i = 1; i < pts.Count; i++) { mBuf.Add (pts[i]); mBuf.Add (pts[i]); }
-      mBuf.Add (pts[0]);
-      Lines (mBuf.AsSpan ());
-   }
-
-   /// <summary>Draws 3D lines</summary>
-   /// The following Lux properties are used:
-   /// - Xfm: current transformation matrix
-   /// - LineWidth: the width of the line
-   /// - Color: draw color
-   public static void Lines (ReadOnlySpan<Vec3F> pts)
-      => Line3DShader.It.Draw (pts);
-
    /// <summary>Draws a Mesh3 using one of the shade-modes</summary>
-   /// The shade modes are
-   ///   0 - Flat shading
-   ///   1 - Gourad shading
-   ///   2 - Phong shading
-   /// (This is primarily for learning purposes. Later we will remove the other shade
-   /// modes, and use only Phong shading)
+   /// See the EShadeMode documentation for the possible shade modes. 
+   /// 
+   /// The following Lux properties are used:
+   /// - Color: draw color
+   /// - Xfm: current transformation matrix
    public static void Mesh (Mesh3 mesh, EShadeMode shadeMode) {
       Mesh3.Node[] nodes = mesh.Vertex.AsArray ();
       int[] tris = mesh.Triangle.AsArray (), wires = mesh.Wire.AsArray ();
@@ -240,7 +300,7 @@ public static partial class Lux {
          case EShadeMode.Glass or EShadeMode.GlassNoStencil: GlassShader.It.Draw (nodes, tris); break;
          default:
             if (BackFacesPink) PhongPinkShader.It.Draw (nodes, tris);
-            else PhongShader.It.Draw (nodes, tris); 
+            else PhongShader.It.Draw (nodes, tris);
             break;
       }
       if (wires.Length > 0) {
@@ -253,17 +313,40 @@ public static partial class Lux {
    }
    static List<Vec3F> mHairs = [];
 
+   /// <summary>Draws one pixel with s specific color</summary>
+   /// The top left corner pixel is (0,0) and +X goes towards the right, +Y towards the
+   /// bottom. This draws exactly one pixel on the screen with the given color (which could
+   /// also have an alpha value). 
+   /// Unlike most other routines, this does not use Lux.Color, but passes the color value
+   /// as part of the vertex data. 
+   /// 
+   /// The following Lux properties are used:
+   /// - Color: Fill color of the triangles
+   public static void Point (Vec2S pix, Color4 color)
+      => PointPxShader.It.Draw (new PointPxShader.Arg (pix, (Vec4F)color));
+
    /// <summary>Draws 2D points in world coordinates, with Z = 0</summary>
+   /// 
    /// The following Lux properties are used:
    /// - PointSize : the diameter of the points, in device independent pixels
-   /// - DrawColor : color of the points being drawn
+   /// - Color : color of the points being drawn
    public static void Points (ReadOnlySpan<Vec2F> pts)
       => Point2DShader.It.Draw (pts);
 
+   /// <summary>Draws 3D points in world coordinates</summary>
+   ///
+   /// The following Lux properties are used:
+   /// - PointSize : the diameter of the points, in device independent pixels
+   /// - Color : color of the points being drawn
    public static void Points (ReadOnlySpan<Vec3F> pts)
       => Point3DShader.It.Draw (pts);
 
    /// <summary>Draws a Poly object in world coordinates, with Z = 0</summary>
+   /// 
+   /// The following Lux properties are used
+   /// - Color: color of the lines/arcs drawn
+   /// - LineWidth: the width of the beziers, in device independent pixels
+   /// - Xfm: current transformation matrix
    public static void Poly (Poly p) {
       mPolys.Clear (); mPolys.Add (p);
       Polys (mPolys.AsSpan ());
@@ -272,6 +355,11 @@ public static partial class Lux {
    static readonly List<Vec2F> mLines = [], mBeziers = [];
 
    /// <summary>Draw multiple Polys in world coordinates, with Z = 0</summary>
+   /// 
+   /// The following Lux properties are used
+   /// - Color: color of the lines/arcs drawn
+   /// - LineWidth: the width of the beziers, in device independent pixels
+   /// - Xfm: current transformation matrix
    public static void Polys (ReadOnlySpan<Poly> polys) {
       mLines.Clear (); mBeziers.Clear ();
       foreach (var p in polys) {
@@ -286,23 +374,69 @@ public static partial class Lux {
 
    /// <summary>Draws 2D quads in world coordinates, with Z = 0</summary>
    /// The quads are drawn with smoothed (anti-aliased) edges.
+   /// 
    /// The following Lux properties are used:
-   /// - DrawColor : color of the triangles being drawn
+   /// - Color : color of the quads being drawn
    public static void Quads (ReadOnlySpan<Vec2F> a) {
       Quad2DShader.It.Draw (a);
       for (int i = 0; i < a.Length; i += 4)
          Line2DShader.It.Draw ([a[i], a[i + 1], a[i + 1], a[i + 2], a[i + 2], a[i + 3], a[i + 3], a[i]]);
    }
 
-   /// <summary>Draws 2D triangles in world coordinates, with Z = 0</summary>
-   /// The triangles are drawn with smoothed (anti-aliased) edges.
+   /// <summary>Draws quads in pixel coordinates</summary>
+   /// The top left corner pixel is (0,0) and +X goes towards the right, +Y towards the
+   /// bottom. The quad edges are not anti-aliased.
+   /// *Note*: If you want to draw a rectangle whose edges are aligned with the X,Y axes,
+   /// use the Rect routine - that is more precise and faster. 
+   /// 
    /// The following Lux properties are used:
-   /// - DrawColor : color of the triangles being drawn
-   public static void Triangles (ReadOnlySpan<Vec2F> a) {
-      Triangle2DShader.It.Draw (a);
-      for (int i = 0; i < a.Length; i += 3)
-         Line2DShader.It.Draw ([a[i], a[i + 1], a[i + 1], a[i + 2], a[i + 2], a[i]]);
-   }
+   /// - Color: Fill color of the triangles
+   public static void Quads (ReadOnlySpan<Vec2S> pts)
+      => QuadPxShader.It.Draw (pts);
+
+   /// <summary>Fills an axis-aligned pixel-coordinate rectangle with Color</summary>
+   /// The top left of the screen is (0,0) and +X goes towards the right, +Y towards
+   /// the bottom. The top and left coordinates of the rect are inclusive, while the
+   /// bottom and right are not. So Lux.Rect (new Rect (10, 10, 30, 20)) will fill
+   /// exactly 600 pixels - the top left pixel filled will be (10,10) and the bottom
+   /// right pixel filled will be (29,19). 
+   /// 
+   /// The following Lux properties are used:
+   /// - Color : fill color for the rect
+   public static void Rect (RectS rect) => RectPxShader.It.Draw ([rect]);
+
+   /// <summary>Fills a pixel-coordinate rectangle with Color, outlined with BorderColor</summary>
+   /// The size passed in is inclusive of the border, so a border that is more than
+   /// min(rect.Height/2, rect.Width/2) will result in incorrect rendering. All coordinates,
+   /// including the border width are in pixels. (See the Rect routine for an exact interpretation
+   /// of the Rect coordinates)
+   /// 
+   /// The following Lux properties are used:
+   /// - Color: fill color used for the rectangle interior
+   /// - BorderColor: color used for the border
+   public static void RectBorder (RectS rect, int border) 
+      => RectBorderPxShader.It.Draw ([new (rect, (short)border)]);
+
+   /// <summary>Fills a pixel-coordinate rounded rectangle with Color</summary>
+   /// The rect coordinate are in pixels (see the Rect routine above for the exact interpretation
+   /// of the coordinates). The radius is also specified in pixels, and the rounded corners are
+   /// anti-aliased.
+   /// 
+   /// The following Lux properties are used:
+   /// - Color: fill color used for the rounded-rectangle
+   public static void RRect (RectS rect, int radius) 
+      => RRectPxShader.It.Draw ([new (rect, (short)radius)]);
+
+   /// <summary>Fills a pixel-coordinate rounded rectangle with Color, outlined with BorderColor</summary>
+   /// Rect coordinate, radius and border are all in pixels (see the Rect routine for an 
+   /// interpretation of the rect coordinates). The radius is specified at the outer corners
+   /// (at the outside of the border). Radius cannot be more than Border. 
+   /// 
+   /// The following Lux properties are used:
+   /// - Color: fill color used for the rounded-rectangle interior
+   /// - BorderColor: color used for the border
+   public static void RRectBorder (RectS rect, int radius, int border) 
+      => RRectBorderPxShader.It.Draw ([new (rect, (short)radius, (short)(Math.Min (border, radius)))]);
 
    /// <summary>Draws text positioned at a given point in world coordinates</summary>
    /// The position _pos_ specifies a point in world coordinates (with Z = 0) where
@@ -312,42 +446,17 @@ public static partial class Lux {
    ///
    /// The following Lux properties are used by this shader:
    /// - Xfm       : current transformation matrix
-   /// - DrawColor : color of the text being drawn
+   /// - Color : color of the text being drawn
    /// - TypeFace  : font, style, size of the text being drawn
    public static void Text2D (ReadOnlySpan<char> text, Vec2F pos, ETextAlign align, Vec2S offset) {   // Can eliminate this and use just Text3D?
       if (text.IsWhiteSpace ()) return;
-      // First, get the basic cells as we would for a TextPx shader, assuming the text
-      // is starting at a position of (0,0)
-      var face = TypeFace ?? TypeFace.Default;
-      Span<TextPxShader.Args> cells = stackalloc TextPxShader.Args[text.Length];
-      int x = GetTextCells (text, offset, cells);
-
-      // If we are going to draw the text with a 'BaseLeft' alignment, then the cells
-      // we obtained are already correct (since the transformed coordinates of the _pos_
-      // parameter from above will get added to each cell position). However, if we want
-      // other alignments like TopRight or MidCenter, we need to adjust all these cells.
-      // Let's compute the dx and dy for that adjustment here:
-      var cellM = face.Measure ("M", true);
-      short dx = 0, dy = 0, nAlign = (short)(align - 1);
+      Span<Text3DShader.Args> cells = stackalloc Text3DShader.Args[text.Length];
+      GetText3DCells (text, new (pos.X, pos.Y, 0), align, offset, cells);
       Span<Text2DShader.Args> output = stackalloc Text2DShader.Args[text.Length];
-
-      // First compute the dx needed based on the horizontal alignment (left alignment
-      // is the default value of 0 in the case below)
-      switch (nAlign % 3) {
-         case 1: dx = (short)(-x / 2); break;   // 'Mid' alignment (shift left by half the width)
-         case 2: dx = (short)-x; break;         // 'Right' alignment (shift left by the width)
-      }
-      // Then, compute the dy needed based on the vertical alignment (base alignment is the
-      // default value of 3 in the case below)
-      switch (nAlign / 3) {
-         case 0: dy = (short)(-cellM.Top); break;        // Top alignment
-         case 1: dy = (short)(-cellM.Top / 2); break;    // Center alignment
-         case 2: dy = (short)face.Descender; break;      // Bottom alignment (based on face bounding box)
-      }
       for (int i = 0; i < cells.Length; i++) {
-         ref TextPxShader.Args input = ref cells[i];
-         var v = input.Cell;
-         output[i] = new (pos, new (v.X + dx, v.Y + dy, v.Z + dx, v.W + dy), input.TexOffset);
+         ref Text3DShader.Args input = ref cells[i];
+         Vec3F apos = input.Pos;
+         output[i] = new Text2DShader.Args (new (apos.X, apos.Y), input.Cell, input.TexOffset);
       }
       Text2DShader.It.Draw (output);
    }
@@ -360,59 +469,50 @@ public static partial class Lux {
    ///
    /// The following Lux properties are used by this shader:
    /// - Xfm       : current transformation matrix
-   /// - DrawColor : color of the text being drawn
+   /// - Color : color of the text being drawn
    /// - TypeFace  : font, style, size of the text being drawn
    public static void Text3D (ReadOnlySpan<char> text, Vec3F pos, ETextAlign align, Vec2S offset) {
       if (text.IsWhiteSpace ()) return;
-      // First, get the basic cells as we would for a TextPx shader, assuming the text
-      // is starting at a position of (0,0)
-      var face = TypeFace ?? TypeFace.Default;
-      Span<TextPxShader.Args> cells = stackalloc TextPxShader.Args[text.Length];
-      int x = GetTextCells (text, offset, cells);
-
-      // If we are going to draw the text with a 'BaseLeft' alignment, then the cells
-      // we obtained are already correct (since the transformed coordinates of the _pos_
-      // parameter from above will get added to each cell position). However, if we want
-      // other alignments like TopRight or MidCenter, we need to adjust all these cells.
-      // Let's compute the dx and dy for that adjustment here:
-      var cellM = face.Measure ("M", true);
-      short dx = 0, dy = 0, nAlign = (short)(align - 1);
       Span<Text3DShader.Args> output = stackalloc Text3DShader.Args[text.Length];
-
-      // First compute the dx needed based on the horizontal alignment (left alignment
-      // is the default value of 0 in the case below)
-      switch (nAlign % 3) {
-         case 1: dx = (short)(-x / 2); break;   // 'Mid' alignment (shift left by half the width)
-         case 2: dx = (short)-x; break;         // 'Right' alignment (shift left by the width)
-      }
-      // Then, compute the dy needed based on the vertical alignment (base alignment is the
-      // default value of 3 in the case below)
-      switch (nAlign / 3) {
-         case 0: dy = (short)(-cellM.Top); break;        // Top alignment
-         case 1: dy = (short)(-cellM.Top / 2); break;    // Center alignment
-         case 2: dy = (short)face.Descender; break;      // Bottom alignment (based on face bounding box)
-      }
-      for (int i = 0; i < cells.Length; i++) {
-         ref TextPxShader.Args input = ref cells[i];
-         var v = input.Cell;
-         output[i] = new (pos, new (v.X + dx, v.Y + dy, v.Z + dx, v.W + dy), input.TexOffset);
-      }
+      GetText3DCells (text, pos, align, offset, output);
       Text3DShader.It.Draw (output);
    }
 
-   /// <summary>Draws text at specified pixel-coordinates (uses the current TypeFace and DrawColor)</summary>
-   /// The pixel (0,0) is the bottom left of the screen, and pixel coordinates increase going
-   /// to the right, or upwards. The following Lux properties are used by this shader:
+   /// <summary>Draws text at specified pixel-coordinates (uses the current TypeFace and Color)</summary>
+   /// The pixel (0,0) is the top left of the screen, and pixel coordinates increase going
+   /// to the right, or downwards. The pos that is passed in is used as the base-left point
+   /// of the text (the text is above this point, and to the right). 
    ///
    /// The following Lux properties are used by this shader:
-   /// - DrawColor : color of the text being drawn
-   /// - TypeFace  : font, style, size of the text being drawn
-   public static void TextPx (ReadOnlySpan<char> text, Vec2S pos) {
+   /// - Color : color of the text being drawn
+   /// - TypeFace : font, style, size of the text being drawn
+   public static void Text (ReadOnlySpan<char> text, Vec2S pos) {
       if (text.IsWhiteSpace ()) return;
       Span<TextPxShader.Args> cells = stackalloc TextPxShader.Args[text.Length];
       GetTextCells (text, pos, cells);
       TextPxShader.It.Draw (cells);
    }
+
+   /// <summary>Draws and fills 2D triangles in world coordinates, with Z = 0</summary>
+   /// The triangles are drawn with smoothed (anti-aliased) edges.
+   /// 
+   /// The following Lux properties are used:
+   /// - Color : color of the triangles being drawn
+   /// - Xfm : current transformation matrix
+   public static void Triangles (ReadOnlySpan<Vec2F> a) {
+      Triangle2DShader.It.Draw (a);
+      for (int i = 0; i < a.Length; i += 3)
+         Line2DShader.It.Draw ([a[i], a[i + 1], a[i + 1], a[i + 2], a[i + 2], a[i]]);
+   }
+
+   /// <summary>Draws triangles in pixel coordinates</summary>
+   /// The top left corner pixel is (0,0) and +X goes towards the right, +Y towards the
+   /// bottom. The triangle edges are not anti-aliased.
+   /// 
+   /// The following Lux properties are used:
+   /// - Color: Fill color of the triangles
+   public static void Triangles (ReadOnlySpan<Vec2S> pts)
+      => TrianglePxShader.It.Draw (pts);
 
    // Implementation -----------------------------------------------------------
    // Given some text, this converts it into a series of TextPxShader.Args (cells) that
@@ -433,18 +533,56 @@ public static partial class Lux {
          uint idx1 = face.GetGlyphIndex (ch);         // Get glyph index for the character
          var metric = face.GetMetrics (idx1);         // Get the metrics for this character
          int kern = face.GetKerning (idx0, idx1);     // Then, the kerning adjustment between the previous character and this one
-         short xChar = (short)(x + metric.LeftBearing + kern), yChar = (short)(y + metric.TopBearing);
+         short xChar = (short)(x + metric.LeftBearing + kern), yChar = (short)(y - metric.TopBearing);
          // We are using a Vec4S to store a 'cell' in pixels where the character is to be drawn.
          // It has lower left corner at (X,Y) of the Vec4S and the top right corner at (Z,W) of the
          // Vec4S. The other bit of data is the offset into the font texture for this glyph
          // (a single number suffices since we store the texture in a linear-unpacked format,
          // not as a 2D bitmap).
-         var vec = new Vec4S (xChar, yChar - metric.Rows, xChar + metric.Columns, yChar);
+         var vec = new Vec4S (xChar, yChar, xChar + metric.Columns, yChar + metric.Rows);
          cells[n++] = new (vec, metric.TexOffset);
          x += metric.Advance + kern;
          idx0 = idx1;
       }
       return x;
+   }
+
+   // Given some text, converts that to cells for use by the Text3DShader. 
+   // This starts off using the basic GetTextCells routine (used by TextPx) and then adjusting the
+   // cells for alignment and offset
+   static void GetText3DCells (ReadOnlySpan<char> text, Vec3F pos, ETextAlign align, Vec2S offset, Span<Text3DShader.Args> output) {
+      // First, get the basic cells as we would for a TextPx shader, assuming the text
+      // is starting at a position of (0,0)
+      var face = TypeFace ?? TypeFace.Default;
+      Span<TextPxShader.Args> cells = stackalloc TextPxShader.Args[text.Length];
+      int x = GetTextCells (text, new (offset.X, -offset.Y), cells);
+
+      // If we are going to draw the text with a 'BaseLeft' alignment, then the cells
+      // we obtained are already correct (since the transformed coordinates of the _pos_
+      // parameter from above will get added to each cell position). However, if we want
+      // other alignments like TopRight or MidCenter, we need to adjust all these cells.
+      // Let's compute the dx and dy for that adjustment here:
+      var cellM = face.Measure ("M", true);
+      short dx = 0, dy = 0, nAlign = (short)(align - 1);
+
+      // First compute the dx needed based on the horizontal alignment (left alignment
+      // is the default value of 0 in the case below)
+      switch (nAlign % 3) {
+         case 1: dx = (short)(-x / 2); break;   // 'Mid' alignment (shift left by half the width)
+         case 2: dx = (short)-x; break;         // 'Right' alignment (shift left by the width)
+      }
+      // Then, compute the dy needed based on the vertical alignment (base alignment is the
+      // default value of 3 in the case below)
+      switch (nAlign / 3) {
+         case 0: dy = (short)(-cellM.Top); break;        // Top alignment
+         case 1: dy = (short)(-cellM.Top / 2); break;    // Center alignment
+         case 2: dy = (short)(-face.Descender); break;   // Bottom alignment (based on face bounding box)
+      }
+      for (int i = 0; i < cells.Length; i++) {
+         ref TextPxShader.Args input = ref cells[i];
+         var v = input.Cell;
+         output[i] = new (pos, new (v.X + dx, v.Y + dy, v.Z + dx, v.W + dy), input.TexOffset);
+      }
    }
 }
 #endregion

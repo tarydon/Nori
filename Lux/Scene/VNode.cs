@@ -192,7 +192,7 @@ public abstract class VNode {
 
    // Overrides ----------------------------------------------------------------
    /// <summary>Specifies which attributes are inherited by children of this VNode</summary>
-   public virtual ELuxAttr Bequeath => ELuxAttr.Color | ELuxAttr.Xfm | ELuxAttr.TypeFace;
+   public virtual ELuxAttr Bequeath => ELuxAttr.SColor | ELuxAttr.Xfm | ELuxAttr.TypeFace | ELuxAttr.BorderColor;
 
    /// <summary>Override this to draw the contents of this VNode</summary>
    /// It is possible that some VNodes will not override this - they will exist purely

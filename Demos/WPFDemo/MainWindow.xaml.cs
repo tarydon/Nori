@@ -2,8 +2,10 @@
 // ╔═╦╦═╦╦╬╣ MainWindow.xaml.cs
 // ║║║║╬║╔╣║ Main window of WPF demo application (various scenes implemented)
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
+using System.Drawing;
 using System.Reactive.Linq;
 using System.Windows;
+using System.Windows.Controls;
 using Nori;
 namespace WPFDemo;
 
@@ -24,26 +26,31 @@ public partial class MainWindow : Window {
       new SceneManipulator ();
    }
 
-   void LeafDemo (object s, RoutedEventArgs e) => Display (new LeafDemoScene ());
-   void LineFontDemo (object s, RoutedEventArgs e) => Display (new LineFontScene ());
-   void TrueTypeDemo (object s, RoutedEventArgs e) => Display (new TrueTypeScene ());
-   void MeshDemo (object s, RoutedEventArgs e) => Display (new MeshScene ());
-   void TessDemo (object s, RoutedEventArgs e) => Display (new MeshScene (true));
-   void BooleanDemo (object s, RoutedEventArgs e) => Display (new BooleanScene ());
-   void DwgDemo (object s, RoutedEventArgs e) => Display (new DwgScene ());
-   void RobotDemo (object s, RoutedEventArgs e) => Display (new RobotScene ());
-   void STPDemo (object s, RoutedEventArgs e) => Display (new STPScene ());
-   void StreamDemo (object s, RoutedEventArgs e) => Display (new StreamDemoScene ());
-   void MinSphereDemo (object s, RoutedEventArgs e) => Display (new MinSphereScene ());
-   void T3XReaderDemo (object s, RoutedEventArgs e) => Display (new T3XDemoScene ());
-   void SliceMeshDemo (object s, RoutedEventArgs e) => Display (new IntMeshPlaneScene ());
-   void ConvexHullDemo (object sender, RoutedEventArgs e) => Display (new ConvexHullScene ());
-   void BuildOBBDemo (object sender, RoutedEventArgs e) => Display (new BuildOBBScene ());
-   void CollisionDemo (object s, RoutedEventArgs e) => Display (new OBBCrashScene ());
-   void PaperFolderDemo (object s, RoutedEventArgs e) => Display (new PaperFolderScene ());
-   void SubScene (object s, RoutedEventArgs e) => Display (new SubSceneDemo ());
+   void LeafDemo (object s, RoutedEventArgs e) => Display (s, new LeafDemoScene ());
+   void LineFontDemo (object s, RoutedEventArgs e) => Display (s, new LineFontScene ());
+   void TrueTypeDemo (object s, RoutedEventArgs e) => Display (s, new TrueTypeScene ());
+   void MeshDemo (object s, RoutedEventArgs e) => Display (s, new MeshScene ());
+   void TessDemo (object s, RoutedEventArgs e) => Display (s, new MeshScene (true));
+   void BooleanDemo (object s, RoutedEventArgs e) => Display (s, new BooleanScene ());
+   void DwgDemo (object s, RoutedEventArgs e) => Display (s, new DwgScene ());
+   void RobotDemo (object s, RoutedEventArgs e) => Display (s, new RobotScene ());
+   void STPDemo (object s, RoutedEventArgs e) => Display (s, new STPScene ());
+   void StreamDemo (object s, RoutedEventArgs e) => Display (s, new StreamDemoScene ());
+   void MinSphereDemo (object s, RoutedEventArgs e) => Display (s, new MinSphereScene ());
+   void T3XReaderDemo (object s, RoutedEventArgs e) => Display (s, new T3XDemoScene ());
+   void SliceMeshDemo (object s, RoutedEventArgs e) => Display (s, new IntMeshPlaneScene ());
+   void ConvexHullDemo (object s, RoutedEventArgs e) => Display (s, new ConvexHullScene ());
+   void BuildOBBDemo (object s, RoutedEventArgs e) => Display (s, new BuildOBBScene ());
+   void CollisionDemo (object s, RoutedEventArgs e) => Display (s, new OBBCrashScene ());
+   void PaperFolderDemo (object s, RoutedEventArgs e) => Display (s, new PaperFolderScene ());
+   void SubScene (object s, RoutedEventArgs e) => Display (s, new SubSceneDemo ());
 
-   void Display (Scene scene) {
+   void Display (object s, Scene scene) {
+      if (s is Button b) {
+         mPrevButton?.Background = mPrevBrush;
+         mPrevButton = b; mPrevBrush = b.Background;
+         b.Background = System.Windows.Media.Brushes.LightBlue;
+      }
       mSettings.Children.Clear ();
       Lux.UIScene = scene;
       if (scene is RobotScene rs) rs.CreateUI (mSettings.Children);
@@ -51,4 +58,6 @@ public partial class MainWindow : Window {
       if (scene is OBBCrashScene cs) cs.CreateUI (mSettings.Children);
       if (scene is PaperFolderScene ps) ps.CreateUI (mSettings.Children);
    }
+   Button? mPrevButton;
+   System.Windows.Media.Brush? mPrevBrush;
 }

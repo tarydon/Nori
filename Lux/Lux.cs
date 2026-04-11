@@ -137,7 +137,7 @@ public static partial class Lux {
          mPickPixel = tup.Item1; mPickDepth = tup.Item2;
       }
 
-      Vec2S local = new (pos.X - scene.Rect.Left, pos.Y - scene.Rect.Bottom);
+      Vec2S local = new (pos.X - scene.Rect.Left, pos.Y - scene.Rect.Top);
       int index = (viewport.Y - local.Y - 1) * viewport.X + local.X;
       if (index < 0 || index >= mPickDepth.Length) return null;
       float fDepth = mPickDepth[index];
@@ -209,8 +209,7 @@ public static partial class Lux {
       Shader.StartFrame ();
       if (scene != null) {
          int yMax = mPanelSize.Y - 1;
-         if (target == ETarget.Screen)
-            scene.Rect = new (vp.Left, yMax - vp.Top, vp.Right, yMax - vp.Bottom);
+         if (target == ETarget.Screen) scene.Rect = vp;
          scene.Render (viewport);
          if (target == ETarget.Screen) {
             for (int i = 1; i < mScenes.Count; i++) {
@@ -224,7 +223,7 @@ public static partial class Lux {
                var vport = rect.Size;
                BeginRender (vport, target);  // Don't worry about viewport - it
                StartFrame (vport);
-               GLState.StartFrame (new Vec2S (rect.Left, rect.Bottom), vport, scene2.BgrdColor);
+               GLState.StartFrame (new Vec2S (rect.Left, rect.Top), vport, scene2.BgrdColor);
                RBatch.StartFrame ();
                Shader.StartFrame ();
                scene2.Render (vport);
@@ -264,7 +263,6 @@ public static partial class Lux {
    static DateTime mFPSReportTS;    // When did we last issue an FPS report
    static int mcFPSFrames;          // Frames rendered since that time
    static bool mRendering;          // Currently rendering a frame
-
 
    /// <summary>Prompts the Lux system to redraw the screen (asynchronous)</summary>
    public static void Redraw () => HW.Redraw ();
@@ -426,7 +424,8 @@ public static partial class Lux {
    internal static bool PopAttr (ELuxAttr flags) {
       flags &= mChanged;
       if (flags != ELuxAttr.None) {
-         if ((flags & ELuxAttr.Color) != 0) mColor = mColors.Pop ();
+         if ((flags & ELuxAttr.SColor) != 0) mColor = mColors.Pop ();
+         if ((flags & ELuxAttr.BorderColor) != 0) mBorderColor = mBorderColors.Pop ();
          if ((flags & ELuxAttr.LineType) != 0) mLineType = mLineTypes.Pop ();
          if ((flags & ELuxAttr.LineWidth) != 0) mLineWidth = mLineWidths.Pop ();
          if ((flags & ELuxAttr.LTScale) != 0) mLTScale = mLTScales.Pop ();
@@ -453,6 +452,7 @@ public static partial class Lux {
       mcFillPaths = 0;
       VPScale = new Vec2F (2.0 / viewport.X, 2.0 / viewport.Y);
       mColors.Clear (); mColor = Color4.White;
+      mBorderColors.Clear (); mBorderColor = Color4.Yellow;
       mLineWidths.Clear (); mLineWidth = 2;     // Multiplied by DPIScale before it is used
       mPointSizes.Clear (); mPointSize = 4;     // Multiplied by DPIScale before it is used
       mLineTypes.Clear (); mLineType = ELineType.Continuous;
