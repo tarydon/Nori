@@ -555,7 +555,7 @@ public static partial class Lux {
       // is starting at a position of (0,0)
       var face = TypeFace ?? TypeFace.Default;
       Span<TextPxShader.Args> cells = stackalloc TextPxShader.Args[text.Length];
-      int x = GetTextCells (text, offset, cells);
+      int x = GetTextCells (text, new (offset.X, -offset.Y), cells);
 
       // If we are going to draw the text with a 'BaseLeft' alignment, then the cells
       // we obtained are already correct (since the transformed coordinates of the _pos_
