@@ -38,30 +38,6 @@ public class Block2 {
 }
 #endregion
 
-#region enum DimStyle2 -----------------------------------------------------------------------------
-/// <summary>
-/// Dimension style (based on AutoCAD)
-/// </summary>
-public class DimStyle2 {
-   public DimStyle2 (string name) {
-      Name = name;
-   }
-
-   public readonly string Name;        // 2
-   public readonly float ArrowSize;    // 41 - Length of arrow
-   public readonly float ExtOffset;    // 42 - Extension line offset from dim definition point
-   public readonly float ExtExtend;    // 44 - Extension line extend beyond dimension line
-   public readonly float TxtSize;      // 140 - Text size
-   public readonly float Gap;          // 147 - Gap between dimension line & text
-
-   public readonly bool TIHorz;        // 73 - Text inside dimension line horizontal?
-   public readonly bool TOHorz;        // 74 - Text outside dimension line horizontal?
-   public readonly int TAbove;         // 77 - 0=Centered, 1=Above, 4=Below (default = above)
-
-   // Todo: 141 DIMCEN, 
-}
-#endregion
-
 #region enum E2Flags -------------------------------------------------------------------------------
 /// <summary>Bitflags for Ent2</summary>
 [Flags]

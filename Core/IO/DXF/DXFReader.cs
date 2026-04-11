@@ -59,9 +59,11 @@ public partial class DXFReader {
             case 40: D40 = Vf; break; case 41: D41 = Vf; break; case 42: D42 = Vf; break;
             case 50: D50 = Vf; break; case 51: D51 = Vf; break;
             case 60: Invisible = Vn == 1; break;
-            case 70: I0 = Vn; break; case 71: I1 = Vn; break; 
-            case 72: I2 = Vn; break; case 73: I3 = Vn; break; 
+            case 70: I0 = Vn; break; case 71: I1 = Vn; break; case 72: I2 = Vn; break; 
+            case 73: I3 = Vn; break; case 74: I4 = Vn; break; case 77: I7 = Vn; break; 
+            case 172: N172 = Vn; break; 
             case 62: ColorNo = E switch { BYLAYER => 256, BYBLOCK => 257, _ => Vn }; break;
+            case 140: D140 = Vf; break; case 141: D141 = Vf; break; case 147: D147 = Vf; break;
             case 230: ZDir = Vf < -0.999 ? -1 : 1; break;
             case 1000: if (mType == LINE) mXData.Add (V); break;
 
@@ -161,6 +163,7 @@ public partial class DXFReader {
          case POLYLINE: mClosedPoly = (Flags & 1) != 0; break;
          case SEQEND: AddPolyline (); break;
          case STYLE: mDwg.Add (new Style2 (Name, FontName, D40 * Scale, D41 == 0 ? 1 : D41, D50.D2R ())); break;
+         case DIMSTYLE: mDwg.Add (new DimStyle2 (Name, D41, D42, D42, D140, D141, D147, I3, I4, N172, I7)); break;
          case TRACE or SOLID: Add (new E2Solid (Layer, [Pt0, Pt1, Pt2, Pt3])); break;
          case VERTEX: Vertex.Add ((Pt0, Flags, Bulge)); break;
 
@@ -514,7 +517,7 @@ public partial class DXFReader {
    int ColorNo;
    double D50, D51;
    bool Invisible;
-   int I0, I1, I2, I3;
+   int I0, I1, I2, I3, I4, I7, N172;
    double X1, Y1, X2, Y2, X3, Y3;
    double D40 { get => field; set => mD40.Add (field = value); }
    double D41 { get => field; set => mD41.Add (field = value); }
@@ -523,6 +526,7 @@ public partial class DXFReader {
    List<double> mX0 = [], mY0 = [], mD40 = [], mD41 = [], mD42 = [];
    string Name = "", LTName = "", StyleName = "", FontName = "", Text = "";
    List<(Point2 Pt, int Flags, double Bulge)> Vertex = [];
+   double D140, D141, D147;
    bool? mClosedPoly;   // NULL=not making POLYLINE, true/false=making polyline
    double ZDir = 1;
 

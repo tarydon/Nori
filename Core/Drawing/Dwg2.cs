@@ -67,6 +67,12 @@ public partial class Dwg2 {
    /// <summary>The list of dimensions in this drawing</summary>
    public IEnumerable<E2Dimension> Dimensions => mEnts.OfType<E2Dimension> ();
 
+   /// <summary>
+   /// The list of dimension styles
+   /// </summary>
+   public IReadOnlyList<DimStyle2> DimStyles => mDimStyles ?? [];
+   List<DimStyle2> mDimStyles;
+
    /// <summary>List of styles in the drawing</summary>
    /// New blocks are added by calling Add(Style2)
    public IReadOnlyList<Style2> Styles => mStyles ?? [];
@@ -105,6 +111,11 @@ public partial class Dwg2 {
    public void Add (Style2 style) {
       if (style.Name.IsBlank ()) return;
       (mStyles ??= []).Add (style); _styleMap = null;
+   }
+
+   public void Add (DimStyle2 style) {
+      if (style.Name.IsBlank ()) return;
+
    }
 
    /// <summary>Marks the inner/outer polylines of the drawing</summary>
@@ -174,6 +185,21 @@ public partial class Dwg2 {
       return style;
    }
    Dictionary<string, Style2>? _styleMap;
+
+   /// <summary>
+   /// Gets a dimension style, given the name
+   /// </summary>
+   public DimStyle2 GetDimStyle (string name) {
+      if (_dimStyleMap == null) {
+         _dimStyleMap = new Dictionary<string, DimStyle2> (StringComparer.OrdinalIgnoreCase);
+         foreach (var s in DimStyles) _dimStyleMap.TryAdd (s.Name, s);
+      }
+      var dimStyle = _dimStyleMap.GetValueOrDefault (name);
+      if (dimStyle == null) {
+         if (Styles.Count == 0) mStyles.Add (DimStyle2.Default);
+      }
+   }
+   Dictionary<string, DimStyle2>? _dimStyleMap;
 
    /// <summary>Picks the closest E2Poly and returns some rich information about the pick</summary>
    public bool PickPoly (Point2 pt, double aperture, out TPolyPick pick) {

@@ -15,11 +15,12 @@ enum EDXF {
    _FIRSTENT,
    LAYER, STYLE, BLOCK, LINE, SOLID, MTEXT, POINT, ARC, CIRCLE, LWPOLYLINE, TEXT, DIMENSION,
    INSERT, SPLINE, POLYLINE, VERTEX, SEQEND, ATTRIB, LEADER, TRACE, ELLIPSE, XLINE, ENDBLK,
+   DIMSTYLE,
    _LASTENT,
 
    // These are the other objects (not entities) that we are going to not skip over
    _FIRSTAUX,
-   SECTION, ENDSEC, TABLE, ENDTAB, DIMSTYLE, 
+   SECTION, ENDSEC, TABLE, ENDTAB, 
    _LASTAUX,
 
    // These are all the entities / tables / sections that we are going to ignore   
