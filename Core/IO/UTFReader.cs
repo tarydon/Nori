@@ -33,7 +33,7 @@ public class UTFReader {
       return this;
    }
 
-   public int Pos => mN;
+   public int Pos { get => mN; set => mN = value; }
 
    /// <summary>Gets a span of bytes (starting at the given position, and of given length)</summary>
    public ReadOnlySpan<byte> GetSpan (int start, int length) => D.AsSpan (start, length);
