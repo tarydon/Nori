@@ -23,6 +23,7 @@ public class DXFReader {
             case > _FIRSTSIMPLE and < _LASTSIMPLE: LoadSimple (type); break;
 
             case DIMENSION: LoadDimension (); break;
+            case ELLIPSE: LoadEllipse (); break;
             case LINE: LoadLine (); break;
             case LWPOLYLINE: LoadLWPolyline (); break;
             case POLYLINE: LoadPolyline (); break;
@@ -40,8 +41,7 @@ public class DXFReader {
       }
 
       LinkDimensions ();
-      CurlWriter.Save (mDwg, "c:/etc/test.curl", "Testing AltDXFReader");
-      DXFWriter.Save (mDwg, "c:/etc/test.dxf");
+      ProcessBendText (mDwg);
       return mDwg;
    }
    HashSet<EDXF> sReported = [];
@@ -100,6 +100,28 @@ public class DXFReader {
       var dim = new E2Dimension (LYR ());
       dim.SetDimSettings (mDwg.DimSettings);
       mDimMap.Add (dim, S (2)); Add (dim);
+   }
+
+   // Loads an ELLIPSE entity
+   void LoadEllipse () {
+      NextAll (); 
+      var (cen, major, ratio, aStart, aEnd) = (PT (10), (Vector2)PT (11), D (40), D (41), D (42));
+      var (east, zDir) = (cen + major, D (230) < -0.999 ? -1.0 : 1.0);
+      while (aEnd < aStart) aEnd += Lib.TwoPI;
+      double R = major.Length, r = R * ratio, aSpan = aEnd - aStart;
+
+      // Figure out the number of steps for discretization (5 degrees per step)
+      int c = (int)Math.Max (4.0, (aSpan / (Math.PI / 36)).Round (0));
+      double aStep = aSpan / c, rot = cen.AngleTo (east);
+      bool closed = aSpan.EQ (2 * Math.PI);
+      if (closed) c--;
+      for (int i = 0; i <= c; i++) {
+         var (sin, cos) = Math.SinCos (aStart + i * aStep);
+         var node = new Point2 (R * cos, r * sin * zDir).Rotated (rot);
+         mPB.Line (node.Moved (cen.X, cen.Y));
+      }
+      if (closed) mPB.Close ();
+      Add (mPB.Build ());
    }
 
    // Loads a line - this is written as a special routine, since lines may contain multiple
@@ -224,6 +246,9 @@ public class DXFReader {
          case POINT: Add (new E2Point (LYR (), PT (10))); break;
          case TRACE or SOLID: Add (new E2Solid (LYR (), [PT (10), PT (11), PT (12), PT (13)])); break;
 
+         case ATTRIB:
+            if ((N (70) & 1) == 0) break;
+            goto case TEXT;
          case ENDBLK:
             // Safe to add this to mDwg since blocks cannot contain nested blocks
             if (mBlock is { } && !SkipBlocks.Contains (mBlock.Name)) mDwg.Add (mBlock);

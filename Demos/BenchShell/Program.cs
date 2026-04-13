@@ -11,10 +11,18 @@ namespace NBench;
 public class Tester {
    public Tester () => Lib.Init ();
 
+   [Benchmark (Baseline = true)]
+   public void OldDXF () {
+      foreach (var file in Directory.GetFiles ("W:/DXF", "*.dxf").Take (MAX)) {
+         var _ = DXFReader.Load (file);
+      }
+   }
+
    [Benchmark]
    public void NewDXF () {
       foreach (var file in Directory.GetFiles ("W:/DXF", "*.dxf").Take (MAX)) {
-         var _ = DXFReader.Load (file);
+         var dr = new Nori.Alt.DXFReader (file);
+         var _ = dr.Load (); 
       }
    }
 

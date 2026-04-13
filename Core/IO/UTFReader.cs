@@ -16,7 +16,15 @@ namespace Nori;
 public class UTFReader {
    // Constructors -------------------------------------------------------------
    /// <summary>Construct a UTFReader given an array of bytes</summary>
-   public UTFReader (byte[] data) => Max = (D = data).Length;
+   public UTFReader (byte[] data) {
+      Max = (D = data).Length;
+      int max = Math.Min (256, Max - 1);
+      for (int i = 0; i < max; i++) {
+         byte b = D[i];
+         if (b == '\n') break;
+         if (b == '\r' && D[i + 1] != '\n') { mLineEnd = '\r'; break; }
+      }
+   }
 
    /// <summary>Construct a UTFReader by reading data from a file</summary>
    public UTFReader (string file) : this (File.ReadAllBytes (file)) => mFile = file;
@@ -212,7 +220,8 @@ public class UTFReader {
    public UTFReader SkipTo (char b) { while (D[mN++] != b) { } return this; }
 
    /// <summary>Skips until the end of the line token is found and consumes it.</summary>
-   public UTFReader SkipToLineEnd () => SkipTo ('\n');
+   public UTFReader SkipToLineEnd () => SkipTo (mLineEnd);
+   char mLineEnd = '\n';
 
    /// <summary>Tries to match the given character, if it is found</summary>
    /// If the next character in the stream (skipping past whitespace) is the given
@@ -262,9 +271,9 @@ public class UTFReader {
    [DoesNotReturn]
    void Fatal (string s) {
       // Convert the current position into a Line,Column within the text
-      int nLine = D.Take (mN).Count (a => a == '\n') + 1, nColumn = mN + 1;
+      int nLine = D.Take (mN).Count (a => a == mLineEnd) + 1, nColumn = mN + 1;
       if (nLine > 0)
-         for (int n = mN - 1; n >= 0; n--) if (D[n] == '\n') { nColumn = mN - n; break; }
+         for (int n = mN - 1; n >= 0; n--) if (D[n] == mLineEnd) { nColumn = mN - n; break; }
       var sb = new StringBuilder ();
       sb.Append ($"At ({nLine},{nColumn})");
       if (mFile != null) sb.Append ($" of {mFile}");
@@ -274,7 +283,7 @@ public class UTFReader {
 
    public int LineNo {
       get {
-         int n = D.Take (mN).Count (a => a == '\n');
+         int n = D.Take (mN).Count (a => a == mLineEnd);
          if (n == 0) n = D.Take (mN).Count (a => a == '\r');
          return n + 1;
       }
