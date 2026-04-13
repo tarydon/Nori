@@ -1,6 +1,7 @@
 ﻿namespace Nori.Alt;
 using static EDXF;
 using static DXFCore;
+using System.ComponentModel.DataAnnotations;
 
 public class DXFReader {
    // Constructors -------------------------------------------------------------
@@ -20,8 +21,11 @@ public class DXFReader {
             case > _FIRSTIGNORE and < _LASTIGNORE: break;
             case > _FIRSTSIMPLE and < _LASTSIMPLE: LoadSimple (type); break;
 
+            case DIMENSION: LoadDimension (); break;
             case LINE: LoadLine (); break;
+            case LWPOLYLINE: LoadLWPolyline (); break;
             case SECTION: LoadSection (); break;
+            case SPLINE: LoadSpline (); break;
             case NIL:
                Console.ForegroundColor = ConsoleColor.Yellow;
                Console.Write ($"{S (0)} ");
@@ -33,6 +37,7 @@ public class DXFReader {
          }
       }
 
+      LinkDimensions ();
       CurlWriter.Save (mDwg, "c:/etc/test.curl", "Testing AltDXFReader");
       DXFWriter.Save (mDwg, "c:/etc/test.dxf");
       return mDwg;
@@ -43,16 +48,48 @@ public class DXFReader {
    // Adds an entity into the drawing (or into the current block being constructed,
    // if there is one)
    void Add (Ent2 ent) {
-      int nLines = mD.Take (mR.Pos).Count (a => a == '\n');
-
       if (N (60).IsOdd ()) return;     // Entity is invisible
       ent.Color = CLR ();
       if (mBlock != null) mBlock.Add (ent);
       else mDwg.Add (ent);
    }
 
+   // Adds multiple entities into the drawing
+   void Add (IEnumerable<Ent2> ents) => ents.ForEach (Add);
+
    // Adds a Poly into the drawing (wrapping it up in an E2Poly entity)
    void Add (Poly poly) => Add (new E2Poly (LYR (), poly));
+
+   // Called at the end of a LWPOLYLINE or POLYLINE entity to build a polyline
+   void AddPolyline (bool closed) {
+      if (mVertex.Count <= 1) return;
+      // If there are any curve fit vertices here, remove the others
+      if (mVertex.Any (a => (a.Flags & 8) > 0))
+         mVertex = [.. mVertex.Where (a => (a.Flags & 8) > 0)];
+      foreach (var (pt, flags, bulge) in mVertex) {
+         if (Math.Abs (bulge) > 1e6 || bulge.IsZero ()) mPB.Line (pt);
+         else mPB.Arc (pt, bulge);
+      }
+      if (closed) mPB.Close ();
+      Add (mPB.Build ());
+   }
+   PolyBuilder mPB = new ();
+
+   // Load the dimensions
+   void LinkDimensions () {
+      List<Block2> blocks = [];
+      foreach (var (dim, name) in mDimMap)
+         if (dim.LoadEnts (mDwg, name) is { } block) blocks.Add (block);
+      mDwg.RemoveBlocks (blocks);
+   }
+
+   // Loads a DIMENSION entity
+   void LoadDimension () {
+      NextAll ();
+      var dim = new E2Dimension (LYR ());
+      dim.SetDimSettings (mDwg.DimSettings);
+      mDimMap.Add (dim, S (2)); Add (dim);
+   }
 
    // Loads a line - this is written as a special routine, since lines may contain multiple
    // 1000 group entries containing bend information
@@ -74,6 +111,55 @@ public class DXFReader {
       else Add (new E2Bendline (mDwg, line.Pts, ba, radius, kfactor));
    }
 
+   // Handles an LWPOLYLINE entity.
+   // This is handed as a special case here, since this entity has multiple repeats
+   // of group 10, group 11 and group 42 codes (for X, Y, Bulge respectively). Also
+   // the group 42 codes can be omitted and will default to 0
+   void LoadLWPolyline () {
+      mVertex.Clear ();
+      double x = double.NaN, y = 0, bulge = 0; 
+      for (; ; ) {
+         int before = mR.Pos;
+         if (!Next () || G == 0) { mR.Pos = before; break; }
+         switch (G) {
+            case 10:
+               if (!x.IsNan) mVertex.Add ((new (x, y), 0, bulge));
+               x = DLIN (10); bulge = 0;
+               break;
+            case 20: y = DLIN (20); break;
+            case 42: bulge = D (42); break; 
+         }
+      }
+      mVertex.Add ((new (x, y), 0, bulge));
+      AddPolyline (N (70).IsOdd ());
+   }
+   List<(Point2 Pt, int Flags, double Bulge)> mVertex = [];
+
+   // Load a SPLINE
+   void LoadSpline () {
+      var (x, flags) = (0.0, 0);
+      mPts.Clear (); mKnots.Clear (); mWeights.Clear ();
+      for (; ; ) {
+         int before = mR.Pos;
+         if (!Next () || G == 0) { mR.Pos = before; break; }
+         switch (G) {
+            case 10: x = DLIN (10); break;
+            case 20: mPts.Add (new (x, DLIN (20))); break;
+            case 40: mKnots.Add (D (40)); break;
+            case 41: mWeights.Add (D (41)); break;
+            case 70: flags = N (70); break;
+         }
+      }
+      E2Flags eFlags = 0;
+      if ((flags & 1) > 0) eFlags |= E2Flags.Closed;
+      if ((flags & 2) > 0) eFlags |= E2Flags.Periodic;
+      var spline = new Spline2 ([.. mPts], [.. mKnots], [.. mWeights]);
+      Add (new E2Spline (LYR (), spline, eFlags));
+   }
+   List<Point2> mPts = [];
+   List<double> mKnots = [], mWeights = [];
+
+   // Handles SECTION codes, and does special processing for the HEADER section alone
    void LoadSection () {
       // We need special processing only for the HEADER section, so we do that here. 
       Next (); Check (G == 2);
@@ -106,9 +192,9 @@ public class DXFReader {
       // Load all the key-value pairs until we hit the next 0 group
       NextAll ();
       switch (type) {
-         case ARC: Poly.Arc (PT (10), D (40) * Scale, DANG (50), DANG (51), true); break;
+         case ARC: Add (Poly.Arc (PT (10), DLIN (40), DANG (50), DANG (51), true)); break;
          case BLOCK: mBlock = new Block2 (S (2), PT (10), []); break;
-         case CIRCLE: Add (Poly.Circle (PT (10), D (40) * Scale)); break;
+         case CIRCLE: Add (Poly.Circle (PT (10), DLIN (40))); break;
          case POINT: Add (new E2Point (LYR (), PT (10))); break;
          case TRACE or SOLID: Add (new E2Solid (LYR (), [PT (10), PT (11), PT (12), PT (13)])); break;
 
@@ -127,16 +213,29 @@ public class DXFReader {
             var layer = new Layer2 (S (2), CLR (), GetLType (S (6))) { IsVisible = visible };
             if (mLayerMap.TryAdd (layer.Name, layer)) mDwg.Add (layer);
             break;
+         case MTEXT:
+            var (nAlign, dx, dy) = (N (71), D (11), D (21));
+            ETextAlign align = (ETextAlign)(nAlign >= 7 ? nAlign + 3 : nAlign);
+            double angle = (dx.IsZero () && dy.IsZero ()) ? DANG (50) : Math.Atan2 (dy, dx);
+            Add (MakeMText (LYR (), STYL (), S (1), PT (10), DLIN (40), angle, align, mSB));
+            break;
          case STYLE:
             if (N (70).IsEven ()) {    // Otherwise, this represents a SHAPE entry
-               var style = new Style2 (S (2), S (3), D (40), D (41, 1.0), DANG (50));
+               var style = new Style2 (S (1), S (3), D (40), D (41, 1.0), DANG (50));
                if (mStyleMap.TryAdd (style.Name, style)) mDwg.Add (style);
             }
+            break;
+         case TEXT:
+            int hAlign = N (72) switch { 1 => 1, 2 => 2, _ => 0, }, vAlign = 3 - N (73).Clamp (0, 3);
+            align = (ETextAlign)(vAlign * 3 + hAlign + 1);
+            Point2 pos = align == ETextAlign.BaseLeft ? PT (10) : PT (11);
+            Add (new E2Text (LYR (), STYL (), CleanText (S (2), mSB), pos, DLIN (40), DANG (50), DANG (51), D (41, 1.0), align));
             break;
          default:
             throw new Exception ($"Unhandled {type} in LoadSimple");
       }
    }
+   StringBuilder mSB = new ();
 
    // Reads one key-value pair - returns false if we are at end-of-file
    // This skips all keys above 255, except when readAll=true, in which case, it returns
@@ -201,10 +300,16 @@ public class DXFReader {
    double D (int g, double fallback) => SB (g).ToDouble (fallback);
 
    // Group value G as a radian angle
-   double DANG (int g) => SB (g).ToDouble ().D2R ();
+   double DANG (int g) => D (g).D2R ();
+
+   // Group value G as a linear value (scaled by current unit)
+   double DLIN (int g) => D (g) * Scale;
 
    // Gets the layer whose name is stored in the group 8
    Layer2 LYR () => mLayerMap.GetValueOrDefault (S (8), mDwg.CurrentLayer);
+
+   // Gets the style whose name is stored in the group 7
+   Style2 STYL () => mStyleMap.GetValueOrDefault (S (7), mDwg.GetStyle ("STANDARD")!);
 
    // Group value G as an integer
    int N (int g) => SB (g).ToInt ();
@@ -253,6 +358,7 @@ public class DXFReader {
    int[] mLen = new int[256];    // .. and the length of that value (both in D)
 
    Encoding mEncoding = Encoding.UTF8;    // Encoding we're using for this file
-   Dictionary<string, Layer2> mLayerMap = new (StringComparer.OrdinalIgnoreCase);
-   Dictionary<string, Style2> mStyleMap = new (StringComparer.OrdinalIgnoreCase);
+   readonly Dictionary<string, Layer2> mLayerMap = new (StringComparer.OrdinalIgnoreCase);
+   readonly Dictionary<string, Style2> mStyleMap = new (StringComparer.OrdinalIgnoreCase);
+   readonly Dictionary<E2Dimension, string> mDimMap = [];
 }
