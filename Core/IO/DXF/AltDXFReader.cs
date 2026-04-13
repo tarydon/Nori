@@ -13,6 +13,8 @@ public class DXFReader {
    /// <summary>Initialize a DXFReader form a file</summary>
    public DXFReader (string file) : this (Lib.ReadBytes (file)) { }
 
+   public static Dwg2 Load (string file) => new DXFReader (file).Load ();
+
    // Methods ------------------------------------------------------------------
    /// <summary>Parse the file, build the DXF and return it</summary>
    public Dwg2 Load () {
@@ -42,6 +44,8 @@ public class DXFReader {
 
       LinkDimensions ();
       ProcessBendText (mDwg);
+      if (mDwg.Layers.FirstOrDefault (a => a.Name == mCurrentLayer) is { } layer)
+         mDwg.CurrentLayer = layer;
       return mDwg;
    }
    HashSet<EDXF> sReported = [];
@@ -272,7 +276,7 @@ public class DXFReader {
             break;
          case STYLE:
             if (N (70).IsEven ()) {    // Otherwise, this represents a SHAPE entry
-               var style = new Style2 (S (1), S (3), D (40), D (41, 1.0), DANG (50));
+               var style = new Style2 (S (2), S (3), D (40), D (41, 1.0), DANG (50));
                if (mStyleMap.TryAdd (style.Name, style)) mDwg.Add (style);
             }
             break;
@@ -357,7 +361,7 @@ public class DXFReader {
    double DLIN (int g) => D (g) * Scale;
 
    // Gets the layer whose name is stored in the group 8
-   Layer2 LYR () => mLayerMap.GetValueOrDefault (S (8), mDwg.CurrentLayer);
+   Layer2 LYR () => mLayerMap.GetValueOrDefault (S (8)) ?? mDwg.CurrentLayer;
 
    // Gets the style whose name is stored in the group 7
    Style2 STYL () => mStyleMap.GetValueOrDefault (S (7), mDwg.GetStyle ("STANDARD")!);

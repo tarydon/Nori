@@ -2,6 +2,7 @@
 // ╔═╦╦═╦╦╬╣ Program.cs
 // ║║║║╬║╔╣║ Shell for Nori console scratch applications
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
+using System.Diagnostics;
 using Nori;
 namespace ConShell;
 
@@ -10,24 +11,27 @@ class Program {
       Lib.Init ();
       Lib.Tracer = Console.WriteLine;
 
-      //foreach (var file in Directory.GetFiles ("W:/DXF", "*.dxf")) {
-      //   Console.WriteLine (file);
-      //   var dr = new Nori.Alt.DXFReader (file);
-      //   var dwg = dr.Load ();
-      //   File.Move (file, "W:/DXF/DONE/" + Path.GetFileName (file));
-      //}
+      string ofile = "c:\\etc\\old.curl", nfile = "c:\\etc\\new.curl";
+      foreach (var file in Directory.GetFiles ("W:\\DXF", "*.dxf")) {
+         var dwg1 = DXFReader.Load (file); 
+         var cl1 = dwg1.CurrentLayer;
+         CurlWriter.Save (dwg1, ofile);
+         var s1 = File.ReadAllText (ofile);
 
-      foreach (var file in Directory.GetFiles ("N:/", "*.dxf", SearchOption.AllDirectories)) 
-         Read (file);
+         var dwg2 = Nori.Alt.DXFReader.Load (file); 
+         var cl2 = dwg2.CurrentLayer;
+         CurlWriter.Save (dwg2, nfile);
+         var s2 = File.ReadAllText (nfile);
 
-      using var bt = new BlockTimer ();
-      foreach (var file in Directory.GetFiles ("N:/", "*.dxf", SearchOption.AllDirectories))
-         Read (file);
-   }
-
-   static void Read (string file) {
-      var dr = new Nori.Alt.DXFReader (file);
-      var dwg = dr.Load ();
-//      Console.WriteLine ();
+         if (s1 != s2) {
+            Console.Write ($" {Path.GetFileName (file)} ");
+            Process.Start ("winmergeu.exe", $"{ofile} {nfile}");
+            File.Move (file, "W:\\DXF\\Bad\\" + Path.GetFileName (file));
+            break;
+         } else {
+            Console.Write ('.');
+            File.Move (file, "W:\\DXF\\Done\\" + Path.GetFileName (file));
+         }
+      }
    }
 }

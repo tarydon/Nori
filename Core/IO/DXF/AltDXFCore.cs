@@ -96,6 +96,7 @@ public class DXFCore {
 
    internal static Color4 GetColor (ReadOnlySpan<byte> txt) {
       if (Dict.GetValueOrDefault (txt) is BYLAYER or BYBLOCK) return Color4.Nil;
+      if (txt.Length == 0) return Color4.Nil;
       return ACADColors[txt.ToInt () & 255];
    }
 
