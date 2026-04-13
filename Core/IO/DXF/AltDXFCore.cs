@@ -22,14 +22,18 @@ enum EDXF {
    // These objects are all loaded using a 'simple load' - this means we can read in all
    // the key value pairs (since none repeat) before building the object
    _FIRSTSIMPLE,
-   LAYER,
+   LAYER, STYLE, BLOCK, ENDBLK, SOLID, TRACE, CIRCLE, POINT, INSERT,
    _LASTSIMPLE,
+
+   // These are handled using custom import routines (typically because they can contain
+   // one or more repeated group codes)
+   LINE,
 
    // These are the entities we are going to try and read (this also includes things like
    // LAYER, STYLE etc that don't reside in the ENTITIES section, but in other sections such
    // as the TABLES section)
-   STYLE, BLOCK, LINE, SOLID, MTEXT, POINT, ARC, CIRCLE, LWPOLYLINE, TEXT, DIMENSION,
-   INSERT, SPLINE, POLYLINE, VERTEX, SEQEND, ATTRIB, LEADER, TRACE, ELLIPSE, XLINE, ENDBLK,
+   MTEXT, ARC, LWPOLYLINE, TEXT, DIMENSION,
+   SPLINE, POLYLINE, VERTEX, SEQEND, ATTRIB, LEADER, ELLIPSE, XLINE,
    _LASTENT,
 
    // These are the other objects (not entities) that we are going to not skip over
@@ -69,6 +73,10 @@ public class DXFCore {
       }
    }
    static SymTable<EDXF>? sDict;
+
+   internal static readonly HashSet<string> SkipBlocks = new (StringComparer.OrdinalIgnoreCase) {
+      "", "*MODEL_SPACE", "*PAPER_SPACE", "*PAPER_SPACE0"
+   };
 
    internal static Color4 GetColor (ReadOnlySpan<byte> txt) {
       if (Dict.GetValueOrDefault (txt) is BYLAYER or BYBLOCK) return Color4.Nil;
