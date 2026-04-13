@@ -1,7 +1,10 @@
-﻿namespace Nori.Alt;
+// ────── ╔╗
+// ╔═╦╦═╦╦╬╣ AltDXFReader.cs
+// ║║║║╬║╔╣║ <<TODO>>
+// ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
+namespace Nori.Alt;
 using static EDXF;
 using static DXFCore;
-using System.ComponentModel.DataAnnotations;
 
 public class DXFReader {
    // Constructors -------------------------------------------------------------
@@ -11,9 +14,7 @@ public class DXFReader {
    public DXFReader (string file) : this (Lib.ReadBytes (file)) { }
 
    // Methods ------------------------------------------------------------------
-   /// <summary>
-   /// Parse the file, build the DXF and return it
-   /// </summary>
+   /// <summary>Parse the file, build the DXF and return it</summary>
    public Dwg2 Load () {
       EDXF type;
       while ((type = NextObject ()) != EOF) {
@@ -24,15 +25,16 @@ public class DXFReader {
             case DIMENSION: LoadDimension (); break;
             case LINE: LoadLine (); break;
             case LWPOLYLINE: LoadLWPolyline (); break;
+            case POLYLINE: LoadPolyline (); break;
             case SECTION: LoadSection (); break;
             case SPLINE: LoadSpline (); break;
-            case NIL:
-               Console.ForegroundColor = ConsoleColor.Yellow;
-               Console.Write ($"{S (0)} ");
-               Console.ResetColor ();
-               break;
-            default: 
-               if (sReported.Add (type)) Console.Write ($"{type} "); 
+            case NIL: UnknownEnt (S (0)); break;
+
+            default:
+               if (sReported.Add (type)) {
+                  Warn ($"Unsupported {type} at line {LineNo ()}");
+                  Environment.Exit (-1);
+               }
                break;
          }
       }
@@ -43,6 +45,12 @@ public class DXFReader {
       return mDwg;
    }
    HashSet<EDXF> sReported = [];
+
+   static void Warn (string s) {
+      Console.ForegroundColor = ConsoleColor.Yellow;
+      Console.WriteLine ($"{s} ");
+      Console.ResetColor (); 
+   }
 
    // Implementation -----------------------------------------------------------
    // Adds an entity into the drawing (or into the current block being constructed,
@@ -61,7 +69,7 @@ public class DXFReader {
    void Add (Poly poly) => Add (new E2Poly (LYR (), poly));
 
    // Called at the end of a LWPOLYLINE or POLYLINE entity to build a polyline
-   void AddPolyline (bool closed) {
+   void AddPolyline (Layer2 layer, bool closed) {
       if (mVertex.Count <= 1) return;
       // If there are any curve fit vertices here, remove the others
       if (mVertex.Any (a => (a.Flags & 8) > 0))
@@ -71,9 +79,12 @@ public class DXFReader {
          else mPB.Arc (pt, bulge);
       }
       if (closed) mPB.Close ();
-      Add (mPB.Build ());
+      Add (new E2Poly (layer, mPB.Build ()));
    }
    PolyBuilder mPB = new ();
+
+   // The current line number
+   int LineNo () => mD.Take (mR.Pos).Count (a => a == '\n');
 
    // Load the dimensions
    void LinkDimensions () {
@@ -131,9 +142,24 @@ public class DXFReader {
          }
       }
       mVertex.Add ((new (x, y), 0, bulge));
-      AddPolyline (N (70).IsOdd ());
+      AddPolyline (LYR (), N (70).IsOdd ());
    }
    List<(Point2 Pt, int Flags, double Bulge)> mVertex = [];
+
+   // Handles a POLYLINE entity.
+   // This is handled as a special case here, since a POLYLINE is created with multiple VERTEX
+   // entities finally followed by a SEQEND
+   void LoadPolyline () {
+      NextAll ();
+      var (layer, closed) = (LYR (), N (70).IsOdd ());
+      mVertex.Clear ();
+      for (; ; ) {
+         var e = NextObject (); NextAll ();
+         if (e == SEQEND) break;
+         if (e == VERTEX) mVertex.Add ((PT (10), N (70), D (42)));
+      }
+      AddPolyline (layer, closed);
+   }
 
    // Load a SPLINE
    void LoadSpline () {
@@ -229,7 +255,7 @@ public class DXFReader {
             int hAlign = N (72) switch { 1 => 1, 2 => 2, _ => 0, }, vAlign = 3 - N (73).Clamp (0, 3);
             align = (ETextAlign)(vAlign * 3 + hAlign + 1);
             Point2 pos = align == ETextAlign.BaseLeft ? PT (10) : PT (11);
-            Add (new E2Text (LYR (), STYL (), CleanText (S (2), mSB), pos, DLIN (40), DANG (50), DANG (51), D (41, 1.0), align));
+            Add (new E2Text (LYR (), STYL (), CleanText (S (1), mSB), pos, DLIN (40), DANG (50), DANG (51), D (41, 1.0), align));
             break;
          default:
             throw new Exception ($"Unhandled {type} in LoadSimple");

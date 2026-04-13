@@ -1,4 +1,8 @@
-﻿namespace Nori.Alt;
+// ────── ╔╗
+// ╔═╦╦═╦╦╬╣ AltDXFCore.cs
+// ║║║║╬║╔╣║ <<TODO>>
+// ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
+namespace Nori.Alt;
 using static EDXF;
 using static ELineType;
 
@@ -10,13 +14,11 @@ enum EDXF {
 
    // All objects in this range are ignored
    _FIRSTIGNORE,
-   CLASS, ENDSEC, TABLE, ENDTAB, VPORT, APPID, BLOCK_RECORD, HELIX, MESH, SUN, UCS, 
-   UNDERLAY, VIEW, OBJECTS, ACDSDATA, THUMBNAILIMAGE, DWGMGR, LTYPE, VIEWPORT, IMAGE, 
-   HATCH, TOLERANCE, _3DFACE, _3DSOLID, OLE2FRAME, OLEFRAME, ACAD_PROXY_ENTITY, REGION, 
-   ASSURFACE, WIPEOUT, BODY, SURFACE, LIGHT, ATTDEF, DICTIONARY, XRECORD, DIMASSOC, 
-   LAYOUT, MATERIAL, MLEADERSTYLE, MLINESTYLE, SCALE, ACDBDICTIONARYWDFLT, ACDBDETAILVIEWSTYLE, 
-   ACDBPLACEHOLDER, ACDBSECTIONVIEWSTYLE, TABLESTYLE, VISUALSTYLE, DICTIONARYVAR, 
-   CELLSTYLEMAP, ACDSSCHEMA, ACDSRECORD,
+   LTYPE, ENDSEC, TABLE, ENDTAB, SEQEND, 
+
+   // These are the entities we still have to implement!
+   DIMSTYLE, ATTRIB, LEADER, ELLIPSE, ATTDEF, HATCH, MATERIAL, MLEADERSTYLE, MLINESTYLE,
+   DIMASSOC, XLINE,
    _LASTIGNORE,
 
    // These objects are all loaded using a 'simple load' - this means we can read in all
@@ -27,26 +29,23 @@ enum EDXF {
 
    // These are handled using custom import routines (typically because they can contain
    // one or more repeated group codes)
-   LINE, LWPOLYLINE, DIMENSION, SPLINE, POLYLINE, VERTEX, SEQEND,
+   LINE, LWPOLYLINE, DIMENSION, SPLINE, POLYLINE, VERTEX, 
 
    // These are the entities we are going to try and read (this also includes things like
    // LAYER, STYLE etc that don't reside in the ENTITIES section, but in other sections such
    // as the TABLES section)
-   ATTRIB, LEADER, ELLIPSE, XLINE,
    _LASTENT,
 
    // These are the other objects (not entities) that we are going to not skip over
    _FIRSTAUX,
-   SECTION, DIMSTYLE,
+   SECTION, 
    _LASTAUX,
 
    // Header values we are going to read
    _ACADVER, _DWGCODEPAGE, _MEASUREMENT, _CLAYER, _INSUNITS,
 
    // Miscellaneous
-   HEADER, 
-   TABLES, BLOCKS, ENTITIES, CLASSES, LAYERS, BYBLOCK, BYLAYER,
-
+   HEADER, TABLES, BLOCKS, ENTITIES, CLASSES, LAYERS, BYBLOCK, BYLAYER,
    EOF
 }
 
@@ -184,4 +183,13 @@ public class DXFCore {
      @"\\U\+(?<hex4>[0-9A-Fa-f]{4})|" +         // Match 4 hex digits prefixed with \U+
      @"(\\S(?<fract>[^;]+[#/\^][^;]+);)",       // Stacking fractions like: \S+0.8^+0.1; \S+0.8#+0.1;
      RegexOptions.Compiled);
+
+   static internal void UnknownEnt (string s) {
+      sIgnore ??= [.. Lib.ReadLines ("nori:DXF/ent-ignore.txt")];
+      if (sIgnore.Contains (s)) return;
+      Lib.Trace ($"Unknown entity {s} in DXFReader");
+      sIgnore.Add (s);
+      Environment.Exit (-1);
+   }
+   static HashSet<string>? sIgnore;
 }

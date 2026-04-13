@@ -10,7 +10,18 @@ class Program {
       Lib.Init ();
       Lib.Tracer = Console.WriteLine;
 
-      var dr = new Nori.Alt.DXFReader ("N:/TData/IO/DXF/AllEnts.dxf");
-      var dwg = dr.Load (); 
+      foreach (var file in Directory.GetFiles ("W:/DXF", "*.dxf")) {
+         Console.WriteLine (file);
+         var dr = new Nori.Alt.DXFReader (file);
+         var dwg = dr.Load ();
+         File.Move (file, "W:/DXF/DONE/" + Path.GetFileName (file));
+      }
+   }
+
+   static void Read (string file) {
+      Console.WriteLine (file);
+      var dr = new Nori.Alt.DXFReader (file);
+      var dwg = dr.Load ();
+      Console.WriteLine ();
    }
 }
