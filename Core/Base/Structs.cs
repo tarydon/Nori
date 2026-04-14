@@ -11,6 +11,7 @@ namespace Nori;
 /// Use this BlockTimer in a using statement that wraps around the block to be timed
 public readonly struct BlockTimer : IDisposable {
    /// <summary>Construct a Blocktimer, given the text to display when the block finishes</summary>
+   public BlockTimer () => (mText, mSW) = ("Timing", Stopwatch.StartNew ());
    public BlockTimer (string text) => (mText, mSW) = (text, Stopwatch.StartNew ());
    public BlockTimer (int iterations, string text) => (mIterations, mText, mSW) = (iterations, text, Stopwatch.StartNew ());
 

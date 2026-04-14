@@ -34,6 +34,9 @@ public class Block2 {
    /// <summary>Returns the bound of this Block2</summary>
    public Bound2 GetBound () => new (mEnts.Select (a => a.Bound));
 
+   // Internal routine to add an entity to the list of ents maintained by the block
+   internal void Add (Ent2 ent) => mEnts.Add (ent); 
+
    public override string ToString () => $"Block:{mName}, {mEnts.Count} ents";
 }
 #endregion
