@@ -59,15 +59,14 @@ class DXFTests {
    [Test (82, "DXF color to Pix color conversion test")]
    void Test8 () {
       // Check for the colors at the boundaries
-      var dr = new DXFReader (NT.File ("IO/DXF/Text.dxf"));
-      Assert.IsTrue (dr.GetColor (0).EQ (Color4.Black));
-      Assert.IsTrue (dr.GetColor (255).EQ (Color4.White));
+      Assert.IsTrue (DXFCore.GetColor (0).EQ (Color4.Black));
+      Assert.IsTrue (DXFCore.GetColor (255).EQ (Color4.White));
       // Check for any number in the range
-      Assert.IsTrue (dr.GetColor (128).EQ (new Color4 (255, 0, 79, 59)));
+      Assert.IsTrue (DXFCore.GetColor (128).EQ (new Color4 (255, 0, 79, 59)));
       // Check for cases when the given number is outside the range
-      Assert.IsTrue (dr.GetColor (256).EQ (Color4.Nil));
-      Assert.IsTrue (dr.GetColor (-5).EQ (Color4.Black));
-      Assert.IsTrue (dr.GetColor (260).EQ (Color4.White));
+      Assert.IsTrue (DXFCore.GetColor (256).EQ (Color4.Nil));
+      Assert.IsTrue (DXFCore.GetColor (-5).EQ (Color4.Black));
+      Assert.IsTrue (DXFCore.GetColor (260).EQ (Color4.White));
    }
 
    [Test (83, "DXF Reader test for LWPOLYLINE entity")]
@@ -104,18 +103,17 @@ class DXFTests {
    [Test (87, "Pix color to DXF Color conversion test")]
    void Test13 () {
       // Standard values
-      var dr = new DXFReader (NT.File ("IO/DXF/Text.dxf"));
       var colors = new Color4[] { Color4.White, Color4.Black, Color4.Yellow };
-      colors.ForEach (c => Assert.IsTrue (dr.GetColor (DXFWriter.ToACADColor (c)).EQ (c)));
+      colors.ForEach (c => Assert.IsTrue (DXFCore.GetColor (DXFWriter.ToACADColor (c)).EQ (c)));
       // Random values
       var random = new Color4 (255, 0, 0, 2);
-      Assert.IsTrue (dr.GetColor (DXFWriter.ToACADColor (random)).EQ (Color4.Black));
+      Assert.IsTrue (DXFCore.GetColor (DXFWriter.ToACADColor (random)).EQ (Color4.Black));
       random = Color4.Transparent;
-      Assert.IsTrue (dr.GetColor (DXFWriter.ToACADColor (random)).EQ (Color4.White));
+      Assert.IsTrue (DXFCore.GetColor (DXFWriter.ToACADColor (random)).EQ (Color4.White));
       random = Color4.Nil;
-      Assert.IsTrue (dr.GetColor (DXFWriter.ToACADColor (random)).EQ (Color4.Black));
+      Assert.IsTrue (DXFCore.GetColor (DXFWriter.ToACADColor (random)).EQ (Color4.Black));
       random = new (260, 247, -1);
-      Assert.IsTrue (dr.GetColor (DXFWriter.ToACADColor (random)).EQ (Color4.Cyan));
+      Assert.IsTrue (DXFCore.GetColor (DXFWriter.ToACADColor (random)).EQ (Color4.Cyan));
    }
 
    [Test (88, "Test for converting encoded texts to special characters")]
@@ -123,7 +121,7 @@ class DXFTests {
       (string Key, string Value)[] textMap = [("", "" ), ("Normal", "Normal"), ("99%", "99%"), ("99%%", "99%%"),
          ("%%", "%%"), ("%%99", "%%99"), ("18%%dN", "18°N"), ("18%%d", "18°"), ("18% dense", "18% dense"),
          ("35%%p0.1", "35±0.1"), ("12%%%p0.2%", "12%±0.2%"), ("%%p0.1", "±0.1"),  ("%%d", "°"), ("%%d%%c%%p", "°∅±")];
-      foreach (var (Key, Value) in textMap) DXFReader.Clean (Key).Is (Value);
+      foreach (var (Key, Value) in textMap) DXFCore.CleanText (Key).Is (Value);
    }
 
    [Test (89, "Font selection doesn't seem to work for the attached MTEXT file")]

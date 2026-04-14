@@ -22,7 +22,7 @@ public class DXFWriter {
 
    /// <summary>Maps Color4 to nearest ACAD color by comparing RGB values</summary>
    public static int ToACADColor (Color4 color) {
-      return DXFReader.ACADColors.MinIndexBy (a => Error (a, color));
+      return DXFCore.ACADColors.MinIndexBy (a => Error (a, color));
 
       // Helper method
       // Returns square dist between two Colors (RGB comparison only)
@@ -84,7 +84,6 @@ public class DXFWriter {
    // 62 group with the color (if the color is not BYLAYER)
    void OutEntPrologue (Ent2 ent, string type) {
       Out ($" 0\n{type}\n 8\n{ent.Layer.Name}\n");
-      if (!ent.Color.IsNil) Out ($" 62\n{ToACADColor (ent.Color)}\n");
    }
 
    // Writes the LAYER table.

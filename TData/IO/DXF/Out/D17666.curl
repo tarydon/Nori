@@ -14,11 +14,10 @@
       Name:SE1
       Base:0,0
       Ents:[
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2275.271786,1851.009421H2292.449152 }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2292.449152,1851.009421V1846.871132 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2275.271786,1851.009421H2292.449152 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2292.449152,1851.009421V1846.871132 }
         (E2Spline){
           Layer:DV1_MARK
-          Color:#FFFFFFFF
           Spline:{
             Imp:{
               Nodes:20
@@ -74,10 +73,9 @@
             Weight:[ ]
           }
         }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2292.449152,1846.871132H2269.33022 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2292.449152,1846.871132H2269.33022 }
         (E2Spline){
           Layer:DV1_MARK
-          Color:#FFFFFFFF
           Spline:{
             Imp:{
               Nodes:22
@@ -137,16 +135,11 @@
             Weight:[ ]
           }
         }
-        (E2Poly){
-          Layer:DV1_MARK
-          Color:#FFFFFFFF
-          Poly:M2274.53198,1871.16913L2270.185621,1871.654627
-        }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2319.521422,1851.009421V1846.871132 }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2302.344055,1851.009421H2319.521422 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2274.53198,1871.16913L2270.185621,1871.654627 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2319.521422,1851.009421V1846.871132 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2302.344055,1851.009421H2319.521422 }
         (E2Spline){
           Layer:DV1_MARK
-          Color:#FFFFFFFF
           Spline:{
             Imp:{
               Nodes:20
@@ -202,10 +195,9 @@
             Weight:[ ]
           }
         }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2319.521422,1846.871132H2296.425608 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2319.521422,1846.871132H2296.425608 }
         (E2Spline){
           Layer:DV1_MARK
-          Color:#FFFFFFFF
           Spline:{
             Imp:{
               Nodes:23
@@ -267,14 +259,9 @@
             Weight:[ ]
           }
         }
-        (E2Poly){
-          Layer:DV1_MARK
-          Color:#FFFFFFFF
-          Poly:M2301.604249,1871.16913L2297.281009,1871.654627
-        }
+        (E2Poly){ Layer:DV1_MARK Poly:M2301.604249,1871.16913L2297.281009,1871.654627 }
         (E2Spline){
           Layer:DV1_MARK
-          Color:#FFFFFFFF
           Spline:{
             Imp:{
               Nodes:20
@@ -330,10 +317,9 @@
             Weight:[ ]
           }
         }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2328.21414,1864.742067H2328.329735 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2328.21414,1864.742067H2328.329735 }
         (E2Spline){
           Layer:DV1_MARK
-          Color:#FFFFFFFF
           Spline:{
             Imp:{
               Nodes:9
@@ -355,7 +341,6 @@
         }
         (E2Spline){
           Layer:DV1_MARK
-          Color:#FFFFFFFF
           Spline:{
             Imp:{
               Nodes:26
@@ -423,15 +408,10 @@
             Weight:[ ]
           }
         }
-        (E2Poly){
-          Layer:DV1_MARK
-          Color:#FFFFFFFF
-          Poly:M2346.362502,1873.064882L2342.06238,1872.694979
-        }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2367.192659,1881.803838V1846.871132 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2346.362502,1873.064882L2342.06238,1872.694979 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2367.192659,1881.803838V1846.871132 }
         (E2Spline){
           Layer:DV1_MARK
-          Color:#FFFFFFFF
           Spline:{
             Imp:{ Nodes:7 Knot:[ 0 0 0 0 0.000544 0.000544 0.000544 1 1 1 1 ] }
             Ctrl:[
@@ -446,21 +426,19 @@
             Weight:[ ]
           }
         }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2354.361652,1868.903474V1873.064882 }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2367.192659,1846.871132H2362.915657 }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2362.915657,1846.871132V1874.035877 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2354.361652,1868.903474V1873.064882 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2367.192659,1846.871132H2362.915657 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2362.915657,1846.871132V1874.035877 }
         (E2Poly){
           Layer:DV1_MARK
-          Color:#FFFFFFFF
           Poly:M2354.361652,1868.903474Q2362.915657,1874.035877,0.239924
         }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2385.225426,1851.749227V1846.871132 }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2380.324213,1851.749227H2385.225426 }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2385.225426,1846.871132H2380.324213 }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2380.324213,1846.871132V1851.749227 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2385.225426,1851.749227V1846.871132 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2380.324213,1851.749227H2385.225426 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2385.225426,1846.871132H2380.324213 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2380.324213,1846.871132V1851.749227 }
         (E2Spline){
           Layer:DV1_MARK
-          Color:#FFFFFFFF
           Spline:{
             Imp:{
               Nodes:20
@@ -516,10 +494,9 @@
             Weight:[ ]
           }
         }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2395.767659,1864.742067H2395.860135 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2395.767659,1864.742067H2395.860135 }
         (E2Spline){
           Layer:DV1_MARK
-          Color:#FFFFFFFF
           Spline:{
             Imp:{
               Nodes:9
@@ -541,7 +518,6 @@
         }
         (E2Spline){
           Layer:DV1_MARK
-          Color:#FFFFFFFF
           Spline:{
             Imp:{
               Nodes:27
@@ -611,19 +587,10 @@
             Weight:[ ]
           }
         }
-        (E2Poly){
-          Layer:DV1_MARK
-          Color:#FFFFFFFF
-          Poly:M2413.892902,1873.064882L2409.6159,1872.694979
-        }
-        (E2Poly){
-          Layer:DV1_MARK
-          Color:#FFFFFFFF
-          Poly:M2205.47573,1800.563911Q2198.933072,1803.916156,0.297942
-        }
+        (E2Poly){ Layer:DV1_MARK Poly:M2413.892902,1873.064882L2409.6159,1872.694979 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2205.47573,1800.563911Q2198.933072,1803.916156,0.297942 }
         (E2Spline){
           Layer:DV1_MARK
-          Color:#FFFFFFFF
           Spline:{
             Imp:{
               Nodes:20
@@ -681,22 +648,15 @@
         }
         (E2Poly){
           Layer:DV1_MARK
-          Color:#FFFFFFFF
           Poly:M2209.105402,1798.090185Q2214.931373,1794.784178,0.166167
         }
+        (E2Poly){ Layer:DV1_MARK Poly:M2214.931373,1794.784178L2213.567356,1791.593766 }
         (E2Poly){
           Layer:DV1_MARK
-          Color:#FFFFFFFF
-          Poly:M2214.931373,1794.784178L2213.567356,1791.593766
-        }
-        (E2Poly){
-          Layer:DV1_MARK
-          Color:#FFFFFFFF
           Poly:M2206.099941,1795.847649Q2213.567356,1791.593766,0.201306
         }
         (E2Spline){
           Layer:DV1_MARK
-          Color:#FFFFFFFF
           Spline:{
             Imp:{
               Nodes:21
@@ -754,23 +714,17 @@
             Weight:[ ]
           }
         }
+        (E2Poly){ Layer:DV1_MARK Poly:M2197.823363,1800.563911L2198.933072,1803.916156 }
         (E2Poly){
           Layer:DV1_MARK
-          Color:#FFFFFFFF
-          Poly:M2197.823363,1800.563911L2198.933072,1803.916156
-        }
-        (E2Poly){
-          Layer:DV1_MARK
-          Color:#FFFFFFFF
           Poly:M2202.331555,1798.529445Q2197.823363,1800.563911,0.235226
         }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2231.207101,1809.048559V1804.771557 }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2218.191142,1804.771557V1809.048559 }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2218.191142,1809.048559H2231.207101 }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2231.207101,1804.771557H2218.191142 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2231.207101,1809.048559V1804.771557 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2218.191142,1804.771557V1809.048559 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2218.191142,1809.048559H2231.207101 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2231.207101,1804.771557H2218.191142 }
         (E2Spline){
           Layer:DV1_MARK
-          Color:#FFFFFFFF
           Spline:{
             Imp:{
               Nodes:25
@@ -838,7 +792,6 @@
         }
         (E2Spline){
           Layer:DV1_MARK
-          Color:#FFFFFFFF
           Spline:{
             Imp:{
               Nodes:15
@@ -884,32 +837,23 @@
             Weight:[ ]
           }
         }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2264.706434,1806.551715H2275.641689 }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2275.641689,1806.551715V1822.180113 }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2284.611834,1802.644615H2279.918691 }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2284.611834,1806.551715V1802.644615 }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2279.918691,1806.551715H2284.611834 }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2279.918691,1802.644615V1794.344919 }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2279.918691,1794.344919H2275.641689 }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2275.641689,1794.344919V1802.644615 }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2275.641689,1802.644615H2260.545026 }
-        (E2Poly){
-          Layer:DV1_MARK
-          Color:#FFFFFFFF
-          Poly:M2275.549213,1822.180113L2264.706434,1806.551715
-        }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2276.404613,1829.092673H2279.918691 }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2279.918691,1829.092673V1806.551715 }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2260.545026,1802.644615V1806.551715 }
-        (E2Poly){
-          Layer:DV1_MARK
-          Color:#FFFFFFFF
-          Poly:M2260.545026,1806.551715L2276.404613,1829.092673
-        }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2275.641689,1822.180113H2275.549213 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2264.706434,1806.551715H2275.641689 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2275.641689,1806.551715V1822.180113 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2284.611834,1802.644615H2279.918691 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2284.611834,1806.551715V1802.644615 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2279.918691,1806.551715H2284.611834 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2279.918691,1802.644615V1794.344919 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2279.918691,1794.344919H2275.641689 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2275.641689,1794.344919V1802.644615 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2275.641689,1802.644615H2260.545026 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2275.549213,1822.180113L2264.706434,1806.551715 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2276.404613,1829.092673H2279.918691 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2279.918691,1829.092673V1806.551715 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2260.545026,1802.644615V1806.551715 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2260.545026,1806.551715L2276.404613,1829.092673 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2275.641689,1822.180113H2275.549213 }
         (E2Spline){
           Layer:DV1_MARK
-          Color:#FFFFFFFF
           Spline:{
             Imp:{ Nodes:7 Knot:[ 0 0 0 0 0.000544 0.000544 0.000544 1 1 1 1 ] }
             Ctrl:[
@@ -924,20 +868,18 @@
             Weight:[ ]
           }
         }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2305.095208,1829.277625V1794.344919 }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2292.264201,1816.377261V1820.538669 }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2305.095208,1794.344919H2300.818206 }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2300.818206,1794.344919V1821.509664 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2305.095208,1829.277625V1794.344919 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2292.264201,1816.377261V1820.538669 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2305.095208,1794.344919H2300.818206 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2300.818206,1794.344919V1821.509664 }
         (E2Poly){
           Layer:DV1_MARK
-          Color:#FFFFFFFF
           Poly:M2292.264201,1816.377261Q2300.818206,1821.509664,0.239924
         }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2319.267113,1816.377261V1820.538669 }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2332.12124,1829.277625V1794.344919 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2319.267113,1816.377261V1820.538669 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2332.12124,1829.277625V1794.344919 }
         (E2Spline){
           Layer:DV1_MARK
-          Color:#FFFFFFFF
           Spline:{
             Imp:{ Nodes:7 Knot:[ 0 0 0 0 0.000544 0.000544 0.000544 1 1 1 1 ] }
             Ctrl:[
@@ -952,20 +894,18 @@
             Weight:[ ]
           }
         }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2332.12124,1794.344919H2327.821118 }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2327.821118,1794.344919V1821.509664 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2332.12124,1794.344919H2327.821118 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2327.821118,1794.344919V1821.509664 }
         (E2Poly){
           Layer:DV1_MARK
-          Color:#FFFFFFFF
           Poly:M2319.267113,1816.377261Q2327.821118,1821.509664,0.242006
         }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2355.517599,1809.048559V1804.771557 }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2342.50164,1804.771557V1809.048559 }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2342.50164,1809.048559H2355.517599 }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2355.517599,1804.771557H2342.50164 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2355.517599,1809.048559V1804.771557 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2342.50164,1804.771557V1809.048559 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2342.50164,1809.048559H2355.517599 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2355.517599,1804.771557H2342.50164 }
         (E2Spline){
           Layer:DV1_MARK
-          Color:#FFFFFFFF
           Spline:{
             Imp:{
               Nodes:26
@@ -1035,7 +975,6 @@
         }
         (E2Spline){
           Layer:DV1_MARK
-          Color:#FFFFFFFF
           Spline:{
             Imp:{
               Nodes:16
@@ -1083,14 +1022,9 @@
             Weight:[ ]
           }
         }
-        (E2Poly){
-          Layer:DV1_MARK
-          Color:#FFFFFFFF
-          Poly:M2390.958922,1819.382722L2386.681919,1820.168766
-        }
+        (E2Poly){ Layer:DV1_MARK Poly:M2390.958922,1819.382722L2386.681919,1820.168766 }
         (E2Spline){
           Layer:DV1_MARK
-          Color:#FFFFFFFF
           Spline:{
             Imp:{
               Nodes:16
@@ -1140,7 +1074,6 @@
         }
         (E2Spline){
           Layer:DV1_MARK
-          Color:#FFFFFFFF
           Spline:{
             Imp:{
               Nodes:26
@@ -1210,7 +1143,6 @@
         }
         (E2Spline){
           Layer:DV1_MARK
-          Color:#FFFFFFFF
           Spline:{
             Imp:{
               Nodes:38
@@ -1302,39 +1234,26 @@
             Weight:[ ]
           }
         }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2416.042963,1806.551715H2426.978218 }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2426.978218,1806.551715V1822.180113 }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2431.25522,1794.344919H2426.978218 }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2435.948363,1806.551715V1802.644615 }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2435.948363,1802.644615H2431.25522 }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2431.25522,1802.644615V1794.344919 }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2431.25522,1806.551715H2435.948363 }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2426.978218,1802.644615H2411.881555 }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2411.881555,1802.644615V1806.551715 }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2426.978218,1794.344919V1802.644615 }
-        (E2Poly){
-          Layer:DV1_MARK
-          Color:#FFFFFFFF
-          Poly:M2411.881555,1806.551715L2427.741142,1829.092673
-        }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2427.741142,1829.092673H2431.25522 }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2426.978218,1822.180113H2426.862623 }
-        (E2Poly){
-          Layer:DV1_MARK
-          Color:#FFFFFFFF
-          Poly:M2426.862623,1822.180113L2416.042963,1806.551715
-        }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2431.25522,1829.092673V1806.551715 }
-        (E2Poly){
-          Layer:DV1_MARK
-          Color:#FFFFFFFF
-          Poly:M2447.7159,1824.445768L2445.912623,1815.221314
-        }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2461.633497,1824.445768H2447.7159 }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2461.633497,1828.607176V1824.445768 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2416.042963,1806.551715H2426.978218 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2426.978218,1806.551715V1822.180113 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2431.25522,1794.344919H2426.978218 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2435.948363,1806.551715V1802.644615 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2435.948363,1802.644615H2431.25522 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2431.25522,1802.644615V1794.344919 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2431.25522,1806.551715H2435.948363 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2426.978218,1802.644615H2411.881555 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2411.881555,1802.644615V1806.551715 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2426.978218,1794.344919V1802.644615 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2411.881555,1806.551715L2427.741142,1829.092673 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2427.741142,1829.092673H2431.25522 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2426.978218,1822.180113H2426.862623 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2426.862623,1822.180113L2416.042963,1806.551715 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2431.25522,1829.092673V1806.551715 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2447.7159,1824.445768L2445.912623,1815.221314 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2461.633497,1824.445768H2447.7159 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2461.633497,1828.607176V1824.445768 }
         (E2Spline){
           Layer:DV1_MARK
-          Color:#FFFFFFFF
           Spline:{
             Imp:{
               Nodes:25
@@ -1402,7 +1321,6 @@
         }
         (E2Spline){
           Layer:DV1_MARK
-          Color:#FFFFFFFF
           Spline:{
             Imp:{
               Nodes:20
@@ -1458,23 +1376,17 @@
             Weight:[ ]
           }
         }
+        (E2Poly){ Layer:DV1_MARK Poly:M2440.965172,1810.690003L2444.363655,1828.607176 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2444.363655,1828.607176H2461.633497 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2490.046664,1828.607176V1825.27805 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2467.551943,1824.445768V1828.607176 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2467.551943,1828.607176H2490.046664 }
         (E2Poly){
           Layer:DV1_MARK
-          Color:#FFFFFFFF
-          Poly:M2440.965172,1810.690003L2444.363655,1828.607176
-        }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2444.363655,1828.607176H2461.633497 }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2490.046664,1828.607176V1825.27805 }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2467.551943,1824.445768V1828.607176 }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2467.551943,1828.607176H2490.046664 }
-        (E2Poly){
-          Layer:DV1_MARK
-          Color:#FFFFFFFF
           Poly:M2484.567477,1824.445768Q2472.453157,1794.344919,0.403792
         }
         (E2Spline){
           Layer:DV1_MARK
-          Color:#FFFFFFFF
           Spline:{
             Imp:{
               Nodes:10
@@ -1495,40 +1407,27 @@
             Weight:[ ]
           }
         }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2484.567477,1824.445768H2467.551943 }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2183.720815,1751.898559H2194.65607 }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2194.65607,1751.898559V1767.526957 }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2203.626215,1751.898559V1747.99146 }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2198.933072,1751.898559H2203.626215 }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2198.933072,1747.99146V1739.668644 }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2203.626215,1747.99146H2198.933072 }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2198.933072,1739.668644H2194.65607 }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2195.418994,1774.439518H2198.933072 }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2194.65607,1739.668644V1747.99146 }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2198.933072,1774.439518V1751.898559 }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2194.65607,1747.99146H2179.559407 }
-        (E2Poly){
-          Layer:DV1_MARK
-          Color:#FFFFFFFF
-          Poly:M2179.559407,1751.898559L2195.418994,1774.439518
-        }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2179.559407,1747.99146V1751.898559 }
-        (E2Poly){
-          Layer:DV1_MARK
-          Color:#FFFFFFFF
-          Poly:M2194.563594,1767.526957L2183.720815,1751.898559
-        }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2194.65607,1767.526957H2194.563594 }
-        (E2Poly){ Layer:DV1_DEFAULT Color:#FFFFFFFF Poly:M2480.638243,1711.598914H2037.154243 }
-        (E2Poly){
-          Layer:DV1_DEFAULT
-          Color:#FFFFFFFF
-          Poly:M2480.638243,1711.598914Q2480.638243,2034.178914,2
-        }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2224.040232,1774.601351V1739.668644 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2484.567477,1824.445768H2467.551943 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2183.720815,1751.898559H2194.65607 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2194.65607,1751.898559V1767.526957 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2203.626215,1751.898559V1747.99146 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2198.933072,1751.898559H2203.626215 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2198.933072,1747.99146V1739.668644 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2203.626215,1747.99146H2198.933072 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2198.933072,1739.668644H2194.65607 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2195.418994,1774.439518H2198.933072 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2194.65607,1739.668644V1747.99146 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2198.933072,1774.439518V1751.898559 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2194.65607,1747.99146H2179.559407 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2179.559407,1751.898559L2195.418994,1774.439518 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2179.559407,1747.99146V1751.898559 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2194.563594,1767.526957L2183.720815,1751.898559 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2194.65607,1767.526957H2194.563594 }
+        (E2Poly){ Layer:DV1_DEFAULT Poly:M2480.638243,1711.598914H2037.154243 }
+        (E2Poly){ Layer:DV1_DEFAULT Poly:M2480.638243,1711.598914Q2480.638243,2034.178914,2 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2224.040232,1774.601351V1739.668644 }
         (E2Spline){
           Layer:DV1_MARK
-          Color:#FFFFFFFF
           Spline:{
             Imp:{ Nodes:7 Knot:[ 0 0 0 0 0.000543 0.000543 0.000543 1 1 1 1 ] }
             Ctrl:[
@@ -1543,17 +1442,12 @@
             Weight:[ ]
           }
         }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2211.209225,1761.724105V1765.885513 }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2224.040232,1739.668644H2219.76323 }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2219.76323,1739.668644V1766.856508 }
-        (E2Poly){
-          Layer:DV1_MARK
-          Color:#FFFFFFFF
-          Poly:M2211.209225,1761.724105Q2219.76323,1766.856508,0.245849
-        }
+        (E2Poly){ Layer:DV1_MARK Poly:M2211.209225,1761.724105V1765.885513 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2224.040232,1739.668644H2219.76323 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2219.76323,1739.668644V1766.856508 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2211.209225,1761.724105Q2219.76323,1766.856508,0.245849 }
         (E2Spline){
           Layer:DV1_MARK
-          Color:#FFFFFFFF
           Spline:{
             Imp:{
               Nodes:21
@@ -1613,7 +1507,6 @@
         }
         (E2Spline){
           Layer:DV1_MARK
-          Color:#FFFFFFFF
           Spline:{
             Imp:{
               Nodes:21
@@ -1673,7 +1566,6 @@
         }
         (E2Spline){
           Layer:DV1_MARK
-          Color:#FFFFFFFF
           Spline:{
             Imp:{
               Nodes:19
@@ -1729,7 +1621,6 @@
         }
         (E2Spline){
           Layer:DV1_MARK
-          Color:#FFFFFFFF
           Spline:{
             Imp:{
               Nodes:21
@@ -1787,13 +1678,12 @@
             Weight:[ ]
           }
         }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2261.516021,1754.395404H2274.53198 }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2261.516021,1750.118402V1754.395404 }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2274.53198,1754.395404V1750.118402 }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2274.53198,1750.118402H2261.516021 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2261.516021,1754.395404H2274.53198 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2261.516021,1750.118402V1754.395404 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2274.53198,1754.395404V1750.118402 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2274.53198,1750.118402H2261.516021 }
         (E2Spline){
           Layer:DV1_MARK
-          Color:#FFFFFFFF
           Spline:{
             Imp:{
               Nodes:22
@@ -1855,7 +1745,6 @@
         }
         (E2Spline){
           Layer:DV1_MARK
-          Color:#FFFFFFFF
           Spline:{
             Imp:{
               Nodes:22
@@ -1917,7 +1806,6 @@
         }
         (E2Spline){
           Layer:DV1_MARK
-          Color:#FFFFFFFF
           Spline:{
             Imp:{
               Nodes:19
@@ -1973,7 +1861,6 @@
         }
         (E2Spline){
           Layer:DV1_MARK
-          Color:#FFFFFFFF
           Spline:{
             Imp:{
               Nodes:21
@@ -2031,39 +1918,26 @@
             Weight:[ ]
           }
         }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2308.054431,1751.898559H2318.966567 }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2318.966567,1751.898559V1767.526957 }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2323.24357,1739.668644H2318.966567 }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2323.24357,1747.99146V1739.668644 }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2323.24357,1751.898559H2327.959832 }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2327.959832,1747.99146H2323.24357 }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2327.959832,1751.898559V1747.99146 }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2318.966567,1739.668644V1747.99146 }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2318.966567,1747.99146H2303.869905 }
-        (E2Poly){
-          Layer:DV1_MARK
-          Color:#FFFFFFFF
-          Poly:M2303.869905,1751.898559L2319.729492,1774.439518
-        }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2319.729492,1774.439518H2323.24357 }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2303.869905,1747.99146V1751.898559 }
-        (E2Poly){
-          Layer:DV1_MARK
-          Color:#FFFFFFFF
-          Poly:M2318.874091,1767.526957L2308.054431,1751.898559
-        }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2318.966567,1767.526957H2318.874091 }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2323.24357,1774.439518V1751.898559 }
-        (E2Poly){
-          Layer:DV1_MARK
-          Color:#FFFFFFFF
-          Poly:M2339.658011,1769.792613L2337.854735,1760.54504
-        }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2353.55249,1769.792613H2339.658011 }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2353.55249,1773.930902V1769.792613 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2308.054431,1751.898559H2318.966567 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2318.966567,1751.898559V1767.526957 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2323.24357,1739.668644H2318.966567 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2323.24357,1747.99146V1739.668644 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2323.24357,1751.898559H2327.959832 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2327.959832,1747.99146H2323.24357 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2327.959832,1751.898559V1747.99146 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2318.966567,1739.668644V1747.99146 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2318.966567,1747.99146H2303.869905 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2303.869905,1751.898559L2319.729492,1774.439518 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2319.729492,1774.439518H2323.24357 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2303.869905,1747.99146V1751.898559 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2318.874091,1767.526957L2308.054431,1751.898559 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2318.966567,1767.526957H2318.874091 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2323.24357,1774.439518V1751.898559 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2339.658011,1769.792613L2337.854735,1760.54504 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2353.55249,1769.792613H2339.658011 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2353.55249,1773.930902V1769.792613 }
         (E2Spline){
           Layer:DV1_MARK
-          Color:#FFFFFFFF
           Spline:{
             Imp:{
               Nodes:19
@@ -2119,7 +1993,6 @@
         }
         (E2Spline){
           Layer:DV1_MARK
-          Color:#FFFFFFFF
           Spline:{
             Imp:{
               Nodes:27
@@ -2189,15 +2062,10 @@
             Weight:[ ]
           }
         }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2336.305766,1773.930902H2353.55249 }
-        (E2Poly){
-          Layer:DV1_MARK
-          Color:#FFFFFFFF
-          Poly:M2332.907283,1756.036848L2336.305766,1773.930902
-        }
+        (E2Poly){ Layer:DV1_MARK Poly:M2336.305766,1773.930902H2353.55249 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2332.907283,1756.036848L2336.305766,1773.930902 }
         (E2Spline){
           Layer:DV1_MARK
-          Color:#FFFFFFFF
           Spline:{
             Imp:{ Nodes:4 Knot:[ 0 0 0 0 1 1 1 1 ] }
             Ctrl:[
@@ -2211,7 +2079,6 @@
         }
         (E2Spline){
           Layer:DV1_MARK
-          Color:#FFFFFFFF
           Spline:{
             Imp:{ Nodes:4 Knot:[ 0 0 0 0 1 1 1 1 ] }
             Ctrl:[
@@ -2223,23 +2090,17 @@
             Weight:[ ]
           }
         }
+        (E2Poly){ Layer:DV1_MARK Poly:M2428.925624,2015.08925Q2316.129757,2016.224702,0.181679 }
         (E2Poly){
           Layer:DV1_MARK
-          Color:#FFFFFFFF
-          Poly:M2428.925624,2015.08925Q2316.129757,2016.224702,0.181679
-        }
-        (E2Poly){
-          Layer:DV1_MARK
-          Color:#FFFFFFFF
           Poly:M2479.578891,1892.473692L2492.323225,1893.542452L2504.347668,1895.071288L2515.561182,1897.048624L2525.87887,1899.459491L2535.222619,1902.285636L2543.521686,1905.505662L2550.713239,1909.095191L2556.742833,1913.027046L2561.564816,1917.271459L2565.142681,1921.796297L2567.449342,1926.567301L2568.467334,1931.548351L2568.18895,1936.701735L2566.616297,1941.988437L2563.761283,1947.368433L2559.645522,1952.800989L2554.300175,1958.244976L2547.765711,1963.659179L2540.091602,1969.002606L2531.335948,1974.234803L2521.56504,1979.316156L2510.85285,1984.208195L2499.280482,1988.873883L2486.935549,1993.277895L2473.911515,1997.38689L2460.306983,2001.169758L2446.224953,2004.597859L2431.77204,2007.645239L2417.057666,2010.288826L2402.193233,2012.508607L2387.29128,2014.287774L2372.464627,2015.612859L2357.825529,2016.473829L2343.484816,2016.864165L2329.551061,2016.780913L2316.129757,2016.224702
         }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2358.754249,1754.395404H2371.770208 }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2371.770208,1754.395404V1750.118402 }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2358.754249,1750.118402V1754.395404 }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2371.770208,1750.118402H2358.754249 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2358.754249,1754.395404H2371.770208 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2371.770208,1754.395404V1750.118402 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2358.754249,1750.118402V1754.395404 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2371.770208,1750.118402H2358.754249 }
         (E2Spline){
           Layer:DV1_MARK
-          Color:#FFFFFFFF
           Spline:{
             Imp:{
               Nodes:20
@@ -2297,7 +2158,6 @@
         }
         (E2Spline){
           Layer:DV1_MARK
-          Color:#FFFFFFFF
           Spline:{
             Imp:{
               Nodes:10
@@ -2318,15 +2178,10 @@
             Weight:[ ]
           }
         }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2394.056858,1756.013729H2393.964383 }
-        (E2Poly){
-          Layer:DV1_MARK
-          Color:#FFFFFFFF
-          Poly:M2376.04721,1747.714033L2380.16238,1748.037698
-        }
+        (E2Poly){ Layer:DV1_MARK Poly:M2394.056858,1756.013729H2393.964383 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2376.04721,1747.714033L2380.16238,1748.037698 }
         (E2Spline){
           Layer:DV1_MARK
-          Color:#FFFFFFFF
           Spline:{
             Imp:{
               Nodes:32
@@ -2406,12 +2261,11 @@
             Weight:[ ]
           }
         }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2425.267417,1773.930902V1770.624894 }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2402.772696,1773.930902H2425.267417 }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2402.772696,1769.792613V1773.930902 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2425.267417,1773.930902V1770.624894 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2402.772696,1773.930902H2425.267417 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2402.772696,1769.792613V1773.930902 }
         (E2Spline){
           Layer:DV1_MARK
-          Color:#FFFFFFFF
           Spline:{
             Imp:{
               Nodes:10
@@ -2432,17 +2286,12 @@
             Weight:[ ]
           }
         }
-        (E2Poly){
-          Layer:DV1_MARK
-          Color:#FFFFFFFF
-          Poly:M2419.765111,1769.792613Q2407.65079,1739.668644,0.400897
-        }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2419.765111,1769.792613H2402.772696 }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2452.03914,1743.830052V1739.668644 }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2434.861773,1743.830052H2452.03914 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2419.765111,1769.792613Q2407.65079,1739.668644,0.400897 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2419.765111,1769.792613H2402.772696 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2452.03914,1743.830052V1739.668644 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2434.861773,1743.830052H2452.03914 }
         (E2Spline){
           Layer:DV1_MARK
-          Color:#FFFFFFFF
           Spline:{
             Imp:{
               Nodes:20
@@ -2498,15 +2347,10 @@
             Weight:[ ]
           }
         }
-        (E2Poly){
-          Layer:DV1_MARK
-          Color:#FFFFFFFF
-          Poly:M2434.121968,1763.989761L2429.775608,1764.475258
-        }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2452.03914,1739.668644H2428.920208 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2434.121968,1763.989761L2429.775608,1764.475258 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2452.03914,1739.668644H2428.920208 }
         (E2Spline){
           Layer:DV1_MARK
-          Color:#FFFFFFFF
           Spline:{
             Imp:{
               Nodes:22
@@ -2568,7 +2412,6 @@
         }
         (E2Spline){
           Layer:DV1_MARK
-          Color:#FFFFFFFF
           Spline:{
             Imp:{
               Nodes:25
@@ -2636,7 +2479,6 @@
         }
         (E2Spline){
           Layer:DV1_MARK
-          Color:#FFFFFFFF
           Spline:{
             Imp:{
               Nodes:16
@@ -2684,22 +2526,13 @@
             Weight:[ ]
           }
         }
-        (E2Poly){ Layer:DV1_DEFAULT Color:#FFFFFFFF Poly:C2077.540243,1872.888914,40.386 }
-        (E2Poly){ Layer:DV1_DEFAULT Color:#FFFFFFFF Poly:M2037.154243,2034.178914H2480.638243 }
-        (E2Poly){
-          Layer:DV1_DEFAULT
-          Color:#FFFFFFFF
-          Poly:M2037.154243,2034.178914Q1996.768243,1993.792914,1
-        }
-        (E2Poly){ Layer:DV1_DEFAULT Color:#FFFFFFFF Poly:M1996.768243,1751.984914V1993.792914 }
-        (E2Poly){
-          Layer:DV1_DEFAULT
-          Color:#FFFFFFFF
-          Poly:M1996.768243,1751.984914Q2037.154243,1711.598914,1
-        }
+        (E2Poly){ Layer:DV1_DEFAULT Poly:C2077.540243,1872.888914,40.386 }
+        (E2Poly){ Layer:DV1_DEFAULT Poly:M2037.154243,2034.178914H2480.638243 }
+        (E2Poly){ Layer:DV1_DEFAULT Poly:M2037.154243,2034.178914Q1996.768243,1993.792914,1 }
+        (E2Poly){ Layer:DV1_DEFAULT Poly:M1996.768243,1751.984914V1993.792914 }
+        (E2Poly){ Layer:DV1_DEFAULT Poly:M1996.768243,1751.984914Q2037.154243,1711.598914,1 }
         (E2Spline){
           Layer:DV1_MARK
-          Color:#FFFFFFFF
           Spline:{
             Imp:{
               Nodes:21
@@ -2759,7 +2592,6 @@
         }
         (E2Spline){
           Layer:DV1_MARK
-          Color:#FFFFFFFF
           Spline:{
             Imp:{
               Nodes:27
@@ -2831,7 +2663,6 @@
         }
         (E2Spline){
           Layer:DV1_MARK
-          Color:#FFFFFFFF
           Spline:{
             Imp:{
               Nodes:33
@@ -2915,7 +2746,6 @@
         }
         (E2Spline){
           Layer:DV1_MARK
-          Color:#FFFFFFFF
           Spline:{
             Imp:{
               Nodes:17
@@ -2965,11 +2795,10 @@
             Weight:[ ]
           }
         }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2339.317575,1957.40237H2346.954593 }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2318.044543,1957.40237H2325.766653 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2339.317575,1957.40237H2346.954593 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2318.044543,1957.40237H2325.766653 }
         (E2Spline){
           Layer:DV1_MARK
-          Color:#FFFFFFFF
           Spline:{
             Imp:{
               Nodes:18
@@ -3021,70 +2850,45 @@
             Weight:[ ]
           }
         }
-        (E2Poly){
-          Layer:DV1_MARK
-          Color:#FFFFFFFF
-          Poly:M2366.398144,1949.637713L2361.675531,1938.065184
-        }
-        (E2Poly){
-          Layer:DV1_MARK
-          Color:#FFFFFFFF
-          Poly:M2370.674024,1938.065184L2366.398144,1949.637713
-        }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2361.675531,1938.065184H2370.674024 }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2357.016737,1926.875569H2348.869166 }
-        (E2Poly){
-          Layer:DV1_MARK
-          Color:#FFFFFFFF
-          Poly:M2348.869166,1926.875569L2362.186084,1957.40237
-        }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2362.186084,1957.40237H2371.014392 }
-        (E2Poly){
-          Layer:DV1_MARK
-          Color:#FFFFFFFF
-          Poly:M2359.463136,1932.832018L2357.016737,1926.875569
-        }
-        (E2Poly){
-          Layer:DV1_MARK
-          Color:#FFFFFFFF
-          Poly:M2371.014392,1957.40237L2382.906017,1926.875569
-        }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2382.906017,1926.875569H2374.800992 }
-        (E2Poly){
-          Layer:DV1_MARK
-          Color:#FFFFFFFF
-          Poly:M2374.800992,1926.875569L2372.631143,1932.832018
-        }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2372.631143,1932.832018H2359.463136 }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2405.795799,1932.789472V1926.875569 }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2405.795799,1926.875569H2384.990774 }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2392.627792,1932.789472H2405.795799 }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2384.990774,1926.875569V1957.40237 }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2384.990774,1957.40237H2392.627792 }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2392.627792,1957.40237V1932.789472 }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2424.686251,1926.875569H2416.645045 }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2424.686251,1951.72247V1926.875569 }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2434.812215,1951.72247H2424.686251 }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2416.645045,1926.875569V1951.72247 }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2416.645045,1951.72247H2406.519082 }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2406.519082,1951.72247V1957.40237 }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2406.519082,1957.40237H2434.812215 }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2434.812215,1957.40237V1951.72247 }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2458.935833,1932.619288V1926.875569 }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2458.935833,1926.875569H2438.130808 }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2445.767826,1932.619288H2458.935833 }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2438.130808,1926.875569V1957.40237 }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2438.130808,1957.40237H2458.552918 }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2458.552918,1957.40237V1951.765016 }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2458.552918,1951.765016H2445.767826 }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2445.767826,1951.765016V1945.532018 }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2445.767826,1945.532018H2457.978546 }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2457.978546,1945.532018V1939.852118 }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2457.978546,1939.852118H2445.767826 }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2445.767826,1939.852118V1932.619288 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2366.398144,1949.637713L2361.675531,1938.065184 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2370.674024,1938.065184L2366.398144,1949.637713 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2361.675531,1938.065184H2370.674024 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2357.016737,1926.875569H2348.869166 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2348.869166,1926.875569L2362.186084,1957.40237 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2362.186084,1957.40237H2371.014392 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2359.463136,1932.832018L2357.016737,1926.875569 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2371.014392,1957.40237L2382.906017,1926.875569 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2382.906017,1926.875569H2374.800992 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2374.800992,1926.875569L2372.631143,1932.832018 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2372.631143,1932.832018H2359.463136 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2405.795799,1932.789472V1926.875569 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2405.795799,1926.875569H2384.990774 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2392.627792,1932.789472H2405.795799 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2384.990774,1926.875569V1957.40237 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2384.990774,1957.40237H2392.627792 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2392.627792,1957.40237V1932.789472 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2424.686251,1926.875569H2416.645045 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2424.686251,1951.72247V1926.875569 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2434.812215,1951.72247H2424.686251 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2416.645045,1926.875569V1951.72247 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2416.645045,1951.72247H2406.519082 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2406.519082,1951.72247V1957.40237 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2406.519082,1957.40237H2434.812215 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2434.812215,1957.40237V1951.72247 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2458.935833,1932.619288V1926.875569 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2458.935833,1926.875569H2438.130808 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2445.767826,1932.619288H2458.935833 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2438.130808,1926.875569V1957.40237 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2438.130808,1957.40237H2458.552918 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2458.552918,1957.40237V1951.765016 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2458.552918,1951.765016H2445.767826 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2445.767826,1951.765016V1945.532018 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2445.767826,1945.532018H2457.978546 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2457.978546,1945.532018V1939.852118 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2457.978546,1939.852118H2445.767826 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2445.767826,1939.852118V1932.619288 }
         (E2Spline){
           Layer:DV1_MARK
-          Color:#FFFFFFFF
           Spline:{
             Imp:{
               Nodes:20
@@ -3140,10 +2944,9 @@
             Weight:[ ]
           }
         }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2490.483739,1936.533525V1929.428333 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2490.483739,1936.533525V1929.428333 }
         (E2Spline){
           Layer:DV1_MARK
-          Color:#FFFFFFFF
           Spline:{
             Imp:{
               Nodes:30
@@ -3219,21 +3022,20 @@
             Weight:[ ]
           }
         }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2502.694459,1926.875569H2495.036168 }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2502.694459,1939.2352V1926.875569 }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2516.3092,1939.2352H2502.694459 }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2495.036168,1926.875569V1957.40237 }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2495.036168,1957.40237H2502.694459 }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2502.694459,1957.40237V1945.149103 }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2502.694459,1945.149103H2516.3092 }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2516.3092,1945.149103V1957.40237 }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2516.3092,1957.40237H2523.946218 }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2523.946218,1957.40237V1926.875569 }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2523.946218,1926.875569H2516.3092 }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2516.3092,1926.875569V1939.2352 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2502.694459,1926.875569H2495.036168 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2502.694459,1939.2352V1926.875569 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2516.3092,1939.2352H2502.694459 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2495.036168,1926.875569V1957.40237 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2495.036168,1957.40237H2502.694459 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2502.694459,1957.40237V1945.149103 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2502.694459,1945.149103H2516.3092 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2516.3092,1945.149103V1957.40237 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2516.3092,1957.40237H2523.946218 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2523.946218,1957.40237V1926.875569 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2523.946218,1926.875569H2516.3092 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2516.3092,1926.875569V1939.2352 }
         (E2Spline){
           Layer:DV1_MARK
-          Color:#FFFFFFFF
           Spline:{
             Imp:{
               Nodes:23
@@ -3297,7 +3099,6 @@
         }
         (E2Spline){
           Layer:DV1_MARK
-          Color:#FFFFFFFF
           Spline:{
             Imp:{
               Nodes:20
@@ -3353,22 +3154,22 @@
             Weight:[ ]
           }
         }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2247.760257,1881.618887V1846.871132 }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2243.182708,1867.331387V1881.618887 }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2243.182708,1881.618887H2247.760257 }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2247.760257,1846.871132H2243.182708 }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2243.182708,1846.871132V1863.169979 }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2243.182708,1863.169979H2225.080584 }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2225.080584,1863.169979V1846.871132 }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2225.080584,1846.871132H2220.503036 }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2220.503036,1846.871132V1881.618887 }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2220.503036,1881.618887H2225.080584 }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2225.080584,1881.618887V1867.331387 }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2225.080584,1867.331387H2243.182708 }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2253.262562,1857.29777V1861.574773 }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2266.278521,1861.574773V1857.29777 }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2253.262562,1861.574773H2266.278521 }
-        (E2Poly){ Layer:DV1_MARK Color:#FFFFFFFF Poly:M2266.278521,1857.29777H2253.262562 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2247.760257,1881.618887V1846.871132 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2243.182708,1867.331387V1881.618887 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2243.182708,1881.618887H2247.760257 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2247.760257,1846.871132H2243.182708 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2243.182708,1846.871132V1863.169979 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2243.182708,1863.169979H2225.080584 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2225.080584,1863.169979V1846.871132 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2225.080584,1846.871132H2220.503036 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2220.503036,1846.871132V1881.618887 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2220.503036,1881.618887H2225.080584 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2225.080584,1881.618887V1867.331387 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2225.080584,1867.331387H2243.182708 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2253.262562,1857.29777V1861.574773 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2266.278521,1861.574773V1857.29777 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2253.262562,1861.574773H2266.278521 }
+        (E2Poly){ Layer:DV1_MARK Poly:M2266.278521,1857.29777H2253.262562 }
       ]
     }
   ]

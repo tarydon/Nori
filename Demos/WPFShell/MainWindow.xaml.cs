@@ -22,8 +22,11 @@ public partial class MainWindow : Window {
 
 class DemoScene : Scene2 {
    public DemoScene () {
-      Dwg2 dwg = new Nori.Alt.DXFReader ("N:/TData/IO/DXF/Poly.dxf").Load ();
-      Bound = dwg.Bound.InflatedF (1.25);
+      var file = System.IO.Directory.GetFiles ("W:\\DXF", "*.dxf")[0];
+      var dr = new DXFReader (file);
+      dr.WhiteToBlack = dr.DarkenColors = true; dr.StitchThreshold = 0.0001;
+      Dwg2 dwg = dr.Load (); 
+      Bound = dwg.Bound.InflatedF (1.1);
       Root = new GroupVN ([new Dwg2VN (dwg), new DwgFillVN (dwg)]);
       BgrdColor = Color4.Gray (216);
    }
