@@ -38,9 +38,12 @@ public class DXFReader {
       EDXF type;
       while ((type = NextObject ()) != EOF) {
          switch (type) {
+            // Entities we know, but choose to ignore
             case > __FIRSTIGNORE and < __LASTTODO: break;
+            // Entities that can be loaded by LoadSimple (read-all-groups-ahead strategy)
             case > __FIRSTSIMPLE and < __LASTSIMPLE: LoadSimple (type); break;
 
+            // These entities require more complex handling, and we need a separate routine for each
             case DIMENSION: LoadDimension (); break;
             case ELLIPSE: LoadEllipse (); break;
             case LINE: LoadLine (); break;
@@ -48,10 +51,10 @@ public class DXFReader {
             case POLYLINE: LoadPolyline (); break;
             case SECTION: LoadSection (); break;
             case SPLINE: LoadSpline (); break;
+
+             // Catch other cases
             case NIL: UnknownEnt (S (0)); break;
-            default:
-               if (sReported.Add (type)) Lib.Trace ($"Unsupported {type} at line {LineNo ()}");
-               break;
+            default: if (sReported.Add (type)) Lib.Trace ($"Unsupported {type} at line {LineNo ()}"); break;
          }
       }
 

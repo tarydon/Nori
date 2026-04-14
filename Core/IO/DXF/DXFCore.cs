@@ -35,7 +35,7 @@ enum EDXF {
 
 #region class DXFCore ------------------------------------------------------------------------------
 /// <summary>Static class containing various helper related to DXF import/export</summary>
-public static class DXFCore {
+public static partial class DXFCore {
    // Properties ---------------------------------------------------------------
    // Map with 256 AutoCAD colors (numbers 0 .. 255)
    internal static Color4[] ACADColors
@@ -211,13 +211,17 @@ public static class DXFCore {
    static readonly Regex sBend = new (@"A([-+]?[0-9]*\.?[0-9]+)\s*R([0-9]*\.?[0-9]+)\s*K([0-9]*\.?[0-9]+)",
       RegexOptions.Compiled | RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
 
-   // Helper used to report unknown entities in DXF 
-   static internal void UnknownEnt (string s) {
+   // Helper used to report unknown entities in DXF (only in debug builds)
+   static internal partial void UnknownEnt (string s);
+
+   #if DEBUG
+   static internal partial void UnknownEnt (string s) {
       sIgnore ??= [.. Lib.ReadLines ("nori:DXF/ent-ignore.txt")];
       if (sIgnore.Contains (s)) return;
       Lib.Trace ($"Unknown entity {s} in DXFReader");
       sIgnore.Add (s);
    }
    static HashSet<string>? sIgnore;
+   #endif
 }
 #endregion
