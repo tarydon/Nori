@@ -1,5 +1,4 @@
-﻿using System.IO;
-using System.IO.Compression;
+﻿using System.Reactive.Linq;
 using System.Windows;
 using Nori;
 namespace WPFShell;
@@ -10,44 +9,42 @@ public partial class MainWindow : Window {
       InitializeComponent ();
       Content = (UIElement)Lux.CreatePanel ();
       Lux.OnReady.Subscribe (OnLuxReady);
+
+      var dwg = DXFReader.Load ("C:/ETC/DEMO.dxf");
+      var polys = dwg.Ents.OfType<E2Poly> ().Select (a => a.Poly).OrderBy (a => a.GetBound ().Midpoint.X).ToList ();
+      mMesher = new CSMesher ([polys[0]], [polys[1]]);
+      mEnum = mMesher.IncBuild ().GetEnumerator ();
    }
+   IEnumerator<string> mEnum;
 
    void OnLuxReady (int _) {
       var source = PresentationSource.FromVisual (this);
       if (source != null) Lux.DPIScale = (float)source.CompositionTarget.TransformToDevice.M11;
-      TraceVN.TextColor = Color4.Yellow;
+      TraceVN.TextColor = Color4.Blue; TraceVN.HoldTime = 20;
+      Lib.Tracer = TraceVN.Print;
       new SceneManipulator ();
-      Lux.UIScene = new DemoScene ();
+
+      Lux.UIScene = new Scene2 { BgrdColor = Color4.Gray (128) };
+      // HW.MouseClicks.Where (a => a.IsLeftPress).Subscribe (a => OnClick ());
+      HW.Keys.Where (a => a.IsPress (EKey.Space)).Subscribe (a => Next ());
    }
-}
+   CSMesher mMesher;
+   Scene2? mScene2;
+   Scene3? mScene3;
 
-class DemoScene2 : Scene3 {
-   public DemoScene2 () {
-      var zar = new ZipArchive (File.OpenRead ("N:/TData/IO/MESH/cow.zip"));
-      var ze = zar.GetEntry ("cow.obj")!;
-      var zstm = new ZipReadStream (ze.Open (), ze.Length);
-      var mesh = Mesh3.LoadObj (zstm.ReadAllLines ());
-      mesh *= Matrix3.Rotation (EAxis.X, Lib.HalfPI) * Matrix3.Rotation (EAxis.Z, -Lib.HalfPI);
-      mesh *= Matrix3.Translation (1, 2, 3);
+   void Next () {
+      if (!mEnum.MoveNext ()) return;
+      Lib.Trace (mEnum.Current);
+      if (mScene2 != null) Lux.RemoveSubScene (mScene2);
+      if (mScene3 != null) Lux.RemoveSubScene (mScene3);
 
-      Bound = mesh.Bound;
-      Root = new Mesh3VN (mesh);
-   }
-}
+      var dwg = mMesher.Dwg;
+      var gvn = new GroupVN ([new Dwg2VN (dwg), TraceVN.It]);
+      mScene2 = new Scene2 { Root = gvn, Bound = dwg.Bound.InflatedF (1.1), BgrdColor = Color4.Gray (216) };
+      Lux.AddSubScene (mScene2, new (0.02, 0.02, 0.49, 0.98));
 
-class DemoScene : Scene3 {
-   public DemoScene () {
-      var dwg = DXFReader.Load ("N:/TData/Misc/csmesher.dxf");
-      var sPt = dwg.Ents.OfType<E2Point> ().Single (e => e.LayerName == "SIDE").Pt;
-      var fPt = dwg.Ents.OfType<E2Point> ().Single (e => e.LayerName == "FRONT").Pt;
-      var sPoly = dwg.Ents.OfType<E2Poly> ().Single (e => e.LayerName == "SIDE").Poly;
-      var fPoly = dwg.Ents.OfType<E2Poly> ().Single (e => e.LayerName == "FRONT").Poly;
-      sPoly *= Matrix2.Translation (-sPt.X, -sPt.Y);
-      fPoly *= Matrix2.Translation (-fPt.X, -fPt.Y);
-      var mesh = new CSMesher ([fPoly], [sPoly]).Build ();
-      File.WriteAllText ("c:/etc/test.tmesh", mesh.ToTMesh ());
-
-      Bound = mesh.Bound;
-      Root = new Mesh3VN (mesh) { Color = Color4.White };
+      var mesh = mMesher.Mesh;
+      mScene3 = new Scene3 { Root = new Mesh3VN (mesh), Bound = mesh.Bound, BgrdColor = Color4.Gray (200) };
+      Lux.AddSubScene (mScene3, new (0.51, 0.02, 0.98, 0.98));
    }
 }

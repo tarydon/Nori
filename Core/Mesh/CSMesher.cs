@@ -22,7 +22,7 @@ public class CSMesher {
          mEvent[mNEv++] = new (i, seg.A.Y - Lib.Epsilon);
          mEvent[mNEv++] = new (-i, seg.B.Y + Lib.Epsilon);
       }
-      mEvent.AsSpan (0, cEv).Sort ();      
+       mEvent.AsSpan (0, cEv).Sort ();      
 
       // Helper ............................................
       void AddSegs (IEnumerable<Poly> polys, bool fview) {
@@ -52,6 +52,37 @@ public class CSMesher {
    CSeg[] mSeg = new CSeg[8]; int mNSeg;        // mSeg[0] is not used
    Event[] mEvent = []; int mNEv;
 
+   public IEnumerable<string> IncBuild () {
+      int max = 0;
+      for (int i = 0; i < mNEv; i++) {
+         int n = mEvent[i].N;
+         if (n > 0) {
+            // Adding a new segment into the active list
+            mActive.Add (n); max = Max (max, mActive.Count);
+         } else {
+            mDwg = new ();
+            var _ = mDwg.CurrentLayer;
+            mDwg.Add (new Layer2 ("Alt", Color4.Red, ELineType.Continuous));
+            foreach (var na in mActive) {
+               ref CSeg seg = ref mSeg[na];
+               Point2 pa = seg.A, pb = seg.B;
+               if (na == -n) mDwg.CurrentLayer = mDwg.Layers[1];
+               else mDwg.CurrentLayer = mDwg.Layers[0];
+               mDwg.Add (Poly.Line (pa, pb));
+            }
+            yield return $"Prep: {mSeg[-n]}";
+            // Removing an existing segment from the active list
+            ProcessSeg (-n);
+            bool ok = mActive.Remove (-n); Lib.Check (ok, "Invalid event sorting");
+            yield return $"Triangles: {Mesh.Triangle.Length / 3}";
+         }
+      }
+   }
+
+   public Mesh3 Mesh => new Mesh3Builder (mPts.AsSpan ()).Build ();
+   public Dwg2 Dwg => mDwg;
+   Dwg2 mDwg = new ();
+
    public Mesh3 Build () {
       int max = 0; 
       for (int i = 0; i < mNEv; i++) {
@@ -60,14 +91,12 @@ public class CSMesher {
             // Adding a new segment into the active list
             mActive.Add (n); max = Max (max, mActive.Count);
          } else {
-
-            var dwg = new Dwg2 ();
+            var dwg = new Dwg2 ();     // REMOVETHIS
             var _ = dwg.CurrentLayer;
             dwg.Add (new Layer2 ("Alt", Color4.Red, ELineType.Continuous));
             foreach (var na in mActive) {
                ref CSeg seg = ref mSeg[na];
                Point2 pa = seg.A, pb = seg.B;
-               if (seg.Front) { pa = pa.Moved (100, 0); pb = pb.Moved (100, 0); }
                if (na == -n) dwg.CurrentLayer = dwg.Layers[1];
                else dwg.CurrentLayer = dwg.Layers[0];
                dwg.Add (Poly.Line (pa, pb));
@@ -75,6 +104,7 @@ public class CSMesher {
             // Removing an existing segment from the active list
             ProcessSeg (-n);
             bool ok = mActive.Remove (-n); Lib.Check (ok, "Invalid event sorting");
+            DXFWriter.Save (dwg, "c:/etc/test.dxf");
          }         
       }
       return new Mesh3Builder (mPts.AsSpan ()).Build ();
@@ -208,6 +238,9 @@ public class CSMesher {
          double lie = (y - A.Y) / (B.Y - A.Y);
          return lie.Along (A.X, B.X);
       }
+
+      public override string ToString ()
+         => $"{(Reverse ? '-' : '+')}{(Front ? 'F' : 'S')} {A} ... {B}";
    }
 
    readonly struct Event (int n, double y) : IComparable<Event> {

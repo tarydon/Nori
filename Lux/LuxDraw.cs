@@ -234,6 +234,7 @@ public static partial class Lux {
    public static void Mesh (Mesh3 mesh, EShadeMode shadeMode) {
       Mesh3.Node[] nodes = mesh.Vertex.AsArray ();
       int[] tris = mesh.Triangle.AsArray (), wires = mesh.Wire.AsArray ();
+      if (tris.Length == 0) return;
       switch (shadeMode) {
          case EShadeMode.Flat: FlatFacetShader.It.Draw (nodes, tris); break;
          case EShadeMode.Gourad: GouradShader.It.Draw (nodes, tris); break;
