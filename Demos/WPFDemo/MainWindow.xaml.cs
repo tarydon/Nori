@@ -4,6 +4,7 @@
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 using System.Reactive.Linq;
 using System.Windows;
+using System.Windows.Controls;
 using Nori;
 namespace WPFDemo;
 
@@ -42,13 +43,16 @@ public partial class MainWindow : Window {
    void CollisionDemo (object s, RoutedEventArgs e) => Display (new OBBCrashScene ());
    void PaperFolderDemo (object s, RoutedEventArgs e) => Display (new PaperFolderScene ());
    void SubScene (object s, RoutedEventArgs e) => Display (new SubSceneDemo ());
+   void CSMesher (object s, RoutedEventArgs e) => Display (new CSMesherDemo ());
 
    void Display (Scene scene) {
       mSettings.Children.Clear ();
       Lux.UIScene = scene;
-      if (scene is RobotScene rs) rs.CreateUI (mSettings.Children);
+      if (scene is ISceneWithUI sc) sc.CreateUI (mSettings.Children);
       if (scene is STPScene or T3XDemoScene) Lux.BackFacesPink = true;
-      if (scene is OBBCrashScene cs) cs.CreateUI (mSettings.Children);
-      if (scene is PaperFolderScene ps) ps.CreateUI (mSettings.Children);
    }
+}
+
+interface ISceneWithUI {
+   void CreateUI (UIElementCollection panel);
 }

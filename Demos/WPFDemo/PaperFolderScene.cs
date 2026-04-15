@@ -8,7 +8,7 @@ using System.Runtime.InteropServices;
 using Nori;
 namespace WPFDemo;
 
-class PaperFolderScene : Scene3 {
+class PaperFolderScene : Scene3, ISceneWithUI {
    // Create a listbox with all the sample files, and an image where we display the 
    // original 2D drawing (before folding)
    public void CreateUI (UIElementCollection ui) {
