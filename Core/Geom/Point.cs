@@ -193,11 +193,14 @@ public readonly struct Point2 : IEQuable<Point2> {
 #region struct Point3f -----------------------------------------------------------------------------
 public readonly struct Point2f {
    public Point2f (double x, double y) => (X, Y) = ((float)x, (float)y);
-
    public Point2f (float x, float y) => (X, Y) = (x, y);
 
    public readonly float X;
    public readonly float Y;
+
+   public static implicit operator Point2 (Point2f p) => new (p.X, p.Y);
+
+   public override string ToString () => $"({X.S5 ()},{Y.S5 ()})";
 }
 #endregion
 

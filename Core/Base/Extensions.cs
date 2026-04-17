@@ -13,14 +13,15 @@ public static class Extensions {
    public static void AddM<T> (this List<T> list, params ReadOnlySpan<T> elems) => list.AddRange (elems);
 
    /// <summary>Interpolates using a given lie f between two doubles a and b</summary>
-   public static double Along (this double f, double a, double b)
-      => a + (b - a) * f;
+   public static double Along (this double f, double a, double b) => a + (b - a) * f;
+   /// <summary>
+   /// Interpolates using the given lie f between two floats a and b
+   /// </summary>
+   public static float Along (this float f, float a, float b) => a + (b - a) * f;
    /// <summary>Interpolates using a given lie f within a given Bound1</summary>
-   public static double Along (this double f, Bound1 b)
-      => b.Min + b.Length * f;
+   public static double Along (this double f, Bound1 b) => b.Min + b.Length * f;
    /// <summary>Interpolates using a given lie f within a given Bound1D</summary>
-   public static double Along (this double f, Bound1D b)
-      => b.Min + b.Length * f;
+   public static double Along (this double f, Bound1D b) => b.Min + b.Length * f;
    /// <summary>Interpolates using a given lie f between two Point2 a and b</summary>
    public static Point2 Along (this double f, Point2 a, Point2 b)
       => new (f.Along (a.X, b.X), f.Along (a.Y, b.Y));
@@ -96,6 +97,10 @@ public static class Extensions {
 
    /// <summary>Gets the lie of f along the interval a..b</summary>
    public static double GetLieOn (this double f, double a, double b) => (f - a) / (b - a);
+   /// <summary>
+   /// Gets the lie of f along the interval a..b
+   /// </summary>
+   public static float GetLieOn (this float f, float a, float b) => (f - a) / (b - a);
 
    /// <summary>Gets a value from a dictionary, or adds a new one (synthesized by the maker function)</summary>
    public static U Get<T, U> (this IDictionary<T, U> dict, T key, Func<T, U> maker) {

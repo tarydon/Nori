@@ -14,7 +14,7 @@ public partial class MainWindow : Window {
    void OnLuxReady (int _) {
       var source = PresentationSource.FromVisual (this);
       if (source != null) Lux.DPIScale = (float)source.CompositionTarget.TransformToDevice.M11;
-      TraceVN.TextColor = Color4.Blue; TraceVN.HoldTime = 20;
+      TraceVN.TextColor = Color4.Blue; TraceVN.HoldTime = 200;
       Lib.Tracer = TraceVN.Print;
       new SceneManipulator ();
 
@@ -22,11 +22,7 @@ public partial class MainWindow : Window {
       var dwg = DXFReader.Load (file);
       Title = file;
       var polys = dwg.Ents.OfType<E2Poly> ().Select (a => a.Poly).OrderBy (a => a.GetBound ().Midpoint.X).ToList ();
-      mMesher = new CSMesher2 ([polys[0]], [polys[1]]);
-
-      var cs = new CSMesher3 ([polys[0]], [polys[1]]);
-      cs.IncBuild ().ToList (); 
-
+      mMesher = new CSMesher3 ([polys[0]], [polys[1]]);
       mMesher.Tess = ETess.VeryCoarse;
       mEnum = mMesher.IncBuild ().GetEnumerator ();
 
@@ -34,7 +30,7 @@ public partial class MainWindow : Window {
       HW.Keys.Where (a => a.IsPress (EKey.Space)).Subscribe (a => Next (1));
       Lux.BackFacesPink = true;
    }
-   CSMesher2 mMesher = null!;
+   CSMesher3 mMesher = null!;
    IEnumerator<string> mEnum = null!;
    Scene2? mScene2;
    Scene3? mScene3;
@@ -47,7 +43,7 @@ public partial class MainWindow : Window {
       if (mScene2 != null) Lux.RemoveSubScene (mScene2);
       if (mScene3 != null) Lux.RemoveSubScene (mScene3);
 
-      var (dwg, mesh) = mMesher.GetIncremental ();
+      var (dwg, mesh) = mMesher.GetIncResult ();
       var gvn = new GroupVN ([new Dwg2VN (dwg), TraceVN.It]);
       mScene2 = new Scene2 { Root = gvn, Bound = dwg.Bound.InflatedF (1.1), BgrdColor = Color4.Gray (216) };
       Lux.AddSubScene (mScene2, new (0.02, 0.02, 0.49, 0.98));
