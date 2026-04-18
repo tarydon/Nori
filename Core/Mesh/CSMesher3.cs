@@ -1,24 +1,47 @@
-﻿namespace Nori;
+// ────── ╔╗
+// ╔═╦╦═╦╦╬╣ CSMesher3.cs
+// ║║║║╬║╔╣║ <<TODO>>
+// ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
+namespace Nori;
 
 public class CSMesher3 {
    // Constructors -------------------------------------------------------------
    public CSMesher3 (IEnumerable<Poly> front, IEnumerable<Poly> side) {
-      mFront = [.. front]; mSide = [.. side];
+      mPolys = [.. front]; mNFront = mPolys.Count; mPolys.AddRange (side);
+      mBounds = [.. mPolys.Select (a => a.GetBound ())];
+      ReverseInner (0, mNFront); 
+      ReverseInner (mNFront, mPolys.Count - mNFront);
+      var bound = new Bound2 (mBounds);
+      mYMin = bound.Y.Min.R3 (); mYMax = bound.Y.Max.R3 ();
+
+      void ReverseInner (int start, int count) {
+         int max = mBounds.Skip (start).Take (count).MaxIndexBy (a => a.Area) + start;
+         for (int i = start; i < start + count; i++) {
+            var poly = mPolys[i];
+            if (poly.GetWinding () == Poly.EWinding.CCW ^ i == max) poly = poly.Reversed ();
+            mPolys[i] = poly;
+         }
+      }
    }
-   List<Poly> mFront, mSide;
+   List<Poly> mPolys;
+   List<Bound2> mBounds;
+   float mYMin, mYMax;
+   int mNFront;
 
    // Properties ---------------------------------------------------------------
-   /// <summary>
-   /// Tessellation accuracy
-   /// </summary>
+   /// <summary>Tessellation accuracy</summary>
    public ETess Tess = ETess.Medium;
 
    // Methods ------------------------------------------------------------------
    public IEnumerable<string> IncBuild () {
       Discretize ();
-      for (int i = 0; i < mFront.Count; i++) AddSegs (i, true);
-      for (int i = 0; i < mSide.Count; i++) AddSegs (i + mFront.Count, false);
+      for (int i = 0; i < mPolys.Count; i++) AddSegs (i, i < mNFront);
       int[] sorted = [.. Enumerable.Range (1, mNSeg - 1)]; sorted.Sort (SegSorter);
+
+      for (int i = 0; i < sorted.Length; i++) {
+         var seg = mSeg[sorted[i]];
+         if (!seg.Front) Lib.Trace (seg);
+      }
 
       int slice = -1;
       for (int i = 0, max = sorted.Length - 1; i <= max; i++) {
@@ -26,39 +49,41 @@ public class CSMesher3 {
          if (mSeg[n].Slice != slice) yield return $"Slice {slice}";
          ref CSeg seg = ref mSeg[n];
          if (seg.Slice != slice) {
-            Build ();
-            mFN.Clear (); mSN.Clear (); slice = seg.Slice;
+            AddTriangles (); AddHorzPlanes (); 
+            mFN.Clear (); mSN.Clear (); mHN.Clear (); 
+            slice = seg.Slice;
          }
-         if (seg.Horz) continue;
-         (seg.Front ? mFN : mSN).Add (n);
+         if (seg.Horz) mHN.Add (n);
+         else (seg.Front ? mFN : mSN).Add (n);
       }
       yield return $"Final slice";
-      Build ();
+      AddTriangles (); AddHorzPlanes ();
+
+      new TopoMesh (mPts).Check (); 
       yield return "Done";
    }
-   List<int> mFN = [], mSN = [];
+   List<int> mFN = [], mSN = [], mHN = [];
 
    public (Dwg2, Mesh3) GetIncResult () {
       Dwg2 dwg = new ();
       dwg.Add (new Layer2 ("FRONT", Color4.Black, ELineType.Continuous));
-      dwg.CurrentLayer = dwg.Layers[^1];
-      foreach (var n in mFN) {
-         ref CSeg seg = ref mSeg[n];
-         dwg.Add (Poly.Line ((Point2)seg.A, (Point2)seg.B));
-      }
       dwg.Add (new Layer2 ("SIDE", Color4.Red, ELineType.Continuous));
-      dwg.CurrentLayer = dwg.Layers[^1];
-      foreach (var n in mSN) {
+      foreach (var n in mFN.Concat (mSN).Concat (mHN)) {
          ref CSeg seg = ref mSeg[n];
-         dwg.Add (Poly.Line ((Point2)seg.A, (Point2)seg.B));
+         Add (seg.Front ? "FRONT" : "SIDE", ref seg);
       }
 
       Mesh3 mesh;
       if (mPts.Count == 0)
          mesh = Mesh3.Extrude ([Poly.Rectangle (0, 0, 10, 5)], 2.5, Matrix3.Identity, ETess.Coarse);
-      else
+      else 
          mesh = new Mesh3Builder (mPts.AsSpan ()).Build ();
       return (dwg, mesh);
+
+      void Add (string layer, ref CSeg seg) {
+         dwg.CurrentLayer = dwg.Layers.First (a => a.Name == layer);
+         dwg.Add (Poly.Line ((Point2)seg.A, (Point2)seg.B));
+      }
    }
 
    // Implementation -----------------------------------------------------------
@@ -93,7 +118,24 @@ public class CSMesher3 {
       }
    }
 
-   void Build () {
+   void AddHorzPlanes () {
+      if (mHN.Count < 2) return;
+      for (int i = 0; i < mHN.Count; i++) {
+         ref CSeg sf = ref mSeg[mHN[i]]; if (!sf.Front) continue;
+         double x0 = sf.A.X, x1 = sf.B.X, z = sf.A.Y;
+         if (!sf.Reverse) (x0, x1) = (x1, x0);
+         for (int j = 0; j < mHN.Count; j++) {
+            ref CSeg ss = ref mSeg[mHN[j]]; if (ss.Front) continue;
+            double y0 = ss.A.X, y1 = ss.B.X;
+            Point3 p1 = new (x0, y0, z), p2 = new (x1, y0, z);
+            Point3 p3 = new (x0, y1, z), p4 = new (x1, y1, z);
+            mPts.Add (p1); mPts.Add (p2); mPts.Add (p4);
+            mPts.Add (p1); mPts.Add (p4); mPts.Add (p3);
+         }
+      }
+   }
+
+   void AddTriangles () {
       Check (!mFN.Count.IsOdd ());
       double zLow = 0, zHigh = 0;
       for (int i = 0; i < mFN.Count; i += 2) {
@@ -131,17 +173,30 @@ public class CSMesher3 {
    void Discretize () {
       // First, find all the unique values of Y among all the discretized poly
       List<Point2> pts = [];
-      HashSet<float> yUnique = [];
-      foreach (var poly in mFront.Concat (mSide)) {
+      foreach (var poly in mPolys) {
          int start = mNodes.Count;
-         pts.ClearFast (); poly.Discretize (pts, Tess);
-         foreach (var pt in pts) {
-            Point2f ptf = new (pt.X.R3 (), pt.Y.R3 ()); 
-            yUnique.Add (ptf.Y); mNodes.Add (ptf); 
+         pts.ClearFast (); poly.Discretize (pts, Tess); 
+         foreach (var pt in pts) 
+            mNodes.Add (new (pt.X.R3 (), pt.Y.R3 ())); 
+         int n = pts.Count;
+         for (int i = 0; i < n; i++) {
+            int first = start + i;
+            float y1 = mNodes[first].Y;
+            if (y1 == mYMin || y1 == mYMax) continue;
+            int second = start + (i - 1 + n) % n;
+            if (y1 != mNodes[second].Y ) continue;
+            float yPrev = mNodes[start + (i  - 2 + n) % n].Y, yNext = mNodes[start + (i + 1) % n].Y;
+            // Pick one of these two nodes to lift slightly
+            int lift = start + ((yPrev > yNext ? i - 1 : i) + n) % n;
+            Point2f pt = mNodes[lift];
+            mNodes[lift] = new (pt.X, pt.Y + 0.1);
          }
          mNodes.Add (mNodes[start]);
-         mSplits.Add (mNodes.Count);
+         mSplits.Add (mNodes.Count); 
       }
+
+      HashSet<float> yUnique = [];
+      foreach (var pt in mNodes) yUnique.Add (pt.Y); 
       foreach (var y in yUnique.Order ()) { 
          mYDict.Add (y, mYList.Count); mYList.Add (y); 
       }

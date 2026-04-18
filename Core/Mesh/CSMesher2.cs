@@ -1,24 +1,22 @@
-﻿namespace Nori;
+// ────── ╔╗
+// ╔═╦╦═╦╦╬╣ CSMesher2.cs
+// ║║║║╬║╔╣║ <<TODO>>
+// ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
+namespace Nori;
 
 public class CSMesher2 {
    // Constructors -------------------------------------------------------------
-   /// <summary>
-   /// Create a CSMesher given the front and side views
-   /// </summary>
+   /// <summary>Create a CSMesher given the front and side views</summary>
    public CSMesher2 (IEnumerable<Poly> front, IEnumerable<Poly> side) {
       mFront.AddRange (front); mSide.AddRange (side);
    }
 
    // Properties ---------------------------------------------------------------
-   /// <summary>
-   /// Tessellation accuracy
-   /// </summary>
+   /// <summary>Tessellation accuracy</summary>
    public ETess Tess = ETess.Medium;
 
    // Methods ------------------------------------------------------------------
-   /// <summary>
-   /// Builds the mesh
-   /// </summary>
+   /// <summary>Builds the mesh</summary>
    public IEnumerable<string> IncBuild () {
       mFront.ForEach (a => AddSegs (a, true));
       mSide.ForEach (a => AddSegs (a, false));

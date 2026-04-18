@@ -19,10 +19,11 @@ public partial class MainWindow : Window {
       new SceneManipulator ();
 
       string file = System.IO.Directory.GetFiles ("c:\\etc", "demo*.dxf")[^1];
+      file = "c:\\etc\\demo1\\simplex.dxf";
       var dwg = DXFReader.Load (file);
       Title = file;
       var polys = dwg.Ents.OfType<E2Poly> ().Select (a => a.Poly).OrderBy (a => a.GetBound ().Midpoint.X).ToList ();
-      mMesher = new CSMesher3 ([polys[0]], [polys[1]]);
+      mMesher = new CSMesher3 ([polys[0]], [polys[1], polys[2]]);
       mMesher.Tess = ETess.VeryCoarse;
       mEnum = mMesher.IncBuild ().GetEnumerator ();
 
