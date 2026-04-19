@@ -214,7 +214,7 @@ public static partial class DXFCore {
    // Helper used to report unknown entities in DXF (only in debug builds)
    static internal partial void UnknownEnt (string s);
 
-   #if DEBUG
+#if DEBUG
    static internal partial void UnknownEnt (string s) {
       sIgnore ??= [.. Lib.ReadLines ("nori:DXF/ent-ignore.txt")];
       if (sIgnore.Contains (s)) return;
@@ -222,6 +222,8 @@ public static partial class DXFCore {
       sIgnore.Add (s);
    }
    static HashSet<string>? sIgnore;
-   #endif
+#else
+   static internal partial void UnknownEnt (string s) { }
+#endif
 }
 #endregion
