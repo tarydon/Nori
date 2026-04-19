@@ -222,6 +222,8 @@ public static partial class DXFCore {
       sIgnore.Add (s);
    }
    static HashSet<string>? sIgnore;
+   #else
+   static internal partial void UnknownEnt (string s) { }
    #endif
 }
 #endregion
