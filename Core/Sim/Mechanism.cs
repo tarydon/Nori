@@ -60,6 +60,12 @@ public partial class Mechanism {
    }
    bool _isColliding;
 
+   public bool IsVisible {
+      get => _isVisible;
+      set { if (Lib.Set (ref _isVisible, value)) Notify (EProp.Visibility); }
+   }
+   bool _isVisible = true;
+
    /// <summary>The definition vector for the joint</summary>
    /// - For a translation joint, this is the direction of translation
    /// - For a rotation joint, this is the direction of the rotation axis. The
