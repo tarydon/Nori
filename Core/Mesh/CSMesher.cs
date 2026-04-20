@@ -3,255 +3,216 @@
 // ║║║║╬║╔╣║ <<TODO>>
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 namespace Nori;
-using static Math;
 
 #region class CSMesher -----------------------------------------------------------------------------
-/// <summary>This class is used to create a mesh from 2 cross-sections (front & side views)</summary>
+/// <summary>CSMesher constructs a mesh given front and side views</summary>
 public class CSMesher {
-   // Constructor --------------------------------------------------------------
+   // Constructors -------------------------------------------------------------
+   /// <summary>Construct a CSMesher given a set of front-view polys and a set of side-view polys</summary>
+   /// Each set can have more than one poly - in that case, the largest one is considered
+   /// as the outer shape, and the others as inner holes
    public CSMesher (IEnumerable<Poly> front, IEnumerable<Poly> side) {
-      mNSeg = 1; 
-      AddSegs (front, true); AddSegs (side, false);
-
-      // Now, add the events (segment enter, segment leave). +ve integers are segments
-      // entering, and -ve integers are segments leaving. 
-      int cEv = 2 * (mNSeg - 1); mNEv = 0; 
-      Lib.Grow (ref mEvent, 0, cEv);
-      for (int i = 1; i < mNSeg; i++) {
-         ref CSeg seg = ref mSeg[i];
-         mEvent[mNEv++] = new (i, seg.A.Y - Lib.Epsilon);
-         mEvent[mNEv++] = new (-i, seg.B.Y + Lib.Epsilon);
-      }
-       mEvent.AsSpan (0, cEv).Sort ();      
+      mPolys = [.. front]; mNFront = mPolys.Count; mPolys.AddRange (side);
+      List<Bound2> bounds = [.. mPolys.Select (a => a.GetBound ())];
+      ReverseInner (0, mNFront); 
+      ReverseInner (mNFront, mPolys.Count - mNFront);
+      var bound = new Bound2 (bounds);
+      mZMin = bound.Y.Min.R3 (); mZMax = bound.Y.Max.R3 ();
 
       // Helper ............................................
-      void AddSegs (IEnumerable<Poly> polys, bool fview) {
-         foreach (var p0 in polys) {
-            mTmp.ClearFast ();
-            p0.Discretize (mTmp, ETess.Medium);
-            for (int i = 0; i < mTmp.Count; i++) mTmp[i] = mTmp[i].R3 ();
-            var b = new Bound2 (mTmp);
-            for (int i = 1; i < mTmp.Count; i++) {
-               if (mTmp[i].Y == mTmp[i - 1].Y) {
-                  // Avoid horizontal segments except at top or bottom of the bound.
-                  if (mTmp[i].Y.EQ (b.Y.Min) || mTmp[i].Y.EQ (b.Y.Max)) continue;
-                  // In other situations move one of the two ends up by 0.1 mm. 
-                  if (mTmp[i - 1].Y < mTmp[(i + 1) % mTmp.Count].Y)
-                     mTmp[i] = mTmp[i].Moved (0, 0.1);
-                  else
-                     mTmp[i] = mTmp[i].Moved (0, -0.1);
-               }
-            }
-            Lib.Grow (ref mSeg, mNSeg, mTmp.Count); mTmp.Add (mTmp[0]);
-            for (int i = 0; i < mTmp.Count - 1; i++)
-               mSeg[mNSeg++] = new CSeg (mTmp[i], mTmp[i + 1], fview);
-         }
-      }
-   }
-   List<Point2> mTmp = [];
-   CSeg[] mSeg = new CSeg[8]; int mNSeg;        // mSeg[0] is not used
-   Event[] mEvent = []; int mNEv;
-
-   public IEnumerable<string> IncBuild () {
-      int max = 0;
-      for (int i = 0; i < mNEv; i++) {
-         int n = mEvent[i].N;
-         if (n > 0) {
-            // Adding a new segment into the active list
-            mActive.Add (n); max = Max (max, mActive.Count);
-         } else {
-            mDwg = new ();
-            var _ = mDwg.CurrentLayer;
-            mDwg.Add (new Layer2 ("Alt", Color4.Red, ELineType.Continuous));
-            foreach (var na in mActive) {
-               ref CSeg seg = ref mSeg[na];
-               Point2 pa = seg.A, pb = seg.B;
-               if (na == -n) mDwg.CurrentLayer = mDwg.Layers[1];
-               else mDwg.CurrentLayer = mDwg.Layers[0];
-               mDwg.Add (Poly.Line (pa, pb));
-            }
-            yield return $"Prep: {mSeg[-n]}";
-            // Removing an existing segment from the active list
-            ProcessSeg (-n);
-            bool ok = mActive.Remove (-n); Lib.Check (ok, "Invalid event sorting");
-            yield return $"Triangles: {Mesh.Triangle.Length / 3}";
+      void ReverseInner (int start, int count) {
+         int max = bounds.Skip (start).Take (count).MaxIndexBy (a => a.Area) + start;
+         for (int i = start; i < start + count; i++) {
+            var poly = mPolys[i];
+            if (poly.GetWinding () == Poly.EWinding.CCW ^ i == max) poly = poly.Reversed ();
+            mPolys[i] = poly;
          }
       }
    }
 
-   public Mesh3 Mesh => new Mesh3Builder (mPts.AsSpan ()).Build ();
-   public Dwg2 Dwg => mDwg;
-   Dwg2 mDwg = new ();
+   // Properties ---------------------------------------------------------------
+   /// <summary>Tessellation accuracy</summary>
+   public ETess Tess = ETess.Medium;
 
+   // Methods ------------------------------------------------------------------
+   /// <summary>Does the actual build of the mesh</summary>
    public Mesh3 Build () {
-      int max = 0; 
-      for (int i = 0; i < mNEv; i++) {
-         int n = mEvent[i].N;
-         if (n > 0) {
-            // Adding a new segment into the active list
-            mActive.Add (n); max = Max (max, mActive.Count);
-         } else {
-            var dwg = new Dwg2 ();     // REMOVETHIS
-            var _ = dwg.CurrentLayer;
-            dwg.Add (new Layer2 ("Alt", Color4.Red, ELineType.Continuous));
-            foreach (var na in mActive) {
-               ref CSeg seg = ref mSeg[na];
-               Point2 pa = seg.A, pb = seg.B;
-               if (na == -n) dwg.CurrentLayer = dwg.Layers[1];
-               else dwg.CurrentLayer = dwg.Layers[0];
-               dwg.Add (Poly.Line (pa, pb));
-            }
-            // Removing an existing segment from the active list
-            ProcessSeg (-n);
-            bool ok = mActive.Remove (-n); Lib.Check (ok, "Invalid event sorting");
-            DXFWriter.Save (dwg, "c:/etc/test.dxf");
-         }         
+      Discretize ();
+      for (int i = 0; i < mPolys.Count; i++) AddSegs (i, i < mNFront);
+      int[] sorted = [.. Enumerable.Range (1, mNSeg - 1)]; sorted.Sort (SegSorter);
+
+      int slice = -1;
+      for (int i = 0, max = sorted.Length - 1; i <= max; i++) {
+         int n = sorted[i];
+         ref CSeg seg = ref mSeg[n];
+         if (seg.Slice != slice) {
+            AddTriangles (); AddHorzPlanes ();
+            mFN.Clear (); mSN.Clear (); mHN.Clear ();
+            slice = seg.Slice;
+         }
+         if (seg.Horz) mHN.Add (n);
+         else (seg.Front ? mFN : mSN).Add (n);
       }
+      AddTriangles (); AddHorzPlanes ();
+
+      var tm = new TopoMesh (mPts).RemoveTJoints ();
+      mPts.Clear ();
+      foreach (var n in tm.Index) mPts.Add ((Point3)tm.Pts[n]);
       return new Mesh3Builder (mPts.AsSpan ()).Build ();
    }
-   List<int> mActive = [];
 
    // Implementation -----------------------------------------------------------
-   void ProcessSeg (int n) {
-      // This is called just before a segment is removed from the active list, and we
-      // use this time to create all the planes that this segment contributes to.
-      ref CSeg seg = ref mSeg[n];
-      if (seg.IsHorizontal) {
-         foreach (var a in mActive) {
-            ref CSeg s2 = ref mSeg[a];
-            if (s2.Front == seg.Front || !s2.IsHorizontal) continue;
-            if (seg.A.Y.EQ (s2.A.Y, 0.001)) AddHorizontalFace (ref seg, ref s2);
-         }
-         return;
-      }
-
-      // First, gather all the 'other view' segments that this intersects with, and 
-      mOverlaps.Clear ();
-      foreach (var a in mActive) {
-         ref CSeg s2 = ref mSeg[a];
-         if (s2.Front == seg.Front || !seg.YOverlap (ref s2) || seg.IsHorizontal) continue;
-         mOverlaps.Add (a);
-      }
-      double yMax = seg.B.Y;
-      if (mOverlaps.Count >= 2) {
-         mOverlaps.Sort ((a, b) => mSeg[a].GetX (yMax).CompareTo (mSeg[b].GetX (yMax)));
-         for (int i = 1; i < mOverlaps.Count; i++) {
-            ref CSeg left = ref mSeg[mOverlaps[i - 1]]; if (!left.Reverse) continue; 
-            ref CSeg right = ref mSeg[mOverlaps[i]]; if (right.Reverse) continue;
-            AddFace (ref seg, ref left, ref right);
-         }
-      }
-
-      // Then, for each of the 'other view' segments currently active, gather the overlaps,
-      // and process the pairs that this segment participates in
-      foreach (var aOther in mActive) {
-         ref CSeg segOther = ref mSeg[aOther];
-         if (segOther.Front == seg.Front) continue;
-         mOverlaps.Clear ();
-         foreach (var a in mActive) {
-            ref CSeg segHere = ref mSeg[a];
-            if (segHere.Front != seg.Front || segHere.IsHorizontal) continue; 
-            if (segHere.YOverlap (ref seg) && segHere.YOverlap (ref segOther))
-               mOverlaps.Add (a);
-         }
-         if (mOverlaps.Count < 2) continue; 
-         mOverlaps.Sort ((a, b) => mSeg[a].GetX (yMax).CompareTo (mSeg[b].GetX (yMax)));
-         for (int i = 0; i < mOverlaps.Count; i++) {
-            int nref = mOverlaps[i]; if (nref != n) continue;
-            ref CSeg sref = ref mSeg[nref];
-            if (sref.Reverse) {
-               if (i == mOverlaps.Count - 1) break;
-               ref CSeg snext = ref mSeg[mOverlaps[i + 1]];
-               if (!snext.Reverse) AddFace (ref segOther, ref sref, ref snext);
-            } else {
-               if (i == 0) break;
-               ref CSeg sprev = ref mSeg[mOverlaps[i - 1]];
-               if (sprev.Reverse) AddFace (ref segOther, ref sprev, ref sref);
+   void AddSegs (int n, bool front) {
+      int a = mSplits[n], b = mSplits[n + 1] - 1;
+      Point2f pb = mNodes[a]; int nyb = mYDict[pb.Y];
+      for (int i = a + 1; i <= b; i++) {
+         Point2f pa = pb; int nya = nyb;
+         pb = mNodes[i]; nyb = mYDict[pb.Y];
+         if (nyb < nya - 1) {
+            Point2f prev = pa;
+            Lib.Grow (ref mSeg, mNSeg, nya - nyb);
+            for (int ny = nya - 1; ny >= nyb; ny--) {
+               float y = mYList[ny], lie = y.GetLieOn (pa.Y, pb.Y);
+               float x = lie.Along (pa.X, pb.X); Point2f pt = new (x, y);
+               mSeg[mNSeg++] = new CSeg (prev, pt, front, ny + 1, ny);
+               prev = pt;
             }
-            break;
+         } else if (nyb > nya + 1) {
+            Point2f prev = pa;
+            Lib.Grow (ref mSeg, mNSeg, nyb - nya);
+            for (int ny = nya + 1; ny <= nyb; ny++) {
+               float y = mYList[ny], lie = y.GetLieOn (pa.Y, pb.Y);
+               float x = lie.Along (pa.X, pb.X); Point2f pt = new (x, y);
+               mSeg[mNSeg++] = new CSeg (prev, pt, front, ny - 1, ny);
+               prev = pt;
+            }
+         } else {
+            Lib.Grow (ref mSeg, mNSeg, 1);
+            mSeg[mNSeg++] = new CSeg (pa, pb, front, nya, nyb);
          }
       }
    }
-   List<int> mOverlaps = [];
 
-   void AddHorizontalFace (ref CSeg s1, ref CSeg s2) {
-      double z = s1.A.Y;
-      if (s1.Front) {
-         Point3 pa = new (s1.A.X, s2.A.X, z), pb = new (s1.B.X, s2.A.X, z);
-         Point3 pc = new (s1.A.X, s2.B.X, z), pd = new (s1.B.X, s2.B.X, z);
-         mPts.AddM (pa, pb, pd, pa, pd, pc);
-      } else {
-         Point3 pa = new (s2.A.X, s1.A.X, z), pb = new (s1.A.X, s1.B.X, z);
-         Point3 pc = new (s2.B.X, s1.A.X, z), pd = new (s2.B.X, s1.B.X, z);
-         mPts.AddM (pa, pd, pb, pa, pc, pd);
+   void AddHorzPlanes () {
+      if (mHN.Count < 2) return;
+      for (int i = 0; i < mHN.Count; i++) {
+         ref CSeg sf = ref mSeg[mHN[i]]; if (!sf.Front) continue;
+         double x0 = sf.A.X, x1 = sf.B.X, z = sf.A.Y;
+         if (!sf.Reverse) (x0, x1) = (x1, x0);
+         for (int j = 0; j < mHN.Count; j++) {
+            ref CSeg ss = ref mSeg[mHN[j]]; if (ss.Front) continue;
+            double y0 = ss.A.X, y1 = ss.B.X;
+            Point3 p1 = new (x0, y0, z), p2 = new (x1, y0, z);
+            Point3 p3 = new (x0, y1, z), p4 = new (x1, y1, z);
+            mPts.Add (p1); mPts.Add (p2); mPts.Add (p4);
+            mPts.Add (p1); mPts.Add (p4); mPts.Add (p3);
+         }
       }
    }
 
-   void AddFace (ref CSeg seg, ref CSeg L, ref CSeg R) {
-      double z0 = Max (seg.A.Y, Max (L.A.Y, R.A.Y)), z1 = Min (seg.B.Y, Min (L.B.Y, R.B.Y));
-      if (z0 >= z1 - Lib.Epsilon) return;
+   void AddTriangles () {
+      Check (!mFN.Count.IsOdd ());
+      double zHigh, zLow;
+      for (int i = 0; i < mFN.Count; i += 2) {
+         ref CSeg sf0 = ref mSeg[mFN[i]], sf1 = ref mSeg[mFN[i + 1]];
+         zLow = sf0.A.Y; zHigh = sf0.B.Y;
+         Check (sf0.Reverse && !sf1.Reverse);
+         for (int j = 0; j < mSN.Count; j += 2) {
+            ref CSeg ss0 = ref mSeg[mSN[j]], ss1 = ref mSeg[mSN[j + 1]];
+            Check (ss0.Reverse && !ss1.Reverse);
 
-      double x0 = seg.GetX (z0), x1 = seg.GetX (z1);
-      double yL0 = L.GetX (z0), yL1 = L.GetX (z1);
-      double yR0 = R.GetX (z0), yR1 = R.GetX (z1);
-      if (seg.Front) {
-         Point3 pa = new (x0, yL0, z0), pb = new (x0, yR0, z0);
-         Point3 pc = new (x1, yL1, z1), pd = new (x1, yR1, z1);
-         if (seg.Reverse) mPts.AddM (pa, pd, pb, pa, pc, pd);
-         else mPts.AddM (pa, pb, pd, pa, pd, pc);
-      } else {
-         Point3 pa = new (yL0, x0, z0), pb = new (yR0, x0, z0);
-         Point3 pc = new (yL1, x1, z1), pd = new (yR1, x1, z1);
-         if (seg.Reverse) mPts.AddM (pa, pb, pd, pa, pd, pc);
-         else mPts.AddM (pa, pd, pb, pa, pc, pd);
+            // Get the points at the L(ow) and H(igh) positions
+            double x0L = sf0.A.X, x1L = sf1.A.X, y0L = ss0.A.X, y1L = ss1.A.X;
+            double x0H = sf0.B.X, x1H = sf1.B.X, y0H = ss0.B.X, y1H = ss1.B.X;
+            Add (x0L, x1L, y0L, y0L, x0H, x1H, y0H, y0H);
+            Add (x1L, x0L, y1L, y1L, x1H, x0H, y1H, y1H);
+            Add (x0L, x0L, y1L, y0L, x0H, x0H, y1H, y0H);
+            Add (x1L, x1L, y0L, y1L, x1H, x1H, y0H, y1H);
+         }
+      }
+
+      // Helper ............................................
+      void Add (double xaL, double xbL, double yaL, double ybL, double xaH, double xbH, double yaH, double ybH) {
+         Point3 p1 = new (xaL, yaL, zLow), p2 = new (xbL, ybL, zLow);
+         Point3 p3 = new (xaH, yaH, zHigh), p4 = new (xbH, ybH, zHigh);
+         mPts.Add (p1); mPts.Add (p2); mPts.Add (p4);
+         mPts.Add (p1); mPts.Add (p4); mPts.Add (p3);
       }
    }
    List<Point3> mPts = [];
 
+   void Check (bool condition) {
+      if (!condition) throw new InvalidOperationException ();
+   }
+
+   void Discretize () {
+      // First, find all the unique values of Y among all the discretized poly
+      List<Point2> pts = [];
+      foreach (var poly in mPolys) {
+         int start = mNodes.Count;
+         pts.ClearFast (); poly.Discretize (pts, Tess); 
+         foreach (var pt in pts) 
+            mNodes.Add (new (pt.X.R3 (), pt.Y.R3 ())); 
+         int n = pts.Count;
+         for (int i = 0; i < n; i++) {
+            int first = start + i;
+            float y1 = mNodes[first].Y;
+            if (y1 == mZMin || y1 == mZMax) continue;
+            int second = start + (i - 1 + n) % n;
+            if (y1 != mNodes[second].Y ) continue;
+            float yPrev = mNodes[start + (i  - 2 + n) % n].Y, yNext = mNodes[start + (i + 1) % n].Y;
+            // Pick one of these two nodes to lift slightly
+            int lift = start + ((yPrev > yNext ? i - 1 : i) + n) % n;
+            Point2f pt = mNodes[lift];
+            mNodes[lift] = new (pt.X, pt.Y + 0.1);
+         }
+         mNodes.Add (mNodes[start]);
+         mSplits.Add (mNodes.Count); 
+      }
+
+      HashSet<float> yUnique = [];
+      foreach (var pt in mNodes) yUnique.Add (pt.Y); 
+      foreach (var y in yUnique.Order ()) { 
+         mYDict.Add (y, mYList.Count); mYList.Add (y); 
+      }
+   }
+   List<Point2f> mNodes = [];    // All the nodes for all the polys, discretized
+   List<int> mSplits = [0];      // Splits those nodes into unique polys
+   List<float> mYList = [];               // List of unique Y values
+   Dictionary<float, int> mYDict = [];    // Map of Y values into unique indices
+
+   int SegSorter (int a, int b) {
+      ref CSeg sa = ref mSeg[a], sb = ref mSeg[b];
+      int n = sa.Slice - sb.Slice; if (n != 0) return n;
+      return sa.XMid.CompareTo (sb.XMid);
+   }
+
    // Nested types -------------------------------------------------------------
    readonly struct CSeg {
-      // Constructor -------------------------------------------------
-      public CSeg (Point2 a, Point2 b, bool front) {
-         bool flip;
-         if (a.Y == b.Y) flip = a.X > b.X;
-         else flip = a.Y > b.Y;
-         (Reverse, Front) = (flip, front);
-         (A, B) = flip ? (b, a) : (a, b);
+      public CSeg (Point2f a, Point2f b, bool front, int aslice, int bslice) {
+         bool flip = (a.Y == b.Y) ? a.X > b.X : a.Y > b.Y;
+         (A, B, Slice) = flip ? (b, a, bslice) : (a, b, aslice);
+         (Reverse, Front, XMid) = (flip, front, a.X + b.X);
       }
 
-      // Properties --------------------------------------------------
-      public readonly Point2 A;        // Bottom point of segment
-      public readonly Point2 B;        // Top point of segment
-      public readonly bool Reverse;    // Does this segment go in 'reverse' (to original Poly.Seg)
-      public readonly bool Front;      // Is this from the front view
+      public readonly Point2f A;       // Bottom point of segment
+      public readonly Point2f B;       // Top point of segment
+      public readonly int Slice;       // Which vertical slice does this seg belong to
+      public readonly bool Front;      // Is this from the front view (false = side view)
+      public readonly bool Reverse;    // Does this segment go in reverse (to original Poly seg)
+      public readonly float XMid;      // X-midpoint of this seg (used for sorting in active edge list)
+      public readonly bool Horz => A.Y == B.Y;
 
-      public bool IsHorizontal => A.Y == B.Y;
-
-      // Methods -----------------------------------------------------
-      public bool YOverlap (ref CSeg other) {
-         if (other.A.Y >= B.Y - Lib.Epsilon) return false;
-         if (A.Y >= other.B.Y - Lib.Epsilon) return false;
-         return true;
-      }
-
-      public double GetX (double y) {
-         double lie = (y - A.Y) / (B.Y - A.Y);
-         return lie.Along (A.X, B.X);
-      }
-
-      public override string ToString ()
-         => $"{(Reverse ? '-' : '+')}{(Front ? 'F' : 'S')} {A} ... {B}";
+      public override string ToString () => $"{(Reverse ? '-' : '+')}{(Front ? 'F' : 'S')} {A} ... {B} | {Slice}";
    }
 
-   readonly struct Event (int n, double y) : IComparable<Event> {
-      public readonly int N = n;
-      public readonly double Y = y;
-
-      // Methods -----------------------------------------------------
-      public int CompareTo (Event other) {
-         if (Y == other.Y) return other.N - N;  // Enter events before leave events
-         return Y.CompareTo (other.Y);
-      }
-   }
+   // Private data -------------------------------------------------------------
+   CSeg[] mSeg = new CSeg[8];    // Array of all the CSeg
+   int mNSeg = 1;                // How many of those are used?
+   List<int> mFN = [], mSN = []; // Non-horizontal segments from front and side views 
+   List<int> mHN = [];           // All horizontal segments (from both views)
+   List<Poly> mPolys;            // List of all the polys
+   int mNFront;                  // The first mNFront polys in this list are 'front view'
+   float mZMin, mZMax;           // Min and Max Z of the bounding box of the mesh we generate
 }
 #endregion

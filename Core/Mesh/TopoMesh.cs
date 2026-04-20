@@ -27,9 +27,7 @@ public class TopoMesh {
    public TopoMesh (ImmutableArray<Point3f> pts, ImmutableArray<int> index)
       => (Pts, Index) = (pts, index);
 
-   /// <summary>
-   /// Creates a TopoMesh from a list of points representing triangle corners
-   /// </summary>
+   /// <summary>Creates a TopoMesh from a list of points representing triangle corners</summary>
    public TopoMesh (IEnumerable<Point3> input) {
       List<int> idx = []; List<Point3f> pts = [];
       Dictionary<Point3f, int> map = new (Point3fComparer.Delta);
