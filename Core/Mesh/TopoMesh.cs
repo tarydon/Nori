@@ -24,6 +24,9 @@ public class TopoMesh {
       Pts = [.. pts]; Index = [.. idx];
    }
 
+   public TopoMesh (ImmutableArray<Point3f> pts, ImmutableArray<int> index)
+      => (Pts, Index) = (pts, index);
+
    /// <summary>
    /// Creates a TopoMesh from a list of points representing triangle corners
    /// </summary>
@@ -69,52 +72,8 @@ public class TopoMesh {
    public readonly ImmutableArray<int> Index;
 
    // Methods ------------------------------------------------------------------
-   public void Check () {
-      Dictionary<uint, int> edges = [];
-      for (int i = 0; i < Index.Length; i += 3) {
-         for (int j = 0; j < 3; j++) {
-            int a = Index[i + j], b = Index[i + (j + 1) % 3];
-            if (a > b) (a, b) = (b, a);
-            uint key = ((uint)a << 16) + (uint)b;
-            if (!edges.TryAdd (key, i + j)) edges.Remove (key);
-         }
-      }
-
-      // Gather the edges that are not paired (non-manifold edges), and sort
-      // them by descending order of length
-      List<(int A, int B)> unpaired = [];
-      foreach (var e in edges.Keys) {
-         int a = (int)(e >> 16), b = (int)(e & 0xffff);
-         unpaired.Add ((a, b));
-      }
-      unpaired.OrderByDescending (tup => Pts[tup.A].DistToSq (Pts[tup.B]));
-
-      List<int> loopEdges = [], loopNodes = [];
-      for (int i = 0; i < unpaired.Count; i++) {
-         loopNodes.Clear (); loopEdges.Clear (); loopEdges.Add (i);
-         var (start, end) = unpaired[i];
-         if (FindLoop (start, end, i + 1)) {
-            foreach (var fid in loopEdges.Skip (1).OrderDescending ()) unpaired.RemoveAt (fid);
-            string s = loopEdges.ToCSV ();
-            string s2 = loopNodes.ToCSV ();
-            Console.Write ("X");
-         }
-      }
-
-      bool FindLoop (int s, int e, int start) {
-         for (; ; ) {
-            int sOld = s;
-            for (int i = start; i < unpaired.Count; i++) {
-               var (s1, e1) = unpaired[i];
-               if (s1 != s && e1 != s || loopEdges.Contains (i)) continue;
-               s = (s1 + e1) - s;
-               loopEdges.Add (i);
-               if (e == s) return true;
-               loopNodes.Add (s);
-            }
-            if (s == sOld) return false;
-         }
-      }
+   public TopoMesh RemoveTJoints () {
+      return new TJointRemover (this).Process ();
    }
 }
 
@@ -122,36 +81,38 @@ class TJointRemover {
    public TJointRemover (TopoMesh tm) => mMesh = tm;
    readonly TopoMesh mMesh;
 
-   public void Process () {
+   public TopoMesh Process () {
       GatherFreeEdges ();
-      for (int i = 0; i < mFreeEdgeMap.Count; i++)
+      for (int i = 0; i < mFreeEdges.Count; i++)
          ProcessFreeEdge (i);
+      if (Index == null) return mMesh;
+      return new TopoMesh (mMesh.Pts, [.. Index]);
    }
 
    void GatherFreeEdges () {
-      // In this loop, we walk through each edge of the triangle mesh, and try to add 
-      // it as a key in mFreeEdgeMap (we use as the value the Index number that starts this edge). 
-      // If the add succeeds, this is the first time we've seen that edge. If the add fails, it's
-      // the second time we see this edge and we remove that key. Finally, the only keys left in the
-      // map will be the edges that have no paired edge - that is, edges not shared between two
-      // triangles. 
+      // In this loop, we walk through each edge of the triangle mesh, and check if we have
+      // already seen its 'reverse edge' - the paired edge going the other way (we use 
+      // start:end packed into a 64-bit value as the key). In a perfect manifold mesh, each
+      // edge a..b will have a corresponding edge b..a. When we see the first of this 'pair',
+      // it gets added to mFreeEdgeMap and when we see the second one, it is removed. 
+      // Finally, mFreeEdgeMap will contain only the unpaired edges.
       var index = mMesh.Index;
       for (int i = 0; i < index.Length; i += 3) {
          for (int j = 0; j < 3; j++) {
-            int a = index[i + j], b = index[i + (j + 1) % 3];
-            if (a > b) (a, b) = (b, a);
-            ulong key = ((ulong)a << 32) + (ulong)b;
-            if (!mFreeEdgeMap.TryAdd (key, i + j)) mFreeEdgeMap.Remove (key);
+            ulong a = (ulong)index[i + j], b = (ulong)index[i + (j + 1) % 3];
+            if (!mFreeEdgeMap.Remove ((a << 32) + b))
+               mFreeEdgeMap.Add ((b << 32) + a, i + j);
          }
       }
 
+      // Create an ordered list of all the free edges, longest first. 
       var pts = mMesh.Pts;
       foreach (var e in mFreeEdgeMap.Keys) {
          int a = (int)(e >> 32), b = (int)(e & 0xffffffff);
          double length = pts[a].DistToSq (pts[b]);
-         mFreeEdges.Add ((a, b, (float)length); 
+         mFreeEdges.Add ((a, b, (float)length)); 
       }
-      mFreeEdges.OrderByDescending (a => a.Length);
+      mFreeEdges.Sort ((a, b) => b.Length.CompareTo (a.Length));
    }
    // This maps each edge (stored as a ulong encoding StartIndex..EndIndex in 64 bits,
    // to an Index (the edge is the one starting at this location - it is found in the
@@ -171,13 +132,45 @@ class TJointRemover {
    // ABC into 3 triangles: ADC, DEC, EBC, thus removing both T joints. 
    void ProcessFreeEdge (int nEdge) {
       var (start, end, _) = mFreeEdges[nEdge];
-      if (FindAlternatePath (start, end, nEdge)) {
-         // At this point, the 
-         
+      if (FindAlternatePath (end, start, nEdge)) {
+         // At this point, we've found an alternate path from start to end (and the intermediate
+         // nodes in that are stored in mPathNodes). If all the nodes in that lie on the original
+         // line, then we have multiple T junctions on that line 
+         var pts = mMesh.Pts;
+         Point3f pa = pts[start], pb = pts[end];
+         Index ??= [.. mMesh.Index];
+         int target = mFreeEdgeMap[((ulong)start << 32) + (ulong)end];
+         // triStart is the position in the Index array of the 3 nodes making up the
+         // triangle we are going to split, and oppositeNode is the other vertex to which we
+         // are going to draw diagonals from the T-junction points. The value stored in the
+         // mFreeEdgeMap is the vertex that 'starts' this long edge (going to be split). 
+         // - (target % 3) is the position within this triangle of that start vertex (0,1,2)
+         // - ((target + 1) % 3) is the position of the end vertex within that triangle (1,2,0)
+         // - ((target + 2) % 3) is therefore the position of the 'opposite' vertex to which 
+         //   we have to draw diagonals
+         bool first = true; 
+         int triStart = 3 * (target / 3), oppositeNode = Index[triStart + (target + 2) % 3];
+         mPathNodes.Add (start);    // Simplifies logic below
+         foreach (var node in mPathNodes) {
+            double dist = mMesh.Pts[node].DistToLineSq (pa, pb);
+            if (!dist.IsZero (1e-5)) continue;
+            if (first) {
+               // If this is the first diagonal we are adding, we can overwrite the large triangle
+               // with a new smaller one. Otherwise, we need to add a new triangle
+               Index[triStart] = end; Index[triStart + 1] = node; Index[triStart + 2] = oppositeNode;
+               first = false;
+            } else {
+               Index.Add (end); Index.Add (node); Index.Add (oppositeNode);
+            }
+            end = node;
+         }
 
+         // Remove the edges we have used up (from alternate path)
+         mPathEdges.OrderDescending ().ForEach (mFreeEdges.RemoveAt);
       }
    }
    List<int> mPathEdges = [], mPathNodes = [];
+   List<int>? Index;
 
    // Given a start and end point of a _long_ edge (these are the two endpoints of the
    // edge stored at nEdgeIndex in the mFreeEdges list), this routine tries to find
@@ -187,16 +180,14 @@ class TJointRemover {
    //   the edges after nEdgeIndex in the array, since we've already sorted it by decreasing
    //   length)
    bool FindAlternatePath (int start, int end, int nEdgeIndex) {
-      mPathNodes.Clear (); 
-      mPathEdges.Clear (); mPathEdges.Add (nEdgeIndex);
+      mPathNodes.Clear (); mPathEdges.Clear (); 
       for (; ; ) {
          int oldStart = start;
          for (int i = nEdgeIndex + 1; i < mFreeEdges.Count; i++) {
             var (s, e, _) = mFreeEdges[i];
-            if (s != start && e != start || mPathEdges.Contains (i)) continue;
+            if (s != start) continue; 
             mPathEdges.Add (i);
-            start = (s + e) - start;
-            if (start == end) return true;   // Found a path all the way to the end!
+            if ((start = e) == end) return true; 
             mPathNodes.Add (start);
          }
          // If we were not able to find any (unused) edge leading out from start, 

@@ -38,15 +38,9 @@ public class CSMesher3 {
       for (int i = 0; i < mPolys.Count; i++) AddSegs (i, i < mNFront);
       int[] sorted = [.. Enumerable.Range (1, mNSeg - 1)]; sorted.Sort (SegSorter);
 
-      for (int i = 0; i < sorted.Length; i++) {
-         var seg = mSeg[sorted[i]];
-         if (!seg.Front) Lib.Trace (seg);
-      }
-
       int slice = -1;
       for (int i = 0, max = sorted.Length - 1; i <= max; i++) {
          int n = sorted[i];
-         if (mSeg[n].Slice != slice) yield return $"Slice {slice}";
          ref CSeg seg = ref mSeg[n];
          if (seg.Slice != slice) {
             AddTriangles (); AddHorzPlanes (); 
@@ -56,10 +50,11 @@ public class CSMesher3 {
          if (seg.Horz) mHN.Add (n);
          else (seg.Front ? mFN : mSN).Add (n);
       }
-      yield return $"Final slice";
       AddTriangles (); AddHorzPlanes ();
 
-      new TopoMesh (mPts).Check (); 
+      var tm = new TopoMesh (mPts).RemoveTJoints ();
+      mPts.Clear ();
+      foreach (var n in tm.Index) mPts.Add ((Point3)tm.Pts[n]);
       yield return "Done";
    }
    List<int> mFN = [], mSN = [], mHN = [];

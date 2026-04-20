@@ -48,7 +48,7 @@ public partial class MainWindow : Window {
       var gvn = new GroupVN ([new Dwg2VN (dwg), TraceVN.It]);
       mScene2 = new Scene2 { Root = gvn, Bound = dwg.Bound.InflatedF (1.1), BgrdColor = Color4.Gray (216) };
       Lux.AddSubScene (mScene2, new (0.02, 0.02, 0.49, 0.98));
-      mScene3 = new Scene3 { Root = new Mesh3VN (mesh.Wireframed ()) { Color = Color4.White }, Bound = mesh.Bound, BgrdColor = Color4.Gray (200) };
+      mScene3 = new Scene3 { Root = new Mesh3VN (mesh) { Color = Color4.White }, Bound = mesh.Bound, BgrdColor = Color4.Gray (200) };
       Lux.AddSubScene (mScene3, new (0.51, 0.02, 0.98, 0.98));
    }
 }
