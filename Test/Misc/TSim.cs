@@ -109,17 +109,26 @@ class TMesh3Build {
       Assert.TextFilesEqual ("Geom/Mesh3/extrude.tmesh", NT.TmpTxt);
    }
 
-   [Test (240, "Basic test for CSMesher")]
-   void Test5 () {
-      var dwg = DXFReader.Load (NT.File ("Misc/csmesher.dxf"));
-      var sPt = dwg.Ents.OfType<E2Point> ().Single (e => e.LayerName == "SIDE").Pt;
-      var fPt = dwg.Ents.OfType<E2Point> ().Single (e => e.LayerName == "FRONT").Pt;
-      var sPoly = dwg.Ents.OfType<E2Poly> ().Single (e => e.LayerName == "SIDE").Poly;
-      var fPoly = dwg.Ents.OfType<E2Poly> ().Single (e => e.LayerName == "FRONT").Poly;
-      sPoly *= Matrix2.Translation (-sPt.X, -sPt.Y);
-      fPoly *= Matrix2.Translation (-fPt.X, -fPt.Y);
-      var mesh = new CSMesher ([fPoly], [sPoly]).Build ();
+   [Test (242, "Basic test for TwoViewMesher - BothHorns")]
+   void Test5 () => TwoViewMesherTest ("BothHorns", ETess.Coarse);
+
+   [Test (243, "Basic test for TwoViewMesher - Simplex")]
+   void Test6 () => TwoViewMesherTest ("Simplex", ETess.Fine);
+
+   void TwoViewMesherTest (string file, ETess tess) {
+      var dwg = DXFReader.Load (NT.File ($"Mesh/{file}.dxf"));
+      var sPoly = dwg.Ents.OfType<E2Poly> ().Where (a => a.LayerName == "SIDE").Select (a => a.Poly).ToList ();
+      var sPt = dwg.Ents.OfType<E2Point> ().Single (a => a.LayerName == "SIDE").Pt;
+      var fPoly = dwg.Ents.OfType<E2Poly> ().Where (a => a.LayerName == "FRONT").Select (a => a.Poly).ToList ();
+      var fPt = dwg.Ents.OfType<E2Point> ().Single (a => a.LayerName == "FRONT").Pt;
+      sPoly = [.. sPoly.Select (a => a * Matrix2.Translation (-sPt.X, -sPt.Y))];
+      fPoly = [.. fPoly.Select (a => a * Matrix2.Translation (-fPt.X, -fPt.Y))];
+      int n = fPoly.MaxIndexBy (a => a.GetBound ().Area);
+      for (int i = 0; i < fPoly.Count; i++)
+         if (i != n) fPoly[i] = fPoly[i].Reversed ();
+      var mesher = new TwoViewMesher (fPoly, sPoly) { Tess = tess };
+      var mesh = mesher.Build ();
       File.WriteAllText (NT.TmpTxt, mesh.ToTMesh ());
-      Assert.TextFilesEqual ("Geom/Mesh3/cross-section.tmesh", NT.TmpTxt);
+      Assert.TextFilesEqual (NT.File ($"Mesh/{file}.tmesh"), NT.TmpTxt);
    }
 }

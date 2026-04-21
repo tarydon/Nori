@@ -1,17 +1,17 @@
 // ────── ╔╗
-// ╔═╦╦═╦╦╬╣ CSMesher.cs
-// ║║║║╬║╔╣║ <<TODO>>
+// ╔═╦╦═╦╦╬╣ TwoViewMesher.cs
+// ║║║║╬║╔╣║ Implements the TwoViewMesher class - creates a mesh from front and side views
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 namespace Nori;
 
-#region class CSMesher -----------------------------------------------------------------------------
-/// <summary>CSMesher constructs a mesh given front and side views</summary>
-public class CSMesher {
+#region class TwoViewMesher ------------------------------------------------------------------------
+/// <summary>TwoViewMesher constructs a mesh given front and side views</summary>
+public class TwoViewMesher {
    // Constructors -------------------------------------------------------------
-   /// <summary>Construct a CSMesher given a set of front-view polys and a set of side-view polys</summary>
+   /// <summary>Construct a TwoViewMesher given a set of front-view polys and a set of side-view polys</summary>
    /// Each set can have more than one poly - in that case, the largest one is considered
    /// as the outer shape, and the others as inner holes
-   public CSMesher (IEnumerable<Poly> front, IEnumerable<Poly> side) {
+   public TwoViewMesher (IEnumerable<Poly> front, IEnumerable<Poly> side) {
       mPolys = [.. front]; mNFront = mPolys.Count; mPolys.AddRange (side);
       List<Bound2> bounds = [.. mPolys.Select (a => a.GetBound ())];
       ReverseInner (0, mNFront); 
@@ -203,7 +203,7 @@ public class CSMesher {
       public readonly float XMid;      // X-midpoint of this seg (used for sorting in active edge list)
       public readonly bool Horz => A.Y == B.Y;
 
-      public override string ToString () => $"{(Reverse ? '-' : '+')}{(Front ? 'F' : 'S')} {A} ... {B} | {Slice}";
+      public override string ToString () => $"{(Reverse ? '-' : '+')}{(Front ? 'F' : 'S')}{(Horz ? 'H' : ' ')} {A} ... {B} | {Slice}";
    }
 
    // Private data -------------------------------------------------------------

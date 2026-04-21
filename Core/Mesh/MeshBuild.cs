@@ -105,7 +105,7 @@ public class Mesh3Builder {
          Vector3 vec = mFace[fd1.NFace].Vec;
          for (int j = 0; j < i; j++) {
             ref FaceData fd2 = ref mChains.Data[mVF[j]];
-            if (mFace[fd2.NFace].Vec.CosineToAlreadyNormalized (vec) > mCos) fd1.NGroup = fd2.NGroup;
+            if (mFace[fd2.NFace].Vec.CosineToAlreadyNormalized (vec) > Cos) fd1.NGroup = fd2.NGroup;
          }
          if (fd1.NGroup == -1) fd1.NGroup = max++;
       }
@@ -169,7 +169,7 @@ public class Mesh3Builder {
    readonly List<int> mVIDs = [];
 
    // If two faces have a cosine less than this between them, it's a sharp edge
-   const double mCos = 0.866;
+   public static double Cos = 0.866;
 
    // This is the list of vertices
    readonly Vertex[] mVertex = [];

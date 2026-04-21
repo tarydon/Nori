@@ -178,12 +178,13 @@ class TJointRemover {
    //   the edges after nEdgeIndex in the array, since we've already sorted it by decreasing
    //   length)
    bool FindAlternatePath (int start, int end, int nEdgeIndex) {
-      mPathNodes.Clear (); mPathEdges.Clear (); 
+      mPathNodes.Clear (); 
+      mPathEdges.Clear (); 
       for (; ; ) {
          int oldStart = start;
          for (int i = nEdgeIndex + 1; i < mFreeEdges.Count; i++) {
             var (s, e, _) = mFreeEdges[i];
-            if (s != start) continue; 
+            if (s != start || mPathEdges.Contains (i)) continue; 
             mPathEdges.Add (i);
             if ((start = e) == end) return true; 
             mPathNodes.Add (start);

@@ -44,7 +44,7 @@ public partial class MainWindow : Window {
    void CollisionDemo (object s, RoutedEventArgs e) => Display (s, new OBBCrashScene ());
    void PaperFolderDemo (object s, RoutedEventArgs e) => Display (s, new PaperFolderScene ());
    void SubScene (object s, RoutedEventArgs e) => Display (s, new SubSceneDemo ());
-   void CSMesher (object s, RoutedEventArgs e) => Display (s, new CSMesherDemo ());
+   void TwoViewMesh (object s, RoutedEventArgs e) => Display (s, new TwoViewMeshDemo ());
 
    void Display (object s, Scene scene) {
       if (s is Button b) {

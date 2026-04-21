@@ -1,11 +1,15 @@
-﻿using System.Windows.Controls;
+﻿// ────── ╔╗
+// ╔═╦╦═╦╦╬╣ TwoViewMesh.cs
+// ║║║║╬║╔╣║ Demonstrates use od the TwoViewMesher (constructs mesh from front/side views)
+// ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
+using System.Windows.Controls;
 using System.Windows;
 using Nori;
 using System.Diagnostics;
 namespace WPFDemo;
 
-class CSMesherDemo : Scene3, ISceneWithUI {
-   public CSMesherDemo () {
+class TwoViewMeshDemo : Scene3, ISceneWithUI {
+   public TwoViewMeshDemo () {
       Lib.Tracer = TraceVN.Print;
       TraceVN.TextColor = Color4.Yellow; TraceVN.HoldTime = 12;
    }
@@ -45,7 +49,7 @@ class CSMesherDemo : Scene3, ISceneWithUI {
          if (i != n) fPoly[i] = fPoly[i].Reversed ();
 
       var sw = Stopwatch.StartNew ();
-      var mesher = new CSMesher (fPoly, sPoly);
+      var mesher = new TwoViewMesher (fPoly, sPoly);
       mesher.Tess = Enum.Parse<ETess> ((string)mTessLB.SelectedItem);
       var mesh = mesher.Build ();
       sw.Stop ();
@@ -59,6 +63,6 @@ class CSMesherDemo : Scene3, ISceneWithUI {
       mScene2.Root = new GroupVN ([new Dwg2VN (dwg), new DwgFillVN (dwg, ETess.Medium)]);
    }
    string mDir = "N:\\Demos\\Data\\CSMesher\\";
-   string[] mFiles = ["Simplex", "LeftHorn", "GaugeTool", "HoleTool", "Chess"];
+   string[] mFiles = ["Simplex", "LeftHorn", "GaugeTool", "HoleTool", "Chess" ];
    string[] mTesses = ["VeryCoarse", "Coarse", "Medium", "Fine", "VeryFine"];
 }
