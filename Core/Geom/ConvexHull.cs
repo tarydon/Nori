@@ -45,7 +45,7 @@ public static class ConvexHull {
    /// Real world 2D part contours are usually guaranteed to be simple polygons.
    public static List<Point2> Compute (Poly poly, bool isSimplePolygon) {
       List<Point2> pts = new (poly.Count);
-      poly.Discretize (pts, Lib.FineTess, Lib.FineTessAngle);
+      poly.Discretize (pts, ETess.Fine);
       return isSimplePolygon ? ComputeForSimplePolygon (pts) : Compute (pts);
    }
 

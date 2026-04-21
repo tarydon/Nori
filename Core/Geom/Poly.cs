@@ -246,6 +246,7 @@ public partial class Poly {
    /// between the chord and the original arc) and the angleLimit (turn angle between successive chords
    /// approximating the arc) - the tighter of those two constraints will eventually determine the number
    /// of segments each arc gets divided into.
+   [Obsolete ("Use Poly.Discretize (pts, eTess)")]
    public void Discretize (List<Point2> pts, double threshold, double angleLimit) {
       if (!HasArcs) pts.AddRange (mPts);
       else {
@@ -253,6 +254,33 @@ public partial class Poly {
          foreach (var seg in Segs) seg.Discretize (pts, threshold, angleLimit);
          if (IsClosed) pts.RemoveLast ();
       }
+   }
+
+   /// <summary>Discetizes the pline with a given error threshold, outputs into the given list of points</summary>
+   /// <param name="pts">The output is added to this list of points (existing points here are not disturbed)</param>
+   /// <param name="eTess">Discretization tolerance</param>
+   /// The tolerance is an index used to pick up two values:
+   /// - Lib.TessChord[eTess] is the maximum lateral deviation between the chord approximation and the arc,
+   ///   this is a linear measurement in mm.
+   /// - Lib.TessAngle[eTess] is the maximum turn angle between successive chord segments in an arc. 
+   /// The number of segments each arc is discretized into depends on both the chord and angle limits. The
+   /// tighter of those two constraints will determine the number of segments each arc gets divided into
+   public void Discretize (List<Point2> pts, ETess eTess) {
+      if (!HasArcs) pts.AddRange (mPts);
+      else {
+         pts.Add (A);
+         double chord = TessChord[(int)eTess], angle = TessAngle[(int)eTess];
+         foreach (var seg in Segs) seg.Discretize (pts, chord, angle);
+         if (IsClosed) pts.RemoveLast (); 
+      }
+   }
+
+   /// <summary>Discretizes the given Poly into another Poly</summary>
+   public Poly DiscretizeP (ETess eTess) {
+      if (!HasArcs) return this; 
+      List<Point2> pts = [];
+      Discretize (pts, eTess);
+      return Lines (pts, IsClosed);
    }
 
    /// <summary>Returns the area of a Poly</summary>
@@ -264,7 +292,7 @@ public partial class Poly {
       }
       if (HasArcs) {
          List<Point2> pts = [];
-         Discretize (pts, FineTess, FineTessAngle);
+         Discretize (pts, ETess.Fine);
          return GetArea (pts.AsSpan ());
       } else {
          return GetArea (Pts.AsSpan ());

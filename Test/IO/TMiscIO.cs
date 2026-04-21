@@ -78,7 +78,9 @@ class STLTests {
       var zar = new ZipArchive (File.OpenRead (NT.File ("IO/MESH/cow.zip")));
       var ze = zar.GetEntry ("cow.obj")!;
       var zstm = new ZipReadStream (ze.Open (), ze.Length);
+      Mesh3Builder.Cos = 0.51;
       var mesh = Mesh3.LoadObj (zstm.ReadAllLines ());
+      Mesh3Builder.Cos = 0.866;
       mesh *= Matrix3.Rotation (EAxis.X, Lib.HalfPI) * Matrix3.Rotation (EAxis.Z, -Lib.HalfPI);
       mesh *= Matrix3.Translation (1, 2, 3);
       mesh.IsEmpty.IsFalse ();
@@ -136,7 +138,7 @@ class T3XTests {
       foreach (var con in surf.Contours) {
          var curves = con.Curves;
          foreach (var c in curves) {
-            c.Discretize (pts, Lib.FineTess, Lib.FineTessAngle); pts.RemoveLast ();
+            c.Discretize (pts, ETess.Fine); pts.RemoveLast ();
             if (c is Line3) pts.Add (c.Start.Midpoint (c.End));
          }
       }

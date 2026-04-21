@@ -27,18 +27,8 @@ public partial class FastTess2D : IBorrowable<FastTess2D> {
    readonly List<Point2> mInput = [];
 
    /// <summary>The discretization tolerance</summary>
-   public ETolerance Tolerance {
-      set {
-         if (value == mETol) return;
-         switch (mETol = value) {
-            case ETolerance.Fine: mTolerance = Lib.FineTess; mAngTolerance = Lib.FineTessAngle; break;
-            case ETolerance.Coarse: mTolerance = Lib.CoarseTess; mAngTolerance = Lib.CoarseTessAngle; break;
-            case ETolerance.VeryCoarse: mTolerance = Lib.VeryCoarseTess; mAngTolerance = Lib.VeryCoarseTessAngle; break;
-            default: throw new BadCaseException (value);
-         }
-      }
-   }
-   ETolerance mETol;
+   public ETess Tolerance { set => mETess = value; }
+   ETess mETess;
 
    /// <summary>The set of integers making up the triangles</summary>
    /// These integers, taken 3 at a time, point into the Pts array
@@ -72,7 +62,7 @@ public partial class FastTess2D : IBorrowable<FastTess2D> {
       // First, if we need to reverse the order of points, or to discretize a Poly
       // with curves, make a copy
       int start = mInput.Count;
-      poly.Discretize (mInput, mTolerance, mAngTolerance);
+      poly.Discretize (mInput, mETess);
       if ((poly.GetWinding () == Poly.EWinding.CW) ^ hole) mInput.Reverse (start, mInput.Count - start); 
       ReadOnlySpan<Point2> pts = mInput.AsSpan ()[start..];
 
@@ -340,7 +330,7 @@ public partial class FastTess2D : IBorrowable<FastTess2D> {
       mBound = new ();
       mInput.Clear (); mTris.Clear ();
       mDiagTiles.Clear (); mValleyTiles.Clear (); mFreeTile.Clear ();
-      mR = new Rand (42); Tolerance = ETolerance.Coarse; BiasAngle = 0.1642;
+      mR = new Rand (42); Tolerance = ETess.Medium; BiasAngle = 0.1642;
       mSN = mNN = 0; mTN = mVN = 1;
    }
 
@@ -416,7 +406,6 @@ public partial class FastTess2D : IBorrowable<FastTess2D> {
    readonly Stack<int> mFreeTile = [];    // Tiles that are free for reuse
    Bound2 mBound;                         // Bound of poly added so far (in rotated coordinates)
    double mBiasAngle, mSin, mCos;
-   double mTolerance, mAngTolerance;
    const double FINE = 1e-9;
 }
 #endregion

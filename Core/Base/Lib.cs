@@ -10,10 +10,6 @@ namespace Nori;
 #region class Lib ----------------------------------------------------------------------------------
 public static class Lib {
    // Constants ----------------------------------------------------------------
-   /// <summary>Coarse tessellation threshold</summary>
-   public const double CoarseTess = 0.2;
-   /// <summary>Coarse tessellation angle tolerance (~ 61 degrees)</summary>
-   public const double CoarseTessAngle = 1.065;
    /// <summary>Delta = 1e-6</summary>
    public const double Delta = 1e-3;
    /// <summary>Epsilon = 1e-6</summary>
@@ -22,12 +18,7 @@ public static class Lib {
    public const double EpsilonSq = Epsilon * Epsilon;
    /// <summary>PI = 180 degrees, in radians</summary>
    public const double PI = Math.PI;
-   /// <summary>Tessellation error</summary>
-   public static double FineTess = 0.01;
-   /// <summary>Square of the tessellation error</summary>
-   public static double FineTessSq = FineTess * FineTess;
-   /// <summary>Fine tessellation angle tolerance (~ 31 degrees)</summary>
-   public const double FineTessAngle = 0.5411;
+
    /// <summary>TwoPI = 360 degrees, in radians</summary>
    public const double TwoPI = 2 * Math.PI;
    /// <summary>HalfPI = 90 degrees, in radians</summary>
@@ -36,11 +27,12 @@ public static class Lib {
    public const double QuarterPI = Math.PI / 4;
    /// <summary>The constant square-root-of-2</summary>
    public const double Root2 = 1.4142135623730950488016887242097;
-   /// <summary>Very coarse tessellation threshold</summary>
-   public const double VeryCoarseTess = 1;
-   /// <summary>Very coarse tessellation angle tolerance (~ 61 degrees)</summary>
-   public const double VeryCoarseTessAngle = 1.065;
 
+   /// <summary>Chordal deviations for discretization / tessellation (index using an ETess value)</summary>
+   public readonly static ImmutableArray<double> TessChord = [0.1, 1, 0.2, 0.1, 0.05, 0.01];
+   /// <summary>Max-angle-step for discretization / tessellation (index using an ETess value)</summary>
+   public readonly static ImmutableArray<double> TessAngle = [0.803, 1.065, 1.065, 0.803, 0.6562, 0.5411];
+   
    // Properties ---------------------------------------------------------------
    /// <summary>The list of known assemblies</summary>
    public static IEnumerable<Assembly> Assemblies => mAssemblies;
@@ -100,8 +92,16 @@ public static class Lib {
    public static int GetArcSteps (double radius, double angSpan, double tolerance, double maxAngSpan) {
       tolerance = tolerance.Clamp (radius * 0.0001, radius * 0.9999);
       double angStep = Min (2 * Acos ((radius - tolerance) / radius), maxAngSpan);
-      return Max ((int)Ceiling (Abs (angSpan) / angStep), 1);
+      int cSteps = Max ((int)Ceiling (Abs (angSpan) / angStep), 1);
+      return cSteps;
    }
+
+   /// <summary>Returns the number of steps required to rasterize an arc with the given tolerance</summary>
+   /// <param name="radius">The radius of the arc</param>
+   /// <param name="angSpan">The angular span of the arc (can be +ve or -ve)</param>
+   /// <param name="eTess">The error tolerance </param>
+   public static int GetArcSteps (double radius, double angSpan, ETess eTess) 
+      => GetArcSteps (radius, angSpan, TessChord[(int)eTess], TessAngle[(int)eTess]);
 
    /// <summary>Returns the full-path-filename of a 'local' file (relative to startup EXE)</summary>
    public static string GetLocalFile (string file) {

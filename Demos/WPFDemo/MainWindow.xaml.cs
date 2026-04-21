@@ -44,6 +44,7 @@ public partial class MainWindow : Window {
    void CollisionDemo (object s, RoutedEventArgs e) => Display (s, new OBBCrashScene ());
    void PaperFolderDemo (object s, RoutedEventArgs e) => Display (s, new PaperFolderScene ());
    void SubScene (object s, RoutedEventArgs e) => Display (s, new SubSceneDemo ());
+   void TwoViewMesh (object s, RoutedEventArgs e) => Display (s, new TwoViewMeshDemo ());
 
    void Display (object s, Scene scene) {
       if (s is Button b) {
@@ -51,13 +52,15 @@ public partial class MainWindow : Window {
          mPrevButton = b; mPrevBrush = b.Background;
          b.Background = System.Windows.Media.Brushes.LightBlue;
       }
-      mSettings.Children.Clear ();
+      mSettings.Children.Clear (); TraceVN.It.Clear (); 
       Lux.UIScene = scene;
-      if (scene is RobotScene rs) rs.CreateUI (mSettings.Children);
+      if (scene is ISceneWithUI sc) sc.CreateUI (mSettings.Children);
       if (scene is STPScene or T3XDemoScene) Lux.BackFacesPink = true;
-      if (scene is OBBCrashScene cs) cs.CreateUI (mSettings.Children);
-      if (scene is PaperFolderScene ps) ps.CreateUI (mSettings.Children);
    }
    Button? mPrevButton;
    System.Windows.Media.Brush? mPrevBrush;
+}
+
+interface ISceneWithUI {
+   void CreateUI (UIElementCollection panel);
 }

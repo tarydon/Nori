@@ -30,9 +30,11 @@ public class CurveUnlofter {
          AddNode (dt * (i + 0.5) + domain.Min);
          AddSeg (i, dt / 2);
       }
+      mTolerance = Lib.TessChord[(int)ETess.Fine];
    }
    readonly Curve3 mCurve;    // The curve we're working with
    const int mRootSegs = 4;   // Initial number of segments
+   double mTolerance;
 
    // Methods ------------------------------------------------------------------
    /// <summary>Returns the T value corresponding to the given Point</summary>
@@ -73,7 +75,7 @@ public class CurveUnlofter {
    // Adds a segment given the index of the center node, and the half-span (in T) of the segment.
    // Returns the index of the newly added segment. 
    int AddSeg (int nCenter, double dtHalf) { 
-      mSegs[mUsedSegs] = new Seg (mUsedSegs, nCenter, dtHalf);
+      mSegs[mUsedSegs] = new Seg (nCenter, dtHalf);
       return mUsedSegs++;
    }
    int mUsedSegs;
@@ -135,13 +137,13 @@ public class CurveUnlofter {
    Node[] mNodes = new Node[8];
 
    struct Seg {
-      public Seg (int id, int center, double dt) => (Center, DT) = (center, dt);
+      public Seg (int center, double dt) => (Center, DT) = (center, dt);
       public readonly int Center;
       public int Left, Right;
       public int Children;
       public readonly double DT;
 
-      public (double T, EOverrun Overrun) GetT (CurveUnlofter owner, Point3 pt) {
+      public readonly (double T, EOverrun Overrun) GetT (CurveUnlofter owner, Point3 pt) {
          ref Node left = ref owner.mNodes[Left], right = ref owner.mNodes[Right];
          pt = pt.SnappedToLine (left.Pt, right.Pt);
          double lie = pt.GetLieOn (left.Pt, right.Pt);
@@ -157,8 +159,8 @@ public class CurveUnlofter {
          Left = owner.AddNode (tCen - DT); Right = owner.AddNode (tCen + DT);
          Point3 cen = center.Pt;
          Point3 left = nodes[Left].Pt, right = nodes[Right].Pt;
-         if (cen.DistToLineSq (left, right) < Lib.FineTessSq
-          && Math.Abs (cen.DistTo (left) - cen.DistTo (right)) < Lib.FineTess) {
+         if (cen.DistToLineSq (left, right) < owner.mTolerance * owner.mTolerance
+          && Math.Abs (cen.DistTo (left) - cen.DistTo (right)) < owner.mTolerance) {
             State = EState.Leaf;
             return;
          }

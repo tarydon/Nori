@@ -5,7 +5,7 @@ using Nori;
 
 namespace WPFDemo;
 
-class OBBCrashScene : Scene3 {
+class OBBCrashScene : Scene3, ISceneWithUI {
    public OBBCrashScene () {
       Lib.Tracer = TraceVN.Print;
       TraceVN.TextColor = Color4.Yellow;

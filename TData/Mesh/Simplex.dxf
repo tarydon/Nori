@@ -1,0 +1,360 @@
+	0
+SECTION
+	2
+HEADER
+	9
+$EXTMAX
+	10
+180
+	20
+100
+	9
+$EXTMIN
+	10
+0
+	20
+0
+	9
+$LIMMAX
+	10
+180
+	20
+100
+	9
+$LIMMIN
+	10
+0
+	20
+0
+	9
+$MEASUREMENT
+	70
+1
+	9
+$INSUNITS
+	70
+4
+	9
+$DIMALTF
+	40
+0.03937
+	0
+ENDSEC
+	0
+SECTION
+	2
+TABLES
+	0
+TABLE
+	2
+LTYPE
+	70
+1
+	0
+LTYPE
+	2
+CONTINUOUS
+	70
+64
+	3
+CONTINUOUS
+	72
+65
+	73
+0
+	40
+1.0
+	0
+ENDTAB
+	0
+TABLE
+	2
+LAYER
+	70
+2
+	0
+LAYER
+	70
+0
+	2
+SIDE
+	62
+250
+	6
+CONTINUOUS
+	0
+LAYER
+	70
+0
+	2
+FRONT
+	62
+12
+	6
+CONTINUOUS
+	0
+ENDTAB
+	0
+ENDSEC
+	0
+SECTION
+	2
+BLOCKS
+	0
+ENDSEC
+	0
+SECTION
+	2
+ENTITIES
+	0
+POLYLINE
+	8
+SIDE
+	66
+1
+	10
+0
+	20
+0
+	70
+1
+	0
+VERTEX
+	8
+0
+	10
+50
+	20
+5
+	0
+VERTEX
+	8
+0
+	10
+50
+	20
+95
+	0
+VERTEX
+	8
+0
+	10
+45
+	20
+100
+	0
+VERTEX
+	8
+0
+	10
+5
+	20
+100
+	0
+VERTEX
+	8
+0
+	10
+0
+	20
+95
+	0
+VERTEX
+	8
+0
+	10
+0
+	20
+5
+	0
+VERTEX
+	8
+0
+	10
+5
+	20
+0
+	0
+VERTEX
+	8
+0
+	10
+45
+	20
+0
+	0
+SEQEND
+	8
+0
+	0
+POLYLINE
+	8
+FRONT
+	66
+1
+	10
+0
+	20
+0
+	70
+1
+	0
+VERTEX
+	8
+0
+	10
+105
+	20
+0
+	0
+VERTEX
+	8
+0
+	10
+175
+	20
+0
+	42
+0.414214
+	0
+VERTEX
+	8
+0
+	10
+180
+	20
+5
+	0
+VERTEX
+	8
+0
+	10
+180
+	20
+95
+	42
+0.414214
+	0
+VERTEX
+	8
+0
+	10
+175
+	20
+100
+	0
+VERTEX
+	8
+0
+	10
+105
+	20
+100
+	42
+0.414214
+	0
+VERTEX
+	8
+0
+	10
+100
+	20
+95
+	0
+VERTEX
+	8
+0
+	10
+100
+	20
+5
+	42
+0.414214
+	0
+SEQEND
+	8
+0
+	0
+POLYLINE
+	8
+FRONT
+	66
+1
+	10
+0
+	20
+0
+	70
+1
+	0
+VERTEX
+	8
+0
+	10
+170
+	20
+50
+	0
+VERTEX
+	8
+0
+	10
+140
+	20
+90
+	0
+VERTEX
+	8
+0
+	10
+110
+	20
+50
+	0
+VERTEX
+	8
+0
+	10
+110
+	20
+10
+	0
+VERTEX
+	8
+0
+	10
+140
+	20
+30
+	0
+VERTEX
+	8
+0
+	10
+170
+	20
+10
+	0
+SEQEND
+	8
+0
+	0
+POINT
+	8
+FRONT
+	10
+140
+	20
+0
+	0
+POINT
+	8
+SIDE
+	10
+25
+	20
+0
+	0
+ENDSEC
+	0
+EOF

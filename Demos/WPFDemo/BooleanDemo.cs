@@ -57,13 +57,13 @@ class BooleanRootVN (List<List<Poly>> polys, Bound2 bound) : VNode {
          EPane.Union => Union (mPolys),
          EPane.Intersection => Intersect (mPolys),
          EPane.Subtraction => Subtract (mPolys),
-         _ => mPolys.SelectMany (a => a).ToList ()
+         _ => [.. mPolys.SelectMany (a => a)]
       };
       return new XfmVN (Matrix3.Translation ((Vector3)GetOffset ((EPane)n, ViewBound)), new PolyVN (polys, pane));
 
       static List<Poly> Union (List<List<Poly>> polys) => polys.SelectMany (x => x).ToList ().AsSpan ().Union ();
-      static List<Poly> Intersect (List<List<Poly>> polys) => polys.SelectMany (a => a.AsSpan ().Intersect ()).ToList ();
-      static List<Poly> Subtract (List<List<Poly>> polys) => polys.SelectMany (a => a.AsSpan ()[..1].Subtract (a.AsSpan ()[1..])).ToList ();
+      static List<Poly> Intersect (List<List<Poly>> polys) => [.. polys.SelectMany (a => a.AsSpan ().Intersect ())];
+      static List<Poly> Subtract (List<List<Poly>> polys) => [.. polys.SelectMany (a => a.AsSpan ()[..1].Subtract (a.AsSpan ()[1..]))];
    }
 
    public override void Draw () {
@@ -137,7 +137,7 @@ class BooleanRootVN (List<List<Poly>> polys, Bound2 bound) : VNode {
          List<Vec2F> path = [bound.Midpoint];
          mPolys.ForEach (x => {
             pts.Clear ();
-            x.Discretize (pts, 0.1, 0.5411);
+            x.Discretize (pts, ETess.Medium);
             var idx0 = path.Count;
             indices.Add (0);
             path.AddRange (pts.Select (p => (Vec2F)p));

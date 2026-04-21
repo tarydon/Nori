@@ -15,8 +15,8 @@ class Curve3Tests {
       arc.Start.EQ (flipped.End).IsTrue ();
       arc.End.EQ (flipped.Start).IsTrue ();
       List<Point3> pts1 = [], pts2 = [];
-      arc.Discretize (pts1, Lib.CoarseTess, Lib.CoarseTessAngle);
-      flipped.Discretize (pts2, Lib.CoarseTess, Lib.CoarseTessAngle);
+      arc.Discretize (pts1, ETess.Coarse);
+      flipped.Discretize (pts2, ETess.Coarse);
       pts2.Reverse ();
       pts1.Count.Is (pts2.Count);
       for (int i = 0; i < pts1.Count; i++)
@@ -30,8 +30,8 @@ class Curve3Tests {
       ellipse.Start.EQ (flipped.End).IsTrue ();
       ellipse.End.EQ (flipped.Start).IsTrue ();
       List<Point3> pts1 = [], pts2 = [];
-      ellipse.Discretize (pts1, Lib.CoarseTess, Lib.CoarseTessAngle);
-      flipped.Discretize (pts2, Lib.CoarseTess, Lib.CoarseTessAngle);
+      ellipse.Discretize (pts1, ETess.Coarse);
+      flipped.Discretize (pts2, ETess.Coarse);
       pts2.Reverse ();
       pts1.Count.Is (pts2.Count);
       for (int i = 0; i < pts1.Count; i++)
@@ -45,8 +45,8 @@ class Curve3Tests {
       ellipse.Start.EQ (flipped.End).IsTrue ();
       ellipse.End.EQ (flipped.Start).IsTrue ();
       List<Point3> pts1 = [], pts2 = [];
-      ellipse.Discretize (pts1, Lib.CoarseTess, Lib.CoarseTessAngle);
-      flipped.Discretize (pts2, Lib.CoarseTess, Lib.CoarseTessAngle);
+      ellipse.Discretize (pts1, ETess.Coarse);
+      flipped.Discretize (pts2, ETess.Coarse);
       pts2.Reverse ();
       pts1.Count.Is (pts2.Count);
       for (int i = 0; i < pts1.Count; i++)
@@ -68,8 +68,8 @@ class Curve3Tests {
       spline.Start.EQ (flipped.End).IsTrue ();
       spline.End.EQ (flipped.Start).IsTrue ();
       List<Point3> pts1 = [], pts2 = [];
-      spline.Discretize (pts1, Lib.CoarseTess, Lib.CoarseTessAngle);
-      flipped.Discretize (pts2, Lib.CoarseTess, Lib.CoarseTessAngle);
+      spline.Discretize (pts1, ETess.Coarse);
+      flipped.Discretize (pts2, ETess.Coarse);
       pts2.Reverse ();
       pts1.Count.Is (pts2.Count);
       for (int i = 0; i < pts1.Count; i++)
@@ -89,8 +89,8 @@ class Curve3Tests {
       polyline.Start.EQ (flipped.End).IsTrue ();
       polyline.End.EQ (flipped.Start).IsTrue ();
       List<Point3> pts1 = [], pts2 = [];
-      polyline.Discretize (pts1, Lib.CoarseTess, Lib.CoarseTessAngle);
-      flipped.Discretize (pts2, Lib.CoarseTess, Lib.CoarseTessAngle);
+      polyline.Discretize (pts1, ETess.Coarse);
+      flipped.Discretize (pts2, ETess.Coarse);
       pts2.Reverse ();
       pts1.Count.Is (pts2.Count);
       for (int i = 0; i < pts1.Count; i++)
@@ -104,7 +104,7 @@ class Curve3Tests {
       trimmed.Start.EQ (new Point3 (5, 0, 10)).IsTrue ();
       trimmed.End.EQ (new Point3 (0, 0, 5)).IsTrue ();
       List<Point3> pts = [];
-      trimmed.Discretize (pts, Lib.FineTess, Lib.FineTessAngle);
+      trimmed.Discretize (pts, ETess.Fine);
       (pts[1].X < 5).IsTrue ();
       var trimmed2 = arc.Trimmed (Lib.HalfPI, Lib.PI, true);
       trimmed.Start.EQ (trimmed2.Start).IsTrue ();
@@ -112,7 +112,7 @@ class Curve3Tests {
       trimmed.Domain.Length.EQ (Lib.HalfPI);
       trimmed2.Domain.Length.EQ (3 * Lib.HalfPI);
       pts.Clear ();
-      trimmed2.Discretize (pts, Lib.FineTess, Lib.FineTessAngle);
+      trimmed2.Discretize (pts, ETess.Fine);
       (pts[1].X > 5).IsTrue ();
    }
 
@@ -123,7 +123,7 @@ class Curve3Tests {
       trimmed.Start.EQ (new Point3 (0, 4, 0)).IsTrue ();
       trimmed.End.EQ (new Point3 (-8, 0, 0)).IsTrue ();
       List<Point3> pts = [];
-      trimmed.Discretize (pts, Lib.FineTess, Lib.FineTessAngle);
+      trimmed.Discretize (pts, ETess.Fine);
       (pts[1].X < 0).IsTrue ();
 
       var trimmed2 = ellipse.Trimmed (Lib.HalfPI, Lib.PI, true);
@@ -132,7 +132,7 @@ class Curve3Tests {
       trimmed.Domain.Length.EQ (Lib.HalfPI);
       trimmed2.Domain.Length.EQ (3 * Lib.HalfPI);
       pts.Clear ();
-      trimmed2.Discretize (pts, Lib.FineTess, Lib.FineTessAngle);
+      trimmed2.Discretize (pts, ETess.Fine);
       (pts[1].X > 0).IsTrue ();
    }
 
@@ -160,7 +160,7 @@ class Curve3Tests {
       trimmed.Domain.Length.EQ (t2 - t1);
 
       List<Point3> pts = [];
-      trimmed.Discretize (pts, Lib.CoarseTess, Lib.CoarseTessAngle);
+      trimmed.Discretize (pts, ETess.Coarse);
       pts[0].EQ (expectedStart).IsTrue ();
       pts[^1].EQ (expectedEnd).IsTrue ();
 
@@ -171,7 +171,7 @@ class Curve3Tests {
       reversed.Domain.Max.EQ (t2).IsTrue ();
 
       List<Point3> reversedPts = [];
-      reversed.Discretize (reversedPts, Lib.CoarseTess, Lib.CoarseTessAngle);
+      reversed.Discretize (reversedPts, ETess.Coarse);
       reversedPts.Reverse ();
       pts.Count.Is (reversedPts.Count);
       for (int i = 0; i < pts.Count; i++)
@@ -202,7 +202,7 @@ class Curve3Tests {
       trimmed.Domain.Length.EQ (expectedSegmentCount);
 
       List<Point3> trimmedPts = [];
-      trimmed.Discretize (trimmedPts, Lib.CoarseTess, Lib.CoarseTessAngle);
+      trimmed.Discretize (trimmedPts, ETess.Coarse);
       trimmedPts[0].EQ (expectedStart).IsTrue ();
       trimmedPts[^1].EQ (expectedEnd).IsTrue ();
 
@@ -214,7 +214,7 @@ class Curve3Tests {
       reversed.Domain.Length.EQ (expectedSegmentCount);
 
       List<Point3> reversedPts = [];
-      reversed.Discretize (reversedPts, Lib.CoarseTess, Lib.CoarseTessAngle);
+      reversed.Discretize (reversedPts, ETess.Coarse);
       reversedPts.Reverse ();
       trimmedPts.Count.Is (reversedPts.Count);
       for (int i = 0; i < trimmedPts.Count; i++)

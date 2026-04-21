@@ -18,7 +18,19 @@ public enum EJoint { None, Translate, Rotate }
 public enum ELineType { Continuous, Dot, Dash, DashDot, DashDotDot, Center, Border, Hidden, Dash2, Phantom }
 
 /// <summary>Tessellation tolerances</summary>
-public enum ETolerance { Unknown, VeryCoarse, Coarse, Fine }
+public enum ETess { 
+   Unknown,
+   /// <summary>Linear tolerance (chord): 1mm, Angular tolerance: 60°</summary>
+   VeryCoarse,
+   /// <summary>Linear tolerance (chord): 0.2mm, Angular tolerance: 60°</summary>
+   Coarse,
+   /// <summary>Linear tolerance (chord): 0.1mm, Angular tolerance: 45°</summary>
+   Medium,
+   /// <summary>Linear tolerance (chord): 0.05mm, Angular tolerance: 37.5°</summary>
+   Fine,
+   /// <summary>Linear tolerance (chord): 0.01mm, Angular tolerance: 30°</summary>
+   VeryFine
+}
 
 /// <summary>Various 'well-known' properties</summary>
 public enum EProp {

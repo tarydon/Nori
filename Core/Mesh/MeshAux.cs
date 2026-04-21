@@ -7,11 +7,11 @@ namespace Nori;
 public partial class Mesh3 {
    // Methods ------------------------------------------------------------------
    /// <summary>Create a mesh by extruding a Poly</summary>
-   public static Mesh3 Extrude (Poly[] poly, double thickness, Matrix3 xfm) {
+   public static Mesh3 Extrude (Poly[] poly, double thickness, Matrix3 xfm, ETess tess) {
       List<Point2> pts = [];
       List<int> splits = [0];
       foreach (var p in poly) {
-         p.Discretize (pts, Lib.CoarseTess, Lib.CoarseTess);
+         p.Discretize (pts, tess);
          splits.Add (pts.Count);
       }
       var tris = Lib.Tessellate (pts, splits);

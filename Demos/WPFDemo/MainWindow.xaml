@@ -33,6 +33,7 @@
          <Button Click="CollisionDemo">Collision</Button>
          <Button Click="PaperFolderDemo">Paper Folder</Button>
          <Button Click="SubScene">Sub-Scenes</Button>
+         <Button Click="TwoViewMesh">2-View Mesh</Button>
       </StackPanel>
          <StackPanel Name="mSettings" DockPanel.Dock="Right" Background="#AAA" />
       <Border Name="mContent" />

@@ -1,0 +1,32 @@
+// A better way to the normal at a vertex (from Blender code).
+// Weight each normal with the 'corner angle' of that triangle's contribution
+
+Vector3 ComputeVertexNormal(Vertex v)
+{
+    Vector3 normal = Vector3.Zero;
+
+    foreach (var loop in v.Loops) // one per face corner around v
+    {
+        Vector3 u = loop.Prev.Position - v.Position;
+        Vector3 v2 = loop.Next.Position - v.Position;
+
+        // Compute cross and dot
+        Vector3 cross = Vector3.Cross(u, v2);
+        float crossLen = cross.Length();
+
+        // Skip degenerate corners
+        if (crossLen < 1e-12f)
+            continue;
+
+        float dot = Vector3.Dot(u, v2);
+
+        // Exact corner angle (robust, no clamping needed)
+        float angle = MathF.Atan2(crossLen, dot);
+
+        // Accumulate using precomputed unit face normal
+        normal += loop.Face.Normal * angle;
+    }
+
+    // Final normalize
+    return Vector3.Normalize(normal);
+}

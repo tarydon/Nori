@@ -66,7 +66,7 @@ class DwgSubScene : Scene2 {
       Bound = dwg.Bound.InflatedF (1.25);
       BgrdColor = new Color4 (232, 236, 240);
       TraceVN.HoldTime = 20; TraceVN.TextColor = Color4.Blue;
-      Root = new GroupVN ([new Dwg2VN (dwg), new DwgFillVN (dwg) { Color = Color4.White }, TraceVN.It]);
+      Root = new GroupVN ([new Dwg2VN (dwg), new DwgFillVN (dwg, ETess.Medium) { Color = Color4.White }, TraceVN.It]);
       Lib.Tracer = TraceVN.Print;
       Lib.Trace ("Click on planes in bottom right to select them.");
       Lib.Trace ("Use mouse-wheel in any scene to zoom in/out.");

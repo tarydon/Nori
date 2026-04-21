@@ -14,7 +14,8 @@ public partial class MainWindow : Window {
    void OnLuxReady (int _) {
       var source = PresentationSource.FromVisual (this);
       if (source != null) Lux.DPIScale = (float)source.CompositionTarget.TransformToDevice.M11;
-      TraceVN.TextColor = Color4.Yellow;
+      TraceVN.TextColor = Color4.Blue; TraceVN.HoldTime = 200;
+      Lib.Tracer = TraceVN.Print;
       new SceneManipulator ();
       Lux.UIScene = new DemoScene ();
    }

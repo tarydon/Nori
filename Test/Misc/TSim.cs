@@ -102,10 +102,33 @@ class TMesh3Build {
 
    [Test (168, "Test for Mesh3 Extrude")]
    void Test4 () {
-      Mesh3 mesh = Mesh3.Extrude (
-         [Poly.Parse ("M0,0 H100 V30 Q80,50,1 H20 Q0,30,-1 Z"), Poly.Parse ("M60,20 H90 V30 Q80,40,1 H60 Z")],
-         20, Matrix3.Rotation (EAxis.Y, 90.D2R ()) * Matrix3.Translation (0, 0, 1));
+      var xfm = Matrix3.Rotation (EAxis.Y, 90.D2R ()) * Matrix3.Translation (0, 0, 1);
+      Poly[] polys = [Poly.Parse ("M0,0 H100 V30 Q80,50,1 H20 Q0,30,-1 Z"), Poly.Parse ("M60,20 H90 V30 Q80,40,1 H60 Z")];
+      Mesh3 mesh = Mesh3.Extrude (polys, 20, xfm, ETess.Medium);
       File.WriteAllText (NT.TmpTxt, mesh.ToTMesh ());
       Assert.TextFilesEqual ("Geom/Mesh3/extrude.tmesh", NT.TmpTxt);
+   }
+
+   [Test (242, "Basic test for TwoViewMesher - BothHorns")]
+   void Test5 () => TwoViewMesherTest ("BothHorns", ETess.Coarse);
+
+   [Test (243, "Basic test for TwoViewMesher - Simplex")]
+   void Test6 () => TwoViewMesherTest ("Simplex", ETess.Fine);
+
+   void TwoViewMesherTest (string file, ETess tess) {
+      var dwg = DXFReader.Load (NT.File ($"Mesh/{file}.dxf"));
+      var sPoly = dwg.Ents.OfType<E2Poly> ().Where (a => a.LayerName == "SIDE").Select (a => a.Poly).ToList ();
+      var sPt = dwg.Ents.OfType<E2Point> ().Single (a => a.LayerName == "SIDE").Pt;
+      var fPoly = dwg.Ents.OfType<E2Poly> ().Where (a => a.LayerName == "FRONT").Select (a => a.Poly).ToList ();
+      var fPt = dwg.Ents.OfType<E2Point> ().Single (a => a.LayerName == "FRONT").Pt;
+      sPoly = [.. sPoly.Select (a => a * Matrix2.Translation (-sPt.X, -sPt.Y))];
+      fPoly = [.. fPoly.Select (a => a * Matrix2.Translation (-fPt.X, -fPt.Y))];
+      int n = fPoly.MaxIndexBy (a => a.GetBound ().Area);
+      for (int i = 0; i < fPoly.Count; i++)
+         if (i != n) fPoly[i] = fPoly[i].Reversed ();
+      var mesher = new TwoViewMesher (fPoly, sPoly) { Tess = tess };
+      var mesh = mesher.Build ();
+      File.WriteAllText (NT.TmpTxt, mesh.ToTMesh ());
+      Assert.TextFilesEqual (NT.File ($"Mesh/{file}.tmesh"), NT.TmpTxt);
    }
 }

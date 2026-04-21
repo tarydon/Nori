@@ -9,7 +9,7 @@ using System.Windows;
 using System.Windows.Controls;
 using Nori;
 
-class RobotScene : Scene3 {
+class RobotScene : Scene3, ISceneWithUI {
    public RobotScene () {
       mMech = Mechanism.Load ("N:/Wad/FanucX/mechanism.curl");
       mTip = mMech.FindChild ("Tip")!;

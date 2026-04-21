@@ -50,7 +50,7 @@ public abstract class Curve3 {
    ///    that cannot be exceeded (this really works only for a smooth curve like an
    ///    arc or NURB with at least 2nd order continuity)
    /// Derived classes MUST implement this
-   public abstract void Discretize (List<Point3> pts, double tolerance, double maxAngStep);
+   public abstract void Discretize (List<Point3> pts, ETess tolerance);
 
    /// <summary>Returns a new curve flipped in direction</summary>
    public abstract Curve3 Flipped ();
@@ -147,8 +147,8 @@ public class Arc3 : Curve3 {
    /// don't deviate from the original arc by more than this</param>
    /// <param name="maxAngStep">Angular tolerance - successive chords in the PWL approximation
    /// don't have a turn angle more than this between them</param>
-   public override void Discretize (List<Point3> pts, double tolerance, double maxAngStep) {
-      int n = Lib.GetArcSteps (Radius, AngSpan, tolerance, maxAngStep);
+   public override void Discretize (List<Point3> pts, ETess eTess) {
+      int n = Lib.GetArcSteps (Radius, AngSpan, eTess);
       if (AngSpan.EQ (Lib.TwoPI) && n.IsOdd ()) n++;
       for (int i = 0; i <= n; i++) pts.Add (GetPoint ((double)i / n * AngSpan));
    }
@@ -252,9 +252,9 @@ public sealed class Ellipse3 : Curve3 {
 
    // Methods ------------------------------------------------------------------
    /// <summary>Discretize the arc with a given</summary>
-   public override void Discretize (List<Point3> pts, double tolerance, double maxAngStep) {
+   public override void Discretize (List<Point3> pts, ETess eTess) {
       double angSpan = mDomain.Length;
-      int n = Lib.GetArcSteps ((XRadius + YRadius) / 2, angSpan, tolerance, maxAngStep);
+      int n = Lib.GetArcSteps ((XRadius + YRadius) / 2, angSpan, eTess);
       if (angSpan.EQ (Lib.TwoPI) && n.IsOdd ()) n++;
       for (int i = 0; i <= n; i++) pts.Add (GetPoint (((double)i / n).Along (mDomain)));
    }
@@ -322,7 +322,7 @@ public sealed class Line3 : Curve3 {
    // Methods ------------------------------------------------------------------
    /// <summary>Discretize just adds the start point of the Line3</summary>
    /// The convention is that the end point is never included (it is added as part of the next curve)
-   public override void Discretize (List<Point3> pts, double tolerance, double maxAngStep) {
+   public override void Discretize (List<Point3> pts, ETess _) {
       pts.Add (mStart); pts.Add (mEnd);
    }
 
@@ -407,10 +407,11 @@ public class NurbsCurve3 : Curve3 {
    /// The discetization is adaptive - it ensures that at no point does the error between
    /// the PWL approximation and the original spline curve exceed the given error threshold
    /// 'error'
-   public override void Discretize (List<Point3> pts, double error, double maxAngStep) {
+   public override void Discretize (List<Point3> pts, ETess eTess) {
       // Set up for adaptive evaluation. We create a rough linear approximation by evaluating
       // the spline at each of the unique knot values, and we push these values of t (along with
       // their evaluated points) into a stack of Nodes
+      double error = Lib.TessChord[(int)eTess];
       var (knots, errSq, eval) = (mImp.Knot, error * error, new Stack<Node> ());
 
       (double tmin, double tmax) = mDomain;
@@ -554,7 +555,7 @@ public class Polyline3 : Curve3 {
 
    // Methods ------------------------------------------------------------------
    /// <summary>Discretize the Polyline3 just returns the set of points</summary>
-   public override void Discretize (List<Point3> pts, double _, double __)
+   public override void Discretize (List<Point3> pts, ETess _)
       => pts.AddRange (Pts);
 
    public override Curve3 Flipped () => new Polyline3 (PairId, [.. Pts.Reverse ()]);
@@ -623,9 +624,9 @@ public class Contour3 {
 
    // Methods ------------------------------------------------------------------
    /// <summary>Discretize this Contour3 into a piecewise-linear approximation</summary>
-   public void Discretize (List<Point3> pts, double tolerance, double maxAngStep) {
+   public void Discretize (List<Point3> pts, ETess eTess) {
       for (int i = 0; i < mCurves.Length; i++) {
-         mCurves[i].Discretize (pts, tolerance, maxAngStep);
+         mCurves[i].Discretize (pts, eTess);
          // The endpoint of curve N is also the start point of curve N + 1
          if (i < mCurves.Length - 1) pts.RemoveLast ();
       }

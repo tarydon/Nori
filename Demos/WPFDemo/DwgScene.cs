@@ -10,7 +10,7 @@ class DwgScene : Scene2 {
       mDwg = MakeDwg ();
       BgrdColor = new Color4 (200, 200, 206);
       Bound = mDwg.Bound.InflatedF (1.2);
-      Root = new GroupVN ([new Dwg2VN (mDwg), new DwgFillVN (mDwg)]);
+      Root = new GroupVN ([new Dwg2VN (mDwg), new DwgFillVN (mDwg, ETess.Medium)]);
    }
    readonly Dwg2 mDwg;
 
@@ -22,7 +22,7 @@ class DwgScene : Scene2 {
       bSet.Add (new E2Poly (layer, Poly.Parse ("M-1,-1 V-3 H1 V-1 H3 V1 H1 V3 H-1 V1 H-3 V-1Z")));
       bSet.Add (new E2Point (layer, Point2.Zero));
       bSet.Add (new E2Poly (layer, Poly.Circle (Point2.Zero, 2)));
-      Block2 b = new Block2 ("Cross", Point2.Zero, bSet);
+      Block2 b = new ("Cross", Point2.Zero, bSet);
       dwg.Add (b);
 
       Style2 s1 = new ("Std", "Simplex", 0, 1, 0);

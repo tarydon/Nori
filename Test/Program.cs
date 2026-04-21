@@ -31,7 +31,9 @@ class Program {
    // This runs the tests in this assembly
    void Run () {
       var assembly = typeof (Program).Assembly;
-      TestRunner.GatherAndRun ([assembly], Filter, ConsoleTestCallback.It);
+      var cit = ConsoleTestCallback.It;
+      cit.StopOnFail = Environment.GetCommandLineArgs ().Any (a => a.ToUpper () == "-STOP");
+      TestRunner.GatherAndRun ([assembly], Filter, cit);
    }
 
    // This is the filter used to run specific tests or fixtures

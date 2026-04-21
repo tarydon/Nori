@@ -44,6 +44,9 @@ public interface ITestCallback {
 #region ConsoleTestCallback ------------------------------------------------------------------------
 /// <summary>Implementation of ITestCallback that echoes to the console</summary>
 public class ConsoleTestCallback : ITestCallback {
+   // Properties ---------------------------------------------------------------
+   public bool StopOnFail;
+
    // ITestCallback implementation ---------------------------------------------
    public void Begin (int cFixtures, int cTests) => WriteLine ($"{cFixtures} fixtures, {cTests} tests");
    public void StartTest (Test test) => Write ($" {test.Id}. {test.Description} ");
@@ -59,11 +62,13 @@ public class ConsoleTestCallback : ITestCallback {
    public void TestFailed (Test test, TestException ex) {
       WriteRight (Yellow, "FAIL");
       ForegroundColor = Yellow; WriteLine (ex.Message); ResetColor ();
+      if (StopOnFail) Environment.Exit (-1);
    }
 
    public void TestCrashed (Test test, Exception ex) {
       WriteRight (Red, "CRASH");
       ForegroundColor = Yellow; WriteLine (ex.Message); ResetColor ();
+      if (StopOnFail) Environment.Exit (-1);
    }
 
    public void EndTest (Test test, int cDone, int cTotal, TimeSpan elapsed)
