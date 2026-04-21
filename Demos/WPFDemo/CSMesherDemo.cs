@@ -54,8 +54,11 @@ class CSMesherDemo : Scene3, ISceneWithUI {
 
       Bound = mesh.Bound;
       Root = new GroupVN ([new Mesh3VN (mesh) { Color = Color4.White }, TraceVN.It]);
+
+      mScene2.Bound = dwg.Bound.InflatedF (1.1);
+      mScene2.Root = new GroupVN ([new Dwg2VN (dwg), new DwgFillVN (dwg, ETess.Medium)]);
    }
-   string mDir = "C:\\etc\\Demo1\\";
+   string mDir = "N:\\Demos\\Data\\CSMesher\\";
    string[] mFiles = ["Simplex", "LeftHorn", "GaugeTool", "HoleTool", "Chess"];
    string[] mTesses = ["VeryCoarse", "Coarse", "Medium", "Fine", "VeryFine"];
 }

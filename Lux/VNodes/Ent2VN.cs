@@ -12,7 +12,7 @@ abstract class Ent2VN (Ent2 ent) : VNode (ent) {
    public override void SetAttributes () {
       if (!ent.InBlock) {
          var layer = ent.Layer;
-         Lux.Color = ent.IsSelected ? Color4.Blue : (ent.Color.IsNil ? layer.Color : ent.Color);
+         Lux.Color = ent.IsSelected ? Color4.Blue : layer.Color;
          if (ent.IsSelected) { Lux.LineWidth = 3; Lux.PointSize = 6; }
          if (ent is not E2Text) Lux.LineType = layer.Linetype;
       }

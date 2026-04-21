@@ -15,6 +15,11 @@ public sealed class AuException (string message) : Exception (message);
 public class BadCaseException (object e, [CallerMemberName] string? caller = null) : Exception ($"Unhandled case '{e}' in {caller}");
 #endregion
 
+#region class NoriCodeException --------------------------------------------------------------------
+/// <summary>Throws to indicate a coding error (an unanticipated condition, a branch not expected to be taken etc)</summary>
+public class NoriCodeException (string text, [CallerMemberName] string? caller = null) : Exception ($"Nori: '{text}' in {caller}");
+#endregion
+
 #region class IncompleteCodeException --------------------------------------------------------------
 /// <summary>Signals that some code is incomplete (some cases not handled, for example)</summary>
 public class IncompleteCodeException (string text) : Exception ($"Incomplete code: {text}");

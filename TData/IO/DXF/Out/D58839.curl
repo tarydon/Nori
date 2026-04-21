@@ -33,34 +33,33 @@
         (E2Poly){ Layer:0 Poly:M410,10V287 }
         (E2Poly){ Layer:0 Poly:M410,287H10 }
         (E2Poly){ Layer:0 Poly:M10,287V10 }
-        (E2Poly){ Layer:AM_BOR Color:#FFFFFF00 Poly:M160,5H260 }
-        (E2Poly){ Layer:AM_BOR Color:#FFFFFF00 Poly:M160,5V10 }
-        (E2Poly){ Layer:AM_BOR Color:#FFFFFF00 Poly:M260,5V10 }
-        (E2Poly){ Layer:AM_BOR Color:#FFFFFF00 Poly:M170,5V10 }
-        (E2Poly){ Layer:AM_BOR Color:#FFFFFF00 Poly:M180,5V10 }
-        (E2Poly){ Layer:AM_BOR Color:#FFFFFF00 Poly:M190,5V10 }
-        (E2Poly){ Layer:AM_BOR Color:#FFFFFF00 Poly:M200,5V10 }
-        (E2Poly){ Layer:AM_BOR Color:#FFFFFF00 Poly:M220,5V10 }
-        (E2Poly){ Layer:AM_BOR Color:#FFFFFF00 Poly:M230,5V10 }
-        (E2Poly){ Layer:AM_BOR Color:#FFFFFF00 Poly:M240,5V10 }
-        (E2Poly){ Layer:AM_BOR Color:#FFFFFF00 Poly:M250,5V10 }
-        (E2Poly){ Layer:AM_BOR Color:#FFFFFF00 Poly:M5,148.5H15 }
-        (E2Poly){ Layer:AM_BOR Color:#FFFFFF00 Poly:M405,148.5H415 }
-        (E2Poly){ Layer:AM_BOR Color:#FFFFFF00 Poly:M210,282V292 }
-        (E2Poly){ Layer:AM_BOR Color:#FFFFFF00 Poly:M210,5V15 }
-        (E2Poly){ Layer:AM_BOR Color:#FFFF0000 Poly:M12.5,151V146 }
-        (E2Poly){ Layer:AM_BOR Color:#FFFF0000 Poly:M12.5,146L7.5,148.5 }
-        (E2Poly){ Layer:AM_BOR Color:#FFFF0000 Poly:M7.5,148.5L12.5,151 }
-        (E2Poly){ Layer:AM_BOR Color:#FFFF0000 Poly:M210,7.5L207.5,12.5 }
-        (E2Poly){ Layer:AM_BOR Color:#FFFF0000 Poly:M207.5,12.5H212.5 }
-        (E2Poly){ Layer:AM_BOR Color:#FFFF0000 Poly:M212.5,12.5L210,7.5 }
-        (E2Poly){ Layer:AM_BOR Color:#FFFF0000 Poly:M10,194.5H5 }
-        (E2Poly){ Layer:AM_BOR Color:#FFFF0000 Poly:M10,240.5H5 }
-        (E2Poly){ Layer:AM_BOR Color:#FFFF0000 Poly:M10,102.5H5 }
-        (E2Poly){ Layer:AM_BOR Color:#FFFF0000 Poly:M10,56.5H5 }
+        (E2Poly){ Layer:AM_BOR Poly:M160,5H260 }
+        (E2Poly){ Layer:AM_BOR Poly:M160,5V10 }
+        (E2Poly){ Layer:AM_BOR Poly:M260,5V10 }
+        (E2Poly){ Layer:AM_BOR Poly:M170,5V10 }
+        (E2Poly){ Layer:AM_BOR Poly:M180,5V10 }
+        (E2Poly){ Layer:AM_BOR Poly:M190,5V10 }
+        (E2Poly){ Layer:AM_BOR Poly:M200,5V10 }
+        (E2Poly){ Layer:AM_BOR Poly:M220,5V10 }
+        (E2Poly){ Layer:AM_BOR Poly:M230,5V10 }
+        (E2Poly){ Layer:AM_BOR Poly:M240,5V10 }
+        (E2Poly){ Layer:AM_BOR Poly:M250,5V10 }
+        (E2Poly){ Layer:AM_BOR Poly:M5,148.5H15 }
+        (E2Poly){ Layer:AM_BOR Poly:M405,148.5H415 }
+        (E2Poly){ Layer:AM_BOR Poly:M210,282V292 }
+        (E2Poly){ Layer:AM_BOR Poly:M210,5V15 }
+        (E2Poly){ Layer:AM_BOR Poly:M12.5,151V146 }
+        (E2Poly){ Layer:AM_BOR Poly:M12.5,146L7.5,148.5 }
+        (E2Poly){ Layer:AM_BOR Poly:M7.5,148.5L12.5,151 }
+        (E2Poly){ Layer:AM_BOR Poly:M210,7.5L207.5,12.5 }
+        (E2Poly){ Layer:AM_BOR Poly:M207.5,12.5H212.5 }
+        (E2Poly){ Layer:AM_BOR Poly:M212.5,12.5L210,7.5 }
+        (E2Poly){ Layer:AM_BOR Poly:M10,194.5H5 }
+        (E2Poly){ Layer:AM_BOR Poly:M10,240.5H5 }
+        (E2Poly){ Layer:AM_BOR Poly:M10,102.5H5 }
+        (E2Poly){ Layer:AM_BOR Poly:M10,56.5H5 }
         (E2Text){
           Layer:AM_BOR
-          Color:#FFFF0000
           Pt:6.166667,261.5
           Text:A
           Style:ACISOTS
@@ -70,7 +69,6 @@
         }
         (E2Text){
           Layer:AM_BOR
-          Color:#FFFF0000
           Pt:6.166667,215.5
           Text:B
           Style:ACISOTS
@@ -80,7 +78,6 @@
         }
         (E2Text){
           Layer:AM_BOR
-          Color:#FFFF0000
           Pt:6.166667,169.5
           Text:C
           Style:ACISOTS
@@ -90,7 +87,6 @@
         }
         (E2Text){
           Layer:AM_BOR
-          Color:#FFFF0000
           Pt:6.166667,123.5
           Text:D
           Style:ACISOTS
@@ -100,7 +96,6 @@
         }
         (E2Text){
           Layer:AM_BOR
-          Color:#FFFF0000
           Pt:6.166667,77.5
           Text:E
           Style:ACISOTS
@@ -110,7 +105,6 @@
         }
         (E2Text){
           Layer:AM_BOR
-          Color:#FFFF0000
           Pt:6.166667,31.5
           Text:F
           Style:ACISOTS
@@ -120,7 +114,6 @@
         }
         (E2Text){
           Layer:AM_BOR
-          Color:#FFFF0000
           Pt:411.166667,261.5
           Text:A
           Style:ACISOTS
@@ -128,10 +121,9 @@
           Height:4
           XScale:1
         }
-        (E2Poly){ Layer:AM_BOR Color:#FFFF0000 Poly:M415,240.5H410 }
+        (E2Poly){ Layer:AM_BOR Poly:M415,240.5H410 }
         (E2Text){
           Layer:AM_BOR
-          Color:#FFFF0000
           Pt:411.166667,215.5
           Text:B
           Style:ACISOTS
@@ -139,10 +131,9 @@
           Height:4
           XScale:1
         }
-        (E2Poly){ Layer:AM_BOR Color:#FFFF0000 Poly:M415,194.5H410 }
+        (E2Poly){ Layer:AM_BOR Poly:M415,194.5H410 }
         (E2Text){
           Layer:AM_BOR
-          Color:#FFFF0000
           Pt:411.166667,169.5
           Text:C
           Style:ACISOTS
@@ -152,7 +143,6 @@
         }
         (E2Text){
           Layer:AM_BOR
-          Color:#FFFF0000
           Pt:411.166667,123.5
           Text:D
           Style:ACISOTS
@@ -160,10 +150,9 @@
           Height:4
           XScale:1
         }
-        (E2Poly){ Layer:AM_BOR Color:#FFFF0000 Poly:M415,102.5H410 }
+        (E2Poly){ Layer:AM_BOR Poly:M415,102.5H410 }
         (E2Text){
           Layer:AM_BOR
-          Color:#FFFF0000
           Pt:411.166667,77.5
           Text:E
           Style:ACISOTS
@@ -171,10 +160,9 @@
           Height:4
           XScale:1
         }
-        (E2Poly){ Layer:AM_BOR Color:#FFFF0000 Poly:M415,56.5H410 }
+        (E2Poly){ Layer:AM_BOR Poly:M415,56.5H410 }
         (E2Text){
           Layer:AM_BOR
-          Color:#FFFF0000
           Pt:411.166667,31.5
           Text:F
           Style:ACISOTS
@@ -182,15 +170,14 @@
           Height:4
           XScale:1
         }
-        (E2Poly){ Layer:AM_BOR Color:#FFFF0000 Poly:M110,287V292 }
-        (E2Poly){ Layer:AM_BOR Color:#FFFF0000 Poly:M160,287V292 }
-        (E2Poly){ Layer:AM_BOR Color:#FFFF0000 Poly:M60,287V292 }
-        (E2Poly){ Layer:AM_BOR Color:#FFFF0000 Poly:M260,287V292 }
-        (E2Poly){ Layer:AM_BOR Color:#FFFF0000 Poly:M310,287V292 }
-        (E2Poly){ Layer:AM_BOR Color:#FFFF0000 Poly:M360,287V292 }
+        (E2Poly){ Layer:AM_BOR Poly:M110,287V292 }
+        (E2Poly){ Layer:AM_BOR Poly:M160,287V292 }
+        (E2Poly){ Layer:AM_BOR Poly:M60,287V292 }
+        (E2Poly){ Layer:AM_BOR Poly:M260,287V292 }
+        (E2Poly){ Layer:AM_BOR Poly:M310,287V292 }
+        (E2Poly){ Layer:AM_BOR Poly:M360,287V292 }
         (E2Text){
           Layer:AM_BOR
-          Color:#FFFF0000
           Pt:83.666667,287.5
           Text:2
           Style:ACISOTS
@@ -200,7 +187,6 @@
         }
         (E2Text){
           Layer:AM_BOR
-          Color:#FFFF0000
           Pt:34.333333,287.5
           Text:1
           Style:ACISOTS
@@ -210,7 +196,6 @@
         }
         (E2Text){
           Layer:AM_BOR
-          Color:#FFFF0000
           Pt:133.666667,287.5
           Text:3
           Style:ACISOTS
@@ -220,7 +205,6 @@
         }
         (E2Text){
           Layer:AM_BOR
-          Color:#FFFF0000
           Pt:183.666667,287.5
           Text:4
           Style:ACISOTS
@@ -230,7 +214,6 @@
         }
         (E2Text){
           Layer:AM_BOR
-          Color:#FFFF0000
           Pt:233.666667,287.5
           Text:5
           Style:ACISOTS
@@ -240,7 +223,6 @@
         }
         (E2Text){
           Layer:AM_BOR
-          Color:#FFFF0000
           Pt:283.666667,287.5
           Text:6
           Style:ACISOTS
@@ -250,7 +232,6 @@
         }
         (E2Text){
           Layer:AM_BOR
-          Color:#FFFF0000
           Pt:333.666667,287.5
           Text:7
           Style:ACISOTS
@@ -260,7 +241,6 @@
         }
         (E2Text){
           Layer:AM_BOR
-          Color:#FFFF0000
           Pt:383.666667,287.5
           Text:8
           Style:ACISOTS
@@ -270,7 +250,6 @@
         }
         (E2Text){
           Layer:AM_BOR
-          Color:#FFFF0000
           Pt:34.333333,5.5
           Text:1
           Style:ACISOTS
@@ -278,10 +257,9 @@
           Height:4
           XScale:1
         }
-        (E2Poly){ Layer:AM_BOR Color:#FFFF0000 Poly:M60,5V10 }
+        (E2Poly){ Layer:AM_BOR Poly:M60,5V10 }
         (E2Text){
           Layer:AM_BOR
-          Color:#FFFF0000
           Pt:133.666667,5.5
           Text:3
           Style:ACISOTS
@@ -291,7 +269,6 @@
         }
         (E2Text){
           Layer:AM_BOR
-          Color:#FFFF0000
           Pt:83.666667,5.5
           Text:2
           Style:ACISOTS
@@ -299,10 +276,9 @@
           Height:4
           XScale:1
         }
-        (E2Poly){ Layer:AM_BOR Color:#FFFF0000 Poly:M110,5V10 }
+        (E2Poly){ Layer:AM_BOR Poly:M110,5V10 }
         (E2Text){
           Layer:AM_BOR
-          Color:#FFFF0000
           Pt:333.666667,5.5
           Text:7
           Style:ACISOTS
@@ -312,7 +288,6 @@
         }
         (E2Text){
           Layer:AM_BOR
-          Color:#FFFF0000
           Pt:283.666667,5.5
           Text:6
           Style:ACISOTS
@@ -320,10 +295,9 @@
           Height:4
           XScale:1
         }
-        (E2Poly){ Layer:AM_BOR Color:#FFFF0000 Poly:M310,5V10 }
+        (E2Poly){ Layer:AM_BOR Poly:M310,5V10 }
         (E2Text){
           Layer:AM_BOR
-          Color:#FFFF0000
           Pt:383.666667,5.5
           Text:8
           Style:ACISOTS
@@ -331,11 +305,11 @@
           Height:4
           XScale:1
         }
-        (E2Poly){ Layer:AM_BOR Color:#FFFF0000 Poly:M360,5V10 }
-        (E2Poly){ Layer:AM_BOR Color:#FFFF0000 Poly:M0,297H420 }
-        (E2Poly){ Layer:AM_BOR Color:#FFFF0000 Poly:M420,297V0 }
-        (E2Poly){ Layer:AM_BOR Color:#FFFF0000 Poly:M420,0H0 }
-        (E2Poly){ Layer:AM_BOR Color:#FFFF0000 Poly:M0,0V297 }
+        (E2Poly){ Layer:AM_BOR Poly:M360,5V10 }
+        (E2Poly){ Layer:AM_BOR Poly:M0,297H420 }
+        (E2Poly){ Layer:AM_BOR Poly:M420,297V0 }
+        (E2Poly){ Layer:AM_BOR Poly:M420,0H0 }
+        (E2Poly){ Layer:AM_BOR Poly:M0,0V297 }
       ]
     }
     {
@@ -344,7 +318,6 @@
       Ents:[
         (E2Text){
           Layer:AM_BOR
-          Color:#FFFF0000
           Pt:-61.604597,17.043253
           Text:SHEET
           Style:ACISOTS
@@ -354,7 +327,6 @@
         }
         (E2Text){
           Layer:AM_BOR
-          Color:#FFFF0000
           Pt:-61.488273,9.409154
           Text:"DWG NO"
           Style:ACISOTS
@@ -363,13 +335,12 @@
           XScale:1
         }
         (E2Poly){ Layer:0 Poly:M0,20H-165 }
-        (E2Poly){ Layer:AM_BOR Color:#FFFF0000 Poly:M0,12H-62 }
+        (E2Poly){ Layer:AM_BOR Poly:M0,12H-62 }
         (E2Poly){ Layer:0 Poly:M0,0H-165 }
-        (E2Poly){ Layer:AM_BOR Color:#FFFF0000 Poly:M-62,12H-165 }
-        (E2Poly){ Layer:AM_BOR Color:#FFFF0000 Poly:M-116.857694,20V12 }
+        (E2Poly){ Layer:AM_BOR Poly:M-62,12H-165 }
+        (E2Poly){ Layer:AM_BOR Poly:M-116.857694,20V12 }
         (E2Text){
           Layer:AM_BOR
-          Color:#FFFF0000
           Pt:-163.972039,17.043253
           Text:"FILE NAME"
           Style:ACISOTS
@@ -378,10 +349,9 @@
           XScale:1
         }
         (E2Poly){ Layer:0 Poly:M-165,0V20 }
-        (E2Poly){ Layer:AM_BOR Color:#FFFF0000 Poly:M-116.857694,6H-165 }
+        (E2Poly){ Layer:AM_BOR Poly:M-116.857694,6H-165 }
         (E2Text){
           Layer:AM_BOR
-          Color:#FFFF0000
           Pt:-163.972039,2.052022
           Text:APPR.
           Style:ACISOTS
@@ -391,7 +361,6 @@
         }
         (E2Text){
           Layer:AM_BOR
-          Color:#FFFF0000
           Pt:-163.972039,8.138747
           Text:DRAWN
           Style:ACISOTS
@@ -401,11 +370,10 @@
         }
         (E2Poly){ Layer:0 Poly:M-165,12V0 }
         (E2Poly){ Layer:0 Poly:M-165,0V12 }
-        (E2Poly){ Layer:AM_BOR Color:#FFFF0000 Poly:M-116.857694,12V0 }
-        (E2Poly){ Layer:AM_BOR Color:#FFFF0000 Poly:M-62,20V0 }
+        (E2Poly){ Layer:AM_BOR Poly:M-116.857694,12V0 }
+        (E2Poly){ Layer:AM_BOR Poly:M-62,20V0 }
         (E2Text){
           Layer:AM_BOR
-          Color:#FFFF0000
           Pt:-30.700341,17.043253
           Text:SCALE
           Style:ACISOTS
@@ -413,7 +381,7 @@
           Height:2
           XScale:1
         }
-        (E2Poly){ Layer:AM_BOR Color:#FFFF0000 Poly:M-31.121248,20V12 }
+        (E2Poly){ Layer:AM_BOR Poly:M-31.121248,20V12 }
         (E2Poly){ Layer:0 Poly:M0,0V20 }
       ]
     }
@@ -424,7 +392,6 @@
     (E2Insert){ Layer:0 BlockName:ISO_TITLEB Pt:410,10 XScale:1 YScale:1 }
     (E2Text){
       Layer:AM_BOR
-      Color:#FFFFFF00
       Pt:246.233323,23.036404
       Text:"STB 1000-00.03 Back panel-sheet2"
       Style:STANDARD
@@ -434,7 +401,6 @@
     }
     (E2Text){
       Layer:AM_BOR
-      Color:#FFFFFF00
       Pt:381.212422,23.063553
       Text:"1:1"
       Style:ACISOTS
@@ -444,7 +410,6 @@
     }
     (E2Text){
       Layer:AM_BOR
-      Color:#FFFFFF00
       Pt:257.703075,18.145488
       Text:"Enrik Filipov"
       Style:ACISOTS
@@ -454,7 +419,6 @@
     }
     (E2Text){
       Layer:AM_BOR
-      Color:#FFFFFFFF
       Pt:298.025867,14.595135
       Text:"Back Panel"
       Style:ACISOTS
@@ -464,7 +428,6 @@
     }
     (E2Text){
       Layer:AM_BOR
-      Color:#FFFFFF00
       Pt:296.152767,11.456904
       Text:""
       Style:ACISOTS
@@ -483,7 +446,6 @@
     }
     (E2Text){
       Layer:AM_BOR
-      Color:#FFFFFF00
       Pt:296.406559,23.036404
       Text:""
       Style:ACISOTS
@@ -493,7 +455,6 @@
     }
     (E2Text){
       Layer:AM_BOR
-      Color:#FFFFFF00
       Pt:257.703075,12.081634
       Text:"Maxim Zaiakov"
       Style:ACISOTS
@@ -503,7 +464,6 @@
     }
     (E2Text){
       Layer:AM_BOR
-      Color:#FFFFFF00
       Pt:350.276203,23.036404
       Text:2
       Style:STANDARD
@@ -930,7 +890,6 @@
         }
         (E2Text){
           Layer:dimension
-          Color:#FFFFFF00
           Pt:198.096546,180.077012
           Text:275
           Style:STANDARD
@@ -938,9 +897,9 @@
           Height:2.4
           XScale:1
         }
-        (E2Point){ Layer:Defpoints Color:#FF000000 Pt:60.596546,133.841505 }
-        (E2Point){ Layer:Defpoints Color:#FF000000 Pt:335.596546,133.841505 }
-        (E2Point){ Layer:Defpoints Color:#FF000000 Pt:335.596546,177.377012 }
+        (E2Point){ Layer:Defpoints Pt:60.596546,133.841505 }
+        (E2Point){ Layer:Defpoints Pt:335.596546,133.841505 }
+        (E2Point){ Layer:Defpoints Pt:335.596546,177.377012 }
       ]
     }
     (E2Dimension){
@@ -969,7 +928,6 @@
         }
         (E2Text){
           Layer:dimension
-          Color:#FFFFFF00
           Pt:198.096546,165.369956
           Text:268.2
           Style:STANDARD
@@ -977,9 +935,9 @@
           Height:2.4
           XScale:1
         }
-        (E2Point){ Layer:Defpoints Color:#FF000000 Pt:63.996546,108.241505 }
-        (E2Point){ Layer:Defpoints Color:#FF000000 Pt:332.196546,108.241505 }
-        (E2Point){ Layer:Defpoints Color:#FF000000 Pt:332.196546,162.669956 }
+        (E2Point){ Layer:Defpoints Pt:63.996546,108.241505 }
+        (E2Point){ Layer:Defpoints Pt:332.196546,108.241505 }
+        (E2Point){ Layer:Defpoints Pt:332.196546,162.669956 }
       ]
     }
     (E2Dimension){
@@ -1008,7 +966,6 @@
         }
         (E2Text){
           Layer:dimension
-          Color:#FFFFFF00
           Pt:355.537224,105.850886
           Text:"(56)"
           Style:STANDARD
@@ -1017,9 +974,9 @@
           Height:2.4
           XScale:1
         }
-        (E2Point){ Layer:Defpoints Color:#FF000000 Pt:335.596546,77.860266 }
-        (E2Point){ Layer:Defpoints Color:#FF000000 Pt:335.596546,133.841505 }
-        (E2Point){ Layer:Defpoints Color:#FF000000 Pt:358.237224,133.841505 }
+        (E2Point){ Layer:Defpoints Pt:335.596546,77.860266 }
+        (E2Point){ Layer:Defpoints Pt:335.596546,133.841505 }
+        (E2Point){ Layer:Defpoints Pt:358.237224,133.841505 }
       ]
     }
     (E2Dimension){
@@ -1049,7 +1006,6 @@
         }
         (E2Text){
           Layer:dimension
-          Color:#FFFFFF00
           Pt:342.071783,69.046988
           Text:"(9.9)"
           Style:STANDARD
@@ -1058,9 +1014,9 @@
           Height:2.4
           XScale:1
         }
-        (E2Point){ Layer:Defpoints Color:#FF000000 Pt:335.596546,77.860266 }
-        (E2Point){ Layer:Defpoints Color:#FF000000 Pt:335.596546,87.750886 }
-        (E2Point){ Layer:Defpoints Color:#FF000000 Pt:344.771783,87.750886 }
+        (E2Point){ Layer:Defpoints Pt:335.596546,77.860266 }
+        (E2Point){ Layer:Defpoints Pt:335.596546,87.750886 }
+        (E2Point){ Layer:Defpoints Pt:344.771783,87.750886 }
       ]
     }
     (E2Dimension){
@@ -1089,7 +1045,6 @@
         }
         (E2Text){
           Layer:dimension
-          Color:#FFFFFF00
           Pt:341.183302,121.041505
           Text:"(25.6)"
           Style:STANDARD
@@ -1098,9 +1053,9 @@
           Height:2.4
           XScale:1
         }
-        (E2Point){ Layer:Defpoints Color:#FF000000 Pt:335.596546,133.841505 }
-        (E2Point){ Layer:Defpoints Color:#FF000000 Pt:332.196546,108.241505 }
-        (E2Point){ Layer:Defpoints Color:#FF000000 Pt:343.883302,108.241505 }
+        (E2Point){ Layer:Defpoints Pt:335.596546,133.841505 }
+        (E2Point){ Layer:Defpoints Pt:332.196546,108.241505 }
+        (E2Point){ Layer:Defpoints Pt:343.883302,108.241505 }
       ]
     }
     (E2Dimension){
@@ -1129,7 +1084,6 @@
         }
         (E2Text){
           Layer:dimension
-          Color:#FFFFFF00
           Pt:347.642567,118.654005
           Text:"(30.4)"
           Style:STANDARD
@@ -1138,9 +1092,9 @@
           Height:2.4
           XScale:1
         }
-        (E2Point){ Layer:Defpoints Color:#FF000000 Pt:335.596546,133.841505 }
-        (E2Point){ Layer:Defpoints Color:#FF000000 Pt:325.279041,103.466505 }
-        (E2Point){ Layer:Defpoints Color:#FF000000 Pt:350.342567,103.466505 }
+        (E2Point){ Layer:Defpoints Pt:335.596546,133.841505 }
+        (E2Point){ Layer:Defpoints Pt:325.279041,103.466505 }
+        (E2Point){ Layer:Defpoints Pt:350.342567,103.466505 }
       ]
     }
     (E2Dimension){
@@ -1171,7 +1125,6 @@
         }
         (E2Text){
           Layer:dimension
-          Color:#FFFFFF00
           Pt:307.810435,69.460266
           Text:4.4
           Style:STANDARD
@@ -1180,9 +1133,9 @@
           Height:2.4
           XScale:1
         }
-        (E2Point){ Layer:Defpoints Color:#FF000000 Pt:300.596546,82.260266 }
-        (E2Point){ Layer:Defpoints Color:#FF000000 Pt:335.596546,77.860266 }
-        (E2Point){ Layer:Defpoints Color:#FF000000 Pt:310.510435,77.860266 }
+        (E2Point){ Layer:Defpoints Pt:300.596546,82.260266 }
+        (E2Point){ Layer:Defpoints Pt:335.596546,77.860266 }
+        (E2Point){ Layer:Defpoints Pt:310.510435,77.860266 }
       ]
     }
     (E2Dimension){
@@ -1211,7 +1164,6 @@
         }
         (E2Text){
           Layer:dimension
-          Color:#FFFFFF00
           Pt:68.817641,118.841505
           Text:19
           Style:STANDARD
@@ -1220,9 +1172,9 @@
           Height:2.4
           XScale:1
         }
-        (E2Point){ Layer:Defpoints Color:#FF000000 Pt:76.596546,109.341505 }
-        (E2Point){ Layer:Defpoints Color:#FF000000 Pt:76.596546,128.341505 }
-        (E2Point){ Layer:Defpoints Color:#FF000000 Pt:71.517641,128.341505 }
+        (E2Point){ Layer:Defpoints Pt:76.596546,109.341505 }
+        (E2Point){ Layer:Defpoints Pt:76.596546,128.341505 }
+        (E2Point){ Layer:Defpoints Pt:71.517641,128.341505 }
       ]
     }
     (E2Dimension){
@@ -1253,7 +1205,6 @@
         }
         (E2Text){
           Layer:dimension
-          Color:#FFFFFF00
           Pt:68.817641,142.241505
           Text:5.5
           Style:STANDARD
@@ -1262,9 +1213,9 @@
           Height:2.4
           XScale:1
         }
-        (E2Point){ Layer:Defpoints Color:#FF000000 Pt:76.596546,128.341505 }
-        (E2Point){ Layer:Defpoints Color:#FF000000 Pt:76.596546,133.841505 }
-        (E2Point){ Layer:Defpoints Color:#FF000000 Pt:71.517641,133.841505 }
+        (E2Point){ Layer:Defpoints Pt:76.596546,128.341505 }
+        (E2Point){ Layer:Defpoints Pt:76.596546,133.841505 }
+        (E2Point){ Layer:Defpoints Pt:71.517641,133.841505 }
       ]
     }
     (E2Dimension){
@@ -1295,7 +1246,6 @@
         }
         (E2Text){
           Layer:dimension
-          Color:#FFFFFF00
           Pt:203.385655,141.841505
           Text:4.1
           Style:STANDARD
@@ -1304,9 +1254,9 @@
           Height:2.4
           XScale:1
         }
-        (E2Point){ Layer:Defpoints Color:#FF000000 Pt:198.096546,129.741505 }
-        (E2Point){ Layer:Defpoints Color:#FF000000 Pt:198.096546,133.841505 }
-        (E2Point){ Layer:Defpoints Color:#FF000000 Pt:206.085655,133.841505 }
+        (E2Point){ Layer:Defpoints Pt:198.096546,129.741505 }
+        (E2Point){ Layer:Defpoints Pt:198.096546,133.841505 }
+        (E2Point){ Layer:Defpoints Pt:206.085655,133.841505 }
       ]
     }
     (E2Dimension){
@@ -1335,7 +1285,6 @@
         }
         (E2Text){
           Layer:dimension
-          Color:#FFFFFF00
           Pt:100.381639,128.991505
           Text:9.7
           Style:STANDARD
@@ -1344,9 +1293,9 @@
           Height:2.4
           XScale:1
         }
-        (E2Point){ Layer:Defpoints Color:#FF000000 Pt:109.68025,133.841505 }
-        (E2Point){ Layer:Defpoints Color:#FF000000 Pt:108.08025,124.141505 }
-        (E2Point){ Layer:Defpoints Color:#FF000000 Pt:103.081639,124.141505 }
+        (E2Point){ Layer:Defpoints Pt:109.68025,133.841505 }
+        (E2Point){ Layer:Defpoints Pt:108.08025,124.141505 }
+        (E2Point){ Layer:Defpoints Pt:103.081639,124.141505 }
       ]
     }
     (E2Dimension){
@@ -1377,7 +1326,6 @@
         }
         (E2Text){
           Layer:dimension
-          Color:#FFFFFF00
           Pt:94.829821,110.541505
           Text:5.2
           Style:STANDARD
@@ -1386,9 +1334,9 @@
           Height:2.4
           XScale:1
         }
-        (E2Point){ Layer:Defpoints Color:#FF000000 Pt:108.08025,124.141505 }
-        (E2Point){ Layer:Defpoints Color:#FF000000 Pt:108.08025,118.941505 }
-        (E2Point){ Layer:Defpoints Color:#FF000000 Pt:97.529821,118.941505 }
+        (E2Point){ Layer:Defpoints Pt:108.08025,124.141505 }
+        (E2Point){ Layer:Defpoints Pt:108.08025,118.941505 }
+        (E2Point){ Layer:Defpoints Pt:97.529821,118.941505 }
       ]
     }
     (E2Dimension){
@@ -1417,7 +1365,6 @@
         }
         (E2Text){
           Layer:dimension
-          Color:#FFFFFF00
           Pt:123.422351,125.441505
           Text:16.8
           Style:STANDARD
@@ -1426,9 +1373,9 @@
           Height:2.4
           XScale:1
         }
-        (E2Point){ Layer:Defpoints Color:#FF000000 Pt:117.18025,133.841505 }
-        (E2Point){ Layer:Defpoints Color:#FF000000 Pt:117.18025,117.041505 }
-        (E2Point){ Layer:Defpoints Color:#FF000000 Pt:126.122351,117.041505 }
+        (E2Point){ Layer:Defpoints Pt:117.18025,133.841505 }
+        (E2Point){ Layer:Defpoints Pt:117.18025,117.041505 }
+        (E2Point){ Layer:Defpoints Pt:126.122351,117.041505 }
       ]
     }
     (E2Dimension){
@@ -1457,7 +1404,6 @@
         }
         (E2Text){
           Layer:dimension
-          Color:#FFFFFF00
           Pt:326.306546,61.703145
           Text:18.6
           Style:STANDARD
@@ -1465,9 +1411,9 @@
           Height:2.4
           XScale:1
         }
-        (E2Point){ Layer:Defpoints Color:#FF000000 Pt:335.596546,77.860266 }
-        (E2Point){ Layer:Defpoints Color:#FF000000 Pt:317.016546,95.204011 }
-        (E2Point){ Layer:Defpoints Color:#FF000000 Pt:317.016546,59.003145 }
+        (E2Point){ Layer:Defpoints Pt:335.596546,77.860266 }
+        (E2Point){ Layer:Defpoints Pt:317.016546,95.204011 }
+        (E2Point){ Layer:Defpoints Pt:317.016546,59.003145 }
       ]
     }
     (E2Dimension){
@@ -1496,7 +1442,6 @@
         }
         (E2Text){
           Layer:dimension
-          Color:#FFFFFF00
           Pt:198.096546,61.703145
           Text:"205±0.1"
           Style:STANDARD
@@ -1504,9 +1449,9 @@
           Height:2.4
           XScale:1
         }
-        (E2Point){ Layer:Defpoints Color:#FF000000 Pt:95.596546,82.260266 }
-        (E2Point){ Layer:Defpoints Color:#FF000000 Pt:300.596546,82.260266 }
-        (E2Point){ Layer:Defpoints Color:#FF000000 Pt:300.596546,59.003145 }
+        (E2Point){ Layer:Defpoints Pt:95.596546,82.260266 }
+        (E2Point){ Layer:Defpoints Pt:300.596546,82.260266 }
+        (E2Point){ Layer:Defpoints Pt:300.596546,59.003145 }
       ]
     }
     (E2Dimension){
@@ -1535,7 +1480,6 @@
         }
         (E2Text){
           Layer:dimension
-          Color:#FFFFFF00
           Pt:292.016546,121.248787
           Text:50
           Style:STANDARD
@@ -1543,9 +1487,9 @@
           Height:2.4
           XScale:1
         }
-        (E2Point){ Layer:Defpoints Color:#FF000000 Pt:317.016546,111.729 }
-        (E2Point){ Layer:Defpoints Color:#FF000000 Pt:267.016546,111.729 }
-        (E2Point){ Layer:Defpoints Color:#FF000000 Pt:267.016546,118.548787 }
+        (E2Point){ Layer:Defpoints Pt:317.016546,111.729 }
+        (E2Point){ Layer:Defpoints Pt:267.016546,111.729 }
+        (E2Point){ Layer:Defpoints Pt:267.016546,118.548787 }
       ]
     }
     (E2Dimension){
@@ -1574,7 +1518,6 @@
         }
         (E2Text){
           Layer:dimension
-          Color:#FFFFFF00
           Pt:256.016546,121.248787
           Text:22
           Style:STANDARD
@@ -1582,9 +1525,9 @@
           Height:2.4
           XScale:1
         }
-        (E2Point){ Layer:Defpoints Color:#FF000000 Pt:267.016546,111.729 }
-        (E2Point){ Layer:Defpoints Color:#FF000000 Pt:245.016546,111.729 }
-        (E2Point){ Layer:Defpoints Color:#FF000000 Pt:245.016546,118.548787 }
+        (E2Point){ Layer:Defpoints Pt:267.016546,111.729 }
+        (E2Point){ Layer:Defpoints Pt:245.016546,111.729 }
+        (E2Point){ Layer:Defpoints Pt:245.016546,118.548787 }
       ]
     }
     (E2Dimension){
@@ -1613,7 +1556,6 @@
         }
         (E2Text){
           Layer:dimension
-          Color:#FFFFFF00
           Pt:68.596546,104.389479
           Text:16
           Style:STANDARD
@@ -1621,9 +1563,9 @@
           Height:2.4
           XScale:1
         }
-        (E2Point){ Layer:Defpoints Color:#FF000000 Pt:76.596546,109.341505 }
-        (E2Point){ Layer:Defpoints Color:#FF000000 Pt:60.596546,105.850886 }
-        (E2Point){ Layer:Defpoints Color:#FF000000 Pt:60.596546,101.689479 }
+        (E2Point){ Layer:Defpoints Pt:76.596546,109.341505 }
+        (E2Point){ Layer:Defpoints Pt:60.596546,105.850886 }
+        (E2Point){ Layer:Defpoints Pt:60.596546,101.689479 }
       ]
     }
     (E2Dimension){
@@ -1652,7 +1594,6 @@
         }
         (E2Text){
           Layer:dimension
-          Color:#FFFFFF00
           Pt:83.146546,104.389479
           Text:13.1
           Style:STANDARD
@@ -1660,9 +1601,9 @@
           Height:2.4
           XScale:1
         }
-        (E2Point){ Layer:Defpoints Color:#FF000000 Pt:76.596546,109.341505 }
-        (E2Point){ Layer:Defpoints Color:#FF000000 Pt:89.696546,109.341505 }
-        (E2Point){ Layer:Defpoints Color:#FF000000 Pt:89.696546,101.689479 }
+        (E2Point){ Layer:Defpoints Pt:76.596546,109.341505 }
+        (E2Point){ Layer:Defpoints Pt:89.696546,109.341505 }
+        (E2Point){ Layer:Defpoints Pt:89.696546,101.689479 }
       ]
     }
     (E2Dimension){
@@ -1691,7 +1632,6 @@
         }
         (E2Text){
           Layer:dimension
-          Color:#FFFFFF00
           Pt:99.946546,92.421125
           Text:78.7
           Style:STANDARD
@@ -1699,9 +1639,9 @@
           Height:2.4
           XScale:1
         }
-        (E2Point){ Layer:Defpoints Color:#FF000000 Pt:60.596546,87.750886 }
-        (E2Point){ Layer:Defpoints Color:#FF000000 Pt:139.296546,102.191505 }
-        (E2Point){ Layer:Defpoints Color:#FF000000 Pt:139.296546,89.721125 }
+        (E2Point){ Layer:Defpoints Pt:60.596546,87.750886 }
+        (E2Point){ Layer:Defpoints Pt:139.296546,102.191505 }
+        (E2Point){ Layer:Defpoints Pt:139.296546,89.721125 }
       ]
     }
     (E2Dimension){
@@ -1730,7 +1670,6 @@
         }
         (E2Text){
           Layer:dimension
-          Color:#FFFFFF00
           Pt:157.471546,120.53137
           Text:36.4
           Style:STANDARD
@@ -1738,9 +1677,9 @@
           Height:2.4
           XScale:1
         }
-        (E2Point){ Layer:Defpoints Color:#FF000000 Pt:139.296546,102.191505 }
-        (E2Point){ Layer:Defpoints Color:#FF000000 Pt:175.646546,109.441505 }
-        (E2Point){ Layer:Defpoints Color:#FF000000 Pt:175.646546,117.83137 }
+        (E2Point){ Layer:Defpoints Pt:139.296546,102.191505 }
+        (E2Point){ Layer:Defpoints Pt:175.646546,109.441505 }
+        (E2Point){ Layer:Defpoints Pt:175.646546,117.83137 }
       ]
     }
     (E2Dimension){
@@ -1770,7 +1709,6 @@
         }
         (E2Text){
           Layer:dimension
-          Color:#FFFFFF00
           Pt:142.911121,69.310266
           Text:"(19.3)"
           Style:STANDARD
@@ -1779,9 +1717,9 @@
           Height:2.4
           XScale:1
         }
-        (E2Point){ Layer:Defpoints Color:#FF000000 Pt:145.446546,97.191505 }
-        (E2Point){ Layer:Defpoints Color:#FF000000 Pt:145.446546,77.860266 }
-        (E2Point){ Layer:Defpoints Color:#FF000000 Pt:145.611121,77.860266 }
+        (E2Point){ Layer:Defpoints Pt:145.446546,97.191505 }
+        (E2Point){ Layer:Defpoints Pt:145.446546,77.860266 }
+        (E2Point){ Layer:Defpoints Pt:145.611121,77.860266 }
       ]
     }
     (E2Dimension){
@@ -1811,7 +1749,6 @@
         }
         (E2Text){
           Layer:dimension
-          Color:#FFFFFF00
           Pt:166.595091,69.310266
           Text:"(17.7)"
           Style:STANDARD
@@ -1820,9 +1757,9 @@
           Height:2.4
           XScale:1
         }
-        (E2Point){ Layer:Defpoints Color:#FF000000 Pt:179.396546,95.591505 }
-        (E2Point){ Layer:Defpoints Color:#FF000000 Pt:179.396546,77.860266 }
-        (E2Point){ Layer:Defpoints Color:#FF000000 Pt:169.295091,77.860266 }
+        (E2Point){ Layer:Defpoints Pt:179.396546,95.591505 }
+        (E2Point){ Layer:Defpoints Pt:179.396546,77.860266 }
+        (E2Point){ Layer:Defpoints Pt:169.295091,77.860266 }
       ]
     }
     (E2Dimension){
@@ -1832,7 +1769,6 @@
         (E2Poly){ Layer:dimension Poly:M260.006132,106.131857L257.903008,106.931462 }
         (E2Text){
           Layer:dimension
-          Color:#FFFFFF00
           Pt:284.915207,99.550014
           Text:"3x∅10.5"
           Style:STANDARD
@@ -1860,8 +1796,8 @@
             271.923836,101.600759
           ]
         }
-        (E2Point){ Layer:Defpoints Color:#FF000000 Pt:271.923836,101.600759 }
-        (E2Point){ Layer:Defpoints Color:#FF000000 Pt:262.109257,105.332251 }
+        (E2Point){ Layer:Defpoints Pt:271.923836,101.600759 }
+        (E2Point){ Layer:Defpoints Pt:262.109257,105.332251 }
       ]
     }
     (E2Dimension){
@@ -1871,7 +1807,6 @@
         (E2Poly){ Layer:dimension Poly:M304.57077,82.713635L306.806271,82.968655 }
         (E2Text){
           Layer:dimension
-          Color:#FFFFFF00
           Pt:285.085048,83.208267
           Text:"4x∅3.5"
           Style:STANDARD
@@ -1899,8 +1834,8 @@
             298.857823,82.061917
           ]
         }
-        (E2Point){ Layer:Defpoints Color:#FF000000 Pt:298.857823,82.061917 }
-        (E2Point){ Layer:Defpoints Color:#FF000000 Pt:302.335269,82.458615 }
+        (E2Point){ Layer:Defpoints Pt:298.857823,82.061917 }
+        (E2Point){ Layer:Defpoints Pt:302.335269,82.458615 }
       ]
     }
     (E2Dimension){
@@ -1910,7 +1845,6 @@
         (E2Poly){ Layer:dimension Poly:M201.279244,131.197676L203.325264,132.133786 }
         (E2Text){
           Layer:dimension
-          Color:#FFFFFF00
           Pt:187.106851,127.6826
           Text:"∅2.5"
           Style:STANDARD
@@ -1938,8 +1872,8 @@
             196.959868,129.221444
           ]
         }
-        (E2Point){ Layer:Defpoints Color:#FF000000 Pt:196.959868,129.221444 }
-        (E2Point){ Layer:Defpoints Color:#FF000000 Pt:199.233224,130.261566 }
+        (E2Point){ Layer:Defpoints Pt:196.959868,129.221444 }
+        (E2Point){ Layer:Defpoints Pt:199.233224,130.261566 }
       ]
     }
     (E2Dimension){
@@ -1968,7 +1902,6 @@
         }
         (E2Text){
           Layer:dimension
-          Color:#FFFFFF00
           Pt:85.138398,98.811644
           Text:49.1
           Style:STANDARD
@@ -1976,9 +1909,9 @@
           Height:2.4
           XScale:1
         }
-        (E2Point){ Layer:Defpoints Color:#FF000000 Pt:109.68025,117.041505 }
-        (E2Point){ Layer:Defpoints Color:#FF000000 Pt:60.596546,117.041505 }
-        (E2Point){ Layer:Defpoints Color:#FF000000 Pt:60.596546,96.111644 }
+        (E2Point){ Layer:Defpoints Pt:109.68025,117.041505 }
+        (E2Point){ Layer:Defpoints Pt:60.596546,117.041505 }
+        (E2Point){ Layer:Defpoints Pt:60.596546,96.111644 }
       ]
     }
     (E2Dimension){
@@ -2009,7 +1942,6 @@
         }
         (E2Text){
           Layer:dimension
-          Color:#FFFFFF00
           Pt:113.43025,148.767859
           Text:7.5
           Style:STANDARD
@@ -2017,9 +1949,9 @@
           Height:2.4
           XScale:1
         }
-        (E2Point){ Layer:Defpoints Color:#FF000000 Pt:109.68025,133.841505 }
-        (E2Point){ Layer:Defpoints Color:#FF000000 Pt:117.18025,133.841505 }
-        (E2Point){ Layer:Defpoints Color:#FF000000 Pt:117.18025,146.067859 }
+        (E2Point){ Layer:Defpoints Pt:109.68025,133.841505 }
+        (E2Point){ Layer:Defpoints Pt:117.18025,133.841505 }
+        (E2Point){ Layer:Defpoints Pt:117.18025,146.067859 }
       ]
     }
     (E2Dimension){
@@ -2050,7 +1982,6 @@
         }
         (E2Text){
           Layer:dimension
-          Color:#FFFFFF00
           Pt:125.18025,108.229253
           Text:1.8
           Style:STANDARD
@@ -2058,9 +1989,9 @@
           Height:2.4
           XScale:1
         }
-        (E2Point){ Layer:Defpoints Color:#FF000000 Pt:115.399011,120.541505 }
-        (E2Point){ Layer:Defpoints Color:#FF000000 Pt:117.18025,117.041505 }
-        (E2Point){ Layer:Defpoints Color:#FF000000 Pt:117.18025,105.529253 }
+        (E2Point){ Layer:Defpoints Pt:115.399011,120.541505 }
+        (E2Point){ Layer:Defpoints Pt:117.18025,117.041505 }
+        (E2Point){ Layer:Defpoints Pt:117.18025,105.529253 }
       ]
     }
     (E2Dimension){
@@ -2090,7 +2021,6 @@
         }
         (E2Text){
           Layer:dimension
-          Color:#FFFFFF00
           Pt:101.320869,156.158153
           Text:"(8.7)"
           Style:STANDARD
@@ -2098,9 +2028,9 @@
           Height:2.4
           XScale:1
         }
-        (E2Point){ Layer:Defpoints Color:#FF000000 Pt:117.78963,121.541505 }
-        (E2Point){ Layer:Defpoints Color:#FF000000 Pt:109.070869,121.541505 }
-        (E2Point){ Layer:Defpoints Color:#FF000000 Pt:109.070869,153.458153 }
+        (E2Point){ Layer:Defpoints Pt:117.78963,121.541505 }
+        (E2Point){ Layer:Defpoints Pt:109.070869,121.541505 }
+        (E2Point){ Layer:Defpoints Pt:109.070869,153.458153 }
       ]
     }
     (E2Poly){ Layer:dimension Poly:M115.399011,122.541505L114.18346,121.340104 }

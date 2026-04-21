@@ -22,7 +22,7 @@ public class DXFWriter {
 
    /// <summary>Maps Color4 to nearest ACAD color by comparing RGB values</summary>
    public static int ToACADColor (Color4 color) {
-      return DXFReader.ACADColors.MinIndexBy (a => Error (a, color));
+      return DXFCore.ACADColors.MinIndexBy (a => Error (a, color));
 
       // Helper method
       // Returns square dist between two Colors (RGB comparison only)
@@ -84,7 +84,6 @@ public class DXFWriter {
    // 62 group with the color (if the color is not BYLAYER)
    void OutEntPrologue (Ent2 ent, string type) {
       Out ($" 0\n{type}\n 8\n{ent.Layer.Name}\n");
-      if (!ent.Color.IsNil) Out ($" 62\n{ToACADColor (ent.Color)}\n");
    }
 
    // Writes the LAYER table.
@@ -93,10 +92,10 @@ public class DXFWriter {
    // table (but not to the drawing itself).
    void OutLayers () {
       var layers = D.Layers.ToList ();
-      if (D.Ents.Any (a => a is E2Bendline)) {
+      if (AllBends ().Any ()) {
          mBend = layers.FirstOrDefault (a => a.Name.EqIC ("BEND"));
          mMBend = layers.FirstOrDefault (a => a.Name.EqIC ("MBEND"));
-         D.Ents.OfType<E2Bendline> ().ForEach (a => {
+         AllBends ().ForEach (a => {
             if (mBend is null && a.Angle >= 0) layers.Add (mBend = new Layer2 ("BEND", Color4.Green, ELineType.Dot));
             else if (mMBend is null && a.Angle < 0) layers.Add (mMBend = new Layer2 ("MBEND", Color4.Green, ELineType.DashDotDot));
          });
@@ -108,6 +107,11 @@ public class DXFWriter {
          Out ($" 0\nLAYER\n 70\n{flags}\n 2\n{name}\n 62\n{color}\n 6\n{ltype}\n");
       }
       Out (" 0\nENDTAB\n");
+
+      IEnumerable<E2Bendline> AllBends () {
+         foreach (var bend in D.Ents.OfType<E2Bendline> ()) yield return bend;
+         foreach (var bend in D.Blocks.SelectMany (b => b.Ents).OfType<E2Bendline> ()) yield return bend;
+      }
    }
 
    // Writes out the STYLE table with a list of text styles

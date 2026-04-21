@@ -17,9 +17,10 @@ public readonly struct Vec2F (float x, float y) : IEQuable<Vec2F> {
 }
 
 /// <summary>2D vector of short-ints (used to represent viewport sizes etc)</summary>
-[StructLayout (LayoutKind.Sequential, Pack = 4, Size = 8)]
+[StructLayout (LayoutKind.Sequential, Pack = 2, Size = 4)]
 public readonly struct Vec2S (short x, short y) : IEQuable<Vec2S> {
    public Vec2S (int x, int y) : this ((short)x, (short)y) { }
+   public static implicit operator Vec2S ((int X, int Y) tup) => new (tup.X, tup.Y);
    public bool EQ (Vec2S b) => X == b.X && Y == b.Y;
    public override string ToString () => $"<{X},{Y}>";
    public static readonly Vec2S Zero = new (0, 0);
@@ -121,46 +122,50 @@ public readonly struct Mat4F {
 }
 
 /// <summary>An axis-aligned pixel-rectangle (components are shorts)</summary>
-/// This follows OpenGL sign conventions : (0,0) is the bottom left corner of the screen,
-/// and +X is right, +Y is up
+/// This follows the Nori pixel-coordinate conventions: (0,0) is the top left corner of the
+/// screen, and +X is RIGHT, +Y is DOWN. The bottom-right corner pixel of the screen has 
+/// pixel coordinates (Lux.PanelSize.X - 1, Lux.PanelSize.Y - 1)
 [StructLayout (LayoutKind.Sequential, Pack = 2, Size = 8)]
 public readonly struct RectS : IEQuable<RectS> {
-   public RectS (int left, int bottom, int right, int top) {
-      (Left, Bottom, Right, Top) = ((short)left, (short)bottom, (short)right, (short)top);
-      if (right < left || top < bottom) throw new NotImplementedException ();
+   // Constructors -------------------------------------------------------------
+   public RectS (int left, int top, int right, int bottom) {
+      (Left, Top, Right, Bottom) = ((short)left, (short)top, (short)right, (short)bottom);
+      Lib.Assert (right >= left && bottom >= top);
    }
 
-   public RectS (float left, float bottom, float right, float top) {
-      (Left, Bottom, Right, Top) = ((short)(left + 0.5f), (short)(bottom + 0.5f), (short)(right + 0.5f), (short)(top + 0.5f));
-      if (right < left || top < bottom) throw new NotImplementedException ();
-   }
+   // Properties ---------------------------------------------------------------
+   /// <summary>Is this an 'empty' RectS</summary>
+   public bool IsEmpty => Right == -32768;
 
-   public RectS Shifted (int x, int y) => new (Left + x, Bottom + y, Right + x, Top + y);
+   /// <summary>Left edge of the RectS (in pixels)</summary>
+   public readonly short Left;
+   /// <summary>Top edge of the RectS (in pixels) - screen top is at Y = 0 pixels</summary>
+   public readonly short Top;
+   /// <summary>Right edge of the RectS (in pixels) : Right >= Left always</summary>
+   public readonly short Right;
+   /// <summary>Bottom edge of the RectS (in pixels) : Bottom >= Top always</summary>
+   public readonly short Bottom;
 
-   public static readonly RectS Empty = new (32767, 32767, 32767, 32767);
-   public bool IsEmpty => Left == 32767;
-
-   public bool Contains (Vec2S p)
-      => Left <= p.X && p.X <= Right && Bottom <= p.Y && p.Y <= Top;
-
+   /// <summary>The height of the RectS</summary>
+   public int Height => Bottom - Top;
+   /// <summary>The width of the RectS</summary>
    public int Width => Right - Left;
-   public int Height => Top - Bottom;
-   public Vec2S Midpoint => new ((Left + Right) / 2, (Top + Bottom) / 2);
-   public Vec2S BottomLeft => new (Left, Bottom);
-   public Vec2S TopRight => new (Right, Top);
-   public Vec2S Size => new (Right - Left, Top - Bottom);
-   public override string ToString () => $"[{Width}x{Height} @ {Left},{Bottom}]";
+   /// <summary>The size of this RectS in pixels (width,height)</summary>
+   public Vec2S Size => new (Right - Left, Bottom - Top);
 
-   public int CompareTo (RectS b) {
-      int n = Left.CompareTo (b.Left); if (n != 0) return n;
-      n = Bottom.CompareTo (b.Bottom); if (n != 0) return n;
-      n = Right.CompareTo (b.Right); if (n != 0) return n;
-      return Top.CompareTo (b.Top);
-   }
+   /// <summary>Special 'empty' RectS</summary>
+   public static readonly RectS Empty = new (-32768, -32768, -32768, -32768);
 
+   // Methods ------------------------------------------------------------------
+   /// <summary>Implementation of IEQable</summary>
    public bool EQ (RectS b)
-      => Left == b.Left && Bottom == b.Bottom && Right == b.Right && Top == b.Top;
+      => Left == b.Left && Top == b.Top && Right == b.Right && Bottom == b.Bottom;
 
-   public readonly short Left, Bottom, Right, Top;
+   /// <summary>Checks if this RectS contains a given Vec2S</summary>
+   public bool Contains (Vec2S p)
+      => Left <= p.X && p.X <= Right && Top <= p.Y && p.Y <= Bottom;
+
+   // Implementation -----------------------------------------------------------
+   public override string ToString () => $"RectS {Width}x{Height} @ {Left},{Top}";
 }
 #endregion

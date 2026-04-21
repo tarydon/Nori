@@ -58,7 +58,7 @@ static class LineCount {
       var (prevDir, nFiles, nLines, nComments) = ("", 0, 0, 0);
       Console.WriteLine ("  No                    Path File                   Lines Comments       %");
       Console.WriteLine ("---------------------------------------------------------------------------");
-      foreach (var file in Directory.EnumerateFiles ("N:\\", "*.cs", SearchOption.AllDirectories)) {
+      foreach (var file in EnumFiles ()) {
          if (SrcClean.ExcludeFile (file)) continue;
          var code = File.ReadAllLines (file);
          int comments = code.Count (a => a.TrimStart ().StartsWith ("//"));
@@ -87,6 +87,16 @@ static class LineCount {
       var dt0 = new DateTime (2024, 10, 13);
       int days = (int)((dt - dt0).TotalDays + 0.5);
       Console.WriteLine ($"{nFiles,4}                     Day {days,-4} {nLines,23}{nComments,9}{tPercent,8}%");
+   }
+
+   static IEnumerable<string> EnumFiles () {
+      foreach (var file in Directory.EnumerateFiles ("N:\\", "*.*", SearchOption.AllDirectories)) {
+         string ext = Path.GetExtension (file).ToLower ();
+         if (ext is not (".vert" or ".geom" or ".tctrl" or ".teval" or ".frag")) continue;
+         yield return file; 
+      }
+      foreach (var file in Directory.EnumerateFiles ("N:\\", "*.cs", SearchOption.AllDirectories))
+         yield return file;
    }
 }
 #endregion

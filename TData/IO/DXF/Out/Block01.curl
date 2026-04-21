@@ -6,11 +6,10 @@
       Name:Blimp
       Base:0,0
       Ents:[
-        (E2Poly){ Layer:0 Color:#FF000000 Poly:C0,0,10 }
-        (E2Poly){ Layer:0 Color:#FF000000 Poly:M-5,-5V5H35Q40,0,-1.000001V-5Z }
+        (E2Poly){ Layer:0 Poly:C0,0,10 }
+        (E2Poly){ Layer:0 Poly:M-5,-5V5H35Q40,0,-1.000001V-5Z }
         (E2Text){
           Layer:0
-          Color:#FF000000
           Pt:12,-2.5
           Text:Blimp
           Style:STANDARD
@@ -24,12 +23,8 @@
       Name:Cross
       Base:0,0
       Ents:[
-        (E2Poly){
-          Layer:0
-          Color:#FF000000
-          Poly:M3,-3H10V3H3V10H-3V8Q-8,3,-1.000001H-10V-3H-3V-10H3Z
-        }
-        (E2Poly){ Layer:0 Color:#FF000000 Poly:M0,0L-10,10 }
+        (E2Poly){ Layer:0 Poly:M3,-3H10V3H3V10H-3V8Q-8,3,-1.000001H-10V-3H-3V-10H3Z }
+        (E2Poly){ Layer:0 Poly:M0,0L-10,10 }
       ]
     }
   ]

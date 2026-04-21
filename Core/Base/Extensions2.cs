@@ -48,6 +48,9 @@ public static class Extensions2 {
       /// <summary>Converts a ReadOnlySpan(byte) to double, returning 0 if the conversion fails</summary>
       public double ToDouble () => Utf8Parser.TryParse (Trim (s), out double f, out _) ? f : 0;
 
+      /// <summary>Converts a ReadOnlySpan(byte) to double, returning the fallback value if conversion fails</summary>
+      public double ToDouble (double fallback) => Utf8Parser.TryParse (Trim (s), out double f, out _) ? f : fallback;
+
       /// <summary>Converts a ReadOnlySpan(byte) to int, returning 0 if the conversion fails</summary>
       public int ToInt () => Utf8Parser.TryParse (Trim (s), out int n, out _) ? n : 0;
 

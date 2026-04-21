@@ -17,20 +17,19 @@ public partial class MainWindow : Window {
       TraceVN.TextColor = Color4.Blue; TraceVN.HoldTime = 200;
       Lib.Tracer = TraceVN.Print;
       new SceneManipulator ();
-
-      string file = System.IO.Directory.GetFiles ("c:\\etc", "demo*.dxf")[^1];
-      file = "c:\\etc\\demo1\\lefthorn.dxf";
-      Title = file;
-      var dwg = DXFReader.Load (file);
-      var polys = dwg.Ents.OfType<E2Poly> ().Select (a => a.Poly).OrderBy (a => a.GetBound ().Midpoint.X).ToList ();
-      CSMesher mesher = new ([polys[0]], [polys[1]]) { Tess = ETess.VeryFine };
-      var mesh = mesher.Build ();
-
-      Lux.UIScene = new Scene3 { 
-         Root = new Mesh3VN (mesh.Wireframed ()) { Color = Color4.White },
-         Bound = mesh.Bound,
-         BgrdColor = Color4.Gray (200)
-      };
-      Lux.BackFacesPink = true;
+      Lux.UIScene = new DemoScene ();
    }
+}
+
+class DemoScene : Scene2 {
+   public DemoScene () {
+      mFace = new (Lib.ReadBytes ("nori:GL/Fonts/Roboto-Regular.ttf"), (int)(48 * Lux.DPIScale));
+      Bound = new Bound2 (0, 0, 100, 50);
+      BgrdColor = new Color4 (128, 96, 64);
+      Root = new SimpleVN (
+         () => (Lux.Color, Lux.TypeFace) = (Color4.White, mFace),
+         () => Lux.Text ("Welcome to Nori.", new Vec2S (100, Lux.PanelSize.Y - 100))
+      );
+   }
+   TypeFace mFace;
 }

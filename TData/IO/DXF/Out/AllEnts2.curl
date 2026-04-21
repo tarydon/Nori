@@ -41,12 +41,11 @@
     (E2Dimension){
       Layer:0
       Ents:[
-        (E2Poly){ Layer:0 Color:#FF000000 Poly:M-71.594562,71.594562L-81.255654,81.255654 }
-        (E2Poly){ Layer:0 Color:#FF000000 Poly:M55.684659,198.873782L46.023566,208.534875 }
-        (E2Poly){ Layer:0 Color:#FF000000 Poly:M-75.952353,83.023421L44.255799,203.231574 }
+        (E2Poly){ Layer:0 Poly:M-71.594562,71.594562L-81.255654,81.255654 }
+        (E2Poly){ Layer:0 Poly:M55.684659,198.873782L46.023566,208.534875 }
+        (E2Poly){ Layer:0 Poly:M-75.952353,83.023421L44.255799,203.231574 }
         (E2Solid){
           Layer:0
-          Color:#FF000000
           Pts:[
             -76.541609,83.612677
             -75.363098,82.434166
@@ -56,7 +55,6 @@
         }
         (E2Solid){
           Layer:0
-          Color:#FF000000
           Pts:[
             43.666544,203.82083
             44.845055,202.642318
@@ -66,7 +64,6 @@
         }
         (E2Text){
           Layer:0
-          Color:#FF000000
           Pt:-18.499928,145.779148
           Text:90
           Style:Standard
@@ -75,9 +72,9 @@
           Height:5
           XScale:1
         }
-        (E2Point){ Layer:Defpoints Color:#FF000000 Pt:-70.710678,70.710678 }
-        (E2Point){ Layer:Defpoints Color:#FF000000 Pt:56.568542,197.989899 }
-        (E2Point){ Layer:Defpoints Color:#FF000000 Pt:47.791333,206.767108 }
+        (E2Point){ Layer:Defpoints Pt:-70.710678,70.710678 }
+        (E2Point){ Layer:Defpoints Pt:56.568542,197.989899 }
+        (E2Point){ Layer:Defpoints Pt:47.791333,206.767108 }
       ]
     }
     (E2Insert){ Layer:0 BlockName:Marker1 Pt:0,70.710678 Angle:90 XScale:1 YScale:1 }

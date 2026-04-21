@@ -150,31 +150,34 @@ public class TypeFace {
    /// <summary>Get metrics data for a given glyph index</summary>
    public ref Metrics GetMetrics (uint n) => ref Notes[n];
 
-   /// <summary>This 'measures' the text and returns the bounding box of it</summary>
-   /// This assumes we are drawing the text with the baseline-start at (0,0). As with
-   /// all pixel coordinates, the top left of the screen is 0,0 and +Y goes downwards. 
-   /// This returns the bounding rectangle of such a text. 
+   /// <summary>This 'measures' some text and returns the bounding box of it</summary>
+   /// This assumes that we are drawing the text with a baseline-start at (0,0). As with all
+   /// pixel coordinates, +Y goes downwards. So the 'top' of this returned rectangle will be
+   /// a negative value (which is how many pixels the top of text extends above the baseline),
+   /// and the 'bottom' of this returned rectangle will be a positive value (which will be how many
+   /// pixels the text descends below the baseline). 
    /// <param name="text">The text to measure</param>
    /// <param name="exact">If set, the Y extents are tightly aligned to the extents of the
-   /// given text. Otherwise, they are set to the general ascender / descender of this font,
-   /// and thus more useful for alignment, planning and positioning</param>
+   /// given string of text. Otherwise, they are set to the general ascender / descender of this
+   /// font, and are thus more useful for alignment, polanning and positioning</param>
    public RectS Measure (string text, bool exact = false) {
       uint idx0 = 0;
-      int x = 0, y = 0;
-      int xMin = 9999, yMin = 0, xMax = 0, yMax = 0;
+      int x = 0, y = 0, left = 9999, top = 0, right = 0, bottom = 0;
       foreach (var ch in text) {
+         // Get the glyph index for this incoming char, then get the metrics for it
+         // and the kerning between this and the previous char
          uint idx1 = GetGlyphIndex (ch);
-         var metric = GetMetrics (idx1);
+         ref var metric = ref GetMetrics (idx1);
          int kern = GetKerning (idx0, idx1);
-         int xChar = x + metric.LeftBearing + kern, yChar = y + metric.TopBearing;
-         xMin = Math.Min (xMin, xChar); yMin = Math.Min (yMin, yChar - metric.Rows);
-         xMax = Math.Max (xMax, xChar + metric.Columns); yMax = Math.Max (yMax, yChar);
+         int xChar = x + metric.LeftBearing + kern, yChar = y - metric.TopBearing;
+         left = Math.Min (left, xChar); top = Math.Min (top, yChar);
+         right = Math.Max (right, xChar + metric.Columns); bottom = Math.Max (bottom, yChar + metric.Rows);
          x += metric.Advance + kern;
          idx0 = idx1;
       }
-      if (!exact) { yMax = mAscender; yMin = -mDescender; }
-      if (xMax == 0) xMin = 0;
-      return new (xMin, yMin, xMax, yMax);
+      if (!exact) { bottom = mDescender; top = -mAscender; }
+      if (right == 0) left = 0;
+      return new (left, top, right, bottom);
    }
 
    /// <summary>Measures each character of the text and stores the potential cursor positions in xpos</summary>

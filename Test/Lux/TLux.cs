@@ -33,13 +33,13 @@ class TLux {
 
       void Draw () {
          (LTScale, LineType, LineWidth, TypeFace) = (100, ELineType.Dot, 10, mFace);
-         TextPx ("Chapter", new (10, 114));
+         Text ("Chapter", new (10, 46));
          Lines ([new Vec2F (0, 65), new (100, 65)]);
          TypeFace = mFace2;
-         TextPx ("An example", new (10, 65));
-         TextPx ("of TrueType", new (10, 40));
+         Text ("An example", new (10, 95));
+         Text ("of TrueType", new (10, 120));
          Color = Color4.Yellow;
-         TextPx ("text.", new (10, 15));
+         Text ("text.", new (10, 145));
       }
    }
 
@@ -85,7 +85,7 @@ class TLux {
       TestPNG (scene, new (264, 144), DIBitmap.EFormat.Gray8, "ZLevel");
 
       void SetAttributes1 () { Color = Color4.Gray (160); LineWidth = 4; }
-      void Draw1 () => Quads ([new (20, 0), new (40, 0), new (20, 20), new (0, 20)]);
+      void Draw1 () => Quads ([new Vec2F (20, 0), new (40, 0), new (20, 20), new (0, 20)]);
 
       void SetAttributes2 () { Color = Color4.Black; TypeFace = mFace; ZLevel = -1; }
       void Draw2 () => Text2D ("Hello, World!", new (0, 5), ETextAlign.MidLeft, Vec2S.Zero);
@@ -110,7 +110,7 @@ class TLux {
          foreach (var n in iter) {
             (ZLevel, Color) = (n, Color4.Gray (n * 10));
             int x = n * 4, y = x;
-            Quads ([new (x, y), new (x + 98, y), new (x + 98, y + 98), new (x, y + 98)]);
+            Quads ([new Vec2F (x, y), new (x + 98, y), new (x + 98, y + 98), new (x, y + 98)]);
          }
       }
    }
@@ -242,6 +242,50 @@ class TLux {
          Text3D ("ABC", new (5, 11, 2), ETextAlign.BaseCenter, Vec2S.Zero);
          Color = Color4.Cyan;
          Text3D ("012", new (5, 16, 2), ETextAlign.BaseCenter, Vec2S.Zero);
+      }
+   }
+
+   [Test (241, "Various Px shaders")]
+   void Test13 () {
+      var scene = new Scene2 (Color4.Gray (128), new (0, 0, 528, 400), new SimpleVN (Draw) { Streaming = true });
+      TestPNG (scene, (528, 400), DIBitmap.EFormat.Gray8, "PxShader");
+
+      static void Draw () {
+         (Color, BorderColor) = (Color4.Gray (224), Color4.Gray (32));
+         byte[] D = Lib.ReadBytesFromZip (NT.File ("Lux/Logo.zip"), "Logo.bmp");
+         for (int y = 0; y < 128; y++)
+            for (int x = 0; x < 128; x++) {
+               int n = 150 + y * 512 + x * 4;
+               byte b = D[n], g = D[n + 1], r = D[n + 2], a = D[n + 3];
+               Point ((x + 10, 138 - y), new Color4 (a, r, g, b));
+            }
+
+         List<Vec2S> pts = [];
+         for (int i = 0; i <= 100; i += 10)
+            pts.AddM ((140 + i, 20), (140, 120 - i));
+         Lines (pts.AsSpan ());
+
+         pts.Clear ();
+         pts.AddM ((270, 20), (370, 20), (270, 120),
+                   (280, 120), (320, 120), (370, 30),
+                   (330, 120), (370, 120), (370, 40));
+         Triangles (pts.AsSpan ());
+
+         pts.Clear ();
+         pts.AddM ((400, 20), (500, 20), (500, 65), (400, 65),
+                   (400, 120), (442, 120), (462, 72), (400, 72),
+                   (450, 120), (500, 120), (500, 72), (470, 72));
+         Quads (pts.AsSpan ());
+
+         Rect (new (20, 150, 120, 250));
+         RRect (new RectS (150, 150, 250, 250), 20);
+         RectBorder (new RectS (280, 150, 380, 250), 10);
+         RRectBorder (new RectS (410, 150, 510, 250), 30, 10);
+
+         Dee (new (20, 280, 120, 380), 30, 0);
+         Dee (new (150, 280, 250, 380), 30, 1);
+         Dee (new (280, 280, 380, 380), 30, 2);
+         Dee (new (410, 280, 510, 380), 30, 3);
       }
    }
 

@@ -11,8 +11,8 @@ namespace NBench;
 public class Tester {
    public Tester () => Lib.Init ();
 
-   [Benchmark]
-   public void NewDXF () {
+   [Benchmark (Baseline = true)]
+   public void DXFRead () {
       foreach (var file in Directory.GetFiles ("W:/DXF", "*.dxf").Take (MAX)) {
          var _ = DXFReader.Load (file);
       }
@@ -24,7 +24,5 @@ public class Tester {
 static class Program {
    public static void Main () {
       BenchmarkRunner.Run<Tester> ();
-      //var t = new Tester ();
-      //t.LibRead ();
    }
 }
