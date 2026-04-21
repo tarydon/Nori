@@ -26,7 +26,7 @@ enum EDXF {
    // Header values we are going to read (the _ will get converted to $ when we make the
    // symbol table)
    _ACADVER, _DWGCODEPAGE, _MEASUREMENT, _CLAYER, _DIMASZ, _DIMEXE, _DIMEXO, _DIMTXT,
-   _DIMCEN, _DIMGAP, _DIMTIH, _DIMTOH, _DIMTOFL, _DIMTAD, _INSUNITS,
+   _DIMCEN, _DIMGAP, _DIMTIH, _DIMTOH, _DIMTOFL, _DIMTAD, _DIMSCALE, _INSUNITS,
    // Miscellaneous
    SECTION, HEADER, TABLES, BLOCKS, ENTITIES, CLASSES, LAYERS, BYBLOCK, BYLAYER,
    EOF

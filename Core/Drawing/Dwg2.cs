@@ -65,9 +65,7 @@ public partial class Dwg2 {
    public IReadOnlyList<Block2> Blocks => mBlocks ?? [];
    List<Block2>? mBlocks;
 
-   /// <summary>
-   /// The list of dimension styles in the drawing
-   /// </summary>
+   /// <summary>The list of dimension styles in the drawing</summary>
    /// New dimension styles are added by calling Add(DimStyle2)
    public IReadOnlyList<DimStyle2> DimStyles => mDimStyles ?? [];
    List<DimStyle2>? mDimStyles;
@@ -109,9 +107,7 @@ public partial class Dwg2 {
    /// <summary>Adds a Block2 to the list of blocks in the drawing</summary>
    public void Add (Block2 block) { (mBlocks ??= []).Add (block); _blockMap = null; }
 
-   /// <summary>
-   /// Adds a dimension style to the list of styles in the drawing
-   /// </summary>
+   /// <summary>Adds a dimension style to the list of styles in the drawing</summary>
    public void Add (DimStyle2 style) {
       if (style.Name.IsBlank ()) return;
       (mDimStyles ??= []).Add (style);

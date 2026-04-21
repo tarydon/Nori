@@ -7,37 +7,51 @@ namespace Nori;
 #region class DimStyle2 ----------------------------------------------------------------------------
 /// <summary>Dimension style (based on AutoCAD)</summary>
 public class DimStyle2 {
-   public DimStyle2 (string name, float asz, float exo, float exe, float txt, float cen, float gap, int tih, int toh, int tofl, int tabove) {
+   // Constructor --------------------------------------------------------------
+   DimStyle2 () => Name = "";
+   public DimStyle2 (string name, float scale, float asz, float exo, float exe, float txt, float cen, float gap, int tih, int toh, int tofl, int tabove) {
       Name = name;
-      ArrowSize = asz; ExtOffset = exo; ExtExtend = exe; TxtSize = txt; DimCen = cen; Gap = gap;
+      ArrowSize = asz * scale; ExtOffset = exo * scale; ExtExtend = exe * scale; 
+      TxtSize = txt * scale; DimCen = cen * scale; DimGap = gap * scale;
       TPos = tabove switch { 0 => EPos.Centered, 4 => EPos.Below, _ => EPos.Above };
       if (tih > 0) mFlags |= EFlags.TIHorz;
       if (toh > 0) mFlags |= EFlags.TOHorz;
-      if (tofl > 0) mFlags |= EFlags.TOfl;
+      if (tofl > 0) mFlags |= EFlags.TOFL;
    }
 
-   public readonly string Name;        // 2
-   public readonly float ArrowSize;    // 41 - Length of arrow
-   public readonly float ExtOffset;    // 42 - Extension line offset from dim definition point
-   public readonly float ExtExtend;    // 44 - Extension line extend beyond dimension line
-   public readonly float TxtSize;      // 140 - Text size
-   public readonly float DimCen;       // 141 - Size of center mark/lines
-   public readonly float Gap;          // 147 - Gap between dimension line & text
+   // Properties ---------------------------------------------------------------
+   /// <summary>Name of the style (DXF Group 2)</summary>
+   public readonly string Name;
 
+   /// <summary>Arrowhead size (DXF Group 41)</summary>
+   public readonly float ArrowSize;
+   /// <summary>Extension line offset from dim. definition point (DXF Group 42)</summary>
+   public readonly float ExtOffset;
+   /// <summary>Extension line extension beyond dimension line (DXF Group 44)</summary>
+   public readonly float ExtExtend;
+   /// <summary>Text height (DXF Group 140)</summary>
+   public readonly float TxtSize;
+   /// <summary>Size of center mark / center lines (DXF Group 141)</summary>
+   public readonly float DimCen;
+   /// <summary>Gap between dimension line and text (DXF Group 147)</summary>
+   public readonly float DimGap;
+
+   /// <summary>Text inside dimension line horizontal (DXF Group 73)</summary>
    public bool TIHorz => (mFlags & EFlags.TIHorz) != 0;
+   /// <summary>Text outside dimension line horizontal (DXF Group 74)</summary>
    public bool TOHorz => (mFlags & EFlags.TOHorz) != 0;
-   public bool TOfl => (mFlags & EFlags.TOfl) != 0;
+   /// <summary>Draw line between extension lines even when text is outside (DXF Group 172)</summary>
+   public bool ForceDimLin => (mFlags & EFlags.TOFL) != 0;
 
+   /// <summary>Text position (Centered / Above / Below)</summary>
+   public readonly EPos TPos;
+
+   // Nested types -------------------------------------------------------------
    [Flags]
-   enum EFlags {
-      TIHorz = 1 << 0,                 // 73 - Text iside dimension line horizontal
-      TOHorz = 1 << 1,                 // 74 - Text outside dimension line horizontal
-      TOfl = 1 << 2,                   // 172 - Draw line between extension lines even when text is outside
-   }
+   enum EFlags { TIHorz = 1 << 0, TOHorz = 1 << 1, TOFL = 1 << 2, }
    EFlags mFlags;
 
    public enum EPos { Centered = 0, Above = 1, Below = 4 }
-   public readonly EPos TPos;          // 77 - 0=Centered, 1=Above, 4=Below
 }
 #endregion
 
@@ -78,9 +92,7 @@ public class E2Dim : Ent2 {
 #endregion
 
 #region class E2DimDia -----------------------------------------------------------------------------
-/// <summary>
-/// Implements a 'diameter' dimension
-/// </summary>
+/// <summary>Implements a 'diameter' dimension</summary>
 public class E2DimDia : E2Dim {
    // Constructors -------------------------------------------------------------
    E2DimDia () { }

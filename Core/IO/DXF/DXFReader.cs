@@ -114,6 +114,8 @@ public class DXFReader {
    // Loads a DIMENSION entity
    void LoadDimension () {
       NextAll ();
+      Console.WriteLine ($"Type {N(70) & 31}");
+
       var dim = new E2Dimension (LYR ());
       dim.SetDimSettings (mDwg.DimSettings);
       mDimMap.Add (dim, S (2)); Add (dim);
@@ -249,6 +251,7 @@ public class DXFReader {
             case _DIMTOH: mDimTOH = N (G); break;
             case _DIMTAD: mDimTAD = N (G); break;
             case _DIMTOFL: mDimTOFL = N (G); break;
+            case _DIMSCALE: mDimScale = F (G); break;
             case _MEASUREMENT: if (!mUnitsSet) Scale = N (G) == 0 ? 25.4 : 1; break;
             case _INSUNITS:
                int n = N (G);
@@ -265,8 +268,9 @@ public class DXFReader {
       mDimASZ *= f; mDimEXO *= f; mDimEXE *= f; mDimTXT *= f; mDimCEN *= f; mDimGAP *= f;
    }
    // Various defaults for DimStyle2
-   float mDimASZ = 2.5f, mDimEXO = 0.625f, mDimEXE = 1.25f, mDimTXT = 2.5f, mDimCEN = 2.5f, mDimGAP = 0.625f;
    int mDimTIH = 0, mDimTOH = 0, mDimTOFL = 1, mDimTAD = 1;
+   float mDimASZ = 2.5f, mDimEXO = 0.625f, mDimEXE = 1.25f, mDimTXT = 2.5f, mDimCEN = 2.5f;
+   float mDimScale = 1, mDimGAP = 0.625f;
 
    // This loads objects where key-value pairs are not repeated at all. So we can race
    // ahead and read all the values till we see the next 0 group
@@ -318,8 +322,9 @@ public class DXFReader {
             Add (new E2Text (LYR (), STYL (), CleanText (S (1), mSB), pos, DLIN (40), DANG (50), DANG (51), D (41, 1.0), align));
             break;
          case DIMSTYLE:
-            mDwg.Add (new DimStyle2 (S (2), F (41, mDimASZ), F (42, mDimEXO), F (44, mDimEXE), 
-               F (140, mDimTXT), F (141, mDimCEN), F (147, mDimGAP), N ()); 
+            mDwg.Add (new DimStyle2 (S (2), F (40, mDimScale), F (41, mDimASZ), F (42, mDimEXO), 
+               F (44, mDimEXE), F (140, mDimTXT), F (141, mDimCEN), F (147, mDimGAP), N (73, mDimTIH), 
+               N (74, mDimTOH), N (172, mDimTOFL), N (77, mDimTAD))); 
             break;
          default:
             throw new NoriCodeException ($"Unhandled {type}");

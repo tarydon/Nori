@@ -116,9 +116,7 @@ public static class Extensions {
 
    /// <summary>Is this an odd integer?</summary>
    public static bool IsOdd (this int n) => n % 2 != 0;
-   /// <summary>
-   /// Is this an even integer?
-   /// </summary>
+   /// <summary>Is this an even integer?</summary>
    public static bool IsEven (this int n) => n % 2 == 0;
 
    /// <summary>Checks if a given double is zero to within 1e-6</summary>
