@@ -14,6 +14,6 @@ public class MechanismVN (Mechanism mMech) : VNode (mMech) {
    }
 
    public override void Draw () {
-      if (mMech.Mesh != null) Lux.Mesh (mMech.Mesh, EShadeMode.Phong);
+      if (mMech.IsVisible && mMech.Mesh != null) Lux.Mesh (mMech.Mesh, EShadeMode.Phong);
    }
 }
