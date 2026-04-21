@@ -16,7 +16,7 @@ public class Dwg2VN : VNode {
 /// <summary>DwgFillVN is used to fill the interior closed polylines of a drawing</summary>
 public class DwgFillVN : VNode {
    // Constructors -------------------------------------------------------------
-   public DwgFillVN (Dwg2 dwg, ETess tess, Predicate<E2Poly>? filter = null) : base (dwg)
+   public DwgFillVN (Dwg2 dwg, ETess tess = ETess.Fine, Predicate<E2Poly>? filter = null) : base (dwg)
       => (mDwg, mETess, mFilter) = (dwg, tess, filter);
    readonly Predicate<E2Poly>? mFilter;
    readonly ETess mETess;

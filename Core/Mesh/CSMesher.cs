@@ -46,14 +46,14 @@ public class TwoViewMesher {
          int n = sorted[i];
          ref CSeg seg = ref mSeg[n];
          if (seg.Slice != slice) {
-            AddTriangles (); AddHorzPlanes ();
+            AddSliceWalls (); AddHorzPlanes ();
             mFN.Clear (); mSN.Clear (); mHN.Clear ();
             slice = seg.Slice;
          }
          if (seg.Horz) mHN.Add (n);
          else (seg.Front ? mFN : mSN).Add (n);
       }
-      AddTriangles (); AddHorzPlanes ();
+      AddSliceWalls (); AddHorzPlanes ();
 
       var tm = new TopoMesh (mPts).RemoveTJoints ();
       mPts.Clear ();
@@ -62,6 +62,14 @@ public class TwoViewMesher {
    }
 
    // Implementation -----------------------------------------------------------
+   // Given a poly, this breaks it up into smaller pieces (at each of the mYList values
+   // produced by Discretize), and stores all these small segments into the mSegs array.
+   // Each segment contains the following information:
+   // - Start & end point (Start.Y <= End.Y always)
+   // - Does this go in 'reverse' relative to the original input Poly
+   // - Does this come from the front os side view
+   // - Which horizontal slice does this segment belong to (remember we've sliced the entire
+   //   input into horizontal slices at each of the onde Y positions). 
    void AddSegs (int n, bool front) {
       int a = mSplits[n], b = mSplits[n + 1] - 1;
       Point2f pb = mNodes[a]; int nyb = mYDict[pb.Y];
@@ -93,6 +101,8 @@ public class TwoViewMesher {
       }
    }
 
+   // For the current slice, this takes the horizontal segments from the front and side views, and
+   // creates horizontal rectangular planes (constant Z, two triangles)
    void AddHorzPlanes () {
       if (mHN.Count < 2) return;
       for (int i = 0; i < mHN.Count; i++) {
@@ -110,7 +120,14 @@ public class TwoViewMesher {
       }
    }
 
-   void AddTriangles () {
+   // For the current slice, this takes all the front view segments and all the side view segments
+   // in that slice (which means all have the same lower and upper bounds in Y - it is a horizontal
+   // band across both the views). For each front view segment, we take the list of side view
+   // segments sorted left-to-right, and create spans. For each front view segment, we take pairs
+   // of side-view segments (first -ve going DOWN, second +ve going UP) and with these 3 segments 
+   // we can create a plane (remembering that all these 3 segments have the same Ymin and Ymax values
+   // since they are part of the same slice). 
+   void AddSliceWalls () {
       Check (!mFN.Count.IsOdd ());
       double zHigh, zLow;
       for (int i = 0; i < mFN.Count; i += 2) {
@@ -145,6 +162,14 @@ public class TwoViewMesher {
       if (!condition) throw new InvalidOperationException ();
    }
 
+   // This takes all the input polys and discretizes them using the given discretization
+   // accuracy. All coordinates are snapped to the nearest 0.001 (to ensure we don't have very thin
+   // triangles because of slight Y-alignment mismatches between front and side views). Then, we 
+   // gather a list of each unique Y value (sorted) in mYList, and the dictionary mYDict maps
+   // each of these values into an index in mYList. 
+   // This routine also stores each segment endpoint in the mNodes array, and the mSplits array
+   // is set up so that mSplits[N]..mSplits[N+1] contain the nodes of the nth poly. The first node
+   // is repeated again at the last so we can more easily gather all the 'segments' of the Nth poly.
    void Discretize () {
       // First, find all the unique values of Y among all the discretized poly
       List<Point2> pts = [];
@@ -181,6 +206,7 @@ public class TwoViewMesher {
    List<float> mYList = [];               // List of unique Y values
    Dictionary<float, int> mYDict = [];    // Map of Y values into unique indices
 
+   // Sorts segments by slice order, and within a slice from left-to-right (+X order)
    int SegSorter (int a, int b) {
       ref CSeg sa = ref mSeg[a], sb = ref mSeg[b];
       int n = sa.Slice - sb.Slice; if (n != 0) return n;
