@@ -56,6 +56,7 @@ public partial class Dwg2 {
    Grid2? mGrid;
 
    /// <summary>The list of layers in the drawing</summary>
+   /// New layers are added by calling Add(Layer2)
    public IReadOnlyList <Layer2> Layers => mLayers;
    readonly List<Layer2> mLayers = [];
 
@@ -63,6 +64,13 @@ public partial class Dwg2 {
    /// New blocks are added by calling Add(Block2)
    public IReadOnlyList<Block2> Blocks => mBlocks ?? [];
    List<Block2>? mBlocks;
+
+   /// <summary>
+   /// The list of dimension styles in the drawing
+   /// </summary>
+   /// New dimension styles are added by calling Add(DimStyle2)
+   public IReadOnlyList<DimStyle2> DimStyles => mDimStyles ?? [];
+   List<DimStyle2>? mDimStyles;
 
    /// <summary>The list of dimensions in this drawing</summary>
    public IEnumerable<E2Dimension> Dimensions => mEnts.OfType<E2Dimension> ();
@@ -100,6 +108,14 @@ public partial class Dwg2 {
 
    /// <summary>Adds a Block2 to the list of blocks in the drawing</summary>
    public void Add (Block2 block) { (mBlocks ??= []).Add (block); _blockMap = null; }
+
+   /// <summary>
+   /// Adds a dimension style to the list of styles in the drawing
+   /// </summary>
+   public void Add (DimStyle2 style) {
+      if (style.Name.IsBlank ()) return;
+      (mDimStyles ??= []).Add (style);
+   }
 
    /// <summary>Adds a style to the list of styles</summary>
    public void Add (Style2 style) {

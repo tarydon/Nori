@@ -239,6 +239,16 @@ public class DXFReader {
          switch (name) {
             case _ACADVER: mACADVer = S (G).ToUpper (); break;
             case _CLAYER: mCurrentLayer = S (G); break;
+            case _DIMASZ: mDimASZ = F (G); break;
+            case _DIMEXE: mDimEXE = F (G); break;
+            case _DIMEXO: mDimEXO = F (G); break;
+            case _DIMTXT: mDimTXT = F (G); break;
+            case _DIMCEN: mDimCEN = F (G); break;
+            case _DIMGAP: mDimGAP = F (G); break;
+            case _DIMTIH: mDimTIH = N (G); break;
+            case _DIMTOH: mDimTOH = N (G); break;
+            case _DIMTAD: mDimTAD = N (G); break;
+            case _DIMTOFL: mDimTOFL = N (G); break;
             case _MEASUREMENT: if (!mUnitsSet) Scale = N (G) == 0 ? 25.4 : 1; break;
             case _INSUNITS:
                int n = N (G);
@@ -250,7 +260,13 @@ public class DXFReader {
                break;
          }
       }
+      // Here, scale all the header variables that need to be scaled
+      float f = (float)Scale;
+      mDimASZ *= f; mDimEXO *= f; mDimEXE *= f; mDimTXT *= f; mDimCEN *= f; mDimGAP *= f;
    }
+   // Various defaults for DimStyle2
+   float mDimASZ = 2.5f, mDimEXO = 0.625f, mDimEXE = 1.25f, mDimTXT = 2.5f, mDimCEN = 2.5f, mDimGAP = 0.625f;
+   int mDimTIH = 0, mDimTOH = 0, mDimTOFL = 1, mDimTAD = 1;
 
    // This loads objects where key-value pairs are not repeated at all. So we can race
    // ahead and read all the values till we see the next 0 group
@@ -300,6 +316,10 @@ public class DXFReader {
             align = (ETextAlign)(vAlign * 3 + hAlign + 1);
             Point2 pos = align == ETextAlign.BaseLeft ? PT (10) : PT (11);
             Add (new E2Text (LYR (), STYL (), CleanText (S (1), mSB), pos, DLIN (40), DANG (50), DANG (51), D (41, 1.0), align));
+            break;
+         case DIMSTYLE:
+            mDwg.Add (new DimStyle2 (S (2), F (41, mDimASZ), F (42, mDimEXO), F (44, mDimEXE), 
+               F (140, mDimTXT), F (141, mDimCEN), F (147, mDimGAP), N ()); 
             break;
          default:
             throw new NoriCodeException ($"Unhandled {type}");
@@ -388,6 +408,10 @@ public class DXFReader {
    // Group value G as a linear value (scaled by current unit)
    double DLIN (int g) => D (g) * Scale;
 
+   // Group value G as a float
+   float F (int g) => SB (g).ToFloat ();
+   float F (int g, float fallback) => SB (g).ToFloat (fallback);
+
    // Gets the layer whose name is stored in the group 8
    Layer2 LYR () => mLayerMap.GetValueOrDefault (S (8)) ?? mDwg.CurrentLayer;
 
@@ -396,6 +420,7 @@ public class DXFReader {
 
    // Group value G as an integer
    int N (int g) => SB (g).ToInt ();
+   int N (int g, int fallback) => SB (g).ToInt (fallback);
 
    // Group value G,G+10 as a SCALED point
    Point2 PT (int g) => new (D (g) * Scale, D (g + 10) * Scale);

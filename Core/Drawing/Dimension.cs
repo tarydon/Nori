@@ -7,11 +7,13 @@ namespace Nori;
 #region class DimStyle2 ----------------------------------------------------------------------------
 /// <summary>Dimension style (based on AutoCAD)</summary>
 public class DimStyle2 {
-   public DimStyle2 (string name, double asz, double exo, double exe, double txt, double cen, double gap, int tih, int toh, int tofl, int tabove) {
+   public DimStyle2 (string name, float asz, float exo, float exe, float txt, float cen, float gap, int tih, int toh, int tofl, int tabove) {
       Name = name;
-      ArrowSize = (float)asz; ExtOffset = (float)exo; ExtExtend = (float)exe;
-      TxtSize = (float)txt; DimCen = (float)cen; Gap = (float)gap;
-      TIHorz = tih > 0; TOHorz = toh > 0; TOfl = tofl > 0; TVertPos = tabove;
+      ArrowSize = asz; ExtOffset = exo; ExtExtend = exe; TxtSize = txt; DimCen = cen; Gap = gap;
+      TPos = tabove switch { 0 => EPos.Centered, 4 => EPos.Below, _ => EPos.Above };
+      if (tih > 0) mFlags |= EFlags.TIHorz;
+      if (toh > 0) mFlags |= EFlags.TOHorz;
+      if (tofl > 0) mFlags |= EFlags.TOfl;
    }
 
    public readonly string Name;        // 2
@@ -22,11 +24,20 @@ public class DimStyle2 {
    public readonly float DimCen;       // 141 - Size of center mark/lines
    public readonly float Gap;          // 147 - Gap between dimension line & text
 
-   public readonly bool TIHorz;        // 73 - Text inside dimension line horizontal?
-   public readonly bool TOHorz;        // 74 - Text outside dimension line horizontal?
-   public readonly bool TOfl;          // 172 - Draw line between extension lines even when text is placed outside
+   public bool TIHorz => (mFlags & EFlags.TIHorz) != 0;
+   public bool TOHorz => (mFlags & EFlags.TOHorz) != 0;
+   public bool TOfl => (mFlags & EFlags.TOfl) != 0;
 
-   public readonly int TVertPos;       // 77 - 0=Centered, 1=Above, 4=Below (default = above)
+   [Flags]
+   enum EFlags {
+      TIHorz = 1 << 0,                 // 73 - Text iside dimension line horizontal
+      TOHorz = 1 << 1,                 // 74 - Text outside dimension line horizontal
+      TOfl = 1 << 2,                   // 172 - Draw line between extension lines even when text is outside
+   }
+   EFlags mFlags;
+
+   public enum EPos { Centered = 0, Above = 1, Below = 4 }
+   public readonly EPos TPos;          // 77 - 0=Centered, 1=Above, 4=Below
 }
 #endregion
 

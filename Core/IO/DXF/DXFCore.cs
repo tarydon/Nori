@@ -15,18 +15,18 @@ enum EDXF {
    // All objects in this range are ignored
    __FIRSTIGNORE, LTYPE, ENDSEC, TABLE, ENDTAB, SEQEND, ATTDEF, __LASTIGNORE,
    // These are the entities we still have to implement!
-   __FIRSTTODO, DIMSTYLE, LEADER, HATCH, MATERIAL, MLEADERSTYLE, MLINESTYLE, DIMASSOC, 
-   XLINE, __LASTTODO,
+   __FIRSTTODO, LEADER, HATCH, MATERIAL, MLEADERSTYLE, MLINESTYLE, DIMASSOC, XLINE, __LASTTODO,
    // These objects are all loaded using a 'simple load' - this means we can read in all
    // the key value pairs (since none repeat) before building the object
    __FIRSTSIMPLE, LAYER, STYLE, BLOCK, ENDBLK, SOLID, TRACE, CIRCLE, POINT, INSERT, 
-   ARC, TEXT, MTEXT, ATTRIB, __LASTSIMPLE,
+   ARC, TEXT, MTEXT, ATTRIB, DIMSTYLE, __LASTSIMPLE,
    // These are handled using custom import routines (typically because they can contain
    // one or more repeated group codes)
    LINE, LWPOLYLINE, DIMENSION, SPLINE, POLYLINE, VERTEX, ELLIPSE,  
    // Header values we are going to read (the _ will get converted to $ when we make the
    // symbol table)
-   _ACADVER, _DWGCODEPAGE, _MEASUREMENT, _CLAYER, _INSUNITS,
+   _ACADVER, _DWGCODEPAGE, _MEASUREMENT, _CLAYER, _DIMASZ, _DIMEXE, _DIMEXO, _DIMTXT,
+   _DIMCEN, _DIMGAP, _DIMTIH, _DIMTOH, _DIMTOFL, _DIMTAD, _INSUNITS,
    // Miscellaneous
    SECTION, HEADER, TABLES, BLOCKS, ENTITIES, CLASSES, LAYERS, BYBLOCK, BYLAYER,
    EOF
