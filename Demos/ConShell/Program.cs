@@ -12,6 +12,6 @@ class Program {
 
       var dr = new DXFReader ("C:\\Dropbox\\Nori\\Dimension\\Dimensions.dxf");
       var dwg = dr.Load ();
-      CurlWriter.Save (dwg, "c:/etc/test.curl", "Dimension test");
+      // CurlWriter.Save (dwg, "c:/etc/test.curl", "Dimension test");
    }
 }

@@ -187,6 +187,19 @@ public partial class Dwg2 {
    }
    Dictionary<string, Style2>? _styleMap;
 
+   /// <summary>
+   /// Gets a dimension style, given the name
+   /// </summary>
+   public DimStyle2 GetDimStyle (string name) {
+      if (_dimStyleMap == null) {
+         _dimStyleMap = new Dictionary<string, DimStyle2> (StringComparer.OrdinalIgnoreCase);
+         foreach (var s in DimStyles) _dimStyleMap.TryAdd (s.Name, s);
+      }
+      var style = _dimStyleMap.GetValueOrDefault (name);
+
+   }
+   Dictionary<string, DimStyle2>? _dimStyleMap;
+
    /// <summary>Picks the closest E2Poly and returns some rich information about the pick</summary>
    public bool PickPoly (Point2 pt, double aperture, out TPolyPick pick) {
       E2Poly? e2p = PickPoly (pt, aperture, out int nSeg, out double lie);

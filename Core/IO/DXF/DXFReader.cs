@@ -22,6 +22,11 @@ public class DXFReader {
    /// <summary>Darken all layer colors (to have a luminance of no more than 160)</summary>
    public bool DarkenColors;
 
+   /// <summary>
+   /// If set, all dimension entities are moved to the "Dimension" layer
+   /// </summary>
+   public bool RelayerDimensions;
+
    /// <summary>If set above zero, then polylines that touch are stitched together</summary>
    /// Two open polylines whose endpoints are closer than this threshold are
    /// joined together (as long as they are on the same layer). If there are open
@@ -105,20 +110,45 @@ public class DXFReader {
 
    // Load the dimensions
    void LinkDimensions () {
+      Layer2? layer = null;
       List<Block2> blocks = [];
-      foreach (var (dim, name) in mDimMap)
-         if (dim.LoadEnts (mDwg, name) is { } block) blocks.Add (block);
+      if (RelayerDimensions)
+         mDwg.Add (layer = new Layer2 ("Dimension", Color4.Blue, ELineType.Continuous));
+      foreach (var (dim, name) in mDimMap) {
+         if (dim.LoadEnts (mDwg, name) is { } block) {
+            if (layer != null) dim.Layer = layer;
+            blocks.Add (block);
+         }
+      }
       mDwg.RemoveBlocks (blocks);
    }
 
    // Loads a DIMENSION entity
    void LoadDimension () {
       NextAll ();
-      Console.WriteLine ($"Type {N(70) & 31}");
+      EDim kind = (EDim)(N (70) & 7);
+      mPts.Clear (); Add2 (10, 11);
 
-      var dim = new E2Dimension (LYR ());
-      dim.SetDimSettings (mDwg.DimSettings);
+      if (kind != EDim.Angular3P) return;
+      Console.WriteLine ($"Dimension {kind}:");
+      for (int i = 0; i < 255; i++) {
+         string s = S (i); if (s.IsBlank ()) continue;
+         Console.WriteLine ($"{i} : {s}");
+      }
+
+      STYL ();
+
+      switch (kind) {
+         case EDim.Angular3P: Add3 (13, 14, 15); break;
+         default: return;
+      }
+      var dim = new E2Dim (LYR (), kind, mPts);
       mDimMap.Add (dim, S (2)); Add (dim);
+
+
+      void Add1 (int a) => mPts.Add (PT (a));
+      void Add2 (int a, int b) { Add1 (a); Add1 (b); }
+      void Add3 (int a, int b, int c) { Add1 (a); Add1 (b); Add1 (c); }
    }
 
    // Loads an ELLIPSE entity
@@ -230,27 +260,29 @@ public class DXFReader {
    // Handles SECTION codes, and does special processing for the HEADER section alone
    void LoadSection () {
       // We need special processing only for the HEADER section, so we do that here. 
-      Next (); 
-      if (E (2) != HEADER) return;
+      Next ();
+      EDXF name = E (2);
+      if (name is BLOCKS or ENTITIES) {
+         // Starting entities section
+         mDefPoints ??= mDwg.Layers.FirstOrDefault (a => a.Name.EqIC ("DEFPOINTS"));
+      }
+      if (name != HEADER) return;
+
       for (; ; ) {
          if (!Next () || G == 0) break;
          if (G != 9) continue;
          // Found a 9 group - header variable name
-         var name = E (9);
+         name = E (9);
          Next ();
          switch (name) {
             case _ACADVER: mACADVer = S (G).ToUpper (); break;
             case _CLAYER: mCurrentLayer = S (G); break;
-            case _DIMASZ: mDimASZ = F (G); break;
-            case _DIMEXE: mDimEXE = F (G); break;
-            case _DIMEXO: mDimEXO = F (G); break;
-            case _DIMTXT: mDimTXT = F (G); break;
-            case _DIMCEN: mDimCEN = F (G); break;
-            case _DIMGAP: mDimGAP = F (G); break;
-            case _DIMTIH: mDimTIH = N (G); break;
-            case _DIMTOH: mDimTOH = N (G); break;
-            case _DIMTAD: mDimTAD = N (G); break;
-            case _DIMTOFL: mDimTOFL = N (G); break;
+            case _DIMASZ: mDimASZ = F (G); break; case _DIMEXE: mDimEXE = F (G); break;
+            case _DIMEXO: mDimEXO = F (G); break; case _DIMTXT: mDimTXT = F (G); break;
+            case _DIMCEN: mDimCEN = F (G); break; case _DIMGAP: mDimGAP = F (G); break;
+            case _DIMTIH: mDimTIH = N (G); break; case _DIMTOH: mDimTOH = N (G); break;
+            case _DIMTAD: mDimTAD = N (G); break; case _DIMDEC: mDimDEC = N (G); break;
+            case _DIMADEC: mDimADEC = N (G); break; case _DIMTOFL: mDimTOFL = N (G); break;
             case _DIMSCALE: mDimScale = F (G); break;
             case _MEASUREMENT: if (!mUnitsSet) Scale = N (G) == 0 ? 25.4 : 1; break;
             case _INSUNITS:
@@ -268,9 +300,10 @@ public class DXFReader {
       mDimASZ *= f; mDimEXO *= f; mDimEXE *= f; mDimTXT *= f; mDimCEN *= f; mDimGAP *= f;
    }
    // Various defaults for DimStyle2
-   int mDimTIH = 0, mDimTOH = 0, mDimTOFL = 1, mDimTAD = 1;
+   int mDimTIH = 0, mDimTOH = 0, mDimTOFL = 1, mDimTAD = 1, mDimDEC = 2, mDimADEC = 1;
    float mDimASZ = 2.5f, mDimEXO = 0.625f, mDimEXE = 1.25f, mDimTXT = 2.5f, mDimCEN = 2.5f;
    float mDimScale = 1, mDimGAP = 0.625f;
+   Layer2? mDefPoints;
 
    // This loads objects where key-value pairs are not repeated at all. So we can race
    // ahead and read all the values till we see the next 0 group
@@ -281,7 +314,6 @@ public class DXFReader {
          case ARC: Add (Poly.Arc (PT (10), DLIN (40), DANG (50), DANG (51), true)); break;
          case BLOCK: mBlock = new Block2 (S (2), PT (10), []); break;
          case CIRCLE: Add (Poly.Circle (PTZ (10), DLIN (40))); break;
-         case POINT: Add (new E2Point (LYR (), PT (10))); break;
          case TRACE or SOLID: Add (new E2Solid (LYR (), [PT (10), PT (11), PT (12), PT (13)])); break;
 
          case ATTRIB:
@@ -308,6 +340,10 @@ public class DXFReader {
             double angle = (dx.IsZero () && dy.IsZero ()) ? DANG (50) : Math.Atan2 (dy, dx);
             Add (MakeMText (LYR (), STYL (), S (1), PT (10), DLIN (40), angle, align, mSB));
             break;
+         case POINT:
+            layer = LYR (); if (layer == mDefPoints) return;
+            Add (new E2Point (layer, PT (10)));
+            break;
          case STYLE:
             if (N (70).IsEven ()) {    // Otherwise, this represents a SHAPE entry
                double xScale = D (41); if (xScale.IsZero ()) xScale = 1; 
@@ -324,7 +360,7 @@ public class DXFReader {
          case DIMSTYLE:
             mDwg.Add (new DimStyle2 (S (2), F (40, mDimScale), F (41, mDimASZ), F (42, mDimEXO), 
                F (44, mDimEXE), F (140, mDimTXT), F (141, mDimCEN), F (147, mDimGAP), N (73, mDimTIH), 
-               N (74, mDimTOH), N (172, mDimTOFL), N (77, mDimTAD))); 
+               N (74, mDimTOH), N (172, mDimTOFL), N (77, mDimTAD), N (271, mDimDEC), N (179, mDimADEC))); 
             break;
          default:
             throw new NoriCodeException ($"Unhandled {type}");
@@ -413,6 +449,8 @@ public class DXFReader {
    // Group value G as a linear value (scaled by current unit)
    double DLIN (int g) => D (g) * Scale;
 
+   DimStyle2 DSTYL () => mDwg.GetDimStyle (S (3));
+
    // Group value G as a float
    float F (int g) => SB (g).ToFloat ();
    float F (int g, float fallback) => SB (g).ToFloat (fallback);
@@ -462,6 +500,6 @@ public class DXFReader {
    Encoding mEncoding = Encoding.UTF8;    // Encoding we're using for this file
    readonly Dictionary<string, Layer2> mLayerMap = new (StringComparer.OrdinalIgnoreCase);
    readonly Dictionary<string, Style2> mStyleMap = new (StringComparer.OrdinalIgnoreCase);
-   readonly Dictionary<E2Dimension, string> mDimMap = [];
+   readonly Dictionary<E2Dim, string> mDimMap = [];
 }
 #endregion

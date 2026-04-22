@@ -23,13 +23,12 @@ public partial class MainWindow : Window {
 
 class DemoScene : Scene2 {
    public DemoScene () {
-      mFace = new (Lib.ReadBytes ("nori:GL/Fonts/Roboto-Regular.ttf"), (int)(48 * Lux.DPIScale));
-      Bound = new Bound2 (0, 0, 100, 50);
-      BgrdColor = new Color4 (128, 96, 64);
-      Root = new SimpleVN (
-         () => (Lux.Color, Lux.TypeFace) = (Color4.White, mFace),
-         () => Lux.Text ("Welcome to Nori.", new Vec2S (100, Lux.PanelSize.Y - 100))
-      );
+      var dr = new DXFReader ("C:/DropBox/Nori/Dimension/Dimensions.dxf");
+      dr.DarkenColors = dr.WhiteToBlack = dr.RelayerDimensions = true;
+      var dwg = dr.Load ();
+
+      Bound = dwg.Bound.InflatedF (1.1);
+      Root = new Dwg2VN (dwg);
+      BgrdColor = Color4.Gray (216);
    }
-   TypeFace mFace;
 }
