@@ -175,7 +175,7 @@ public partial class Dwg2 {
    /// <summary>Gets a style, given the name</summary>
    public Style2? GetStyle (string name) {
       if (_styleMap == null) {
-         _styleMap = new Dictionary<string, Style2> (StringComparer.OrdinalIgnoreCase);
+         _styleMap = new (StringComparer.OrdinalIgnoreCase);
          foreach (var s in Styles) _styleMap.TryAdd (s.Name, s);
       }
       var style = _styleMap.GetValueOrDefault (name);
@@ -187,16 +187,19 @@ public partial class Dwg2 {
    }
    Dictionary<string, Style2>? _styleMap;
 
-   /// <summary>
-   /// Gets a dimension style, given the name
-   /// </summary>
+   /// <summary>Gets a dimension style, given the name</summary>
+   /// If the style does not exist, this returns Styles[0]. If there are no
+   /// styles at all, this creates one with default values
    public DimStyle2 GetDimStyle (string name) {
+      var styles = DimStyles;
       if (_dimStyleMap == null) {
-         _dimStyleMap = new Dictionary<string, DimStyle2> (StringComparer.OrdinalIgnoreCase);
-         foreach (var s in DimStyles) _dimStyleMap.TryAdd (s.Name, s);
+         _dimStyleMap = new (StringComparer.OrdinalIgnoreCase);
+         foreach (var s in styles) _dimStyleMap.TryAdd (s.Name, s);
       }
       var style = _dimStyleMap.GetValueOrDefault (name);
-
+      if (style == null && styles.Count > 0) return styles[0];
+      (mDimStyles ??= []).Add (style = new ("STANDARD", GetStyle ("STANDARD")!));
+      return style;
    }
    Dictionary<string, DimStyle2>? _dimStyleMap;
 

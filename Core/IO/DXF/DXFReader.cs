@@ -22,9 +22,7 @@ public class DXFReader {
    /// <summary>Darken all layer colors (to have a luminance of no more than 160)</summary>
    public bool DarkenColors;
 
-   /// <summary>
-   /// If set, all dimension entities are moved to the "Dimension" layer
-   /// </summary>
+   /// <summary>If set, all dimension entities are moved to the "Dimension" layer</summary>
    public bool RelayerDimensions;
 
    /// <summary>If set above zero, then polylines that touch are stitched together</summary>
@@ -127,28 +125,27 @@ public class DXFReader {
    void LoadDimension () {
       NextAll ();
       EDim kind = (EDim)(N (70) & 7);
-      mPts.Clear (); Add2 (10, 11);
-
       if (kind != EDim.Angular3P) return;
+
+      mPts.Clear (); Add2 (10, 11);
+      var (layer, style, text) = (LYR (), mDwg.GetDimStyle (S (3)), S (1));
       Console.WriteLine ($"Dimension {kind}:");
-      for (int i = 0; i < 255; i++) {
+      for (int i = 0; i < 272; i++) {
          string s = S (i); if (s.IsBlank ()) continue;
          Console.WriteLine ($"{i} : {s}");
       }
 
-      STYL ();
-
-      switch (kind) {
-         case EDim.Angular3P: Add3 (13, 14, 15); break;
-         default: return;
-      }
-      var dim = new E2Dim (LYR (), kind, mPts);
+      E2Dim? dim = kind switch {
+         EDim.Angular3P => new E2Dim3PAngular (layer, style, Add3 (13, 14, 15), text),
+         _ => null
+      };
+      if (dim == null) return;
       mDimMap.Add (dim, S (2)); Add (dim);
 
-
-      void Add1 (int a) => mPts.Add (PT (a));
+      // Helpers ...........................................
+      List<Point2> Add1 (int a) { mPts.Add (PT (a)); return mPts; }
       void Add2 (int a, int b) { Add1 (a); Add1 (b); }
-      void Add3 (int a, int b, int c) { Add1 (a); Add1 (b); Add1 (c); }
+      List<Point2> Add3 (int a, int b, int c) { Add1 (a); Add1 (b); return Add1 (c); }
    }
 
    // Loads an ELLIPSE entity
@@ -360,7 +357,8 @@ public class DXFReader {
          case DIMSTYLE:
             mDwg.Add (new DimStyle2 (S (2), F (40, mDimScale), F (41, mDimASZ), F (42, mDimEXO), 
                F (44, mDimEXE), F (140, mDimTXT), F (141, mDimCEN), F (147, mDimGAP), N (73, mDimTIH), 
-               N (74, mDimTOH), N (172, mDimTOFL), N (77, mDimTAD), N (271, mDimDEC), N (179, mDimADEC))); 
+               N (74, mDimTOH), N (172, mDimTOFL), N (77, mDimTAD), N (271, mDimDEC), N (179, mDimADEC),
+               STYL ())); 
             break;
          default:
             throw new NoriCodeException ($"Unhandled {type}");
@@ -369,14 +367,14 @@ public class DXFReader {
    StringBuilder mSB = new ();
 
    // Reads one key-value pair - returns false if we are at end-of-file
-   // This skips all keys above 255, except when readAll=true, in which case, it returns
-   // even after reading a key above 255 (like 1000)
+   // This skips all keys above 272, except when readAll=true, in which case, it returns
+   // even after reading a key above 272 (like 1000)
    bool Next (bool readAll = false) {
       for (; ; ) {
          if (mR.AtEndOfFile) return false;
          mR.Read (out G).SkipToLineEnd ();
          mR.ReadLineRange (out mStart, out mLength);
-         if (G < 256) { mSt[G] = mStart; mLen[G] = mLength; return true; }
+         if (G < 277) { mSt[G] = mStart; mLen[G] = mLength; return true; }
          if (readAll) return true; 
       }
    }
@@ -391,7 +389,7 @@ public class DXFReader {
          mR.Read (out G).SkipToLineEnd ();
          if (G == 0) { mR.Pos = before; return true; }
          mR.ReadLineRange (out int st, out int len);
-         if (G < 256) { mSt[G] = st; mLen[G] = len; }
+         if (G < 272) { mSt[G] = st; mLen[G] = len; }
       }
    }
 
@@ -419,7 +417,7 @@ public class DXFReader {
 
    // Routines to fetch group values -------------------------------------------
    // The mSt[] and mLen[] arrays store the last read values of each of the group codes from 
-   // 0..255. Suppose we ask for the value of group 41 code (which is used for Vertex.Bulge),
+   // 0..272. Suppose we ask for the value of group 41 code (which is used for Vertex.Bulge),
    // we want to return a value ONLY if we have read in a group 41 code AFTER we started reading
    // the most recent entity (VERTEX). If we read in a group-41 code for the previous vertex, but
    // the current vertex does not have a group 41 code, the previous value we latched into mSt/mLen
@@ -494,8 +492,8 @@ public class DXFReader {
 
    int G;                        // Group code 
    int mBase;                    // The current 'entity' (Group 0 set) data starts here
-   int[] mSt = new int[256];     // For each group code, the start of the value
-   int[] mLen = new int[256];    // .. and the length of that value (both in D)
+   int[] mSt = new int[272];     // For each group code, the start of the value
+   int[] mLen = new int[272];    // .. and the length of that value (both in D)
 
    Encoding mEncoding = Encoding.UTF8;    // Encoding we're using for this file
    readonly Dictionary<string, Layer2> mLayerMap = new (StringComparer.OrdinalIgnoreCase);
