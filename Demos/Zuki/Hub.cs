@@ -1,4 +1,5 @@
-﻿using Nori;
+﻿using System.Reactive.Linq;
+using Nori;
 namespace Zuki;
 
 static class Hub {
@@ -12,7 +13,8 @@ static class Hub {
          Lux.UIScene = mScene = new DwgScene (mDwg = value);
          if (!mHooked) {
             mHooked = true;
-            HW.MouseMoves.Subscribe (OnMouseMove);
+            MouseMoves.Subscribe (a => CursorVN.It.Pt = a);
+            Widget = new Dim3PAngularMaker ();
          }
       }
    }
@@ -21,14 +23,35 @@ static class Hub {
    static bool mHooked;
 
    /// <summary>
+   /// Current PixelScale (how many world units per pixels)
+   /// </summary>
+   public static double PixelScale => mScene.PixelScale;
+
+   /// <summary>
    /// The Root GroupVN displaying all the content
    /// </summary>
    public static GroupVN Root { get => mRoot; set => mRoot = value;  }
    static GroupVN mRoot = null!;
 
+   public static Widget? Widget;
+
    // Event handlers -----------------------------------------------------------
    static void OnMouseMove (Vec2S vec) {
+      CursorVN.It.Pt = PixelToWorld (vec);
    }
+
+   // Observables --------------------------------------------------------------
+   /// <summary>
+   /// Returns mouse-moves, in Point2 coordinates
+   /// </summary>
+   public static IObservable<Point2> MouseMoves 
+      => HW.MouseMoves.Select (PixelToWorld);
+
+   /// <summary>
+   /// Returns left mouse-clicks in Point2 coordinates
+   /// </summary>
+   public static IObservable<Point2> LeftClicks
+      => HW.MouseClicks.Where (a => a.IsLeftPress).Select (a => PixelToWorld (a.Position));
 
    // Methods ------------------------------------------------------------------
    /// <summary>
@@ -40,4 +63,10 @@ static class Hub {
       dr.StitchThreshold = 0.001;
       Dwg = dr.Load ();
    }
+
+   /// <summary>
+   /// Converts pixel coordinates to world coordinates
+   /// </summary>
+   public static Point2 PixelToWorld (Vec2S pix)
+      => (Point2)mScene.PixelToWorld (pix);
 }
