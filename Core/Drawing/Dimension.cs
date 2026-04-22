@@ -76,7 +76,7 @@ public class DimStyle2 {
 #endregion
 
 public enum EDim { 
-   Linear = 0, Aligned = 1, Angular = 2, Diameter = 3, Radius = 4, Angular3P = 5, Ordinate = 6 
+   Linear = 0, Aligned = 1, Angular = 2, Diameter = 3, Radius = 4, Angular3P = 5, Ordinate = 6, Generic = 32
 };
 
 #region class E2Dim --------------------------------------------------------------------------------
@@ -133,7 +133,7 @@ public abstract class E2Dim : Ent2 {
    /// here and later discard that block
    internal Block2? LoadEnts (Dwg2 dwg, string name) {
       if (dwg.Blocks.FirstOrDefault (a => a.Name == name) is { } block) {
-         //mEnts.AddRange (block.Ents);
+         mEnts.AddRange (block.Ents);
          return block;
       }
       return null;
@@ -168,6 +168,13 @@ public abstract class E2Dim : Ent2 {
    }
 }
 #endregion   
+
+class E2DimGeneric : E2Dim {
+   public E2DimGeneric (Layer2 layer, DimStyle2 style, IList<Point2> pts, string text)
+      : base (layer, EDim.Generic, style, pts, text) { }
+
+   protected override void MakeEnts () => throw new NotImplementedException ();
+}
 
 class E2Dim3PAngular : E2Dim {
    E2Dim3PAngular () { }

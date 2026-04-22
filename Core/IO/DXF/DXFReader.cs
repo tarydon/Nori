@@ -125,21 +125,13 @@ public class DXFReader {
    void LoadDimension () {
       NextAll ();
       EDim kind = (EDim)(N (70) & 7);
-      if (kind != EDim.Angular3P) return;
-
       mPts.Clear (); Add2 (10, 11);
       var (layer, style, text) = (LYR (), mDwg.GetDimStyle (S (3)), S (1));
-      Console.WriteLine ($"Dimension {kind}:");
-      for (int i = 0; i < 272; i++) {
-         string s = S (i); if (s.IsBlank ()) continue;
-         Console.WriteLine ($"{i} : {s}");
-      }
 
       E2Dim? dim = kind switch {
-         EDim.Angular3P => new E2Dim3PAngular (layer, style, Add3 (13, 14, 15), text),
-         _ => null
+         // EDim.Angular3P => new E2Dim3PAngular (layer, style, Add3 (13, 14, 15), text),
+         _ => new E2DimGeneric (layer, style, mPts, text),
       };
-      if (dim == null) return;
       mDimMap.Add (dim, S (2)); Add (dim);
 
       // Helpers ...........................................
