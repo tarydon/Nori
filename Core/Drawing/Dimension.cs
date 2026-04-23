@@ -13,7 +13,7 @@ public class DimStyle2 {
       Name = name; Style = style;
       ArrowSize = asz * scale; ExtOffset = exo * scale; ExtExtend = exe * scale; 
       TxtSize = txt * scale; DimCen = cen * scale; DimGap = gap * scale;
-      TPos = tabove switch { 0 => EPos.Centered, 4 => EPos.Below, _ => EPos.Above };
+      TxtPos = tabove switch { 0 => EPos.Centered, 4 => EPos.Below, _ => EPos.Above };
       LinDecimal = dec; AngDecimal = adec;
       if (tih > 0) mFlags |= EFlags.TIHorz;
       if (toh > 0) mFlags |= EFlags.TOHorz;
@@ -22,9 +22,7 @@ public class DimStyle2 {
 
    public DimStyle2 (string name, Style2 style) {
       Name = name; Style = style;
-      ArrowSize = TxtSize = DimCen = 2.5f; 
-      ExtOffset = DimGap = 0.625f;
-      ExtExtend = 1.25f;
+      ArrowSize = TxtSize = DimCen = 2.5f; ExtOffset = DimGap = 0.625f; ExtExtend = 1.25f;
       LinDecimal = 2; AngDecimal = 1;
       mFlags = EFlags.TOFL;
    }
@@ -52,18 +50,17 @@ public class DimStyle2 {
    public readonly int AngDecimal;
 
    /// <summary>Text inside dimension line horizontal (DXF Group 73)</summary>
-   public bool TIHorz => (mFlags & EFlags.TIHorz) != 0;
+   public bool TIHorz { get => Get (EFlags.TIHorz);  set => Set (EFlags.TIHorz, value); }
    /// <summary>Text outside dimension line horizontal (DXF Group 74)</summary>
-   public bool TOHorz => (mFlags & EFlags.TOHorz) != 0;
+   public bool TOHorz { get => Get (EFlags.TOHorz); set => Set (EFlags.TOHorz, value); }
    /// <summary>Draw line between extension lines even when text is outside (DXF Group 172)</summary>
-   public bool ForceDimLin => (mFlags & EFlags.TOFL) != 0;
+   public bool ForceDimLin => Get (EFlags.TOFL);
 
    /// <summary>Text position (Centered / Above / Below)</summary>
-   public readonly EPos TPos;
+   public EPos TxtPos { get => mTxtPos; set => mTxtPos = value; }
+   EPos mTxtPos;
 
-   /// <summary>
-   /// Text style used for dimensions
-   /// </summary>
+   /// <summary>Text style used for dimensions</summary>
    public readonly Style2 Style;
 
    // Nested types -------------------------------------------------------------
@@ -72,6 +69,10 @@ public class DimStyle2 {
    EFlags mFlags;
 
    public enum EPos { Centered = 0, Above = 1, Below = 4 }
+
+   // Implementation -----------------------------------------------------------
+   bool Get (EFlags bit) => (mFlags & bit) != 0;
+   void Set (EFlags bit, bool value) { if (value) mFlags |= bit; else mFlags &= ~bit; }
 }
 #endregion
 
@@ -80,34 +81,42 @@ public enum EDim {
 };
 
 #region class E2Dim --------------------------------------------------------------------------------
+/// <summary>E2Dim is the base class for all 2D dimensions</summary>
 public abstract class E2Dim : Ent2 {
    // Constructors -------------------------------------------------------------
-   protected E2Dim () => mStyle = null!;
-   public E2Dim (Layer2 layer, EDim kind, DimStyle2 style, IList<Point2> pts, string text) : base (layer) {
-      (mKind, mPts, mStyle) = (kind, [.. pts], style);
-      if (text != "") mText = text;
+   // Default constructor used during streaming
+   protected E2Dim () => (mStyle, mText) = (null!, null);
+   /// <summary>Called by derived classes when an E2Dim is built</summary>
+   /// <param name="layer">Layer this entity lives in</param>
+   /// <param name="kind">Which kind of dimension is this?</param>
+   /// <param name="style">The DimStyle2 that provides dimension settings</param>
+   /// <param name="pts">Definition points </param>
+   /// <param name="text">Dimension text</param>
+   /// The interpretation of definition points varies based on the actual kind of dimension
+   /// this is. Typically, the set of points is in the same order in which one would click
+   /// to input them when creating the dimension dynamically.
+   public E2Dim (Layer2 layer, EDim kind, DimStyle2 style, IList<Point2> pts, string? text) : base (layer) {
+      (mKind, mStyle, mText) = (kind, style, text is null or "<>" or "" ? null : text);
+      mPts.AddRange (pts);
    }
 
    // Properties ---------------------------------------------------------------
    /// <summary>The Bound of the dimension</summary>
-   public override Bound2 Bound
-      => Bound2.Cached (ref mBound, () => new (Ents.Select (a => a.Bound)));
+   public override Bound2 Bound => Bound2.Cached (ref mBound, () => new (Ents.Select (a => a.Bound)));
    Bound2 mBound = new ();
 
-   /// <summary>The DimStyle used by this dimension entity</summary>
-   public DimStyle2 Style => mStyle;
-   protected DimStyle2 mStyle;
-
    /// <summary>The entities making up the dimension</summary>
-   /// In DXF, this is stored in a block, but since we never reuse that, we just store the
-   /// entities here and create a block on the fly when saving the dimension
+   /// When loading a Dimension from a DXF file, these are stored in Block - we explode
+   /// that block and gather the Ents here. When a dimension is created dynamically in the UI,
+   /// we call the MakeEnts routine that is overridden for each type of dimension to create the
+   /// actual dimension
    public IReadOnlyList<Ent2> Ents {
       get {
          if (mEnts.Count == 0) MakeEnts ();
          return mEnts;
       }
    }
-   List<Ent2> mEnts = [];
+   protected List<Ent2> mEnts = [];
 
    /// <summary>Which kind of dimension is this?</summary>
    public EDim Kind => mKind;
@@ -115,13 +124,18 @@ public abstract class E2Dim : Ent2 {
 
    /// <summary>Set of points defining the dimension (interpretation depends on the kind)</summary>
    public IReadOnlyList<Point2> Pts => mPts;
-   protected Point2[] mPts = [];
+   protected List<Point2> mPts = [];
+
+   /// <summary>The DimStyle used by this dimension entity</summary>
+   /// This is stored primarily in the DimStyles list of the drawing
+   public DimStyle2 Style => mStyle;
+   protected DimStyle2 mStyle;
 
    /// <summary>The text of the dimension, if not blank</summary>
    /// If this is "<>" or "" or null, the default text is used (based on the actual 
    /// measurement). If this is " ", then the text is suppressed.
    public string? Text => mText;
-   string? mText;
+   protected string? mText;
 
    // Methods ------------------------------------------------------------------
    /// <summary>Get the transformed bound of the dimension</summary>
@@ -147,15 +161,8 @@ public abstract class E2Dim : Ent2 {
       return false;
    }
 
-   /// <summary>Creates a transformed version of this dimension</summary>
-   protected override E2Dim Xformed (Matrix2 m)
-      => throw new NotImplementedException ();
-
    // Implementation -----------------------------------------------------------
-   protected abstract void MakeEnts ();
-
-   protected void AddPoly (Poly poly) => mEnts.Add (new E2Poly (Layer = Layer, poly));
-
+   // Adds an arrowhead to the list of entities
    protected void AddArrow (Point2 pt, double angle) {
       double len = mStyle.ArrowSize, hwid = len / 6;
       Point2 pa = pt.Polar (len, angle);
@@ -163,43 +170,265 @@ public abstract class E2Dim : Ent2 {
       mEnts.Add (new E2Solid (Layer, [pa, pb, pt, pt]));
    }
 
+   // Adds a Poly to the list of entities
+   protected void AddPoly (Poly poly) => mEnts.Add (new E2Poly (Layer = Layer, poly));
+
+   // Adds text to the list of entities
    protected void AddText (Point2 pt, string text, double angle) {
-      mEnts.Add (new E2Text (Layer, mStyle.Style, text, pt, mStyle.TxtSize, angle, 0, 1, ETextAlign.MidCenter)); 
+      mEnts.Add (new E2Text (Layer, mStyle.Style, text, pt, mStyle.TxtSize, angle, 0, 1, ETextAlign.MidCenter));
    }
+
+   // This trims the given dimension segment around the text-box of the dimension and
+   // adds the remnant segments to the mEnts list
+   protected void AddTrimmedSeg (Seg seg, Poly box) {
+      List<double> lies = [];
+      Span<Point2> buffer = stackalloc Point2[2];
+      foreach (var s in box.Segs)
+         foreach (var pt in seg.Intersect (s, buffer, true))
+            lies.Add (seg.GetLie (pt));
+      lies.Sort ();
+      if (lies.Count < 2) {
+         AddPoly (Poly.Arc (seg.A, seg.Midpoint, seg.B));
+         return;
+      }
+
+      // Get the two points adjacent the 'gap'
+      double startLie = lies[0], endLie = lies[^1];
+      Point2 ptStart = seg.GetPointAt (startLie), ptEnd = seg.GetPointAt (endLie);
+      if (seg.IsArc) {
+         AddPoly (Poly.Arc (seg.A, seg.GetPointAt (startLie / 2), ptStart));
+         AddPoly (Poly.Arc (ptEnd, seg.GetPointAt ((endLie + 1.0) / 2), seg.B));
+      } else {
+         AddPoly (Poly.Line (seg.A, ptStart));
+         AddPoly (Poly.Line (ptEnd, seg.B));
+      }
+   }
+
+   // Checks if the arrows and text can be accomodated within the given space.
+   // Normally, we try to draw arrow-heads within the two extension lines, and also draw the
+   // text within the two extension lines. this checks if the space is large enough, and returns
+   // EInside.Both if that can be done. Otherwise, it tries if either one of the text or arrows
+   // can be drawn (and returns EInside.Arrow / EInside.Text in that case). Sometimes the space
+   // is so small, we can't accommodate either (and this returns EInside.None). 
+   // Anything that cannot be accomodated between the extension lines goes outside on one or
+   // the other side. 
+   protected EInside CheckSpace (double available, double txtMeasure) {
+      double asz = mStyle.ArrowSize * 3;
+      txtMeasure += 2 * mStyle.ExtExtend;
+      if (asz + txtMeasure <= available) return EInside.Both;
+      if (asz > txtMeasure && asz <= available) return EInside.Arrows;
+      if (txtMeasure <= available) return EInside.Text;
+      if (asz <= available) return EInside.Arrows;
+      return EInside.None;
+   }
+
+   // Gets the lengths of the dimension line that overhang beyond the extension lines on
+   // either side. Normally, if there is enough space between the extension lines to accomodate
+   // arrowheads and text, these overhangs are both zero. Otherwise, the overhangs depend
+   // on these:
+   // - code : Which combination of arrowheads / text fit inside between the extension lines
+   // - txtMeasure: The text measurement (width/height) that we should use for computation.
+   // - nearStart: If the text is outside the extension lines, is it closer to the start point
+   //              or the end point   
+   protected (double a, double b) GetOverhangs (EInside code, double txtMeasure, bool nearStart) {
+      double aExtend = 0, bExtend = 0;
+      bool textOutside = (code & EInside.Text) == 0, arrowOutside = (code & EInside.Arrows) == 0;
+      bool iBreak = mStyle.TxtPos == DimStyle2.EPos.Centered;
+      if (textOutside) {
+         // If the text is outside then we might need to extend the extension line,
+         // if text is above/below the line
+         aExtend += (nearStart && !iBreak) ? txtMeasure : 0;
+         bExtend += (!nearStart && !iBreak) ? txtMeasure : 0;
+      }
+      if (arrowOutside) {
+         // If the arrows are outside, then we need to extend the extension lines
+         // by arrow-size + exo
+         aExtend = bExtend = mStyle.ArrowSize + mStyle.ExtExtend;
+         if (textOutside && !iBreak) {
+            if (nearStart) aExtend += txtMeasure;
+            else bExtend += txtMeasure;
+         }
+      }
+      return (aExtend, bExtend);
+   }
+
+   // This is overridden in derived types to make the entities 
+   protected abstract void MakeEnts ();
+  
+   // Helper used to measure the text (assumes text is horizontal, centered at 0,0)
+   protected Bound2 Measure (string text) {
+      var font = LineFont.Get (mStyle.Style.Font);
+      return font.Measure (text, Point2.Zero, ETextAlign.MidCenter, 0, 1, mStyle.TxtSize, 0);      
+   }
+
+   // Nested types -------------------------------------------------------------
+   // What lies on the 'inside' of the dimension (between the two extension lines)
+   // The arrows and/or text can lie on the inside or the outside
+   [Flags]
+   protected enum EInside { None = 0, Text = 1, Arrows = 2, Both = 3 };
 }
 #endregion   
 
+#region class E2DimGeneric -------------------------------------------------------------------------
+/// <summary>E2DimGeneric is a 'fallback' dimension used when we don't have a suitable type</summary>
+/// An E2DimGeneric loads and displays all the entities (looks fine visually), but cannot be 
+/// edited nor exported to DXF
 class E2DimGeneric : E2Dim {
-   public E2DimGeneric (Layer2 layer, DimStyle2 style, IList<Point2> pts, string text)
+   public E2DimGeneric (Layer2 layer, DimStyle2 style, IList<Point2> pts, string? text)
       : base (layer, EDim.Generic, style, pts, text) { }
 
    protected override void MakeEnts () => throw new NotImplementedException ();
-}
-
-class E2Dim3PAngular : E2Dim {
-   E2Dim3PAngular () { }
-   public E2Dim3PAngular (Layer2 layer, DimStyle2 style, IList<Point2> pts, string text)
-      : base (layer, EDim.Angular3P, style, pts, text) { }
-
-   protected override void MakeEnts () {
-      double exo = mStyle.ExtOffset, ext = mStyle.ExtExtend;
-      Point2 cen = mPts[4], p3 = mPts[2], p4 = mPts[3], ptxt = mPts[1];
-      double ang3 = cen.AngleTo (p3), ang4 = cen.AngleTo (p4), rad = cen.DistTo (mPts[0]);
-      p3 = cen.Polar (cen.DistTo (p3) + exo, ang3); 
-      p4 = cen.Polar (cen.DistTo (p4) + exo, ang4);
-      Point2 p3a = cen.Polar (rad + ext, ang3), p4a = cen.Polar (rad + ext, ang4);
-
-      AddPoly (Poly.Line (p3, p3a)); AddPoly (Poly.Line (p4, p4a));
-      Vector3 v3 = (Vector3)(p3 - cen), v4 = (Vector3)(p4 - cen);
-      if ((v3 * v4).Z < 0) (ang3, ang4) = (ang4, ang3);
-      Poly arc = Poly.Arc (cen, rad, ang3, ang4, true); AddPoly (arc);
-      AddArrow (arc.A, ang3 + Lib.HalfPI); AddArrow (arc.B, ang4 - Lib.HalfPI);
-      string? text = Text;
-      if (text == null) {
-         double span = Math.Abs (arc[0].AngSpan).R2D ().Round (mStyle.AngDecimal);
-         text = span.ToString () + "\u00b0";
-      }
-      double tAng = cen.AngleTo (ptxt) - Lib.HalfPI;
-      AddText (ptxt, text, tAng);
+   protected override Ent2 Xformed (Matrix2 xfm) {
+      var dim = new E2DimGeneric (Layer, mStyle, [.. mPts.Select (a => a * xfm)], mText);
+      dim.mEnts.AddRange (mEnts.Select (a => a * xfm));
+      return dim; 
    }
 }
+#endregion
+
+#region class E2Dim3PAngular -----------------------------------------------------------------------
+/// <summary>E2Dim3PAngular is a '3-point angular' dimension</summary>
+/// This image file://N:/Doc/Img/Dim3PAngle1.png shows the definition of this type of dimension.
+/// The points a, b, c, d are enough to define the dimension (with point e being the optional
+/// text positioning point). The values in parentheses are the group codes from which these values
+/// are loaded from the DXF file. 
+public class E2Dim3PAngular : E2Dim {
+   // Constructors -------------------------------------------------------------
+   E2Dim3PAngular () { }
+   /// <summary>Creates a 3P-Angular dimension given the definition points as shown in the image above</summary>
+   public E2Dim3PAngular (Layer2 layer, DimStyle2 style, IList<Point2> pts, string? text)
+      : base (layer, EDim.Angular3P, style, pts, text) { }
+
+   // Overrides ----------------------------------------------------------------
+   // Creates a transformed version of the 3P Angular dimension
+   protected override Ent2 Xformed (Matrix2 xfm) {
+      var dim = new E2Dim3PAngular (Layer, mStyle, [.. mPts.Select (a => a * xfm)], mText);
+      dim.mEnts.AddRange (mEnts.Select (a => a * xfm));
+      return dim; 
+   }
+
+   /// <summary>Creates the entities of the 3P Angular dimension</summary>
+   /// Based on whether the TIHorz flag (text-inside horizontal) is set, and the text position
+   /// (Center/Above/Below), the text will need to be positioned in one of the ways as shown
+   /// in the image: file://N:/Doc/Img/Dim3PAngle2.png 
+   /// 
+   /// There are several helper routines in the E2Dim class that are used in this MakeEnts
+   /// routine (and those of other classes)
+   /// - Measure(text) computes the bounding box of the text (assuming the text is horizontal,
+   ///   and centered at (0,0)). 
+   /// - CheckSpace(available,txtSize) figures out if there is enough space between the
+   ///   extension lines to position the arrowheads and/or text (4 possibilities exist for
+   ///   this, as illustrated by file://N:/Doc/Img/Dim3PAngle3.png
+   /// - GetOverhangs returns the overhang distances used for the dimension line overhangs
+   ///   on either side of the extension lines. If both the arrowheads and text fit inside
+   ///   the extension lines, these overhangs are both 0. Otherwise, the overhangs are computed
+   ///   based on the arrowhead size / text measurement as shown in the images (the blue distances
+   ///   are the overhangs: file://N:/Doc/Img/Dim3PAngle4.png
+   /// - AddPoly, AddText, AddArrow are used to add various entities into the mEnts list.
+   /// - When the text is placed with 'centered' alignment, and fits between the extension 
+   ///   lines, the dimension line has to be trimmed to the bits on both sides of the text-box;
+   ///   this is done by AddTrimmedSeg
+   protected override void MakeEnts () {
+      // Figure out if the CCW arc runs from b..c or from c..b (depends on the position of d)
+      Point2 a = mPts[0], b = mPts[1], c = mPts[2], d = mPts[3];
+      double angB = a.AngleTo (b), angC = a.AngleTo (c), rad = a.DistTo (d);
+      Point2 arcStart = a.Polar (rad, angB), arcEnd = a.Polar (rad, angC);
+
+      // Create the two extension lines - they run 'outward' or 'inward' from the
+      // definition points b and c (depending on the position of d)
+      double exo = mStyle.ExtOffset, ext = mStyle.ExtExtend, asz = mStyle.ArrowSize;
+      double r1 = a.DistTo (b), r2 = a.DistTo (c), ang = rad > r1 ? angB : angB + Lib.PI;
+      AddPoly (Poly.Line (b.Polar (exo, ang), arcStart.Polar (ext, ang)));
+      ang = rad > r2 ? angC : angC + Lib.PI;
+      AddPoly (Poly.Line (c.Polar (exo, ang), arcEnd.Polar (ext, ang)));
+
+      // Figure out if we need a major or minor arc, and compute the angle text
+      string text = Text ?? "";
+      var arc = Poly.Arc (arcStart, d, arcEnd); var arcSeg = arc[0]; 
+      if (!arcSeg.IsCCW) { arc = arc.Reversed (); arcSeg = arc[0]; }
+      double slope0 = arcSeg.GetSlopeAt (0), slope1 = arcSeg.GetSlopeAt (1);
+      if ((mFlags & E2Flags.AutoText) == 0) {
+         double span = Math.Abs (arcSeg.AngSpan).R2D ().Round (mStyle.AngDecimal);
+         text = $"{span}\u00b0";
+      }
+
+      // Measure the text, and figure if we have to find space for the width or the
+      // height of the text. 
+      // - If the text is aligned (not horizontal), then this is the width
+      // - Otherwise, it depends on the angle at which the dimension line goes through
+      //   the text. If this is more vertical (not more than 30 degrees away from vertical)
+      //   then we use the height of the text, else the width
+      Bound2 bound = Measure (text).InflatedL (mStyle.DimGap);
+      double txtMeasure = bound.Width;
+      if (mStyle.TIHorz && Math.Abs (Math.Cos (arcSeg.GetSlopeAt (0.5))) < 0.5) txtMeasure = bound.Height;
+      var inside = CheckSpace (arcSeg.Length, txtMeasure);
+      bool textInside = (inside & EInside.Text) != 0, arrowInside = (inside & EInside.Arrows) != 0;
+
+      // Figure out the rotation angle of the text box, and an initial anchor point for
+      // the text box
+      int txtLie = -1; // -1:Inside, 0:Outside Start, 1:Outside End
+      double textAngle = 0; Point2 txtPos = arcSeg.Midpoint;
+      if (!(textInside ? mStyle.TIHorz : mStyle.TOHorz)) {
+         textAngle = arcSeg.GetSlopeAt (0.5);
+         if (!textInside) {
+            if (d.DistToSq (arcSeg.A) < d.DistToSq (arcSeg.B)) {
+               txtPos = arcSeg.A; textAngle = arcSeg.GetSlopeAt (0) + Lib.PI;
+               txtLie = 0; 
+            } else {
+               txtPos = arcSeg.B; textAngle = arcSeg.GetSlopeAt (1);
+               txtLie = 1; 
+            }
+            double shift = txtMeasure / 2;
+            if (!arrowInside) { shift += mStyle.ArrowSize + mStyle.ExtExtend; }
+            txtPos = txtPos.Polar (shift, textAngle);
+         }
+      }
+
+      // Add the arrowheads, and the extension lines outside
+      if (arrowInside) {
+         double lie = asz / arcSeg.Length;
+         AddArrow (arcSeg.A, arcSeg.A.AngleTo (arcSeg.GetPointAt (lie)));
+         AddArrow (arcSeg.B, arcSeg.B.AngleTo (arcSeg.GetPointAt (1 - lie)));
+      } else {
+         AddArrow (arcSeg.A, slope0 + Lib.PI);
+         AddArrow (arcSeg.B, slope1);
+      }
+      var (aExt, bExt) = GetOverhangs (inside, txtMeasure, txtLie == 0);
+      if (aExt > 0) AddPoly (Poly.Line (arcSeg.A, arcSeg.A.Polar (aExt, slope0 + Lib.PI)));
+      if (bExt > 0) AddPoly (Poly.Line (arcSeg.B, arcSeg.B.Polar (bExt, slope1)));
+
+      // If the text is within the extensions, we have to trim the extension lines at the
+      // box, otherwise we can add the complete arc
+      var textBox = Poly.Rectangle (bound) * Matrix2.Rotation (textAngle) * Matrix2.Translation (txtPos);
+      if (textInside && mStyle.TxtPos == DimStyle2.EPos.Centered) AddTrimmedSeg (arcSeg, textBox);
+      else AddPoly (arc);
+
+      // If we are not doing 'centered' positioning, we have to shift the text box in a suitable
+      // direction
+      if (mStyle.TxtPos != DimStyle2.EPos.Centered) {
+         double shiftLie = textInside ? 0.5 : txtLie, shiftAngle = a.AngleTo (arcSeg.GetPointAt (shiftLie));
+         if (mStyle.TxtPos == DimStyle2.EPos.Below) shiftAngle += Lib.PI;
+         Vector2 vec = GetShift (textBox, shiftAngle);
+         txtPos += vec;
+      }
+      // AddPoly (textBox);
+
+      // Add the text itself
+      textAngle = Lib.NormalizeAngle (textAngle);
+      if (textAngle is < (-Lib.HalfPI - Lib.Epsilon) or > (Lib.HalfPI + Lib.Epsilon))
+         textAngle += Lib.PI;
+      AddText (txtPos, text, textAngle);
+   }
+
+   Vector2 GetShift (Poly rect, double angle) {
+      Point2 cen = rect.Pts[0].Midpoint (rect.Pts[2]);
+      Point2 outer = cen.Polar (1000, angle);
+      foreach (var seg in rect.Segs) {
+         Point2 pa = Geo.LineSegXLineSeg (seg.A, seg.B, cen, outer);
+         if (!pa.IsNil) return pa - cen;
+      }
+      return Vector2.Zero;
+   }
+}
+#endregion
+

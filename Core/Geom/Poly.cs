@@ -45,6 +45,16 @@ public partial class Poly {
       return Arc (cen, cen.DistTo (start), sa, ea, arcDir > 0);
    }
 
+   /// <summary>Creates an arc given a start, through and end point</summary>
+   public static Poly Arc (Point2 start, Point2 thru, Point2 end) {
+      Point2 cen = Get3PCircle (start, thru, end); 
+      if (cen.IsNil) return Line (start, end);
+      double a = cen.AngleTo (start), b = cen.AngleTo (thru), c = cen.AngleTo (end);
+      if (b <= a) b += TwoPI; if (c <= a) c += TwoPI;
+      EFlags flags = c <= b ? EFlags.CW : EFlags.CCW;
+      return new Poly ([start, end], [new ArcInfo (cen, flags)], EFlags.HasArcs);
+   }
+
    /// <summary>Make a full-circle Poly</summary>
    public static Poly Circle (Point2 pt, double radius) {
       Point2 a = pt + new Vector2 (radius, 0);

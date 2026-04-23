@@ -257,7 +257,7 @@ public class E2Insert : Ent2 {
          (x, y) = (Math.Abs (x), Math.Abs (y));
          if (!(x.EQ (1) && y.EQ (1))) xfm *= Matrix2.Scaling (x, y);
          if (!mAngle.IsZero ()) xfm *= Matrix2.Rotation (mAngle);
-         return _xfm = xfm * Matrix2.Translation ((Vector2)mPt);
+         return _xfm = xfm * Matrix2.Translation (mPt);
       }
    }
    Matrix2? _xfm;

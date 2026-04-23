@@ -45,7 +45,20 @@ public class Block2 {
 /// <summary>Bitflags for Ent2</summary>
 [Flags]
 public enum E2Flags {
-   Selected = 0x1, InBlock = 0x2, Closed = 0x4, Periodic = 0x8, Outer = 0x10, IsError = 0x20,
+   /// <summary>Entity is selected</summary>
+   Selected = 0x1, 
+   /// <summary>Entity is part of a block</summary>
+   InBlock = 0x2, 
+   /// <summary>Entity (E2Poly / E2Spline) is closed</summary>
+   Closed = 0x4, 
+   /// <summary>Entity (E2Spline) is periodic</summary>
+   Periodic = 0x8, 
+   /// <summary>This is an 'outer' entity</summary>
+   Outer = 0x10, 
+   /// <summary>Entity is an error state</summary>
+   IsError = 0x20,
+   /// <summary>For a dimension, text is auto-computed</summary>
+   AutoText = 0x40,
 }
 #endregion
 

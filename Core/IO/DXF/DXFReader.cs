@@ -63,9 +63,8 @@ public class DXFReader {
 
       LinkDimensions ();
       ProcessBendText (mDwg);
-      StitchDrawing (); 
-      if (mDwg.Layers.FirstOrDefault (a => a.Name == mCurrentLayer) is { } layer)
-         mDwg.CurrentLayer = layer;
+      StitchDrawing ();
+      SetCurrent ();
       return mDwg;
    }
    HashSet<EDXF> sReported = [];
@@ -129,15 +128,15 @@ public class DXFReader {
       var (layer, style, text) = (LYR (), mDwg.GetDimStyle (S (3)), S (1));
 
       E2Dim? dim = kind switch {
-         // EDim.Angular3P => new E2Dim3PAngular (layer, style, Add3 (13, 14, 15), text),
+         EDim.Angular3P => new E2Dim3PAngular (layer, style, Add5 (15, 13, 14, 10, 11), text),
          _ => new E2DimGeneric (layer, style, mPts, text),
       };
       mDimMap.Add (dim, S (2)); Add (dim);
 
       // Helpers ...........................................
       List<Point2> Add1 (int a) { mPts.Add (PT (a)); return mPts; }
-      void Add2 (int a, int b) { Add1 (a); Add1 (b); }
-      List<Point2> Add3 (int a, int b, int c) { Add1 (a); Add1 (b); return Add1 (c); }
+      List<Point2> Add2 (int a, int b) { Add1 (a); return Add1 (b); }
+      List<Point2> Add5 (int a, int b, int c, int d, int e) { Add2 (a, b); Add2 (c, d); return Add1 (e); }
    }
 
    // Loads an ELLIPSE entity
@@ -266,6 +265,7 @@ public class DXFReader {
          switch (name) {
             case _ACADVER: mACADVer = S (G).ToUpper (); break;
             case _CLAYER: mCurrentLayer = S (G); break;
+            case _DIMSTYLE: mCurrentDimStyle = S (G); break;
             case _DIMASZ: mDimASZ = F (G); break; case _DIMEXE: mDimEXE = F (G); break;
             case _DIMEXO: mDimEXO = F (G); break; case _DIMTXT: mDimTXT = F (G); break;
             case _DIMCEN: mDimCEN = F (G); break; case _DIMGAP: mDimGAP = F (G); break;
@@ -400,6 +400,14 @@ public class DXFReader {
       }
    }
 
+   // Sets up the current layer, dimension style etc
+   void SetCurrent () {
+      if (mDwg.Layers.FirstOrDefault (a => a.Name == mCurrentLayer) is { } layer)
+         mDwg.CurrentLayer = layer;
+      if (mDwg.DimStyles.FirstOrDefault (a => a.Name == mCurrentDimStyle) is { } dimstyle)
+         mDwg.CurrentDimStyle = dimstyle;
+   }
+
    // Stitches the drawing if we want
    void StitchDrawing () {
       if (StitchThreshold <= 0) return;
@@ -473,6 +481,7 @@ public class DXFReader {
    // DXF state ----------------------------------------------------------------
    string mACADVer = "AC1021";   // AutoCAD version
    string mCurrentLayer = "";    // Current layer from DXF file
+   string mCurrentDimStyle = ""; // Current dimension style from DXF file
    bool mUnitsSet = false;       // Have we figured out the DXF units yet?
    double Scale = 1;             // Scale factor to mm (METRIC=>1, IMPERIAL=>25.4 etc)
    Block2? mBlock;               // If non-null, this is the block we're currently reading

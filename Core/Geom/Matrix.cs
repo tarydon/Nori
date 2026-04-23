@@ -12,6 +12,8 @@ public class Matrix2 (double m11, double m12, double m21, double m22, double x, 
    /// <summary>Create a translation matrix</summary>
    public static Matrix2 Translation (Vector2 vec) => Translation (vec.X, vec.Y);
    /// <summary>Create a translation matrix</summary>
+   public static Matrix2 Translation (Point2 pt) => Translation (pt.X, pt.Y);
+   /// <summary>Create a translation matrix</summary>
    public static Matrix2 Translation (double x, double y) => new (1, 0, 0, 1, x, y);
 
    /// <summary>Create a uniform scaling matrix (same scale in X, Y) about the origin</summary>

@@ -1,12 +1,13 @@
-﻿using System.Windows.Controls;
-using Nori;
+﻿using Nori;
 namespace Zuki;
 
 class Widget : IDisposable {
    public Widget () {
+      mDwg = Hub.Dwg;
       mDisp.Add (Hub.MouseMoves.Subscribe (OnMouseMove));
       mDisp.Add (Hub.LeftClicks.Subscribe (OnLeftClick));
    }
+   protected Dwg2 mDwg;
 
    public virtual void Draw () { }
    public virtual void OnMouseMove (Point2 pt) {
@@ -25,13 +26,20 @@ class Widget : IDisposable {
 }
 
 class Dim3PAngularMaker : Widget {
+   public Dim3PAngularMaker () => mDimStyle = mDwg.CurrentDimStyle;
+   readonly DimStyle2 mDimStyle;
+
    public override void Draw () {
       Lux.Color = Color4.DarkGreen;
       Lux.LineWidth = 1.25f;
-      if (Phase > 1) Lux.Lines ([Pts[0], Pts[1]]);
-      if (Phase > 2) Lux.Lines ([Pts[0], Pts[2]]);
-
-      Lux.Color = Color4.Black;
       Lux.Points (Pts.Select (a => (Vec2F)a).ToArray ());
+
+      if (Phase == 4) {
+         var dim = new E2Dim3PAngular (mDwg.CurrentLayer, mDimStyle, Pts, "");
+         Hub.DrawEnts (dim.Ents);
+      } else {
+         if (Phase > 1) Lux.Lines ([Pts[0], Pts[1]]);
+         if (Phase > 2) Lux.Lines ([Pts[0], Pts[2]]);
+      }
    }
 }

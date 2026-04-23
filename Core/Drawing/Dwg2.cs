@@ -24,7 +24,22 @@ public partial class Dwg2 {
    }
    Bound2 mBound = new ();
 
+   /// <summary>The current dimension style of the drawing</summary>
+   [DebuggerBrowsable (DebuggerBrowsableState.Never)]
+   public DimStyle2 CurrentDimStyle {
+      get {
+         if (DimStyles.Count == 0) Add (new DimStyle2 ("STANDARD", GetStyle ("STANDARD")!));
+         return mCurrentDimStyle ??= DimStyles[0];
+      }
+      set {
+         if (!Lib.Check (DimStyles.Contains (value), "Invalid DimStyle passed to CurrentDimStyle")) return;
+         mCurrentDimStyle = value;
+      }
+   }
+   DimStyle2? mCurrentDimStyle;
+
    /// <summary>The current layer of the drawing</summary>
+   [DebuggerBrowsable (DebuggerBrowsableState.Never)]
    public Layer2 CurrentLayer {
       get {
          if (mLayers.Count == 0) Add (new Layer2 ("0", Color4.Black, ELineType.Continuous));
@@ -110,7 +125,7 @@ public partial class Dwg2 {
    /// <summary>Adds a dimension style to the list of styles in the drawing</summary>
    public void Add (DimStyle2 style) {
       if (style.Name.IsBlank ()) return;
-      (mDimStyles ??= []).Add (style);
+      (mDimStyles ??= []).Add (style); _dimStyleMap = null;
    }
 
    /// <summary>Adds a style to the list of styles</summary>
@@ -196,9 +211,9 @@ public partial class Dwg2 {
          _dimStyleMap = new (StringComparer.OrdinalIgnoreCase);
          foreach (var s in styles) _dimStyleMap.TryAdd (s.Name, s);
       }
-      var style = _dimStyleMap.GetValueOrDefault (name);
-      if (style == null && styles.Count > 0) return styles[0];
-      (mDimStyles ??= []).Add (style = new ("STANDARD", GetStyle ("STANDARD")!));
+      if (_dimStyleMap.GetValueOrDefault (name) is { } style) return style;
+      if (styles.Count > 0) return styles[0];
+      Add (style = new ("STANDARD", GetStyle ("STANDARD")!));
       return style;
    }
    Dictionary<string, DimStyle2>? _dimStyleMap;
