@@ -17,8 +17,8 @@ public class DXFWriter {
 
    #region Methods -------------------------------------------------------------
    /// <summary>Utility helper to save a Dwg to DXF file</summary>
-   public static void Save (Dwg2 dwg, string file)
-      => File.WriteAllText (file, new DXFWriter (dwg).Write ());
+   public static void Save (Dwg2 dwg, string file, bool blackToWhite = false)
+      => File.WriteAllText (file, new DXFWriter (dwg) { BlackToWhite = blackToWhite }.Write ());
 
    /// <summary>Maps Color4 to nearest ACAD color by comparing RGB values</summary>
    public static int ToACADColor (Color4 color) {
@@ -35,11 +35,15 @@ public class DXFWriter {
    /// <summary>Writes the Dwg2 to a string (that can then be saved to a file to make a DXF)</summary>
    public string Write () {
       S.Clear ();
-      Out (" 0\nSECTION\n 2\nHEADER\n 0\nENDSEC\n 0\nSECTION\n 2\nTABLES\n");
-      OutLayers ();
+      OutHeader ();
+      Out (" 0\nSECTION\n 2\nTABLES\n");
+      var layers = OutLTypes ();
+      OutLayers (layers);
       OutStyles ();
+      OutAppIDs ();
+      Out (" 0\nENDSEC\n");
       OutBlocks ();
-      Out (" 0\nENDSEC\n 0\nSECTION\n 2\nENTITIES\n");
+      Out (" 0\nSECTION\n 2\nENTITIES\n");
       OutEntities (D.Ents);
       Out (" 0\nENDSEC\n 0\nEOF\n");
       return S.ToString ();
@@ -50,17 +54,23 @@ public class DXFWriter {
    // Basic function to append a string
    int Out (string s) { S.Append (s); return 0; }
 
+   // Outputs the NORI AppID, if there are any bendlines
+   void OutAppIDs () {
+      if (D.Ents.OfType<E2Bendline> ().Any ())
+         Out (" 0\nTABLE\n 2\nAPPID\n 70\n1\n 0\nAPPID\n 2\nNORI\n 70\n0\n 0\nENDTAB\n");
+   }
+
    // Writes out the BLOCKS table with the list of blocks
    void OutBlocks () {
       var blocks = D.Blocks; if (blocks.Count == 0) return;
-      Out ($" 0\nTABLE\n 2\nBLOCKS\n 70\n{blocks.Count}\n");
+      Out ($" 0\nSECTION\n 2\nBLOCKS\n");
       foreach (var block in blocks) {
          var pt = block.Base;
-         Out ($" 0\nBLOCK\n 70\n65\n 2\n{block.Name}\n 10\n{pt.X}\n 20\n{pt.Y}\n");
+         Out ($" 0\nBLOCK\n 2\n{block.Name}\n 70\n0\n 10\n{pt.X}\n 20\n{pt.Y}\n");
          OutEntities (block.Ents);
          Out (" 0\nENDBLK\n");
       }
-      Out (" 0\nENDTAB\n");
+      Out (" 0\nENDSEC\n");
    }
 
    // Output the entities (could be the ents in the drawing, or within a block)
@@ -74,7 +84,7 @@ public class DXFWriter {
             E2Insert ei => OutInsert (ei),
             E2Dimension e2d => OutDimension (e2d),
             E2Bendline e2b => OutBendLine (e2b),
-            E2Spline e2s => OutSpline (e2s),
+            E2DimGeneric or E2Dim3PAngular or E2Spline => 0,
             _ => throw new BadCaseException (ent.GetType ().Name)
          };
       }
@@ -86,11 +96,34 @@ public class DXFWriter {
       Out ($" 0\n{type}\n 8\n{ent.Layer.Name}\n");
    }
 
+   // Outputs the HEADER section
+   void OutHeader () {
+      var b = D.Bound;
+      Out (" 0\nSECTION\n 2\nHEADER\n 9\n$ACADVER\n 1\nAC1009\n");
+      Out ($" 9\n$EXTMIN\n 10\n{b.X.Min}\n 20\n{b.Y.Min}\n 30\n0\n");
+      Out ($" 9\n$EXTMAX\n 10\n{b.X.Max}\n 20\n{b.Y.Max}\n 30\n0\n");
+      Out (" 0\nENDSEC\n");
+   }
+
    // Writes the LAYER table.
    // Bend lines in the drawing are converted into lines in the BEND and MBEND
    // layers. If these layers do not exist in the drawing, they are added to the LAYER
    // table (but not to the drawing itself).
-   void OutLayers () {
+   void OutLayers (List<Layer2> layers) {
+      Out ($" 0\nTABLE\n 2\nLAYER\n 70\n{layers.Count}\n");
+      foreach (var layer in layers) {
+         int flags = layer.IsVisible ? 0 : 1, color = ToACADColor (layer.Color);
+         if (BlackToWhite && color == 0) color = 7;
+         string name = layer.Name, ltype = layer.Linetype.ToString ().ToUpper ();
+         Out ($" 0\nLAYER\n 2\n{name}\n 70\n{flags}\n 62\n{color}\n 6\n{ltype}\n");
+      }
+      Out (" 0\nENDTAB\n");
+   }
+   public bool BlackToWhite;
+
+   // Writes the LTYPE table (only the ones used in the layers we have)
+   List<Layer2> OutLTypes () {
+      // Adds layers for BEND and MBEND if there are any valley / mountain bends
       var layers = D.Layers.ToList ();
       if (AllBends ().Any ()) {
          mBend = layers.FirstOrDefault (a => a.Name.EqIC ("BEND"));
@@ -100,19 +133,34 @@ public class DXFWriter {
             else if (mMBend is null && a.Angle < 0) layers.Add (mMBend = new Layer2 ("MBEND", Color4.Green, ELineType.DashDotDot));
          });
       }
-      Out ($" 0\nTABLE\n 2\nLAYER\n 70\n{layers.Count}\n");
-      foreach (var layer in layers) {
-         int flags = layer.IsVisible ? 0 : 1, color = ToACADColor (layer.Color);
-         string name = layer.Name, ltype = layer.Linetype.ToString ().ToUpper ();
-         Out ($" 0\nLAYER\n 70\n{flags}\n 2\n{name}\n 62\n{color}\n 6\n{ltype}\n");
-      }
-      Out (" 0\nENDTAB\n");
 
+      // Gather the set of linetypes in use
+      var set = layers.Select (a => a.Linetype).ToHashSet ();
+      set.Remove (ELineType.Continuous);
+      if (set.Count > 0) {
+         Out ($" 0\nTABLE\n 2\nLTYPE\n 70\n{set.Count}\n");
+         foreach (var lt in set) {
+            var vals = sPattern[lt].Select (a => a * 0.1).ToList (); double total = vals.Sum (Math.Abs);
+            Out ($" 0\nLTYPE\n 2\n{lt.ToString ().ToUpper ()}\n 70\n0\n 3\n{lt}\n 72\n65\n");
+            Out ($" 73\n{vals.Count}\n40\n{total.R3 ()}\n");
+            foreach (var n in vals) Out ($" 49\n{n.R3 ()}\n");
+         }
+         Out (" 0\nENDTAB\n");
+      }
+      return layers;
+
+      // Helpers ...........................................
       IEnumerable<E2Bendline> AllBends () {
          foreach (var bend in D.Ents.OfType<E2Bendline> ()) yield return bend;
          foreach (var bend in D.Blocks.SelectMany (b => b.Ents).OfType<E2Bendline> ()) yield return bend;
       }
    }
+   static Dictionary<ELineType, int[]> sPattern = new () {
+      [ELineType.Phantom] = [32, -4, 8, -4, 8, -4], [ELineType.Dash] = [10, -5, 10, -5, 10, -5],
+      [ELineType.DashDotDot] = [28, -8, 4, -8, 4, -8], [ELineType.Dot] = [3, -3], 
+      [ELineType.Hidden] = [7, -8], [ELineType.Dash2] = [18, -12], [ELineType.Center] = [12, -6, 4, -6],
+      [ELineType.Border] = [18, -8, 18, -8, 4, -8], [ELineType.DashDot] = [20, -4, 2, -4]
+   };
 
    // Writes out the STYLE table with a list of text styles
    void OutStyles () {
@@ -166,7 +214,7 @@ public class DXFWriter {
          if (Lib.Testing) (a, r, k) = (a.R6 (), r.R6 (), k.R6 ());
          var layer = eb.Angle < 0 ? mMBend : mBend;
          Out ($" 0\nLINE\n 8\n{layer!.Name}\n 10\n{pa.X}\n 20\n{pa.Y}\n 11\n{pb.X}\n 21\n{pb.Y}\n");
-         Out ($" 1000\nBEND_ANGLE:{a}\n 1000\nBEND_RADIUS:{r}\n 1000\nK_FACTOR:{k} \n");
+         Out ($" 1001\nNORI\n 1000\nBEND_ANGLE:{a}\n 1000\nBEND_RADIUS:{r}\n 1000\nK_FACTOR:{k} \n");
       }
       return 0;
    }

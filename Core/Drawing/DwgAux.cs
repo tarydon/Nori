@@ -149,7 +149,7 @@ public class Layer2 {
 
    /// <summary>Is this layer visible?</summary>
    public bool IsVisible { get => mVisible; set => mVisible = value; }
-   bool mVisible;
+   bool mVisible = true;
 
    /// <summary>What is the linetype</summary>
    public ELineType Linetype => mLinetype;

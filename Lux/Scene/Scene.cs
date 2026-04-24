@@ -194,9 +194,7 @@ public abstract class Scene {
       clip = new (Math.Round (clip.X, d), Math.Round (clip.Y, d), Math.Round (clip.Z, d));
       return clip;
    }
-   /// <summary>
-   /// If set other than -1, all mouse-input is rounded to this many decimals
-   /// </summary>
+   /// <summary>If set other than -1, all mouse-input is rounded to this many decimals</summary>
    public int WorldDecimals = -1;
 
    public virtual void ZoomExtents () {

@@ -10,8 +10,11 @@ class Program {
       Lib.Init ();
       Lib.Tracer = Console.WriteLine;
 
-      var dr = new DXFReader ("C:\\Dropbox\\Nori\\Dimension\\Dimensions.dxf");
-      var dwg = dr.Load ();
-      CurlWriter.Save (dwg, "c:/etc/test.curl", "Dimension test");
+      var dwg = DXFReader.Load ("N:/TData/IO/DXF/AllEnts.dxf");
+      while (dwg.Ents.Count > 9) dwg.Ents.RemoveAt (dwg.Ents.Count - 1);
+      foreach (var e in dwg.Ents)
+         Console.WriteLine (e.ToString ());
+
+      DXFWriter.Save (dwg, "c:/etc/test.dxf", true);
    }
 }
