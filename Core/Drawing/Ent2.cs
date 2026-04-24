@@ -308,6 +308,9 @@ public class E2Point : Ent2 {
    /// <summary>Compute the bound, under a transform</summary>
    public override Bound2 GetBound (Matrix2 xfm) => new (mPt * xfm);
 
+   /// <summary>Is this a 'definition point' of a dimension?</summary>
+   public bool IsDefPoint { get => Get (E2Flags.DefPoint); set => Set (E2Flags.DefPoint, value); }
+
    // Methods ------------------------------------------------------------------
    public override bool IsCloser (Point2 pt, ref double threshold) {
       double dist = pt.DistTo (mPt);

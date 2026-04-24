@@ -33,6 +33,12 @@ public class TypeFace {
    }
    readonly GCHandle mFaceRawBlock;    // Unmanaged-memory copy of the byte-array
 
+   /// <summary>Create a new TypeFace from a given one (with a different pixel-size)</summary>
+   public TypeFace (TypeFace tf, int pixelSize) {
+      mGamma = tf.Gamma; mFace = tf.mFace;
+      InitFont (pixelSize);
+   }
+
    // Properties ---------------------------------------------------------------
    /// <summary>Returns the indices of all glyphs available in this font</summary>
    public IReadOnlyList<uint> AllGlyphs { get { _ = Map; return mAllGlyphs!; } }

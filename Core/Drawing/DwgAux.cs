@@ -59,6 +59,8 @@ public enum E2Flags {
    IsError = 0x20,
    /// <summary>For a dimension, text is auto-computed</summary>
    AutoText = 0x40,
+   /// <summary>A 'definition point' for a dimension, spline etc</summary>
+   DefPoint = 0x80,
 }
 #endregion
 

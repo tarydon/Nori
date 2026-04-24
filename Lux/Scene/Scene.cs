@@ -190,9 +190,14 @@ public abstract class Scene {
       Point3 clip = new (2.0 * pix.X / vp.X - 1, 1.0 - 2.0 * pix.Y / vp.Y, 0);
       clip *= Xfms[0].InvXfm;
       int d = PixelScale switch { > 1 => 0, > 0.1 => 1, > 0.01 => 2, > 0.001 => 3, _ => 4 };
+      if (WorldDecimals >= 0) d = WorldDecimals;
       clip = new (Math.Round (clip.X, d), Math.Round (clip.Y, d), Math.Round (clip.Z, d));
       return clip;
    }
+   /// <summary>
+   /// If set other than -1, all mouse-input is rounded to this many decimals
+   /// </summary>
+   public int WorldDecimals = -1;
 
    public virtual void ZoomExtents () {
       mZoomFactor = 1; mPanVector = Vector2.Zero;

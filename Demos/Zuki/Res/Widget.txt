@@ -1,0 +1,10 @@
+[Basic]
+Desc=Widget
+
+[Dim3PAngular]
+Phases=4
+Name=3-P Angular
+0=Set angle vertex
+1=Set first angle endpoint
+2=Set second angle endpoint
+3=Set dimension arc location

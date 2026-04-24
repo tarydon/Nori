@@ -11,6 +11,8 @@ public class GroupVN : VNode {
    // Constructors -------------------------------------------------------------
    /// <summary>Construct a GroupVN given multiple child VNodes to hold on to</summary>
    public GroupVN (IEnumerable<VNode> children) => mChildren = [.. children];
+
+   public IReadOnlyList<VNode> Children => mChildren;
    readonly List<VNode> mChildren;
 
    public void Add (VNode child) { mChildren.Add (child); ChildAdded (); }

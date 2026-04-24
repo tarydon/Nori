@@ -1,4 +1,7 @@
+using System.IO;
 using System.Reactive.Linq;
+using System.Windows;
+using System.Windows.Controls;
 using Nori;
 namespace Zuki;
 
@@ -14,11 +17,22 @@ static class Hub {
             MouseMoves.Subscribe (a => CursorVN.It.Pt = a);
             Widget = new Dim3PAngularMaker ();
          }
+         SetTitle ();
       }
    }
    static Dwg2 mDwg = new ();
    static DwgScene mScene = null!;
    static bool mHooked;
+
+   public static bool FillDrawing {
+      get;
+      set {
+         if (!Lib.Set (ref field, value)) return;
+         if (value) Root.Add (new DwgFillVN (Dwg));
+         else if (Root.Children.FirstOrDefault (a => a is DwgFillVN) is { } fillVN)
+            Root.Remove (fillVN);
+      }
+   } = true;
 
    /// <summary>Current PixelScale (how many world units per pixels)</summary>
    public static double PixelScale => mScene.PixelScale;
@@ -27,7 +41,20 @@ static class Hub {
    public static GroupVN Root { get => mRoot; set => mRoot = value;  }
    static GroupVN mRoot = null!;
 
-   public static Widget? Widget;
+   public static TextBlock? Status;
+   public static TextBlock? Command;
+
+   public static string StatusText { set => Status?.Text = value; }
+   public static string CommandText { set => Command?.Text = value; }
+
+   /// <summary>The current widget that is running</summary>
+   public static Widget? Widget { 
+      get => mWidget;
+      set { mWidget?.Deactivate (); (mWidget = value)?.Activate ();  }
+   }
+   static Widget? mWidget;
+
+   public static Window? MainWindow;
 
    // Event handlers -----------------------------------------------------------
    static void OnMouseMove (Vec2S vec) {
@@ -57,9 +84,16 @@ static class Hub {
       // Draw points
       mPoints.AddRange (ents.OfType<E2Point> ().Select (a => (Vec2F)a.Pt));
       Lux.Points (mPoints.AsSpan ());
+      // Handle dimensions
+      ents.OfType<E2Dim> ().ForEach (d => DrawEnts (d.Ents));
    }
    static List<Poly> mPolys = [];
    static List<Vec2F> mQuads = [], mPoints = [];
+
+   /// <summary>Draws one entity</summary>
+   public static void DrawEnt (Ent2? ent) {
+      if (ent is { }) DrawEnts ([ent]);
+   }
 
    /// <summary>Loads a DXF file and mounts it for editing</summary>
    public static void LoadDXF (string file) {
@@ -72,4 +106,11 @@ static class Hub {
    /// <summary>Converts pixel coordinates to world coordinates</summary>
    public static Point2 PixelToWorld (Vec2S pix)
       => (Point2)mScene.PixelToWorld (pix);
+
+   /// <summary>Sets the title of the main window</summary>
+   public static void SetTitle () {
+      string s = $"Z U K I";
+      if (!mDwg.Filename.IsBlank ()) s += $"  \u2022  {Path.GetFileNameWithoutExtension (mDwg.Filename)}";
+      MainWindow?.Title = s;
+   }
 }

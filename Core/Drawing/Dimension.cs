@@ -173,6 +173,9 @@ public abstract class E2Dim : Ent2 {
    // Adds a Poly to the list of entities
    protected void AddPoly (Poly poly) => mEnts.Add (new E2Poly (Layer = Layer, poly));
 
+   // Adds a Point to the list of entities      
+   protected void AddPoint (Point2 pt) => mEnts.Add (new E2Point (Layer = Layer, pt) { IsDefPoint = true });
+
    // Adds text to the list of entities
    protected void AddText (Point2 pt, string text, double angle) {
       mEnts.Add (new E2Text (Layer, mStyle.Style, text, pt, mStyle.TxtSize, angle, 0, 1, ETextAlign.MidCenter));
@@ -418,6 +421,7 @@ public class E2Dim3PAngular : E2Dim {
       if (textAngle is < (-Lib.HalfPI - Lib.Epsilon) or > (Lib.HalfPI + Lib.Epsilon))
          textAngle += Lib.PI;
       AddText (txtPos, text, textAngle);
+      AddPoint (a); AddPoint (b); AddPoint (c);
    }
 
    Vector2 GetShift (Poly rect, double angle) {

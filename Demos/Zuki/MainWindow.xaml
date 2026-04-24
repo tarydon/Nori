@@ -6,7 +6,33 @@
         xmlns:local="clr-namespace:Zuki"
         mc:Ignorable="d"
         Title="Z U K I" Height="450" Width="800" WindowState="Maximized">
-    <Grid>
-
-    </Grid>
+   <DockPanel>
+      <Menu Name="mMenu" DockPanel.Dock="Top">
+         <MenuItem Header="_FILE">
+            <MenuItem Header="_New" InputGestureText="Ctrl+N" Tag="New" />
+            <MenuItem Header="_Open..." InputGestureText="Ctrl+O" Tag="Open" />
+            <MenuItem Header="_Save" InputGestureText="Ctrl+S" Tag="Save" />
+            <MenuItem Header="Save _As" Tag="SaveAs" />
+            <MenuItem Header="E_xit" InputGestureText="Alt+F4" Tag="Exit" />
+         </MenuItem>
+         <MenuItem Header="_MODE">
+            <MenuItem Header="_P. Pick" Tag="Pick" />
+            <Separator />
+            <MenuItem Header="_3. Dim 3-P Angular" Tag="Dim3PAnglular" />
+         </MenuItem>
+         <MenuItem Header="_SETTINGS">
+            <MenuItem Header="_Layers" InputGestureText="Ctrl+L" Tag="Layers"/>
+            <MenuItem Header="_Text Styles" Tag="Styles"/>
+            <MenuItem Header="_Dimension Styles" Tag="DimStyles"/>
+            <MenuItem Header="_Grid" Tag="Grid" />
+            <Separator />
+            <MenuItem Header="_Fill Drawing" Tag="FillDrawing" />
+         </MenuItem>
+      </Menu>
+      <DockPanel DockPanel.Dock="Bottom">
+         <TextBlock Padding="3,1,3,1" Margin="0,0,2,0" Name="mCommand" MinWidth="150" Background="#F0F0F0">Command</TextBlock>
+         <TextBlock Padding="3,1,3,1" DockPanel.Dock="Bottom" Name="mStatus" Background="#F0F0F0">OK</TextBlock>
+      </DockPanel>
+      <Border Name="mContent" />
+   </DockPanel>
 </Window>

@@ -4,13 +4,15 @@ namespace Zuki;
 class DwgScene : Scene2 {
    public DwgScene (Dwg2 dwg) {
       mDwg = dwg;
-      VNode[] nodes = [new Dwg2VN (mDwg), new DwgFillVN (mDwg), TraceVN.It,
-                       CursorVN.It, WidgetVN.It];
+      List<VNode> nodes = [new Dwg2VN (mDwg), TraceVN.It, CursorVN.It, WidgetVN.It];
+      if (Hub.FillDrawing) nodes.Add (new DwgFillVN (mDwg));
       Root = Hub.Root = new GroupVN (nodes);
-      var b = dwg.Bound.InflatedF (1.1);
-      Bound = new (b.X.Min, b.Y.Min, 350, b.Y.Max);
+      Bound = dwg.Bound.InflatedF (1.1);
       BgrdColor = Color4.Gray (216);
+      WorldDecimals = 0;
    }
+
+   public override bool CursorVisible => false;
 
    readonly Dwg2 mDwg;
 }

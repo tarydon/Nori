@@ -16,7 +16,8 @@ public class DXFReader {
    /// <summary>Initialize a DXFReader with a byte-array containing DXF data</summary>
    public DXFReader (byte[] data) => mR = new (mD = data);
    /// <summary>Initialize a DXFReader form a file</summary>
-   public DXFReader (string file) : this (Lib.ReadBytes (file)) { }
+   public DXFReader (string file) : this (Lib.ReadBytes (file)) => mFilename = file;
+   string? mFilename;
 
    // Properties ---------------------------------------------------------------
    /// <summary>Darken all layer colors (to have a luminance of no more than 160)</summary>
@@ -124,7 +125,7 @@ public class DXFReader {
    void LoadDimension () {
       NextAll ();
       EDim kind = (EDim)(N (70) & 7);
-      mPts.Clear (); Add2 (10, 11);
+      mPts.Clear (); 
       var (layer, style, text) = (LYR (), mDwg.GetDimStyle (S (3)), S (1));
 
       E2Dim? dim = kind switch {
@@ -406,6 +407,7 @@ public class DXFReader {
          mDwg.CurrentLayer = layer;
       if (mDwg.DimStyles.FirstOrDefault (a => a.Name == mCurrentDimStyle) is { } dimstyle)
          mDwg.CurrentDimStyle = dimstyle;
+      mDwg.Filename = mFilename;
    }
 
    // Stitches the drawing if we want

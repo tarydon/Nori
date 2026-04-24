@@ -137,6 +137,10 @@ class E2TextVN (E2Text e2t) : Ent2VN (e2t) {
 /// <summary>VNode to render an E2Point entity</summary>
 [Used]
 class E2PointVN (E2Point e2p) : Ent2VN (e2p) {
+   public override void SetAttributes () { 
+      base.SetAttributes ();
+      if (e2p.IsDefPoint) Lux.PointSize = 2.25f; 
+   }
    public override void Draw () => Lux.Points ([e2p.Pt]);
 }
 #endregion

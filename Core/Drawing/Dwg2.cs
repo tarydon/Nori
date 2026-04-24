@@ -66,6 +66,9 @@ public partial class Dwg2 {
    }
    bool mFillInterior = true;
 
+   /// <summary>File from which this drawing was loaded</summary>
+   public string? Filename { get; set; }
+
    /// <summary>Contains the 'snap grid' settings for this Dwg</summary>
    public Grid2 Grid { get => mGrid ?? Grid2.Default; set { mGrid = value; Notify (EProp.Grid); } }
    Grid2? mGrid;
