@@ -9,15 +9,15 @@ namespace Nori;
 public class DimStyle2 {
    // Constructor --------------------------------------------------------------
    DimStyle2 () => (Name, Style) = ("", null!);
-   public DimStyle2 (string name, float scale, float asz, float exo, float exe, float txt, float cen, float gap, int tih, int toh, int tofl, int tabove, int dec, int adec, Style2 style) {
+   public DimStyle2 (string name, float scale, float asz, float exo, float exe, float txt, float cen, float gap, bool tih, bool toh, bool tofl, int tabove, int dec, int adec, Style2 style) {
       Name = name; Style = style;
       ArrowSize = asz * scale; ExtOffset = exo * scale; ExtExtend = exe * scale; 
       TxtSize = txt * scale; DimCen = cen * scale; DimGap = gap * scale;
       TxtPos = tabove switch { 0 => EPos.Centered, 4 => EPos.Below, _ => EPos.Above };
       LinDecimal = dec; AngDecimal = adec;
-      if (tih > 0) mFlags |= EFlags.TIHorz;
-      if (toh > 0) mFlags |= EFlags.TOHorz;
-      if (tofl > 0) mFlags |= EFlags.TOFL;
+      if (tih) mFlags |= EFlags.TIHorz;
+      if (toh) mFlags |= EFlags.TOHorz;
+      if (tofl) mFlags |= EFlags.TOFL;
    }
 
    public DimStyle2 (string name, Style2 style) {
@@ -299,7 +299,7 @@ public class E2Dim3PAngular : E2Dim {
    // Constructors -------------------------------------------------------------
    E2Dim3PAngular () { }
    /// <summary>Creates a 3P-Angular dimension given the definition points as shown in the image above</summary>
-   public E2Dim3PAngular (Layer2 layer, DimStyle2 style, IList<Point2> pts, string? text)
+   public E2Dim3PAngular (Layer2 layer, DimStyle2 style, IList<Point2> pts, string? text = null)
       : base (layer, EDim.Angular3P, style, pts, text) { }
 
    // Overrides ----------------------------------------------------------------
@@ -371,21 +371,22 @@ public class E2Dim3PAngular : E2Dim {
       // the text box
       int txtLie = -1; // -1:Inside, 0:Outside Start, 1:Outside End
       double textAngle = 0; Point2 txtPos = arcSeg.Midpoint;
-      if (!(textInside ? mStyle.TIHorz : mStyle.TOHorz)) {
-         textAngle = arcSeg.GetSlopeAt (0.5);
-         if (!textInside) {
-            if (d.DistToSq (arcSeg.A) < d.DistToSq (arcSeg.B)) {
-               txtPos = arcSeg.A; textAngle = arcSeg.GetSlopeAt (0) + Lib.PI;
-               txtLie = 0; 
-            } else {
-               txtPos = arcSeg.B; textAngle = arcSeg.GetSlopeAt (1);
-               txtLie = 1; 
-            }
-            double shift = txtMeasure / 2;
-            if (!arrowInside) { shift += mStyle.ArrowSize + mStyle.ExtExtend; }
-            txtPos = txtPos.Polar (shift, textAngle);
+      bool txtHorz = textInside ? mStyle.TIHorz : mStyle.TOHorz;
+      if (!txtHorz) textAngle = arcSeg.GetSlopeAt (0.5);
+      if (!textInside) {
+         if (d.DistToSq (arcSeg.A) < d.DistToSq (arcSeg.B)) {
+            txtPos = arcSeg.A; 
+            if (!txtHorz) textAngle = arcSeg.GetSlopeAt (0) + Lib.PI;
+            txtLie = 0; 
+         } else {
+            txtPos = arcSeg.B; 
+            if (!txtHorz) textAngle = arcSeg.GetSlopeAt (1);
+            txtLie = 1; 
          }
-      }
+         double shift = txtMeasure / 2;
+         if (!arrowInside) { shift += mStyle.ArrowSize + mStyle.ExtExtend; }
+         txtPos = txtPos.Polar (shift, textAngle);
+      }     
 
       // Add the arrowheads, and the extension lines outside
       if (arrowInside) {
@@ -408,13 +409,14 @@ public class E2Dim3PAngular : E2Dim {
 
       // If we are not doing 'centered' positioning, we have to shift the text box in a suitable
       // direction
+      Vector2 vecShift = new (0, 0);
       if (mStyle.TxtPos != DimStyle2.EPos.Centered) {
          double shiftLie = textInside ? 0.5 : txtLie, shiftAngle = a.AngleTo (arcSeg.GetPointAt (shiftLie));
          if (mStyle.TxtPos == DimStyle2.EPos.Below) shiftAngle += Lib.PI;
-         Vector2 vec = GetShift (textBox, shiftAngle);
-         txtPos += vec;
+         vecShift = GetShift (textBox, shiftAngle);
+         txtPos += vecShift;
       }
-      // AddPoly (textBox);
+      // AddPoly (textBox * Matrix2.Translation (vecShift));
 
       // Add the text itself
       textAngle = Lib.NormalizeAngle (textAngle);

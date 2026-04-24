@@ -349,8 +349,8 @@ public class DXFReader {
             break;
          case DIMSTYLE:
             mDwg.Add (new DimStyle2 (S (2), F (40, mDimScale), F (41, mDimASZ), F (42, mDimEXO), 
-               F (44, mDimEXE), F (140, mDimTXT), F (141, mDimCEN), F (147, mDimGAP), N (73, mDimTIH), 
-               N (74, mDimTOH), N (172, mDimTOFL), N (77, mDimTAD), N (271, mDimDEC), N (179, mDimADEC),
+               F (44, mDimEXE), F (140, mDimTXT), F (141, mDimCEN), F (147, mDimGAP), N (73, mDimTIH) > 0, 
+               N (74, mDimTOH) > 0, N (172, mDimTOFL) > 0, N (77, mDimTAD), N (271, mDimDEC), N (179, mDimADEC),
                STYL ())); 
             break;
          default:
