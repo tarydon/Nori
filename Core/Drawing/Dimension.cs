@@ -54,7 +54,7 @@ public class DimStyle2 {
    /// <summary>Text outside dimension line horizontal (DXF Group 74)</summary>
    public bool TOHorz { get => Get (EFlags.TOHorz); set => Set (EFlags.TOHorz, value); }
    /// <summary>Draw line between extension lines even when text is outside (DXF Group 172)</summary>
-   public bool ForceDimLin => Get (EFlags.TOFL);
+   public bool TOFL => Get (EFlags.TOFL);
 
    /// <summary>Text position (Centered / Above / Below)</summary>
    public EPos TxtPos { get => mTxtPos; set => mTxtPos = value; }

@@ -35,17 +35,18 @@ public class DXFWriter {
    /// <summary>Writes the Dwg2 to a string (that can then be saved to a file to make a DXF)</summary>
    public string Write () {
       S.Clear ();
-      OutHeader ();
-      Out (" 0\nSECTION\n 2\nTABLES\n");
-      var layers = OutLTypes ();
-      OutLayers (layers);
-      OutStyles ();
-      OutAppIDs ();
-      Out (" 0\nENDSEC\n");
-      OutBlocks ();
-      Out (" 0\nSECTION\n 2\nENTITIES\n");
-      OutEntities (D.Ents);
-      Out (" 0\nENDSEC\n 0\nEOF\n");
+      OutHeader ();                          // HEADER section
+      Out (" 0\nSECTION\n 2\nTABLES\n");     // TABLES section
+      var layers = OutLTypes ();             // |
+      OutLayers (layers);                    // |
+      OutStyles ();                          // |
+      OutAppIDs ();                          // |
+      OutDimStyles ();                       // |
+      Out (" 0\nENDSEC\n");                  // |
+      OutBlocks ();                          // BLOCKS section
+      Out (" 0\nSECTION\n 2\nENTITIES\n");   // ENTITIES section
+      OutEntities (D.Ents);                  // |
+      Out (" 0\nENDSEC\n 0\nEOF\n");         // |
       return S.ToString ();
    }
    #endregion
@@ -71,6 +72,22 @@ public class DXFWriter {
          Out (" 0\nENDBLK\n");
       }
       Out (" 0\nENDSEC\n");
+   }
+
+   // Ouptut the dimension styles
+   void OutDimStyles () {
+      var styles = D.DimStyles;
+      Out ($" 0\nTABLE\n 2\nDIMSTYLE\n 70\n{styles.Count}\n");
+      foreach (var d in styles) {
+         Out ($" 0\nDIMSTYLE\n 2\n{d.Name}\n 70\n0\n 3\n\n 4\n\n 5\n\n 6\n\n 7\n\n");
+         Out ($" 40\n1\n 41\n{d.ArrowSize}\n 42\n{d.ExtOffset}\n 43\n{6 * d.ExtOffset}\n");
+         Out ($" 44\n{d.ExtExtend}\n 45\n0\n 46\n0\n 47\n0\n 48\n0\n 140\n{d.TxtSize}\n");
+         Out ($" 141\n{d.DimCen}\n 142\n0\n 143\n25.4\n 144\n1\n 145\n0\n 146\n1\n");
+         Out ($" 147\n{d.DimGap}\n 71\n0\n 72\n0\n 73\n{(d.TIHorz ? 1 : 0)}\n 74\n{(d.TOHorz ? 1 : 0)}\n");
+         Out ($" 75\n0\n 76\n0\n 77\n{(int)d.TxtPos}\n 78\n0\n 170\n0\n 171\n2\n 172\n{(d.TOFL ? 1 : 0)}\n");
+         Out ($" 173\n0\n 174\n0\n 175\n0\n 176\n0\n 177\n0\n 178\n0\n");
+      }
+      Out (" 0\nENDTAB\n");
    }
 
    // Output the entities (could be the ents in the drawing, or within a block)

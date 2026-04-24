@@ -10,11 +10,13 @@ class Program {
       Lib.Init ();
       Lib.Tracer = Console.WriteLine;
 
-      var dwg = DXFReader.Load ("N:/TData/IO/DXF/AllEnts.dxf");
-      while (dwg.Ents.Count > 9) dwg.Ents.RemoveAt (dwg.Ents.Count - 1);
-      foreach (var e in dwg.Ents)
-         Console.WriteLine (e.ToString ());
+      //var dwg = DXFReader.Load ("N:/TData/IO/DXF/AllEnts.dxf");
+      //while (dwg.Ents.Count > 9) dwg.Ents.RemoveAt (dwg.Ents.Count - 1);
+      //foreach (var e in dwg.Ents)
+      //   Console.WriteLine (e.ToString ());
 
-      DXFWriter.Save (dwg, "c:/etc/test.dxf", true);
+      //DXFWriter.Save (dwg, "c:/etc/test.dxf", true);
+
+      var dwg = DXFReader.Load ("c:/etc/rect.dxf");
    }
 }

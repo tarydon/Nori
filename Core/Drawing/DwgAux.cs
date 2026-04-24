@@ -144,8 +144,8 @@ public class Layer2 {
    readonly string mName;
 
    /// <summary>Layer color</summary>
-   public Color4 Color => mColor;
-   readonly Color4 mColor;
+   public Color4 Color { get => mColor; set => mColor = value; }
+   Color4 mColor;
 
    /// <summary>Is this layer visible?</summary>
    public bool IsVisible { get => mVisible; set => mVisible = value; }

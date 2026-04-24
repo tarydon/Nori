@@ -66,10 +66,10 @@ static class MenuCmds {
    }
 
    static void Save () {
-      if (Hub.Dwg.Filename.IsBlank ()) SaveAs ();
-      else {
-
-      }
+      var dwg = Hub.Dwg;
+      dwg.Layers.ForEach (a => a.Color = Color4.Black);
+      if (dwg.Filename.IsBlank ()) SaveAs ();
+      else DXFWriter.Save (dwg, dwg.Filename, true);
    }
 
    static void SaveAs () {
