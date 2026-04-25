@@ -63,16 +63,33 @@ public class DXFWriter {
 
    // Writes out the BLOCKS table with the list of blocks
    void OutBlocks () {
-      var blocks = D.Blocks; if (blocks.Count == 0) return;
+      var blocks = D.Blocks.ToList ();
+      int id = 0, std = blocks.Count;
+      foreach (var dim in D.Ents.OfType<E2Dim> ()) {
+         string name = GetBlockName ();
+         blocks.Add (new (name, Point2.Zero, dim.Ents));
+         mDimBlocks[dim] = name;
+      }
+
+      if (blocks.Count == 0) return;
       Out ($" 0\nSECTION\n 2\nBLOCKS\n");
-      foreach (var block in blocks) {
-         var pt = block.Base;
-         Out ($" 0\nBLOCK\n 2\n{block.Name}\n 70\n0\n 10\n{pt.X}\n 20\n{pt.Y}\n");
+      for (int i = 0; i < blocks.Count; i++) {
+         var block = blocks[i]; var pt = block.Base;
+         Out ($" 0\nBLOCK\n 2\n{block.Name}\n 70\n{(i < std ? 0 : 1)}\n 10\n{pt.X}\n 20\n{pt.Y}\n");
          OutEntities (block.Ents);
          Out (" 0\nENDBLK\n");
       }
       Out (" 0\nENDSEC\n");
+
+      // Helper ............................................
+      string GetBlockName () {
+         for (; ; ) {
+            string name = $"*D{++id}";
+            if (blocks.None (a => a.Name.EqIC (name))) return name;
+         }
+      }
    }
+   Dictionary<E2Dim, string> mDimBlocks = [];
 
    // Ouptut the dimension styles
    void OutDimStyles () {
@@ -81,10 +98,10 @@ public class DXFWriter {
       foreach (var d in styles) {
          Out ($" 0\nDIMSTYLE\n 2\n{d.Name}\n 70\n0\n 3\n\n 4\n\n 5\n\n 6\n\n 7\n\n");
          Out ($" 40\n1\n 41\n{d.ArrowSize}\n 42\n{d.ExtOffset}\n 43\n{6 * d.ExtOffset}\n");
-         Out ($" 44\n{d.ExtExtend}\n 45\n0\n 46\n0\n 47\n0\n 48\n0\n 140\n{d.TxtSize}\n");
+         Out ($" 44\n{d.ExtExtend}\n 45\n0\n 46\n0\n 47\n0\n 48\n0\n 140\n{d.TextSize}\n");
          Out ($" 141\n{d.DimCen}\n 142\n0\n 143\n25.4\n 144\n1\n 145\n0\n 146\n1\n");
          Out ($" 147\n{d.DimGap}\n 71\n0\n 72\n0\n 73\n{(d.TIHorz ? 1 : 0)}\n 74\n{(d.TOHorz ? 1 : 0)}\n");
-         Out ($" 75\n0\n 76\n0\n 77\n{(int)d.TxtPos}\n 78\n0\n 170\n0\n 171\n2\n 172\n{(d.TOFL ? 1 : 0)}\n");
+         Out ($" 75\n0\n 76\n0\n 77\n{(int)d.TextPos}\n 78\n0\n 170\n0\n 171\n2\n 172\n{(d.TOFL ? 1 : 0)}\n");
          Out ($" 173\n0\n 174\n0\n 175\n0\n 176\n0\n 177\n0\n 178\n0\n");
       }
       Out (" 0\nENDTAB\n");
@@ -99,9 +116,9 @@ public class DXFWriter {
             E2Text et => OutText (et),
             E2Solid es => OutSolid (es),
             E2Insert ei => OutInsert (ei),
-            E2Dimension e2d => OutDimension (e2d),
             E2Bendline e2b => OutBendLine (e2b),
-            E2DimGeneric or E2Dim3PAngular or E2Spline => 0,
+            E2Dim e2dim => OutDimension (e2dim),
+            E2DimGeneric or E2Spline or E2Dimension => 0,
             _ => throw new BadCaseException (ent.GetType ().Name)
          };
       }
@@ -237,8 +254,17 @@ public class DXFWriter {
    }
    Layer2? mMBend, mBend;
 
-   // This is a placeholder, we don't write dimensions out yet
-   static int OutDimension (E2Dimension _) => 0;
+   // This outputs a dimension entity
+   int OutDimension (E2Dim e) {
+      string text = e.IsAutoText ? "<>" : e.Text!;
+      Out ($" 0\nDIMENSION\n 8\n{e.Layer.Name}\n 70\n{(int)e.Kind}\n 2\n{mDimBlocks[e]}\n");
+      Out ($" 3\n{e.Style.Name}\n 1\n{text}\n");
+      mDefPts.Clear (); e.GetDefPoints (mDefPts);
+      foreach (var (id, pt) in mDefPts)
+         Out ($" {id}\n{pt.X}\n {id + 10}\n{pt.Y}\n");
+      return 0;
+   }
+   List<(int, Point2)> mDefPts = [];
 
    // Writes out the E2Insert entities
    int OutInsert (E2Insert e) {

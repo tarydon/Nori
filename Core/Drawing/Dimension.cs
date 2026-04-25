@@ -12,8 +12,8 @@ public class DimStyle2 {
    public DimStyle2 (string name, float scale, float asz, float exo, float exe, float txt, float cen, float gap, bool tih, bool toh, bool tofl, int tabove, int dec, int adec, Style2 style) {
       Name = name; Style = style;
       ArrowSize = asz * scale; ExtOffset = exo * scale; ExtExtend = exe * scale; 
-      TxtSize = txt * scale; DimCen = cen * scale; DimGap = gap * scale;
-      TxtPos = tabove switch { 0 => EPos.Centered, 4 => EPos.Below, _ => EPos.Above };
+      TextSize = txt * scale; DimCen = cen * scale; DimGap = gap * scale;
+      TextPos = tabove switch { 0 => EPos.Centered, 4 => EPos.Below, _ => EPos.Above };
       LinDecimal = dec; AngDecimal = adec;
       if (tih) mFlags |= EFlags.TIHorz;
       if (toh) mFlags |= EFlags.TOHorz;
@@ -22,7 +22,7 @@ public class DimStyle2 {
 
    public DimStyle2 (string name, Style2 style) {
       Name = name; Style = style;
-      ArrowSize = TxtSize = DimCen = 2.5f; ExtOffset = DimGap = 0.625f; ExtExtend = 1.25f;
+      ArrowSize = TextSize = DimCen = 2.5f; ExtOffset = DimGap = 0.625f; ExtExtend = 1.25f;
       LinDecimal = 2; AngDecimal = 1;
       mFlags = EFlags.TOFL;
    }
@@ -38,7 +38,7 @@ public class DimStyle2 {
    /// <summary>Extension line extension beyond dimension line (DXF Group 44)</summary>
    public readonly float ExtExtend;
    /// <summary>Text height (DXF Group 140)</summary>
-   public readonly float TxtSize;
+   public readonly float TextSize;
    /// <summary>Size of center mark / center lines (DXF Group 141)</summary>
    public readonly float DimCen;
    /// <summary>Gap between dimension line and text (DXF Group 147)</summary>
@@ -57,8 +57,8 @@ public class DimStyle2 {
    public bool TOFL => Get (EFlags.TOFL);
 
    /// <summary>Text position (Centered / Above / Below)</summary>
-   public EPos TxtPos { get => mTxtPos; set => mTxtPos = value; }
-   EPos mTxtPos;
+   public EPos TextPos { get => mTextPos; set => mTextPos = value; }
+   EPos mTextPos;
 
    /// <summary>Text style used for dimensions</summary>
    public readonly Style2 Style;
@@ -97,6 +97,7 @@ public abstract class E2Dim : Ent2 {
    /// to input them when creating the dimension dynamically.
    public E2Dim (Layer2 layer, EDim kind, DimStyle2 style, IList<Point2> pts, string? text) : base (layer) {
       (mKind, mStyle, mText) = (kind, style, text is null or "<>" or "" ? null : text);
+      if (mText == null) mFlags |= E2Flags.AutoText;
       mPts.AddRange (pts);
    }
 
@@ -117,6 +118,11 @@ public abstract class E2Dim : Ent2 {
       }
    }
    protected List<Ent2> mEnts = [];
+
+   /// <summary>
+   /// Has the text been auto-generated (based on measurement)
+   /// </summary>
+   public bool IsAutoText => Get (E2Flags.AutoText);
 
    /// <summary>Which kind of dimension is this?</summary>
    public EDim Kind => mKind;
@@ -141,6 +147,13 @@ public abstract class E2Dim : Ent2 {
    /// <summary>Get the transformed bound of the dimension</summary>
    public override Bound2 GetBound (Matrix2 xfm) 
       => new (Ents.Select (a => a.GetBound (xfm)));
+
+   /// <summary>
+   /// Gets the 'definition points' of this dimension (for saving to DXF)
+   /// </summary>
+   /// Each tuple in the list is a DXF group code (10,11,12 etc) for the X
+   /// coordinate (the Y coordinates are stored at that value + 10)
+   public abstract void GetDefPoints (List<(int, Point2)> defPoints);
 
    /// <summary>Internal routine to load the entities from a block</summary>
    /// Since blocks are not used by any dimension other than this one, we can load the entities
@@ -178,7 +191,7 @@ public abstract class E2Dim : Ent2 {
 
    // Adds text to the list of entities
    protected void AddText (Point2 pt, string text, double angle) {
-      mEnts.Add (new E2Text (Layer, mStyle.Style, text, pt, mStyle.TxtSize, angle, 0, 1, ETextAlign.MidCenter));
+      mEnts.Add (new E2Text (Layer, mStyle.Style, text, pt, mStyle.TextSize, angle, 0, 1, ETextAlign.MidCenter));
    }
 
    // This trims the given dimension segment around the text-box of the dimension and
@@ -236,7 +249,7 @@ public abstract class E2Dim : Ent2 {
    protected (double a, double b) GetOverhangs (EInside code, double txtMeasure, bool nearStart) {
       double aExtend = 0, bExtend = 0;
       bool textOutside = (code & EInside.Text) == 0, arrowOutside = (code & EInside.Arrows) == 0;
-      bool iBreak = mStyle.TxtPos == DimStyle2.EPos.Centered;
+      bool iBreak = mStyle.TextPos == DimStyle2.EPos.Centered;
       if (textOutside) {
          // If the text is outside then we might need to extend the extension line,
          // if text is above/below the line
@@ -245,11 +258,13 @@ public abstract class E2Dim : Ent2 {
       }
       if (arrowOutside) {
          // If the arrows are outside, then we need to extend the extension lines
-         // by arrow-size + exo
-         aExtend = bExtend = mStyle.ArrowSize + mStyle.ExtExtend;
+         // by arrow-size + ext
+         double ext = mStyle.ExtExtend;
+         aExtend = bExtend = mStyle.ArrowSize;
+         if (mStyle.TextPos == DimStyle2.EPos.Centered || !textOutside) { aExtend += ext; bExtend += ext; } 
          if (textOutside && !iBreak) {
-            if (nearStart) aExtend += txtMeasure;
-            else bExtend += txtMeasure;
+            if (nearStart) { aExtend += txtMeasure; bExtend += ext; }
+            else { bExtend += txtMeasure; aExtend += ext; }
          }
       }
       return (aExtend, bExtend);
@@ -261,7 +276,7 @@ public abstract class E2Dim : Ent2 {
    // Helper used to measure the text (assumes text is horizontal, centered at 0,0)
    protected Bound2 Measure (string text) {
       var font = LineFont.Get (mStyle.Style.Font);
-      return font.Measure (text, Point2.Zero, ETextAlign.MidCenter, 0, 1, mStyle.TxtSize, 0);      
+      return font.Measure (text, Point2.Zero, ETextAlign.MidCenter, 0, 1, mStyle.TextSize, 0);      
    }
 
    // Nested types -------------------------------------------------------------
@@ -281,6 +296,8 @@ class E2DimGeneric : E2Dim {
       : base (layer, EDim.Generic, style, pts, text) { }
 
    protected override void MakeEnts () => throw new NotImplementedException ();
+   public override void GetDefPoints (List<(int, Point2)> defPoints) => throw new NotImplementedException ();
+
    protected override Ent2 Xformed (Matrix2 xfm) {
       var dim = new E2DimGeneric (Layer, mStyle, [.. mPts.Select (a => a * xfm)], mText);
       dim.mEnts.AddRange (mEnts.Select (a => a * xfm));
@@ -303,6 +320,12 @@ public class E2Dim3PAngular : E2Dim {
       : base (layer, EDim.Angular3P, style, pts, text) { }
 
    // Overrides ----------------------------------------------------------------
+   public override void GetDefPoints (List<(int, Point2)> pts) {
+      var _ = Ents;
+      pts.Add ((10, mPts[3])); pts.Add ((11, mPts[4]));
+      pts.Add ((13, mPts[1])); pts.Add ((14, mPts[2])); pts.Add ((15, mPts[0]));
+   }
+
    // Creates a transformed version of the 3P Angular dimension
    protected override Ent2 Xformed (Matrix2 xfm) {
       var dim = new E2Dim3PAngular (Layer, mStyle, [.. mPts.Select (a => a * xfm)], mText);
@@ -336,11 +359,13 @@ public class E2Dim3PAngular : E2Dim {
       Point2 a = mPts[0], b = mPts[1], c = mPts[2], d = mPts[3];
       double angB = a.AngleTo (b), angC = a.AngleTo (c), rad = a.DistTo (d);
       Point2 arcStart = a.Polar (rad, angB), arcEnd = a.Polar (rad, angC);
+      bool iBreak = mStyle.TextPos == DimStyle2.EPos.Centered;
 
       // Create the two extension lines - they run 'outward' or 'inward' from the
       // definition points b and c (depending on the position of d)
       double exo = mStyle.ExtOffset, ext = mStyle.ExtExtend, asz = mStyle.ArrowSize;
-      double r1 = a.DistTo (b), r2 = a.DistTo (c), ang = rad > r1 ? angB : angB + Lib.PI;
+      double r1 = a.DistTo (b), r2 = a.DistTo (c);
+      double ang = rad > r1 ? angB : angB + Lib.PI;
       AddPoly (Poly.Line (b.Polar (exo, ang), arcStart.Polar (ext, ang)));
       ang = rad > r2 ? angC : angC + Lib.PI;
       AddPoly (Poly.Line (c.Polar (exo, ang), arcEnd.Polar (ext, ang)));
@@ -350,7 +375,7 @@ public class E2Dim3PAngular : E2Dim {
       var arc = Poly.Arc (arcStart, d, arcEnd); var arcSeg = arc[0]; 
       if (!arcSeg.IsCCW) { arc = arc.Reversed (); arcSeg = arc[0]; }
       double slope0 = arcSeg.GetSlopeAt (0), slope1 = arcSeg.GetSlopeAt (1);
-      if ((mFlags & E2Flags.AutoText) == 0) {
+      if (IsAutoText) {
          double span = Math.Abs (arcSeg.AngSpan).R2D ().Round (mStyle.AngDecimal);
          text = $"{span}\u00b0";
       }
@@ -370,22 +395,27 @@ public class E2Dim3PAngular : E2Dim {
       // Figure out the rotation angle of the text box, and an initial anchor point for
       // the text box
       int txtLie = -1; // -1:Inside, 0:Outside Start, 1:Outside End
-      double textAngle = 0; Point2 txtPos = arcSeg.Midpoint;
-      bool txtHorz = textInside ? mStyle.TIHorz : mStyle.TOHorz;
-      if (!txtHorz) textAngle = arcSeg.GetSlopeAt (0.5);
+      double tangentAngle = 0; Point2 textPos = arcSeg.Midpoint;
+      bool textHorz = textInside ? mStyle.TIHorz : mStyle.TOHorz;
+      // If we are doing horizontal text, we always use 'centered' position, otherwise
+      // we can compute the appropriate text angle
+      if (textHorz) iBreak = true; else tangentAngle = arcSeg.GetSlopeAt (0.5);
       if (!textInside) {
          if (d.DistToSq (arcSeg.A) < d.DistToSq (arcSeg.B)) {
-            txtPos = arcSeg.A; 
-            if (!txtHorz) textAngle = arcSeg.GetSlopeAt (0) + Lib.PI;
+            textPos = arcSeg.A; 
+            tangentAngle = arcSeg.GetSlopeAt (0) + Lib.PI;
             txtLie = 0; 
          } else {
-            txtPos = arcSeg.B; 
-            if (!txtHorz) textAngle = arcSeg.GetSlopeAt (1);
+            textPos = arcSeg.B; 
+            tangentAngle = arcSeg.GetSlopeAt (1);
             txtLie = 1; 
          }
          double shift = txtMeasure / 2;
-         if (!arrowInside) { shift += mStyle.ArrowSize + mStyle.ExtExtend; }
-         txtPos = txtPos.Polar (shift, textAngle);
+         if (!arrowInside) { 
+            shift += mStyle.ArrowSize;
+            if (iBreak) shift += mStyle.ExtExtend;
+         }
+         if (!textHorz) textPos = textPos.Polar (shift, tangentAngle);
       }     
 
       // Add the arrowheads, and the extension lines outside
@@ -403,26 +433,30 @@ public class E2Dim3PAngular : E2Dim {
 
       // If the text is within the extensions, we have to trim the extension lines at the
       // box, otherwise we can add the complete arc
-      var textBox = Poly.Rectangle (bound) * Matrix2.Rotation (textAngle) * Matrix2.Translation (txtPos);
-      if (textInside && mStyle.TxtPos == DimStyle2.EPos.Centered) AddTrimmedSeg (arcSeg, textBox);
+      double textAngle = textHorz ? 0 : tangentAngle;
+      var textBox = Poly.Rectangle (bound) * Matrix2.Rotation (textAngle) * Matrix2.Translation (textPos);
+      if (textInside && mStyle.TextPos == DimStyle2.EPos.Centered) AddTrimmedSeg (arcSeg, textBox);
       else AddPoly (arc);
 
       // If we are not doing 'centered' positioning, we have to shift the text box in a suitable
       // direction
       Vector2 vecShift = new (0, 0);
-      if (mStyle.TxtPos != DimStyle2.EPos.Centered) {
+      if (!textHorz && mStyle.TextPos != DimStyle2.EPos.Centered) {
          double shiftLie = textInside ? 0.5 : txtLie, shiftAngle = a.AngleTo (arcSeg.GetPointAt (shiftLie));
-         if (mStyle.TxtPos == DimStyle2.EPos.Below) shiftAngle += Lib.PI;
+         if (mStyle.TextPos == DimStyle2.EPos.Below) shiftAngle += Lib.PI;
          vecShift = GetShift (textBox, shiftAngle);
-         txtPos += vecShift;
-      }
+      } else if (textHorz && !textInside) 
+         vecShift = GetShift2 (textBox, tangentAngle, !arrowInside);
+      textPos += vecShift;
       // AddPoly (textBox * Matrix2.Translation (vecShift));
 
       // Add the text itself
       textAngle = Lib.NormalizeAngle (textAngle);
-      if (textAngle is < (-Lib.HalfPI - Lib.Epsilon) or > (Lib.HalfPI + Lib.Epsilon))
+      if (textAngle is < (-Lib.HalfPI + Lib.Epsilon) or > (Lib.HalfPI + Lib.Epsilon))
          textAngle += Lib.PI;
-      AddText (txtPos, text, textAngle);
+      if (mPts.Count < 5) mPts.Add (Point2.Zero);
+      mPts[4] = textPos;
+      AddText (textPos, text, textAngle);
       AddPoint (a); AddPoint (b); AddPoint (c);
    }
 
@@ -435,6 +469,18 @@ public class E2Dim3PAngular : E2Dim {
       }
       return Vector2.Zero;
    }
+
+   Vector2 GetShift2 (Poly rect, double angle, bool arrowOutside) {
+      Point2 cen = rect.Pts[0].Midpoint (rect.Pts[2]), outer = cen.Polar (1000, angle + Lib.PI);
+      double minDist = 1e10; Point2 best = cen;
+      foreach (var seg in rect.Segs) { Check (seg.A); Check (seg.Midpoint); }
+      if (arrowOutside) cen = cen.Polar (mStyle.ArrowSize + mStyle.ExtExtend, angle);
+      return cen - best;
+
+      void Check (Point2 pt) {
+         double dist = pt.DistToLineSeg (cen, outer);
+         if (dist < minDist) { minDist = dist; best = pt; }
+      }
+   }
 }
 #endregion
-

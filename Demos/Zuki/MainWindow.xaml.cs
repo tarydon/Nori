@@ -21,53 +21,67 @@ public partial class MainWindow : Window {
 
       MenuCmds.Connect (mMenu);
       (Hub.MainWindow, Hub.Command, Hub.Status) = (this, mCommand, mStatus);
+      Hub.Dwg = Make3PAngularDwg ();
+   }
 
+   Dwg2 Make3PAngularDwg () {
       Dwg2 dwg = new ();
       var layer = dwg.CurrentLayer;
-      var style = dwg.CurrentDimStyle;
-      dwg.Add (Poly.Rectangle (10, 5, 430, 200));
-      dwg.Add (new E2Dim3PAngular (layer, style, Point2.List (20, 20, 40, 20, 34, 34, 40, 32)));
-      dwg.Add (new E2Dim3PAngular (layer, style, Point2.List (50, 20, 80, 20, 70, 40, 70, 30)));
-      dwg.Add (new E2Dim3PAngular (layer, style, Point2.List (80, 20, 105, 20, 100, 40, 97, 28)));
-      dwg.Add (new E2Dim3PAngular (layer, style, Point2.List (110, 20, 130, 20, 125, 35, 121, 22)));
-      dwg.Add (new E2Dim3PAngular (layer, style, Point2.List (140, 20, 160, 20, 155, 35, 149, 25)));
-      dwg.Add (new E2Dim3PAngular (layer, style, Point2.List (170, 20, 185, 20, 180, 30, 177, 24)));
-      dwg.Add (new E2Dim3PAngular (layer, style, Point2.List (200, 20, 215, 20, 210, 30, 206, 21)));
+      var style = dwg.CurrentDimStyle; var s = style;
+      dwg.Add (Poly.Rectangle (10, 5, 225, 185));
+      Add (20, 20, 40, 20, 34, 34, 40, 32);
+      Add (50, 20, 80, 20, 70, 40, 70, 30);
+      Add (80, 20, 105, 20, 100, 40, 97, 28);
+      Add (110, 20, 130, 20, 125, 35, 121, 22);
+      Add (140, 20, 160, 20, 155, 35, 149, 25);
+      Add (170, 20, 185, 20, 180, 30, 177, 24);
+      Add (200, 20, 215, 20, 210, 30, 206, 21);
 
-      var s = style;
-      DimStyle2 style2 = new ("HORZ", 1, s.ArrowSize, s.ExtOffset, s.ExtExtend, s.TxtSize, s.DimCen,
-         s.DimGap, true, true, s.TOFL, (int)s.TxtPos, s.LinDecimal, s.AngDecimal, s.Style);
-      dwg.Add (style2); dwg.CurrentDimStyle = style2;
-      dwg.Add (new E2Dim3PAngular (layer, style2, Point2.List (220, 20, 240, 20, 234, 34, 240, 32)));
-      dwg.Add (new E2Dim3PAngular (layer, style2, Point2.List (250, 20, 280, 20, 270, 40, 270, 30)));
-      dwg.Add (new E2Dim3PAngular (layer, style2, Point2.List (280, 20, 305, 20, 300, 40, 297, 28)));
-      dwg.Add (new E2Dim3PAngular (layer, style2, Point2.List (310, 20, 330, 20, 325, 35, 321, 22)));
-      dwg.Add (new E2Dim3PAngular (layer, style2, Point2.List (340, 20, 360, 20, 355, 35, 349, 25)));
-      dwg.Add (new E2Dim3PAngular (layer, style2, Point2.List (370, 20, 385, 20, 380, 30, 377, 24)));
-      dwg.Add (new E2Dim3PAngular (layer, style2, Point2.List (400, 20, 415, 20, 410, 30, 406, 21)));
-
-      DimStyle2 style3 = new ("ABOVE", 1, s.ArrowSize, s.ExtOffset, s.ExtExtend, s.TxtSize, s.DimCen,
-         s.DimGap, s.TIHorz, s.TOHorz, s.TOFL, 1, s.LinDecimal, s.AngDecimal, s.Style);
-      dwg.Add (style3); dwg.CurrentDimStyle = style3;
-      dwg.Add (new E2Dim3PAngular (layer, style3, Point2.List (20, 120, 40, 120, 34, 134, 40, 132)));
-      dwg.Add (new E2Dim3PAngular (layer, style3, Point2.List (50, 120, 80, 120, 70, 140, 70, 130)));
-      dwg.Add (new E2Dim3PAngular (layer, style3, Point2.List (80, 120, 105, 120, 100, 140, 97, 128)));
-      dwg.Add (new E2Dim3PAngular (layer, style3, Point2.List (110, 120, 130, 120, 125, 135, 121, 122)));
-      dwg.Add (new E2Dim3PAngular (layer, style3, Point2.List (140, 120, 160, 120, 155, 135, 149, 125)));
-      dwg.Add (new E2Dim3PAngular (layer, style3, Point2.List (170, 120, 185, 120, 180, 130, 177, 124)));
-      dwg.Add (new E2Dim3PAngular (layer, style3, Point2.List (200, 120, 215, 120, 210, 130, 206, 121)));
-
-      DimStyle2 style4 = new ("BELOW", 1, s.ArrowSize, s.ExtOffset, s.ExtExtend, s.TxtSize, s.DimCen,
+      DimStyle2 style4 = new ("BELOW", 1, s.ArrowSize, s.ExtOffset, s.ExtExtend, s.TextSize, s.DimCen,
          s.DimGap, s.TIHorz, s.TOHorz, s.TOFL, 4, s.LinDecimal, s.AngDecimal, s.Style);
       dwg.Add (style4); dwg.CurrentDimStyle = style4;
-      dwg.Add (new E2Dim3PAngular (layer, style4, Point2.List (20,  70, 40,  70, 34,  84, 40,  82)));
-      dwg.Add (new E2Dim3PAngular (layer, style4, Point2.List (50,  70, 80,  70, 70,  90, 70,  80)));
-      dwg.Add (new E2Dim3PAngular (layer, style4, Point2.List (80,  70, 105, 70, 100, 90, 97,  78)));
-      dwg.Add (new E2Dim3PAngular (layer, style4, Point2.List (110, 70, 130, 70, 125, 85, 121, 72)));
-      dwg.Add (new E2Dim3PAngular (layer, style4, Point2.List (140, 70, 160, 70, 155, 85, 149, 75)));
-      dwg.Add (new E2Dim3PAngular (layer, style4, Point2.List (170, 70, 185, 70, 180, 80, 177, 74)));
-      dwg.Add (new E2Dim3PAngular (layer, style4, Point2.List (200, 70, 215, 70, 210, 80, 206, 71)));
+      Add (20, 50, 40, 50, 34, 64, 40, 62);
+      Add (50, 50, 80, 50, 70, 70, 70, 60);
+      Add (80, 50, 105, 50, 100, 70, 97, 58);
+      Add (110, 50, 130, 50, 125, 65, 121, 52);
+      Add (140, 50, 160, 50, 155, 65, 149, 55);
+      Add (170, 50, 185, 50, 180, 60, 177, 54);
+      Add (200, 50, 215, 50, 210, 60, 206, 51);
 
-      Hub.Dwg = dwg;
+      DimStyle2 style3 = new ("ABOVE", 1, s.ArrowSize, s.ExtOffset, s.ExtExtend, s.TextSize, s.DimCen,
+         s.DimGap, s.TIHorz, s.TOHorz, s.TOFL, 1, s.LinDecimal, s.AngDecimal, s.Style);
+      dwg.Add (style3); dwg.CurrentDimStyle = style3;
+      Add (20, 80, 40, 80, 34, 94, 40, 92);
+      Add (50, 80, 80, 80, 70, 100, 70, 90);
+      Add (80, 80, 105, 80, 100, 100, 97, 88);
+      Add (110, 80, 130, 80, 125, 95, 121, 82);
+      Add (140, 80, 160, 80, 155, 95, 149, 85);
+      Add (170, 80, 185, 80, 180, 90, 177, 84);
+      Add (200, 80, 215, 80, 210, 90, 206, 81);
+
+      DimStyle2 style2 = new ("HORZ", 1, s.ArrowSize, s.ExtOffset, s.ExtExtend, s.TextSize, s.DimCen,
+         s.DimGap, true, true, s.TOFL, (int)s.TextPos, s.LinDecimal, s.AngDecimal, s.Style);
+      dwg.Add (style2); dwg.CurrentDimStyle = style2;
+      Add (20, 110, 40, 110, 34, 124, 40, 122);
+      Add (50, 110, 80, 110, 70, 130, 70, 120);
+      Add (80, 110, 105, 110, 100, 130, 89, 113);
+      Add (110, 110, 130, 110, 125, 125, 121, 112);
+      Add (140, 110, 160, 110, 155, 125, 149, 115);
+      Add (170, 110, 185, 110, 180, 120, 176, 112);
+      Add (200, 110, 215, 110, 210, 120, 205, 114);
+
+      dwg.CurrentDimStyle = style3;
+      Add (50, 150, 60, 150, 50, 160, 65, 165);
+      Add (50, 150, 50, 160, 40, 150, 36, 164);
+      Add (50, 150, 40, 150, 50, 140, 37, 137);
+      Add (50, 150, 50, 140, 60, 150, 62, 138);
+      dwg.CurrentDimStyle = style;
+      Add (90, 150, 90, 140, 83, 157, 100, 160);
+      Add (130, 150, 140, 160, 140, 140, 118, 150);
+      Add (130, 150, 140, 160, 140, 140, 148, 150);
+
+      void Add (params double[] vals)
+         => dwg.Add (new E2Dim3PAngular (layer, dwg.CurrentDimStyle, Point2.List (vals)));
+      return dwg; 
    }
 }

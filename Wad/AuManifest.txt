@@ -1,7 +1,7 @@
 Dwg2
   Layers Styles DimStyles Blocks -Bound CurrentLayer.Name CurrentDimStyle.Name Ents -FillInterior Grid
 DimStyle2
-  Name ArrowSize ExtOffset ExtExtend TxtSize DimCen DimGap TxtPos Flags LinDecimal AngDecimal Style.Name
+  Name ArrowSize ExtOffset ExtExtend TextSize DimCen DimGap TextPos Flags LinDecimal AngDecimal Style.Name
 Layer2
   Name Color Linetype Visible
 Grid2
