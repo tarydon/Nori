@@ -2,6 +2,36 @@
 SECTION
  2
 HEADER
+ 9
+$ACADVER
+ 1
+AC1009
+ 9
+$EXTMIN
+ 10
+0
+ 20
+-0.0012
+ 30
+0
+ 9
+$EXTMAX
+ 10
+120.00023
+ 20
+42.221
+ 30
+0
+ 9
+$VIEWCTR
+ 10
+60.00011444091797
+ 20
+21.109899520874023
+ 9
+$VIEWSIZE
+ 40
+79.2
  0
 ENDSEC
  0
@@ -11,35 +41,91 @@ TABLES
  0
 TABLE
  2
+LTYPE
+ 70
+2
+ 0
+LTYPE
+ 2
+DASHDOT
+ 70
+0
+ 3
+DashDot
+ 72
+65
+ 73
+4
+40
+3
+ 49
+2
+ 49
+-0.4
+ 49
+0.2
+ 49
+-0.4
+ 0
+LTYPE
+ 2
+PHANTOM
+ 70
+0
+ 3
+Phantom
+ 72
+65
+ 73
+6
+40
+6
+ 49
+3.2
+ 49
+-0.4
+ 49
+0.8
+ 49
+-0.4
+ 49
+0.8
+ 49
+-0.4
+ 0
+ENDTAB
+ 0
+TABLE
+ 2
 LAYER
  70
 3
  0
 LAYER
- 70
-1
  2
 0
+ 70
+1
  62
 0
  6
 CONTINUOUS
  0
 LAYER
- 70
-1
  2
 Layer2
+ 70
+1
  62
 202
  6
 DASHDOT
  0
 LAYER
- 70
-1
  2
 Layer3
+ 70
+1
  62
 92
  6

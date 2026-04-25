@@ -66,7 +66,7 @@ class Matrix2Tests {
       (p1 * m1).Is ("(10,12)"); (v1 * m1).Is ("<3,5>");
 
       var m2 = Matrix2.Translation (3, 4); m2.Is ("[1,0 | 0,1 | 3,4]");
-      Matrix2.Translation (new (4, 5)).Is ("[1,0 | 0,1 | 4,5]");
+      Matrix2.Translation (new Point2 (4, 5)).Is ("[1,0 | 0,1 | 4,5]");
       (p1 * m2).Is ("(13,16)"); (v1 * m2).Is ("<3,5>");
 
       var m3 = Matrix2.Scaling (2); m3.Is ("[2,0 | 0,2 | 0,0]");

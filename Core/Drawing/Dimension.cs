@@ -65,7 +65,7 @@ public class DimStyle2 {
 
    // Nested types -------------------------------------------------------------
    [Flags]
-   enum EFlags { TIHorz = 1 << 0, TOHorz = 1 << 1, TOFL = 1 << 2, }
+   enum EFlags { Nil = 0, TIHorz = 1 << 0, TOHorz = 1 << 1, TOFL = 1 << 2, }
    EFlags mFlags;
 
    public enum EPos { Centered = 0, Above = 1, Below = 4 }
@@ -73,6 +73,12 @@ public class DimStyle2 {
    // Implementation -----------------------------------------------------------
    bool Get (EFlags bit) => (mFlags & bit) != 0;
    void Set (EFlags bit, bool value) { if (value) mFlags |= bit; else mFlags &= ~bit; }
+
+   static DimStyle2? ByName (IReadOnlyList<object> stack, string name) {
+      for (int i = stack.Count - 1; i >= 0; i--)
+         if (stack[i] is Dwg2 dwg) return dwg.GetDimStyle (name);
+      return null;
+   }
 }
 #endregion
 
@@ -119,9 +125,7 @@ public abstract class E2Dim : Ent2 {
    }
    protected List<Ent2> mEnts = [];
 
-   /// <summary>
-   /// Has the text been auto-generated (based on measurement)
-   /// </summary>
+   /// <summary>Has the text been auto-generated (based on measurement)</summary>
    public bool IsAutoText => Get (E2Flags.AutoText);
 
    /// <summary>Which kind of dimension is this?</summary>
@@ -148,9 +152,7 @@ public abstract class E2Dim : Ent2 {
    public override Bound2 GetBound (Matrix2 xfm) 
       => new (Ents.Select (a => a.GetBound (xfm)));
 
-   /// <summary>
-   /// Gets the 'definition points' of this dimension (for saving to DXF)
-   /// </summary>
+   /// <summary>Gets the 'definition points' of this dimension (for saving to DXF)</summary>
    /// Each tuple in the list is a DXF group code (10,11,12 etc) for the X
    /// coordinate (the Y coordinates are stored at that value + 10)
    public abstract void GetDefPoints (List<(int, Point2)> defPoints);
@@ -253,6 +255,7 @@ public abstract class E2Dim : Ent2 {
       if (textOutside) {
          // If the text is outside then we might need to extend the extension line,
          // if text is above/below the line
+         if (mStyle.TOHorz) iBreak = true; 
          aExtend += (nearStart && !iBreak) ? txtMeasure : 0;
          bExtend += (!nearStart && !iBreak) ? txtMeasure : 0;
       }
@@ -261,7 +264,7 @@ public abstract class E2Dim : Ent2 {
          // by arrow-size + ext
          double ext = mStyle.ExtExtend;
          aExtend = bExtend = mStyle.ArrowSize;
-         if (mStyle.TextPos == DimStyle2.EPos.Centered || !textOutside) { aExtend += ext; bExtend += ext; } 
+         if (iBreak || !textOutside) { aExtend += ext; bExtend += ext; } 
          if (textOutside && !iBreak) {
             if (nearStart) { aExtend += txtMeasure; bExtend += ext; }
             else { bExtend += txtMeasure; aExtend += ext; }

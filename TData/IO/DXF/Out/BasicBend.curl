@@ -1,8 +1,8 @@
 (Dwg2){
   Layers:[
-    { Name:0 Color:#FF333333 Linetype:Continuous Visible:True }
-    { Name:Bend Color:#FF008100 Linetype:Dot Visible:True }
-    { Name:MBend Color:#FF008100 Linetype:DashDotDot Visible:True }
+    { Name:0 Color:#FF333333 Linetype:Continuous }
+    { Name:Bend Color:#FF008100 Linetype:Dot }
+    { Name:MBend Color:#FF008100 Linetype:DashDotDot }
   ]
   CurrentLayer:0
   Ents:[

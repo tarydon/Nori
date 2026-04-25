@@ -3,7 +3,7 @@ Dwg2
 DimStyle2
   Name ArrowSize ExtOffset ExtExtend TextSize DimCen DimGap TextPos Flags LinDecimal AngDecimal Style.Name
 Layer2
-  Name Color Linetype Visible
+  Name Color Linetype Invisible
 Grid2
   Pitch Subdivs Visible Snap Origin Rotation
 Ent2

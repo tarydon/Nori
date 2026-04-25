@@ -1,11 +1,39 @@
 (Dwg2){
   Layers:[
-    { Name:0 Color:#FFFFFFFF Linetype:Continuous Visible:True }
-    { Name:Defpoints Color:#FFFFFFFF Linetype:Continuous Visible:True }
+    { Name:0 Color:#FFFFFFFF Linetype:Continuous }
+    { Name:Defpoints Color:#FFFFFFFF Linetype:Continuous }
   ]
   Styles:[
     { Name:Standard Font:simplex XScale:1 }
     { Name:Annotative Font:arial.ttf XScale:1 }
+  ]
+  DimStyles:[
+    {
+      Name:Standard
+      ArrowSize:2.5
+      ExtOffset:0.625
+      ExtExtend:1.25
+      TextSize:2.5
+      DimCen:2.5
+      DimGap:0.625
+      TextPos:Centered
+      Flags:Nil
+      Style:Standard
+    }
+    { Name:Annotative TextPos:Above Flags:TOFL LinDecimal:2 Style:Standard }
+    {
+      Name:ISO-25
+      ArrowSize:2.5
+      ExtOffset:0.625
+      ExtExtend:1.25
+      TextSize:2.5
+      DimCen:2.5
+      DimGap:0.625
+      TextPos:Above
+      Flags:TOFL
+      LinDecimal:2
+      Style:Standard
+    }
   ]
   Blocks:[
     {
@@ -21,6 +49,7 @@
     }
   ]
   CurrentLayer:0
+  CurrentDimStyle:ISO-25
   Ents:[
     (E2Poly){
       Layer:0

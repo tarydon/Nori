@@ -1,19 +1,19 @@
 (Dwg2){
   Layers:[
-    { Name:0 Color:#FFFFFFFF Linetype:Continuous Visible:True }
-    { Name:3 Color:#FF00FF00 Linetype:Continuous Visible:True }
-    { Name:4 Color:#FF00FFFF Linetype:Continuous Visible:True }
-    { Name:5 Color:#FF00FFFF Linetype:Continuous Visible:True }
-    { Name:6 Color:#FF00FF00 Linetype:Dash Visible:True }
-    { Name:9 Color:#FF00FFFF Linetype:DashDot Visible:True }
-    { Name:DEFPOINTS Color:#FFFFFFFF Linetype:Continuous Visible:True }
-    { Name:7A Color:#FF00FFFF Linetype:Continuous Visible:True }
-    { Name:T_02 Color:#FFFFFF00 Linetype:Continuous Visible:True }
-    { Name:Tego_ram Color:#FFFFFFFF Linetype:Continuous Visible:True }
-    { Name:Tego_huvud Color:#FFFFFFFF Linetype:Continuous Visible:True }
-    { Name:Tego_styck Color:#FFFFFFFF Linetype:Continuous Visible:True }
-    { Name:Tego_artikel Color:#FFFFFFFF Linetype:Continuous Visible:True }
-    { Name:Tego_help Color:#FFFFFFFF Linetype:Continuous Visible:True }
+    { Name:0 Color:#FFFFFFFF Linetype:Continuous }
+    { Name:3 Color:#FF00FF00 Linetype:Continuous }
+    { Name:4 Color:#FF00FFFF Linetype:Continuous }
+    { Name:5 Color:#FF00FFFF Linetype:Continuous }
+    { Name:6 Color:#FF00FF00 Linetype:Dash }
+    { Name:9 Color:#FF00FFFF Linetype:DashDot }
+    { Name:DEFPOINTS Color:#FFFFFFFF Linetype:Continuous }
+    { Name:7A Color:#FF00FFFF Linetype:Continuous }
+    { Name:T_02 Color:#FFFFFF00 Linetype:Continuous }
+    { Name:Tego_ram Color:#FFFFFFFF Linetype:Continuous }
+    { Name:Tego_huvud Color:#FFFFFFFF Linetype:Continuous }
+    { Name:Tego_styck Color:#FFFFFFFF Linetype:Continuous }
+    { Name:Tego_artikel Color:#FFFFFFFF Linetype:Continuous }
+    { Name:Tego_help Color:#FFFFFFFF Linetype:Continuous }
   ]
   Styles:[
     { Name:STANDARD Font:ISOCP.SHX XScale:1 }
@@ -24,6 +24,212 @@
     { Name:Tego_40 Font:romans Height:8 XScale:0.7 }
     { Name:Tego_15 Font:romans Height:3 XScale:0.7 }
     { Name:Tego_20 Font:romans Height:4 XScale:0.7 }
+  ]
+  DimStyles:[
+    {
+      Name:STANDARD
+      ArrowSize:6
+      ExtOffset:1.25
+      ExtExtend:2
+      TextSize:6
+      DimGap:2
+      TextPos:Centered
+      Flags:Nil
+      Style:STANDARD
+    }
+    {
+      Name:ACDIM
+      ArrowSize:7
+      ExtOffset:4
+      ExtExtend:2
+      TextSize:7
+      DimCen:12
+      DimGap:2
+      TextPos:Centered
+      Flags:TOFL
+      LinDecimal:2
+      Style:STANDARD
+    }
+    {
+      Name:GEN-ISO
+      ArrowSize:5
+      ExtOffset:2
+      ExtExtend:2
+      TextSize:7
+      DimGap:3
+      TextPos:Above
+      Flags:TOFL
+      LinDecimal:2
+      Style:STANDARD
+    }
+    {
+      Name:GEN-ISO$4
+      ArrowSize:5
+      ExtOffset:2
+      ExtExtend:2
+      TextSize:7
+      DimGap:3
+      TextPos:Above
+      Flags:Nil
+      LinDecimal:2
+      Style:STANDARD
+    }
+    {
+      Name:GEN-ISO$3
+      ArrowSize:5
+      ExtOffset:2
+      ExtExtend:2
+      TextSize:7
+      DimGap:3
+      TextPos:Above
+      Flags:Nil
+      LinDecimal:2
+      Style:STANDARD
+    }
+    {
+      Name:ISO-25
+      ArrowSize:5
+      ExtOffset:1.25
+      ExtExtend:2.5
+      TextSize:5
+      DimCen:5
+      DimGap:1.25
+      TextPos:Above
+      Flags:TOFL
+      Style:STANDARD
+    }
+    {
+      Name:AM_ISO
+      ArrowSize:5
+      ExtOffset:2
+      ExtExtend:2
+      TextSize:7
+      DimGap:3
+      TextPos:Above
+      Flags:TOFL
+      LinDecimal:2
+      Style:STANDARD
+    }
+    {
+      Name:AM_ISO$3
+      ArrowSize:5
+      ExtOffset:2
+      ExtExtend:2
+      TextSize:7
+      DimGap:3
+      TextPos:Above
+      Flags:Nil
+      LinDecimal:2
+      Style:STANDARD
+    }
+    {
+      Name:AM_ISO$4
+      ArrowSize:5
+      ExtOffset:2
+      ExtExtend:2
+      TextSize:7
+      DimGap:3
+      TextPos:Above
+      Flags:Nil
+      LinDecimal:2
+      Style:STANDARD
+    }
+    {
+      Name:AM_ISO$6
+      ArrowSize:5
+      ExtOffset:2
+      ExtExtend:2
+      TextSize:7
+      DimGap:3
+      TextPos:Centered
+      Flags:TOFL
+      LinDecimal:2
+      Style:STANDARD
+    }
+    {
+      Name:AM_ISO$7
+      ArrowSize:5
+      ExtOffset:2
+      ExtExtend:2
+      TextSize:10
+      DimGap:3
+      TextPos:Above
+      Flags:TOFL
+      LinDecimal:2
+      Style:STANDARD
+    }
+    {
+      Name:AM_ISO$SF
+      ArrowSize:5
+      ExtOffset:2
+      ExtExtend:2
+      TextSize:7
+      DimGap:3
+      TextPos:Above
+      Flags:TOFL
+      LinDecimal:2
+      Style:STANDARD
+    }
+    {
+      Name:AM_ISO$SH
+      ArrowSize:5
+      ExtOffset:2
+      ExtExtend:2
+      TextSize:7
+      DimGap:3
+      TextPos:Above
+      Flags:TOFL
+      LinDecimal:2
+      Style:STANDARD
+    }
+    {
+      Name:GEN-ISO$6
+      ArrowSize:5
+      ExtOffset:2
+      ExtExtend:2
+      TextSize:7
+      DimGap:3
+      TextPos:Centered
+      Flags:Nil
+      LinDecimal:2
+      Style:STANDARD
+    }
+    {
+      Name:GEN-ISO-POS
+      ArrowSize:5
+      ExtOffset:2
+      ExtExtend:2
+      TextSize:10
+      DimGap:3
+      TextPos:Centered
+      Flags:Nil
+      LinDecimal:2
+      Style:STANDARD
+    }
+    {
+      Name:GEN-ISO-AXE-F
+      ArrowSize:5
+      ExtOffset:2
+      ExtExtend:2
+      TextSize:7
+      DimGap:3
+      TextPos:Above
+      Flags:TOFL
+      LinDecimal:2
+      Style:STANDARD
+    }
+    {
+      Name:GEN-ISO-AXE-H
+      ArrowSize:5
+      ExtOffset:2
+      ExtExtend:2
+      TextSize:7
+      DimGap:3
+      TextPos:Above
+      Flags:TOFL
+      LinDecimal:2
+      Style:STANDARD
+    }
   ]
   Blocks:[
     {
@@ -627,6 +833,7 @@
     }
   ]
   CurrentLayer:T_02
+  CurrentDimStyle:GEN-ISO
   Ents:[
     (E2Poly){ Layer:4 Poly:M73.318207,611.561582V323.061582 }
     (E2Poly){ Layer:4 Poly:M73.318207,323.061582H81.318207 }

@@ -1,19 +1,26 @@
 // ────── ╔╗
-// ╔═╦╦═╦╦╬╣ Program.cs
-// ║║║║╬║╔╣║ Shell for Nori console scratch applications
+// ╔═╦╦═╦╦╬╣ TDim.cs
+// ║║║║╬║╔╣║ <<TODO>>
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
-using Nori;
-namespace ConShell;
+namespace Nori.Testing;
 
-class Program {
-   static void Main () {
-      Lib.Init ();
-      Lib.Tracer = Console.WriteLine;
+[Fixture (42, "Tests for Dimension entities", "Dwg")]
+class DimEntTests () {
+   [Test (244, "Test 3-P Angular dimensions")]
+   void Test1 () => Test (Make3PAngularDwg (), "3PAngular", new (1308, 800));
 
-      var dwg = Make3PAngularDwg ();
-      var bound = dwg.Bound;
-      CurlWriter.Save (dwg, "c:/etc/test.curl", "3-P Angular");
-      DXFWriter.Save (dwg, "c:/etc/test.dxf", true);
+   void Test (Dwg2 dwg, string name, Vec2S size) {
+      var bound = dwg.Bound.InflatedF (1.05);
+      string curl = NT.File ($"Dwg/Dim/{name}.curl");
+      CurlWriter.Save (dwg, curl);
+      string dxf = Path.ChangeExtension (curl, ".dxf");
+      DXFWriter.Save (dwg, dxf, true);
+      
+      string png = Path.ChangeExtension (curl, ".png");
+      var scene = new Scene2 { Bound = bound, BgrdColor = Color4.White, Root = new Dwg2VN (dwg) };
+      var dib = scene.RenderImage (size, DIBitmap.EFormat.Gray8);
+      new PNGWriter (dib).Write (NT.TmpPNG);
+      Assert.PNGFilesEqual (png, NT.TmpPNG, dib);
    }
 
    static Dwg2 Make3PAngularDwg () {

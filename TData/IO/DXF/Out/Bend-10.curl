@@ -1,11 +1,25 @@
 (Dwg2){
-  Layers:[ { Name:0 Color:#FFFFFFFF Linetype:Continuous Visible:True } ]
+  Layers:[ { Name:0 Color:#FFFFFFFF Linetype:Continuous } ]
   Styles:[
     { Name:Standard Font:txt XScale:1 }
     { Name:SLDTEXTSTYLE0 Font:TXT XScale:0.75 }
     { Name:SLDTEXTSTYLE1 Font:TXT XScale:0.686449 }
     { Name:SLDTEXTSTYLE2 Font:TXT XScale:0.6875 }
     { Name:SLDTEXTSTYLE3 Font:TXT XScale:0.65625 }
+  ]
+  DimStyles:[
+    {
+      Name:Standard
+      ArrowSize:3.3019998
+      ExtOffset:1
+      ExtExtend:1
+      TextSize:3.4999998
+      DimCen:2.286
+      DimGap:1.5239999
+      TextPos:Centered
+      Flags:Nil
+      Style:Standard
+    }
   ]
   Blocks:[
     {
@@ -159,6 +173,7 @@
     }
   ]
   CurrentLayer:0
+  CurrentDimStyle:Standard
   Ents:[
     (E2Poly){ Layer:0 Poly:M999,14.25H1179 }
     (E2Poly){ Layer:0 Poly:M1179,48.25H999 }

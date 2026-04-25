@@ -94,6 +94,7 @@ public class DXFWriter {
    // Ouptut the dimension styles
    void OutDimStyles () {
       var styles = D.DimStyles;
+      if (styles.Count == 0) return;
       Out ($" 0\nTABLE\n 2\nDIMSTYLE\n 70\n{styles.Count}\n");
       foreach (var d in styles) {
          Out ($" 0\nDIMSTYLE\n 2\n{d.Name}\n 70\n0\n 3\n\n 4\n\n 5\n\n 6\n\n 7\n\n");
@@ -136,6 +137,9 @@ public class DXFWriter {
       Out (" 0\nSECTION\n 2\nHEADER\n 9\n$ACADVER\n 1\nAC1009\n");
       Out ($" 9\n$EXTMIN\n 10\n{b.X.Min}\n 20\n{b.Y.Min}\n 30\n0\n");
       Out ($" 9\n$EXTMAX\n 10\n{b.X.Max}\n 20\n{b.Y.Max}\n 30\n0\n");
+      double height = Math.Max (b.Y.Length, b.X.Length * 0.6) * 1.1;
+      Out ($" 9\n$VIEWCTR\n 10\n{b.X.Mid}\n 20\n{b.Y.Mid}\n");
+      Out ($" 9\n$VIEWSIZE\n 40\n{height.R3 ()}\n");
       Out (" 0\nENDSEC\n");
    }
 
@@ -349,7 +353,7 @@ public class DXFWriter {
       if (Lib.Testing) (pt, height) = (pt.R6 (), height.R6 ());
       OutEntPrologue (e, "TEXT");
       int align = (int)e.Alignment - 1, horz = align % 3, vert = 3 - align / 3;
-      Out ($" 10\n{pt.X}\n 20\n{pt.Y}\n 40\n{height}\n 1\n{e.Text}\n");
+      Out ($" 10\n{pt.X}\n 20\n{pt.Y}\n 40\n{height}\n 1\n{DXFCore.EncodeDXF (e.Text)}\n");
       if (e.Alignment != ETextAlign.BaseLeft) Out ($" 11\n{pt.X}\n 21\n{pt.Y}\n");
       if (!angle.IsZero ()) Out ($" 50\n{angle}\n");
       if (e.Style.Name != "STANDARD") Out ($" 7\n{e.Style.Name}\n");

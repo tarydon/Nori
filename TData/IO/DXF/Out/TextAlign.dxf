@@ -2,6 +2,36 @@
 SECTION
  2
 HEADER
+ 9
+$ACADVER
+ 1
+AC1009
+ 9
+$EXTMIN
+ 10
+-30
+ 20
+-40
+ 30
+0
+ 9
+$EXTMAX
+ 10
+180
+ 20
+70
+ 30
+0
+ 9
+$VIEWCTR
+ 10
+75
+ 20
+15
+ 9
+$VIEWSIZE
+ 40
+138.6
  0
 ENDSEC
  0
@@ -16,9 +46,9 @@ LAYER
 1
  0
 LAYER
- 70
-0
  2
+0
+ 70
 0
  62
 250

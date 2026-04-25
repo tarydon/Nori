@@ -1,13 +1,28 @@
 (Dwg2){
   Layers:[
-    { Name:0 Color:#FFFFFFFF Linetype:Continuous Visible:True }
-    { Name:DEFAULT Color:#FFFFFFFF Linetype:Continuous Visible:True }
-    { Name:AUTO_-_HIDE Color:#FF000000 Linetype:Continuous Visible:True }
-    { Name:MARK Color:#FFFFFFFF Linetype:Continuous Visible:True }
-    { Name:DV1_MARK Color:#FFFFFFFF Linetype:Continuous Visible:True }
-    { Name:DV1_DEFAULT Color:#FFFFFFFF Linetype:Continuous Visible:True }
+    { Name:0 Color:#FFFFFFFF Linetype:Continuous }
+    { Name:DEFAULT Color:#FFFFFFFF Linetype:Continuous }
+    { Name:AUTO_-_HIDE Color:#FF000000 Linetype:Continuous }
+    { Name:MARK Color:#FFFFFFFF Linetype:Continuous }
+    { Name:DV1_MARK Color:#FFFFFFFF Linetype:Continuous }
+    { Name:DV1_DEFAULT Color:#FFFFFFFF Linetype:Continuous }
   ]
   Styles:[ { Name:Standard Font:txt XScale:1 } ]
+  DimStyles:[
+    {
+      Name:Standard
+      ArrowSize:0.18
+      ExtOffset:0.0625
+      ExtExtend:0.18
+      TextSize:0.18
+      DimCen:0.09
+      DimGap:0.09
+      TextPos:Centered
+      Flags:TIHorz,TOHorz
+      LinDecimal:4
+      Style:Standard
+    }
+  ]
   Blocks:[
     { Name:SE0 Base:0,0 Ents:[ ] }
     {
@@ -3174,6 +3189,7 @@
     }
   ]
   CurrentLayer:0
+  CurrentDimStyle:Standard
   Ents:[
     (E2Insert){ Layer:0 BlockName:SE1 Pt:0,0 XScale:1 YScale:1 }
     (E2Insert){ Layer:0 BlockName:SE0 Pt:0,0 XScale:1 YScale:1 }

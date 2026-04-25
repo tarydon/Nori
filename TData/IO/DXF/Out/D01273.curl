@@ -1,16 +1,100 @@
 (Dwg2){
   Layers:[
-    { Name:0 Color:#FFFFFFFF Linetype:Continuous Visible:True }
-    { Name:KADER Color:#FFFFFFFF Linetype:Continuous Visible:True }
-    { Name:DIM Color:#FF414141 Linetype:Continuous Visible:True }
-    { Name:TEKST Color:#FFFFFFFF Linetype:Continuous Visible:True }
-    { Name:ONDERHOEK Color:#FFFFFFFF Linetype:Continuous Visible:True }
+    { Name:0 Color:#FFFFFFFF Linetype:Continuous }
+    { Name:KADER Color:#FFFFFFFF Linetype:Continuous }
+    { Name:DIM Color:#FF414141 Linetype:Continuous }
+    { Name:TEKST Color:#FFFFFFFF Linetype:Continuous }
+    { Name:ONDERHOEK Color:#FFFFFFFF Linetype:Continuous }
   ]
   Styles:[
     { Name:SLDTEXTSTYLE0 Font:TXT XScale:0.605 }
     { Name:SLDTEXTSTYLE1 Font:TXT XScale:0.75 }
     { Name:SLDTEXTSTYLE2 Font:TXT XScale:0.7 }
     { Name:SLDTEXTSTYLE3 Font:TXT XScale:0.681818 }
+  ]
+  DimStyles:[
+    {
+      Name:ISO-25
+      ArrowSize:2.5
+      ExtOffset:0.625
+      ExtExtend:1.25
+      TextSize:2.5
+      DimCen:2.5
+      DimGap:0.625
+      TextPos:Above
+      Flags:TOFL
+      LinDecimal:2
+      Style:STANDARD
+    }
+    {
+      Name:SLDDIMSTYLE0
+      ArrowSize:3.3
+      ExtOffset:1
+      TextSize:3.5
+      DimCen:2.5
+      DimGap:0.875
+      TextPos:Above
+      Flags:Nil
+      LinDecimal:1
+      Style:STANDARD
+    }
+    {
+      Name:SLDDIMSTYLE1
+      ArrowSize:3.3
+      ExtOffset:1
+      TextSize:3.5
+      DimCen:2.5
+      TextPos:Centered
+      Flags:Nil
+      Style:STANDARD
+    }
+    {
+      Name:SLDDIMSTYLE2
+      ArrowSize:3.3
+      ExtOffset:1
+      TextSize:3.5
+      DimCen:2.5
+      DimGap:0.875
+      TextPos:Above
+      Flags:Nil
+      AngDecimal:1
+      Style:STANDARD
+    }
+    {
+      Name:SLDDIMSTYLE3
+      ArrowSize:3.3
+      ExtOffset:1
+      TextSize:3.5
+      DimCen:2.5
+      DimGap:0.875
+      TextPos:Above
+      Flags:Nil
+      LinDecimal:1
+      Style:STANDARD
+    }
+    {
+      Name:SLDDIMSTYLE4
+      ArrowSize:3.3
+      ExtOffset:1
+      TextSize:3.5
+      DimGap:0.875
+      TextPos:Above
+      Flags:Nil
+      LinDecimal:1
+      Style:STANDARD
+    }
+    {
+      Name:SLDDIMSTYLE5
+      ArrowSize:3.3
+      ExtOffset:1
+      TextSize:3.5
+      DimCen:2.5
+      DimGap:0.875
+      TextPos:Above
+      Flags:TOFL
+      LinDecimal:1
+      Style:STANDARD
+    }
   ]
   Blocks:[
     {
@@ -575,6 +659,7 @@
     }
   ]
   CurrentLayer:0
+  CurrentDimStyle:ISO-25
   Ents:[
     (E2Poly){ Layer:KADER Poly:M415,284.010649H13.004662 }
     (E2Poly){ Layer:KADER Poly:M13.004662,284.010649V5 }

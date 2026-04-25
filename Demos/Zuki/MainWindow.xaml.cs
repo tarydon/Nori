@@ -21,14 +21,16 @@ public partial class MainWindow : Window {
 
       MenuCmds.Connect (mMenu);
       (Hub.MainWindow, Hub.Command, Hub.Status) = (this, mCommand, mStatus);
-      Hub.Dwg = Make3PAngularDwg ();
+
+      var dxf = Environment.GetCommandLineArgs ().FirstOrDefault (a => a.EndsWith (".dxf"));
+      if (dxf != null) Hub.LoadDXF (dxf);
    }
 
    Dwg2 Make3PAngularDwg () {
       Dwg2 dwg = new ();
       var layer = dwg.CurrentLayer;
       var style = dwg.CurrentDimStyle; var s = style;
-      dwg.Add (Poly.Rectangle (10, 5, 225, 185));
+      dwg.Add (Poly.Rectangle (10, 5, 280, 170));
       Add (20, 20, 40, 20, 34, 34, 40, 32);
       Add (50, 20, 80, 20, 70, 40, 70, 30);
       Add (80, 20, 105, 20, 100, 40, 97, 28);
@@ -70,15 +72,26 @@ public partial class MainWindow : Window {
       Add (170, 110, 185, 110, 180, 120, 176, 112);
       Add (200, 110, 215, 110, 210, 120, 205, 114);
 
+      DimStyle2 style5 = new ("MIXED", 1, s.ArrowSize, s.ExtOffset, s.ExtExtend, s.TextSize, s.DimCen,
+         s.DimGap, false, true, s.TOFL, 1, s.LinDecimal, s.AngDecimal, s.Style);
+      dwg.Add (style5); dwg.CurrentDimStyle = style5;
+      Add (20, 140, 40, 140, 34, 154, 40, 152);
+      Add (50, 140, 80, 140, 70, 160, 70, 150);
+      Add (80, 140, 105, 140, 100, 160, 97, 148);
+      Add (110, 140, 130, 140, 125, 155, 121, 142);
+      Add (140, 140, 160, 140, 155, 155, 149, 145);
+      Add (170, 140, 185, 140, 180, 150, 177, 144);
+      Add (200, 140, 215, 140, 210, 150, 206, 141);
+
       dwg.CurrentDimStyle = style3;
-      Add (50, 150, 60, 150, 50, 160, 65, 165);
-      Add (50, 150, 50, 160, 40, 150, 36, 164);
-      Add (50, 150, 40, 150, 50, 140, 37, 137);
-      Add (50, 150, 50, 140, 60, 150, 62, 138);
+      Add (245, 30, 255, 30, 245, 40, 260, 45);
+      Add (245, 30, 245, 40, 235, 30, 231, 44);
+      Add (245, 30, 235, 30, 245, 20, 232, 17);
+      Add (245, 30, 245, 20, 255, 30, 257, 18);
       dwg.CurrentDimStyle = style;
-      Add (90, 150, 90, 140, 83, 157, 100, 160);
-      Add (130, 150, 140, 160, 140, 140, 118, 150);
-      Add (130, 150, 140, 160, 140, 140, 148, 150);
+      Add (245, 80, 245, 70, 238, 87, 255, 90);
+      Add (245, 120, 255, 130, 255, 110, 233, 120);
+      Add (245, 120, 255, 130, 255, 110, 263, 120);
 
       void Add (params double[] vals)
          => dwg.Add (new E2Dim3PAngular (layer, dwg.CurrentDimStyle, Point2.List (vals)));

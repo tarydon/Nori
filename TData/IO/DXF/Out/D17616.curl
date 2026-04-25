@@ -1,7 +1,7 @@
 (Dwg2){
   Layers:[
-    { Name:0 Color:#FFFFFFFF Linetype:Continuous Visible:True }
-    { Name:"レイヤー_1" Color:#FF003FFF Linetype:Continuous Visible:True }
+    { Name:0 Color:#FFFFFFFF Linetype:Continuous }
+    { Name:"レイヤー_1" Color:#FF003FFF Linetype:Continuous }
   ]
   Styles:[
     { Name:STANDARD Font:txt XScale:1 }
@@ -9,6 +9,21 @@
     { Name:TATESTD Font:txt XScale:1 }
     { Name:KANJISTD Font:txt XScale:1 }
     { Name:KANJITATE Font:txt XScale:1 }
+  ]
+  DimStyles:[
+    {
+      Name:STANDARD
+      ArrowSize:0.18
+      ExtOffset:0.0625
+      ExtExtend:0.18
+      TextSize:0.18
+      DimCen:0.09
+      DimGap:0.09
+      TextPos:Centered
+      Flags:TIHorz,TOHorz
+      LinDecimal:4
+      Style:STANDARD
+    }
   ]
   Blocks:[
     {
@@ -370,6 +385,7 @@
     }
   ]
   CurrentLayer:0
+  CurrentDimStyle:STANDARD
   Ents:[
     (E2Insert){
       Layer:"レイヤー_1"

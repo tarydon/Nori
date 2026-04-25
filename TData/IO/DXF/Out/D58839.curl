@@ -1,21 +1,40 @@
 (Dwg2){
   Layers:[
-    { Name:0 Color:#FFFFFFFF Linetype:Continuous Visible:True }
-    { Name:AM_BOR Color:#FFFFFFFF Linetype:Continuous Visible:True }
-    { Name:axis Color:#FFFF00FF Linetype:Continuous Visible:True }
-    { Name:dimension Color:#FFFF0000 Linetype:Continuous Visible:True }
-    { Name:Defpoints Color:#FFFFFFFF Linetype:Continuous Visible:True }
-    {
-      Name:"Bend Centerline (ISO)"
-      Color:#FFBEBEBE
-      Linetype:Continuous
-      Visible:True
-    }
-    { Name:"Visible (ISO)" Color:#FFFFFFFF Linetype:Continuous Visible:True }
-    { Name:"Visible Narrow (ISO)" Color:#FFFFFFFF Linetype:Continuous Visible:True }
-    { Name:text Color:#FFFFFF00 Linetype:Continuous Visible:True }
+    { Name:0 Color:#FFFFFFFF Linetype:Continuous }
+    { Name:AM_BOR Color:#FFFFFFFF Linetype:Continuous }
+    { Name:axis Color:#FFFF00FF Linetype:Continuous }
+    { Name:dimension Color:#FFFF0000 Linetype:Continuous }
+    { Name:Defpoints Color:#FFFFFFFF Linetype:Continuous }
+    { Name:"Bend Centerline (ISO)" Color:#FFBEBEBE Linetype:Continuous }
+    { Name:"Visible (ISO)" Color:#FFFFFFFF Linetype:Continuous }
+    { Name:"Visible Narrow (ISO)" Color:#FFFFFFFF Linetype:Continuous }
+    { Name:text Color:#FFFFFF00 Linetype:Continuous }
   ]
   Styles:[ { Name:STANDARD Font:txt XScale:1 } { Name:ACISOTS Font:txt XScale:1 } ]
+  DimStyles:[
+    {
+      Name:AM_ISO
+      ArrowSize:2.25
+      ExtExtend:1
+      TextSize:2.4
+      DimGap:1.5
+      TextPos:Above
+      Flags:TOFL
+      LinDecimal:1
+      AngDecimal:1
+      Style:STANDARD
+    }
+    {
+      Name:Standard
+      ArrowSize:2.25
+      ExtExtend:1
+      TextSize:2.4
+      DimGap:1.5
+      TextPos:Centered
+      Flags:Nil
+      Style:STANDARD
+    }
+  ]
   Blocks:[
     {
       Name:ISO_A3
@@ -387,6 +406,7 @@
     }
   ]
   CurrentLayer:dimension
+  CurrentDimStyle:AM_ISO
   Ents:[
     (E2Insert){ Layer:0 BlockName:ISO_A3 Pt:0,0 XScale:1 YScale:1 }
     (E2Insert){ Layer:0 BlockName:ISO_TITLEB Pt:410,10 XScale:1 YScale:1 }

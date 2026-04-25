@@ -118,6 +118,9 @@ public class DXFReader {
             blocks.Add (block);
          }
       }
+      foreach (var (dim, name) in mDimMap2) 
+         if (dim.LoadEnts (mDwg, name) is { } block)
+            blocks.Add (block);
       mDwg.RemoveBlocks (blocks);
    }
 
@@ -130,9 +133,15 @@ public class DXFReader {
 
       E2Dim? dim = kind switch {
          EDim.Angular3P => new E2Dim3PAngular (layer, style, Add5 (15, 13, 14, 10, 11), text),
-         _ => new E2DimGeneric (layer, style, mPts, text),
+         _ => null
       };
-      mDimMap.Add (dim, S (2)); Add (dim);
+      if (dim == null) {
+         var oldDim = new E2Dimension (LYR ());
+         oldDim.SetDimSettings (mDwg.DimSettings);
+         mDimMap2.Add (oldDim, S (2)); Add (oldDim);
+      } else {
+         mDimMap.Add (dim, S (2)); Add (dim);
+      }
 
       // Helpers ...........................................
       List<Point2> Add1 (int a) { mPts.Add (PT (a)); return mPts; }
@@ -331,8 +340,10 @@ public class DXFReader {
             Add (MakeMText (LYR (), STYL (), S (1), PT (10), DLIN (40), angle, align, mSB));
             break;
          case POINT:
-            layer = LYR (); if (layer == mDefPoints) return;
-            Add (new E2Point (layer, PT (10)));
+            layer = LYR ();
+            var ept = new E2Point (layer, PT (10));
+            // if (layer == mDefPoints) ept.IsDefPoint = true; REMOVETHIS
+            Add (ept); 
             break;
          case STYLE:
             if (N (70).IsEven ()) {    // Otherwise, this represents a SHAPE entry
@@ -502,5 +513,6 @@ public class DXFReader {
    readonly Dictionary<string, Layer2> mLayerMap = new (StringComparer.OrdinalIgnoreCase);
    readonly Dictionary<string, Style2> mStyleMap = new (StringComparer.OrdinalIgnoreCase);
    readonly Dictionary<E2Dim, string> mDimMap = [];
+   readonly Dictionary<E2Dimension, string> mDimMap2 = [];
 }
 #endregion

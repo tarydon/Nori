@@ -88,6 +88,11 @@ public static partial class DXFCore {
       return sb.ToString ();
    }
 
+   // Encodes a string into DXF form
+   internal static string EncodeDXF (string s) {
+      return s.Replace ("\u00b0", "%%d");
+   }
+
    // Convert a color name from DXF into a color value
    // Mostly, these color names are integers that map to colors, but this also handles
    // the special values BYLAYER and BYBLOCK (and returns Color4.Nil in those cases)
