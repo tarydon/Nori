@@ -1,4 +1,4 @@
-﻿using Nori;
+using Nori;
 namespace Zuki;
 
 [Singleton]
@@ -17,15 +17,19 @@ partial class CursorVN : VNode {
       Lux.Lines ([Pt.Moved (-a, 0), Pt.Moved (a, 0), Pt.Moved (0, -a), Pt.Moved (0, a)]);
 
       int d = Hub.PixelScale switch { > 1 => 0, > 0.1 => 1, > 0.01 => 2, > 0.001 => 3, _ => 4 };
-      string fmt = $"F{0}";
+      if (Lux.UIScene!.WorldDecimals >= 0) d = Lux.UIScene.WorldDecimals;
+      string fmt = $"F{d}";
       string text = $"{Pt.X.ToString (fmt)}, {Pt.Y.ToString (fmt)}";
       Lux.Text2D (text, (Vec2F)Pt, ETextAlign.BaseLeft, new Vec2S (10, 10));
    }
 }
 
+#region class WidgetVN -----------------------------------------------------------------------------
+/// <summary>WidgetVN draws feedback from the current widget</summary>
 [Singleton]
 partial class WidgetVN : VNode {
    public WidgetVN () => Streaming = true;
 
    public override void Draw () => Hub.Widget?.Draw ();
 }
+#endregion

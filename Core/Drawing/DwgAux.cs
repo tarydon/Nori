@@ -61,6 +61,10 @@ public enum E2Flags {
    AutoText = 0x40,
    /// <summary>A 'definition point' for a dimension, spline etc</summary>
    DefPoint = 0x80,
+   /// <summary>
+   /// Force dimension line (TOFL)
+   /// </summary>
+   ForceDimLin = 0x100,
 }
 #endregion
 

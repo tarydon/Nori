@@ -7,7 +7,10 @@ namespace Nori.Testing;
 [Fixture (42, "Tests for Dimension entities", "Dwg")]
 class DimEntTests () {
    [Test (244, "Test 3-P Angular dimensions")]
-   void Test1 () => Test (Make3PAngularDwg (), "3PAngular", new (1308, 800));
+   void Test1 () => Test (MakeDim3PAngle (), "Dim3PAngle", new (1308, 800));
+
+   [Test (245, "Test Radius dimensions")]
+   void Test2 () => Test (MakeDimRad (), "DimRad", new (1328, 752));
 
    void Test (Dwg2 dwg, string name, Vec2S size) {
       var bound = dwg.Bound.InflatedF (1.05);
@@ -18,12 +21,13 @@ class DimEntTests () {
       
       string png = Path.ChangeExtension (curl, ".png");
       var scene = new Scene2 { Bound = bound, BgrdColor = Color4.White, Root = new Dwg2VN (dwg) };
+      int cx = (int)(bound.Width * 4.618), cy = (int)(bound.Height * 4.618);
       var dib = scene.RenderImage (size, DIBitmap.EFormat.Gray8);
       new PNGWriter (dib).Write (NT.TmpPNG);
       Assert.PNGFilesEqual (png, NT.TmpPNG, dib);
    }
 
-   static Dwg2 Make3PAngularDwg () {
+   static Dwg2 MakeDim3PAngle () {
       Dwg2 dwg = new ();
       var layer = dwg.CurrentLayer;
       var style = dwg.CurrentDimStyle; var s = style;
@@ -91,7 +95,56 @@ class DimEntTests () {
       Add (245, 120, 255, 130, 255, 110, 263, 120);
 
       void Add (params double[] vals)
-         => dwg.Add (new E2Dim3PAngular (layer, dwg.CurrentDimStyle, Point2.List (vals)));
+         => dwg.Add (new E2Dim3PAngle (layer, dwg.CurrentDimStyle, Point2.List (vals)));
       return dwg;
+   }
+
+   static Dwg2 MakeDimRad () {
+      var dwg = DXFReader.Load (NT.File ("Dwg/Dim/DimRad-Blank.dxf"));
+      dwg.Add (new DimStyle2 ("BREAK", dwg.GetStyle ("STANDARD")!));
+      dwg.CurrentDimStyle = dwg.GetDimStyle ("BREAK");
+      Add (false, 70, 56, 81, 68); Add (false, 70, 56, 65, 43);
+      Add (true, 70, 56, 54, 52); Add (false, 22, 13, 19, 19);
+      Add (false, 22, 13, 15, 15); Add (true, 79, 12, 76, 14);
+
+      var style = new DimStyle2 ("ABOVE", dwg.GetStyle ("STANDARD")!) { TextPos = DimStyle2.EPos.Above };
+      dwg.Add (style); dwg.CurrentDimStyle = style;
+      Add (false, 160, 56, 171, 68); Add (false, 160, 56, 155, 43);
+      Add (true, 160, 56, 144, 52); Add (false, 112, 13, 109, 19);
+      Add (false, 112, 13, 105, 15); Add (true, 169, 12, 166, 14);
+
+      style = new DimStyle2 ("BELOW", dwg.GetStyle ("STANDARD")!) { TextPos = DimStyle2.EPos.Below };
+      dwg.Add (style); dwg.CurrentDimStyle = style;
+      Add (false, 250, 56, 261, 68); Add (false, 250, 56, 245, 43);
+      Add (true, 250, 56, 234, 52); Add (false, 202, 13, 199, 19);
+      Add (false, 202, 13, 195, 15); Add (true, 259, 12, 256, 14);
+
+      style = new DimStyle2 ("HORZ", dwg.GetStyle ("STANDARD")!) { TIHorz = true, TOHorz = true };
+      dwg.Add (style); dwg.CurrentDimStyle = style;
+      double dy2 = 75, dy1 = 70;
+      Add (false, 70, 61 + dy1, 81, 73 + dy1); Add (false, 70, 61 + dy1, 65, 48 + dy1);
+      Add (true, 70, 61 + dy1, 54, 57 + dy1); Add (false, 22, 13 + dy2, 19, 19 + dy2);
+      Add (false, 22, 13 + dy2, 15, 15 + dy2); Add (true, 79, 12 + dy2, 76, 14 + dy2);
+
+      style = new DimStyle2 ("HORZABOVE", dwg.GetStyle ("STANDARD")!) { TIHorz = true, TOHorz = true, TextPos = DimStyle2.EPos.Above };
+      dwg.Add (style); dwg.CurrentDimStyle = style;
+      Add (false, 160, 61 + dy1, 171, 73 + dy1); Add (false, 160, 61 + dy1, 155, 48 + dy1);
+      Add (true, 160, 61 + dy1, 144, 57 + dy1); Add (false, 112, 13 + dy2, 109, 19 + dy2);
+      Add (false, 112, 13 + dy2, 105, 15 + dy2); Add (true, 169, 12 + dy2, 166, 14 + dy2);
+
+      style = new DimStyle2 ("HORZBELOW", dwg.GetStyle ("STANDARD")!) { TIHorz = true, TOHorz = true, TextPos = DimStyle2.EPos.Below };
+      dwg.Add (style); dwg.CurrentDimStyle = style;
+      Add (false, 250, 61 + dy1, 261, 73 + dy1); Add (false, 250, 61 + dy1, 245, 48 + dy1);
+      Add (true, 250, 61 + dy1, 234, 57 + dy1); Add (false, 202, 13 + dy2, 199, 19 + dy2);
+      Add (false, 202, 13 + dy2, 195, 15 + dy2); Add (true, 259, 12 + dy2, 256, 14 + dy2);
+      return dwg;
+
+      void Add (bool tofl, params double[] vals) {
+         var pts = Point2.List (vals);
+         dwg.PickPoly (pts[0], 3, out var p);
+         var seg = p.Poly[p.Seg];
+         pts[0] = seg.Center;
+         dwg.Add (new E2DimRad (dwg.CurrentLayer, dwg.CurrentDimStyle, seg.Radius, tofl, pts));
+      }
    }
 }

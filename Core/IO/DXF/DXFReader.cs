@@ -132,7 +132,7 @@ public class DXFReader {
       var (layer, style, text) = (LYR (), mDwg.GetDimStyle (S (3)), S (1));
 
       E2Dim? dim = kind switch {
-         EDim.Angular3P => new E2Dim3PAngular (layer, style, Add5 (15, 13, 14, 10, 11), text),
+         EDim.Angular3P => new E2Dim3PAngle (layer, style, Add5 (15, 13, 14, 10, 11), text),
          _ => null
       };
       if (dim == null) {

@@ -263,7 +263,7 @@ public class DXFWriter {
       string text = e.IsAutoText ? "<>" : e.Text!;
       Out ($" 0\nDIMENSION\n 8\n{e.Layer.Name}\n 70\n{(int)e.Kind}\n 2\n{mDimBlocks[e]}\n");
       Out ($" 3\n{e.Style.Name}\n 1\n{text}\n");
-      mDefPts.Clear (); e.GetDefPoints (mDefPts);
+      mDefPts.Clear (); _ = e.Ents; e.GetDefPoints (mDefPts);
       foreach (var (id, pt) in mDefPts)
          Out ($" {id}\n{pt.X}\n {id + 10}\n{pt.Y}\n");
       return 0;

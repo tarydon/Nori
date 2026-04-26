@@ -84,7 +84,7 @@ class Program {
       Add (245, 120, 255, 130, 255, 110, 263, 120);
 
       void Add (params double[] vals)
-         => dwg.Add (new E2Dim3PAngular (layer, dwg.CurrentDimStyle, Point2.List (vals)));
+         => dwg.Add (new E2Dim3PAngle (layer, dwg.CurrentDimStyle, Point2.List (vals)));
       return dwg;
    }
 }

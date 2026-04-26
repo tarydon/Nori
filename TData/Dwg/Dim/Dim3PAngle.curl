@@ -77,7 +77,7 @@
   CurrentDimStyle:STANDARD
   Ents:[
     (E2Poly){ Layer:0 Poly:M10,5H280V170H10Z }
-    (E2Dim3PAngular){
+    (E2Dim3PAngle){
       Layer:0
       Ents:[
         (E2Poly){ Layer:0 Poly:M40.625,20H44.573808 }
@@ -115,7 +115,7 @@
       Pts:[ 20,20 40,20 34,34 40,32 41.548388,28.925635 ]
       Style:STANDARD
     }
-    (E2Dim3PAngular){
+    (E2Dim3PAngle){
       Layer:0
       Ents:[
         (E2Poly){ Layer:0 Poly:M79.375,20H71.11068 }
@@ -153,7 +153,7 @@
       Pts:[ 50,20 80,20 70,40 70,30 70.658574,28.557062 ]
       Style:STANDARD
     }
-    (E2Dim3PAngular){
+    (E2Dim3PAngle){
       Layer:0
       Ents:[
         (E2Poly){ Layer:0 Poly:M104.375,20H97.538294 }
@@ -185,7 +185,7 @@
       Pts:[ 80,20 105,20 100,40 97,28 97.35812,27.189969 ]
       Style:STANDARD
     }
-    (E2Dim3PAngular){
+    (E2Dim3PAngle){
       Layer:0
       Ents:[
         (E2Poly){ Layer:0 Poly:M129.375,20H119.93034 }
@@ -222,7 +222,7 @@
       Pts:[ 110,20 130,20 125,35 121,22 121.18034,16.7625 ]
       Style:STANDARD
     }
-    (E2Dim3PAngular){
+    (E2Dim3PAngle){
       Layer:0
       Ents:[
         (E2Poly){ Layer:0 Poly:M159.375,20H149.04563 }
@@ -259,7 +259,7 @@
       Pts:[ 140,20 160,20 155,35 149,25 144.990852,29.569368 ]
       Style:STANDARD
     }
-    (E2Dim3PAngular){
+    (E2Dim3PAngle){
       Layer:0
       Ents:[
         (E2Poly){ Layer:0 Poly:M184.375,20H176.812258 }
@@ -295,7 +295,7 @@
       Pts:[ 170,20 185,20 180,30 177,24 170.759969,30.641786 ]
       Style:STANDARD
     }
-    (E2Dim3PAngular){
+    (E2Dim3PAngle){
       Layer:0
       Ents:[
         (E2Poly){ Layer:0 Poly:M214.375,20H204.832763 }
@@ -331,7 +331,7 @@
       Pts:[ 200,20 215,20 210,30 206,21 206.082763,13.0125 ]
       Style:STANDARD
     }
-    (E2Dim3PAngular){
+    (E2Dim3PAngle){
       Layer:0
       Ents:[
         (E2Poly){ Layer:0 Poly:M40.625,50H44.573808 }
@@ -368,7 +368,7 @@
       Pts:[ 20,50 40,50 34,64 40,62 39.816114,58.208103 ]
       Style:BELOW
     }
-    (E2Dim3PAngular){
+    (E2Dim3PAngle){
       Layer:0
       Ents:[
         (E2Poly){ Layer:0 Poly:M79.375,50H71.11068 }
@@ -405,7 +405,7 @@
       Pts:[ 50,50 80,50 70,70 70,60 68.9263,57.83953 ]
       Style:BELOW
     }
-    (E2Dim3PAngular){
+    (E2Dim3PAngle){
       Layer:0
       Ents:[
         (E2Poly){ Layer:0 Poly:M104.375,50H97.538294 }
@@ -436,7 +436,7 @@
       Pts:[ 80,50 105,50 100,70 97,58 95.625846,56.472437 ]
       Style:BELOW
     }
-    (E2Dim3PAngular){
+    (E2Dim3PAngle){
       Layer:0
       Ents:[
         (E2Poly){ Layer:0 Poly:M129.375,50H119.93034 }
@@ -474,7 +474,7 @@
       Pts:[ 110,50 130,50 125,65 121,52 119.30534,46.7625 ]
       Style:BELOW
     }
-    (E2Dim3PAngular){
+    (E2Dim3PAngle){
       Layer:0
       Ents:[
         (E2Poly){ Layer:0 Poly:M159.375,50H149.04563 }
@@ -512,7 +512,7 @@
       Pts:[ 140,50 160,50 155,65 149,55 143.665027,58.243543 ]
       Style:BELOW
     }
-    (E2Dim3PAngular){
+    (E2Dim3PAngle){
       Layer:0
       Ents:[
         (E2Poly){ Layer:0 Poly:M184.375,50H176.812258 }
@@ -548,7 +548,7 @@
       Pts:[ 170,50 185,50 180,60 177,54 170.318027,58.432077 ]
       Style:BELOW
     }
-    (E2Dim3PAngular){
+    (E2Dim3PAngle){
       Layer:0
       Ents:[
         (E2Poly){ Layer:0 Poly:M214.375,50H204.832763 }
@@ -584,7 +584,7 @@
       Pts:[ 200,50 215,50 210,60 206,51 204.207763,44.2625 ]
       Style:BELOW
     }
-    (E2Dim3PAngular){
+    (E2Dim3PAngle){
       Layer:0
       Ents:[
         (E2Poly){ Layer:0 Poly:M40.625,80H44.573808 }
@@ -621,7 +621,7 @@
       Pts:[ 20,80 40,80 34,94 40,92 43.280663,89.643166 ]
       Style:ABOVE
     }
-    (E2Dim3PAngular){
+    (E2Dim3PAngle){
       Layer:0
       Ents:[
         (E2Poly){ Layer:0 Poly:M79.375,80H71.11068 }
@@ -658,7 +658,7 @@
       Pts:[ 50,80 80,80 70,100 70,90 72.390849,89.274593 ]
       Style:ABOVE
     }
-    (E2Dim3PAngular){
+    (E2Dim3PAngle){
       Layer:0
       Ents:[
         (E2Poly){ Layer:0 Poly:M104.375,80H97.538294 }
@@ -689,7 +689,7 @@
       Pts:[ 80,80 105,80 100,100 97,88 99.090395,87.9075 ]
       Style:ABOVE
     }
-    (E2Dim3PAngular){
+    (E2Dim3PAngle){
       Layer:0
       Ents:[
         (E2Poly){ Layer:0 Poly:M129.375,80H119.93034 }
@@ -727,7 +727,7 @@
       Pts:[ 110,80 130,80 125,95 121,82 123.05534,76.7625 ]
       Style:ABOVE
     }
-    (E2Dim3PAngular){
+    (E2Dim3PAngle){
       Layer:0
       Ents:[
         (E2Poly){ Layer:0 Poly:M159.375,80H149.04563 }
@@ -765,7 +765,7 @@
       Pts:[ 140,80 160,80 155,95 149,85 146.316677,90.895193 ]
       Style:ABOVE
     }
-    (E2Dim3PAngular){
+    (E2Dim3PAngle){
       Layer:0
       Ents:[
         (E2Poly){ Layer:0 Poly:M184.375,80H176.812258 }
@@ -801,7 +801,7 @@
       Pts:[ 170,80 185,80 180,90 177,84 172.969677,91.083727 ]
       Style:ABOVE
     }
-    (E2Dim3PAngular){
+    (E2Dim3PAngle){
       Layer:0
       Ents:[
         (E2Poly){ Layer:0 Poly:M214.375,80H204.832763 }
@@ -837,7 +837,7 @@
       Pts:[ 200,80 215,80 210,90 206,81 207.957763,74.2625 ]
       Style:ABOVE
     }
-    (E2Dim3PAngular){
+    (E2Dim3PAngle){
       Layer:0
       Ents:[
         (E2Poly){ Layer:0 Poly:M40.625,110H44.573808 }
@@ -874,7 +874,7 @@
       Pts:[ 20,110 40,110 34,124 40,122 41.548388,118.925635 ]
       Style:HORZ
     }
-    (E2Dim3PAngular){
+    (E2Dim3PAngle){
       Layer:0
       Ents:[
         (E2Poly){ Layer:0 Poly:M79.375,110H71.11068 }
@@ -911,7 +911,7 @@
       Pts:[ 50,110 80,110 70,130 70,120 70.658574,118.557062 ]
       Style:HORZ
     }
-    (E2Dim3PAngular){
+    (E2Dim3PAngle){
       Layer:0
       Ents:[
         (E2Poly){ Layer:0 Poly:M104.375,110H88.236833 }
@@ -947,7 +947,7 @@
       Pts:[ 80,110 105,110 100,130 89,113 88.764691,113.630454 ]
       Style:HORZ
     }
-    (E2Dim3PAngular){
+    (E2Dim3PAngle){
       Layer:0
       Ents:[
         (E2Poly){ Layer:0 Poly:M129.375,110H119.93034 }
@@ -983,7 +983,7 @@
       Pts:[ 110,110 130,110 125,125 121,112 121.18034,108.125 ]
       Style:HORZ
     }
-    (E2Dim3PAngular){
+    (E2Dim3PAngle){
       Layer:0
       Ents:[
         (E2Poly){ Layer:0 Poly:M159.375,110H149.04563 }
@@ -1019,7 +1019,7 @@
       Pts:[ 140,110 160,110 155,125 149,115 144.04261,119.15511 ]
       Style:HORZ
     }
-    (E2Dim3PAngular){
+    (E2Dim3PAngle){
       Layer:0
       Ents:[
         (E2Poly){ Layer:0 Poly:M184.375,110H175.074555 }
@@ -1057,7 +1057,7 @@
       Pts:[ 170,110 185,110 180,120 176,112 176.324555,104.375 ]
       Style:HORZ
     }
-    (E2Dim3PAngular){
+    (E2Dim3PAngle){
       Layer:0
       Ents:[
         (E2Poly){ Layer:0 Poly:M214.375,110H205.153124 }
@@ -1095,7 +1095,7 @@
       Pts:[ 200,110 215,110 210,120 205,114 198.638542,119.054343 ]
       Style:HORZ
     }
-    (E2Dim3PAngular){
+    (E2Dim3PAngle){
       Layer:0
       Ents:[
         (E2Poly){ Layer:0 Poly:M40.625,140H44.573808 }
@@ -1132,7 +1132,7 @@
       Pts:[ 20,140 40,140 34,154 40,152 43.280663,149.643166 ]
       Style:MIXED
     }
-    (E2Dim3PAngular){
+    (E2Dim3PAngle){
       Layer:0
       Ents:[
         (E2Poly){ Layer:0 Poly:M79.375,140H71.11068 }
@@ -1169,7 +1169,7 @@
       Pts:[ 50,140 80,140 70,160 70,150 72.390849,149.274593 ]
       Style:MIXED
     }
-    (E2Dim3PAngular){
+    (E2Dim3PAngle){
       Layer:0
       Ents:[
         (E2Poly){ Layer:0 Poly:M104.375,140H97.538294 }
@@ -1205,7 +1205,7 @@
       Pts:[ 80,140 105,140 100,160 97,148 99.090395,147.9075 ]
       Style:MIXED
     }
-    (E2Dim3PAngular){
+    (E2Dim3PAngle){
       Layer:0
       Ents:[
         (E2Poly){ Layer:0 Poly:M129.375,140H119.93034 }
@@ -1241,7 +1241,7 @@
       Pts:[ 110,140 130,140 125,155 121,142 121.18034,138.125 ]
       Style:MIXED
     }
-    (E2Dim3PAngular){
+    (E2Dim3PAngle){
       Layer:0
       Ents:[
         (E2Poly){ Layer:0 Poly:M159.375,140H149.04563 }
@@ -1277,7 +1277,7 @@
       Pts:[ 140,140 160,140 155,155 149,145 144.04261,149.15511 ]
       Style:MIXED
     }
-    (E2Dim3PAngular){
+    (E2Dim3PAngle){
       Layer:0
       Ents:[
         (E2Poly){ Layer:0 Poly:M184.375,140H176.812258 }
@@ -1315,7 +1315,7 @@
       Pts:[ 170,140 185,140 180,150 177,144 169.811727,150.227528 ]
       Style:MIXED
     }
-    (E2Dim3PAngular){
+    (E2Dim3PAngle){
       Layer:0
       Ents:[
         (E2Poly){ Layer:0 Poly:M214.375,140H204.832763 }
@@ -1353,7 +1353,7 @@
       Pts:[ 200,140 215,140 210,150 206,141 206.082763,134.375 ]
       Style:MIXED
     }
-    (E2Dim3PAngular){
+    (E2Dim3PAngle){
       Layer:0
       Ents:[
         (E2Poly){ Layer:0 Poly:M255.625,30H267.463203 }
@@ -1385,7 +1385,7 @@
       Pts:[ 245,30 255,30 245,40 260,45 261.325825,46.325825 ]
       Style:ABOVE
     }
-    (E2Dim3PAngular){
+    (E2Dim3PAngle){
       Layer:0
       Ents:[
         (E2Poly){ Layer:0 Poly:M245,40.625V51.04899 }
@@ -1417,7 +1417,7 @@
       Pts:[ 245,30 245,40 235,30 231,44 229.674175,45.325825 ]
       Style:ABOVE
     }
-    (E2Dim3PAngular){
+    (E2Dim3PAngle){
       Layer:0
       Ents:[
         (E2Poly){ Layer:0 Poly:M234.375,30H225.365224 }
@@ -1449,7 +1449,7 @@
       Pts:[ 245,30 235,30 245,20 232,17 230.674175,15.674175 ]
       Style:ABOVE
     }
-    (E2Dim3PAngular){
+    (E2Dim3PAngle){
       Layer:0
       Ents:[
         (E2Poly){ Layer:0 Poly:M245,19.375V11.779437 }
@@ -1481,7 +1481,7 @@
       Pts:[ 245,30 245,20 255,30 257,18 258.325825,16.674175 ]
       Style:ABOVE
     }
-    (E2Dim3PAngular){
+    (E2Dim3PAngle){
       Layer:0
       Ents:[
         (E2Poly){ Layer:0 Poly:M245,69.375V64.607864 }
@@ -1511,7 +1511,7 @@
       Pts:[ 245,80 245,70 238,87 255,90 258.06563,85.411961 ]
       Style:STANDARD
     }
-    (E2Dim3PAngular){
+    (E2Dim3PAngle){
       Layer:0
       Ents:[
         (E2Poly){ Layer:0 Poly:M254.558058,129.558058L252.601398,127.601398 }
@@ -1554,7 +1554,7 @@
       Pts:[ 245,120 255,130 255,110 233,120 233,120 ]
       Style:STANDARD
     }
-    (E2Dim3PAngular){
+    (E2Dim3PAngle){
       Layer:0
       Ents:[
         (E2Poly){ Layer:0 Poly:M255.441942,130.441942L258.611806,133.611806 }

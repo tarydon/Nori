@@ -1,7 +1,11 @@
-﻿using Nori;
+using Nori;
 namespace Zuki;
 
+#region class DwgScene -----------------------------------------------------------------------------
+/// <summary>Implements the drawing scene</summary>
+/// This is trivial, since most of the heavy lifting is done by the Hub class
 class DwgScene : Scene2 {
+   // Constructor --------------------------------------------------------------
    public DwgScene (Dwg2 dwg) {
       mDwg = dwg;
       List<VNode> nodes = [new Dwg2VN (mDwg), TraceVN.It, CursorVN.It, WidgetVN.It];
@@ -12,7 +16,10 @@ class DwgScene : Scene2 {
       WorldDecimals = 0;
    }
 
+   // Overrides ----------------------------------------------------------------
    public override bool CursorVisible => false;
 
+   // Private data -------------------------------------------------------------
    readonly Dwg2 mDwg;
 }
+#endregion

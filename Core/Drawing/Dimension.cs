@@ -3,6 +3,7 @@
 // ║║║║╬║╔╣║ <<TODO>>
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 namespace Nori;
+using static DimStyle2.EPos;
 
 #region class DimStyle2 ----------------------------------------------------------------------------
 /// <summary>Dimension style (based on AutoCAD)</summary>
@@ -13,7 +14,7 @@ public class DimStyle2 {
       Name = name; Style = style;
       ArrowSize = asz * scale; ExtOffset = exo * scale; ExtExtend = exe * scale; 
       TextSize = txt * scale; DimCen = cen * scale; DimGap = gap * scale;
-      TextPos = tabove switch { 0 => EPos.Centered, 4 => EPos.Below, _ => EPos.Above };
+      TextPos = tabove switch { 0 => Centered, 4 => Below, _ => Above };
       LinDecimal = dec; AngDecimal = adec;
       if (tih) mFlags |= EFlags.TIHorz;
       if (toh) mFlags |= EFlags.TOHorz;
@@ -32,22 +33,22 @@ public class DimStyle2 {
    public readonly string Name;
 
    /// <summary>Arrowhead size (DXF Group 41)</summary>
-   public readonly float ArrowSize;
+   public float ArrowSize;
    /// <summary>Extension line offset from dim. definition point (DXF Group 42)</summary>
-   public readonly float ExtOffset;
+   public float ExtOffset;
    /// <summary>Extension line extension beyond dimension line (DXF Group 44)</summary>
-   public readonly float ExtExtend;
+   public float ExtExtend;
    /// <summary>Text height (DXF Group 140)</summary>
-   public readonly float TextSize;
+   public float TextSize;
    /// <summary>Size of center mark / center lines (DXF Group 141)</summary>
-   public readonly float DimCen;
+   public float DimCen;
    /// <summary>Gap between dimension line and text (DXF Group 147)</summary>
-   public readonly float DimGap;
+   public float DimGap;
 
    /// <summary>Number of decimal places for linear dimensions</summary>
-   public readonly int LinDecimal;
+   public int LinDecimal;
    /// <summary>Number of decimal places for angular dimensions</summary>
-   public readonly int AngDecimal;
+   public int AngDecimal;
 
    /// <summary>Text inside dimension line horizontal (DXF Group 73)</summary>
    public bool TIHorz { get => Get (EFlags.TIHorz);  set => Set (EFlags.TIHorz, value); }
@@ -57,8 +58,7 @@ public class DimStyle2 {
    public bool TOFL => Get (EFlags.TOFL);
 
    /// <summary>Text position (Centered / Above / Below)</summary>
-   public EPos TextPos { get => mTextPos; set => mTextPos = value; }
-   EPos mTextPos;
+   public EPos TextPos;
 
    /// <summary>Text style used for dimensions</summary>
    public readonly Style2 Style;
@@ -127,6 +127,11 @@ public abstract class E2Dim : Ent2 {
 
    /// <summary>Has the text been auto-generated (based on measurement)</summary>
    public bool IsAutoText => Get (E2Flags.AutoText);
+
+   /// <summary>
+   /// Force dimension line to be drawn (to center / between extension lines etc)
+   /// </summary>
+   public bool ForceDimLine => Get (E2Flags.ForceDimLin);
 
    /// <summary>Which kind of dimension is this?</summary>
    public EDim Kind => mKind;
@@ -251,7 +256,7 @@ public abstract class E2Dim : Ent2 {
    protected (double a, double b) GetOverhangs (EInside code, double txtMeasure, bool nearStart) {
       double aExtend = 0, bExtend = 0;
       bool textOutside = (code & EInside.Text) == 0, arrowOutside = (code & EInside.Arrows) == 0;
-      bool iBreak = mStyle.TextPos == DimStyle2.EPos.Centered;
+      bool iBreak = mStyle.TextPos == Centered;
       if (textOutside) {
          // If the text is outside then we might need to extend the extension line,
          // if text is above/below the line
@@ -273,13 +278,22 @@ public abstract class E2Dim : Ent2 {
       return (aExtend, bExtend);
    }
 
+   // Gets the normalized angle used for text
+   protected double GetTextAngle (double textAngle) {
+      textAngle = Lib.NormalizeAngle (textAngle);
+      if (textAngle is < (-Lib.HalfPI + Lib.Epsilon) or > (Lib.HalfPI + Lib.Epsilon))
+         textAngle += Lib.PI;
+      return textAngle;
+   }
+
    // This is overridden in derived types to make the entities 
    protected abstract void MakeEnts ();
   
    // Helper used to measure the text (assumes text is horizontal, centered at 0,0)
    protected Bound2 Measure (string text) {
       var font = LineFont.Get (mStyle.Style.Font);
-      return font.Measure (text, Point2.Zero, ETextAlign.MidCenter, 0, 1, mStyle.TextSize, 0);      
+      var box = font.Measure (text, Point2.Zero, ETextAlign.MidCenter, 0, 1, mStyle.TextSize, 0);
+      return box.InflatedL (mStyle.DimGap);
    }
 
    // Nested types -------------------------------------------------------------
@@ -309,29 +323,113 @@ class E2DimGeneric : E2Dim {
 }
 #endregion
 
+#region class E2DimRad -----------------------------------------------------------------------------
+/// <summary>
+/// E2DimRad implements a radius dimension
+/// </summary>
+public class E2DimRad : E2Dim {
+   // Constructors -------------------------------------------------------------
+   /// <summary>
+   /// Create a radius dimension given the definition points as shown in the image above
+   /// </summary>
+   public E2DimRad (Layer2 layer, DimStyle2 style, double radius, bool tofl, IList<Point2> pts, string? text = null)
+      : base (layer, EDim.Radius, style, pts, text) {
+      mRadius = radius; if (tofl) mFlags |= E2Flags.ForceDimLin;
+   }
+
+   // Overrides ----------------------------------------------------------------
+   public override void GetDefPoints (List<(int, Point2)> pts) {
+      pts.Add ((10, Pts[0])); pts.Add ((11, Pts[2]));
+      pts.Add ((15, Pts[0].Polar (mRadius, Pts[0].AngleTo (Pts[1]))));
+   }
+
+   protected override void MakeEnts () {
+      var (txt, gap, horz) = (mStyle.TextSize, mStyle.DimGap, mStyle.TOHorz);
+      var (exo, pos, cen, pick) = (mStyle.ExtOffset, mStyle.TextPos, Pts[0], Pts[1]);
+      var (asz, ext, iBreak) = (mStyle.ArrowSize, mStyle.ExtExtend, pos == Centered);
+      double angle = cen.AngleTo (pick);
+      Point2 tip = cen.Polar (mRadius, angle);
+      bool inside = cen.DistTo (pick) < mRadius - Lib.Delta;
+      if (inside) angle += Lib.PI;  // Angle of arrowhead
+      AddArrow (tip, angle);
+
+      // Compute the text and text bound
+      string text = mText ?? "";
+      if (IsAutoText) text = $"R{mRadius.Round (mStyle.LinDecimal)}";
+      var bound = Measure (text);
+      double txtHalf = bound.Width / 2;
+      double minLineLen = asz + ext + (iBreak || horz ? 0 : 2 * txtHalf);
+      double lineLen = Math.Max (pick.DistTo (tip), minLineLen);
+      bool toCenter = inside && ForceDimLine && 2 * txtHalf + asz + 3 * ext < mRadius;
+      if (toCenter) lineLen = Math.Max (lineLen, mRadius - exo);
+
+      // Compute the dimension line
+      Poly poly; double textAngle; Point2 ptText;
+      Point2 pt2 = tip.Polar (lineLen, angle);
+      if (horz && !toCenter) {
+         textAngle = 0;
+         double dx = pt2.X < tip.X ? -1 : 1;
+         Point2 pt3 = pt2.Moved (ext * dx, 0);
+         ptText = pt3.Moved (txtHalf * dx, 0);
+         if (!iBreak) pt3 = pt3.Moved (2 * txtHalf * dx, 0);
+         poly = Poly.Lines ([tip, pt2, pt3], false);
+      } else {
+         textAngle = horz ? 0 : GetTextAngle (angle);
+         poly = Poly.Line (tip, pt2);
+         double textDist = iBreak ? lineLen + txtHalf : lineLen - txtHalf;
+         ptText = toCenter ? poly[0].Midpoint : tip.Polar (textDist, angle);
+      }
+
+      // Compute the text angle, and the text-box
+      if (horz && toCenter) { pos = Centered; iBreak = true; }
+      double vShift = pos switch { Above => txt / 2 + gap, Below => -(txt / 2 + gap), _ => 0 };
+      if (!vShift.IsZero ()) ptText = ptText.Polar (vShift, textAngle + Lib.HalfPI);
+      var textBox = Poly.Rectangle (bound) * Matrix2.Rotation (textAngle) * Matrix2.Translation (ptText);
+
+      // Add the entities
+      if (toCenter) AddPoint (cen);
+      if (toCenter && iBreak) AddTrimmedSeg (poly[0], textBox);
+      else AddPoly (poly);
+      if (mPts.Count < 3) mPts.Add (Point2.Zero);
+      mPts[2] = ptText;
+      AddText (ptText, text, textAngle);
+   }
+
+   protected override Ent2 Xformed (Matrix2 xfm) {
+      var dim = new E2DimRad (Layer, mStyle, mRadius, ForceDimLine, [.. mPts.Select (a => a * xfm)], mText);
+      dim.mEnts.AddRange (mEnts.Select (a => a * xfm));
+      return dim;
+   }
+
+   // Private data -------------------------------------------------------------
+   readonly double mRadius;
+}
+#endregion
+
 #region class E2Dim3PAngular -----------------------------------------------------------------------
 /// <summary>E2Dim3PAngular is a '3-point angular' dimension</summary>
 /// This image file://N:/Doc/Img/Dim3PAngle1.png shows the definition of this type of dimension.
 /// The points a, b, c, d are enough to define the dimension (with point e being the optional
 /// text positioning point). The values in parentheses are the group codes from which these values
 /// are loaded from the DXF file. 
-public class E2Dim3PAngular : E2Dim {
+public class E2Dim3PAngle : E2Dim {
    // Constructors -------------------------------------------------------------
-   E2Dim3PAngular () { }
+   E2Dim3PAngle () { }
    /// <summary>Creates a 3P-Angular dimension given the definition points as shown in the image above</summary>
-   public E2Dim3PAngular (Layer2 layer, DimStyle2 style, IList<Point2> pts, string? text = null)
+   /// The point e (text position) is not necessary to be supplied, and will be computed by 
+   /// the MakeEnts routine automatically
+   public E2Dim3PAngle (Layer2 layer, DimStyle2 style, IList<Point2> pts, string? text = null)
       : base (layer, EDim.Angular3P, style, pts, text) { }
 
    // Overrides ----------------------------------------------------------------
    public override void GetDefPoints (List<(int, Point2)> pts) {
-      var _ = Ents;
       pts.Add ((10, mPts[3])); pts.Add ((11, mPts[4]));
       pts.Add ((13, mPts[1])); pts.Add ((14, mPts[2])); pts.Add ((15, mPts[0]));
    }
 
    // Creates a transformed version of the 3P Angular dimension
    protected override Ent2 Xformed (Matrix2 xfm) {
-      var dim = new E2Dim3PAngular (Layer, mStyle, [.. mPts.Select (a => a * xfm)], mText);
+      var dim = new E2Dim3PAngle (Layer, mStyle, [.. mPts.Select (a => a * xfm)], mText);
       dim.mEnts.AddRange (mEnts.Select (a => a * xfm));
       return dim; 
    }
@@ -362,7 +460,7 @@ public class E2Dim3PAngular : E2Dim {
       Point2 a = mPts[0], b = mPts[1], c = mPts[2], d = mPts[3];
       double angB = a.AngleTo (b), angC = a.AngleTo (c), rad = a.DistTo (d);
       Point2 arcStart = a.Polar (rad, angB), arcEnd = a.Polar (rad, angC);
-      bool iBreak = mStyle.TextPos == DimStyle2.EPos.Centered;
+      bool iBreak = mStyle.TextPos == Centered;
 
       // Create the two extension lines - they run 'outward' or 'inward' from the
       // definition points b and c (depending on the position of d)
@@ -389,7 +487,7 @@ public class E2Dim3PAngular : E2Dim {
       // - Otherwise, it depends on the angle at which the dimension line goes through
       //   the text. If this is more vertical (not more than 30 degrees away from vertical)
       //   then we use the height of the text, else the width
-      Bound2 bound = Measure (text).InflatedL (mStyle.DimGap);
+      Bound2 bound = Measure (text);
       double txtMeasure = bound.Width;
       if (mStyle.TIHorz && Math.Abs (Math.Cos (arcSeg.GetSlopeAt (0.5))) < 0.5) txtMeasure = bound.Height;
       var inside = CheckSpace (arcSeg.Length, txtMeasure);
@@ -438,15 +536,15 @@ public class E2Dim3PAngular : E2Dim {
       // box, otherwise we can add the complete arc
       double textAngle = textHorz ? 0 : tangentAngle;
       var textBox = Poly.Rectangle (bound) * Matrix2.Rotation (textAngle) * Matrix2.Translation (textPos);
-      if (textInside && mStyle.TextPos == DimStyle2.EPos.Centered) AddTrimmedSeg (arcSeg, textBox);
+      if (textInside && mStyle.TextPos == Centered) AddTrimmedSeg (arcSeg, textBox);
       else AddPoly (arc);
 
       // If we are not doing 'centered' positioning, we have to shift the text box in a suitable
       // direction
       Vector2 vecShift = new (0, 0);
-      if (!textHorz && mStyle.TextPos != DimStyle2.EPos.Centered) {
+      if (!textHorz && mStyle.TextPos != Centered) {
          double shiftLie = textInside ? 0.5 : txtLie, shiftAngle = a.AngleTo (arcSeg.GetPointAt (shiftLie));
-         if (mStyle.TextPos == DimStyle2.EPos.Below) shiftAngle += Lib.PI;
+         if (mStyle.TextPos == Below) shiftAngle += Lib.PI;
          vecShift = GetShift (textBox, shiftAngle);
       } else if (textHorz && !textInside) 
          vecShift = GetShift2 (textBox, tangentAngle, !arrowInside);
@@ -454,9 +552,7 @@ public class E2Dim3PAngular : E2Dim {
       // AddPoly (textBox * Matrix2.Translation (vecShift));
 
       // Add the text itself
-      textAngle = Lib.NormalizeAngle (textAngle);
-      if (textAngle is < (-Lib.HalfPI + Lib.Epsilon) or > (Lib.HalfPI + Lib.Epsilon))
-         textAngle += Lib.PI;
+      textAngle = GetTextAngle (textAngle);
       if (mPts.Count < 5) mPts.Add (Point2.Zero);
       mPts[4] = textPos;
       AddText (textPos, text, textAngle);

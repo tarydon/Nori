@@ -71,4 +71,6 @@ E3Contour
 E2Dim
   -Bound Ents Kind Pts Style.Name Text
 E2DimGeneric
-E2Dim3PAngular
+E2Dim3PAngle
+E2DimRad
+  Radius
