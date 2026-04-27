@@ -15,7 +15,7 @@ Name=Radius Dim.
 0=Select circle or arc
 1=Set dimension location [F5=Toggle]
 
-[DimDiameter]
+[DimDia]
 Phases=2
 Name=Diameter Dim.
 0=Select circle

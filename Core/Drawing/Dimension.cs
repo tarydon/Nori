@@ -128,9 +128,7 @@ public abstract class E2Dim : Ent2 {
    /// <summary>Has the text been auto-generated (based on measurement)</summary>
    public bool IsAutoText => Get (E2Flags.AutoText);
 
-   /// <summary>
-   /// Force dimension line to be drawn (to center / between extension lines etc)
-   /// </summary>
+   /// <summary>Force dimension line to be drawn (to center / between extension lines etc)</summary>
    public bool ForceDimLine => Get (E2Flags.ForceDimLin);
 
    /// <summary>Which kind of dimension is this?</summary>
@@ -339,13 +337,9 @@ class E2DimGeneric : E2Dim {
 #endregion
 
 #region class E2DimDia -----------------------------------------------------------------------------
-/// <summary>
-/// E2DimDia implements a diameter dimension
-/// </summary>
+/// <summary>E2DimDia implements a diameter dimension</summary>
 public class E2DimDia : E2Dim {
-   /// <summary>
-   /// Create a diameter dimension given the definition points as shown in the image below
-   /// </summary>
+   /// <summary>Create a diameter dimension given the definition points as shown in the image below</summary>
    public E2DimDia (Layer2 layer, DimStyle2 style, double radius, bool tofl, IList<Point2> pts, string? text = null) 
       : base (layer, EDim.Diameter, style, pts, text) {
       mRadius = radius; if (tofl) mFlags |= E2Flags.ForceDimLin;
@@ -398,12 +392,9 @@ public class E2DimDia : E2Dim {
          } else 
             tip = cen.Polar (-radius, angle);
       }
-      if (poly == null) {
-         if (horzLine.IsZero ())
-            poly = Poly.Line (tip, knee);
-         else
-            poly = Poly.Lines ([tip, knee, knee.Moved (dx * horzLine, 0)], false);
-      }
+      poly ??= horzLine.IsZero ()
+         ? Poly.Line (tip, knee)
+         : Poly.Lines ([tip, knee, knee.Moved (dx * horzLine, 0)], false);
 
       // Now, compute the text position
       double angle1 = horzLine.IsZero () ? angle : dx > 0 ? 0 : Lib.PI;
@@ -431,14 +422,10 @@ public class E2DimDia : E2Dim {
 #endregion
 
 #region class E2DimRad -----------------------------------------------------------------------------
-/// <summary>
-/// E2DimRad implements a radius dimension
-/// </summary>
+/// <summary>E2DimRad implements a radius dimension</summary>
 public class E2DimRad : E2Dim {
    // Constructors -------------------------------------------------------------
-   /// <summary>
-   /// Create a radius dimension given the definition points as shown in the image below
-   /// </summary>
+   /// <summary>Create a radius dimension given the definition points as shown in the image below</summary>
    public E2DimRad (Layer2 layer, DimStyle2 style, double radius, bool tofl, IList<Point2> pts, string? text = null)
       : base (layer, EDim.Radius, style, pts, text) {
       mRadius = radius; if (tofl) mFlags |= E2Flags.ForceDimLin;
@@ -490,12 +477,9 @@ public class E2DimRad : E2Dim {
             tip = cen.Polar (exo, angle);
          AddPoint (cen);
       }
-      if (poly == null) {
-         if (horzLine.IsZero ())
-            poly = Poly.Line (tip, knee);
-         else
-            poly = Poly.Lines ([tip, knee, knee.Moved (dx * horzLine, 0)], false);
-      }
+      poly ??= horzLine.IsZero () 
+         ? Poly.Line (tip, knee)
+         : Poly.Lines ([tip, knee, knee.Moved (dx * horzLine, 0)], false);
 
       // Now, compute the text position
       double angle1 = horzLine.IsZero () ? angle : dx > 0 ? 0 : Lib.PI;

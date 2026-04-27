@@ -1,5 +1,4 @@
 using System.Windows;
-using System.Windows.Navigation;
 using Nori;
 
 namespace Zuki;
@@ -21,19 +20,14 @@ public partial class MainWindow : Window {
 
       MenuCmds.Connect (mMenu);
       (Hub.MainWindow, Hub.CmdName, Hub.Status) = (this, mCommand, mStatus);
-
       var dxf = Environment.GetCommandLineArgs ().FirstOrDefault (a => a.EndsWith (".dxf"));
       if (dxf != null) Hub.LoadDXF (dxf);
-      else {
-         Hub.Dwg = TestDimRad ();
-         Hub.Widget = new DimRadiusMaker ();
-      }
+      else Hub.Dwg = new ();
    }
 
    Dwg2 TestDimDia () {
-      var dwg = DXFReader.Load ("c:/etc/DimDia.dxf");
-
       double dx = 0, dy = 0;
+      var dwg = DXFReader.Load ("N:/TData/Dwg/Dim/DimDia-Blank.dxf");
       var style = new DimStyle2 ("BREAK", dwg.GetStyle ("STANDARD")!);
       dwg.Add (style); dwg.CurrentDimStyle = style;
       Add (false, 79, 58, 82, 58); Add (false, 79, 58, 75, 60); 
@@ -74,9 +68,9 @@ public partial class MainWindow : Window {
       Add (false, 79, 58, 82, 58); Add (false, 79, 58, 75, 60);
       Add (false, 79, 58, 80, 72); Add (false, 79, 58, 35, 36);
       Add (true, 79, 58, 27, 55); Add (true, 79, 58, 78, 26);
-
       return dwg;
 
+      // Header ............................................
       void Add (bool tofl, params double[] vals) {
          var pts = Point2.List (vals).Select (a => a.Moved (dx, dy)).ToList ();
          dwg.PickPoly (pts[0], 3, out var p);
@@ -87,7 +81,7 @@ public partial class MainWindow : Window {
    }
 
    Dwg2 TestDimRad () {
-      var dwg = DXFReader.Load ("c:/etc/DimRad.dxf");
+      var dwg = DXFReader.Load ("N:/TData/Dwg/Dim/DimRad-Blank.dxf");
       dwg.Add (new DimStyle2 ("BREAK", dwg.GetStyle ("STANDARD")!));
       dwg.CurrentDimStyle = dwg.GetDimStyle ("BREAK");
       Add (false, 70, 56, 81, 68); Add (false, 70, 56, 65, 43); 
@@ -127,6 +121,7 @@ public partial class MainWindow : Window {
       Add (true, 250, 61 + dy1, 230, 150);
       return dwg;
 
+      // Header ............................................
       void Add (bool tofl, params double[] vals) {
          var pts = Point2.List (vals);
          dwg.PickPoly (pts[0], 3, out var p);

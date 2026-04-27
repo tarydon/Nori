@@ -46,9 +46,7 @@ static class Hub {
 
    /// <summary>Current PixelScale (how many world units per pixels)</summary>
    public static double PixelScale => mScene.PixelScale;
-   /// <summary>
-   /// Current pick aperture
-   /// </summary>
+   /// <summary>Current pick aperture</summary>
    public static double PickAperture => 16 * PixelScale;
 
    /// <summary>The Root GroupVN displaying all the content</summary>
@@ -90,14 +88,14 @@ static class Hub {
       if (ent is { }) DrawEnts ([ent]);
    }
 
-   /// <summary>
-   /// Highlights the current segment in transparent blue
-   /// </summary>
-   public static void HighlightSeg (Seg seg) {
-      mPts.Clear (); 
-      Lux.LineWidth = 3f; Lux.Color = new (128, 0, 0, 255); Lux.ZLevel = 100;
-      if (seg.IsArc) { seg.ToBeziers (mPts); Lux.Beziers (mPts.AsSpan ()); }
-      else { mPts.AddM (seg.A, seg.B); Lux.Lines (mPts.AsSpan ()); }
+   /// <summary>Highlights the current segment in transparent blue</summary>
+   public static void HighlightSeg (Seg? seg0) {
+      if (seg0 is { } seg) {
+         mPts.Clear ();
+         Lux.LineWidth = 3f; Lux.Color = new (128, 0, 0, 255); Lux.ZLevel = 100;
+         if (seg.IsArc) { seg.ToBeziers (mPts); Lux.Beziers (mPts.AsSpan ()); } 
+         else { mPts.AddM (seg.A, seg.B); Lux.Lines (mPts.AsSpan ()); }
+      }
    }
 
    /// <summary>Loads a DXF file and mounts it for editing</summary>
