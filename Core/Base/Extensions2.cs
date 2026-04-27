@@ -58,7 +58,7 @@ public static class Extensions2 {
       /// <summary>Converts a ReadOnlySpan(byte) to int, returning 0 if the conversion fails</summary>
       public int ToInt () => Utf8Parser.TryParse (Trim (s), out int n, out _) ? n : 0;
       /// <summary>Converts a ReadOnlySpan(byte) to int, returning the fallback value if the conversion fails</summary>
-      public int ToInt (int fallback) => Utf8Parser.TryParse (Trim (s), out int n, out _) ? n : 0;
+      public int ToInt (int fallback) => Utf8Parser.TryParse (Trim (s), out int n, out _) ? n : fallback;
 
       public ReadOnlySpan<byte> Trim () {
          var space = UTFReader.SpaceChars;

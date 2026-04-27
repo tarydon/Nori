@@ -255,8 +255,10 @@ public partial class Dwg2 {
       return e2p;
    }
 
-   public void RemoveBlocks (IEnumerable<Block2> blocks)
-      => blocks.ForEach (b => mBlocks?.Remove (b));
+   public void RemoveBlocks (IEnumerable<Block2> blocks) {
+      blocks.ForEach (b => mBlocks?.Remove (b));
+      if (mBlocks?.Count == 0) mBlocks = null;
+   }
 
    /// <summary>Purges layers, blocks, styles that are unused</summary>
    public Dwg2 Purge () {

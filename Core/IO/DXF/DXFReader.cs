@@ -71,7 +71,8 @@ public class DXFReader {
    HashSet<EDXF> sReported = [];
 
    /// <summary>Basic interface function to load a DXF with default values</summary>
-   public static Dwg2 Load (string file) => new DXFReader (file).Load ();
+   public static Dwg2 Load (string file, bool whiteToBlack = false) 
+      => new DXFReader (file) { WhiteToBlack = whiteToBlack }.Load ();
 
    // Implementation -----------------------------------------------------------
    // Adds an entity into the drawing (or into the current block being constructed,

@@ -34,7 +34,7 @@
       DimCen:2.5
       DimGap:0.875
       TextPos:Above
-      Flags:Nil
+      Flags:TOFL
       LinDecimal:1
       Style:STANDARD
     }
@@ -44,8 +44,8 @@
       ExtOffset:1
       TextSize:3.5
       DimCen:2.5
-      TextPos:Centered
-      Flags:Nil
+      TextPos:Above
+      Flags:TIHorz,TOHorz,TOFL
       Style:STANDARD
     }
     {
@@ -56,7 +56,8 @@
       DimCen:2.5
       DimGap:0.875
       TextPos:Above
-      Flags:Nil
+      Flags:TOFL
+      LinDecimal:1
       AngDecimal:1
       Style:STANDARD
     }
@@ -68,7 +69,7 @@
       DimCen:2.5
       DimGap:0.875
       TextPos:Above
-      Flags:Nil
+      Flags:TOFL
       LinDecimal:1
       Style:STANDARD
     }
@@ -79,7 +80,7 @@
       TextSize:3.5
       DimGap:0.875
       TextPos:Above
-      Flags:Nil
+      Flags:TOFL
       LinDecimal:1
       Style:STANDARD
     }

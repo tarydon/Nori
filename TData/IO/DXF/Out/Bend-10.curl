@@ -16,8 +16,10 @@
       TextSize:3.4999998
       DimCen:2.286
       DimGap:1.5239999
-      TextPos:Centered
-      Flags:Nil
+      TextPos:Above
+      Flags:TIHorz,TOHorz
+      LinDecimal:2
+      AngDecimal:2
       Style:Standard
     }
   ]

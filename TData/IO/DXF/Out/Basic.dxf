@@ -32,6 +32,10 @@ $VIEWCTR
 $VIEWSIZE
  40
 264
+ 9
+$CLAYER
+ 8
+0
  0
 ENDSEC
  0
@@ -135,7 +139,7 @@ Standard
  76
 0
  77
-0
+1
  78
 0
  170
@@ -143,7 +147,7 @@ Standard
  171
 2
  172
-0
+1
  173
 0
  174

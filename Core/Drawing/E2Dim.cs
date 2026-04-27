@@ -128,6 +128,7 @@ public class E2DimDia : E2Dim {
       : base (layer, EDim.Diameter, style, pts, text) {
       mRadius = radius; if (tofl) mFlags |= E2Flags.ForceDimLin;
    }
+   E2DimDia () { }
 
    // Overrides ----------------------------------------------------------------
    public override void GetDefPoints (List<(int, Point2)> pts) {
@@ -157,6 +158,7 @@ public class E2DimRad : E2Dim {
       : base (layer, EDim.Radius, style, pts, text) {
       mRadius = radius; if (tofl) mFlags |= E2Flags.ForceDimLin;
    }
+   E2DimRad () { }
 
    // Overrides ----------------------------------------------------------------
    public override void GetDefPoints (List<(int, Point2)> pts) {

@@ -30,8 +30,10 @@
       ExtExtend:1
       TextSize:2.4
       DimGap:1.5
-      TextPos:Centered
-      Flags:Nil
+      TextPos:Above
+      Flags:TOFL
+      LinDecimal:1
+      AngDecimal:1
       Style:STANDARD
     }
   ]

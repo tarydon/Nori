@@ -17,8 +17,9 @@
       TextSize:2.5
       DimCen:2.5
       DimGap:0.625
-      TextPos:Centered
-      Flags:Nil
+      TextPos:Above
+      Flags:TOFL
+      LinDecimal:2
       Style:Standard
     }
     { Name:Annotative TextPos:Above Flags:TOFL LinDecimal:2 Style:Standard }

@@ -33,8 +33,9 @@
       ExtExtend:2
       TextSize:6
       DimGap:2
-      TextPos:Centered
-      Flags:Nil
+      TextPos:Above
+      Flags:TOFL
+      LinDecimal:2
       Style:STANDARD
     }
     {
@@ -45,7 +46,7 @@
       TextSize:7
       DimCen:12
       DimGap:2
-      TextPos:Centered
+      TextPos:Above
       Flags:TOFL
       LinDecimal:2
       Style:STANDARD
@@ -70,7 +71,7 @@
       TextSize:7
       DimGap:3
       TextPos:Above
-      Flags:Nil
+      Flags:TOFL
       LinDecimal:2
       Style:STANDARD
     }
@@ -82,7 +83,7 @@
       TextSize:7
       DimGap:3
       TextPos:Above
-      Flags:Nil
+      Flags:TOFL
       LinDecimal:2
       Style:STANDARD
     }
@@ -96,6 +97,7 @@
       DimGap:1.25
       TextPos:Above
       Flags:TOFL
+      LinDecimal:2
       Style:STANDARD
     }
     {
@@ -118,7 +120,7 @@
       TextSize:7
       DimGap:3
       TextPos:Above
-      Flags:Nil
+      Flags:TOFL
       LinDecimal:2
       Style:STANDARD
     }
@@ -130,7 +132,7 @@
       TextSize:7
       DimGap:3
       TextPos:Above
-      Flags:Nil
+      Flags:TOFL
       LinDecimal:2
       Style:STANDARD
     }
@@ -141,7 +143,7 @@
       ExtExtend:2
       TextSize:7
       DimGap:3
-      TextPos:Centered
+      TextPos:Above
       Flags:TOFL
       LinDecimal:2
       Style:STANDARD
@@ -189,8 +191,8 @@
       ExtExtend:2
       TextSize:7
       DimGap:3
-      TextPos:Centered
-      Flags:Nil
+      TextPos:Above
+      Flags:TOFL
       LinDecimal:2
       Style:STANDARD
     }
@@ -201,8 +203,8 @@
       ExtExtend:2
       TextSize:10
       DimGap:3
-      TextPos:Centered
-      Flags:Nil
+      TextPos:Above
+      Flags:TOFL
       LinDecimal:2
       Style:STANDARD
     }

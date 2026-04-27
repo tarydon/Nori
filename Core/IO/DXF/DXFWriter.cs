@@ -104,6 +104,7 @@ public class DXFWriter {
          Out ($" 147\n{d.DimGap}\n 71\n0\n 72\n0\n 73\n{(d.TIHorz ? 1 : 0)}\n 74\n{(d.TOHorz ? 1 : 0)}\n");
          Out ($" 75\n0\n 76\n0\n 77\n{(int)d.TextPos}\n 78\n0\n 170\n0\n 171\n2\n 172\n{(d.TOFL ? 1 : 0)}\n");
          Out ($" 173\n0\n 174\n0\n 175\n0\n 176\n0\n 177\n0\n 178\n0\n");
+         // TODO: Save linear / angular decimals?
       }
       Out (" 0\nENDTAB\n");
    }
@@ -140,6 +141,8 @@ public class DXFWriter {
       double height = Math.Max (b.Y.Length, b.X.Length * 0.6) * 1.1;
       Out ($" 9\n$VIEWCTR\n 10\n{b.X.Mid}\n 20\n{b.Y.Mid}\n");
       Out ($" 9\n$VIEWSIZE\n 40\n{height.R3 ()}\n");
+      Out ($" 9\n$CLAYER\n 8\n{D.CurrentLayer.Name}\n");
+      if (D.Styles.Count > 0) Out ($" 9\n$DIMSTYLE\n 2\n{D.CurrentDimStyle.Name}\n");
       Out (" 0\nENDSEC\n");
    }
 
