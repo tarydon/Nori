@@ -229,6 +229,7 @@
             79.315291,43.627111
           ]
         }
+        (E2Point){ Layer:0 Pt:50,50 }
         (E2Text){
           Layer:0
           Pt:50,50
@@ -268,6 +269,7 @@
             27.222302,69.523741
           ]
         }
+        (E2Point){ Layer:0 Pt:50,50 }
         (E2Text){
           Layer:0
           Pt:80.866194,23.543263
@@ -278,7 +280,7 @@
           Height:2.5
           XScale:1
         }
-        (E2Poly){ Layer:0 Poly:M23.426019,72.777698L78,26 }
+        (E2Poly){ Layer:0 Poly:M50.474535,49.593255L78,26 }
       ]
       Kind:Diameter
       Pts:[ 50,50 78,26 80.866194,23.543263 ]
@@ -422,9 +424,10 @@
             154.315291,43.627111
           ]
         }
+        (E2Point){ Layer:0 Pt:125,50 }
         (E2Text){
           Layer:0
-          Pt:125.398306,51.832206
+          Pt:125,50
           Text:"∅60"
           Style:STANDARD
           Angle:-12.264774
@@ -432,10 +435,11 @@
           Height:2.5
           XScale:1
         }
-        (E2Poly){ Layer:0 Poly:M154.315291,43.627111L95.684709,56.372889 }
+        (E2Poly){ Layer:0 Poly:M154.315291,43.627111L128.688841,49.198078 }
+        (E2Poly){ Layer:0 Poly:M121.311159,50.801922L95.684709,56.372889 }
       ]
       Kind:Diameter
-      Pts:[ 125,50 102,55 125.398306,51.832206 ]
+      Pts:[ 125,50 102,55 125,50 ]
       Style:ABOVE
       Radius:30
     }
@@ -460,6 +464,7 @@
             102.222302,69.523741
           ]
         }
+        (E2Point){ Layer:0 Pt:125,50 }
         (E2Text){
           Layer:0
           Pt:154.236803,27.409404
@@ -470,7 +475,7 @@
           Height:2.5
           XScale:1
         }
-        (E2Poly){ Layer:0 Poly:M98.426019,72.777698L155.882762,23.529061 }
+        (E2Poly){ Layer:0 Poly:M125.474535,49.593255L155.882762,23.529061 }
       ]
       Kind:Diameter
       Pts:[ 125,50 153,26 154.236803,27.409404 ]
@@ -614,9 +619,10 @@
             229.315291,43.627111
           ]
         }
+        (E2Point){ Layer:0 Pt:200,50 }
         (E2Text){
           Layer:0
-          Pt:199.601694,48.167794
+          Pt:200,50
           Text:"∅60"
           Style:STANDARD
           Angle:-12.264774
@@ -624,10 +630,11 @@
           Height:2.5
           XScale:1
         }
-        (E2Poly){ Layer:0 Poly:M229.315291,43.627111L170.684709,56.372889 }
+        (E2Poly){ Layer:0 Poly:M229.315291,43.627111L203.688841,49.198078 }
+        (E2Poly){ Layer:0 Poly:M196.311159,50.801922L170.684709,56.372889 }
       ]
       Kind:Diameter
-      Pts:[ 200,50 177,55 199.601694,48.167794 ]
+      Pts:[ 200,50 177,55 200,50 ]
       Style:BELOW
       Radius:30
     }
@@ -652,6 +659,7 @@
             177.222302,69.523741
           ]
         }
+        (E2Point){ Layer:0 Pt:200,50 }
         (E2Text){
           Layer:0
           Pt:226.796335,24.562192
@@ -662,7 +670,7 @@
           Height:2.5
           XScale:1
         }
-        (E2Poly){ Layer:0 Poly:M173.426019,72.777698L230.882762,23.529061 }
+        (E2Poly){ Layer:0 Poly:M200.474535,49.593255L230.882762,23.529061 }
       ]
       Kind:Diameter
       Pts:[ 200,50 228,26 226.796335,24.562192 ]
@@ -802,18 +810,18 @@
             79.315291,113.627111
           ]
         }
+        (E2Point){ Layer:0 Pt:50,120 }
         (E2Text){
           Layer:0
           Pt:50,120
           Text:"∅60"
           Style:STANDARD
-          Angle:-12.264774
           Alignment:MidCenter
           Height:2.5
           XScale:1
         }
-        (E2Poly){ Layer:0 Poly:M79.315291,113.627111L53.688841,119.198078 }
-        (E2Poly){ Layer:0 Poly:M46.311159,120.801922L20.684709,126.372889 }
+        (E2Poly){ Layer:0 Poly:M79.315291,113.627111L53.775,119.179348 }
+        (E2Poly){ Layer:0 Poly:M46.225,120.820652L20.684709,126.372889 }
       ]
       Kind:Diameter
       Pts:[ 50,120 27,125 50,120 ]
@@ -841,6 +849,7 @@
             27.222302,139.523741
           ]
         }
+        (E2Point){ Layer:0 Pt:50,120 }
         (E2Text){
           Layer:0
           Pt:84.275,96
@@ -850,7 +859,7 @@
           Height:2.5
           XScale:1
         }
-        (E2Poly){ Layer:0 Poly:M23.426019,142.777698L78,96H80.5 }
+        (E2Poly){ Layer:0 Poly:M50.474535,119.593255L78,96H80.5 }
       ]
       Kind:Diameter
       Pts:[ 50,120 78,96 84.275,96 ]
@@ -990,20 +999,21 @@
             154.315291,113.627111
           ]
         }
+        (E2Point){ Layer:0 Pt:125,120 }
         (E2Text){
           Layer:0
-          Pt:125.398306,121.832206
+          Pt:125,120
           Text:"∅60"
           Style:STANDARD
-          Angle:-12.264774
           Alignment:MidCenter
           Height:2.5
           XScale:1
         }
-        (E2Poly){ Layer:0 Poly:M154.315291,113.627111L95.684709,126.372889 }
+        (E2Poly){ Layer:0 Poly:M154.315291,113.627111L128.775,119.179348 }
+        (E2Poly){ Layer:0 Poly:M121.225,120.820652L95.684709,126.372889 }
       ]
       Kind:Diameter
-      Pts:[ 125,120 102,125 125.398306,121.832206 ]
+      Pts:[ 125,120 102,125 125,120 ]
       Style:HORZABOVE
       Radius:30
     }
@@ -1028,6 +1038,7 @@
             102.222302,139.523741
           ]
         }
+        (E2Point){ Layer:0 Pt:125,120 }
         (E2Text){
           Layer:0
           Pt:156.775,97.875
@@ -1037,7 +1048,7 @@
           Height:2.5
           XScale:1
         }
-        (E2Poly){ Layer:0 Poly:M98.426019,142.777698L153,96H160.55 }
+        (E2Poly){ Layer:0 Poly:M125.474535,119.593255L153,96H160.55 }
       ]
       Kind:Diameter
       Pts:[ 125,120 153,96 156.775,97.875 ]
@@ -1177,20 +1188,21 @@
             229.315291,113.627111
           ]
         }
+        (E2Point){ Layer:0 Pt:200,120 }
         (E2Text){
           Layer:0
-          Pt:199.601694,118.167794
+          Pt:200,120
           Text:"∅60"
           Style:STANDARD
-          Angle:-12.264774
           Alignment:MidCenter
           Height:2.5
           XScale:1
         }
-        (E2Poly){ Layer:0 Poly:M229.315291,113.627111L170.684709,126.372889 }
+        (E2Poly){ Layer:0 Poly:M229.315291,113.627111L203.775,119.179348 }
+        (E2Poly){ Layer:0 Poly:M196.225,120.820652L170.684709,126.372889 }
       ]
       Kind:Diameter
-      Pts:[ 200,120 177,125 199.601694,118.167794 ]
+      Pts:[ 200,120 177,125 200,120 ]
       Style:HORZBELOW
       Radius:30
     }
@@ -1215,6 +1227,7 @@
             177.222302,139.523741
           ]
         }
+        (E2Point){ Layer:0 Pt:200,120 }
         (E2Text){
           Layer:0
           Pt:231.775,94.125
@@ -1224,7 +1237,7 @@
           Height:2.5
           XScale:1
         }
-        (E2Poly){ Layer:0 Poly:M173.426019,142.777698L228,96H235.55 }
+        (E2Poly){ Layer:0 Poly:M200.474535,119.593255L228,96H235.55 }
       ]
       Kind:Diameter
       Pts:[ 200,120 228,96 231.775,94.125 ]

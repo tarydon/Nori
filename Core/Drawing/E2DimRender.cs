@@ -1,0 +1,344 @@
+﻿namespace Nori;
+using static DimStyle2.EPos;
+
+// Implements E2Dim methods related to MakeEnts
+public abstract partial class E2Dim {
+   // Entity build helpers -----------------------------------------------------
+   // Adds an arrowhead to the list of entities
+   protected void AddArrow (Point2 pt, double angle) {
+      double len = mStyle.ArrowSize, hwid = len / 6;
+      Point2 pa = pt.Polar (len, angle);
+      Point2 pb = pa.Polar (hwid, angle + Lib.HalfPI); pa = pa.Polar (hwid, angle - Lib.HalfPI);
+      mEnts.Add (new E2Solid (Layer, [pa, pb, pt, pt]));
+   }
+
+   // Adds a Poly to the list of entities
+   protected void AddPoly (Poly poly) => mEnts.Add (new E2Poly (Layer = Layer, poly));
+
+   // Adds a Point to the list of entities      
+   protected void AddPoint (Point2 pt) => mEnts.Add (new E2Point (Layer = Layer, pt) { IsDefPoint = true });
+
+   // Adds text to the list of entities
+   protected void AddText (Point2 pt, string text, double angle) {
+      mEnts.Add (new E2Text (Layer, mStyle.Style, text, pt, mStyle.TextSize, angle, 0, 1, ETextAlign.MidCenter));
+   }
+
+   // This trims the given dimension segment around the text-box of the dimension and
+   // adds the remnant segments to the mEnts list
+   protected void AddTrimmedSeg (Seg seg, Poly box) {
+      List<double> lies = [];
+      Span<Point2> buffer = stackalloc Point2[2];
+      foreach (var s in box.Segs)
+         foreach (var pt in seg.Intersect (s, buffer, true))
+            lies.Add (seg.GetLie (pt));
+      lies.Sort ();
+      if (lies.Count < 2) {
+         AddPoly (Poly.Arc (seg.A, seg.Midpoint, seg.B));
+         return;
+      }
+
+      // Get the two points adjacent the 'gap'
+      double startLie = lies[0], endLie = lies[^1];
+      Point2 ptStart = seg.GetPointAt (startLie), ptEnd = seg.GetPointAt (endLie);
+      if (seg.IsArc) {
+         AddPoly (Poly.Arc (seg.A, seg.GetPointAt (startLie / 2), ptStart));
+         AddPoly (Poly.Arc (ptEnd, seg.GetPointAt ((endLie + 1.0) / 2), seg.B));
+      } else {
+         AddPoly (Poly.Line (seg.A, ptStart));
+         AddPoly (Poly.Line (ptEnd, seg.B));
+      }
+   }
+
+   protected void SetTextPoint (int index, Point2 pt) {
+      if (mPts.Count <= index) mPts.Add (Point2.Zero);
+      mPts[index] = pt;
+   }
+
+   // Checks if the arrows and text can be accomodated within the given space.
+   // Normally, we try to draw arrow-heads within the two extension lines, and also draw the
+   // text within the two extension lines. this checks if the space is large enough, and returns
+   // EInside.Both if that can be done. Otherwise, it tries if either one of the text or arrows
+   // can be drawn (and returns EInside.Arrow / EInside.Text in that case). Sometimes the space
+   // is so small, we can't accommodate either (and this returns EInside.None). 
+   // Anything that cannot be accomodated between the extension lines goes outside on one or
+   // the other side. 
+   protected EInside CheckSpace (double available, double txtMeasure) {
+      double asz = mStyle.ArrowSize * 3;
+      txtMeasure += 2 * mStyle.ExtExtend;
+      if (asz + txtMeasure <= available) return EInside.Both;
+      if (asz > txtMeasure && asz <= available) return EInside.Arrows;
+      if (txtMeasure <= available) return EInside.Text;
+      if (asz <= available) return EInside.Arrows;
+      return EInside.None;
+   }
+
+   // Gets the lengths of the dimension line that overhang beyond the extension lines on
+   // either side. Normally, if there is enough space between the extension lines to accomodate
+   // arrowheads and text, these overhangs are both zero. Otherwise, the overhangs depend
+   // on these:
+   // - code : Which combination of arrowheads / text fit inside between the extension lines
+   // - txtMeasure: The text measurement (width/height) that we should use for computation.
+   // - nearStart: If the text is outside the extension lines, is it closer to the start point
+   //              or the end point   
+   protected (double a, double b) GetOverhangs (EInside code, double txtMeasure, bool nearStart) {
+      double aExtend = 0, bExtend = 0;
+      bool textOutside = (code & EInside.Text) == 0, arrowOutside = (code & EInside.Arrows) == 0;
+      bool iBreak = mStyle.TextPos == Centered;
+      if (textOutside) {
+         // If the text is outside then we might need to extend the extension line,
+         // if text is above/below the line
+         if (mStyle.TOHorz) iBreak = true;
+         aExtend += (nearStart && !iBreak) ? txtMeasure : 0;
+         bExtend += (!nearStart && !iBreak) ? txtMeasure : 0;
+      }
+      if (arrowOutside) {
+         // If the arrows are outside, then we need to extend the extension lines
+         // by arrow-size + ext
+         double ext = mStyle.ExtExtend;
+         aExtend = bExtend = mStyle.ArrowSize;
+         if (iBreak || !textOutside) { aExtend += ext; bExtend += ext; }
+         if (textOutside && !iBreak) {
+            if (nearStart) { aExtend += txtMeasure; bExtend += ext; } else { bExtend += txtMeasure; aExtend += ext; }
+         }
+      }
+      return (aExtend, bExtend);
+   }
+
+   // Gets the normalized angle used for text
+   protected double GetTextAngle (double textAngle) {
+      textAngle = Lib.NormalizeAngle (textAngle);
+      if (textAngle is < (-Lib.HalfPI + Lib.Epsilon) or > (Lib.HalfPI + Lib.Epsilon))
+         textAngle += Lib.PI;
+      return textAngle;
+   }
+
+   // This is overridden in derived types to make the entities 
+   protected virtual void MakeEnts () {
+      var s = Style;
+      var (asz, gap, ohorz, ihorz) = (s.ArrowSize, s.DimGap, s.TOHorz, s.TIHorz);
+      var (ext, exo, pos) = (s.ExtExtend, s.ExtOffset, s.TextPos);
+      switch (this) {
+         case E2DimRad e2r: MakeRadOrDia (asz, exo, gap, ohorz, false, pos, e2r.Radius); break;
+         case E2DimDia e2d: MakeRadOrDia (asz, exo, gap, ohorz, true, pos, e2d.Radius); break;
+         case E2Dim3PAngle e2p: Make3PAngle (asz, exo, ext, ohorz, ihorz, pos); break;
+         default: throw new NotImplementedException ();
+      }
+   }
+
+   // Helper used to measure the text (assumes text is horizontal, centered at 0,0)
+   protected Bound2 Measure (string text) {
+      var font = LineFont.Get (mStyle.Style.Font);
+      var box = font.Measure (text, Point2.Zero, ETextAlign.MidCenter, 0, 1, mStyle.TextSize, 0);
+      return box.InflatedL (mStyle.DimGap);
+   }
+
+   // Given a text box, computes the vector that would moves its center point
+   // to a point on the edge of the box (moving along the given angle)
+   protected Vector2 SlideTextBox (Poly rect, double angle) {
+      Point2 cen = rect.Pts[0].Midpoint (rect.Pts[2]);
+      Point2 outer = cen.Polar (1000, angle);
+      foreach (var seg in rect.Segs) {
+         Point2 pa = Geo.LineSegXLineSeg (seg.A, seg.B, cen, outer);
+         if (!pa.IsNil) return pa - cen;
+      }
+      return Vector2.Zero;
+   }
+
+   // Given a text box, computes the vector that would move its center point
+   // to one of the 8 corners on the edge of the box (closest to the angle)
+   protected Vector2 SnapTextBox (Poly rect, double angle, bool arrowOutside) {
+      Point2 cen = rect.Pts[0].Midpoint (rect.Pts[2]), outer = cen.Polar (1000, angle + Lib.PI);
+      double minDist = 1e10; Point2 best = cen;
+      foreach (var seg in rect.Segs) { Check (seg.A); Check (seg.Midpoint); }
+      if (arrowOutside) cen = cen.Polar (mStyle.ArrowSize + mStyle.ExtExtend, angle);
+      return cen - best;
+
+      void Check (Point2 pt) {
+         double dist = pt.DistToLineSeg (cen, outer);
+         if (dist < minDist) { minDist = dist; best = pt; }
+      }
+   }
+
+   // Entity build methods -------------------------------------------------------------------------
+   // Creates the entities of the 3P Angular dimension.
+   // Based on whether the TIHorz flag (text-inside horizontal) is set, and the text position
+   // (Center/Above/Below), the text will need to be positioned in one of the ways as shown
+   // in the image: file://N:/Doc/Img/Dim3PAngle2.png 
+   // 
+   // There are several helper routines in the E2Dim class that are used in this MakeEnts
+   // routine (and those of other classes)
+   // - Measure(text) computes the bounding box of the text (assuming the text is horizontal,
+   //   and centered at (0,0)). 
+   // - CheckSpace(available,txtSize) figures out if there is enough space between the
+   //   extension lines to position the arrowheads and/or text (4 possibilities exist for
+   //   this, as illustrated by file://N:/Doc/Img/Dim3PAngle3.png
+   // - GetOverhangs returns the overhang distances used for the dimension line overhangs
+   //   on either side of the extension lines. If both the arrowheads and text fit inside
+   //   the extension lines, these overhangs are both 0. Otherwise, the overhangs are computed
+   //   based on the arrowhead size / text measurement as shown in the images (the blue distances
+   //   are the overhangs: file://N:/Doc/Img/Dim3PAngle4.png
+   // - AddPoly, AddText, AddArrow are used to add various entities into the mEnts list.
+   // - When the text is placed with 'centered' alignment, and fits between the extension 
+   //   lines, the dimension line has to be trimmed to the bits on both sides of the text-box;
+   //   this is done by AddTrimmedSeg
+   void Make3PAngle (double asz, double exo, double ext, bool oHorz, bool iHorz, DimStyle2.EPos pos) {
+      // Figure out if the CCW arc runs from b..c or from c..b (depends on the position of d)
+      Point2 a = mPts[0], b = mPts[1], c = mPts[2], d = mPts[3];
+      double angB = a.AngleTo (b), angC = a.AngleTo (c), rad = a.DistTo (d);
+      Point2 arcStart = a.Polar (rad, angB), arcEnd = a.Polar (rad, angC);
+      bool iBreak = pos == Centered;
+
+      // Create the two extension lines - they run 'outward' or 'inward' from the
+      // definition points b and c (depending on the position of d)
+      double r1 = a.DistTo (b), r2 = a.DistTo (c);
+      double ang = rad > r1 ? angB : angB + Lib.PI;
+      AddPoly (Poly.Line (b.Polar (exo, ang), arcStart.Polar (ext, ang)));
+      ang = rad > r2 ? angC : angC + Lib.PI;
+      AddPoly (Poly.Line (c.Polar (exo, ang), arcEnd.Polar (ext, ang)));
+
+      // Figure out if we need a major or minor arc, and compute the angle text
+      string text = Text ?? "";
+      var arc = Poly.Arc (arcStart, d, arcEnd); var arcSeg = arc[0];
+      if (!arcSeg.IsCCW) { arc = arc.Reversed (); arcSeg = arc[0]; }
+      double slope0 = arcSeg.GetSlopeAt (0), slope1 = arcSeg.GetSlopeAt (1);
+      if (IsAutoText) {
+         double span = Math.Abs (arcSeg.AngSpan).R2D ().Round (mStyle.AngDecimal);
+         text = $"{span}\u00b0";
+      }
+
+      // Measure the text, and figure if we have to find space for the width or the
+      // height of the text. 
+      // - If the text is aligned (not horizontal), then this is the width
+      // - Otherwise, it depends on the angle at which the dimension line goes through
+      //   the text. If this is more vertical (not more than 30 degrees away from vertical)
+      //   then we use the height of the text, else the width
+      Bound2 bound = Measure (text);
+      double txtMeasure = bound.Width;
+      if (iHorz && Math.Abs (Math.Cos (arcSeg.GetSlopeAt (0.5))) < 0.5) txtMeasure = bound.Height;
+      var inside = CheckSpace (arcSeg.Length, txtMeasure);
+      bool textInside = (inside & EInside.Text) != 0, arrowInside = (inside & EInside.Arrows) != 0;
+
+      // Figure out the rotation angle of the text box, and an initial anchor point for
+      // the text box
+      int txtLie = -1; // -1:Inside, 0:Outside Start, 1:Outside End
+      double tangentAngle = 0; Point2 textPos = arcSeg.Midpoint;
+      bool textHorz = textInside ? iHorz : oHorz;
+      // If we are doing horizontal text, we always use 'centered' position, otherwise
+      // we can compute the appropriate text angle
+      if (textHorz) iBreak = true; else tangentAngle = arcSeg.GetSlopeAt (0.5);
+      if (!textInside) {
+         if (d.DistToSq (arcSeg.A) < d.DistToSq (arcSeg.B)) {
+            textPos = arcSeg.A;
+            tangentAngle = arcSeg.GetSlopeAt (0) + Lib.PI;
+            txtLie = 0;
+         } else {
+            textPos = arcSeg.B;
+            tangentAngle = arcSeg.GetSlopeAt (1);
+            txtLie = 1;
+         }
+         double shift = txtMeasure / 2;
+         if (!arrowInside) {
+            shift += asz;
+            if (iBreak) shift += ext;
+         }
+         if (!textHorz) textPos = textPos.Polar (shift, tangentAngle);
+      }
+
+      // Add the arrowheads, and the extension lines outside
+      if (arrowInside) {
+         double lie = asz / arcSeg.Length;
+         AddArrow (arcSeg.A, arcSeg.A.AngleTo (arcSeg.GetPointAt (lie)));
+         AddArrow (arcSeg.B, arcSeg.B.AngleTo (arcSeg.GetPointAt (1 - lie)));
+      } else {
+         AddArrow (arcSeg.A, slope0 + Lib.PI);
+         AddArrow (arcSeg.B, slope1);
+      }
+      var (aExt, bExt) = GetOverhangs (inside, txtMeasure, txtLie == 0);
+      if (aExt > 0) AddPoly (Poly.Line (arcSeg.A, arcSeg.A.Polar (aExt, slope0 + Lib.PI)));
+      if (bExt > 0) AddPoly (Poly.Line (arcSeg.B, arcSeg.B.Polar (bExt, slope1)));
+
+      // If the text is within the extensions, we have to trim the extension lines at the
+      // box, otherwise we can add the complete arc
+      double textAngle = textHorz ? 0 : tangentAngle;
+      var textBox = Poly.Rectangle (bound) * Matrix2.Rotation (textAngle) * Matrix2.Translation (textPos);
+      if (textInside && pos == Centered) AddTrimmedSeg (arcSeg, textBox);
+      else AddPoly (arc);
+
+      // If we are not doing 'centered' positioning, we have to shift the text box in a suitable
+      // direction
+      Vector2 vecShift = new (0, 0);
+      if (!textHorz && pos != Centered) {
+         double shiftLie = textInside ? 0.5 : txtLie, shiftAngle = a.AngleTo (arcSeg.GetPointAt (shiftLie));
+         if (pos == Below) shiftAngle += Lib.PI;
+         vecShift = SlideTextBox (textBox, shiftAngle);
+      } else if (textHorz && !textInside)
+         vecShift = SnapTextBox (textBox, tangentAngle, !arrowInside);
+      textPos += vecShift;
+
+      // Add the text itself
+      textAngle = GetTextAngle (textAngle);
+      SetTextPoint (4, textPos);
+      AddText (textPos, text, textAngle);
+      AddPoint (a); AddPoint (b); AddPoint (c);
+   }
+
+   // Builds a radius or diameter dimension
+   void MakeRadOrDia (double asz, double exo, double gap, bool horz, bool isDia, DimStyle2.EPos pos, double mRadius) {
+      var (cen, pick, thruCenter, iBreak) = (Pts[0], Pts[1], ForceDimLine, pos == Centered);
+      var (angle, inside) = (cen.AngleTo (pick), cen.DistTo (pick) < mRadius - Lib.Delta);
+      var tip = cen.Polar (mRadius, angle);
+      if (inside) angle += Lib.PI;
+      var textAngle = horz ? 0 : GetTextAngle (angle);
+
+      // Compute and measure the text
+      string text = mText ?? "";
+      if (IsAutoText) text = isDia ? $"\u2205{(2 * mRadius).Round (mStyle.LinDecimal)}"
+                                   : $"R{mRadius.Round (mStyle.LinDecimal)}";
+      var bound = Measure (text);
+      var (txtWidth, txtHeight) = (bound.Width, bound.Height);
+      if (thruCenter && mRadius < txtWidth + 4 * asz) thruCenter = false;
+
+      // Add arrowhead(s)
+      AddArrow (tip, angle);
+      if (isDia && thruCenter) AddArrow (cen + (cen - tip), angle + Lib.PI);
+
+      // Compute the dimension line Poly
+      Poly? poly = null;
+      bool trimSeg = false;
+      double outLine = asz + ((iBreak || horz) ? asz : txtWidth + gap);
+      double horzLine = horz ? (iBreak ? asz : txtWidth) : 0;
+      double textDx = ((horz || iBreak) ? 1 : -1) * txtWidth / 2;
+      if (horz && iBreak) textDx += asz;
+      double textDY = (pos switch { Above => 1, Below => -1, _ => 0 }) * txtHeight / 2;
+
+      Point2 knee = tip.Polar (Math.Max (outLine, tip.DistTo (Pts[1])), angle);
+      double dx = knee.X > tip.X ? 1 : -1;
+      if (thruCenter) {
+         double radius = inside ? mRadius : mRadius + 2 * asz;
+         if (inside) {
+            double shift1 = isDia ? radius : -exo;
+            poly = Poly.Line (cen.Polar (shift1, angle), cen.Polar (-radius, angle));
+            knee = isDia ? cen : poly[0].Midpoint;
+            trimSeg = true; horzLine = textDx = textDY = 0;
+         } else
+            tip = cen.Polar (exo, angle);
+         if (isDia) AddPoint (cen);
+      }
+      poly ??= horzLine.IsZero ()
+         ? Poly.Line (tip, knee)
+         : Poly.Lines ([tip, knee, knee.Moved (dx * horzLine, 0)], false);
+
+      // Now, compute the text position
+      double angle1 = horzLine.IsZero () ? angle : dx > 0 ? 0 : Lib.PI;
+      Point2 textPt = knee.Polar (textDx, angle1);
+      if (textDY != 0) textPt = textPt.Polar (textDY, textAngle + Lib.HalfPI);
+      SetTextPoint (2, textPt);
+      AddText (textPt, text, textAngle);
+
+      if (trimSeg) {
+         var textBox = Poly.Rectangle (bound) * Matrix2.Rotation (textAngle) * Matrix2.Translation (textPt);
+         AddTrimmedSeg (poly[0], textBox);
+      } else
+         AddPoly (poly);
+   }
+}
