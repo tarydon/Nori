@@ -22,7 +22,7 @@ public partial class MainWindow : Window {
       (Hub.MainWindow, Hub.CmdName, Hub.Status) = (this, mCommand, mStatus);
       var dxf = Environment.GetCommandLineArgs ().FirstOrDefault (a => a.EndsWith (".dxf"));
       if (dxf != null) Hub.LoadDXF (dxf);
-      else Hub.Dwg = new ();
+      else Hub.Dwg = TestDimDia ();
    }
 
    Dwg2 TestDimDia () {

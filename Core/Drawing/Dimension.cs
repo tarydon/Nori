@@ -88,7 +88,7 @@ public enum EDim {
 
 #region class E2Dim --------------------------------------------------------------------------------
 /// <summary>E2Dim is the base class for all 2D dimensions</summary>
-public abstract class E2Dim : Ent2 {
+public abstract partial class E2Dim : Ent2 {
    // Constructors -------------------------------------------------------------
    // Default constructor used during streaming
    protected E2Dim () => (mStyle, mText) = (null!, null);
@@ -387,8 +387,8 @@ public class E2DimDia : E2Dim {
          double radius = inside ? mRadius : mRadius + 2 * asz;
          if (inside) {
             poly = Poly.Line (cen.Polar (radius, angle), cen.Polar (-radius, angle));
-            knee = cen; horzLine = 0; textDx = 0; trimSeg = iBreak;
-            if (horz) textAngle = GetTextAngle (angle);
+            knee = cen; horzLine = 0; textDx = textDY = 0;
+            trimSeg = true;
          } else 
             tip = cen.Polar (-radius, angle);
       }
@@ -417,6 +417,7 @@ public class E2DimDia : E2Dim {
    }
 
    // Private data -------------------------------------------------------------
+   public double Radius => mRadius;
    readonly double mRadius;
 }
 #endregion
@@ -471,8 +472,8 @@ public class E2DimRad : E2Dim {
          double radius = inside ? mRadius : mRadius + 2 * asz;
          if (inside) {
             poly = Poly.Line (cen.Polar (-exo, angle), cen.Polar (-radius, angle));
-            knee = poly[0].Midpoint; horzLine = 0; textDx = 0; trimSeg = iBreak;
-            if (horz) textAngle = GetTextAngle (angle);
+            knee = poly[0].Midpoint; horzLine = 0; textDx = textDY = 0; 
+            trimSeg = true; 
          } else
             tip = cen.Polar (exo, angle);
          AddPoint (cen);
@@ -502,6 +503,7 @@ public class E2DimRad : E2Dim {
    }
 
    // Private data -------------------------------------------------------------
+   public double Radius => mRadius;
    readonly double mRadius;
 }
 #endregion
