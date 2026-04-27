@@ -22,12 +22,12 @@ public partial class MainWindow : Window {
       MenuCmds.Connect (mMenu);
       (Hub.MainWindow, Hub.CmdName, Hub.Status) = (this, mCommand, mStatus);
 
-      //var dxf = Environment.GetCommandLineArgs ().FirstOrDefault (a => a.EndsWith (".dxf"));
-      //if (dxf != null) Hub.LoadDXF (dxf);
-      //else Hub.Dwg = new ();
-
-      Hub.Dwg = TestDimDia ();
-      Hub.Widget = new DimDiameterMaker ();
+      var dxf = Environment.GetCommandLineArgs ().FirstOrDefault (a => a.EndsWith (".dxf"));
+      if (dxf != null) Hub.LoadDXF (dxf);
+      else {
+         Hub.Dwg = TestDimRad ();
+         Hub.Widget = new DimRadiusMaker ();
+      }
    }
 
    Dwg2 TestDimDia () {
@@ -86,7 +86,7 @@ public partial class MainWindow : Window {
       }
    }
 
-   Dwg2 TestDimArc () {
+   Dwg2 TestDimRad () {
       var dwg = DXFReader.Load ("c:/etc/DimRad.dxf");
       dwg.Add (new DimStyle2 ("BREAK", dwg.GetStyle ("STANDARD")!));
       dwg.CurrentDimStyle = dwg.GetDimStyle ("BREAK");

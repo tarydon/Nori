@@ -360,7 +360,7 @@ public class E2DimDia : E2Dim {
 
    protected override void MakeEnts () {
       // Get basic settings
-      var (asz, txt, horz, pos) = (mStyle.ArrowSize, mStyle.TextSize, mStyle.TOHorz, mStyle.TextPos);
+      var (asz, horz, pos, gap) = (mStyle.ArrowSize, mStyle.TOHorz, mStyle.TextPos, mStyle.DimGap);
       var (cen, pick, thruCenter, iBreak) = (Pts[0], Pts[1], ForceDimLine, pos == Centered);
       var (angle, inside) = (cen.AngleTo (pick), cen.DistTo (pick) < mRadius - Lib.Delta);
       var tip = cen.Polar (mRadius, angle);
@@ -381,7 +381,7 @@ public class E2DimDia : E2Dim {
       // Compute the dimension line Poly
       Poly? poly = null;
       bool trimSeg = false;
-      double outLine = 2 * asz + ((iBreak || horz) ? 0 : txtWidth);
+      double outLine = asz + ((iBreak || horz) ? asz : txtWidth + gap);
       double horzLine = horz ? (iBreak ? asz : txtWidth) : 0;
       double textDx = ((horz || iBreak) ? 1 : -1) * txtWidth / 2;
       if (horz && iBreak) textDx += asz;
@@ -415,7 +415,8 @@ public class E2DimDia : E2Dim {
       if (trimSeg) {
          var textBox = Poly.Rectangle (bound) * Matrix2.Rotation (textAngle) * Matrix2.Translation (textPt);
          AddTrimmedSeg (poly[0], textBox);
-      } else AddPoly (poly);
+      } else 
+         AddPoly (poly);
    }
 
    protected override Ent2 Xformed (Matrix2 xfm) {
@@ -450,59 +451,64 @@ public class E2DimRad : E2Dim {
    }
 
    protected override void MakeEnts () {
-      var (txt, gap, horz) = (mStyle.TextSize, mStyle.DimGap, mStyle.TOHorz);
-      var (exo, pos, cen, pick) = (mStyle.ExtOffset, mStyle.TextPos, Pts[0], Pts[1]);
-      var (asz, ext, iBreak) = (mStyle.ArrowSize, mStyle.ExtExtend, pos == Centered);
-      double angle = cen.AngleTo (pick);
-      Point2 tip = cen.Polar (mRadius, angle);
-      bool inside = cen.DistTo (pick) < mRadius - Lib.Delta;
-      if (inside) angle += Lib.PI;  // Angle of arrowhead
-      AddArrow (tip, angle);
+      // Get basic settings
+      var (asz, exo, horz, pos, gap) = (mStyle.ArrowSize, mStyle.ExtOffset, mStyle.TOHorz, mStyle.TextPos, mStyle.DimGap);
+      var (cen, pick, thruCenter, iBreak) = (Pts[0], Pts[1], ForceDimLine, pos == Centered);
+      var (angle, inside) = (cen.AngleTo (pick), cen.DistTo (pick) < mRadius - Lib.Delta);
+      var tip = cen.Polar (mRadius, angle);
+      if (inside) angle += Lib.PI;
+      var textAngle = horz ? 0 : GetTextAngle (angle);
 
-      // Compute the text and text bound
+      // Compute and measure the text
       string text = mText ?? "";
       if (IsAutoText) text = $"R{mRadius.Round (mStyle.LinDecimal)}";
       var bound = Measure (text);
-      double txtHalf = bound.Width / 2;
-      double minLineLen = asz + ext + (iBreak || horz ? 0 : 2 * txtHalf);
-      double lineLen = Math.Max (pick.DistTo (tip), minLineLen);
-      bool toCenter = inside && ForceDimLine && 2 * txtHalf + asz + 3 * ext < mRadius;
-      if (toCenter) lineLen = Math.Max (lineLen, mRadius - exo);
+      var (txtWidth, txtHeight) = (bound.Width, bound.Height);
+      if (thruCenter && mRadius < txtWidth + 4 * asz) thruCenter = false;
 
-      // Compute the dimension line
-      Poly poly; double textAngle; Point2 ptText;
-      Point2 pt2 = tip.Polar (lineLen, angle);
-      if (horz && !toCenter) {
-         textAngle = 0;
-         double dx = pt2.X < tip.X ? -1 : 1;
-         Point2 pt3 = pt2.Moved (ext * dx, 0);
-         ptText = pt3.Moved (txtHalf * dx, 0);
-         if (!iBreak) pt3 = pt3.Moved (2 * txtHalf * dx, 0);
-         poly = Poly.Lines ([tip, pt2, pt3], false);
-      } else {
-         textAngle = horz ? 0 : GetTextAngle (angle);
-         poly = Poly.Line (tip, pt2);
-         double textDist = iBreak ? lineLen + txtHalf : lineLen - txtHalf;
-         ptText = toCenter ? poly[0].Midpoint : tip.Polar (textDist, angle);
-      }
-      if (ForceDimLine && !inside) {
-         var pts = poly.Pts.ToList (); pts[0] = cen.Polar (exo, cen.AngleTo (tip));
-         poly = Poly.Lines (pts, false);
+      // Add arrowhead
+      AddArrow (tip, angle);
+
+      // Compute the dimension line Poly
+      Poly? poly = null;
+      bool trimSeg = false;
+      double outLine = asz + ((iBreak || horz) ? asz : txtWidth + gap);
+      double horzLine = horz ? (iBreak ? asz : txtWidth) : 0;
+      double textDx = ((horz || iBreak) ? 1 : -1) * txtWidth / 2;
+      if (horz && iBreak) textDx += asz;
+      double textDY = (pos switch { Above => 1, Below => -1, _ => 0 }) * txtHeight / 2;
+
+      Point2 knee = tip.Polar (Math.Max (outLine, tip.DistTo (Pts[1])), angle);
+      double dx = knee.X > tip.X ? 1 : -1;
+      if (thruCenter) {
+         double radius = inside ? mRadius : mRadius + 2 * asz;
+         if (inside) {
+            poly = Poly.Line (cen.Polar (-exo, angle), cen.Polar (-radius, angle));
+            knee = poly[0].Midpoint; horzLine = 0; textDx = 0; trimSeg = iBreak;
+            if (horz) textAngle = GetTextAngle (angle);
+         } else
+            tip = cen.Polar (exo, angle);
          AddPoint (cen);
       }
+      if (poly == null) {
+         if (horzLine.IsZero ())
+            poly = Poly.Line (tip, knee);
+         else
+            poly = Poly.Lines ([tip, knee, knee.Moved (dx * horzLine, 0)], false);
+      }
 
-      // Compute the text angle, and the text-box
-      if (horz && toCenter) { pos = Centered; iBreak = true; }
-      double vShift = pos switch { Above => txt / 2 + gap, Below => -(txt / 2 + gap), _ => 0 };
-      if (!vShift.IsZero ()) ptText = ptText.Polar (vShift, textAngle + Lib.HalfPI);
-      var textBox = Poly.Rectangle (bound) * Matrix2.Rotation (textAngle) * Matrix2.Translation (ptText);
+      // Now, compute the text position
+      double angle1 = horzLine.IsZero () ? angle : dx > 0 ? 0 : Lib.PI;
+      Point2 textPt = knee.Polar (textDx, angle1);
+      if (textDY != 0) textPt = textPt.Polar (textDY, textAngle + Lib.HalfPI);
+      SetTextPoint (2, textPt);
+      AddText (textPt, text, textAngle);
 
-      // Add the entities
-      if (toCenter) AddPoint (cen);
-      if (toCenter && iBreak) AddTrimmedSeg (poly[0], textBox);
-      else AddPoly (poly);
-      SetTextPoint (2, ptText);
-      AddText (ptText, text, textAngle);
+      if (trimSeg) {
+         var textBox = Poly.Rectangle (bound) * Matrix2.Rotation (textAngle) * Matrix2.Translation (textPt);
+         AddTrimmedSeg (poly[0], textBox);
+      } else
+         AddPoly (poly);
    }
 
    protected override Ent2 Xformed (Matrix2 xfm) {
