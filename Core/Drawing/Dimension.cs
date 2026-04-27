@@ -227,6 +227,11 @@ public abstract class E2Dim : Ent2 {
       }
    }
 
+   protected void SetTextPoint (int index, Point2 pt) {
+      if (mPts.Count <= index) mPts.Add (Point2.Zero);
+      mPts[index] = pt;
+   }
+
    // Checks if the arrows and text can be accomodated within the given space.
    // Normally, we try to draw arrow-heads within the two extension lines, and also draw the
    // text within the two extension lines. this checks if the space is large enough, and returns
@@ -243,6 +248,16 @@ public abstract class E2Dim : Ent2 {
       if (txtMeasure <= available) return EInside.Text;
       if (asz <= available) return EInside.Arrows;
       return EInside.None;
+   }
+
+   protected Vector2 SlideTextBox (Poly rect, double angle) {
+      Point2 cen = rect.Pts[0].Midpoint (rect.Pts[2]);
+      Point2 outer = cen.Polar (1000, angle);
+      foreach (var seg in rect.Segs) {
+         Point2 pa = Geo.LineSegXLineSeg (seg.A, seg.B, cen, outer);
+         if (!pa.IsNil) return pa - cen;
+      }
+      return Vector2.Zero;
    }
 
    // Gets the lengths of the dimension line that overhang beyond the extension lines on
@@ -323,6 +338,97 @@ class E2DimGeneric : E2Dim {
 }
 #endregion
 
+#region class E2DimDia -----------------------------------------------------------------------------
+/// <summary>
+/// E2DimDia implements a diameter dimension
+/// </summary>
+public class E2DimDia : E2Dim {
+   /// <summary>
+   /// Create a diameter dimension given the definition points as shown in the image below
+   /// </summary>
+   public E2DimDia (Layer2 layer, DimStyle2 style, double radius, bool tofl, IList<Point2> pts, string? text = null) 
+      : base (layer, EDim.Diameter, style, pts, text) {
+      mRadius = radius; if (tofl) mFlags |= E2Flags.ForceDimLin;
+   }
+
+   // Overrides ----------------------------------------------------------------
+   public override void GetDefPoints (List<(int, Point2)> pts) {
+      double angle = Pts[0].AngleTo (Pts[1]);
+      Point2 pt15 = Pts[0].Polar (mRadius, angle), pt10 = Pts[0].Polar (-mRadius, angle);
+      pts.Add ((10, pt10)); pts.Add ((11, Pts[2])); pts.Add ((15, pt15));
+   }
+
+   protected override void MakeEnts () {
+      // Get basic settings
+      var (asz, txt, horz, pos) = (mStyle.ArrowSize, mStyle.TextSize, mStyle.TOHorz, mStyle.TextPos);
+      var (cen, pick, thruCenter, iBreak) = (Pts[0], Pts[1], ForceDimLine, pos == Centered);
+      var (angle, inside) = (cen.AngleTo (pick), cen.DistTo (pick) < mRadius - Lib.Delta);
+      var tip = cen.Polar (mRadius, angle);
+      if (inside) angle += Lib.PI;
+      var textAngle = horz ? 0 : GetTextAngle (angle);
+
+      // Compute and measure the text
+      string text = mText ?? "";
+      if (IsAutoText) text = $"\u2205{(2 * mRadius).Round (mStyle.LinDecimal)}";
+      var bound = Measure (text);
+      var (txtWidth, txtHeight) = (bound.Width, bound.Height);
+      if (thruCenter && mRadius < txtWidth + 4 * asz) thruCenter = false;
+
+      // Add arrowheads
+      AddArrow (tip, angle);
+      if (thruCenter) AddArrow (cen + (cen - tip), angle + Lib.PI);
+
+      // Compute the dimension line Poly
+      Poly? poly = null;
+      bool trimSeg = false;
+      double outLine = 2 * asz + ((iBreak || horz) ? 0 : txtWidth);
+      double horzLine = horz ? (iBreak ? asz : txtWidth) : 0;
+      double textDx = ((horz || iBreak) ? 1 : -1) * txtWidth / 2;
+      if (horz && iBreak) textDx += asz;
+      double textDY = (pos switch { Above => 1, Below => -1, _ => 0 }) * txtHeight / 2;
+
+      Point2 knee = tip.Polar (Math.Max (outLine, tip.DistTo (Pts[1])), angle);
+      double dx = knee.X > tip.X ? 1 : -1;
+      if (thruCenter) {
+         double radius = inside ? mRadius : mRadius + 2 * asz;
+         if (inside) {
+            poly = Poly.Line (cen.Polar (radius, angle), cen.Polar (-radius, angle));
+            knee = cen; horzLine = 0; textDx = 0; trimSeg = iBreak;
+            if (horz) textAngle = GetTextAngle (angle);
+         } else 
+            tip = cen.Polar (-radius, angle);
+      }
+      if (poly == null) {
+         if (horzLine.IsZero ())
+            poly = Poly.Line (tip, knee);
+         else
+            poly = Poly.Lines ([tip, knee, knee.Moved (dx * horzLine, 0)], false);
+      }
+
+      // Now, compute the text position
+      double angle1 = horzLine.IsZero () ? angle : dx > 0 ? 0 : Lib.PI;
+      Point2 textPt = knee.Polar (textDx, angle1);
+      if (textDY != 0) textPt = textPt.Polar (textDY, textAngle + Lib.HalfPI);
+      SetTextPoint (2, textPt);
+      AddText (textPt, text, textAngle);
+
+      if (trimSeg) {
+         var textBox = Poly.Rectangle (bound) * Matrix2.Rotation (textAngle) * Matrix2.Translation (textPt);
+         AddTrimmedSeg (poly[0], textBox);
+      } else AddPoly (poly);
+   }
+
+   protected override Ent2 Xformed (Matrix2 xfm) {
+      var dim = new E2DimDia (Layer, mStyle, mRadius, ForceDimLine, [.. mPts.Select (a => a * xfm)], mText);
+      dim.mEnts.AddRange (mEnts.Select (a => a * xfm));
+      return dim;
+   }
+
+   // Private data -------------------------------------------------------------
+   readonly double mRadius;
+}
+#endregion
+
 #region class E2DimRad -----------------------------------------------------------------------------
 /// <summary>
 /// E2DimRad implements a radius dimension
@@ -330,7 +436,7 @@ class E2DimGeneric : E2Dim {
 public class E2DimRad : E2Dim {
    // Constructors -------------------------------------------------------------
    /// <summary>
-   /// Create a radius dimension given the definition points as shown in the image above
+   /// Create a radius dimension given the definition points as shown in the image below
    /// </summary>
    public E2DimRad (Layer2 layer, DimStyle2 style, double radius, bool tofl, IList<Point2> pts, string? text = null)
       : base (layer, EDim.Radius, style, pts, text) {
@@ -379,6 +485,11 @@ public class E2DimRad : E2Dim {
          double textDist = iBreak ? lineLen + txtHalf : lineLen - txtHalf;
          ptText = toCenter ? poly[0].Midpoint : tip.Polar (textDist, angle);
       }
+      if (ForceDimLine && !inside) {
+         var pts = poly.Pts.ToList (); pts[0] = cen.Polar (exo, cen.AngleTo (tip));
+         poly = Poly.Lines (pts, false);
+         AddPoint (cen);
+      }
 
       // Compute the text angle, and the text-box
       if (horz && toCenter) { pos = Centered; iBreak = true; }
@@ -390,8 +501,7 @@ public class E2DimRad : E2Dim {
       if (toCenter) AddPoint (cen);
       if (toCenter && iBreak) AddTrimmedSeg (poly[0], textBox);
       else AddPoly (poly);
-      if (mPts.Count < 3) mPts.Add (Point2.Zero);
-      mPts[2] = ptText;
+      SetTextPoint (2, ptText);
       AddText (ptText, text, textAngle);
    }
 
@@ -545,7 +655,7 @@ public class E2Dim3PAngle : E2Dim {
       if (!textHorz && mStyle.TextPos != Centered) {
          double shiftLie = textInside ? 0.5 : txtLie, shiftAngle = a.AngleTo (arcSeg.GetPointAt (shiftLie));
          if (mStyle.TextPos == Below) shiftAngle += Lib.PI;
-         vecShift = GetShift (textBox, shiftAngle);
+         vecShift = SlideTextBox (textBox, shiftAngle);
       } else if (textHorz && !textInside) 
          vecShift = GetShift2 (textBox, tangentAngle, !arrowInside);
       textPos += vecShift;
@@ -553,20 +663,9 @@ public class E2Dim3PAngle : E2Dim {
 
       // Add the text itself
       textAngle = GetTextAngle (textAngle);
-      if (mPts.Count < 5) mPts.Add (Point2.Zero);
-      mPts[4] = textPos;
+      SetTextPoint (4, textPos);
       AddText (textPos, text, textAngle);
       AddPoint (a); AddPoint (b); AddPoint (c);
-   }
-
-   Vector2 GetShift (Poly rect, double angle) {
-      Point2 cen = rect.Pts[0].Midpoint (rect.Pts[2]);
-      Point2 outer = cen.Polar (1000, angle);
-      foreach (var seg in rect.Segs) {
-         Point2 pa = Geo.LineSegXLineSeg (seg.A, seg.B, cen, outer);
-         if (!pa.IsNil) return pa - cen;
-      }
-      return Vector2.Zero;
    }
 
    Vector2 GetShift2 (Poly rect, double angle, bool arrowOutside) {

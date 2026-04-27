@@ -9,11 +9,9 @@ class Program {
    static void Main () {
       Lib.Init ();
       Lib.Tracer = Console.WriteLine;
+      var s = File.ReadAllText ("c:/etc/another.txt");
 
-      var dwg = Make3PAngularDwg ();
-      var bound = dwg.Bound;
-      CurlWriter.Save (dwg, "c:/etc/test.curl", "3-P Angular");
-      DXFWriter.Save (dwg, "c:/etc/test.dxf", true);
+      Console.WriteLine (File.ReadAllText ("c:/etc/another.txt"));
    }
 
    static Dwg2 Make3PAngularDwg () {

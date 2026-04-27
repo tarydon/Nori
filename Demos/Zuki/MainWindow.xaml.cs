@@ -26,7 +26,64 @@ public partial class MainWindow : Window {
       //if (dxf != null) Hub.LoadDXF (dxf);
       //else Hub.Dwg = new ();
 
-      Hub.Dwg = TestDimArc ();
+      Hub.Dwg = TestDimDia ();
+      Hub.Widget = new DimDiameterMaker ();
+   }
+
+   Dwg2 TestDimDia () {
+      var dwg = DXFReader.Load ("c:/etc/DimDia.dxf");
+
+      double dx = 0, dy = 0;
+      var style = new DimStyle2 ("BREAK", dwg.GetStyle ("STANDARD")!);
+      dwg.Add (style); dwg.CurrentDimStyle = style;
+      Add (false, 79, 58, 82, 58); Add (false, 79, 58, 75, 60); 
+      Add (false, 79, 58, 80, 72); Add (false, 79, 58, 35, 36);
+      Add (true, 79, 58, 27, 55); Add (true, 79, 58, 78, 26);
+
+      dx = 75; dy = 0; 
+      style = new DimStyle2 ("ABOVE", dwg.GetStyle ("STANDARD")!) { TextPos = DimStyle2.EPos.Above };
+      dwg.Add (style); dwg.CurrentDimStyle = style;
+      Add (false, 79, 58, 82, 58); Add (false, 79, 58, 75, 60);
+      Add (false, 79, 58, 80, 72); Add (false, 79, 58, 35, 36);
+      Add (true, 79, 58, 27, 55); Add (true, 79, 58, 78, 26);
+
+      dx = 150;
+      style = new DimStyle2 ("BELOW", dwg.GetStyle ("STANDARD")!) { TextPos = DimStyle2.EPos.Below };
+      dwg.Add (style); dwg.CurrentDimStyle = style;
+      Add (false, 79, 58, 82, 58); Add (false, 79, 58, 75, 60);
+      Add (false, 79, 58, 80, 72); Add (false, 79, 58, 35, 36);
+      Add (true, 79, 58, 27, 55); Add (true, 79, 58, 78, 26);
+
+      dx = 0; dy = 70;
+      style = new DimStyle2 ("HORZ", dwg.GetStyle ("STANDARD")!) { TIHorz = true, TOHorz = true };
+      dwg.Add (style); dwg.CurrentDimStyle = style;
+      Add (false, 79, 58, 82, 58); Add (false, 79, 58, 75, 60);
+      Add (false, 79, 58, 80, 72); Add (false, 79, 58, 35, 36);
+      Add (true, 79, 58, 27, 55); Add (true, 79, 58, 78, 26);
+
+      dx = 75; dy = 70;
+      style = new DimStyle2 ("HORZABOVE", dwg.GetStyle ("STANDARD")!) { TIHorz = true, TOHorz = true, TextPos = DimStyle2.EPos.Above };
+      dwg.Add (style); dwg.CurrentDimStyle = style;
+      Add (false, 79, 58, 82, 58); Add (false, 79, 58, 75, 60);
+      Add (false, 79, 58, 80, 72); Add (false, 79, 58, 35, 36);
+      Add (true, 79, 58, 27, 55); Add (true, 79, 58, 78, 26);
+
+      dx = 150; dy = 70;
+      style = new DimStyle2 ("HORZBELOW", dwg.GetStyle ("STANDARD")!) { TIHorz = true, TOHorz = true, TextPos = DimStyle2.EPos.Below };
+      dwg.Add (style); dwg.CurrentDimStyle = style;
+      Add (false, 79, 58, 82, 58); Add (false, 79, 58, 75, 60);
+      Add (false, 79, 58, 80, 72); Add (false, 79, 58, 35, 36);
+      Add (true, 79, 58, 27, 55); Add (true, 79, 58, 78, 26);
+
+      return dwg;
+
+      void Add (bool tofl, params double[] vals) {
+         var pts = Point2.List (vals).Select (a => a.Moved (dx, dy)).ToList ();
+         dwg.PickPoly (pts[0], 3, out var p);
+         var seg = p.Poly[p.Seg];
+         pts[0] = seg.Center;
+         dwg.Add (new E2DimDia (dwg.CurrentLayer, dwg.CurrentDimStyle, seg.Radius, tofl, pts));
+      }
    }
 
    Dwg2 TestDimArc () {
@@ -67,6 +124,7 @@ public partial class MainWindow : Window {
       Add (false, 250, 61 + dy1, 261, 73 + dy1); Add (false, 250, 61 + dy1, 245, 48 + dy1);
       Add (true,  250, 61 + dy1, 234, 57 + dy1); Add (false, 202, 13 + dy2, 199, 19 + dy2);
       Add (false, 202, 13 + dy2, 195, 15 + dy2); Add (true,  259, 12 + dy2, 256, 14 + dy2);
+      Add (true, 250, 61 + dy1, 230, 150);
       return dwg;
 
       void Add (bool tofl, params double[] vals) {

@@ -1,4 +1,5 @@
 using System.Reactive.Linq;
+using System.Windows.Interop;
 using Nori;
 namespace Zuki;
 using static Lux;
@@ -49,6 +50,8 @@ class Widget {
    public virtual void OnMouseMove (Point2 pt) { 
       Pts[^1] = pt; WidgetVN.It.Redraw ();
    }
+
+   protected void Redraw () => WidgetVN.It.Redraw ();
 
    public virtual void OnLeftClick (Point2 pt) {
       if (!CanAdvance (pt)) return;
@@ -124,7 +127,7 @@ class DimRadiusMaker : DimMakerWidget {
    }
 
    public override void OnKey (KeyInfo ki) {
-      if (ki.Key == EKey.F5) { mTOFL = !mTOFL; WidgetVN.It.Redraw (); }
+      if (ki.Key == EKey.F5) { mTOFL = !mTOFL; Redraw (); }
    }
 
    public override bool CanAdvance (Point2 pt) {
@@ -146,5 +149,32 @@ class DimRadiusMaker : DimMakerWidget {
    static bool mTOFL;
 }
 
-class DimDiaMaker : DimMakerWidget {
+class DimDiameterMaker : DimMakerWidget {
+   public override void Draw () {
+      base.Draw ();
+      if (Phase == 1) {
+         mSeg = null;
+         if (Dwg.PickPoly (Pts[0], Hub.PickAperture, out var p))
+            if (p.Poly.IsCircle) mSeg = p.Poly[0];
+         if (mSeg is { } s) Hub.HighlightSeg (s);
+      }
+   }
+
+   public override void OnKey (KeyInfo ki) {
+      if (ki.Key == EKey.F5) { mTOFL = !mTOFL; Redraw (); }
+   }
+
+   public override bool CanAdvance (Point2 pt) {
+      if (mSeg is { } s) { Pts[0] = s.Center; return true; }
+      return false;
+   }
+
+   public override Ent2? MakeEnt () {
+      if (Phase == 2 && mSeg is { } s) 
+         return new E2DimDia (Dwg.CurrentLayer, DimStyle, s.Radius, mTOFL, Pts);
+      return null;
+   }
+
+   Seg? mSeg = null;
+   static bool mTOFL;
 }

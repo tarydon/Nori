@@ -74,3 +74,5 @@ E2DimGeneric
 E2Dim3PAngle
 E2DimRad
   Radius
+E2DimDia
+  Radius

@@ -1151,5 +1151,34 @@
       Style:HORZBELOW
       Radius:4.999996
     }
+    (E2DimRad){
+      Layer:0
+      Ents:[
+        (E2Solid){
+          Layer:0
+          Pts:[
+            229.626292,146.397568
+            228.812803,146.578343
+            228.677222,144.047487
+            228.677222,144.047487
+          ]
+        }
+        (E2Point){ Layer:0 Pt:220.00003,105.00003 }
+        (E2Poly){ Layer:0 Poly:M220.135611,105.610147L230,150H239.05 }
+        (E2Text){
+          Layer:0
+          Pt:235.15,148.125
+          Text:R40
+          Style:STANDARD
+          Alignment:MidCenter
+          Height:2.5
+          XScale:1
+        }
+      ]
+      Kind:Radius
+      Pts:[ 220.00003,105.00003 230,150 235.15,148.125 ]
+      Style:HORZBELOW
+      Radius:39.99997
+    }
   ]
 }

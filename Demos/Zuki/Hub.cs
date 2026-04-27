@@ -22,7 +22,6 @@ static class Hub {
          if (!mHooked) {
             mHooked = true;
             MouseMoves.Subscribe (a => CursorVN.It.Pt = a);
-            Widget = new DimRadiusMaker ();
          }
          SetTitle ();
       }

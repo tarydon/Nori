@@ -90,7 +90,7 @@ public static partial class DXFCore {
 
    // Encodes a string into DXF form
    internal static string EncodeDXF (string s) {
-      return s.Replace ("\u00b0", "%%d");
+      return s.Replace ("\u00b0", "%%d").Replace ("\u2205", "%%c");
    }
 
    // Convert a color name from DXF into a color value

@@ -13,7 +13,7 @@ partial class CursorVN : VNode {
 
    public override void Draw () {
       double a = Hub.PixelScale * 20;
-      (Lux.Color, Lux.LineWidth, Lux.TypeFace) = (Color4.Gray (96), 1.25f, mFace);
+      (Lux.Color, Lux.LineWidth, Lux.TypeFace) = (Color4.Black, 1.25f, mFace);
       Lux.Lines ([Pt.Moved (-a, 0), Pt.Moved (a, 0), Pt.Moved (0, -a), Pt.Moved (0, a)]);
 
       int d = Hub.PixelScale switch { > 1 => 0, > 0.1 => 1, > 0.01 => 2, > 0.001 => 3, _ => 4 };
