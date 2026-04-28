@@ -122,6 +122,14 @@ class E2DimGeneric : E2Dim {
 
 #region class E2DimDia -----------------------------------------------------------------------------
 /// <summary>E2DimDia implements a diameter dimension</summary>
+/// This image file://N:/Doc/Img/DimDia.png shows the definition points of this type of dimension.
+/// When the dimension is created the points a, b (a is the center of the circle , and b is the 
+/// dimension definition point) are passed in, along with the radius of the circle. The dimension
+/// is created based on whether the point b is inside or outside the circle. The point c (text location)
+/// is computed automatically.
+/// 
+/// When outputting to DXF, the points indicated as (10,20), (15,25) and (11,21) are output as the
+/// definition points. 
 public class E2DimDia : E2Dim {
    /// <summary>Create a diameter dimension given the definition points as shown in the image below</summary>
    public E2DimDia (Layer2 layer, DimStyle2 style, double radius, bool tofl, IList<Point2> pts, string? text = null)
@@ -151,6 +159,14 @@ public class E2DimDia : E2Dim {
 
 #region class E2DimRad -----------------------------------------------------------------------------
 /// <summary>E2DimRad implements a radius dimension</summary>
+/// This image file://N:/Doc/Img/DimRad.png shows the definition points of this type of dimension. 
+/// When the dimension is created the points a, b are passed in (a is the center of the arc, and 
+/// b is the dimension definition point), along with the exact radius of the arc. The dimension is 
+/// created based on whether the point b is inside or outside the arc. The point c 
+/// (text location) is computed automatically.
+/// 
+/// When outputting to DXF, the points indicated as (10,20), (15,25) and (11,21) are output 
+/// as the definition points. 
 public class E2DimRad : E2Dim {
    // Constructors -------------------------------------------------------------
    /// <summary>Create a radius dimension given the definition points as shown in the image below</summary>

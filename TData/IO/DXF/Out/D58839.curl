@@ -1784,7 +1784,7 @@
         (E2Point){ Layer:Defpoints Pt:169.295091,77.860266 }
       ]
     }
-    (E2Dimension){
+    (E2DimDia){
       Layer:dimension
       Ents:[
         (E2Poly){ Layer:dimension Poly:M291.526927,94.147686L274.02696,100.801154 }
@@ -1821,8 +1821,12 @@
         (E2Point){ Layer:Defpoints Pt:271.923836,101.600759 }
         (E2Point){ Layer:Defpoints Pt:262.109257,105.332251 }
       ]
+      Kind:Diameter
+      Pts:[ 267.016546,103.466505 271.923836,101.600759 283.95568,97.026266 ]
+      Style:AM_ISO
+      Radius:5.25
     }
-    (E2Dimension){
+    (E2DimDia){
       Layer:dimension
       Ents:[
         (E2Poly){ Layer:dimension Poly:M277.939402,79.675599L296.622322,81.806897 }
@@ -1859,8 +1863,12 @@
         (E2Point){ Layer:Defpoints Pt:298.857823,82.061917 }
         (E2Point){ Layer:Defpoints Pt:302.335269,82.458615 }
       ]
+      Kind:Diameter
+      Pts:[ 300.596546,82.260266 298.857823,82.061917 285.391072,80.525666 ]
+      Style:AM_ISO
+      Radius:1.75
     }
-    (E2Dimension){
+    (E2DimDia){
       Layer:dimension
       Ents:[
         (E2Poly){ Layer:dimension Poly:M183.592537,123.105527L194.913848,128.285334 }
@@ -1897,6 +1905,10 @@
         (E2Point){ Layer:Defpoints Pt:196.959868,129.221444 }
         (E2Point){ Layer:Defpoints Pt:199.233224,130.261566 }
       ]
+      Kind:Diameter
+      Pts:[ 198.096546,129.741505 196.959868,129.221444 187.106851,127.6826 ]
+      Style:AM_ISO
+      Radius:1.25
     }
     (E2Dimension){
       Layer:dimension

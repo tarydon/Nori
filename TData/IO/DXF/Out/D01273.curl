@@ -1138,7 +1138,7 @@
         }
       ]
     }
-    (E2Dimension){
+    (E2DimRad){
       Layer:DIM
       Ents:[
         (E2Solid){
@@ -1163,6 +1163,10 @@
           XScale:0.75
         }
       ]
+      Kind:Radius
+      Pts:[ 209.097523,247.006754 186.522037,227.944086 229.717494,264.418192 ]
+      Style:SLDDIMSTYLE4
+      Radius:29.547215
     }
     (E2Dimension){
       Layer:DIM

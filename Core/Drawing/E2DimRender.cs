@@ -321,8 +321,8 @@ public abstract partial class E2Dim {
             knee = isDia ? cen : poly[0].Midpoint;
             trimSeg = true; horzLine = textDx = textDY = 0;
          } else
-            tip = cen.Polar (exo, angle);
-         if (isDia) AddPoint (cen);
+            tip = cen.Polar (isDia ? -radius : exo, angle);
+         if (!isDia) AddPoint (cen);
       }
       poly ??= horzLine.IsZero ()
          ? Poly.Line (tip, knee)
