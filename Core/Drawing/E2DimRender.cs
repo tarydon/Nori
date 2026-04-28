@@ -345,6 +345,7 @@ public abstract partial class E2Dim {
       // Add the extension lines, if needed
       var s = mStyle;
       if (basis.Length >= 4) {
+         Lib.Trace (pick);
          for (int i = 0; i < 2; i++) {
             Point2 end = seg.GetPointAt (i); 
             double lie = end.GetLieOn (basis[i * 2], basis[i * 2 + 1]);

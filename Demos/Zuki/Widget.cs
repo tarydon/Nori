@@ -246,7 +246,7 @@ class DimAngleMaker : DimMaker {
    public override Ent2? MakeEnt () {
       if (Phase == 3) {
          List<Point2> pts = [];
-         foreach (var seg in mSegs) { pts.Add (seg.A); pts.Add (seg.B); }
+         foreach (var seg in mSegs.Take (2)) { pts.Add (seg.A); pts.Add (seg.B); }
          pts.Add (Pts[2]);
          return new E2DimAngular (Layer, DimStyle, pts);
       }

@@ -241,6 +241,7 @@ public class E2DimAngular : E2Dim {
 
       double a0 = cen.AngleTo (mPts[1]), a1 = cen.AngleTo (mPts[2]), rad = cen.DistTo (pick);
       Point2 p0 = cen.Polar (rad, a0), p1 = cen.Polar (rad, a1);
+      if (pick.EQ (p1)) pick = cen.Polar (rad, (a0 + a1) / 2);
       var seg = Poly.Arc (p0, pick, p1)[0];
 
       string text = Text ?? "";
