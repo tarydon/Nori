@@ -315,6 +315,13 @@ public static class Extensions {
       return s == "-0" ? "0" : s;
    }
 
+   /// <summary>
+   /// Swaps two elements from a list
+   /// </summary>
+   public static void Swap<T> (this List<T> list, int a, int b) {
+      T tmp = list[a]; list[a] = list[b]; list[b] = tmp;
+   }
+
    /// <summary>Converts an IEnumerable into a comma-separated list</summary>
    /// This takes each object out of the IEnumerable and prints it using it's ToString operator.
    /// It then returns all of them as a comma separated list. If any of the items has the separator

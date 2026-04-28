@@ -3,7 +3,7 @@ Desc=Widget
 
 [Dim3PAngular]
 Phases=4
-Name=3-P Angular
+Name=3-P Angle Dim.
 0=Set angle vertex
 1=Set first angle endpoint
 2=Set second angle endpoint
@@ -21,3 +21,9 @@ Name=Diameter Dim.
 0=Select circle
 1=Set dimension location [F5=Toggle]
 
+[DimAngle]
+Phases=3
+Name=Angle Dim.
+0=Select first line
+1=Select second line
+2=Set dimension arc location

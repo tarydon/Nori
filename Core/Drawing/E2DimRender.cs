@@ -62,9 +62,8 @@ public abstract partial class E2Dim {
    // is so small, we can't accommodate either (and this returns EInside.None). 
    // Anything that cannot be accomodated between the extension lines goes outside on one or
    // the other side. 
-   protected EInside CheckSpace (double available, double txtMeasure) {
-      double asz = mStyle.ArrowSize * 3;
-      txtMeasure += 2 * mStyle.ExtExtend;
+   protected EInside CheckSpace (double available, double txtMeasure) { // REMOVETHIS
+      double asz = mStyle.ArrowSize * 4;
       if (asz + txtMeasure <= available) return EInside.Both;
       if (asz > txtMeasure && asz <= available) return EInside.Arrows;
       if (txtMeasure <= available) return EInside.Text;
@@ -340,5 +339,35 @@ public abstract partial class E2Dim {
          AddTrimmedSeg (poly[0], textBox);
       } else
          AddPoly (poly);
+   }
+
+   protected void BuildEnts (Seg seg, Point2 pick, string text, ReadOnlySpan<Point2> basis, bool twoArrows, bool discardSeg) {
+      // Add the extension lines, if needed
+      var s = mStyle;
+      if (basis.Length >= 4) {
+         for (int i = 0; i < 2; i++) {
+            Point2 end = seg.GetPointAt (i); 
+            double lie = end.GetLieOn (basis[i * 2], basis[i * 2 + 1]);
+            if (lie is >= 0 and <= 1) continue;
+            Point2 start = basis[i * 2 + (lie < 0 ? 0 : 1)];
+            double slope = start.AngleTo (end);
+            AddPoly (Poly.Line (start.Polar (s.ExtOffset, slope), end.Polar (s.ExtExtend, slope)));
+         }
+      }
+
+      Bound2 bound = Measure (text);
+      double txtMeasure = bound.Width;
+      if (s.TIHorz && Math.Abs (Math.Cos (seg.GetSlopeAt (0.5))) < 0.5) txtMeasure = bound.Height;
+      var code = CheckSpace (seg.Length, txtMeasure);
+      bool textInside = (code & EInside.Text) != 0, arrowInside = (code & EInside.Arrows) != 0;
+
+      AddPoly (seg.ToPoly ());
+      double delta = s.ArrowSize / seg.Length, ang0, ang1;
+      if (arrowInside) 
+         (ang0, ang1) = (seg.A.AngleTo (seg.GetPointAt (delta)), seg.B.AngleTo (seg.GetPointAt (1 - delta)));
+      else
+         (ang0, ang1) = (seg.GetSlopeAt (0) + Lib.PI, seg.GetSlopeAt (1));
+      AddArrow (seg.A, ang0); if (twoArrows) AddArrow (seg.B, ang1);
+      if (textInside) AddText (seg.GetPointAt (0.5), text, 0);
    }
 }

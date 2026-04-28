@@ -105,9 +105,11 @@ class Widget {
 }
 #endregion
 
-#region class EntWidget ----------------------------------------------------------------------------
+#region class EntMaker -----------------------------------------------------------------------------
 /// <summary>Subtype of Widget used to make entities</summary>
 abstract class EntMaker : Widget {
+   public Layer2 Layer => Dwg.CurrentLayer;
+
    // Overridden to add the entity into the drawing
    public override void Completed () { if (MakeEnt () is { } ent) Dwg.Add (ent); }
 
@@ -123,8 +125,7 @@ abstract class EntMaker : Widget {
 #region class DimWidget ----------------------------------------------------------------------------
 /// <summary>Subtype of EntWidget used to make dimensions</summary>
 abstract class DimMaker : EntMaker {
-   protected DimMaker () => DimStyle = Dwg.CurrentDimStyle;
-   protected DimStyle2 DimStyle;
+   protected DimStyle2 DimStyle => Dwg.CurrentDimStyle;
 }
 #endregion
 
@@ -223,5 +224,36 @@ class DimDiaMaker : DimMaker {
    // Private data -------------------------------------------------------------
    Seg? mSeg = null;
    static bool mTOFL;
+}
+#endregion
+
+#region class DimAngleMaker ------------------------------------------------------------------------
+class DimAngleMaker : DimMaker {
+   public override bool CanAdvance (Point2 pt) => Phase == 3 || mSegs.Count >= Phase;
+
+   public override void Draw () {
+      base.Draw ();
+      while (mSegs.Count >= Phase) mSegs.RemoveLast ();
+      if (Dwg.PickPoly (Pts[Phase - 1], Hub.PickAperture, out var p))
+         if (p.Poly[p.Seg] is { IsLine: true } seg) {
+            Span<Point2> buffer = stackalloc Point2[2];
+            if (mSegs.Count == 0 || mSegs[0].Intersect (seg, buffer, false).Length > 0)
+               mSegs.Add (seg);
+         }
+      mSegs.ForEach (a => Hub.HighlightSeg (a));
+   }
+
+   public override Ent2? MakeEnt () {
+      if (Phase == 3) {
+         List<Point2> pts = [];
+         foreach (var seg in mSegs) { pts.Add (seg.A); pts.Add (seg.B); }
+         pts.Add (Pts[2]);
+         return new E2DimAngular (Layer, DimStyle, pts);
+      }
+      return null;
+   }
+
+   // Private data -------------------------------------------------------------
+   List<Seg> mSegs = [];
 }
 #endregion

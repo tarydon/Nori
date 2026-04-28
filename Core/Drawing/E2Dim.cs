@@ -223,3 +223,34 @@ public class E2Dim3PAngle : E2Dim {
    }
 }
 #endregion
+
+public class E2DimAngular : E2Dim {
+   // Constructors -------------------------------------------------------------
+   E2DimAngular () { }
+   public E2DimAngular (Layer2 layer, DimStyle2 style, IList<Point2> pts, string? text = null)
+      : base (layer, EDim.Angular, style, pts, text) { }
+
+   // Overrides ----------------------------------------------------------------
+   public override void GetDefPoints (List<(int, Point2)> defPoints) => throw new NotImplementedException ();
+
+   protected override void MakeEnts () {
+      // Get the center point based on the intersection of the first 4 points
+      Point2 cen = Geo.LineXLine (Pts[0], Pts[1], Pts[2], Pts[3]).ExceptNil (Point2.Zero), pick = Pts[4];
+      if (cen.DistToSq (Pts[0]) > cen.DistToSq (Pts[1])) mPts.Swap (0, 1);
+      if (cen.DistToSq (Pts[2]) > cen.DistToSq (Pts[3])) mPts.Swap (2, 3);
+
+      double a0 = cen.AngleTo (mPts[1]), a1 = cen.AngleTo (mPts[2]), rad = cen.DistTo (pick);
+      Point2 p0 = cen.Polar (rad, a0), p1 = cen.Polar (rad, a1);
+      var seg = Poly.Arc (p0, pick, p1)[0];
+
+      string text = Text ?? "";
+      if (IsAutoText) {
+         double span = Math.Abs (seg.AngSpan).R2D ().Round (mStyle.AngDecimal);
+         text = $"{span}\u00b0";
+      }
+      text = "45\u00b0";
+      BuildEnts (seg, pick, text, mPts.AsSpan (), true, false);
+   }
+
+   protected override Ent2 Xformed (Matrix2 xfm) => throw new NotImplementedException ();
+}

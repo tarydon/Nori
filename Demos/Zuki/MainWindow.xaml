@@ -18,9 +18,10 @@
          <MenuItem Header="_MODE">
             <MenuItem Header="_P. Pick" Tag="Pick" />
             <Separator />
+            <MenuItem Header="_A. Dim: Angular" Tag="DimAngle" />
             <MenuItem Header="_D. Dim: Diameter" Tag="DimDiameter" />
             <MenuItem Header="_R. Dim: Radius" Tag="DimRadius" />
-            <MenuItem Header="_3. Dim: 3-P Angular" Tag="Dim3PAngular" />
+            <MenuItem Header="_3. Dim: 3-P Angular" Tag="Dim3PAngle" />
          </MenuItem>
          <MenuItem Header="_SETTINGS">
             <MenuItem Header="_Layers" InputGestureText="Ctrl+L" Tag="Layers"/>

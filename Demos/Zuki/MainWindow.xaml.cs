@@ -22,7 +22,19 @@ public partial class MainWindow : Window {
       (Hub.MainWindow, Hub.CmdName, Hub.Status) = (this, mCommand, mStatus);
       var dxf = Environment.GetCommandLineArgs ().FirstOrDefault (a => a.EndsWith (".dxf"));
       if (dxf != null) Hub.LoadDXF (dxf);
-      else Hub.Dwg = TestDimDia ();
+      else {
+         Hub.Dwg = TestAngleDim ();
+         Hub.Widget = new DimAngleMaker ();
+      }
+   }
+
+   Dwg2 TestAngleDim () {
+      var dwg = DXFReader.Load ("c:/etc/dimangle.dxf");
+      var style = new DimStyle2 ("BREAK", dwg.GetStyle ("STANDARD")!);
+      dwg.Add (style); dwg.CurrentDimStyle = style;
+      var layer = new Layer2 ("DIMENSION", Color4.Blue, ELineType.Continuous);
+      dwg.Add (layer); dwg.CurrentLayer = layer;
+      return dwg; 
    }
 
    Dwg2 TestDimDia () {

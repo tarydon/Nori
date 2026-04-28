@@ -367,6 +367,11 @@ public readonly struct Seg {
       }
    }
 
+   public Poly ToPoly () {
+      if (IsArc) return Poly.Arc (Center, Center.DistTo (A), Center.AngleTo (A), Center.AngleTo (B), IsCCW);
+      else return Poly.Line (A, B);
+   }
+
    /// <summary>Converts a Seg to a Curve3 by lofting it into space</summary>
    public static Curve3 operator * (Seg seg, Matrix3 xfm) {
       if (seg.IsArc) {
