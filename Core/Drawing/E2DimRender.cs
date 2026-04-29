@@ -342,13 +342,23 @@ public abstract partial class E2Dim {
    }
 
    protected void BuildEnts (Seg seg, Point2 pick, string text, ReadOnlySpan<Point2> basis, bool twoArrows, bool discardSeg) {
-      // Add the extension lines, if needed
+      // Add the extension lines (these are required for most dimension types (except
+      // radius & diameter), and are specified by the basis[] points array.
+      // - If there are no basis points, no extension lines are drawn (Radius, Diameter dimensions)
+      // - If there are two basis points, they form the start points of the first and second extension
+      //   lines (Linear, Aligned, 3P-Angle dimensions)
+      // - If there are four basis points, the first two are used for the first extension line,
+      //   and the second two for the other one. We see where the seg.A position lies relative to 
+      //   basis[0]..basis[1]. If it lies in between, we don't draw an extension line. If it lies
+      //   _before_ basis[0], the extension line starts at basis[0], if it lies _beyond_ basis[1],
+      //   the extension line starts form there (Angle dimensions)
+      // The extension line is offset from the start point by ExtOffset, and extends beyond the 
+      // dimension line by ExtExtend
       var s = mStyle;
       if (basis.Length >= 4) {
-         Lib.Trace (pick);
          for (int i = 0; i < 2; i++) {
-            Point2 end = seg.GetPointAt (i); 
-            double lie = end.GetLieOn (basis[i * 2], basis[i * 2 + 1]);
+            Point2 end = seg.GetPointAt (i), a = basis[i * 2], b = basis[i * 2 + 1];
+            double lie = a.EQ (b) ? 1.01 : end.GetLieOn (a, b);
             if (lie is >= 0 and <= 1) continue;
             Point2 start = basis[i * 2 + (lie < 0 ? 0 : 1)];
             double slope = start.AngleTo (end);
@@ -356,19 +366,83 @@ public abstract partial class E2Dim {
          }
       }
 
+      // Next, measure the text and see if the dimension line cuts more through the horizontal or
+      // vertical direction of the text-box (from this we figure out if we are going to use the 
+      // width or height of the text box as txtMeasure). Of course, if the text is aligned to
+      // the dimension (not horizontal), we always use the width. With this txtMeasure value, we 
+      // use CheckSpace to figure out if there is enough space between the extension lines to place
+      // the arrow, the text, both or neither. 
       Bound2 bound = Measure (text);
       double txtMeasure = bound.Width;
       if (s.TIHorz && Math.Abs (Math.Cos (seg.GetSlopeAt (0.5))) < 0.5) txtMeasure = bound.Height;
-      var code = CheckSpace (seg.Length, txtMeasure);
+      var code = CheckSpace (seg.A.DistTo (seg.B), txtMeasure);
       bool textInside = (code & EInside.Text) != 0, arrowInside = (code & EInside.Arrows) != 0;
 
-      AddPoly (seg.ToPoly ());
+      // Next, add the arrowheads
+      // - Radius dimensions have one arrow head
+      // - Diameter dimensions have one arrow head (unless the TOFL is set, in which case they extend
+      //   to the opposite diameter of the circle and have two)
+      // - Other dimension types have two
+      // Note that the arrowhead direction is FROM the tip to the BASE of the arrow
       double delta = s.ArrowSize / seg.Length, ang0, ang1;
-      if (arrowInside) 
+      if (arrowInside)
          (ang0, ang1) = (seg.A.AngleTo (seg.GetPointAt (delta)), seg.B.AngleTo (seg.GetPointAt (1 - delta)));
-      else
+      else {
          (ang0, ang1) = (seg.GetSlopeAt (0) + Lib.PI, seg.GetSlopeAt (1));
+      }
       AddArrow (seg.A, ang0); if (twoArrows) AddArrow (seg.B, ang1);
-      if (textInside) AddText (seg.GetPointAt (0.5), text, 0);
+      if (arrowInside && !textInside) { ang0 = seg.GetSlopeAt (0); ang1 = seg.GetSlopeAt (1) + Lib.PI; }
+
+      // Next, add the leader lines from the arrow to the text. First, figure out text position
+      // relative to seg: 0=outside seg.A, -1:inside seg, 1:outside seg.B
+      double asz = mStyle.ArrowSize;
+      Point2 ptText = seg.GetPointAt (0.5);
+      var pos = mStyle.TextPos; var txtWidth = bound.Width;
+      bool iBreak = pos == Centered, horz = textInside ? mStyle.TIHorz : mStyle.TOHorz;
+      int textLie = textInside ? -1 : (pick.DistToSq (seg.A) < pick.DistToSq (seg.B) ? 0 : 1);
+      double textAngle = horz ? 0 : GetTextAngle (seg.GetSlopeAt (0.5));
+      for (int i = 0; i < 2; i++) {
+         // Each leader line consists of two legs:
+         // - Leg 1 leading directly along/against the arrowhead of length leg1
+         // - Leg 2 horizontal (only if txtHorz is set). 
+         // Leader line length also depends on whether text is outside and on that side where
+         // we are drawing the leader line
+         double leg1 = arrowInside ? 0 : 2 * asz, leg2 = 0; 
+         if (i == textLie) {
+            // Text is also on this side, we might need to extend leg1 further
+            if (!horz) {
+               // Aligned text along this leader line (no horizontal leg 2)
+               if (!iBreak) leg1 += txtWidth;
+            } else {
+               // Horizontal text - figure out if centered (iBreak) or not
+               leg2 = iBreak ? asz : txtWidth;
+            }
+            if (arrowInside && !textInside) leg1 += asz;
+         }
+         Point2 hip = seg.GetPointAt (i);
+         Point2 knee = hip.Polar (leg1 * (arrowInside ? -1 : 1), i == 0 ? ang0 : ang1);
+         Point2 toe = knee.Moved (leg2 * (knee.X > hip.X ? 1 : -1), 0);
+         Poly poly = leg2.IsZero () ? Poly.Line (hip, knee) : Poly.Lines ([hip, knee, toe], false);
+         AddPoly (poly);
+
+         // If the text has to be positioned near the leader line (outside the extension lines),
+         // update the text pos
+         if (i == textLie) {
+            // Compute the text shift from the toe point
+            double txtShift = txtWidth / 2 * (iBreak ? 1 : -1);
+            ptText = toe.Polar (txtShift, textAngle = poly[^1].Slope);
+            textAngle = GetTextAngle (textAngle);
+         }
+      }
+
+      // Compute the text angle, and the text box
+      double yShift = pos switch { Above => 1, Below => -1, _ => 0 } * bound.Height / 2;
+      ptText = ptText.Polar (yShift, textAngle + Lib.HalfPI);
+      Poly textBox = Poly.Rectangle (bound) * Matrix2.Rotation (textAngle) * Matrix2.Translation (ptText);
+      if (iBreak && textInside) AddTrimmedSeg (seg, textBox);
+      else AddPoly (seg.ToPoly ());
+
+      // Position the text
+      AddText (ptText, text, textAngle);
    }
 }

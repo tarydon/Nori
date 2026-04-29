@@ -249,7 +249,6 @@ public class E2DimAngular : E2Dim {
          double span = Math.Abs (seg.AngSpan).R2D ().Round (mStyle.AngDecimal);
          text = $"{span}\u00b0";
       }
-      text = "45\u00b0";
       BuildEnts (seg, pick, text, mPts.AsSpan (), true, false);
    }
 

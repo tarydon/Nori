@@ -248,7 +248,7 @@ class DimAngleMaker : DimMaker {
          List<Point2> pts = [];
          foreach (var seg in mSegs.Take (2)) { pts.Add (seg.A); pts.Add (seg.B); }
          pts.Add (Pts[2]);
-         return new E2DimAngular (Layer, DimStyle, pts);
+         return new E2DimAngular (Layer, DimStyle, pts, "45\u00b0");
       }
       return null;
    }

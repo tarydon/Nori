@@ -34,6 +34,9 @@ public partial class MainWindow : Window {
       dwg.Add (style); dwg.CurrentDimStyle = style;
       var layer = new Layer2 ("DIMENSION", Color4.Blue, ELineType.Continuous);
       dwg.Add (layer); dwg.CurrentLayer = layer;
+
+      
+
       return dwg; 
    }
 
