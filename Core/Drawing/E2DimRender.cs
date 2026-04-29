@@ -375,7 +375,8 @@ public abstract partial class E2Dim {
       Bound2 bound = Measure (text);
       double txtMeasure = bound.Width;
       if (s.TIHorz && Math.Abs (Math.Cos (seg.GetSlopeAt (0.5))) < 0.5) txtMeasure = bound.Height;
-      var code = CheckSpace (seg.A.DistTo (seg.B), txtMeasure);
+      double space = Math.Abs (seg.AngSpan) < Lib.PI ? seg.A.DistTo (seg.B) : seg.Length;
+      var code = CheckSpace (space, txtMeasure);
       bool textInside = (code & EInside.Text) != 0, arrowInside = (code & EInside.Arrows) != 0;
 
       // Next, add the arrowheads
@@ -395,8 +396,8 @@ public abstract partial class E2Dim {
 
       // Next, add the leader lines from the arrow to the text. First, figure out text position
       // relative to seg: 0=outside seg.A, -1:inside seg, 1:outside seg.B
-      double asz = mStyle.ArrowSize;
       Point2 ptText = seg.GetPointAt (0.5);
+      double asz = mStyle.ArrowSize, gap = mStyle.DimGap;
       var pos = mStyle.TextPos; var txtWidth = bound.Width;
       bool iBreak = pos == Centered, horz = textInside ? mStyle.TIHorz : mStyle.TOHorz;
       int textLie = textInside ? -1 : (pick.DistToSq (seg.A) < pick.DistToSq (seg.B) ? 0 : 1);
@@ -417,7 +418,10 @@ public abstract partial class E2Dim {
                // Horizontal text - figure out if centered (iBreak) or not
                leg2 = iBreak ? asz : txtWidth;
             }
-            if (arrowInside && !textInside) leg1 += asz;
+            if (!textInside) {
+               if (arrowInside) leg1 += iBreak ? asz : gap;
+               else leg1 -= iBreak ? 0 : asz - gap;
+            }
          }
          Point2 hip = seg.GetPointAt (i);
          Point2 knee = hip.Polar (leg1 * (arrowInside ? -1 : 1), i == 0 ? ang0 : ang1);

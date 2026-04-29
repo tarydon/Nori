@@ -30,14 +30,48 @@ public partial class MainWindow : Window {
 
    Dwg2 TestAngleDim () {
       var dwg = DXFReader.Load ("c:/etc/dimangle.dxf");
-      var style = new DimStyle2 ("BREAK", dwg.GetStyle ("STANDARD")!);
-      dwg.Add (style); dwg.CurrentDimStyle = style;
+      var tstyle = dwg.GetStyle ("STANDARD")!;
       var layer = new Layer2 ("DIMENSION", Color4.Blue, ELineType.Continuous);
       dwg.Add (layer); dwg.CurrentLayer = layer;
 
-      
+      double dx = 0, dy = 0;
+      var style = new DimStyle2 ("BREAK", tstyle);
+      dwg.Add (style); dwg.CurrentDimStyle = style;
+      Add (35, 20, 30, 30, 26, 21); Add (35, 20, 30, 30, 29, 24);
+      Add (35, 20, 30, 30, 30, 29); Add (35, 20, 30, 30, 37, 23);
+      Add (35, 20, 30, 30, 40, 29); Add (35, 20, 30, 30, 44, 34);
 
+      dx = 35; dy = 0;
+      style = new DimStyle2 ("ABOVE", tstyle) { TextPos = DimStyle2.EPos.Above };
+      dwg.Add (style); dwg.CurrentDimStyle = style;
+      Add (35, 20, 30, 30, 26, 21); Add (35, 20, 30, 30, 29, 24);
+      Add (35, 20, 30, 30, 32, 29); Add (35, 20, 30, 30, 39, 23);
+      Add (35, 20, 30, 30, 42, 29); Add (35, 20, 30, 30, 49, 29);
+
+      dx = 70; dy = 0;
+      style = new DimStyle2 ("BELOW", tstyle) { TextPos = DimStyle2.EPos.Below };
+      dwg.Add (style); dwg.CurrentDimStyle = style;
+      Add (35, 20, 30, 30, 26, 21); Add (35, 20, 30, 30, 30, 24);
+      Add (35, 20, 30, 30, 32, 29); Add (35, 20, 30, 30, 39, 23);
+      Add (35, 20, 30, 30, 42, 29); Add (35, 20, 30, 30, 49, 29);
+
+      dx = 0; dy = 40;
+      style = new DimStyle2 ("BREAKHORZ", tstyle) { TIHorz = true, TOHorz = true };
+      dwg.Add (style); dwg.CurrentDimStyle = style;
+      // Add (35, 20, 30, 30, 26, 21); 
+      //Add (35, 20, 30, 30, 29, 24);
+      //Add (35, 20, 30, 30, 30, 29); Add (35, 20, 30, 30, 37, 23);
+      //Add (35, 20, 30, 30, 40, 29); Add (35, 20, 30, 30, 44, 34);
       return dwg; 
+
+      void Add (params double[] vals) {
+         List<Point2> pts = [];
+         var input = Point2.List (vals).Select (a => a.Moved (dx, dy)).ToList ();
+         if (dwg.PickPoly (input[0], 5, out var tp1)) pts.AddM (tp1.Poly.A, tp1.Poly.B);
+         if (dwg.PickPoly (input[1], 5, out var tp2)) pts.AddM (tp2.Poly.A, tp2.Poly.B);
+         pts.Add (input[2]);
+         dwg.Add (new E2DimAngular (dwg.CurrentLayer, dwg.CurrentDimStyle, pts));
+      }
    }
 
    Dwg2 TestDimDia () {
