@@ -144,7 +144,7 @@ public class DXFReader {
    // Loads a line - this is written as a special routine, since lines may contain multiple
    // 1000 group entries containing bend information
    void LoadLine () {
-      var (ba, radius, kfactor) = (double.NaN, 0.0, 0.42);
+      var (ba, radius, kfactor, thickness, deduction, bc, mat) = (double.NaN, 0.0, 0.42, 1.0, 0.0, 0, "");
       for (; ; ) {
          int before = mR.Pos;
          if (!Next (true)) break;
@@ -152,13 +152,18 @@ public class DXFReader {
          if (G == 1000) {
             var s = mEncoding.GetString (mD.AsSpan (mStart, mLength)).ToUpper ();
             if (s.StartsWith ("BEND_ANGLE:")) ba = s[11..].ToDouble ().D2R ();
+            else if (s.StartsWith ("MATERIAL:")) mat = s[9..].Trim ();
             else if (s.StartsWith ("BEND_RADIUS:")) radius = s[12..].ToDouble () * Scale;
             else if (s.StartsWith ("K_FACTOR:")) kfactor = s[9..].ToDouble ();
+            else if (s.StartsWith ("THICKNESS:")) thickness = s[10..].ToDouble () * Scale;
+            else if (s.StartsWith ("BEND_FACTOR:")) deduction = Math.Abs (s[12..].ToDouble ()) * Scale;
+            else if (s.StartsWith ("BUMP_COUNT:")) bc = s[11..].ToInt ();
          }
       }
       var line = Poly.Line (PT (10), PT (11));
       if (ba.IsNan) Add (line);
-      else Add (new E2Bendline (mDwg, line.Pts, ba, radius, kfactor));
+      else Add (new E2Bendline (mDwg, line.Pts, ba, radius, kfactor, thickness)
+               { Deduction = deduction, BumpCount = (short)bc, Material = mat });
    }
 
    // Handles an LWPOLYLINE entity.

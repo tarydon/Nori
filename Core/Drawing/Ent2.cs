@@ -123,6 +123,13 @@ public class E2Bendline : Ent2 {
       }
    }
 
+   /// <summary>The bump-count for this bend</summary>
+   /// This makes sense only for step-bends that are done in multiple bumps.
+   public short BumpCount;
+
+   /// <summary>Material of the part</summary>
+   public string? Material;
+
    // Overrides ----------------------------------------------------------------
    public override Bound2 Bound => new (Pts);
    public override Bound2 GetBound (Matrix2 xfm) => new (Pts.Select (a => a * xfm));
