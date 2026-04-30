@@ -162,11 +162,14 @@ public class DXFWriter {
       for (int i = 0; i < eb.Pts.Length; i += 2) {
          Point2 pa = eb.Pts[i], pb = eb.Pts[i + 1];
          if (Lib.Testing) (pa, pb) = (pa.R6 (), pb.R6 ());
-         var (a, r, k) = (eb.Angle.R2D (), eb.Radius, eb.KFactor);
-         if (Lib.Testing) (a, r, k) = (a.R6 (), r.R6 (), k.R6 ());
+         var (a, r, k, t, d, m) = (eb.Angle.R2D (), eb.Radius, eb.KFactor, eb.Thickness, eb.Deduction, eb.Material);
+         if (Lib.Testing) (a, r, k, t, d) = (a.R6 (), r.R6 (), k.R6 (), t.R6 (), d.R6 ());
          var layer = eb.Angle < 0 ? mMBend : mBend;
          Out ($" 0\nLINE\n 8\n{layer!.Name}\n 10\n{pa.X}\n 20\n{pa.Y}\n 11\n{pb.X}\n 21\n{pb.Y}\n");
-         Out ($" 1000\nBEND_ANGLE:{a}\n 1000\nBEND_RADIUS:{r}\n 1000\nK_FACTOR:{k} \n");
+         if (!double.IsNaN (a)) Out ($" 1000\nBEND_ANGLE:{a}\n");
+         if (!string.IsNullOrWhiteSpace (m)) Out ($" 1000\nMATERIAL:{m}\n");
+         Out ($" 1000\nTHICKNESS:{t}\n 1000\nBEND_RADIUS:{r}\n 1000\nK_FACTOR:{k}\n");
+         Out ($" 1000\nBEND_FACTOR:{d}\n 1000\nBUMP_COUNT:{eb.BumpCount}\n");
       }
       return 0;
    }
