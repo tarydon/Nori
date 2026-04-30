@@ -355,6 +355,7 @@ public abstract partial class E2Dim {
       // The extension line is offset from the start point by ExtOffset, and extends beyond the 
       // dimension line by ExtExtend
       var s = mStyle;
+      double ext = s.ExtExtend, asz = s.ArrowSize, gap = s.DimGap;
       if (basis.Length >= 4) {
          for (int i = 0; i < 2; i++) {
             Point2 end = seg.GetPointAt (i), a = basis[i * 2], b = basis[i * 2 + 1];
@@ -362,7 +363,7 @@ public abstract partial class E2Dim {
             if (lie is >= 0 and <= 1) continue;
             Point2 start = basis[i * 2 + (lie < 0 ? 0 : 1)];
             double slope = start.AngleTo (end);
-            AddPoly (Poly.Line (start.Polar (s.ExtOffset, slope), end.Polar (s.ExtExtend, slope)));
+            AddPoly (Poly.Line (start.Polar (s.ExtOffset, slope), end.Polar (ext, slope)));
          }
       }
 
@@ -392,40 +393,46 @@ public abstract partial class E2Dim {
          (ang0, ang1) = (seg.GetSlopeAt (0) + Lib.PI, seg.GetSlopeAt (1));
       }
       AddArrow (seg.A, ang0); if (twoArrows) AddArrow (seg.B, ang1);
+      // After this, tweak the ang0 and ang1 angles - we did not make them exactly tangential
+      // to the start and end slopes to better 'center' the arrowhead along a curved dimension line
+      // above, but now we want to clean tangent to position the text outside the dimension line
+      // (so we do this only if arrowInside and textOutside). 
       if (arrowInside && !textInside) { ang0 = seg.GetSlopeAt (0); ang1 = seg.GetSlopeAt (1) + Lib.PI; }
 
       // Next, add the leader lines from the arrow to the text. First, figure out text position
       // relative to seg: 0=outside seg.A, -1:inside seg, 1:outside seg.B
       Point2 ptText = seg.GetPointAt (0.5);
-      double asz = mStyle.ArrowSize, gap = mStyle.DimGap;
-      var pos = mStyle.TextPos; var txtWidth = bound.Width;
-      bool iBreak = pos == Centered, horz = textInside ? mStyle.TIHorz : mStyle.TOHorz;
+      var pos = s.TextPos; var txtWidth = bound.Width;
+      double txtSlideAngle = double.NaN; 
+      bool iBreak = pos == Centered, iHorz = textInside ? s.TIHorz : s.TOHorz;
       int textLie = textInside ? -1 : (pick.DistToSq (seg.A) < pick.DistToSq (seg.B) ? 0 : 1);
-      double textAngle = horz ? 0 : GetTextAngle (seg.GetSlopeAt (0.5));
+      double textAngle = iHorz ? 0 : GetTextAngle (seg.GetSlopeAt (0.5));
+      double yShift = pos switch { Above => 1, Below => -1, _ => 0 } * bound.Height / 2;
+
+      double D () => 0;
+
       for (int i = 0; i < 2; i++) {
          // Each leader line consists of two legs:
          // - Leg 1 leading directly along/against the arrowhead of length leg1
          // - Leg 2 horizontal (only if txtHorz is set). 
          // Leader line length also depends on whether text is outside and on that side where
          // we are drawing the leader line
-         double leg1 = arrowInside ? 0 : 2 * asz, leg2 = 0; 
-         if (i == textLie) {
-            // Text is also on this side, we might need to extend leg1 further
-            if (!horz) {
-               // Aligned text along this leader line (no horizontal leg 2)
-               if (!iBreak) leg1 += txtWidth;
-            } else {
-               // Horizontal text - figure out if centered (iBreak) or not
-               leg2 = iBreak ? asz : txtWidth;
-            }
-            if (!textInside) {
-               if (arrowInside) leg1 += iBreak ? asz : gap;
-               else leg1 -= iBreak ? 0 : asz - gap;
-            }
-         }
+         bool textOutside = (i == textLie && !textInside), arrowOutside = !arrowInside;
+         double leg1 = arrowOutside ? asz + ext : 0;
+         leg1 += (arrowOutside, textOutside, iHorz, iBreak) switch {
+            (true, true, false, false) => gap + txtWidth - asz,
+            (false, true, false, false) => gap + txtWidth,
+            (false, true, _, true) => asz,
+            (false, true, true, false) => ext + D (),
+            (true, true, true, false) => D (),
+            _ => 0
+         };
+         double leg2 = (textOutside && iHorz) ? (iBreak ? ext : txtWidth) : 0;
+
          Point2 hip = seg.GetPointAt (i);
          Point2 knee = hip.Polar (leg1 * (arrowInside ? -1 : 1), i == 0 ? ang0 : ang1);
-         Point2 toe = knee.Moved (leg2 * (knee.X > hip.X ? 1 : -1), 0);
+         double dx = knee.X.EQ (hip.X) ? Math.Sign (hip.X - seg.GetPointAt (1 - i).X) : Math.Sign (knee.X - hip.X);
+         Point2 toe = knee.Moved (leg2 * dx, 0);
          Poly poly = leg2.IsZero () ? Poly.Line (hip, knee) : Poly.Lines ([hip, knee, toe], false);
          AddPoly (poly);
 
@@ -433,17 +440,28 @@ public abstract partial class E2Dim {
          // update the text pos
          if (i == textLie) {
             // Compute the text shift from the toe point
-            double txtShift = txtWidth / 2 * (iBreak ? 1 : -1);
-            ptText = toe.Polar (txtShift, textAngle = poly[^1].Slope);
-            textAngle = GetTextAngle (textAngle);
+            double txtShift = txtWidth / 2 * (iBreak ? 1 : -1), slope = poly[^1].Slope;
+            if (iHorz != iBreak) ptText = toe.Polar (txtShift, slope);
+            else { ptText = toe; if (iHorz && iBreak) txtSlideAngle = slope; }
+            if (!iHorz) textAngle = GetTextAngle (slope);
+
+            if (!iHorz && iBreak) { textAngle = slope; ptText = toe.Polar (txtShift, slope); }
+            if (!iHorz && !iBreak) { textAngle = slope; ptText = toe.Polar (txtShift, slope); }
+            if (iHorz && iBreak) { ptText = toe; txtSlideAngle = slope; }
          }
       }
+      if (iHorz && textInside) yShift = 0; 
 
       // Compute the text angle, and the text box
-      double yShift = pos switch { Above => 1, Below => -1, _ => 0 } * bound.Height / 2;
+      Vector2 vecSlide = Vector2.Zero;
+      textAngle = GetTextAngle (textAngle);
       ptText = ptText.Polar (yShift, textAngle + Lib.HalfPI);
       Poly textBox = Poly.Rectangle (bound) * Matrix2.Rotation (textAngle) * Matrix2.Translation (ptText);
-      if (iBreak && textInside) AddTrimmedSeg (seg, textBox);
+      if (!txtSlideAngle.IsNan) {
+         vecSlide = SlideTextBox (textBox, txtSlideAngle);
+         ptText += vecSlide;
+      }
+      if ((iBreak || iHorz) && textInside) AddTrimmedSeg (seg, textBox);
       else AddPoly (seg.ToPoly ());
 
       // Position the text

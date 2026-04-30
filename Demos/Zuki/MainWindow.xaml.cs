@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Windows;
 using Nori;
 
@@ -29,7 +30,7 @@ public partial class MainWindow : Window {
    }
 
    Dwg2 TestAngleDim () {
-      var dwg = DXFReader.Load ("c:/etc/dimangle.dxf");
+      var dwg = DXFReader.Load ("c:/dropbox/wip/dimangle.dxf");
       var tstyle = dwg.GetStyle ("STANDARD")!;
       var layer = new Layer2 ("DIMENSION", Color4.Blue, ELineType.Continuous);
       dwg.Add (layer); dwg.CurrentLayer = layer;
@@ -41,27 +42,37 @@ public partial class MainWindow : Window {
       Add (35, 20, 30, 30, 30, 29); Add (35, 20, 30, 30, 37, 23);
       Add (35, 20, 30, 30, 40, 29); Add (35, 20, 30, 30, 44, 34);
 
-      dx = 35; dy = 0;
-      style = new DimStyle2 ("ABOVE", tstyle) { TextPos = DimStyle2.EPos.Above };
-      dwg.Add (style); dwg.CurrentDimStyle = style;
-      Add (35, 20, 30, 30, 26, 21); Add (35, 20, 30, 30, 29, 24);
-      Add (35, 20, 30, 30, 32, 29); Add (35, 20, 30, 30, 39, 23);
+      dx = 35; dy = 0; 
+      style = new DimStyle2 ("ABOVE", tstyle) { TextPos = DimStyle2.EPos.Above }; 
+      dwg.Add (style); dwg.CurrentDimStyle = style; 
+      Add (35, 20, 30, 30, 26, 21); Add (35, 20, 30, 30, 29, 24); 
+      Add (35, 20, 30, 30, 32, 29); Add (35, 20, 30, 30, 39, 23); 
+      Add (35, 20, 30, 30, 42, 29); Add (35, 20, 30, 30, 49, 29); 
+ 
+      dx = 70; dy = 0; 
+      style = new DimStyle2 ("BELOW", tstyle) { TextPos = DimStyle2.EPos.Below }; 
+      dwg.Add (style); dwg.CurrentDimStyle = style; 
+      Add (35, 20, 30, 30, 26, 21); Add (35, 20, 30, 30, 30, 24); 
+      Add (35, 20, 30, 30, 32, 29); Add (35, 20, 30, 30, 39, 23); 
       Add (35, 20, 30, 30, 42, 29); Add (35, 20, 30, 30, 49, 29);
 
-      dx = 70; dy = 0;
-      style = new DimStyle2 ("BELOW", tstyle) { TextPos = DimStyle2.EPos.Below };
-      dwg.Add (style); dwg.CurrentDimStyle = style;
-      Add (35, 20, 30, 30, 26, 21); Add (35, 20, 30, 30, 30, 24);
-      Add (35, 20, 30, 30, 32, 29); Add (35, 20, 30, 30, 39, 23);
-      Add (35, 20, 30, 30, 42, 29); Add (35, 20, 30, 30, 49, 29);
+      dx = 0; dy = 40; 
+      style = new DimStyle2 ("HORZ-BREAK", tstyle) { TIHorz = true, TOHorz = true }; 
+      dwg.Add (style); dwg.CurrentDimStyle = style; 
+      Add (35, 20, 30, 30, 21.9, 20.5); Add (35, 20, 30, 30, 23, 22);
+      Add (35, 20, 30, 30, 28.7, 24.2); Add (35, 20, 30, 30, 32.6, 24.1);
+      Add (35, 20, 30, 30, 32.0, 30.2); Add (35, 20, 30, 30, 36.8, 30.4);
+      Add (35, 20, 30, 30, 41.5, 37.6);
 
-      dx = 0; dy = 40;
-      style = new DimStyle2 ("BREAKHORZ", tstyle) { TIHorz = true, TOHorz = true };
-      dwg.Add (style); dwg.CurrentDimStyle = style;
-      // Add (35, 20, 30, 30, 26, 21); 
-      //Add (35, 20, 30, 30, 29, 24);
-      //Add (35, 20, 30, 30, 30, 29); Add (35, 20, 30, 30, 37, 23);
-      //Add (35, 20, 30, 30, 40, 29); Add (35, 20, 30, 30, 44, 34);
+      //dx = 35; dy = 40; 
+      //style = new DimStyle2 ("HORZ-ABOVE", tstyle) { TIHorz = true, TOHorz = true, TextPos = DimStyle2.EPos.Above }; 
+      //dwg.Add (style); dwg.CurrentDimStyle = style; 
+      //Add (35, 20, 30, 30, 65 - 35, 68.7 - 40); Add (35, 20, 30, 30, 57.5 - 35, 60.5 - 40);
+      //Add (35, 20, 30, 30, 58.6 - 35, 62.8 - 40); Add (35, 20, 30, 30, 62 - 35, 63 - 40);
+
+      CurlWriter.Save (dwg, "c:/etc/test.curl");
+      Process.Start ("winmergeu.exe", "c:\\etc\\ref.curl c:\\etc\\test.curl");
+
       return dwg; 
 
       void Add (params double[] vals) {
