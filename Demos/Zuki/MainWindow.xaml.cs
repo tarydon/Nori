@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Windows;
+using System.IO;
 using Nori;
 
 namespace Zuki;
@@ -62,16 +63,25 @@ public partial class MainWindow : Window {
       Add (35, 20, 30, 30, 21.9, 20.5); Add (35, 20, 30, 30, 23, 22);
       Add (35, 20, 30, 30, 28.7, 24.2); Add (35, 20, 30, 30, 32.6, 24.1);
       Add (35, 20, 30, 30, 32.0, 30.2); Add (35, 20, 30, 30, 36.8, 30.4);
-      Add (35, 20, 30, 30, 41.5, 37.6);
 
-      //dx = 35; dy = 40; 
-      //style = new DimStyle2 ("HORZ-ABOVE", tstyle) { TIHorz = true, TOHorz = true, TextPos = DimStyle2.EPos.Above }; 
-      //dwg.Add (style); dwg.CurrentDimStyle = style; 
-      //Add (35, 20, 30, 30, 65 - 35, 68.7 - 40); Add (35, 20, 30, 30, 57.5 - 35, 60.5 - 40);
-      //Add (35, 20, 30, 30, 58.6 - 35, 62.8 - 40); Add (35, 20, 30, 30, 62 - 35, 63 - 40);
+      dx = 35; dy = 40; 
+      style = new DimStyle2 ("HORZ-ABOVE", tstyle) { TIHorz = true, TOHorz = true, TextPos = DimStyle2.EPos.Above }; 
+      dwg.Add (style); dwg.CurrentDimStyle = style;
+      Add (35, 20, 30, 30, 22.7, 21.4); Add (35, 20, 30, 30, 24.6, 20.4);
+      Add (35, 20, 30, 30, 29.2, 22.4); Add (35, 20, 30, 30, 31, 28);
+      Add (35, 20, 30, 30, 35.5, 24.3); Add (35, 20, 30, 30, 37, 33);
+
+      dx = 70; dy = 40;
+      style = new DimStyle2 ("HORZ-BELOW", tstyle) { TIHorz = true, TOHorz = true, TextPos = DimStyle2.EPos.Below };
+      dwg.Add (style); dwg.CurrentDimStyle = style;
+      Add (35, 20, 30, 30, 22.7, 21.4); Add (35, 20, 30, 30, 24.6, 20.4);
+      Add (35, 20, 30, 30, 29.2, 22.4); Add (35, 20, 30, 30, 31, 28);
+      Add (35, 20, 30, 30, 35.5, 24.3); Add (35, 20, 30, 30, 37, 33);
+      Add (35, 20, 30, 30, 44, 37);
 
       CurlWriter.Save (dwg, "c:/etc/test.curl");
-      Process.Start ("winmergeu.exe", "c:\\etc\\ref.curl c:\\etc\\test.curl");
+      if (File.ReadAllText ("c:\\etc\\ref.curl") != File.ReadAllText ("c:\\etc\\test.curl"))
+         Process.Start ("winmergeu.exe", "c:\\etc\\ref.curl c:\\etc\\test.curl");
 
       return dwg; 
 

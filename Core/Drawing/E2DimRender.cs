@@ -409,8 +409,6 @@ public abstract partial class E2Dim {
       double textAngle = iHorz ? 0 : GetTextAngle (seg.GetSlopeAt (0.5));
       double yShift = pos switch { Above => 1, Below => -1, _ => 0 } * bound.Height / 2;
 
-      double D () => 0;
-
       for (int i = 0; i < 2; i++) {
          // Each leader line consists of two legs:
          // - Leg 1 leading directly along/against the arrowhead of length leg1
@@ -423,8 +421,8 @@ public abstract partial class E2Dim {
             (true, true, false, false) => gap + txtWidth - asz,
             (false, true, false, false) => gap + txtWidth,
             (false, true, _, true) => asz,
-            (false, true, true, false) => ext + D (),
-            (true, true, true, false) => D (),
+            (false, true, true, false) => ext + DShift (i == 0 ? ang0 : ang1),
+            (true, true, true, false) => DShift (i == 0 ? ang0 : ang1),
             _ => 0
          };
          double leg2 = (textOutside && iHorz) ? (iBreak ? ext : txtWidth) : 0;
@@ -450,7 +448,13 @@ public abstract partial class E2Dim {
             if (iHorz && iBreak) { ptText = toe; txtSlideAngle = slope; }
          }
       }
-      if (iHorz && textInside) yShift = 0; 
+      if (iHorz && textInside) yShift = 0;
+
+      double DShift (double angle) {
+         bool upward = Math.Sin (angle) > 0;
+         if (arrowInside) return upward == (pos == Above) ? bound.Height : 0;
+         return upward == (pos == Below) ? bound.Height - ext : 0;
+      }
 
       // Compute the text angle, and the text box
       Vector2 vecSlide = Vector2.Zero;
