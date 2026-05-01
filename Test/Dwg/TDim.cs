@@ -18,6 +18,9 @@ class DimEntTests () {
    [Test (247, "Test DimAngle dimensions")]
    void Test4 () => Test (MakeDimAngle (), "DimAngle", new (880, 600));
 
+   [Test (248, "Test DimAligned dimensions")]
+   void Test5 () => Test (MakeDimAligned (), "DimAligned", new (1616, 1101));
+
    void Test (Dwg2 dwg, string name, Vec2S size) {
       // Test saving curl files
       var bound = dwg.Bound.InflatedF (1.05);
@@ -39,10 +42,71 @@ class DimEntTests () {
       // Save and test PNG files      
       string png = Path.ChangeExtension (curl, ".png");
       var scene = new Scene2 { Bound = bound, BgrdColor = Color4.White, Root = new Dwg2VN (dwg) };
-      // int cx = (int)(bound.Width * 7), cy = (int)(bound.Height * 7);
+      int cx = (int)(bound.Width * 7), cy = (int)(bound.Height * 7);
+      Console.WriteLine ($"{cx} x {cy}");
       var dib = scene.RenderImage (size, DIBitmap.EFormat.Gray8);
       new PNGWriter (dib).Write (NT.TmpPNG);
       Assert.PNGFilesEqual (png, NT.TmpPNG, dib);
+   }
+
+   static Dwg2 MakeDimAligned () {
+      var dwg = DXFReader.Load (NT.File ("Dwg/Dim/DimAligned-Blank.dxf"), true);
+      var tstyle = dwg.GetStyle ("STANDARD")!;
+      DimStyle2 style; double dx, dy;
+
+      dx = 0; dy = 0;
+      style = new DimStyle2 ("BREAK", tstyle);
+      dwg.Add (style); dwg.CurrentDimStyle = style;
+      AddStuff ();
+
+      dx = 65; dy = 0;
+      style = new DimStyle2 ("ABOVE", tstyle) { TextPos = DimStyle2.EPos.Above };
+      dwg.Add (style); dwg.CurrentDimStyle = style;
+      AddStuff ();
+
+      dx = 130; dy = 0;
+      style = new DimStyle2 ("BELOW", tstyle) { TextPos = DimStyle2.EPos.Below };
+      dwg.Add (style); dwg.CurrentDimStyle = style;
+      AddStuff ();
+
+      dx = 0; dy = 65;
+      style = new DimStyle2 ("HORZ-BREAK", tstyle) { TIHorz = true, TOHorz = true };
+      dwg.Add (style); dwg.CurrentDimStyle = style;
+      AddStuff ();
+
+      dx = 0; dy = 0;
+      style = new DimStyle2 ("HORZ-ABOVE", tstyle) { TIHorz = true, TOHorz = true, TextPos = DimStyle2.EPos.Above };
+      dwg.Add (style); dwg.CurrentDimStyle = style;
+      AddStuff2 ();
+
+      dx = 65; dy = 0;
+      style = new DimStyle2 ("HORZ-BELOW", tstyle) { TIHorz = true, TOHorz = true, TextPos = DimStyle2.EPos.Below };
+      dwg.Add (style); dwg.CurrentDimStyle = style;
+      AddStuff2 ();
+      return dwg;
+
+      void AddStuff () {
+         Add (0, 50, 20, 50, 9, 54); Add (20, 50, 50, 35, 47, 41);
+         Add (50, 0, 50, 35, 54, 16); Add (15, 0, 50, 0, 39, -4);
+         Add (15, 0, 15, 10, 19, 11); Add (15, 10, 0, 10, -1, 14);
+         Add (8, 10, 8, 50, 8, 30); Add (20, 25, 30, 25, 41, 32);
+         Add (25, 20, 25, 25, 15, 22); Add (25, 20, 25, 25.67, 35, 22);
+         Add (15, 0, 0, 10, 0, 3);
+      }
+
+      void AddStuff2 () {
+         Add (65, 115, 85, 115, 64, 119); Add (65, 115, 85, 115, 86, 123);
+         Add (115, 100, 115, 65, 112, 70); Add (115, 100, 115, 65, 118, 63);
+         Add (65, 75, 80, 75, 74, 78); Add (85, 115, 115, 100, 80, 109);
+         Add (85, 115, 115, 100, 115, 105); Add (85, 90, 90, 90, 86, 98);
+         Add (85, 90, 87, 90, 85.9, 82); Add (95, 90, 93.75, 90, 94.9, 82);
+         Add (80, 65, 115, 65, 100, 69); Add (65, 75, 80, 65, 80, 61);
+      }
+
+      void Add (params double[] vals) {
+         var pts = Point2.List (vals).Select (a => a.Moved (dx, dy)).ToList ();
+         dwg.Add (new E2DimAligned (dwg.CurrentLayer, dwg.CurrentDimStyle, pts));
+      }
    }
 
    static Dwg2 MakeDimAngle () {

@@ -245,7 +245,10 @@ public class E2DimAligned : E2Dim {
    public E2DimAligned (Layer2 layer, DimStyle2 style, IList<Point2> pts, string? text = null)
       : base (layer, EDim.Aligned, style, pts, text) { }
 
-   public override void GetDXFPoints (List<(int, Point2)> defPoints) => throw new NotImplementedException ();
+   public override void GetDXFPoints (List<(int, Point2)> pts) {
+      pts.Add ((13, mPts[0])); pts.Add ((14, mPts[1]));
+      pts.Add ((10, mPts[2])); pts.Add ((11, mPts[3]));
+   }
 
    protected override void MakeEnts () {
       double angle = Pts[0].AngleTo (Pts[1]);

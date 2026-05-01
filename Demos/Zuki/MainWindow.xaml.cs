@@ -31,7 +31,7 @@ public partial class MainWindow : Window {
    }
 
    Dwg2 MakeDimAligned () {
-      var dwg = DXFReader.Load ("c:/etc/dimlinear.dxf");
+      var dwg = DXFReader.Load ("N:/TData/Dwg/Dim/DimAligned-Blank.dxf");
       var tstyle = dwg.GetStyle ("STANDARD")!;
       DimStyle2 style; double dx, dy;
 
@@ -58,23 +58,12 @@ public partial class MainWindow : Window {
       dx = 0; dy = 0;
       style = new DimStyle2 ("HORZ-ABOVE", tstyle) { TIHorz = true, TOHorz = true, TextPos = DimStyle2.EPos.Above };
       dwg.Add (style); dwg.CurrentDimStyle = style;
-      Add (65, 115, 85, 115, 64, 119);
-      Add (65, 115, 85, 115, 86, 123);
-      Add (115, 100, 115, 65, 112, 70);
-      Add (115, 100, 115, 65, 118, 63);
-      Add (65, 75, 80, 75, 74, 78);
-      Add (85, 115, 115, 100, 80, 109);
-      Add (85, 115, 115, 100, 115, 105);
-      Add (85, 90, 90, 90, 86, 98);
-      Add (85, 90, 87, 90, 85.9, 82);
-      Add (95, 90, 93.75, 90, 94.9, 82);
-      Add (80, 65, 115, 65, 100, 69);
-      Add (65, 75, 80, 65, 80, 61);
+      AddStuff2 ();
 
-      //dx = 130; dy = 65;
-      //style = new DimStyle2 ("HORZ-BELOW", tstyle) { TIHorz = true, TOHorz = true, TextPos = DimStyle2.EPos.Below };
-      //dwg.Add (style); dwg.CurrentDimStyle = style;
-      //AddStuff ();
+      dx = 65; dy = 0;
+      style = new DimStyle2 ("HORZ-BELOW", tstyle) { TIHorz = true, TOHorz = true, TextPos = DimStyle2.EPos.Below };
+      dwg.Add (style); dwg.CurrentDimStyle = style;
+      AddStuff2 ();
       return dwg; 
 
       void AddStuff () {
@@ -84,6 +73,15 @@ public partial class MainWindow : Window {
          Add (8, 10, 8, 50, 8, 30); Add (20, 25, 30, 25, 41, 32);
          Add (25, 20, 25, 25, 15, 22); Add (25, 20, 25, 25.67, 35, 22);
          Add (15, 0, 0, 10, 0, 3);
+      }
+
+      void AddStuff2 () {
+         Add (65, 115, 85, 115, 64, 119); Add (65, 115, 85, 115, 86, 123);
+         Add (115, 100, 115, 65, 112, 70); Add (115, 100, 115, 65, 118, 63);
+         Add (65, 75, 80, 75, 74, 78); Add (85, 115, 115, 100, 80, 109);
+         Add (85, 115, 115, 100, 115, 105); Add (85, 90, 90, 90, 86, 98);
+         Add (85, 90, 87, 90, 85.9, 82); Add (95, 90, 93.75, 90, 94.9, 82);
+         Add (80, 65, 115, 65, 100, 69); Add (65, 75, 80, 65, 80, 61);
       }
 
       void Add (params double[] vals) {

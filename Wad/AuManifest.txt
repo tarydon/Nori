@@ -70,10 +70,10 @@ E3Contour
   Curves
 E2Dim
   -Bound Ents Kind Pts Style.Name Text
-E2DimGeneric
 E2Dim3PAngle
 E2DimAngular
 E2DimRad
   Radius
 E2DimDia
   Radius
+E2DimAligned
