@@ -103,7 +103,7 @@ public abstract partial class E2Dim {
    }
 
    // Entity build methods -------------------------------------------------------------------------
-   protected Point2 BuildEnts (Seg seg, Point2 pick, string text, ReadOnlySpan<Point2> basis, bool twoArrows, bool discardSeg, bool markSegEnd = false) {
+   protected Point2 BuildEnts (Seg seg, Point2 pick, string text, ReadOnlySpan<Point2> basis, bool twoArrows = true, bool discardSeg = false, bool markSegEnd = false) {
       // Add the extension lines (these are required for most dimension types (except
       // radius & diameter), and are specified by the basis[] points array.
       // - If there are no basis points, no extension lines are drawn (Radius, Diameter dimensions)
@@ -192,12 +192,15 @@ public abstract partial class E2Dim {
             _ => 0
          };
          double leg2 = (textOutside && iHorz) ? (iBreak ? ext : txtWidth) : 0;
+         double kneeAngle = i == 0 ? ang0 : ang1;
+         if (Math.Abs (Math.Sin (kneeAngle)) < 0.1 && textOutside && iHorz) leg1 -= ext;
 
          Point2 hip = seg.GetPointAt (i);
          if ((snappedTextLie < 0 && i == 0) || (snappedTextLie > 1 && i == 1))
             leg1 = Math.Max (leg1, hip.DistTo (pick));
-         Point2 knee = hip.Polar (leg1 * (arrowInside ? -1 : 1), i == 0 ? ang0 : ang1);
+         Point2 knee = hip.Polar (leg1 * (arrowInside ? -1 : 1), kneeAngle);
          double dx = knee.X.EQ (hip.X) ? Math.Sign (hip.X - seg.GetPointAt (1 - i).X) : Math.Sign (knee.X - hip.X);
+         if (dx == 0) dx = 1;
          Point2 toe = knee.Moved (leg2 * dx, 0);
          Poly poly = leg2.IsZero () ? Poly.Line (hip, knee) : Poly.Lines ([hip, knee, toe], false);
          AddPoly (poly);
@@ -220,7 +223,8 @@ public abstract partial class E2Dim {
       if (iHorz && textInside) yShift = 0;
 
       double DShift (double angle) {
-         bool upward = Math.Sin (angle) > 0;
+         double sin = Math.Sin (angle); if (Math.Abs (sin) < 0.1) return 0;
+         bool upward = sin > 0;
          if (arrowInside) return upward == (pos == Above) ? bound.Height : 0;
          return upward == (pos == Below) ? bound.Height - ext : 0;
       }

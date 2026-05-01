@@ -1,6 +1,13 @@
 [Basic]
 Desc=Widget
 
+[DimAligned]
+Phases=3
+Name = Aligned Dim.
+0=Set first extension line origin
+1=Set second extension line origin
+2=Set dimension location
+
 [Dim3PAngle]
 Phases=4
 Name=3-P Angle Dim.

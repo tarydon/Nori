@@ -57,6 +57,7 @@ static class MenuCmds {
    static bool FillDrawing { get => Hub.FillDrawing; set => Hub.FillDrawing = value; }
 
    // Handlers -----------------------------------------------------------------
+   static void DimAligned () => Hub.Widget = new DimAlignedMaker ();
    static void Dim3PAngle () => Hub.Widget = new Dim3PAngleMaker ();
    static void DimRadius () => Hub.Widget = new DimRadMaker ();
    static void DimDiameter () => Hub.Widget = new DimDiaMaker ();

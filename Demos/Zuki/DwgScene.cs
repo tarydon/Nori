@@ -13,7 +13,7 @@ class DwgScene : Scene2 {
       Root = Hub.Root = new GroupVN (nodes);
       Bound = dwg.Bound.InflatedF (1.1);
       BgrdColor = Color4.Gray (216);
-      WorldDecimals = 1;
+      WorldDecimals = 0;
    }
 
    // Overrides ----------------------------------------------------------------

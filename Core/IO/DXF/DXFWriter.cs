@@ -120,7 +120,7 @@ public class DXFWriter {
             E2Insert ei => OutInsert (ei),
             E2Bendline e2b => OutBendLine (e2b),
             E2Dim e2dim => OutDimension (e2dim),
-            E2DimGeneric or E2Spline or E2Dimension => 0,
+            E2Spline or E2Dimension => 0,
             _ => throw new BadCaseException (ent.GetType ().Name)
          };
       }

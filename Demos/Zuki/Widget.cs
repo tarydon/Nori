@@ -129,6 +129,18 @@ abstract class DimMaker : EntMaker {
 }
 #endregion
 
+#region class DimAlignedMaker ----------------------------------------------------------------------
+/// <summary>
+/// Widget to make aligned dimensions
+/// </summary>
+class DimAlignedMaker : DimMaker {
+   public override Ent2? MakeEnt () {
+      if (Phase == 3) return new E2DimAligned (Dwg.CurrentLayer, DimStyle, Pts);
+      return null;
+   }
+}
+#endregion
+
 #region class Dim3PAngleMaker ----------------------------------------------------------------------
 /// <summary>Widget that makes 3-P angular dimensions</summary>
 class Dim3PAngleMaker : DimMaker {

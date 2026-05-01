@@ -78,11 +78,8 @@ public abstract partial class E2Dim : Ent2 {
    /// Since blocks are not used by any dimension other than this one, we can load the entities
    /// here and later discard that block
    internal Block2? LoadEnts (Dwg2 dwg, string name) {
-      if (dwg.Blocks.FirstOrDefault (a => a.Name == name) is { } block) {
-         mEnts.AddRange (block.Ents);
-         return block;
-      }
-      return null;
+      if (dwg.Blocks.FirstOrDefault (a => a.Name == name) is not { } block) return null;
+      mEnts.AddRange (block.Ents); return block;
    }
 
    /// <summary>Check if the Dimension is close to the given point (closer than the given threshold)</summary>
@@ -100,25 +97,6 @@ public abstract partial class E2Dim : Ent2 {
    protected enum EInside { None = 0, Text = 1, Arrows = 2, Both = 3 };
 }
 #endregion   
-
-#region class E2DimGeneric -------------------------------------------------------------------------
-/// <summary>E2DimGeneric is a 'fallback' dimension used when we don't have a suitable type</summary>
-/// An E2DimGeneric loads and displays all the entities (looks fine visually), but cannot be 
-/// edited nor exported to DXF
-class E2DimGeneric : E2Dim {
-   public E2DimGeneric (Layer2 layer, DimStyle2 style, IList<Point2> pts, string? text)
-      : base (layer, EDim.Generic, style, pts, text) { }
-
-   protected override void MakeEnts () => throw new NotImplementedException ();
-   public override void GetDXFPoints (List<(int, Point2)> defPoints) => throw new NotImplementedException ();
-
-   protected override Ent2 Xformed (Matrix2 xfm) {
-      var dim = new E2DimGeneric (Layer, mStyle, [.. mPts.Select (a => a * xfm)], mText);
-      dim.mEnts.AddRange (mEnts.Select (a => a * xfm));
-      return dim;
-   }
-}
-#endregion
 
 #region class E2DimDia -----------------------------------------------------------------------------
 /// <summary>E2DimDia implements a diameter dimension</summary>
@@ -248,7 +226,7 @@ public class E2Dim3PAngle : E2Dim {
          double span = Math.Abs (seg.AngSpan).R2D ().Round (mStyle.AngDecimal);
          text = $"{span}\u00b0";
       }
-      SetTextPoint (4, BuildEnts (seg, pick, text, mPts.AsSpan ()[1..3], true, false));
+      SetTextPoint (4, BuildEnts (seg, pick, text, mPts.AsSpan ()[1..3]));
       AddPoint (cen);
    }
 
@@ -260,6 +238,33 @@ public class E2Dim3PAngle : E2Dim {
    }
 }
 #endregion
+
+public class E2DimAligned : E2Dim {
+   // Constructors -------------------------------------------------------------
+   E2DimAligned () { }
+   public E2DimAligned (Layer2 layer, DimStyle2 style, IList<Point2> pts, string? text = null)
+      : base (layer, EDim.Aligned, style, pts, text) { }
+
+   public override void GetDXFPoints (List<(int, Point2)> defPoints) => throw new NotImplementedException ();
+
+   protected override void MakeEnts () {
+      double angle = Pts[0].AngleTo (Pts[1]);
+      Matrix2 rot = Matrix2.Rotation (angle), inv = Matrix2.Rotation (-angle);
+      Point2 a = Pts[0] * inv, b = Pts[1] * inv, pick = Pts[2] * inv;
+      Point2 sega = new Point2 (a.X, pick.Y) * rot, segb = new Point2 (b.X, pick.Y) * rot;
+      var seg = Poly.Line (sega, segb)[0];
+
+      string text = Text ?? "";
+      if (IsAutoText) text = seg.Length.Round (mStyle.LinDecimal).ToString ();
+      SetTextPoint (3, BuildEnts (seg, Pts[2], text, mPts.AsSpan ()[..2]));
+   }
+
+   protected override Ent2 Xformed (Matrix2 xfm) {
+      var dim = new E2DimAligned (Layer, Style, [.. mPts.Select (a => a * xfm)], mText);
+      dim.mEnts.AddRange (mEnts.Select (a => a * xfm));
+      return dim; 
+   }
+}
 
 #region class E2DimAngle ---------------------------------------------------------------------------
 /// <summary>
@@ -300,9 +305,13 @@ public class E2DimAngle : E2Dim {
          double span = Math.Abs (seg.AngSpan).R2D ().Round (mStyle.AngDecimal);
          text = $"{span}\u00b0";
       }
-      SetTextPoint (5, BuildEnts (seg, pick, text, mPts.AsSpan (), true, false));
+      SetTextPoint (5, BuildEnts (seg, pick, text, mPts.AsSpan ()));
    }
 
-   protected override Ent2 Xformed (Matrix2 xfm) => throw new NotImplementedException ();
+   protected override Ent2 Xformed (Matrix2 xfm) {
+      var dim = new E2DimAngle (Layer, Style, [.. mPts.Select (a => a * xfm)], mText);
+      dim.mEnts.AddRange (mEnts.Select (a => a * xfm));
+      return dim;
+   }
 }
 #endregion
