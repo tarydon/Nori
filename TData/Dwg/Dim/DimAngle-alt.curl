@@ -106,7 +106,7 @@
     (E2Poly){ Layer:0 Poly:M109.091883,79.091883L96.363961,66.363961 }
     (E2Poly){ Layer:0 Poly:M99,60H117 }
     (E2Poly){ Layer:0 Poly:M10,5H130V87H10Z }
-    (E2Dimension){
+    (E2DimAngle){
       Layer:DIMENSION
       Ents:[
         (E2Poly){ Layer:DIMENSION Poly:M28.375,20H24.832763 }
@@ -138,8 +138,11 @@
           XScale:1
         }
       ]
+      Kind:Angular
+      Pts:[ 29,20 45,20 26.363961,26.363961 37.67767,37.67767 26,21 26.082763,13.0125 ]
+      Style:BREAK
     }
-    (E2Dimension){
+    (E2DimAngle){
       Layer:DIMENSION
       Ents:[
         (E2Solid){
@@ -170,8 +173,11 @@
           XScale:1
         }
       ]
+      Kind:Angular
+      Pts:[ 29,20 45,20 26.363961,26.363961 37.67767,37.67767 29,24 29.099158,23.768995 ]
+      Style:BREAK
     }
-    (E2Dimension){
+    (E2DimAngle){
       Layer:DIMENSION
       Ents:[
         (E2Solid){
@@ -201,8 +207,11 @@
           XScale:1
         }
       ]
+      Kind:Angular
+      Pts:[ 29,20 45,20 26.363961,26.363961 37.67767,37.67767 30,29 25.456124,33.570174 ]
+      Style:BREAK
     }
-    (E2Dimension){
+    (E2DimAngle){
       Layer:DIMENSION
       Ents:[
         (E2Solid){
@@ -232,8 +241,11 @@
           XScale:1
         }
       ]
+      Kind:Angular
+      Pts:[ 29,20 45,20 26.363961,26.363961 37.67767,37.67767 37,23 37.262677,14.2625 ]
+      Style:BREAK
     }
-    (E2Dimension){
+    (E2DimAngle){
       Layer:DIMENSION
       Ents:[
         (E2Solid){
@@ -264,8 +276,11 @@
           XScale:1
         }
       ]
+      Kind:Angular
+      Pts:[ 29,20 45,20 26.363961,26.363961 37.67767,37.67767 40,29 40.26226,28.392903 ]
+      Style:BREAK
     }
-    (E2Dimension){
+    (E2DimAngle){
       Layer:DIMENSION
       Ents:[
         (E2Poly){ Layer:DIMENSION Poly:M45.625,20H49.034888 }
@@ -298,8 +313,11 @@
           XScale:1
         }
       ]
+      Kind:Angular
+      Pts:[ 29,20 45,20 26.363961,26.363961 37.67767,37.67767 44,34 45.669889,30.632816 ]
+      Style:BREAK
     }
-    (E2Dimension){
+    (E2DimAngle){
       Layer:DIMENSION
       Ents:[
         (E2Poly){ Layer:DIMENSION Poly:M63.375,20H59.832763 }
@@ -331,8 +349,11 @@
           XScale:1
         }
       ]
+      Kind:Angular
+      Pts:[ 64,20 82,20 61.363961,26.363961 74.091883,39.091883 61,21 59.207763,13.6375 ]
+      Style:ABOVE
     }
-    (E2Dimension){
+    (E2DimAngle){
       Layer:DIMENSION
       Ents:[
         (E2Solid){
@@ -362,8 +383,18 @@
           XScale:1
         }
       ]
+      Kind:Angular
+      Pts:[
+        64,20
+        82,20
+        61.363961,26.363961
+        74.091883,39.091883
+        64,24
+        65.831432,24.486526
+      ]
+      Style:ABOVE
     }
-    (E2Dimension){
+    (E2DimAngle){
       Layer:DIMENSION
       Ents:[
         (E2Solid){ Layer:DIMENSION Pts:[ 70.207128,22.526007 69.376687,22.456642 70,20 70,20 ] }
@@ -390,8 +421,18 @@
           XScale:1
         }
       ]
+      Kind:Angular
+      Pts:[
+        64,20
+        82,20
+        61.363961,26.363961
+        74.091883,39.091883
+        67,29
+        64.201227,34.663627
+      ]
+      Style:ABOVE
     }
-    (E2Dimension){
+    (E2DimAngle){
       Layer:DIMENSION
       Ents:[
         (E2Solid){
@@ -421,8 +462,11 @@
           XScale:1
         }
       ]
+      Kind:Angular
+      Pts:[ 64,20 82,20 61.363961,26.363961 74.091883,39.091883 74,23 72.360384,16.1375 ]
+      Style:ABOVE
     }
-    (E2Dimension){
+    (E2DimAngle){
       Layer:DIMENSION
       Ents:[
         (E2Solid){
@@ -452,8 +496,11 @@
           XScale:1
         }
       ]
+      Kind:Angular
+      Pts:[ 64,20 82,20 61.363961,26.363961 74.091883,39.091883 77,29 78.69264,29.813813 ]
+      Style:ABOVE
     }
-    (E2Dimension){
+    (E2DimAngle){
       Layer:DIMENSION
       Ents:[
         (E2Poly){ Layer:DIMENSION Poly:M82.625,20H86.614453 }
@@ -485,8 +532,18 @@
           XScale:1
         }
       ]
+      Kind:Angular
+      Pts:[
+        64,20
+        82,20
+        61.363961,26.363961
+        74.091883,39.091883
+        84,29
+        84.785371,32.337504
+      ]
+      Style:ABOVE
     }
-    (E2Dimension){
+    (E2DimAngle){
       Layer:DIMENSION
       Ents:[
         (E2Poly){ Layer:DIMENSION Poly:M98.375,20H94.832763 }
@@ -518,8 +575,18 @@
           XScale:1
         }
       ]
+      Kind:Angular
+      Pts:[
+        99,20
+        117,20
+        96.363961,26.363961
+        109.091883,39.091883
+        96,21
+        97.957763,13.6375
+      ]
+      Style:BELOW
     }
-    (E2Dimension){
+    (E2DimAngle){
       Layer:DIMENSION
       Ents:[
         (E2Solid){
@@ -549,8 +616,18 @@
           XScale:1
         }
       ]
+      Kind:Angular
+      Pts:[
+        99,20
+        117,20
+        96.363961,26.363961
+        109.091883,39.091883
+        100,24
+        98.218213,23.404095
+      ]
+      Style:BELOW
     }
-    (E2Dimension){
+    (E2DimAngle){
       Layer:DIMENSION
       Ents:[
         (E2Solid){
@@ -580,8 +657,18 @@
           XScale:1
         }
       ]
+      Kind:Angular
+      Pts:[
+        99,20
+        117,20
+        96.363961,26.363961
+        109.091883,39.091883
+        102,29
+        96.549577,32.011976
+      ]
+      Style:BELOW
     }
-    (E2Dimension){
+    (E2DimAngle){
       Layer:DIMENSION
       Ents:[
         (E2Solid){
@@ -611,8 +698,18 @@
           XScale:1
         }
       ]
+      Kind:Angular
+      Pts:[
+        99,20
+        117,20
+        96.363961,26.363961
+        109.091883,39.091883
+        109,23
+        111.110384,16.1375
+      ]
+      Style:BELOW
     }
-    (E2Dimension){
+    (E2DimAngle){
       Layer:DIMENSION
       Ents:[
         (E2Solid){
@@ -642,8 +739,18 @@
           XScale:1
         }
       ]
+      Kind:Angular
+      Pts:[
+        99,20
+        117,20
+        96.363961,26.363961
+        109.091883,39.091883
+        112,29
+        110.228092,28.37875
+      ]
+      Style:BELOW
     }
-    (E2Dimension){
+    (E2DimAngle){
       Layer:DIMENSION
       Ents:[
         (E2Poly){ Layer:DIMENSION Poly:M117.625,20H121.614453 }
@@ -675,8 +782,18 @@
           XScale:1
         }
       ]
+      Kind:Angular
+      Pts:[
+        99,20
+        117,20
+        96.363961,26.363961
+        109.091883,39.091883
+        119,29
+        116.320822,30.902442
+      ]
+      Style:BELOW
     }
-    (E2Dimension){
+    (E2DimAngle){
       Layer:DIMENSION
       Ents:[
         (E2Poly){ Layer:DIMENSION Poly:M28.375,60H20.714688 }
@@ -707,8 +824,11 @@
           XScale:1
         }
       ]
+      Kind:Angular
+      Pts:[ 29,60 45,60 26.363961,66.363961 37.67767,77.67767 21.9,60.5 26.452188,56.25 ]
+      Style:HORZ-BREAK
     }
-    (E2Dimension){
+    (E2DimAngle){
       Layer:DIMENSION
       Ents:[
         (E2Poly){ Layer:DIMENSION Poly:M28.375,60H22.355551 }
@@ -734,8 +854,11 @@
           XScale:1
         }
       ]
+      Kind:Angular
+      Pts:[ 29,60 45,60 26.363961,66.363961 37.67767,77.67767 23,62 15.410359,65.20116 ]
+      Style:HORZ-BREAK
     }
-    (E2Dimension){
+    (E2DimAngle){
       Layer:DIMENSION
       Ents:[
         (E2Solid){
@@ -765,8 +888,18 @@
           XScale:1
         }
       ]
+      Kind:Angular
+      Pts:[
+        29,60
+        45,60
+        26.363961,66.363961
+        37.67767,77.67767
+        28.7,64.2
+        28.925365,63.697007
+      ]
+      Style:HORZ-BREAK
     }
-    (E2Dimension){
+    (E2DimAngle){
       Layer:DIMENSION
       Ents:[
         (E2Solid){
@@ -795,8 +928,11 @@
           XScale:1
         }
       ]
+      Kind:Angular
+      Pts:[ 29,60 45,60 26.363961,66.363961 37.67767,77.67767 32.6,64.1 37.737783,57.5 ]
+      Style:HORZ-BREAK
     }
-    (E2Dimension){
+    (E2DimAngle){
       Layer:DIMENSION
       Ents:[
         (E2Solid){
@@ -825,8 +961,11 @@
           XScale:1
         }
       ]
+      Kind:Angular
+      Pts:[ 29,60 45,60 26.363961,66.363961 37.67767,77.67767 32,70.2 24.88116,72.904194 ]
+      Style:HORZ-BREAK
     }
-    (E2Dimension){
+    (E2DimAngle){
       Layer:DIMENSION
       Ents:[
         (E2Solid){
@@ -856,8 +995,18 @@
           XScale:1
         }
       ]
+      Kind:Angular
+      Pts:[
+        29,60
+        45,60
+        26.363961,66.363961
+        37.67767,77.67767
+        36.8,70.4
+        38.254513,67.561267
+      ]
+      Style:HORZ-BREAK
     }
-    (E2Dimension){
+    (E2DimAngle){
       Layer:DIMENSION
       Ents:[
         (E2Poly){ Layer:DIMENSION Poly:M63.375,60H56.791381 }
@@ -888,8 +1037,18 @@
           XScale:1
         }
       ]
+      Kind:Angular
+      Pts:[
+        64,60
+        82,60
+        61.363961,66.363961
+        74.091883,79.091883
+        57.7,61.4
+        51.261431,66.677232
+      ]
+      Style:HORZ-ABOVE
     }
-    (E2Dimension){
+    (E2DimAngle){
       Layer:DIMENSION
       Ents:[
         (E2Poly){ Layer:DIMENSION Poly:M63.375,60H58.367359 }
@@ -920,8 +1079,18 @@
           XScale:1
         }
       ]
+      Kind:Angular
+      Pts:[
+        64,60
+        82,60
+        61.363961,66.363961
+        74.091883,79.091883
+        59.6,60.4
+        62.854859,55.625
+      ]
+      Style:HORZ-ABOVE
     }
-    (E2Dimension){
+    (E2DimAngle){
       Layer:DIMENSION
       Ents:[
         (E2Solid){
@@ -951,8 +1120,18 @@
           XScale:1
         }
       ]
+      Kind:Angular
+      Pts:[
+        64,60
+        82,60
+        61.363961,66.363961
+        74.091883,79.091883
+        64.2,62.4
+        63.784146,63.638513
+      ]
+      Style:HORZ-ABOVE
     }
-    (E2Dimension){
+    (E2DimAngle){
       Layer:DIMENSION
       Ents:[
         (E2Solid){
@@ -981,8 +1160,18 @@
           XScale:1
         }
       ]
+      Kind:Angular
+      Pts:[
+        64,60
+        82,60
+        61.363961,66.363961
+        74.091883,79.091883
+        66,68
+        60.496309,72.376576
+      ]
+      Style:HORZ-ABOVE
     }
-    (E2Dimension){
+    (E2DimAngle){
       Layer:DIMENSION
       Ents:[
         (E2Solid){
@@ -1011,8 +1200,18 @@
           XScale:1
         }
       ]
+      Kind:Angular
+      Pts:[
+        64,60
+        82,60
+        61.363961,66.363961
+        74.091883,79.091883
+        70.5,64.3
+        74.322897,56.875
+      ]
+      Style:HORZ-ABOVE
     }
-    (E2Dimension){
+    (E2DimAngle){
       Layer:DIMENSION
       Ents:[
         (E2Solid){
@@ -1042,8 +1241,18 @@
           XScale:1
         }
       ]
+      Kind:Angular
+      Pts:[
+        64,60
+        82,60
+        61.363961,66.363961
+        74.091883,79.091883
+        72,73
+        74.771885,68.189783
+      ]
+      Style:HORZ-ABOVE
     }
-    (E2Dimension){
+    (E2DimAngle){
       Layer:DIMENSION
       Ents:[
         (E2Poly){ Layer:DIMENSION Poly:M98.375,60H91.791381 }
@@ -1074,8 +1283,18 @@
           XScale:1
         }
       ]
+      Kind:Angular
+      Pts:[
+        99,60
+        117,60
+        96.363961,66.363961
+        109.091883,79.091883
+        92.7,61.4
+        84.493664,64.694999
+      ]
+      Style:HORZ-BELOW
     }
-    (E2Dimension){
+    (E2DimAngle){
       Layer:DIMENSION
       Ents:[
         (E2Poly){ Layer:DIMENSION Poly:M98.375,60H93.367359 }
@@ -1106,8 +1325,18 @@
           XScale:1
         }
       ]
+      Kind:Angular
+      Pts:[
+        99,60
+        117,60
+        96.363961,66.363961
+        109.091883,79.091883
+        94.6,60.4
+        97.854859,54.375
+      ]
+      Style:HORZ-BELOW
     }
-    (E2Dimension){
+    (E2DimAngle){
       Layer:DIMENSION
       Ents:[
         (E2Solid){
@@ -1137,8 +1366,18 @@
           XScale:1
         }
       ]
+      Kind:Angular
+      Pts:[
+        99,60
+        117,60
+        96.363961,66.363961
+        109.091883,79.091883
+        99.2,62.4
+        98.784146,63.638513
+      ]
+      Style:HORZ-BELOW
     }
-    (E2Dimension){
+    (E2DimAngle){
       Layer:DIMENSION
       Ents:[
         (E2Solid){
@@ -1167,8 +1406,18 @@
           XScale:1
         }
       ]
+      Kind:Angular
+      Pts:[
+        99,60
+        117,60
+        96.363961,66.363961
+        109.091883,79.091883
+        101,68
+        92.844658,71.278226
+      ]
+      Style:HORZ-BELOW
     }
-    (E2Dimension){
+    (E2DimAngle){
       Layer:DIMENSION
       Ents:[
         (E2Solid){
@@ -1197,8 +1446,18 @@
           XScale:1
         }
       ]
+      Kind:Angular
+      Pts:[
+        99,60
+        117,60
+        96.363961,66.363961
+        109.091883,79.091883
+        105.5,64.3
+        109.322897,56.875
+      ]
+      Style:HORZ-BELOW
     }
-    (E2Dimension){
+    (E2DimAngle){
       Layer:DIMENSION
       Ents:[
         (E2Solid){
@@ -1228,8 +1487,18 @@
           XScale:1
         }
       ]
+      Kind:Angular
+      Pts:[
+        99,60
+        117,60
+        96.363961,66.363961
+        109.091883,79.091883
+        107,73
+        109.771885,68.189783
+      ]
+      Style:HORZ-BELOW
     }
-    (E2Dimension){
+    (E2DimAngle){
       Layer:DIMENSION
       Ents:[
         (E2Poly){ Layer:DIMENSION Poly:M117.625,60H120.660882 }
@@ -1261,6 +1530,16 @@
           XScale:1
         }
       ]
+      Kind:Angular
+      Pts:[
+        99,60
+        117,60
+        96.363961,66.363961
+        109.091883,79.091883
+        114,77
+        117.172112,71.255057
+      ]
+      Style:HORZ-BELOW
     }
   ]
 }

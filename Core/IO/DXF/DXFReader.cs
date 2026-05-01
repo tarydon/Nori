@@ -133,9 +133,11 @@ public class DXFReader {
       var (layer, style, text) = (LYR (), mDwg.GetDimStyle (S (3)), S (1));
 
       E2Dim? dim = kind switch {
-         EDim.Angular3P => new E2Dim3PAngle (layer, style, Add5 (15, 13, 14, 10, 11), text),
+         EDim.Angular3P => new E2Dim3PAngle (layer, style, AddN (15, 13, 14, 10, 11), text),
+         EDim.Angular => new E2DimAngle (layer, style, AddN (13, 14, 15, 10, 16, 11), text),
          EDim.Radius => MakeRadiusDim (),
          EDim.Diameter => MakeDiameterDim (),
+         EDim.Aligned => new E2DimAligned (layer, style, AddN (13, 14, 10, 11), text), 
          _ => null
       };
       if (dim == null) {
@@ -148,19 +150,19 @@ public class DXFReader {
 
       // Helpers ...........................................
       E2Dim MakeRadiusDim () {
-         var pts = Add3 (15, 10, 11);
+         var pts = AddN (15, 10, 11);
          return new E2DimRad (layer, style, pts[0].DistTo (pts[1]), style.TOFL, pts);
       }
 
       E2Dim MakeDiameterDim () {
-         var pts = Add3 (10, 15, 11); pts[0] = pts[0].Midpoint (pts[1]);
+         var pts = AddN (10, 15, 11); pts[0] = pts[0].Midpoint (pts[1]);
          return new E2DimDia (layer, style, pts[0].DistTo (pts[1]), style.TOFL, pts);
       }
 
-      List<Point2> Add1 (int a) { mPts.Add (PT (a)); return mPts; }
-      List<Point2> Add2 (int a, int b) { Add1 (a); return Add1 (b); }
-      List<Point2> Add3 (int a, int b, int c) { Add2 (a, b); return Add1 (c); }
-      List<Point2> Add5 (int a, int b, int c, int d, int e) { Add2 (a, b); Add2 (c, d); return Add1 (e); }
+      List<Point2> AddN (params int[] a) {
+         foreach (var n in a) mPts.Add (PT (n)); 
+         return mPts; 
+      }
    }
 
    // Loads an ELLIPSE entity
