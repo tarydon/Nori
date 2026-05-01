@@ -25,12 +25,69 @@ public partial class MainWindow : Window {
       var dxf = Environment.GetCommandLineArgs ().FirstOrDefault (a => a.EndsWith (".dxf"));
       if (dxf != null) Hub.LoadDXF (dxf);
       else {
-         Hub.Dwg = TestAngleDim ();
-         Hub.Widget = new DimAngleMaker ();
+         Hub.Dwg = MakeDimAligned ();
+         Hub.Widget = new DimDiaMaker ();
       }
    }
 
-   Dwg2 TestAngleDim () {
+   Dwg2 MakeDimAligned () {
+      var dwg = DXFReader.Load ("c:/etc/dimlinear.dxf");
+      return dwg; 
+   }
+
+   Dwg2 MakeDim3PAngle () {
+      var dwg = DXFReader.Load ("N:/TData/Dwg/Dim/Dim3PAngle-Blank.dxf", true);
+      var tstyle = dwg.GetStyle ("STANDARD")!;
+      var layer = new Layer2 ("DIMENSION", Color4.Blue, ELineType.Continuous);
+      dwg.Add (layer); dwg.CurrentLayer = layer;
+
+      double dx = 0, dy = 0;
+      var style = new DimStyle2 ("BREAK", tstyle);
+      dwg.Add (style); dwg.CurrentDimStyle = style;
+      Add (22.9, 21.7); Add (26, 21); Add (29, 24);
+      Add (30, 29); Add (37, 23); Add (40, 29);
+
+      dx = 35; dy = 0;
+      style = new DimStyle2 ("ABOVE", tstyle) { TextPos = DimStyle2.EPos.Above };
+      dwg.Add (style); dwg.CurrentDimStyle = style;
+      Add (22, 21); Add (26, 21); Add (29, 24);
+      Add (30, 29); Add (37, 23); Add (40, 29);
+
+      dx = 70; dy = 0;
+      style = new DimStyle2 ("BELOW", tstyle) { TextPos = DimStyle2.EPos.Below };
+      dwg.Add (style); dwg.CurrentDimStyle = style;
+      Add (22, 21); Add (26, 21); Add (29, 24);
+      Add (31, 29); Add (37, 23); Add (40, 29);
+
+      dx = 0; dy = 40;
+      style = new DimStyle2 ("HORZ-BREAK", tstyle) { TIHorz = true, TOHorz = true };
+      dwg.Add (style); dwg.CurrentDimStyle = style;
+      Add (21.9, 20.5); Add (23, 22); Add (28.7, 24.2); 
+      Add (32.6, 24.1); Add (32.0, 30.2); Add (36.8, 30.4);
+
+      dx = 35; dy = 40;
+      style = new DimStyle2 ("HORZ-ABOVE", tstyle) { TIHorz = true, TOHorz = true, TextPos = DimStyle2.EPos.Above };
+      dwg.Add (style); dwg.CurrentDimStyle = style;
+      Add (22.7, 21.4); Add (24.6, 20.4); Add (29.2, 22.4); 
+      Add (31, 28); Add (35.5, 24.3); Add (37, 33);
+
+      dx = 70; dy = 40;
+      style = new DimStyle2 ("HORZ-BELOW", tstyle) { TIHorz = true, TOHorz = true, TextPos = DimStyle2.EPos.Below };
+      dwg.Add (style); dwg.CurrentDimStyle = style;
+      Add (22.7, 21.4); Add (24.6, 20.4); Add (29.2, 22.4); Add (31, 28);
+      Add (35.5, 24.3); Add (37, 33); Add (44, 37);
+
+      return dwg;
+
+      void Add (double x, double y) {
+         List<double> vals = [];
+         vals.AddM (20, 20, 35, 20, 30, 30, x, y);
+         var input = Point2.List ([.. vals]).Select (a => a.Moved (dx, dy)).ToList ();
+         dwg.Add (new E2Dim3PAngle (dwg.CurrentLayer, dwg.CurrentDimStyle, input));
+      }
+   }
+
+   Dwg2 MakeDimAngle () {
       var dwg = DXFReader.Load ("c:/dropbox/wip/dimangle.dxf");
       var tstyle = dwg.GetStyle ("STANDARD")!;
       var layer = new Layer2 ("DIMENSION", Color4.Blue, ELineType.Continuous);
@@ -91,109 +148,127 @@ public partial class MainWindow : Window {
          if (dwg.PickPoly (input[0], 5, out var tp1)) pts.AddM (tp1.Poly.A, tp1.Poly.B);
          if (dwg.PickPoly (input[1], 5, out var tp2)) pts.AddM (tp2.Poly.A, tp2.Poly.B);
          pts.Add (input[2]);
-         dwg.Add (new E2DimAngular (dwg.CurrentLayer, dwg.CurrentDimStyle, pts));
+         dwg.Add (new E2DimAngle (dwg.CurrentLayer, dwg.CurrentDimStyle, pts));
       }
    }
 
-   Dwg2 TestDimDia () {
-      double dx = 0, dy = 0;
-      var dwg = DXFReader.Load ("N:/TData/Dwg/Dim/DimDia-Blank.dxf");
-      var style = new DimStyle2 ("BREAK", dwg.GetStyle ("STANDARD")!);
-      dwg.Add (style); dwg.CurrentDimStyle = style;
-      Add (false, 79, 58, 82, 58); Add (false, 79, 58, 75, 60); 
-      Add (false, 79, 58, 80, 72); Add (false, 79, 58, 35, 36);
-      Add (true, 79, 58, 27, 55); Add (true, 79, 58, 78, 26);
+   Dwg2 MakeDimDia () {
+      var dwg = DXFReader.Load ("N:/TData/Dwg/Dim/DimDia-Blank.dxf", true);
+      var tstyle = dwg.GetStyle ("STANDARD")!;
+      DimStyle2 style; double dx, dy;
 
-      dx = 75; dy = 0; 
-      style = new DimStyle2 ("ABOVE", dwg.GetStyle ("STANDARD")!) { TextPos = DimStyle2.EPos.Above };
+      dx = 0; dy = 0;
+      style = new DimStyle2 ("BREAK", tstyle);
       dwg.Add (style); dwg.CurrentDimStyle = style;
-      Add (false, 79, 58, 82, 58); Add (false, 79, 58, 75, 60);
-      Add (false, 79, 58, 80, 72); Add (false, 79, 58, 35, 36);
-      Add (true, 79, 58, 27, 55); Add (true, 79, 58, 78, 26);
+      Add (false, 14, 14); Add (false, 11, 11);
+      Add (false, 40, 40); Add (false, 53, 53);
+      Add (true, 49, 12); Add (true, 51, 23);
 
-      dx = 150;
-      style = new DimStyle2 ("BELOW", dwg.GetStyle ("STANDARD")!) { TextPos = DimStyle2.EPos.Below };
+      dx = 60; dy = 0;
+      style = new DimStyle2 ("ABOVE", tstyle) { TextPos = DimStyle2.EPos.Above };
       dwg.Add (style); dwg.CurrentDimStyle = style;
-      Add (false, 79, 58, 82, 58); Add (false, 79, 58, 75, 60);
-      Add (false, 79, 58, 80, 72); Add (false, 79, 58, 35, 36);
-      Add (true, 79, 58, 27, 55); Add (true, 79, 58, 78, 26);
+      Add (false, 14, 14); Add (false, 11, 11);
+      Add (false, 40, 40); Add (false, 53, 53);
+      Add (true, 49, 12); Add (true, 51, 23);
 
-      dx = 0; dy = 70;
-      style = new DimStyle2 ("HORZ", dwg.GetStyle ("STANDARD")!) { TIHorz = true, TOHorz = true };
+      dx = 120; dy = 0;
+      style = new DimStyle2 ("BELOW", tstyle) { TextPos = DimStyle2.EPos.Below };
       dwg.Add (style); dwg.CurrentDimStyle = style;
-      Add (false, 79, 58, 82, 58); Add (false, 79, 58, 75, 60);
-      Add (false, 79, 58, 80, 72); Add (false, 79, 58, 35, 36);
-      Add (true, 79, 58, 27, 55); Add (true, 79, 58, 78, 26);
+      Add (false, 14, 14); Add (false, 11, 11);
+      Add (false, 40, 40); Add (false, 53, 53);
+      Add (true, 49, 12); Add (true, 51, 23);
 
-      dx = 75; dy = 70;
-      style = new DimStyle2 ("HORZABOVE", dwg.GetStyle ("STANDARD")!) { TIHorz = true, TOHorz = true, TextPos = DimStyle2.EPos.Above };
+      dx = 0; dy = 60;
+      style = new DimStyle2 ("HORZ-BREAK", tstyle) { TIHorz = true, TOHorz = true };
       dwg.Add (style); dwg.CurrentDimStyle = style;
-      Add (false, 79, 58, 82, 58); Add (false, 79, 58, 75, 60);
-      Add (false, 79, 58, 80, 72); Add (false, 79, 58, 35, 36);
-      Add (true, 79, 58, 27, 55); Add (true, 79, 58, 78, 26);
+      Add (false, 14, 14); Add (false, 11, 11);
+      Add (false, 40, 40); Add (false, 53, 53);
+      Add (true, 49, 12); Add (true, 51, 23);
 
-      dx = 150; dy = 70;
-      style = new DimStyle2 ("HORZBELOW", dwg.GetStyle ("STANDARD")!) { TIHorz = true, TOHorz = true, TextPos = DimStyle2.EPos.Below };
+      dx = 60; dy = 60;
+      style = new DimStyle2 ("HORZ-ABOVE", tstyle) { TIHorz = true, TOHorz = true, TextPos = DimStyle2.EPos.Above };
       dwg.Add (style); dwg.CurrentDimStyle = style;
-      Add (false, 79, 58, 82, 58); Add (false, 79, 58, 75, 60);
-      Add (false, 79, 58, 80, 72); Add (false, 79, 58, 35, 36);
-      Add (true, 79, 58, 27, 55); Add (true, 79, 58, 78, 26);
+      Add (false, 14, 14); Add (false, 11, 11);
+      Add (false, 40, 40); Add (false, 53, 53);
+      Add (true, 49, 12); Add (true, 51, 23);
+
+      dx = 120; dy = 60;
+      style = new DimStyle2 ("HORZ-BELOW", tstyle) { TIHorz = true, TOHorz = true, TextPos = DimStyle2.EPos.Below };
+      dwg.Add (style); dwg.CurrentDimStyle = style;
+      Add (false, 14, 14); Add (false, 11, 11);
+      Add (false, 40, 40); Add (false, 53, 53);
+      Add (true, 49, 12); Add (true, 51, 23);
+
+      return dwg;
+
+      // Header ............................................
+      void Add (bool tofl, double x, double y) {
+         double[] vals = [12.3, 12.3, x, y];
+         var pts = Point2.List (vals).Select (a => a.Moved (dx, dy)).ToList ();
+         dwg.PickPoly (pts[0], 3, out var p);
+         var seg = p.Poly[p.Seg]; pts[0] = seg.Center;
+         dwg.Add (new E2DimDia (dwg.CurrentLayer, dwg.CurrentDimStyle, seg.Radius, tofl, pts));
+      }
+   }
+
+   Dwg2 MakeDimRad () {
+      var dwg = DXFReader.Load ("N:/TData/Dwg/Dim/DimRad-Blank.dxf");
+      var tstyle = dwg.GetStyle ("STANDARD")!;
+      DimStyle2 style; double dx, dy;
+
+      dx = 0; dy = 0;
+      style = new DimStyle2 ("BREAK", tstyle);
+      dwg.Add (style); dwg.CurrentDimStyle = style;
+      Add (false, 14, 15, 12, 13); Add (false, 14, 15, 14, 19);
+      Add (false, 54, 52, 63, 38); Add (false, 54, 52, 64, 44);
+      Add (false, 54, 52, 68, 55); Add (true, 54, 52, 62, 30); 
+      Add (true, 54, 52, 56, 53);
+
+      dx = 70; dy = 0;
+      style = new DimStyle2 ("ABOVE", tstyle) { TextPos = DimStyle2.EPos.Above };
+      dwg.Add (style); dwg.CurrentDimStyle = style;
+      Add (false, 14, 15, 12, 13); Add (false, 14, 15, 14, 19);
+      Add (false, 54, 52, 63, 38); Add (false, 54, 52, 64, 44);
+      Add (false, 54, 52, 70, 57); Add (true, 54, 52, 62, 30);
+      Add (true, 54, 52, 56, 53);
+
+      dx = 140; dy = 0;
+      style = new DimStyle2 ("BELOW", tstyle) { TextPos = DimStyle2.EPos.Below };
+      dwg.Add (style); dwg.CurrentDimStyle = style;
+      Add (false, 14, 15, 12, 13); Add (false, 14, 15, 14, 19);
+      Add (false, 54, 52, 63, 38); Add (false, 54, 52, 64, 44);
+      Add (false, 54, 52, 70, 57); Add (true, 54, 52, 62, 30);
+      Add (true, 54, 52, 56, 53);
+
+      dx = 0; dy = 55;
+      style = new DimStyle2 ("HORZ-BREAK", tstyle) { TIHorz = true, TOHorz = true };
+      dwg.Add (style); dwg.CurrentDimStyle = style;
+      Add (false, 14, 15, 12, 13); Add (false, 14, 15, 14, 19);
+      Add (false, 54, 52, 63, 38); Add (false, 54, 52, 64, 44);
+      Add (false, 54, 52, 68, 55); Add (true, 54, 52, 62, 30);
+      Add (true, 54, 52, 52, 55);
+
+      dx = 70; dy = 55;
+      style = new DimStyle2 ("HORZ-ABOVE", tstyle) { TIHorz = true, TOHorz = true, TextPos = DimStyle2.EPos.Above };
+      dwg.Add (style); dwg.CurrentDimStyle = style;
+      Add (false, 14, 15, 12, 13); Add (false, 14, 15, 14, 19);
+      Add (false, 54, 52, 63, 38); Add (false, 54, 52, 64, 44);
+      Add (false, 54, 52, 68, 55); Add (true, 54, 52, 62, 30);
+      Add (true, 54, 52, 52, 55);
+
+      dx = 140; dy = 55;
+      style = new DimStyle2 ("HORZ-BELOW", tstyle) { TIHorz = true, TOHorz = true, TextPos = DimStyle2.EPos.Below };
+      dwg.Add (style); dwg.CurrentDimStyle = style;
+      Add (false, 14, 15, 12, 13); Add (false, 14, 15, 14, 19);
+      Add (false, 54, 52, 63, 38); Add (false, 54, 52, 64, 44);
+      Add (false, 54, 52, 68, 55); Add (true, 54, 52, 62, 30);
+      Add (true, 54, 52, 52, 55);
+
       return dwg;
 
       // Header ............................................
       void Add (bool tofl, params double[] vals) {
          var pts = Point2.List (vals).Select (a => a.Moved (dx, dy)).ToList ();
-         dwg.PickPoly (pts[0], 3, out var p);
-         var seg = p.Poly[p.Seg];
-         pts[0] = seg.Center;
-         dwg.Add (new E2DimDia (dwg.CurrentLayer, dwg.CurrentDimStyle, seg.Radius, tofl, pts));
-      }
-   }
-
-   Dwg2 TestDimRad () {
-      var dwg = DXFReader.Load ("N:/TData/Dwg/Dim/DimRad-Blank.dxf");
-      dwg.Add (new DimStyle2 ("BREAK", dwg.GetStyle ("STANDARD")!));
-      dwg.CurrentDimStyle = dwg.GetDimStyle ("BREAK");
-      Add (false, 70, 56, 81, 68); Add (false, 70, 56, 65, 43); 
-      Add (true,  70, 56, 54, 52); Add (false, 22, 13, 19, 19); 
-      Add (false, 22, 13, 15, 15); Add (true,  79, 12, 76, 14);
-
-      var style = new DimStyle2 ("ABOVE", dwg.GetStyle ("STANDARD")!) { TextPos = DimStyle2.EPos.Above };
-      dwg.Add (style); dwg.CurrentDimStyle = style;
-      Add (false, 160, 56, 171, 68); Add (false, 160, 56, 155, 43);
-      Add (true,  160, 56, 144, 52); Add (false, 112, 13, 109, 19);
-      Add (false, 112, 13, 105, 15); Add (true,  169, 12, 166, 14);
-
-      style = new DimStyle2 ("BELOW", dwg.GetStyle ("STANDARD")!) { TextPos = DimStyle2.EPos.Below };
-      dwg.Add (style); dwg.CurrentDimStyle = style;
-      Add (false, 250, 56, 261, 68); Add (false, 250, 56, 245, 43);
-      Add (true,  250, 56, 234, 52); Add (false, 202, 13, 199, 19);
-      Add (false, 202, 13, 195, 15); Add (true,  259, 12, 256, 14);
-
-      style = new DimStyle2 ("HORZ", dwg.GetStyle ("STANDARD")!) { TIHorz = true, TOHorz = true };
-      dwg.Add (style); dwg.CurrentDimStyle = style;
-      double dy2 = 75, dy1 = 70;
-      Add (false, 70, 61 + dy1, 81, 73 + dy1); Add (false, 70, 61 + dy1, 65, 48 + dy1);
-      Add (true,  70, 61 + dy1, 54, 57 + dy1); Add (false, 22, 13 + dy2, 19, 19 + dy2);
-      Add (false, 22, 13 + dy2, 15, 15 + dy2); Add (true,  79, 12 + dy2, 76, 14 + dy2);
-
-      style = new DimStyle2 ("HORZABOVE", dwg.GetStyle ("STANDARD")!) { TIHorz = true, TOHorz = true, TextPos = DimStyle2.EPos.Above };
-      dwg.Add (style); dwg.CurrentDimStyle = style;
-      Add (false, 160, 61 + dy1, 171, 73 + dy1); Add (false, 160, 61 + dy1, 155, 48 + dy1);
-      Add (true,  160, 61 + dy1, 144, 57 + dy1); Add (false, 112, 13 + dy2, 109, 19 + dy2);
-      Add (false, 112, 13 + dy2, 105, 15 + dy2); Add (true,  169, 12 + dy2, 166, 14 + dy2);
-
-      style = new DimStyle2 ("HORZBELOW", dwg.GetStyle ("STANDARD")!) { TIHorz = true, TOHorz = true, TextPos = DimStyle2.EPos.Below };
-      dwg.Add (style); dwg.CurrentDimStyle = style;
-      Add (false, 250, 61 + dy1, 261, 73 + dy1); Add (false, 250, 61 + dy1, 245, 48 + dy1);
-      Add (true,  250, 61 + dy1, 234, 57 + dy1); Add (false, 202, 13 + dy2, 199, 19 + dy2);
-      Add (false, 202, 13 + dy2, 195, 15 + dy2); Add (true,  259, 12 + dy2, 256, 14 + dy2);
-      Add (true, 250, 61 + dy1, 230, 150);
-      return dwg;
-
-      // Header ............................................
-      void Add (bool tofl, params double[] vals) {
-         var pts = Point2.List (vals);
          dwg.PickPoly (pts[0], 3, out var p);
          var seg = p.Poly[p.Seg];
          pts[0] = seg.Center;

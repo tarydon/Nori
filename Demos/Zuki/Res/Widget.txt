@@ -1,7 +1,7 @@
 [Basic]
 Desc=Widget
 
-[Dim3PAngular]
+[Dim3PAngle]
 Phases=4
 Name=3-P Angle Dim.
 0=Set angle vertex
@@ -9,7 +9,7 @@ Name=3-P Angle Dim.
 2=Set second angle endpoint
 3=Set dimension arc location
 
-[DimRadius]
+[DimRad]
 Phases=2
 Name=Radius Dim.
 0=Select circle or arc

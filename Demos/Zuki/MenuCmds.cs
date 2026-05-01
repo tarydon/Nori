@@ -58,7 +58,7 @@ static class MenuCmds {
 
    // Handlers -----------------------------------------------------------------
    static void Dim3PAngle () => Hub.Widget = new Dim3PAngleMaker ();
-   static void DimRadius () => Hub.Widget = new DimRadiusMaker ();
+   static void DimRadius () => Hub.Widget = new DimRadMaker ();
    static void DimDiameter () => Hub.Widget = new DimDiaMaker ();
    static void DimAngle () => Hub.Widget = new DimAngleMaker ();
    static void Exit () => Hub.MainWindow?.Close ();

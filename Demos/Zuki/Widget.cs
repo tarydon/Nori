@@ -149,7 +149,7 @@ class Dim3PAngleMaker : DimMaker {
 
 #region class DimRadMaker --------------------------------------------------------------------------
 /// <summary>Widget that makes E2DimRad (radius dimension) entities</summary>
-class DimRadiusMaker : DimMaker {
+class DimRadMaker : DimMaker {
    // We can advanced to the next phase if we have selected a curved segment
    public override bool CanAdvance (Point2 pt) {
       if (mSeg != null) { Pts[0] = mSeg.Value.Center; return true; }
@@ -248,7 +248,7 @@ class DimAngleMaker : DimMaker {
          List<Point2> pts = [];
          foreach (var seg in mSegs.Take (2)) { pts.Add (seg.A); pts.Add (seg.B); }
          pts.Add (Pts[2]);
-         return new E2DimAngular (Layer, DimStyle, pts, "45\u00b0");
+         return new E2DimAngle (Layer, DimStyle, pts, "45\u00b0");
       }
       return null;
    }

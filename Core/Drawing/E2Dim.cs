@@ -72,7 +72,7 @@ public abstract partial class E2Dim : Ent2 {
    /// <summary>Gets the 'definition points' of this dimension (for saving to DXF)</summary>
    /// Each tuple in the list is a DXF group code (10,11,12 etc) for the X
    /// coordinate (the Y coordinates are stored at that value + 10)
-   public abstract void GetDefPoints (List<(int, Point2)> defPoints);
+   public abstract void GetDXFPoints (List<(int, Point2)> defPoints);
 
    /// <summary>Internal routine to load the entities from a block</summary>
    /// Since blocks are not used by any dimension other than this one, we can load the entities
@@ -110,7 +110,7 @@ class E2DimGeneric : E2Dim {
       : base (layer, EDim.Generic, style, pts, text) { }
 
    protected override void MakeEnts () => throw new NotImplementedException ();
-   public override void GetDefPoints (List<(int, Point2)> defPoints) => throw new NotImplementedException ();
+   public override void GetDXFPoints (List<(int, Point2)> defPoints) => throw new NotImplementedException ();
 
    protected override Ent2 Xformed (Matrix2 xfm) {
       var dim = new E2DimGeneric (Layer, mStyle, [.. mPts.Select (a => a * xfm)], mText);
@@ -139,10 +139,20 @@ public class E2DimDia : E2Dim {
    E2DimDia () { }
 
    // Overrides ----------------------------------------------------------------
-   public override void GetDefPoints (List<(int, Point2)> pts) {
+   public override void GetDXFPoints (List<(int, Point2)> pts) {
       double angle = Pts[0].AngleTo (Pts[1]);
       Point2 pt15 = Pts[0].Polar (mRadius, angle), pt10 = Pts[0].Polar (-mRadius, angle);
       pts.Add ((10, pt10)); pts.Add ((11, Pts[2])); pts.Add ((15, pt15));
+   }
+
+   public Point2 Tip => Pts[0].Polar (mRadius, Pts[0].AngleTo (Pts[1]));
+
+   protected override void MakeEnts () {
+      Point2 cen = Pts[0], tip = Tip, alt = tip.Polar (-1, tip.AngleTo (Pts[1])), opp = cen + (cen - tip);
+      var seg = Poly.Line (tip, ForceDimLine ? opp : alt)[0];
+      string text = mText ?? "";
+      if (IsAutoText) text = $"\u2205{(2 * mRadius).Round (mStyle.LinDecimal)}";
+      SetTextPoint (2, BuildEnts (seg, Pts[1], text, [], ForceDimLine, !ForceDimLine, ForceDimLine));
    }
 
    protected override Ent2 Xformed (Matrix2 xfm) {
@@ -176,10 +186,20 @@ public class E2DimRad : E2Dim {
    }
    E2DimRad () { }
 
+   // Properties ---------------------------------------------------------------
+   public Point2 Tip => Pts[0].Polar (mRadius, Pts[0].AngleTo (Pts[1]));
+
    // Overrides ----------------------------------------------------------------
-   public override void GetDefPoints (List<(int, Point2)> pts) {
-      pts.Add ((10, Pts[0])); pts.Add ((11, Pts[2]));
-      pts.Add ((15, Pts[0].Polar (mRadius, Pts[0].AngleTo (Pts[1]))));
+   public override void GetDXFPoints (List<(int, Point2)> pts) {
+      pts.Add ((10, Pts[0])); pts.Add ((11, Pts[2])); pts.Add ((15, Tip));
+   }
+
+   protected override void MakeEnts () {
+      Point2 cen = Pts[0], tip = Tip, alt = tip.Polar (-1, tip.AngleTo (Pts[1]));
+      var seg = Poly.Line (tip, ForceDimLine ? cen : alt)[0];
+      string text = mText ?? "";
+      if (IsAutoText) text = $"R{mRadius.Round (mStyle.LinDecimal)}";
+      SetTextPoint (2, BuildEnts (seg, Pts[1], text, [], false, !ForceDimLine, ForceDimLine));
    }
 
    protected override Ent2 Xformed (Matrix2 xfm) {
@@ -210,9 +230,26 @@ public class E2Dim3PAngle : E2Dim {
       : base (layer, EDim.Angular3P, style, pts, text) { }
 
    // Overrides ----------------------------------------------------------------
-   public override void GetDefPoints (List<(int, Point2)> pts) {
+   public override void GetDXFPoints (List<(int, Point2)> pts) {
       pts.Add ((10, mPts[3])); pts.Add ((11, mPts[4]));
       pts.Add ((13, mPts[1])); pts.Add ((14, mPts[2])); pts.Add ((15, mPts[0]));
+   }
+
+   protected override void MakeEnts () {
+      // Get the center point, and compute the arc segment
+      Point2 cen = Pts[0], pick = Pts[3];
+      double a0 = cen.AngleTo (Pts[1]), a1 = cen.AngleTo (Pts[2]), rad = cen.DistTo (pick);
+      Point2 p0 = cen.Polar (rad, a0), p1 = cen.Polar (rad, a1);
+      if (pick.EQ (p1)) pick = cen.Polar (rad, (a0 + a1) / 2);
+      var seg = Poly.Arc (p0, pick, p1)[0];
+
+      string text = Text ?? "";
+      if (IsAutoText) {
+         double span = Math.Abs (seg.AngSpan).R2D ().Round (mStyle.AngDecimal);
+         text = $"{span}\u00b0";
+      }
+      SetTextPoint (4, BuildEnts (seg, pick, text, mPts.AsSpan ()[1..3], true, false));
+      AddPoint (cen);
    }
 
    // Creates a transformed version of the 3P Angular dimension
@@ -224,14 +261,28 @@ public class E2Dim3PAngle : E2Dim {
 }
 #endregion
 
-public class E2DimAngular : E2Dim {
+#region class E2DimAngle ---------------------------------------------------------------------------
+/// <summary>
+/// E2DimAngle is an 'angular dimension' between two segments
+/// </summary>
+/// The image file://N:/Doc/Img/DimAngle.png" shows the definition of this type of dimension. 
+/// The first definition line is a..b, the second is c..d. The dimension measures the angle between
+/// these two lines (which should not be parallel). The point e positions the dimension, and the
+/// text position is computed automatically (and stored as mPts[5]).
+/// The numbers in parentheses are the DXF group codes by which these points are output into 
+/// a DXF file when this dimension is written out, and the group 70 code for this is 2.
+public class E2DimAngle : E2Dim {
    // Constructors -------------------------------------------------------------
-   E2DimAngular () { }
-   public E2DimAngular (Layer2 layer, DimStyle2 style, IList<Point2> pts, string? text = null)
+   E2DimAngle () { }
+   public E2DimAngle (Layer2 layer, DimStyle2 style, IList<Point2> pts, string? text = null)
       : base (layer, EDim.Angular, style, pts, text) { }
 
    // Overrides ----------------------------------------------------------------
-   public override void GetDefPoints (List<(int, Point2)> defPoints) => throw new NotImplementedException ();
+   // This gathers the DXF points required for the DimAngle
+   public override void GetDXFPoints (List<(int, Point2)> pts) {
+      pts.Add ((10, mPts[3])); pts.Add ((11, mPts[5])); pts.Add ((13, mPts[0]));
+      pts.Add ((14, mPts[1])); pts.Add ((15, mPts[2])); pts.Add ((16, mPts[4]));
+   }
 
    protected override void MakeEnts () {
       // Get the center point based on the intersection of the first 4 points
@@ -239,7 +290,7 @@ public class E2DimAngular : E2Dim {
       if (cen.DistToSq (Pts[0]) > cen.DistToSq (Pts[1])) mPts.Swap (0, 1);
       if (cen.DistToSq (Pts[2]) > cen.DistToSq (Pts[3])) mPts.Swap (2, 3);
 
-      double a0 = cen.AngleTo (mPts[1]), a1 = cen.AngleTo (mPts[2]), rad = cen.DistTo (pick);
+      double a0 = cen.AngleTo (mPts[1]), a1 = cen.AngleTo (mPts[3]), rad = cen.DistTo (pick);
       Point2 p0 = cen.Polar (rad, a0), p1 = cen.Polar (rad, a1);
       if (pick.EQ (p1)) pick = cen.Polar (rad, (a0 + a1) / 2);
       var seg = Poly.Arc (p0, pick, p1)[0];
@@ -249,8 +300,9 @@ public class E2DimAngular : E2Dim {
          double span = Math.Abs (seg.AngSpan).R2D ().Round (mStyle.AngDecimal);
          text = $"{span}\u00b0";
       }
-      BuildEnts (seg, pick, text, mPts.AsSpan (), true, false);
+      SetTextPoint (5, BuildEnts (seg, pick, text, mPts.AsSpan (), true, false));
    }
 
    protected override Ent2 Xformed (Matrix2 xfm) => throw new NotImplementedException ();
 }
+#endregion
