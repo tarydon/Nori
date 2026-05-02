@@ -42,8 +42,8 @@ class DimEntTests () {
       // Save and test PNG files      
       string png = Path.ChangeExtension (curl, ".png");
       var scene = new Scene2 { Bound = bound, BgrdColor = Color4.White, Root = new Dwg2VN (dwg) };
-      int cx = (int)(bound.Width * 7), cy = (int)(bound.Height * 7);
-      Console.WriteLine ($"{cx} x {cy}");
+      //int cx = (int)(bound.Width * 7), cy = (int)(bound.Height * 7);
+      //Console.WriteLine ($"{cx} x {cy}");
       var dib = scene.RenderImage (size, DIBitmap.EFormat.Gray8);
       new PNGWriter (dib).Write (NT.TmpPNG);
       Assert.PNGFilesEqual (png, NT.TmpPNG, dib);
