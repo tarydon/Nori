@@ -27,6 +27,12 @@ public class Mesh3Builder {
       }
    }
 
+   public static Mesh3Builder Init (ReadOnlySpan<Point3> verts, ReadOnlySpan<int> index) {
+      List<Point3> pts = new (index.Length);
+      foreach (var n in index) pts.Add (verts[n]);
+      return new Mesh3Builder (pts.AsSpan ());
+   }
+
    /// <summary>Constructs a Mesh3 object from the given set of 'smoothed' triangles.</summary>
    public Mesh3 Build () {
       for (int i = 0; i < mIdx.Count; i += 3) {

@@ -116,9 +116,7 @@ public static class Extensions {
 
    /// <summary>Is this an odd integer?</summary>
    public static bool IsOdd (this int n) => n % 2 != 0;
-   /// <summary>
-   /// Is this an even integer?
-   /// </summary>
+   /// <summary>Is this an even integer?</summary>
    public static bool IsEven (this int n) => n % 2 == 0;
 
    /// <summary>Checks if a given double is zero to within 1e-6</summary>
@@ -300,6 +298,9 @@ public static class Extensions {
    /// <summary>Returns a value from an list, or default value (of appropriate type) if the index is out of range</summary>
    public static T? SafeGet<T> (this IReadOnlyList<T> list, int n)
       => n >= 0 && n < list.Count ? list[n] : default;
+   /// <summary>Returns a value from a ReadOnlySpan, or default value (of appropriate type) if the index is out of range</summary>
+   public static T? SafeGet<T> (this ReadOnlySpan<T> span, int n)
+      => n >= 0 && n < span.Length ? span[n] : default;
 
    /// <summary>Convert a double to a string, rounded to 6 decimal places (no trailing zeroes)</summary>
    /// This has special handling to avoid the annoying "-0"
@@ -312,6 +313,14 @@ public static class Extensions {
    public static string S5 (this float f) {
       string s = Round (f, 5).ToString (CultureInfo.InvariantCulture);
       return s == "-0" ? "0" : s;
+   }
+
+   /// <summary>
+   /// Swaps two elements from a list
+   /// </summary>
+   public static void Swap<T> (this List<T> list, int a, int b) {
+      if (a == b) return;
+      T tmp = list[a]; list[a] = list[b]; list[b] = tmp;
    }
 
    /// <summary>Converts an IEnumerable into a comma-separated list</summary>

@@ -58,12 +58,13 @@ public partial class FastTess2D : IBorrowable<FastTess2D> {
 
    /// <summary>Adds a contour for tessellation</summary>
    /// Returns the number of points added into the tessellation for this contour
-   public int AddPoly (Poly poly, bool hole) {
+   public int AddPoly (Poly poly, bool hole, bool windingChecked = false) {
       // First, if we need to reverse the order of points, or to discretize a Poly
       // with curves, make a copy
       int start = mInput.Count;
       poly.Discretize (mInput, mETess);
-      if ((poly.GetWinding () == Poly.EWinding.CW) ^ hole) mInput.Reverse (start, mInput.Count - start); 
+      if (!windingChecked && ((poly.GetWinding () == Poly.EWinding.CW) ^ hole)) 
+         mInput.Reverse (start, mInput.Count - start); 
       ReadOnlySpan<Point2> pts = mInput.AsSpan ()[start..];
 
       // Now, add the contour into the mV array, and create segments from this in

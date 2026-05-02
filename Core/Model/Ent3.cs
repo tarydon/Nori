@@ -87,6 +87,11 @@ public abstract partial class Ent3 {
       set { if (Set (E3Flags.Translucent, value)) Notify (EProp.Geometry); }
    }
 
+   /// <summary>
+   /// Quality used for surface / flat meshes
+   /// </summary>
+   public static ETess MeshQuality = ETess.Medium;
+
    /// <summary>Don't draw stencil lines around this model's wireframes</summary>
    public bool NoStencil { 
       get => Get (E3Flags.NoStencil);
@@ -245,8 +250,6 @@ public abstract class E3Surface : Ent3 {
       }
    }
    Mesh3? _mesh;
-
-   public static ETess MeshQuality = ETess.Medium;
 
    // Overrides ----------------------------------------------------------------
    /// <summary>BuildMesh is called to compute a tessellated mesh for this surface</summary>
