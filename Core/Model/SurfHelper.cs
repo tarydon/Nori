@@ -39,7 +39,7 @@ class SurfaceMesher (E3Surface surf) {
       // (to cope with the curvature)
       for (int i = 0; i < uvs.Count; i++) {
          Point2 uv = uvs[i];
-         mNodes.Add (new (uv, (Point3f)pts[i], (Vec3H)mSurf.GetNormal (uv.X, uv.Y)));
+         mNodes.Add (new (uv, (Point3f)pts[i], mSurf.GetNormal (uv.X, uv.Y)));
       }
       for (int i = 0; i < tris.Count; i += 3)
          AddTriangle (tris[i], tris[i + 1], tris[i + 2], 0);
@@ -96,7 +96,7 @@ class SurfaceMesher (E3Surface surf) {
 
    int AddNode (Point2 uv, Point3 pt) {
       if (mCache.TryGetValue (uv, out int n)) return n;
-      mNodes.Add (new (uv, (Point3f)pt, (Vec3H)mSurf.GetNormal (uv.X, uv.Y)));
+      mNodes.Add (new (uv, (Point3f)pt, mSurf.GetNormal (uv.X, uv.Y)));
       mCache.Add (uv, n = mNodes.Count - 1);
       return n;
    }

@@ -325,7 +325,7 @@ public sealed class E3Plane : E3CSSurface {
 
       var xfm = ToXfm;
       var pts = tess.Pts; var tris = tess.Tris;
-      var normal = (Vec3H)(IsNormalFlipped ? -CS.VecZ : CS.VecZ);
+      var normal = IsNormalFlipped ? -CS.VecZ : CS.VecZ;
       List<Mesh3.Node> nodes = [];
       foreach (var pt in pts) {
          Point3 pt3 = pt * xfm;

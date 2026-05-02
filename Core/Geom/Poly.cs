@@ -275,6 +275,36 @@ public partial class Poly {
       }
    }
 
+   public IEnumerable<(Point2 Pt, double Slope, bool Sharp)> DiscretizeTangent (ETess tess) {
+      double chord = TessChord[(int)tess], angle = TessAngle[(int)tess];
+      double lastSlope = this[Count - 1].GetSlopeAt (1);
+      for (int i = 0, max = Count; i < max; i++) {
+         var seg = this[i];
+         if (i == 0) {
+            double slope = seg.GetSlopeAt (0);
+            yield return (seg.A, slope, !lastSlope.EQ (slope, 0.0001));
+            lastSlope = slope;
+         }
+         if (seg.IsArc2 (out var cen, out var flags)) {
+            var (sa, ea) = seg.GetStartAndEndAngles (cen, flags);
+            var (rad, slope) = (cen.DistTo (seg.A), seg.GetSlopeAt (0));
+            int cSteps = GetArcSteps (rad, Abs (ea - sa), chord, angle);
+            double angStep = (ea - sa) / cSteps;
+            for (int j = 0; j <= cSteps; j++) {
+               Point2 pt = cen.Polar (rad, sa);
+               if (j > 0 || !lastSlope.EQ (slope, 0.0001))
+                  yield return (pt, slope, j == 0);
+               if (j == cSteps) lastSlope = slope;
+               sa += angStep; slope += angStep;
+            }
+         } else {
+            var slope = seg.Slope;
+            if (!lastSlope.EQ (slope, 0.0001)) yield return (seg.A, slope, true);
+            yield return (seg.B, lastSlope = slope, false);
+         }
+      }
+   }
+
    /// <summary>Discretizes the given Poly into another Poly</summary>
    public Poly DiscretizeP (ETess eTess) {
       if (!HasArcs) return this; 
