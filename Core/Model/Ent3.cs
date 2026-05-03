@@ -135,6 +135,19 @@ public enum E3Flags : uint {
 }
 #endregion
 
+public sealed class E3Marker : Ent3 {
+   public E3Marker (CoordSystem cs, double len) => (mCS, Length) = (cs, len);
+
+   public readonly double Length;
+
+   public CoordSystem CS { get => mCS; set { mCS = value; Notify (EProp.Geometry); } }
+   CoordSystem mCS;
+
+   public override Bound3 Bound => new ([mCS.Org]);
+
+   protected override Ent3 Xformed (Matrix3 xfm) => new E3Marker (mCS * xfm, Length);
+}
+
 #region class E3Curve ------------------------------------------------------------------------------
 /// <summary>An Entity that represents a free-space curve</summary>
 public sealed class E3Curve : Ent3 {
