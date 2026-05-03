@@ -163,6 +163,30 @@ public partial class Poly {
       }
    }
 
+   public Poly MonotoneP () {
+      if (!HasArcs) return this;
+      List<double> lies = [];
+      PolyBuilder pb = new ();
+      foreach (var seg in Segs) {
+         if (!seg.IsArc2 (out var cen, out var flags)) pb.Line (seg.A);
+         else {
+            double rad = cen.DistTo (seg.A);
+            for (var dir = EDir.E; dir <= EDir.S; dir++) {
+               Point2 pt = cen.CardinalMoved (rad, dir);
+               double lie = seg.GetLie (pt);
+               if (lie is > Delta and < 1 - Delta) lies.Add (lie);
+            }
+            if (lies.Count == 0) pb.Arc (seg.A, seg.Center, seg.Flags);
+            else {
+               lies.Sort (); lies.Insert (0, 0);
+               foreach (var lie in lies) pb.Arc (seg.GetPointAt (lie), seg.Center, seg.Flags & ~EFlags.Circle);
+            }
+         }
+      }
+      if (IsClosed) pb.Close ();
+      return pb.Build ();
+   }
+
    /// <summary>Returns the Nth segment from the Pline</summary>
    /// The poly is considered as a looped collection, so a value outside the range
    /// of segs in the poly is automatically wrapped around (thus, this[Count] is
@@ -299,7 +323,7 @@ public partial class Poly {
             }
          } else {
             var slope = seg.Slope;
-            if (!lastSlope.EQ (slope, 0.0001)) yield return (seg.A, slope, true);
+            if (!lastSlope.EQ (slope, 0.0001)) yield return (seg.A, slope, Cos (lastSlope - slope) < 0.866);
             yield return (seg.B, lastSlope = slope, false);
          }
       }
@@ -307,7 +331,7 @@ public partial class Poly {
 
    /// <summary>Discretizes the given Poly into another Poly</summary>
    public Poly DiscretizeP (ETess eTess) {
-      if (!HasArcs) return this; 
+      if (!HasArcs) return this;
       List<Point2> pts = [];
       Discretize (pts, eTess);
       return Lines (pts, IsClosed);
@@ -658,6 +682,11 @@ public class PolyBuilder {
          a = (a + 1) % n; aLie = 0; 
       }
       return this; 
+   }
+
+   public PolyBuilder Add (Seg seg) {
+      if (seg.IsLine) return Line (seg.A);
+      else return Arc (seg.A, seg.Center, seg.Flags & ~Poly.EFlags.Circle);
    }
 
    /// <summary>Adds an Arc starting at the given point a and with center cen</summary>
