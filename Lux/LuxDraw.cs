@@ -312,6 +312,15 @@ public static partial class Lux {
          }
       }
    }
+
+   public static void MeshNormals (Mesh3 mesh, double len) {
+      mHairs.Clear ();
+      foreach (var n in mesh.Vertex) {
+         Point3 pt = (Point3)n.Pos; Vector3 vec = (Vector3)n.Vec;
+         mHairs.Add (pt); mHairs.Add (pt + vec * len);
+      }
+      Lux.Lines (mHairs.AsSpan ());
+   }
    static List<Vec3F> mHairs = [];
 
    /// <summary>Draws one pixel with s specific color</summary>

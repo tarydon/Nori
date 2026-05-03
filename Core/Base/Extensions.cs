@@ -340,6 +340,13 @@ public static class Extensions {
       return sb.ToString ();
    }
 
+   /// <summary>Creates an ImmutableArray from an array, without a copy</summary>
+   /// Note: the promise here is that the underlying array will never be modified
+   /// in the future by the supplier!
+   [MethodImpl (MethodImplOptions.AggressiveInlining)]
+   static public ImmutableArray<T> ToIArray<T> (this T[] array)
+      => Unsafe.As<T[], ImmutableArray<T>> (ref array);
+
    /// <summary>Convert a string to an integer - if the conversion fails, this silently returns 0</summary>
    public static int ToInt (this string s) {
       if (int.TryParse (s, out int n)) return n;
