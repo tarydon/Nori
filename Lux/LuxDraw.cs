@@ -291,7 +291,7 @@ public static partial class Lux {
    /// The following Lux properties are used:
    /// - Color: draw color
    /// - Xfm: current transformation matrix
-   public static void Mesh (Mesh3 mesh, EShadeMode shadeMode) {
+   public static void Mesh (Mesh3 mesh, EShadeMode shadeMode = EShadeMode.Phong) {
       Mesh3.Node[] nodes = mesh.Vertex.AsArray ();
       int[] tris = mesh.Triangle.AsArray (), wires = mesh.Wire.AsArray ();
       if (tris.Length == 0) return;

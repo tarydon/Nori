@@ -87,9 +87,7 @@ public abstract partial class Ent3 {
       set { if (Set (E3Flags.Translucent, value)) Notify (EProp.Geometry); }
    }
 
-   /// <summary>
-   /// Quality used for surface / flat meshes
-   /// </summary>
+   /// <summary>Quality used for surface / flat meshes</summary>
    public static ETess MeshQuality = ETess.Medium;
 
    /// <summary>Don't draw stencil lines around this model's wireframes</summary>
