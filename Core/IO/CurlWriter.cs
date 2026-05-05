@@ -44,6 +44,7 @@ public class CurlWriter {
                af.WriteLabel (B);
                switch (af.Tactic) {
                   case ECurlTactic.ByName: af.WriteByName (B, value); break;
+                  case ECurlTactic.ById: af.WriteById (B, value); break;
                   default:
                      if (af.FieldType.Kind == EAuTypeKind.Primitive) {
                         if (af.IsAngle) value = ((double)value).R2D ();

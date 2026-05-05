@@ -66,7 +66,7 @@ public abstract class E3Thick : Ent3 {
    protected abstract Mesh3 ComputeMesh ();
 
    // Helper used by E3Flat and E3Flex to build a mesh
-   protected Mesh3 BuildMesh (Matrix3 xfm, bool horizontalBias) {
+   protected Mesh3 BuildMesh (Poly[] shapes, Matrix3 xfm, bool horizontalBias) {
       // Mesh data
       List<Mesh3.Node> nodes = [];
       List<int> tris = [], wires = [], counts = [];
@@ -75,8 +75,8 @@ public abstract class E3Thick : Ent3 {
       using var tess = FastTess2D.Borrow ();
       tess.Tolerance = MeshQuality;
       if (horizontalBias) tess.BiasAngle = 0.0001;
-      for (int i = 0; i < Shape.Length; i++) {
-         var poly = Shape[i].DiscretizeP (MeshQuality);
+      for (int i = 0; i < shapes.Length; i++) {
+         var poly = shapes[i].DiscretizeP (MeshQuality);
          counts.Add (tess.AddPoly (poly, i > 0, true));
       }
       tess.Process ();
@@ -105,7 +105,7 @@ public abstract class E3Thick : Ent3 {
       }
 
       // Add the sidewalls
-      foreach (var shape in Shape) {
+      foreach (var shape in shapes) {
          int start = nodes.Count; Point2 last = Point2.Nil;
          foreach (var (pt, slope, wire) in shape.DiscretizeTangent (MeshQuality)) {
             int a = nodes.Count;
@@ -151,7 +151,7 @@ public class E3Flat : E3Thick {
 
    // Overrides -----------------------------------------------------------------
    /// <summary>Computes the mesh for this E3Flat</summary>
-   protected override Mesh3 ComputeMesh () => BuildMesh (ToXfm, false);
+   protected override Mesh3 ComputeMesh () => BuildMesh (mShape, ToXfm, false);
 
    /// <summary>Returns a transformed version of this E3Flat</summary>
    protected override Ent3 Xformed (Matrix3 xfm) => new E3Flat (this, xfm);

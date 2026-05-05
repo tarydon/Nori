@@ -69,7 +69,7 @@ public class E3Flex : E3Thick {
    /// bent mesh (the same that is returned by E3Flex.Mesh)
    public Mesh3 BuildMesh (double lie) {
       // Cache the mesh at a lie of 0 into _zeroMesh (we will need this often)
-      if (lie.IsZero (Lib.Delta)) return _zeroMesh ??= BuildMesh (ToXfm, true);
+      if (lie.IsZero (Lib.Delta)) return _zeroMesh ??= BuildMesh (mShape, ToXfm, true);
       if (lie.EQ (1) && _oneMesh != null) return _oneMesh;
 
       // Compute the 'base mesh' that we will deform - this is the mesh of the Flex in
@@ -77,15 +77,16 @@ public class E3Flex : E3Thick {
       // it using the E3Thick.BuildMesh base routine
       if (_baseMesh == null) {
          int cSplits = Lib.GetArcSteps (mSpine.Radius, mSpine.Angle, MeshQuality);
-         _ySplits = new double[cSplits - 1];
+         double[] ySplits = new double[cSplits - 1];
+         Poly[] slicedPoly = new Poly[Shape.Length];
          double yMin = -0.01, yMax = mSpine.FlatWidth + 0.01;
          for (int i = 1; i < cSplits; i++) {
             double yLie = (double)i / cSplits;
-            _ySplits[i - 1] = yLie.Along (yMin, yMax);
+            ySplits[i - 1] = yLie.Along (yMin, yMax);
          }
          for (int i = 0; i < mShape.Length; i++)
-            mShape[i] = SlicePoly (mShape[i], _ySplits);
-         _baseMesh ??= BuildMesh (Matrix3.Identity, true);
+            slicedPoly[i] = SlicePoly (mShape[i], ySplits);
+         _baseMesh ??= BuildMesh (slicedPoly, Matrix3.Identity, true);
       }
 
       // In this stage, we 'bend' this mesh by passing each node through a deformation
@@ -177,7 +178,6 @@ public class E3Flex : E3Thick {
 
    // Private data -------------------------------------------------------------
    Mesh3? _baseMesh, _zeroMesh, _oneMesh;
-   double[]? _ySplits;
 }
 #endregion
 
@@ -209,6 +209,7 @@ public class BSpine {
    // Properties ---------------------------------------------------------------
    public readonly double FlatWidth;
    public readonly double Radius;
+   [Radian]
    public readonly double Angle;
    public readonly double KFactor;
    public readonly bool Upward;

@@ -70,4 +70,8 @@ class TModel {
       var model2 = model * Matrix3.Rotation (EAxis.X, Lib.HalfPI);
       model2.Bound.DiagVector.Is ("<50.202042,0.563709,38.157703>");
    }
+
+   [Test (249, "Basic test of E3Flat/E3Flex")]
+   void Test5 () {
+   }
 }

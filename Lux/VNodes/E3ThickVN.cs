@@ -32,7 +32,7 @@ public class E3MarkerVN (E3Marker marker) : VNode (marker) {
 public class BPoseNodeVN (BendPose.Node node) : VNode (node) {
    // Overrides ----------------------------------------------------------------
    public override void SetAttributes ()
-      => (Lux.Xfm, Lux.LineWidth) = (mNode.Xfm, 3);
+      => Lux.Xfm = mNode.Xfm;
 
    public override void Draw () {
       var (ent, lie) = (mNode.Ent, mNode.Lie);

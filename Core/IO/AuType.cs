@@ -337,6 +337,7 @@ class AuType {
       }
       if (mType.HasAttribute<FlagsAttribute> ()) {
          ulong bits = NormalizedEnumInteger (mType, value);
+         if (bits == 0) { stm.Write ("0"); return; }
          int cBit = Type.GetTypeCode (mType) switch {
             TypeCode.Int32 or TypeCode.UInt32 => 32, // Default backing type
             TypeCode.Int16 or TypeCode.UInt16 => 16,
@@ -415,6 +416,7 @@ class AuType {
                if (w[0] == '-') (w, tactic) = (w[1..], ECurlTactic.Skip);
                else if (w[0] == '^') (w, tactic) = (w[1..], ECurlTactic.Uplink);
                else if (w.EndsWith (".Name")) (w, tactic) = (w[..^5], ECurlTactic.ByName);
+               else if (w.EndsWith (".Id")) (w, tactic) = (w[..^3], ECurlTactic.ById);
                tactics.Add ($"{tname}.{w}", (tactic, ++n));
             }
          } else {
@@ -503,13 +505,28 @@ class AuField {
    /// <summary>Writes out this field by name</summary>
    /// This finds the Name property / field of the underlying object and writes it out
    public void WriteByName (UTFWriter buf, object obj) {
-      const BindingFlags bf = Public | NonPublic | DeclaredOnly | Instance;
-      mFIName ??= mFieldType.Type.GetField ("Name", bf)
-         ?? mFieldType.Type.GetField ("mName", bf)
-         ?? throw new AuException ($"Missing field {Lib.NiceName (mFieldType.Type)}.Name");
+      var type = mFieldType.Type;
+      const BindingFlags bf = Public | NonPublic | Instance;
+      mFIName ??= type.GetField ("Name", bf)
+         ?? type.GetField ("mName", bf)
+         ?? throw new AuException ($"Missing field {Lib.NiceName (type)}.Name");
       buf.Write ((string)mFIName.GetValue (obj)!);
    }
    FieldInfo? mFIName;
+
+   /// <summary>
+   /// Writes out this field by Id
+   /// </summary>
+   /// This finds the Id property / field of the underlying object and writes it out
+   public void WriteById (UTFWriter buf, object obj) {
+      var type = mFieldType.Type;
+      const BindingFlags bf = Public | NonPublic | Instance;
+      mFIId ??= type.GetField ("Id", bf)
+         ?? type.GetField ("mId", bf)
+         ?? throw new AuException ($"Missing field {Lib.NiceName (type)}.Id");
+      buf.Write ((int)mFIId.GetValue (obj)!);
+   }
+   FieldInfo? mFIId;
 
    // Implementation -----------------------------------------------------------
    public override string ToString ()
