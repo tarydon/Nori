@@ -3,6 +3,8 @@
 // ║║║║╬║╔╣║ Tests of Lux rendering system
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 namespace Nori.Testing;
+
+using System.ComponentModel.Design.Serialization;
 using static Lux;
 
 [Fixture (16, "Lux rendering tests", "Lux")]
@@ -158,6 +160,32 @@ class TLux {
    }
    Mesh3 mCube;
 
+   [Test (244, "Mesh3.Normals rendering")]
+   void Test14 () {
+      var tess = Ent3.MeshQuality;
+      Mesh3 mesh; E3Marker marker;
+      try {
+         Ent3.MeshQuality = ETess.VeryCoarse;
+         var spine = new BSpine (30, Lib.HalfPI, 0.5, true);
+         var flex = new E3Flex (0, CoordSystem.World, 4, spine, [Nori.Poly.Rectangle (-50, 0, 50, spine.FlatWidth)]);
+         mesh = flex.Mesh;
+         marker = new E3Marker (flex.GetTailCS (1), E3Marker.EKind.CS, 10) { Color = Color4.White };
+
+         var root = new GroupVN ([VNode.MakeFor (marker), new SimpleVN (Draw) { Streaming = true }]);
+         var scene = new Scene3 (Color4.Gray (200), mesh.Bound, root);
+         TestPNG (scene, new (300, 246), DIBitmap.EFormat.RGB8, "Mesh3Normal", true);
+
+         void Draw () {
+            Color = Color4.White; LineWidth = 3;
+            Mesh (mesh);
+            Color = Color4.Gray (128); LineWidth = 3f;
+            MeshNormals (mesh, 4);
+         }
+      } finally {
+         Ent3.MeshQuality = tess;
+      }
+   }
+
    [Test (219, "Picking")]
    void Test8 () {
       var scene = new Scene3 (Color4.Gray (128), mCube.Bound, new Mesh3VN (mCube) { Color = Color4.White });
@@ -289,8 +317,12 @@ class TLux {
       }
    }
 
-   void TestPNG (Scene scene, Vec2S size, DIBitmap.EFormat format, string file) {
-      var dib = scene.RenderImage (size, format);
+   void TestPNG (Scene scene, Vec2S size, DIBitmap.EFormat format, string file, bool zoomed = false) {
+      DIBitmap dib;
+      if (zoomed) 
+         dib = scene.RenderZoomedImage (size, format, out int _);
+      else 
+         dib = scene.RenderImage (size, format);
       new PNGWriter (dib).Write (NT.TmpPNG);
       Assert.PNGFilesEqual ($"{NT.Data}/Lux/{file}.png", NT.TmpPNG, dib);
    }

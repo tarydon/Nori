@@ -339,8 +339,8 @@ public static class Extensions {
    }
 
    /// <summary>Creates an ImmutableArray from an array, without a copy</summary>
-   /// Note: the promise here is that the underlying array will never be modified
-   /// in the future by the supplier!
+   /// The caller promises not to modify the underlying Array after passing it to this
+   /// routine, otherwise the 'immutability' is not guaranteed
    [MethodImpl (MethodImplOptions.AggressiveInlining)]
    static public ImmutableArray<T> ToIArray<T> (this T[] array)
       => Unsafe.As<T[], ImmutableArray<T>> (ref array);

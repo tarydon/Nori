@@ -222,7 +222,7 @@ public class Matrix3 : IEQuable<Matrix3> {
    public bool HasScaling => (Flags & EFlag.Scale) != 0;
 
    /// <summary>The 'scaling factor' of this matrix (assuming equal scaling in all axes)</summary>
-   public double ScaleFactor => (Vector3.XAxis * this).Length;
+   public double ScaleFactor => HasScaling ? (Vector3.XAxis * this).Length : 1;
 
    // Methods ------------------------------------------------------------------
    public Matrix3 ExtractRotation () => new (M11, M12, M13, M21, M22, M23, M31, M32, M33, 0, 0, 0);

@@ -1,6 +1,6 @@
 // ────── ╔╗
 // ╔═╦╦═╦╦╬╣ E3Flex.cs
-// ║║║║╬║╔╣║ <<TODO>>
+// ║║║║╬║╔╣║ E3Flex represents the deforming (bending) areas of a sheet metal model
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 using static Nori.Mesh3;
 namespace Nori;
@@ -11,8 +11,30 @@ namespace Nori;
 /// E3Flat and the entities in this model form a tree connected via the E3Thick.Parent pointer
 /// in each of these flats/flexes. The root E3Flat.Parent is null, but is non-null for all the
 /// other entities. 
+/// 
 /// In a sheet-metal model, this tree has flats and flexes at alternate layers. Thus, no plane
 /// connects directly to another plane, and no flex connects directly to another flex. 
+/// 
+/// See this image: file://N://Doc/Img/E3Flex.png
+/// An E3Flex is defined by a set of contours that are lofted up into a coordinate system (much 
+/// like an E3Flat). In addition, there is a "Spine" that provides the deformation that a Flex
+/// undergoes. Initially, the spine is just a straight line, and you can imagine that this spine
+/// is affixed at the origin of the CS and extends in the +Y direction. The trimming curve has
+/// exactly the same height as the length of the spine. 
+/// 
+/// Then, during the bending, the spine deforms into a shape (a simple circular arc for a 
+/// basic bend), and what was the original Y axis is now deformed into this arc, bending the
+/// whole thickened shape along with it. Different types of spines result in different types
+/// of bends like bump-bends, hems, Z-bends etc. 
+/// 
+/// Because of the way E3Flex objects are defined, it is necessary that the trimming curve
+/// have YMin=0, and has a Y-Height that is exactly equal to the flat length of the unfolded 
+/// spine (Spine at lie = 0). 
+/// 
+/// NOTE: The spine always represents the line at the exact midpoint of the thickness. It is not
+/// to be confused with the neutral axis (that is the line that does not change in length as the
+/// bending is done). Depending on the position of the neutral axis, the spine for a simple radius
+/// bend typically increases slightly in length as the bending happens. 
 public class E3Flex : E3Thick {
    // Constructors -------------------------------------------------------------
    /// <summary>Construct an E3Flex given a lofting coordinate system, thickness and a set of poly</summary>
@@ -54,7 +76,7 @@ public class E3Flex : E3Thick {
       // a flattened state. This is not much different from the mesh for a E3Flat, so we build
       // it using the E3Thick.BuildMesh base routine
       if (_baseMesh == null) {
-         int cSplits = Lib.GetArcSteps (mSpine.Radius, mSpine.Angle, ETess.Fine);
+         int cSplits = Lib.GetArcSteps (mSpine.Radius, mSpine.Angle, MeshQuality);
          _ySplits = new double[cSplits - 1];
          double yMin = -0.01, yMax = mSpine.FlatWidth + 0.01;
          for (int i = 1; i < cSplits; i++) {
@@ -121,7 +143,7 @@ public class E3Flex : E3Thick {
    // (see BuildMesh above)
    static Poly SlicePoly (Poly input, double[] split) {
       var pb = new PolyBuilder ();
-      foreach (var seg in input.MonotoneP ().Segs) {
+      foreach (var seg in input.Monotoned ().Segs) {
          pb.Add (seg);
          if (seg.B.Y.EQ (seg.A.Y)) continue;
          if (seg.B.Y > seg.A.Y) {
@@ -159,6 +181,10 @@ public class E3Flex : E3Thick {
 }
 #endregion
 
+/// <summary>BSpine is a place-holder class that handles only radius bending with K-Factor = 0.5</summary>
+/// We put this here for testing the rest of the system. This will later be replaced by an
+/// IBSpine interface and set of implementations of that representing different types of bends
+/// like air-bends, bump-bends, Z-bends etc. 
 public class BSpine {
    public BSpine (double radius, double angle, double kfactor, bool upward) {
       (Radius, Angle, KFactor, Upward) = (radius, angle, kfactor, upward);

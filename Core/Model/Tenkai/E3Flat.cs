@@ -1,6 +1,6 @@
 // ────── ╔╗
 // ╔═╦╦═╦╦╬╣ E3Flat.cs
-// ║║║║╬║╔╣║ <<TODO>>
+// ║║║║╬║╔╣║ Implements E3Flat (planar areas of sheet metal), and E3Thick (base class)
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 namespace Nori;
 
@@ -128,7 +128,12 @@ public abstract class E3Thick : Ent3 {
 #region class E3Flat -------------------------------------------------------------------------------
 /// <summary>E3Flat represents the planar/flat parts of a sheet-metal model</summary>
 /// These connect to other E3Flats via E3Flex objects (that represent the defoming areas,
-/// or bends)
+/// or bends). An E3Flat is defined with a set of contours, and a 'lofting' coordinate system, 
+/// as shown here: file://N:/Doc/Img/E3Flat.png.
+/// 
+/// The set of contours is lofted up into the frame defined by the CS. The zero point of this
+/// CS is at the midpoint of the thickness, which extends by Thickness/2 in each of the -Z and +Z
+/// directions around this. 
 public class E3Flat : E3Thick {
    // Constructors -------------------------------------------------------------
    /// <summary>Construct an E3Flat given a lofting coordinate system, thickness and a set of poly</summary>

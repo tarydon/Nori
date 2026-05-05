@@ -133,19 +133,6 @@ public enum E3Flags : uint {
 }
 #endregion
 
-public sealed class E3Marker : Ent3 {
-   public E3Marker (CoordSystem cs, double len) => (mCS, Length) = (cs, len);
-
-   public readonly double Length;
-
-   public CoordSystem CS { get => mCS; set { mCS = value; Notify (EProp.Geometry); } }
-   CoordSystem mCS;
-
-   public override Bound3 Bound => new ([mCS.Org]);
-
-   protected override Ent3 Xformed (Matrix3 xfm) => new E3Marker (mCS * xfm, Length);
-}
-
 #region class E3Curve ------------------------------------------------------------------------------
 /// <summary>An Entity that represents a free-space curve</summary>
 public sealed class E3Curve : Ent3 {
@@ -195,6 +182,47 @@ public sealed class E3Contour : Ent3 {
    }
 
    protected override Ent3 Xformed (Matrix3 xfm) => new E3Contour (Id, [.. Curves.Select (a => a * xfm)]);
+}
+#endregion
+
+#region class E3Marker -----------------------------------------------------------------------------
+/// <summary>Represents a 'marker' drawn in a 3D model</summary>
+/// The marker is drawn with the position and alignment defined by the given CS.
+/// For now, the marker is drawn as just 2 lines - a longer one along the local X axis
+/// and a shorter one along the local Y axis (like a coordinate system marker). Later, we will
+/// add other marker types
+public sealed class E3Marker : Ent3 {
+   // Constructor --------------------------------------------------------------
+   /// <summary>Construct a marker given a coordinate system and a size</summary>
+   public E3Marker (CoordSystem cs, EKind kind, double size) 
+      => (mCS, mKind, Size) = (cs, kind, size);
+
+   // Properties ---------------------------------------------------------------
+   /// <summary>The CS in which the marker is drawn (this can be modified and the marker is redrawn)</summary>
+   public CoordSystem CS { get => mCS; set { mCS = value; Notify (EProp.Geometry); } }
+   CoordSystem mCS;
+
+   /// <summary>Color of tihs marker</summary>
+   public Color4 Color { get => mColor; set { mColor = value; Notify (EProp.Attributes); } }
+   Color4 mColor = Color4.Yellow;
+
+   /// <summary>What style of marker is this?</summary>
+   public EKind Kind => mKind;
+   readonly EKind mKind;
+
+   /// <summary>The marker size</summary>
+   public double Size { get => mSize; set { mSize = value; Notify (EProp.Geometry); } }
+   double mSize;
+
+   // Types --------------------------------------------------------------------
+   /// <summary>Enumerates the various types of markers that can be drawn</summary>
+   public enum EKind { CS = 0 };
+
+   // Overrides ----------------------------------------------------------------
+   /// <summary>Returns the bound of this E3Marker (just includes the starting point)</summary>
+   public override Bound3 Bound => new ([mCS.Org]);
+   /// <summary>Transforms the E3Marker</summary>
+   protected override Ent3 Xformed (Matrix3 xfm) => new E3Marker (mCS * xfm, mKind, mSize * xfm.ScaleFactor);
 }
 #endregion
 

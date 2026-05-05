@@ -57,11 +57,16 @@ public partial class FastTess2D : IBorrowable<FastTess2D> {
    }
 
    /// <summary>Adds a contour for tessellation</summary>
-   /// Returns the number of points added into the tessellation for this contour
+   /// <param name="poly">The poly to add (should be closed)</param>
+   /// <param name="hole">True if this is a hole, false otherwise</param>
+   /// <param name="windingChecked">If true, the caller has checked the 'winding' of the Poly
+   /// and guarantees tht outer Poly will be CCW and inner Poly will be CW. Otherwise,
+   /// this routine will check and reverse Poly as required to meet this condition</param>
    public int AddPoly (Poly poly, bool hole, bool windingChecked = false) {
       // First, if we need to reverse the order of points, or to discretize a Poly
       // with curves, make a copy
       int start = mInput.Count;
+      Lib.Check (poly.IsClosed, "AddPoly requires closed Poly");
       poly.Discretize (mInput, mETess);
       if (!windingChecked && ((poly.GetWinding () == Poly.EWinding.CW) ^ hole)) 
          mInput.Reverse (start, mInput.Count - start); 

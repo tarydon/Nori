@@ -313,15 +313,16 @@ public static partial class Lux {
       }
    }
 
+   /// <summary>Draws the normal vectors of a Mesh3 (useful during debugging)</summary>
    public static void MeshNormals (Mesh3 mesh, double len) {
-      mHairs.Clear ();
+      mPts3.Clear ();
       foreach (var n in mesh.Vertex) {
          Point3 pt = (Point3)n.Pos; Vector3 vec = (Vector3)n.Vec;
-         mHairs.Add (pt); mHairs.Add (pt + vec * len);
+         mPts3.Add (pt); mPts3.Add (pt + vec * len);
       }
-      Lux.Lines (mHairs.AsSpan ());
+      Lines (mPts3.AsSpan ());
    }
-   static List<Vec3F> mHairs = [];
+   static List<Vec3F> mPts3 = [];
 
    /// <summary>Draws one pixel with s specific color</summary>
    /// The top left corner pixel is (0,0) and +X goes towards the right, +Y towards the

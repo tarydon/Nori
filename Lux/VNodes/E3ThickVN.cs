@@ -16,10 +16,10 @@ public class E3ThickVN (E3Thick thick) : VNode (thick) {
 /// <summary>VNode used to render E3Marker</summary>
 public class E3MarkerVN (E3Marker marker) : VNode (marker) {
    public override void SetAttributes () =>
-      (Lux.Color, Lux.LineWidth) = (Color4.Yellow, 4);
+      (Lux.Color, Lux.LineWidth, Lux.ZLevel) = (marker.Color, 3, 1);
 
    public override void Draw () {
-      var (c, d) = (marker.CS, marker.Length);
+      var (c, d) = (marker.CS, marker.Size);
       List<Vec3F> pts = [];
       pts.AddM (c.Org, c.Org + c.VecX * d, c.Org, c.Org + c.VecY * d / 2);
       Lux.Lines (pts.AsSpan ());
