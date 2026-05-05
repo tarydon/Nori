@@ -6,6 +6,7 @@ namespace Nori.Testing;
 
 using System.ComponentModel.Design.Serialization;
 using static Lux;
+using NPoly = Nori.Poly;
 
 [Fixture (16, "Lux rendering tests", "Lux")]
 class TLux {
@@ -160,32 +161,6 @@ class TLux {
    }
    Mesh3 mCube;
 
-   [Test (244, "Mesh3.Normals rendering")]
-   void Test14 () {
-      var tess = Ent3.MeshQuality;
-      Mesh3 mesh; E3Marker marker;
-      try {
-         Ent3.MeshQuality = ETess.VeryCoarse;
-         var spine = new BSpine (30, Lib.HalfPI, 0.5, true);
-         var flex = new E3Flex (0, CoordSystem.World, 4, spine, [Nori.Poly.Rectangle (-50, 0, 50, spine.FlatWidth)]);
-         mesh = flex.Mesh;
-         marker = new E3Marker (flex.GetTailCS (1), E3Marker.EKind.CS, 10) { Color = Color4.White };
-
-         var root = new GroupVN ([VNode.MakeFor (marker), new SimpleVN (Draw) { Streaming = true }]);
-         var scene = new Scene3 (Color4.Gray (200), mesh.Bound, root);
-         TestPNG (scene, new (300, 246), DIBitmap.EFormat.RGB8, "Mesh3Normal", true);
-
-         void Draw () {
-            Color = Color4.White; LineWidth = 3;
-            Mesh (mesh);
-            Color = Color4.Gray (128); LineWidth = 3f;
-            MeshNormals (mesh, 4);
-         }
-      } finally {
-         Ent3.MeshQuality = tess;
-      }
-   }
-
    [Test (219, "Picking")]
    void Test8 () {
       var scene = new Scene3 (Color4.Gray (128), mCube.Bound, new Mesh3VN (mCube) { Color = Color4.White });
@@ -317,11 +292,81 @@ class TLux {
       }
    }
 
+   [Test (244, "Mesh3.Normals rendering")]
+   void Test14 () {
+      var tess = Ent3.MeshQuality;
+      Mesh3 mesh; E3Marker marker;
+      try {
+         Ent3.MeshQuality = ETess.VeryCoarse;
+         var spine = new BSpine (30, Lib.HalfPI, 0.5, true);
+         var flex = new E3Flex (0, CoordSystem.World, 4, spine, [Nori.Poly.Rectangle (-50, 0, 50, spine.FlatWidth)]);
+         mesh = flex.Mesh;
+         marker = new E3Marker (flex.GetTailCS (1), E3Marker.EKind.CS, 10) { Color = Color4.White };
+
+         var root = new GroupVN ([VNode.MakeFor (marker), new SimpleVN (Draw) { Streaming = true }]);
+         var scene = new Scene3 (Color4.Gray (200), mesh.Bound, root);
+         TestPNG (scene, new (300, 246), DIBitmap.EFormat.RGB8, "Mesh3Normal", true);
+
+         void Draw () {
+            Color = Color4.White; LineWidth = 3;
+            Mesh (mesh);
+            Color = Color4.Gray (128); LineWidth = 3f;
+            MeshNormals (mesh, 4);
+         }
+      } finally {
+         Ent3.MeshQuality = tess;
+      }
+   }
+
+   [Test (245, "Basic sanity check of E3Thick model")]
+   void Test15 () {
+      var model = MakeModel (); _ = model.Bound;
+      CurlWriter.Save (model, NT.TmpCurl);
+      Assert.TextFilesEqual (NT.File ("Lux/E3Thick.curl"), NT.TmpCurl);
+
+      var pose = new BendPose (model);
+      pose.SetLie (0.0);
+      var group = new GroupVN (pose.Nodes.Select (a => new BPoseNodeVN (a)));
+      var scene = new Scene3 { BgrdColor = Color4.Gray (216), Bound = pose.GetBound (), Root = group };
+      TestPNG (scene, new Vec2S (480, 246), DIBitmap.EFormat.RGB8, "E3Thick-000", true);
+
+      pose.SetLie (0.5); scene.Bound = pose.GetBound ();
+      TestPNG (scene, new Vec2S (480, 304), DIBitmap.EFormat.RGB8, "E3Thick-050", true);
+
+      pose.SetLie (1.0); scene.Bound = pose.GetBound ();
+      TestPNG (scene, new Vec2S (480, 338), DIBitmap.EFormat.RGB8, "E3Thick-100", true);
+   }
+
+   // Makes a sheet-metal model
+   Model3 MakeModel () {
+      Model3 model = new ();
+      E3Flat p1, p3, p5, p7; E3Flex f2, f4, f6;
+      model.Ents.Add (p1 = new E3Flat (1, CoordSystem.World, 4, [NPoly.Rectangle (-100, -100, 100, 100), NPoly.Rectangle (-40, -40, 40, 40)]));
+      var cs1 = new CoordSystem (new (100, 0, 0), -Vector3.YAxis, Vector3.XAxis);
+      var spine = new BSpine (8, 1.25 * Lib.HalfPI, 0.5, true);
+      model.Ents.Add (f2 = new E3Flex (2, cs1, 4, spine, [NPoly.Rectangle (-100, 0, 100, spine.FlatWidth)]));
+      var cs2 = f2.GetTailCS (1);
+      model.Ents.Add (p3 = new E3Flat (3, cs2, 4, [NPoly.Rectangle (-100, 0, 100, 20)]));
+      var cs3 = new CoordSystem (cs2.Org + cs2.VecY * 20, cs2.VecX, cs2.VecY);
+      var spine2 = new BSpine (24, Lib.HalfPI, 0.5, false);
+      model.Ents.Add (f4 = new E3Flex (4, cs3, 4, spine2, [NPoly.Rectangle (-100, 0, 100, spine2.FlatWidth), NPoly.Rectangle (-90, 10, -60, 27)]));
+      var cs4 = f4.GetTailCS (1);
+      model.Ents.Add (p5 = new E3Flat (5, cs4, 4, [NPoly.Rectangle (-100, 0, 100, 20)]));
+      var cs5 = new CoordSystem (new (0, -40, 0));
+      var spine3 = new BSpine (8, 0.8 * Lib.HalfPI, 0.5, true);
+      model.Ents.Add (f6 = new E3Flex (6, cs5, 4, spine3, [NPoly.Rectangle (-35, 0, 35, spine3.FlatWidth)]));
+      var cs6 = f6.GetTailCS (1);
+      model.Ents.Add (p7 = new E3Flat (7, cs6, 4, [NPoly.Rectangle (-35, 0, 35, 62), NPoly.Rectangle (-25, 10, 0, 25)]));
+      f2.Parent = p1; p3.Parent = f2; f4.Parent = p3; p5.Parent = f4; f6.Parent = p1; p7.Parent = f6;
+      return model;
+   }
+
    void TestPNG (Scene scene, Vec2S size, DIBitmap.EFormat format, string file, bool zoomed = false) {
       DIBitmap dib;
-      if (zoomed) 
-         dib = scene.RenderZoomedImage (size, format, out int _);
-      else 
+      if (zoomed) {
+         dib = scene.RenderZoomedImage (size, format, out int cy);
+         Console.WriteLine (cy);
+      } else
          dib = scene.RenderImage (size, format);
       new PNGWriter (dib).Write (NT.TmpPNG);
       Assert.PNGFilesEqual ($"{NT.Data}/Lux/{file}.png", NT.TmpPNG, dib);

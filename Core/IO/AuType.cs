@@ -514,9 +514,7 @@ class AuField {
    }
    FieldInfo? mFIName;
 
-   /// <summary>
-   /// Writes out this field by Id
-   /// </summary>
+   /// <summary>Writes out this field by Id</summary>
    /// This finds the Id property / field of the underlying object and writes it out
    public void WriteById (UTFWriter buf, object obj) {
       var type = mFieldType.Type;

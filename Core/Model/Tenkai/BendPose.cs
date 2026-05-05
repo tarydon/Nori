@@ -55,9 +55,7 @@ public class BendPose {
    readonly Node[] mNodes;
 
    // Methods ------------------------------------------------------------------
-   /// <summary>
-   /// Returns the bound of the BendPose in the current state
-   /// </summary>
+   /// <summary>Returns the bound of the BendPose in the current state</summary>
    public Bound3 GetBound () {
       Bound3 bound = new ();
       foreach (var node in mNodes.NonNull ()) {
@@ -73,9 +71,7 @@ public class BendPose {
    public void SetFlexLie (int id, double lie)
       => mNodes[id].SetLie (mNodes, lie);
 
-   /// <summary>
-   /// Sets the lies for all the flexes to the given value
-   /// </summary>
+   /// <summary>Sets the lies for all the flexes to the given value</summary>
    public void SetLie (double lie) 
       => mNodes.Where (a => a?.IsFlex ?? false).ForEach (a => a.SetLie (mNodes, lie));
 
