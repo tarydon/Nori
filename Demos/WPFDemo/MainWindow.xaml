@@ -8,17 +8,16 @@
         Title="NORI Demos" WindowState="Maximized" Background="Black">
    <Window.Resources>
       <Style TargetType="Button">
-         <Setter Property="Margin" Value="4,0,4,4" />
+         <Setter Property="Margin" Value="3,0,3,3" />
          <Setter Property="Padding" Value="7,1,7,1" />
          <Setter Property="Focusable" Value="False"/>
       </Style>
    </Window.Resources>
    <DockPanel>
       <StackPanel DockPanel.Dock="Left" Background="#888">
-         <Button Margin="4" Click="LeafDemo">Polygon Fill</Button>
+         <Button Margin="3" Click="LeafDemo">Polygon Fill</Button>
          <Button Click="LineFontDemo">Line Fonts</Button>
          <Button Click="TrueTypeDemo">TrueType Text</Button>
-         <Button Click="MeshDemo">Load TMesh</Button>
          <Button Click="TessDemo">Tessellation</Button>
          <Button Click="BooleanDemo">Poly Boolean</Button>
          <Button Click="DwgDemo">Load DXF</Button>
@@ -34,6 +33,7 @@
          <Button Click="PaperFolderDemo">Paper Folder</Button>
          <Button Click="SubScene">Sub-Scenes</Button>
          <Button Click="TwoViewMesh">2-View Mesh</Button>
+         <Button Click="E3ThickDemo">Sheet-Metal</Button>
       </StackPanel>
          <StackPanel Name="mSettings" DockPanel.Dock="Right" Background="#AAA" />
       <Border Name="mContent" />

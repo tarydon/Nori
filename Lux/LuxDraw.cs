@@ -291,7 +291,7 @@ public static partial class Lux {
    /// The following Lux properties are used:
    /// - Color: draw color
    /// - Xfm: current transformation matrix
-   public static void Mesh (Mesh3 mesh, EShadeMode shadeMode) {
+   public static void Mesh (Mesh3 mesh, EShadeMode shadeMode = EShadeMode.Phong) {
       Mesh3.Node[] nodes = mesh.Vertex.AsArray ();
       int[] tris = mesh.Triangle.AsArray (), wires = mesh.Wire.AsArray ();
       if (tris.Length == 0) return;
@@ -312,7 +312,17 @@ public static partial class Lux {
          }
       }
    }
-   static List<Vec3F> mHairs = [];
+
+   /// <summary>Draws the normal vectors of a Mesh3 (useful during debugging)</summary>
+   public static void MeshNormals (Mesh3 mesh, double len) {
+      mPts3.Clear ();
+      foreach (var n in mesh.Vertex) {
+         Point3 pt = (Point3)n.Pos; Vector3 vec = (Vector3)n.Vec;
+         mPts3.Add (pt); mPts3.Add (pt + vec * len);
+      }
+      Lines (mPts3.AsSpan ());
+   }
+   static List<Vec3F> mPts3 = [];
 
    /// <summary>Draws one pixel with s specific color</summary>
    /// The top left corner pixel is (0,0) and +X goes towards the right, +Y towards the

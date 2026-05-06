@@ -1,6 +1,6 @@
 // ────── ╔╗
 // ╔═╦╦═╦╦╬╣ TModel.cs
-// ║║║║╬║╔╣║ <<TODO>>
+// ║║║║╬║╔╣║ Basic TModel tests
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 namespace Nori.Testing;
 
@@ -11,10 +11,10 @@ class TModel {
       var reader = new T3XReader (NT.File ("IO/T3X/NURB.t3x")) { NoMeshes = true };
       var model = reader.Load ();
       var nurb = model.Ents.OfType<E3NurbsSurface> ().Single ();
-      var old = E3Surface.MeshQuality;
-      E3Surface.MeshQuality = ETess.Coarse;
+      var old = Ent3.MeshQuality;
+      Ent3.MeshQuality = ETess.Coarse;
       var mesh = nurb.Mesh;
-      E3Surface.MeshQuality = old;
+      Ent3.MeshQuality = old;
       mesh.Vertex.Length.Is (926);
       mesh.Wire.Length.Is (364);
       mesh.Triangle.Length.Is (10692);
@@ -69,5 +69,9 @@ class TModel {
       model.Bound.DiagVector.Is ("<50.202042,38.157703,0.563709>");
       var model2 = model * Matrix3.Rotation (EAxis.X, Lib.HalfPI);
       model2.Bound.DiagVector.Is ("<50.202042,0.563709,38.157703>");
+   }
+
+   [Test (249, "Basic test of E3Flat/E3Flex")]
+   void Test5 () {
    }
 }

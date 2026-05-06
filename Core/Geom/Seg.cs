@@ -382,7 +382,7 @@ public readonly struct Seg {
    // Implementation -----------------------------------------------------------
    // Get the start and end angles of an arc (this ensures that end > start if
    // CCW, and end < start if CW)
-   (double S, double E) GetStartAndEndAngles (Point2 cen, Poly.EFlags flags) {
+   internal (double S, double E) GetStartAndEndAngles (Point2 cen, Poly.EFlags flags) {
       if ((flags & Poly.EFlags.Circle) != 0)
          return (0, (flags & Poly.EFlags.CCW) != 0 ? Lib.TwoPI : -Lib.TwoPI);
       double s = cen.AngleTo (A), e = cen.AngleTo (B);
@@ -396,7 +396,7 @@ public readonly struct Seg {
 
    // Checks if this segment is an arc (if so, it also returns the center point
    // and the flags - useful to check if the arc is CW or CCW)
-   bool IsArc2 (out Point2 cen, out Poly.EFlags flags) {
+   internal bool IsArc2 (out Point2 cen, out Poly.EFlags flags) {
       if (N < Poly.Extra.Length) {
          var extra = Poly.Extra[N];
          flags = extra.Flags;
