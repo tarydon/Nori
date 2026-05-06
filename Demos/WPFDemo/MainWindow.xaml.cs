@@ -29,8 +29,7 @@ public partial class MainWindow : Window {
    void LeafDemo (object s, RoutedEventArgs e) => Display (s, new LeafDemoScene ());
    void LineFontDemo (object s, RoutedEventArgs e) => Display (s, new LineFontScene ());
    void TrueTypeDemo (object s, RoutedEventArgs e) => Display (s, new TrueTypeScene ());
-   void MeshDemo (object s, RoutedEventArgs e) => Display (s, new MeshScene ());
-   void TessDemo (object s, RoutedEventArgs e) => Display (s, new MeshScene (true));
+   void TessDemo (object s, RoutedEventArgs e) => Display (s, new MeshScene ());
    void BooleanDemo (object s, RoutedEventArgs e) => Display (s, new BooleanScene ());
    void DwgDemo (object s, RoutedEventArgs e) => Display (s, new DwgScene ());
    void RobotDemo (object s, RoutedEventArgs e) => Display (s, new RobotScene ());
@@ -45,6 +44,7 @@ public partial class MainWindow : Window {
    void PaperFolderDemo (object s, RoutedEventArgs e) => Display (s, new PaperFolderScene ());
    void SubScene (object s, RoutedEventArgs e) => Display (s, new SubSceneDemo ());
    void TwoViewMesh (object s, RoutedEventArgs e) => Display (s, new TwoViewMeshDemo ());
+   void E3ThickDemo (object s, RoutedEventArgs e) => Display (s, new E3ThickDemo ());
 
    void Display (object s, Scene scene) {
       if (s is Button b) {

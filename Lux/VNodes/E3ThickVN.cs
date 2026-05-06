@@ -1,6 +1,6 @@
 // ────── ╔╗
 // ╔═╦╦═╦╦╬╣ E3ThickVN.cs
-// ║║║║╬║╔╣║ <<TODO>>
+// ║║║║╬║╔╣║ Contains VNodes to render
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 namespace Nori;
 
@@ -12,23 +12,8 @@ public class E3ThickVN (E3Thick thick) : VNode (thick) {
 }
 #endregion
 
-#region class E3MarkerVN ---------------------------------------------------------------------------
-/// <summary>VNode used to render E3Marker</summary>
-public class E3MarkerVN (E3Marker marker) : VNode (marker) {
-   public override void SetAttributes () =>
-      (Lux.Color, Lux.LineWidth, Lux.ZLevel) = (marker.Color, 3, 1);
-
-   public override void Draw () {
-      var (c, d) = (marker.CS, marker.Size);
-      List<Vec3F> pts = [];
-      pts.AddM (c.Org, c.Org + c.VecX * d, c.Org, c.Org + c.VecY * d / 2);
-      Lux.Lines (pts.AsSpan ());
-   }
-}
-#endregion
-
-#region class BPoseVNodeVN -------------------------------------------------------------------------
-/// <summary>Viewnode used to render a BPoseNodeVN</summary>
+#region class BPoseNodeVN --------------------------------------------------------------------------
+/// <summary>Viewnode used to render a BendPose.Node</summary>
 public class BPoseNodeVN (BendPose.Node node) : VNode (node) {
    // Overrides ----------------------------------------------------------------
    public override void SetAttributes ()

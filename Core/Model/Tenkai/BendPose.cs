@@ -1,6 +1,6 @@
 // ────── ╔╗
 // ╔═╦╦═╦╦╬╣ BendPose.cs
-// ║║║║╬║╔╣║ <<TODO>>
+// ║║║║╬║╔╣║ Used to 'pose' a sheet-metal model by bending/unbending each flex independently
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 using System.Reactive.Subjects;
 namespace Nori;
@@ -56,7 +56,8 @@ public class BendPose {
 
    // Methods ------------------------------------------------------------------
    /// <summary>Returns the bound of the BendPose in the current state</summary>
-   public Bound3 GetBound () {
+   public Bound3 GetBound (double lie = double.NaN) {
+      if (!lie.IsNan) SetLie (lie);
       Bound3 bound = new ();
       foreach (var node in mNodes.NonNull ()) {
          if (node.Ent is E3Flex flex)
