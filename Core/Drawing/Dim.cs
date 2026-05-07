@@ -98,6 +98,35 @@ public class E2DimAngle : E2Dimension {
 }
 #endregion
 
+#region E2DimCallout -------------------------------------------------------------------------------
+public class E2DimCallout : E2Dimension {
+   /// <summary>Callout dimension</summary>
+   public E2DimCallout (Layer2 layer, Point2 pt, Point2 ptxt, string? text) : base (layer) => (mPt, mPtRef, mTxt) = (pt, ptxt, text);
+
+   string? mTxt;
+   readonly Point2 mPt, mPtRef;
+
+   public override IReadOnlyList<Ent2> MakeDim (DimSettings dim) {
+      mTxt ??= "ABC";
+      bool flip = mPt.X < mPtRef.X;
+      var texts = DXFCore.MakeMText (Layer, dim.DimTextStyle, mTxt, mPt, dim.DimTxtSize, Lib.PI, dim.DimTxtAlign, new StringBuilder ());
+      double textWidth = new Bound2 (texts.Select (e => e.Bound)).Width;
+      // Scaling the extension line to the width of the text
+      var pt2 = new Point2 (flip ? mPtRef.X + textWidth : mPtRef.X - textWidth, mPtRef.Y);
+      var mid = mPtRef.Midpoint (pt2);
+      var textang = pt2.AngleTo (mPtRef);
+      // Fix the textAng to avoid inverted text, etc [Lets limit it to -90, 90 range]
+      if (textang is > Lib.HalfPI or < -Lib.HalfPI) textang += Lib.PI;
+      return [
+         new E2Poly (Layer, Poly.Line (mPt, mPtRef)),
+         new E2Poly (Layer, Poly.Line (mPtRef, pt2)),
+         new E2Text (Layer, dim.DimTextStyle, mTxt, new Point2 (mid.X, mid.Y + dim.DimOffset), dim.DimTxtSize, textang, 0, 1, dim.DimTxtAlign),
+         MakeArrow (Layer, mPt, mPtRef.AngleTo (mPt), dim.DimArrowSize),
+      ];
+   }
+}
+#endregion
+
 #region class DimSettings --------------------------------------------------------------------------
 public class DimSettings {
    /// <summary>Dimension arrow size</summary>
