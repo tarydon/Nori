@@ -119,9 +119,6 @@ public class DXFReader {
             blocks.Add (block);
          }
       }
-      foreach (var (dim, name) in mDimMap2) 
-         if (dim.LoadEnts (mDwg, name) is { } block)
-            blocks.Add (block);
       mDwg.RemoveBlocks (blocks);
    }
 
@@ -140,13 +137,7 @@ public class DXFReader {
          EDim.Aligned => new E2DimAligned (layer, style, AddN (13, 14, 10, 11), text), 
          _ => null
       };
-      if (dim == null) {
-         var oldDim = new E2Dimension (LYR ());
-         oldDim.SetDimSettings (mDwg.DimSettings);
-         mDimMap2.Add (oldDim, S (2)); Add (oldDim);
-      } else {
-         mDimMap.Add (dim, S (2)); Add (dim);
-      }
+      if (dim != null) { mDimMap.Add (dim, S (2)); Add (dim); }
 
       // Helpers ...........................................
       E2Dim MakeRadiusDim () {
@@ -529,6 +520,5 @@ public class DXFReader {
    readonly Dictionary<string, Layer2> mLayerMap = new (StringComparer.OrdinalIgnoreCase);
    readonly Dictionary<string, Style2> mStyleMap = new (StringComparer.OrdinalIgnoreCase);
    readonly Dictionary<E2Dim, string> mDimMap = [];
-   readonly Dictionary<E2Dimension, string> mDimMap2 = [];
 }
 #endregion

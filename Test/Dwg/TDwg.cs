@@ -178,7 +178,7 @@ class DwgMiscTests {
       text.GetBound (xfm).Is ("(-110~-98.1,150~240.39999)");
       // Dimension
       dwg = DXFReader.Load (NT.File ("IO/DXF/AllEnts.dxf"));
-      var dim = dwg.Ents.OfType<E2Dimension> ().Single ();
+      var dim = dwg.Ents.OfType<E2Dim> ().Single ();
       t = 2; dim.IsCloser (new (65, 56), ref t).Is (true); Math.Round (t, 2).Is (0.21);
       t = 2; dim.IsCloser (new (65, 53), ref t).Is (false);
       dim.IsCloser (far, ref t).Is (false);

@@ -78,20 +78,6 @@ class E2InsertVN (E2Insert e2i) : Ent2VN (e2i) {
 }
 #endregion
 
-#region class E2DimensionVN ------------------------------------------------------------------------
-/// <summary>VNode to render all types of dimensions</summary>
-/// Regardless of the type of dimension, it gets 'rendered' into the set of entities called
-/// Ents (those entities will typically contain text, lines, arcs, arrow-heads etc). So all dimension
-/// rendering can be done by this base class
-[Used]
-class E2DimensionVN (E2Dimension e2d) : Ent2VN (e2d) {
-   public override VNode? GetChild (int n) {
-      Ent2? ent = e2d.Ents.SafeGet (n);
-      return ent == null ? null : MakeFor (ent);
-   }
-}
-#endregion
-
 #region class E2DimVN ------------------------------------------------------------------------------
 /// <summary>VNode to render all types of dimensions</summary>
 /// Regardless of the type of dimension, it gets 'rendered' into the set of entities called

@@ -52,9 +52,6 @@ public partial class Dwg2 {
    }
    Layer2? mCurrentLayer;
 
-   /// <summary>Dimensioning settings for this drawing</summary>
-   public DimSettings DimSettings => new ();
-
    /// <summary>The list of entities in the drawing (active list, implements Observable(ListChange)</summary>
    public AList <Ent2> Ents => mEnts;
    readonly AList<Ent2> mEnts = [];
@@ -89,7 +86,7 @@ public partial class Dwg2 {
    List<DimStyle2>? mDimStyles;
 
    /// <summary>The list of dimensions in this drawing</summary>
-   public IEnumerable<E2Dimension> Dimensions => mEnts.OfType<E2Dimension> ();
+   public IEnumerable<E2Dim> Dimensions => mEnts.OfType<E2Dim> ();
 
    /// <summary>List of styles in the drawing</summary>
    /// New blocks are added by calling Add(Style2)
