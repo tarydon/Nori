@@ -85,4 +85,3 @@ public class DimStyle2 {
 public enum EDim { 
    Linear = 0, Aligned = 1, Angular = 2, Diameter = 3, Radius = 4, Angular3P = 5, Ordinate = 6, Generic = 32
 };
-

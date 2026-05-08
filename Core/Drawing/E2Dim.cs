@@ -239,6 +239,25 @@ public class E2Dim3PAngle : E2Dim {
 }
 #endregion
 
+#region class E2DimGeneric -------------------------------------------------------------------------
+/// <summary>
+/// E2DimGeneric is a 'generic' dimension that we fall back to if we cannot construct a more specific one
+/// </summary>
+public class E2DimGeneric : E2Dim {
+   E2DimGeneric () { }
+   public E2DimGeneric (Layer2 layer, DimStyle2 style) : base (layer, EDim.Generic, style, [], null) { }
+
+   public override void GetDXFPoints (List<(int, Point2)> defPoints) => throw new NotImplementedException ();
+   protected override void MakeEnts () => throw new NotImplementedException ();
+
+   protected override Ent2 Xformed (Matrix2 xfm) {
+      var dim = new E2DimGeneric (Layer, Style);
+      dim.mEnts.AddRange (mEnts.Select (a => a * xfm));
+      return dim;
+   }
+}
+#endregion
+
 public class E2DimAligned : E2Dim {
    // Constructors -------------------------------------------------------------
    E2DimAligned () { }

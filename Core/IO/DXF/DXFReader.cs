@@ -135,9 +135,10 @@ public class DXFReader {
          EDim.Radius => MakeRadiusDim (),
          EDim.Diameter => MakeDiameterDim (),
          EDim.Aligned => new E2DimAligned (layer, style, AddN (13, 14, 10, 11), text), 
-         _ => null
+         _ => new E2DimGeneric (layer, style)
       };
-      if (dim != null) { mDimMap.Add (dim, S (2)); Add (dim); }
+      mDimMap.Add (dim, S (2)); 
+      Add (dim); 
 
       // Helpers ...........................................
       E2Dim MakeRadiusDim () {
