@@ -101,27 +101,23 @@ public class E2DimAngle : E2Dimension {
 #region E2DimCallout -------------------------------------------------------------------------------
 public class E2DimCallout : E2Dimension {
    /// <summary>Callout dimension</summary>
-   public E2DimCallout (Layer2 layer, Point2 pt, Point2 ptxt, string? text) : base (layer) => (mPt, mPtRef, mTxt) = (pt, ptxt, text);
+   public E2DimCallout (Layer2 layer, Point2 pt1, Point2 pt2, string text)
+      : base (layer) => (mPt1, mPt2, mText) = (pt1, pt2, text);
 
-   string? mTxt;
-   readonly Point2 mPt, mPtRef;
+   string mText;
+   readonly Point2 mPt1, mPt2;
 
    public override IReadOnlyList<Ent2> MakeDim (DimSettings dim) {
-      mTxt ??= "ABC";
-      bool flip = mPt.X < mPtRef.X;
-      var texts = DXFCore.MakeMText (Layer, dim.DimTextStyle, mTxt, mPt, dim.DimTxtSize, Lib.PI, dim.DimTxtAlign, new StringBuilder ());
-      double textWidth = new Bound2 (texts.Select (e => e.Bound)).Width;
-      // Scaling the extension line to the width of the text
-      var pt2 = new Point2 (flip ? mPtRef.X + textWidth : mPtRef.X - textWidth, mPtRef.Y);
-      var mid = mPtRef.Midpoint (pt2);
-      var textang = pt2.AngleTo (mPtRef);
-      // Fix the textAng to avoid inverted text, etc [Lets limit it to -90, 90 range]
-      if (textang is > Lib.HalfPI or < -Lib.HalfPI) textang += Lib.PI;
+      bool flip = mPt2.X < mPt1.X;
+      var txtAlign = flip ? ETextAlign.BaseRight : ETextAlign.BaseLeft;
+      var textPos = mPt2.Moved (0, dim.DimTxtSize / 5); // Magic: Gap b/w dim-line & dim-text
+      var e2t = new E2Text (Layer, dim.DimTextStyle, mText, textPos, dim.DimTxtSize, angle: 0 , 0, 1, txtAlign);
+      double textWidth = e2t.Bound.Width;
       return [
-         new E2Poly (Layer, Poly.Line (mPt, mPtRef)),
-         new E2Poly (Layer, Poly.Line (mPtRef, pt2)),
-         new E2Text (Layer, dim.DimTextStyle, mTxt, new Point2 (mid.X, mid.Y + dim.DimOffset), dim.DimTxtSize, textang, 0, 1, dim.DimTxtAlign),
-         MakeArrow (Layer, mPt, mPtRef.AngleTo (mPt), dim.DimArrowSize),
+         new E2Poly (Layer, Poly.Line (mPt1, mPt2)),
+         new E2Poly (Layer, Poly.Line (mPt2, mPt2.Moved (flip ? -textWidth : textWidth, 0))),
+         e2t,
+         MakeArrow (Layer, mPt1, mPt2.AngleTo (mPt1), dim.DimArrowSize),
       ];
    }
 }
