@@ -75,7 +75,7 @@ public abstract class VNode {
    /// rather than RetainBuffer objects
    public bool Streaming {
       get => mStreaming;
-      set { mStreaming = value; if (value) NoPicking = true; }
+      set { mStreaming = value; if (value) { ReleaseBatches (); NoPicking = true; } }
    }
    bool mStreaming;
 

@@ -1,9 +1,8 @@
 // ────── ╔╗
 // ╔═╦╦═╦╦╬╣ Project.cs
-// ║║║║╬║╔╣║ <<TODO>>
+// ║║║║╬║╔╣║ Represents a Nori.Doc project
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 using System.Text.RegularExpressions;
-
 namespace Nori.Doc;
 
 class Project {
@@ -109,4 +108,16 @@ class Project {
 
    readonly string mOutDir = "";          // Output folder
    readonly List<string> mInput = [];     // Set of input files (XML, DLL)
+}
+
+class TypeInfo {
+   // Should this type be skipped during documentation generation?
+   public static bool Skip (Type type, bool includePrivate) {
+      if (!includePrivate && !type.IsPublic) return true;
+      if (type.BaseType?.Name == "System.MultiCastDelegate") return true;
+      string name = type.FullName ?? "";
+      if (name.Contains ('<') && name.Contains ('>')) return true;
+      if (type.GetCustomAttribute<ObsoleteAttribute> () != null) return true;
+      return false;
+   }
 }

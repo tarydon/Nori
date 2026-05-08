@@ -315,10 +315,9 @@ public static class Extensions {
       return s == "-0" ? "0" : s;
    }
 
-   /// <summary>
-   /// Swaps two elements from a list
-   /// </summary>
+   /// <summary>Swaps two elements from a list</summary>
    public static void Swap<T> (this List<T> list, int a, int b) {
+      if (a == b) return;
       T tmp = list[a]; list[a] = list[b]; list[b] = tmp;
    }
 
@@ -338,6 +337,13 @@ public static class Extensions {
       }
       return sb.ToString ();
    }
+
+   /// <summary>Creates an ImmutableArray from an array, without a copy</summary>
+   /// The caller promises not to modify the underlying Array after passing it to this
+   /// routine, otherwise the 'immutability' is not guaranteed
+   [MethodImpl (MethodImplOptions.AggressiveInlining)]
+   static public ImmutableArray<T> ToIArray<T> (this T[] array)
+      => Unsafe.As<T[], ImmutableArray<T>> (ref array);
 
    /// <summary>Convert a string to an integer - if the conversion fails, this silently returns 0</summary>
    public static int ToInt (this string s) {

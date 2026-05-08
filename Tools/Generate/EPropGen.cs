@@ -110,7 +110,7 @@ class EPropClassGenerator : IIncrementalGenerator {
 
          partial class {{typeName}} : IObservable<EProp> {
          {{sb}}
-            void Notify (EProp prop) => mSubject?.OnNext (prop);
+            protected void Notify (EProp prop) => mSubject?.OnNext (prop);
             /// <summary>Notifies the provider that an observer is to receive notifications.</summary>
             public IDisposable Subscribe (IObserver<EProp> observer) => (mSubject ??= new ()).Subscribe (observer);
             Subject<EProp>? mSubject;

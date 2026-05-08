@@ -249,7 +249,7 @@ public partial class Mesh3 {
       /// <summary>Basic constructor for Node</summary>
       public Node (Point3f pos, Vec3H vec) { Pos = pos; Vec = vec; }
       /// <summary>Construct a Node given a Point3 and a Vector3</summary>
-      public Node (Point3 pos, Vector3 vec) { Pos = (Point3f)pos; Vec = (Vec3H)vec; }
+      public Node (Point3 pos, Vector3 vec) { Pos = (Point3f)pos; Vec = vec; }
       /// <summary>Construct a Node3 given 3 components for position and 3 components for normal</summary>
       public Node (double x, double y, double z, double dx, double dy, double dz) {
          Pos = new Point3f (x, y, z); Vec = new Vec3H ((Half)dx, (Half)dy, (Half)dz);

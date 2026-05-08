@@ -87,6 +87,9 @@ public abstract partial class Ent3 {
       set { if (Set (E3Flags.Translucent, value)) Notify (EProp.Geometry); }
    }
 
+   /// <summary>Quality used for surface / flat meshes</summary>
+   public static ETess MeshQuality = ETess.Medium;
+
    /// <summary>Don't draw stencil lines around this model's wireframes</summary>
    public bool NoStencil { 
       get => Get (E3Flags.NoStencil);
@@ -182,6 +185,47 @@ public sealed class E3Contour : Ent3 {
 }
 #endregion
 
+#region class E3Marker -----------------------------------------------------------------------------
+/// <summary>Represents a 'marker' drawn in a 3D model</summary>
+/// The marker is drawn with the position and alignment defined by the given CS.
+/// For now, the marker is drawn as just 2 lines - a longer one along the local X axis
+/// and a shorter one along the local Y axis (like a coordinate system marker). Later, we will
+/// add other marker types
+public sealed class E3Marker : Ent3 {
+   // Constructor --------------------------------------------------------------
+   /// <summary>Construct a marker given a coordinate system and a size</summary>
+   public E3Marker (CoordSystem cs, EKind kind, double size) 
+      => (mCS, mKind, Size) = (cs, kind, size);
+
+   // Properties ---------------------------------------------------------------
+   /// <summary>The CS in which the marker is drawn (this can be modified and the marker is redrawn)</summary>
+   public CoordSystem CS { get => mCS; set { mCS = value; Notify (EProp.Geometry); } }
+   CoordSystem mCS;
+
+   /// <summary>Color of tihs marker</summary>
+   public Color4 Color { get => mColor; set { mColor = value; Notify (EProp.Attributes); } }
+   Color4 mColor = Color4.Yellow;
+
+   /// <summary>What style of marker is this?</summary>
+   public EKind Kind => mKind;
+   readonly EKind mKind;
+
+   /// <summary>The marker size</summary>
+   public double Size { get => mSize; set { mSize = value; Notify (EProp.Geometry); } }
+   double mSize;
+
+   // Types --------------------------------------------------------------------
+   /// <summary>Enumerates the various types of markers that can be drawn</summary>
+   public enum EKind { CS = 0 };
+
+   // Overrides ----------------------------------------------------------------
+   /// <summary>Returns the bound of this E3Marker (just includes the starting point)</summary>
+   public override Bound3 Bound => new ([mCS.Org]);
+   /// <summary>Transforms the E3Marker</summary>
+   protected override Ent3 Xformed (Matrix3 xfm) => new E3Marker (mCS * xfm, mKind, mSize * xfm.ScaleFactor);
+}
+#endregion
+
 #region class E3Surface ----------------------------------------------------------------------------
 /// <summary>E3Surface is the base class for parametric surfaces with no thickness</summary>
 /// The surfaces are parametric - the 3D points can be unlofted into a UV parameter space 
@@ -245,8 +289,6 @@ public abstract class E3Surface : Ent3 {
       }
    }
    Mesh3? _mesh;
-
-   public static ETess MeshQuality = ETess.Medium;
 
    // Overrides ----------------------------------------------------------------
    /// <summary>BuildMesh is called to compute a tessellated mesh for this surface</summary>

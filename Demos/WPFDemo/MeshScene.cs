@@ -8,19 +8,15 @@ using System.Diagnostics;
 using Nori;
 
 class MeshScene : Scene3 {
-   public MeshScene (bool tessdemo = false) {
-      TessDemo = tessdemo;
+   public MeshScene () {
       Lib.Tracer = TraceVN.Print; 
       TraceVN.HoldTime = 20; TraceVN.TextColor = Color4.Yellow;
       Root = new GroupVN ([new MeshVN (mMesh = MakeMesh ()), TraceVN.It]);
       BgrdColor = Color4.Gray (96);
       Bound = mMesh.Bound;
    }
-   readonly bool TessDemo = false;
 
    Mesh3 MakeMesh () {
-      if (!TessDemo) return Mesh3.LoadFluxMesh ($"{Lib.DevRoot}/Wad/FanucX/Model/R.mesh")!;
-
       // Tessellation demo makes a 'thick plane' from a Poly with holes.
       const double thk = 10;     // Plane thickness
       var dwg = DXFReader.Load ("N:/TData/Geom/Tess/J.dxf");

@@ -1,6 +1,6 @@
 // ────── ╔╗
 // ╔═╦╦═╦╦╬╣ MeshBuild.cs
-// ║║║║╬║╔╣║ <<TODO>>
+// ║║║║╬║╔╣║ Make meshes from triangle soups with auto-smoothing and marking of sharp creases
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 namespace Nori;
 

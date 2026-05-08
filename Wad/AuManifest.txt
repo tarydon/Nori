@@ -68,6 +68,7 @@ Polyline3
   Pts
 E3Contour
   Curves
+<<<<<<< HEAD
 E2Dim
   -Bound Ents Kind Pts Style.Name Text
 E2Dim3PAngle
@@ -77,3 +78,13 @@ E2DimRad
 E2DimDia
   Radius
 E2DimAligned
+||||||| cda845a
+=======
+E3Thick
+  CS Shape Thickness Bound Parent.Id
+E3Flat
+E3Flex
+  Spine
+BSpine
+  Radius Angle KFactor Upward FlatWidth
+>>>>>>> main

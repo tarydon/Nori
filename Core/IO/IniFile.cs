@@ -1,6 +1,6 @@
 // ────── ╔╗
 // ╔═╦╦═╦╦╬╣ IniFile.cs
-// ║║║║╬║╔╣║ <<TODO>>
+// ║║║║╬║╔╣║ Implements a Windows-Style INI file (for storing simple configuration informtion)
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 namespace Nori;
 
