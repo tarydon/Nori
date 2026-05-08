@@ -80,9 +80,7 @@ public readonly struct Point2 : IEQuable<Point2> {
    /// <summary>Compares two points are equal to within the given threshold</summary>
    public bool EQ (Point2 b, double threshold) => X.EQ (b.X, threshold) && Y.EQ (b.Y, threshold);
 
-   /// <summary>
-   /// Returns this point, except when it is nil (in which case it returns fallback)
-   /// </summary>
+   /// <summary>Returns this point, except when it is nil (in which case it returns fallback)</summary>
    public Point2 ExceptNil (Point2 fallback) => IsNil ? fallback : this;
 
    /// <summary>Gets the lie of this point on the given line segment a..b</summary>

@@ -3,8 +3,15 @@ Desc=Widget
 
 [DimAligned]
 Phases=3
-Name = Aligned Dim.
+Name=Aligned Dim.
 0=Set first extension line origin
+1=Set second extension line origin
+2=Set dimension location
+
+[DimLinear]
+Phases=3
+Name=Linear Dim.
+0=Set first extension line origin [F5=Direction]
 1=Set second extension line origin
 2=Set dimension location
 

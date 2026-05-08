@@ -130,9 +130,7 @@ abstract class DimMaker : EntMaker {
 #endregion
 
 #region class DimAlignedMaker ----------------------------------------------------------------------
-/// <summary>
-/// Widget to make aligned dimensions
-/// </summary>
+/// <summary>Widget to make aligned dimensions</summary>
 class DimAlignedMaker : DimMaker {
    public override Ent2? MakeEnt () {
       if (Phase == 3) return new E2DimAligned (Dwg.CurrentLayer, DimStyle, Pts);
@@ -155,6 +153,44 @@ class Dim3PAngleMaker : DimMaker {
    public override Ent2? MakeEnt () {
       if (Phase == 4) return new E2Dim3PAngle (Dwg.CurrentLayer, DimStyle, Pts);
       return null;
+   }
+}
+#endregion
+
+#region class DimLinearMaker -----------------------------------------------------------------------
+class DimLinearMaker : DimMaker {
+   public override void Draw () {
+      base.Draw ();
+      if (Phase == 1) {
+         Lux.LineType = ELineType.Dot;
+         double a = Hub.PixelScale * Lux.PanelSize.X;
+         Point2 pa = Pts[0].Polar (a, mAngle), pb = Pts[0].Polar (-a, mAngle);
+         Lux.Lines ([pa, pb]);
+         Lux.LineType = ELineType.Continuous;
+
+         mSeg = null;
+         if (Dwg.PickPoly (Pts[0], Hub.PickAperture, out var p))
+            if (p.Poly[p.Seg] is { IsLine: true } seg) Hub.HighlightSeg (mSeg = seg);
+      } else if (Phase == 2) {
+         Matrix2 rot = Matrix2.Rotation (mAngle), inv = Matrix2.Rotation (-mAngle);
+         Point2 a = Pts[0] * inv, b = Pts[1] * inv;
+         a = new Point2 (a.X, b.Y) * rot;
+         Lux.Lines ([Pts[0], a, a, Pts[1]]);
+      }
+   }
+   Seg? mSeg;
+   double mAngle;
+
+   public override Ent2? MakeEnt ()
+      => (Phase == 3) ? new E2DimLinear (Dwg.CurrentLayer, DimStyle, mAngle, Pts) : null;
+
+   public override void OnKey (KeyInfo ki) {
+      if (ki.Key == EKey.F5) {
+         double ang = mSeg == null ? 0 : mSeg.Value.Slope;
+         if (ang.EQ (mAngle)) ang = Lib.NormalizeAngle (ang + Lib.HalfPI);
+         mAngle = ang;
+         Redraw ();
+      }
    }
 }
 #endregion

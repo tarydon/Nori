@@ -1,4 +1,8 @@
-﻿namespace Nori;
+// ────── ╔╗
+// ╔═╦╦═╦╦╬╣ E2Dim.cs
+// ║║║║╬║╔╣║ <<TODO>>
+// ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
+namespace Nori;
 
 #region class E2Dim --------------------------------------------------------------------------------
 /// <summary>E2Dim is the base class for all 2D dimensions</summary>
@@ -240,9 +244,7 @@ public class E2Dim3PAngle : E2Dim {
 #endregion
 
 #region class E2DimGeneric -------------------------------------------------------------------------
-/// <summary>
-/// E2DimGeneric is a 'generic' dimension that we fall back to if we cannot construct a more specific one
-/// </summary>
+/// <summary>E2DimGeneric is a 'generic' dimension that we fall back to if we cannot construct a more specific one</summary>
 public class E2DimGeneric : E2Dim {
    E2DimGeneric () { }
    public E2DimGeneric (Layer2 layer, DimStyle2 style) : base (layer, EDim.Generic, style, [], null) { }
@@ -257,6 +259,40 @@ public class E2DimGeneric : E2Dim {
    }
 }
 #endregion
+
+public class E2DimLinear : E2Dim {
+   // Constructors -------------------------------------------------------------
+   E2DimLinear () { }
+   public E2DimLinear (Layer2 layer, DimStyle2 style, double angle, IList<Point2> pts, string? text = null)
+      : base (layer, EDim.Linear, style, pts, text) => mAngle = angle;
+
+   public double Angle => mAngle;
+   readonly double mAngle;
+
+   public override void GetDXFPoints (List<(int, Point2)> pts) {
+      pts.Add ((13, mPts[0])); pts.Add ((14, mPts[1]));
+      pts.Add ((10, mPts[2])); pts.Add ((11, mPts[3]));
+   }
+
+   protected override void MakeEnts () {
+      Matrix2 rot = Matrix2.Rotation (mAngle), inv = Matrix2.Rotation (-mAngle);
+      Point2 a = Pts[0] * inv, b = Pts[1] * inv, pick = Pts[2] * inv;
+      Point2 sega = new Point2 (a.X, pick.Y) * rot, segb = new Point2 (b.X, pick.Y) * rot;
+      var seg = Poly.Line (sega, segb)[0];
+
+      string text = Text ?? "";
+      if (IsAutoText) text = seg.Length.Round (mStyle.LinDecimal).ToString ();
+      SetTextPoint (3, BuildEnts (seg, Pts[2], text, mPts.AsSpan ()[..2]));
+   }
+
+   protected override Ent2 Xformed (Matrix2 xfm) {
+      var vec = Vector2.UnitVec (mAngle) * xfm;
+      double angle = Math.Atan2 (vec.Y, vec.X);
+      var dim = new E2DimLinear (Layer, Style, angle, [.. mPts.Select (a => a * xfm)], mText);
+      dim.mEnts.AddRange (mEnts.Select (a => a * xfm));
+      return dim;
+   }
+}
 
 public class E2DimAligned : E2Dim {
    // Constructors -------------------------------------------------------------
@@ -289,9 +325,7 @@ public class E2DimAligned : E2Dim {
 }
 
 #region class E2DimAngle ---------------------------------------------------------------------------
-/// <summary>
-/// E2DimAngle is an 'angular dimension' between two segments
-/// </summary>
+/// <summary>E2DimAngle is an 'angular dimension' between two segments</summary>
 /// The image file://N:/Doc/Img/DimAngle.png" shows the definition of this type of dimension. 
 /// The first definition line is a..b, the second is c..d. The dimension measures the angle between
 /// these two lines (which should not be parallel). The point e positions the dimension, and the

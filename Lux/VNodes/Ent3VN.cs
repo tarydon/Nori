@@ -65,9 +65,7 @@ public class E3MarkerVN (E3Marker marker) : VNode (marker) {
 #endregion
 
 #region class Model3VN -----------------------------------------------------------------------------
-/// <summary>
-/// VNode for a Model3 container
-/// </summary>
+/// <summary>VNode for a Model3 container</summary>
 public class Model3VN : VNode {
    public Model3VN (Model3 model) : base (model) => ChildSource = model.Ents;
 }

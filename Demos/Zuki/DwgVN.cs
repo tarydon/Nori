@@ -12,7 +12,7 @@ partial class CursorVN : VNode {
    public Point2 Pt { get; set { field = value; Redraw (); } }
 
    public override void Draw () {
-      double a = Hub.PixelScale * 20;
+      double a = Hub.PixelScale * 10;
       (Lux.Color, Lux.LineWidth, Lux.TypeFace) = (Color4.Black, 1.25f, mFace);
       Lux.Lines ([Pt.Moved (-a, 0), Pt.Moved (a, 0), Pt.Moved (0, -a), Pt.Moved (0, a)]);
 

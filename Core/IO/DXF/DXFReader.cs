@@ -135,20 +135,26 @@ public class DXFReader {
          EDim.Radius => MakeRadiusDim (),
          EDim.Diameter => MakeDiameterDim (),
          EDim.Aligned => new E2DimAligned (layer, style, AddN (13, 14, 10, 11), text), 
+         EDim.Linear => MakeLinearDim (),
          _ => new E2DimGeneric (layer, style)
       };
       mDimMap.Add (dim, S (2)); 
       Add (dim); 
 
       // Helpers ...........................................
+      E2Dim MakeDiameterDim () {
+         var pts = AddN (10, 15, 11); pts[0] = pts[0].Midpoint (pts[1]);
+         return new E2DimDia (layer, style, pts[0].DistTo (pts[1]), style.TOFL, pts);
+      }
+
       E2Dim MakeRadiusDim () {
          var pts = AddN (15, 10, 11);
          return new E2DimRad (layer, style, pts[0].DistTo (pts[1]), style.TOFL, pts);
       }
 
-      E2Dim MakeDiameterDim () {
-         var pts = AddN (10, 15, 11); pts[0] = pts[0].Midpoint (pts[1]);
-         return new E2DimDia (layer, style, pts[0].DistTo (pts[1]), style.TOFL, pts);
+      E2Dim MakeLinearDim () {
+         var pts = AddN (13, 14, 10, 11);
+         return new E2DimLinear (layer, style, D (50), pts);
       }
 
       List<Point2> AddN (params int[] a) {

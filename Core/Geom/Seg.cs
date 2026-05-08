@@ -222,9 +222,7 @@ public readonly struct Seg {
       }
    }
 
-   /// <summary>
-   /// Snaps the given point to the (infinite) segment, and returns the lie
-   /// </summary>
+   /// <summary>Snaps the given point to the (infinite) segment, and returns the lie</summary>
    /// Given a point, this snaps it first to the infinite line (or circle) defining the segment,
    /// and then returns the lie of that snapped point on the segment
    public double GetSnappedLie (Point2 pt) {

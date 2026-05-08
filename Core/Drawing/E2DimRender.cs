@@ -1,4 +1,8 @@
-﻿namespace Nori;
+// ────── ╔╗
+// ╔═╦╦═╦╦╬╣ E2DimRender.cs
+// ║║║║╬║╔╣║ <<TODO>>
+// ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
+namespace Nori;
 using static DimStyle2.EPos;
 
 // Implements E2Dim methods related to MakeEnts

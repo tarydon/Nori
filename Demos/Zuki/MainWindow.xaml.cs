@@ -25,9 +25,33 @@ public partial class MainWindow : Window {
       var dxf = Environment.GetCommandLineArgs ().FirstOrDefault (a => a.EndsWith (".dxf"));
       if (dxf != null) Hub.LoadDXF (dxf);
       else {
-         Hub.Dwg = MakeDimAligned ();
-         Hub.Widget = new DimAlignedMaker ();
+         Hub.Dwg = MakeDimLinear ();
+         Hub.Widget = new DimLinearMaker ();
       }
+   }
+
+   Dwg2 MakeDimLinear () {
+      var dr = new DXFReader ("N:/TData/Dwg/Dim/DimAligned-Blank.dxf");
+      dr.RelayerDimensions = dr.WhiteToBlack = true;
+      var dwg = dr.Load ();
+
+      var tstyle = dwg.GetStyle ("STANDARD")!;
+      DimStyle2 style; double dx, dy, a0 = 0, a1 = Lib.HalfPI, a2 = Math.Atan2 (1, -2);
+
+      dx = 0; dy = 0; 
+      style = new DimStyle2 ("BREAK", tstyle);
+      dwg.Add (style); dwg.CurrentDimStyle = style;
+      Add (a0, 15, 0, 50, 0, 46, -3);
+      Add (a0, 0, 10, 15, 10, -1, 7);
+      Add (a1, 15, 0, 15, 10, 10, 2);
+      Add (a2, 20, 50, 50, 35, 49, 40);
+      
+      void Add (double angle, params double[] vals) {
+         var pts = Point2.List (vals).Select (a => a.Moved (dx, dy)).ToList ();
+         dwg.Add (new E2DimLinear (dwg.CurrentLayer, dwg.CurrentDimStyle, angle, pts));
+      }
+
+      return dwg;
    }
 
    Dwg2 MakeDimAligned () {
