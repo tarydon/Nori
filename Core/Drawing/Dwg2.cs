@@ -307,10 +307,10 @@ public partial class Dwg2 {
       }
    }
 
-   /// <summary>Enumerate all entities in the drawing, as well as entities in all the blocks</summary>
-   IEnumerable<Ent2> DeepEnumEnts ()
-      => Blocks.SelectMany (a => a.Ents)
-         .Concat (Dimensions.SelectMany (a => a.Ents))
-         .Concat (mEnts);
+   public IEnumerable<Ent2> DeepEnumEnts () {
+      foreach (var b in mBlocks ?? [])
+         foreach (var ent in b.Ents) yield return ent;
+      foreach (var ent in mEnts) yield return ent;
+   }
 }
 #endregion

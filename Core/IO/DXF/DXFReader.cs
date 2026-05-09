@@ -154,7 +154,7 @@ public class DXFReader {
 
       E2Dim MakeLinearDim () {
          var pts = AddN (13, 14, 10, 11);
-         return new E2DimLinear (layer, style, D (50), pts);
+         return new E2DimLinear (layer, style, DANG (50), pts);
       }
 
       List<Point2> AddN (params int[] a) {

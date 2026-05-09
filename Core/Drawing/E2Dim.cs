@@ -267,6 +267,7 @@ public class E2DimLinear : E2Dim {
       : base (layer, EDim.Linear, style, pts, text) => mAngle = angle;
 
    public double Angle => mAngle;
+   [Radian]
    readonly double mAngle;
 
    public override void GetDXFPoints (List<(int, Point2)> pts) {

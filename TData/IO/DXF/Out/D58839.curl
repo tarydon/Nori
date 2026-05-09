@@ -4,7 +4,6 @@
     { Name:AM_BOR Color:#FFFFFFFF Linetype:Continuous }
     { Name:axis Color:#FFFF00FF Linetype:Continuous }
     { Name:dimension Color:#FFFF0000 Linetype:Continuous }
-    { Name:Defpoints Color:#FFFFFFFF Linetype:Continuous }
     { Name:"Bend Centerline (ISO)" Color:#FFBEBEBE Linetype:Continuous }
     { Name:"Visible (ISO)" Color:#FFFFFFFF Linetype:Continuous }
     { Name:"Visible Narrow (ISO)" Color:#FFFFFFFF Linetype:Continuous }
@@ -886,7 +885,7 @@
     (E2Poly){ Layer:axis Poly:M308.754052,103.466505H325.279041 }
     (E2Poly){ Layer:axis Poly:M317.016546,111.729V95.204011 }
     (E2Poly){ Layer:axis Poly:M198.096546,138.004V71.916658 }
-    (E2Dimension){
+    (E2DimLinear){
       Layer:dimension
       Ents:[
         (E2Poly){ Layer:dimension Poly:M60.596546,133.841505V178.377012 }
@@ -923,8 +922,16 @@
         (E2Point){ Layer:Defpoints Pt:335.596546,133.841505 }
         (E2Point){ Layer:Defpoints Pt:335.596546,177.377012 }
       ]
+      Kind:Linear
+      Pts:[
+        60.596546,133.841505
+        335.596546,133.841505
+        335.596546,177.377012
+        198.096546,180.077012
+      ]
+      Style:AM_ISO
     }
-    (E2Dimension){
+    (E2DimLinear){
       Layer:dimension
       Ents:[
         (E2Poly){ Layer:dimension Poly:M63.996546,108.241505V163.669956 }
@@ -961,8 +968,16 @@
         (E2Point){ Layer:Defpoints Pt:332.196546,108.241505 }
         (E2Point){ Layer:Defpoints Pt:332.196546,162.669956 }
       ]
+      Kind:Linear
+      Pts:[
+        63.996546,108.241505
+        332.196546,108.241505
+        332.196546,162.669956
+        198.096546,165.369956
+      ]
+      Style:AM_ISO
     }
-    (E2Dimension){
+    (E2DimLinear){
       Layer:dimension
       Ents:[
         (E2Poly){ Layer:dimension Poly:M335.596546,77.860266H359.237224 }
@@ -1000,8 +1015,17 @@
         (E2Point){ Layer:Defpoints Pt:335.596546,133.841505 }
         (E2Point){ Layer:Defpoints Pt:358.237224,133.841505 }
       ]
+      Kind:Linear
+      Pts:[
+        335.596546,77.860266
+        335.596546,133.841505
+        358.237224,133.841505
+        355.537224,105.850886
+      ]
+      Style:AM_ISO
+      Angle:90
     }
-    (E2Dimension){
+    (E2DimLinear){
       Layer:dimension
       Ents:[
         (E2Poly){ Layer:dimension Poly:M335.596546,77.860266H345.771783 }
@@ -1040,8 +1064,17 @@
         (E2Point){ Layer:Defpoints Pt:335.596546,87.750886 }
         (E2Point){ Layer:Defpoints Pt:344.771783,87.750886 }
       ]
+      Kind:Linear
+      Pts:[
+        335.596546,77.860266
+        335.596546,87.750886
+        344.771783,87.750886
+        344.771783,69.046988
+      ]
+      Style:AM_ISO
+      Angle:90
     }
-    (E2Dimension){
+    (E2DimLinear){
       Layer:dimension
       Ents:[
         (E2Poly){ Layer:dimension Poly:M335.596546,133.841505H344.883302 }
@@ -1079,8 +1112,17 @@
         (E2Point){ Layer:Defpoints Pt:332.196546,108.241505 }
         (E2Point){ Layer:Defpoints Pt:343.883302,108.241505 }
       ]
+      Kind:Linear
+      Pts:[
+        335.596546,133.841505
+        332.196546,108.241505
+        343.883302,108.241505
+        341.183302,121.041505
+      ]
+      Style:AM_ISO
+      Angle:90
     }
-    (E2Dimension){
+    (E2DimLinear){
       Layer:dimension
       Ents:[
         (E2Poly){ Layer:dimension Poly:M335.596546,133.841505H351.342567 }
@@ -1118,8 +1160,17 @@
         (E2Point){ Layer:Defpoints Pt:325.279041,103.466505 }
         (E2Point){ Layer:Defpoints Pt:350.342567,103.466505 }
       ]
+      Kind:Linear
+      Pts:[
+        335.596546,133.841505
+        325.279041,103.466505
+        350.342567,103.466505
+        347.642567,118.654005
+      ]
+      Style:AM_ISO
+      Angle:90
     }
-    (E2Dimension){
+    (E2DimLinear){
       Layer:dimension
       Ents:[
         (E2Poly){ Layer:dimension Poly:M300.596546,82.260266H311.510435 }
@@ -1159,8 +1210,17 @@
         (E2Point){ Layer:Defpoints Pt:335.596546,77.860266 }
         (E2Point){ Layer:Defpoints Pt:310.510435,77.860266 }
       ]
+      Kind:Linear
+      Pts:[
+        300.596546,82.260266
+        335.596546,77.860266
+        310.510435,77.860266
+        307.810435,69.460266
+      ]
+      Style:AM_ISO
+      Angle:90
     }
-    (E2Dimension){
+    (E2DimLinear){
       Layer:dimension
       Ents:[
         (E2Poly){ Layer:dimension Poly:M76.596546,109.341505H70.517641 }
@@ -1198,8 +1258,17 @@
         (E2Point){ Layer:Defpoints Pt:76.596546,128.341505 }
         (E2Point){ Layer:Defpoints Pt:71.517641,128.341505 }
       ]
+      Kind:Linear
+      Pts:[
+        76.596546,109.341505
+        76.596546,128.341505
+        71.517641,128.341505
+        68.817641,118.841505
+      ]
+      Style:AM_ISO
+      Angle:90
     }
-    (E2Dimension){
+    (E2DimLinear){
       Layer:dimension
       Ents:[
         (E2Poly){ Layer:dimension Poly:M76.596546,128.341505H70.517641 }
@@ -1239,8 +1308,17 @@
         (E2Point){ Layer:Defpoints Pt:76.596546,133.841505 }
         (E2Point){ Layer:Defpoints Pt:71.517641,133.841505 }
       ]
+      Kind:Linear
+      Pts:[
+        76.596546,128.341505
+        76.596546,133.841505
+        71.517641,133.841505
+        68.817641,142.241505
+      ]
+      Style:AM_ISO
+      Angle:90
     }
-    (E2Dimension){
+    (E2DimLinear){
       Layer:dimension
       Ents:[
         (E2Poly){ Layer:dimension Poly:M198.096546,129.741505H207.085655 }
@@ -1280,8 +1358,17 @@
         (E2Point){ Layer:Defpoints Pt:198.096546,133.841505 }
         (E2Point){ Layer:Defpoints Pt:206.085655,133.841505 }
       ]
+      Kind:Linear
+      Pts:[
+        198.096546,129.741505
+        198.096546,133.841505
+        206.085655,133.841505
+        203.385655,141.841505
+      ]
+      Style:AM_ISO
+      Angle:90
     }
-    (E2Dimension){
+    (E2DimLinear){
       Layer:dimension
       Ents:[
         (E2Poly){ Layer:dimension Poly:M109.68025,133.841505H102.081639 }
@@ -1319,8 +1406,17 @@
         (E2Point){ Layer:Defpoints Pt:108.08025,124.141505 }
         (E2Point){ Layer:Defpoints Pt:103.081639,124.141505 }
       ]
+      Kind:Linear
+      Pts:[
+        109.68025,133.841505
+        108.08025,124.141505
+        103.081639,124.141505
+        103.081639,128.991505
+      ]
+      Style:AM_ISO
+      Angle:90
     }
-    (E2Dimension){
+    (E2DimLinear){
       Layer:dimension
       Ents:[
         (E2Poly){ Layer:dimension Poly:M108.08025,124.141505H96.529821 }
@@ -1360,8 +1456,17 @@
         (E2Point){ Layer:Defpoints Pt:108.08025,118.941505 }
         (E2Point){ Layer:Defpoints Pt:97.529821,118.941505 }
       ]
+      Kind:Linear
+      Pts:[
+        108.08025,124.141505
+        108.08025,118.941505
+        97.529821,118.941505
+        94.829821,110.541505
+      ]
+      Style:AM_ISO
+      Angle:90
     }
-    (E2Dimension){
+    (E2DimLinear){
       Layer:dimension
       Ents:[
         (E2Poly){ Layer:dimension Poly:M117.18025,133.841505H127.122351 }
@@ -1399,8 +1504,17 @@
         (E2Point){ Layer:Defpoints Pt:117.18025,117.041505 }
         (E2Point){ Layer:Defpoints Pt:126.122351,117.041505 }
       ]
+      Kind:Linear
+      Pts:[
+        117.18025,133.841505
+        117.18025,117.041505
+        126.122351,117.041505
+        123.422351,125.441505
+      ]
+      Style:AM_ISO
+      Angle:90
     }
-    (E2Dimension){
+    (E2DimLinear){
       Layer:dimension
       Ents:[
         (E2Poly){ Layer:dimension Poly:M335.596546,77.860266V58.003145 }
@@ -1437,8 +1551,16 @@
         (E2Point){ Layer:Defpoints Pt:317.016546,95.204011 }
         (E2Point){ Layer:Defpoints Pt:317.016546,59.003145 }
       ]
+      Kind:Linear
+      Pts:[
+        335.596546,77.860266
+        317.016546,95.204011
+        317.016546,59.003145
+        326.306546,61.703145
+      ]
+      Style:AM_ISO
     }
-    (E2Dimension){
+    (E2DimLinear){
       Layer:dimension
       Ents:[
         (E2Poly){ Layer:dimension Poly:M95.596546,82.260266V58.003145 }
@@ -1475,8 +1597,16 @@
         (E2Point){ Layer:Defpoints Pt:300.596546,82.260266 }
         (E2Point){ Layer:Defpoints Pt:300.596546,59.003145 }
       ]
+      Kind:Linear
+      Pts:[
+        95.596546,82.260266
+        300.596546,82.260266
+        300.596546,59.003145
+        198.096546,59.003145
+      ]
+      Style:AM_ISO
     }
-    (E2Dimension){
+    (E2DimLinear){
       Layer:dimension
       Ents:[
         (E2Poly){ Layer:dimension Poly:M317.016546,111.729V119.548787 }
@@ -1513,8 +1643,16 @@
         (E2Point){ Layer:Defpoints Pt:267.016546,111.729 }
         (E2Point){ Layer:Defpoints Pt:267.016546,118.548787 }
       ]
+      Kind:Linear
+      Pts:[
+        317.016546,111.729
+        267.016546,111.729
+        267.016546,118.548787
+        292.016546,121.248787
+      ]
+      Style:AM_ISO
     }
-    (E2Dimension){
+    (E2DimLinear){
       Layer:dimension
       Ents:[
         (E2Poly){ Layer:dimension Poly:M267.016546,111.729V119.548787 }
@@ -1551,8 +1689,16 @@
         (E2Point){ Layer:Defpoints Pt:245.016546,111.729 }
         (E2Point){ Layer:Defpoints Pt:245.016546,118.548787 }
       ]
+      Kind:Linear
+      Pts:[
+        267.016546,111.729
+        245.016546,111.729
+        245.016546,118.548787
+        256.016546,121.248787
+      ]
+      Style:AM_ISO
     }
-    (E2Dimension){
+    (E2DimLinear){
       Layer:dimension
       Ents:[
         (E2Poly){ Layer:dimension Poly:M76.596546,109.341505V100.689479 }
@@ -1589,8 +1735,16 @@
         (E2Point){ Layer:Defpoints Pt:60.596546,105.850886 }
         (E2Point){ Layer:Defpoints Pt:60.596546,101.689479 }
       ]
+      Kind:Linear
+      Pts:[
+        76.596546,109.341505
+        60.596546,105.850886
+        60.596546,101.689479
+        68.596546,104.389479
+      ]
+      Style:AM_ISO
     }
-    (E2Dimension){
+    (E2DimLinear){
       Layer:dimension
       Ents:[
         (E2Poly){ Layer:dimension Poly:M76.596546,109.341505V100.689479 }
@@ -1627,8 +1781,16 @@
         (E2Point){ Layer:Defpoints Pt:89.696546,109.341505 }
         (E2Point){ Layer:Defpoints Pt:89.696546,101.689479 }
       ]
+      Kind:Linear
+      Pts:[
+        76.596546,109.341505
+        89.696546,109.341505
+        89.696546,101.689479
+        83.146546,104.389479
+      ]
+      Style:AM_ISO
     }
-    (E2Dimension){
+    (E2DimLinear){
       Layer:dimension
       Ents:[
         (E2Poly){ Layer:dimension Poly:M60.596546,87.750886V90.721125 }
@@ -1665,8 +1827,16 @@
         (E2Point){ Layer:Defpoints Pt:139.296546,102.191505 }
         (E2Point){ Layer:Defpoints Pt:139.296546,89.721125 }
       ]
+      Kind:Linear
+      Pts:[
+        60.596546,87.750886
+        139.296546,102.191505
+        139.296546,89.721125
+        99.946546,92.421125
+      ]
+      Style:AM_ISO
     }
-    (E2Dimension){
+    (E2DimLinear){
       Layer:dimension
       Ents:[
         (E2Poly){ Layer:dimension Poly:M139.296546,102.191505V118.83137 }
@@ -1703,8 +1873,16 @@
         (E2Point){ Layer:Defpoints Pt:175.646546,109.441505 }
         (E2Point){ Layer:Defpoints Pt:175.646546,117.83137 }
       ]
+      Kind:Linear
+      Pts:[
+        139.296546,102.191505
+        175.646546,109.441505
+        175.646546,117.83137
+        157.471546,120.53137
+      ]
+      Style:AM_ISO
     }
-    (E2Dimension){
+    (E2DimLinear){
       Layer:dimension
       Ents:[
         (E2Poly){ Layer:dimension Poly:M145.446546,97.191505H146.611121 }
@@ -1743,8 +1921,17 @@
         (E2Point){ Layer:Defpoints Pt:145.446546,77.860266 }
         (E2Point){ Layer:Defpoints Pt:145.611121,77.860266 }
       ]
+      Kind:Linear
+      Pts:[
+        145.446546,97.191505
+        145.446546,77.860266
+        145.611121,77.860266
+        145.611121,69.310266
+      ]
+      Style:AM_ISO
+      Angle:90
     }
-    (E2Dimension){
+    (E2DimLinear){
       Layer:dimension
       Ents:[
         (E2Poly){ Layer:dimension Poly:M179.396546,95.591505H168.295091 }
@@ -1783,6 +1970,15 @@
         (E2Point){ Layer:Defpoints Pt:179.396546,77.860266 }
         (E2Point){ Layer:Defpoints Pt:169.295091,77.860266 }
       ]
+      Kind:Linear
+      Pts:[
+        179.396546,95.591505
+        179.396546,77.860266
+        169.295091,77.860266
+        169.295091,69.310266
+      ]
+      Style:AM_ISO
+      Angle:90
     }
     (E2DimDia){
       Layer:dimension
@@ -1910,7 +2106,7 @@
       Style:AM_ISO
       Radius:1.25
     }
-    (E2Dimension){
+    (E2DimLinear){
       Layer:dimension
       Ents:[
         (E2Poly){ Layer:dimension Poly:M109.68025,117.041505V95.111644 }
@@ -1947,8 +2143,16 @@
         (E2Point){ Layer:Defpoints Pt:60.596546,117.041505 }
         (E2Point){ Layer:Defpoints Pt:60.596546,96.111644 }
       ]
+      Kind:Linear
+      Pts:[
+        109.68025,117.041505
+        60.596546,117.041505
+        60.596546,96.111644
+        85.138398,98.811644
+      ]
+      Style:AM_ISO
     }
-    (E2Dimension){
+    (E2DimLinear){
       Layer:dimension
       Ents:[
         (E2Poly){ Layer:dimension Poly:M109.68025,133.841505V147.067859 }
@@ -1987,8 +2191,16 @@
         (E2Point){ Layer:Defpoints Pt:117.18025,133.841505 }
         (E2Point){ Layer:Defpoints Pt:117.18025,146.067859 }
       ]
+      Kind:Linear
+      Pts:[
+        109.68025,133.841505
+        117.18025,133.841505
+        117.18025,146.067859
+        113.43025,146.067859
+      ]
+      Style:AM_ISO
     }
-    (E2Dimension){
+    (E2DimLinear){
       Layer:dimension
       Ents:[
         (E2Poly){ Layer:dimension Poly:M115.399011,120.541505V104.529253 }
@@ -2027,8 +2239,16 @@
         (E2Point){ Layer:Defpoints Pt:117.18025,117.041505 }
         (E2Point){ Layer:Defpoints Pt:117.18025,105.529253 }
       ]
+      Kind:Linear
+      Pts:[
+        115.399011,120.541505
+        117.18025,117.041505
+        117.18025,105.529253
+        125.18025,108.229253
+      ]
+      Style:AM_ISO
     }
-    (E2Dimension){
+    (E2DimLinear){
       Layer:dimension
       Ents:[
         (E2Poly){ Layer:dimension Poly:M117.78963,121.541505V154.458153 }
@@ -2066,6 +2286,14 @@
         (E2Point){ Layer:Defpoints Pt:109.070869,121.541505 }
         (E2Point){ Layer:Defpoints Pt:109.070869,153.458153 }
       ]
+      Kind:Linear
+      Pts:[
+        117.78963,121.541505
+        109.070869,121.541505
+        109.070869,153.458153
+        101.320869,156.158153
+      ]
+      Style:AM_ISO
     }
     (E2Poly){ Layer:dimension Poly:M115.399011,122.541505L114.18346,121.340104 }
     (E2Poly){ Layer:dimension Poly:M114.18346,121.340104V136.089599 }

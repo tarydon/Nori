@@ -177,8 +177,9 @@ public abstract partial class E2Dim {
       bool iBreak = pos == Centered, iHorz = textInside ? s.TIHorz : s.TOHorz;
       int textLie = textInside ? -1 : (pick.DistToSq (seg.A) < pick.DistToSq (seg.B) ? 0 : 1);
       double textAngle = iHorz ? 0 : GetTextAngle (seg.GetSlopeAt (0.5));
-      bool textHorzAnyway = textAngle.IsZero ();
+      bool textHorzAnyway = GetTextAngle (seg.GetSlopeAt (0.5)).IsZero ();
       double yShift = pos switch { Above => 1, Below => -1, _ => 0 } * bound.Height / 2;
+      if (iHorz && textInside && !textHorzAnyway) yShift = 0;
 
       for (int i = 0; i < 2; i++) {
          // Each leader line consists of two legs:
@@ -225,7 +226,6 @@ public abstract partial class E2Dim {
          }
          if (!twoArrows) break;
       }
-      if (iHorz && textInside) yShift = 0;
 
       double DShift (double angle) {
          double sin = Math.Sin (angle); if (Math.Abs (sin) < 0.1) return 0;
@@ -249,7 +249,7 @@ public abstract partial class E2Dim {
             AddPoint (seg.B);
             seg = Poly.Line (seg.A, seg.B.Polar (-s.ExtOffset, angle))[0];
          } 
-         if ((iBreak || iHorz) && textInside) AddTrimmedSeg (seg, textBox);
+         if ((iBreak || (iHorz && !textHorzAnyway)) && textInside) AddTrimmedSeg (seg, textBox);
          else AddPoly (seg.ToPoly ());
       }
 

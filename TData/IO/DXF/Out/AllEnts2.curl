@@ -68,7 +68,7 @@
       Height:5
       XScale:1
     }
-    (E2Dimension){
+    (E2DimLinear){
       Layer:0
       Ents:[
         (E2Poly){ Layer:0 Poly:M-71.594562,71.594562L-81.255654,81.255654 }
@@ -106,6 +106,15 @@
         (E2Point){ Layer:Defpoints Pt:56.568542,197.989899 }
         (E2Point){ Layer:Defpoints Pt:47.791333,206.767108 }
       ]
+      Kind:Linear
+      Pts:[
+        -70.710678,70.710678
+        56.568542,197.989899
+        47.791333,206.767108
+        -18.499928,145.779148
+      ]
+      Style:ISO-25
+      Angle:45
     }
     (E2Insert){ Layer:0 BlockName:Marker1 Pt:0,70.710678 Angle:90 XScale:1 YScale:1 }
     (E2Spline){

@@ -77,6 +77,8 @@ E2DimRad
 E2DimDia
   Radius
 E2DimAligned
+E2DimLinear
+  Angle
 E3Thick
   CS Shape Thickness Bound Parent.Id
 E3Flat

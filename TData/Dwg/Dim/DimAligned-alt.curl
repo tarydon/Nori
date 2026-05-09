@@ -1373,11 +1373,10 @@
         (E2Solid){ Layer:0 Pts:[ 77.5,78.416667 77.5,77.583333 80,78 80,78 ] }
         (E2Poly){ Layer:0 Poly:M65,78V78 }
         (E2Poly){ Layer:0 Poly:M80,78V78 }
-        (E2Poly){ Layer:0 Poly:M65,78H70.0875 }
-        (E2Poly){ Layer:0 Poly:M74.9125,78H80 }
+        (E2Poly){ Layer:0 Poly:M65,78H80 }
         (E2Text){
           Layer:0
-          Pt:72.5,78
+          Pt:72.5,79.875
           Text:15
           Style:STANDARD
           Alignment:MidCenter
@@ -1386,7 +1385,7 @@
         }
       ]
       Kind:Aligned
-      Pts:[ 65,75 80,75 74,78 72.5,78 ]
+      Pts:[ 65,75 80,75 74,78 72.5,79.875 ]
       Style:HORZ-ABOVE
     }
     (E2DimAligned){
@@ -1453,11 +1452,10 @@
         (E2Solid){ Layer:0 Pts:[ 92.5,97.583333 92.5,98.416667 90,98 90,98 ] }
         (E2Poly){ Layer:0 Poly:M85,98H81.25 }
         (E2Poly){ Layer:0 Poly:M90,98H93.75 }
-        (E2Poly){ Layer:0 Poly:M85,98H86.0375 }
-        (E2Poly){ Layer:0 Poly:M88.9625,98H90 }
+        (E2Poly){ Layer:0 Poly:M85,98H90 }
         (E2Text){
           Layer:0
-          Pt:87.5,98
+          Pt:87.5,99.875
           Text:5
           Style:STANDARD
           Alignment:MidCenter
@@ -1466,7 +1464,7 @@
         }
       ]
       Kind:Aligned
-      Pts:[ 85,90 90,90 86,98 87.5,98 ]
+      Pts:[ 85,90 90,90 86,98 87.5,99.875 ]
       Style:HORZ-ABOVE
     }
     (E2DimAligned){
@@ -1526,11 +1524,10 @@
         (E2Solid){ Layer:0 Pts:[ 112.5,69.416667 112.5,68.583333 115,69 115,69 ] }
         (E2Poly){ Layer:0 Poly:M80,69V69 }
         (E2Poly){ Layer:0 Poly:M115,69V69 }
-        (E2Poly){ Layer:0 Poly:M80,69H94.85 }
-        (E2Poly){ Layer:0 Poly:M100.15,69H115 }
+        (E2Poly){ Layer:0 Poly:M80,69H115 }
         (E2Text){
           Layer:0
-          Pt:97.5,69
+          Pt:97.5,70.875
           Text:35
           Style:STANDARD
           Alignment:MidCenter
@@ -1539,7 +1536,7 @@
         }
       ]
       Kind:Aligned
-      Pts:[ 80,65 115,65 100,69 97.5,69 ]
+      Pts:[ 80,65 115,65 100,69 97.5,70.875 ]
       Style:HORZ-ABOVE
     }
     (E2DimAligned){
@@ -1688,11 +1685,10 @@
         (E2Solid){ Layer:0 Pts:[ 142.5,78.416667 142.5,77.583333 145,78 145,78 ] }
         (E2Poly){ Layer:0 Poly:M130,78V78 }
         (E2Poly){ Layer:0 Poly:M145,78V78 }
-        (E2Poly){ Layer:0 Poly:M130,78H135.0875 }
-        (E2Poly){ Layer:0 Poly:M139.9125,78H145 }
+        (E2Poly){ Layer:0 Poly:M130,78H145 }
         (E2Text){
           Layer:0
-          Pt:137.5,78
+          Pt:137.5,76.125
           Text:15
           Style:STANDARD
           Alignment:MidCenter
@@ -1701,7 +1697,7 @@
         }
       ]
       Kind:Aligned
-      Pts:[ 130,75 145,75 139,78 137.5,78 ]
+      Pts:[ 130,75 145,75 139,78 137.5,76.125 ]
       Style:HORZ-BELOW
     }
     (E2DimAligned){
@@ -1768,11 +1764,10 @@
         (E2Solid){ Layer:0 Pts:[ 157.5,97.583333 157.5,98.416667 155,98 155,98 ] }
         (E2Poly){ Layer:0 Poly:M150,98H146.25 }
         (E2Poly){ Layer:0 Poly:M155,98H158.75 }
-        (E2Poly){ Layer:0 Poly:M150,98H151.0375 }
-        (E2Poly){ Layer:0 Poly:M153.9625,98H155 }
+        (E2Poly){ Layer:0 Poly:M150,98H155 }
         (E2Text){
           Layer:0
-          Pt:152.5,98
+          Pt:152.5,96.125
           Text:5
           Style:STANDARD
           Alignment:MidCenter
@@ -1781,7 +1776,7 @@
         }
       ]
       Kind:Aligned
-      Pts:[ 150,90 155,90 151,98 152.5,98 ]
+      Pts:[ 150,90 155,90 151,98 152.5,96.125 ]
       Style:HORZ-BELOW
     }
     (E2DimAligned){
@@ -1841,11 +1836,10 @@
         (E2Solid){ Layer:0 Pts:[ 177.5,69.416667 177.5,68.583333 180,69 180,69 ] }
         (E2Poly){ Layer:0 Poly:M145,69V69 }
         (E2Poly){ Layer:0 Poly:M180,69V69 }
-        (E2Poly){ Layer:0 Poly:M145,69H159.85 }
-        (E2Poly){ Layer:0 Poly:M165.15,69H180 }
+        (E2Poly){ Layer:0 Poly:M145,69H180 }
         (E2Text){
           Layer:0
-          Pt:162.5,69
+          Pt:162.5,67.125
           Text:35
           Style:STANDARD
           Alignment:MidCenter
@@ -1854,7 +1848,7 @@
         }
       ]
       Kind:Aligned
-      Pts:[ 145,65 180,65 165,69 162.5,69 ]
+      Pts:[ 145,65 180,65 165,69 162.5,67.125 ]
       Style:HORZ-BELOW
     }
     (E2DimAligned){

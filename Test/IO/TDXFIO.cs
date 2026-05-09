@@ -161,7 +161,7 @@ class DXFTests {
 
    [Test (93, "Pix crashes when trying to import the attached DXF files")]
    void Test19 () {
-      var files = new[] { "C36249_B", "47458206_B", "47616434", "48142366_A","AX0974", "337228A2" };
+      var files = new[] { "C36249_B", "47458206_B", "47616434", "48142366_A", "AX0974", "337228A2" };
       foreach (var name in files) {
          var dwg = DXFReader.Load (NT.File ($"IO/DXF/{name}.dxf"));
          DXFWriter.Save (dwg.Purge (), NT.TmpDXF);

@@ -65,7 +65,7 @@ public class DXFWriter {
    void OutBlocks () {
       var blocks = D.Blocks.ToList ();
       int id = 0, std = blocks.Count;
-      foreach (var dim in D.Ents.OfType<E2Dim> ()) {
+      foreach (var dim in D.DeepEnumEnts ().OfType<E2Dim> ()) {
          string name = GetBlockName ();
          blocks.Add (new (name, Point2.Zero, dim.Ents));
          mDimBlocks[dim] = name;
@@ -269,6 +269,7 @@ public class DXFWriter {
       mDefPts.Clear (); _ = e.Ents; e.GetDXFPoints (mDefPts);
       foreach (var (id, pt) in mDefPts)
          Out ($" {id}\n{pt.X}\n {id + 10}\n{pt.Y}\n");
+      if (e is E2DimLinear lin) Out ($" 50\n{lin.Angle.R2D ().R6 ()}\n");
       return 0;
    }
    List<(int, Point2)> mDefPts = [];

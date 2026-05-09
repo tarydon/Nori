@@ -808,7 +808,7 @@
     (E2Poly){ Layer:0 Poly:M42.873464,33.766077H42.846247 }
     (E2Poly){ Layer:0 Poly:M32.241552,66.757125V21.646069 }
     (E2Poly){ Layer:0 Poly:M137.279324,21.646069V67.277414 }
-    (E2Dimension){
+    (E2DimLinear){
       Layer:DIM
       Ents:[
         (E2Solid){
@@ -843,6 +843,15 @@
           XScale:0.75
         }
       ]
+      Kind:Linear
+      Pts:[
+        127.269048,21.646071
+        127.269048,204.336359
+        153.479324,204.336359
+        153.479324,112.991215
+      ]
+      Style:SLDDIMSTYLE0
+      Angle:90
     }
     (E2Insert){ Layer:DIM BlockName:SW_NOTE_8 Pt:21.449838,191.89747 XScale:1 YScale:1 }
     (E2Insert){ Layer:DIM BlockName:SW_NOTE_9 Pt:21.449838,111.824548 XScale:1 YScale:1 }
@@ -910,7 +919,7 @@
     (E2Poly){ Layer:0 Poly:M42.279048,234.32383L42.251827,234.12569 }
     (E2Poly){ Layer:0 Poly:M125.660439,257.453481V257.653481 }
     (E2Poly){ Layer:0 Poly:M127.241828,234.32383L127.269049,234.12569 }
-    (E2Dimension){
+    (E2DimLinear){
       Layer:DIM
       Ents:[
         (E2Solid){
@@ -944,8 +953,16 @@
           XScale:0.75
         }
       ]
+      Kind:Linear
+      Pts:[
+        32.041552,245.834595
+        137.479324,245.834595
+        137.479324,267.653481
+        84.760438,267.653481
+      ]
+      Style:SLDDIMSTYLE0
     }
-    (E2Dimension){
+    (E2DimLinear){
       Layer:DIM
       Ents:[
         (E2Solid){
@@ -979,8 +996,16 @@
           XScale:0.75
         }
       ]
+      Kind:Linear
+      Pts:[
+        125.260438,234.05162
+        44.260438,234.05162
+        44.260438,223.853481
+        84.760438,223.853481
+      ]
+      Style:SLDDIMSTYLE0
     }
-    (E2Dimension){
+    (E2DimLinear){
       Layer:DIM
       Ents:[
         (E2Solid){
@@ -1014,6 +1039,14 @@
           XScale:0.75
         }
       ]
+      Kind:Linear
+      Pts:[
+        43.860438,257.453481
+        125.660438,257.453481
+        125.660438,245.756083
+        84.760438,245.756083
+      ]
+      Style:SLDDIMSTYLE0
     }
     (E2Poly){ Layer:0 Poly:M120.3993,231.123138H139.066092 }
     (E2Poly){ Layer:0 Poly:M139.066092,260.540585V231.123138 }
@@ -1092,7 +1125,7 @@
       ]
       Style:SLDDIMSTYLE2
     }
-    (E2Dimension){
+    (E2DimLinear){
       Layer:DIM
       Ents:[
         (E2Solid){
@@ -1147,6 +1180,15 @@
           XScale:0.75
         }
       ]
+      Kind:Linear
+      Pts:[
+        185.59009,197.9913
+        186.522039,257.4913
+        238.069252,257.4913
+        238.069252,227.7413
+      ]
+      Style:SLDDIMSTYLE3
+      Angle:90
     }
     (E2DimRad){
       Layer:DIM
@@ -1178,7 +1220,7 @@
       Style:SLDDIMSTYLE4
       Radius:29.547215
     }
-    (E2Dimension){
+    (E2DimLinear){
       Layer:DIM
       Ents:[
         (E2Solid){
@@ -1215,6 +1257,15 @@
           XScale:0.75
         }
       ]
+      Kind:Linear
+      Pts:[
+        185.59009,197.9913
+        190.543562,198.671826
+        192.564246,183.963473
+        178.209009,181.9913
+      ]
+      Style:SLDDIMSTYLE5
+      Angle:7.822523
     }
     (E2Insert){ Layer:DIM BlockName:SW_NOTE_10 Pt:203.661776,185.112134 XScale:1 YScale:1 }
     (E2Poly){ Layer:0 Poly:M312.859104,72.129477V220.739904 }
