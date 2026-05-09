@@ -62,6 +62,7 @@ static class MenuCmds {
    static void DimRadius () => Hub.Widget = new DimRadMaker ();
    static void DimDiameter () => Hub.Widget = new DimDiaMaker ();
    static void DimAngle () => Hub.Widget = new DimAngleMaker ();
+   static void DimCallout () => Hub.Widget = new DimCalloutMaker ();
    static void Exit () => Hub.MainWindow?.Close ();
    static void New () => Hub.Dwg = new ();
 

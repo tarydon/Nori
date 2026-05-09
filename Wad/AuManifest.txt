@@ -86,3 +86,5 @@ E3Flex
   Spine
 BSpine
   Radius Angle KFactor Upward FlatWidth
+E2Leader
+  -Bound Pts Style.Name Text

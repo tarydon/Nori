@@ -372,3 +372,73 @@ public class E2DimAngle : E2Dim {
    }
 }
 #endregion
+
+#region class E2Leader -----------------------------------------------------------------------------
+/// <summary>Implements a 'leader' entity</summary>
+/// Even though this is not strictly a dimension, it behaves similar to one in many ways
+public class E2Leader : Ent2 {
+   /// <summary>Construct an E2Leader, given the Layer, DimStyle, points list and text</summary>
+   public E2Leader (Layer2 layer, DimStyle2 style, IEnumerable<Point2> pts, string text) : base (layer) 
+      => (mPts, mStyle, mText) = ([.. pts], style, text);
+   E2Leader () => (mStyle, mText) = (null!, null!);
+
+   // Properties ---------------------------------------------------------------
+   /// <summary>The list of entities used to render the E2Leader</summary>
+   public IReadOnlyList<Ent2> Ents {
+      get {
+         if (_ents == null) {
+            _ents = [];
+            while (mPts.Count < 2) mPts.Add (Point2.Zero);
+            
+            // Add the arrowhead
+            E2Dim.AddArrow (mLayer, mStyle, _ents, Pts[0], Pts[0].AngleTo (Pts[1]));
+
+            // Measure the text and position it
+            var font = LineFont.Get (mStyle.Style.Font);
+            var box = font.Measure (mText, Point2.Zero, ETextAlign.MidCenter, 0, 1, mStyle.TextSize, 0).InflatedL (mStyle.DimGap);            
+            List<Point2> pts = [.. mPts];
+            double sign = (pts[^1].X >= pts[^2].X) ? 1 : -1;
+            double dx = box.Width / 2 * sign, dy = box.Height / 2, asz = mStyle.ArrowSize * sign;
+            Point2 pt = pts[^1], pe;
+            (pe, pt) = mStyle.TextPos switch {
+               DimStyle2.EPos.Above => (pt.Moved (2 * dx, 0), pt.Moved (dx, dy)), 
+               DimStyle2.EPos.Below => (pt.Moved (2 * dx, 0), pt.Moved (dx, -dy)),
+               _ => (pt.Moved (asz, 0), pt.Moved (asz + dx, 0)),
+            };
+
+            // Add the text
+            _ents.Add (new E2Text (mLayer, mStyle.Style, mText, pt, mStyle.TextSize, 0, 0, 1, ETextAlign.MidCenter));
+            pts.Add (pe); _ents.Add (new E2Poly (mLayer, Poly.Lines (pts, false)));
+         }
+         return _ents;
+      }
+   }
+   List<Ent2>? _ents;
+
+   /// <summary>List of points defining the E2Leader</summary>
+   /// Pts[0] is the tip of the arrowhead, and Pts[^1] where the text is positioned
+   public IReadOnlyList<Point2> Pts => mPts;
+   protected List<Point2> mPts = [];
+
+   /// <summary>The DimStyle used by this dimension entity</summary>
+   /// This is stored primarily in the DimStyles list of the drawing
+   public DimStyle2 Style => mStyle;
+   protected DimStyle2 mStyle;
+
+   /// <summary>The text of the leader</summary>
+   public string Text => mText;
+   readonly string mText;
+
+   /// <summary>The Bound of the</summary>
+   public override Bound2 Bound => Bound2.Cached (ref mBound, () => new (Ents.Select (a => a.Bound)));
+   Bound2 mBound = new ();
+
+   // Overrides ----------------------------------------------------------------
+   /// <summary>Get the transformed bound of this E2Leader</summary>
+   public override Bound2 GetBound (Matrix2 xfm) => new (Ents.Select (a => a.GetBound (xfm)));
+
+   /// <summary>Returns a transformed version of this bound</summary>
+   protected override Ent2 Xformed (Matrix2 xfm)
+      => new E2Leader (Layer, Style, mPts.Select (a => a * xfm), mText);
+}
+#endregion

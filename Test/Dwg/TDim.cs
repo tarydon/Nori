@@ -24,6 +24,9 @@ class DimEntTests () {
    [Test (249, "Test DimLinear dimensions")]
    void Test6 () => Test (MakeDimLinear (), "DimLinear", new (1616, 1101));
 
+   [Test (252, "Test DimCallout (E2Leader)")]
+   void Test7 () => Test (MakeDimCallout (), "DimCallout", new (412, 440));
+
    void Test (Dwg2 dwg, string name, Vec2S size) {
       // Test saving curl files
       var bound = dwg.Bound.InflatedF (1.05);
@@ -50,6 +53,39 @@ class DimEntTests () {
       var dib = scene.RenderImage (size, DIBitmap.EFormat.Gray8);
       new PNGWriter (dib).Write (NT.TmpPNG);
       Assert.PNGFilesEqual (png, NT.TmpPNG, dib);
+   }
+
+   static Dwg2 MakeDimCallout () {
+      Dwg2 dwg = new ();
+      var tstyle = dwg.GetStyle ("STANDARD")!;
+      dwg.Add (Poly.Rectangle (2, 15, 58, 75));
+      DimStyle2 style; double dx, dy;
+
+      int n = 64; dx = 0; dy = 20;
+      style = new DimStyle2 ("HORZ-BREAK", tstyle) { TIHorz = true, TOHorz = true };
+      dwg.Add (style); dwg.CurrentDimStyle = style;
+      Add2 ();
+
+      dx = 0; dy = 0;
+      style = new DimStyle2 ("HORZ-ABOVE", tstyle) { TextPos = DimStyle2.EPos.Above, TIHorz = true, TOHorz = true };
+      dwg.Add (style); dwg.CurrentDimStyle = style;
+      Add2 ();
+
+      dx = 0; dy = 40;
+      style = new DimStyle2 ("HORZ-BELOW", tstyle) { TextPos = DimStyle2.EPos.Below, TIHorz = true, TOHorz = true };
+      dwg.Add (style); dwg.CurrentDimStyle = style;
+      Add2 ();
+      return dwg;
+
+      void Add2 () {
+         Add (30, 25, 25, 20); Add (30, 25, 25, 30);
+         Add (30, 25, 35, 20); Add (30, 25, 35, 30);
+      }
+
+      void Add (params double[] vals) {
+         var pts = Point2.List (vals).Select (a => a.Moved (dx, dy)).ToList ();
+         dwg.Add (new E2Leader (dwg.CurrentLayer, dwg.CurrentDimStyle, pts, $"LEAD~{(char)++n}"));
+      }
    }
 
    static Dwg2 MakeDimLinear () {

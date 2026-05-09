@@ -107,7 +107,7 @@ class Widget {
 
 #region class EntMaker -----------------------------------------------------------------------------
 /// <summary>Subtype of Widget used to make entities</summary>
-abstract class EntMaker : Widget {
+abstract class Ent2Maker : Widget {
    public Layer2 Layer => Dwg.CurrentLayer;
 
    // Overridden to add the entity into the drawing
@@ -124,7 +124,7 @@ abstract class EntMaker : Widget {
 
 #region class DimWidget ----------------------------------------------------------------------------
 /// <summary>Subtype of EntWidget used to make dimensions</summary>
-abstract class DimMaker : EntMaker {
+abstract class DimMaker : Ent2Maker {
    protected DimStyle2 DimStyle => Dwg.CurrentDimStyle;
 }
 #endregion
@@ -133,7 +133,7 @@ abstract class DimMaker : EntMaker {
 /// <summary>Widget to make aligned dimensions</summary>
 class DimAlignedMaker : DimMaker {
    public override Ent2? MakeEnt () {
-      if (Phase == 3) return new E2DimAligned (Dwg.CurrentLayer, DimStyle, Pts);
+      if (Phase == 3) return new E2DimAligned (Layer, DimStyle, Pts);
       return null;
    }
 }
@@ -151,7 +151,7 @@ class Dim3PAngleMaker : DimMaker {
    }
 
    public override Ent2? MakeEnt () {
-      if (Phase == 4) return new E2Dim3PAngle (Dwg.CurrentLayer, DimStyle, Pts);
+      if (Phase == 4) return new E2Dim3PAngle (Layer, DimStyle, Pts);
       return null;
    }
 }
@@ -182,7 +182,7 @@ class DimLinearMaker : DimMaker {
    double mAngle;
 
    public override Ent2? MakeEnt ()
-      => (Phase == 3) ? new E2DimLinear (Dwg.CurrentLayer, DimStyle, mAngle, Pts) : null;
+      => (Phase == 3) ? new E2DimLinear (Layer, DimStyle, mAngle, Pts) : null;
 
    public override void OnKey (KeyInfo ki) {
       if (ki.Key == EKey.F5) {
@@ -227,7 +227,7 @@ class DimRadMaker : DimMaker {
          Point2 pt = seg.Center.Polar (seg.Radius, seg.Center.AngleTo (Pts[1]));
          double lie = seg.GetLie (pt).Clamp (); pt = seg.GetPointAt (lie);
          Pts[1] = seg.Center.Polar (seg.Center.DistTo (Pts[1]), seg.Center.AngleTo (pt));
-         return new E2DimRad (Dwg.CurrentLayer, DimStyle, seg.Radius, mTOFL, Pts);
+         return new E2DimRad (Layer, DimStyle, seg.Radius, mTOFL, Pts);
       }
       return null;
    }
@@ -235,6 +235,20 @@ class DimRadMaker : DimMaker {
    // Private data -------------------------------------------------------------
    Seg? mSeg = null;
    static bool mTOFL;
+}
+#endregion
+
+#region class DimCalloutMaker ----------------------------------------------------------------------
+/// <summary>Widget used to create E2Leader entities</summary>
+class DimCalloutMaker : Ent2Maker {
+   public override Ent2? MakeEnt () {
+      if (Phase == 2) return new E2Leader (Layer, Dwg.CurrentDimStyle, Pts, $"LEAD-{sN}");
+      return null;
+   }
+
+   public override void Completed () { base.Completed (); sN++; }
+
+   static int sN = 1;
 }
 #endregion
 
@@ -265,7 +279,7 @@ class DimDiaMaker : DimMaker {
    // Make the diameter dimension
    public override Ent2? MakeEnt () {
       if (Phase == 2 && mSeg is { } seg) 
-         return new E2DimDia (Dwg.CurrentLayer, DimStyle, seg.Radius, mTOFL, Pts);
+         return new E2DimDia (Layer, DimStyle, seg.Radius, mTOFL, Pts);
       return null;
    }
 

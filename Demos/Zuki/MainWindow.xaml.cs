@@ -25,8 +25,43 @@ public partial class MainWindow : Window {
       var dxf = Environment.GetCommandLineArgs ().FirstOrDefault (a => a.EndsWith (".dxf"));
       if (dxf != null) Hub.LoadDXF (dxf);
       else {
-         Hub.Dwg = MakeDimLinear ();
-         Hub.Widget = new DimLinearMaker ();
+         Hub.Dwg = MakeDimCallout ();
+         Hub.Widget = new DimCalloutMaker ();
+         DXFWriter.Save (Hub.Dwg, "c:/etc/test.dxf", true);
+         Hub.Dwg = DXFReader.Load ("c:/etc/test.dxf", true);
+      }
+   }
+
+   Dwg2 MakeDimCallout () {
+      Dwg2 dwg = new ();
+      var tstyle = dwg.GetStyle ("STANDARD")!;
+      dwg.Add (Poly.Rectangle (2, 15, 58, 75));
+      DimStyle2 style; double dx, dy;
+
+      int n = 64; dx = 0; dy = 20; 
+      style = new DimStyle2 ("HORZ-BREAK", tstyle) { TIHorz = true, TOHorz = true };
+      dwg.Add (style); dwg.CurrentDimStyle = style;
+      Add2 ();
+
+      dx = 0; dy = 0;
+      style = new DimStyle2 ("HORZ-ABOVE", tstyle) { TextPos = DimStyle2.EPos.Above, TIHorz = true, TOHorz = true };
+      dwg.Add (style); dwg.CurrentDimStyle = style;
+      Add2 ();
+
+      dx = 0; dy = 40;
+      style = new DimStyle2 ("HORZ-BELOW", tstyle) { TextPos = DimStyle2.EPos.Below, TIHorz = true, TOHorz = true };
+      dwg.Add (style); dwg.CurrentDimStyle = style;
+      Add2 ();
+      return dwg; 
+
+      void Add2 () {
+         Add (30, 25, 25, 20); Add (30, 25, 25, 30);
+         Add (30, 25, 35, 20); Add (30, 25, 35, 30);
+      }
+
+      void Add (params double[] vals) {
+         var pts = Point2.List (vals).Select (a => a.Moved (dx, dy)).ToList ();
+         dwg.Add (new E2Leader (dwg.CurrentLayer, dwg.CurrentDimStyle, pts, $"LEAD~{(char)++n}"));
       }
    }
 

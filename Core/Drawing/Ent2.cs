@@ -22,7 +22,7 @@ public abstract partial class Ent2 {
 
    /// <summary>The layer on which this Ent2 exists</summary>
    public Layer2 Layer { get => mLayer; set => mLayer = value; }
-   Layer2 mLayer;
+   protected Layer2 mLayer;
 
    /// <summary>The name of the layer</summary>
    public string LayerName => mLayer.Name;

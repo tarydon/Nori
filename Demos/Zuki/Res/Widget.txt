@@ -41,3 +41,9 @@ Name=Angle Dim.
 0=Select first line
 1=Select second line
 2=Set dimension arc location
+
+[DimCallout]
+Phases=2
+Name=Callout
+0=Set feature location
+1=Set text position

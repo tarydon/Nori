@@ -1,0 +1,65 @@
+(Dwg2){
+  Layers:[ { Name:0 Color:#FF000000 Linetype:Continuous } ]
+  Styles:[ { Name:STANDARD Font:SIMPLEX XScale:1 } ]
+  DimStyles:[
+    {
+      Name:HORZ-BREAK
+      ArrowSize:2.5
+      ExtOffset:0.625
+      ExtExtend:1.25
+      TextSize:2.5
+      DimCen:2.5
+      DimGap:0.625
+      TextPos:Centered
+      Flags:TIHorz,TOHorz,TOFL
+      LinDecimal:2
+      AngDecimal:1
+      Style:STANDARD
+    }
+    {
+      Name:HORZ-ABOVE
+      ArrowSize:2.5
+      ExtOffset:0.625
+      ExtExtend:1.25
+      TextSize:2.5
+      DimCen:2.5
+      DimGap:0.625
+      TextPos:Above
+      Flags:TIHorz,TOHorz,TOFL
+      LinDecimal:2
+      AngDecimal:1
+      Style:STANDARD
+    }
+    {
+      Name:HORZ-BELOW
+      ArrowSize:2.5
+      ExtOffset:0.625
+      ExtExtend:1.25
+      TextSize:2.5
+      DimCen:2.5
+      DimGap:0.625
+      TextPos:Below
+      Flags:TIHorz,TOHorz,TOFL
+      LinDecimal:2
+      AngDecimal:1
+      Style:STANDARD
+    }
+  ]
+  CurrentLayer:0
+  CurrentDimStyle:HORZ-BELOW
+  Ents:[
+    (E2Poly){ Layer:0 Poly:M2,15H58V75H2Z }
+    (E2Leader){ Layer:0 Pts:[ 30,45 25,40 ] Style:HORZ-BREAK Text:LEAD~A }
+    (E2Leader){ Layer:0 Pts:[ 30,45 25,50 ] Style:HORZ-BREAK Text:LEAD~B }
+    (E2Leader){ Layer:0 Pts:[ 30,45 35,40 ] Style:HORZ-BREAK Text:LEAD~C }
+    (E2Leader){ Layer:0 Pts:[ 30,45 35,50 ] Style:HORZ-BREAK Text:LEAD~D }
+    (E2Leader){ Layer:0 Pts:[ 30,25 25,20 ] Style:HORZ-ABOVE Text:LEAD~E }
+    (E2Leader){ Layer:0 Pts:[ 30,25 25,30 ] Style:HORZ-ABOVE Text:LEAD~F }
+    (E2Leader){ Layer:0 Pts:[ 30,25 35,20 ] Style:HORZ-ABOVE Text:LEAD~G }
+    (E2Leader){ Layer:0 Pts:[ 30,25 35,30 ] Style:HORZ-ABOVE Text:LEAD~H }
+    (E2Leader){ Layer:0 Pts:[ 30,65 25,60 ] Style:HORZ-BELOW Text:LEAD~I }
+    (E2Leader){ Layer:0 Pts:[ 30,65 25,70 ] Style:HORZ-BELOW Text:LEAD~J }
+    (E2Leader){ Layer:0 Pts:[ 30,65 35,60 ] Style:HORZ-BELOW Text:LEAD~K }
+    (E2Leader){ Layer:0 Pts:[ 30,65 35,70 ] Style:HORZ-BELOW Text:LEAD~L }
+  ]
+}

@@ -49,6 +49,7 @@ public class DXFReader {
 
             // These entities require more complex handling, and we need a separate routine for each
             case DIMENSION: LoadDimension (); break;
+            case INSERT: LoadInsert (); break;
             case ELLIPSE: LoadEllipse (); break;
             case LINE: LoadLine (); break;
             case LWPOLYLINE: LoadLWPolyline (); break;
@@ -120,6 +121,33 @@ public class DXFReader {
          }
       }
       mDwg.RemoveBlocks (blocks);
+   }
+
+   // Loads an INSERT (with special handling for E2Leader that we save as INSERT)
+   void LoadInsert () {
+      List<Point2> pts = [];
+      string type = "", text = ""; DimStyle2? style = null;
+      for (; ; ) {
+         int before = mR.Pos;
+         if (!Next (true)) break;
+         if (G == 0) { mR.Pos = before; break; }
+         if (G == 1000) {
+            var s = mEncoding.GetString (mD.AsSpan (mStart, mLength));
+            if (s.StartsWith ("TYPE:")) type = s[5..];
+            else if (s.StartsWith ("TEXT:")) text = s[5..];
+            else if (s.StartsWith ("STYLE:")) style = mDwg.GetDimStyle (s[6..]);
+            else if (s.StartsWith ("PT:")) {
+               double[] v = [.. s[3..].Split (',').Select (a => a.ToDouble ())];
+               if (v.Length >= 2) pts.Add (new (v[0], v[1]));
+            }
+         }
+      }
+      string name = S (2);
+      if (type == "LEADER") {
+         Add (new E2Leader (LYR (), style ?? mDwg.CurrentDimStyle, pts, text));
+         mDwg.RemoveBlocks ([..mDwg.Blocks.Where (a => a.Name == name)]);
+      } else
+         Add (new E2Insert (mDwg, LYR (), name, PT (10), DANG (50), D (41, 1.0), D (42, 1.0)));
    }
 
    // Loads a DIMENSION entity
@@ -336,11 +364,6 @@ public class DXFReader {
             // Safe to add this to mDwg since blocks cannot contain nested blocks
             if (mBlock is { } && !SkipBlocks.Contains (mBlock.Name)) mDwg.Add (mBlock);
             mBlock = null;
-            break;
-         case INSERT:
-            string name = S (2);
-            if (!SkipBlocks.Contains (name)) 
-               Add (new E2Insert (mDwg, LYR (), name, PT (10), DANG (50), D (41, 1.0), D (42, 1.0)));
             break;
          case LAYER:
             bool visible = N (70).IsEven ();

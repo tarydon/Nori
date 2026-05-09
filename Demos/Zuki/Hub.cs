@@ -79,6 +79,7 @@ static class Hub {
       Lux.Points (mPts.AsSpan ());
       // Handle dimensions
       ents.OfType<E2Dim> ().ForEach (d => DrawEnts (d.Ents));
+      ents.OfType<E2Leader> ().ForEach (d => DrawEnts (d.Ents));
    }
    static List<Poly> mPolys = [];
    static List<Vec2F> mQuads = [], mPts = [];

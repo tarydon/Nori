@@ -57,7 +57,7 @@ public class DXFWriter {
 
    // Outputs the NORI AppID, if there are any bendlines
    void OutAppIDs () {
-      if (D.Ents.OfType<E2Bendline> ().Any ())
+      if (D.Ents.Any (a => a is E2Bendline or E2Leader))
          Out (" 0\nTABLE\n 2\nAPPID\n 70\n1\n 0\nAPPID\n 2\nNORI\n 70\n0\n 0\nENDTAB\n");
    }
 
@@ -69,6 +69,11 @@ public class DXFWriter {
          string name = GetBlockName ();
          blocks.Add (new (name, Point2.Zero, dim.Ents));
          mDimBlocks[dim] = name;
+      }
+      foreach (var lead in D.DeepEnumEnts ().OfType<E2Leader> ()) {
+         string name = GetBlockName ();
+         blocks.Add (new (name, Point2.Zero, lead.Ents));
+         mDimBlocks[lead] = name;
       }
 
       if (blocks.Count == 0) return;
@@ -89,7 +94,7 @@ public class DXFWriter {
          }
       }
    }
-   Dictionary<E2Dim, string> mDimBlocks = [];
+   Dictionary<Ent2, string> mDimBlocks = [];
 
    // Ouptut the dimension styles
    void OutDimStyles () {
@@ -120,6 +125,7 @@ public class DXFWriter {
             E2Insert ei => OutInsert (ei),
             E2Bendline e2b => OutBendLine (e2b),
             E2Dim e2dim => OutDimension (e2dim),
+            E2Leader el => OutLeader (el),
             E2Spline => 0,
             _ => throw new BadCaseException (ent.GetType ().Name)
          };
@@ -260,6 +266,15 @@ public class DXFWriter {
       return 0;
    }
    Layer2? mMBend, mBend;
+
+   // Outputs a LEADER entity
+   int OutLeader (E2Leader e) {
+      Out ($" 0\nINSERT\n 8\n{e.Layer.Name}\n 2\n{mDimBlocks[e]}\n 10\n0\n 20\n0\n");
+      Out ($" 41\n1\n 42\n 1\n 50\n0\n");
+      Out ($" 1001\nNORI\n 1000\nTYPE:LEADER\n 1000\nTEXT:{e.Text}\n 1000\nSTYLE:{e.Style.Name}\n");
+      foreach (var pt in e.Pts) Out ($" 1000\nPT:{pt.X.R6 ()},{pt.Y.R6 ()}\n");
+      return 0; 
+   }
 
    // This outputs a dimension entity
    int OutDimension (E2Dim e) {

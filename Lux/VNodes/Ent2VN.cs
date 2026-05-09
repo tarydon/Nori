@@ -95,6 +95,16 @@ class E2DimVN (E2Dim e2d) : Ent2VN (e2d) {
 }
 #endregion
 
+#region class E2Leader -----------------------------------------------------------------------------
+/// <summary>VNode to render an E2Leader</summary>
+class E2LeaderVN (E2Leader e2d) : Ent2VN (e2d) {
+   public override VNode? GetChild (int n) {
+      Ent2? ent = e2d.Ents.SafeGet (n);
+      return ent == null ? null : MakeFor (ent);
+   }
+}
+#endregion
+
 #region class E2PolyVN -----------------------------------------------------------------------------
 /// <summary>VNode to render an E2Poly entity</summary>
 [Used]

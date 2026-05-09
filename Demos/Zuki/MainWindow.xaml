@@ -21,6 +21,7 @@
             <MenuItem Header="_A. Dim: Angular" Tag="DimAngle" />
             <MenuItem Header="_D. Dim: Diameter" Tag="DimDiameter" />
             <MenuItem Header="_L. Dim: Aligned" Tag="DimAligned" />
+            <MenuItem Header="_C. Dim: Callout" Tag="DimCallout" />
             <MenuItem Header="_R. Dim: Radius" Tag="DimRadius" />
             <MenuItem Header="_3. Dim: 3-P Angular" Tag="Dim3PAngle" />
          </MenuItem>
