@@ -177,6 +177,7 @@ public abstract partial class E2Dim {
       bool iBreak = pos == Centered, iHorz = textInside ? s.TIHorz : s.TOHorz;
       int textLie = textInside ? -1 : (pick.DistToSq (seg.A) < pick.DistToSq (seg.B) ? 0 : 1);
       double textAngle = iHorz ? 0 : GetTextAngle (seg.GetSlopeAt (0.5));
+      bool textHorzAnyway = textAngle.IsZero ();
       double yShift = pos switch { Above => 1, Below => -1, _ => 0 } * bound.Height / 2;
 
       for (int i = 0; i < 2; i++) {

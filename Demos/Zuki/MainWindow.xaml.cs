@@ -41,17 +41,46 @@ public partial class MainWindow : Window {
       dx = 0; dy = 0; 
       style = new DimStyle2 ("BREAK", tstyle);
       dwg.Add (style); dwg.CurrentDimStyle = style;
-      Add (a0, 15, 0, 50, 0, 46, -3);
-      Add (a0, 0, 10, 15, 10, -1, 7);
-      Add (a1, 15, 0, 15, 10, 10, 2);
-      Add (a2, 20, 50, 50, 35, 49, 40);
-      
+      AddStuff ();
+
+      dx = 65; dy = 0;
+      style = new DimStyle2 ("ABOVE", tstyle) { TextPos = DimStyle2.EPos.Above };
+      dwg.Add (style); dwg.CurrentDimStyle = style;
+      AddStuff ();
+
+      dx = 130; dy = 0;
+      style = new DimStyle2 ("BELOW", tstyle) { TextPos = DimStyle2.EPos.Below };
+      dwg.Add (style); dwg.CurrentDimStyle = style;
+      AddStuff ();
+
+      dx = 0; dy = 65;
+      style = new DimStyle2 ("HORZ-BREAK", tstyle) { TIHorz = true, TOHorz = true };
+      dwg.Add (style); dwg.CurrentDimStyle = style;
+      AddStuff ();
+
+      dx = 65; dy = 65;
+      style = new DimStyle2 ("HORZ-ABOVE", tstyle) { TIHorz = true, TOHorz = true, TextPos = DimStyle2.EPos.Above };
+      dwg.Add (style); dwg.CurrentDimStyle = style;
+      AddStuff ();
+
+      dx = 130; dy = 65;
+      style = new DimStyle2 ("HORZ-BELOW", tstyle) { TIHorz = true, TOHorz = true, TextPos = DimStyle2.EPos.Below };
+      dwg.Add (style); dwg.CurrentDimStyle = style;
+      AddStuff ();
+      return dwg;
+
+      void AddStuff () {
+         Add (a0, 15, 0, 50, 0, 46, -3); Add (a0, 0, 10, 15, 10, -1, 7);
+         Add (a1, 15, 0, 15, 10, 10, 2); Add (a2, 20, 50, 50, 35, 49, 40);
+         Add (a2, 20, 50, 30, 45, 28, 41); Add (a0, 20, 25, 30, 25, 29, 18);
+         Add (a0, 20, 25, 30, 25, 7, 32); Add (a1, 50, 35, 50, 0, 54, -1);
+         Add (a1, 50, 35, 20, 50, -3, 42); Add (a0, 25, 25, 30, 25, 27, 13);
+      }
+
       void Add (double angle, params double[] vals) {
          var pts = Point2.List (vals).Select (a => a.Moved (dx, dy)).ToList ();
          dwg.Add (new E2DimLinear (dwg.CurrentLayer, dwg.CurrentDimStyle, angle, pts));
       }
-
-      return dwg;
    }
 
    Dwg2 MakeDimAligned () {
