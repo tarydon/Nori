@@ -50,7 +50,7 @@ class IntMeshPlaneScene : Scene3 {
          pmi.Compute (pdef, output);
       }
       foreach (var poly in output) {
-         vnodes.Add (new Curve3VN (poly));
+         vnodes.Add (new E3CurveVN (new E3Curve (poly)));
          if (!poly.Pts[0].EQ (poly.Pts[^1])) { ends.Add (poly.Start); ends.Add (poly.End); }
       }
 

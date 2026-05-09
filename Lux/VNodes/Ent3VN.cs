@@ -17,7 +17,7 @@ public abstract class Ent3VN (Ent3 mEnt) : VNode (mEnt) {
 
 #region class E3CurveVN ----------------------------------------------------------------------------
 /// <summary>Render an E3Curve entity (free-space curve)</summary>
-class E3CurveVN (E3Curve mCurve) : Ent3VN (mCurve) {
+public class E3CurveVN (E3Curve mCurve) : Ent3VN (mCurve) {
    public override void Draw () {
       List<Point3> pts = [];
       mCurve.Curve.Discretize (pts, ETess.Fine);
