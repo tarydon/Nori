@@ -325,7 +325,7 @@ class AuType {
    /// To avoid calling ToString() on the value and building a short-lived temporary string,
    /// we build a map that maps each enumeration value (integer) into a byte[] that is a
    /// UTF8 encoding of the string.
-   public void WriteEnum (UTFWriter stm, object value) {
+   public void WriteEnum (UTFWriter stm, object value) {    // TODO: Rewrite completely, this is too slow
       mEnumDescs = [];
       var (names, values) = (Enum.GetNames (mType), Enum.GetValues (mType));
       for (int i = 0; i < names.Length; i++)

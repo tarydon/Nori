@@ -1,11 +1,40 @@
 (Dwg2){
   Layers:[
-    { Name:0 Color:#FFFFFFFF Linetype:Continuous Visible:True }
-    { Name:Defpoints Color:#FFFFFFFF Linetype:Continuous Visible:True }
+    { Name:0 Color:#FFFFFFFF Linetype:Continuous }
+    { Name:Defpoints Color:#FFFFFFFF Linetype:Continuous }
   ]
   Styles:[
     { Name:Standard Font:simplex XScale:1 }
     { Name:Annotative Font:arial.ttf XScale:1 }
+  ]
+  DimStyles:[
+    {
+      Name:Standard
+      ArrowSize:2.5
+      ExtOffset:0.625
+      ExtExtend:1.25
+      TextSize:2.5
+      DimCen:2.5
+      DimGap:0.625
+      TextPos:Above
+      Flags:TOFL
+      LinDecimal:2
+      Style:Standard
+    }
+    { Name:Annotative TextPos:Above Flags:TOFL LinDecimal:2 Style:Standard }
+    {
+      Name:ISO-25
+      ArrowSize:2.5
+      ExtOffset:0.625
+      ExtExtend:1.25
+      TextSize:2.5
+      DimCen:2.5
+      DimGap:0.625
+      TextPos:Above
+      Flags:TOFL
+      LinDecimal:2
+      Style:Standard
+    }
   ]
   Blocks:[
     {
@@ -21,6 +50,7 @@
     }
   ]
   CurrentLayer:0
+  CurrentDimStyle:ISO-25
   Ents:[
     (E2Poly){
       Layer:0
@@ -38,7 +68,7 @@
       Height:5
       XScale:1
     }
-    (E2Dimension){
+    (E2DimLinear){
       Layer:0
       Ents:[
         (E2Poly){ Layer:0 Poly:M-71.594562,71.594562L-81.255654,81.255654 }
@@ -76,6 +106,15 @@
         (E2Point){ Layer:Defpoints Pt:56.568542,197.989899 }
         (E2Point){ Layer:Defpoints Pt:47.791333,206.767108 }
       ]
+      Kind:Linear
+      Pts:[
+        -70.710678,70.710678
+        56.568542,197.989899
+        47.791333,206.767108
+        -18.499928,145.779148
+      ]
+      Style:ISO-25
+      Angle:45
     }
     (E2Insert){ Layer:0 BlockName:Marker1 Pt:0,70.710678 Angle:90 XScale:1 YScale:1 }
     (E2Spline){

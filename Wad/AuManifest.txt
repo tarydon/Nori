@@ -1,7 +1,9 @@
 Dwg2
-  Layers Styles Blocks -Bound CurrentLayer.Name Ents -FillInterior Grid
+  Layers Styles DimStyles Blocks -Bound CurrentLayer.Name CurrentDimStyle.Name Ents -FillInterior Grid
+DimStyle2
+  Name ArrowSize ExtOffset ExtExtend TextSize DimCen DimGap TextPos Flags LinDecimal AngDecimal Style.Name
 Layer2
-  Name Color Linetype Visible
+  Name Color Linetype Invisible
 Grid2
   Pitch Subdivs Visible Snap Origin Rotation
 Ent2
@@ -66,6 +68,17 @@ Polyline3
   Pts
 E3Contour
   Curves
+E2Dim
+  -Bound Ents Kind Pts Style.Name Text
+E2Dim3PAngle
+E2DimAngular
+E2DimRad
+  Radius
+E2DimDia
+  Radius
+E2DimAligned
+E2DimLinear
+  Angle
 E3Thick
   CS Shape Thickness Bound Parent.Id
 E3Flat
@@ -73,3 +86,5 @@ E3Flex
   Spine
 BSpine
   Radius Angle KFactor Upward FlatWidth
+E2Leader
+  -Bound Pts Style.Name Text

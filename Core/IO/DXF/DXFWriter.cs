@@ -17,8 +17,8 @@ public class DXFWriter {
 
    #region Methods -------------------------------------------------------------
    /// <summary>Utility helper to save a Dwg to DXF file</summary>
-   public static void Save (Dwg2 dwg, string file)
-      => File.WriteAllText (file, new DXFWriter (dwg).Write ());
+   public static void Save (Dwg2 dwg, string file, bool blackToWhite = false)
+      => File.WriteAllText (file, new DXFWriter (dwg) { BlackToWhite = blackToWhite }.Write ());
 
    /// <summary>Maps Color4 to nearest ACAD color by comparing RGB values</summary>
    public static int ToACADColor (Color4 color) {
@@ -35,13 +35,18 @@ public class DXFWriter {
    /// <summary>Writes the Dwg2 to a string (that can then be saved to a file to make a DXF)</summary>
    public string Write () {
       S.Clear ();
-      Out (" 0\nSECTION\n 2\nHEADER\n 0\nENDSEC\n 0\nSECTION\n 2\nTABLES\n");
-      OutLayers ();
-      OutStyles ();
-      OutBlocks ();
-      Out (" 0\nENDSEC\n 0\nSECTION\n 2\nENTITIES\n");
-      OutEntities (D.Ents);
-      Out (" 0\nENDSEC\n 0\nEOF\n");
+      OutHeader ();                          // HEADER section
+      Out (" 0\nSECTION\n 2\nTABLES\n");     // TABLES section
+      var layers = OutLTypes ();             // |
+      OutLayers (layers);                    // |
+      OutStyles ();                          // |
+      OutAppIDs ();                          // |
+      OutDimStyles ();                       // |
+      Out (" 0\nENDSEC\n");                  // |
+      OutBlocks ();                          // BLOCKS section
+      Out (" 0\nSECTION\n 2\nENTITIES\n");   // ENTITIES section
+      OutEntities (D.Ents);                  // |
+      Out (" 0\nENDSEC\n 0\nEOF\n");         // |
       return S.ToString ();
    }
    #endregion
@@ -50,15 +55,61 @@ public class DXFWriter {
    // Basic function to append a string
    int Out (string s) { S.Append (s); return 0; }
 
+   // Outputs the NORI AppID, if there are any bendlines
+   void OutAppIDs () {
+      if (D.Ents.Any (a => a is E2Bendline or E2Leader))
+         Out (" 0\nTABLE\n 2\nAPPID\n 70\n1\n 0\nAPPID\n 2\nNORI\n 70\n0\n 0\nENDTAB\n");
+   }
+
    // Writes out the BLOCKS table with the list of blocks
    void OutBlocks () {
-      var blocks = D.Blocks; if (blocks.Count == 0) return;
-      Out ($" 0\nTABLE\n 2\nBLOCKS\n 70\n{blocks.Count}\n");
-      foreach (var block in blocks) {
-         var pt = block.Base;
-         Out ($" 0\nBLOCK\n 70\n65\n 2\n{block.Name}\n 10\n{pt.X}\n 20\n{pt.Y}\n");
+      var blocks = D.Blocks.ToList ();
+      int id = 0, std = blocks.Count;
+      foreach (var dim in D.DeepEnumEnts ().OfType<E2Dim> ()) {
+         string name = GetBlockName ();
+         blocks.Add (new (name, Point2.Zero, dim.Ents));
+         mDimBlocks[dim] = name;
+      }
+      foreach (var lead in D.DeepEnumEnts ().OfType<E2Leader> ()) {
+         string name = GetBlockName ();
+         blocks.Add (new (name, Point2.Zero, lead.Ents));
+         mDimBlocks[lead] = name;
+      }
+
+      if (blocks.Count == 0) return;
+      Out ($" 0\nSECTION\n 2\nBLOCKS\n");
+      for (int i = 0; i < blocks.Count; i++) {
+         var block = blocks[i]; var pt = block.Base;
+         Out ($" 0\nBLOCK\n 2\n{block.Name}\n 70\n{(i < std ? 0 : 1)}\n 10\n{pt.X}\n 20\n{pt.Y}\n");
          OutEntities (block.Ents);
          Out (" 0\nENDBLK\n");
+      }
+      Out (" 0\nENDSEC\n");
+
+      // Helper ............................................
+      string GetBlockName () {
+         for (; ; ) {
+            string name = $"*D{++id}";
+            if (blocks.None (a => a.Name.EqIC (name))) return name;
+         }
+      }
+   }
+   Dictionary<Ent2, string> mDimBlocks = [];
+
+   // Ouptut the dimension styles
+   void OutDimStyles () {
+      var styles = D.DimStyles;
+      if (styles.Count == 0) return;
+      Out ($" 0\nTABLE\n 2\nDIMSTYLE\n 70\n{styles.Count}\n");
+      foreach (var d in styles) {
+         Out ($" 0\nDIMSTYLE\n 2\n{d.Name}\n 70\n0\n 3\n\n 4\n\n 5\n\n 6\n\n 7\n\n");
+         Out ($" 40\n1\n 41\n{d.ArrowSize}\n 42\n{d.ExtOffset}\n 43\n{6 * d.ExtOffset}\n");
+         Out ($" 44\n{d.ExtExtend}\n 45\n0\n 46\n0\n 47\n0\n 48\n0\n 140\n{d.TextSize}\n");
+         Out ($" 141\n{d.DimCen}\n 142\n0\n 143\n25.4\n 144\n1\n 145\n0\n 146\n1\n");
+         Out ($" 147\n{d.DimGap}\n 71\n0\n 72\n0\n 73\n{(d.TIHorz ? 1 : 0)}\n 74\n{(d.TOHorz ? 1 : 0)}\n");
+         Out ($" 75\n0\n 76\n0\n 77\n{(int)d.TextPos}\n 78\n0\n 170\n0\n 171\n2\n 172\n{(d.TOFL ? 1 : 0)}\n");
+         Out ($" 173\n0\n 174\n0\n 175\n0\n 176\n0\n 177\n0\n 178\n0\n");
+         // TODO: Save linear / angular decimals?
       }
       Out (" 0\nENDTAB\n");
    }
@@ -72,9 +123,10 @@ public class DXFWriter {
             E2Text et => OutText (et),
             E2Solid es => OutSolid (es),
             E2Insert ei => OutInsert (ei),
-            E2Dimension e2d => OutDimension (e2d),
             E2Bendline e2b => OutBendLine (e2b),
-            E2Spline e2s => OutSpline (e2s),
+            E2Dim e2dim => OutDimension (e2dim),
+            E2Leader el => OutLeader (el),
+            E2Spline => 0,
             _ => throw new BadCaseException (ent.GetType ().Name)
          };
       }
@@ -86,11 +138,39 @@ public class DXFWriter {
       Out ($" 0\n{type}\n 8\n{ent.Layer.Name}\n");
    }
 
+   // Outputs the HEADER section
+   void OutHeader () {
+      var b = D.Bound;
+      Out (" 0\nSECTION\n 2\nHEADER\n 9\n$ACADVER\n 1\nAC1009\n");
+      Out ($" 9\n$EXTMIN\n 10\n{b.X.Min}\n 20\n{b.Y.Min}\n 30\n0\n");
+      Out ($" 9\n$EXTMAX\n 10\n{b.X.Max}\n 20\n{b.Y.Max}\n 30\n0\n");
+      double height = Math.Max (b.Y.Length, b.X.Length * 0.6) * 1.1;
+      Out ($" 9\n$VIEWCTR\n 10\n{b.X.Mid}\n 20\n{b.Y.Mid}\n");
+      Out ($" 9\n$VIEWSIZE\n 40\n{height.R3 ()}\n");
+      Out ($" 9\n$CLAYER\n 8\n{D.CurrentLayer.Name}\n");
+      if (D.Styles.Count > 0) Out ($" 9\n$DIMSTYLE\n 2\n{D.CurrentDimStyle.Name}\n");
+      Out (" 0\nENDSEC\n");
+   }
+
    // Writes the LAYER table.
    // Bend lines in the drawing are converted into lines in the BEND and MBEND
    // layers. If these layers do not exist in the drawing, they are added to the LAYER
    // table (but not to the drawing itself).
-   void OutLayers () {
+   void OutLayers (List<Layer2> layers) {
+      Out ($" 0\nTABLE\n 2\nLAYER\n 70\n{layers.Count}\n");
+      foreach (var layer in layers) {
+         int flags = layer.IsVisible ? 0 : 1, color = ToACADColor (layer.Color);
+         if (BlackToWhite && color == 0) color = 7;
+         string name = layer.Name, ltype = layer.Linetype.ToString ().ToUpper ();
+         Out ($" 0\nLAYER\n 2\n{name}\n 70\n{flags}\n 62\n{color}\n 6\n{ltype}\n");
+      }
+      Out (" 0\nENDTAB\n");
+   }
+   public bool BlackToWhite;
+
+   // Writes the LTYPE table (only the ones used in the layers we have)
+   List<Layer2> OutLTypes () {
+      // Adds layers for BEND and MBEND if there are any valley / mountain bends
       var layers = D.Layers.ToList ();
       if (AllBends ().Any ()) {
          mBend = layers.FirstOrDefault (a => a.Name.EqIC ("BEND"));
@@ -100,19 +180,34 @@ public class DXFWriter {
             else if (mMBend is null && a.Angle < 0) layers.Add (mMBend = new Layer2 ("MBEND", Color4.Green, ELineType.DashDotDot));
          });
       }
-      Out ($" 0\nTABLE\n 2\nLAYER\n 70\n{layers.Count}\n");
-      foreach (var layer in layers) {
-         int flags = layer.IsVisible ? 0 : 1, color = ToACADColor (layer.Color);
-         string name = layer.Name, ltype = layer.Linetype.ToString ().ToUpper ();
-         Out ($" 0\nLAYER\n 70\n{flags}\n 2\n{name}\n 62\n{color}\n 6\n{ltype}\n");
-      }
-      Out (" 0\nENDTAB\n");
 
+      // Gather the set of linetypes in use
+      var set = layers.Select (a => a.Linetype).ToHashSet ();
+      set.Remove (ELineType.Continuous);
+      if (set.Count > 0) {
+         Out ($" 0\nTABLE\n 2\nLTYPE\n 70\n{set.Count}\n");
+         foreach (var lt in set) {
+            var vals = sPattern[lt].Select (a => a * 0.1).ToList (); double total = vals.Sum (Math.Abs);
+            Out ($" 0\nLTYPE\n 2\n{lt.ToString ().ToUpper ()}\n 70\n0\n 3\n{lt}\n 72\n65\n");
+            Out ($" 73\n{vals.Count}\n40\n{total.R3 ()}\n");
+            foreach (var n in vals) Out ($" 49\n{n.R3 ()}\n");
+         }
+         Out (" 0\nENDTAB\n");
+      }
+      return layers;
+
+      // Helpers ...........................................
       IEnumerable<E2Bendline> AllBends () {
          foreach (var bend in D.Ents.OfType<E2Bendline> ()) yield return bend;
          foreach (var bend in D.Blocks.SelectMany (b => b.Ents).OfType<E2Bendline> ()) yield return bend;
       }
    }
+   static Dictionary<ELineType, int[]> sPattern = new () {
+      [ELineType.Phantom] = [32, -4, 8, -4, 8, -4], [ELineType.Dash] = [10, -5, 10, -5, 10, -5],
+      [ELineType.DashDotDot] = [28, -8, 4, -8, 4, -8], [ELineType.Dot] = [3, -3], 
+      [ELineType.Hidden] = [7, -8], [ELineType.Dash2] = [18, -12], [ELineType.Center] = [12, -6, 4, -6],
+      [ELineType.Border] = [18, -8, 18, -8, 4, -8], [ELineType.DashDot] = [20, -4, 2, -4]
+   };
 
    // Writes out the STYLE table with a list of text styles
    void OutStyles () {
@@ -166,14 +261,33 @@ public class DXFWriter {
          if (Lib.Testing) (a, r, k) = (a.R6 (), r.R6 (), k.R6 ());
          var layer = eb.Angle < 0 ? mMBend : mBend;
          Out ($" 0\nLINE\n 8\n{layer!.Name}\n 10\n{pa.X}\n 20\n{pa.Y}\n 11\n{pb.X}\n 21\n{pb.Y}\n");
-         Out ($" 1000\nBEND_ANGLE:{a}\n 1000\nBEND_RADIUS:{r}\n 1000\nK_FACTOR:{k} \n");
+         Out ($" 1001\nNORI\n 1000\nBEND_ANGLE:{a}\n 1000\nBEND_RADIUS:{r}\n 1000\nK_FACTOR:{k} \n");
       }
       return 0;
    }
    Layer2? mMBend, mBend;
 
-   // This is a placeholder, we don't write dimensions out yet
-   static int OutDimension (E2Dimension _) => 0;
+   // Outputs a LEADER entity
+   int OutLeader (E2Leader e) {
+      Out ($" 0\nINSERT\n 8\n{e.Layer.Name}\n 2\n{mDimBlocks[e]}\n 10\n0\n 20\n0\n");
+      Out ($" 41\n1\n 42\n 1\n 50\n0\n");
+      Out ($" 1001\nNORI\n 1000\nTYPE:LEADER\n 1000\nTEXT:{e.Text}\n 1000\nSTYLE:{e.Style.Name}\n");
+      foreach (var pt in e.Pts) Out ($" 1000\nPT:{pt.X.R6 ()},{pt.Y.R6 ()}\n");
+      return 0; 
+   }
+
+   // This outputs a dimension entity
+   int OutDimension (E2Dim e) {
+      string text = e.IsAutoText ? "<>" : e.Text!;
+      Out ($" 0\nDIMENSION\n 8\n{e.Layer.Name}\n 70\n{(int)e.Kind}\n 2\n{mDimBlocks[e]}\n");
+      Out ($" 3\n{e.Style.Name}\n 1\n{text}\n");
+      mDefPts.Clear (); _ = e.Ents; e.GetDXFPoints (mDefPts);
+      foreach (var (id, pt) in mDefPts)
+         Out ($" {id}\n{pt.X}\n {id + 10}\n{pt.Y}\n");
+      if (e is E2DimLinear lin) Out ($" 50\n{lin.Angle.R2D ().R6 ()}\n");
+      return 0;
+   }
+   List<(int, Point2)> mDefPts = [];
 
    // Writes out the E2Insert entities
    int OutInsert (E2Insert e) {
@@ -258,7 +372,7 @@ public class DXFWriter {
       if (Lib.Testing) (pt, height) = (pt.R6 (), height.R6 ());
       OutEntPrologue (e, "TEXT");
       int align = (int)e.Alignment - 1, horz = align % 3, vert = 3 - align / 3;
-      Out ($" 10\n{pt.X}\n 20\n{pt.Y}\n 40\n{height}\n 1\n{e.Text}\n");
+      Out ($" 10\n{pt.X}\n 20\n{pt.Y}\n 40\n{height}\n 1\n{DXFCore.EncodeDXF (e.Text)}\n");
       if (e.Alignment != ETextAlign.BaseLeft) Out ($" 11\n{pt.X}\n 21\n{pt.Y}\n");
       if (!angle.IsZero ()) Out ($" 50\n{angle}\n");
       if (e.Style.Name != "STANDARD") Out ($" 7\n{e.Style.Name}\n");

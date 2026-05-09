@@ -1,0 +1,68 @@
+[Basic]
+Desc=Widget
+
+[DimAligned]
+Phases=3
+Name=Aligned Dim.
+0=Set first extension line origin
+1=Set second extension line origin
+2=Set dimension location
+
+[DimLinear]
+Phases=3
+Name=Linear Dim.
+0=Set first extension line origin [F5=Direction]
+1=Set second extension line origin
+2=Set dimension location
+
+[Dim3PAngle]
+Phases=4
+Name=3-P Angle Dim.
+0=Set angle vertex
+1=Set first angle endpoint
+2=Set second angle endpoint
+3=Set dimension arc location
+
+[DimRad]
+Phases=2
+Name=Radius Dim.
+0=Select circle or arc
+1=Set dimension location [F5=Toggle]
+
+[DimDia]
+Phases=2
+Name=Diameter Dim.
+0=Select circle
+1=Set dimension location [F5=Toggle]
+
+[DimAngle]
+Phases=3
+Name=Angle Dim.
+0=Select first line
+1=Select second line
+2=Set dimension arc location
+
+[DimCallout]
+Phases=2
+Name=Callout
+0=Set feature location
+1=Set text position
+
+[Line]
+Phases=2
+Name=Line
+0=Set start point
+1=Set end point
+
+[Arc]
+Phases=3
+Name=Arc
+0=Set start point
+1=Set through point
+2=Set end point
+
+[Circle]
+Phases=2
+Name=Circle
+0=Set center
+1=Set point on circle

@@ -16,11 +16,15 @@ public class DXFReader {
    /// <summary>Initialize a DXFReader with a byte-array containing DXF data</summary>
    public DXFReader (byte[] data) => mR = new (mD = data);
    /// <summary>Initialize a DXFReader form a file</summary>
-   public DXFReader (string file) : this (Lib.ReadBytes (file)) { }
+   public DXFReader (string file) : this (Lib.ReadBytes (file)) => mFilename = file;
+   string? mFilename;
 
    // Properties ---------------------------------------------------------------
    /// <summary>Darken all layer colors (to have a luminance of no more than 160)</summary>
    public bool DarkenColors;
+
+   /// <summary>If set, all dimension entities are moved to the "Dimension" layer</summary>
+   public bool RelayerDimensions;
 
    /// <summary>If set above zero, then polylines that touch are stitched together</summary>
    /// Two open polylines whose endpoints are closer than this threshold are
@@ -45,6 +49,7 @@ public class DXFReader {
 
             // These entities require more complex handling, and we need a separate routine for each
             case DIMENSION: LoadDimension (); break;
+            case INSERT: LoadInsert (); break;
             case ELLIPSE: LoadEllipse (); break;
             case LINE: LoadLine (); break;
             case LWPOLYLINE: LoadLWPolyline (); break;
@@ -60,15 +65,15 @@ public class DXFReader {
 
       LinkDimensions ();
       ProcessBendText (mDwg);
-      StitchDrawing (); 
-      if (mDwg.Layers.FirstOrDefault (a => a.Name == mCurrentLayer) is { } layer)
-         mDwg.CurrentLayer = layer;
+      StitchDrawing ();
+      SetCurrent ();
       return mDwg;
    }
    HashSet<EDXF> sReported = [];
 
    /// <summary>Basic interface function to load a DXF with default values</summary>
-   public static Dwg2 Load (string file) => new DXFReader (file).Load ();
+   public static Dwg2 Load (string file, bool whiteToBlack = false) 
+      => new DXFReader (file) { WhiteToBlack = whiteToBlack }.Load ();
 
    // Implementation -----------------------------------------------------------
    // Adds an entity into the drawing (or into the current block being constructed,
@@ -105,18 +110,85 @@ public class DXFReader {
 
    // Load the dimensions
    void LinkDimensions () {
+      Layer2? layer = null;
       List<Block2> blocks = [];
-      foreach (var (dim, name) in mDimMap)
-         if (dim.LoadEnts (mDwg, name) is { } block) blocks.Add (block);
+      if (RelayerDimensions)
+         mDwg.Add (layer = new Layer2 ("Dimension", Color4.Blue, ELineType.Continuous));
+      foreach (var (dim, name) in mDimMap) {
+         if (dim.LoadEnts (mDwg, name) is { } block) {
+            if (layer != null) dim.Layer = layer;
+            blocks.Add (block);
+         }
+      }
       mDwg.RemoveBlocks (blocks);
+   }
+
+   // Loads an INSERT (with special handling for E2Leader that we save as INSERT)
+   void LoadInsert () {
+      List<Point2> pts = [];
+      string type = "", text = ""; DimStyle2? style = null;
+      for (; ; ) {
+         int before = mR.Pos;
+         if (!Next (true)) break;
+         if (G == 0) { mR.Pos = before; break; }
+         if (G == 1000) {
+            var s = mEncoding.GetString (mD.AsSpan (mStart, mLength));
+            if (s.StartsWith ("TYPE:")) type = s[5..];
+            else if (s.StartsWith ("TEXT:")) text = s[5..];
+            else if (s.StartsWith ("STYLE:")) style = mDwg.GetDimStyle (s[6..]);
+            else if (s.StartsWith ("PT:")) {
+               double[] v = [.. s[3..].Split (',').Select (a => a.ToDouble ())];
+               if (v.Length >= 2) pts.Add (new (v[0], v[1]));
+            }
+         }
+      }
+      string name = S (2);
+      if (type == "LEADER") {
+         Add (new E2Leader (LYR (), style ?? mDwg.CurrentDimStyle, pts, text));
+         mDwg.RemoveBlocks ([..mDwg.Blocks.Where (a => a.Name == name)]);
+      } else
+         Add (new E2Insert (mDwg, LYR (), name, PT (10), DANG (50), D (41, 1.0), D (42, 1.0)));
    }
 
    // Loads a DIMENSION entity
    void LoadDimension () {
       NextAll ();
-      var dim = new E2Dimension (LYR ());
-      dim.SetDimSettings (mDwg.DimSettings);
-      mDimMap.Add (dim, S (2)); Add (dim);
+      EDim kind = (EDim)(N (70) & 7);
+      mPts.Clear (); 
+      var (layer, style, text) = (LYR (), mDwg.GetDimStyle (S (3)), S (1));
+
+      E2Dim? dim = kind switch {
+         EDim.Angular3P => new E2Dim3PAngle (layer, style, AddN (15, 13, 14, 10, 11), text),
+         EDim.Angular => new E2DimAngle (layer, style, AddN (13, 14, 15, 10, 16, 11), text),
+         EDim.Radius => MakeRadiusDim (),
+         EDim.Diameter => MakeDiameterDim (),
+         EDim.Aligned => new E2DimAligned (layer, style, AddN (13, 14, 10, 11), text), 
+         EDim.Linear => MakeLinearDim (),
+         _ => new E2DimGeneric (layer, style)
+      };
+      mDimMap.Add (dim, S (2)); 
+      Add (dim); 
+
+      // Helpers ...........................................
+      E2Dim MakeDiameterDim () {
+         var pts = AddN (10, 15, 11); pts[0] = pts[0].Midpoint (pts[1]);
+         return new E2DimDia (layer, style, pts[0].DistTo (pts[1]), style.TOFL, pts);
+      }
+
+      E2Dim MakeRadiusDim () {
+         var pts = AddN (15, 10, 11);
+         return new E2DimRad (layer, style, pts[0].DistTo (pts[1]), style.TOFL, pts);
+      }
+
+      E2Dim MakeLinearDim () {
+         var pts = AddN (13, 14, 10, 11);
+         return new E2DimLinear (layer, style, DANG (50), pts);
+      }
+
+      List<Point2> AddN (params int[] a) {
+         foreach (var n in a) mPts.Add (PT (n)); 
+         return mPts; 
+      }
    }
 
    // Loads an ELLIPSE entity
@@ -228,17 +300,31 @@ public class DXFReader {
    // Handles SECTION codes, and does special processing for the HEADER section alone
    void LoadSection () {
       // We need special processing only for the HEADER section, so we do that here. 
-      Next (); 
-      if (E (2) != HEADER) return;
+      Next ();
+      EDXF name = E (2);
+      if (name is BLOCKS or ENTITIES) {
+         // Starting entities section
+         mDefPoints ??= mDwg.Layers.FirstOrDefault (a => a.Name.EqIC ("DEFPOINTS"));
+      }
+      if (name != HEADER) return;
+
       for (; ; ) {
          if (!Next () || G == 0) break;
          if (G != 9) continue;
          // Found a 9 group - header variable name
-         var name = E (9);
+         name = E (9);
          Next ();
          switch (name) {
             case _ACADVER: mACADVer = S (G).ToUpper (); break;
             case _CLAYER: mCurrentLayer = S (G); break;
+            case _DIMSTYLE: mCurrentDimStyle = S (G); break;
+            case _DIMASZ: mDimASZ = F (G); break; case _DIMEXE: mDimEXE = F (G); break;
+            case _DIMEXO: mDimEXO = F (G); break; case _DIMTXT: mDimTXT = F (G); break;
+            case _DIMCEN: mDimCEN = F (G); break; case _DIMGAP: mDimGAP = F (G); break;
+            case _DIMTIH: mDimTIH = N (G); break; case _DIMTOH: mDimTOH = N (G); break;
+            case _DIMTAD: mDimTAD = N (G); break; case _DIMDEC: mDimDEC = N (G); break;
+            case _DIMADEC: mDimADEC = N (G); break; case _DIMTOFL: mDimTOFL = N (G); break;
+            case _DIMSCALE: mDimScale = F (G); break;
             case _MEASUREMENT: if (!mUnitsSet) Scale = N (G) == 0 ? 25.4 : 1; break;
             case _INSUNITS:
                int n = N (G);
@@ -250,7 +336,15 @@ public class DXFReader {
                break;
          }
       }
+      // Here, scale all the header variables that need to be scaled
+      float f = (float)Scale;
+      mDimASZ *= f; mDimEXO *= f; mDimEXE *= f; mDimTXT *= f; mDimCEN *= f; mDimGAP *= f;
    }
+   // Various defaults for DimStyle2
+   int mDimTIH = 0, mDimTOH = 0, mDimTOFL = 1, mDimTAD = 1, mDimDEC = 2, mDimADEC = 1;
+   float mDimASZ = 2.5f, mDimEXO = 0.625f, mDimEXE = 1.25f, mDimTXT = 2.5f, mDimCEN = 2.5f;
+   float mDimScale = 1, mDimGAP = 0.625f;
+   Layer2? mDefPoints;
 
    // This loads objects where key-value pairs are not repeated at all. So we can race
    // ahead and read all the values till we see the next 0 group
@@ -261,7 +355,6 @@ public class DXFReader {
          case ARC: Add (Poly.Arc (PT (10), DLIN (40), DANG (50), DANG (51), true)); break;
          case BLOCK: mBlock = new Block2 (S (2), PT (10), []); break;
          case CIRCLE: Add (Poly.Circle (PTZ (10), DLIN (40))); break;
-         case POINT: Add (new E2Point (LYR (), PT (10))); break;
          case TRACE or SOLID: Add (new E2Solid (LYR (), [PT (10), PT (11), PT (12), PT (13)])); break;
 
          case ATTRIB:
@@ -271,11 +364,6 @@ public class DXFReader {
             // Safe to add this to mDwg since blocks cannot contain nested blocks
             if (mBlock is { } && !SkipBlocks.Contains (mBlock.Name)) mDwg.Add (mBlock);
             mBlock = null;
-            break;
-         case INSERT:
-            string name = S (2);
-            if (!SkipBlocks.Contains (name)) 
-               Add (new E2Insert (mDwg, LYR (), name, PT (10), DANG (50), D (41, 1.0), D (42, 1.0)));
             break;
          case LAYER:
             bool visible = N (70).IsEven ();
@@ -287,6 +375,12 @@ public class DXFReader {
             ETextAlign align = (ETextAlign)(nAlign >= 7 ? nAlign + 3 : nAlign);
             double angle = (dx.IsZero () && dy.IsZero ()) ? DANG (50) : Math.Atan2 (dy, dx);
             Add (MakeMText (LYR (), STYL (), S (1), PT (10), DLIN (40), angle, align, mSB));
+            break;
+         case POINT:
+            layer = LYR ();
+            var ept = new E2Point (layer, PT (10));
+            // if (layer == mDefPoints) ept.IsDefPoint = true; REMOVETHIS
+            Add (ept); 
             break;
          case STYLE:
             if (N (70).IsEven ()) {    // Otherwise, this represents a SHAPE entry
@@ -301,6 +395,12 @@ public class DXFReader {
             Point2 pos = align == ETextAlign.BaseLeft ? PT (10) : PT (11);
             Add (new E2Text (LYR (), STYL (), CleanText (S (1), mSB), pos, DLIN (40), DANG (50), DANG (51), D (41, 1.0), align));
             break;
+         case DIMSTYLE:
+            mDwg.Add (new DimStyle2 (S (2), F (40, mDimScale), F (41, mDimASZ), F (42, mDimEXO), 
+               F (44, mDimEXE), F (140, mDimTXT), F (141, mDimCEN), F (147, mDimGAP), N (73, mDimTIH) > 0, 
+               N (74, mDimTOH) > 0, N (172, mDimTOFL) > 0, N (77, mDimTAD), N (271, mDimDEC), N (179, mDimADEC),
+               STYL ())); 
+            break;
          default:
             throw new NoriCodeException ($"Unhandled {type}");
       }
@@ -308,14 +408,14 @@ public class DXFReader {
    StringBuilder mSB = new ();
 
    // Reads one key-value pair - returns false if we are at end-of-file
-   // This skips all keys above 255, except when readAll=true, in which case, it returns
-   // even after reading a key above 255 (like 1000)
+   // This skips all keys above 272, except when readAll=true, in which case, it returns
+   // even after reading a key above 272 (like 1000)
    bool Next (bool readAll = false) {
       for (; ; ) {
          if (mR.AtEndOfFile) return false;
          mR.Read (out G).SkipToLineEnd ();
          mR.ReadLineRange (out mStart, out mLength);
-         if (G < 256) { mSt[G] = mStart; mLen[G] = mLength; return true; }
+         if (G < 277) { mSt[G] = mStart; mLen[G] = mLength; return true; }
          if (readAll) return true; 
       }
    }
@@ -330,7 +430,7 @@ public class DXFReader {
          mR.Read (out G).SkipToLineEnd ();
          if (G == 0) { mR.Pos = before; return true; }
          mR.ReadLineRange (out int st, out int len);
-         if (G < 256) { mSt[G] = st; mLen[G] = len; }
+         if (G < 272) { mSt[G] = st; mLen[G] = len; }
       }
    }
 
@@ -349,6 +449,15 @@ public class DXFReader {
       }
    }
 
+   // Sets up the current layer, dimension style etc
+   void SetCurrent () {
+      if (mDwg.Layers.FirstOrDefault (a => a.Name == mCurrentLayer) is { } layer)
+         mDwg.CurrentLayer = layer;
+      if (mDwg.DimStyles.FirstOrDefault (a => a.Name == mCurrentDimStyle) is { } dimstyle)
+         mDwg.CurrentDimStyle = dimstyle;
+      mDwg.Filename = mFilename;
+   }
+
    // Stitches the drawing if we want
    void StitchDrawing () {
       if (StitchThreshold <= 0) return;
@@ -358,7 +467,7 @@ public class DXFReader {
 
    // Routines to fetch group values -------------------------------------------
    // The mSt[] and mLen[] arrays store the last read values of each of the group codes from 
-   // 0..255. Suppose we ask for the value of group 41 code (which is used for Vertex.Bulge),
+   // 0..272. Suppose we ask for the value of group 41 code (which is used for Vertex.Bulge),
    // we want to return a value ONLY if we have read in a group 41 code AFTER we started reading
    // the most recent entity (VERTEX). If we read in a group-41 code for the previous vertex, but
    // the current vertex does not have a group 41 code, the previous value we latched into mSt/mLen
@@ -388,6 +497,12 @@ public class DXFReader {
    // Group value G as a linear value (scaled by current unit)
    double DLIN (int g) => D (g) * Scale;
 
+   DimStyle2 DSTYL () => mDwg.GetDimStyle (S (3));
+
+   // Group value G as a float
+   float F (int g) => SB (g).ToFloat ();
+   float F (int g, float fallback) => SB (g).ToFloat (fallback);
+
    // Gets the layer whose name is stored in the group 8
    Layer2 LYR () => mLayerMap.GetValueOrDefault (S (8)) ?? mDwg.CurrentLayer;
 
@@ -396,6 +511,7 @@ public class DXFReader {
 
    // Group value G as an integer
    int N (int g) => SB (g).ToInt ();
+   int N (int g, int fallback) => SB (g).ToInt (fallback);
 
    // Group value G,G+10 as a SCALED point
    Point2 PT (int g) => new (D (g) * Scale, D (g + 10) * Scale);
@@ -415,6 +531,7 @@ public class DXFReader {
    // DXF state ----------------------------------------------------------------
    string mACADVer = "AC1021";   // AutoCAD version
    string mCurrentLayer = "";    // Current layer from DXF file
+   string mCurrentDimStyle = ""; // Current dimension style from DXF file
    bool mUnitsSet = false;       // Have we figured out the DXF units yet?
    double Scale = 1;             // Scale factor to mm (METRIC=>1, IMPERIAL=>25.4 etc)
    Block2? mBlock;               // If non-null, this is the block we're currently reading
@@ -426,12 +543,12 @@ public class DXFReader {
 
    int G;                        // Group code 
    int mBase;                    // The current 'entity' (Group 0 set) data starts here
-   int[] mSt = new int[256];     // For each group code, the start of the value
-   int[] mLen = new int[256];    // .. and the length of that value (both in D)
+   int[] mSt = new int[272];     // For each group code, the start of the value
+   int[] mLen = new int[272];    // .. and the length of that value (both in D)
 
    Encoding mEncoding = Encoding.UTF8;    // Encoding we're using for this file
    readonly Dictionary<string, Layer2> mLayerMap = new (StringComparer.OrdinalIgnoreCase);
    readonly Dictionary<string, Style2> mStyleMap = new (StringComparer.OrdinalIgnoreCase);
-   readonly Dictionary<E2Dimension, string> mDimMap = [];
+   readonly Dictionary<E2Dim, string> mDimMap = [];
 }
 #endregion

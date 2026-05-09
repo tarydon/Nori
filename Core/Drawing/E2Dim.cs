@@ -1,0 +1,444 @@
+// ────── ╔╗
+// ╔═╦╦═╦╦╬╣ E2Dim.cs
+// ║║║║╬║╔╣║ <<TODO>>
+// ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
+namespace Nori;
+
+#region class E2Dim --------------------------------------------------------------------------------
+/// <summary>E2Dim is the base class for all 2D dimensions</summary>
+public abstract partial class E2Dim : Ent2 {
+   // Constructors -------------------------------------------------------------
+   // Default constructor used during streaming
+   protected E2Dim () => (mStyle, mText) = (null!, null);
+   /// <summary>Called by derived classes when an E2Dim is built</summary>
+   /// <param name="layer">Layer this entity lives in</param>
+   /// <param name="kind">Which kind of dimension is this?</param>
+   /// <param name="style">The DimStyle2 that provides dimension settings</param>
+   /// <param name="pts">Definition points </param>
+   /// <param name="text">Dimension text</param>
+   /// The interpretation of definition points varies based on the actual kind of dimension
+   /// this is. Typically, the set of points is in the same order in which one would click
+   /// to input them when creating the dimension dynamically.
+   public E2Dim (Layer2 layer, EDim kind, DimStyle2 style, IList<Point2> pts, string? text) : base (layer) {
+      (mKind, mStyle, mText) = (kind, style, text is null or "<>" or "" ? null : text);
+      if (mText == null) mFlags |= E2Flags.AutoText;
+      mPts.AddRange (pts);
+   }
+
+   // Properties ---------------------------------------------------------------
+   /// <summary>The Bound of the dimension</summary>
+   public override Bound2 Bound => Bound2.Cached (ref mBound, () => new (Ents.Select (a => a.Bound)));
+   Bound2 mBound = new ();
+
+   /// <summary>The entities making up the dimension</summary>
+   /// When loading a Dimension from a DXF file, these are stored in Block - we explode
+   /// that block and gather the Ents here. When a dimension is created dynamically in the UI,
+   /// we call the MakeEnts routine that is overridden for each type of dimension to create the
+   /// actual dimension
+   public IReadOnlyList<Ent2> Ents {
+      get {
+         if (mEnts.Count == 0) MakeEnts ();
+         return mEnts;
+      }
+   }
+   protected List<Ent2> mEnts = [];
+
+   /// <summary>Has the text been auto-generated (based on measurement)</summary>
+   public bool IsAutoText => Get (E2Flags.AutoText);
+
+   /// <summary>Force dimension line to be drawn (to center / between extension lines etc)</summary>
+   public bool ForceDimLine => Get (E2Flags.ForceDimLin);
+
+   /// <summary>Which kind of dimension is this?</summary>
+   public EDim Kind => mKind;
+   EDim mKind;
+
+   /// <summary>Set of points defining the dimension (interpretation depends on the kind)</summary>
+   public IReadOnlyList<Point2> Pts => mPts;
+   protected List<Point2> mPts = [];
+
+   /// <summary>The DimStyle used by this dimension entity</summary>
+   /// This is stored primarily in the DimStyles list of the drawing
+   public DimStyle2 Style => mStyle;
+   protected DimStyle2 mStyle;
+
+   /// <summary>The text of the dimension, if not blank</summary>
+   /// If this is "<>" or "" or null, the default text is used (based on the actual 
+   /// measurement). If this is " ", then the text is suppressed.
+   public string? Text => mText;
+   protected string? mText;
+
+   // Methods ------------------------------------------------------------------
+   /// <summary>Get the transformed bound of the dimension</summary>
+   public override Bound2 GetBound (Matrix2 xfm)
+      => new (Ents.Select (a => a.GetBound (xfm)));
+
+   /// <summary>Gets the 'definition points' of this dimension (for saving to DXF)</summary>
+   /// Each tuple in the list is a DXF group code (10,11,12 etc) for the X
+   /// coordinate (the Y coordinates are stored at that value + 10)
+   public abstract void GetDXFPoints (List<(int, Point2)> defPoints);
+
+   /// <summary>Internal routine to load the entities from a block</summary>
+   /// Since blocks are not used by any dimension other than this one, we can load the entities
+   /// here and later discard that block
+   internal Block2? LoadEnts (Dwg2 dwg, string name) {
+      if (dwg.Blocks.FirstOrDefault (a => a.Name == name) is not { } block) return null;
+      mEnts.AddRange (block.Ents); return block;
+   }
+
+   /// <summary>Check if the Dimension is close to the given point (closer than the given threshold)</summary>
+   public override bool IsCloser (Point2 pt, ref double threshold) {
+      if (!Bound.Contains (pt, threshold)) return false;
+      foreach (var ent in Ents)
+         if (ent.IsCloser (pt, ref threshold)) return true;
+      return false;
+   }
+
+   // Nested types -------------------------------------------------------------
+   // What lies on the 'inside' of the dimension (between the two extension lines)
+   // The arrows and/or text can lie on the inside or the outside
+   [Flags]
+   protected enum EInside { None = 0, Text = 1, Arrows = 2, Both = 3 };
+}
+#endregion   
+
+#region class E2DimDia -----------------------------------------------------------------------------
+/// <summary>E2DimDia implements a diameter dimension</summary>
+/// This image file://N:/Doc/Img/DimDia.png shows the definition points of this type of dimension.
+/// When the dimension is created the points a, b (a is the center of the circle , and b is the 
+/// dimension definition point) are passed in, along with the radius of the circle. The dimension
+/// is created based on whether the point b is inside or outside the circle. The point c (text location)
+/// is computed automatically.
+/// 
+/// When outputting to DXF, the points indicated as (10,20), (15,25) and (11,21) are output as the
+/// definition points. 
+public class E2DimDia : E2Dim {
+   /// <summary>Create a diameter dimension given the definition points as shown in the image below</summary>
+   public E2DimDia (Layer2 layer, DimStyle2 style, double radius, bool tofl, IList<Point2> pts, string? text = null)
+      : base (layer, EDim.Diameter, style, pts, text) {
+      mRadius = radius; if (tofl) mFlags |= E2Flags.ForceDimLin;
+   }
+   E2DimDia () { }
+
+   // Overrides ----------------------------------------------------------------
+   public override void GetDXFPoints (List<(int, Point2)> pts) {
+      double angle = Pts[0].AngleTo (Pts[1]);
+      Point2 pt15 = Pts[0].Polar (mRadius, angle), pt10 = Pts[0].Polar (-mRadius, angle);
+      pts.Add ((10, pt10)); pts.Add ((11, Pts[2])); pts.Add ((15, pt15));
+   }
+
+   public Point2 Tip => Pts[0].Polar (mRadius, Pts[0].AngleTo (Pts[1]));
+
+   protected override void MakeEnts () {
+      Point2 cen = Pts[0], tip = Tip, alt = tip.Polar (-1, tip.AngleTo (Pts[1])), opp = cen + (cen - tip);
+      var seg = Poly.Line (tip, ForceDimLine ? opp : alt)[0];
+      string text = mText ?? "";
+      if (IsAutoText) text = $"\u2205{(2 * mRadius).Round (mStyle.LinDecimal)}";
+      SetTextPoint (2, BuildEnts (seg, Pts[1], text, [], ForceDimLine, !ForceDimLine, ForceDimLine));
+   }
+
+   protected override Ent2 Xformed (Matrix2 xfm) {
+      var dim = new E2DimDia (Layer, mStyle, mRadius, ForceDimLine, [.. mPts.Select (a => a * xfm)], mText);
+      dim.mEnts.AddRange (mEnts.Select (a => a * xfm));
+      return dim;
+   }
+
+   // Private data -------------------------------------------------------------
+   public double Radius => mRadius;
+   readonly double mRadius;
+}
+#endregion
+
+#region class E2DimRad -----------------------------------------------------------------------------
+/// <summary>E2DimRad implements a radius dimension</summary>
+/// This image file://N:/Doc/Img/DimRad.png shows the definition points of this type of dimension. 
+/// When the dimension is created the points a, b are passed in (a is the center of the arc, and 
+/// b is the dimension definition point), along with the exact radius of the arc. The dimension is 
+/// created based on whether the point b is inside or outside the arc. The point c 
+/// (text location) is computed automatically.
+/// 
+/// When outputting to DXF, the points indicated as (10,20), (15,25) and (11,21) are output 
+/// as the definition points. 
+public class E2DimRad : E2Dim {
+   // Constructors -------------------------------------------------------------
+   /// <summary>Create a radius dimension given the definition points as shown in the image below</summary>
+   public E2DimRad (Layer2 layer, DimStyle2 style, double radius, bool tofl, IList<Point2> pts, string? text = null)
+      : base (layer, EDim.Radius, style, pts, text) {
+      mRadius = radius; if (tofl) mFlags |= E2Flags.ForceDimLin;
+   }
+   E2DimRad () { }
+
+   // Properties ---------------------------------------------------------------
+   public Point2 Tip => Pts[0].Polar (mRadius, Pts[0].AngleTo (Pts[1]));
+
+   // Overrides ----------------------------------------------------------------
+   public override void GetDXFPoints (List<(int, Point2)> pts) {
+      pts.Add ((10, Pts[0])); pts.Add ((11, Pts[2])); pts.Add ((15, Tip));
+   }
+
+   protected override void MakeEnts () {
+      Point2 cen = Pts[0], tip = Tip, alt = tip.Polar (-1, tip.AngleTo (Pts[1]));
+      var seg = Poly.Line (tip, ForceDimLine ? cen : alt)[0];
+      string text = mText ?? "";
+      if (IsAutoText) text = $"R{mRadius.Round (mStyle.LinDecimal)}";
+      SetTextPoint (2, BuildEnts (seg, Pts[1], text, [], false, !ForceDimLine, ForceDimLine));
+   }
+
+   protected override Ent2 Xformed (Matrix2 xfm) {
+      var dim = new E2DimRad (Layer, mStyle, mRadius, ForceDimLine, [.. mPts.Select (a => a * xfm)], mText);
+      dim.mEnts.AddRange (mEnts.Select (a => a * xfm));
+      return dim;
+   }
+
+   // Private data -------------------------------------------------------------
+   public double Radius => mRadius;
+   readonly double mRadius;
+}
+#endregion
+
+#region class E2Dim3PAngle -------------------------------------------------------------------------
+/// <summary>E2Dim3PAngle is a '3-point angular' dimension</summary>
+/// This image file://N:/Doc/Img/Dim3PAngle1.png shows the definition of this type of dimension.
+/// The points a, b, c, d are enough to define the dimension (with point e being the optional
+/// text positioning point). The values in parentheses are the group codes from which these values
+/// are loaded from the DXF file. 
+public class E2Dim3PAngle : E2Dim {
+   // Constructors -------------------------------------------------------------
+   E2Dim3PAngle () { }
+   /// <summary>Creates a 3P-Angular dimension given the definition points as shown in the image above</summary>
+   /// The point e (text position) is not necessary to be supplied, and will be computed by 
+   /// the MakeEnts routine automatically
+   public E2Dim3PAngle (Layer2 layer, DimStyle2 style, IList<Point2> pts, string? text = null)
+      : base (layer, EDim.Angular3P, style, pts, text) { }
+
+   // Overrides ----------------------------------------------------------------
+   public override void GetDXFPoints (List<(int, Point2)> pts) {
+      pts.Add ((10, mPts[3])); pts.Add ((11, mPts[4]));
+      pts.Add ((13, mPts[1])); pts.Add ((14, mPts[2])); pts.Add ((15, mPts[0]));
+   }
+
+   protected override void MakeEnts () {
+      // Get the center point, and compute the arc segment
+      Point2 cen = Pts[0], pick = Pts[3];
+      double a0 = cen.AngleTo (Pts[1]), a1 = cen.AngleTo (Pts[2]), rad = cen.DistTo (pick);
+      Point2 p0 = cen.Polar (rad, a0), p1 = cen.Polar (rad, a1);
+      if (pick.EQ (p1)) pick = cen.Polar (rad, (a0 + a1) / 2);
+      var seg = Poly.Arc (p0, pick, p1)[0];
+
+      string text = Text ?? "";
+      if (IsAutoText) {
+         double span = Math.Abs (seg.AngSpan).R2D ().Round (mStyle.AngDecimal);
+         text = $"{span}\u00b0";
+      }
+      SetTextPoint (4, BuildEnts (seg, pick, text, mPts.AsSpan ()[1..3]));
+      AddPoint (cen);
+   }
+
+   // Creates a transformed version of the 3P Angular dimension
+   protected override Ent2 Xformed (Matrix2 xfm) {
+      var dim = new E2Dim3PAngle (Layer, mStyle, [.. mPts.Select (a => a * xfm)], mText);
+      dim.mEnts.AddRange (mEnts.Select (a => a * xfm));
+      return dim;
+   }
+}
+#endregion
+
+#region class E2DimGeneric -------------------------------------------------------------------------
+/// <summary>E2DimGeneric is a 'generic' dimension that we fall back to if we cannot construct a more specific one</summary>
+public class E2DimGeneric : E2Dim {
+   E2DimGeneric () { }
+   public E2DimGeneric (Layer2 layer, DimStyle2 style) : base (layer, EDim.Generic, style, [], null) { }
+
+   public override void GetDXFPoints (List<(int, Point2)> defPoints) => throw new NotImplementedException ();
+   protected override void MakeEnts () => throw new NotImplementedException ();
+
+   protected override Ent2 Xformed (Matrix2 xfm) {
+      var dim = new E2DimGeneric (Layer, Style);
+      dim.mEnts.AddRange (mEnts.Select (a => a * xfm));
+      return dim;
+   }
+}
+#endregion
+
+public class E2DimLinear : E2Dim {
+   // Constructors -------------------------------------------------------------
+   E2DimLinear () { }
+   public E2DimLinear (Layer2 layer, DimStyle2 style, double angle, IList<Point2> pts, string? text = null)
+      : base (layer, EDim.Linear, style, pts, text) => mAngle = angle;
+
+   public double Angle => mAngle;
+   [Radian]
+   readonly double mAngle;
+
+   public override void GetDXFPoints (List<(int, Point2)> pts) {
+      pts.Add ((13, mPts[0])); pts.Add ((14, mPts[1]));
+      pts.Add ((10, mPts[2])); pts.Add ((11, mPts[3]));
+   }
+
+   protected override void MakeEnts () {
+      Matrix2 rot = Matrix2.Rotation (mAngle), inv = Matrix2.Rotation (-mAngle);
+      Point2 a = Pts[0] * inv, b = Pts[1] * inv, pick = Pts[2] * inv;
+      Point2 sega = new Point2 (a.X, pick.Y) * rot, segb = new Point2 (b.X, pick.Y) * rot;
+      var seg = Poly.Line (sega, segb)[0];
+
+      string text = Text ?? "";
+      if (IsAutoText) text = seg.Length.Round (mStyle.LinDecimal).ToString ();
+      SetTextPoint (3, BuildEnts (seg, Pts[2], text, mPts.AsSpan ()[..2]));
+   }
+
+   protected override Ent2 Xformed (Matrix2 xfm) {
+      var vec = Vector2.UnitVec (mAngle) * xfm;
+      double angle = Math.Atan2 (vec.Y, vec.X);
+      var dim = new E2DimLinear (Layer, Style, angle, [.. mPts.Select (a => a * xfm)], mText);
+      dim.mEnts.AddRange (mEnts.Select (a => a * xfm));
+      return dim;
+   }
+}
+
+public class E2DimAligned : E2Dim {
+   // Constructors -------------------------------------------------------------
+   E2DimAligned () { }
+   public E2DimAligned (Layer2 layer, DimStyle2 style, IList<Point2> pts, string? text = null)
+      : base (layer, EDim.Aligned, style, pts, text) { }
+
+   public override void GetDXFPoints (List<(int, Point2)> pts) {
+      pts.Add ((13, mPts[0])); pts.Add ((14, mPts[1]));
+      pts.Add ((10, mPts[2])); pts.Add ((11, mPts[3]));
+   }
+
+   protected override void MakeEnts () {
+      double angle = Pts[0].AngleTo (Pts[1]);
+      Matrix2 rot = Matrix2.Rotation (angle), inv = Matrix2.Rotation (-angle);
+      Point2 a = Pts[0] * inv, b = Pts[1] * inv, pick = Pts[2] * inv;
+      Point2 sega = new Point2 (a.X, pick.Y) * rot, segb = new Point2 (b.X, pick.Y) * rot;
+      var seg = Poly.Line (sega, segb)[0];
+
+      string text = Text ?? "";
+      if (IsAutoText) text = seg.Length.Round (mStyle.LinDecimal).ToString ();
+      SetTextPoint (3, BuildEnts (seg, Pts[2], text, mPts.AsSpan ()[..2]));
+   }
+
+   protected override Ent2 Xformed (Matrix2 xfm) {
+      var dim = new E2DimAligned (Layer, Style, [.. mPts.Select (a => a * xfm)], mText);
+      dim.mEnts.AddRange (mEnts.Select (a => a * xfm));
+      return dim; 
+   }
+}
+
+#region class E2DimAngle ---------------------------------------------------------------------------
+/// <summary>E2DimAngle is an 'angular dimension' between two segments</summary>
+/// The image file://N:/Doc/Img/DimAngle.png" shows the definition of this type of dimension. 
+/// The first definition line is a..b, the second is c..d. The dimension measures the angle between
+/// these two lines (which should not be parallel). The point e positions the dimension, and the
+/// text position is computed automatically (and stored as mPts[5]).
+/// The numbers in parentheses are the DXF group codes by which these points are output into 
+/// a DXF file when this dimension is written out, and the group 70 code for this is 2.
+public class E2DimAngle : E2Dim {
+   // Constructors -------------------------------------------------------------
+   E2DimAngle () { }
+   public E2DimAngle (Layer2 layer, DimStyle2 style, IList<Point2> pts, string? text = null)
+      : base (layer, EDim.Angular, style, pts, text) { }
+
+   // Overrides ----------------------------------------------------------------
+   // This gathers the DXF points required for the DimAngle
+   public override void GetDXFPoints (List<(int, Point2)> pts) {
+      pts.Add ((10, mPts[3])); pts.Add ((11, mPts[5])); pts.Add ((13, mPts[0]));
+      pts.Add ((14, mPts[1])); pts.Add ((15, mPts[2])); pts.Add ((16, mPts[4]));
+   }
+
+   protected override void MakeEnts () {
+      // Get the center point based on the intersection of the first 4 points
+      Point2 cen = Geo.LineXLine (Pts[0], Pts[1], Pts[2], Pts[3]).ExceptNil (Point2.Zero), pick = Pts[4];
+      if (cen.DistToSq (Pts[0]) > cen.DistToSq (Pts[1])) mPts.Swap (0, 1);
+      if (cen.DistToSq (Pts[2]) > cen.DistToSq (Pts[3])) mPts.Swap (2, 3);
+
+      double a0 = cen.AngleTo (mPts[1]), a1 = cen.AngleTo (mPts[3]), rad = cen.DistTo (pick);
+      Point2 p0 = cen.Polar (rad, a0), p1 = cen.Polar (rad, a1);
+      if (pick.EQ (p1)) pick = cen.Polar (rad, (a0 + a1) / 2);
+      var seg = Poly.Arc (p0, pick, p1)[0];
+
+      string text = Text ?? "";
+      if (IsAutoText) {
+         double span = Math.Abs (seg.AngSpan).R2D ().Round (mStyle.AngDecimal);
+         text = $"{span}\u00b0";
+      }
+      SetTextPoint (5, BuildEnts (seg, pick, text, mPts.AsSpan ()));
+   }
+
+   protected override Ent2 Xformed (Matrix2 xfm) {
+      var dim = new E2DimAngle (Layer, Style, [.. mPts.Select (a => a * xfm)], mText);
+      dim.mEnts.AddRange (mEnts.Select (a => a * xfm));
+      return dim;
+   }
+}
+#endregion
+
+#region class E2Leader -----------------------------------------------------------------------------
+/// <summary>Implements a 'leader' entity</summary>
+/// Even though this is not strictly a dimension, it behaves similar to one in many ways
+public class E2Leader : Ent2 {
+   /// <summary>Construct an E2Leader, given the Layer, DimStyle, points list and text</summary>
+   public E2Leader (Layer2 layer, DimStyle2 style, IEnumerable<Point2> pts, string text) : base (layer) 
+      => (mPts, mStyle, mText) = ([.. pts], style, text);
+   E2Leader () => (mStyle, mText) = (null!, null!);
+
+   // Properties ---------------------------------------------------------------
+   /// <summary>The list of entities used to render the E2Leader</summary>
+   public IReadOnlyList<Ent2> Ents {
+      get {
+         if (_ents == null) {
+            _ents = [];
+            while (mPts.Count < 2) mPts.Add (Point2.Zero);
+            
+            // Add the arrowhead
+            E2Dim.AddArrow (mLayer, mStyle, _ents, Pts[0], Pts[0].AngleTo (Pts[1]));
+
+            // Measure the text and position it
+            var font = LineFont.Get (mStyle.Style.Font);
+            var box = font.Measure (mText, Point2.Zero, ETextAlign.MidCenter, 0, 1, mStyle.TextSize, 0).InflatedL (mStyle.DimGap);            
+            List<Point2> pts = [.. mPts];
+            double sign = (pts[^1].X >= pts[^2].X) ? 1 : -1;
+            double dx = box.Width / 2 * sign, dy = box.Height / 2, asz = mStyle.ArrowSize * sign;
+            Point2 pt = pts[^1], pe;
+            (pe, pt) = mStyle.TextPos switch {
+               DimStyle2.EPos.Above => (pt.Moved (2 * dx, 0), pt.Moved (dx, dy)), 
+               DimStyle2.EPos.Below => (pt.Moved (2 * dx, 0), pt.Moved (dx, -dy)),
+               _ => (pt.Moved (asz, 0), pt.Moved (asz + dx, 0)),
+            };
+
+            // Add the text
+            _ents.Add (new E2Text (mLayer, mStyle.Style, mText, pt, mStyle.TextSize, 0, 0, 1, ETextAlign.MidCenter));
+            pts.Add (pe); _ents.Add (new E2Poly (mLayer, Poly.Lines (pts, false)));
+         }
+         return _ents;
+      }
+   }
+   List<Ent2>? _ents;
+
+   /// <summary>List of points defining the E2Leader</summary>
+   /// Pts[0] is the tip of the arrowhead, and Pts[^1] where the text is positioned
+   public IReadOnlyList<Point2> Pts => mPts;
+   protected List<Point2> mPts = [];
+
+   /// <summary>The DimStyle used by this dimension entity</summary>
+   /// This is stored primarily in the DimStyles list of the drawing
+   public DimStyle2 Style => mStyle;
+   protected DimStyle2 mStyle;
+
+   /// <summary>The text of the leader</summary>
+   public string Text => mText;
+   readonly string mText;
+
+   /// <summary>The Bound of the</summary>
+   public override Bound2 Bound => Bound2.Cached (ref mBound, () => new (Ents.Select (a => a.Bound)));
+   Bound2 mBound = new ();
+
+   // Overrides ----------------------------------------------------------------
+   /// <summary>Get the transformed bound of this E2Leader</summary>
+   public override Bound2 GetBound (Matrix2 xfm) => new (Ents.Select (a => a.GetBound (xfm)));
+
+   /// <summary>Returns a transformed version of this bound</summary>
+   protected override Ent2 Xformed (Matrix2 xfm)
+      => new E2Leader (Layer, Style, mPts.Select (a => a * xfm), mText);
+}
+#endregion

@@ -78,13 +78,26 @@ class E2InsertVN (E2Insert e2i) : Ent2VN (e2i) {
 }
 #endregion
 
-#region class E2DimensionVN ------------------------------------------------------------------------
+#region class E2DimVN ------------------------------------------------------------------------------
 /// <summary>VNode to render all types of dimensions</summary>
 /// Regardless of the type of dimension, it gets 'rendered' into the set of entities called
 /// Ents (those entities will typically contain text, lines, arcs, arrow-heads etc). So all dimension
 /// rendering can be done by this base class
 [Used]
-class E2DimensionVN (E2Dimension e2d) : Ent2VN (e2d) {
+class E2DimVN (E2Dim e2d) : Ent2VN (e2d) {
+   public override VNode? GetChild (int n) {
+      Ent2? ent = e2d.Ents.SafeGet (n);
+      return ent == null ? null : MakeFor (ent);
+   }
+
+   // REMOVETHIS
+   // public override void Draw () => Lux.Points (e2d.Pts.Select (a => (Vec2F)a).ToArray ());
+}
+#endregion
+
+#region class E2Leader -----------------------------------------------------------------------------
+/// <summary>VNode to render an E2Leader</summary>
+class E2LeaderVN (E2Leader e2d) : Ent2VN (e2d) {
    public override VNode? GetChild (int n) {
       Ent2? ent = e2d.Ents.SafeGet (n);
       return ent == null ? null : MakeFor (ent);
@@ -120,6 +133,10 @@ class E2TextVN (E2Text e2t) : Ent2VN (e2t) {
 /// <summary>VNode to render an E2Point entity</summary>
 [Used]
 class E2PointVN (E2Point e2p) : Ent2VN (e2p) {
+   public override void SetAttributes () { 
+      base.SetAttributes ();
+      if (e2p.IsDefPoint) Lux.PointSize = 2.25f; 
+   }
    public override void Draw () => Lux.Points ([e2p.Pt]);
 }
 #endregion

@@ -68,6 +68,22 @@ public class LineFont {
    // The LFONT database.
    static readonly Dictionary<string, LineFont> mFonts = [];
 
+   /// <summary>Measures text using this font</summary>
+   /// The result is the bounding box that would result if the text were to be rendered at the given position
+   /// pos, with all the other attributes as specified
+   /// <param name="text">The text to render (multi-line text supported, separate lines with \n characters)</param>
+   /// <param name="pos">Reference point of the text</param>
+   /// <param name="align">Specifies which corner of the text bounding box the 'pos' is aligned to</param>
+   /// <param name="oblique">The text obliquing angle (in radians), use 0 for non-italic text</param>
+   /// <param name="xstretch">How much is the text 'stretched' in X direction (1 = normal, less than 1 for condensed etc)</param>
+   /// <param name="height">Text height (height of a capital M, typically)</param>
+   /// <param name="angle">Rotation angle of the baseline, in radians</param>
+   public Bound2 Measure (string text, Point2 pos, ETextAlign align, double oblique, double xstretch, double height, double angle) {
+      Bound2 bound = new ();
+      Process (text, pos, align, oblique, xstretch, height, angle, (poly, xfm) => bound += poly.GetBound (xfm));
+      return bound;
+   }
+
    /// <summary>Render text using this font into a a set of polylines</summary>
    /// <param name="text">The text to render (multi-line text supported, separate lines with \n characters)</param>
    /// <param name="pos">Reference point of the text</param>
@@ -77,7 +93,21 @@ public class LineFont {
    /// <param name="height">Text height (height of a capital M, typically)</param>
    /// <param name="angle">Rotation angle of the baseline, in radians</param>
    /// <param name="output">The List(Poly) the text is output into</param>
-   public void Render (string text, Point2 pos, ETextAlign align, double oblique, double xstretch, double height, double angle, List<Poly> output) {
+   public void Render (string text, Point2 pos, ETextAlign align, double oblique, double xstretch, double height, double angle, List<Poly> output) 
+      => Process (text, pos, align, oblique, xstretch, height, angle, (poly, xfm) => output.Add (poly * xfm));
+
+   public override string ToString () => $"{Name}.lfont";
+   
+   // The immutable, readonly font glyphs. 
+   readonly FrozenDictionary<int, Glyph> Glyphs;
+
+   // Implementation -------------------------------------------------------------------------------
+   // Helper used by Render and Measure
+   // This breaks down the text into a series of Glyph.Poly + Xfm pairs and passes them to the
+   // supplied action function. When rendering, that function makes transformed copies of these
+   // Poly and adds them to the output list. When measuring, the function measure the outermost
+   // bound of the transformed poly. 
+   void Process (string text, Point2 pos, ETextAlign align, double oblique, double xstretch, double height, double angle, Action<Poly, Matrix2> action) {
       string[] lines = [.. text.Split ('\n')];                 // Split the text into lines, 
       List<double> widths = [.. lines.Select (GetWidth)];      // and get their widths (assuming height=1)
 
@@ -117,7 +147,7 @@ public class LineFont {
             // As we output each character, adjust posChar by the horizontal advance of this character
             if (Glyphs.TryGetValue (ch, out var g)) {
                var xfm2 = xfm * Matrix2.Translation (posChar.X, posChar.Y);
-               output.AddRange (g.Polys.Select (a => a * xfm2));
+               g.Polys.ForEach (a => action (a, xfm2));
                posChar += across * g.HAdvance;
             }
          }
@@ -137,13 +167,9 @@ public class LineFont {
             if (i < line.Length - 1) x += g.HAdvance;
             else x += g.Width;
          }
-         return x; 
+         return x;
       }
    }
-   public override string ToString () => $"{Name}.lfont";
-   
-   // The immutable, readonly font glyphs. 
-   readonly FrozenDictionary<int, Glyph> Glyphs;
 
    // Nested types -------------------------------------------------------------
    // A glyph contains the shape data needed to render an individual character.

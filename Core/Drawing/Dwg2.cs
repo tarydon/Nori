@@ -24,7 +24,22 @@ public partial class Dwg2 {
    }
    Bound2 mBound = new ();
 
+   /// <summary>The current dimension style of the drawing</summary>
+   [DebuggerBrowsable (DebuggerBrowsableState.Never)]
+   public DimStyle2 CurrentDimStyle {
+      get {
+         if (DimStyles.Count == 0) Add (new DimStyle2 ("STANDARD", GetStyle ("STANDARD")!));
+         return mCurrentDimStyle ??= DimStyles[0];
+      }
+      set {
+         if (!Lib.Check (DimStyles.Contains (value), "Invalid DimStyle passed to CurrentDimStyle")) return;
+         mCurrentDimStyle = value;
+      }
+   }
+   DimStyle2? mCurrentDimStyle;
+
    /// <summary>The current layer of the drawing</summary>
+   [DebuggerBrowsable (DebuggerBrowsableState.Never)]
    public Layer2 CurrentLayer {
       get {
          if (mLayers.Count == 0) Add (new Layer2 ("0", Color4.Black, ELineType.Continuous));
@@ -37,9 +52,6 @@ public partial class Dwg2 {
    }
    Layer2? mCurrentLayer;
 
-   /// <summary>Dimensioning settings for this drawing</summary>
-   public DimSettings DimSettings => new ();
-
    /// <summary>The list of entities in the drawing (active list, implements Observable(ListChange)</summary>
    public AList <Ent2> Ents => mEnts;
    readonly AList<Ent2> mEnts = [];
@@ -51,11 +63,15 @@ public partial class Dwg2 {
    }
    bool mFillInterior = true;
 
+   /// <summary>File from which this drawing was loaded</summary>
+   public string? Filename { get; set; }
+
    /// <summary>Contains the 'snap grid' settings for this Dwg</summary>
    public Grid2 Grid { get => mGrid ?? Grid2.Default; set { mGrid = value; Notify (EProp.Grid); } }
    Grid2? mGrid;
 
    /// <summary>The list of layers in the drawing</summary>
+   /// New layers are added by calling Add(Layer2)
    public IReadOnlyList <Layer2> Layers => mLayers;
    readonly List<Layer2> mLayers = [];
 
@@ -64,8 +80,13 @@ public partial class Dwg2 {
    public IReadOnlyList<Block2> Blocks => mBlocks ?? [];
    List<Block2>? mBlocks;
 
+   /// <summary>The list of dimension styles in the drawing</summary>
+   /// New dimension styles are added by calling Add(DimStyle2)
+   public IReadOnlyList<DimStyle2> DimStyles => mDimStyles ?? [];
+   List<DimStyle2>? mDimStyles;
+
    /// <summary>The list of dimensions in this drawing</summary>
-   public IEnumerable<E2Dimension> Dimensions => mEnts.OfType<E2Dimension> ();
+   public IEnumerable<E2Dim> Dimensions => mEnts.OfType<E2Dim> ();
 
    /// <summary>List of styles in the drawing</summary>
    /// New blocks are added by calling Add(Style2)
@@ -100,6 +121,12 @@ public partial class Dwg2 {
 
    /// <summary>Adds a Block2 to the list of blocks in the drawing</summary>
    public void Add (Block2 block) { (mBlocks ??= []).Add (block); _blockMap = null; }
+
+   /// <summary>Adds a dimension style to the list of styles in the drawing</summary>
+   public void Add (DimStyle2 style) {
+      if (style.Name.IsBlank ()) return;
+      (mDimStyles ??= []).Add (style); _dimStyleMap = null;
+   }
 
    /// <summary>Adds a style to the list of styles</summary>
    public void Add (Style2 style) {
@@ -163,7 +190,7 @@ public partial class Dwg2 {
    /// <summary>Gets a style, given the name</summary>
    public Style2? GetStyle (string name) {
       if (_styleMap == null) {
-         _styleMap = new Dictionary<string, Style2> (StringComparer.OrdinalIgnoreCase);
+         _styleMap = new (StringComparer.OrdinalIgnoreCase);
          foreach (var s in Styles) _styleMap.TryAdd (s.Name, s);
       }
       var style = _styleMap.GetValueOrDefault (name);
@@ -174,6 +201,22 @@ public partial class Dwg2 {
       return style;
    }
    Dictionary<string, Style2>? _styleMap;
+
+   /// <summary>Gets a dimension style, given the name</summary>
+   /// If the style does not exist, this returns Styles[0]. If there are no
+   /// styles at all, this creates one with default values
+   public DimStyle2 GetDimStyle (string name) {
+      var styles = DimStyles;
+      if (_dimStyleMap == null) {
+         _dimStyleMap = new (StringComparer.OrdinalIgnoreCase);
+         foreach (var s in styles) _dimStyleMap.TryAdd (s.Name, s);
+      }
+      if (_dimStyleMap.GetValueOrDefault (name) is { } style) return style;
+      if (styles.Count > 0) return styles[0];
+      Add (style = new ("STANDARD", GetStyle ("STANDARD")!));
+      return style;
+   }
+   Dictionary<string, DimStyle2>? _dimStyleMap;
 
    /// <summary>Picks the closest E2Poly and returns some rich information about the pick</summary>
    public bool PickPoly (Point2 pt, double aperture, out TPolyPick pick) {
@@ -209,8 +252,10 @@ public partial class Dwg2 {
       return e2p;
    }
 
-   public void RemoveBlocks (IEnumerable<Block2> blocks)
-      => blocks.ForEach (b => mBlocks?.Remove (b));
+   public void RemoveBlocks (IEnumerable<Block2> blocks) {
+      blocks.ForEach (b => mBlocks?.Remove (b));
+      if (mBlocks?.Count == 0) mBlocks = null;
+   }
 
    /// <summary>Purges layers, blocks, styles that are unused</summary>
    public Dwg2 Purge () {
@@ -262,10 +307,10 @@ public partial class Dwg2 {
       }
    }
 
-   /// <summary>Enumerate all entities in the drawing, as well as entities in all the blocks</summary>
-   IEnumerable<Ent2> DeepEnumEnts ()
-      => Blocks.SelectMany (a => a.Ents)
-         .Concat (Dimensions.SelectMany (a => a.Ents))
-         .Concat (mEnts);
+   public IEnumerable<Ent2> DeepEnumEnts () {
+      foreach (var b in mBlocks ?? [])
+         foreach (var ent in b.Ents) yield return ent;
+      foreach (var ent in mEnts) yield return ent;
+   }
 }
 #endregion

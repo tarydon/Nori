@@ -292,7 +292,7 @@ class TLux {
       }
    }
 
-   [Test (244, "Mesh3.Normals rendering")]
+   [Test (250, "Mesh3.Normals rendering")]
    void Test14 () {
       var tess = Ent3.MeshQuality;
       Mesh3 mesh; E3Marker marker;
@@ -318,7 +318,7 @@ class TLux {
       }
    }
 
-   [Test (245, "Basic sanity check of E3Thick model")]
+   [Test (251, "Basic sanity check of E3Thick model")]
    void Test15 () {
       var model = MakeModel (); _ = model.Bound;
       CurlWriter.Save (model, NT.TmpCurl);
@@ -364,8 +364,7 @@ class TLux {
    void TestPNG (Scene scene, Vec2S size, DIBitmap.EFormat format, string file, bool zoomed = false) {
       DIBitmap dib;
       if (zoomed) {
-         dib = scene.RenderZoomedImage (size, format, out int cy);
-         Console.WriteLine (cy);
+         dib = scene.RenderZoomedImage (size, format, out int _);
       } else
          dib = scene.RenderImage (size, format);
       new PNGWriter (dib).Write (NT.TmpPNG);

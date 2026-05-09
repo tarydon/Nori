@@ -222,6 +222,17 @@ public readonly struct Seg {
       }
    }
 
+   /// <summary>Snaps the given point to the (infinite) segment, and returns the lie</summary>
+   /// Given a point, this snaps it first to the infinite line (or circle) defining the segment,
+   /// and then returns the lie of that snapped point on the segment
+   public double GetSnappedLie (Point2 pt) {
+      if (IsArc2 (out var cen, out _))
+         pt = cen.Polar (cen.DistTo (A), cen.AngleTo (A));
+      else
+         pt = pt.SnappedToLine (A, B);
+      return GetLie (pt);
+   }
+
    /// <summary>Gets the 'lie' of a given point on the segment (0 = start, 1 = end)</summary>
    /// The lie may be less than zero or more than 1. For a point that lies outside
    /// the extent of an arc, there is an ambiguity - there may be a point that could
@@ -365,6 +376,11 @@ public readonly struct Seg {
          pts.Add (pa); pts.Add (pa.Polar (dist, ang1));
          pts.Add (pb.Polar (-dist, ang2)); pts.Add (pb);
       }
+   }
+
+   public Poly ToPoly () {
+      if (IsArc) return Poly.Arc (Center, Center.DistTo (A), Center.AngleTo (A), Center.AngleTo (B), IsCCW);
+      else return Poly.Line (A, B);
    }
 
    /// <summary>Converts a Seg to a Curve3 by lofting it into space</summary>

@@ -29,6 +29,17 @@ public class IniFile {
    string mSection = "";
    int mSecStart = -1;
 
+   /// <summary>Returns the names of all the sections</summary>
+   public IEnumerable<string> Sections {
+      get {
+         for (int i = 0; i < mLines.Count; i++) {
+            string line = mLines[i].Trim ();
+            if (line.StartsWith ('[') && line.EndsWith (']'))
+               yield return line[1..^1];
+         }
+      }
+   }
+
    // Methods ------------------------------------------------------------------
    /// <summary>Returns a bool from the current section (or false if key not found)</summary>
    /// Values 1, TRUE, YES are treated as boolean true
