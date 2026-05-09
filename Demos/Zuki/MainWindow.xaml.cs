@@ -24,12 +24,7 @@ public partial class MainWindow : Window {
       (Hub.MainWindow, Hub.CmdName, Hub.Status) = (this, mCommand, mStatus);
       var dxf = Environment.GetCommandLineArgs ().FirstOrDefault (a => a.EndsWith (".dxf"));
       if (dxf != null) Hub.LoadDXF (dxf);
-      else {
-         Hub.Dwg = MakeDimCallout ();
-         Hub.Widget = new DimCalloutMaker ();
-         DXFWriter.Save (Hub.Dwg, "c:/etc/test.dxf", true);
-         Hub.Dwg = DXFReader.Load ("c:/etc/test.dxf", true);
-      }
+      else Hub.Dwg = new Dwg2 ();
    }
 
    Dwg2 MakeDimCallout () {

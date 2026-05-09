@@ -57,12 +57,16 @@ static class MenuCmds {
    static bool FillDrawing { get => Hub.FillDrawing; set => Hub.FillDrawing = value; }
 
    // Handlers -----------------------------------------------------------------
+   static void Line () => Hub.Widget = new LineMaker ();
+   static void Arc () => Hub.Widget = new ArcMaker ();
+   static void Circle () => Hub.Widget = new CircleMaker ();
    static void DimAligned () => Hub.Widget = new DimAlignedMaker ();
    static void Dim3PAngle () => Hub.Widget = new Dim3PAngleMaker ();
    static void DimRadius () => Hub.Widget = new DimRadMaker ();
    static void DimDiameter () => Hub.Widget = new DimDiaMaker ();
    static void DimAngle () => Hub.Widget = new DimAngleMaker ();
    static void DimCallout () => Hub.Widget = new DimCalloutMaker ();
+   static void DimLinear () => Hub.Widget = new DimLinearMaker ();
    static void Exit () => Hub.MainWindow?.Close ();
    static void New () => Hub.Dwg = new ();
 

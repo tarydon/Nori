@@ -1,6 +1,7 @@
 using System.Reactive.Linq;
 using Nori;
 namespace Zuki;
+using NPoly = Nori.Poly;
 using static Lux;
 
 #region class Widget -------------------------------------------------------------------------------
@@ -122,6 +123,47 @@ abstract class Ent2Maker : Widget {
 }
 #endregion
 
+#region class PolyMaker ----------------------------------------------------------------------------
+/// <summary>Base class for all poly-maker widgets</summary>
+abstract class PolyMaker : Ent2Maker {
+   public abstract Poly? MakePoly ();
+
+   public override Ent2? MakeEnt () {
+      if (MakePoly () is { } p) return new E2Poly (Layer, p);
+      return null;
+   }
+}
+#endregion
+
+#region class ArcMaker -----------------------------------------------------------------------------
+/// <summary>Widget to make arcs</summary>
+class ArcMaker : PolyMaker {
+   public override void Draw () {
+      base.Draw ();
+      if (Phase == 2) { LineType = ELineType.Dot; Poly (NPoly.Line (Pts[0], Pts[1])); }
+   }
+
+   public override NPoly? MakePoly () 
+      => Phase == 3 ? NPoly.Arc (Pts[0], Pts[1], Pts[2]) : null;
+}
+#endregion
+
+#region class CircleMaker --------------------------------------------------------------------------
+/// <summary>Widget to make circles</summary>
+class CircleMaker : PolyMaker {
+   public override Poly? MakePoly () 
+      => Phase == 2 ? NPoly.Circle (Pts[0], Pts[0].DistTo (Pts[1])) : null;
+}
+#endregion
+
+#region class LineMaker ----------------------------------------------------------------------------
+/// <summary>Widget to make lines</summary>
+class LineMaker : PolyMaker {
+   public override Poly? MakePoly () 
+      => Phase == 2 ? NPoly.Line (Pts[0], Pts[1]) : null;
+}
+#endregion
+
 #region class DimWidget ----------------------------------------------------------------------------
 /// <summary>Subtype of EntWidget used to make dimensions</summary>
 abstract class DimMaker : Ent2Maker {
@@ -132,10 +174,8 @@ abstract class DimMaker : Ent2Maker {
 #region class DimAlignedMaker ----------------------------------------------------------------------
 /// <summary>Widget to make aligned dimensions</summary>
 class DimAlignedMaker : DimMaker {
-   public override Ent2? MakeEnt () {
-      if (Phase == 3) return new E2DimAligned (Layer, DimStyle, Pts);
-      return null;
-   }
+   public override Ent2? MakeEnt () 
+      => Phase == 3 ? new E2DimAligned (Layer, DimStyle, Pts) : null;
 }
 #endregion
 
@@ -150,10 +190,8 @@ class Dim3PAngleMaker : DimMaker {
       if (Phase is > 2 and < 4) Lines ([Pts[0], Pts[2]]);
    }
 
-   public override Ent2? MakeEnt () {
-      if (Phase == 4) return new E2Dim3PAngle (Layer, DimStyle, Pts);
-      return null;
-   }
+   public override Ent2? MakeEnt () 
+      => Phase == 4 ? new E2Dim3PAngle (Layer, DimStyle, Pts) : null;
 }
 #endregion
 
@@ -182,7 +220,7 @@ class DimLinearMaker : DimMaker {
    double mAngle;
 
    public override Ent2? MakeEnt ()
-      => (Phase == 3) ? new E2DimLinear (Layer, DimStyle, mAngle, Pts) : null;
+      => Phase == 3 ? new E2DimLinear (Layer, DimStyle, mAngle, Pts) : null;
 
    public override void OnKey (KeyInfo ki) {
       if (ki.Key == EKey.F5) {

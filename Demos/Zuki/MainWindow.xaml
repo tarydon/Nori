@@ -18,9 +18,14 @@
          <MenuItem Header="_MODE">
             <MenuItem Header="_P. Pick" Tag="Pick" />
             <Separator />
+            <MenuItem Header="_1. Line" Tag="Line" />
+            <MenuItem Header="_2. Arc" Tag="Arc" />
+            <MenuItem Header="_3. Circle" Tag="Circle" />
+            <Separator />
             <MenuItem Header="_A. Dim: Angular" Tag="DimAngle" />
             <MenuItem Header="_D. Dim: Diameter" Tag="DimDiameter" />
-            <MenuItem Header="_L. Dim: Aligned" Tag="DimAligned" />
+            <MenuItem Header="_G. Dim: Aligned" Tag="DimAligned" />
+            <MenuItem Header="_L. Dim: Linear" Tag="DimLinear" />
             <MenuItem Header="_C. Dim: Callout" Tag="DimCallout" />
             <MenuItem Header="_R. Dim: Radius" Tag="DimRadius" />
             <MenuItem Header="_3. Dim: 3-P Angular" Tag="Dim3PAngle" />

@@ -47,3 +47,22 @@ Phases=2
 Name=Callout
 0=Set feature location
 1=Set text position
+
+[Line]
+Phases=2
+Name=Line
+0=Set start point
+1=Set end point
+
+[Arc]
+Phases=3
+Name=Arc
+0=Set start point
+1=Set through point
+2=Set end point
+
+[Circle]
+Phases=2
+Name=Circle
+0=Set center
+1=Set point on circle
