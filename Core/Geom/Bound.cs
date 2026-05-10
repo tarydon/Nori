@@ -7,6 +7,7 @@ namespace Nori;
 
 #region struct Bound1 ------------------------------------------------------------------------------
 /// <summary>Represents a bound in 1 dimension (simply a Min .. Max value, stored as floats)</summary>
+[AuPrimitive]
 public readonly struct Bound1 : IEQuable<Bound1> {
    // Constructors -------------------------------------------------------------
    /// <summary>Constructs an empty Bound1</summary>
@@ -78,6 +79,8 @@ public readonly struct Bound1 : IEQuable<Bound1> {
    /// <summary>Checks if this Bound1 intersects with another Bound1.</summary>
    [MethodImpl (MethodImplOptions.AggressiveInlining)]
    public bool Intersects (Bound1 b) => Max >= b.Min && Min <= b.Max;
+
+   public void Write (UTFWriter W) => W.Write (Min).Write ('~').Write (Max);
 
    // Operators ----------------------------------------------------------------
    /// <summary>Implicit conversion from a tuple of two double to a Bound1</summary>
