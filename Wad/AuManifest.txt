@@ -31,10 +31,12 @@ E2DimAngle
 E2Spline
   -Bound Spline -Pts
 Mechanism
-  Name Color Joint JMin JMax -JValue JVector JAsDrawn Sockets ConnectTo Children ^Parent -RootDir Geometry
+  Name Color Joint JMin JMax JValue JVector JAsDrawn Sockets ConnectTo Children ^Parent -RootDir Decals Geometry
 GeometrySource
 FileGeometry
   File Shift -Rotate
+ExtrudedGeometry
+  File CS Spans
 E2Bendline
   ^Dwg Angle KFactor Radius Pts Thickness
 Spline2
@@ -88,3 +90,5 @@ BSpine
   Radius Angle KFactor Upward FlatWidth
 E2Leader
   -Bound Pts Style.Name Text
+Decal
+  File CS Scale

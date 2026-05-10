@@ -170,7 +170,7 @@ class TCollision {
 
    [Test (188, "OBBTree test")]
    void Test5 () {
-      var mesh = Mesh3.LoadTMesh (NT.File ("Geom/Mesh3/part.tmesh"));
+      var mesh = Mesh3.Load (NT.File ("Geom/Mesh3/part.msh"));
       var tree = OBBTree.From (mesh);
       tree.EnumBoxes (5).Count ().Is (32);
       int leftH = GetHeight (tree.OBBs[0].Left), rightH = GetHeight (tree.OBBs[0].Right);

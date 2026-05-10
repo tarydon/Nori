@@ -25,6 +25,12 @@ public readonly struct Bound1 : IEQuable<Bound1> {
    /// <summary>Constructs a bound that encompasses a and b (a and b need not be ordered)</summary>
    public Bound1 (float a, float b) => (Min, Max) = (MathF.Min (a, b), MathF.Max (a, b));
 
+   /// <summary>Read a Bound1 from a UTF8 stream</summary>
+   public static Bound1 Read (UTFReader R) {
+      R.Read (out float min).Match ('~').Read (out float max);
+      return new (min, max);
+   }
+
    /// <summary>Deconstruct a Bound1 into min and max values</summary>
    public void Deconstruct (out float min, out float max) => (min, max) = (Min, Max);
 
@@ -402,8 +408,15 @@ public readonly struct Bound3 : IEQuable<Bound3> {
    }
 
    public static Bound3 Read (UTFReader r) {
-      r.Match ('"').Read (out double x0).Match (',').Read (out double y0).Match (',').Read (out double z0)
-         .Match (':').Read (out double x1).Match (',').Read (out double y1).Match (',').Read (out double z1).Match ('"');
+      float x0, y0, z0, x1, y1, z1;
+      if (r.TryMatch ('"')) {
+         r.Match ('"').Read (out x0).Match (',').Read (out y0).Match (',').Read (out z0)
+          .Match (':').Read (out x1).Match (',').Read (out y1).Match (',').Read (out z1).Match ('"');
+      } else {
+         r.Read (out x0).Match ('~').Read (out x1)
+          .Match (',').Read (out y0).Match ('~').Read (out y1)
+          .Match (',').Read (out z0).Match ('~').Read (out z1);
+      } 
       return new (x0, y0, z0, x1, y1, z1);
    }
 

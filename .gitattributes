@@ -8,3 +8,5 @@
 *.img filter=lfs diff=lfs merge=lfs -text
 *.mesh filter=lfs diff=lfs merge=lfs -text
 *.t3x filter=lfs diff=lfs merge=lfs -text
+*.msh filter=lfs diff=lfs merge=lfs -text
+*.msh2 filter=lfs diff=lfs merge=lfs -text

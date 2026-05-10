@@ -75,8 +75,8 @@ class TMesh3Build {
    [Test (37, "class Mesh3, Mesh3Builder test")]
    void Test1 () {
       // Mesh3 IO test
-      var part = Mesh3.LoadTMesh ($"{NT.Data}/Geom/Mesh3/part.tmesh");
-      File.WriteAllText (NT.TmpTxt, part.ToTMesh ());
+      var part = Mesh3.Load ($"{NT.Data}/Geom/Mesh3/part.msh");
+      part.SaveTMesh (NT.TmpTxt);
       Assert.TextFilesEqual ("Geom/Mesh3/part-out.tmesh", NT.TmpTxt);
 
       // Mesh3Builder test
@@ -86,14 +86,23 @@ class TMesh3Build {
          pts.Add ((Point3)(pos.X, pos.Y, pos.Z));
       }
 
-      File.WriteAllText (NT.TmpTxt, new Mesh3Builder (pts.AsSpan ()).Build ().ToTMesh ());
+      new Mesh3Builder (pts.AsSpan ()).Build ().SaveTMesh (NT.TmpTxt);
       Assert.TextFilesEqual ("Geom/Mesh3/part-gen.tmesh", NT.TmpTxt);
+   }
+
+   [Test (253, "Test of MSH2, TopoMesh.ToMesh")]
+   void Test2 () {
+      var (model, crash) = Mesh3.LoadMSH2 (NT.File ("Geom/Mesh3/Tiny.msh2"));
+      model.SaveTMesh (NT.TmpTxt);
+      Assert.TextFilesEqual ("Geom/Mesh3/Tiny.M.tmesh", NT.TmpTxt);
+      crash.ToMesh (false).SaveTMesh (NT.TmpTxt);
+      Assert.TextFilesEqual ("Geom/Mesh3/Tiny.C.tmesh", NT.TmpTxt);
    }
 
    [Test (149, "Mesh3.Sphere")]
    void Test3 () {
       var mesh = Mesh3.Sphere ((1, 2, 0), 10, 0.01);
-      File.WriteAllText (NT.TmpTxt, mesh.ToTMesh ());
+      mesh.SaveTMesh (NT.TmpTxt);
       Assert.TextFilesEqual ("Misc/sphere-10.tmesh", NT.TmpTxt);
       mesh = Mesh3.Sphere ((1, 2, 0), 10, 0.02);
       // Expecting octahedron selection with '2' subdivisions (384 = (8 * 4 * 4) * 3)
@@ -104,8 +113,7 @@ class TMesh3Build {
    void Test4 () {
       var xfm = Matrix3.Rotation (EAxis.Y, 90.D2R ()) * Matrix3.Translation (0, 0, 1);
       Poly[] polys = [Poly.Parse ("M0,0 H100 V30 Q80,50,1 H20 Q0,30,-1 Z"), Poly.Parse ("M60,20 H90 V30 Q80,40,1 H60 Z")];
-      Mesh3 mesh = Mesh3.Extrude (polys, 20, xfm, ETess.Medium);
-      File.WriteAllText (NT.TmpTxt, mesh.ToTMesh ());
+      Mesh3.Extrude (polys, 20, xfm, ETess.Medium).SaveTMesh (NT.TmpTxt);
       Assert.TextFilesEqual ("Geom/Mesh3/extrude.tmesh", NT.TmpTxt);
    }
 
@@ -127,8 +135,7 @@ class TMesh3Build {
       for (int i = 0; i < fPoly.Count; i++)
          if (i != n) fPoly[i] = fPoly[i].Reversed ();
       var mesher = new TwoViewMesher (fPoly, sPoly) { Tess = tess };
-      var mesh = mesher.Build ();
-      File.WriteAllText (NT.TmpTxt, mesh.ToTMesh ());
+      mesher.Build ().SaveTMesh (NT.TmpTxt);
       Assert.TextFilesEqual (NT.File ($"Mesh/{file}.tmesh"), NT.TmpTxt);
    }
 }

@@ -5,6 +5,7 @@
 namespace Nori;
 using static EDXF;
 using static DXFCore;
+using System.IO.Compression;
 
 #region class DXFReader ----------------------------------------------------------------------------
 /// <summary>This can read a text DXF file and convert it to a Dwg2</summary>
@@ -37,6 +38,25 @@ public class DXFReader {
    public bool WhiteToBlack;
 
    // Methods ------------------------------------------------------------------
+   /// <summary>
+   /// Loads the pair of drawings from a DXF2 file, normalizes and returns them
+   /// </summary>
+   public static (Poly[] Model, Poly[] Crash) LoadDXF2 (string file) {
+      using var stm = File.OpenRead (file);
+      using var zar = new ZipArchive (stm, ZipArchiveMode.Read);
+      Poly[] model = GetPoly (zar.ReadAllBytes ("model.dxf"));
+      Poly[] crash = GetPoly (zar.ReadAllBytes ("crash.dxf"));
+      return (model, crash);
+
+      // Helper ............................................
+      Poly[] GetPoly (byte[] data) {
+         Vector2 shift = Vector2.Zero;
+         Dwg2 dwg = new DXFReader (data).Load ();
+         if (dwg.Ents.OfType<E2Point> ().FirstOrDefault () is { } e2p) shift = (Vector2)e2p.Pt;
+         return [.. dwg.Polys.Select (a => a * Matrix2.Translation (-shift))];
+      }
+   }
+
    /// <summary>Parse the file, build the DXF and return it</summary>
    public Dwg2 Load () {
       EDXF type;

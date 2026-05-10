@@ -31,6 +31,10 @@ public partial class Mechanism {
    /// <summary>Which socket (on the parent) is this connected to</summary>
    public readonly int ConnectTo;
 
+   /// <summary>The list of decals painted on this Mechanism</summary>
+   public IReadOnlyList<Decal> Decals => mDecals ?? [];
+   List<Decal>? mDecals = null;
+
    /// <summary>Where do we fetch our geometry from (could be null)</summary>
    public readonly GeometrySource? Geometry;
 
@@ -89,19 +93,19 @@ public partial class Mechanism {
 
    /// <summary>The mesh to use for collision testing. If a separate collision mesh is not defined,
    /// it returns the rendering mesh (if the rendering mesh exists)</summary>
-   public Mesh3? CMesh {
+   public TopoMesh? CMesh {
       get {
          if (field == null) {
             string name = FullName;
             if (!sCrashMeshCache.TryGetValue (name, out field)) {
-               field = Geometry?.GetCMesh (RootDir) ?? Mesh;
+               field = Geometry?.GetCMesh (RootDir) ?? Mesh?.ToTopoMesh ();
                sCrashMeshCache.TryAdd (name, field);
             }
          }
          return field;
       }
    }
-   static readonly ConcurrentDictionary<string, Mesh3?> sCrashMeshCache = [];
+   static readonly ConcurrentDictionary<string, TopoMesh?> sCrashMeshCache = [];
 
    /// <summary>What's the name of this mechanism (or sub-mechanism)</summary>
    public readonly string Name = string.Empty;
@@ -187,28 +191,60 @@ public abstract class GeometrySource {
    public abstract Mesh3 GetMesh (string rootDir);
    /// <summary>Gets the special mesh to use for collision testing, if one exists. Null if
    /// the mesh for rendering must be used for collision testing too.</summary>
-   public abstract Mesh3? GetCMesh (string rootDir);
+   public abstract TopoMesh? GetCMesh (string rootDir);
 }
 
 public class FileGeometry : GeometrySource {
-   public override Mesh3 GetMesh (string rootDir) => LoadMesh (File, rootDir);
-
-   // If abc.mesh is the rendering mesh, then abcCrash.mesh must be the collision mesh.
-   public override Mesh3? GetCMesh (string rootDir) {
-      string ext = Path.GetExtension (File);
-      string file = string.Concat (File.AsSpan (0, File.Length - ext.Length), "Crash", ext);
-      if (System.IO.File.Exists (Path.Combine (rootDir, file))) return LoadMesh (file, rootDir);
-      return null;
-   }
+   public override Mesh3 GetMesh (string rootDir) { LoadMeshes (rootDir); return _mesh!; }
+   public override TopoMesh? GetCMesh (string rootDir) { LoadMeshes (rootDir); return _crashMesh; }
 
    public readonly string File = string.Empty;
    public readonly Quaternion Rotate = Quaternion.Identity;
    public readonly Vector3 Shift = Vector3.Zero;
 
-   Mesh3 LoadMesh (string file, string rootDir) {
-      file = Path.Combine (rootDir, file);
-      Matrix3 xfm = Rotate.IsIdentity ? Matrix3.Identity : Matrix3.Rotation (Rotate);
-      xfm *= Matrix3.Translation (Shift);
-      return Mesh3.LoadFluxMesh (file) * xfm;
+   void LoadMeshes (string rootDir) {
+      if (_mesh == null) {
+         Matrix3 xfm = Matrix3.Rotation (Rotate) * Matrix3.Translation (Shift);
+         var file = Path.Combine (rootDir, File);
+         (_mesh, _crashMesh) = Mesh3.LoadMSH2 (file);
+         _mesh *= xfm; _crashMesh *= xfm;
+      }
    }
+   TopoMesh? _crashMesh;
+   Mesh3? _mesh;
+}
+
+public class ExtrudedGeometry : GeometrySource {
+   public readonly string File = null!;
+   public readonly CoordSystem CS;
+   public readonly Bound1[] Spans = null!;
+
+   public override TopoMesh? GetCMesh (string rootDir) { LoadMeshes (rootDir); return _crashMesh!; }
+   public override Mesh3 GetMesh (string rootDir) { LoadMeshes (rootDir); return _mesh!; }
+
+   void LoadMeshes (string rootDir) {
+      if (_mesh == null) {
+         var file = Path.Combine (rootDir, File);
+         var (mset, cset) = DXFReader.LoadDXF2 (file);
+         if (Spans.Length != 1) throw new NoriCodeException ("Unsupported");
+         _mesh = Extrude (mset, Spans[0], ETess.Medium);
+         _crashMesh = Extrude (cset, Spans[0], ETess.Coarse).ToTopoMesh ();
+
+         // Helpers ........................................
+         Mesh3 Extrude (Poly[] set, Bound1 span, ETess tess) {
+            var csFrom = new CoordSystem (new (0, 0, span.Length / 2));
+            var xfm = Matrix3.Between (in csFrom, in CS);
+            return Mesh3.Extrude (set, span.Length, xfm, ETess.Medium);
+         }
+      }
+   }
+   TopoMesh? _crashMesh;
+   Mesh3? _mesh;
+}
+
+/// <summary>Represents a decal that is pasted on a Mechanism</summary>
+public class Decal {
+   public readonly string File = "";
+   public readonly CoordSystem CS;
+   public readonly float Scale;
 }
