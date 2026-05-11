@@ -302,7 +302,7 @@ readonly record struct Attrib (int Dims, EDataType Type, int Size, bool Integral
          EVertexSpec.Vec4S => [AVec4s],
          EVertexSpec.Vec4S_Short => [AVec4s, AShort],
          EVertexSpec.Vec4S_Short_Short => [AVec4s, AShort, AShort],
-         EVertexSpec.UIRect => [AVec2s, AVec2s, AShort, AUInt],
+         EVertexSpec.UIRect => [AVec2s, AVec2s, AUInt, AUInt, AShort, AShort],
          _ => throw new BadCaseException (spec)
       };
 
@@ -320,7 +320,7 @@ readonly record struct Attrib (int Dims, EDataType Type, int Size, bool Integral
          EVertexSpec.Vec4S => 8,
          EVertexSpec.Vec4S_Short => 10,
          EVertexSpec.Vec4S_Short_Short => 12,
-         EVertexSpec.UIRect => 14,
+         EVertexSpec.UIRect => 20,
          _ => throw new BadCaseException (spec)
       };
 }

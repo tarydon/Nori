@@ -430,8 +430,9 @@ public static partial class Lux {
    public static void RectBorder (RectS rect, int border) 
       => RectBorderPxShader.It.Draw ([new (rect, (short)border)]);
 
-   public static void UIRect (Vec2S center, Vec2S size, int radius, Color4 color) {
-      UIRectShader.Args arg = new (center, new (size.X / 2, size.Y / 2), (short)radius, color);
+   public static void UIRect (Vec2S center, Vec2S size, int radius, int borderWidth, Color4 fillColor, Color4 borderColor) {
+      UIRectShader.Args arg = new (center, new (size.X / 2, size.Y / 2), (short)radius, (short)borderWidth, 
+         fillColor, borderColor);
       UIRectShader.It.Draw (ref arg);
    }
 

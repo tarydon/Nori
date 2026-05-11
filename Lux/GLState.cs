@@ -138,7 +138,7 @@ static class GLState {
          GL.Scissor (offset.X, offset.Y, size.X, size.Y);
       } else
          GL.Disable (ECap.ScissorTest);
-      GL.BlendFunc (EBlendFactor.SrcAlpha, EBlendFactor.OneMinusSrcAlpha);
+      GL.BlendFunc (EBlendFactor.One, EBlendFactor.OneMinusSrcAlpha);
       GL.PatchParameter (EPatchParam.PatchVertices, 4);
       GL.PrimitiveRestartIndex (0xFFFFFFFF);
       GL.PolygonOffset (1, 1);
@@ -151,8 +151,7 @@ static class GLState {
       mPolygonOffsetFill = true; PolygonOffsetFill = false;
       mProgram = null; GL.UseProgram (0);
       mHVAO = 0; GL.BindVertexArray (0);
-      mPgmChanges = 0; mVAOChanges = 0;
-      mTypeFaceId = 0;
+      mPgmChanges = 0; mVAOChanges = 0; mTypeFaceId = 0;
 
       var (r, g, b, a) = bgrdColor;
       GL.ClearColor (r / 255f, g / 255f, b / 255f, a / 255f);

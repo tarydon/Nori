@@ -232,7 +232,10 @@ partial class PointPxShader : PxShader<PointPxShader.Arg> {
 
 [Singleton]
 partial class UIRectShader : Shader<UIRectShader.Args, int> {
-   public UIRectShader () : base (ShaderImp.UIRect) => Bind ();
+   public UIRectShader () : base (ShaderImp.UIRect) {
+      Bind ();
+      Lib.Check (Marshal.SizeOf<Args> () == Attrib.GetSize (EVertexSpec.UIRect), "UIRectShader");  // REMOVETHIS
+   }
    protected int muVPScale = 0;
 
    protected override int OrderUniformsImp (ref readonly int a, ref readonly int b) => 0;
@@ -240,12 +243,15 @@ partial class UIRectShader : Shader<UIRectShader.Args, int> {
    protected override int SnapUniformsImp () => 0;
    protected override void SetConstantsImp () => Pgm.Set (muVPScale, Lux.VPScale);
 
-   [StructLayout (LayoutKind.Sequential, Pack = 2, Size = 14)]
-   public readonly struct Args (Vec2S center, Vec2S hsize, short radius, Color4 color) {
-      readonly Vec2S Center = center;     // 4
-      readonly Vec2S HSize = hsize;       // 8
-      readonly uint Color = color.Value;  // 12
-      readonly short Radius = radius;     // 14
+   [StructLayout (LayoutKind.Sequential, Pack = 2, Size = 20)]
+   public readonly struct Args (Vec2S center, Vec2S hsize, short radius, short borderThickness, Color4 fillColor, Color4 borderColor) {
+      readonly Vec2S Center = center;                    // 4
+      readonly Vec2S HSize = hsize;                      // 8
+      readonly uint FillColor = fillColor.GLValue;       // 12
+      readonly uint BorderColor = borderColor.GLValue;   // 16
+
+      readonly short Radius = radius;                    // 18
+      readonly short BorderThickness = borderThickness;  // 20
    }
 }
 

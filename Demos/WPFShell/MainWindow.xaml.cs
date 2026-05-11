@@ -23,13 +23,12 @@ public partial class MainWindow : Window {
 
 class DemoScene : Scene2 {
    public DemoScene () {
-      BgrdColor = Color4.Gray (216);
+      BgrdColor = new Color4 (240, 244, 248);
       Root = new SimpleVN (Draw) { Streaming = true };
    }
 
    void Draw () {
-      Lux.Color = Color4.Gray (128);
-      Lux.Rect (new RectS (100, 100, 400, 200));
-      Lux.UIRect (new (250, 300), new (300, 100), 10, Color4.Blue);
+      Lux.UIRect (new (250, 150), new (300, 100), 6, 2, new Color4 (251, 252, 253), new Color4 (0, 96, 160));
+      Lux.UIRect (new (250, 300), new (300, 100), 6, 0, new Color4 (251, 252, 253), new Color4 (251, 252, 253));
    }
 }

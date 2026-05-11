@@ -1,6 +1,7 @@
 // Experimental UI Rect shader
 
 #version 330 core
+#extension GL_ARB_shading_language_packing : enable
 
 // Constants
 uniform vec2 VPScale;      // = 2.0 / ViewportSize
@@ -9,15 +10,19 @@ uniform vec2 VPScale;      // = 2.0 / ViewportSize
 layout (location = 0) in ivec2 Center;
 layout (location = 1) in uvec2 HSize;
 layout (location = 2) in uint FillColor;
+layout (location = 3) in uint BorderColor;
 
-layout (location = 3) in uint Radius;
+layout (location = 4) in uint Radius;
+layout (location = 5) in uint BorderThickness;
 
 // Outputs
 out vec2 vLocalPos;
 flat out vec2 vHSize;
 flat out float vRadius;
+flat out float vBorderThickness;
 
 flat out vec4 vFillColor;
+flat out vec4 vBorderColor;
 
 // Generate quad corners procedurally
 vec2 GetCorner (int vertexID) {
@@ -31,7 +36,7 @@ vec2 GetCorner (int vertexID) {
 
 void main () {
    // Expand for shadows and anti-aliasing
-   float expand = 4.0;
+   float expand = 30.0;
    vec2 expandedHSize = vec2 (HSize) + expand;
 
    // Get the corner (based on instanced vertex ID)
@@ -47,5 +52,7 @@ void main () {
    // Pass through parameters
    vHSize = vec2 (HSize);
    vRadius = float (Radius);
+   vBorderThickness = float (BorderThickness);
    vFillColor = unpackUnorm4x8 (FillColor);
+   vBorderColor = unpackUnorm4x8 (BorderColor);
 }

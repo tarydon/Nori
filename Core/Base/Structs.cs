@@ -95,6 +95,7 @@ public readonly struct Color4 : IEQuable<Color4> {
    public bool IsTransparent => A == 0;
    public bool IsNil => A == 0 && R == 0 && G == 0 && B == 0;
    public uint Value => (uint)((A << 24) | (R << 16) | (G << 8) | B);
+   public uint GLValue => (uint)((A << 24) | (B << 16) | (G << 8) | R);
 
    // Methods ------------------------------------------------------------------
    /// <summary>Returns a darkened version of a given color</summary>
