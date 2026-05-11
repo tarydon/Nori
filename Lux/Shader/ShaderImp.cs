@@ -142,7 +142,8 @@ class ShaderImp {
    public static ShaderImp RectBorderPx => mRectBorderPx ??= Load ();
    public static ShaderImp RRectBorderPx => mRRectBorderPx ??= Load ();
    public static ShaderImp DeePx => mDeePx ??= Load ();
-   static ShaderImp? mRectPx, mRRectPx, mRectBorderPx, mRRectBorderPx, mDeePx;
+   public static ShaderImp UIRect => mUIRect ??= Load ();
+   static ShaderImp? mRectPx, mRRectPx, mRectBorderPx, mRRectBorderPx, mDeePx, mUIRect;
 
    public static ShaderImp BlackLine => mBlackLine ??= Load ();
    public static ShaderImp GlassLine => mGlassLine ??= Load ();
@@ -278,6 +279,7 @@ class ShaderImp {
 readonly record struct Attrib (int Dims, EDataType Type, int Size, bool Integral) {
    public static Attrib AVec2f = new (2, EDataType.Float, 8, false);
    public static Attrib AInt = new (1, EDataType.Int, 4, true);
+   public static Attrib AUInt = new (1, EDataType.UInt, 4, true);
    public static Attrib AShort = new (1, EDataType.Short, 2, true);
    public static Attrib AFloat = new (1, EDataType.Float, 4, false);
    public static Attrib AVec3f = new (3, EDataType.Float, 12, false);
@@ -300,6 +302,7 @@ readonly record struct Attrib (int Dims, EDataType Type, int Size, bool Integral
          EVertexSpec.Vec4S => [AVec4s],
          EVertexSpec.Vec4S_Short => [AVec4s, AShort],
          EVertexSpec.Vec4S_Short_Short => [AVec4s, AShort, AShort],
+         EVertexSpec.UIRect => [AVec2s, AVec2s, AShort, AUInt],
          _ => throw new BadCaseException (spec)
       };
 
@@ -317,6 +320,7 @@ readonly record struct Attrib (int Dims, EDataType Type, int Size, bool Integral
          EVertexSpec.Vec4S => 8,
          EVertexSpec.Vec4S_Short => 10,
          EVertexSpec.Vec4S_Short_Short => 12,
+         EVertexSpec.UIRect => 14,
          _ => throw new BadCaseException (spec)
       };
 }
@@ -326,6 +330,7 @@ readonly record struct Attrib (int Dims, EDataType Type, int Size, bool Integral
 // The various Vertex specifications used by OpenGL shaders
 enum EVertexSpec { Vec2F, Vec3F, Vec3F_Vec3H, Vec4S_Int, Vec2F_Vec4S_Int, Vec3F_Vec4S_Int, 
                    Vec2S, Vec2S_Vec4F, Vec2F_Vec4F, Vec4S, Vec4S_Short, Vec4S_Short_Short, 
+                   UIRect,
                    _Last }
 #endregion
 

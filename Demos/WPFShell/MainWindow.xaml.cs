@@ -23,12 +23,13 @@ public partial class MainWindow : Window {
 
 class DemoScene : Scene2 {
    public DemoScene () {
-      var dr = new DXFReader ("C:/DropBox/Nori/Dimension/Dimensions.dxf");
-      dr.DarkenColors = dr.WhiteToBlack = dr.RelayerDimensions = true;
-      var dwg = dr.Load ();
-
-      Bound = dwg.Bound.InflatedF (1.1);
-      Root = new Dwg2VN (dwg);
       BgrdColor = Color4.Gray (216);
+      Root = new SimpleVN (Draw) { Streaming = true };
+   }
+
+   void Draw () {
+      Lux.Color = Color4.Gray (128);
+      Lux.Rect (new RectS (100, 100, 400, 200));
+      Lux.UIRect (new (250, 300), new (300, 100), 10, Color4.Blue);
    }
 }

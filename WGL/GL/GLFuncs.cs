@@ -121,6 +121,12 @@ static public unsafe class GL {
    delegate void glDrawElementsBaseVertex (EMode mode, int count, EIndexType type, Ptr indices, int baseVertex);
    static glDrawElementsBaseVertex? pDrawElementsBaseVertex;
 
+   // Instanced drawing (multiple instances) ...................................
+   public static void DrawArraysInstanced (EMode mode, int start, int instances, int count)
+      => (pDrawArraysInstanced ??= Load<glDrawArraysInstanced> ()) (mode, start, instances, count);
+   delegate void glDrawArraysInstanced (EMode mode, int start, int instances, int count);
+   static glDrawArraysInstanced? pDrawArraysInstanced;
+
    // Specify that a particular element (specified by glVertexAttribPointer) is in use
    public static void EnableVertexAttribArray (int index) 
       => (pEnableVertexAttribArray ??= Load<glEnableVertexAttribArray> ()) ((uint)index);
@@ -361,6 +367,12 @@ static public unsafe class GL {
       => (pVertexAttribPointer ??= Load<glVertexAttribPointer> ()) (index, size, type, normalized, stride, offset);
    delegate void glVertexAttribPointer (int index, int size, EDataType type, bool normalized, int stride, Ptr pointer);
    static glVertexAttribPointer? pVertexAttribPointer;
+
+   // Specify an attribute as 'per-instance' rather than 'per-vertex' ..........
+   public static void VertexAttribDivisor (int index, int divisor)
+      => (pVertexAttribDivisor ??= Load<glVertexAttribDivisor> ()) (index, divisor);
+   delegate void glVertexAttribDivisor (int index, int divisor);
+   static glVertexAttribDivisor? pVertexAttribDivisor;
 
    // P-Invoke imports ---------------------------------------------------------
    [DllImport (GDI32)] internal static extern int ChoosePixelFormat (HDC hDC, [In] ref PixelFormatDescriptor pfd);

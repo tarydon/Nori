@@ -230,6 +230,25 @@ partial class PointPxShader : PxShader<PointPxShader.Arg> {
 }
 #endregion
 
+[Singleton]
+partial class UIRectShader : Shader<UIRectShader.Args, int> {
+   public UIRectShader () : base (ShaderImp.UIRect) => Bind ();
+   protected int muVPScale = 0;
+
+   protected override int OrderUniformsImp (ref readonly int a, ref readonly int b) => 0;
+   protected override void ApplyUniformsImp (ref readonly int a) { }
+   protected override int SnapUniformsImp () => 0;
+   protected override void SetConstantsImp () => Pgm.Set (muVPScale, Lux.VPScale);
+
+   [StructLayout (LayoutKind.Sequential, Pack = 2, Size = 14)]
+   public readonly struct Args (Vec2S center, Vec2S hsize, short radius, Color4 color) {
+      readonly Vec2S Center = center;     // 4
+      readonly Vec2S HSize = hsize;       // 8
+      readonly uint Color = color.Value;  // 12
+      readonly short Radius = radius;     // 14
+   }
+}
+
 #region class PxShader -----------------------------------------------------------------------------
 /// <summary>Base class for various shaders using pixels (Vec2S)</summary>
 class PxShader<TVertex> : Shader<TVertex, Color4> where TVertex : unmanaged {
