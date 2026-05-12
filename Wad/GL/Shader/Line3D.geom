@@ -20,17 +20,17 @@ void main (void) {
    dir *= 0.25;
 
    gDist = width * 2.9;
-   gl_Position = vec4 (VPScale * (p0 + perpdir - dir), vert0.z, 1);
+   gl_Position = vec4 (VPScale * (p0 + perpdir - dir), vert0.z - 0.001 * vert0.w, 1);
    EmitVertex ();
 
-   gl_Position = vec4 (VPScale * (p1 + perpdir + dir), vert1.z, 1);   
+   gl_Position = vec4 (VPScale * (p1 + perpdir + dir), vert1.z - 0.001 * vert1.w, 1);   
    EmitVertex ();
 
    gDist = -width * 2.9;
-   gl_Position = vec4 (VPScale * (p0 - perpdir - dir), vert0.z, 1);
+   gl_Position = vec4 (VPScale * (p0 - perpdir - dir), vert0.z - 0.001 * vert0.w, 1);
    EmitVertex();
 
-   gl_Position = vec4 (VPScale * (p1 - perpdir + dir), vert1.z, 1);
+   gl_Position = vec4 (VPScale * (p1 - perpdir + dir), vert1.z - 0.001 * vert1.w, 1);
    EmitVertex ();
 
    EndPrimitive ();
