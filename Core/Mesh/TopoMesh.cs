@@ -40,6 +40,18 @@ public class TopoMesh {
       Pts = [.. pts]; Index = [.. idx];
    }
 
+   /// <summary>
+   /// Create a TopoMesh by combining a set of meshes
+   /// </summary>
+   public TopoMesh (IEnumerable<TopoMesh> meshes) {
+      List<Point3f> pts = []; List<int> idx = [];
+      foreach (var mesh in meshes) {
+         int n = pts.Count; pts.AddRange (mesh.Pts); 
+         idx.AddRange (mesh.Index.Select (a => a + n));
+      }
+      Pts = [.. pts]; Index = [.. idx];
+   }
+
    /// <summary>Creates a TopoMesh from a list of Point3 representing triangle corners</summary>
    public TopoMesh (IEnumerable<Point3> input) : this (input.Select (a => (Point3f)a)) { }
 

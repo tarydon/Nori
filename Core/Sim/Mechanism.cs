@@ -242,6 +242,16 @@ public class ExtrudedGeometry : GeometrySource {
    Mesh3? _mesh;
 }
 
+public class MultiGeometry : GeometrySource {
+   public override TopoMesh? GetCMesh (string rootDir) 
+      => new (Items.Select (a => GetCMesh (rootDir)).NonNull ());
+
+   public override Mesh3 GetMesh (string rootDir) 
+      => new (Items.Select (a => GetMesh (rootDir)));
+
+   public readonly GeometrySource[] Items = [];
+}
+
 /// <summary>Represents a decal that is pasted on a Mechanism</summary>
 public class Decal {
    public readonly string File = "";

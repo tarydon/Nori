@@ -22,6 +22,19 @@ public partial class Mesh3 {
    public Mesh3 (ImmutableArray<Node> vertex, ImmutableArray<int> tris, ImmutableArray<int> wires) 
       => (Vertex, Triangle, Wire) = (vertex, tris, wires);
 
+   /// <summary>
+   /// Create a mesh by merging multiple meshes together
+   /// </summary>
+   public Mesh3 (IEnumerable<Mesh3> meshes) {
+      List<Node> verts = []; List<int> tris = [], wires = [];
+      foreach (var mesh in meshes) {
+         int n = verts.Count; verts.AddRange (mesh.Vertex);
+         tris.AddRange (mesh.Triangle.Select (a => a + n));
+         wires.AddRange (mesh.Wire.Select (a => a + n));
+      }
+      Vertex = [.. verts]; Triangle = [.. tris]; Wire = [.. wires];
+   }
+
    /// <summary>Returns the surface area of this mesh (sum of areas of all triangles)</summary>
    public double GetArea () {
       double total = 0;
