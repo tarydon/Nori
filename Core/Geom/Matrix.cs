@@ -289,6 +289,7 @@ public class Matrix3 : IEQuable<Matrix3> {
 
    /// <summary>Composes a matrix to go TO the given coordinate-system from the World</summary>
    public static Matrix3 To (in CoordSystem cs) {
+      if (cs.IsWorld) return Identity;
       Vector3 x = cs.VecX, y = cs.VecY, z = cs.VecZ;
       return new Matrix3 (
          x.X, x.Y, x.Z,

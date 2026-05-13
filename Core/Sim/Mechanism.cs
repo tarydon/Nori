@@ -229,25 +229,51 @@ public abstract class GeomSrc {
 }
 #endregion
 
+#region class MeshGeomSrc --------------------------------------------------------------------------
+/// <summary>
+/// MeshGeomSrc is a geometry source using a Mesh3 for the geometry data
+/// </summary>
+/// The input is a .msh file for geometry data, and the collision TopoMesh is derived from the
+/// Mesh3 internally. Alternatively, the input could be specified using a .msh2 file, which contains
+/// a .msh (Mesh3 for rendering) and a .msht (TopoMesh for collision) packed into a ZIP file. 
+/// The mesh can optionally be positioned in space by the given coordinate system 
 public class MeshGeomSrc : GeomSrc {
+   // Constructors -------------------------------------------------------------
+   /// <summary>
+   /// Get the mesh for rendering
+   /// </summary>
    public override Mesh3 GetMesh (string rootDir) { LoadMeshes (rootDir); return _mesh!; }
    public override TopoMesh? GetCMesh (string rootDir) { LoadMeshes (rootDir); return _crashMesh; }
 
+   // Properties ---------------------------------------------------------------
+   /// <summary>
+   /// File from which the data is loaded
+   /// </summary>
    public readonly string File = string.Empty;
-   public readonly Quaternion Rotate = Quaternion.Identity;
-   public readonly Vector3 Shift = Vector3.Zero;
+   /// <summary>
+   /// The coordinate system used to position the model 
+   /// </summary>
+   public CoordSystem CS => mCS;
+   CoordSystem mCS;
 
+   // Implementation -----------------------------------------------------------
    void LoadMeshes (string rootDir) {
       if (_mesh == null) {
-         Matrix3 xfm = Matrix3.Rotation (Rotate) * Matrix3.Translation (Shift);
+         Matrix3 xfm = Matrix3.To (CS);
          var file = Path.Combine (rootDir, File);
-         (_mesh, _crashMesh) = Mesh3.LoadMSH2 (file);
-         _mesh *= xfm; _crashMesh *= xfm;
+         if (File.EndsWith (".mesh")) {
+            _mesh = Mesh3.LoadFluxMesh (file) * xfm;
+            _crashMesh = _mesh.ToTopoMesh ();
+         } else {
+            (_mesh, _crashMesh) = Mesh3.LoadMSH2 (file);
+            _mesh *= xfm; _crashMesh *= xfm;
+         }
       }
    }
    TopoMesh? _crashMesh;
    Mesh3? _mesh;
 }
+#endregion
 
 public class SweptGeomSrc : GeomSrc {
    public readonly string File = null!;
