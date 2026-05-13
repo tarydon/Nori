@@ -38,9 +38,7 @@ public class DXFReader {
    public bool WhiteToBlack;
 
    // Methods ------------------------------------------------------------------
-   /// <summary>
-   /// Loads the pair of drawings from a DXF2 file, normalizes and returns them
-   /// </summary>
+   /// <summary>Loads the pair of drawings from a DXF2 file, normalizes and returns them</summary>
    public static (Poly[] Model, Poly[] Crash) LoadDXF2 (string file) {
       using var stm = File.OpenRead (file);
       using var zar = new ZipArchive (stm, ZipArchiveMode.Read);

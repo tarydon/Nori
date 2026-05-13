@@ -58,15 +58,15 @@ public class CurlReader {
 
       // Create an object, and push it on the stack of objects being partially read,
       // we will need that to handle 'uplink' fields (and sometimes 'byname' fields)
-      object owner = auType.CreateInstance ();
+      object obj = auType.CreateInstance ();
       foreach (var upf in auType.Uplinks) {
          var uptype = upf.FieldType.Type;
          var uplink = mStack.LastOrDefault (a => a?.GetType ().IsAssignableFrom (uptype) ?? false);
          if (!upf.IsNullable && uplink == null) throw new AuException ($"{auType.Type.FullName}.{upf.Name} cannot be set to null");
-         upf.SetValue (owner, uplink);
+         upf.SetValue (obj, uplink);
       }
 
-      mStack.Add (owner);
+      mStack.Add (obj);
       R.Match ('{');
       for (; ; ) {
          SkipComment ();
@@ -85,9 +85,10 @@ public class CurlReader {
                if (field.IsAngle) value = ((double)value!).D2R ();
                break;
          }
-         field.SetValue (owner, value);
+         field.SetValue (obj, value);
       }
       // Pop off the stack of partially read objects and return
+      auType.RunPostLoad (obj);
       return mStack.RemoveLast ();
    }
    readonly List<object> mStack = [];

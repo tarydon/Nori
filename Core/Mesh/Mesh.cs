@@ -22,9 +22,7 @@ public partial class Mesh3 {
    public Mesh3 (ImmutableArray<Node> vertex, ImmutableArray<int> tris, ImmutableArray<int> wires) 
       => (Vertex, Triangle, Wire) = (vertex, tris, wires);
 
-   /// <summary>
-   /// Create a mesh by merging multiple meshes together
-   /// </summary>
+   /// <summary>Create a mesh by merging multiple meshes together</summary>
    public Mesh3 (IEnumerable<Mesh3> meshes) {
       List<Node> verts = []; List<int> tris = [], wires = [];
       foreach (var mesh in meshes) {

@@ -25,6 +25,22 @@ public partial class Mechanism {
    public IReadOnlyList<Mechanism> Children => mChildren ?? [];
    List<Mechanism>? mChildren;
 
+   /// <summary>The mesh to use for collision testing. If a separate collision mesh is not defined,
+   /// it returns the rendering mesh (if the rendering mesh exists)</summary>
+   public TopoMesh? CMesh {
+      get {
+         if (field == null) {
+            string name = FullName;
+            if (!sCrashMeshCache.TryGetValue (name, out field)) {
+               field = Geometry?.GetCMesh (RootDir) ?? Mesh?.ToTopoMesh ();
+               sCrashMeshCache.TryAdd (name, field);
+            }
+         }
+         return field;
+      }
+   }
+   static readonly ConcurrentDictionary<string, TopoMesh?> sCrashMeshCache = [];
+
    /// <summary>The color used to draw this mechanism</summary>
    public readonly Color4 Color = Color4.Yellow;
 
@@ -36,7 +52,21 @@ public partial class Mechanism {
    List<Decal>? mDecals = null;
 
    /// <summary>Where do we fetch our geometry from (could be null)</summary>
-   public readonly GeometrySource? Geometry;
+   public readonly GeomSrc? Geometry;
+
+   /// <summary>Is this mechanism colliding?</summary>
+   public bool IsColliding {
+      get => _isColliding;
+      set { if (Lib.Set (ref _isColliding, value)) Notify (EProp.Colliding); }
+   }
+   bool _isColliding;
+
+   /// <summary>Is this mechanism visible?</summary>
+   public bool IsVisible {
+      get => _isVisible;
+      set { if (Lib.Set (ref _isVisible, value)) Notify (EProp.Visibility); }
+   }
+   bool _isVisible = true;
 
    /// <summary>What kind of joint does this mechanism have?</summary>
    public readonly EJoint Joint;
@@ -58,18 +88,6 @@ public partial class Mechanism {
    }
    double mJValue;
 
-   public bool IsColliding {
-      get => _isColliding;
-      set { if (Lib.Set (ref _isColliding, value)) Notify (EProp.Colliding); }
-   }
-   bool _isColliding;
-
-   public bool IsVisible {
-      get => _isVisible;
-      set { if (Lib.Set (ref _isVisible, value)) Notify (EProp.Visibility); }
-   }
-   bool _isVisible = true;
-
    /// <summary>The definition vector for the joint</summary>
    /// - For a translation joint, this is the direction of translation
    /// - For a rotation joint, this is the direction of the rotation axis. The
@@ -90,22 +108,6 @@ public partial class Mechanism {
       }
    }
    static readonly ConcurrentDictionary<string, Mesh3?> sMeshCache = [];
-
-   /// <summary>The mesh to use for collision testing. If a separate collision mesh is not defined,
-   /// it returns the rendering mesh (if the rendering mesh exists)</summary>
-   public TopoMesh? CMesh {
-      get {
-         if (field == null) {
-            string name = FullName;
-            if (!sCrashMeshCache.TryGetValue (name, out field)) {
-               field = Geometry?.GetCMesh (RootDir) ?? Mesh?.ToTopoMesh ();
-               sCrashMeshCache.TryAdd (name, field);
-            }
-         }
-         return field;
-      }
-   }
-   static readonly ConcurrentDictionary<string, TopoMesh?> sCrashMeshCache = [];
 
    /// <summary>What's the name of this mechanism (or sub-mechanism)</summary>
    public readonly string Name = string.Empty;
@@ -184,17 +186,50 @@ public partial class Mechanism {
       EnumTree ().Skip (1).ForEach (c => b += c.Bound);
       return b;
    }
+
+   void PostLoad () {
+      if ((mFlags & EFlags.Invisible) != 0) _isVisible = false;
+   }
+
+   // Nested types -------------------------------------------------------------
+   [Flags]
+   public enum EFlags { 
+      /// <summary>The mechanism is initially invisible when loaded from the file</summary>
+      Invisible = 1,
+
+   }
+   public EFlags Flags => mFlags;
+   EFlags mFlags;
 }
 #endregion
 
-public abstract class GeometrySource {
+#region struct Decal -------------------------------------------------------------------------------
+/// <summary>Represents a decal that is pasted on a Mechanism</summary>
+public readonly struct Decal {
+   public Decal () { }
+   public Decal (string file, CoordSystem cs, float scale)
+      => (File, CS, Scale) = (file, cs, scale);
+
+   public readonly string File = "";
+   public readonly CoordSystem CS;
+   public readonly float Scale;
+}
+#endregion
+
+#region class GeomSrc ------------------------------------------------------------------------------
+/// <summary>GeomSrc represents a 'geometry source' for a Mechanism node</summary>
+/// The geometry source can provide geometry for the rendering (Mesh) and geometry for
+/// the collision checking (CMesh)
+public abstract class GeomSrc {
+   /// <summary>Get the mesh used for rendering</summary>
+   /// This always exists (for any mesh that includes a GeomSrc)
    public abstract Mesh3 GetMesh (string rootDir);
-   /// <summary>Gets the special mesh to use for collision testing, if one exists. Null if
-   /// the mesh for rendering must be used for collision testing too.</summary>
+   /// <summary>Gets the special mesh to use for collision testing</summary>
    public abstract TopoMesh? GetCMesh (string rootDir);
 }
+#endregion
 
-public class FileGeometry : GeometrySource {
+public class MeshGeomSrc : GeomSrc {
    public override Mesh3 GetMesh (string rootDir) { LoadMeshes (rootDir); return _mesh!; }
    public override TopoMesh? GetCMesh (string rootDir) { LoadMeshes (rootDir); return _crashMesh; }
 
@@ -214,7 +249,7 @@ public class FileGeometry : GeometrySource {
    Mesh3? _mesh;
 }
 
-public class ExtrudedGeometry : GeometrySource {
+public class SweptGeomSrc : GeomSrc {
    public readonly string File = null!;
    public readonly CoordSystem CS;
    public readonly Bound1[] Spans = null!;
@@ -242,19 +277,12 @@ public class ExtrudedGeometry : GeometrySource {
    Mesh3? _mesh;
 }
 
-public class MultiGeometry : GeometrySource {
+public class MultiGeomSrc : GeomSrc {
    public override TopoMesh? GetCMesh (string rootDir) 
-      => new (Items.Select (a => GetCMesh (rootDir)).NonNull ());
+      => new (Items.Select (a => a.GetCMesh (rootDir)).NonNull ());
 
    public override Mesh3 GetMesh (string rootDir) 
-      => new (Items.Select (a => GetMesh (rootDir)));
+      => new (Items.Select (a => a.GetMesh (rootDir)));
 
-   public readonly GeometrySource[] Items = [];
-}
-
-/// <summary>Represents a decal that is pasted on a Mechanism</summary>
-public class Decal {
-   public readonly string File = "";
-   public readonly CoordSystem CS;
-   public readonly float Scale;
+   public readonly GeomSrc[] Items = [];
 }
