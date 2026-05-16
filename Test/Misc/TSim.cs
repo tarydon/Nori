@@ -4,7 +4,7 @@
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 namespace Nori.Testing;
 
-[Fixture (32, "RBR robot basic tests", "Sim")]
+[Fixture (32, "RBR robot basic tests", "Sim", Skip = true)]
 class TRBRSolver {
    TRBRSolver () {
       mMech = Mechanism.Load ("N:/Wad/FanucX/mechanism.curl");

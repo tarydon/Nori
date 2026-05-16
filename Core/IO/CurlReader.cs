@@ -62,7 +62,8 @@ public class CurlReader {
       foreach (var upf in auType.Uplinks) {
          var uptype = upf.FieldType.Type;
          var uplink = mStack.LastOrDefault (a => a?.GetType ().IsAssignableFrom (uptype) ?? false);
-         if (!upf.IsNullable && uplink == null) throw new AuException ($"{auType.Type.FullName}.{upf.Name} cannot be set to null");
+         if (!upf.IsNullable && uplink == null) 
+            throw new AuException ($"{auType.Type.FullName}.{upf.Name} cannot be set to null (line {R.LineNo})");
          upf.SetValue (obj, uplink);
       }
 
@@ -72,7 +73,7 @@ public class CurlReader {
          SkipComment ();
          if (R.TryMatch ('}')) break;     // Finished reading all the fields
          var fieldName = R.TakeUntil (mNameStop, true);
-         var field = auType.GetField (fieldName) ?? throw new AuException ($"Field {Encoding.UTF8.GetString (fieldName)} not found in {auType.Type.FullName}");
+         var field = auType.GetField (fieldName) ?? throw new AuException ($"Field {Encoding.UTF8.GetString (fieldName)} not found in {auType.Type.FullName} (line {R.LineNo})");
          R.Match (':');
          object? value;
          switch (field.Tactic) {
@@ -144,6 +145,6 @@ public class CurlReader {
 
    // Checks if a comment follows (semicolon character), and skips past it.
    // The comment continues to the end of the line. 
-   void SkipComment () { while (R.Peek == ';') R.SkipTo ('\n'); }
+   void SkipComment () { while (R.Peek () == ';') R.SkipTo ('\n'); }
 }
 #endregion

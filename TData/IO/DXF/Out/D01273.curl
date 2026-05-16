@@ -1,10 +1,10 @@
 (Dwg2){
   Layers:[
-    { Name:0 Color:#FFFFFFFF Linetype:Continuous }
-    { Name:KADER Color:#FFFFFFFF Linetype:Continuous }
-    { Name:DIM Color:#FF414141 Linetype:Continuous }
-    { Name:TEKST Color:#FFFFFFFF Linetype:Continuous }
-    { Name:ONDERHOEK Color:#FFFFFFFF Linetype:Continuous }
+    { Name:0 Color:White Linetype:Continuous }
+    { Name:KADER Color:White Linetype:Continuous }
+    { Name:DIM Color:#41 Linetype:Continuous }
+    { Name:TEKST Color:White Linetype:Continuous }
+    { Name:ONDERHOEK Color:White Linetype:Continuous }
   ]
   Styles:[
     { Name:SLDTEXTSTYLE0 Font:TXT XScale:0.605 }

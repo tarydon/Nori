@@ -70,7 +70,7 @@ static class Assert {
       if (!File.Exists (reference)) { File.Copy (test, reference, true); return; }
       byte[] data1 = File.ReadAllBytes (reference), data2 = File.ReadAllBytes (test);
       if (data1.SequenceEqual (data2)) return;
-      Process.Start ("winmergeu.exe", $"{reference} {test}").WaitForExit ();
+      if (TestRunner.RunDiff) Process.Start ("winmergeu.exe", $"{reference} {test}").WaitForExit ();
       throw new TestException ($"Files different: {reference} and {test}");
    }
 

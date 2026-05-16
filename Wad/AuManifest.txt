@@ -34,7 +34,7 @@ Mechanism
   Name Flags Color Joint JMin JMax JValue JVector JAsDrawn Sockets ConnectTo Children ^Parent -RootDir Decals Geometry
 GeomSrc
 MeshGeomSrc
-  File Shift -Rotate
+  File CS
 SweptGeomSrc
   File CS Spans
 MultiGeomSrc

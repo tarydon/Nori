@@ -88,7 +88,7 @@ class TAuSystem {
          byte[] data = CurlWriter.SaveToByteArray (dwg.Shapes[0]);
          CurlReader.Load (data);
       });
-      message.Is ("AuException: Nori.Testing.Circle.Dwg cannot be set to null");
+      message.Is ("AuException: Nori.Testing.Circle.Dwg cannot be set to null (line 1)");
 
       var layer3 = new Layer3 { Name = "Outline" };
       var shape3 = new Shape3 (3.5, layer3);

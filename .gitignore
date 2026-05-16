@@ -11,5 +11,6 @@ Demos/Pentax
 **/bin/*
 **/obj/*
 TData/tmpfile.*
+TData/failed.txt
 **/BenchmarkDotNet.Artifacts/*
 .claude/**

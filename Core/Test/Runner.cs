@@ -44,9 +44,6 @@ public interface ITestCallback {
 #region ConsoleTestCallback ------------------------------------------------------------------------
 /// <summary>Implementation of ITestCallback that echoes to the console</summary>
 public class ConsoleTestCallback : ITestCallback {
-   // Properties ---------------------------------------------------------------
-   public bool StopOnFail;
-
    // ITestCallback implementation ---------------------------------------------
    public void Begin (int cFixtures, int cTests) => WriteLine ($"{cFixtures} fixtures, {cTests} tests");
    public void StartTest (Test test) => Write ($" {test.Id}. {test.Description} ");
@@ -62,13 +59,13 @@ public class ConsoleTestCallback : ITestCallback {
    public void TestFailed (Test test, TestException ex) {
       WriteRight (Yellow, "FAIL");
       ForegroundColor = Yellow; WriteLine (ex.Message); ResetColor ();
-      if (StopOnFail) Environment.Exit (-1);
+      if (TestRunner.StopOnFail) TestRunner.StopTests = true;
    }
 
    public void TestCrashed (Test test, Exception ex) {
       WriteRight (Red, "CRASH");
       ForegroundColor = Yellow; WriteLine (ex.Message); ResetColor ();
-      if (StopOnFail) Environment.Exit (-1);
+      if (TestRunner.StopOnFail) TestRunner.StopTests = true;
    }
 
    public void EndTest (Test test, int cDone, int cTotal, TimeSpan elapsed)
@@ -107,6 +104,18 @@ public static class TestRunner {
    public static bool RunDiff;
    /// <summary>Stop tests when a failure occurs</summary>
    public static bool StopOnFail;
+   /// <summary>
+   /// Only run the tests that have failed
+   /// </summary>
+   public static bool OnlyFailed;
+   /// <summary>
+   /// List of tests that have failed (read in from failed.txt)
+   /// </summary>
+   public static HashSet<int> FailList = [];
+   /// <summary>
+   /// Stop the testing
+   /// </summary>
+   public static bool StopTests;
 
    // Methods ------------------------------------------------------------------
    /// <summary>Gather all the tests from the given set of assemblies</summary>
@@ -175,9 +184,15 @@ public static class TestRunner {
                else except = ex;
             }
             switch (except) {
-               case TestException te: echo.TestFailed (test, te); cFailed++; break;
-               case not null: echo.TestCrashed (test, except); cCrashed++; break;
-               default: echo.TestPassed (test); break;
+               case TestException te: 
+                  echo.TestFailed (test, te); FailList.Add (test.Id); cFailed++; 
+                  break;
+               case not null: 
+                  echo.TestCrashed (test, except); FailList.Add (test.Id); cCrashed++; 
+                  break;
+               default: 
+                  echo.TestPassed (test); FailList.Remove (test.Id); 
+                  break;
             }
          }
          echo.EndTest (test, ++cDone, cTests, DateTime.Now - start);

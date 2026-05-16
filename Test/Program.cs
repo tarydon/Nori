@@ -32,12 +32,24 @@ class Program {
    void Run () {
       var assembly = typeof (Program).Assembly;
       var cit = ConsoleTestCallback.It;
-      cit.StopOnFail = Environment.GetCommandLineArgs ().Any (a => a.ToUpper () == "-STOP");
+      var args = Environment.GetCommandLineArgs ().Select (a => a.ToUpper ()).ToList ();
+      TestRunner.StopOnFail = args.Contains ("-STOP");
+      TestRunner.RunDiff = args.Contains ("-DIFF");
+      TestRunner.OnlyFailed = args.Contains ("-FAILED");
+      string fail = NT.File ("failed.txt");
+      if (File.Exists (fail)) {
+         // If the 'failed.txt' exists, load it in
+         foreach (var n in File.ReadAllLines (fail).Select (a => a.ToInt ()))
+            TestRunner.FailList.Add (n);
+      }
       TestRunner.GatherAndRun ([assembly], Filter, cit);
+      File.WriteAllLines (fail, TestRunner.FailList.Select (a => a.ToString ()));
    }
 
    // This is the filter used to run specific tests or fixtures
    TestRunner.ETest Filter (Test t) {
+      if (TestRunner.OnlyFailed && !TestRunner.FailList.Contains (t.Id))
+         return TestRunner.ETest.Hide;
       if (mTestID.Count > 0 || mFixtureID.Count > 0)
          return mTestID.Contains (t.Id) || mFixtureID.Contains (t.Fixture.Id) ? TestRunner.ETest.Run : TestRunner.ETest.Hide;
       return TestRunner.ETest.Run;

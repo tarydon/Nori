@@ -21,7 +21,7 @@ public class STLReader {
       List<Point3> pts = [];
       UTFReader r = new (mData);
       r.SkipToLineEnd ().SkipSpace (); // Skip the first line which is in the format 'solid xxxx'
-      while (r.Peek == 102) { // The next character must be 'f' from "facet normal x y z" phrase. Otherwise, we are done.
+      while (r.Peek () == 102) { // The next character must be 'f' from "facet normal x y z" phrase. Otherwise, we are done.
          r.SkipToLineEnd (); // Skip the normal "facet normal ..."
          r.SkipTo ('o').SkipToLineEnd (); // Skip the phrase "outer loop"
          for (int i = 0; i < 3; i++) {

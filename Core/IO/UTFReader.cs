@@ -41,6 +41,19 @@ public class UTFReader {
       return this;
    }
 
+   /// <summary>Matches any one of a sequence of characters</summary>
+   public UTFReader MatchAny (ReadOnlySpan<byte> opts) {
+      SkipSpace ();
+      if (!opts.Contains (D[mN++])) Fatal ($"Expecting one of '{Encoding.UTF8.GetString (opts)}', found '{(char)D[--mN]}'");
+      return this; 
+   }
+
+   /// <summary>Matches a sequence of characters</summary>
+   public UTFReader Match (ReadOnlySpan<byte> str) {
+      foreach (var b in str) Match ((char)b);
+      return this; 
+   }
+
    public int Pos { get => mN; set => mN = value; }
 
    /// <summary>Gets a span of bytes (starting at the given position, and of given length)</summary>
@@ -48,7 +61,7 @@ public class UTFReader {
 
    /// <summary>Peeks at the next character in the stream, skipping past whitespace</summary>
    /// If we are already at the end of the stream, this throws an exception
-   public byte Peek { get { SkipSpace (); return D[mN]; } }
+   public byte Peek () { SkipSpace (); return D[mN]; } 
 
    public bool TryPeek (out byte b) {
       SkipSpace ();
@@ -131,7 +144,7 @@ public class UTFReader {
    /// <summary>Reads a string from the stream (if the string is "quoted", removes the quotes)</summary>
    public UTFReader Read (out string str) {
       SkipSpace ();
-      if (Peek == '"') {
+      if (Peek () == '"') {
          mN++; str = Encoding.UTF8.GetString (TakeUntil (sQuote, false)); mN++;
       } else
          str = Encoding.UTF8.GetString (TakeUntil (CurlReader.NameStop, false));
@@ -228,7 +241,7 @@ public class UTFReader {
    /// character, this consumes that character and returns true. Otherwise, it leaves the
    /// character unread, and returns false
    public bool TryMatch (char b) {
-      if (Peek == b) { Skip (); return true; }
+      if (Peek () == b) { Skip (); return true; }
       return false;
    }
 

@@ -1,15 +1,15 @@
 (Dwg2){
   Layers:[
-    { Name:0 Color:#FFFFFFFF Linetype:Continuous }
-    { Name:Dimensions Color:#FFFFFFFF Linetype:Continuous }
-    { Name:$CONSTRUCTION Color:#FF4F0000 Linetype:Continuous }
-    { Name:PDF_Hatching Color:#FFFFFFFF Linetype:Continuous }
-    { Name:PDF_Brickwall Color:#FFFFFFFF Linetype:Continuous }
-    { Name:PDF_Htching Color:#FFFFFFFF Linetype:Continuous }
-    { Name:"PDF_Steel Angle" Color:#FFFFFFFF Linetype:Continuous }
-    { Name:PDF_Text Color:#FFFFFFFF Linetype:Continuous }
-    { Name:ASHADE Color:#FFFFFFFF Linetype:Continuous }
-    { Name:Defpoints Color:#FFFFFFFF Linetype:Continuous }
+    { Name:0 Color:White Linetype:Continuous }
+    { Name:Dimensions Color:White Linetype:Continuous }
+    { Name:$CONSTRUCTION Color:#4F0000 Linetype:Continuous }
+    { Name:PDF_Hatching Color:White Linetype:Continuous }
+    { Name:PDF_Brickwall Color:White Linetype:Continuous }
+    { Name:PDF_Htching Color:White Linetype:Continuous }
+    { Name:"PDF_Steel Angle" Color:White Linetype:Continuous }
+    { Name:PDF_Text Color:White Linetype:Continuous }
+    { Name:ASHADE Color:White Linetype:Continuous }
+    { Name:Defpoints Color:White Linetype:Continuous }
   ]
   Styles:[
     { Name:Standard Font:arial.ttf XScale:1 }

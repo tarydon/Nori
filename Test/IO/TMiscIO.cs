@@ -84,8 +84,8 @@ class STLTests {
       mesh *= Matrix3.Rotation (EAxis.X, Lib.HalfPI) * Matrix3.Rotation (EAxis.Z, -Lib.HalfPI);
       mesh *= Matrix3.Translation (1, 2, 3);
       mesh.IsEmpty.IsFalse ();
-      mesh.Bound.Is ("(0.72783~1.27201,1.01957~2.68977,2.41668~3.43965)");
-      mesh.GetBound (Matrix3.Translation (0, 0, 1)).Is ("(0.72783~1.27201,1.01957~2.68977,3.41668~4.43965)");
+      mesh.Bound.Is ("0.54418x1.67019x1.02297@0.72783,1.01957,2.41668");
+      mesh.GetBound (Matrix3.Translation (0, 0, 1)).Is ("0.54418x1.67019x1.02297@0.72783,1.01957,3.41668");
       mesh.Vertex[0].Is ("(1.14103,1.61218,2.85889) <0.371,-0.76,-0.533>");
       mesh.SaveTMesh (NT.TmpTxt);
       Assert.TextFilesEqual (NT.File ("IO/MESH/cow.tmesh"), NT.TmpTxt);

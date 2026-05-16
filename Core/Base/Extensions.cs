@@ -191,6 +191,8 @@ public static class Extensions {
    public static float R3 (this float f) => MathF.Round (f, 3);
    /// <summary>Returns a float rounded off to 5 decimal places</summary>
    public static float R5 (this float f) => MathF.Round (f, 5);
+   /// <summary>Returns a float rounded off to 6 decimal places</summary>
+   public static float R6 (this float f) => MathF.Round (f, 6);
    /// <summary>Returns double rounded off to 3 decimal places</summary>
    public static double R3 (this double f) => Math.Round (f, 3);
    /// <summary>Returns a double rounded off to 6 decimal places</summary>

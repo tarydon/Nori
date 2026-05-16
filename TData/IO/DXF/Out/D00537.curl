@@ -1,18 +1,18 @@
 (Dwg2){
   Layers:[
-    { Name:0 Color:#FFFFFFFF Linetype:Continuous }
-    { Name:3 Color:#FF00FF00 Linetype:Continuous }
-    { Name:4 Color:#FF00FFFF Linetype:Continuous }
-    { Name:5 Color:#FF00FFFF Linetype:Continuous }
-    { Name:6 Color:#FF00FF00 Linetype:Dash }
-    { Name:9 Color:#FF00FFFF Linetype:DashDot }
-    { Name:7A Color:#FF00FFFF Linetype:Continuous }
-    { Name:T_02 Color:#FFFFFF00 Linetype:Continuous }
-    { Name:Tego_ram Color:#FFFFFFFF Linetype:Continuous }
-    { Name:Tego_huvud Color:#FFFFFFFF Linetype:Continuous }
-    { Name:Tego_styck Color:#FFFFFFFF Linetype:Continuous }
-    { Name:Tego_artikel Color:#FFFFFFFF Linetype:Continuous }
-    { Name:Tego_help Color:#FFFFFFFF Linetype:Continuous }
+    { Name:0 Color:White Linetype:Continuous }
+    { Name:3 Color:Green Linetype:Continuous }
+    { Name:4 Color:Cyan Linetype:Continuous }
+    { Name:5 Color:Cyan Linetype:Continuous }
+    { Name:6 Color:Green Linetype:Dash }
+    { Name:9 Color:Cyan Linetype:DashDot }
+    { Name:7A Color:Cyan Linetype:Continuous }
+    { Name:T_02 Color:Yellow Linetype:Continuous }
+    { Name:Tego_ram Color:White Linetype:Continuous }
+    { Name:Tego_huvud Color:White Linetype:Continuous }
+    { Name:Tego_styck Color:White Linetype:Continuous }
+    { Name:Tego_artikel Color:White Linetype:Continuous }
+    { Name:Tego_help Color:White Linetype:Continuous }
   ]
   Styles:[
     { Name:STANDARD Font:ISOCP.SHX XScale:1 }
