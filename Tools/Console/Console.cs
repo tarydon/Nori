@@ -4,6 +4,7 @@
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 namespace Nori.Con;
 using System.Diagnostics.CodeAnalysis;
+using System.IO.Compression;
 using static System.Reflection.BindingFlags;
 
 #region class Program ------------------------------------------------------------------------------
@@ -35,6 +36,7 @@ static class Program {
          OPTIMIZE 0/1 - Turns optimization on / off for all Nori projects
          XMLDOC 0/1   - Turns XML documentation on / off for all Nori projects
          LFFtoLFONT   - Converts one or more .lff font definition files to .lfont format
+         MESH2toMSH2  - Converts a Flux MESH2 file into a Nori MSH2 file
          """);
       Environment.Exit (0);
    }
@@ -43,6 +45,7 @@ static class Program {
    [ConsoleCommand] static void Coverage () => ComputeCoverage.Run ();
    [ConsoleCommand] static void Count () => LineCount.Run ();
    [ConsoleCommand] static void NextId () => GetNextId.Run ();
+   [ConsoleCommand] static void ExpandBook () => BookExpander.Run ();
 
    [ConsoleCommand]
    static void Optimize () {

@@ -4,6 +4,7 @@
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 using System.Diagnostics;
 using System.Reflection;
+using System.Security.Principal;
 namespace Nori.Con;
 
 #region class ComputeCoverage ----------------------------------------------------------------------
@@ -252,3 +253,40 @@ static class SrcClean {
    }
 }
 #endregion
+
+class BookExpander {
+   public static void Run () {
+      var lines = File.ReadAllLines ("N:/Book/map.txt");
+      List<string> dirs = [];
+      string fileName = "", root = "N:/Book/";
+      foreach (var line0 in lines) {
+         int level = line0.TakeWhile (a => a == ' ').Count ();
+         var line = line0.Trim ();
+
+         if (line.StartsWith ('[')) {
+            int n = line.IndexOf (']');
+            string dir = line[1..n];
+            string title = line[(n + 1)..].Trim ();
+            Console.Write ($"{new string (' ', level)}{dir}");
+            if (title != "") Console.Write ($"  >> {title}");
+            Console.WriteLine ();
+            while (dirs.Count > level) dirs.RemoveLast ();
+            dirs.Add (dir);
+            string dirName = $"{root}{string.Join ('/', dirs)}";
+            Directory.CreateDirectory (dirName);
+            string indexFile = $"{dirName}/Index.adoc";
+            File.WriteAllText (indexFile, $"= {dir}");
+         } else if (line.StartsWith ('+')) {
+         } else {
+            int n = line.IndexOf ('-');
+            string file = line, title = "";
+            if (n != -1) { file = line[..n].Trim (); title = line[(n + 1)..].Trim (); }
+            Console.ForegroundColor = ConsoleColor.Green;
+            Console.Write ($"{new string (' ', level)}{file}");
+            fileName = "N:/Book/" + string.Join ('/', dirs) + '/' + file;
+            if (title != "") Console.Write ($" >> {title}");
+            Console.WriteLine (); Console.ResetColor ();
+         }
+      }
+   }
+}
