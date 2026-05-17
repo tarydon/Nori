@@ -1,6 +1,6 @@
-[Core] - Nori Core Library
-  [Foundation]
-    Attributes - Nori Attributes
+[Core] : Nori Core Library
+  [Foundation] : Foundations
+    Attributes : Nori Attributes
     Collections
       + AList
       + Chains
@@ -11,32 +11,32 @@
       + BorrowPool
       + IStmLocator
       + Undo
-    [Utility]
+    [Utility] : Utility Types, Functions
       Types
         + BlockTimer
         + Rand
         + Eval
       Extensions
       Lib
-  [Geometry]
-    [Primitives]
-      PointsVectors
+  [Geometry] : Geometry Types
+    [Primitives] : Primitive Values
+      PointsVectors : Points and Vectors
         + Point2
         + Point2f
         + Point3
         + Point3f
         + Vector3
-      Transforms
+      Transforms : Transformations
         + Matrix2
         + Matrix3
         + Quaternion
         + CoordSystem
         + Quaternion
-      Bounds
+      Bounds : Bounds in 1D, 2D, 3D
         + Bound1
         + Bound2
         + Bound3
-      GPUTypes
+      GPUTypes : GPU Interface Types
         + Vec2F, Vec3F and Vec4F
         + Vec3H
         + Vec2S, Vec4S, RectS
@@ -48,8 +48,8 @@
     Splines
     Geo
   [Drawing]
-    Dwg2Ent2 - Dwg2, Ent2, Layer2, Style2, Block2
-    Ent2 - Ent2 children
+    Dwg2Ent2 : Dwg2, Ent2, Layer2, Style2, Block2
+    Ent2 : Ent2 children
       + E2Poly
       + E2Insert
       + E2Point
@@ -58,12 +58,12 @@
       + E2Spline
       + E2Text
       + E2Bendline
-    E2Dim - DimStyle2, E2Dim
-    E2DimTypes - E2Dim children
-    DwgSnap - Drawing Snaps
-    LFont - Line Fonts
+    E2Dim : DimStyle2, E2Dim
+    E2DimTypes : E2Dim children
+    DwgSnap : Drawing Snaps
+    LFont : Line Fonts
   [Model]
-    Model3Ent3 - Model3 and Ent3
+    Model3Ent3 : Model3 and Ent3
       + Ent3
       + E3Curve, E3Contour
       + E3Marker
@@ -93,7 +93,7 @@
       Folder
       Thickener
   [Mesh]
-    Mesh3 - Mesh3 and TopoMesh
+    Mesh3 : Mesh3 and TopoMesh
     Construction
       + Sphere
       + Extrusion
@@ -103,19 +103,19 @@
       + MeshSlicer
       + TJointRemover
   [IO]
-    UTF8 - UTF8 Format
+    UTF8 : UTF8 Format
       + UTFReader
       + UTFWriter
     [AuSystem]
       Metadata
       [CurlFiles]
-        CurlFormat - Curl Format
-        CurlIO - Curl I/O
+        CurlFormat : Curl Format
+        CurlIO : Curl I/O
           + CurlReader
           + CurlWriter
       [AuFiles]
-        AuFormat - Au Format
-        AuIO - Au I/O
+        AuFormat : Au Format
+        AuIO : Au I/O
           + AuReader
           + AuWriter
     [DXFFormat]
@@ -135,9 +135,9 @@
       + Collision chalk
     Mechanism
     RBRSolver
-[Lux] - Nori Render Engine
-  ShaderImp - ShaderImp, Shader
-  Shader - Shader<Vertex,Uniform>
+[Lux] : Nori Render Engine
+  ShaderImp : ShaderImp, Shader
+  Shader : Shader<Vertex,Uniform>
     + Singleton Pattern
     + Incremental Compilation
   Buffers
@@ -152,7 +152,7 @@
       + Attributes, Draw, children
       + VNode DAG
       + VNode factory
-    PrebuiltVN - Prebuilt VNodes
+    PrebuiltVN : Prebuilt VNodes
       + Drawing Nodes
       + Model Nodes
       + Utility Nodes
@@ -163,20 +163,20 @@
     Methods
       + ReadOnlySpan interface
       + World Space / Pixel Space
-  TextRender - Text Rendering
+  TextRender : Text Rendering
     + FreeType
     + HarfBuzz
     + FontTexture (no atlas)
   SceneManipulator
-[HAL] - Nori Platform abstraction
-  GLInit - GL Init
-    WindowsWPF - Windows WPF
+[HAL] : Nori Platform abstraction
+  GLInit : GL Init
+    WindowsWPF : Windows WPF
       + Surface and Panel
       + Static vs Dynamic GL Bindings
-    Other - Other platforms
+    Other : Other platforms
       + GLFW Init
       + GLFW Loader Bindings
-  Events - Events as Observables
+  Events : Events as Observables
     Keyboard
       + Windows
       + Other platforms
@@ -185,9 +185,9 @@
       + Clicks
       + Wheel
       + Scene Coordinates
-    WindowState - Window State
+    WindowState : Window State
       + Minimize / restore
       + Mouse Enter / Leave
       + Activate / Deactivate
-    OtherEvents - Other Events
+    OtherEvents : Other Events
       + File Drop
