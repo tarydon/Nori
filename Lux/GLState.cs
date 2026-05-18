@@ -13,14 +13,24 @@ namespace Nori;
 /// used primarily by the Lux draw classes.
 static class GLState {
    // Properties ---------------------------------------------------------------
-   /// <summary>Is Blending now enable (default = false)</summary>
-   public static bool Blending {
+   /// <summary>
+   /// The blending mode
+   /// 0 = Blending not enabled
+   /// 1 = Blending enabled (SrcAlpha, OneMinusSrcAlpha)
+   /// 2 = Blending enabled (One, OneMinusSrcAlpha) - premultiplied alpha
+   /// </summary>
+   public static int Blending {
       set {
-         if (Lib.Set (ref mBlending, value))
-            GL.Enable (ECap.Blend, value);
+         bool blendEnable = value > 0;
+         if (Lib.Set (ref mBlendEnable, blendEnable)) GL.Enable (ECap.Blend, blendEnable);
+         if (blendEnable) {
+            var factor = value == 2 ? EBlendFactor.One : EBlendFactor.SrcAlpha;
+            if (Lib.SetE (ref mBlendFactor, factor)) GL.BlendFunc (factor, EBlendFactor.OneMinusSrcAlpha);
+         }
       }
    }
-   static bool mBlending;
+   static bool mBlendEnable; 
+   static EBlendFactor mBlendFactor = EBlendFactor.SrcAlpha;
 
    /// <summary>Is depth-testing now enable (default = false)</summary>
    public static bool DepthTest {
@@ -138,14 +148,14 @@ static class GLState {
          GL.Scissor (offset.X, offset.Y, size.X, size.Y);
       } else
          GL.Disable (ECap.ScissorTest);
-      GL.BlendFunc (EBlendFactor.One, EBlendFactor.OneMinusSrcAlpha);
+      GL.BlendFunc (mBlendFactor = EBlendFactor.SrcAlpha, EBlendFactor.OneMinusSrcAlpha);
       GL.PatchParameter (EPatchParam.PatchVertices, 4);
       GL.PrimitiveRestartIndex (0xFFFFFFFF);
       GL.PolygonOffset (1, 1);
 
       // We 'force-set' each of these settings below by priming them with a
       // different value beforehand
-      mBlending = true; Blending = false;
+      mBlendEnable = false; GL.Disable (ECap.Blend);
       mDepthTest = true; DepthTest = false;
       mStencilBehavior = EStencilBehavior.Cover; StencilBehavior = EStencilBehavior.None;
       mPolygonOffsetFill = true; PolygonOffsetFill = false;

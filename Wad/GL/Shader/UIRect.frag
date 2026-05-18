@@ -50,6 +50,9 @@ float RectShadow (vec2 p, vec2 halfSize, float blur) {
 }
 
 void main () {
+   gFragColor = vec4 (1, 1, 1, 1);
+   return;
+
    float d = SDRoundRect (vLocalPos, vHSize, vRadius);
    float aa = max (fwidth (d) * 0.5, 0.25);
 

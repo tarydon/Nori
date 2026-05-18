@@ -28,8 +28,14 @@ class DemoScene : Scene2 {
       BgrdColor = new Color4 (128, 96, 64);
       Root = new SimpleVN (
          () => (Lux.Color, Lux.TypeFace) = (Color4.White, mFace),
-         () => Lux.Text ("Welcome to Nori.", new Vec2S (100, Lux.PanelSize.Y - 100))
+         Draw
       );
    }
+
+   void Draw () {
+      Lux.Text ("Welcome to Nori.", new Vec2S (100, Lux.PanelSize.Y - 100));
+      Lux.UIRect (new Vec2S (100, 50), new Vec2S (100, 30), 8, 4, Color4.Black, Color4.White);
+   }
+
    TypeFace mFace;
 }

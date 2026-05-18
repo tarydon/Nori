@@ -11,7 +11,7 @@ namespace Nori;
 class ShaderImp {
    // Constructor --------------------------------------------------------------
    /// <summary>Construct a pipeline given the code for the individual shaders</summary>
-   ShaderImp (string name, int sort, EMode mode, EVertexSpec vspec, string[] code, bool blend, bool depthTest, bool polyOffset, EStencilBehavior stencil) {
+   ShaderImp (string name, int sort, EMode mode, EVertexSpec vspec, string[] code, int blend, bool depthTest, bool polyOffset, EStencilBehavior stencil) {
       (Name, SortCode, Mode, VSpec, Blending, DepthTest, PolygonOffset, StencilBehavior, Handle)
          = (name, sort, mode, vspec, blend, depthTest, polyOffset, stencil, GL.CreateProgram ());
       code.ForEach (a => GL.AttachShader (Handle, sCache.Get (a, CompileShader)));
@@ -45,7 +45,10 @@ class ShaderImp {
 
    // Properties ---------------------------------------------------------------
    /// <summary>Enable blending when this program is used</summary>
-   public readonly bool Blending;
+   /// 0 = no blending
+   /// 1 = blending with (SrcAlpha, OneMinusSrcAlpha)
+   /// 2 = blending with (One, OneMinusSrcAlpha) - premultiplied alpha
+   public readonly int Blending;
    /// <summary>Enable depth-testing when this program is used</summary>
    public readonly bool DepthTest;
    /// <summary>The OpenGL handle for this shader program (set up with GL.UseProgram)</summary>
@@ -212,7 +215,7 @@ class ShaderImp {
             var sort = int.Parse (w[1]);
             var mode = Enum.Parse<EMode> (w[2], true);
             var vspec = Enum.Parse<EVertexSpec> (w[3], true);
-            bool blending = w[4] == "1", depthtest = w[5] == "1", offset = w[6] == "1";
+            int blending = w[4].ToInt (); bool depthtest = w[5] == "1", offset = w[6] == "1";
             var stencil = Enum.Parse<EStencilBehavior> (w[7], true);
             var programs = w[8].Split ('|');
             return new (name, sort, mode, vspec, programs, blending, depthtest, offset, stencil);
