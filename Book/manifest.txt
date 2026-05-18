@@ -1,9 +1,0 @@
-TITLE=Nori Guide
-OUTDIR=W:/Books/NoriHTML
-LOGO=img/small-nori-logo.png,139,34
-COPYRIGHT=Published under MIT license
-
-BODYFONT=Atkinson Hyperlegible
-MONOFONT=Ubuntu Mono
-HEADFONT=PT Sans
-FONTCSS=<link rel="preconnect" href="https://fonts.googleapis.com">|<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>|<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400;1,700&family=PT+Sans:ital,wght@0,400;0,700;1,400;1,700&family=Ubuntu+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
