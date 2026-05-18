@@ -4,6 +4,8 @@
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 using System.Diagnostics;
 using System.Reflection;
+using System.Security.AccessControl;
+using System.Security.Principal;
 namespace Nori.Con;
 
 #region class ComputeCoverage ----------------------------------------------------------------------
@@ -87,6 +89,14 @@ static class LineCount {
       var dt0 = new DateTime (2024, 10, 13);
       int days = (int)((dt - dt0).TotalDays + 0.5);
       Console.WriteLine ($"{nFiles,4}                     Day {days,-4} {nLines,23}{nComments,9}{tPercent,8}%");
+
+      Console.WriteLine ();
+      int nDoc = 0, nDocLines = 0; 
+      foreach (var file in EnumDocFiles ()) {
+         nDoc++;
+         nDocLines += File.ReadAllLines (file).Length;
+      }
+      Console.WriteLine ($"NoriBook: {nDocLines} lines in {nDoc} files");
    }
 
    static IEnumerable<string> EnumFiles () {
@@ -97,6 +107,13 @@ static class LineCount {
       }
       foreach (var file in Directory.EnumerateFiles ("N:\\", "*.cs", SearchOption.AllDirectories))
          yield return file;
+   }
+
+   static IEnumerable<string> EnumDocFiles () {
+      foreach (var file in Directory.EnumerateFiles ("W:\\NoriBook", "*.adoc", SearchOption.AllDirectories)) {
+         if (file.ToUpper ().Contains ("\\PARK\\")) continue;
+         yield return file; 
+      }
    }
 }
 #endregion
@@ -252,3 +269,74 @@ static class SrcClean {
    }
 }
 #endregion
+
+class BookExpander {
+   public static void Run () {
+      new BookExpander ().Process ();
+   }
+
+   void Process () {
+      File.WriteAllText ($"{mRoot}/contents.txt", "");
+      foreach (var line0 in File.ReadAllLines (mRoot + "map.txt")) {
+         int level = line0.TakeWhile (a => a == ' ').Count () / 2;
+         string line = line0.Trim (), title = "";
+         int n = line.IndexOf (':');
+         if (n != -1) { title = line[(n + 1)..].Trim (); line = line[..n].Trim (); }
+
+         if (line.StartsWith ('[')) {
+            // This is a new folder
+            ProcessDir (line[1..^1], level, title);
+         } else if (line.StartsWith ('+')) {
+            // This is a new level-2 topic within the current file
+            ProcessTopic (line[1..].Trim ());
+         } else {
+            // This is a new ADOC file
+            ProcessFile (line, level, title);
+         }
+         Console.ResetColor ();
+      }
+   }
+
+   void ProcessDir (string name, int level, string title) {
+      Console.ForegroundColor = ConsoleColor.Green;
+      Console.Write ($"{new string (' ', level * 2)}{name}");
+      if (title != "") Console.Write ($" | {title}");
+
+      while (mDirs.Count > level) mDirs.RemoveLast ();
+      mDirs.Add (name);
+      mDir = GetPath (level, name);
+      Directory.CreateDirectory (mDir);
+      File.WriteAllText (GetPath (level + 1, "contents.txt"), "");
+      if (title == "") title = name;
+      File.WriteAllText (GetPath (level + 1, "Index.adoc"), $"= {title}\n");
+      File.AppendAllText (GetPath (level, "contents.txt"), $"[{name}]\n");
+      Console.Write ($" | {mDir}");
+      Console.WriteLine ();
+   }
+
+   void ProcessFile (string name, int level, string title) {
+      Console.Write ($"{new string (' ', level * 2)}{name}");
+      if (title != "") Console.Write ($" | {title}");
+      while (mDirs.Count > level) mDirs.RemoveLast ();
+      
+      mDir = $"{mRoot}{string.Join ('/', mDirs)}";
+      mFile = GetPath (level, name + ".adoc");
+      File.AppendAllText (GetPath (level, "contents.txt"), $"{name}\n");
+      if (title == "") title = name;
+      File.WriteAllText (mFile, $"= {title}\n\n<TBD>\n");      
+      Console.WriteLine ();
+   }
+
+   void ProcessTopic (string title) {
+      File.AppendAllText (mFile, $"\n== {title}\n");
+   }
+
+   string GetPath (int level, string name) {
+      return $"{mRoot}{string.Join ('/', mDirs.Take (level))}/{name}".Replace ("//", "/");
+   }
+
+   List<string> mDirs = [];      // The multiple levels of directories
+   string mDir = "";             // Current folder name
+   string mFile = "";            // The current ADOC file we're adding to the project
+   string mRoot = "W:/NoriBook/";
+}

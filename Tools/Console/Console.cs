@@ -45,6 +45,7 @@ static class Program {
    [ConsoleCommand] static void Coverage () => ComputeCoverage.Run ();
    [ConsoleCommand] static void Count () => LineCount.Run ();
    [ConsoleCommand] static void NextId () => GetNextId.Run ();
+   [ConsoleCommand] static void ExpandBook () => BookExpander.Run ();
 
    [ConsoleCommand]
    static void Optimize () {
