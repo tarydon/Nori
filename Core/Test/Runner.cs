@@ -104,17 +104,11 @@ public static class TestRunner {
    public static bool RunDiff;
    /// <summary>Stop tests when a failure occurs</summary>
    public static bool StopOnFail;
-   /// <summary>
-   /// Only run the tests that have failed
-   /// </summary>
+   /// <summary>Only run the tests that have failed</summary>
    public static bool OnlyFailed;
-   /// <summary>
-   /// List of tests that have failed (read in from failed.txt)
-   /// </summary>
+   /// <summary>List of tests that have failed (read in from failed.txt)</summary>
    public static HashSet<int> FailList = [];
-   /// <summary>
-   /// Stop the testing
-   /// </summary>
+   /// <summary>Stop the testing</summary>
    public static bool StopTests;
 
    // Methods ------------------------------------------------------------------

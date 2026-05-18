@@ -199,7 +199,7 @@ public partial class Mechanism {
 
    }
    public EFlags Flags => mFlags;
-   EFlags mFlags;
+   EFlags mFlags = 0;
 }
 #endregion
 
