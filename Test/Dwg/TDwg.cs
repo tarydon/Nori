@@ -131,7 +131,7 @@ class DwgMiscTests {
    [Test (214, "Test of IsCloser, GetBound for all Ent2")]
    void Test2 () {
       Dwg2 dwg = DXFReader.Load (NT.File ("IO/DXF/AllEnt.dxf"));
-      var bound = dwg.Bound; bound.Is ("(0~400,0~200)");
+      var bound = dwg.Bound; bound.Is ("400x200@0,0");
       Matrix2 xfm = Matrix2.Rotation (Lib.HalfPI);
       Point2 far = new (1000, 1000);
       // Poly
@@ -139,50 +139,50 @@ class DwgMiscTests {
       double t = 2; poly.IsCloser (new (-1, 100), ref t).Is (true); t.Is (1);
       t = 2; poly.IsCloser (new (-3, 100), ref t).Is (false);
       poly.IsCloser (far, ref t).Is (false);
-      poly.GetBound (xfm).Is ("(-200~0,0~400)");
+      poly.GetBound (xfm).Is ("200x400@-200,0");
       // Point
       var point = dwg.Ents.OfType<E2Point> ().Single ();
       t = 2; point.IsCloser (new (9, 10), ref t).Is (true); t.Is (1);
       t = 2; point.IsCloser (new (7, 10), ref t).Is (false);
       point.IsCloser (far, ref t).Is (false);
-      point.GetBound (xfm).Is ("(-10~-10,10~10)");
+      point.GetBound (xfm).Is ("0x0@-10,10");
       // Bendline
       var bend = dwg.Ents.OfType<E2Bendline> ().Single ();
       t = 2; bend.IsCloser (new (20, 29), ref t).Is (true); t.Is (1);
       t = 2; bend.IsCloser (new (-3, 30), ref t).Is (false);
       bend.IsCloser (far, ref t).Is (false);
-      bend.GetBound (xfm).Is ("(-30~-30,0~400)");
+      bend.GetBound (xfm).Is ("0x400@-30,0");
       // Solid
       var solid = dwg.Ents.OfType<E2Solid> ().Single ();
       t = 2; solid.IsCloser (new (149, 65), ref t).Is (true); t.Is (1);
       t = 2; solid.IsCloser (new (147, 65), ref t).Is (false);
       solid.IsCloser (far, ref t).Is (false);
-      solid.GetBound (xfm).Is ("(-75~-60,150~170)");
+      solid.GetBound (xfm).Is ("15x20@-75,150");
       // Spline
       var spline = dwg.Ents.OfType<E2Spline> ().Single ();
       t = 2; spline.IsCloser (new (40, 85), ref t).Is (true); Math.Round (t, 2).Is (0.23);
       t = 2; spline.IsCloser (new (40, 89), ref t).Is (false);
       spline.IsCloser (far, ref t).Is (false);
-      spline.GetBound (xfm).Is ("(-110~-50,10~110)");
+      spline.GetBound (xfm).Is ("60x100@-110,10");
       // Insert
       var insert = dwg.Ents.OfType<E2Insert> ().Single ();
       t = 2; insert.IsCloser (new (141, 70), ref t).Is (true); t.Is (1);
       t = 2; insert.IsCloser (new (141.5, 71.5), ref t).Is (false);
       insert.IsCloser (far, ref t).Is (false);
-      insert.GetBound (xfm).Is ("(-70~-60,120~140)");
+      insert.GetBound (xfm).Is ("10x20@-70,120");
       // Text
       var text = dwg.Ents.OfType<E2Text> ().Single ();
       t = 2; text.IsCloser (new (199, 110), ref t).Is (true); t.Is (0.8);
       t = 2; text.IsCloser (new (197, 110), ref t).Is (false);
       text.IsCloser (far, ref t).Is (false);
-      text.GetBound (xfm).Is ("(-110~-98.1,150~240.39999)");
+      text.GetBound (xfm).Is ("11.9x90.39999@-110,150");
       // Dimension
       dwg = DXFReader.Load (NT.File ("IO/DXF/AllEnts.dxf"));
       var dim = dwg.Ents.OfType<E2Dim> ().Single ();
       t = 2; dim.IsCloser (new (65, 56), ref t).Is (true); Math.Round (t, 2).Is (0.21);
       t = 2; dim.IsCloser (new (65, 53), ref t).Is (false);
       dim.IsCloser (far, ref t).Is (false);
-      dim.GetBound (xfm).Is ("(-59.33142~-50,0~90)");
+      dim.GetBound (xfm).Is ("9.33142x90@-59.33142,0");
    }
 
    [Test (215, "Curl round-trip of all Ent2")]

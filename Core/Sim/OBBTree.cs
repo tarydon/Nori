@@ -3,7 +3,6 @@
 // ║║║║╬║╔╣║ Implements OBBTree (bounding-box hierarchy using OBB primitives), OBBTreeBuilder
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 using System.Threading;
-
 namespace Nori;
 
 #region class OBBTree ------------------------------------------------------------------------------
@@ -12,6 +11,13 @@ public class OBBTree {
    // Constructors -------------------------------------------------------------
    /// <summary>Construct an OBBTree from a mesh</summary>
    public static OBBTree From (Mesh3 mesh, string? tag = null) {
+      using var mb = OBBTreeBuilder.Borrow ();
+      mb.AddMesh (mesh);
+      return mb.Build (tag);
+   }
+
+   /// <summary>Construct an OBBTree from a TopoMesh</summary>
+   public static OBBTree From (TopoMesh mesh, string? tag = null) {
       using var mb = OBBTreeBuilder.Borrow ();
       mb.AddMesh (mesh);
       return mb.Build (tag);
@@ -98,6 +104,24 @@ public class OBBTreeBuilder : IBorrowable<OBBTreeBuilder> {
       var builder = BorrowPool<OBBTreeBuilder>.Borrow ();
       builder.Reset ();
       return builder;
+   }
+
+   /// <summary>Adds a TopoMesh into the OBBTreeBuilder (multiple meshes can be added before a collider is built)</summary>
+   public void AddMesh (TopoMesh mesh) {
+      // First, all the points into the Pts array (the points the TopoMesh are already
+      // de-duplicated so we don't need to use a dictionary to map them
+      var (pts, tris) = (mesh.Pts, mesh.Triangle);
+      Lib.Grow (ref mPt, mPtN, pts.Length);
+      foreach (var pt in pts) mPt[mPtN++] = pt;
+
+      // Next, add the CTri objects for the points
+      for (int i = 0; i < tris.Length; i += 3) {
+         int a = tris[i], b = tris[i + 1], c = tris[i + 2];
+         Point3f pa = pts[a], pb = pts[b], pc = pts[c];
+         // Discard zero-area triangles and add in the rest
+         double area = ((pb - pa) * (pc - pa)).LengthSq; if (area < 1e-8) continue;
+         mTri[mTriN++] = new CTri (mPt, a, b, c);
+      }
    }
 
    /// <summary>Adds a Mesh into the OBBTreeBuilder (multiple meshes can be added before a collider is built)</summary>

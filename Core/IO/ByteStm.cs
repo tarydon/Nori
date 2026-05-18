@@ -9,7 +9,7 @@ namespace Nori;
 public class ByteStm {
    // Constructors -------------------------------------------------------------
    /// <summary>Construct a ByteStm, given the raw array of bytes to work with</summary>
-   public ByteStm (byte[] data) { mData = data; ReadPtr = 0; }
+   public ByteStm (byte[] data) { mData = data; Position = 0; }
    #endregion
 
    #region Read .Net primitives -----------------------------------
@@ -44,19 +44,19 @@ public class ByteStm {
    public byte[]? ReadByteArray () {
       int n = ReadIntV (); if (n == -1) return null;
       byte[] data = new byte[n];
-      Array.Copy (mData, ReadPtr, data, 0, n); ReadPtr += n;
+      Array.Copy (mData, Position, data, 0, n); Position += n;
       return data;
    }
    /// <summary>Read a Guid</summary>
    public Guid ReadGuid () {
       byte[] tmp = new byte[16];
-      Array.Copy (mData, ReadPtr, tmp, 0, 16); ReadPtr += 16;
+      Array.Copy (mData, Position, tmp, 0, 16); Position += 16;
       return new Guid (tmp);
    }
    /// <summary>Reads a string</summary>
    public string? ReadString () {
       int n = ReadIntV (); if (n == -1) return null;
-      string s = Encoding.UTF8.GetString (mData, ReadPtr, n); ReadPtr += n;
+      string s = Encoding.UTF8.GetString (mData, Position, n); Position += n;
       return s;
    }
    /// <summary>Reads an integer stored using a variable number of bytes (see WriteIntV for details)</summary>
@@ -81,13 +81,13 @@ public class ByteStm {
 
    // Private data -------------------------------------------------------------
    readonly byte[] mData;
-   int ReadPtr;
+   public int Position;
 
    #region Implementation -----------------------------------------
    // Read N bytes from this ByteStm into the given destination
    public unsafe void Read (void* dest, int cb) {
       byte* pdest = (byte*)dest;
-      for (int i = 0; i < cb; i++) pdest[i] = mData[ReadPtr++];
+      for (int i = 0; i < cb; i++) pdest[i] = mData[Position++];
    }
 }
 #endregion

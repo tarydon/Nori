@@ -1,9 +1,10 @@
 // ────── ╔╗
 // ╔═╦╦═╦╦╬╣ TopoMesh.cs
-// ║║║║╬║╔╣║ <<TODO>>
+// ║║║║╬║╔╣║ TopoMesh represents a basic mesh for topology operations (only positions, no normals)
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 namespace Nori;
 
+#region class TopoMesh -----------------------------------------------------------------------------
 /// <summary>Represents a mesh made of triangles in 3D</summary>
 /// The core data is a set of points (with no duplicates), and a set of integers that 
 /// are indices into this set of points. These integers, taken 3 at a time, define the
@@ -21,23 +22,7 @@ public class TopoMesh {
          idx.Add (n);
       }
       RemoveEmpty (idx);
-      Pts = [.. pts]; Index = [.. idx];
-   }
-
-   public TopoMesh (ImmutableArray<Point3f> pts, ImmutableArray<int> index)
-      => (Pts, Index) = (pts, index);
-
-   /// <summary>Creates a TopoMesh from a list of points representing triangle corners</summary>
-   public TopoMesh (IEnumerable<Point3> input) {
-      List<int> idx = []; List<Point3f> pts = [];
-      Dictionary<Point3f, int> map = new (Point3fComparer.Delta);
-      foreach (var pt0 in input) {
-         Point3f pt = (Point3f)pt0;
-         if (!map.TryGetValue (pt, out int n)) { map.Add (pt, n = pts.Count); pts.Add (pt); }
-         idx.Add (n);
-      }
-      RemoveEmpty (idx);
-      Pts = [.. pts]; Index = [.. idx];
+      Pts = [.. pts]; Triangle = [.. idx];
    }
 
    /// <summary>Creates a TopoMesh from an indexed list of points</summary>
@@ -52,33 +37,117 @@ public class TopoMesh {
          idx.Add (n);
       }
       RemoveEmpty (idx);
-      Pts = [.. pts]; Index = [.. idx];
+      Pts = [.. pts]; Triangle = [.. idx];
    }
 
-   void RemoveEmpty (List<int> idx) {
-      for (int i = idx.Count - 3; i >= 0; i -= 3) {
-         int a = idx[i], b = idx[i + 1], c = idx[i + 2];
-         if (a == b || b == c || a == c) idx.RemoveRange (i, 3); 
+   /// <summary>Create a TopoMesh by combining a set of meshes</summary>
+   public TopoMesh (IEnumerable<TopoMesh> meshes) {
+      List<Point3f> pts = []; List<int> idx = [];
+      foreach (var mesh in meshes) {
+         int n = pts.Count; pts.AddRange (mesh.Pts); 
+         idx.AddRange (mesh.Triangle.Select (a => a + n));
       }
+      Pts = [.. pts]; Triangle = [.. idx];
    }
+
+   /// <summary>Creates a TopoMesh from a list of Point3 representing triangle corners</summary>
+   public TopoMesh (IEnumerable<Point3> input) : this (input.Select (a => (Point3f)a)) { }
+
+   /// <summary>Creates a TopoMesh given the core Pts and Index arrays (useful during serialization)</summary>
+   public TopoMesh (ImmutableArray<Point3f> pts, ImmutableArray<int> index) => (Pts, Triangle) = (pts, index);
 
    // Properties ---------------------------------------------------------------
    /// <summary>The unique list of points</summary>
    public readonly ImmutableArray<Point3f> Pts;
 
+   /// <summary>A descriptive tag that is attached with the TopoMesh</summary>
+   public string? Tag;
+
    /// <summary>Indices into Pts representing triangles (taken 3 at time)</summary>
-   public readonly ImmutableArray<int> Index;
+   public readonly ImmutableArray<int> Triangle;
 
    // Methods ------------------------------------------------------------------
-   public TopoMesh RemoveTJoints () {
-      return new TJointRemover (this).Process ();
+   /// <summary>Loads a TopoMesh from a binary format (uncompressed)</summary>
+   public static TopoMesh Load (Stream stm) {
+      int sign = stm.ReadInt32 (), version = stm.ReadInt32 ();
+      if (sign != SIGN || version != 1) throw new IOException ($"Not a TMSH file");
+      Point3f[] pts = new Point3f[stm.ReadInt32 ()];
+      int[] idx = new int[stm.ReadInt32 ()];
+      string? tag = stm.ReadString ();
+      stm.ReadExactly (MemoryMarshal.AsBytes (pts.AsSpan ()));
+      if (pts.Length < 65535) {
+         ushort[] uidx = new ushort[idx.Length];
+         stm.ReadExactly (MemoryMarshal.AsBytes (uidx.AsSpan ()));
+         for (int i = 0; i < idx.Length; i++) idx[i] = uidx[i];
+      } else
+         stm.ReadExactly (MemoryMarshal.AsBytes (idx.AsSpan ()));
+      return new TopoMesh (pts.ToIArray (), idx.ToIArray ()) { Tag = tag };
+   }
+
+   /// <summary>Saves a TopoMesh file to a binary format (no compression here)</summary>
+   public void Save (Stream stm) {
+      stm.WriteInt32 (SIGN); stm.WriteInt32 (1);
+      stm.WriteInt32 (Pts.Length).WriteInt32 (Triangle.Length);
+      stm.WriteString (Tag);
+      stm.Write (MemoryMarshal.AsBytes (Pts.AsSpan ()));
+      if (Pts.Length < 65535)
+         stm.Write (MemoryMarshal.AsBytes (Triangle.Select (a => (ushort)a).ToList ().AsSpan ()));
+      else
+         stm.Write (MemoryMarshal.AsBytes (Triangle.AsSpan ()));
+   }
+   const int SIGN = 'T' + ('M' << 8) + ('S' << 16) + ('H' << 24);
+
+   /// <summary>Returns a new TopoMesh with T junctions removed</summary>
+   /// They are removed by adding additional diagonals where needed
+   public TopoMesh TJointsRemoved () => new TJointRemover (this).Process ();
+
+   /// <summary>Converts a TopoMesh to a Mesh3 (typically for rendering)</summary>
+   public Mesh3 ToMesh (bool wireframe) {
+      List<Mesh3.Node> nodes = []; List<int> tris = [], wires = [];
+      for (int i = 0; i < Triangle.Length; i += 3) {
+         int n = nodes.Count;
+         Point3 pa = (Point3)Pts[Triangle[i]], pb = (Point3)Pts[Triangle[i + 1]], pc = (Point3)Pts[Triangle[i + 2]];
+         Vector3 vec = ((pb - pa) * (pc - pa)).Normalized ();
+         nodes.Add (new (pa, vec)); nodes.Add (new (pb, vec)); nodes.Add (new (pc, vec));
+         for (int j = 0; j < 3; j++) { 
+            tris.Add (n + j);
+            if (wireframe) { wires.Add (n + j); wires.Add (n + (j + 1) % 3); }
+         }
+      }
+      return new ([.. nodes], [.. tris], [.. wires]);
+   }
+
+   // Operators ----------------------------------------------------------------
+   /// <summary>Multiply a TopoMesh by a given transform</summary>
+   public static TopoMesh operator * (TopoMesh mesh, Matrix3 xfm) {
+      if (xfm.IsIdentity) return mesh;
+      ImmutableArray<Point3f> pts = [.. mesh.Pts.Select (a => a * xfm)];
+      return new (pts, mesh.Triangle);
+   }
+
+   // Implementation -----------------------------------------------------------
+   public override string ToString () => $"TopoMesh {Pts.Length} pts, {Triangle.Length / 3} tris";
+
+   void RemoveEmpty (List<int> idx) {
+      for (int i = idx.Count - 3; i >= 0; i -= 3) {
+         int a = idx[i], b = idx[i + 1], c = idx[i + 2];
+         if (a == b || b == c || a == c) idx.RemoveRange (i, 3);
+      }
    }
 }
+#endregion
 
+#region class TJointRemover ------------------------------------------------------------------------
+/// <summary>Algorithm to remove T-Joints from a TopoMesh</summary>
 class TJointRemover {
+   // Constructors -------------------------------------------------------------
+   /// <summary>Constructs a T-Joint remover given a TopoMesh to work with</summary>
    public TJointRemover (TopoMesh tm) => mMesh = tm;
    readonly TopoMesh mMesh;
 
+   // Methods ------------------------------------------------------------------
+   /// <summary>Processes and returns an updated mesh</summary>
+   /// If the input mesh has no T joints, this returns the same mesh unchanged
    public TopoMesh Process () {
       GatherFreeEdges ();
       for (int i = 0; i < mFreeEdges.Count; i++)
@@ -87,6 +156,7 @@ class TJointRemover {
       return new TopoMesh (mMesh.Pts, [.. Index]);
    }
 
+   // Implementation -----------------------------------------------------------
    void GatherFreeEdges () {
       // In this loop, we walk through each edge of the triangle mesh, and check if we have
       // already seen its 'reverse edge' - the paired edge going the other way (we use 
@@ -94,7 +164,7 @@ class TJointRemover {
       // edge a..b will have a corresponding edge b..a. When we see the first of this 'pair',
       // it gets added to mFreeEdgeMap and when we see the second one, it is removed. 
       // Finally, mFreeEdgeMap will contain only the unpaired edges.
-      var index = mMesh.Index;
+      var index = mMesh.Triangle;
       for (int i = 0; i < index.Length; i += 3) {
          for (int j = 0; j < 3; j++) {
             ulong a = (ulong)index[i + j], b = (ulong)index[i + (j + 1) % 3];
@@ -136,7 +206,7 @@ class TJointRemover {
          // line, then we have multiple T junctions on that line 
          var pts = mMesh.Pts;
          Point3f pa = pts[start], pb = pts[end];
-         Index ??= [.. mMesh.Index];
+         Index ??= [.. mMesh.Triangle];
          int target = mFreeEdgeMap[((ulong)start << 32) + (ulong)end];
          // triStart is the position in the Index array of the 3 nodes making up the
          // triangle we are going to split, and oppositeNode is the other vertex to which we
@@ -195,3 +265,4 @@ class TJointRemover {
       }
    }
 }
+#endregion

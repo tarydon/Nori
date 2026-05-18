@@ -18,7 +18,7 @@ class StepTests {
       foreach (var e3s in model.Ents.OfType<E3Surface> ()) {
          var mesh = e3s.Mesh;
          sb.AppendLine ($"Entity: {e3s.GetType ().Name} #{e3s.Id}");
-         sb.Append (mesh.ToTMesh ());
+         mesh.SaveTMesh (NT.TmpTxt); sb.Append (File.ReadAllText (NT.TmpTxt));
          sb.AppendLine ("----------------");
       }
       File.WriteAllText (NT.TmpTxt, sb.ToString ());

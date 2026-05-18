@@ -18,8 +18,8 @@ class StructTests {
       Color4.Cyan.Is ("Cyan"); Color4.White.Is ("White");
       Color4.Red.EQ (Color4.Red).Is (true);
       Color4.Red.Value.Is (0xFFFF0000);
-      Color4.Gray (128).Is ("#808080");
-      Color4.Gray (0x33).Is ("#333");
+      Color4.Gray (128).Is ("#80");
+      Color4.Gray (0x33).Is ("#33");
       Vec4F v1 = (Vec4F)Color4.Magenta; v1.Is ("<1,0,1,1>");
       new Color4 (0x11, 0x22, 0x33).Is ("#123");
       Color4.Random.A.Is ((byte)255);
@@ -98,12 +98,12 @@ class StructTests {
    void Test4 () {
       CoordSystem.World.IsWorld.IsTrue ();
       new CoordSystem (Point3.Nil).IsNil.IsTrue ();
-      new CoordSystem (new (5, 5, 5)).Is ("CoordSystem:(5,5,5),<1,0,0>,<0,1,0>");
+      new CoordSystem (new (5, 5, 5)).Is ("5,5,5");
       var c1 = new CoordSystem (new (5, 5, 5), Vector3.ZAxis, Vector3.XAxis);
-      c1.Is ("CoordSystem:(5,5,5),<0,0,1>,<1,0,0>");
+      c1.Is ("5,5,5|0,0,1|1,0,0");
       c1.VecZ.Is ("<0,1,0>");
       c1.PlaneDef.Is ("PlaneDef:0,1,0,-5");
-      (c1 + new Vector3 (1, 2, 3)).Is ("CoordSystem:(6,7,8),<0,0,1>,<1,0,0>");
+      (c1 + new Vector3 (1, 2, 3)).Is ("6,7,8|0,0,1|1,0,0");
       try {
          var c7 = new CoordSystem (Point3.Zero, new (1, 2, 3), new (4, 5, 6));
          throw new Exception ("Should not reach this line");
@@ -133,24 +133,24 @@ class StructTests {
    [Test (45, "Tests of Bound2")]
    void Test7 () {
       Point2[] pts = [new (1, 20), new (10, 2)];
-      Bound2 b1 = new (pts); b1.Is ("(1~10,2~20)");
-      Bound2 b2 = new (5, 50); new Bound2 ([b1, b2]).Is ("(1~10,2~50)");
+      Bound2 b1 = new (pts); b1.Is ("9x18@1,2");
+      Bound2 b2 = new (5, 50); new Bound2 ([b1, b2]).Is ("9x48@1,2");
       b1.Diagonal.Is (Math.Sqrt (9 * 9 + 18 * 18));
-      b1.InflatedF (2, new (5, 5)).Is ("(-3~15,-1~35)");
+      b1.InflatedF (2, new (5, 5)).Is ("18x36@-3,-1");
       (new Bound2 ()).InflatedF (2, Point2.Zero).Is ("Empty");
       Bound2 b3 = new (5, 15, 25, 30);
-      (b1 * b3).Is ("(5~10,15~20)");
-      (b1 * Matrix2.Translation (100, 100)).Is ("(101~110,102~120)");
+      (b1 * b3).Is ("5x5@5,15");
+      (b1 * Matrix2.Translation (100, 200)).Is ("9x18@101,202");
    }
 
    [Test (46, "Tests of Bound3")]
    void Test8 () {
       Point3f[] pts = [new (1, 20, 4), new (10, 2, 5)];
-      Bound3 b1 = new (pts); b1.Is ("(1~10,2~20,4~5)");
+      Bound3 b1 = new (pts); b1.Is ("9x18x1@1,2,4");
       b1.Diagonal.Is (20.149442);
       Bound3 b2 = new (5, 10, 4.5, 20, 30, 10);
-      (b1 + b2).Is ("(1~20,2~30,4~10)");
-      (b1 * b2).Is ("(5~10,10~20,4.5~5)");
+      (b1 + b2).Is ("19x28x6@1,2,4");
+      (b1 * b2).Is ("5x10x0.5@5,10,4.5");
    }
 
    [Test (191, "Bound intersection checks")]

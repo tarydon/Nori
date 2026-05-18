@@ -27,31 +27,31 @@ class BoundTests {
    void Test6 () {
       Bound2 b1 = new (), b2 = new (10, 100, 20, 200), b3 = new (10, 10, 1, 1);
       b1.IsEmpty.Is (true); b1.ToString ().Is ("Empty");
-      b2.Is ("(10~20,100~200)"); b3.Is ("(1~10,1~10)");
+      b2.Is ("10x100@10,100"); b3.Is ("9x9@1,1");
       b2.Width.Is (10); b2.Height.Is (100); b2.Midpoint.Is ("(15,150)");
       b2.Contains (new Point2 (11, 110)).Is (true);
       b2.Contains (new Point2 (11, 210)).Is (false); b2.Contains (new Point2 (21, 110)).Is (false);
-      b2.InflatedF (1.2).Is ("(9~21,90~210)");
-      b2.InflatedL (1.2).Is ("(8.8~21.2,98.8~201.2)");
-      (b2 + new Point2 (5, 205) + new Point2 (21, 99)).Is ("(5~21,99~205)");
-      (b2 * new Bound2 (15, 150, 25, 250)).Is ("(15~20,150~200)");
-      (new Bound2 (5, 6)).Is ("(5~5,6~6)");
+      b2.InflatedF (1.2).Is ("12x120@9,90");
+      b2.InflatedL (1).Is ("12x102@9,99");
+      (b2 + new Point2 (5, 205) + new Point2 (21, 99)).Is ("16x106@5,99");
+      (b2 * new Bound2 (15, 150, 25, 250)).Is ("5x50@15,150");
+      (new Bound2 (5, 6)).Is ("0x0@5,6");
    }
 
    [Test (3, "class Bound3")]
    void Test7 () {
       Bound3 b1 = new (), b2 = new (10, 100, 1000, 20, 200, 2000), b3 = new (10, 10, 10, 1, 1, 1);
       b1.IsEmpty.Is (true); b1.ToString ().Is ("Empty");
-      b2.Is ("(10~20,100~200,1000~2000)"); b3.Is ("(1~10,1~10,1~10)");
+      b2.Is ("10x100x1000@10,100,1000"); b3.Is ("9x9x9@1,1,1");
       b2.Width.Is (10); b2.Height.Is (100); b2.Depth.Is (1000); b2.Midpoint.Is ("(15,150,1500)");
       b2.Contains (new Point3 (11, 110, 1100)).Is (true);
       b2.Contains (new Point3 (11, 210, 1100)).Is (false);
       b2.Contains (new Point3 (21, 110, 1100)).Is (false);
       b2.Contains (new Point3 (11, 110, 2100)).Is (false);
-      b2.InflatedF (1.2).Is ("(9~21,90~210,900~2100)");
-      b2.InflatedL (5).Is ("(5~25,95~205,995~2005)");
-      (b2 + new Point3 (5, 205, 3000) + new Point3 (21, 99, 875)).Is ("(5~21,99~205,875~3000)");
-      (b2 * new Bound3 (15, 150, 1500, 25, 250, 2500)).Is ("(15~20,150~200,1500~2000)");
+      b2.InflatedF (1.2).Is ("12x120x1200@9,90,900");
+      b2.InflatedL (5).Is ("20x110x1010@5,95,995");
+      (b2 + new Point3 (5, 205, 3000) + new Point3 (21, 99, 875)).Is ("16x106x2125@5,99,875");
+      (b2 * new Bound3 (15, 150, 1500, 25, 250, 2500)).Is ("5x50x500@15,150,1500");
    }
 }
 

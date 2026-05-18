@@ -23,12 +23,13 @@ public partial class MainWindow : Window {
 
 class DemoScene : Scene2 {
    public DemoScene () {
-      BgrdColor = new Color4 (240, 244, 248);
-      Root = new SimpleVN (Draw) { Streaming = true };
+      mFace = new (Lib.ReadBytes ("nori:GL/Fonts/Roboto-Regular.ttf"), (int)(48 * Lux.DPIScale));
+      Bound = new Bound2 (0, 0, 100, 50);
+      BgrdColor = new Color4 (128, 96, 64);
+      Root = new SimpleVN (
+         () => (Lux.Color, Lux.TypeFace) = (Color4.White, mFace),
+         () => Lux.Text ("Welcome to Nori.", new Vec2S (100, Lux.PanelSize.Y - 100))
+      );
    }
-
-   void Draw () {
-      Lux.UIRect (new (250, 150), new (300, 100), 6, 2, new Color4 (251, 252, 253), new Color4 (0, 96, 160));
-      Lux.UIRect (new (250, 300), new (300, 100), 6, 0, new Color4 (251, 252, 253), new Color4 (251, 252, 253));
-   }
+   TypeFace mFace;
 }

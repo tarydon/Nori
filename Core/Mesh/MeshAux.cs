@@ -7,6 +7,8 @@ namespace Nori;
 public partial class Mesh3 {
    // Methods ------------------------------------------------------------------
    /// <summary>Create a mesh by extruding a Poly</summary>
+   /// The poly is placed on the XY plane and extruded by the given thickness in the +Z direction.
+   /// The bottom face is at Z=0.
    public static Mesh3 Extrude (Poly[] poly, double thickness, Matrix3 xfm, ETess tess) {
       List<Point2> pts = [];
       List<int> splits = [0];

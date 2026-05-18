@@ -361,7 +361,7 @@ class TMisc {
       var nodes = tries.Select (n => (Point3)pts[n]).ToList ();
 
       // Build and compare the mesh
-      File.WriteAllText (NT.TmpTxt, new Mesh3Builder (nodes.AsSpan ()).Build ().ToTMesh ());
+      new Mesh3Builder (nodes.AsSpan ()).Build ().SaveTMesh (NT.TmpTxt);
       Assert.TextFilesEqual ("Geom/Tess/gl2d.tmesh", NT.TmpTxt);
    }
 

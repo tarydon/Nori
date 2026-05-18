@@ -1,7 +1,7 @@
 (Dwg2){
   Layers:[
-    { Name:0 Color:#FFFFFFFF Linetype:Continuous }
-    { Name:"レイヤー_1" Color:#FF003FFF Linetype:Continuous }
+    { Name:0 Color:White Linetype:Continuous }
+    { Name:"レイヤー_1" Color:#003FFF Linetype:Continuous }
   ]
   Styles:[
     { Name:STANDARD Font:txt XScale:1 }

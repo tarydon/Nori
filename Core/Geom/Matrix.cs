@@ -227,6 +227,10 @@ public class Matrix3 : IEQuable<Matrix3> {
    public double ScaleFactor => HasScaling ? (Vector3.XAxis * this).Length : 1;
 
    // Methods ------------------------------------------------------------------
+   /// <summary>Composes the Matrix3 between two given coordinate systems</summary>
+   public static Matrix3 Between (in CoordSystem csFrom, in CoordSystem csTo)
+      => From (in csFrom) * To (in csTo);
+
    public Matrix3 ExtractRotation () => new (M11, M12, M13, M21, M22, M23, M31, M32, M33, 0, 0, 0);
 
    public Matrix3 ExtractAbs () {
@@ -285,6 +289,7 @@ public class Matrix3 : IEQuable<Matrix3> {
 
    /// <summary>Composes a matrix to go TO the given coordinate-system from the World</summary>
    public static Matrix3 To (in CoordSystem cs) {
+      if (cs.IsWorld) return Identity;
       Vector3 x = cs.VecX, y = cs.VecY, z = cs.VecZ;
       return new Matrix3 (
          x.X, x.Y, x.Z,
