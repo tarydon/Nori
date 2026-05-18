@@ -21,11 +21,15 @@ public partial class MainWindow : Window {
    }
 }
 
-class DemoScene : Scene3 {
+class DemoScene : Scene2 {
    public DemoScene () {
-      var mech = Mechanism.Load ("O:/MC/mech.curl");
-      Bound = mech.Bound;
-      BgrdColor = Color4.Gray (216);
-      Root = new MechanismVN (mech);
-   }
+      mFace = new (Lib.ReadBytes ("nori:GL/Fonts/Roboto-Regular.ttf"), (int)(48 * Lux.DPIScale));
+      Bound = new Bound2 (0, 0, 100, 50);
+      BgrdColor = new Color4 (128, 96, 64);
+      Root = new SimpleVN (
+         () => (Lux.Color, Lux.TypeFace) = (Color4.White, mFace),
+         () => Lux.Text ("Welcome to Nori.", new Vec2S (100, Lux.PanelSize.Y - 100))
+      );
+}
+   TypeFace mFace;
 }

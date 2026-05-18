@@ -23,7 +23,7 @@ public class CurlReader {
    // Properties ---------------------------------------------------------------
    /// <summary>These are the characters that stop parsing an identifier</summary>
    public static SearchValues<byte> NameStop => mNameStop;
-   static readonly SearchValues<byte> mNameStop = SearchValues.Create ("\r\n\t\f :([{}])="u8);
+   static readonly SearchValues<byte> mNameStop = SearchValues.Create ("\r\n\t\f :([{}])=\""u8);
 
    // Implementation -----------------------------------------------------------
    // Construct a UTFReader, and skips past any leading comments
