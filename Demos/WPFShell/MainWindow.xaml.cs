@@ -21,14 +21,11 @@ public partial class MainWindow : Window {
    }
 }
 
-class DemoScene : Scene2 {
+class DemoScene : Scene3 {
    public DemoScene () {
-      var dr = new DXFReader ("C:/DropBox/Nori/Dimension/Dimensions.dxf");
-      dr.DarkenColors = dr.WhiteToBlack = dr.RelayerDimensions = true;
-      var dwg = dr.Load ();
-
-      Bound = dwg.Bound.InflatedF (1.1);
-      Root = new Dwg2VN (dwg);
+      var mech = Mechanism.Load ("O:/MC/mech.curl");
+      Bound = mech.Bound;
       BgrdColor = Color4.Gray (216);
+      Root = new MechanismVN (mech);
    }
 }

@@ -50,6 +50,35 @@ partial class DashLine2DShader : Shader<Vec2F, DashLine2DShader.Settings> {
 }
 #endregion
 
+[Singleton]
+partial class DecalShader : Shader<DecalShader.Args, DecalShader.Settings> {
+   // Constructors -------------------------------------------------------------
+   public DecalShader () : base (ShaderImp.Decal) => Bind ();
+
+   // Overrides ----------------------------------------------------------------
+   protected override void ApplyUniformsImp (ref readonly Settings a) {
+      Pgm.Set (muXfm, ref Lux.Scene!.Xfms[a.IDXfm].Xfm);
+      Pgm.Set (muNormalXfm, ref Lux.Scene!.Xfms[a.IDXfm].NormalXfm);
+      Pgm.Set (muDecalTexture, a.IDTexture);
+   }
+
+   protected override int OrderUniformsImp (ref readonly Settings a, ref readonly Settings b) {
+      int n = a.IDXfm - b.IDXfm; if (n != 0) return n;
+      return a.IDTexture - b.IDTexture;
+   }
+
+   protected override void SetConstantsImp () { }
+   protected override Settings SnapUniformsImp () => new (Lux.IDXfm, Lux.IDDecal);
+
+   // Nested types -------------------------------------------------------------
+   [StructLayout (LayoutKind.Sequential, Pack = 2, Size = 26)]
+   public readonly record struct Args (Vec3F Position, Vec3H Normal, Vec2F TexCoord);
+   public readonly record struct Settings (int IDXfm, int IDTexture);
+
+   // Private data -------------------------------------------------------------
+   protected int muXfm = 0, muNormalXfm = 0, muDecalTexture = 0;
+}
+
 #region class FacetShader --------------------------------------------------------------------------
 /// <summary>Base class for various types of 3D shader (Flat / Gourad / Phong)</summary>
 abstract class FacetShader : Shader<Mesh3.Node, FacetShader.Settings> {

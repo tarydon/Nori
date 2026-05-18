@@ -14,6 +14,12 @@ public class MechanismVN (Mechanism mMech) : VNode (mMech) {
    }
 
    public override void Draw () {
-      if (mMech.IsVisible && mMech.Mesh != null) Lux.Mesh (mMech.Mesh);
+      if (mMech.IsVisible && mMech.Mesh != null) {
+         Lux.Mesh (mMech.Mesh);
+         foreach (var decal in mMech.Decals) {
+            string file = Path.Combine (mMech.RootDir, decal.File).Replace ('\\', '/');
+            Lux.Decal (file, decal.CS, decal.Scale);
+         }
+      }
    }
 }

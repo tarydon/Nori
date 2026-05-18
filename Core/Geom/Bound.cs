@@ -15,20 +15,25 @@ public readonly struct Bound1 : IEQuable<Bound1> {
    /// is a Bound1 that is initialized with all zeroes - which is *not* an empty bound,
    /// but a valid bound extending from 0 .. 0.
    public Bound1 () => (Min, Max) = (float.MaxValue, float.MinValue);
-
    /// <summary>Constructs a non-empty bound that encompasses a single value (Min = Max = v)</summary>
    public Bound1 (double v) => Min = Max = (float)v;
-
    /// <summary>Constructs a bound that encompasses a and b (a and b need not be ordered)</summary>
    public Bound1 (double a, double b) => (Min, Max) = ((float)Min (a, b), (float)Max (a, b));
-
    /// <summary>Constructs a bound that encompasses a and b (a and b need not be ordered)</summary>
    public Bound1 (float a, float b) => (Min, Max) = (MathF.Min (a, b), MathF.Max (a, b));
 
+   /// <summary>Read a Bound1 from a UTF8 stream</summary>
+   public static Bound1 Read (UTFReader R) {
+      if (R.Peek () == 'E') {
+         R.Match ("Empty"u8); return new ();
+      } else {
+         R.Read (out float min).Match ('~').Read (out float max);
+         return new (min, max);
+      }
+   }
+
    /// <summary>Deconstruct a Bound1 into min and max values</summary>
    public void Deconstruct (out float min, out float max) => (min, max) = (Min, Max);
-
-   public override string ToString () => IsEmpty ? "Empty" : $"{Min.S5 ()}~{Max.S5 ()}";
 
    // Properties ---------------------------------------------------------------
    /// <summary>The minimum value of the bound (inclusive)</summary>
@@ -80,7 +85,12 @@ public readonly struct Bound1 : IEQuable<Bound1> {
    [MethodImpl (MethodImplOptions.AggressiveInlining)]
    public bool Intersects (Bound1 b) => Max >= b.Min && Min <= b.Max;
 
-   public void Write (UTFWriter W) => W.Write (Min).Write ('~').Write (Max);
+   /// <summary>Write the Bound1 to UTF (used for Curl serialization)</summary>
+   public void Write (UTFWriter W) {
+      if (IsEmpty) W.Write ("Empty"u8);
+      else W.WriteR5 (Min).Write ('~').WriteR5 (Max);
+   }
+   public override string ToString () => UTFWriter.ToString (Write);
 
    // Operators ----------------------------------------------------------------
    /// <summary>Implicit conversion from a tuple of two double to a Bound1</summary>
@@ -113,10 +123,8 @@ public readonly struct Bound1D : IEQuable<Bound1D> {
    /// is a Bound1 that is initialized with all zeroes - which is *not* an empty bound,
    /// but a valid bound extending from 0 .. 0.
    public Bound1D () => (Min, Max) = (double.MaxValue, double.MinValue);
-
    /// <summary>Constructs a non-empty bound that encompasses a single value (Min = Max = v)</summary>
    public Bound1D (double v) => Min = Max = v;
-
    /// <summary>Constructs a bound that encompasses a and b (a and b need not be ordered)</summary>
    public Bound1D (double a, double b) => (Min, Max) = (Min (a, b), Max (a, b));
 
@@ -168,7 +176,6 @@ public readonly struct Bound1D : IEQuable<Bound1D> {
    /// This makes it much simpler to construct Bound1 objects on the fly where needed by
    /// just enclosing a pair of numbers in parentheses.
    public static implicit operator Bound1D ((double Min, double Max) value) => new (value.Min, value.Max);
-
    /// <summary>Explicitly convert Bound1D to Bound1</summary>
    public static explicit operator Bound1 (Bound1D b) => new (b.Min, b.Max);
 
@@ -198,50 +205,63 @@ public readonly struct Bound2 : IEQuable<Bound2> {
    /// is a Bound2 that is initialized with all zeroes - which is *not* an empty bound,
    /// but a valid bound extending from 0 .. 0 in both X and Y.
    public Bound2 () => (X, Y) = (new (), new ());
-
    /// <summary>Constructs a Bound2 that encompasses just a single point (min == max in X and Y)</summary>
    public Bound2 (double x, double y) => (X, Y) = (new (x), new (y));
-
    /// <summary>Constructs a Bound2 that encompasses a single point (min == max in X and Y)</summary>
    public Bound2 (Point2 pt) => (X, Y) = (new (pt.X), new (pt.Y));
-
    /// <summary>Constructs a Bound2 from two Bound1 structs (one in X and one in Y)</summary>
    public Bound2 (Bound1 x, Bound1 y) => (X, Y) = (x, y);
-
    /// <summary>Constructs a Bound2 that uses the two given points x1,y1 and x2,y2 as diagonals</summary>
    /// No particular ordering is required between x1 and x2 or between y1 and y2. For
    /// example, x1 may be less than x2, while y1 may be more than y2.
    public Bound2 (double x1, double y1, double x2, double y2) => (X, Y) = (new (x1, x2), new (y1, y2));
+
+   /// <summary>Read a Bound2 from a UTF8 stream</summary>
+   /// These formats are supported:
+   /// - "Empty" : an empty Bound2
+   /// - "1,2:9:5" : Bound2 spanning from 1..9 in X, and 2..5 in Y
+   /// - "8x3@1,2" : Bound2 spanning from 1..9 in X, and 2..5 in Y 
+   ///               (X-size is 8, Y-size is 3). 
+   public static Bound2 Read (UTFReader R) {
+      if (R.Peek () == 'E') { R.Match ("Empty"u8); return new (); }
+      R.Read (out double a);
+      bool newFmt = (char)R.Peek () is 'x' or 'X';
+      R.MatchAny ("x,X"u8).Read (out double b).MatchAny ("@:"u8);
+      R.Read (out double c).Match (',').Read (out double d);
+      if (newFmt) return new (c, d, a + c, b + d);
+      else return new (a, b, c, d);
+   }
 
    /// <summary>Construct a Bound2 that encompasses all the given points</summary>
    public Bound2 (IEnumerable<Point2> pts) {
       (X, Y) = (new (), new ());
       foreach (var p in pts) { X += p.X; Y += p.Y; }
    }
-
    /// <summary>Construct a Bound2 that encompasses all the given points</summary>
    public Bound2 (params ReadOnlySpan<Point2> pts) {
       (X, Y) = (new (), new ());
       foreach (var p in pts) { X += p.X; Y += p.Y; }
    }
-
    /// <summary>Construct a Bound2 that encompasses all the given points</summary>
    public Bound2 (params ReadOnlySpan<Point2f> pts) {
       (X, Y) = (new (), new ());
       foreach (var p in pts) { X += p.X; Y += p.Y; }
    }
-
    /// <summary>Construct a Bound2  that encompasses all the given Bound2 (union)</summary>
    public Bound2 (IEnumerable<Bound2> bounds) {
       (X, Y) = (new (), new ());
       foreach (var b in bounds.Where (a => !a.IsEmpty)) { X += b.X; Y += b.Y; }
    }
 
-   public override string ToString () => IsEmpty ? "Empty" : $"({X},{Y})";
-
-   [Used]
-   internal void Write (UTFWriter buf)
-      => buf.Write (X.Min).Write (',').Write (Y.Min).Write (',').Write (X.Max).Write (',').Write (Y.Max);
+   /// <summary>Write a Bound2 to a UTF8 stream</summary>
+   public void Write (UTFWriter W) {
+      if (IsEmpty) W.Write ("Empty"u8);
+      else {
+         float dx = (float)X.Length, dy = (float)Y.Length;
+         W.WriteR5 (dx).Write ('x').WriteR5 (dy).Write ('@').WriteR5 (X.Min).Write (',').WriteR5 (Y.Min);
+      }
+   }
+   public override string ToString () => UTFWriter.ToString (Write);
 
    // Properties ---------------------------------------------------------------
    /// <summary>Area of the Bound2</summary>
@@ -280,15 +300,12 @@ public readonly struct Bound2 : IEQuable<Bound2> {
    /// the bound covers in X and Y (as in tennis, values lying exactly on the boundary
    /// are considered _in_).
    public bool Contains (Point2 pt) => X.Contains (pt.X) && Y.Contains (pt.Y);
-
    /// <summary>Check if a Bound2 contains a given 2D point within specified threshold</summary>
    /// This is the same as expanding the Bound2 by the given threshold in all 4 directions and then
    /// checking if that expanded Bound2 contains the given point
    public bool Contains (Point2 pt, double threshold) => X.Contains (pt.X, threshold) && Y.Contains (pt.Y, threshold);
-
    /// <summary>Checks if a Bound2 contains another bound (exact overlap is treated as containment)</summary>
    public bool Contains (Bound2 bound) => X.Contains (bound.X) && Y.Contains (bound.Y);
-
    /// <summary>Check if the a Bound2 contains the given 2D point</summary>
    public bool Contains (Vec2F pt) => X.Contains (pt.X) && Y.Contains (pt.Y);
 
@@ -297,10 +314,6 @@ public readonly struct Bound2 : IEQuable<Bound2> {
 
    /// <summary>Returns a Bound2 inflated by a given factor about the midpoint</summary>
    public Bound2 InflatedF (double factor) => new (X.InflatedF (factor), Y.InflatedF (factor));
-
-   /// <summary>Returns a Bound2 padded by a given linear margin on all sides</summary>
-   public Bound2 InflatedL (double delta) => new (X.InflatedL (delta), Y.InflatedL (delta));
-
    /// <summary>Scales the rectangle by a given scale factor, about a given center of scaling</summary>
    public Bound2 InflatedF (double factor, Point2 pm) {
       if (IsEmpty) return new ();
@@ -308,6 +321,9 @@ public readonly struct Bound2 : IEQuable<Bound2> {
       double top = (Y.Max - pm.Y) * factor, bottom = (Y.Min - pm.Y) * factor;
       return new (pm.X + left, pm.Y + bottom, pm.X + right, pm.Y + top);
    }
+
+   /// <summary>Returns a Bound2 padded by a given linear margin on all sides</summary>
+   public Bound2 InflatedL (double delta) => new (X.InflatedL (delta), Y.InflatedL (delta));
 
    /// <summary>Determines whether this Bound2 intersects with the specified Bound2.</summary>
    /// Two bounds intersect if they overlap along both axes
@@ -346,10 +362,8 @@ public readonly struct Bound2 : IEQuable<Bound2> {
    /// constructor:
    /// Bound2 b = new (pts);
    public static Bound2 operator + (Bound2 b, Point2 p) => new (b.X + p.X, b.Y + p.Y);
-
    /// <summary>Returns the intersection of two Bound2 (could be empty)</summary>
    public static Bound2 operator * (Bound2 a, Bound2 b) => new (a.X * b.X, a.Y * b.Y);
-
    /// <summary>Returns the union of two bounds</summary>
    public static Bound2 operator + (Bound2 a, Bound2 b) => new (a.X + b.X, a.Y + b.Y);
 
@@ -377,7 +391,6 @@ public readonly struct Bound3 : IEQuable<Bound3> {
    public Bound3 (float xmin, float ymin, float zmin, float xmax, float ymax, float zmax)
       => (X, Y, Z) = (new (xmin, xmax), new (ymin, ymax), new (zmin, zmax));
    public Bound3 (Bound1 x, Bound1 y, Bound1 z) => (X, Y, Z) = (x, y, z);
-   public override string ToString () => IsEmpty ? "Empty" : $"({X},{Y},{Z})";
 
    public Bound3 (IEnumerable<Point3f> pts) {
       (X, Y, Z) = (new (), new (), new ());
@@ -401,10 +414,19 @@ public readonly struct Bound3 : IEQuable<Bound3> {
       foreach (var b in bounds) { X += b.X; Y += b.Y; Z += b.Z; }
    }
 
-   public static Bound3 Read (UTFReader r) {
-      r.Match ('"').Read (out double x0).Match (',').Read (out double y0).Match (',').Read (out double z0)
-         .Match (':').Read (out double x1).Match (',').Read (out double y1).Match (',').Read (out double z1).Match ('"');
-      return new (x0, y0, z0, x1, y1, z1);
+   /// <summary>Reads a Bound3 from a UTF8 stream</summary>
+   /// - "Empty" : an empty Bound3
+   /// - "1,2,3:9,5,10" : Bound3 spanning from 1..9 in X, 2..5 in Y and 3..10 in Z
+   /// - "8x3x7@1,2,3" : Bound3 spanning from 1..9 in X, 2..5 in Y and 3..10 in Z
+   ///                   (X-size is 8, Y-size is 3, Z-size is 7). 
+   public static Bound3 Read (UTFReader R) {
+      if (R.Peek () == 'E') { R.Match ("Empty"u8); return new (); }
+      R.Read (out double a);
+      bool newFmt = (char)R.Peek () is 'x' or 'X';
+      R.MatchAny ("x,X"u8).Read (out double b).MatchAny ("x,X"u8).Read (out double c).MatchAny ("@:"u8);
+      R.Read (out double d).Match (',').Read (out double e).Match (',').Read (out double f);
+      if (newFmt) return new (d, e, f, a + d, b + e, c + f);
+      else return new (a, b, c, d, e, f);
    }
 
    // Properties ---------------------------------------------------------------
@@ -460,16 +482,16 @@ public readonly struct Bound3 : IEQuable<Bound3> {
       return bound;
    }
 
-   /// <summary>Write the Bound3 to UTF8, in a format like "1,2,3:4,5,6"</summary>
-   /// Here, (1,2,3) is the X,Y,Z lower min point and (4,5,6) is upper max point
-   public void Write (UTFWriter w) {
-      if (Lib.Testing)
-         w.Write ('"').Write (X.Min.R5 ()).Write (',').Write (Y.Min.R5 ()).Write (',').Write (Z.Min.R5 ()).Write (':')
-         .Write (X.Max.R5 ()).Write (',').Write (Y.Max.R5 ()).Write (',').Write (Z.Max.R5 ()).Write ('"');
-      else
-         w.Write ('"').Write (X.Min).Write (',').Write (Y.Min).Write (',').Write (Z.Min).Write (':')
-         .Write (X.Max).Write (',').Write (Y.Max).Write (',').Write (Z.Max).Write ('"');
+   /// <summary>Write the Bound3 to UTF8, in a format like "1x2x3@4,5,6"</summary>
+   /// Here the lower left corner is (4,5,6) and the extents of the Bound3 in X, Y and Z
+   /// are 1,2 and 3. 
+   public void Write (UTFWriter W) {
+      if (IsEmpty) { W.Write ("Empty"u8); return; }
+      float dx = (float)X.Length, dy = (float)Y.Length, dz = (float)Z.Length;
+      W.WriteR5 (dx).Write ('x').WriteR5 (dy).Write ('x').WriteR5 (dz).Write ('@')
+       .WriteR5 (X.Min).Write (',').WriteR5 (Y.Min).Write (',').WriteR5 (Z.Min);
    }
+   public override string ToString () => UTFWriter.ToString (Write);
 
    // Operators ----------------------------------------------------------------
    /// <summary>Returns a Bound3 expanded to include the given Point3</summary>

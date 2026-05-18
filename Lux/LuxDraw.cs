@@ -117,6 +117,10 @@ public static partial class Lux {
    public static VNode? VNode => mVNode;
    static VNode? mVNode;
 
+   /// <summary>The index of the decal being drawn</summary>
+   public static int IDDecal { get => mIDDecal; set => mIDDecal = value; }
+   static int mIDDecal;
+
    /// <summary>The index of the current transform in use</summary>
    /// This is an index into Scene.Xfms[]
    public static int IDXfm {
@@ -161,6 +165,46 @@ public static partial class Lux {
    /// - Color : color of the lines being drawn
    public static void Beziers (ReadOnlySpan<Vec2F> pts)
       => Bezier2DShader.It.Draw (pts);
+
+   /// <summary>Draws a Decal</summary>
+   public static void Decal (string file, CoordSystem cs, double scale) {
+      // First, see if this decal exists already in one of the 4 slots. If not, we need to sacrifice
+      // one of them, and reuse it for this decal
+      int n = -1;
+      string ufile = file.ToUpper (); 
+      for (int i = 0; i < 4; i++) if (mDecals[i] == ufile) { n = i; break; }
+      if (n == -1) {
+         n = mNDecal; 
+         DIBitmap dib = new PNGReader (file).Load ();
+         GL.ActiveTexture ((ETexUnit)((int)ETexUnit.Tex4 + n));
+         HTexture hTexture = mDecalTex[n];
+         if (hTexture == 0) mDecalTex[n] = hTexture = GL.GenTexture ();
+         GL.BindTexture (ETexTarget.Texture2D, hTexture);
+         GL.PixelStore (EPixelStoreParam.UnpackAlignment, 1);
+
+         GL.TexImage2D (ETexTarget.Texture2D, EPixelInternalFormat.RGBA, dib.Width, dib.Height, EPixelFormat.RGBA, EPixelType.UByte, dib.Data);
+         GL.TexParameter (ETexTarget.Texture2D, ETexParam.WrapS, (int)ETexWrap.Clamp);
+         GL.TexParameter (ETexTarget.Texture2D, ETexParam.WrapT, (int)ETexWrap.Clamp);
+         GL.TexParameter (ETexTarget.Texture2D, ETexParam.MagFilter, (int)ETexFilter.Linear);
+         GL.TexParameter (ETexTarget.Texture2D, ETexParam.MinFilter, (int)ETexFilter.Linear);
+
+         mDecalSize[n] = new (dib.Width, dib.Height); mDecals[n] = ufile;
+         mNDecal = (mNDecal + 1) % 4;  // Next decal to sacrifice
+      }
+
+      Span<DecalShader.Args> a = stackalloc DecalShader.Args[4];
+      double cx = mDecalSize[n].X * scale, cy = mDecalSize[n].Y * scale;
+      Point3 p0 = cs.Org - cs.VecX * cx / 2 - cs.VecY * cy / 2;
+      Point3 p1 = p0 + cs.VecX * cx, p2 = p1 + cs.VecY * cy, p3 = p0 + cs.VecY * cy;
+      Vec3H norm = cs.VecZ;
+      a[0] = new (p0, norm, new (0, 0)); a[1] = new (p1, norm, new (1, 0));
+      a[2] = new (p2, norm, new (1, 1)); a[3] = new (p3, norm, new (0, 1));
+      IDDecal = n + 4; DecalShader.It.Draw (a);
+   }
+   static string[] mDecals = ["", "", "", ""];
+   static HTexture[] mDecalTex = new HTexture[4];
+   static Vec2S[] mDecalSize = new Vec2S[4];
+   static int mNDecal;
 
    /// <summary>Draws a Dee (rectangle with rounding on one side)</summary>
    /// See the Rect routine for an explanation of how the coordinates are interpreted.

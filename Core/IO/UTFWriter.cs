@@ -4,6 +4,7 @@
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 using System.Buffers;
 using System.Buffers.Text;
+using Nori.STEP;
 namespace Nori;
 
 #region class UTFWriter ----------------------------------------------------------------------------
@@ -132,12 +133,16 @@ public class UTFWriter {
       while (!Utf8Formatter.TryFormat (value, D.AsSpan (N), out mDelta, fmt)) Grow ();
       return Bump ();
    }
+   /// <summary>Write a double to UTF8 rounded to 6 decimal places</summary>
+   public UTFWriter WriteR6 (double value) => Write (value.R6 ());
 
    /// <summary>Write a float to a UTF8 stream using default formatting</summary>
    public UTFWriter Write (float value) {
       while (!Utf8Formatter.TryFormat (value, D.AsSpan (N), out mDelta)) Grow ();
       return Bump ();
    }
+   /// <summary>Write a float to a UTF8 stream, rounding to 5 decimals</summary>
+   public UTFWriter WriteR5 (float value) => Write (value.R5 ());
 
    /// <summary>Write a Guid to a UTF8 stream</summary>
    public UTFWriter Write (Guid value) {
@@ -229,6 +234,15 @@ public class UTFWriter {
    void Grow () => Array.Resize (ref D, D.Length * 2);
 
    public ReadOnlySpan<byte> Trimmed () => D.AsSpan (0, N);
+
+   /// <summary>Converts an object to a string representation using the given 'writer function'</summary>
+   /// This is not very efficient - it make a new UTFWriter on each call, and is intended
+   /// primarily to support a simple ToString() implementation - do not use this in any 
+   /// hot paths.
+   public static string ToString (Action<UTFWriter> writeFunc) {
+      var w = new UTFWriter (); writeFunc (w);
+      return Encoding.UTF8.GetString (w.Trimmed ());
+   }
 
    byte[] D = new byte[256];  // The byte-array that we grow as needed
    int N;                     // The 'write-pointer' into that array

@@ -1,7 +1,7 @@
 (Dwg2){
   Layers:[
-    { Name:0 Color:#FF000000 Linetype:Continuous }
-    { Name:DIMENSION Color:#FF000000 Linetype:Continuous }
+    { Name:0 Color:Black Linetype:Continuous }
+    { Name:DIMENSION Color:Black Linetype:Continuous }
   ]
   Styles:[ { Name:STANDARD Font:SIMPLEX XScale:1 } ]
   DimStyles:[

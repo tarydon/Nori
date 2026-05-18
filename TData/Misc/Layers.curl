@@ -1,8 +1,8 @@
 (Dwg2){
   Layers:[
-    { Name:Circle Color:#FFFFFFFF Linetype:Dash }
-    { Name:Rect Color:#FFFFFF00 Linetype:Dot }
-    { Name:Line Color:#FF00FF00 Linetype:DashDot }
+    { Name:Circle Color:White Linetype:Dash }
+    { Name:Rect Color:Yellow Linetype:Dot }
+    { Name:Line Color:Green Linetype:DashDot }
   ]
   CurrentLayer:Line
   Ents:[

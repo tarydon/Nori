@@ -118,17 +118,16 @@ public partial class Poly {
       foreach (var seg in Segs) {
          if (first) {
             if (IsCircle) {
-               w.Write ('C').Write (seg.Center.X.R6 ()).Write (',').
-                  Write (seg.Center.Y.R6 ()).Write (',').Write (seg.Radius.R6 ());
+               w.Write ('C').WriteR6 (seg.Center.X).Write (',').WriteR6 (seg.Center.Y).Write (',').WriteR6 (seg.Radius);
                return;
             }
-            w.Write ('M').Write (a.X.R6 ()).Write (',').Write (a.Y.R6 ());
+            w.Write ('M').WriteR6 (a.X).Write (',').WriteR6 (a.Y);
             first = false;
          }
          Point2 b = seg.B;
          if (seg.IsArc) {
             double t = seg.AngSpan / (PI / 2);
-            w.Write ('Q').Write (b.X.R6 ()).Write (',').Write (b.Y.R6 ()).Write (',').Write (t.R6 ());
+            w.Write ('Q').WriteR6 (b.X).Write (',').WriteR6 (b.Y).Write (',').Write (t.R6 ());
          } else {
             if (!(seg.IsLast && IsClosed)) {
                if (a.X.EQ (b.X)) w.Write ('V').Write (b.Y.R6 ());

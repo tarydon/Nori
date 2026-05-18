@@ -2,6 +2,7 @@
 // ╔═╦╦═╦╦╬╣ Extensions.cs
 // ║║║║╬║╔╣║ Various extension methods for common system types
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
+using System.Buffers;
 using System.IO.Compression;
 using static System.Math;
 namespace Nori;
@@ -190,6 +191,8 @@ public static class Extensions {
    public static float R3 (this float f) => MathF.Round (f, 3);
    /// <summary>Returns a float rounded off to 5 decimal places</summary>
    public static float R5 (this float f) => MathF.Round (f, 5);
+   /// <summary>Returns a float rounded off to 6 decimal places</summary>
+   public static float R6 (this float f) => MathF.Round (f, 6);
    /// <summary>Returns double rounded off to 3 decimal places</summary>
    public static double R3 (this double f) => Math.Round (f, 3);
    /// <summary>Returns a double rounded off to 6 decimal places</summary>
@@ -221,6 +224,42 @@ public static class Extensions {
    public static unsafe int ReadInt32 (this Stream stm) {
       int n; stm.ReadExactly (new Span<byte> (&n, 4));
       return n;
+   }
+
+   /// <summary>Writes an integer to the stream</summary>
+   public static unsafe Stream WriteInt32 (this Stream stm, int n) {
+      stm.Write (new ReadOnlySpan<byte> (&n, 4));
+      return stm; 
+   }
+
+   /// <summary>Reads a string from the stream (UTF8 format, prefixed by length)</summary>
+   public static string? ReadString (this Stream stm) {
+      int len = stm.ReadInt32 (); if (len == -1) return null;
+      byte[] data = new byte[len];
+      stm.ReadExactly (data);
+      return Encoding.UTF8.GetString (data);
+   }
+
+   /// <summary>Writes an arbitary array of T to a stream</summary>
+   public static Stream Write<T> (this Stream stm, ImmutableArray<T> data) where T : struct {
+      stm.Write (MemoryMarshal.AsBytes (data.AsSpan ()));
+      return stm; 
+   }
+
+   /// <summary>Writes an arbitrary List(T) to a stream</summary>
+   public static Stream WriteList<T> (this Stream stm, List<T> data) where T : struct {
+      stm.Write (MemoryMarshal.AsBytes (data.AsSpan ()));
+      return stm; 
+   }
+
+   /// <summary>Writes a string to the stream (in UTF8 format), prefixed by a length</summary>
+   public static Stream WriteString (this Stream stm, string? s) {
+      if (s == null) stm.WriteInt32 (-1);
+      else {
+         var b = Encoding.UTF8.GetBytes (s);
+         stm.WriteInt32 (b.Length); stm.Write (b);
+      }
+      return stm; 
    }
 
    /// <summary>Reads all the bytes from a stream in a Zip file</summary>

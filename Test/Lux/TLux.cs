@@ -337,6 +337,20 @@ class TLux {
       TestPNG (scene, new Vec2S (480, 338), DIBitmap.EFormat.RGB8, "E3Thick-100", true);
    }
 
+   [Test (254, "Test of Lux.Decal")]
+   void Test16 () {
+      var mesh = Mesh3.Extrude ([NPoly.Rectangle (-130, -130, 130, 130)], 50, Matrix3.Rotation (EAxis.X, Lib.HalfPI), ETess.Medium);
+      var scene = new Scene3 { BgrdColor = Color4.Gray (216), Bound = mesh.Bound, Root = new SimpleVN (Settings, Draw) };
+      TestPNG (scene, new Vec2S (200, 240), DIBitmap.EFormat.Gray8, "Decal", true);
+
+      void Settings () => Color = Color4.White;
+
+      void Draw () {
+         Mesh (mesh, EShadeMode.Phong);
+         Decal (NT.File ("Lux/Logo.png"), new CoordSystem (new (0, -51, 0), Vector3.XAxis, Vector3.ZAxis), 1.5);
+      }
+   }
+
    // Makes a sheet-metal model
    Model3 MakeModel () {
       Model3 model = new ();

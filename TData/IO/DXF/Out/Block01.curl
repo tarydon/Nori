@@ -1,5 +1,5 @@
 (Dwg2){
-  Layers:[ { Name:0 Color:#FF333333 Linetype:Continuous } ]
+  Layers:[ { Name:0 Color:#33 Linetype:Continuous } ]
   Styles:[ { Name:STANDARD Font:SIMPLEX XScale:1 } ]
   Blocks:[
     {

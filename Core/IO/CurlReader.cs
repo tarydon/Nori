@@ -58,21 +58,22 @@ public class CurlReader {
 
       // Create an object, and push it on the stack of objects being partially read,
       // we will need that to handle 'uplink' fields (and sometimes 'byname' fields)
-      object owner = auType.CreateInstance ();
+      object obj = auType.CreateInstance ();
       foreach (var upf in auType.Uplinks) {
          var uptype = upf.FieldType.Type;
          var uplink = mStack.LastOrDefault (a => a?.GetType ().IsAssignableFrom (uptype) ?? false);
-         if (!upf.IsNullable && uplink == null) throw new AuException ($"{auType.Type.FullName}.{upf.Name} cannot be set to null");
-         upf.SetValue (owner, uplink);
+         if (!upf.IsNullable && uplink == null) 
+            throw new AuException ($"{auType.Type.FullName}.{upf.Name} cannot be set to null (line {R.LineNo})");
+         upf.SetValue (obj, uplink);
       }
 
-      mStack.Add (owner);
+      mStack.Add (obj);
       R.Match ('{');
       for (; ; ) {
          SkipComment ();
          if (R.TryMatch ('}')) break;     // Finished reading all the fields
          var fieldName = R.TakeUntil (mNameStop, true);
-         var field = auType.GetField (fieldName) ?? throw new AuException ($"Field {Encoding.UTF8.GetString (fieldName)} not found in {auType.Type.FullName}");
+         var field = auType.GetField (fieldName) ?? throw new AuException ($"Field {Encoding.UTF8.GetString (fieldName)} not found in {auType.Type.FullName} (line {R.LineNo})");
          R.Match (':');
          object? value;
          switch (field.Tactic) {
@@ -85,9 +86,10 @@ public class CurlReader {
                if (field.IsAngle) value = ((double)value!).D2R ();
                break;
          }
-         field.SetValue (owner, value);
+         field.SetValue (obj, value);
       }
       // Pop off the stack of partially read objects and return
+      auType.RunPostLoad (obj);
       return mStack.RemoveLast ();
    }
    readonly List<object> mStack = [];
@@ -143,6 +145,6 @@ public class CurlReader {
 
    // Checks if a comment follows (semicolon character), and skips past it.
    // The comment continues to the end of the line. 
-   void SkipComment () { while (R.Peek == ';') R.SkipTo ('\n'); }
+   void SkipComment () { while (R.Peek () == ';') R.SkipTo ('\n'); }
 }
 #endregion

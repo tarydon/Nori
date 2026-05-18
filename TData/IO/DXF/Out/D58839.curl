@@ -1,13 +1,13 @@
 (Dwg2){
   Layers:[
-    { Name:0 Color:#FFFFFFFF Linetype:Continuous }
-    { Name:AM_BOR Color:#FFFFFFFF Linetype:Continuous }
-    { Name:axis Color:#FFFF00FF Linetype:Continuous }
-    { Name:dimension Color:#FFFF0000 Linetype:Continuous }
-    { Name:"Bend Centerline (ISO)" Color:#FFBEBEBE Linetype:Continuous }
-    { Name:"Visible (ISO)" Color:#FFFFFFFF Linetype:Continuous }
-    { Name:"Visible Narrow (ISO)" Color:#FFFFFFFF Linetype:Continuous }
-    { Name:text Color:#FFFFFF00 Linetype:Continuous }
+    { Name:0 Color:White Linetype:Continuous }
+    { Name:AM_BOR Color:White Linetype:Continuous }
+    { Name:axis Color:Magenta Linetype:Continuous }
+    { Name:dimension Color:Red Linetype:Continuous }
+    { Name:"Bend Centerline (ISO)" Color:#BE Linetype:Continuous }
+    { Name:"Visible (ISO)" Color:White Linetype:Continuous }
+    { Name:"Visible Narrow (ISO)" Color:White Linetype:Continuous }
+    { Name:text Color:Yellow Linetype:Continuous }
   ]
   Styles:[ { Name:STANDARD Font:txt XScale:1 } { Name:ACISOTS Font:txt XScale:1 } ]
   DimStyles:[
