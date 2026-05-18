@@ -7,7 +7,6 @@ Bin/*
 *.pdb
 *.obj
 Demos/Pentax
-Book/*
 **/launchSettings.json
 **/bin/*
 **/obj/*

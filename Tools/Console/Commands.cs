@@ -89,6 +89,14 @@ static class LineCount {
       var dt0 = new DateTime (2024, 10, 13);
       int days = (int)((dt - dt0).TotalDays + 0.5);
       Console.WriteLine ($"{nFiles,4}                     Day {days,-4} {nLines,23}{nComments,9}{tPercent,8}%");
+
+      Console.WriteLine ();
+      int nDoc = 0, nDocLines = 0; 
+      foreach (var file in EnumDocFiles ()) {
+         nDoc++;
+         nDocLines += File.ReadAllLines (file).Length;
+      }
+      Console.WriteLine ($"NoriBook: {nDocLines} lines in {nDoc} files");
    }
 
    static IEnumerable<string> EnumFiles () {
@@ -99,6 +107,13 @@ static class LineCount {
       }
       foreach (var file in Directory.EnumerateFiles ("N:\\", "*.cs", SearchOption.AllDirectories))
          yield return file;
+   }
+
+   static IEnumerable<string> EnumDocFiles () {
+      foreach (var file in Directory.EnumerateFiles ("W:\\NoriBook", "*.adoc", SearchOption.AllDirectories)) {
+         if (file.ToUpper ().Contains ("\\PARK\\")) continue;
+         yield return file; 
+      }
    }
 }
 #endregion
@@ -308,7 +323,7 @@ class BookExpander {
       mFile = GetPath (level, name + ".adoc");
       File.AppendAllText (GetPath (level, "contents.txt"), $"{name}\n");
       if (title == "") title = name;
-      File.WriteAllText (mFile, $"= {title}\n");      
+      File.WriteAllText (mFile, $"= {title}\n\n<TBD>\n");      
       Console.WriteLine ();
    }
 
@@ -323,5 +338,5 @@ class BookExpander {
    List<string> mDirs = [];      // The multiple levels of directories
    string mDir = "";             // Current folder name
    string mFile = "";            // The current ADOC file we're adding to the project
-   string mRoot = "N:/Book/";
+   string mRoot = "W:/NoriBook/";
 }
