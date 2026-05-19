@@ -171,6 +171,17 @@ class AuType {
    }
    SymTable<AuField>? mFieldDict;
 
+   /// <summary>Runs the 'PostLoad' method for this object (if one exists)</summary>
+   public void RunPostLoad (object obj) {
+      if (!mPostLoaderChecked) {
+         mPostLoaderChecked = true;
+         mPostLoader = obj.GetType ().GetMethod ("PostLoad", NonPublic | Instance | Public | DeclaredOnly);
+      }
+      mPostLoader?.Invoke (obj, []);
+   }
+   MethodInfo? mPostLoader;
+   bool mPostLoaderChecked;
+
    // Read methods -------------------------------------------------------------
    /// <summary>This is called if this type is an [AuPrimitive] type, reads the value in using the Read(UTFReader) method</summary>
    /// Classes tagged with [AuPrimitive] must implement a method like this:

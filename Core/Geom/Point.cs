@@ -193,10 +193,18 @@ public readonly struct Point2 : IEQuable<Point2> {
 }
 #endregion
 
-#region struct Point3f -----------------------------------------------------------------------------
+#region struct Point2f -----------------------------------------------------------------------------
+[AuPrimitive]
 public readonly struct Point2f {
+   // Constructors -------------------------------------------------------------
    public Point2f (double x, double y) => (X, Y) = ((float)x, (float)y);
    public Point2f (float x, float y) => (X, Y) = (x, y);
+
+   /// <summary>Read a Point2f from a UTF8 stream</summary>
+   public static Point2f Read (UTFReader R) {
+      R.Read (out float x).Match (',').Read (out float y);
+      return new (x, y);
+   }
 
    public readonly float X;
    public readonly float Y;
@@ -204,17 +212,26 @@ public readonly struct Point2f {
    public static implicit operator Point2 (Point2f p) => new (p.X, p.Y);
 
    public override string ToString () => $"({X.S5 ()},{Y.S5 ()})";
+
+   public void Write (UTFWriter W) => W.Write (X).Write (',').Write (Y);
 }
 #endregion
 
 #region struct Point3f -----------------------------------------------------------------------------
 /// <summary>Point in 3 dimensions, 32-bit float components</summary>
+[AuPrimitive]
 public readonly struct Point3f {
    // Constructors -------------------------------------------------------------
    /// <summary>Construct a Point3f given 3 doubles</summary>
    public Point3f (double x, double y, double z) => (X, Y, Z) = ((float)x, (float)y, (float)z);
    /// <summary>Construct a Point3f given 3 floats</summary>
    public Point3f (float x, float y, float z) => (X, Y, Z) = (x, y, z);
+
+   /// <summary>Read a Point3f from a UTF8 stream</summary>
+   public static Point3f Read (UTFReader R) {
+      R.Read (out float x).Match (',').Read (out float y).Match (',').Read (out float z);
+      return new (x, y, z);
+   }
 
    // Properties ---------------------------------------------------------------
    /// <summary>The X ordinate of the Point3f</summary>
@@ -268,6 +285,8 @@ public readonly struct Point3f {
    public static Point3f operator * (Point3f a, float f) => new (a.X * f, a.Y * f, a.Z * f);
 
    public override string ToString () => $"({X.S5 ()},{Y.S5 ()},{Z.S5 ()})";
+
+   public void Write (UTFWriter W) => W.Write (X).Write (',').Write (Y);
 
    // Implementation -----------------------------------------------------------
    // Helper used by SnappedToLine and SnappedToLineSeg

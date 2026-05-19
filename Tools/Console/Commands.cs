@@ -110,7 +110,7 @@ static class LineCount {
    }
 
    static IEnumerable<string> EnumDocFiles () {
-      foreach (var file in Directory.EnumerateFiles ("W:\\NoriBook", "*.adoc", SearchOption.AllDirectories)) {
+      foreach (var file in Directory.EnumerateFiles ("W:\\Books\\Nori", "*.adoc", SearchOption.AllDirectories)) {
          if (file.ToUpper ().Contains ("\\PARK\\")) continue;
          yield return file; 
       }

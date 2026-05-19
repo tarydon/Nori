@@ -149,10 +149,13 @@ class ShaderImp {
    public static ShaderImp Gourad => mGourad ??= Load ();
    public static ShaderImp Phong => mPhong ??= Load ();
    public static ShaderImp PhongPink => mPhongPink ??= Load ();
-   public static ShaderImp Pick => mPick ??= Load ();
    public static ShaderImp Glass => mGlass ??= Load ();
    public static ShaderImp FlatFacet => mFlatFacet ??= Load ();
-   static ShaderImp? mBlackLine, mGlassLine, mGourad, mPhong, mPhongPink, mPick, mFlatFacet, mGlass;
+   static ShaderImp? mBlackLine, mGlassLine, mGourad, mPhong, mPhongPink, mFlatFacet, mGlass;
+
+   public static ShaderImp Pick => mPick ??= Load ();
+   public static ShaderImp Decal => mDecal ??= Load ();
+   static ShaderImp? mPick, mDecal;
 
    public static ShaderImp TriFanStencil => mTriFanStencil ??= Load ();
    public static ShaderImp TriFanCover => mTriFanCover ??= Load ();
@@ -300,6 +303,7 @@ readonly record struct Attrib (int Dims, EDataType Type, int Size, bool Integral
          EVertexSpec.Vec4S => [AVec4s],
          EVertexSpec.Vec4S_Short => [AVec4s, AShort],
          EVertexSpec.Vec4S_Short_Short => [AVec4s, AShort, AShort],
+         EVertexSpec.Vec3F_Vec3H_Vec2F => [AVec3f, AVec3h, AVec2f],
          _ => throw new BadCaseException (spec)
       };
 
@@ -317,6 +321,7 @@ readonly record struct Attrib (int Dims, EDataType Type, int Size, bool Integral
          EVertexSpec.Vec4S => 8,
          EVertexSpec.Vec4S_Short => 10,
          EVertexSpec.Vec4S_Short_Short => 12,
+         EVertexSpec.Vec3F_Vec3H_Vec2F => 26,
          _ => throw new BadCaseException (spec)
       };
 }
@@ -326,7 +331,7 @@ readonly record struct Attrib (int Dims, EDataType Type, int Size, bool Integral
 // The various Vertex specifications used by OpenGL shaders
 enum EVertexSpec { Vec2F, Vec3F, Vec3F_Vec3H, Vec4S_Int, Vec2F_Vec4S_Int, Vec3F_Vec4S_Int, 
                    Vec2S, Vec2S_Vec4F, Vec2F_Vec4F, Vec4S, Vec4S_Short, Vec4S_Short_Short, 
-                   _Last }
+                   Vec3F_Vec3H_Vec2F, _Last }
 #endregion
 
 #region enum EStencilBehavior ----------------------------------------------------------------------

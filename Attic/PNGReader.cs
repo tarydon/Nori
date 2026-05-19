@@ -38,48 +38,48 @@ public class PNGReader : PNGCore {
    // Implementation -----------------------------------------------------------
    // Applies the per-line PNG filters
    void ApplyFilters () {
-      //// Normally, each line would take mWidth * mBPP bytes (width * bytes-per-pixel).
-      //// However, in the mRaw buffer, we have each line prefixed by a 1-byte 'filter policy'
-      //// so the stride there is 1 more than that. The stride in the 'filtered' buffer is
-      //// actually this width * byte-per-pixel value, which we call below as cbLine
-      //int cbLine = mRawStride - 1;
-      //mFilterStride = cbLine.RoundUp (4);
-      //mFiltered = new byte[mHeight * mFilterStride];
-      //for (int y = 0; y < mHeight; y++) {
-      //   int src = y * mRawStride + 1;    // Start of source data for scanline y
-      //   int dst = (mHeight - y - 1) * mFilterStride;     // Start of destination data for scanline y
-      //   int filter = mData[src - 1];      // Filter policy for this scanline
-      //   switch (filter) {
-      //      case 0:     // None
-      //         for (int x = 0; x < cbLine; x++)
-      //            mFiltered[dst + x] = mData[src + x];
-      //         break;
-      //      case 1:     // Sub (each pixel relative to one on the left)
-      //         for (int x = 0; x < mBPP; x++)
-      //            mFiltered[dst + x] = mData[src + x];
-      //         for (int x = mBPP; x < cbLine; x++)
-      //            mFiltered[dst + x] = (byte)(mData[src + x] + mFiltered[dst + x - mBPP]);
-      //         break;
-      //      case 2:     // Up (each pixel relative to the one above
-      //         for (int x = 0; x < cbLine; x++)
-      //            mFiltered[dst + x] = (byte)(mData[src + x] + mFiltered[dst + x + cbLine]);
-      //         break;
-      //      case 3:     // 'Average' algorithm
-      //         for (int x = 0; x < mBPP; x++) {
-      //            int dst1 = dst + x;
-      //            byte b1 = 0, b2 = mFiltered[dst1 + cbLine];
-      //            mFiltered[dst1] = (byte)(mData[src + x] + (b1 + b2) / 2);
-      //         }
-      //         for (int x = mBPP; x < cbLine; x++) {
-      //            int dst1 = dst + x;
-      //            byte b1 = mFiltered[dst1 - mBPP], b2 = mFiltered[dst1 + cbLine];
-      //            mFiltered[dst1] = (byte)(mData[src + x] + (b1 + b2) / 2);
-      //         }
-      //         break;
-      //      default:
-      //         throw new NotImplementedException ();
-      //   }
-      //}
+      // Normally, each line would take mWidth * mBPP bytes (width * bytes-per-pixel).
+      // However, in the mRaw buffer, we have each line prefixed by a 1-byte 'filter policy'
+      // so the stride there is 1 more than that. The stride in the 'filtered' buffer is
+      // actually this width * byte-per-pixel value, which we call below as cbLine
+      int cbLine = mRawStride - 1;
+      mFilterStride = cbLine.RoundUp (4);
+      mFiltered = new byte[mHeight * mFilterStride];
+      for (int y = 0; y < mHeight; y++) {
+         int src = y * mRawStride + 1;    // Start of source data for scanline y
+         int dst = (mHeight - y - 1) * mFilterStride;     // Start of destination data for scanline y
+         int filter = mData[src - 1];      // Filter policy for this scanline
+         switch (filter) {
+            case 0:     // None
+               for (int x = 0; x < cbLine; x++)
+                  mFiltered[dst + x] = mData[src + x];
+               break;
+            case 1:     // Sub (each pixel relative to one on the left)
+               for (int x = 0; x < mBPP; x++)
+                  mFiltered[dst + x] = mData[src + x];
+               for (int x = mBPP; x < cbLine; x++)
+                  mFiltered[dst + x] = (byte)(mData[src + x] + mFiltered[dst + x - mBPP]);
+               break;
+            case 2:     // Up (each pixel relative to the one above
+               for (int x = 0; x < cbLine; x++)
+                  mFiltered[dst + x] = (byte)(mData[src + x] + mFiltered[dst + x + cbLine]);
+               break;
+            case 3:     // 'Average' algorithm
+               for (int x = 0; x < mBPP; x++) {
+                  int dst1 = dst + x;
+                  byte b1 = 0, b2 = mFiltered[dst1 + cbLine];
+                  mFiltered[dst1] = (byte)(mData[src + x] + (b1 + b2) / 2);
+               }
+               for (int x = mBPP; x < cbLine; x++) {
+                  int dst1 = dst + x;
+                  byte b1 = mFiltered[dst1 - mBPP], b2 = mFiltered[dst1 + cbLine];
+                  mFiltered[dst1] = (byte)(mData[src + x] + (b1 + b2) / 2);
+               }
+               break;
+            default:
+               throw new NotImplementedException ();
+         }
+      }
    }
 
    // If this is a palette-based format, apply the palette (converting the palette indices

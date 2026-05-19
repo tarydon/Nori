@@ -1,8 +1,8 @@
 ; All-Ents
 (Dwg2){
   Layers:[
-    { Name:0 Color:#FFFFFFFF Linetype:Continuous }
-    { Name:Defpoints Color:#FFFFFFFF Linetype:Continuous }
+    { Name:0 Color:White Linetype:Continuous }
+    { Name:Defpoints Color:White Linetype:Continuous }
   ]
   Styles:[
     { Name:Standard Font:simplex XScale:1 }

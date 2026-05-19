@@ -30,3 +30,4 @@ RectBorderPx     19  Points       Vec4S_Short        1      0      0        None
 RRectPx          20  Points       Vec4S_Short        1      0      0        None     RRect.vert|RRect.geom|RRect.frag
 RRectBorderPx    21  Points       Vec4S_Short_Short  1      0      0        None     RRectBorder.vert|RRectBorder.geom|RRectBorder.frag
 DeePx            22  Points       Vec4S_Short_Short  1      0      0        None     Dee.vert|Dee.geom|Dee.frag
+Decal           108  Quads        Vec3F_Vec3H_Vec2F  1      1      0        None     Decal.vert|Decal.frag

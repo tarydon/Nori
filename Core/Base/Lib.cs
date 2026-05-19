@@ -69,12 +69,6 @@ public static class Lib {
    /// This clamps values beyond the range -1 .. +1 to lie within that range
    public static double Acos (double f) => Math.Acos (f.Clamp (-1, 1));
 
-   /// <summary>
-   /// Adds metadata (from a file like AuManifest.txt)
-   /// </summary>
-   public static void AddMetadata (string file) 
-      => AuType.AddTactics (File.ReadAllLines (file));
-
    /// <summary>Add an assembly to the list of 'known' assemblies</summary>
    /// These are the assemblies searched when we try to get a type by name
    public static void AddAssembly (Assembly assy) => mAssemblies.Add (assy);
@@ -84,6 +78,7 @@ public static class Lib {
    /// is specified, these namespaces are prepended to that name to try to form a match
    public static void AddNamespace (string nameSpace) => mNamespaces.Add ($"{nameSpace.TrimEnd ('.')}.");
 
+   /// <summary>Adds Metadata into the AuType system (like from the AuManifest.txt file)</summary>
    public static void AddMetadata (string[] metadata) => AuType.AddTactics (metadata);
 
    /// <summary>Checks a condition, and throws an exception if it fails</summary>

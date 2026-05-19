@@ -56,14 +56,16 @@ public readonly struct Color4 : IEQuable<Color4> {
    /// - #AARRGGBB : 8 digit hex, 2 digits each for Alpha, Red, Green, Blue
    /// - #RRGGBB : 6 digit hex, 2 digits each for Red, Green, Blue. Alpha set to 0xFF
    /// - #RGB : 3 digit hex, expands into #RRGGBB (similar to 3 digit hex codes for HTML colors)
+   /// - #NN : 2 digit hex, treated as a gray value from 00 (black) to FF (white)
    /// - Named values like Red, Transparent, Blue etc
    public static Color4 Parse (string s) {
       BuildMap ();
       if (sParse.TryGetValue (s, out var c)) return c;
-      if (s.Length is 4 or 7 or 9 && s[0] == '#') {
+      if (s.Length is 3 or 4 or 7 or 9 && s[0] == '#') {
          Span<char> inp = stackalloc char[8];
          inp[0] = inp[1] = 'F';
          switch (s.Length) {
+            case 3: for (int i = 1; i <= 3; i++) { inp[i * 2] = s[1]; inp[i * 2 + 1] = s[2]; } break;
             case 4: for (int i = 0; i < 3; i++) inp[i * 2 + 2] = inp[i * 2 + 3] = s[i + 1]; break;
             case 7: for (int i = 0; i < 6; i++) inp[i + 2] = s[i + 1]; break;
             default: for (int i = 0; i < 8; i++) inp[i] = s[i + 1]; break;
@@ -78,15 +80,16 @@ public readonly struct Color4 : IEQuable<Color4> {
    public static readonly Color4 Nil = new (0, 0, 0, 0);
    public static readonly Color4 Transparent = new (0, 255, 255, 255);
    public static readonly Color4 Black = new (0, 0, 0);
+   public static readonly Color4 White = new (255, 255, 255);
    public static readonly Color4 Red = new (255, 0, 0);
-   public static readonly Color4 Green = new (0, 255, 0);
-   public static readonly Color4 DarkGreen = new (0, 128, 0);
    public static readonly Color4 Blue = new (0, 0, 255);
-   public static readonly Color4 DarkBlue = new (0, 0, 176);
+   public static readonly Color4 Green = new (0, 255, 0);
    public static readonly Color4 Yellow = new (255, 255, 0);
    public static readonly Color4 Magenta = new (255, 0, 255);
    public static readonly Color4 Cyan = new (0, 255, 255);
-   public static readonly Color4 White = new (255, 255, 255);
+   public static readonly Color4 DarkGreen = new (0, 128, 0);
+   public static readonly Color4 DarkBlue = new (0, 0, 128);
+   public static readonly Color4 DarkRed = new (0, 0, 128);
 
    public static Color4 Random => new (mRand.Next (256), mRand.Next (256), mRand.Next (256));
    public static Color4 RandomLight => new (mRand.Next (128) + 128, mRand.Next (128) + 128, mRand.Next (128) + 128);
@@ -107,20 +110,28 @@ public readonly struct Color4 : IEQuable<Color4> {
    public static Color4 Gray (int v) => new (v, v, v);
 
    /// <summary>Read a Color4 from a UTF8 stream</summary>
-   public static Color4 Read (UTFReader R) { R.Match ('#').Read (out uint value, true); return new (value); }
+   public static Color4 Read (UTFReader R) { R.Read (out string s); return Parse (s); }
 
+   /// <summary>Convert a Color4 to a string</summary>
+   /// There are several formats possible, we will choose the most compact representation:
+   /// - #FF0080E0 : (8 hex digits) Color with A, R, G, B components
+   /// - #0080E0 : (6 hex digits) R, G, B, components provided, A implicitly set to 255
+   /// - #08D : (3 hex digits) Same as the color value #0088DD (which is the same as #FF0088DD)
+   /// - #75 : (2 hex digits) Same as Gray(0x75), or #FF757575
+   /// - Red : One of the named colors listed above
    public override string ToString () {
       BuildMap ();
       if (sNames.TryGetValue (this, out var s)) return $"{s}";
-      s = $"{(uint)((A << 24) | (R << 16) | (G << 8) | B):X8}";
-      if (s.StartsWith ("FF")) s = s[2..];
-      if (s.Length == 6 && s[0] == s[1] && s[2] == s[3] && s[4] == s[5])
-         s = $"{s[0]}{s[2]}{s[4]}";
-      return $"#{s}";
+      if (A == 255 && R == G && R == B) return $"#{R:X2}";
+      uint val = (uint)((R << 16) | (G << 8) | B);
+      s = (A == 255) ? $"#{val:X6}" : $"#{(((uint)A << 24) | val):X8}";
+      if (s.Length == 7 && s[1] == s[2] && s[3] == s[4] && s[5] == s[6])
+         s = $"#{s[1]}{s[3]}{s[5]}";
+      return s;
    }
 
    /// <summary>Write a Color4 to a UTF8 stream</summary>
-   public void Write (UTFWriter W) => W.Write ('#').Write (Value, true);
+   public void Write (UTFWriter W) => W.Write (ToString ());
 
    // Operators ----------------------------------------------------------------
    /// <summary>Converts the color to a Vec4f with the X,Y,Z,W components mapping to R,G,B,A</summary>
@@ -145,6 +156,7 @@ public readonly struct Color4 : IEQuable<Color4> {
 #region struct CoordSystem -------------------------------------------------------------------------
 /// <summary>Defines a CoordSystem in 3-D space (given by origin point, x-vector and y-vector)</summary>
 /// The Z-vector of the coordinate system is defined using the right-hand rule: Z = X.Cross(Y)
+[AuPrimitive]
 public readonly struct CoordSystem {
    // Constructors -------------------------------------------------------------
    /// <summary>Constructor to make a CoordSystem given the origin, X and Y axes</summary>
@@ -157,6 +169,22 @@ public readonly struct CoordSystem {
    /// <summary>A new coordinate system that has only a shift of origin (alignment is the same as world)</summary>
    public CoordSystem (Point3 org)
       => (Org, VecX, VecY) = (org, Vector3.XAxis, Vector3.YAxis);
+
+   /// <summary>Reads a CoordSystem from a UTFReader (used to load from Curl file)</summary>
+   /// There are 4 different formats:
+   /// - "World" : The special world coordinate system (Org=0,0,0; VecX=1,0,0; VecY=0,1,0)
+   /// - "2,3,4" : Coordinate system with origin at 2,3,4, aligned with world (only translation)
+   /// - "0,0,1|0,-1,0" : Origin at zero (0,0,0), VecX = 0,0,1, VecY = 0,-1,0
+   /// - "1,2,3|0,0,1|0,-1,0" : Origin at (1,2,3), VecX=(0,0,1), VecY=(0,-1,0)
+   public static CoordSystem Read (UTFReader R) {
+      if (R.Peek () == 'W') { R.Match ("World"u8); return World; }
+      R.Read (out double x).Match (',').Read (out double y).Match (',').Read (out double z);
+      if (R.Peek () != '|') return new CoordSystem (new (x, y, z));
+      R.Match ('|').Read (out double x1).Match (',').Read (out double y1).Match (',').Read (out double z1);
+      if (R.Peek () != '|') return new CoordSystem (Point3.Zero, new (x, y, z), new (x1, y1, z));
+      R.Match ('|').Read (out double x2).Match (',').Read (out double y2).Match (',').Read (out double z2);
+      return new CoordSystem (new (x, y, z), new (x1, y1, z1), new (x2, y2, z2));
+   }
 
    // Properties ---------------------------------------------------------------
    /// <summary>Is this similar to the world coordinate system?</summary>
@@ -182,6 +210,26 @@ public readonly struct CoordSystem {
    /// <summary>The 'nil' coordinate system (uninitialized)</summary>
    public static readonly CoordSystem Nil = new (Point3.Nil);
 
+   // Methods ------------------------------------------------------------------
+   /// <summary>Writes a CoordSystem to a UTF8 stream</summary>
+   /// There are 4 different formats:
+   /// - "World" : The special world coordinate system (Org=0,0,0; VecX=1,0,0; VecY=0,1,0)
+   /// - "2,3,4" : Coordinate system with origin at 2,3,4, aligned with world (only translation)
+   /// - "0,0,1|0,-1,0" : Origin at zero (0,0,0), VecX = 0,0,1, VecY = 0,-1,0
+   /// - "1,2,3|0,0,1|0,-1,0" : Origin at (1,2,3), VecX=(0,0,1), VecY=(0,-1,0)
+   public void Write (UTFWriter W) {
+      Point3 o = Org.R6 (); Vector3 x = VecX.R6 (), y = VecY.R6 ();
+      bool aligned = x.EQ (Vector3.XAxis) && y.EQ (Vector3.YAxis), ozero = o.EQ (Point3.Zero);
+      if (aligned && ozero) { W.Write ("World"u8); return; }
+      if (!ozero) W.Write (o.X).Write (',').Write (o.Y).Write (',').Write (o.Z);
+      if (!aligned) {
+         if (!ozero) W.Write ('|');
+         W.Write (x.X).Write (',').Write (x.Y).Write (',').Write (x.Z);
+         W.Write ('|').Write (y.X).Write (',').Write (y.Y).Write (',').Write (y.Z);
+      }
+   }
+   public override string ToString () => UTFWriter.ToString (Write);
+
    // Operators ----------------------------------------------------------------
    /// <summary>Shift a coordinate system by a given amount without rotating it</summary>
    public static CoordSystem operator + (CoordSystem cs, Vector3 vec)
@@ -193,9 +241,6 @@ public readonly struct CoordSystem {
       if (xfm.HasScaling) { vecx = vecx.Normalized (); vecy = vecy.Normalized (); }
       return new (org, vecx, vecy);
    }
-
-   public override string ToString ()
-      => $"CoordSystem:{Org.R6 ()},{VecX.R6 ()},{VecY.R6 ()}";
 }
 #endregion
 

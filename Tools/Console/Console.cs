@@ -109,6 +109,45 @@ static class Program {
       }
    }
 
+   // Converts a Flux Mesh2 file (model + collision-model) into a .msh2 file (same information,
+   // but the collision model is now just a TopoMesh (more efficient)
+   [ConsoleCommand]
+   static void MESH2toMSH2 () {
+      string[] args = Environment.GetCommandLineArgs ();
+      if (args.Length != 3) {
+         Console.ForegroundColor = ConsoleColor.Yellow;
+         Console.WriteLine ("Usage: MESH2toMSH2 <input.mesh2>");
+         Console.ResetColor ();
+         Environment.Exit (1);
+      }
+      string mesh2 = args[2];
+      if (!File.Exists (mesh2)) {
+         Console.ForegroundColor = ConsoleColor.Red;
+         Console.WriteLine ($"File not found: {mesh2}");
+         Console.ResetColor ();
+         Environment.Exit (1);
+      }
+
+      using var zip1 = File.OpenRead (mesh2);
+      using var zar1 = new ZipArchive (zip1, ZipArchiveMode.Read);
+      Mesh3 model; TopoMesh crash;
+      using (var stm1 = zar1.Open ("model.mesh")) 
+         model = Mesh3.LoadFluxMesh (stm1);
+      using (var stm2 = zar1.Open ("crash.mesh"))
+         crash = Mesh3.LoadFluxMesh (stm2).ToTopoMesh ();
+
+      string msh2 = Path.ChangeExtension (mesh2, "msh2");
+      try { File.Delete (msh2); } catch { }
+      using var zip2 = File.OpenWrite (msh2);
+      using var zar2 = new ZipArchive (zip2, ZipArchiveMode.Create, false);
+      var entry = zar2.CreateEntry ("model.msh", CompressionLevel.SmallestSize);
+      using (var stm1 = entry.Open ())
+         model.Save (stm1);
+      entry = zar2.CreateEntry ("crash.msht", CompressionLevel.SmallestSize);
+      using (var stm2 = entry.Open ())
+         crash.Save (stm2);
+   }
+
    // Placeholder for putting in some test code and running it
    [ConsoleCommand]
    static void TestHook () {

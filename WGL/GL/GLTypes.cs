@@ -120,9 +120,9 @@ public enum EStencilFunc : uint {
 public enum EStencilOp : uint { Keep = 0x1e00, Zero = 0, Replace = 0x1e01, Incr = 0x1e02, Decr = 0x1e03, Invert = 0x150a }
 
 // Texture related enums
-public enum ETexUnit : uint { Tex0 = 33984, Tex1 = 33985, Tex2 = 33986, Tex3 = 33987 }
+public enum ETexUnit : uint { Tex0 = 33984, Tex1 = 33985, Tex2 = 33986, Tex3 = 33987, Tex4 = 33988 }
 public enum ETexTarget : uint { Texture1D = 3552, Texture2D = 3553, TexRectangle = 0x84F5 }
-public enum EPixelInternalFormat : uint { Red = 6403 }
+public enum EPixelInternalFormat : uint { Red = 6403, RGB = 6407, RGBA = 6408 }
 public enum ETexParam : uint { MagFilter = 0x2800, MinFilter = 0x2801, WrapS = 0x2802, WrapT = 0x2803 }
 public enum ETexFilter { Nearest = 9728, Linear = 9729 }
 public enum ETexWrap { Clamp = 10496, Repeat = 10497 }

@@ -55,9 +55,9 @@ public class TwoViewMesher {
       }
       AddSliceWalls (); AddHorzPlanes ();
 
-      var tm = new TopoMesh (mPts).RemoveTJoints ();
+      var tm = new TopoMesh (mPts).TJointsRemoved ();
       mPts.Clear ();
-      foreach (var n in tm.Index) mPts.Add ((Point3)tm.Pts[n]);
+      foreach (var n in tm.Triangle) mPts.Add ((Point3)tm.Pts[n]);
       return new Mesh3Builder (mPts.AsSpan ()).Build ();
    }
 
