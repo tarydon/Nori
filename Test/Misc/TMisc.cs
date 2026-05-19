@@ -405,14 +405,14 @@ class TMisc {
       dwg.Add (Poly.Line (0, 0, 50, 50)); dwg.Add (Poly.Line (50, 50, 100, 100));
 
       // Add new layers with their names matching existing layers
-      dwg.Add (new Layer2 ("Rect", Color4.Yellow, ELineType.Dot));
-      dwg.Add (new Layer2 ("Line", Color4.Green, ELineType.DashDot));
-      dwg.Add (new Layer2 ("Circle", Color4.White, ELineType.Dash));
+      dwg.Layers.Add (new Layer2 ("Rect", Color4.Yellow, ELineType.Dot));
+      dwg.Layers.Add (new Layer2 ("Line", Color4.Green, ELineType.DashDot));
+      dwg.Layers.Add (new Layer2 ("Circle", Color4.White, ELineType.Dash));
       Assert.IsTrue (dwg.Layers.Count == 3);
       CurlWriter.Save (dwg, NT.TmpCurl);
       Assert.TextFilesEqual ("Misc/Layers.curl", NT.TmpCurl);
 
-      void SetLayer (Layer2 layer) { dwg.Add (layer); dwg.CurrentLayer = layer; }
+      void SetLayer (Layer2 layer) { dwg.Layers.Add (layer); dwg.Layers.Current = layer; }
    }
 
    [Test (147, "Minimum Enclosing Circle/Sphere")]

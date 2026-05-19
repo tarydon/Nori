@@ -75,8 +75,8 @@ public class ModifyDwgLayers : UndoStep {
    // Add/remove the necessary layers
    public override void Step (EUndoDir dir) {
       var (add, rmv) = dir == EUndoDir.Redo ? (mAdd, mRmv) : (mRmv, mAdd);
-      foreach (var layer in rmv) mDwg.Remove (layer);
-      foreach (var layer in add) mDwg.Add (layer);
+      foreach (var layer in rmv) mDwg.Layers.Remove (layer);
+      foreach (var layer in add) mDwg.Layers.Add (layer);
    }
 
    // Private data -------------------------------------------------------------

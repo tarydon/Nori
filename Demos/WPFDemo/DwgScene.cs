@@ -16,7 +16,7 @@ class DwgScene : Scene2 {
 
    Dwg2 MakeDwg () {
       var dwg = new Dwg2 ();
-      var layer = dwg.CurrentLayer;
+      var layer = dwg.Layers.Current;
 
       List<Ent2> bSet = [];
       bSet.Add (new E2Poly (layer, Poly.Parse ("M-1,-1 V-3 H1 V-1 H3 V1 H1 V3 H-1 V1 H-3 V-1Z")));

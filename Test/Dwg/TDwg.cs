@@ -8,12 +8,12 @@ namespace Nori.Testing;
 class DwgSnapTests {
    DwgSnapTests () {
       mDwg = DXFReader.Load (NT.File ("Dwg/Snap.dxf"));
-      List<Ent2> ents = [new E2Poly (mDwg.CurrentLayer, Poly.Circle (Point2.Zero, 10)), 
-                         new E2Poly (mDwg.CurrentLayer, Poly.Line (Point2.Zero, new (10, 10)))];
-      Block2 block = new Block2 ("STAR", Point2.Zero, ents); mDwg.Add (block);
-      Style2 style = new Style2 ("STD", "SIMPLEX", 0, 1, 0); mDwg.Add (style);
-      mDwg.Ents.Add (new E2Text (mDwg.CurrentLayer, mDwg.Styles[^1], "Hello", new (-110, 20), 10, 0, 0, 1, ETextAlign.BaseLeft));
-      mDwg.Ents.Add (new E2Insert (mDwg, mDwg.CurrentLayer, "STAR", new (-110, 30), 0, 1, 1));
+      List<Ent2> ents = [new E2Poly (mDwg.Layers.Current, Poly.Circle (Point2.Zero, 10)), 
+                         new E2Poly (mDwg.Layers.Current, Poly.Line (Point2.Zero, new (10, 10)))];
+      Block2 block = new ("STAR", Point2.Zero, ents); mDwg.Add (block);
+      Style2 style = new ("STD", "SIMPLEX", 0, 1, 0); mDwg.Add (style);
+      mDwg.Ents.Add (new E2Text (mDwg.Layers.Current, mDwg.Styles[^1], "Hello", new (-110, 20), 10, 0, 0, 1, ETextAlign.BaseLeft));
+      mDwg.Ents.Add (new E2Insert (mDwg, mDwg.Layers.Current, "STAR", new (-110, 30), 0, 1, 1));
       mSnap = new DwgSnap (mDwg);
    }
 

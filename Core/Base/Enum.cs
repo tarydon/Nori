@@ -49,7 +49,7 @@ public enum EProp {
    /// <summary>This entity is 'colliding'</summary>
    Colliding,
 
-   Grid, FillInterior, CurrentLayer
+   Grid, FillInterior, CurrentLayer, CurrentStyle, CurrentDimStyle,
 }
 
 /// <summary>Result enumeration (returned by several algorithms)</summary>
@@ -72,4 +72,17 @@ public enum ETextAlign {
 
 /// <summary>Various render-targets for Lux.Panel</summary>
 public enum ETarget { Screen, Image, Pick }
+
+public enum EError {
+   /// <summary>A null value is not allowed</summary>
+   NoNulls = 1,
+   /// <summary>Invalid name for this object</summary>
+   BadName = 2,
+   /// <summary>This entity is in use (has references) and cannot be removed</summary>
+   InUse = 3,
+   /// <summary>The name is duplicated (similarly named object exists already)</summary>
+   DuplicateName = 4,
+   /// <summary>The supplied item was not found in the list</summary>
+   NotInList = 5,
+}
 #endregion

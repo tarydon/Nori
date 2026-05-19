@@ -43,19 +43,19 @@ class Misc2 {
    [Test (115, "Eval: exceptions during expression evaluation")]
    void Test3 () {
       Eval e = new ();
-      e.TryEvaluate ("1 + 2 +", out double v).IsFalse ();
-      e.TryEvaluate ("1 + 2 3", out v).IsFalse ();
-      e.TryEvaluate ("1 * (2 + 3", out v).IsFalse ();
+      e.TryEvaluate ("1 + 2 +", out _).IsFalse ();
+      e.TryEvaluate ("1 + 2 3", out _).IsFalse ();
+      e.TryEvaluate ("1 * (2 + 3", out _).IsFalse ();
    }
 
    [Test (169, "UndoStep.Push with no UndoStack in place")]
    void Test4 () {
       Dwg2 dwg = new ();
-      var p1 = new E2Poly (dwg.CurrentLayer, Poly.Line (new (0, 0), new (10, 0)));
+      var p1 = new E2Poly (dwg.Layers.Current, Poly.Line (new (0, 0), new (10, 0)));
       new ModifyDwgEnts (dwg, "Add Line", [p1], []).Push ();
       dwg.Ents.Count.Is (1);
 
-      var p2 = new E2Poly (dwg.CurrentLayer, Poly.Line (new (10, 0), new (10, 5)));
+      var p2 = new E2Poly (dwg.Layers.Current, Poly.Line (new (10, 0), new (10, 5)));
       new ModifyDwgEnts (dwg, "Add Line2", [p2], []).Push ();
       dwg.Ents.Count.Is (1);
       var e2p = (E2Poly)dwg.Ents[0];
@@ -67,13 +67,13 @@ class Misc2 {
       try {
          Dwg2 dwg = new ();
          var stack = UndoStack.Current = new (); 
-         var p0 = new E2Poly (dwg.CurrentLayer, Poly.Circle (Point2.Zero, 10));
+         var p0 = new E2Poly (dwg.Layers.Current, Poly.Circle (Point2.Zero, 10));
          new ModifyDwgEnts (dwg, "Add Circle", [p0], []).Push ();
          dwg.Ents.Count.Is (1);
          stack.NextUndo?.Description.Is ("Add Circle");
          (stack.NextRedo == null).IsTrue ();
 
-         var p1 = new E2Poly (dwg.CurrentLayer, Poly.Line (new (0, 0), new (10, 0)));
+         var p1 = new E2Poly (dwg.Layers.Current, Poly.Line (new (0, 0), new (10, 0)));
          new ModifyDwgEnts (dwg, "Add Line", [p1], [p0]).Push ();
          dwg.Ents.Count.Is (1);
          var e2p = (E2Poly)dwg.Ents[0]; e2p.Poly.Is ("M0,0H10");
@@ -100,7 +100,7 @@ class Misc2 {
          stack.NextUndo?.Description.Is ("Add MBend Layer");
          stack.NextRedo?.Description.Is ("Add Rect");
 
-         var p4 = new E2Poly (dwg.CurrentLayer, Poly.Circle (Point2.Zero, 5));
+         var p4 = new E2Poly (dwg.Layers.Current, Poly.Circle (Point2.Zero, 5));
          new ModifyDwgEnts (dwg, "Add Circle2", [p4], []).Push ();
          (stack.NextRedo == null).IsTrue ();
          stack.NextUndo?.Description.Is ("Add Circle2");
@@ -114,7 +114,7 @@ class Misc2 {
       try {
          Dwg2 dwg = new ();
          var stack = UndoStack.Current = new ();
-         var p0 = new E2Poly (dwg.CurrentLayer, Poly.Circle (Point2.Zero, 10));
+         var p0 = new E2Poly (dwg.Layers.Current, Poly.Circle (Point2.Zero, 10));
          new ModifyDwgEnts (dwg, "Add Circle", [p0], []).Push ();
          dwg.Ents.Count.Is (1);
 
@@ -124,7 +124,7 @@ class Misc2 {
          stack.NextUndo?.Description.Is ("Add Circle");
          // One step to club, ClubSteps will simply keep that step
          new ClubbedStep (dwg, "OneStep").Push ();
-         var p1 = new E2Poly (dwg.CurrentLayer, Poly.Circle (Point2.Zero, 5));
+         var p1 = new E2Poly (dwg.Layers.Current, Poly.Circle (Point2.Zero, 5));
          new ModifyDwgEnts (dwg, "Add Circle2", [p1], []).Push ();
          stack.ClubSteps ();
          dwg.Ents.Count.Is (2);

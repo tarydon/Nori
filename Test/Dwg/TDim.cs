@@ -57,7 +57,7 @@ class DimEntTests () {
 
    static Dwg2 MakeDimCallout () {
       Dwg2 dwg = new ();
-      var tstyle = dwg.GetStyle ("STANDARD")!;
+      var tstyle = dwg.CurrentStyle;
       dwg.Add (Poly.Rectangle (2, 15, 58, 75));
       DimStyle2 style; double dx, dy;
 
@@ -84,13 +84,13 @@ class DimEntTests () {
 
       void Add (params double[] vals) {
          var pts = Point2.List (vals).Select (a => a.Moved (dx, dy)).ToList ();
-         dwg.Add (new E2Leader (dwg.CurrentLayer, dwg.CurrentDimStyle, pts, $"LEAD~{(char)++n}"));
+         dwg.Add (new E2Leader (dwg.Layers.Current, dwg.CurrentDimStyle, pts, $"LEAD~{(char)++n}"));
       }
    }
 
    static Dwg2 MakeDimLinear () {
       var dwg = DXFReader.Load (NT.File ("Dwg/Dim/DimAligned-Blank.dxf"), true);
-      var tstyle = dwg.GetStyle ("STANDARD")!;
+      var tstyle = dwg.CurrentStyle;
       DimStyle2 style; double dx, dy, a0 = 0, a1 = Lib.HalfPI, a2 = Math.Atan2 (1, -2);
 
       dx = 0; dy = 0;
@@ -134,13 +134,13 @@ class DimEntTests () {
 
       void Add (double angle, params double[] vals) {
          var pts = Point2.List (vals).Select (a => a.Moved (dx, dy)).ToList ();
-         dwg.Add (new E2DimLinear (dwg.CurrentLayer, dwg.CurrentDimStyle, angle, pts));
+         dwg.Add (new E2DimLinear (dwg.Layers.Current, dwg.CurrentDimStyle, angle, pts));
       }
    }
 
    static Dwg2 MakeDimAligned () {
       var dwg = DXFReader.Load (NT.File ("Dwg/Dim/DimAligned-Blank.dxf"), true);
-      var tstyle = dwg.GetStyle ("STANDARD")!;
+      var tstyle = dwg.CurrentStyle;
       DimStyle2 style; double dx, dy;
 
       dx = 0; dy = 0;
@@ -194,15 +194,15 @@ class DimEntTests () {
 
       void Add (params double[] vals) {
          var pts = Point2.List (vals).Select (a => a.Moved (dx, dy)).ToList ();
-         dwg.Add (new E2DimAligned (dwg.CurrentLayer, dwg.CurrentDimStyle, pts));
+         dwg.Add (new E2DimAligned (dwg.Layers.Current, dwg.CurrentDimStyle, pts));
       }
    }
 
    static Dwg2 MakeDimAngle () {
       var dwg = DXFReader.Load (NT.File ("Dwg/Dim/DimAngle-Blank.dxf"), true);
-      var tstyle = dwg.GetStyle ("STANDARD")!;
+      var tstyle = dwg.CurrentStyle;
       var layer = new Layer2 ("DIMENSION", Color4.Black, ELineType.Continuous);
-      dwg.Add (layer); dwg.CurrentLayer = layer;
+      dwg.Layers.Add (layer); dwg.Layers.Current = layer;
 
       double dx = 0, dy = 0;
       var style = new DimStyle2 ("BREAK", tstyle);
@@ -255,15 +255,15 @@ class DimEntTests () {
          if (dwg.PickPoly (input[0], 5, out var tp1)) pts.AddM (tp1.Poly.A, tp1.Poly.B);
          if (dwg.PickPoly (input[1], 5, out var tp2)) pts.AddM (tp2.Poly.A, tp2.Poly.B);
          pts.Add (input[2]);
-         dwg.Add (new E2DimAngle (dwg.CurrentLayer, dwg.CurrentDimStyle, pts));
+         dwg.Add (new E2DimAngle (dwg.Layers.Current, dwg.CurrentDimStyle, pts));
       }
    }
 
    static Dwg2 MakeDim3PAngle () {
       var dwg = DXFReader.Load (NT.File ("Dwg/Dim/Dim3PAngle-Blank.dxf"), true);
-      var tstyle = dwg.GetStyle ("STANDARD")!;
+      var tstyle = dwg.CurrentStyle;
       var layer = new Layer2 ("DIMENSION", Color4.Black, ELineType.Continuous);
-      dwg.Add (layer); dwg.CurrentLayer = layer;
+      dwg.Layers.Add (layer); dwg.Layers.Current = layer;
 
       double dx = 0, dy = 0;
       var style = new DimStyle2 ("BREAK", tstyle);
@@ -306,13 +306,13 @@ class DimEntTests () {
          List<double> vals = [];
          vals.AddM (20, 20, 35, 20, 30, 30, x, y);
          var input = Point2.List ([.. vals]).Select (a => a.Moved (dx, dy)).ToList ();
-         dwg.Add (new E2Dim3PAngle (dwg.CurrentLayer, dwg.CurrentDimStyle, input));
+         dwg.Add (new E2Dim3PAngle (dwg.Layers.Current, dwg.CurrentDimStyle, input));
       }
    }
 
    static Dwg2 MakeDimDia () {
       var dwg = DXFReader.Load (NT.File ("Dwg/Dim/DimDia-Blank.dxf"), true);
-      var tstyle = dwg.GetStyle ("STANDARD")!;
+      var tstyle = dwg.CurrentStyle;
       DimStyle2 style; double dx, dy;
 
       dx = 0; dy = 0;
@@ -365,13 +365,13 @@ class DimEntTests () {
          var pts = Point2.List (vals).Select (a => a.Moved (dx, dy)).ToList ();
          dwg.PickPoly (pts[0], 3, out var p);
          var seg = p.Poly[p.Seg]; pts[0] = seg.Center;
-         dwg.Add (new E2DimDia (dwg.CurrentLayer, dwg.CurrentDimStyle, seg.Radius, tofl, pts));
+         dwg.Add (new E2DimDia (dwg.Layers.Current, dwg.CurrentDimStyle, seg.Radius, tofl, pts));
       }
    }
 
    static Dwg2 MakeDimRad () {
       var dwg = DXFReader.Load ("N:/TData/Dwg/Dim/DimRad-Blank.dxf");
-      var tstyle = dwg.GetStyle ("STANDARD")!;
+      var tstyle = dwg.CurrentStyle;
       DimStyle2 style; double dx, dy;
 
       dx = 0; dy = 0;
@@ -430,7 +430,7 @@ class DimEntTests () {
          dwg.PickPoly (pts[0], 3, out var p);
          var seg = p.Poly[p.Seg];
          pts[0] = seg.Center;
-         dwg.Add (new E2DimRad (dwg.CurrentLayer, dwg.CurrentDimStyle, seg.Radius, tofl, pts));
+         dwg.Add (new E2DimRad (dwg.Layers.Current, dwg.CurrentDimStyle, seg.Radius, tofl, pts));
       }
    }
 }

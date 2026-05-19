@@ -131,7 +131,7 @@ public class DXFReader {
       Layer2? layer = null;
       List<Block2> blocks = [];
       if (RelayerDimensions)
-         mDwg.Add (layer = new Layer2 ("Dimension", Color4.Blue, ELineType.Continuous));
+         mDwg.Layers.Add (layer = new Layer2 ("Dimension", Color4.Blue, ELineType.Continuous));
       foreach (var (dim, name) in mDimMap) {
          if (dim.LoadEnts (mDwg, name) is { } block) {
             if (layer != null) dim.Layer = layer;
@@ -173,7 +173,7 @@ public class DXFReader {
       NextAll ();
       EDim kind = (EDim)(N (70) & 7);
       mPts.Clear (); 
-      var (layer, style, text) = (LYR (), mDwg.GetDimStyle (S (3)), S (1));
+      var (layer, style, text) = (LYR (), mDwg.GetDimStyle (S (3)) ?? mDwg.CurrentDimStyle, S (1));
 
       E2Dim? dim = kind switch {
          EDim.Angular3P => new E2Dim3PAngle (layer, style, AddN (15, 13, 14, 10, 11), text),
@@ -386,7 +386,7 @@ public class DXFReader {
          case LAYER:
             bool visible = N (70).IsEven ();
             var layer = new Layer2 (S (2), CLR (), GetLType (S (6))) { IsVisible = visible };
-            if (mLayerMap.TryAdd (layer.Name, layer)) mDwg.Add (layer);
+            if (mLayerMap.TryAdd (layer.Name, layer)) mDwg.Layers.Add (layer);
             break;
          case MTEXT:
             var (nAlign, dx, dy) = (N (71), D (11), D (21));
@@ -470,7 +470,7 @@ public class DXFReader {
    // Sets up the current layer, dimension style etc
    void SetCurrent () {
       if (mDwg.Layers.FirstOrDefault (a => a.Name == mCurrentLayer) is { } layer)
-         mDwg.CurrentLayer = layer;
+         mDwg.Layers.Current = layer;
       if (mDwg.DimStyles.FirstOrDefault (a => a.Name == mCurrentDimStyle) is { } dimstyle)
          mDwg.CurrentDimStyle = dimstyle;
       mDwg.Filename = mFilename;
@@ -515,17 +515,17 @@ public class DXFReader {
    // Group value G as a linear value (scaled by current unit)
    double DLIN (int g) => D (g) * Scale;
 
-   DimStyle2 DSTYL () => mDwg.GetDimStyle (S (3));
+   DimStyle2 DSTYL () => mDwg.GetDimStyle (S (3)) ?? mDwg.CurrentDimStyle;
 
    // Group value G as a float
    float F (int g) => SB (g).ToFloat ();
    float F (int g, float fallback) => SB (g).ToFloat (fallback);
 
    // Gets the layer whose name is stored in the group 8
-   Layer2 LYR () => mLayerMap.GetValueOrDefault (S (8)) ?? mDwg.CurrentLayer;
+   Layer2 LYR () => mLayerMap.GetValueOrDefault (S (8)) ?? mDwg.Layers.Current;
 
    // Gets the style whose name is stored in the group 7
-   Style2 STYL () => mStyleMap.GetValueOrDefault (S (7)) ?? mDwg.GetStyle ("STANDARD")!;
+   Style2 STYL () => mStyleMap.GetValueOrDefault (S (7)) ?? mDwg.CurrentStyle;
 
    // Group value G as an integer
    int N (int g) => SB (g).ToInt ();

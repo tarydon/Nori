@@ -147,7 +147,7 @@ public class DXFWriter {
       double height = Math.Max (b.Y.Length, b.X.Length * 0.6) * 1.1;
       Out ($" 9\n$VIEWCTR\n 10\n{b.X.Mid}\n 20\n{b.Y.Mid}\n");
       Out ($" 9\n$VIEWSIZE\n 40\n{height.R3 ()}\n");
-      Out ($" 9\n$CLAYER\n 8\n{D.CurrentLayer.Name}\n");
+      Out ($" 9\n$CLAYER\n 8\n{D.Layers.Current.Name}\n");
       if (D.Styles.Count > 0) Out ($" 9\n$DIMSTYLE\n 2\n{D.CurrentDimStyle.Name}\n");
       Out (" 0\nENDSEC\n");
    }
