@@ -362,7 +362,7 @@ public class E2DimAngle : E2Dim {
          double span = Math.Abs (seg.AngSpan).R2D ().Round (mStyle.AngDecimal);
          text = $"{span}\u00b0";
       }
-      SetTextPoint (5, BuildEnts (seg, pick, text, mPts.AsSpan ()[..4]));
+      SetTextPoint (5, BuildEnts (seg, pick, text, mPts.AsSpan ()));
    }
 
    protected override Ent2 Xformed (Matrix2 xfm) {
