@@ -354,7 +354,7 @@ public class E2DimAngle : E2Dim {
 
       double a0 = cen.AngleTo (mPts[1]), a1 = cen.AngleTo (mPts[3]), rad = cen.DistTo (pick);
       Point2 p0 = cen.Polar (rad, a0), p1 = cen.Polar (rad, a1);
-      if (pick.EQ (p1)) pick = cen.Polar (rad, (a0 + a1) / 2);
+      if (pick.EQ (p1) || pick.EQ (p0)) pick = cen.Polar (rad, (a0 + a1) / 2); // Ensure we form a "clean" arc
       var seg = Poly.Arc (p0, pick, p1)[0];
 
       string text = Text ?? "";
@@ -362,7 +362,7 @@ public class E2DimAngle : E2Dim {
          double span = Math.Abs (seg.AngSpan).R2D ().Round (mStyle.AngDecimal);
          text = $"{span}\u00b0";
       }
-      SetTextPoint (5, BuildEnts (seg, pick, text, mPts.AsSpan ()));
+      SetTextPoint (5, BuildEnts (seg, pick, text, mPts.AsSpan ()[..4]));
    }
 
    protected override Ent2 Xformed (Matrix2 xfm) {

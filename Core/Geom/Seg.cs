@@ -227,7 +227,7 @@ public readonly struct Seg {
    /// and then returns the lie of that snapped point on the segment
    public double GetSnappedLie (Point2 pt) {
       if (IsArc2 (out var cen, out _))
-         pt = cen.Polar (cen.DistTo (A), cen.AngleTo (A));
+         pt = cen.Polar (cen.DistTo (A), cen.AngleTo (pt));
       else
          pt = pt.SnappedToLine (A, B);
       return GetLie (pt);

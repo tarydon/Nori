@@ -210,11 +210,11 @@ public abstract partial class E2Dim {
       if (basis.Length >= 2) {
          for (int i = 0; i < 2; i++) {
             Point2 end = seg.GetPointAt (i), start;
-            if (basis.Length >= 4) {
+            if (basis.Length == 4) {
                Point2 a = basis[i * 2], b = basis[i * 2 + 1];
                double lie = a.EQ (b) ? 1.01 : end.GetLieOn (a, b);
                if (lie is >= 0 and <= 1) continue;
-               start = basis[i * 2 + (lie < 0 ? 0 : 1)];
+               start = lie < 0 ? a : b;
             } else
                start = basis[i];
             double slope = start.AngleTo (end);
