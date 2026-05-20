@@ -81,7 +81,14 @@ public class CurlWriter {
                   break;
                default:
                   var subtype = AuType.Get (elemType);
-                  foreach (var elem in (IList)obj) { Write (elem, subtype); B.NewLine (); }
+                  foreach (var elem in (IList)obj) { 
+                     Write (elem, subtype);
+                     if (nominal.CurrentElem is { } pi) {
+                        var current = pi.GetValue (obj);
+                        if (elem.Equals (current)) B.Back ().Write ('*');
+                     }
+                     B.NewLine (); 
+                  }
                   break;
             }
             B.Write ("]\n"u8);

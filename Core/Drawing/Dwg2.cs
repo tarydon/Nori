@@ -79,14 +79,12 @@ public partial class Dwg2 {
 
    /// <summary>The list of layers in the drawing</summary>
    /// New layers are added by calling Add(Layer2)
+   [AuInclude]
    public Ledger<Layer2> Layers 
-      => mLayers ??= new Ledger<Layer2> (Changed) { 
+      => field ??= new Ledger<Layer2> (Changed) { 
          Validator = IsValid, Namer = a => a.Name,
          Maker = () => new ("STANDARD", Color4.Black, ELineType.Continuous) 
       };
-   Ledger<Layer2>? mLayers;
-   [AuInclude]
-   string? CurrentLayer { get => mLayers?.Current.Name ; set => mLayers?.Current = mLayers[value ?? ""]!; }
 
    /// <summary>The list of blocks in the drawing</summary>
    /// New blocks are added by calling Add(Block2)

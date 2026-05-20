@@ -11,7 +11,12 @@ class Program {
       Lib.Tracer = Console.WriteLine;
       Dwg2 dwg = new ();
       dwg.Add (new Point2 (3, 4));
+      dwg.Layers.Add (new Layer2 ("DIMENSION", Color4.Blue, ELineType.Continuous));
+      dwg.Layers.Add (new Layer2 ("BEND", Color4.Black, ELineType.Dot));
+      dwg.Layers.Current = dwg.Layers[1];
       CurlWriter.Save (dwg, "c:/etc/test.curl");
-      dwg.Layers.RemoveAt (0);
+
+
+     // var dwg2 = (Dwg2)CurlReader.Load ("c:/etc/test.curl");
    }
 }

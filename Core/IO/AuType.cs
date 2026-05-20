@@ -83,7 +83,10 @@ class AuType {
             break;
 
          case EAuTypeKind.List:
-            IsImmutableArray = type.Name == "ImmutableArray`1";
+            switch (type.Name) {
+               case "ImmutableArray`1": IsImmutableArray = true; break;
+               case "Ledger`1": CurrentElem = type.GetProperty ("Current"); break;
+            }
             break;
       }
    }
@@ -138,6 +141,11 @@ class AuType {
    static readonly Dictionary<Type, AuType> mDict = [];
 
    // Properties --------------------------------------------------------------
+   /// <summary>
+   /// PropertyInfo used to get/set the 'current element' for a Ledger(T)
+   /// </summary>
+   public PropertyInfo? CurrentElem;
+
    /// <summary>Set of fields in this type</summary>
    public ReadOnlySpan<AuField> Fields => mFields.AsSpan ();
    readonly ImmutableArray<AuField> mFields = [];

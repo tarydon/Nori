@@ -237,3 +237,7 @@ public class Ledger<T> : IReadOnlyList<T>, IList<T>, IList, IObservable<Ledger<T
    List<T> List => _list ??= [];
    List<T>? _list;
 }
+
+// Serializing a property: 
+// - If this is a collection, then we expect it will be BUILT by the property
+//   read, and we can just fill up the existing collection with data. 
