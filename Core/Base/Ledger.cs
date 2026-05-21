@@ -80,7 +80,7 @@ public class Ledger<T> : IReadOnlyList<T>, IList<T>, IList, IObservable<LChange<
          int n = List.IndexOf (value);
          if (n == -1) Fatal (EError.NotInList);
          mCurrent = n;
-         var c = new (ELChange.Current, n, oldValue, value));
+         var c = new LChange<T> (ELChange.Current, n, oldValue, value);
          Notify (ref c);
       }
    }
@@ -144,15 +144,20 @@ public class Ledger<T> : IReadOnlyList<T>, IList<T>, IList, IObservable<LChange<
    public void Insert (int index, T item) {
       var c = new LChange<T> (ELChange.Add, index, default, item);
       if (DefValidate (c) is EError err) Fatal (err);
+      // TODO: What if the current item is beyond this index?
       List.Insert (index, item);
       Notify (ref c);
    }
 
    /// <summary>Remove an element at a given index</summary>
    public void RemoveAt (int index) {
-      var c = new LChange<T> (ELChange.Remove, index, List[index], default);
+      var item = List[index];
+      var c = new LChange<T> (ELChange.Remove, index, item, default);
       if (DefValidate (c) is EError err) Fatal (err);
-      List.RemoveAt (index); _dict?.Clear ();
+      _dict?.Remove (Namer! (item));
+      // TODO: What if this is the current item?
+      // TODO: What if the current item is beyond this index?
+      List.RemoveAt (index);
       Notify (ref c);
    }
 
@@ -228,10 +233,13 @@ public class Ledger<T> : IReadOnlyList<T>, IList<T>, IList, IObservable<LChange<
    T Get (int index) => List[index];
 
    // Internal setter used to update an element in the list
-   void Set (int index, T item) {
-      var c = new LChange<T> (ELChange.Replace, index, List[index], item);
+   void Set (int index, T newItem) {
+      var oldItem = List[index];
+      var c = new LChange<T> (ELChange.Replace, index, oldItem, newItem);
       if (DefValidate (c) is EError err) Fatal (err);
-      List[index] = item; _dict?[Namer! (item)] = item;
+      _dict?.Remove (Namer! (oldItem));
+      List[index] = newItem; 
+      _dict?[Namer! (newItem)] = newItem;
       Notify (ref c);
    }
 
@@ -257,11 +265,35 @@ public class Ledger<T> : IReadOnlyList<T>, IList<T>, IList, IObservable<LChange<
 
 public class ModifyLedger<T> : UndoStep {
    public ModifyLedger (Ledger<T> ledger, ref LChange<T> change) : base (ledger, UndoStack.DescribeNext ?? change.UndoDescription) {
+      UndoStack.DescribeNext = null;
       mLedger = ledger; mChange = change;
    }
    readonly Ledger<T> mLedger;
    readonly LChange<T> mChange;
 
    public override void Step (EUndoDir dir) {
+      var stack = UndoStack.Current; UndoStack.Current = null;
+      if (dir == EUndoDir.Redo) Redo (); else Undo ();
+      UndoStack.Current = stack;
+   }
+
+   void Redo () {
+      switch (mChange.Kind) {
+         case ELChange.Add: mLedger.Insert (mChange.Index, mChange.NewValue!); break;
+         case ELChange.Remove: mLedger.RemoveAt (mChange.Index); break;
+         case ELChange.Replace: mLedger[mChange.Index] = mChange.NewValue!; break;
+         case ELChange.Current: mLedger.Current = mChange.NewValue!; break;
+         default: throw new BadCaseException (mChange.Kind);
+      }
+   }
+
+   void Undo () {
+      switch (mChange.Kind) {
+         case ELChange.Add: mLedger.RemoveAt (mChange.Index); break;
+         case ELChange.Remove: mLedger.Insert (mChange.Index, mChange.OldValue!); break;
+         case ELChange.Replace: mLedger[mChange.Index] = mChange.OldValue!; break;
+         case ELChange.Current: mLedger.Current = mChange.OldValue!; break;
+         default: throw new BadCaseException (mChange.Kind);
+      }
    }
 }
