@@ -17,8 +17,8 @@ namespace Nori;
 /// human-readable name to be used in the UI (for the Undo/Redo menus).
 public abstract class UndoStep {
    /// <summary>Construct an UndoStep, given a 'document' it is working with, and a description</summary>
-   protected UndoStep (object document, string description) => (Doc, mDescription) = (document, description);
-   public readonly object Doc;
+   protected UndoStep (object? document, string description) => (Doc, mDescription) = (document, description);
+   public readonly object? Doc;
 
    // Properties ---------------------------------------------------------------
    /// <summary>Override this to provide a custom description of the Step (for the Undo/Redo menu)</summary>
@@ -68,6 +68,11 @@ public class UndoStack {
    /// Typically, we will maintain an UndoStack per part, and when we start editing
    /// that part, we make that UndoStack 'current'.
    public static UndoStack? Current;
+
+   /// <summary>
+   /// Suggest a descriptio for the next action
+   /// </summary>
+   public static string? DescribeNext;
 
    /// <summary>The next step that can be undone (if any)</summary>
    /// Use this to update the 'Undo' menu with a suitable title, or to disable it
@@ -155,7 +160,7 @@ public class ClubbedStep : UndoStep {
    /// At this point, the list of sub-steps within this ClubbedStep is not yet set. They
    /// will get pushed into the stack on top of this, and will all finally be gathered and
    /// placed into the Steps collection by UndoStack.ClubSteps().
-   public ClubbedStep (object doc, string description) : base (doc, description) { }
+   public ClubbedStep (object? doc, string description) : base (doc, description) { }
 
    // Properties ---------------------------------------------------------------
    /// <summary>List of steps within this ClubbedStep</summary>

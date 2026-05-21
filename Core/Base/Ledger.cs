@@ -3,23 +3,54 @@
 // ║║║║╬║╔╣║ <<TODO>>
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 using System.Collections;
-using System.Diagnostics.Metrics;
 using System.Reactive.Subjects;
 namespace Nori;
 
-public enum ELedgerChange {
-   /// <summary>Notification fired AFTER an item is added</summary>
+#region enum ELChange ------------------------------------------------------------------------------
+/// <summary>Enumerates the types of changes that can happen on a ledger</summary>
+public enum ELChange {
+   /// <summary>Notification fired when an item is added</summary>
    Add = 1,
-   /// <summary>Notification fired BEFORE an item is removed</summary>
+   /// <summary>Notification when an item is removed</summary>
    Remove = 2,
-   /// <summary>Notification fired BEFORE an item is replaced</summary>
+   /// <summary>Notification fired when an item is replaced</summary>
    Replace = 3,
-   /// <summary>The 'current' value of a Ledger(T) has changed</summary>
+   /// <summary>Notification that the 'current' value has changed</summary>
    Current = 5,
 }
+#endregion
 
-public class Ledger<T> : IReadOnlyList<T>, IList<T>, IList, IObservable<Ledger<T>.Change> {
-   public Ledger (Action<Change>? observer = null) {
+#region struct LChange<T> --------------------------------------------------------------------------
+/// <summary>Represents a change on a Ledger(T)</summary>
+public readonly struct LChange<T> {
+   public LChange (ELChange kind, int index, T? oldValue, T? newValue) {
+      Kind = kind; Index = index; OldValue = oldValue; NewValue = newValue;
+   }
+
+   public string UndoDescription => $"{Kind} {typeof (T).Name}";
+
+   /// <summary>The kind of change this encapsulate</summary>
+   public readonly ELChange Kind;
+   /// <summary>The index at which the change occurs (also index of current value)</summary>
+   public readonly int Index;
+   /// <summary>
+   /// Removing: the value that we are removing
+   /// Replacing: the old value (one being replaced)
+   /// </summary>
+   public readonly T? OldValue;
+   /// <summary>
+   /// Added: the new value that was added
+   /// Replacing: the new (replacement) value
+   /// Current: The new 'Current' value
+   /// </summary>
+   public readonly T? NewValue;
+}
+#endregion
+
+#region class Ledger<T> ----------------------------------------------------------------------------
+/// <summary>Implements a Ledger of T (a 'managed' collection)</summary>
+public class Ledger<T> : IReadOnlyList<T>, IList<T>, IList, IObservable<LChange<T>> {
+   public Ledger (Action<LChange<T>>? observer = null) {
       if (observer != null) this.Subscribe (observer);
    }
 
@@ -49,7 +80,8 @@ public class Ledger<T> : IReadOnlyList<T>, IList<T>, IList, IObservable<Ledger<T
          int n = List.IndexOf (value);
          if (n == -1) Fatal (EError.NotInList);
          mCurrent = n;
-         mSubject?.OnNext (new (ELedgerChange.Current, n, oldValue, value));
+         var c = new (ELChange.Current, n, oldValue, value));
+         Notify (ref c);
       }
    }
    int mCurrent;  // Index of current object
@@ -57,9 +89,7 @@ public class Ledger<T> : IReadOnlyList<T>, IList<T>, IList, IObservable<Ledger<T
    /// <summary>Indexer to get/set elements</summary>
    public T this[int index] { get => Get (index); set => Set (index, value); }
 
-   /// <summary>
-   /// Returns a T by name (uses the dictionary to search through)
-   /// </summary>
+   /// <summary>Returns a T by name (uses the dictionary to search through)</summary>
    public T? this[string name] {
       get {
          if (Namer != null && Dict.TryGetValue (name, out T? value) == true) return value;
@@ -71,8 +101,8 @@ public class Ledger<T> : IReadOnlyList<T>, IList<T>, IList, IObservable<Ledger<T
    /// <summary>Validator is called before every operation</summary>
    /// It returns null if the validation is successful, a non-null object describing
    /// the error otherwise
-   public Func<Change, object?> Validator { get => DefValidate; init => mValidator = value; }
-   Func<Change, object?>? mValidator;
+   public Func<LChange<T>, object?> Validator { get => DefValidate; init => mValidator = value; }
+   Func<LChange<T>, object?>? mValidator;
 
    /// <summary>Makes a default object (needed if this has a 'Current' property that is never null)</summary>
    public Func<T>? Maker { get; init; }
@@ -88,13 +118,11 @@ public class Ledger<T> : IReadOnlyList<T>, IList<T>, IList, IObservable<Ledger<T
    /// - Ensure item.Name is not blank (if a Namer function is supplied)
    /// - Ensure item.Name is unique within the Ledger (if a Namer function is supplied)
    public void Add (T item) {
-      var c = new Change (ELedgerChange.Add, Count, default, item);
+      var c = new LChange<T> (ELChange.Add, Count, default, item);
       if (DefValidate (c) is EError err) Fatal (err);
-      List.Add (item); _dict?.Clear ();
-      mSubject?.OnNext (c);
+      List.Add (item); _dict?.Add (Namer! (item), item);
+      Notify (ref c);
    }
-
-   void Fatal (EError e) => throw new NoriException (e);
 
    /// <summary>Removes all elements from the list</summary>
    public void Clear () { for (int i = (_list?.Count ?? 0) - 1; i >= 0; i--) RemoveAt (i); }
@@ -114,18 +142,18 @@ public class Ledger<T> : IReadOnlyList<T>, IList<T>, IList, IObservable<Ledger<T
 
    /// <summary>Insert an element at a given index</summary>
    public void Insert (int index, T item) {
-      var c = new Change (ELedgerChange.Add, index, default, item);
+      var c = new LChange<T> (ELChange.Add, index, default, item);
       if (DefValidate (c) is EError err) Fatal (err);
       List.Insert (index, item);
-      mSubject?.OnNext (c);
+      Notify (ref c);
    }
 
    /// <summary>Remove an element at a given index</summary>
    public void RemoveAt (int index) {
-      var c = new Change (ELedgerChange.Remove, index, List[index], default);
+      var c = new LChange<T> (ELChange.Remove, index, List[index], default);
       if (DefValidate (c) is EError err) Fatal (err);
       List.RemoveAt (index); _dict?.Clear ();
-      mSubject?.OnNext (c);
+      Notify (ref c);
    }
 
    /// <summary>Finds the given item and removes it</summary>
@@ -138,41 +166,15 @@ public class Ledger<T> : IReadOnlyList<T>, IList<T>, IList, IObservable<Ledger<T
       return true;
    }
 
-   /// <summary>
-   /// Remove all items that pass the filter
-   /// </summary>
+   /// <summary>Remove all items that pass the filter</summary>
    public void RemoveAll (Predicate<T> filter) {
       for (int i = List.Count - 1; i >= 0; i--)
          if (filter (List[i])) RemoveAt (i);
    }
 
    /// <summary>Subscribes to the change notifications</summary>
-   public IDisposable Subscribe (IObserver<Change> observer) => (mSubject ??= new ()).Subscribe (observer);
-   Subject<Change>? mSubject;
-
-   // Nested types -------------------------------------------------------------
-   /// <summary>Represents a Change on a Ledger(T)</summary>
-   public readonly struct Change {
-      public Change (ELedgerChange kind, int index, T? oldValue, T? newValue) {
-         Kind = kind; Index = index; OldValue = oldValue; NewValue = newValue;
-      }
-
-      /// <summary>The kind of change this encapsulate</summary>
-      public readonly ELedgerChange Kind;
-      /// <summary>The index at which the change occurs (also index of current value)</summary>
-      public readonly int Index;
-      /// <summary>
-      /// Removing: the value that we are removing
-      /// Replacing: the old value (one being replaced)
-      /// </summary>
-      public readonly T? OldValue;
-      /// <summary>
-      /// Added: the new value that was added
-      /// Replacing: the new (replacement) value
-      /// Current: The new 'Current' value
-      /// </summary>
-      public readonly T? NewValue;
-   }
+   public IDisposable Subscribe (IObserver<LChange<T>> observer) => (mSubject ??= new ()).Subscribe (observer);
+   Subject<LChange<T>>? mSubject;
 
    // Interface implementations ------------------------------------------------
    bool ICollection<T>.IsReadOnly => false;
@@ -191,9 +193,10 @@ public class Ledger<T> : IReadOnlyList<T>, IList<T>, IList, IObservable<Ledger<T
    IEnumerator IEnumerable.GetEnumerator () => (_list ?? []).GetEnumerator ();
 
    // Implementation -----------------------------------------------------------
-   object? DefValidate (Change c) {
+   // The default validator 
+   object? DefValidate (LChange<T> c) {
       switch (c.Kind) {
-         case ELedgerChange.Add or ELedgerChange.Replace:
+         case ELChange.Add or ELChange.Replace:
             if (c.NewValue == null) return EError.NoNulls;
             if (Namer != null) {
                // If this is a named collection, ensure the name is valid and that there is no
@@ -202,7 +205,7 @@ public class Ledger<T> : IReadOnlyList<T>, IList<T>, IList, IObservable<Ledger<T
                if (name.IsBlank ()) return EError.BadName;
                // If we're adding a new item, or if we're replacing an item with a differently
                // named item, check there is no name collision
-               if (c.Kind == ELedgerChange.Add || name != Namer (c.OldValue!)) 
+               if (c.Kind == ELChange.Add || name != Namer (c.OldValue!))
                   if (Dict.ContainsKey (name)) return EError.DuplicateName;
             }
             break;
@@ -210,13 +213,26 @@ public class Ledger<T> : IReadOnlyList<T>, IList<T>, IList, IObservable<Ledger<T
       return mValidator?.Invoke (c);
    }
 
+   // Fatal error
+   void Fatal (EError e) => throw new NoriException (e);
+
+   // Called at the end of every action to 
+   // 1. Push an action on the undo stack if needed
+   // 2. Notify subscribers
+   void Notify (ref LChange<T> c) {
+      if (UndoStack.Current != null) new ModifyLedger<T> (this, ref c).Push (false);
+      mSubject?.OnNext (c);
+   }
+
+   // Internal getter used to return an element from the list
    T Get (int index) => List[index];
 
-   void Set (int index, T value) {
-      var c = new Change (ELedgerChange.Replace, index, List[index], value);
+   // Internal setter used to update an element in the list
+   void Set (int index, T item) {
+      var c = new LChange<T> (ELChange.Replace, index, List[index], item);
       if (DefValidate (c) is EError err) Fatal (err);
-      List[index] = value; _dict?.Clear ();
-      mSubject?.OnNext (c);
+      List[index] = item; _dict?[Namer! (item)] = item;
+      Notify (ref c);
    }
 
    // Private data -------------------------------------------------------------
@@ -237,7 +253,15 @@ public class Ledger<T> : IReadOnlyList<T>, IList<T>, IList, IObservable<Ledger<T
    List<T> List => _list ??= [];
    List<T>? _list;
 }
+#endregion
 
-// Serializing a property: 
-// - If this is a collection, then we expect it will be BUILT by the property
-//   read, and we can just fill up the existing collection with data. 
+public class ModifyLedger<T> : UndoStep {
+   public ModifyLedger (Ledger<T> ledger, ref LChange<T> change) : base (ledger, UndoStack.DescribeNext ?? change.UndoDescription) {
+      mLedger = ledger; mChange = change;
+   }
+   readonly Ledger<T> mLedger;
+   readonly LChange<T> mChange;
+
+   public override void Step (EUndoDir dir) {
+   }
+}

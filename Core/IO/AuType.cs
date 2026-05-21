@@ -141,9 +141,7 @@ class AuType {
    static readonly Dictionary<Type, AuType> mDict = [];
 
    // Properties --------------------------------------------------------------
-   /// <summary>
-   /// PropertyInfo used to get/set the 'current element' for a Ledger(T)
-   /// </summary>
+   /// <summary>PropertyInfo used to get/set the 'current element' for a Ledger(T)</summary>
    public PropertyInfo? CurrentElem;
 
    /// <summary>Set of fields in this type</summary>
@@ -459,7 +457,8 @@ class AuType {
 
 #region class AuField ------------------------------------------------------------------------------
 /// <summary>A wrapper around System.FieldInfo that holds additional information needed by the Au system</summary>
-/// For example, this holds the serialization _tactic_ for this particular field
+/// For example, this holds the serialization _tactic_ for this particular field. 
+/// Note: in some situations, this AuField actually is a wrapper around a PropertyInfo. 
 class AuField {
    // Constructor --------------------------------------------------------------
    public AuField (AuType owner, FieldInfo? fi, PropertyInfo? pi, ECurlTactic tactic, int sort) {
@@ -473,6 +472,7 @@ class AuField {
          mFieldType = AuType.Get (pi.PropertyType);
          IsNullable = pi.HasAttribute<NullableAttribute> ();
          IsAngle = pi.HasAttribute<RadianAttribute> ();
+         PrebuiltList = !pi.CanWrite;
       } else
          throw new NoriCodeException ("Neither FI or PI");
       mOwner = owner; Tactic = tactic; Sort = sort;
@@ -493,6 +493,19 @@ class AuField {
 
    /// <summary>It this field nullable?</summary>
    public readonly bool IsNullable;
+
+   /// <summary>If true, this is an IList that is pre-built, and just needs to be populated</summary>
+   /// This is set only for an AuField that is attached to a Property, rather than Field,
+   /// and if the value is an IList. Normally, the reader will construct an empty collection,
+   /// populate it with items that are read in and return it (to be poked into the field). 
+   /// However, some collections are lazily built, and have some callbacks that are set up.
+   /// An example is Dwg.Layers collection, which is constructed when the Dwg.Layers property 
+   /// is READ, and that construction sets up:
+   /// - validators to ensure the layers being added in are valid (non-null, unique name)
+   /// - cascading updators to update all dependent entities when the layer is replaced
+   /// - indexers to compute the 'key' (name) when a layer is added, used to maintain a 
+   ///   'find-by-name' dictionary
+   public readonly bool PrebuiltList;
 
    /// <summary>Sort order of this field within the enclosing type</summary>
    public readonly int Sort;

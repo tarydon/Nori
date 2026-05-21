@@ -24,6 +24,11 @@ public partial class Dwg2 {
    }
    Bound2 mBound = new ();
 
+   /// <summary>The list of blocks in the drawing</summary>
+   /// New blocks are added by calling Add(Block2)
+   public IReadOnlyList<Block2> Blocks => mBlocks ?? [];
+   List<Block2>? mBlocks;
+
    /// <summary>The current dimension style of the drawing</summary>
    /// Reading this will always return a valid DimStyle2 object: if no dimension styles exist yet,
    /// one called "STANDARD" will be created with default values and returned. When writing to this
@@ -78,18 +83,32 @@ public partial class Dwg2 {
    Grid2? mGrid;
 
    /// <summary>The list of layers in the drawing</summary>
-   /// New layers are added by calling Add(Layer2)
    [AuInclude]
-   public Ledger<Layer2> Layers 
-      => field ??= new Ledger<Layer2> (Changed) { 
-         Validator = IsValid, Namer = a => a.Name,
-         Maker = () => new ("STANDARD", Color4.Black, ELineType.Continuous) 
-      };
+   public Ledger<Layer2> Layers {
+      get {
+         return field ??= new Ledger<Layer2> (Changed) {
+            Validator = IsValid, Namer = a => a.Name,
+            Maker = () => new ("STANDARD", Color4.Black, ELineType.Continuous)
+         };
 
-   /// <summary>The list of blocks in the drawing</summary>
-   /// New blocks are added by calling Add(Block2)
-   public IReadOnlyList<Block2> Blocks => mBlocks ?? [];
-   List<Block2>? mBlocks;
+         // Helpers ........................................
+         // Update entities when Layer is replaced
+         void Changed (LChange<Layer2> c) {
+            if (c.Kind == ELChange.Replace)
+               foreach (var ent in DeepEnumEnts ())
+                  if (ent.Layer == c.OldValue) ent.Layer = c.NewValue!;
+         }
+
+         // Check if a Layer can be removed/replaced
+         object? IsValid (LChange<Layer2> c) {
+            if (c.Kind is ELChange.Remove or ELChange.Replace) {
+               Layer2 layer = c.OldValue!;
+               if (DeepEnumEnts ().Any (a => a.Layer == layer)) return EError.InUse;
+            }
+            return null;
+         }
+      }
+   }
 
    /// <summary>The list of dimension styles in the drawing</summary>
    /// New dimension styles are added by calling Add(DimStyle2)
@@ -270,22 +289,6 @@ public partial class Dwg2 {
       if (deselectOthers)
          mEnts.Where (a => a.IsSelected).ForEach (a => a.IsSelected = false);
       ent?.IsSelected ^= true; // Toggle selection
-   }
-
-   // Ledger callbacks ---------------------------------------------------------
-   // Check if a Layer can be removed/replaced
-   object? IsValid (Ledger<Layer2>.Change c) {
-      if (c.Kind is ELedgerChange.Remove or ELedgerChange.Replace) {
-         Layer2 layer = c.OldValue!;
-         if (DeepEnumEnts ().Any (a => a.Layer == layer)) return EError.InUse;
-      }
-      return null;
-   }
-   // Update entities when Layer is replaced
-   void Changed (Ledger<Layer2>.Change c) {
-      if (c.Kind == ELedgerChange.Replace)
-         foreach (var ent in DeepEnumEnts ())
-            if (ent.Layer == c.OldValue) ent.Layer = c.NewValue!;
    }
 
    // Implementation -----------------------------------------------------------
