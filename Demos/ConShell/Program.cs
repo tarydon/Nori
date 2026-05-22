@@ -10,7 +10,16 @@ class Program {
       Lib.Init ();
       Lib.Tracer = Console.WriteLine;
       Dwg2 dwg = new ();
-      dwg.Add (new Point2 (3, 4));
+      _ = dwg.Layers.Current;
+      var layer = dwg.Layers["0"];
+   }
+
+   static void Main1 () {
+      Lib.Init ();
+      Lib.Tracer = Console.WriteLine;
+      Dwg2 dwg = new ();
+      // dwg.Add (new Point2 (3, 4));
+      _ = dwg.Layers.Current;
       dwg.Layers.Add (new Layer2 ("DIMENSION", Color4.Blue, ELineType.Continuous));
       dwg.Layers.Add (new Layer2 ("BEND", Color4.Black, ELineType.Dot));
       dwg.Layers.Current = dwg.Layers[1];
@@ -19,17 +28,19 @@ class Program {
       var dwg2 = (Dwg2)CurlReader.Load ("c:/etc/test.curl");
       CurlWriter.Save (dwg2, "c:/etc/test1.curl");
 
-      var stack = UndoStack.Current = new ();
-      UndoStack.DescribeNext = "Add LAYER";
-      dwg.Layers.Add (new Layer2 ("MBEND", Color4.Red, ELineType.Phantom));
-      dwg.Layers[2] = new Layer2 ("MODIFIED", Color4.RandomDark, ELineType.Center);
-
+      UndoStack.Current = new ();
+      dwg.Layers.Insert (0, new Layer2("SUMMAT", Color4.Random, ELineType.Dot));
       Dump (dwg);
-      dwg.Layers.RemoveAt (1);
+      dwg.Layers.RemoveAt (0);
       Dump (dwg);
-      stack.Undo ();
+      dwg.Layers.RemoveAt (0);
       Dump (dwg);
-      stack.Redo ();
+      dwg.Layers.Current = dwg.Layers[1];
+      dwg.Layers.RemoveAt (0);
+      Dump (dwg);
+      // dwg.Layers.RemoveAt (0);
+      Dump (dwg);
+      _ = dwg.Layers.Current;
       Dump (dwg);
    }
 

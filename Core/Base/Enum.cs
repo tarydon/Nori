@@ -76,13 +76,17 @@ public enum ETarget { Screen, Image, Pick }
 public enum EError {
    /// <summary>A null value is not allowed</summary>
    NoNulls = 1,
-   /// <summary>Invalid name for this object</summary>
-   BadName = 2,
+   /// <summary>Invalid key for this object</summary>
+   BadKey = 2,
    /// <summary>This entity is in use (has references) and cannot be removed</summary>
    InUse = 3,
-   /// <summary>The name is duplicated (similarly named object exists already)</summary>
-   DuplicateName = 4,
+   /// <summary>The key is duplicated (similarly named object exists already)</summary>
+   DuplicateKey = 4,
    /// <summary>The supplied item was not found in the list</summary>
    NotInList = 5,
+   /// <summary>Cannot delete 'current' item from a Ledger</summary>
+   DeleteCurrent = 6,
+   /// <summary>This ledger is not indexed by name</summary>
+   NotIndexed = 7,
 }
 #endregion

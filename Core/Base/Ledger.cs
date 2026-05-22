@@ -49,12 +49,14 @@ public readonly struct LChange<T> {
 
 #region class Ledger<T> ----------------------------------------------------------------------------
 /// <summary>Implements a Ledger of T (a 'managed' collection)</summary>
-public class Ledger<T> : IReadOnlyList<T>, IList<T>, IList, IObservable<LChange<T>> {
+public class Ledger<T> : IReadOnlyList<T>, IList<T>, IList> {
    public Ledger (Action<LChange<T>>? observer = null) {
-      if (observer != null) this.Subscribe (observer);
+      if (observer != null) Changes.Subscribe (observer);
    }
 
    // Properties ---------------------------------------------------------------
+   public IObservable<LChange<T>> Changes => mSubject ??= new ();
+
    /// <summary>Count of elements in the table</summary>
    public int Count => _list?.Count ?? 0;
 
@@ -92,7 +94,8 @@ public class Ledger<T> : IReadOnlyList<T>, IList<T>, IList, IObservable<LChange<
    /// <summary>Returns a T by name (uses the dictionary to search through)</summary>
    public T? this[string name] {
       get {
-         if (Namer != null && Dict.TryGetValue (name, out T? value) == true) return value;
+         if (Keyer == null) Fatal (EError.NotIndexed);
+         if (Dict.TryGetValue (name, out T? value) == true) return value;
          return default;
       }
    }
@@ -107,8 +110,11 @@ public class Ledger<T> : IReadOnlyList<T>, IList<T>, IList, IObservable<LChange<
    /// <summary>Makes a default object (needed if this has a 'Current' property that is never null)</summary>
    public Func<T>? Maker { get; init; }
 
-   /// <summary>Function to extract the 'name' from a list</summary>
-   public Func<T, string>? Namer { get; init; }
+   /// <summary>Function to extract the key from an item</summary>
+   /// This is optional, but if specified, the Ledger will ensure that:
+   /// - No item is added with an invalid key (empty / null string)
+   /// - No two items in a ledger have the same key
+   public Func<T, string>? Keyer { get; init; }
 
    // Methods ------------------------------------------------------------------
    /// <summary>Adds a given item at the end of the list</summary>
@@ -120,7 +126,7 @@ public class Ledger<T> : IReadOnlyList<T>, IList<T>, IList, IObservable<LChange<
    public void Add (T item) {
       var c = new LChange<T> (ELChange.Add, Count, default, item);
       if (DefValidate (c) is EError err) Fatal (err);
-      List.Add (item); _dict?.Add (Namer! (item), item);
+      List.Add (item); _dict?.Add (Keyer! (item), item);
       Notify (ref c);
    }
 
@@ -144,7 +150,7 @@ public class Ledger<T> : IReadOnlyList<T>, IList<T>, IList, IObservable<LChange<
    public void Insert (int index, T item) {
       var c = new LChange<T> (ELChange.Add, index, default, item);
       if (DefValidate (c) is EError err) Fatal (err);
-      // TODO: What if the current item is beyond this index?
+      if (mCurrent >= index) mCurrent++;
       List.Insert (index, item);
       Notify (ref c);
    }
@@ -152,11 +158,13 @@ public class Ledger<T> : IReadOnlyList<T>, IList<T>, IList, IObservable<LChange<
    /// <summary>Remove an element at a given index</summary>
    public void RemoveAt (int index) {
       var item = List[index];
+      if (index == mCurrent) Fatal (EError.DeleteCurrent);
       var c = new LChange<T> (ELChange.Remove, index, item, default);
       if (DefValidate (c) is EError err) Fatal (err);
-      _dict?.Remove (Namer! (item));
+      _dict?.Remove (Keyer! (item));
       // TODO: What if this is the current item?
       // TODO: What if the current item is beyond this index?
+      if (mCurrent >= Math.Max (index, 1)) mCurrent--;
       List.RemoveAt (index);
       Notify (ref c);
    }
@@ -203,15 +211,15 @@ public class Ledger<T> : IReadOnlyList<T>, IList<T>, IList, IObservable<LChange<
       switch (c.Kind) {
          case ELChange.Add or ELChange.Replace:
             if (c.NewValue == null) return EError.NoNulls;
-            if (Namer != null) {
+            if (Keyer != null) {
                // If this is a named collection, ensure the name is valid and that there is no
                // duplicate.
-               string name = Namer (c.NewValue);
-               if (name.IsBlank ()) return EError.BadName;
+               string name = Keyer (c.NewValue);
+               if (name.IsBlank ()) return EError.BadKey;
                // If we're adding a new item, or if we're replacing an item with a differently
                // named item, check there is no name collision
-               if (c.Kind == ELChange.Add || name != Namer (c.OldValue!))
-                  if (Dict.ContainsKey (name)) return EError.DuplicateName;
+               if (c.Kind == ELChange.Add || name != Keyer (c.OldValue!))
+                  if (Dict.ContainsKey (name)) return EError.DuplicateKey;
             }
             break;
       }
@@ -237,9 +245,9 @@ public class Ledger<T> : IReadOnlyList<T>, IList<T>, IList, IObservable<LChange<
       var oldItem = List[index];
       var c = new LChange<T> (ELChange.Replace, index, oldItem, newItem);
       if (DefValidate (c) is EError err) Fatal (err);
-      _dict?.Remove (Namer! (oldItem));
+      _dict?.Remove (Keyer! (oldItem));
       List[index] = newItem; 
-      _dict?[Namer! (newItem)] = newItem;
+      _dict?[Keyer! (newItem)] = newItem;
       Notify (ref c);
    }
 
@@ -247,10 +255,10 @@ public class Ledger<T> : IReadOnlyList<T>, IList<T>, IList, IObservable<LChange<
    [DebuggerBrowsable (DebuggerBrowsableState.Never)]
    Dictionary<string, T> Dict {
       get {
-         if ((_dict?.Count ?? 0) == 0 && Namer != null) {
+         if ((_dict?.Count ?? 0) == 0 && Keyer != null) {
             _dict ??= [];
             if (_list != null) 
-               foreach (var item in List) _dict[Namer (item)] = item;
+               foreach (var item in List) _dict[Keyer (item)] = item;
          }
          return _dict!;
       }

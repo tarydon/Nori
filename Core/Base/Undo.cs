@@ -69,9 +69,7 @@ public class UndoStack {
    /// that part, we make that UndoStack 'current'.
    public static UndoStack? Current;
 
-   /// <summary>
-   /// Suggest a descriptio for the next action
-   /// </summary>
+   /// <summary>Suggest a descriptio for the next action</summary>
    public static string? DescribeNext;
 
    /// <summary>The next step that can be undone (if any)</summary>

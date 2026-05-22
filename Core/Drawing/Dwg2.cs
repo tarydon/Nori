@@ -87,7 +87,7 @@ public partial class Dwg2 {
    public Ledger<Layer2> Layers {
       get {
          return field ??= new Ledger<Layer2> (Changed) {
-            Validator = IsValid, Namer = a => a.Name,
+            Validator = IsValid, Keyer = a => a.Name,
             Maker = () => new ("STANDARD", Color4.Black, ELineType.Continuous)
          };
 
@@ -101,7 +101,7 @@ public partial class Dwg2 {
 
          // Check if a Layer can be removed/replaced
          object? IsValid (LChange<Layer2> c) {
-            if (c.Kind is ELChange.Remove or ELChange.Replace) {
+            if (c.Kind is ELChange.Remove) {
                Layer2 layer = c.OldValue!;
                if (DeepEnumEnts ().Any (a => a.Layer == layer)) return EError.InUse;
             }
