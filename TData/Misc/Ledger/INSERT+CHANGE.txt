@@ -1,0 +1,7 @@
+Insert layer, change current layer
+----------------------------------
+CHANGES:
+Add Layer2[0]  NEW:Layer "BEND" Green Dash
+Current Layer2[1]  OLD:Layer "TRIAL" Red Dot  NEW:Layer "0" Black Continuous
+
+UNDO: INSERT+CHANGE

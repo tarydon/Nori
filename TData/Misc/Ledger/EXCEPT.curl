@@ -1,0 +1,7 @@
+(Dwg2){
+  Layers:[
+    { Name:STANDARD Color:White Linetype:Continuous }*
+    { Name:TRIAL Color:Red Linetype:Dot }
+  ]
+  Ents:[ (E2Point){ Layer:STANDARD Pt:1,2 } ]
+}

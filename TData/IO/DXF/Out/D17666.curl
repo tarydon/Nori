@@ -1,6 +1,6 @@
 (Dwg2){
   Layers:[
-    { Name:0 Color:White Linetype:Continuous }
+    { Name:0 Color:White Linetype:Continuous }*
     { Name:DEFAULT Color:White Linetype:Continuous }
     { Name:AUTO_-_HIDE Color:Black Linetype:Continuous }
     { Name:MARK Color:White Linetype:Continuous }
@@ -3189,8 +3189,6 @@
       ]
     }
   ]
-  CurrentLayer:0
-  CurrentDimStyle:Standard
   Ents:[
     (E2Insert){ Layer:0 BlockName:SE1 Pt:0,0 XScale:1 YScale:1 }
     (E2Insert){ Layer:0 BlockName:SE0 Pt:0,0 XScale:1 YScale:1 }

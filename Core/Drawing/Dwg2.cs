@@ -88,15 +88,14 @@ public partial class Dwg2 {
       get {
          return field ??= new Ledger<Layer2> (Changed) {
             Validator = IsValid, Keyer = a => a.Name,
-            Maker = () => new ("STANDARD", Color4.Black, ELineType.Continuous)
+            Maker = () => new ("0", Color4.Black, ELineType.Continuous)
          };
 
          // Helpers ........................................
          // Update entities when Layer is replaced
          void Changed (LChange<Layer2> c) {
             if (c.Kind == ELChange.Replace)
-               foreach (var ent in DeepEnumEnts ())
-                  if (ent.Layer == c.OldValue) ent.Layer = c.NewValue!;
+               new RelayerEnts (DeepEnumEnts ().Where (a => a.Layer == c.OldValue), c.NewValue!).Push ();
          }
 
          // Check if a Layer can be removed/replaced
@@ -277,9 +276,10 @@ public partial class Dwg2 {
          if (ent is E2Dim dim) { styles.Add (dim.Style.Style); dimStyles.Add (dim.Style); }
          if (ent is E2Insert insert) blocks.Add (insert.Block);
       }
+      if (layers.Count > 0) layers.Add (Layers.Current);
       mStyles?.RemoveAll (a => !styles.Contains (a));
-      mBlocks?.RemoveAll (a => !blocks.Contains (a));
-      mDimStyles?.RemoveAll (a => !dimStyles.Contains (a));
+      mBlocks?.RemoveAll (a => !blocks.Contains (a)); 
+      mDimStyles?.RemoveAll (a => !dimStyles.Contains (a));      
       Layers.RemoveAll (a => !layers.Contains (a));
       return this;
    }

@@ -1,6 +1,6 @@
 (Dwg2){
   Layers:[
-    { Name:0 Color:White Linetype:Continuous }
+    { Name:0 Color:White Linetype:Continuous }*
     { Name:Defpoints Color:White Linetype:Continuous }
   ]
   Styles:[
@@ -49,8 +49,6 @@
       ]
     }
   ]
-  CurrentLayer:0
-  CurrentDimStyle:ISO-25
   Ents:[
     (E2Poly){ Layer:0 Poly:M0,0H100V40Q90,50,1H0Z }
     (E2Poly){ Layer:0 Poly:C90,40,8 }

@@ -27,7 +27,16 @@ public readonly struct LChange<T> {
       Kind = kind; Index = index; OldValue = oldValue; NewValue = newValue;
    }
 
-   public string UndoDescription => $"{Kind} {typeof (T).Name}";
+   public string UndoDescription {
+      get {
+         string s = $"{Kind} {typeof (T).Name}[{Index}]";
+         if (Lib.Testing) {
+            if (OldValue is { }) s += $"  OLD:{OldValue}";
+            if (NewValue is { }) s += $"  NEW:{NewValue}";
+         }
+         return s; 
+      }
+   }
 
    /// <summary>The kind of change this encapsulate</summary>
    public readonly ELChange Kind;
@@ -49,7 +58,7 @@ public readonly struct LChange<T> {
 
 #region class Ledger<T> ----------------------------------------------------------------------------
 /// <summary>Implements a Ledger of T (a 'managed' collection)</summary>
-public class Ledger<T> : IReadOnlyList<T>, IList<T>, IList> {
+public class Ledger<T> : IReadOnlyList<T>, IList<T>, IList where T:class {
    public Ledger (Action<LChange<T>>? observer = null) {
       if (observer != null) Changes.Subscribe (observer);
    }
@@ -151,7 +160,7 @@ public class Ledger<T> : IReadOnlyList<T>, IList<T>, IList> {
       var c = new LChange<T> (ELChange.Add, index, default, item);
       if (DefValidate (c) is EError err) Fatal (err);
       if (mCurrent >= index) mCurrent++;
-      List.Insert (index, item);
+      List.Insert (index, item); _dict?.Add (Keyer! (item), item);
       Notify (ref c);
    }
 
@@ -271,9 +280,8 @@ public class Ledger<T> : IReadOnlyList<T>, IList<T>, IList> {
 }
 #endregion
 
-public class ModifyLedger<T> : UndoStep {
-   public ModifyLedger (Ledger<T> ledger, ref LChange<T> change) : base (ledger, UndoStack.DescribeNext ?? change.UndoDescription) {
-      UndoStack.DescribeNext = null;
+public class ModifyLedger<T> : UndoStep where T:class {
+   public ModifyLedger (Ledger<T> ledger, ref LChange<T> change) : base (ledger, change.UndoDescription) {
       mLedger = ledger; mChange = change;
    }
    readonly Ledger<T> mLedger;

@@ -150,4 +150,135 @@ class Misc2 {
          UndoStack.Current = null;
       }
    }
+
+   [Test (255, "Test of Ledger<T> type")]
+   void Test7 () {
+      Dwg2 dwg = new Dwg2 ();
+      _ = dwg.Layers.Current;
+      dwg.Add (new Point2 (1, 2));
+
+      try {
+         List<string> changes = [];
+         List<Exception> exceptions = [];
+         dwg.Layers.Changes.Subscribe (OnChange);
+         UndoStack.Current = new ();
+
+         DumpDwg ("START");
+
+         // 1. Add layer
+         dwg.Layers.Add (new ("TRIAL", Color4.Red, ELineType.Dot));
+         Dump ("ADD", "Add Layer TRIAL", true);
+
+         // 2. Check dictionary access
+         object.ReferenceEquals (dwg.Layers["TRIAL"], dwg.Layers[1]).IsTrue ();
+
+         // 3. TRY remove current layer
+         try { dwg.Layers.RemoveAt (0); } catch (Exception e) { exceptions.Add (e); }
+         Dump ("REMOVE-CURRENT", "TRY remove current layer", false);
+
+         // 4. Change current layer
+         dwg.Layers.Current = dwg.Layers[1];
+         Dump ("SET-CURRENT", "Change current layer", true);
+
+         // 5. TRY remove in-use layer
+         try { dwg.Layers.RemoveAt (0); } catch (Exception e) { exceptions.Add (e); }
+         Dump ("REMOVE-INUSE", "TRY remove in-use layer", false);
+
+         // 6. Insert layer, change current layer
+         UndoStack.Current.Push (new ClubbedStep (dwg, "INSERT+CHANGE"));
+         dwg.Layers.Insert (0, new Layer2 ("BEND", Color4.Green, ELineType.Dash));
+         dwg.Layers.Current = dwg.Layers["0"]!;
+         UndoStack.Current.ClubSteps ();
+         Dump ("INSERT+CHANGE", "Insert layer, change current layer", true);
+
+         // 7. TRY add invalid layer
+         try { dwg.Layers.Add (new Layer2 ("", Color4.Blue, ELineType.Border)); } catch (Exception e) { exceptions.Add (e); }
+         Dump ("BADNAME", "Add layer with bad name", false);
+
+         // 8. TRY add duplicate layer
+         try { dwg.Layers.Add (new Layer2 ("BEND", Color4.DarkBlue, ELineType.Border)); } catch (Exception e) { exceptions.Add (e); }
+         Dump ("DUPLICATE", "Add layer with duplicate name", false);
+
+         // 9. Remove a layer
+         dwg.Layers.RemoveAt (0);
+         Dump ("REMOVE", "Remove a layer", true);
+
+         // 10. Remove a layer
+         UndoStack.Current.Push (new ClubbedStep (dwg, "REPLACE-LAYER"));
+         dwg.Layers[0] = new Layer2 ("STANDARD", Color4.White, ELineType.Continuous);
+         UndoStack.Current.ClubSteps ();
+         Dump ("REPLACE", "Replace a layer", true);
+
+         // 11. Few other exceptions
+         dwg.Layers[1] = new Layer2 ("TRIAL", Color4.Red, ELineType.Dot);  // Should be fine!
+         UndoStack.Current.Undo ();
+         try { dwg.Layers[0] = new Layer2 ("TRIAL", Color4.Black, ELineType.Dot); } catch (Exception e) { exceptions.Add (e); }
+         try { dwg.Layers.Add (null!); } catch (Exception e) { exceptions.Add (e); }
+         try { dwg.Layers.Insert (0, new Layer2 (" ", Color4.Black, ELineType.Dot)); } catch (Exception e) { exceptions.Add (e); }
+         Dump ("EXCEPT", "Exceptions", true);
+
+         Undo ("REMOVE");
+         Undo ("INSERT+CHANGE");
+         Undo ("SET-CURRENT");
+         Undo ("ADD");
+         Undo ("START");
+         (UndoStack.Current.NextUndo == null).IsTrue ();
+         Redo ("ADD");
+         Redo ("SET-CURRENT");
+         Redo ("INSERT+CHANGE");
+         Redo ("REMOVE");
+         Redo ("REPLACE");
+         Redo ("EXCEPT");
+         (UndoStack.Current.NextRedo == null).IsTrue ();
+
+         void OnChange (LChange<Layer2> c)
+            => changes.Add (c.UndoDescription);
+
+         void Dump (string file, string desc, bool dwgOut) {
+            var sb = Compose (desc);
+            File.WriteAllText (NT.TmpTxt, sb.ToString ());
+            Assert.TextFilesEqual (NT.File ($"Misc/Ledger/{file}.txt"), NT.TmpTxt);
+            if (dwgOut) DumpDwg (file);
+         }
+
+         StringBuilder Compose (string desc) {
+            var sb = new StringBuilder ();
+            sb.AppendLine (desc).AppendLine (new string ('-', desc.Length));
+            if (exceptions.Count > 0) {
+               foreach (var e in exceptions.OfType<NoriException> ()) sb.AppendLine (e.Code.ToString ());
+               exceptions.Clear ();
+               return sb;
+            }
+
+            if (changes.Count > 0) {
+               sb.AppendLine ("CHANGES:");
+               foreach (var s in changes) sb.AppendLine (s);
+               changes.Clear ();
+               sb.AppendLine ();
+            }
+
+            sb.Append ("UNDO: ");
+            sb.AppendLine (UndoStack.Current?.NextUndo?.Description);
+            return sb;
+         }
+
+         void Undo (string file) {
+            UndoStack.Current?.Undo ().IsTrue ();
+            DumpDwg (file);
+         }
+
+         void Redo (string file) {
+            UndoStack.Current?.Redo ().IsTrue ();
+            DumpDwg (file);
+         }
+
+         void DumpDwg (string file) {
+            var dwgCurl = Encoding.UTF8.GetString (CurlWriter.SaveToByteArray (dwg));
+            File.WriteAllText (NT.TmpCurl, dwgCurl);
+            Assert.TextFilesEqual (NT.File ($"Misc/Ledger/{file}.curl"), NT.TmpCurl);
+         }
+      } finally {
+         UndoStack.Current = null;
+      }
+   }
 }
