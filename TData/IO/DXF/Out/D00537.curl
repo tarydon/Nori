@@ -7,7 +7,7 @@
     { Name:6 Color:Green Linetype:Dash }
     { Name:9 Color:Cyan Linetype:DashDot }
     { Name:7A Color:Cyan Linetype:Continuous }
-    { Name:T_02 Color:Yellow Linetype:Continuous }
+    { Name:T_02 Color:Yellow Linetype:Continuous }*
     { Name:Tego_ram Color:White Linetype:Continuous }
     { Name:Tego_huvud Color:White Linetype:Continuous }
     { Name:Tego_styck Color:White Linetype:Continuous }
@@ -878,8 +878,6 @@
       ]
     }
   ]
-  CurrentLayer:T_02
-  CurrentDimStyle:GEN-ISO
   Ents:[
     (E2Poly){ Layer:4 Poly:M73.318207,611.561582V323.061582 }
     (E2Poly){ Layer:4 Poly:M73.318207,323.061582H81.318207 }

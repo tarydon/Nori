@@ -75,6 +75,15 @@ public class UndoStack {
    /// that part, we make that UndoStack 'current'.
    public static UndoStack? Current;
 
+   /// <summary>
+   /// A description string to use for the next action that is pushed on the stack
+   /// </summary>
+   /// Some undo actions have somewhat 'generic' descriptions, and this provides a way
+   /// to use those generic undo actions with more meaningful Undo/Redo descriptions. Just
+   /// set up the string here, and then create the UndoStep (which should be written to 
+   /// read from here). This gets cleared immediately when a step is pushed
+   public string? NextDescription;
+
    /// <summary>The next step that can be undone (if any)</summary>
    /// Use this to update the 'Undo' menu with a suitable title, or to disable it
    /// if there is no NextUndo step
@@ -132,6 +141,7 @@ public class UndoStack {
       if (mSteps.Count == mMaxDepth) mSteps.RemoveAt (0); // Limit to MaxDepth. Drop oldest "done" step
       mSteps.Add (step); mCursor = mSteps.Count - 1;
       if (redoNow) step.Step (EUndoDir.Redo);
+      NextDescription = null;
    }
 
    /// <summary>Called to perform a Redo (if any steps are available)</summary>

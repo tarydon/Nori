@@ -281,7 +281,8 @@ public class Ledger<T> : IReadOnlyList<T>, IList<T>, IList where T:class {
 #endregion
 
 public class ModifyLedger<T> : UndoStep where T:class {
-   public ModifyLedger (Ledger<T> ledger, ref LChange<T> change) : base (ledger, change.UndoDescription) {
+   public ModifyLedger (Ledger<T> ledger, ref LChange<T> change) 
+      : base (ledger, UndoStack.Current?.NextDescription ?? change.UndoDescription) {
       mLedger = ledger; mChange = change;
    }
    readonly Ledger<T> mLedger;

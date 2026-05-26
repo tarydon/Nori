@@ -3,7 +3,7 @@
     { Name:0 Color:White Linetype:Continuous }
     { Name:AM_BOR Color:White Linetype:Continuous }
     { Name:axis Color:Magenta Linetype:Continuous }
-    { Name:dimension Color:Red Linetype:Continuous }
+    { Name:dimension Color:Red Linetype:Continuous }*
     { Name:"Bend Centerline (ISO)" Color:#BE Linetype:Continuous }
     { Name:"Visible (ISO)" Color:White Linetype:Continuous }
     { Name:"Visible Narrow (ISO)" Color:White Linetype:Continuous }
@@ -406,8 +406,6 @@
       ]
     }
   ]
-  CurrentLayer:dimension
-  CurrentDimStyle:AM_ISO
   Ents:[
     (E2Insert){ Layer:0 BlockName:ISO_A3 Pt:0,0 XScale:1 YScale:1 }
     (E2Insert){ Layer:0 BlockName:ISO_TITLEB Pt:410,10 XScale:1 YScale:1 }

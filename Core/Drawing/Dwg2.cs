@@ -279,7 +279,7 @@ public partial class Dwg2 {
       if (layers.Count > 0) layers.Add (Layers.Current);
       mStyles?.RemoveAll (a => !styles.Contains (a));
       mBlocks?.RemoveAll (a => !blocks.Contains (a)); 
-      mDimStyles?.RemoveAll (a => !dimStyles.Contains (a));      
+      // mDimStyles?.RemoveAll (a => !dimStyles.Contains (a));      
       Layers.RemoveAll (a => !layers.Contains (a));
       return this;
    }

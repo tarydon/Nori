@@ -79,6 +79,7 @@ class Misc2 {
          var e2p = (E2Poly)dwg.Ents[0]; e2p.Poly.Is ("M0,0H10");
 
          var l1 = new Layer2 ("Bend", Color4.Blue, ELineType.Dot);
+         dwg.Layers.Add (l1);
          new ModifyDwgLayers (dwg, "Add Bend Layer", [l1], []).Push ();
          dwg.Layers.Count.Is (2);
          var l2 = new Layer2 ("MBend", Color4.Green, ELineType.Dash);
