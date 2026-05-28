@@ -36,12 +36,14 @@ public class DIBitmap {
       if (Width != other.Width || Height != other.Height || Fmt != other.Fmt || Data.Length != other.Data.Length)
          return false;
 
+      double mse = 0; // Mean Squared Error check
       for (int i = 0; i < Data.Length; i++) {
          byte a = Data[i], b = other.Data[i];
          if (a == b) continue;
-         if (threshold == 0 || Math.Abs (a - b) > threshold) return false;
+         var v = a - b;
+         mse += v * v;
       }
-      return true;
+      return mse / Data.Length < 0.025;
    }
 
    /// <summary>Format of the bitmap</summary>
