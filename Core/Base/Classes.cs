@@ -31,8 +31,8 @@ public class DIBitmap {
    /// <summary>Raw data of the bitmap</summary>
    public readonly byte[] Data;
 
-   /// <summary>Checks if this bitmap is identical to another, within a given threshold</summary>
-   public bool Identical (DIBitmap other, byte threshold = 0) {
+   /// <summary>Checks if this bitmap is identical to another</summary>
+   public bool Identical (DIBitmap other) {
       if (Width != other.Width || Height != other.Height || Fmt != other.Fmt || Data.Length != other.Data.Length)
          return false;
 
@@ -43,7 +43,7 @@ public class DIBitmap {
          var v = a - b;
          mse += v * v;
       }
-      return mse / Data.Length < 0.025;
+      return mse / Data.Length < 0.022; // Magic: Max MSE value limit
    }
 
    /// <summary>Format of the bitmap</summary>
