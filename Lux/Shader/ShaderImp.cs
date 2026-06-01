@@ -235,8 +235,8 @@ class ShaderImp {
       // We're always hardcoding that texture-unit 1 will be used for the linetype texture
       // (just like texture unit 0 is used for truetype font texture)
       GL.ActiveTexture (ETexUnit.Tex1);
-      HTexture idTexture = GL.GenTexture ();
-      GL.BindTexture (ETexTarget.Texture2D, idTexture);
+      HTexture idTexture = GL2.GenTexture ();
+      GL2.BindTexture (ETexTarget.Texture2D, idTexture);
 
       byte[,] data = new byte[10, 60];
       foreach (string s in mLTypeData) {
@@ -244,11 +244,11 @@ class ShaderImp {
          int n = (int)Enum.Parse<ELineType> (w[0], true);
          for (int j = 0; j < 60; j++) data[n, j] = (w[1][j] == 'x') ? (byte)255 : (byte)0;
       }
-      GL.PixelStore (EPixelStoreParam.UnpackAlignment, 1);
-      GL.TexImage2D (ETexTarget.Texture2D, EPixelInternalFormat.Red, 60, 10, EPixelFormat.Red, EPixelType.UByte, data);
-      GL.TexParameter (ETexTarget.Texture2D, ETexParam.MagFilter, (int)ETexFilter.Linear);
-      GL.TexParameter (ETexTarget.Texture2D, ETexParam.MinFilter, (int)ETexFilter.Linear);
-      GL.TexParameter (ETexTarget.Texture2D, ETexParam.WrapS, (int)ETexWrap.Repeat);
+      GL2.PixelStore (EPixelStoreParam.UnpackAlignment, 1);
+      GL2.TexImage2D (ETexTarget.Texture2D, EPixelInternalFormat.Red, 60, 10, EPixelFormat.Red, EPixelType.UByte, data);
+      GL2.TexParameter (ETexTarget.Texture2D, ETexParam.MagFilter, (int)ETexFilter.Linear);
+      GL2.TexParameter (ETexTarget.Texture2D, ETexParam.MinFilter, (int)ETexFilter.Linear);
+      GL2.TexParameter (ETexTarget.Texture2D, ETexParam.WrapS, (int)ETexWrap.Repeat);
    }
    // This gets set to true once we have made the linetype texture
    static bool miLTypeTextureMade;

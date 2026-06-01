@@ -178,15 +178,15 @@ public static partial class Lux {
          DIBitmap dib = new PNGReader (file).Load ();
          GL.ActiveTexture ((ETexUnit)((int)ETexUnit.Tex4 + n));
          HTexture hTexture = mDecalTex[n];
-         if (hTexture == 0) mDecalTex[n] = hTexture = GL.GenTexture ();
-         GL.BindTexture (ETexTarget.Texture2D, hTexture);
-         GL.PixelStore (EPixelStoreParam.UnpackAlignment, 1);
+         if (hTexture == 0) mDecalTex[n] = hTexture = GL2.GenTexture ();
+         GL2.BindTexture (ETexTarget.Texture2D, hTexture);
+         GL2.PixelStore (EPixelStoreParam.UnpackAlignment, 1);
 
-         GL.TexImage2D (ETexTarget.Texture2D, EPixelInternalFormat.RGBA, dib.Width, dib.Height, EPixelFormat.RGBA, EPixelType.UByte, dib.Data);
-         GL.TexParameter (ETexTarget.Texture2D, ETexParam.WrapS, (int)ETexWrap.Clamp);
-         GL.TexParameter (ETexTarget.Texture2D, ETexParam.WrapT, (int)ETexWrap.Clamp);
-         GL.TexParameter (ETexTarget.Texture2D, ETexParam.MagFilter, (int)ETexFilter.Linear);
-         GL.TexParameter (ETexTarget.Texture2D, ETexParam.MinFilter, (int)ETexFilter.Linear);
+         GL2.TexImage2D (ETexTarget.Texture2D, EPixelInternalFormat.RGBA, dib.Width, dib.Height, EPixelFormat.RGBA, EPixelType.UByte, dib.Data);
+         GL2.TexParameter (ETexTarget.Texture2D, ETexParam.WrapS, (int)ETexWrap.Clamp);
+         GL2.TexParameter (ETexTarget.Texture2D, ETexParam.WrapT, (int)ETexWrap.Clamp);
+         GL2.TexParameter (ETexTarget.Texture2D, ETexParam.MagFilter, (int)ETexFilter.Linear);
+         GL2.TexParameter (ETexTarget.Texture2D, ETexParam.MinFilter, (int)ETexFilter.Linear);
 
          mDecalSize[n] = new (dib.Width, dib.Height); mDecals[n] = ufile;
          mNDecal = (mNDecal + 1) % 4;  // Next decal to sacrifice

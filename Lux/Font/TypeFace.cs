@@ -233,11 +233,11 @@ public class TypeFace {
    HTexture BuildTexture () {
       _ = Notes;  // This will also build the mRawTexData buffer
       GL.ActiveTexture (ETexUnit.Tex0);
-      HTexture texture = GL.GenTexture ();
-      GL.BindTexture (ETexTarget.TexRectangle, texture);
-      GL.PixelStore (EPixelStoreParam.UnpackAlignment, 1);
+      HTexture texture = GL2.GenTexture ();
+      GL2.BindTexture (ETexTarget.TexRectangle, texture);
+      GL2.PixelStore (EPixelStoreParam.UnpackAlignment, 1);
       byte[] texData = mRawTexData!;
-      GL.TexImage2D (ETexTarget.TexRectangle, EPixelInternalFormat.Red, CXTex, texData.Length / CXTex, EPixelFormat.Red, EPixelType.UByte, texData);
+      GL2.TexImage2D (ETexTarget.TexRectangle, EPixelInternalFormat.Red, CXTex, texData.Length / CXTex, EPixelFormat.Red, EPixelType.UByte, texData);
       mRawTexData = null;
       return texture;
    }

@@ -168,9 +168,6 @@ static public unsafe class GL {
    delegate void glGenRenderbuffers (int n, HRenderBuffer* buffers);
    static glGenRenderbuffers? pGenRenderBuffers;
 
-   // Creates a new texture ....................................................
-   public static HTexture GenTexture () { HTexture tex; GenTextures (1, &tex); return tex; }
-
    // Allocate a new VertexArray object (VAO) ..................................
    public static HVertexArray GenVertexArray () { 
       HVertexArray array; 
@@ -283,16 +280,6 @@ static public unsafe class GL {
    delegate void glPrimitiveRestartIndex (uint index);
    static glPrimitiveRestartIndex? pPrimitiveRestartIndex;
 
-   // Reads pixels from the current framebuffer ................................
-   public static void ReadPixels<T> (int x, int y, int width, int height, EPixelFormat format, EPixelType ptype, T[] data) where T : struct {
-      GCHandle pixelptr = GCHandle.Alloc (data, GCHandleType.Pinned);
-      try {
-         ReadPixels (x, y, width, height, format, ptype, pixelptr.AddrOfPinnedObject ());
-      } finally {
-         pixelptr.Free ();
-      }
-   }
-
    // Allocates render buffer storage ..........................................
    public static void RenderBufferStorage (ERenderBufferFormat format, int cx, int cy) 
       => (pRenderBufferStorage ??= Load<glRenderbufferStorage> ()) (ERenderBufferTarget.RenderBuffer, format, cx, cy);
@@ -380,38 +367,11 @@ static public unsafe class GL {
    [DllImport (GDI32)] internal static extern int SwapBuffers (HDC hDC);
 
    [DllImport (USER32)] internal static extern HDC GetDC (HWindow hWnd);
-
-   [DllImport (OPENGL32, EntryPoint = "glBegin")] public static extern void Begin (EMode mode);
-   [DllImport (OPENGL32, EntryPoint = "glBindTexture")] public static extern void BindTexture (ETexTarget target, HTexture id);
-   [DllImport (OPENGL32, EntryPoint = "glBlendFunc")] public static extern void BlendFunc (EBlendFactor sfactor, EBlendFactor dfactor);
-   [DllImport (OPENGL32, EntryPoint = "glClear")] public static extern void Clear (EBuffer mask);
-//   [DllImport (OPENGL32, EntryPoint = "glClearColor")] public static extern void ClearColor (float red, float green, float blue, float alpha);
-   [DllImport (OPENGL32, EntryPoint = "glColor3f")] public static extern void Color (float red, float green, float blue);
+   [DllImport (OPENGL32, EntryPoint = "wglDeleteContext")] internal static extern bool DeleteContext (HGLRC hglrc);
    [DllImport (OPENGL32, EntryPoint = "wglCreateContext")] internal static extern HGLRC CreateContext (HDC hdc);
-   [DllImport (OPENGL32, EntryPoint = "wglDeleteContext")] public static extern bool DeleteContext (HGLRC hglrc);
-   [DllImport (OPENGL32, EntryPoint = "glDisable")] public static extern void Disable (ECap cap);
-   [DllImport (OPENGL32, EntryPoint = "glDrawArrays")] public static extern void DrawArrays (EMode mode, int start, int count);
-   [DllImport (OPENGL32, EntryPoint = "glEnable")] public static extern void Enable (ECap cap);
-   public static void Enable (ECap cap, bool v) { if (v) Enable (cap); else Disable (cap); }
-
-   [DllImport (OPENGL32, EntryPoint = "glEnd")] public static extern void End ();
-   [DllImport (OPENGL32, EntryPoint = "glFinish")] public static extern void Finish ();
-   [DllImport (OPENGL32, EntryPoint = "glGenTextures")] public static extern void GenTextures (int n, HTexture* pTex);
-   [DllImport (OPENGL32, EntryPoint = "glReadPixels")] public static extern void ReadPixels (int x, int y, int width, int height, EPixelFormat format, EPixelType type, Ptr pixels);
-   [DllImport (OPENGL32, EntryPoint = "wglGetProcAddress")] public static extern Ptr GetProcAddress (string name);
+   [DllImport (OPENGL32, EntryPoint = "wglGetProcAddress")] internal static extern Ptr GetProcAddress (string name);
+   [DllImport (OPENGL32, EntryPoint = "glViewport")] internal static extern void Viewport (int x, int y, int width, int height);
    [DllImport (OPENGL32, EntryPoint = "wglMakeCurrent")] internal static extern int MakeCurrent (HDC hdc, HGLRC hrc);
-   [DllImport (OPENGL32, EntryPoint = "glPixelStorei")] public static extern void PixelStore (EPixelStoreParam pname, int param);
-   [DllImport (OPENGL32, EntryPoint = "glPolygonOffset")] public static extern void PolygonOffset (float factor, float units);
-   [DllImport (OPENGL32, EntryPoint = "glScissor")] public static extern void Scissor (int x, int y, int width, int height);
-   [DllImport (OPENGL32, EntryPoint = "glTexImage2D")] public static extern void TexImage2D (ETexTarget target, int level, EPixelInternalFormat publicformat, int width, int height, int border, EPixelFormat format, EPixelType type, void* pixels);
-   public static void TexImage2D (ETexTarget target, EPixelInternalFormat infmt, int width, int height, EPixelFormat fmt, EPixelType type, byte[] data) 
-      { fixed (byte* p = &data[0]) TexImage2D (target, 0, infmt, width, height, 0, fmt, type, p); }
-   public static void TexImage2D (ETexTarget target, EPixelInternalFormat infmt, int width, int height, EPixelFormat fmt, EPixelType type, byte[,] data) 
-      { fixed (byte* p = &data[0,0]) TexImage2D (target, 0, infmt, width, height, 0, fmt, type, p); }
-   [DllImport (OPENGL32, EntryPoint = "glTexParameteri")] public static extern void TexParameter (ETexTarget target, ETexParam pname, int param);
-   [DllImport (OPENGL32, EntryPoint = "glVertex2f")] public static extern void Vertex (float x, float y);
-   [DllImport (OPENGL32, EntryPoint = "glVertex3f")] public static extern void Vertex (float x, float y, float z);
-   [DllImport (OPENGL32, EntryPoint = "glViewport")] public static extern void Viewport (int x, int y, int width, int height);
 
    const string GDI32 = "gdi32.dll";
    const string OPENGL32 = "opengl32.dll";

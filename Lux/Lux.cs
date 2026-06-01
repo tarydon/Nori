@@ -393,7 +393,7 @@ public static partial class Lux {
    static object? EndRender (ETarget target, DIBitmap.EFormat fmt) {
       switch (target) {
          case ETarget.Image:
-            GL.Finish ();
+            GL2.Finish ();
             int x = mFBViewport.X, y = mFBViewport.Y, bpp = fmt.BytesPerPixel ();
             var pxfmt = fmt switch {
                DIBitmap.EFormat.RGBA8 => EPixelFormat.RGBA,
@@ -401,18 +401,18 @@ public static partial class Lux {
                DIBitmap.EFormat.Gray8 => EPixelFormat.Red,
                _ => throw new BadCaseException (fmt)
             };
-            GL.PixelStore (EPixelStoreParam.PackAlignment, 4);
+            GL2.PixelStore (EPixelStoreParam.PackAlignment, 4);
             byte[] data = new byte[bpp * x * y];
-            GL.ReadPixels (0, 0, x, y, pxfmt, EPixelType.UByte, data);
+            GL2.ReadPixels (0, 0, x, y, pxfmt, EPixelType.UByte, data);
             return new DIBitmap (x, y, fmt, data);
          case ETarget.Pick:
-            GL.Finish ();
+            GL2.Finish ();
             int size = (x = mFBViewport.X) * (y = mFBViewport.Y);
             if (size > mPickDepth.Length)
                (mPickPixel, mPickDepth) = (new byte[size * 4], new float[size]);
-            GL.PixelStore (EPixelStoreParam.PackAlignment, 4);
-            GL.ReadPixels (0, 0, x, y, EPixelFormat.BGRA, EPixelType.UByte, mPickPixel);
-            GL.ReadPixels (0, 0, x, y, EPixelFormat.DepthComponent, EPixelType.Float, mPickDepth);
+            GL2.PixelStore (EPixelStoreParam.PackAlignment, 4);
+            GL2.ReadPixels (0, 0, x, y, EPixelFormat.BGRA, EPixelType.UByte, mPickPixel);
+            GL2.ReadPixels (0, 0, x, y, EPixelFormat.DepthComponent, EPixelType.Float, mPickDepth);
             return (mPickPixel, mPickDepth);
       }
       return null;

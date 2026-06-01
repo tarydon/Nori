@@ -71,7 +71,7 @@ class RetainBuffer : IIndexed {
    /// <summary>Draws data from the VAO using a simple DrawArrays call</summary>
    public void Draw (EMode mode, int offset, int count) {
       PushToGPU ();
-      GL.DrawArrays (mode, offset / mcbVertex, count);
+      GL2.DrawArrays (mode, offset / mcbVertex, count);
    }
 
    /// <summary>Draws data from the VAO using a more complex DrawElements call (indexed drawing)</summary>
@@ -220,7 +220,7 @@ class StreamBuffer {
 
       mCursor += cbReserve;
       if (shader.Name == "UIRect") GL.DrawArraysInstanced (shader.Mode, 0, 4, nVerts);
-      else GL.DrawArrays (shader.Mode, 0, nVerts);
+      else GL2.DrawArrays (shader.Mode, 0, nVerts);
       for (int i = 0; i < index; i++) GL.DisableVertexAttribArray (index);
       GL.BindBuffer (EBufferTarget.Array, HBuffer.Zero);
    }
