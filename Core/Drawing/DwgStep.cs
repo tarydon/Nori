@@ -65,32 +65,6 @@ public class ModifyDwgEnts : UndoStep {
 }
 #endregion
 
-#region class ModifyDwgLayers ----------------------------------------------------------------------
-/// <summary>UndoStep used to add/remove layers from the drawing</summary>
-[Obsolete ("Use Dwg.Layers.Add/Remove directly (REMOVE 2026.07.01)")]
-public class ModifyDwgLayers : UndoStep {
-   /// <summary>Constructor that takes a set of layers to add, and a set to remove</summary>
-   /// Note that a Layer2 can be removed only if it has no entities. Otherwise, the Dwg2 will
-   /// throw an exception. 
-   public ModifyDwgLayers (Dwg2 dwg, string desc, IEnumerable<Layer2> add, IEnumerable<Layer2> rmv) : base (dwg, desc)
-      => (mDwg, mAdd, mRmv) = (dwg, [.. add], [.. rmv]);
-
-   // Overrides ----------------------------------------------------------------
-   public override bool IsMoot => mAdd.Count + mRmv.Count == 0;
-
-   // Add/remove the necessary layers
-   public override void Step (EUndoDir dir) {
-      var (add, rmv) = dir == EUndoDir.Redo ? (mAdd, mRmv) : (mRmv, mAdd);
-      foreach (var layer in rmv) mDwg.Layers.Remove (layer);
-      foreach (var layer in add) mDwg.Layers.Add (layer);
-   }
-
-   // Private data -------------------------------------------------------------
-   readonly Dwg2 mDwg;                 // Drawing we're working with
-   readonly List<Layer2> mAdd, mRmv;   // Set of layers to add/remove
-}
-#endregion
-
 #region class RelayerEnts --------------------------------------------------------------------------
 /// <summary>UndoStep used to move entities to a new layer</summary>
 public class RelayerEnts : UndoStep {

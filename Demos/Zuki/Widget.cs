@@ -109,7 +109,7 @@ class Widget {
 #region class EntMaker -----------------------------------------------------------------------------
 /// <summary>Subtype of Widget used to make entities</summary>
 abstract class Ent2Maker : Widget {
-   public Layer2 Layer => Dwg.CurrentLayer;
+   public Layer2 Layer => Dwg.Layers.Current;
 
    // Overridden to add the entity into the drawing
    public override void Completed () { if (MakeEnt () is { } ent) Dwg.Add (ent); }
