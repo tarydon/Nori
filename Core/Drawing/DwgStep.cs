@@ -18,10 +18,8 @@ public class ModifyDwgEnts : UndoStep {
    }
 
    // Overrides ----------------------------------------------------------------
-   /// <summary>
-   /// A ModifyDwgEnts action is empty if it has no entities being added or removed
-   /// </summary>
-   public override bool IsEmpty => mAdd.Count + mRmv.Count == 0; 
+   /// <summary>A ModifyDwgEnts action is empty if it has no entities being added or removed</summary>
+   public override bool IsMoot => mAdd.Count + mRmv.Count == 0; 
 
    // Actually do the add/remove of entities. Note that any 'stitching' required has already
    // been done by the constructor. 
@@ -69,7 +67,7 @@ public class ModifyDwgEnts : UndoStep {
 
 #region class ModifyDwgLayers ----------------------------------------------------------------------
 /// <summary>UndoStep used to add/remove layers from the drawing</summary>
-[Obsolete]
+[Obsolete ("Use Dwg.Layers.Add/Remove directly (REMOVE 2026.07.01)")]
 public class ModifyDwgLayers : UndoStep {
    /// <summary>Constructor that takes a set of layers to add, and a set to remove</summary>
    /// Note that a Layer2 can be removed only if it has no entities. Otherwise, the Dwg2 will
@@ -78,7 +76,7 @@ public class ModifyDwgLayers : UndoStep {
       => (mDwg, mAdd, mRmv) = (dwg, [.. add], [.. rmv]);
 
    // Overrides ----------------------------------------------------------------
-   public override bool IsEmpty => mAdd.Count + mRmv.Count == 0;
+   public override bool IsMoot => mAdd.Count + mRmv.Count == 0;
 
    // Add/remove the necessary layers
    public override void Step (EUndoDir dir) {
@@ -94,15 +92,13 @@ public class ModifyDwgLayers : UndoStep {
 #endregion
 
 #region class RelayerEnts --------------------------------------------------------------------------
-/// <summary>
-/// UndoStep used to move entities to a new layer
-/// </summary>
+/// <summary>UndoStep used to move entities to a new layer</summary>
 public class RelayerEnts : UndoStep {
    public RelayerEnts (IEnumerable<Ent2> ents, Layer2 layer) : base (null, "Change Entity Layer") {
       mOldLayers = [.. (mEnts = [.. ents]).Select (a => a.Layer)];
       mNewLayer = layer;
    }
-   public override bool IsEmpty => mEnts.Count == 0; 
+   public override bool IsMoot => mEnts.Count == 0; 
 
    public override void Step (EUndoDir dir) {
       if (dir == EUndoDir.Redo) mEnts.ForEach (a => a.Layer = mNewLayer);

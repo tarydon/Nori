@@ -1,63 +1,22 @@
 // ────── ╔╗
 // ╔═╦╦═╦╦╬╣ Ledger.cs
-// ║║║║╬║╔╣║ <<TODO>>
+// ║║║║╬║╔╣║ Implements Ledger<T> (smart list inspired by database table)
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 using System.Collections;
 using System.Reactive.Subjects;
 namespace Nori;
 
-#region enum ELChange ------------------------------------------------------------------------------
-/// <summary>Enumerates the types of changes that can happen on a ledger</summary>
-public enum ELChange {
-   /// <summary>Notification fired when an item is added</summary>
-   Add = 1,
-   /// <summary>Notification when an item is removed</summary>
-   Remove = 2,
-   /// <summary>Notification fired when an item is replaced</summary>
-   Replace = 3,
-   /// <summary>Notification that the 'current' value has changed</summary>
-   Current = 5,
-}
-#endregion
-
-#region struct LChange<T> --------------------------------------------------------------------------
-/// <summary>Represents a change on a Ledger(T)</summary>
-public readonly struct LChange<T> {
-   public LChange (ELChange kind, int index, T? oldValue, T? newValue) {
-      Kind = kind; Index = index; OldValue = oldValue; NewValue = newValue;
-   }
-
-   public string UndoDescription {
-      get {
-         string s = $"{Kind} {typeof (T).Name}[{Index}]";
-         if (Lib.Testing) {
-            if (OldValue is { }) s += $"  OLD:{OldValue}";
-            if (NewValue is { }) s += $"  NEW:{NewValue}";
-         }
-         return s; 
-      }
-   }
-
-   /// <summary>The kind of change this encapsulate</summary>
-   public readonly ELChange Kind;
-   /// <summary>The index at which the change occurs (also index of current value)</summary>
-   public readonly int Index;
-   /// <summary>
-   /// Removing: the value that we are removing
-   /// Replacing: the old value (one being replaced)
-   /// </summary>
-   public readonly T? OldValue;
-   /// <summary>
-   /// Added: the new value that was added
-   /// Replacing: the new (replacement) value
-   /// Current: The new 'Current' value
-   /// </summary>
-   public readonly T? NewValue;
-}
-#endregion
-
 #region class Ledger<T> ----------------------------------------------------------------------------
-/// <summary>Implements a Ledger of T (a 'managed' collection)</summary>
+/// <summary>Implements a Ledger(T)</summary>
+/// The* Ledger*type represents a _smart List<T>_ type that takes some inspiration from a
+/// relation database _table_.Since this implements the `IList<T>` interface, the traditional
+/// list operations like `Add`, `Remove`, `Count` and the `this[]` indexer are all
+/// implemented. In addition, this type adds a lot of other useful functionality.
+
+/// An important part of the implementation is that all this additional functionality
+/// is *opt-in*, and incurs no cost if not used. That is, for the unadorned use of
+/// this type, it is as efficient as a *List<T>* (which is used in its underlying
+/// implementation).
 public class Ledger<T> : IReadOnlyList<T>, IList<T>, IList where T:class {
    public Ledger (Action<LChange<T>>? observer = null) {
       if (observer != null) Changes.Subscribe (observer);
@@ -314,3 +273,51 @@ public class ModifyLedger<T> : UndoStep where T:class {
       }
    }
 }
+
+#region enum ELChange ------------------------------------------------------------------------------
+/// <summary>Enumerates the types of changes that can happen on a ledger</summary>
+public enum ELChange {
+   /// <summary>Notification fired when an item is added</summary>
+   Add = 1,
+   /// <summary>Notification when an item is removed</summary>
+   Remove = 2,
+   /// <summary>Notification fired when an item is replaced</summary>
+   Replace = 3,
+   /// <summary>Notification that the 'current' value has changed</summary>
+   Current = 5,
+}
+#endregion
+
+#region struct LChange<T> --------------------------------------------------------------------------
+/// <summary>Represents a change on a Ledger(T)</summary>
+public readonly struct LChange<T> {
+   public LChange (ELChange kind, int index, T? oldValue, T? newValue) {
+      Kind = kind; Index = index; OldValue = oldValue; NewValue = newValue;
+   }
+
+   public string UndoDescription {
+      get {
+         string s = $"{Kind} {typeof (T).Name}[{Index}]";
+         if (Lib.Testing) {
+            if (OldValue is { }) s += $"  OLD:{OldValue}";
+            if (NewValue is { }) s += $"  NEW:{NewValue}";
+         }
+         return s;
+      }
+   }
+
+   /// <summary>The kind of change this encapsulate</summary>
+   public readonly ELChange Kind;
+   /// <summary>The index at which the change occurs (also index of current value)</summary>
+   public readonly int Index;
+   /// <summary>The OLD value</summary>
+   /// Kind=Remove : the value we are removing
+   /// Kind=Replace : the value being replaced
+   public readonly T? OldValue;
+   /// <summary>The NEW value</summary>
+   /// Kind=Add : the value taht was added
+   /// Kind=Replace: the new (replacement) value
+   /// Kind=Current: the new 'current' value
+   public readonly T? NewValue;
+}
+#endregion

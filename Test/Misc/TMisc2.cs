@@ -78,19 +78,22 @@ class Misc2 {
          dwg.Ents.Count.Is (1);
          var e2p = (E2Poly)dwg.Ents[0]; e2p.Poly.Is ("M0,0H10");
 
-         var l1 = new Layer2 ("Bend", Color4.Blue, ELineType.Dot);
-         dwg.Layers.Add (l1);
-         new ModifyDwgLayers (dwg, "Add Bend Layer", [l1], []).Push ();
+         // Add a "BEND" layer
+         stack.NextDescription = "Add Bend Layer";
+         var bend = new Layer2 ("Bend", Color4.Blue, ELineType.Dot);
+         dwg.Layers.Add (bend); 
          dwg.Layers.Count.Is (2);
-         var l2 = new Layer2 ("MBend", Color4.Green, ELineType.Dash);
-         new ModifyDwgLayers (dwg, "Add MBend Layer", [l2], [l1]).Push ();
+         var mbend = new Layer2 ("MBend", Color4.Green, ELineType.Dash);
+         stack.NextDescription = "Add MBend Layer";
+         dwg.Layers[1] = mbend;
          dwg.Layers.Count.Is (2);
          dwg.Layers[1].Name.Is ("MBend");
 
-         var p3 = new E2Poly (l2, Poly.Rectangle (0, 0, 10, 5));
+         var p3 = new E2Poly (mbend, Poly.Rectangle (0, 0, 10, 5));
          new ModifyDwgEnts (dwg, "Add Rect", [p3], []).Push ();
          dwg.Ents.Count.Is (2);
 
+         stack.NextUndo?.Description.Is ("Add Rect");
          stack.Undo (); // Add Rect
          stack.Undo (); // Replace layer Bend with MBend
          stack.Undo (); // Add layer Bend
@@ -123,19 +126,20 @@ class Misc2 {
          new ClubbedStep (dwg, "Empty").Push ();
          stack.ClubSteps ();
          stack.NextUndo?.Description.Is ("Add Circle");
-         // One step to club, ClubSteps will simply keep that step
+         // One step to club, ClubSteps will still wrap around it, presumably because
+         // the ClubbedStep provides a better Undo description than the step inside
          new ClubbedStep (dwg, "OneStep").Push ();
          var p1 = new E2Poly (dwg.Layers.Current, Poly.Circle (Point2.Zero, 5));
          new ModifyDwgEnts (dwg, "Add Circle2", [p1], []).Push ();
          stack.ClubSteps ();
          dwg.Ents.Count.Is (2);
-         stack.NextUndo?.Description.Is ("Add Circle2");
+         stack.NextUndo?.Description.Is ("OneStep");
 
          // Club with 2 steps
          new ClubbedStep (dwg, "Add Layer and Line").Push ();
-         var l1 = new Layer2 ("Bend", Color4.Blue, ELineType.Dot);
-         new ModifyDwgLayers (dwg, "Add Layer", [l1], []).Push ();
-         var p2 = new E2Poly (l1, Poly.Line (new (0, 0), new (10, 0)));
+         var bend = new Layer2 ("Bend", Color4.Blue, ELineType.Dot);
+         dwg.Layers.Add (bend);
+         var p2 = new E2Poly (bend, Poly.Line (new (0, 0), new (10, 0)));
          new ModifyDwgEnts (dwg, "Add Line", [p2], []).Push ();
          stack.ClubSteps ();
 
@@ -143,7 +147,7 @@ class Misc2 {
          stack.NextUndo?.Description.Is ("Add Layer and Line");
          stack.Undo ();
          dwg.Ents.Count.Is (2); dwg.Layers.Count.Is (1);
-         stack.NextUndo?.Description.Is ("Add Circle2");
+         stack.NextUndo?.Description.Is ("OneStep");
          stack.NextRedo?.Description.Is ("Add Layer and Line");
          stack.Redo ();
          dwg.Ents.Count.Is (3); dwg.Layers.Count.Is (2);

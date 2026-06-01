@@ -140,7 +140,17 @@ public partial class Dwg2 {
    /// <summary>Adds a dimension style to the list of styles in the drawing</summary>
    public void Add (DimStyle2 style) => (mDimStyles ??= []).Add (style); 
    /// <summary>Adds a style to the list of styles</summary>
-   public void Add (Style2 style) => (mStyles ??= []).Add (style); 
+   public void Add (Style2 style) => (mStyles ??= []).Add (style);
+
+   [Obsolete ("Use Layers.Add instead (REMOVE 2026.07.01)")]
+   public void Add (Layer2 layer) => Layers.Add (layer);
+   [Obsolete ("Use Layers.Current instead (REMOVE 2026.07.01)")]
+   public Layer2 CurrentLayer { get => Layers.Current; set => Layers.Current = value; }
+   [Obsolete ("Use Layers[N]=newLayer instead (REMOVE 2026.07.01)")]
+   public void UpdateLayer (Layer2 oldLayer, Layer2 newLayer) {
+      int n = Layers.IndexOf (oldLayer);
+      if (n != -1) Layers[n] = newLayer; else Layers.Add (newLayer);
+   }
 
    /// <summary>Marks the inner/outer polylines of the drawing</summary>
    public bool MarkInOut () {

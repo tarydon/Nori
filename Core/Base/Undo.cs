@@ -26,10 +26,8 @@ public abstract class UndoStep {
    readonly string mDescription;
 
    // Methods ------------------------------------------------------------------
-   /// <summary>
-   /// Override this to say if this is effectively an 'empty' action (nothing being done)
-   /// </summary>
-   public virtual bool IsEmpty => false;
+   /// <summary>Override this to say if this is effectively an 'empty' action (nothing being done)</summary>
+   public virtual bool IsMoot => false;
 
    /// <summary>Override this to do the actual Undo or Redo of the action</summary>
    public abstract void Step (EUndoDir dir);
@@ -43,7 +41,7 @@ public abstract class UndoStep {
    /// to this step have already been applied). In that case, pass in false for the `redoNow`
    /// parameter to avoid an immediate call to Step(Redo). 
    public void Push (bool redoNow = true) {
-      if (IsEmpty) return;
+      if (IsMoot) return;
       if (UndoStack.Current is { } stack) stack.Push (this, redoNow);
       else if (redoNow) Step (EUndoDir.Redo);
    }
@@ -75,9 +73,7 @@ public class UndoStack {
    /// that part, we make that UndoStack 'current'.
    public static UndoStack? Current;
 
-   /// <summary>
-   /// A description string to use for the next action that is pushed on the stack
-   /// </summary>
+   /// <summary>A description string to use for the next action that is pushed on the stack</summary>
    /// Some undo actions have somewhat 'generic' descriptions, and this provides a way
    /// to use those generic undo actions with more meaningful Undo/Redo descriptions. Just
    /// set up the string here, and then create the UndoStep (which should be written to 
@@ -182,10 +178,7 @@ public class ClubbedStep : UndoStep {
    internal readonly List<UndoStep> Steps = [];
 
    // Methods ------------------------------------------------------------------
-   /// <summary>
-   /// A ClubbedStep is 'empty' if it has no nested actions in it
-   /// </summary>
-   public override bool IsEmpty => Steps.Count == 0; 
+   public override bool IsMoot => false;
 
    /// <summary>Undo/Redo is implemented by calling the underlying steps to perform their Undo/Redo</summary>
    /// When we are doing a Redo, the Steps are walked in the forward order, while during an

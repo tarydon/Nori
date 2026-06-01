@@ -9,9 +9,7 @@ namespace Nori;
 public sealed class AuException (string message) : Exception (message);
 #endregion
 
-/// <summary>
-/// Represents an error of type EError
-/// </summary>
+/// <summary>Represents an error of type EError</summary>
 public sealed class NoriException (EError error) : Exception (error.ToString ())  {
    public readonly EError Code = error;
 }
