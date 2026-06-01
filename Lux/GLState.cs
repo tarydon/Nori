@@ -164,7 +164,7 @@ static class GLState {
       mPgmChanges = 0; mVAOChanges = 0; mTypeFaceId = 0;
 
       var (r, g, b, a) = bgrdColor;
-      GL.ClearColor (r / 255f, g / 255f, b / 255f, a / 255f);
+      GL2.ClearColor (r / 255f, g / 255f, b / 255f, a / 255f);
       GL.Clear (EBuffer.Color | EBuffer.Depth | EBuffer.Stencil);
    }
 }

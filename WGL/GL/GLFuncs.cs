@@ -385,7 +385,7 @@ static public unsafe class GL {
    [DllImport (OPENGL32, EntryPoint = "glBindTexture")] public static extern void BindTexture (ETexTarget target, HTexture id);
    [DllImport (OPENGL32, EntryPoint = "glBlendFunc")] public static extern void BlendFunc (EBlendFactor sfactor, EBlendFactor dfactor);
    [DllImport (OPENGL32, EntryPoint = "glClear")] public static extern void Clear (EBuffer mask);
-   [DllImport (OPENGL32, EntryPoint = "glClearColor")] public static extern void ClearColor (float red, float green, float blue, float alpha);
+//   [DllImport (OPENGL32, EntryPoint = "glClearColor")] public static extern void ClearColor (float red, float green, float blue, float alpha);
    [DllImport (OPENGL32, EntryPoint = "glColor3f")] public static extern void Color (float red, float green, float blue);
    [DllImport (OPENGL32, EntryPoint = "wglCreateContext")] internal static extern HGLRC CreateContext (HDC hdc);
    [DllImport (OPENGL32, EntryPoint = "wglDeleteContext")] public static extern bool DeleteContext (HGLRC hglrc);

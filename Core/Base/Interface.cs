@@ -3,6 +3,7 @@
 // ║║║║╬║╔╣║ Various interface definitions used (and exported) by Nore.Core
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 namespace Nori;
+using Ptr = nint;
 
 #region interface IEQuable<T> ----------------------------------------------------------------------
 /// <summary>Interface implemented by classes / structs that have an EQ comparision method</summary>
@@ -14,7 +15,7 @@ public interface IEQuable<in T> {
 #region interface IIndexed -------------------------------------------------------------------------
 /// <summary>IIndexed implements a class that has a 32-bit index</summary>
 public interface IIndexed {
-   int Idx { get; set; }
+   public int Idx { get; set; }
 }
 #endregion
 
@@ -32,3 +33,9 @@ public interface IStmLocator {
    public Stream? Open (string name);
 }
 #endregion
+
+public interface IPlatform {
+   public Ptr GetGLProcAddress (string name);
+
+   public static IPlatform It = null!;
+}

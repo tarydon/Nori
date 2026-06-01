@@ -5,7 +5,7 @@ namespace WPFShell;
 
 public partial class MainWindow : Window {
    public MainWindow () {
-      Lib.Init (); Lux2.Init ();
+      Lib.Init (); Host.Init (); Lux2.Init ();
       InitializeComponent ();
       Content = (UIElement)Lux.CreatePanel ();
       Lux.OnReady.Subscribe (OnLuxReady);
