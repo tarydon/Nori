@@ -77,7 +77,7 @@ class RetainBuffer : IIndexed {
    /// <summary>Draws data from the VAO using a more complex DrawElements call (indexed drawing)</summary>
    public void Draw (EMode mode, int offset, int ioffset, int icount) {
       PushToGPU ();
-      GL.DrawElementsBaseVertex (mode, icount, EIndexType.UInt, ioffset * 4, offset / mcbVertex);
+      GL2.DrawElementsBaseVertex (mode, icount, EIndexType.UInt, ioffset * 4, offset / mcbVertex);
    }
 
    /// <summary>Gets a currently open RetainBuffer corresponding to a given vertex-spec</summary>
@@ -96,7 +96,7 @@ class RetainBuffer : IIndexed {
    // released (when this.References goes down to zero)
    public void Release () {
       if (GLState.VAO == mHVAO) GLState.VAO = 0;
-      GL.DeleteBuffer (mHVertex); GL.DeleteBuffer (mHIndex); GL.DeleteVertexArray (mHVAO);
+      GL2.DeleteBuffer (mHVertex); GL2.DeleteBuffer (mHIndex); GL2.DeleteVertexArray (mHVAO);
       mHVertex = mHIndex = HBuffer.Zero; mHVAO = HVertexArray.Zero;
       All.Release (Idx);
    }
@@ -107,15 +107,15 @@ class RetainBuffer : IIndexed {
    // VAO object as the current one to use
    unsafe void PushToGPU () {
       if (mHVAO != 0) { GLState.VAO = mHVAO; return; }
-      GLState.VAO = mHVAO = GL.GenVertexArray ();
-      GL.BindBuffer (EBufferTarget.Array, mHVertex = GL.GenBuffer ());
+      GLState.VAO = mHVAO = GL2.GenVertexArray ();
+      GL2.BindBuffer (EBufferTarget.Array, mHVertex = GL2.GenBuffer ());
       fixed (void* p = &mData[0])
-         GL.BufferData (EBufferTarget.Array, mUsed, (Ptr)p, EBufferUsage.StaticDraw);
+         GL2.BufferData (EBufferTarget.Array, mUsed, (Ptr)p, EBufferUsage.StaticDraw);
       PushedVerts = mUsed;
 
-      GL.BindBuffer (EBufferTarget.ElementArray, mHIndex = GL.GenBuffer ());
+      GL2.BindBuffer (EBufferTarget.ElementArray, mHIndex = GL2.GenBuffer ());
       fixed (void* p = &mIndex[0])
-         GL.BufferData (EBufferTarget.ElementArray, mIndexUsed * 4, (Ptr)p, EBufferUsage.StaticDraw);
+         GL2.BufferData (EBufferTarget.ElementArray, mIndexUsed * 4, (Ptr)p, EBufferUsage.StaticDraw);
       mData = null!; mIndex = null!; mBySpec[(int)VSpec] = null;
       mUsed = mIndexUsed = 0;
 
@@ -129,7 +129,7 @@ class RetainBuffer : IIndexed {
       foreach (var a in attribs) {
          if (a.Integral) GL.VertexAttribIPointer (index, a.Dims, a.Type, mcbVertex, offset);
          else GL.VertexAttribPointer (index, a.Dims, a.Type, false, mcbVertex, offset);
-         GL.EnableVertexAttribArray (index);
+         GL2.EnableVertexAttribArray (index);
          index++; offset += a.Size;
       }
       PushID = ++mNextPushID;
@@ -183,9 +183,9 @@ class StreamBuffer {
    // Constructors -------------------------------------------------------------
    /// <summary>Construct a StreamBuffer (this generates the buffer and assigns 8MB of storage for it)</summary>
    public StreamBuffer () {
-      mId = GL.GenBuffer ();
-      GL.BindBuffer (EBufferTarget.Array, mId);
-      GL.BufferData (EBufferTarget.Array, mSize = 8192 * 1024, 0, EBufferUsage.StreamDraw);
+      mId = GL2.GenBuffer ();
+      GL2.BindBuffer (EBufferTarget.Array, mId);
+      GL2.BufferData (EBufferTarget.Array, mSize = 8192 * 1024, 0, EBufferUsage.StreamDraw);
    }
 
    public static StreamBuffer It => mIt ??= new ();
@@ -199,7 +199,7 @@ class StreamBuffer {
    /// <param name="attribs">The set of Attrib values (like Vec4f, int, Vec2s etc)</param>
    internal unsafe void Draw (ShaderImp shader, void* pSrc, int nVerts, Attrib[] attribs) {
       GLState.VAO = HVertexArray.Zero;
-      GL.BindBuffer (EBufferTarget.Array, mId);
+      GL2.BindBuffer (EBufferTarget.Array, mId);
       int cbVertex = attribs.Sum (a => a.Size);
       int cbData = cbVertex * nVerts, cbReserve = cbData.RoundUp (64);
       if (cbReserve > mSize) throw new Exception ($"StreamBuffer size of {mSize} bytes inadequate.");
@@ -213,16 +213,16 @@ class StreamBuffer {
       foreach (var a in attribs) {
          if (a.Integral) GL.VertexAttribIPointer (index, a.Dims, a.Type, cbVertex, basis);
          else GL.VertexAttribPointer (index, a.Dims, a.Type, false, cbVertex, basis);
-         GL.EnableVertexAttribArray (index);
+         GL2.EnableVertexAttribArray (index);
          if (shader.Name == "UIRect" && index >= 0) GL.VertexAttribDivisor (index, 1);
          index++; basis += a.Size;
       }
 
       mCursor += cbReserve;
-      if (shader.Name == "UIRect") GL.DrawArraysInstanced (shader.Mode, 0, 4, nVerts);
+      if (shader.Name == "UIRect") GL2.DrawArraysInstanced (shader.Mode, 0, 4, nVerts);
       else GL2.DrawArrays (shader.Mode, 0, nVerts);
-      for (int i = 0; i < index; i++) GL.DisableVertexAttribArray (index);
-      GL.BindBuffer (EBufferTarget.Array, HBuffer.Zero);
+      for (int i = 0; i < index; i++) GL2.DisableVertexAttribArray (index);
+      GL2.BindBuffer (EBufferTarget.Array, HBuffer.Zero);
    }
 
    // Implementation -----------------------------------------------------------
@@ -231,7 +231,7 @@ class StreamBuffer {
    // allocates a fresh 8MB buffer for us to start filling, and sets the cursor back to 0.
    void Orphan () {
       mCursor = 0;
-      GL.BufferData (EBufferTarget.Array, mSize, 0, EBufferUsage.StreamDraw);
+      GL2.BufferData (EBufferTarget.Array, mSize, 0, EBufferUsage.StreamDraw);
    }
 
    readonly HBuffer mId;      // The buffer we're using

@@ -224,7 +224,7 @@ public class TypeFace {
    // Called whenever the font size is changed
    void Bump () {
       mNotes = null; mRawTexData = null;
-      if (mTexture != 0) { GL.DeleteTexture (mTexture); mTexture = HTexture.Zero; }
+      if (mTexture != 0) { GL2.DeleteTexture (mTexture); mTexture = HTexture.Zero; }
       mUID = ++sNextUID;
    }
 
@@ -232,7 +232,7 @@ public class TypeFace {
    // when we iterate through all the glyphs). 
    HTexture BuildTexture () {
       _ = Notes;  // This will also build the mRawTexData buffer
-      GL.ActiveTexture (ETexUnit.Tex0);
+      GL2.ActiveTexture (ETexUnit.Tex0);
       HTexture texture = GL2.GenTexture ();
       GL2.BindTexture (ETexTarget.TexRectangle, texture);
       GL2.PixelStore (EPixelStoreParam.UnpackAlignment, 1);

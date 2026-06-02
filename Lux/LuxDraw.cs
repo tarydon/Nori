@@ -176,7 +176,7 @@ public static partial class Lux {
       if (n == -1) {
          n = mNDecal; 
          DIBitmap dib = new PNGReader (file).Load ();
-         GL.ActiveTexture ((ETexUnit)((int)ETexUnit.Tex4 + n));
+         GL2.ActiveTexture ((ETexUnit)((int)ETexUnit.Tex4 + n));
          HTexture hTexture = mDecalTex[n];
          if (hTexture == 0) mDecalTex[n] = hTexture = GL2.GenTexture ();
          GL2.BindTexture (ETexTarget.Texture2D, hTexture);

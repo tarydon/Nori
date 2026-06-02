@@ -13,10 +13,11 @@ class WPFPlatform : IPlatform {
    readonly Ptr Lib;
 
    public Ptr GetGLProcAddress (string name) {
-      Ptr ptr = WGLGetProcAddress (name);
-      if (ptr == 0) 
-         ptr = NativeLibrary.GetExport (Lib, name);
-      return ptr; 
+      Ptr proc = WGLGetProcAddress (name);
+      if (proc == 0) 
+         proc = NativeLibrary.GetExport (Lib, name);
+      if (proc == 0) throw new Exception ($"OpenGL function '{name}' not found.");
+      return proc; 
    }
 
    const string OPENGL32 = "opengl32.dll";

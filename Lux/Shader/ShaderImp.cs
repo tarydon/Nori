@@ -13,20 +13,20 @@ class ShaderImp {
    /// <summary>Construct a pipeline given the code for the individual shaders</summary>
    ShaderImp (string name, int sort, EMode mode, EVertexSpec vspec, string[] code, int blend, bool depthTest, bool polyOffset, EStencilBehavior stencil) {
       (Name, SortCode, Mode, VSpec, Blending, DepthTest, PolygonOffset, StencilBehavior, Handle)
-         = (name, sort, mode, vspec, blend, depthTest, polyOffset, stencil, GL.CreateProgram ());
-      code.ForEach (a => GL.AttachShader (Handle, sCache.Get (a, CompileShader)));
+         = (name, sort, mode, vspec, blend, depthTest, polyOffset, stencil, GL2.CreateProgram ());
+      code.ForEach (a => GL2.AttachShader (Handle, sCache.Get (a, CompileShader)));
       GL.LinkProgram (Handle);
-      string log2 = GL.GetProgramInfoLog (Handle);
-      if (GL.GetProgram (Handle, EProgramParam.LinkStatus) == 0)
+      string log2 = GL2.GetProgramInfoLog (Handle);
+      if (GL2.GetProgram (Handle, EProgramParam.LinkStatus) == 0)
          throw new Exception ($"GLProgram link error in program '{Name}':\r\n{log2}");
       if (!string.IsNullOrWhiteSpace (log2))
          Lib.Trace ($"Warning while linking program '{Name}':\n{log2}\n");
 
       // Get information about the uniforms
-      int cUniforms = GL.GetProgram (Handle, EProgramParam.ActiveUniforms);
+      int cUniforms = GL2.GetProgram (Handle, EProgramParam.ActiveUniforms);
       mUniforms = new UniformInfo[cUniforms];
       for (int i = 0; i < cUniforms; i++) {
-         GL.GetActiveUniform (Handle, i, out int _, out var type, out string uname, out int location);
+         GL2.GetActiveUniform (Handle, i, out int _, out var type, out string uname, out int location);
          object value = type switch {
             EDataType.Int or EDataType.Sampler2D or EDataType.Sampler2DRect => 0,
             EDataType.Vec2f => new Vec2F (0, 0),
@@ -192,11 +192,11 @@ class ShaderImp {
    static HShader CompileShader (string file) {
       var text = Lib.ReadText ($"nori:GL/Shader/{file}");
       var eShader = Enum.Parse<EShader> (Path.GetExtension (file)[1..], true);
-      var shader = GL.CreateShader (eShader);
+      var shader = GL2.CreateShader (eShader);
       GL.ShaderSource (shader, text);
-      GL.CompileShader (shader);
-      if (GL.GetShader (shader, EShaderParam.CompileStatus) == 0) {
-         string log = GL.GetShaderInfoLog (shader);
+      GL2.CompileShader (shader);
+      if (GL2.GetShader (shader, EShaderParam.CompileStatus) == 0) {
+         string log = GL2.GetShaderInfoLog (shader);
          throw new Exception ($"OpenGL shader compile error in '{file}':\r\n{log}");
       }
       return shader;
@@ -234,7 +234,7 @@ class ShaderImp {
       miLTypeTextureMade = true;
       // We're always hardcoding that texture-unit 1 will be used for the linetype texture
       // (just like texture unit 0 is used for truetype font texture)
-      GL.ActiveTexture (ETexUnit.Tex1);
+      GL2.ActiveTexture (ETexUnit.Tex1);
       HTexture idTexture = GL2.GenTexture ();
       GL2.BindTexture (ETexTarget.Texture2D, idTexture);
 

@@ -118,7 +118,7 @@ static class GLState {
       set {
          if (mTypeFaceId == value?.UID) return;
          if (value != null) {
-            GL.ActiveTexture (ETexUnit.Tex0);
+            GL2.ActiveTexture (ETexUnit.Tex0);
             GL2.PixelStore (EPixelStoreParam.UnpackAlignment, 1);
             GL2.BindTexture (ETexTarget.TexRectangle, value.Texture);
             mTypeFaceId = value.UID;
@@ -132,7 +132,7 @@ static class GLState {
       get => mHVAO;
       set {
          if (mHVAO == value) return;
-         GL.BindVertexArray (mHVAO = value);
+         GL2.BindVertexArray (mHVAO = value);
          if (value != 0) mVAOChanges++;
       }
    }
@@ -160,7 +160,7 @@ static class GLState {
       mStencilBehavior = EStencilBehavior.Cover; StencilBehavior = EStencilBehavior.None;
       mPolygonOffsetFill = true; PolygonOffsetFill = false;
       mProgram = null; GL.UseProgram (0);
-      mHVAO = 0; GL.BindVertexArray (0);
+      mHVAO = 0; GL2.BindVertexArray (0);
       mPgmChanges = 0; mVAOChanges = 0; mTypeFaceId = 0;
 
       var (r, g, b, a) = bgrdColor;

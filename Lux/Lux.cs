@@ -343,23 +343,23 @@ public static partial class Lux {
       if (target is ETarget.Image or ETarget.Pick) {
          mFBViewport = viewport;
          if (mFrameBuffer == 0) {
-            mFrameBuffer = GL.GenFrameBuffer ();
-            mColorBuffer = GL.GenRenderBuffer (); mDepthBuffer = GL.GenRenderBuffer ();
+            mFrameBuffer = GL2.GenFrameBuffer ();
+            mColorBuffer = GL2.GenRenderBuffer (); mDepthBuffer = GL2.GenRenderBuffer ();
          }
-         GL.BindFrameBuffer (EFrameBufferTarget.DrawAndRead, mFrameBuffer);
+         GL2.BindFrameBuffer (EFrameBufferTarget.DrawAndRead, mFrameBuffer);
          if (viewport.X > mFBSize.X || viewport.Y > mFBSize.Y) {
             mFBSize = viewport;
-            GL.BindRenderBuffer (ERenderBufferTarget.RenderBuffer, mColorBuffer);
+            GL2.BindRenderBuffer (ERenderBufferTarget.RenderBuffer, mColorBuffer);
             GL.RenderBufferStorage (ERenderBufferFormat.RGBA8, viewport.X, viewport.Y);
-            GL.BindRenderBuffer (ERenderBufferTarget.RenderBuffer, mDepthBuffer);
+            GL2.BindRenderBuffer (ERenderBufferTarget.RenderBuffer, mDepthBuffer);
             GL.RenderBufferStorage (ERenderBufferFormat.Depth24Stencil8, viewport.X, viewport.Y);
-            GL.FrameBufferRenderBuffer (EFrameBufferTarget.DrawAndRead, EFrameBufferAttachment.Color0, mColorBuffer);
-            GL.FrameBufferRenderBuffer (EFrameBufferTarget.DrawAndRead, EFrameBufferAttachment.DepthStencil, mDepthBuffer);
-            if (GL.CheckFrameBufferStatus (EFrameBufferTarget.Draw) != EFrameBufferStatus.Complete)
+            GL2.FrameBufferRenderBuffer (EFrameBufferTarget.DrawAndRead, EFrameBufferAttachment.Color0, mColorBuffer);
+            GL2.FrameBufferRenderBuffer (EFrameBufferTarget.DrawAndRead, EFrameBufferAttachment.DepthStencil, mDepthBuffer);
+            if (GL2.CheckFrameBufferStatus (EFrameBufferTarget.Draw) != EFrameBufferStatus.Complete)
                throw new NotImplementedException ();
          }
       } else
-         GL.BindFrameBuffer (EFrameBufferTarget.DrawAndRead, 0);
+         GL2.BindFrameBuffer (EFrameBufferTarget.DrawAndRead, 0);
    }
    static Vec2S mFBViewport;            // Viewport size, when rendering to a frame-buffer
    static HFrameBuffer mFrameBuffer;    // Frame-buffer for image rendering

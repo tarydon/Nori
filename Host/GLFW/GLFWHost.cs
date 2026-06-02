@@ -1,4 +1,5 @@
 ﻿namespace Nori;
+using Ptr = nint;
 
 public static class Host {
    public static void Init () {
@@ -7,6 +8,12 @@ public static class Host {
 }
 
 class GLFWPlatform : IPlatform {
-   public nint GetGLProcAddress (string name) => throw new NotImplementedException ();
+   public Ptr GetGLProcAddress (string name) {
+      var szName = Marshal.StringToHGlobalAnsi (name);
+      Ptr proc = GLFW.GetProcAddress (szName);
+      Marshal.FreeHGlobal (szName);
+      if (proc == 0) throw new Exception ($"OpenGL function '{name}' not found.");
+      return proc;
+   }
 }
 
