@@ -127,8 +127,8 @@ class RetainBuffer : IIndexed {
       int index = 0, offset = 0;
       var attribs = Attrib.GetFor (VSpec);
       foreach (var a in attribs) {
-         if (a.Integral) GL.VertexAttribIPointer (index, a.Dims, a.Type, mcbVertex, offset);
-         else GL.VertexAttribPointer (index, a.Dims, a.Type, false, mcbVertex, offset);
+         if (a.Integral) GL2.VertexAttribIPointer (index, a.Dims, a.Type, mcbVertex, offset);
+         else GL2.VertexAttribPointer (index, a.Dims, a.Type, false, mcbVertex, offset);
          GL2.EnableVertexAttribArray (index);
          index++; offset += a.Size;
       }
@@ -204,17 +204,17 @@ class StreamBuffer {
       int cbData = cbVertex * nVerts, cbReserve = cbData.RoundUp (64);
       if (cbReserve > mSize) throw new Exception ($"StreamBuffer size of {mSize} bytes inadequate.");
       if (mCursor + cbReserve > mSize) Orphan ();
-      Ptr pDst = GL.MapBufferRange (EBufferTarget.Array, mCursor, cbReserve, EMapAccess.Unsynchronized | EMapAccess.Write);
+      Ptr pDst = GL2.MapBufferRange (EBufferTarget.Array, mCursor, cbReserve, EMapAccess.Unsynchronized | EMapAccess.Write);
       Buffer.MemoryCopy (pSrc, pDst.ToPointer (), cbData, cbData);
-      GL.UnmapBuffer (EBufferTarget.Array);
+      GL2.UnmapBuffer (EBufferTarget.Array);
 
       // If the set of attributes has changed, then we set up the attribute array again
       int index = 0, basis = mCursor;
       foreach (var a in attribs) {
-         if (a.Integral) GL.VertexAttribIPointer (index, a.Dims, a.Type, cbVertex, basis);
-         else GL.VertexAttribPointer (index, a.Dims, a.Type, false, cbVertex, basis);
+         if (a.Integral) GL2.VertexAttribIPointer (index, a.Dims, a.Type, cbVertex, basis);
+         else GL2.VertexAttribPointer (index, a.Dims, a.Type, false, cbVertex, basis);
          GL2.EnableVertexAttribArray (index);
-         if (shader.Name == "UIRect" && index >= 0) GL.VertexAttribDivisor (index, 1);
+         if (shader.Name == "UIRect" && index >= 0) GL2.VertexAttribDivisor (index, 1);
          index++; basis += a.Size;
       }
 

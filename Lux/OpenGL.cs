@@ -191,6 +191,41 @@ static unsafe class GL2 {
    public static int GetUniformLocation (HProgram program, string name) => glGetUniformLocation (program, name);
    static delegate* unmanaged<HProgram, string, int> glGetUniformLocation;
 
+   // Links all the shaders into a single program (shader-pipeline)
+   public static void LinkProgram (HProgram program) => glLinkProgram (program);
+   static delegate* unmanaged<HProgram, void> glLinkProgram;
+
+   // Map part of a buffer object to client address space
+   public static Ptr MapBufferRange (EBufferTarget target, int offset, int length, EMapAccess access) => glMapBufferRange (target, offset, length, access);
+   static delegate* unmanaged<EBufferTarget, Ptr, Ptr, EMapAccess, Ptr> glMapBufferRange;
+
+   // Set up a parameter for patch rendering (commonly the number of vertices per patch)
+   public static void PatchParameter (EPatchParam pname, int value) => glPatchParameteri (pname, value);
+   static delegate* unmanaged<EPatchParam, int, void> glPatchParameteri;
+
+   // Set up the sentinel value to signal a primitive-restart
+   public static void PrimitiveRestartIndex (uint index) => glPrimitiveRestartIndex (index);
+   static delegate* unmanaged<uint, void> glPrimitiveRestartIndex;
+
+   // Allocates render buffer storage
+   public static void RenderBufferStorage (ERenderBufferFormat format, int cx, int cy) => glRenderbufferStorage (ERenderBufferTarget.RenderBuffer, format, cx, cy);
+   static delegate* unmanaged<ERenderBufferTarget, ERenderBufferFormat, int, int, void> glRenderbufferStorage;
+
+   // Set up the source code for a shader
+   public static void ShaderSource (HShader shader, string source) {
+      byte[] data = Encoding.UTF8.GetBytes (source);
+      fixed (byte* p = data) { int len = data.Length; glShaderSource (shader, 1, &p, &len); }
+   }
+   static delegate* unmanaged<HShader, int, byte**, int*, void> glShaderSource;
+
+   // Set up the stencil function for testing
+   public static void StencilFunc (EFace face, EStencilFunc func, int value, uint mask) => glStencilFuncSeparate (face, func, value, mask);
+   static delegate* unmanaged<EFace, EStencilFunc, int, uint, void> glStencilFuncSeparate;
+
+   // Set up the stencil op for front or back face
+   public static void StencilOp (EFace face, EStencilOp sfail, EStencilOp dpfail, EStencilOp dppass) => glStencilOpSeparate (face, sfail, dpfail, dppass);
+   static delegate* unmanaged<EFace, EStencilOp, EStencilOp, EStencilOp, void> glStencilOpSeparate;
+
    // Read a block of pixels from the frame buffer
    public static void ReadPixels (int x, int y, int width, int height, EPixelFormat format, EPixelType type, Ptr pixels) => glReadPixels (x, y, width, height, format, type, pixels);
    static delegate* unmanaged<int, int, int, int, EPixelFormat, EPixelType, Ptr, void> glReadPixels;
@@ -223,6 +258,38 @@ static unsafe class GL2 {
    // Set texture parameters
    public static void TexParameter (ETexTarget target, ETexParam pname, int param) => glTexParameteri (target, pname, param);
    static delegate* unmanaged<ETexTarget, ETexParam, int, void> glTexParameteri;
+
+   // Specify the value of a uniform variable
+   public static void Uniform (int location, float f0) => glUniform1f (location, f0);
+   static delegate* unmanaged<int, float, void> glUniform1f;
+   public static void Uniform (int location, float f0, float f1) => glUniform2f (location, f0, f1);
+   static delegate* unmanaged<int, float, float, void> glUniform2f;
+   public static void Uniform (int location, float f0, float f1, float f2, float f3) => glUniform4f (location, f0, f1, f2, f3);
+   static delegate* unmanaged<int, float, float, float, float, void> glUniform4f;
+   public static void Uniform (int location, bool transpose, float* value) => glUniformMatrix4fv (location, 1, transpose, value);
+   static delegate* unmanaged<int, int, bool, float*, void> glUniformMatrix4fv;
+   public static void Uniform1i (int location, int n) => glUniform1i (location, n);
+   static delegate* unmanaged<int, int, void> glUniform1i;
+
+   // Release the mapping of a buffer object's data store
+   public static void UnmapBuffer (EBufferTarget target) => glUnmapBuffer (target);
+   static delegate* unmanaged<EBufferTarget, void> glUnmapBuffer;
+
+   // This sets the program object to use for rendering
+   public static void UseProgram (HProgram program) => glUseProgram (program);
+   static delegate* unmanaged<HProgram, void> glUseProgram;
+
+   // Defines an element in a Vertex specification (integral type)
+   public static void VertexAttribIPointer (int index, int size, EDataType type, int stride, int offset) => glVertexAttribIPointer (index, size, type, stride, offset);
+   static delegate* unmanaged<int, int, EDataType, int, Ptr, void> glVertexAttribIPointer;
+
+   // Defines an element in a Vertex specification (float type)
+   public static void VertexAttribPointer (int index, int size, EDataType type, bool normalized, int stride, int offset) => glVertexAttribPointer (index, size, type, normalized, stride, offset);
+   static delegate* unmanaged<int, int, EDataType, bool, int, int, void> glVertexAttribPointer;
+
+   // Specify an attribute as 'per-instance' rather than 'per-vertex'
+   public static void VertexAttribDivisor (int index, int divisor) => glVertexAttribDivisor (index, divisor);
+   static delegate* unmanaged<int, int, void> glVertexAttribDivisor;
 
    // Set the viewport
    public static void Viewport (int x, int y, int width, int height) => glViewport (x, y, width, height);
@@ -270,12 +337,30 @@ static unsafe class GL2 {
       glGetShaderiv = (delegate* unmanaged<HShader, EShaderParam, int*, void>)Get ("glGetShaderiv");
       glGetShaderInfoLog = (delegate* unmanaged<HShader, int, int*, byte*, void>)Get ("glGetShaderInfoLog");
       glGetUniformLocation = (delegate* unmanaged<HProgram, string, int>) Get ("glGetUniformLocation");
+      glLinkProgram = (delegate* unmanaged<HProgram, void>)Get ("glLinkProgram");
+      glMapBufferRange = (delegate* unmanaged<EBufferTarget, Ptr, Ptr, EMapAccess, Ptr>)Get ("glMapBufferRange");
+      glPatchParameteri = (delegate* unmanaged<EPatchParam, int, void>)Get ("glPatchParameteri");
+      glPrimitiveRestartIndex = (delegate* unmanaged<uint, void>)Get ("glPrimitiveRestartIndex");
+      glRenderbufferStorage = (delegate* unmanaged<ERenderBufferTarget, ERenderBufferFormat, int, int, void>)Get ("glRenderbufferStorage");
+      glShaderSource = (delegate* unmanaged<HShader, int, byte**, int*, void>)Get ("glShaderSource");
+      glStencilFuncSeparate = (delegate* unmanaged<EFace, EStencilFunc, int, uint, void>)Get ("glStencilFuncSeparate");
+      glStencilOpSeparate = (delegate* unmanaged<EFace, EStencilOp, EStencilOp, EStencilOp, void>)Get ("glStencilOpSeparate");
       glReadPixels = (delegate* unmanaged<int, int, int, int, EPixelFormat, EPixelType, Ptr, void>)Get ("glReadPixels");
       glPixelStorei = (delegate* unmanaged<EPixelStoreParam, int, void>)Get ("glPixelStorei");
       glPolygonOffset = (delegate* unmanaged<float, float, void>)Get ("glPolygonOffset");
       glScissor = (delegate* unmanaged<int, int, int, int, void>)Get ("glScissor");
       glTexImage2D = (delegate* unmanaged<ETexTarget, int, EPixelInternalFormat, int, int, int, EPixelFormat, EPixelType, void*, void>)Get ("glTexImage2D");
       glTexParameteri = (delegate* unmanaged<ETexTarget, ETexParam, int, void>)Get ("glTexParameteri");
+      glUniform1f = (delegate* unmanaged<int, float, void>)Get ("glUniform1f");
+      glUniform2f = (delegate* unmanaged<int, float, float, void>)Get ("glUniform2f");
+      glUniform4f = (delegate* unmanaged<int, float, float, float, float, void>)Get ("glUniform4f");
+      glUniformMatrix4fv = (delegate* unmanaged<int, int, bool, float*, void>)Get ("glUniformMatrix4fv");
+      glUniform1i = (delegate* unmanaged<int, int, void>)Get ("glUniform1i");
+      glUnmapBuffer = (delegate* unmanaged<EBufferTarget, void>)Get ("glUnmapBuffer");
+      glUseProgram = (delegate* unmanaged<HProgram, void>)Get ("glUseProgram");
+      glVertexAttribIPointer = (delegate* unmanaged<int, int, EDataType, int, Ptr, void>)Get ("glVertexAttribIPointer");
+      glVertexAttribPointer = (delegate* unmanaged<int, int, EDataType, bool, int, int, void>)Get ("glVertexAttribPointer");
+      glVertexAttribDivisor = (delegate* unmanaged<int, int, void>)Get ("glVertexAttribDivisor");
       glViewport = (delegate* unmanaged<int, int, int, int, void>)Get ("glViewport");
    }
    static nint Get (string name) => IPlatform.It.GetGLProcAddress (name);

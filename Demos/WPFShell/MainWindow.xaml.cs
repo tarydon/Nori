@@ -17,7 +17,7 @@ public partial class MainWindow : Window {
       TraceVN.TextColor = Color4.Blue; TraceVN.HoldTime = 200;
       Lib.Tracer = TraceVN.Print;
       new SceneManipulator ();
-      Lux.UIScene = new DemoScene ();
+      Lib.Post (() => Lux.UIScene = new DemoScene ());
    }
 }
 
@@ -29,13 +29,15 @@ class DemoScene : Scene2 {
 
       string message = "Welcome to Nori.";
       var size = mFace.Measure (message, true);
+      int dx = size.Width, dy = size.Height;
+      Vec2S cen = new Vec2S (dx / 2 + dy, dy / 2 + dy);
       var vn1 = new SimpleVN (
          () => (Lux.Color, Lux.TypeFace, Lux.ZLevel) = (new (255, 224, 226, 228), mFace, 1),
-         () => Lux.Text (message, new (150, 210))
+         () => Lux.Text (message, new Vec2S (cen.X - dx / 2, cen.Y + dy / 2))
       );
 
       var vn2 = new SimpleVN (
-         () => Lux.UIRect (new Vec2S (670, 165), new Vec2S (1200, 210), 16, 8, new (255, 64, 66, 68), new (255, 200, 202, 204))
+         () => Lux.UIRect (cen, new Vec2S (size.Width + dy, size.Height + dy), 16, 8, new (255, 64, 66, 68), new (255, 200, 202, 204))
       ) { Streaming = true };
       var gvn = new GroupVN ([vn1, vn2]);
       Root = gvn;

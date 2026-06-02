@@ -71,7 +71,7 @@ static class GLState {
             StencilBehavior = value.StencilBehavior;
             PrimitiveRestart = value.Mode == EMode.TriangleFan;
          }
-         GL.UseProgram (value?.Handle ?? 0);
+         GL2.UseProgram (value?.Handle ?? 0);
       }
    }
    static ShaderImp? mProgram;
@@ -96,8 +96,8 @@ static class GLState {
                // a triangle-fan from a fixed point to every segment of every closed polyline in the path.
                // That will end up leaving the stencil bit set for every point inside the path. We also
                // use StencilFunc to avoid updating any actual color buffer pixels during this phase.
-               GL.StencilOp (EFace.FrontAndBack, EStencilOp.Invert, EStencilOp.Invert, EStencilOp.Invert);
-               GL.StencilFunc (EFace.FrontAndBack, EStencilFunc.Never, 0, 0);
+               GL2.StencilOp (EFace.FrontAndBack, EStencilOp.Invert, EStencilOp.Invert, EStencilOp.Invert);
+               GL2.StencilFunc (EFace.FrontAndBack, EStencilFunc.Never, 0, 0);
                break;
             case EStencilBehavior.Cover:
                // This is used by the TriFanCover shader - the second phase of the stencil-then-cover
@@ -105,8 +105,8 @@ static class GLState {
                // color buffer (painting through the stencil). We also clear those bits using the
                // StencilOp at the same time, so the stencil buffer is reset in preparation for the next
                // primitive to be drawn
-               GL.StencilOp (EFace.FrontAndBack, EStencilOp.Zero, EStencilOp.Zero, EStencilOp.Zero);
-               GL.StencilFunc (EFace.FrontAndBack, EStencilFunc.Equal, 1, 0x1);
+               GL2.StencilOp (EFace.FrontAndBack, EStencilOp.Zero, EStencilOp.Zero, EStencilOp.Zero);
+               GL2.StencilFunc (EFace.FrontAndBack, EStencilFunc.Equal, 1, 0x1);
                break;
          }
       }
@@ -149,8 +149,8 @@ static class GLState {
       } else
          GL2.Disable (ECap.ScissorTest);
       GL2.BlendFunc (mBlendFactor = EBlendFactor.SrcAlpha, EBlendFactor.OneMinusSrcAlpha);
-      GL.PatchParameter (EPatchParam.PatchVertices, 4);
-      GL.PrimitiveRestartIndex (0xFFFFFFFF);
+      GL2.PatchParameter (EPatchParam.PatchVertices, 4);
+      GL2.PrimitiveRestartIndex (0xFFFFFFFF);
       GL2.PolygonOffset (1, 1);
 
       // We 'force-set' each of these settings below by priming them with a
@@ -159,7 +159,7 @@ static class GLState {
       mDepthTest = true; DepthTest = false;
       mStencilBehavior = EStencilBehavior.Cover; StencilBehavior = EStencilBehavior.None;
       mPolygonOffsetFill = true; PolygonOffsetFill = false;
-      mProgram = null; GL.UseProgram (0);
+      mProgram = null; GL2.UseProgram (0);
       mHVAO = 0; GL2.BindVertexArray (0);
       mPgmChanges = 0; mVAOChanges = 0; mTypeFaceId = 0;
 

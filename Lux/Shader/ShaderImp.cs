@@ -15,7 +15,7 @@ class ShaderImp {
       (Name, SortCode, Mode, VSpec, Blending, DepthTest, PolygonOffset, StencilBehavior, Handle)
          = (name, sort, mode, vspec, blend, depthTest, polyOffset, stencil, GL2.CreateProgram ());
       code.ForEach (a => GL2.AttachShader (Handle, sCache.Get (a, CompileShader)));
-      GL.LinkProgram (Handle);
+      GL2.LinkProgram (Handle);
       string log2 = GL2.GetProgramInfoLog (Handle);
       if (GL2.GetProgram (Handle, EProgramParam.LinkStatus) == 0)
          throw new Exception ($"GLProgram link error in program '{Name}':\r\n{log2}");
@@ -81,7 +81,7 @@ class ShaderImp {
    public ShaderImp Set (int index, float f) {
       if (index != -1) {
          var data = mUniforms[index];
-         if (!f.EQ ((float)data.Value)) { data.Value = f; GL.Uniform (index, f); }
+         if (!f.EQ ((float)data.Value)) { data.Value = f; GL2.Uniform (index, f); }
       }
       return this;
    }
@@ -90,7 +90,7 @@ class ShaderImp {
    public ShaderImp Set (int index, int n) {
       if (index != -1) {
          var data = mUniforms[index];
-         if (n != (int)data.Value) { data.Value = n; GL.Uniform1i (index, n); }
+         if (n != (int)data.Value) { data.Value = n; GL2.Uniform1i (index, n); }
       }
       return this;
    }
@@ -99,7 +99,7 @@ class ShaderImp {
    public ShaderImp Set (int index, Vec2F v) {
       if (index != -1) {
          var data = mUniforms[index];
-         if (!v.EQ ((Vec2F)data.Value)) { data.Value = v; GL.Uniform (index, v.X, v.Y); }
+         if (!v.EQ ((Vec2F)data.Value)) { data.Value = v; GL2.Uniform (index, v.X, v.Y); }
       }
       return this;
    }
@@ -108,7 +108,7 @@ class ShaderImp {
    public ShaderImp Set (int index, Vec4F v) {
       if (index != -1) {
          var data = mUniforms[index];
-         if (!v.EQ ((Vec4F)data.Value)) { data.Value = v; GL.Uniform (index, v.X, v.Y, v.Z, v.W); }
+         if (!v.EQ ((Vec4F)data.Value)) { data.Value = v; GL2.Uniform (index, v.X, v.Y, v.Z, v.W); }
       }
       return this;
    }
@@ -117,7 +117,7 @@ class ShaderImp {
    public unsafe ShaderImp Set (int index, ref Mat4F m) {
       if (index != -1) {
          var data = mUniforms[index]; data.Value = m;
-         fixed (float* f = &m.M11) GL.Uniform (index, false, f);
+         fixed (float* f = &m.M11) GL2.Uniform (index, false, f);
       }
       return this;
    }
@@ -193,7 +193,7 @@ class ShaderImp {
       var text = Lib.ReadText ($"nori:GL/Shader/{file}");
       var eShader = Enum.Parse<EShader> (Path.GetExtension (file)[1..], true);
       var shader = GL2.CreateShader (eShader);
-      GL.ShaderSource (shader, text);
+      GL2.ShaderSource (shader, text);
       GL2.CompileShader (shader);
       if (GL2.GetShader (shader, EShaderParam.CompileStatus) == 0) {
          string log = GL2.GetShaderInfoLog (shader);

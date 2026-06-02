@@ -350,9 +350,9 @@ public static partial class Lux {
          if (viewport.X > mFBSize.X || viewport.Y > mFBSize.Y) {
             mFBSize = viewport;
             GL2.BindRenderBuffer (ERenderBufferTarget.RenderBuffer, mColorBuffer);
-            GL.RenderBufferStorage (ERenderBufferFormat.RGBA8, viewport.X, viewport.Y);
+            GL2.RenderBufferStorage (ERenderBufferFormat.RGBA8, viewport.X, viewport.Y);
             GL2.BindRenderBuffer (ERenderBufferTarget.RenderBuffer, mDepthBuffer);
-            GL.RenderBufferStorage (ERenderBufferFormat.Depth24Stencil8, viewport.X, viewport.Y);
+            GL2.RenderBufferStorage (ERenderBufferFormat.Depth24Stencil8, viewport.X, viewport.Y);
             GL2.FrameBufferRenderBuffer (EFrameBufferTarget.DrawAndRead, EFrameBufferAttachment.Color0, mColorBuffer);
             GL2.FrameBufferRenderBuffer (EFrameBufferTarget.DrawAndRead, EFrameBufferAttachment.DepthStencil, mDepthBuffer);
             if (GL2.CheckFrameBufferStatus (EFrameBufferTarget.Draw) != EFrameBufferStatus.Complete)
