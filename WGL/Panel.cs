@@ -8,6 +8,7 @@ using static System.Windows.Forms.ControlStyles;
 using FCursor = System.Windows.Forms.Cursor;
 using WControl = System.Windows.Controls.UserControl;
 namespace Nori;
+using Nori.WGL;
 
 public static class WinGL {
    public static WControl Create (Action onReady, Action<int, int> onPaint, bool createHost) {
@@ -138,7 +139,6 @@ class Surface : UserControl {
             break;
          }
       }
-      Lib.Tessellate = Tess2D.Process;
       WinGL.mReady = true; 
       WinGL.OnReady?.Invoke ();
    }
