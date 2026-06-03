@@ -84,7 +84,7 @@ public abstract class Scene {
 
    /// <summary>Render a scene to an image (for example, to generate a thumbnail)</summary>
    public DIBitmap RenderImage (Vec2S size, DIBitmap.EFormat fmt) {
-      if (size.X % 4 != 0) throw new ArgumentException ("Lux.RenderToImage: image width must be a multiple of 4");
+      if (size.X % 4 != 0) throw new ArgumentException ("Scene.RenderToImage: image width must be a multiple of 4");
       bool unattached = !miAttached;
       if (unattached) Attach ();
       var dib = (DIBitmap)Lux.Render (this, size, ETarget.Image, fmt)!;
@@ -93,7 +93,7 @@ public abstract class Scene {
    }
 
    void ZoomToContent (Vec2S size, out int yIdeal) {
-      if (size.X % 4 != 0) throw new ArgumentException ("Lux.RenderToImage: image width must be a multiple of 4");
+      if (size.X % 4 != 0) throw new ArgumentException ("Scene.ZoomToContent: image width must be a multiple of 4");
 
       // First, render default image, and then measure the background color 'margins' around
       // the image so we can compute a zoom factor

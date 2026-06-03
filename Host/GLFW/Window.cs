@@ -11,10 +11,22 @@ public class Window {
       mHWnd = CreateWindow (cx, cy, bTitle, HMonitor.None, HWindow.None);
       MakeContextCurrent (mHWnd);
       SwapInterval (1);
+      GLFWHost.Win = this; 
+      GLFWHost.OnReady?.Invoke ();
    }
    HWindow mHWnd;
 
    // Properties ---------------------------------------------------------------
+   /// <summary>
+   /// Gets the DPI scaling
+   /// </summary>
+   public float DPIScale {
+      get {
+         GetWindowContentScale (mHWnd, out float x, out float y);
+         return (x + y) / 2;
+      }
+   }
+
    /// <summary>Frame-buffer size</summary>
    public (int DX, int DY) FramebufferSize {
       get {
@@ -81,12 +93,10 @@ public class Window {
          Draw (dx, dy);
          Swap (wait);
       }
-   }
+   }   
 
-   public virtual void Draw (int cx, int dy) {
-      //GL.ClearColor (0.3f, 0.6f, 0.9f, 1);
-      //GL.Clear (EBuffer.Color | EBuffer.Depth | EBuffer.Stencil);
-   }
+   public virtual void Draw (int cx, int dy) 
+      => GLFWHost.OnPaint?.Invoke (cx, dy);
 
    // Implementation -----------------------------------------------------------
    void SetWindowHints () {

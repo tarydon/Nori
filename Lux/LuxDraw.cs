@@ -44,8 +44,7 @@ public static partial class Lux {
    public static Color4 StencilColor = Color4.Black;
 
    /// <summary>The DPI scaling (how many pixels to one logical pixel)</summary>
-   public static float DPIScale { get => mDPIScale; set => mDPIScale = value; }
-   static float mDPIScale = 1;
+   public static float DPIScale => Hub.OpenGL.DPIScale;
 
    /// <summary>The current line-width, in device-independent pixels</summary>
    public static float LineWidth {

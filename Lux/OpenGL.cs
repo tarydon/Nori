@@ -363,5 +363,5 @@ static unsafe class GL2 {
       glVertexAttribDivisor = (delegate* unmanaged<int, int, void>)Get ("glVertexAttribDivisor");
       glViewport = (delegate* unmanaged<int, int, int, int, void>)Get ("glViewport");
    }
-   static nint Get (string name) => IPlatform.It.GetGLProcAddress (name);
+   static nint Get (string name) => Hub.OpenGL.GetGLProcAddress (name);
 }

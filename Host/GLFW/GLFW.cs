@@ -52,6 +52,9 @@ static class GLFW {
    [DllImport (LIB, EntryPoint = "glfwGetProcAddress", CallingConvention = Cdecl)]
    public static extern Ptr GetProcAddress (Ptr procName);
 
+   [DllImport (LIB, EntryPoint = "glfwGetWindowContentScale", CallingConvention = Cdecl)]
+   public static extern void GetWindowContentScale (HWindow window, out float xScale, out float yScale);
+
    // Returns the current video mode of the given monitor
    [DllImport (LIB, EntryPoint = "glfwGetVideoMode", CallingConvention = Cdecl)]
    public static extern Ptr GetVideoMode (HMonitor monitor);
@@ -100,6 +103,10 @@ static class GLFW {
    // (if there are no messages, this does not wait)
    [DllImport (LIB, EntryPoint = "glfwPollEvents", CallingConvention = Cdecl)]
    public static extern void PollEvents ();
+
+   // Posts an empty event from the current thread to the event queue (causing WaitEvents to return)
+   [DllImport (LIB, EntryPoint = "glfwPostEmptyEvent", CallingConvention = Cdecl)]
+   public static extern void PostEmptyEvent ();
 
    // Restores a window from maximized
    [DllImport (LIB, EntryPoint = "glfwRestoreWindow", CallingConvention = Cdecl)]

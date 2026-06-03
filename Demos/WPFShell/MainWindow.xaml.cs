@@ -5,15 +5,13 @@ namespace WPFShell;
 
 public partial class MainWindow : Window {
    public MainWindow () {
-      Lib.Init (); Host.Init (); Lux2.Init ();
+      Lib.Init (); 
       InitializeComponent ();
-      Content = (UIElement)Lux.CreatePanel ();
-      Lux.OnReady.Subscribe (OnLuxReady);
+      Content = WPFHost.Create (this, OnReady);
+      Lux2.Init ();
    }
 
-   void OnLuxReady (int _) {
-      var source = PresentationSource.FromVisual (this);
-      if (source != null) Lux.DPIScale = (float)source.CompositionTarget.TransformToDevice.M11;
+   void OnReady () {
       TraceVN.TextColor = Color4.Blue; TraceVN.HoldTime = 200;
       Lib.Tracer = TraceVN.Print;
       new SceneManipulator ();

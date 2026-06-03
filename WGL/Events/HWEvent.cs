@@ -95,9 +95,6 @@ public static class HW {
 
    public static bool IsDragging => Panel?.Capture == true;
 
-   /// <summary>Force a redraw of the OpenGL panel</summary>
-   public static void Redraw () => Nori.Panel.It?.Redraw ();
-
    // Observable points --------------------------------------------------------
    public static IObservable<int> MouseLost => mLost ??= new ();
    static CaptureLostWrap? mLost;

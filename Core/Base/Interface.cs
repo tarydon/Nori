@@ -34,8 +34,9 @@ public interface IStmLocator {
 }
 #endregion
 
-public interface IPlatform {
+public interface IOpenGL {
    public Ptr GetGLProcAddress (string name);
-
-   public static IPlatform It = null!;
+   public Action<int, int> OnPaint { set; }
+   public float DPIScale { get; }
+   public void Redraw ();
 }

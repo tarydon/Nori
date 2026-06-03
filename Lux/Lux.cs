@@ -265,7 +265,7 @@ public static partial class Lux {
    static bool mRendering;          // Currently rendering a frame
 
    /// <summary>Prompts the Lux system to redraw the screen (asynchronous)</summary>
-   public static void Redraw () => HW.Redraw ();
+   public static void Redraw () => Hub.OpenGL.Redraw ();
 
    /// <summary>This is called to initiate 'continuous rendering'</summary>
    /// This function takes a 'callback' that will be invoked after each frame is rendered. Once
