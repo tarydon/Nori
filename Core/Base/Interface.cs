@@ -3,6 +3,8 @@
 // ║║║║╬║╔╣║ Various interface definitions used (and exported) by Nore.Core
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 namespace Nori;
+
+using System.Reactive;
 using Ptr = nint;
 
 #region interface IEQuable<T> ----------------------------------------------------------------------
@@ -39,4 +41,42 @@ public interface IOpenGL {
    public Action<int, int> OnPaint { set; }
    public float DPIScale { get; }
    public void Redraw ();
+}
+
+public interface IMouse {
+   /// <summary>
+   /// Observe this to know when the mouse is clicked
+   /// </summary>
+   public IObservable<MouseClickInfo> Clicks { get; }
+   /// <summary>
+   /// Observe this to know when the mouse leaves the client area
+   /// </summary>
+   public IObservable<Unit> Leave { get; }
+   /// <summary>
+   /// Observe this to know when mouse-capture is lost
+   /// </summary>
+   public IObservable<Unit> Lost { get; }
+   /// <summary>
+   /// Observe this to know when the mouse is moved
+   /// </summary>
+   public IObservable<Vec2S> Moves { get; }
+   /// <summary>
+   /// Observe this to know when mouse-wheel is rotated
+   /// </summary>
+   public IObservable<MouseWheelInfo> Wheel { get; }
+}
+
+public interface IKeyboard {
+   /// <summary>
+   /// Observe this to know when a key is pressed or released
+   /// </summary>
+   public IObservable<KeyInfo> Keys { get; }
+   /// <summary>
+   /// Tells us which modifiers (SHIFT/CTRL/ALT) are being held down now
+   /// </summary>
+   public EKeyModifier Modifiers { get; }
+   /// <summary>
+   /// Observe this to get the text that was typed
+   /// </summary>
+   public IObservable<string> Text { get; }
 }

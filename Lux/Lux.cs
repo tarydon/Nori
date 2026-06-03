@@ -53,10 +53,6 @@ public static partial class Lux {
       }
    }
 
-   /// <summary>Returns true if Lux is ready to use</summary>
-   public static bool Ready => mReady;
-   static bool mReady;
-
    /// <summary>Enumerates all the sub-scenes (use Scene.Rect to get the pixel-area it uses)</summary>
    public static IEnumerable<Scene> SubScenes => mScenes.Select (a => a.Scene).Skip (1);
    static readonly List<(Scene Scene, Bound2 Bound)> mScenes = [];
@@ -104,14 +100,6 @@ public static partial class Lux {
       Redraw ();
    }
 
-   /// <summary>Creates the Lux rendering panel</summary>
-   public static object CreatePanel (bool createHost = false) {
-      return WinGL.Create (OnReady, OnPaint, createHost);
-
-      static void OnReady () { mReady = true; mOnReady.OnNext (0); }
-      static void OnPaint (int x, int y) => Render (UIScene, new Vec2S (x, y), ETarget.Screen, DIBitmap.EFormat.Unknown);
-   }
-
    public static void DumpStats () {
       Debug.Print ("Buffers:");
       foreach (var buf in RetainBuffer.All.GetSnapshot ()) Debug.Print (buf.ToString ());
@@ -127,7 +115,7 @@ public static partial class Lux {
    /// This effectively returns the VNode that lies underneat the current mouse position.
    public static VNode? Pick (Vec2S pos) {
       // If we're doign any simulation, return null
-      if (!(mReady || Lib.Testing) || mRendering) return null;
+      if (Lib.Testing || mRendering) return null;
       var scene = PickScene (pos);
       if (scene == null || sRenderCompletes.Any (a => a.Scene == scene)) return null;
       var viewport = scene.Rect.Size;
