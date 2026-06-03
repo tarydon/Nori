@@ -2,6 +2,8 @@
 // ╔═╦╦═╦╦╬╣ GLState.cs
 // ║║║║╬║╔╣║ Class GLState - used to effect changes to OpenGL state (write only on change)
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
+using System.Runtime.Intrinsics.X86;
+
 namespace Nori;
 
 #region class GLState ------------------------------------------------------------------------------
@@ -164,7 +166,8 @@ static class GLState {
       mPgmChanges = 0; mVAOChanges = 0; mTypeFaceId = 0;
 
       var (r, g, b, a) = bgrdColor;
-      GL2.ClearColor (r / 255f, g / 255f, b / 255f, a / 255f);
+      float rf = r / 255f, gf = g / 255f, bf = b / 255f, af = a / 255f;
+      GL2.ClearColor (rf * af, gf * af, bf * af, af);
       GL2.Clear (EBuffer.Color | EBuffer.Depth | EBuffer.Stencil);
    }
 }

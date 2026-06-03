@@ -6,7 +6,7 @@ internal class Program {
       Lib.Init (); GLFWHost.Init (OnReady); Lux2.Init ();
 
       var (_, _, width, height) = Monitor.Primary.WorkArea;
-      var w = new Window (width * 6 / 10, height * 6 / 10, "Welcome to GLFW");
+      var w = new Window (width * 6 / 10, height * 6 / 10, "Welcome to GLFW", Window.EFlags.Default | Window.EFlags.Maximized);
       w.CenterOnScreen ();
       w.Run (true);
    }

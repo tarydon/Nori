@@ -1,4 +1,8 @@
-﻿using System.Runtime.InteropServices;
+// ────── ╔╗
+// ╔═╦╦═╦╦╬╣ OpenGL.cs
+// ║║║║╬║╔╣║ <<TODO>>
+// ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
+using System.Runtime.InteropServices;
 using Ptr = nint;
 namespace Nori;
 

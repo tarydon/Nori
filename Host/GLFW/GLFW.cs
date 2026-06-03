@@ -1,12 +1,14 @@
-﻿using Nori.Internal;
+// ────── ╔╗
+// ╔═╦╦═╦╦╬╣ GLFW.cs
+// ║║║║╬║╔╣║ <<TODO>>
+// ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
+using Nori.Internal;
 namespace Nori;
 using static CallingConvention;
 using Ptr = nint;
 
 #region class GLFW ---------------------------------------------------------------------------------
-/// <summary>
-/// Class that encapsulates the GLFW functions
-/// </summary>
+/// <summary>Class that encapsulates the GLFW functions</summary>
 static class GLFW {
    // Constructors -------------------------------------------------------------
    static GLFW () {

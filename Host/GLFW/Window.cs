@@ -1,11 +1,15 @@
-﻿using System.Text;
+// ────── ╔╗
+// ╔═╦╦═╦╦╬╣ Window.cs
+// ║║║║╬║╔╣║ <<TODO>>
+// ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
+using System.Text;
 namespace Nori;
 using static GLFW;
 
 public class Window {
    // Constructors -------------------------------------------------------------
-   public Window (int cx, int cy, string title) {
-      SetWindowHints ();
+   public Window (int cx, int cy, string title, EFlags flags = EFlags.Default) {
+      SetWindowHints (flags);
       byte[] bTitle = Encoding.UTF8.GetBytes (title);
       Array.Resize (ref bTitle, bTitle.Length + 1);
       mHWnd = CreateWindow (cx, cy, bTitle, HMonitor.None, HWindow.None);
@@ -16,10 +20,23 @@ public class Window {
    }
    HWindow mHWnd;
 
-   // Properties ---------------------------------------------------------------
    /// <summary>
-   /// Gets the DPI scaling
+   /// Window creation flags
    /// </summary>
+   [Flags]
+   public enum EFlags {      
+      Visible = 1 << 0,
+      Resizeable = 1 << 1,
+      Decorated = 1 << 2,
+      AlwaysOnTop = 1 << 3, 
+      Maximized = 1 << 4,
+      Transparent = 1 << 5,
+
+      Default = Visible | Resizeable | Decorated
+   }
+
+   // Properties ---------------------------------------------------------------
+   /// <summary>Gets the DPI scaling</summary>
    public float DPIScale {
       get {
          GetWindowContentScale (mHWnd, out float x, out float y);
@@ -82,9 +99,7 @@ public class Window {
       Position = ((screen.Width - size.DX) / 2, (screen.Height - size.DY) / 2);
    }
 
-   /// <summary>
-   /// Runs the message loop
-   /// </summary>
+   /// <summary>Runs the message loop</summary>
    /// <param name="wait">If set, waits for events or repaint request after each frame
    /// Otherwise, runs a continuous render loop</param>
    public void Run (bool wait) {
@@ -99,14 +114,20 @@ public class Window {
       => GLFWHost.OnPaint?.Invoke (cx, dy);
 
    // Implementation -----------------------------------------------------------
-   void SetWindowHints () {
+   void SetWindowHints (EFlags flags) {
       // Set some common hints for the OpenGL profile creation
       WindowHint (Hint.ClientApi, ClientApi.OpenGL);
       WindowHint (Hint.ContextVersionMajor, 3);
       WindowHint (Hint.ContextVersionMinor, 3);
       WindowHint (Hint.OpenglProfile, GLProfile.Compatibility);
       WindowHint (Hint.Doublebuffer, true);
-      WindowHint (Hint.Decorated, true);
+
+      WindowHint (Hint.Visible, (flags & EFlags.Visible) > 0);
+      WindowHint (Hint.Resizable, (flags & EFlags.Resizeable) > 0);
+      WindowHint (Hint.Decorated, (flags & EFlags.Decorated) > 0);
+      WindowHint (Hint.Floating, (flags & EFlags.AlwaysOnTop) > 0);
+      WindowHint (Hint.Maximized, (flags & EFlags.Maximized) > 0);
+      WindowHint (Hint.TransparentFramebuffer, (flags & EFlags.Transparent) > 0);
    }
 
    // Swap contents after render is complete.

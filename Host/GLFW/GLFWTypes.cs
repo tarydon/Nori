@@ -1,4 +1,8 @@
-﻿namespace Nori;
+// ────── ╔╗
+// ╔═╦╦═╦╦╬╣ GLFWTypes.cs
+// ║║║║╬║╔╣║ <<TODO>>
+// ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
+namespace Nori;
 using static GLFW;
 
 // Signature for receiving error callbacks
@@ -32,7 +36,7 @@ public enum GLProfile { Any = 0x0, Core = 0x32001, Compatibility = 0x32002 }
 
 // Various hints related to creating a Window
 enum Hint {
-   Focused = 0x20001,                  // Is window focused on creation? (default = Constants.True)
+   Focused = 0x20001,                  // Is window focused on creation? (default = true)
    Resizable = 0x20003,                // Is window resizeable? (default = true)
    Visible = 0x20004,                  // Is window visible? (default = true)
    Decorated = 0x20005,                // Is Window decorated with chrome (default = true)

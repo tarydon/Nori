@@ -1,4 +1,8 @@
-﻿namespace Nori.WGL;
+// ────── ╔╗
+// ╔═╦╦═╦╦╬╣ GLTypes.cs
+// ║║║║╬║╔╣║ <<TODO>>
+// ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
+namespace Nori.WGL;
 
 // Win32 windows handle
 enum HWindow : ulong { Zero }

@@ -12,10 +12,7 @@ public partial class MainWindow : Window {
    }
 
    void OnReady () {
-      TraceVN.TextColor = Color4.Blue; TraceVN.HoldTime = 200;
-      Lib.Tracer = TraceVN.Print;
-      new SceneManipulator ();
-      Lib.Post (() => Lux.UIScene = new DemoScene ());
+      Lux.UIScene = new DemoScene ();
    }
 }
 
