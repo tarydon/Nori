@@ -24,6 +24,10 @@ static class GLFW {
 
    [DllImport (LIB, EntryPoint = "glfwGetCursorPos", CallingConvention = Cdecl)]
    public static extern void GetCursorPosition (HWindow window, out double x, out double y);
+   public static Vec2S GetCursorPosition (HWindow window) {
+      GetCursorPosition (window, out var x, out var y);
+      return new ((short)Math.Round (x), (short)Math.Round (y));
+   }
 
    // Returns the size of the frame-buffer attached to a window (OpenGL viewport size)
    [DllImport (LIB, EntryPoint = "glfwGetFramebufferSize", CallingConvention = Cdecl)]

@@ -14,5 +14,5 @@ class WPFMouse : IMouse {
 
    public Vec2S Pos => throw new NotImplementedException ();
 
-   public bool TryCapture () => throw new NotImplementedException ();
+   public IObservable<bool> Enter => throw new NotImplementedException ();
 }

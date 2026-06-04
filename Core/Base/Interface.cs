@@ -46,14 +46,10 @@ public interface IOpenGL {
 }
 
 public interface IMouse {
-   /// <summary>
-   /// Attempts to capture the mouse
-   /// </summary>
-   public bool TryCapture ();
    /// <summary>Observe this to know when the mouse is clicked</summary>
    public IObservable<MouseClickInfo> Clicks { get; }
-   /// <summary>Observe this to know when the mouse leaves the client area</summary>
-   public IObservable<Unit> Leave { get; }
+   /// <summary>Observe this to know when the mouse enters/leaves the client area</summary>
+   public IObservable<bool> Enter { get; }
    /// <summary>Observe this to know when mouse-capture is lost</summary>
    public IObservable<Unit> Lost { get; }
    /// <summary>Observe this to know when the mouse is moved</summary>

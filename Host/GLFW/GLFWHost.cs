@@ -3,7 +3,6 @@
 // ║║║║╬║╔╣║ <<TODO>>
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 namespace Nori;
-using System.Reactive;
 using System.Runtime.InteropServices;
 using Ptr = nint;
 

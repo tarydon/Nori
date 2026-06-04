@@ -19,7 +19,6 @@ public abstract class MouseDragger {
       mAnchor = mLast = mPt = anchor;
       // If we can't capture the mouse, we're done (no overrides like Start/End etc will be fired)
       var mouse = Hub.Mouse;
-      if (!mouse.TryCapture ()) return;
       mObservers = new (
          // Forward mouse-moves to the Move override
          mouse.Moves.Subscribe (pt => { mLast = mPt; Move (mPt = pt); }),
