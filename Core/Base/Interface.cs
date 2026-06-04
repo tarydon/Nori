@@ -1,10 +1,12 @@
-﻿// ────── ╔╗
+// ────── ╔╗
 // ╔═╦╦═╦╦╬╣ Interfaces.cs
 // ║║║║╬║╔╣║ Various interface definitions used (and exported) by Nore.Core
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 namespace Nori;
 
 using System.Reactive;
+using System.Threading.Tasks;
+using System.Threading;
 using Ptr = nint;
 
 #region interface IEQuable<T> ----------------------------------------------------------------------
@@ -45,38 +47,59 @@ public interface IOpenGL {
 
 public interface IMouse {
    /// <summary>
-   /// Observe this to know when the mouse is clicked
+   /// Attempts to capture the mouse
    /// </summary>
+   public bool TryCapture ();
+   /// <summary>Observe this to know when the mouse is clicked</summary>
    public IObservable<MouseClickInfo> Clicks { get; }
-   /// <summary>
-   /// Observe this to know when the mouse leaves the client area
-   /// </summary>
+   /// <summary>Observe this to know when the mouse leaves the client area</summary>
    public IObservable<Unit> Leave { get; }
-   /// <summary>
-   /// Observe this to know when mouse-capture is lost
-   /// </summary>
+   /// <summary>Observe this to know when mouse-capture is lost</summary>
    public IObservable<Unit> Lost { get; }
-   /// <summary>
-   /// Observe this to know when the mouse is moved
-   /// </summary>
+   /// <summary>Observe this to know when the mouse is moved</summary>
    public IObservable<Vec2S> Moves { get; }
-   /// <summary>
-   /// Observe this to know when mouse-wheel is rotated
-   /// </summary>
+   /// <summary>Observe this to know when mouse-wheel is rotated</summary>
    public IObservable<MouseWheelInfo> Wheel { get; }
+   /// <summary>
+   /// The current position of the mouse
+   /// </summary>
+   public Vec2S Pos { get; }
 }
 
 public interface IKeyboard {
-   /// <summary>
-   /// Observe this to know when a key is pressed or released
-   /// </summary>
+   /// <summary>Observe this to know when a key is pressed or released</summary>
    public IObservable<KeyInfo> Keys { get; }
-   /// <summary>
-   /// Tells us which modifiers (SHIFT/CTRL/ALT) are being held down now
-   /// </summary>
+   /// <summary>Tells us which modifiers (SHIFT/CTRL/ALT) are being held down now</summary>
    public EKeyModifier Modifiers { get; }
-   /// <summary>
-   /// Observe this to get the text that was typed
-   /// </summary>
+   /// <summary>Observe this to get the text that was typed</summary>
    public IObservable<string> Text { get; }
+}
+
+public interface IDispatcher {
+   public bool CheckAccess ();
+   public void Post (Action act);
+   public Task InvokeAsync (Action act);
+   public Task<T> InvokeAsync<T> (Func<T> func);
+
+   public IDisposable Timer (TimeSpan interval, bool repeat, Action callback) 
+      => new Timer (_ => Post (callback), null, interval, repeat ? interval : Timeout.InfiniteTimeSpan);
+
+   public void VerifyAccess () {
+      if (!CheckAccess ()) 
+         throw new InvalidOperationException ("Code should be on the UI thread");
+   }
+   
+   public void Send (Action act) {
+      if (CheckAccess ()) { act (); return; }
+      InvokeAsync (act).GetAwaiter ().GetResult ();
+   }
+
+   public T Send<T> (Func<T> act) {
+      if (CheckAccess ()) return act ();
+      return InvokeAsync (act).GetAwaiter ().GetResult ();
+   }
+
+   public Task Yield () {
+      return InvokeAsync (() => { });
+   }
 }

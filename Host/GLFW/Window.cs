@@ -10,6 +10,7 @@ public class Window {
    // Constructors -------------------------------------------------------------
    public Window (int cx, int cy, string title, EFlags flags = EFlags.Default) {
       SetWindowHints (flags);
+      mDispatcher = (GLFWDispatcher)Hub.Dispatcher;
       byte[] bTitle = Encoding.UTF8.GetBytes (title);
       Array.Resize (ref bTitle, bTitle.Length + 1);
       mHWnd = CreateWindow (cx, cy, bTitle, HMonitor.None, HWindow.None);
@@ -19,10 +20,9 @@ public class Window {
       GLFWHost.OnReady?.Invoke ();
    }
    HWindow mHWnd;
+   GLFWDispatcher mDispatcher;
 
-   /// <summary>
-   /// Window creation flags
-   /// </summary>
+   /// <summary>Window creation flags</summary>
    [Flags]
    public enum EFlags {      
       Visible = 1 << 0,
@@ -105,6 +105,7 @@ public class Window {
    public void Run (bool wait) {
       while (!ShouldClose) {
          var (dx, dy) = FramebufferSize;
+         mDispatcher.ProcessWorkQueue ();
          Draw (dx, dy);
          Swap (wait);
       }

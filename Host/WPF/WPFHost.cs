@@ -10,6 +10,9 @@ using Ptr = nint;
 public static class WPFHost {
    public static UIElement Create (Window main, Action onReady) {
       Hub.OpenGL = new WPFOpenGL ();
+      Hub.Keyboard = new WPFKeyboard ();
+      Hub.Mouse = new WPFMouse ();
+      Hub.Dispatcher = new WPFDispatcher ();
       Main = main;
       OnReady = onReady;
       return GLPanel = Panel.It;
@@ -19,6 +22,13 @@ public static class WPFHost {
    static internal Action? OnReady;
    static internal Action<int, int>? OnPaint;
    static internal Panel? GLPanel;
+}
+
+class WPFDispatcher : IDispatcher {
+   public bool CheckAccess () => throw new NotImplementedException ();
+   public Task InvokeAsync (Action act) => throw new NotImplementedException ();
+   public Task<T> InvokeAsync<T> (Func<T> func) => throw new NotImplementedException ();
+   public void Post (Action act) => throw new NotImplementedException ();
 }
 
 class WPFOpenGL : IOpenGL {
