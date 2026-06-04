@@ -4,6 +4,7 @@
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 using System.Buffers;
 using System.IO.Compression;
+using System.Reactive;
 using static System.Math;
 namespace Nori;
 
@@ -352,6 +353,12 @@ public static class Extensions {
    public static string S5 (this float f) {
       string s = Round (f, 5).ToString (CultureInfo.InvariantCulture);
       return s == "-0" ? "0" : s;
+   }
+
+   public static IDisposable Subscribe<T> (
+       this IObservable<T> source,
+       Action<T> onNext) {
+      return source.Subscribe (new AnonymousObserver<T> (onNext));
    }
 
    /// <summary>Swaps two elements from a list</summary>

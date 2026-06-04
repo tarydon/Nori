@@ -177,10 +177,10 @@ class KeysWrap : EventWrapper<KeyInfo> {
    // this across platforms), and push the KeyInfo structs that we construct from that
    void Process (KeyEventArgs e, EKeyState state) {
       if (!mMap.TryGetValue (e.KeyCode, out EKey key)) key = (EKey)e.KeyCode;
-      var mods = EKeyModifier.None;
-      if ((e.Modifiers & Keys.Shift) > 0) mods |= EKeyModifier.Shift;
-      if ((e.Modifiers & Keys.Control) > 0) mods |= EKeyModifier.Control;
-      if ((e.Modifiers & Keys.Alt) > 0) mods |= EKeyModifier.Alt;
+      var mods = EModifier.None;
+      if ((e.Modifiers & Keys.Shift) > 0) mods |= EModifier.Shift;
+      if ((e.Modifiers & Keys.Control) > 0) mods |= EModifier.Control;
+      if ((e.Modifiers & Keys.Alt) > 0) mods |= EModifier.Alt;
       Push (new (key, mods, state));
       // REFINE: Use e.Modifiers to distinguish between Enter and Numpad-Enter etc
    }
@@ -223,10 +223,10 @@ class MouseClicksWrap : EventWrapper<MouseClickInfo> {
 
    void Process (MouseEventArgs e, EKeyState state) {
       if (!mMap.TryGetValue (e.Button, out EMouseButton btn)) return;
-      var mods = EKeyModifier.None;
-      if (HW.IsCtrlDown) mods |= EKeyModifier.Control;
-      if (HW.IsShiftDown) mods |= EKeyModifier.Shift;
-      if (HW.IsAltDown) mods |= EKeyModifier.Alt;
+      var mods = EModifier.None;
+      if (HW.IsCtrlDown) mods |= EModifier.Control;
+      if (HW.IsShiftDown) mods |= EModifier.Shift;
+      if (HW.IsAltDown) mods |= EModifier.Alt;
       Vec2S position = new (e.X, e.Y);
       Push (new (btn, position, mods, state));
    }

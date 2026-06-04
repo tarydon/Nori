@@ -4,6 +4,7 @@
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 namespace Nori;
 using System.Reactive;
+using System.Runtime.InteropServices;
 using Ptr = nint;
 
 public static class GLFWHost {
@@ -23,20 +24,8 @@ public static class GLFWHost {
 
 class GLFWKeyboard : IKeyboard {
    public IObservable<KeyInfo> Keys => throw new NotImplementedException ();
-   public EKeyModifier Modifiers => throw new NotImplementedException ();
+   public EModifier Modifiers => throw new NotImplementedException ();
    public IObservable<string> Text => throw new NotImplementedException ();
-}
-
-class GLFWMouse : IMouse {
-   public IObservable<MouseClickInfo> Clicks => throw new NotImplementedException ();
-   public IObservable<Unit> Leave => throw new NotImplementedException ();
-   public IObservable<Unit> Lost => throw new NotImplementedException ();
-   public IObservable<Vec2S> Moves => throw new NotImplementedException ();
-   public IObservable<MouseWheelInfo> Wheel => throw new NotImplementedException ();
-
-   public Vec2S Pos => throw new NotImplementedException ();
-
-   public bool TryCapture () => throw new NotImplementedException ();
 }
 
 class GLFWOpenGL : IOpenGL {

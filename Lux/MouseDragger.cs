@@ -81,7 +81,7 @@ public class SceneManipulator {
    // Implementation -----------------------------------------------------------
    // When Ctrl+E is pressed, do a zoom-extents
    void OnKey (KeyInfo ki) {
-      if (ki.Key == EKey.E && ki.Modifier == EKeyModifier.Control) 
+      if (ki.Key == EKey.E && ki.Modifier == EModifier.Control) 
          Lux.PickScene (Hub.Mouse.Pos)?.ZoomExtents ();
    }
 

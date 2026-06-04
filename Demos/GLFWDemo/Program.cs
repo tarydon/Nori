@@ -1,5 +1,6 @@
 ﻿using Nori;
 namespace GLFWDemo;
+using System.Reactive.Linq;
 
 internal class Program {
    static void Main () {
@@ -34,9 +35,43 @@ class DemoScene : Scene2 {
       var vn2 = new SimpleVN (
          () => Lux.UIRect (cen, new Vec2S (size.Width + dy, size.Height + dy), 16, 8, new (255, 64, 66, 68), new (255, 200, 202, 204))
       ) { Streaming = true };
-      var gvn = new GroupVN ([vn1, vn2]);
+      var gvn = new GroupVN ([vn1, vn2, mDemo, mMouse]);
       Root = gvn;
    }
 
+   DemoVN mDemo = new ();
+   MouseVN mMouse = new ();
    TypeFace mFace;
+}
+
+class DemoVN : VNode {
+   public DemoVN () => Hub.Dispatcher.Timer (System.TimeSpan.FromSeconds (1), true, Redraw);
+
+   public override void Draw () {
+      Lux.TypeFace = TypeFace.Default;
+      Lux.Text ($"Step {mN++}", new Vec2S (100, 400));
+   }
+
+   static int mN;
+}
+
+class MouseVN : VNode {
+   public MouseVN () {
+      Hub.Mouse.Moves.Subscribe (p => { mPos = p; Redraw (); });
+      Hub.Mouse.Clicks.Subscribe (p => { mClick = p; Redraw (); });
+      Hub.Mouse.Wheel.Subscribe (p => { mWheel = p; mWheelPos += p.Delta; Redraw (); });
+   }
+
+   public override void SetAttributes () => Lux.TypeFace = TypeFace.Default;
+
+   public override void Draw () {
+      Lux.Text ($"MousePos: {mPos}", new Vec2S (100, 430));
+      Lux.Text ($"Click: {mClick}", new Vec2S (100, 460));
+      Lux.Text ($"Wheel: {mWheel.Position} / {mWheelPos}", new Vec2S (100, 490));
+   }
+
+   Vec2S mPos;
+   MouseClickInfo mClick;
+   MouseWheelInfo mWheel;
+   int mWheelPos;
 }

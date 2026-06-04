@@ -2,7 +2,7 @@
 // ╔═╦╦═╦╦╬╣ GLFW.cs
 // ║║║║╬║╔╣║ <<TODO>>
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
-using Nori.Internal;
+using System.Runtime.InteropServices;
 namespace Nori;
 using static CallingConvention;
 using Ptr = nint;
@@ -21,6 +21,9 @@ static class GLFW {
    // Create a GLFW window
    [DllImport (LIB, EntryPoint = "glfwCreateWindow", CallingConvention = Cdecl)]
    public static extern HWindow CreateWindow (int width, int height, byte[] title, HMonitor monitor, HWindow share);
+
+   [DllImport (LIB, EntryPoint = "glfwGetCursorPos", CallingConvention = Cdecl)]
+   public static extern void GetCursorPosition (HWindow window, out double x, out double y);
 
    // Returns the size of the frame-buffer attached to a window (OpenGL viewport size)
    [DllImport (LIB, EntryPoint = "glfwGetFramebufferSize", CallingConvention = Cdecl)]
@@ -124,6 +127,24 @@ static class GLFW {
    [UnmanagedFunctionPointer (Cdecl)] public delegate void MonitorCallback (HMonitor monitor, ConnectionStatus status);
    [DllImport (LIB, EntryPoint = "glfwSetMonitorCallback", CallingConvention = Cdecl)]
    public static extern Ptr SetMonitorCallback (MonitorCallback monitorCallback);
+
+   [UnmanagedFunctionPointer (Cdecl)] public delegate void BoolCallback (HWindow window, bool entering);
+   [DllImport (LIB, EntryPoint = "glfwSetCursorEnterCallback", CallingConvention = Cdecl)]
+   public static extern Ptr SetCursorEnterCallback (HWindow window, BoolCallback? mouseCallback);
+
+   // Set up the 'cursor position' callback (to track mouse-moves)
+   [UnmanagedFunctionPointer (Cdecl)] public delegate void Vec2FCallback (HWindow window, double x, double y);
+   [DllImport (LIB , EntryPoint = "glfwSetCursorPosCallback", CallingConvention = Cdecl)]
+   public static extern Ptr SetCursorPosCallback (HWindow window, Vec2FCallback? callback);
+
+   // Callback to handle mouse-button clicks & releases
+   [UnmanagedFunctionPointer (Cdecl)] public delegate void MouseButtonCallback (HWindow window, EMouseButton button, EKeyState state, EModifier modifiers);
+   [DllImport (LIB, EntryPoint = "glfwSetMouseButtonCallback", CallingConvention = Cdecl)]
+   public static extern Ptr SetMouseButtonCallback (HWindow window, MouseButtonCallback? mouseCallback);
+
+   // Callback to handle mouse-wheel scrolling (in both X and Y)
+   [DllImport (LIB, EntryPoint = "glfwSetScrollCallback", CallingConvention = Cdecl)]
+   public static extern Vec2FCallback SetScrollCallback (HWindow window, Vec2FCallback? mouseCallback);
 
    // Sets the window's position, in pixels
    [DllImport (LIB, EntryPoint = "glfwSetWindowPos", CallingConvention = Cdecl)]

@@ -70,7 +70,7 @@ public interface IKeyboard {
    /// <summary>Observe this to know when a key is pressed or released</summary>
    public IObservable<KeyInfo> Keys { get; }
    /// <summary>Tells us which modifiers (SHIFT/CTRL/ALT) are being held down now</summary>
-   public EKeyModifier Modifiers { get; }
+   public EModifier Modifiers { get; }
    /// <summary>Observe this to get the text that was typed</summary>
    public IObservable<string> Text { get; }
 }
@@ -81,8 +81,10 @@ public interface IDispatcher {
    public Task InvokeAsync (Action act);
    public Task<T> InvokeAsync<T> (Func<T> func);
 
-   public IDisposable Timer (TimeSpan interval, bool repeat, Action callback) 
-      => new Timer (_ => Post (callback), null, interval, repeat ? interval : Timeout.InfiniteTimeSpan);
+   public IDisposable Timer (TimeSpan interval, bool repeat, Action callback) {
+      var t = new Timer (_ => Post (callback), null, interval, interval);
+      return new TimerDisposer (t);
+   }
 
    public void VerifyAccess () {
       if (!CheckAccess ()) 
@@ -101,5 +103,12 @@ public interface IDispatcher {
 
    public Task Yield () {
       return InvokeAsync (() => { });
+   }
+
+   class TimerDisposer : IDisposable {
+      public TimerDisposer (Timer t) { mTimer = t; mList.Add (this); }
+      public void Dispose () { if (mList.Remove (this)) mTimer.Dispose (); }
+      readonly Timer mTimer;
+      static List<TimerDisposer> mList = [];
    }
 }
