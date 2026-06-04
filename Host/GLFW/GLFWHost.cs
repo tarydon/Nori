@@ -21,12 +21,6 @@ public static class GLFWHost {
    internal static Window? Win;
 }
 
-class GLFWKeyboard : IKeyboard {
-   public IObservable<KeyInfo> Keys => throw new NotImplementedException ();
-   public EModifier Modifiers => throw new NotImplementedException ();
-   public IObservable<string> Text => throw new NotImplementedException ();
-}
-
 class GLFWOpenGL : IOpenGL {
    public Action<int, int> OnPaint { set => GLFWHost.OnPaint = value; }
 

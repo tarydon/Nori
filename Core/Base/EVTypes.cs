@@ -9,18 +9,17 @@ namespace Nori;
 public enum EKey : short {
    D0 = (short)'0', D1, D2, D3, D4, D5, D6, D7, D8, D9,
    A = (short)'A', B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y, Z,
-
-   NPad0 = 128, NPad1, NPad2, NPad3, NPad4, NPad5, NPad6, NPad7, NPad8, NPad9,
-
-   Escape = 27, Backspace = 8, Tilde = (short)'~', Hyphen = (short)'-', Equals = (short)'=',
-   Tab = 9, OpenBracket = (short)'[', CloseBracket = (short)']', Backslash = (short)'\\',
-   Semicolon = (short)';', Quote = (short)'\'', Enter = 13, Space = 32,
-
+   N0 = 128, N1, N2, N3, N4, N5, N6, N7, N8, N9,
    F1 = 140, F2, F3, F4, F5, F6, F7, F8, F9, F10, F11, F12,
 
-   Scroll = 168, CapsLock, Windows, Pause, Shift, Ctrl, Alt, Menu, Insert, Home, PageUp,
-   Delete, End, PageDown, Up, Left, Down, Right, NumLock, NDivide, NMultiply, NSubtract, NAdd,
-   NEnter, NPeriod
+   Escape = 27, 
+
+   //Tab = 9, OpenBracket = (short)'[', CloseBracket = (short)']', Backslash = (short)'\\',
+   //Semicolon = (short)';', Quote = (short)'\'', Enter = 13, 
+
+   //Scroll = 168, CapsLock, Windows, Pause, Shift, Ctrl, Alt, Menu, Insert, Home, PageUp,
+   //Delete, End, PageDown, Up, Left, Down, Right, NumLock, NDivide, NMultiply, NSubtract, NAdd,
+   //NEnter, NPeriod
 }
 #endregion
 
@@ -47,6 +46,8 @@ public readonly struct KeyInfo (EKey key, EModifier modifier, EKeyState state) {
    public readonly EModifier Modifier = modifier;
    /// <summary>Is the key being pressed or released</summary>
    public readonly EKeyState State = state;
+
+   public override string ToString () => $"{State} {Key} ({Modifier})";
 }
 #endregion
 

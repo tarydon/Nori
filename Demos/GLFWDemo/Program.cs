@@ -73,6 +73,7 @@ class MouseVN : VNode {
       Lux.Text ($"Click: {mClick}", new Vec2S (100, 460));
       Lux.Text ($"Wheel: {mWheel.Position} / {mWheelPos}", new Vec2S (100, 490));
       Lux.Text ($"Enter: {mEnter}", new Vec2S (100, 520));
+      Lux.Text ($"Key: {mKey}", new Vec2S (100, 580));
    }
 
    Vec2S mPos;

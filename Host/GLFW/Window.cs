@@ -14,8 +14,8 @@ public class Window {
       byte[] bTitle = Encoding.UTF8.GetBytes (title);
       Array.Resize (ref bTitle, bTitle.Length + 1);
       mHWnd = CreateWindow (cx, cy, bTitle, HMonitor.None, HWindow.None);
-      GLFWMouse.HWnd = mHWnd;
       MakeContextCurrent (mHWnd);
+      GLFWMouse.HWnd = GLFWKeyboard.HWnd = mHWnd;
       SwapInterval (1);
       GLFWHost.Win = this; 
       GLFWHost.OnReady?.Invoke ();
