@@ -191,20 +191,31 @@ class KeysWrap : EventWrapper<KeyInfo> {
       [Keys.Escape] = EKey.Escape, [Keys.F1] = EKey.F1, [Keys.F2] = EKey.F2, [Keys.F3] = EKey.F3,
       [Keys.F4] = EKey.F4, [Keys.F5] = EKey.F5, [Keys.F6] = EKey.F6, [Keys.F7] = EKey.F7,
       [Keys.F8] = EKey.F8, [Keys.F9] = EKey.F9, [Keys.F10] = EKey.F10, [Keys.F11] = EKey.F11,
-      [Keys.F12] = EKey.F12, [Keys.Scroll] = EKey.Scroll, [Keys.Oemtilde] = EKey.Tilde,
-      [Keys.OemMinus] = EKey.Hyphen, [Keys.Oemplus] = EKey.Equals, [Keys.OemOpenBrackets] = EKey.OpenBracket,
-      [Keys.OemCloseBrackets] = EKey.CloseBracket, [Keys.OemPipe] = EKey.Backslash, [Keys.LWin] = EKey.Windows,
-      [Keys.RWin] = EKey.Windows, [Keys.ControlKey] = EKey.Ctrl, [Keys.ShiftKey] = EKey.Shift,
-      [Keys.Menu] = EKey.Alt, [Keys.Capital] = EKey.CapsLock, [Keys.Apps] = EKey.Menu, [Keys.Pause] = EKey.Pause,
+      [Keys.F12] = EKey.F12, 
+      [Keys.OemMinus] = EKey.Minus, [Keys.Oemplus] = EKey.Equal, 
+      [Keys.OemPipe] = EKey.Backslash, 
+      [Keys.Menu] = EKey.Menu, [Keys.Capital] = EKey.CapsLock, [Keys.Apps] = EKey.Menu, [Keys.Pause] = EKey.Pause,
       [Keys.Insert] = EKey.Insert, [Keys.Home] = EKey.Home, [Keys.PageUp] = EKey.PageUp,
       [Keys.PageDown] = EKey.PageDown, [Keys.Delete] = EKey.Delete, [Keys.End] = EKey.End,
       [Keys.Up] = EKey.Up, [Keys.Down] = EKey.Down, [Keys.Left] = EKey.Left, [Keys.Right] = EKey.Right,
       [Keys.NumLock] = EKey.NumLock, [Keys.Divide] = EKey.NDivide, [Keys.Multiply] = EKey.NMultiply,
-      [Keys.Subtract] = EKey.NSubtract, [Keys.Add] = EKey.NAdd, [Keys.Decimal] = EKey.NPeriod,
-      [Keys.NumPad0] = EKey.NPad0, [Keys.NumPad1] = EKey.NPad1, [Keys.NumPad2] = EKey.NPad2,
-      [Keys.NumPad3] = EKey.NPad3, [Keys.NumPad4] = EKey.NPad4, [Keys.Clear] = EKey.NPad5,
-      [Keys.NumPad6] = EKey.NPad6, [Keys.NumPad7] = EKey.NPad7, [Keys.NumPad8] = EKey.NPad8,
-      [Keys.NumPad9] = EKey.NPad9, [Keys.Space] = EKey.Space
+      [Keys.Subtract] = EKey.NSubtract, [Keys.Add] = EKey.NAdd, 
+      [Keys.NumPad0] = EKey.N0, [Keys.NumPad1] = EKey.N1, [Keys.NumPad2] = EKey.N2,
+      [Keys.NumPad3] = EKey.N3, [Keys.NumPad4] = EKey.N4, [Keys.Clear] = EKey.N5,
+      [Keys.NumPad6] = EKey.N6, [Keys.NumPad7] = EKey.N7, [Keys.NumPad8] = EKey.N8,
+      [Keys.NumPad9] = EKey.N9, [Keys.Space] = EKey.Space
+
+      /*
+      [Keys.Scroll] = EKey.Scroll,
+      [Keys.Oemtilde] = EKey.Tilde,
+      [Keys.OemOpenBrackets] = EKey.OpenBracket,
+      [Keys.OemCloseBrackets] = EKey.CloseBracket, 
+      [Keys.LWin] = EKey.Windows,
+      [Keys.RWin] = EKey.Windows, 
+      [Keys.ControlKey] = EKey.Ctrl, 
+      [Keys.ShiftKey] = EKey.Shift,
+      [Keys.Decimal] = EKey.NPeriod,
+      */
    };
 }
 #endregion

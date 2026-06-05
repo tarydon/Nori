@@ -1,5 +1,7 @@
 ﻿using Nori;
 namespace GLFWDemo;
+
+using System;
 using System.Reactive.Linq;
 
 internal class Program {
@@ -50,7 +52,8 @@ class DemoVN : VNode {
    public override void Draw () {
       Lux.TypeFace = TypeFace.Default;
       Vec2S pos = Hub.Mouse.Pos;
-      Lux.Text ($"Step {mN++} {pos}", new Vec2S (100, 400));
+      EModifier mods = Hub.Keyboard.Modifiers;
+      Lux.Text ($"Step {mN++} {pos} ({mods})", new Vec2S (100, 400));
    }
 
    static int mN;
@@ -64,6 +67,7 @@ class MouseVN : VNode {
       Hub.Mouse.Enter.Subscribe (p => { mEnter = p; Redraw (); });
 
       Hub.Keyboard.Keys.Subscribe (p => { mKey = p; Redraw (); });
+      Hub.Keyboard.Text.Subscribe (p => { mChars = p; Redraw (); });
    }
 
    public override void SetAttributes () => Lux.TypeFace = TypeFace.Default;
@@ -74,6 +78,7 @@ class MouseVN : VNode {
       Lux.Text ($"Wheel: {mWheel.Position} / {mWheelPos}", new Vec2S (100, 490));
       Lux.Text ($"Enter: {mEnter}", new Vec2S (100, 520));
       Lux.Text ($"Key: {mKey}", new Vec2S (100, 580));
+      Lux.Text ($"Chars: {mChars}", new Vec2S (100, 610));
    }
 
    Vec2S mPos;
@@ -82,4 +87,5 @@ class MouseVN : VNode {
    int mWheelPos;
    bool mEnter;
    KeyInfo mKey;
+   string mChars = "";
 }

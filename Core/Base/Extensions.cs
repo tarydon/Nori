@@ -355,12 +355,6 @@ public static class Extensions {
       return s == "-0" ? "0" : s;
    }
 
-   public static IDisposable Subscribe<T> (
-       this IObservable<T> source,
-       Action<T> onNext) {
-      return source.Subscribe (new AnonymousObserver<T> (onNext));
-   }
-
    /// <summary>Swaps two elements from a list</summary>
    public static void Swap<T> (this List<T> list, int a, int b) {
       if (a == b) return;

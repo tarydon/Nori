@@ -33,6 +33,10 @@ static class GLFW {
    [DllImport (LIB, EntryPoint = "glfwGetFramebufferSize", CallingConvention = Cdecl)]
    public static extern void GetFramebufferSize (HWindow window, out int width, out int height);
 
+   // Gets the current pressed/released state of any key
+   [DllImport (LIB, EntryPoint = "glfwGetKey", CallingConvention = Cdecl)]
+   public static extern EKeyState GetKey (HWindow window, EKey key);
+
    // Returns handles to the set of monitors in the system
    [DllImport (LIB, EntryPoint = "glfwGetMonitors", CallingConvention = Cdecl)]
    public static extern Ptr GetMonitors (out int count);
@@ -132,6 +136,11 @@ static class GLFW {
    [DllImport (LIB, EntryPoint = "glfwSetMonitorCallback", CallingConvention = Cdecl)]
    public static extern Ptr SetMonitorCallback (MonitorCallback monitorCallback);
 
+   // Callback for decoded characters
+   [UnmanagedFunctionPointer (Cdecl)] public delegate void CharCallback (HWindow window, uint codePoint);
+   [DllImport (LIB, EntryPoint = "glfwSetCharCallback", CallingConvention = Cdecl)]
+   public static extern Ptr SetCharCallback (HWindow window, CharCallback? charCallback);
+
    [UnmanagedFunctionPointer (Cdecl)] public delegate void BoolCallback (HWindow window, bool entering);
    [DllImport (LIB, EntryPoint = "glfwSetCursorEnterCallback", CallingConvention = Cdecl)]
    public static extern Ptr SetCursorEnterCallback (HWindow window, BoolCallback? mouseCallback);
@@ -142,7 +151,7 @@ static class GLFW {
    public static extern Ptr SetCursorPosCallback (HWindow window, Vec2FCallback? callback);
 
    // Set up the key pressed/key released callback 
-   [UnmanagedFunctionPointer (Cdecl)] public delegate void KeyCallback (HWindow window, EGLFWKey key, int scanCode, EKeyState state, EModifier mods);
+   [UnmanagedFunctionPointer (Cdecl)] public delegate void KeyCallback (HWindow window, EKey key, int scanCode, EKeyState state, EModifier mods);
    [DllImport (LIB, EntryPoint = "glfwSetKeyCallback", CallingConvention = Cdecl)]
    public static extern Ptr SetKeyCallback (HWindow window, KeyCallback? keyCallback);
 

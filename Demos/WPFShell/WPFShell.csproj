@@ -13,7 +13,6 @@
 		<ProjectReference Include="..\..\Core\Nori.Core.csproj" />
 		<ProjectReference Include="..\..\Host\WPF\Nori.Host.WPF.csproj" />
 		<ProjectReference Include="..\..\Lux\Nori.Lux.csproj" />
-		<ProjectReference Include="..\..\WGL\Nori.WGL.csproj" />
 	</ItemGroup>
 
 </Project>

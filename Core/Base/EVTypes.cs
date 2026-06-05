@@ -6,20 +6,42 @@ namespace Nori;
 
 #region enum EKey ----------------------------------------------------------------------------------
 /// <summary>Enumeration used in the KeyInfo struct to describe which key on the keyboard was pressed</summary>
-public enum EKey : short {
-   D0 = (short)'0', D1, D2, D3, D4, D5, D6, D7, D8, D9,
-   A = (short)'A', B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y, Z,
-   N0 = 128, N1, N2, N3, N4, N5, N6, N7, N8, N9,
-   F1 = 140, F2, F3, F4, F5, F6, F7, F8, F9, F10, F11, F12,
+public enum EKey {
+   Unknown = -1,
+   /// <summary>The '0' .. '9' digits on the top row</summary>
+   D0 = '0', D1, D2, D3, D4, D5, D6, D7, D8, D9,
+   /// <summary>Alphabet keys 'A' .. 'Z'</summary>
+   A = 'A', B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y, Z,
+   /// <summary>Function keys 'F1' .. 'F12'</summary>
+   F1 = 290, F2, F3, F4, F5, F6, F7, F8, F9, F10, F11, F12,
+   /// <summary>Keys '0' .. '9' on the numeric keypad</summary>
+   N0 = 320, N1, N2, N3, N4, N5, N6, N7, N8, N9,
 
-   Escape = 27, 
+   /// <summary>
+   /// Punctuation and symbols
+   /// </summary>
+   Space = ' ', Apostrophe = '\'', Comma = ',', Minus = '-', Period = '.', Slash = '/',
+   SemiColon = ';', Equal = '=', LeftBracket = '[', Backslash = '\\', RightBracket = ']',
+   GraveAccent = '`',
 
-   //Tab = 9, OpenBracket = (short)'[', CloseBracket = (short)']', Backslash = (short)'\\',
-   //Semicolon = (short)';', Quote = (short)'\'', Enter = 13, 
+   /// <summary>
+   /// Navigation and other keys
+   /// </summary>
+   Escape = 256, Enter = 257, Tab = 258, Backspace = 259, Insert = 260, Delete = 261,
+   Right = 262, Left = 263, Down = 264, Up = 265, PageUp = 266, PageDown = 267, Home = 268,
+   End = 269, PrintScreen = 283, Pause = 284,
 
-   //Scroll = 168, CapsLock, Windows, Pause, Shift, Ctrl, Alt, Menu, Insert, Home, PageUp,
-   //Delete, End, PageDown, Up, Left, Down, Right, NumLock, NDivide, NMultiply, NSubtract, NAdd,
-   //NEnter, NPeriod
+   /// <summary>
+   /// Operators on numeric keypad
+   /// </summary>
+   NDecimal = 330, NDivide = 331, NMultiply = 332, NSubtract = 333, NAdd = 334, NEnter = 335,
+   NEqual = 336,
+
+   /// <summary>
+   /// Modifier keys
+   /// </summary>
+   LShift = 340, LCtrl = 341, LAlt = 342, LSuper = 343, RShift = 344, RCtrl = 345, RAlt = 346,
+   RSuper = 347, Menu = 348, CapsLock = 280, ScrollLock = 281, NumLock = 282,
 }
 #endregion
 
