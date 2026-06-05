@@ -72,6 +72,7 @@ class Surface : UserControl {
       (DoubleBuffered, Name, AutoScaleMode) = (false, "PixSurface", AutoScaleMode.None);
       foreach (var style in new[] { Opaque, UserPaint, AllPaintingInWmPaint }) SetStyle (style, true);
       foreach (var style in new[] { OptimizedDoubleBuffer, Selectable }) SetStyle (style, false);
+      WPFMouse.Panel = WPFKeyboard.Panel = this; 
    }
 
    // Overrides ----------------------------------------------------------------

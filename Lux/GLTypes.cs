@@ -20,7 +20,8 @@ public enum EBlendFactor : uint { Zero = 0, One = 1, SrcAlpha = 770, OneMinusSrc
 // Various capabilities we can Enable / Disable
 public enum ECap : uint { 
    Blend = 0xBE2, DepthTest = 0xB71, PolygonOffsetFill = 0x8037, ScissorTest = 0xC11,
-   CullFace = 0xB44, StencilTest = 0xB90, PrimitiveRestart = 0x8F9D
+   CullFace = 0xB44, StencilTest = 0xB90, PrimitiveRestart = 0x8F9D, DebugOutput = 0x92E0,
+   DebugOutputSynchronous = 0x8242,
 }
 
 // Various data types for storing in vertex array buffers
@@ -33,6 +34,8 @@ public enum EDataType : uint {
 
 // Binding targets for a FrameBuffer
 public enum EFrameBufferTarget : uint { Draw = 0x8CA9, Read = 0x8CA8, DrawAndRead = 0x8D40 }
+
+public enum ESeverity : uint { High = 0x9146, Medium = 0x9147, Low = 0x9148, Info = 0x826b, DontCare = 0x1100 };
 
 // Defines a frame-buffer attachment point
 public enum EFrameBufferAttachment { Depth = 0x8D00, Color0 = 0x8CE0, Color1 = 0x8CE1, DepthStencil = 0x821A }

@@ -47,7 +47,7 @@ struct PixelFormatDescriptor {
 /// <summary>Implements the P-Invoke connections to OpenGL</summary>
 static public unsafe class GL {
    // Interface ----------------------------------------------------------------
-   // Creates an OpenGL context in Windows .....................................
+   // Creates an OpenGL context in Windows
    internal static HGLRC CreateContextAttribsARB (HDC dc, HGLRC share, int major, int minor, bool debug, bool core) {
       HGLRC retvalue;
       int[] pn = new int[8];

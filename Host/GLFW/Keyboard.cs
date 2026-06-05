@@ -26,8 +26,9 @@ class GLFWKeyboard : IKeyboard {
 #region class KeyPressWrap -------------------------------------------------------------------------
 /// <summary>Helper used to generate a stream of key-press, key-release events</summary>
 class KeysWrap : EventWrapper<KeyInfo> {
-   public KeysWrap (HWindow w) : base (w) => mCallback = Callback;
+   public KeysWrap (HWindow w) => (mWindow, mCallback) = (w, Callback);
    readonly KeyCallback mCallback;
+   readonly HWindow mWindow;
 
    protected override void Connect (bool connect) => SetKeyCallback (mWindow, connect ? mCallback : null);
    void Callback (HWindow _, EKey k, int code, EKeyState st, EModifier m) => Push (new KeyInfo (k, m, st));
@@ -37,9 +38,11 @@ class KeysWrap : EventWrapper<KeyInfo> {
 #region class CharsWrap ----------------------------------------------------------------------------
 /// <summary>Helper used to generate Unicode characters from key-presses</summary>
 class CharsWrap : EventWrapper<string> {
-   public CharsWrap (HWindow w) : base (w) => mCallback = Callback;
+   public CharsWrap (HWindow w) => (mWindow, mCallback) = (w, Callback);
+   readonly CharCallback mCallback;
+   readonly HWindow mWindow;
+
    protected override void Connect (bool connect) => SetCharCallback (mWindow, connect ? mCallback : null);
    void Callback (HWindow _, uint code) => Push (char.ConvertFromUtf32 ((int)code));
-   readonly CharCallback mCallback;
 }
 #endregion

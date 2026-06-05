@@ -24,7 +24,7 @@ class StreamDemoScene : Scene2 {
       Root = new GroupVN ([under, lines1, lines2, quads1, quads2, over, quads3]);
       //Root = new GroupVN ([quads1, lines1, quads2, quads3]);
 
-      mKeys = HW.Keys.Where (a => a.Key == EKey.Space && a.State == EKeyState.Pressed).Subscribe (k => Lux.DumpStats ());
+      mKeys = Hub.Keyboard.Keys.Where (a => a.Key == EKey.Space && a.State == EKeyState.Pressed).Subscribe (k => Lux.DumpStats ());
    }
    IDisposable mKeys;
 
@@ -103,6 +103,6 @@ class Overlay : VNode {
       Lux.Text2D (s, (Vec2F)mPt, ETextAlign.MidCenter, new Vec2S (0, 0));
    }
 
-   public override void OnAttach () => mMouse = HW.MouseMoves.Subscribe (OnMouseMove);
+   public override void OnAttach () => mMouse = Hub.Mouse.Moves.Subscribe (OnMouseMove);
    public override void OnDetach () => mMouse?.Dispose ();
 }

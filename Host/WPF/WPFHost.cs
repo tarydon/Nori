@@ -4,6 +4,7 @@
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 using System.Runtime.InteropServices;
 using System.Windows;
+using System.Windows.Threading;
 namespace Nori;
 using Ptr = nint;
 
@@ -12,7 +13,7 @@ public static class WPFHost {
       Hub.OpenGL = new WPFOpenGL ();
       Hub.Keyboard = new WPFKeyboard ();
       Hub.Mouse = new WPFMouse ();
-      Hub.Dispatcher = new WPFDispatcher ();
+      Hub.Dispatcher = new WPFDispatcher (main.Dispatcher);
       Main = main;
       OnReady = onReady;
       return GLPanel = Panel.It;
@@ -25,10 +26,13 @@ public static class WPFHost {
 }
 
 class WPFDispatcher : IDispatcher {
-   public bool CheckAccess () => throw new NotImplementedException ();
-   public Task InvokeAsync (Action act) => throw new NotImplementedException ();
-   public Task<T> InvokeAsync<T> (Func<T> func) => throw new NotImplementedException ();
-   public void Post (Action act) => throw new NotImplementedException ();
+   public WPFDispatcher (Dispatcher disp) => mDispatcher = disp;
+   readonly Dispatcher mDispatcher;
+
+   public bool CheckAccess () => mDispatcher.CheckAccess ();
+   public Task InvokeAsync (Action act) => mDispatcher.InvokeAsync (act).Task;
+   public Task<T> InvokeAsync<T> (Func<T> func) => mDispatcher.InvokeAsync (func).Task;
+   public void Post (Action act) => mDispatcher.BeginInvoke (act);
 }
 
 class WPFOpenGL : IOpenGL {
@@ -37,8 +41,8 @@ class WPFOpenGL : IOpenGL {
 
    public Ptr GetGLProcAddress (string name) {
       Ptr proc = WGLGetProcAddress (name);
-      if (proc == 0) 
-         proc = NativeLibrary.GetExport (Lib, name);
+      if (proc == 0)
+         try { proc = NativeLibrary.GetExport (Lib, name); } catch { }
       if (proc == 0) throw new Exception ($"OpenGL function '{name}' not found.");
       return proc; 
    }

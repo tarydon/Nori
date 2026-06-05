@@ -20,8 +20,8 @@ class HullNode : VNode {
    Bound2 mBound;
 
    public override void OnAttach () {
-      DisposeOnDetach (HW.MouseMoves.Subscribe (OnMouse));
-      DisposeOnDetach (HW.MouseClicks.Where (a => a.IsLeftPress).Subscribe (OnClick));
+      DisposeOnDetach (Hub.Mouse.Moves.Subscribe (OnMouse));
+      DisposeOnDetach (Hub.Mouse.Clicks.Where (a => a.IsLeftPress).Subscribe (OnClick));
       Lib.Trace ("Move mouse about to modify point set");
       Lib.Trace ("Click to add random points");
       AddRandom (10 * mMax);

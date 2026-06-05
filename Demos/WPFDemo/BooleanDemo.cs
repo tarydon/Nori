@@ -24,7 +24,7 @@ class BooleanScene : Scene2 {
 
          // Results in multiple intersection polys
          [Poly.Rectangle (1700, 50, 2150, 650),
-         Poly.Rectangle (1850, 150, 2300, 550).Subtract (Poly.Rectangle (1850, 275, 2225, 425)).First ()],
+//         Poly.Rectangle (1850, 150, 2300, 550).Subtract (Poly.Rectangle (1850, 275, 2225, 425)).First ()],
 
          // Combine outer with hole
          [Poly.Parse ("M1700,850H2500V1250Q2300,1450,-1H1900Q1700,1250,1Z"),

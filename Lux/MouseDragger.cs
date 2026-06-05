@@ -25,9 +25,7 @@ public abstract class MouseDragger {
          // When the mouse button is released, stop dragging (completed)
          mouse.Clicks.Where (a => a.IsRelease).Subscribe (_ => Finish (true)),
          // When the ESC key is pressed, stop dragging (cancelled)
-         Hub.Keyboard.Keys.Where (a => a.IsPress (EKey.Escape)).Subscribe (_ => Finish (false)),
-         // Whem mouse-capture is lost, stop dragging (cancelled)
-         mouse.Lost.Subscribe (_ => Finish (false)));
+         Hub.Keyboard.Keys.Where (a => a.IsPress (EKey.Escape)).Subscribe (_ => Finish (false)));
 
       // All captures set up, call the Start and Move event to initiate the drag cycle
       // NOTE: Do this asynchronously because this is still inside the constructor

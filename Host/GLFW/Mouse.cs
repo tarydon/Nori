@@ -9,8 +9,6 @@ class GLFWMouse : IMouse {
    public IObservable<bool> Enter => mEnter ??= new (HWnd);
    MouseEnterWrap? mEnter;
 
-   public IObservable<Unit> Lost => throw new NotImplementedException ();
-
    public IObservable<MouseWheelInfo> Wheel => mWheel ??= new (HWnd);
    MouseWheelWrap? mWheel;
 
@@ -25,8 +23,9 @@ class GLFWMouse : IMouse {
 #region class MouseClickWrap -----------------------------------------------------------------------
 /// <summary>Helper used to generate events for mouse-button-press, mouse-button-release</summary>
 class MouseClickWrap : EventWrapper<MouseClickInfo> {
-   public MouseClickWrap (HWindow w) : base (w) => mCallback = Callback;
+   public MouseClickWrap (HWindow w) => (mWindow, mCallback) = (w, Callback);
    readonly MouseButtonCallback mCallback;
+   readonly HWindow mWindow;
 
    protected override void Connect (bool connect) => SetMouseButtonCallback (mWindow, connect ? mCallback : null);
    void Callback (HWindow _, EMouseButton b, EKeyState s, EModifier m) => Push (new MouseClickInfo (b, GetCursorPosition (mWindow), m, s));
@@ -36,8 +35,9 @@ class MouseClickWrap : EventWrapper<MouseClickInfo> {
 #region class MouseEnterWrap -----------------------------------------------------------------------
 /// <summary>Helper used to generate events when the mouse enters / leaves the window</summary>
 class MouseEnterWrap : EventWrapper<bool> {
-   public MouseEnterWrap (HWindow w) : base (w) => mCallback = Callback;
-   BoolCallback mCallback;
+   public MouseEnterWrap (HWindow w) => (mWindow, mCallback) = (w, Callback);
+   readonly BoolCallback mCallback;
+   readonly HWindow mWindow;
 
    protected override void Connect (bool connect) => SetCursorEnterCallback (mWindow, connect ? mCallback : null);
    void Callback (HWindow _, bool enter) => Push (enter);
@@ -47,8 +47,9 @@ class MouseEnterWrap : EventWrapper<bool> {
 #region class MouseMoveWrap ------------------------------------------------------------------------
 /// <summary>Helper used to generate events for mouse-moves</summary>
 class MouseMoveWrap : EventWrapper<Vec2S> {
-   public MouseMoveWrap (HWindow w) : base (w) => mCallback = Callback;
+   public MouseMoveWrap (HWindow w) => (mWindow, mCallback) = (w, Callback);
    readonly Vec2FCallback mCallback;
+   readonly HWindow mWindow;
 
    protected override void Connect (bool connect) => SetCursorPosCallback (mWindow, connect ? mCallback : null);
    void Callback (HWindow _, double x, double y) => Push (new ((short)(x + 0.5), (short)(y + 0.5)));
@@ -58,8 +59,9 @@ class MouseMoveWrap : EventWrapper<Vec2S> {
 #region class MouseWheelWrap -----------------------------------------------------------------------
 /// <summary>Helper used to generate events for mouse-wheel rotations</summary>
 class MouseWheelWrap : EventWrapper<MouseWheelInfo> {
-   public MouseWheelWrap (HWindow w) : base (w) => mCallback = Callback;
+   public MouseWheelWrap (HWindow w) => (mWindow, mCallback) = (w, Callback);
    readonly Vec2FCallback mCallback;
+   readonly HWindow mWindow;
 
    protected override void Connect (bool connect) => SetScrollCallback (mWindow, connect ? mCallback : null);
    void Callback (HWindow _, double __, double yWheel) => Push (new MouseWheelInfo ((int)Math.Round (yWheel), GetCursorPosition (mWindow)));

@@ -50,8 +50,6 @@ public interface IMouse {
    public IObservable<MouseClickInfo> Clicks { get; }
    /// <summary>Observe this to know when the mouse enters/leaves the client area</summary>
    public IObservable<bool> Enter { get; }
-   /// <summary>Observe this to know when mouse-capture is lost</summary>
-   public IObservable<Unit> Lost { get; }
    /// <summary>Observe this to know when the mouse is moved</summary>
    public IObservable<Vec2S> Moves { get; }
    /// <summary>Observe this to know when mouse-wheel is rotated</summary>
@@ -78,8 +76,8 @@ public interface IDispatcher {
    public Task<T> InvokeAsync<T> (Func<T> func);
 
    public IDisposable Timer (TimeSpan interval, bool repeat, Action callback) {
-      var t = new Timer (_ => Post (callback), null, interval, interval);
-      return new TimerDisposer (t);
+      var t = new Timer (_ => Post (callback), null, interval, repeat ? interval : Timeout.InfiniteTimeSpan);
+      return new TimerHandle (t);
    }
 
    public void VerifyAccess () {
@@ -101,10 +99,12 @@ public interface IDispatcher {
       return InvokeAsync (() => { });
    }
 
-   class TimerDisposer : IDisposable {
-      public TimerDisposer (Timer t) { mTimer = t; mList.Add (this); }
-      public void Dispose () { if (mList.Remove (this)) mTimer.Dispose (); }
+   // Helper used to keep Timer objects alive until they are actually disposed. 
+   class TimerHandle : IDisposable {
+      public TimerHandle (Timer timer) { mTimer = timer; sActive.Add (this); }
+      public void Dispose () { if (sActive.Remove (this)) mTimer.Dispose (); }
+
+      static readonly HashSet<TimerHandle> sActive = [];
       readonly Timer mTimer;
-      static List<TimerDisposer> mList = [];
    }
 }

@@ -5,6 +5,7 @@
 using System.Text;
 using Nori;
 using Ptr = nint;
+using unsafe GLDEBUGPROC = delegate* unmanaged< uint, uint, uint, uint, int, byte*, void*, void>;
 
 static unsafe class GL2 {
    // Select the active texture unit
@@ -67,6 +68,25 @@ static unsafe class GL2 {
    public static HShader CreateShader (EShader type) => glCreateShader (type);
    static delegate* unmanaged<EShader, HShader> glCreateShader;
 
+   // Install the debug message callback
+   public static void SetDebugOn () {
+      Enable (ECap.DebugOutput); Enable (ECap.DebugOutputSynchronous);
+      glDebugMessageCallback (&DebugCallback, null);
+      DebugMessageControl (ESeverity.DontCare, false);
+      DebugMessageControl (ESeverity.High, true);
+   }
+   static delegate* unmanaged<GLDEBUGPROC,void*,void> glDebugMessageCallback;
+
+   [UnmanagedCallersOnly]
+   static void DebugCallback (uint source, uint type, uint id, uint severity, int length, byte* message, void* userParam) {
+      string msg = Encoding.UTF8.GetString (new ReadOnlySpan<byte> (message, length));
+      Debug.WriteLine (msg);
+   }
+
+   static void DebugMessageControl (ESeverity severity, bool enable)
+      => glDebugMessageControl (0x1100, 0x1100, severity, 0, null, (byte)(enable ? 1 : 0));
+   static delegate* unmanaged<uint, uint, ESeverity, int, uint*, byte, void> glDebugMessageControl;
+
    // Delete a named buffer object
    public static void DeleteBuffer (HBuffer buffer) => glDeleteBuffers (1, &buffer);
    static delegate* unmanaged<int, HBuffer*, void> glDeleteBuffers;
@@ -113,8 +133,8 @@ static unsafe class GL2 {
    static delegate* unmanaged<void> glFinish;
 
    // Attach render-buffer to frame buffer
-   public static void FrameBufferRenderBuffer (EFrameBufferTarget ftarget, EFrameBufferAttachment attachment, HRenderBuffer rbo) => glFramebufferRenderbuffer (ftarget, attachment, rbo);
-   static delegate* unmanaged<EFrameBufferTarget, EFrameBufferAttachment, HRenderBuffer, void> glFramebufferRenderbuffer;
+   public static void FrameBufferRenderBuffer (EFrameBufferTarget ftarget, EFrameBufferAttachment attachment, HRenderBuffer rbo) => glFramebufferRenderbuffer (ftarget, attachment, ERenderBufferTarget.RenderBuffer, rbo);
+   static delegate* unmanaged<EFrameBufferTarget, EFrameBufferAttachment, ERenderBufferTarget, HRenderBuffer, void> glFramebufferRenderbuffer;
 
    // Allocate a new data-storage buffer object
    public static HBuffer GenBuffer () { HBuffer buffer; glGenBuffers (1, &buffer); return buffer; }
@@ -321,13 +341,15 @@ static unsafe class GL2 {
       glDeleteBuffers = (delegate* unmanaged<int, HBuffer*, void>)Get ("glDeleteBuffers");
       glDeleteTextures = (delegate* unmanaged<int, HTexture*, void>)Get ("glDeleteTextures");
       glDeleteVertexArrays = (delegate* unmanaged<int, HVertexArray*, void>)Get ("glDeleteVertexArrays");
+      glDebugMessageCallback = (delegate* unmanaged<GLDEBUGPROC, void*, void>)Get ("glDebugMessageCallback");
+      glDebugMessageControl = (delegate* unmanaged<uint, uint, ESeverity, int, uint*, byte, void>)Get ("glDebugMessageControl");
       glDrawArrays = (delegate* unmanaged<EMode, int, int, void>)Get ("glDrawArrays");
       glDrawArraysInstanced = (delegate* unmanaged<EMode, int, int, int, void>)Get ("glDrawArraysInstanced");
       glDrawElementsBaseVertex = (delegate* unmanaged<EMode, int, EIndexType, Ptr, int, void>)Get ("glDrawElementsBaseVertex");
       glEnable = (delegate* unmanaged<ECap, void>)Get ("glEnable");
       glEnableVertexAttribArray = (delegate* unmanaged<int, void>)Get ("glEnableVertexAttribArray");
       glFinish = (delegate* unmanaged<void>)Get ("glFinish");
-      glFramebufferRenderbuffer = (delegate* unmanaged<EFrameBufferTarget, EFrameBufferAttachment, HRenderBuffer, void>)Get ("glFramebufferRenderbuffer");
+      glFramebufferRenderbuffer = (delegate* unmanaged<EFrameBufferTarget, EFrameBufferAttachment, ERenderBufferTarget, HRenderBuffer, void>)Get ("glFramebufferRenderbuffer");
       glGenBuffers = (delegate* unmanaged<int, HBuffer*, void>)Get ("glGenBuffers");
       glGenFramebuffers = (delegate* unmanaged<int, HFrameBuffer*, void>)Get ("glGenFramebuffers");
       glGenRenderbuffers = (delegate* unmanaged<int, HRenderBuffer*, void>)Get ("glGenRenderbuffers");

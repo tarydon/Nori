@@ -28,7 +28,7 @@ class DemoScene : Scene2 {
       string message = "Welcome to Nori.";
       var size = mFace.Measure (message, true);
       int dx = size.Width, dy = size.Height;
-      Vec2S cen = new Vec2S (dx / 2 + dy, dy / 2 + dy);
+      Vec2S cen = new (dx / 2 + dy, dy / 2 + dy);
       var vn1 = new SimpleVN (
          () => (Lux.Color, Lux.TypeFace, Lux.ZLevel) = (new (255, 224, 226, 228), mFace, 1),
          () => Lux.Text (message, new Vec2S (cen.X - dx / 2, cen.Y + dy / 2))

@@ -73,3 +73,57 @@ public class MultiDispose : IDisposable {
    public void Dispose () { mDisposables.ForEach (a => a?.Dispose ()); mDisposables.Clear (); }
 }
 #endregion
+
+#region class EventWrapper<T> ----------------------------------------------------------------------
+/// <summary>
+/// Helper class to wrap events / callbacks into IObservables
+/// </summary>
+/// Derive a class from this, implement Connect() to sign up/disconnect from the event
+/// or callback. Then, use Push() to push events. This class manages any number of observers,
+/// calls Connect lazily (only when first subscriber signs up) and manages the disposal of
+/// observers etc. 
+public abstract class EventWrapper<T> : IObservable<T> {
+   // Methods ------------------------------------------------------------------
+   /// <summary>Implements the IObservable contract</summary>
+   /// When the first subscriber connects, this calls Connect(true) on its derived
+   /// class, which in turn will actually connect an event handler to the underlying
+   /// event. This returns an instance of the Disposer (see below) that when disposed
+   /// disconnects the observer from our list of observers.
+   public IDisposable Subscribe (IObserver<T> observer) {
+      mObservers.Add (observer);
+      if (mObservers.Count == 1) Connect (true);
+      return new Disposer (this, observer);
+   }
+   List<IObserver<T>> mObservers = [];
+
+   // Implementation -----------------------------------------------------------
+   // Must be implemented by derived class to actually connect / disconnect from the event
+   abstract protected void Connect (bool connect);
+
+   // Used internally by derived clases to push an item (KeyInfo / MouseInfo etc)
+   // to all observers. Note that even when we have multiple observers connected, there is
+   // only event handler that is signed up (since we call Connect only when the first observer
+   // signs up). This push method will then distribute the event to all observers that have
+   // signed up.
+   // NOTE: This is done in a last-come, first-served method. The most recent observer to
+   // sign up will get the first look at the event.
+   protected void Push (T item) {
+      for (int i = mObservers.Count - 1; i >= 0; i--)
+         mObservers[i].OnNext (item);
+   }
+
+   // Called by the Disposer type (see below) to remove this particular observer from
+   // the list of observers this class maintains. Once the last observer is gone, it
+   // calls Connect(false) to disconnect the event handler
+   void Remove (IObserver<T> observer) {
+      if (mObservers.Remove (observer) && mObservers.Count == 0)
+         Connect (false);
+   }
+
+   // Nested types -------------------------------------------------------------
+   // An implementation of IDisposable that removes this observer from its owner
+   class Disposer (EventWrapper<T> owner, IObserver<T> observer) : IDisposable {
+      public void Dispose () => owner.Remove (observer);
+   }
+}
+#endregion
