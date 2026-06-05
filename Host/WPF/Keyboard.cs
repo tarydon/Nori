@@ -1,4 +1,8 @@
-﻿using System.Runtime.InteropServices;
+// ────── ╔╗
+// ╔═╦╦═╦╦╬╣ Keyboard.cs
+// ║║║║╬║╔╣║ <<TODO>>
+// ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
+using System.Runtime.InteropServices;
 namespace Nori;
 
 class WPFKeyboard : IKeyboard {
@@ -10,7 +14,7 @@ class WPFKeyboard : IKeyboard {
          EModifier mods = EModifier.None;
          if (Check (LMENU) || Check (RMENU)) mods |= EModifier.Alt;
          if (Check (LSHIFT) || Check (RSHIFT)) mods |= EModifier.Shift;
-         if (Check (LCONTROL) || Check (RCONTROL)) mods |= EModifier.Control;
+         if (Check (LCONTROL) || Check (RCONTROL)) mods |= EModifier.Ctrl;
          return mods;
       }
    }
@@ -66,7 +70,7 @@ class KeysWrap : EventWrapper<KeyInfo> {
 
       var mods = EModifier.None;
       if ((e.Modifiers & Keys.Shift) > 0) mods |= EModifier.Shift;
-      if ((e.Modifiers & Keys.Control) > 0) mods |= EModifier.Control;
+      if ((e.Modifiers & Keys.Control) > 0) mods |= EModifier.Ctrl;
       if ((e.Modifiers & Keys.Alt) > 0) mods |= EModifier.Alt;
       Push (new (key, mods, state));
       // REFINE: Use e.Modifiers to distinguish between Enter and Numpad-Enter etc

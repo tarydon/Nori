@@ -1,4 +1,8 @@
-﻿namespace Nori;
+// ────── ╔╗
+// ╔═╦╦═╦╦╬╣ Keyboard.cs
+// ║║║║╬║╔╣║ <<TODO>>
+// ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
+namespace Nori;
 using static GLFW;
 
 class GLFWKeyboard : IKeyboard {
@@ -10,8 +14,8 @@ class GLFWKeyboard : IKeyboard {
          EModifier mod = EModifier.None;
          if (GetKey (HWnd, EKey.LShift) == EKeyState.Pressed) mod |= EModifier.Shift;
          if (GetKey (HWnd, EKey.RShift) == EKeyState.Pressed) mod |= EModifier.Shift;
-         if (GetKey (HWnd, EKey.LCtrl) == EKeyState.Pressed) mod |= EModifier.Control;
-         if (GetKey (HWnd, EKey.RCtrl) == EKeyState.Pressed) mod |= EModifier.Control;
+         if (GetKey (HWnd, EKey.LCtrl) == EKeyState.Pressed) mod |= EModifier.Ctrl;
+         if (GetKey (HWnd, EKey.RCtrl) == EKeyState.Pressed) mod |= EModifier.Ctrl;
          if (GetKey (HWnd, EKey.LAlt) == EKeyState.Pressed) mod |= EModifier.Alt;
          if (GetKey (HWnd, EKey.RAlt) == EKeyState.Pressed) mod |= EModifier.Alt;
          return mod;

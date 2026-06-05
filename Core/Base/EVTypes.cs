@@ -17,29 +17,21 @@ public enum EKey {
    /// <summary>Keys '0' .. '9' on the numeric keypad</summary>
    N0 = 320, N1, N2, N3, N4, N5, N6, N7, N8, N9,
 
-   /// <summary>
-   /// Punctuation and symbols
-   /// </summary>
+   /// <summary>Punctuation and symbols</summary>
    Space = ' ', Apostrophe = '\'', Comma = ',', Minus = '-', Period = '.', Slash = '/',
    SemiColon = ';', Equal = '=', LeftBracket = '[', Backslash = '\\', RightBracket = ']',
    GraveAccent = '`',
 
-   /// <summary>
-   /// Navigation and other keys
-   /// </summary>
+   /// <summary>Navigation and other keys</summary>
    Escape = 256, Enter = 257, Tab = 258, Backspace = 259, Insert = 260, Delete = 261,
    Right = 262, Left = 263, Down = 264, Up = 265, PageUp = 266, PageDown = 267, Home = 268,
    End = 269, PrintScreen = 283, Pause = 284,
 
-   /// <summary>
-   /// Operators on numeric keypad
-   /// </summary>
+   /// <summary>Operators on numeric keypad</summary>
    NDecimal = 330, NDivide = 331, NMultiply = 332, NSubtract = 333, NAdd = 334, NEnter = 335,
    NEqual = 336,
 
-   /// <summary>
-   /// Modifier keys
-   /// </summary>
+   /// <summary>Modifier keys</summary>
    LShift = 340, LCtrl = 341, LAlt = 342, LSuper = 343, RShift = 344, RCtrl = 345, RAlt = 346,
    RSuper = 347, Menu = 348, CapsLock = 280, ScrollLock = 281, NumLock = 282,
 }
@@ -48,7 +40,7 @@ public enum EKey {
 #region enum EKeyModifier --------------------------------------------------------------------------
 /// <summary>Used in KeyInfo to specify which modifiers (Shift / Control / Alt) are being held down</summary>
 [Flags]
-public enum EModifier : byte { None = 0, Shift = 1, Control = 2, Alt = 4 }
+public enum EModifier : byte { None = 0, Shift = 1, Ctrl = 2, Alt = 4 }
 #endregion
 
 #region enum EKeyState -----------------------------------------------------------------------------

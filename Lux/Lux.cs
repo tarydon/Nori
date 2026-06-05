@@ -3,6 +3,7 @@
 // ║║║║╬║╔╣║ The Lux class: public interface to the Lux rendering engine
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 using System.Reactive.Subjects;
+using System.Reflection;
 namespace Nori;
 
 #region class Lux ----------------------------------------------------------------------------------
@@ -60,6 +61,7 @@ public static partial class Lux {
    public static Scene? UIScene {
       get => mScenes.Count > 0 ? mScenes[0].Scene : null;
       set {
+         Init ();
          BackFacesPink = false;
          mScenes.ForEach (a => a.Scene.Detach ());
          mScenes.Clear ();
@@ -109,6 +111,19 @@ public static partial class Lux {
    /// pick buffer
    public static void FlushPickBuffer () => mPickBufferValid = false;
    static bool mPickBufferValid;
+
+   // Init method - initializes 
+   internal static void Init () {
+      if (!sInited) {
+         sInited = true; 
+         VNode.RegisterAssembly (Assembly.GetExecutingAssembly ());
+         Hub.OpenGL.OnPaint = OnPaint;
+      }
+
+      static void OnPaint (int x, int y)
+         => Render (UIScene, new Vec2S (x, y), ETarget.Screen, DIBitmap.EFormat.Unknown);
+   }
+   static bool sInited;
 
    /// <summary>This does a 'pick' operation on the current UIScene</summary>
    /// This effectively returns the VNode that lies underneat the current mouse position.

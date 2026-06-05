@@ -10,6 +10,8 @@ namespace Nori;
 /// types of scenes, and the important Draw() method that will be overridden in derived types
 /// to draw the content
 public abstract class Scene {
+   protected Scene () => Lux.Init ();
+
    // Properties ---------------------------------------------------------------
    /// <summary>Background color (clear color) for this scene</summary>
    public Color4 BgrdColor {

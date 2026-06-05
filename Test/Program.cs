@@ -16,8 +16,8 @@ class Program {
    // The constructor gathers all the tests, and also parses the command line arguments
    Program (string[] args) {
       Lib.Init ();
-      Lux2.Init (); 
-      Lux.CreatePanel (true);
+      GLFWHost.Init (() => { });
+      mWindow = new Window (1024, 768, "Nori-Testing", Window.EFlags.Default & ~Window.EFlags.Visible);
       foreach (var arg in args) {
          if (int.TryParse (arg, out int n)) {
             if (n >= 0) mTestID.Add (n);
@@ -27,6 +27,7 @@ class Program {
    }
    readonly List<int> mTestID = [];       // If non-empty, run only these tests
    readonly List<int> mFixtureID = [];    // If non-empty, run only these fixtures
+   readonly Window mWindow;
 
    // This runs the tests in this assembly
    void Run () {

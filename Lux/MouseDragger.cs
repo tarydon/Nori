@@ -70,6 +70,7 @@ public abstract class MouseDragger {
 public class SceneManipulator {
    // Constructor --------------------------------------------------------------
    public SceneManipulator () {
+      Lux.Init ();
       Hub.Mouse.Clicks.Where (a => a.IsPress).Subscribe (OnMouseClick);
       Hub.Mouse.Wheel.Subscribe (OnMouseWheel);
       Hub.Keyboard.Keys.Where (a => a.IsPress ()).Subscribe (OnKey);
@@ -78,7 +79,7 @@ public class SceneManipulator {
    // Implementation -----------------------------------------------------------
    // When Ctrl+E is pressed, do a zoom-extents
    void OnKey (KeyInfo ki) {
-      if (ki.Key == EKey.E && ki.Modifier == EModifier.Control) 
+      if (ki.Key == EKey.E && ki.Modifier == EModifier.Ctrl) 
          Lux.PickScene (Hub.Mouse.Pos)?.ZoomExtents ();
    }
 

@@ -3,8 +3,6 @@
 // ║║║║╬║╔╣║ Tests of Lux rendering system
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 namespace Nori.Testing;
-
-using System.ComponentModel.Design.Serialization;
 using static Lux;
 using NPoly = Nori.Poly;
 

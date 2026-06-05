@@ -6,9 +6,7 @@ namespace Nori;
 
 /// <summary>A central whiteboard</summary>
 public static class Hub {
-   /// <summary>
-   /// The current dispatcher (used to execute code synchronously/asynchronously on UI thread)
-   /// </summary>
+   /// <summary>The current dispatcher (used to execute code synchronously/asynchronously on UI thread)</summary>
    public static IDispatcher Dispatcher { get; set; } = null!;
 
    /// <summary>Abstraction for the current keyboard (provides keys, modifiers etc)</summary>

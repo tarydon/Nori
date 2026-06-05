@@ -1,4 +1,8 @@
-﻿using System.Reactive;
+// ────── ╔╗
+// ╔═╦╦═╦╦╬╣ Mouse.cs
+// ║║║║╬║╔╣║ <<TODO>>
+// ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
+using System.Reactive;
 namespace Nori;
 using static GLFW;
 

@@ -2,8 +2,6 @@
 // ╔═╦╦═╦╦╬╣ MainWindow.xaml.cs
 // ║║║║╬║╔╣║ Main window of WPF demo application (various scenes implemented)
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
-using System.Drawing;
-using System.Reactive.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using Nori;
@@ -15,7 +13,6 @@ public partial class MainWindow : Window {
       Lib.Init ();
       InitializeComponent ();
       mContent.Child = WPFHost.Create (this, OnLuxReady);
-      Lux2.Init ();  // REMOVETHIS later
    }
 
    void OnLuxReady () {

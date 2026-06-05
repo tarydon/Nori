@@ -75,9 +75,7 @@ public class MultiDispose : IDisposable {
 #endregion
 
 #region class EventWrapper<T> ----------------------------------------------------------------------
-/// <summary>
-/// Helper class to wrap events / callbacks into IObservables
-/// </summary>
+/// <summary>Helper class to wrap events / callbacks into IObservables</summary>
 /// Derive a class from this, implement Connect() to sign up/disconnect from the event
 /// or callback. Then, use Push() to push events. This class manages any number of observers,
 /// calls Connect lazily (only when first subscriber signs up) and manages the disposal of

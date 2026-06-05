@@ -1,4 +1,8 @@
-﻿using System.Reactive;
+// ────── ╔╗
+// ╔═╦╦═╦╦╬╣ Mouse.cs
+// ║║║║╬║╔╣║ <<TODO>>
+// ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
+using System.Reactive;
 using System.Windows.Controls.Ribbon.Primitives;
 namespace Nori;
 
