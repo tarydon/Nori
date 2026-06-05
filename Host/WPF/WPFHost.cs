@@ -36,13 +36,13 @@ class WPFDispatcher : IDispatcher {
 }
 
 class WPFOpenGL : IOpenGL {
-   public WPFOpenGL () => Lib = NativeLibrary.Load ("opengl32.dll");
-   readonly Ptr Lib;
+   public WPFOpenGL () => GLLib = NativeLibrary.Load ("opengl32.dll");
+   readonly Ptr GLLib;
 
    public Ptr GetGLProcAddress (string name) {
       Ptr proc = WGLGetProcAddress (name);
       if (proc == 0)
-         try { proc = NativeLibrary.GetExport (Lib, name); } catch { }
+         try { proc = NativeLibrary.GetExport (GLLib, name); } catch { }
       if (proc == 0) throw new Exception ($"OpenGL function '{name}' not found.");
       return proc; 
    }
@@ -54,7 +54,8 @@ class WPFOpenGL : IOpenGL {
    public float DPIScale {
       get {
          if (mDPIScale == 0) {
-            if (PresentationSource.FromVisual (WPFHost.Main) is { } source) {
+            if (Lib.Testing) mDPIScale = 1; 
+            else if (PresentationSource.FromVisual (WPFHost.Main) is { } source) {
                var xfm = source.CompositionTarget.TransformToDevice;
                mDPIScale = (float)(xfm.M11 + xfm.M22) / 2;
             } else return 1;

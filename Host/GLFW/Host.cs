@@ -37,7 +37,8 @@ class GLFWOpenGL : IOpenGL {
    public float DPIScale {
       get {
          if (mDPIScale == 0) {
-            if (GLFWHost.Win is { } win) mDPIScale = win.DPIScale;
+            if (Lib.Testing) mDPIScale = 1; 
+            else if (GLFWHost.Win is { } win) mDPIScale = win.DPIScale;
             else return 1; 
          }
          return mDPIScale;

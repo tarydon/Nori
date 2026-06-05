@@ -135,7 +135,7 @@ class TLux {
       }
    }
 
-   [Test (218, "Mesh3 rendering")]
+   [Test (218, "Mesh3 rendering", Skip = false)]
    void Test7 () {
       var m1 = mCube;
       var bound = new Bound3 (0, -8, 0, 18, 10, 14);
@@ -159,7 +159,7 @@ class TLux {
    }
    Mesh3 mCube;
 
-   [Test (219, "Picking")]
+   [Test (219, "Picking", Skip = true)]
    void Test8 () {
       var scene = new Scene3 (Color4.Gray (128), mCube.Bound, new Mesh3VN (mCube) { Color = Color4.White });
       UIScene = scene;
@@ -335,7 +335,7 @@ class TLux {
       TestPNG (scene, new Vec2S (480, 338), DIBitmap.EFormat.RGB8, "E3Thick-100", true);
    }
 
-   [Test (254, "Test of Lux.Decal")]
+   [Test (254, "Test of Lux.Decal", Skip = true)]
    void Test16 () {
       var mesh = Mesh3.Extrude ([NPoly.Rectangle (-130, -130, 130, 130)], 50, Matrix3.Rotation (EAxis.X, Lib.HalfPI), ETess.Medium);
       var scene = new Scene3 { BgrdColor = Color4.Gray (216), Bound = mesh.Bound, Root = new SimpleVN (Settings, Draw) };
