@@ -26,6 +26,7 @@ public class Window {
    /// <summary>Window creation flags</summary>
    [Flags]
    public enum EFlags {      
+      None = 0,
       Visible = 1 << 0,
       Resizeable = 1 << 1,
       Decorated = 1 << 2,

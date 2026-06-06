@@ -159,7 +159,7 @@ class TLux {
    }
    Mesh3 mCube;
 
-   [Test (219, "Picking", Skip = true)]
+   [Test (219, "Picking")]
    void Test8 () {
       var scene = new Scene3 (Color4.Gray (128), mCube.Bound, new Mesh3VN (mCube) { Color = Color4.White });
       UIScene = scene;

@@ -17,7 +17,9 @@ class Program {
    Program (string[] args) {
       Lib.Init ();
       GLFWHost.Init (() => { });
-      mWindow = new Window (1024, 768, "Nori-Testing", Window.EFlags.Default & ~Window.EFlags.Visible);
+      // Create an invisible, fixed size, undecorated window (just so we have an OpenGL
+      // context for rendering offscreen images)
+      mWindow = new Window (500, 500, "Nori-Testing", Window.EFlags.None);
       foreach (var arg in args) {
          if (int.TryParse (arg, out int n)) {
             if (n >= 0) mTestID.Add (n);
@@ -37,6 +39,7 @@ class Program {
       TestRunner.StopOnFail = args.Contains ("-STOP");
       TestRunner.RunDiff = args.Contains ("-DIFF");
       TestRunner.OnlyFailed = args.Contains ("-FAILED");
+      TestRunner.OnlySkipped = args.Contains ("-SKIPPED");
       string fail = NT.File ("failed.txt");
       if (File.Exists (fail)) {
          // If the 'failed.txt' exists, load it in
@@ -49,6 +52,8 @@ class Program {
 
    // This is the filter used to run specific tests or fixtures
    TestRunner.ETest Filter (Test t) {
+      if (TestRunner.OnlySkipped && !t.Skip)
+         return TestRunner.ETest.Hide;
       if (TestRunner.OnlyFailed && !TestRunner.FailList.Contains (t.Id))
          return TestRunner.ETest.Hide;
       if (mTestID.Count > 0 || mFixtureID.Count > 0)

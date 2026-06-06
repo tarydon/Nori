@@ -129,7 +129,7 @@ public static partial class Lux {
    /// This effectively returns the VNode that lies underneat the current mouse position.
    public static VNode? Pick (Vec2S pos) {
       // If we're doign any simulation, return null
-      if (Lib.Testing || mRendering) return null;
+      if (mRendering) return null;
       var scene = PickScene (pos);
       if (scene == null || sRenderCompletes.Any (a => a.Scene == scene)) return null;
       var viewport = scene.Rect.Size;
