@@ -9,12 +9,12 @@ class WPFKeyboard : IKeyboard {
    public IObservable<KeyInfo> Keys => mKeys ??= new (Panel);
    KeysWrap? mKeys;
 
-   public EModifier Modifiers {
+   public EKeyModifier Modifiers {
       get {
-         EModifier mods = EModifier.None;
-         if (Check (LMENU) || Check (RMENU)) mods |= EModifier.Alt;
-         if (Check (LSHIFT) || Check (RSHIFT)) mods |= EModifier.Shift;
-         if (Check (LCONTROL) || Check (RCONTROL)) mods |= EModifier.Ctrl;
+         EKeyModifier mods = EKeyModifier.None;
+         if (Check (LMENU) || Check (RMENU)) mods |= EKeyModifier.Alt;
+         if (Check (LSHIFT) || Check (RSHIFT)) mods |= EKeyModifier.Shift;
+         if (Check (LCONTROL) || Check (RCONTROL)) mods |= EKeyModifier.Control;
          return mods;
       }
    }
@@ -68,10 +68,10 @@ class KeysWrap : EventWrapper<KeyInfo> {
    void Process (KeyEventArgs e, EKeyState state) {
       if (!mMap.TryGetValue (e.KeyCode, out EKey key)) key = (EKey)e.KeyCode;
 
-      var mods = EModifier.None;
-      if ((e.Modifiers & Keys.Shift) > 0) mods |= EModifier.Shift;
-      if ((e.Modifiers & Keys.Control) > 0) mods |= EModifier.Ctrl;
-      if ((e.Modifiers & Keys.Alt) > 0) mods |= EModifier.Alt;
+      var mods = EKeyModifier.None;
+      if ((e.Modifiers & Keys.Shift) > 0) mods |= EKeyModifier.Shift;
+      if ((e.Modifiers & Keys.Control) > 0) mods |= EKeyModifier.Control;
+      if ((e.Modifiers & Keys.Alt) > 0) mods |= EKeyModifier.Alt;
       Push (new (key, mods, state));
       // REFINE: Use e.Modifiers to distinguish between Enter and Numpad-Enter etc
    }

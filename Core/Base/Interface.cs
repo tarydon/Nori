@@ -91,16 +91,16 @@ public interface IKeyboard {
    /// <summary>Observe this to know when a key is pressed or released</summary>
    public IObservable<KeyInfo> Keys { get; }
    /// <summary>Tells us which modifiers (SHIFT/CTRL/ALT) are being held down now</summary>
-   public EModifier Modifiers { get; }
+   public EKeyModifier Modifiers { get; }
    /// <summary>Observe this to get the text that was typed</summary>
    public IObservable<string> Text { get; }
 
    /// <summary>Is the Shift modifier key currently pressed?</summary>
-   public bool IsShiftPressed => (Modifiers & EModifier.Shift) > 0;
+   public bool IsShiftDown => (Modifiers & EKeyModifier.Shift) > 0;
    /// <summary>Is the Ctrl modifier key currently pressed?</summary>
-   public bool IsCtrlPressed => (Modifiers & EModifier.Ctrl) > 0;
+   public bool IsCtrlDown => (Modifiers & EKeyModifier.Control) > 0;
    /// <summary>Is the Alt modifier key currently pressed?</summary>
-   public bool IsAltPressed => (Modifiers & EModifier.Alt) > 0;
+   public bool IsAltDown => (Modifiers & EKeyModifier.Alt) > 0;
 }
 #endregion
 

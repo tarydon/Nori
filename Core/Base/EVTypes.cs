@@ -40,7 +40,7 @@ public enum EKey {
 #region enum EKeyModifier --------------------------------------------------------------------------
 /// <summary>Used in KeyInfo to specify which modifiers (Shift / Control / Alt) are being held down</summary>
 [Flags]
-public enum EModifier : byte { None = 0, Shift = 1, Ctrl = 2, Alt = 4 }
+public enum EKeyModifier : byte { None = 0, Shift = 1, Control = 2, Alt = 4 }
 #endregion
 
 #region enum EKeyState -----------------------------------------------------------------------------
@@ -50,14 +50,14 @@ public enum EKeyState : byte { Released = 0, Pressed = 1, Repeat = 2 }
 
 #region struct KeyInfo -----------------------------------------------------------------------------
 /// <summary>Data about a key being pressed or released</summary>
-public readonly struct KeyInfo (EKey key, EModifier modifier, EKeyState state) {
+public readonly struct KeyInfo (EKey key, EKeyModifier modifier, EKeyState state) {
    public bool IsPress () => State == EKeyState.Pressed;
    public bool IsPress (EKey key) => key == Key && State == EKeyState.Pressed;
 
    /// <summary>Which key on the keyboard was pressed or released</summary>
    public readonly EKey Key = key;
    /// <summary>Which modifiers (like Shift, Ctrl, Alt) are being held down</summary>
-   public readonly EModifier Modifier = modifier;
+   public readonly EKeyModifier Modifier = modifier;
    /// <summary>Is the key being pressed or released</summary>
    public readonly EKeyState State = state;
 
@@ -72,7 +72,7 @@ public enum EMouseButton : byte { Left, Right, Middle }
 
 #region struct MouseClickInfo ----------------------------------------------------------------------
 /// <summary>Data about a mouse button being pressed or released</summary>
-public readonly struct MouseClickInfo (EMouseButton button, Vec2S position, EModifier modifier, EKeyState state) {
+public readonly struct MouseClickInfo (EMouseButton button, Vec2S position, EKeyModifier modifier, EKeyState state) {
    public bool IsPress => State == EKeyState.Pressed;
    public bool IsLeftPress => State == EKeyState.Pressed && Button == EMouseButton.Left;
    public bool IsRelease => State == EKeyState.Released;
@@ -82,7 +82,7 @@ public readonly struct MouseClickInfo (EMouseButton button, Vec2S position, EMod
    /// <summary>The position where the mouse was clicked</summary>
    public readonly Vec2S Position = position;
    /// <summary>Which modifiers (like Shift, Control, Alt) are being held down</summary>
-   public readonly EModifier Modifier = modifier;
+   public readonly EKeyModifier Modifier = modifier;
    /// <summary>Is the mouse button being pressed, or being released</summary>
    public readonly EKeyState State = state;
 

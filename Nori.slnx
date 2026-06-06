@@ -20,4 +20,5 @@
   </Folder>
   <Project Path="Core/Nori.Core.csproj" />
   <Project Path="Lux/Nori.Lux.csproj" />
+  <Project Path="GLU/Nori.GLU.csproj" />
 </Solution>

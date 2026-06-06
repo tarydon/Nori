@@ -109,7 +109,7 @@ class TMesh3Build {
       mesh.Triangle.Length.Is (384);
    }
 
-   [Test (168, "Test for Mesh3 Extrude", Skip = true)]
+   [Test (168, "Test for Mesh3 Extrude")]
    void Test4 () {
       var xfm = Matrix3.Rotation (EAxis.Y, 90.D2R ()) * Matrix3.Translation (0, 0, 1);
       Poly[] polys = [Poly.Parse ("M0,0 H100 V30 Q80,50,1 H20 Q0,30,-1 Z"), Poly.Parse ("M60,20 H90 V30 Q80,40,1 H60 Z")];

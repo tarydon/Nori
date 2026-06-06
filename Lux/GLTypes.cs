@@ -93,9 +93,6 @@ public enum EProgramParam : uint {
    InfoLogLength = 0x8B84, LinkStatus = 0x8B82, ActiveAttributes = 0x8B89, ActiveUniforms = 0x8B86
 }
 
-// Various Primitive types used in tessellation
-enum EPrimitive { Triangles = 0x0004, TriangleStrip = 0x0005, TriangleFan = 0x0006 }
-
 // Used with 'patches' type glDrawElements
 public enum EPatchParam : uint { PatchVertices = 36466 }
 
@@ -129,9 +126,6 @@ public enum EPixelInternalFormat : uint { Red = 6403, RGB = 6407, RGBA = 6408 }
 public enum ETexParam : uint { MagFilter = 0x2800, MinFilter = 0x2801, WrapS = 0x2802, WrapT = 0x2803 }
 public enum ETexFilter { Nearest = 9728, Linear = 9729 }
 public enum ETexWrap { Clamp = 10496, Repeat = 10497 }
-// Enumeration for the winding-rule to be used in polygon tessellation and boolean operations
-public enum EWindingRule { Odd = 100130, NonZero = 100131, Positive = 100132, AbsGeqTwo = 100134 }
-
 #endregion
 
 #region Strongly typed handles ---------------------------------------------------------------------
@@ -148,8 +142,6 @@ public enum HBuffer : ulong { Zero }
 public enum HFrameBuffer : ulong { Zero }
 // OpenGL render-buffer object
 public enum HRenderBuffer : ulong { Zero }
-// Tessellator object used by GL based tessellators.
-enum HTesselator : ulong { Zero }
 // Texture object, created with GenTexture
 public enum HTexture : ulong { Zero }
 #endregion

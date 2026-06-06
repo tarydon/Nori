@@ -20,11 +20,11 @@ class STPScene : Scene3 {
 
    public override void Picked (object obj) {
       var kbd = Hub.Keyboard;
-      if (!kbd.IsShiftPressed) mModel.Ents.ForEach (a => a.IsSelected = false);
+      if (!kbd.IsShiftDown) mModel.Ents.ForEach (a => a.IsSelected = false);
       if (obj is E3Surface ent) {
          Lib.Trace ($"Picked: {ent.GetType ().Name} #{ent.Id}");
          ent.IsSelected = true;
-         if (kbd.IsCtrlPressed)
+         if (kbd.IsCtrlDown)
             foreach (var ent2 in mModel.GetNeighbors (ent)) ent2.IsSelected = true;
       }
    }

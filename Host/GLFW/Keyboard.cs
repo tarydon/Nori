@@ -9,15 +9,15 @@ class GLFWKeyboard : IKeyboard {
    public IObservable<KeyInfo> Keys => mKeys ??= new (HWnd);
    KeysWrap? mKeys;
 
-   public EModifier Modifiers {
+   public EKeyModifier Modifiers {
       get {
-         EModifier mod = EModifier.None;
-         if (GetKey (HWnd, EKey.LShift) == EKeyState.Pressed) mod |= EModifier.Shift;
-         if (GetKey (HWnd, EKey.RShift) == EKeyState.Pressed) mod |= EModifier.Shift;
-         if (GetKey (HWnd, EKey.LCtrl) == EKeyState.Pressed) mod |= EModifier.Ctrl;
-         if (GetKey (HWnd, EKey.RCtrl) == EKeyState.Pressed) mod |= EModifier.Ctrl;
-         if (GetKey (HWnd, EKey.LAlt) == EKeyState.Pressed) mod |= EModifier.Alt;
-         if (GetKey (HWnd, EKey.RAlt) == EKeyState.Pressed) mod |= EModifier.Alt;
+         EKeyModifier mod = EKeyModifier.None;
+         if (GetKey (HWnd, EKey.LShift) == EKeyState.Pressed) mod |= EKeyModifier.Shift;
+         if (GetKey (HWnd, EKey.RShift) == EKeyState.Pressed) mod |= EKeyModifier.Shift;
+         if (GetKey (HWnd, EKey.LCtrl) == EKeyState.Pressed) mod |= EKeyModifier.Control;
+         if (GetKey (HWnd, EKey.RCtrl) == EKeyState.Pressed) mod |= EKeyModifier.Control;
+         if (GetKey (HWnd, EKey.LAlt) == EKeyState.Pressed) mod |= EKeyModifier.Alt;
+         if (GetKey (HWnd, EKey.RAlt) == EKeyState.Pressed) mod |= EKeyModifier.Alt;
          return mod;
       }
    }
@@ -35,7 +35,7 @@ class KeysWrap : EventWrapper<KeyInfo> {
    readonly HWindow mWindow;
 
    protected override void Connect (bool connect) => SetKeyCallback (mWindow, connect ? mCallback : null);
-   void Callback (HWindow _, EKey k, int code, EKeyState st, EModifier m) => Push (new KeyInfo (k, m, st));
+   void Callback (HWindow _, EKey k, int code, EKeyState st, EKeyModifier m) => Push (new KeyInfo (k, m, st));
 }
 #endregion
 

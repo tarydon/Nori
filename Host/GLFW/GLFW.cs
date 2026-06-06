@@ -151,12 +151,12 @@ static class GLFW {
    public static extern Ptr SetCursorPosCallback (HWindow window, Vec2FCallback? callback);
 
    // Set up the key pressed/key released callback 
-   [UnmanagedFunctionPointer (Cdecl)] public delegate void KeyCallback (HWindow window, EKey key, int scanCode, EKeyState state, EModifier mods);
+   [UnmanagedFunctionPointer (Cdecl)] public delegate void KeyCallback (HWindow window, EKey key, int scanCode, EKeyState state, EKeyModifier mods);
    [DllImport (LIB, EntryPoint = "glfwSetKeyCallback", CallingConvention = Cdecl)]
    public static extern Ptr SetKeyCallback (HWindow window, KeyCallback? keyCallback);
 
    // Callback to handle mouse-button clicks & releases
-   [UnmanagedFunctionPointer (Cdecl)] public delegate void MouseButtonCallback (HWindow window, EMouseButton button, EKeyState state, EModifier modifiers);
+   [UnmanagedFunctionPointer (Cdecl)] public delegate void MouseButtonCallback (HWindow window, EMouseButton button, EKeyState state, EKeyModifier modifiers);
    [DllImport (LIB, EntryPoint = "glfwSetMouseButtonCallback", CallingConvention = Cdecl)]
    public static extern Ptr SetMouseButtonCallback (HWindow window, MouseButtonCallback? mouseCallback);
 

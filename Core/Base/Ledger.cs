@@ -131,7 +131,6 @@ public class Ledger<T> : IReadOnlyList<T>, IList<T>, IList where T:class {
       if (DefValidate (c) is EError err) Fatal (err);
       _dict?.Remove (Keyer! (item));
       // TODO: What if this is the current item?
-      // TODO: What if the current item is beyond this index?
       if (mCurrent >= Math.Max (index, 1)) mCurrent--;
       List.RemoveAt (index);
       Notify (ref c);

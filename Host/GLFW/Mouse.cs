@@ -32,7 +32,7 @@ class MouseClickWrap : EventWrapper<MouseClickInfo> {
    readonly HWindow mWindow;
 
    protected override void Connect (bool connect) => SetMouseButtonCallback (mWindow, connect ? mCallback : null);
-   void Callback (HWindow _, EMouseButton b, EKeyState s, EModifier m) => Push (new MouseClickInfo (b, GetCursorPosition (mWindow), m, s));
+   void Callback (HWindow _, EMouseButton b, EKeyState s, EKeyModifier m) => Push (new MouseClickInfo (b, GetCursorPosition (mWindow), m, s));
 }
 #endregion
 
