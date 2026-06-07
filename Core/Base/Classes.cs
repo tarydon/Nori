@@ -20,6 +20,12 @@ public class DIBitmap {
    }
    public override string ToString () => $"DIBitmap: {Width}x{Height}, {Fmt}";
 
+   /// <summary>Get the number of bytes per pixel</summary>
+   public int BytesPerPixel => Fmt switch {
+      EFormat.Gray8 => 1, EFormat.RGB8 => 3, EFormat.RGBA8 => 4,
+      _ => throw new BadCaseException (Fmt)
+   };
+
    /// <summary>Width of the bitmap in pixels</summary>
    public readonly int Width;
    /// <summary>Height of the bitmap in pixels</summary>
@@ -35,11 +41,10 @@ public class DIBitmap {
    public bool Identical (DIBitmap other, byte threshold = 0) {
       if (Width != other.Width || Height != other.Height || Fmt != other.Fmt || Data.Length != other.Data.Length)
          return false;
-
       for (int i = 0; i < Data.Length; i++) {
          byte a = Data[i], b = other.Data[i];
-         if (a == b) continue;
-         if (threshold == 0 || Math.Abs (a - b) > threshold) return false;
+         if (Math.Abs (a - b) <= threshold) continue;
+         return false;
       }
       return true;
    }

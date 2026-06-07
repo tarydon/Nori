@@ -1,6 +1,6 @@
 // ────── ╔╗
 // ╔═╦╦═╦╦╬╣ Panel.cs
-// ║║║║╬║╔╣║ <<TODO>>
+// ║║║║╬║╔╣║ Implements Panel (a WPF UserControl with a GL context embedded in it)
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 namespace Nori;
 using System.Runtime.InteropServices;
@@ -9,9 +9,13 @@ using System.Windows.Forms.Integration;
 using System.Windows.Threading;
 using static System.Windows.Forms.ControlStyles;
 using WControl = System.Windows.Controls.UserControl;
+using Ptr = nint;
 
 #region class Panel --------------------------------------------------------------------------------
 /// <summary>A WPF UserControl used that houses an OpenGL rendering surface (used to display all GL content)</summary>
+/// A WPF UserControl does not have a windows handle, so cannot actually contain an 
+/// OpenGL context directly. So we have a WinForms control as a child (using a 
+/// WindowsFormsHost as intermediary) and create the GL surface on that
 class Panel : WControl {
    // Interface ----------------------------------------------------------------
    // The Panel singleton (only one GL context, so only one Panel, one Surface)
@@ -132,13 +136,6 @@ class Surface : UserControl {
 }
 #endregion
 
-// Win32 windows handle
-enum HWindow : ulong { Zero }
-// Window GDI device context handle
-enum HDC : ulong { Zero }
-// OpenGL rendering-context handle
-enum HGLRC : ulong { Zero }
-
 #region struct PixelFormatDescriptor ---------------------------------------------------------------
 // Structure used to describe an OpenGL pixel-format descriptor
 [StructLayout (LayoutKind.Sequential)]
@@ -216,4 +213,13 @@ static public unsafe class WGL {
       return (T)del;
    }
 }
+#endregion
+
+#region Low level enums ----------------------------------------------------------------------------
+// Win32 windows handle
+enum HWindow : ulong { Zero }
+// Window GDI device context handle
+enum HDC : ulong { Zero }
+// OpenGL rendering-context handle
+enum HGLRC : ulong { Zero }
 #endregion

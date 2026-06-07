@@ -1,15 +1,13 @@
 // ────── ╔╗
 // ╔═╦╦═╦╦╬╣ OpenGL.cs
-// ║║║║╬║╔╣║ <<TODO>>
+// ║║║║╬║╔╣║ WPFOpenGL is a WPF-specific implementation of the IOpenGL interface
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 using System.Runtime.InteropServices;
 using System.Windows;
 using Ptr = nint;
 namespace Nori;
 
-/// <summary>
-/// Implementation of the IOpenGL interface for WPF
-/// </summary>
+/// <summary>Implementation of the IOpenGL interface for WPF</summary>
 /// OpenGL itself is a huge interface with hundreds of functions. However, there are only a few
 /// 'differences' between various OpenGL implementations and that is all that is captured in the
 /// IOpenGL interface. The bulk of the renderer code works by first using GetGLProcAddress to get

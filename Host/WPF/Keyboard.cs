@@ -6,9 +6,7 @@ using System.Runtime.InteropServices;
 namespace Nori;
 
 #region class WPFKeyboard --------------------------------------------------------------------------
-/// <summary>
-/// WPF-specific implementation of the IKeyboard interface
-/// </summary>
+/// <summary>WPF-specific implementation of the IKeyboard interface</summary>
 /// Internally, the WPF OpenGL host Nori uses creates a Windows-Forms control to host the GL
 /// context (since we need an actual HWND). When we want to observe keyboard events, we set up
 /// event-handlers on that underlying Windows Forms control (stored here as Panel). 
@@ -50,9 +48,7 @@ class WPFKeyboard : IKeyboard {
 #endregion
 
 #region class CharsWrap ----------------------------------------------------------------------------
-/// <summary>
-/// EventWrapper implementation that handles KeyPress events and converts them to a stream of strings
-/// </summary>
+/// <summary>EventWrapper implementation that handles KeyPress events and converts them to a stream of strings</summary>
 class CharsWrap : EventWrapper<char> {
    public CharsWrap (UserControl panel) => mPanel = panel;
    readonly UserControl mPanel;
@@ -93,7 +89,6 @@ class KeysWrap : EventWrapper<KeyInfo> {
       if ((e.Modifiers & Keys.Control) > 0) mods |= EKeyModifier.Control;
       if ((e.Modifiers & Keys.Alt) > 0) mods |= EKeyModifier.Alt;
       Push (new (key, mods, state));
-      // REFINE: Use e.Modifiers to distinguish between Enter and Numpad-Enter etc
    }
    // Internal dictionary used to map Windows.Keys enumeration values to our EKey values.
    // If any entries are missing in this dictionary, then the numerical values of the Windows.Keys

@@ -5,9 +5,7 @@
 namespace Nori;
 
 #region class WPFMouse -----------------------------------------------------------------------------
-/// <summary>
-/// WPF-specific implementation of the IMouse interface
-/// </summary>
+/// <summary>WPF-specific implementation of the IMouse interface</summary>
 /// Internally, the WPF OpenGL host Nori uses creates a Windows-Forms control to host the GL
 /// context (since we need an actual HWND). When we want to observe moves, clicks etc, we set up
 /// event-handlers on that underlying Windows Forms control (stored here as Panel). 
