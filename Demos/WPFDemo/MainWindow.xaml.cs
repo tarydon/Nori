@@ -12,7 +12,7 @@ public partial class MainWindow : Window {
    public MainWindow () {
       Lib.Init ();
       InitializeComponent ();
-      mContent.Child = WPFHost.Create (this, OnLuxReady);
+      mContent.Child = WPFHost.Init (this, OnLuxReady);
    }
 
    void OnLuxReady () {

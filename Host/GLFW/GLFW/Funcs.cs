@@ -1,6 +1,6 @@
 // ────── ╔╗
-// ╔═╦╦═╦╦╬╣ GLFW.cs
-// ║║║║╬║╔╣║ <<TODO>>
+// ╔═╦╦═╦╦╬╣ Funcs.cs
+// ║║║║╬║╔╣║ Contains all entry points to the GLFW library
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 using System.Runtime.InteropServices;
 namespace Nori;
@@ -11,10 +11,7 @@ using Ptr = nint;
 /// <summary>Class that encapsulates the GLFW functions</summary>
 static class GLFW {
    // Constructors -------------------------------------------------------------
-   static GLFW () {
-      Init ();
-      SetErrorCallback (mError);
-   }
+   static GLFW () { Init (); SetErrorCallback (mError); }
    static readonly ErrorCallback mError = GlfwError;
 
    // GLFW wrappers ------------------------------------------------------------

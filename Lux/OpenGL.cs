@@ -1,13 +1,20 @@
 // ────── ╔╗
-// ╔═╦╦═╦╦╬╣ OpenGL.cs
-// ║║║║╬║╔╣║ <<TODO>>
+// ╔═╦╦═╦╦╬╣ GL.cs
+// ║║║║╬║╔╣║ Pointers to all the OpenGL functions we use in Lux
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 using System.Text;
 using Nori;
 using Ptr = nint;
 using unsafe GLDEBUGPROC = delegate* unmanaged< uint, uint, uint, uint, int, byte*, void*, void>;
 
-static unsafe class GL2 {
+// The GL class maintains unmanaged function pointers to all the OpenGL functions we use. 
+// We don't use [DllImport] since not all these functions are actually exported from "opengl32" or 
+// the underlying DLL. Some of them are, but others are obtained using GL's built-in loader 
+// (such as wglGetProcAddress for Windows platform). We could store these as delegates, but it's
+// more efficient to store them as just unmanaged function pointers (no delegates, no marshalling). 
+// The flip side is that we have to be very careful to match the function signatures perfectly, 
+// but with a very finite function list like we are using, that is not difficult. 
+static unsafe class GL {
    // Select the active texture unit
    public static void ActiveTexture (ETexUnit unit) => glActiveTexture (unit);
    static delegate* unmanaged<ETexUnit, void> glActiveTexture;
@@ -320,7 +327,7 @@ static unsafe class GL2 {
    static delegate* unmanaged<int, int, int, int, void> glViewport;
 
    // Implementation -----------------------------------------------------------
-   static GL2 () {
+   static GL () {
       glActiveTexture = (delegate* unmanaged<ETexUnit, void>)Get ("glActiveTexture");
       glAttachShader = (delegate* unmanaged<HProgram, HShader, void>)Get ("glAttachShader");
       glBindBuffer = (delegate* unmanaged<EBufferTarget, HBuffer, void>)Get ("glBindBuffer");

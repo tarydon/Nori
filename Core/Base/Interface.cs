@@ -89,11 +89,16 @@ public interface IMouse {
 /// to Hub.Keyboard.Keys to watch for key presses/releases. 
 public interface IKeyboard {
    /// <summary>Observe this to know when a key is pressed or released</summary>
+   /// This includes all keys (whether they generate a character code or not), for example like
+   /// the CTRL or CAPSLOCK keys.
    public IObservable<KeyInfo> Keys { get; }
    /// <summary>Tells us which modifiers (SHIFT/CTRL/ALT) are being held down now</summary>
    public EKeyModifier Modifiers { get; }
-   /// <summary>Observe this to get the text that was typed</summary>
-   public IObservable<string> Text { get; }
+   /// <summary>Observe this to get the characters that were typed</summary>
+   /// This is called only when the key being pressed/released generates a character, and the
+   /// character being generated depends on the current state of some modifiers like SHIFT, 
+   /// CAPSLOCK etc. 
+   public IObservable<char> Chars { get; }
 
    /// <summary>Is the Shift modifier key currently pressed?</summary>
    public bool IsShiftDown => (Modifiers & EKeyModifier.Shift) > 0;

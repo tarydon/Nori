@@ -13,20 +13,20 @@ class ShaderImp {
    /// <summary>Construct a pipeline given the code for the individual shaders</summary>
    ShaderImp (string name, int sort, EMode mode, EVertexSpec vspec, string[] code, int blend, bool depthTest, bool polyOffset, EStencilBehavior stencil) {
       (Name, SortCode, Mode, VSpec, Blending, DepthTest, PolygonOffset, StencilBehavior, Handle)
-         = (name, sort, mode, vspec, blend, depthTest, polyOffset, stencil, GL2.CreateProgram ());
-      code.ForEach (a => GL2.AttachShader (Handle, sCache.Get (a, CompileShader)));
-      GL2.LinkProgram (Handle);
-      string log2 = GL2.GetProgramInfoLog (Handle);
-      if (GL2.GetProgram (Handle, EProgramParam.LinkStatus) == 0)
+         = (name, sort, mode, vspec, blend, depthTest, polyOffset, stencil, GL.CreateProgram ());
+      code.ForEach (a => GL.AttachShader (Handle, sCache.Get (a, CompileShader)));
+      GL.LinkProgram (Handle);
+      string log2 = GL.GetProgramInfoLog (Handle);
+      if (GL.GetProgram (Handle, EProgramParam.LinkStatus) == 0)
          throw new Exception ($"GLProgram link error in program '{Name}':\r\n{log2}");
       if (!string.IsNullOrWhiteSpace (log2))
          Lib.Trace ($"Warning while linking program '{Name}':\n{log2}\n");
 
       // Get information about the uniforms
-      int cUniforms = GL2.GetProgram (Handle, EProgramParam.ActiveUniforms);
+      int cUniforms = GL.GetProgram (Handle, EProgramParam.ActiveUniforms);
       mUniforms = new UniformInfo[cUniforms];
       for (int i = 0; i < cUniforms; i++) {
-         GL2.GetActiveUniform (Handle, i, out int _, out var type, out string uname, out int location);
+         GL.GetActiveUniform (Handle, i, out int _, out var type, out string uname, out int location);
          object value = type switch {
             EDataType.Int or EDataType.Sampler2D or EDataType.Sampler2DRect => 0,
             EDataType.Vec2f => new Vec2F (0, 0),
@@ -81,7 +81,7 @@ class ShaderImp {
    public ShaderImp Set (int index, float f) {
       if (index != -1) {
          var data = mUniforms[index];
-         if (!f.EQ ((float)data.Value)) { data.Value = f; GL2.Uniform (index, f); }
+         if (!f.EQ ((float)data.Value)) { data.Value = f; GL.Uniform (index, f); }
       }
       return this;
    }
@@ -90,7 +90,7 @@ class ShaderImp {
    public ShaderImp Set (int index, int n) {
       if (index != -1) {
          var data = mUniforms[index];
-         if (n != (int)data.Value) { data.Value = n; GL2.Uniform1i (index, n); }
+         if (n != (int)data.Value) { data.Value = n; GL.Uniform1i (index, n); }
       }
       return this;
    }
@@ -99,7 +99,7 @@ class ShaderImp {
    public ShaderImp Set (int index, Vec2F v) {
       if (index != -1) {
          var data = mUniforms[index];
-         if (!v.EQ ((Vec2F)data.Value)) { data.Value = v; GL2.Uniform (index, v.X, v.Y); }
+         if (!v.EQ ((Vec2F)data.Value)) { data.Value = v; GL.Uniform (index, v.X, v.Y); }
       }
       return this;
    }
@@ -108,7 +108,7 @@ class ShaderImp {
    public ShaderImp Set (int index, Vec4F v) {
       if (index != -1) {
          var data = mUniforms[index];
-         if (!v.EQ ((Vec4F)data.Value)) { data.Value = v; GL2.Uniform (index, v.X, v.Y, v.Z, v.W); }
+         if (!v.EQ ((Vec4F)data.Value)) { data.Value = v; GL.Uniform (index, v.X, v.Y, v.Z, v.W); }
       }
       return this;
    }
@@ -117,7 +117,7 @@ class ShaderImp {
    public unsafe ShaderImp Set (int index, ref Mat4F m) {
       if (index != -1) {
          var data = mUniforms[index]; data.Value = m;
-         fixed (float* f = &m.M11) GL2.Uniform (index, false, f);
+         fixed (float* f = &m.M11) GL.Uniform (index, false, f);
       }
       return this;
    }
@@ -192,11 +192,11 @@ class ShaderImp {
    static HShader CompileShader (string file) {
       var text = Lib.ReadText ($"nori:GL/Shader/{file}");
       var eShader = Enum.Parse<EShader> (Path.GetExtension (file)[1..], true);
-      var shader = GL2.CreateShader (eShader);
-      GL2.ShaderSource (shader, text);
-      GL2.CompileShader (shader);
-      if (GL2.GetShader (shader, EShaderParam.CompileStatus) == 0) {
-         string log = GL2.GetShaderInfoLog (shader);
+      var shader = GL.CreateShader (eShader);
+      GL.ShaderSource (shader, text);
+      GL.CompileShader (shader);
+      if (GL.GetShader (shader, EShaderParam.CompileStatus) == 0) {
+         string log = GL.GetShaderInfoLog (shader);
          throw new Exception ($"OpenGL shader compile error in '{file}':\r\n{log}");
       }
       return shader;
@@ -234,9 +234,9 @@ class ShaderImp {
       miLTypeTextureMade = true;
       // We're always hardcoding that texture-unit 1 will be used for the linetype texture
       // (just like texture unit 0 is used for truetype font texture)
-      GL2.ActiveTexture (ETexUnit.Tex1);
-      HTexture idTexture = GL2.GenTexture ();
-      GL2.BindTexture (ETexTarget.Texture2D, idTexture);
+      GL.ActiveTexture (ETexUnit.Tex1);
+      HTexture idTexture = GL.GenTexture ();
+      GL.BindTexture (ETexTarget.Texture2D, idTexture);
 
       byte[,] data = new byte[10, 60];
       foreach (string s in mLTypeData) {
@@ -244,11 +244,11 @@ class ShaderImp {
          int n = (int)Enum.Parse<ELineType> (w[0], true);
          for (int j = 0; j < 60; j++) data[n, j] = (w[1][j] == 'x') ? (byte)255 : (byte)0;
       }
-      GL2.PixelStore (EPixelStoreParam.UnpackAlignment, 1);
-      GL2.TexImage2D (ETexTarget.Texture2D, EPixelInternalFormat.Red, 60, 10, EPixelFormat.Red, EPixelType.UByte, data);
-      GL2.TexParameter (ETexTarget.Texture2D, ETexParam.MagFilter, (int)ETexFilter.Linear);
-      GL2.TexParameter (ETexTarget.Texture2D, ETexParam.MinFilter, (int)ETexFilter.Linear);
-      GL2.TexParameter (ETexTarget.Texture2D, ETexParam.WrapS, (int)ETexWrap.Repeat);
+      GL.PixelStore (EPixelStoreParam.UnpackAlignment, 1);
+      GL.TexImage2D (ETexTarget.Texture2D, EPixelInternalFormat.Red, 60, 10, EPixelFormat.Red, EPixelType.UByte, data);
+      GL.TexParameter (ETexTarget.Texture2D, ETexParam.MagFilter, (int)ETexFilter.Linear);
+      GL.TexParameter (ETexTarget.Texture2D, ETexParam.MinFilter, (int)ETexFilter.Linear);
+      GL.TexParameter (ETexTarget.Texture2D, ETexParam.WrapS, (int)ETexWrap.Repeat);
    }
    // This gets set to true once we have made the linetype texture
    static bool miLTypeTextureMade;

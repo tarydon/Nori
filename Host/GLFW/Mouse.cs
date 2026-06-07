@@ -1,28 +1,36 @@
 // ────── ╔╗
 // ╔═╦╦═╦╦╬╣ Mouse.cs
-// ║║║║╬║╔╣║ <<TODO>>
+// ║║║║╬║╔╣║ Implements GLFWMouse : a GLFW-specific implementation of IMouse
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
-using System.Reactive;
 namespace Nori;
 using static GLFW;
 
+#region class GLFWMouse ----------------------------------------------------------------------------
+/// <summary>GLFW-specific implementation of the IMouse interface</summary>
+/// In GLFW, mouse messages are handled by setting up callbacks on the GLFW main window. We use the
+/// EventWrapper(T) helper from Nori to convert these callbacks into an IObservable stream. For each
+/// of the different IObservables, we implement specific classes like MouseClickWrap, MouseMovesWrap
+/// etc to handle the details of how to subscribe/unsubscribe for that particular callback (and
+/// these classes use the GLFW functions to do this)
 class GLFWMouse : IMouse {
+   // Interface ----------------------------------------------------------------
    public IObservable<MouseClickInfo> Clicks => mClicks ??= new (HWnd);
-   MouseClickWrap? mClicks;
-
    public IObservable<bool> Enter => mEnter ??= new (HWnd);
-   MouseEnterWrap? mEnter;
-
    public IObservable<MouseWheelInfo> Wheel => mWheel ??= new (HWnd);
-   MouseWheelWrap? mWheel;
-
    public Vec2S Pos => GetCursorPosition (HWnd);
-
    public IObservable<Vec2S> Moves => mMoves ??= new (HWnd);
-   MouseMoveWrap? mMoves;
 
+   // Private data -------------------------------------------------------------
+   // When the GLFWMouse is created, we don't yet have this main window handle. However, 
+   // very soon after that, the main window is created by the client code and at that point the
+   // window handle is set into this variable. Subsequently, the observables can be invoked and used. 
    internal static HWindow HWnd;
+   MouseClickWrap? mClicks;
+   MouseEnterWrap? mEnter;
+   MouseWheelWrap? mWheel;
+   MouseMoveWrap? mMoves;
 }
+#endregion
 
 #region class MouseClickWrap -----------------------------------------------------------------------
 /// <summary>Helper used to generate events for mouse-button-press, mouse-button-release</summary>

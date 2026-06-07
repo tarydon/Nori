@@ -1,13 +1,19 @@
 // ────── ╔╗
 // ╔═╦╦═╦╦╬╣ Window.cs
-// ║║║║╬║╔╣║ <<TODO>>
+// ║║║║╬║╔╣║ Wrapper around a GLFW window <ToDoc> 
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 using System.Text;
 namespace Nori;
 using static GLFW;
 
+#region class Window -------------------------------------------------------------------------------
+/// <summary>A wrapper around a GLFW window</summary>
+/// This is still evolving and the public interface of this will change. In particular, it is not
+/// yet clear whether you will ever create a derived class from this, or just always use this type
+/// and merely provide a different scene to render the contents. 
 public class Window {
    // Constructors -------------------------------------------------------------
+   /// <summary>Create a Window with specified size, title and flags</summary>
    public Window (int cx, int cy, string title, EFlags flags = EFlags.Default) {
       SetWindowHints (flags);
       mDispatcher = (GLFWDispatcher)Hub.Dispatcher;
@@ -22,20 +28,6 @@ public class Window {
    }
    HWindow mHWnd;
    GLFWDispatcher mDispatcher;
-
-   /// <summary>Window creation flags</summary>
-   [Flags]
-   public enum EFlags {      
-      None = 0,
-      Visible = 1 << 0,
-      Resizeable = 1 << 1,
-      Decorated = 1 << 2,
-      AlwaysOnTop = 1 << 3, 
-      Maximized = 1 << 4,
-      Transparent = 1 << 5,
-
-      Default = Visible | Resizeable | Decorated
-   }
 
    // Properties ---------------------------------------------------------------
    /// <summary>Gets the DPI scaling</summary>
@@ -116,6 +108,30 @@ public class Window {
    public virtual void Draw (int cx, int dy) 
       => GLFWHost.OnPaint?.Invoke (cx, dy);
 
+   // Nested types -------------------------------------------------------------
+   /// <summary>Window creation flags</summary>
+   [Flags]
+   public enum EFlags {
+      None = 0,
+      /// <summary>Is the window visible?</summary>
+      Visible = 1 << 0,
+      /// <summary>Can the window be resized by dragging the corners?</summary>
+      Resizeable = 1 << 1,
+      /// <summary>Is the window 'decorated' with platform-specific caption, min-max buttons, system-menu etc</summary>
+      Decorated = 1 << 2,
+      /// <summary>Is this an always-on-top window (remains on top of all applications)</summary>
+      AlwaysOnTop = 1 << 3,
+      /// <summary>Is the window created maximized at startup?</summary>
+      Maximized = 1 << 4,
+      /// <summary>Is the window background potentially transparent</summary>
+      /// For this to actually exhibit transparency, you need to set the scene's clear color
+      /// to have an alpha value less than 255
+      Transparent = 1 << 5,
+
+      /// <summary>The default window creation flags: Visible, Resizable, Decorated</summary>
+      Default = Visible | Resizeable | Decorated
+   }
+
    // Implementation -----------------------------------------------------------
    void SetWindowHints (EFlags flags) {
       // Set some common hints for the OpenGL profile creation
@@ -142,3 +158,4 @@ public class Window {
       if (wait) WaitEvents (); else PollEvents ();
    }
 }
+#endregion

@@ -3,91 +3,67 @@
 // ║║║║╬║╔╣║ <<TODO>>
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 using System.Runtime.InteropServices;
+using System.Windows;
 using Ptr = nint;
 namespace Nori;
 
-// Win32 windows handle
-enum HWindow : ulong { Zero }
-// Window GDI device context handle
-enum HDC : ulong { Zero }
-// OpenGL rendering-context handle
-enum HGLRC : ulong { Zero }
+/// <summary>
+/// Implementation of the IOpenGL interface for WPF
+/// </summary>
+/// OpenGL itself is a huge interface with hundreds of functions. However, there are only a few
+/// 'differences' between various OpenGL implementations and that is all that is captured in the
+/// IOpenGL interface. The bulk of the renderer code works by first using GetGLProcAddress to get
+/// pointers to the dozens of OpenGL function it needs (like "glCompileShader" or "glDrawArrays"),
+/// and then using those pointers. So all those functions don't need to be exposed in this
+/// interface directly, but are obtained indirectly using the GetGLProcAddress. 
+class WPFOpenGL : IOpenGL {
+   // Interface ----------------------------------------------------------------
+   // When WPFOpenGL is initialized, load the "opengl32.dll" library, we will later
+   // use this to fetch pointers from it
+   public WPFOpenGL () => GLLib = NativeLibrary.Load ("opengl32.dll");
+   readonly Ptr GLLib;
 
-#region struct PixelFormatDescriptor ---------------------------------------------------------------
-// Structure used to describe an OpenGL pixel-format descriptor
-[StructLayout (LayoutKind.Sequential)]
-struct PixelFormatDescriptor {
-   ushort Size, Version;
-   uint Flags;
-   byte PixelType, ColorBits, RedBits, RedShift, GreenBits, GreenShift, BlueBits, BlueShift;
-   byte AlphaBits, AlphaShift, AccumBits, AccumRedBits, AccumGreenBits, AccumBlueBits, AccumAlphaBits;
-   byte DepthBits, StencilBits, AuxBuffers, LayerType, Reserved;
-   uint LayerMask, VisibleMask, DamageMask;
+   // For old OpenGL functions (like glBegin, glEnable, glFlush etc), we use the 
+   // NativeLibrary.GetExport("opengl32.dll", name) method - this just directly gets the
+   // exported function from the DLL and returns it. However, a number of more modern functions
+   // (like "glCompileShader", "glDrawArrays") are not exported directly from Opengl32.dll
+   // but are obtained indirectly by calling wglGetProcAddress with the function name. 
+   // To make this GetGLProcAddress universal, we try WGLGetProcAddress first, and if that
+   // fails, we fall back to NativeLibrary.GetExport.
+   public Ptr GetGLProcAddress (string name) {
+      Ptr proc = WGLGetProcAddress (name);
+      if (proc == 0)
+         try { proc = NativeLibrary.GetExport (GLLib, name); } catch { }
+      if (proc == 0) throw new Exception ($"OpenGL function '{name}' not found.");
+      return proc;
+   }
 
-   // Static used to obtain a 'default' pixel-format-descriptor
-   public static PixelFormatDescriptor Default {
+   // Pass on the OnPaint handler to WPFHost, from where WM_PAINT handler of the
+   // OpenGL surface will use it to do the actual drawing. This is set up by Lux to point to 
+   // code that draws the current UIScene
+   public Action<int, int> OnPaint { set => WPFHost.OnPaint = value; }
+
+   // Request a redraw by doing an old-fashioned Invalidate of the UserControl that hosts
+   // the GL context
+   public void Redraw () => WPFHost.GLPanel?.Redraw ();
+
+   // The DPI scaling can be obtained from the WPF main window using its TransformToDevice.
+   // If no WPF main window exists, or if we are running tests, we just return 1. 
+   public float DPIScale {
       get {
-         const uint PFD_DRAW_TO_WINDOW = 4, PFD_SUPPORT_OPENGL = 32, PFD_DOUBLEBUFFER = 1;
-         PixelFormatDescriptor pfd = new () {
-            Size = 40, Version = 1,
-            Flags = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER,
-            ColorBits = 32, DepthBits = 32, StencilBits = 8
-         };
-         if (40 != Marshal.SizeOf<PixelFormatDescriptor> ())
-            throw new Exception ("Unexpected size for PixelFormatDescriptor");
-         if (8 != Marshal.SizeOf<nint> ())
-            throw new Exception ("Expecting 64-bit compilation");
-         return pfd;
+         if (mDPIScale == 0) {
+            if (Lib.Testing) mDPIScale = 1;
+            else if (PresentationSource.FromVisual (WPFHost.Main) is { } source) {
+               var xfm = source.CompositionTarget.TransformToDevice;
+               mDPIScale = (float)(xfm.M11 + xfm.M22) / 2;
+            } else return 1;
+         }
+         return mDPIScale;
       }
    }
-}
-#endregion
-
-#region class GL -----------------------------------------------------------------------------------
-/// <summary>Implements the P-Invoke connections to OpenGL</summary>
-static public unsafe class GL {
-   // Interface ----------------------------------------------------------------
-   // Creates an OpenGL context in Windows
-   internal static HGLRC CreateContextAttribsARB (HDC dc, HGLRC share, int major, int minor, bool debug, bool core) {
-      HGLRC retvalue;
-      int[] pn = new int[8];
-      pCreateContextAttribsARB ??= Load<wglCreateContextAttribsARB> ();
-      const int MAJOR_VERSION = 0x2091, MINOR_VERSION = 0x2092, PROFILE_MASK = 0x9126, CONTEXT_FLAGS = 0x2094;
-      pn[0] = MAJOR_VERSION; pn[1] = major;
-      pn[2] = MINOR_VERSION; pn[3] = minor;           // Set the minor version
-      pn[4] = PROFILE_MASK; pn[5] = core ? 1 : 2;     // Select either the 'core' or 'compatibility' profile
-      pn[6] = CONTEXT_FLAGS; pn[7] = debug ? 1 : 0;   // Opt for a 'debug' context if needed
-      fixed (int* apn = &pn[0]) { retvalue = pCreateContextAttribsARB (dc, share, apn); }
-      return retvalue;
-   }
-   delegate HGLRC wglCreateContextAttribsARB (HDC dc, HGLRC share, int* attribs);
-   static wglCreateContextAttribsARB? pCreateContextAttribsARB;
-
-   // P-Invoke imports ---------------------------------------------------------
-   [DllImport (GDI32)] internal static extern int ChoosePixelFormat (HDC hDC, [In] ref PixelFormatDescriptor pfd);
-   [DllImport (GDI32)] internal static extern int SetPixelFormat (HDC hDC, int iPixelFormat, [In] ref PixelFormatDescriptor pfd);
-   [DllImport (GDI32)] internal static extern int SwapBuffers (HDC hDC);
-
-   [DllImport (USER32)] internal static extern HDC GetDC (HWindow hWnd);
-   [DllImport (OPENGL32, EntryPoint = "wglDeleteContext")] internal static extern bool DeleteContext (HGLRC hglrc);
-   [DllImport (OPENGL32, EntryPoint = "wglCreateContext")] internal static extern HGLRC CreateContext (HDC hdc);
-   [DllImport (OPENGL32, EntryPoint = "wglGetProcAddress")] internal static extern Ptr GetProcAddress (string name);
-   [DllImport (OPENGL32, EntryPoint = "glViewport")] internal static extern void Viewport (int x, int y, int width, int height);
-   [DllImport (OPENGL32, EntryPoint = "wglMakeCurrent")] internal static extern int MakeCurrent (HDC hdc, HGLRC hrc);
-
-   const string GDI32 = "gdi32.dll";
-   const string OPENGL32 = "opengl32.dll";
-   const string USER32 = "user32.dll";
+   float mDPIScale = 0;
 
    // Implementation -----------------------------------------------------------
-   // Loads an OpenGL entry-point (using dynamic load from the DLL) and returns a
-   // raw Delegate that can be cast to the appropriate function signature
-   static T Load<T> () where T : Delegate {
-      Type type = typeof (T);
-      Ptr proc = GetProcAddress (type.Name);
-      if (proc == 0) throw new Exception ($"OpenGL function '{type.Name}' not found.");
-      Delegate del = Marshal.GetDelegateForFunctionPointer (proc, type);
-      return (T)del;
-   }
+   const string OPENGL32 = "opengl32.dll";
+   [DllImport (OPENGL32, EntryPoint = "wglGetProcAddress")] public static extern Ptr WGLGetProcAddress (string name);
 }
-#endregion

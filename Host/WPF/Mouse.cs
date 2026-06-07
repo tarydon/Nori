@@ -1,20 +1,26 @@
 // ────── ╔╗
 // ╔═╦╦═╦╦╬╣ Mouse.cs
-// ║║║║╬║╔╣║ <<TODO>>
+// ║║║║╬║╔╣║ WPFMouse is an implementation of the IMouse interface that works with WPF
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
-using System.Reactive;
-using System.Windows.Controls.Ribbon.Primitives;
 namespace Nori;
 
+#region class WPFMouse -----------------------------------------------------------------------------
+/// <summary>
+/// WPF-specific implementation of the IMouse interface
+/// </summary>
+/// Internally, the WPF OpenGL host Nori uses creates a Windows-Forms control to host the GL
+/// context (since we need an actual HWND). When we want to observe moves, clicks etc, we set up
+/// event-handlers on that underlying Windows Forms control (stored here as Panel). 
+/// 
+/// We use the Nori EventWrapper(T) helper class to convert those events into IObservable streams.
+/// This is done by actual implementations of EventWrapper such as MouseMovesWrap which need to just 
+/// override the Connect method to set up / take down the event handlers. 
 class WPFMouse : IMouse {
+   // Interface ----------------------------------------------------------------
    public IObservable<MouseClickInfo> Clicks => mClicks ??= new (Panel);
-   MouseClicksWrap? mClicks;
-
    public IObservable<Vec2S> Moves => mMoves ??= new (Panel);
-   MouseMovesWrap? mMoves;
-
    public IObservable<MouseWheelInfo> Wheel => mWheel ??= new (Panel);
-   MouseWheelWrap? mWheel;
+   public IObservable<bool> Enter => mEnter ??= new (Panel);
 
    public Vec2S Pos {
       get {
@@ -23,11 +29,16 @@ class WPFMouse : IMouse {
       }
    }
 
-   public IObservable<bool> Enter => mEnter ??= new (Panel);
-   MouseEnterWrap? mEnter;
-
+   // Private data -------------------------------------------------------------
+   // This is initially null when WPFMouse is created, but soon afterwards, it is set to 
+   // point to the actual UserControl implementing the GL surface by the Panel constructor (in Panel.cs)
    internal static UserControl Panel = null!;
+   MouseClicksWrap? mClicks;
+   MouseMovesWrap? mMoves;
+   MouseWheelWrap? mWheel;
+   MouseEnterWrap? mEnter;
 }
+#endregion
 
 #region class MouseMovesWrap -----------------------------------------------------------------------
 /// <summary>Handles mouse-move events (used by IMouse.Moves)</summary>

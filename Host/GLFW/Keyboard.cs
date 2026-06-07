@@ -1,13 +1,20 @@
 // ────── ╔╗
 // ╔═╦╦═╦╦╬╣ Keyboard.cs
-// ║║║║╬║╔╣║ <<TODO>>
+// ║║║║╬║╔╣║ Implements GLFWKeyboard : a GLFW-specific implementation of the IKeyboard interface
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 namespace Nori;
 using static GLFW;
 
+#region class GLFWKeyboard -------------------------------------------------------------------------
+/// <summary>GLFWKeyboard is a GLFW specific implementation of IKeyboard</summary>
+/// In GLFW, keyboard messages are handled by setting up callbacks on the GLFW main window. We use the
+/// EventWrapper(T) helper from Nori to convert these callbacks into an IObservable stream. This is done
+/// by the classes below like KeysWrap, which know how to use GLFW functions to sign up for / release
+/// the corresponding GLFW callbacks. 
 class GLFWKeyboard : IKeyboard {
+   // Implementation -----------------------------------------------------------
    public IObservable<KeyInfo> Keys => mKeys ??= new (HWnd);
-   KeysWrap? mKeys;
+   public IObservable<char> Chars => mChars ??= new (HWnd);
 
    public EKeyModifier Modifiers {
       get {
@@ -22,10 +29,12 @@ class GLFWKeyboard : IKeyboard {
       }
    }
 
-   public IObservable<string> Text => mChars ??= new (HWnd);
-   CharsWrap? mChars;
+   // Private data -------------------------------------------------------------
    internal static HWindow HWnd;
+   CharsWrap? mChars;
+   KeysWrap? mKeys;
 }
+#endregion
 
 #region class KeyPressWrap -------------------------------------------------------------------------
 /// <summary>Helper used to generate a stream of key-press, key-release events</summary>
@@ -41,12 +50,12 @@ class KeysWrap : EventWrapper<KeyInfo> {
 
 #region class CharsWrap ----------------------------------------------------------------------------
 /// <summary>Helper used to generate Unicode characters from key-presses</summary>
-class CharsWrap : EventWrapper<string> {
+class CharsWrap : EventWrapper<char> {
    public CharsWrap (HWindow w) => (mWindow, mCallback) = (w, Callback);
    readonly CharCallback mCallback;
    readonly HWindow mWindow;
 
    protected override void Connect (bool connect) => SetCharCallback (mWindow, connect ? mCallback : null);
-   void Callback (HWindow _, uint code) => Push (char.ConvertFromUtf32 ((int)code));
+   void Callback (HWindow _, uint code) { foreach (var ch in char.ConvertFromUtf32 ((int)code)) Push (ch); }
 }
 #endregion

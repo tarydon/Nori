@@ -1,13 +1,26 @@
 // ────── ╔╗
 // ╔═╦╦═╦╦╬╣ Keyboard.cs
-// ║║║║╬║╔╣║ <<TODO>>
+// ║║║║╬║╔╣║ WPFKeyboard is an implementation of the IKeyboard interface for WPF
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 using System.Runtime.InteropServices;
 namespace Nori;
 
+#region class WPFKeyboard --------------------------------------------------------------------------
+/// <summary>
+/// WPF-specific implementation of the IKeyboard interface
+/// </summary>
+/// Internally, the WPF OpenGL host Nori uses creates a Windows-Forms control to host the GL
+/// context (since we need an actual HWND). When we want to observe keyboard events, we set up
+/// event-handlers on that underlying Windows Forms control (stored here as Panel). 
+/// 
+/// We use the Nori EventWrapper(T) helper class to convert those events into IObservable streams.
+/// This is done by actual implementations of EventWrapper such as KeysWrap which need to just 
+/// override the Connect method to set up / take down the event handlers. In addition, we also 
+/// use the GetAsyncKeyState Win32 API function (from USER32.dll) to get the instantaneous state
+/// of the modifier keys. 
 class WPFKeyboard : IKeyboard {
+   // Interface ----------------------------------------------------------------
    public IObservable<KeyInfo> Keys => mKeys ??= new (Panel);
-   KeysWrap? mKeys;
 
    public EKeyModifier Modifiers {
       get {
@@ -19,22 +32,28 @@ class WPFKeyboard : IKeyboard {
       }
    }
 
-   public IObservable<string> Text => mChars ??= new (Panel);
-   CharsWrap? mChars;
+   public IObservable<char> Chars => mChars ??= new (Panel);
 
+   // Implementation -----------------------------------------------------------
    const int PRESSED = 0x8000;
-   [DllImport ("user32.dll")] static extern short GetAsyncKeyState (int key);
-
    const int LMENU = 0xA4, RMENU = 0xA5, LSHIFT = 0xA0, RSHIFT = 0xA1,
       LCONTROL = 0xA2, RCONTROL = 0xA3, NUMPAD0 = 0x60, NUMPAD1 = 0x61, NUMPAD2 = 0x62,
       NUMPAD3 = 0x63, NUMPAD4 = 0x64, NUMPAD5 = 0x65, NUMPAD6 = 0x66, NUMPAD7 = 0x67,
       NUMPAD8 = 0x68, NUMPAD9 = 0x69;
+   [DllImport ("user32.dll")] static extern short GetAsyncKeyState (int key);
 
    static bool Check (int code) => (GetAsyncKeyState (code) & PRESSED) != 0;
    static internal UserControl Panel = null!;
+   CharsWrap? mChars;
+   KeysWrap? mKeys;
 }
+#endregion
 
-class CharsWrap : EventWrapper<string> {
+#region class CharsWrap ----------------------------------------------------------------------------
+/// <summary>
+/// EventWrapper implementation that handles KeyPress events and converts them to a stream of strings
+/// </summary>
+class CharsWrap : EventWrapper<char> {
    public CharsWrap (UserControl panel) => mPanel = panel;
    readonly UserControl mPanel;
 
@@ -43,8 +62,9 @@ class CharsWrap : EventWrapper<string> {
       else mPanel.KeyPress -= OnKeyPress;
    }
 
-   void OnKeyPress (object? _, KeyPressEventArgs e) => Push (e.KeyChar.ToString ());
+   void OnKeyPress (object? _, KeyPressEventArgs e) => Push (e.KeyChar);
 }
+#endregion
 
 #region class KeysWrap -----------------------------------------------------------------------------
 /// <summary>EventWrapper implementation that handles keydown and keyup events (used by HW.Keys)</summary>

@@ -1,6 +1,6 @@
 // ────── ╔╗
-// ╔═╦╦═╦╦╬╣ GLFWTypes.cs
-// ║║║║╬║╔╣║ <<TODO>>
+// ╔═╦╦═╦╦╬╣ Types.cs
+// ║║║║╬║╔╣║ Types used to talk to GLFW (used by the functions defined in Funcs)
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 using System.Runtime.InteropServices;
 namespace Nori;

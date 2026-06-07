@@ -18,7 +18,7 @@ class T3XDemoScene : Scene3 {
 
    public override void Picked (object obj) {
       if (mModel == null) return;
-      if ((Hub.Keyboard.Modifiers & EModifier.Shift) == 0)
+      if ((Hub.Keyboard.Modifiers & EKeyModifier.Shift) == 0)
          mModel.Ents.ForEach (a => a.IsSelected = false);
       if (obj is E3Surface ent && mBlank != null) {
          Lib.Trace ($"Picked: {ent.GetType ().Name} #{ent.Id}");

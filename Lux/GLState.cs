@@ -2,8 +2,6 @@
 // ╔═╦╦═╦╦╬╣ GLState.cs
 // ║║║║╬║╔╣║ Class GLState - used to effect changes to OpenGL state (write only on change)
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
-using System.Runtime.Intrinsics.X86;
-
 namespace Nori;
 
 #region class GLState ------------------------------------------------------------------------------
@@ -24,10 +22,10 @@ static class GLState {
    public static int Blending {
       set {
          bool blendEnable = value > 0;
-         if (Lib.Set (ref mBlendEnable, blendEnable)) GL2.Enable (ECap.Blend, blendEnable);
+         if (Lib.Set (ref mBlendEnable, blendEnable)) GL.Enable (ECap.Blend, blendEnable);
          if (blendEnable) {
             var factor = value == 2 ? EBlendFactor.One : EBlendFactor.SrcAlpha;
-            if (Lib.SetE (ref mBlendFactor, factor)) GL2.BlendFunc (factor, EBlendFactor.OneMinusSrcAlpha);
+            if (Lib.SetE (ref mBlendFactor, factor)) GL.BlendFunc (factor, EBlendFactor.OneMinusSrcAlpha);
          }
       }
    }
@@ -38,7 +36,7 @@ static class GLState {
    public static bool DepthTest {
       set {
          if (Lib.Set (ref mDepthTest, value))
-            GL2.Enable (ECap.DepthTest, value);
+            GL.Enable (ECap.DepthTest, value);
       }
    }
    static bool mDepthTest;
@@ -47,7 +45,7 @@ static class GLState {
    public static bool PolygonOffsetFill {
       set {
          if (Lib.Set (ref mPolygonOffsetFill, value))
-            GL2.Enable (ECap.PolygonOffsetFill, value);
+            GL.Enable (ECap.PolygonOffsetFill, value);
       }
    }
    static bool mPolygonOffsetFill;
@@ -55,7 +53,7 @@ static class GLState {
    public static bool PrimitiveRestart {
       set {
          if (Lib.Set (ref mPrimitiveRestart, value))
-            GL2.Enable (ECap.PrimitiveRestart, value);
+            GL.Enable (ECap.PrimitiveRestart, value);
       }
    }
    static bool mPrimitiveRestart;
@@ -73,7 +71,7 @@ static class GLState {
             StencilBehavior = value.StencilBehavior;
             PrimitiveRestart = value.Mode == EMode.TriangleFan;
          }
-         GL2.UseProgram (value?.Handle ?? 0);
+         GL.UseProgram (value?.Handle ?? 0);
       }
    }
    static ShaderImp? mProgram;
@@ -89,7 +87,7 @@ static class GLState {
          // We enable the stencil test when the stencil-behavior is set other than NONE.
          // This enables both the StencilOp (used to update the stencil buffer) and the StencilFunc
          // used to test and discard some pixels using stencil buffer comparisons
-         GL2.Enable (ECap.StencilTest, mStencilBehavior != EStencilBehavior.None);
+         GL.Enable (ECap.StencilTest, mStencilBehavior != EStencilBehavior.None);
          switch (value) {
             case EStencilBehavior.Stencil:
                // This is used by the TriFanStencil shader - the first phase of the stencil-then-cover
@@ -98,8 +96,8 @@ static class GLState {
                // a triangle-fan from a fixed point to every segment of every closed polyline in the path.
                // That will end up leaving the stencil bit set for every point inside the path. We also
                // use StencilFunc to avoid updating any actual color buffer pixels during this phase.
-               GL2.StencilOp (EFace.FrontAndBack, EStencilOp.Invert, EStencilOp.Invert, EStencilOp.Invert);
-               GL2.StencilFunc (EFace.FrontAndBack, EStencilFunc.Never, 0, 0);
+               GL.StencilOp (EFace.FrontAndBack, EStencilOp.Invert, EStencilOp.Invert, EStencilOp.Invert);
+               GL.StencilFunc (EFace.FrontAndBack, EStencilFunc.Never, 0, 0);
                break;
             case EStencilBehavior.Cover:
                // This is used by the TriFanCover shader - the second phase of the stencil-then-cover
@@ -107,8 +105,8 @@ static class GLState {
                // color buffer (painting through the stencil). We also clear those bits using the
                // StencilOp at the same time, so the stencil buffer is reset in preparation for the next
                // primitive to be drawn
-               GL2.StencilOp (EFace.FrontAndBack, EStencilOp.Zero, EStencilOp.Zero, EStencilOp.Zero);
-               GL2.StencilFunc (EFace.FrontAndBack, EStencilFunc.Equal, 1, 0x1);
+               GL.StencilOp (EFace.FrontAndBack, EStencilOp.Zero, EStencilOp.Zero, EStencilOp.Zero);
+               GL.StencilFunc (EFace.FrontAndBack, EStencilFunc.Equal, 1, 0x1);
                break;
          }
       }
@@ -120,9 +118,9 @@ static class GLState {
       set {
          if (mTypeFaceId == value?.UID) return;
          if (value != null) {
-            GL2.ActiveTexture (ETexUnit.Tex0);
-            GL2.PixelStore (EPixelStoreParam.UnpackAlignment, 1);
-            GL2.BindTexture (ETexTarget.TexRectangle, value.Texture);
+            GL.ActiveTexture (ETexUnit.Tex0);
+            GL.PixelStore (EPixelStoreParam.UnpackAlignment, 1);
+            GL.BindTexture (ETexTarget.TexRectangle, value.Texture);
             mTypeFaceId = value.UID;
          }
       }
@@ -134,7 +132,7 @@ static class GLState {
       get => mHVAO;
       set {
          if (mHVAO == value) return;
-         GL2.BindVertexArray (mHVAO = value);
+         GL.BindVertexArray (mHVAO = value);
          if (value != 0) mVAOChanges++;
       }
    }
@@ -144,31 +142,31 @@ static class GLState {
    // Methods ------------------------------------------------------------------
    /// <summary>Resets everything to a known state (at the start of every frame)</summary>
    public static void StartFrame (Vec2S offset, Vec2S size, Color4 bgrdColor) {
-      GL2.Viewport (offset.X, offset.Y, size.X, size.Y);
+      GL.Viewport (offset.X, offset.Y, size.X, size.Y);
       if (!offset.EQ (Vec2S.Zero)) {
-         GL2.Enable (ECap.ScissorTest);
-         GL2.Scissor (offset.X, offset.Y, size.X, size.Y);
+         GL.Enable (ECap.ScissorTest);
+         GL.Scissor (offset.X, offset.Y, size.X, size.Y);
       } else
-         GL2.Disable (ECap.ScissorTest);
-      GL2.BlendFunc (mBlendFactor = EBlendFactor.SrcAlpha, EBlendFactor.OneMinusSrcAlpha);
-      GL2.PatchParameter (EPatchParam.PatchVertices, 4);
-      GL2.PrimitiveRestartIndex (0xFFFFFFFF);
-      GL2.PolygonOffset (1, 1);
+         GL.Disable (ECap.ScissorTest);
+      GL.BlendFunc (mBlendFactor = EBlendFactor.SrcAlpha, EBlendFactor.OneMinusSrcAlpha);
+      GL.PatchParameter (EPatchParam.PatchVertices, 4);
+      GL.PrimitiveRestartIndex (0xFFFFFFFF);
+      GL.PolygonOffset (1, 1);
 
       // We 'force-set' each of these settings below by priming them with a
       // different value beforehand
-      mBlendEnable = false; GL2.Disable (ECap.Blend);
+      mBlendEnable = false; GL.Disable (ECap.Blend);
       mDepthTest = true; DepthTest = false;
       mStencilBehavior = EStencilBehavior.Cover; StencilBehavior = EStencilBehavior.None;
       mPolygonOffsetFill = true; PolygonOffsetFill = false;
-      mProgram = null; GL2.UseProgram (0);
-      mHVAO = 0; GL2.BindVertexArray (0);
+      mProgram = null; GL.UseProgram (0);
+      mHVAO = 0; GL.BindVertexArray (0);
       mPgmChanges = 0; mVAOChanges = 0; mTypeFaceId = 0;
 
       var (r, g, b, a) = bgrdColor;
       float rf = r / 255f, gf = g / 255f, bf = b / 255f, af = a / 255f;
-      GL2.ClearColor (rf * af, gf * af, bf * af, af);
-      GL2.Clear (EBuffer.Color | EBuffer.Depth | EBuffer.Stencil);
+      GL.ClearColor (rf * af, gf * af, bf * af, af);
+      GL.Clear (EBuffer.Color | EBuffer.Depth | EBuffer.Stencil);
    }
 }
 #endregion

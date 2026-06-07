@@ -4,7 +4,6 @@
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 using System.Buffers;
 using System.Buffers.Text;
-using Nori.STEP;
 namespace Nori;
 
 #region class UTFWriter ----------------------------------------------------------------------------

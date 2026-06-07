@@ -328,23 +328,23 @@ public static partial class Lux {
       if (target is ETarget.Image or ETarget.Pick) {
          mFBViewport = viewport;
          if (mFrameBuffer == 0) {
-            mFrameBuffer = GL2.GenFrameBuffer ();
-            mColorBuffer = GL2.GenRenderBuffer (); mDepthBuffer = GL2.GenRenderBuffer ();
+            mFrameBuffer = GL.GenFrameBuffer ();
+            mColorBuffer = GL.GenRenderBuffer (); mDepthBuffer = GL.GenRenderBuffer ();
          }
-         GL2.BindFrameBuffer (EFrameBufferTarget.DrawAndRead, mFrameBuffer);
+         GL.BindFrameBuffer (EFrameBufferTarget.DrawAndRead, mFrameBuffer);
          if (viewport.X > mFBSize.X || viewport.Y > mFBSize.Y) {
             mFBSize = viewport;
-            GL2.BindRenderBuffer (ERenderBufferTarget.RenderBuffer, mColorBuffer);
-            GL2.RenderBufferStorage (ERenderBufferFormat.RGBA8, viewport.X, viewport.Y);
-            GL2.BindRenderBuffer (ERenderBufferTarget.RenderBuffer, mDepthBuffer);
-            GL2.RenderBufferStorage (ERenderBufferFormat.Depth24Stencil8, viewport.X, viewport.Y);
-            GL2.FrameBufferRenderBuffer (EFrameBufferTarget.DrawAndRead, EFrameBufferAttachment.Color0, mColorBuffer);
-            GL2.FrameBufferRenderBuffer (EFrameBufferTarget.DrawAndRead, EFrameBufferAttachment.DepthStencil, mDepthBuffer);
-            if (GL2.CheckFrameBufferStatus (EFrameBufferTarget.Draw) != EFrameBufferStatus.Complete)
+            GL.BindRenderBuffer (ERenderBufferTarget.RenderBuffer, mColorBuffer);
+            GL.RenderBufferStorage (ERenderBufferFormat.RGBA8, viewport.X, viewport.Y);
+            GL.BindRenderBuffer (ERenderBufferTarget.RenderBuffer, mDepthBuffer);
+            GL.RenderBufferStorage (ERenderBufferFormat.Depth24Stencil8, viewport.X, viewport.Y);
+            GL.FrameBufferRenderBuffer (EFrameBufferTarget.DrawAndRead, EFrameBufferAttachment.Color0, mColorBuffer);
+            GL.FrameBufferRenderBuffer (EFrameBufferTarget.DrawAndRead, EFrameBufferAttachment.DepthStencil, mDepthBuffer);
+            if (GL.CheckFrameBufferStatus (EFrameBufferTarget.Draw) != EFrameBufferStatus.Complete)
                throw new NotImplementedException ();
          }
       } else
-         GL2.BindFrameBuffer (EFrameBufferTarget.DrawAndRead, 0);
+         GL.BindFrameBuffer (EFrameBufferTarget.DrawAndRead, 0);
    }
    static Vec2S mFBViewport;            // Viewport size, when rendering to a frame-buffer
    static HFrameBuffer mFrameBuffer;    // Frame-buffer for image rendering
@@ -378,7 +378,7 @@ public static partial class Lux {
    static object? EndRender (ETarget target, DIBitmap.EFormat fmt) {
       switch (target) {
          case ETarget.Image:
-            GL2.Finish ();
+            GL.Finish ();
             int x = mFBViewport.X, y = mFBViewport.Y, bpp = fmt.BytesPerPixel ();
             var pxfmt = fmt switch {
                DIBitmap.EFormat.RGBA8 => EPixelFormat.RGBA,
@@ -386,18 +386,18 @@ public static partial class Lux {
                DIBitmap.EFormat.Gray8 => EPixelFormat.Red,
                _ => throw new BadCaseException (fmt)
             };
-            GL2.PixelStore (EPixelStoreParam.PackAlignment, 4);
+            GL.PixelStore (EPixelStoreParam.PackAlignment, 4);
             byte[] data = new byte[bpp * x * y];
-            GL2.ReadPixels (0, 0, x, y, pxfmt, EPixelType.UByte, data);
+            GL.ReadPixels (0, 0, x, y, pxfmt, EPixelType.UByte, data);
             return new DIBitmap (x, y, fmt, data);
          case ETarget.Pick:
-            GL2.Finish ();
+            GL.Finish ();
             int size = (x = mFBViewport.X) * (y = mFBViewport.Y);
             if (size > mPickDepth.Length)
                (mPickPixel, mPickDepth) = (new byte[size * 4], new float[size]);
-            GL2.PixelStore (EPixelStoreParam.PackAlignment, 4);
-            GL2.ReadPixels (0, 0, x, y, EPixelFormat.BGRA, EPixelType.UByte, mPickPixel);
-            GL2.ReadPixels (0, 0, x, y, EPixelFormat.DepthComponent, EPixelType.Float, mPickDepth);
+            GL.PixelStore (EPixelStoreParam.PackAlignment, 4);
+            GL.ReadPixels (0, 0, x, y, EPixelFormat.BGRA, EPixelType.UByte, mPickPixel);
+            GL.ReadPixels (0, 0, x, y, EPixelFormat.DepthComponent, EPixelType.Float, mPickDepth);
             return (mPickPixel, mPickDepth);
       }
       return null;
