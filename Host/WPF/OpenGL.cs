@@ -45,6 +45,9 @@ class WPFOpenGL : IOpenGL {
    // the GL context
    public void Redraw () => WPFHost.GLPanel?.Redraw ();
 
+   /// <summary>Handle cursorvisible by setting it on the panel</summary>
+   public bool CursorVisible { set => Panel.CursorVisible = value; }
+
    // The DPI scaling can be obtained from the WPF main window using its TransformToDevice.
    // If no WPF main window exists, or if we are running tests, we just return 1. 
    public float DPIScale {

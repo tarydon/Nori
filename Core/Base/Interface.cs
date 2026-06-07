@@ -55,6 +55,8 @@ public interface IOpenGL {
    public Action<int, int> OnPaint { set; }
    /// <summary>Issues a redraw</summary>
    public void Redraw ();
+   /// <summary>Sets whether the cursor is visible over the rendering surface or not</summary>
+   public bool CursorVisible { set; }
 }
 #endregion
 

@@ -17,7 +17,7 @@ public static partial class Lux {
    /// <summary>Sets whether the cursor is visible or not when it is over the panel</summary>
    /// If this is set to false, then the current scene must 'paint' a cursor that follows
    /// the mouse movement
-   public static bool CursorVisible { set { } }  // TODO: Implement
+   public static bool CursorVisible { set => Hub.OpenGL.CursorVisible = value; }
 
    /// <summary>Subscribe to this to get a FPS (frames-per-second) report each second</summary>
    public static IObservable<int> FPS => mFPS;

@@ -18,7 +18,7 @@ class GLFWOpenGL : IOpenGL {
    // This gets set by the Lux renderer, and it typically just renders the
    // currently installed UIScene into the viewport
    public Action<int, int> OnPaint { set => GLFWHost.OnPaint = value; }
-
+   
    // The 'bootstrap' function used by the renderer to fetch pointers to all the other
    // functions it needs
    public Ptr GetGLProcAddress (string name) {
@@ -33,6 +33,9 @@ class GLFWOpenGL : IOpenGL {
    // In this implementation, it simply wakes up the GLFW message pump (if it is dormant) by
    // posting a dummy event into the queue
    public void Redraw () => GLFW.PostEmptyEvent ();
+
+   // Sets whether the mouse cursor is visible over the OpenGL render surface
+   public bool CursorVisible { set { } }
 
    // The current DPI-Scaling is fetched from the current GLFW window, if one has been 
    // created. When tests are running, we always set the DPIScale to 1 (for consistency across

@@ -8,6 +8,7 @@ using System.Windows;
 using System.Windows.Forms.Integration;
 using System.Windows.Threading;
 using static System.Windows.Forms.ControlStyles;
+using FCursor = System.Windows.Forms.Cursor;
 using WControl = System.Windows.Controls.UserControl;
 using Ptr = nint;
 
@@ -26,8 +27,8 @@ class Panel : WControl {
    // (this is just the implementation of the Lux.Panel.CursorVisible property)
    public static bool CursorVisible {
       set {
-         if (mIt?.mSurface is not { }) return;
-         throw new NotImplementedException (); 
+         if (mIt?.mSurface is not { } surface) return;
+         surface.Cursor = value ? null : Surface.EmptyCursor;
       }
    }
 
@@ -120,6 +121,17 @@ class Surface : UserControl {
       }
       WPFHost.OnReady?.Invoke ();
    }
+
+   /// <summary>An 'empty' cursor</summary>
+   internal static FCursor EmptyCursor {
+      get {
+         if (mEmptyCursor == null)
+            using (var stm = Lib.OpenRead ("nori:Cursor/Empty.cur"))
+               mEmptyCursor = new FCursor (stm);
+         return mEmptyCursor;
+      }
+   }
+   static FCursor? mEmptyCursor;
 
    // Override OnPaint to call back to PX.Render, where our actual paint code resides
    protected override void OnPaint (PaintEventArgs e) {
