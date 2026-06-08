@@ -633,9 +633,8 @@ public class Contour3 {
    }
 
    /// <summary>Project the Contour3 into a</summary>
-   public Poly Flatten (CoordSystem cs) {
+   public Poly Flatten (Matrix3 xfm) {
       var pb = PolyBuilder.It;
-      var xfm = Matrix3.From (cs);
       foreach (var edge in mCurves) {
          switch (edge) {
             case Line3 line:

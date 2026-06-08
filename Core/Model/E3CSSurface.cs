@@ -307,6 +307,38 @@ public sealed class E3Plane : E3CSSurface {
       return new E3Plane (id, [..curves], cs);
    }
 
+   // Properties ---------------------------------------------------------------
+   public override double Area {
+      get {
+         if (_area == 0) {
+            for (int i = 0; i < Polys.Length; i++) {
+               double area = Polys[i].GetArea (ETess.Medium) * (i == 0 ? 1 : -1);
+               _area += area;
+            }
+         }
+         return _area;
+      }
+   }
+   double _area;
+
+   public ImmutableArray<Poly> Polys {
+      get {
+         if (_polys.IsDefault) {
+            List<Poly> polys = [];
+            var xfm = Matrix3.From (CS);
+            for (int i = 0; i < Contours.Length; i++) {
+               var poly = Contours[i].Flatten (xfm);
+               if ((poly.GetWinding () == Poly.EWinding.CCW) != (i == 0))
+                  poly = poly.Reversed ();
+               polys.Add (poly);
+            }
+            _polys = [.. polys];
+         }
+         return _polys;
+      }
+   }
+   ImmutableArray<Poly> _polys;
+
    // Overrides ----------------------------------------------------------------
    // The mesh for the E3Plane can be built with just a simple 2D tessellation,
    // lofted up into the final space of the plane
@@ -314,8 +346,9 @@ public sealed class E3Plane : E3CSSurface {
       List<int> wires = []; int a = 0;
       using var tess = FastTess2D.Borrow ();
       tess.Tolerance = eTess;
+      var fromXfm = Matrix3.From (CS);
       for (int i = 0; i < Contours.Length; i++) {
-         int b = a + tess.AddPoly (Contours[i].Flatten (CS), i > 0);
+         int b = a + tess.AddPoly (Contours[i].Flatten (fromXfm), i > 0);
          wires.Add (b - 1);
          for (int j = a; j < b; j++) { wires.Add (j); wires.Add (j); }
          wires.RemoveLast ();
@@ -323,12 +356,12 @@ public sealed class E3Plane : E3CSSurface {
       }
       tess.Process ();
 
-      var xfm = ToXfm;
+      var toXfm = ToXfm;
       var pts = tess.Pts; var tris = tess.Tris;
       var normal = IsNormalFlipped ? -CS.VecZ : CS.VecZ;
       List<Mesh3.Node> nodes = [];
       foreach (var pt in pts) {
-         Point3 pt3 = pt * xfm;
+         Point3 pt3 = pt * toXfm;
          nodes.Add (new (new Point3f (pt3.X, pt3.Y, pt3.Z), normal));
       }
       Mesh3 mesh = new ([.. nodes], [.. tris], [.. wires]);

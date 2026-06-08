@@ -129,7 +129,8 @@ public abstract partial class Ent3 {
 [Flags]
 public enum E3Flags : uint {
    Selected = 1 << 0, Translucent = 1 << 1, FlipNormal = 1 << 2, GeneratrixFlat = 1 << 3,
-   ULinear = 1 << 4, VLinear = 1 << 5, NoStencil = 1 << 6, Colliding = 1 << 7,
+   ULinear = 1 << 4, VLinear = 1 << 5, NoStencil = 1 << 6, Colliding = 1 << 7, 
+   ContourWindingChecked = 1 << 8,
 }
 #endregion
 
@@ -245,7 +246,7 @@ public abstract class E3Surface : Ent3 {
 
    // Properties ---------------------------------------------------------------
    [DebuggerBrowsable (DebuggerBrowsableState.Never)]
-   public double Area => mArea.Cached (Mesh.GetArea);
+   public virtual double Area => mArea.Cached (Mesh.GetArea);
    double mArea = double.NaN;
 
    /// <summary>The Bound of the surface in 3D</summary>

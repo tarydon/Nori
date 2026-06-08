@@ -335,14 +335,14 @@ public partial class Poly {
 
    /// <summary>Returns the area of a Poly</summary>
    /// Results are meaningful only for closed Poly
-   public double GetArea () {
+   public double GetArea (ETess tess = ETess.Fine) {
       if (IsCircle) {
          double radius = Extra[0].Center.DistTo (Pts[0]);
          return PI * radius * radius;
       }
       if (HasArcs) {
          List<Point2> pts = [];
-         Discretize (pts, ETess.Fine);
+         Discretize (pts, tess);
          return GetArea (pts.AsSpan ());
       } else {
          return GetArea (Pts.AsSpan ());
