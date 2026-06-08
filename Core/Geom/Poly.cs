@@ -341,9 +341,9 @@ public partial class Poly {
          return PI * radius * radius;
       }
       if (HasArcs) {
-         List<Point2> pts = [];
-         Discretize (pts, tess);
-         return GetArea (pts.AsSpan ());
+         List<Point2> pts = ListPool<Point2>.Borrow ();
+         try { Discretize (pts, tess); return GetArea (pts.AsSpan ()); }
+         finally { ListPool<Point2>.Return (pts); }
       } else {
          return GetArea (Pts.AsSpan ());
       }

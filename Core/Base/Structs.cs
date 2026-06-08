@@ -267,6 +267,12 @@ public readonly struct PlaneDef {
       D = -(A * pt.X + B * pt.Y + C * pt.Z);
    }
 
+   public PlaneDef (in CoordSystem cs) {
+      var (normal, pt) = (cs.VecZ, cs.Org);
+      A = normal.X; B = normal.Y; C = normal.Z;
+      D = -(A * pt.X + B * pt.Y + C * pt.Z);
+   }
+
    // Properties ---------------------------------------------------------------
    /// <summary>Coefficients of the plane equation</summary>
    /// These are normalized such that A^2 + B^2 + C^2 = 1

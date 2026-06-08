@@ -2,6 +2,7 @@
 // ╔═╦╦═╦╦╬╣ BorrowPool.cs
 // ║║║║╬║╔╣║ Implements BorrowPool<T> class and the IBorrowable<T> interface
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
+using System.Collections.Concurrent;
 using System.Threading;
 namespace Nori;
 
@@ -146,3 +147,16 @@ static partial class BorrowPool<T> {
 }
 #endif
 #endregion
+
+public static class ListPool<T> {
+   public static List<T> Borrow () {
+      if (sBag.TryTake (out var list)) return list;
+      return [];
+   }
+
+   public static void Return (List<T> list) {
+      list.Clear (); sBag.Add (list);
+   }
+
+   static ConcurrentBag<List<T>> sBag = [];
+}

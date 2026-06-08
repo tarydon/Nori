@@ -20,6 +20,9 @@ partial class STEPReader {
    }
    readonly Model3 mModel = new ();
 
+   public static Model3 Load (string file)
+      => new STEPReader (file).Load ();
+
    // Implementation -----------------------------------------------------------
    // Given a vertex point object, fetches the underlying point
    Point3 GetPoint (int nVertexPoint) {

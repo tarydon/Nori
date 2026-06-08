@@ -440,15 +440,12 @@ public readonly struct Bound3 : IEQuable<Bound3> {
    public bool IsEmpty => X.IsEmpty || Y.IsEmpty || Z.IsEmpty;
    public Point3 Midpoint => new (X.Mid, Y.Mid, Z.Mid);
 
-   public double Diagonal {
-      get {
-         double dx = X.Length, dy = Y.Length, dz = Z.Length;
-         return Sqrt (dx * dx + dy * dy + dz * dz);
-      }
-   }
-
    /// <summary>The diagonal vector of this Bound3</summary>
    public Vector3 DiagVector => new (X.Length, Y.Length, Z.Length);
+   /// <summary>
+   /// The length of the diagonal vector of this bound
+   /// </summary>
+   public double Diagonal => DiagVector.Length;
 
    // Methods ------------------------------------------------------------------
       /// <summary>Check if a Bound3 contains a given 3D point</summary>

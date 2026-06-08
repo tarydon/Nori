@@ -9,7 +9,21 @@ class Program {
       w.Run (true);
    }
 
-   static void OnReady () => Lux.UIScene = new DemoScene ();
+   static void OnReady () {
+      new SceneManipulator ();
+      Lux.UIScene = new NewScene ();
+   }
+}
+
+class NewScene : Scene3 {
+   public NewScene () {
+      var model = STEPReader.Load ("N:/TData/STEP/S00178.stp");
+      var shmodel = new ModelThickener (model).Process ();
+
+      Bound = shmodel.Bound;
+      BgrdColor = new Color4 (192, 184, 200);
+      Root = new Model3VN (shmodel);
+   }
 }
 
 class DemoScene : Scene2 {
