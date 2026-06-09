@@ -1,4 +1,7 @@
-﻿using Nori;
+﻿using System.Collections.Generic;
+using System.ComponentModel;
+using System.Linq;
+using Nori;
 namespace GLFWDemo;
 
 class Program {
@@ -23,9 +26,55 @@ class NewScene : Scene3 {
       var model = STEPReader.Load ("N:/TData/STEP/S00178.stp");
       var shmodel = new SheetMetalizer (model).Process ();
 
-      Bound = shmodel.Bound;
+      //List<int> parents = [];
+      //for (int i = 0; i < shmodel.Ents.Count; i++) {
+      //   if (shmodel.Ents[i] is E3Thick et) parents.Add (shmodel.Ents.IndexOf (et.Parent!));
+      //   else parents.Add (-1);
+      //}
+      //var plane = shmodel.Ents.OfType<E3Flat> ().First ();
+      //var xfm = Matrix3.From (plane.CS);
+      //for (int i = 0; i < shmodel.Ents.Count; i++)
+      //   shmodel.Ents[i] *= xfm;
+      //for (int i = 0; i < shmodel.Ents.Count; i++)
+      //   if (parents[i] != -1) ((E3Thick)shmodel.Ents[i]).Parent = (E3Thick)shmodel.Ents[parents[i]];
+
+      List<VNode> nodes = [];
+      var pose = new BendPose (shmodel);
+      pose.SetLie (0.5);
+      nodes.AddRange (pose.Nodes.Select (a => new BPoseNodeVN (a)));
+      nodes.Add (TraceVN.It);
+
+      Bound = pose.GetBound (0);
+      var dwg = GetDrawing (pose);
+      // nodes.Clear ();
+
+      var b2 = dwg.Bound;
+      Bound += new Bound3 (b2.X.Min, b2.Y.Min, -10, b2.X.Max, b2.Y.Max, 10);
+      nodes.Add (new Dwg2VN (dwg));
       BgrdColor = new Color4 (90, 100, 110);
-      Root = new GroupVN ([new Model3VN (shmodel), TraceVN.It]);
+      Root = new GroupVN (nodes);
+   }
+
+   Dwg2 GetDrawing (BendPose pose) {
+      Dwg2 dwg = new ();
+      pose.SetLie (0);
+
+      var plane = (E3Flat)pose.Nodes.First ().Ent;
+      var xfmRoot = Matrix3.From (plane.CS);
+
+      foreach (var node in pose.Nodes) {
+         if (node.Ent is E3Flat flat) {
+            var xfm = flat.ToXfm * node.Xfm * xfmRoot;
+            foreach (var shape in flat.Shape)
+               dwg.Add (shape * xfm);
+         }
+         if (node.Ent is E3Flex flex) {
+            var xfm = flex.ToXfm * node.Xfm * xfmRoot;
+            foreach (var shape in flex.Shape)
+               dwg.Add (shape * xfm);
+         }
+      }
+      return dwg;
    }
 }
 

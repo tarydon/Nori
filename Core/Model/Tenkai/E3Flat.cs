@@ -25,7 +25,7 @@ public abstract class E3Thick : Ent3 {
 
    /// <summary>Constructor used by Xform</summary>
    protected E3Thick (E3Thick other, Matrix3 xfm) : base (other.Id) {
-      mCS = other.mCS * xfm;
+      mCS = other.mCS * xfm; mThickness = other.mThickness;
       if (other._mesh != null) _mesh = other._mesh * xfm;
       mShape = other.mShape;
    }

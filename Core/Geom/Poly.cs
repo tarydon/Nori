@@ -657,6 +657,19 @@ public partial class Poly {
       }
    }
 
+   public static Poly operator * (Poly p, Matrix3 xfm) {
+      if (p.IsCircle) {
+         var cen = p.Extra[0].Center;
+         double radius = cen.DistTo (p.A) * xfm.ScaleFactor;
+         return Circle ((Point2)(cen * xfm), radius);
+      } else {
+         var pts = p.Pts.Select (a => (Point2)(a * xfm)).ToImmutableArray ();
+         ImmutableArray<ArcInfo> extra = [];
+         if (p.HasArcs) extra = [.. p.Extra.Select (a => a * xfm)];
+         return new Poly (pts, extra, p.mFlags);
+      }
+   }
+
    // Nested types -------------------------------------------------------------
    [Flags]
    public enum EFlags : ushort {
@@ -682,6 +695,11 @@ public partial class Poly {
       public static ArcInfo operator * (ArcInfo e, Matrix2 xfm) {
          if ((e.Flags & EFlags.Arc) == 0) return e;
          return new (e.Center * xfm, xfm.IsMirror ? e.Flags ^ EFlags.Arc : e.Flags);
+      }
+
+      public static ArcInfo operator * (ArcInfo e, Matrix3 xfm) {
+         if ((e.Flags & EFlags.Arc) == 0) return e;
+         return new ((Point2)(e.Center * xfm), xfm.HasMirroring ? e.Flags ^ EFlags.Arc : e.Flags);
       }
    }
    /// <summary>This array is populated only if the Poly has any arcs</summary>
