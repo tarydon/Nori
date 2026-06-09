@@ -274,10 +274,7 @@ public readonly struct Bound2 : IEQuable<Bound2> {
    /// <summary>Write a Bound2 to a UTF8 stream</summary>
    public void Write (UTFWriter W) {
       if (IsEmpty) W.Write ("Empty"u8);
-      else {
-         float dx = (float)X.Length, dy = (float)Y.Length;
-         W.WriteR5 (dx).Write ('x').WriteR5 (dy).Write ('@').WriteR5 (X.Min).Write (',').WriteR5 (Y.Min);
-      }
+      else W.WriteR5 (X.Min).Write (',').WriteR5 (Y.Min).Write (':').WriteR5 (X.Max).Write (',').WriteR5 (Y.Max);
    }
    public override string ToString () => UTFWriter.ToString (Write);
 

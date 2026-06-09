@@ -32,6 +32,22 @@ class CurlTests {
       RoundTrip ("IO/DXF/Out/Point.curl");
    }
 
+   [Test (256, "E3Contour test")]
+   void Test4 () {
+      var stp = new STEPReader (NT.File ("STEP/5X-039.stp")).Load ();
+      CurlWriter.Save (stp, NT.TmpCurl);
+      Assert.TextFilesEqual ("STEP/5X-039.curl", NT.TmpCurl);
+      RoundTrip ("STEP/5X-039.curl");
+   }
+
+   [Test (257, "Surface meshes test")]
+   void Test5 () {
+      var t3x = new T3XReader (NT.File ("IO/T3X/5X-032.t3x")).Load ();
+      CurlWriter.Save (t3x, NT.TmpCurl);
+      Assert.TextFilesEqual ("IO/T3X/5X-032.curl", NT.TmpCurl);
+      RoundTrip ("IO/T3X/5X-032.curl");
+   }
+
    void RoundTrip (string file) {
       if (!Path.IsPathRooted (file)) file = NT.File (file);
       var obj = CurlReader.Load (file);
