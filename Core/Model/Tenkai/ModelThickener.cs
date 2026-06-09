@@ -1,11 +1,10 @@
-﻿using Nori.STEP;
-
-namespace Nori;
+﻿namespace Nori;
 
 public partial class ModelThickener {
-   public ModelThickener (Model3 model) => mModel = model;
+   public ModelThickener (Model3 model) { mModel = model; mShModel = model; }
 
    public Model3 Process () {
+      mModel.Ents.ForEach (a => a.IsTranslucent = true);
       var planes = mModel.Ents.OfType<E3Plane> ().OrderByDescending (a => a.Area).ToList ();
       if (ComputeBaseplane () is not TFlat tpBase) return mShModel;
 
@@ -55,7 +54,7 @@ public partial class ModelThickener {
 
    // Private data -------------------------------------------------------------
    readonly Model3 mModel;             // The input surface model
-   readonly Model3 mShModel = new ();   // The output sheet-metal model
+   readonly Model3 mShModel;           // The output sheet-metal model
    HashSet<E3CSSurface> mUsed = [];
    double Thickness;
 }
@@ -76,6 +75,7 @@ public partial class ModelThickener {
                cs = new CoordSystem (cs.Org, cs.VecX, -cs.VecY);
                for (int i = 0; i < set.Count; i++) set[i] = (set[i] * Matrix2.VMirror).Reversed ();
             }
+            cs += cs.VecZ * mOwner.Thickness / 2;
             mFlat = new E3Flat (mOwner.mShModel.Ents.Count + 1, cs, mOwner.Thickness, set);
          }
          return mFlat;
@@ -116,6 +116,7 @@ public partial class ModelThickener {
          List<E3Cylinder> set = [];
          Vector3 vec = plane.CS.VecZ;
          foreach (var cyl in mOwner.mModel.GetNeighbors (plane).OfType<E3Cylinder> ()) {
+            if (mOwner.mUsed.Contains (cyl)) continue; 
             double cos = vec.CosineToAlreadyNormalized (cyl.CS.VecZ);
             if (cos.IsZero (1e-5)) set.Add (cyl);
          }
@@ -130,26 +131,77 @@ public partial class ModelThickener {
    class TFlex {
       public TFlex (ModelThickener owner, TFlat parent, E3Cylinder c0, E3Cylinder c1) {
          mOwner = owner; mParent = parent; mCyl0 = c0; mCyl1 = c1;
+         owner.mUsed.Add (c0); owner.mUsed.Add (c1);
       }
 
       public E3Flex? Build () {
          var model = mOwner.mModel;
-         if (model.GetSharedEdge (mCyl0, mParent.Plane0) is not Line3 line0) return null;
-         if (model.GetSharedEdge (mCyl1, mParent.Plane1) is not Line3 line1) return null;
+         Lib.Trace ("Building...");
 
-         //// Let's compute the coordinate system to use for the flex. Origin is at the 
-         //// midpoint of the thickness
-         //Point3 side0 = line0.Midpoint, side1 = side0.SnappedToLine (line1.Start, line1.End);
-         
-         //Point3 org = side0.Midpoint (side1);
-         //Vector3 vecz = mParent.Plane0.CS.VecZ, vecx = (line0.End - line0.Start).Normalized ();
-         //Vector3 vecy = 
+         var plane0 = mParent.Plane0; 
+         if (model.GetSharedEdge (plane0, mCyl0) is not Line3 line0) return null;
+         if (model.GetSharedEdge (mParent.Plane1, mCyl1) is not Line3 line1) return null;
 
-         //Lib.Check (side0.DistTo (side1).EQ (mOwner.Thickness, 0.0001), "Thickener 1");
+         // Let's propose a foundation coordinate system for the Flex
+         double radius = (mCyl0.Radius + mCyl1.Radius) / 2;
+         Point3 side0 = line0.Midpoint, side1 = side0.SnappedToLine (line1.Start, line1.End);
+         Point3 org = side0.Midpoint (side1);
+         Vector3 vecx = (line0.Start - line0.End).Normalized (), vecz = plane0.CS.VecZ, vecy = vecz * vecx;
 
-         
+         // See if the cylinder lies on the +Y side of this proposed coordinate system
+         List<Poly> trims = [];
+         List<Point3> pts = ListPool<Point3>.Borrow ();
+         List<Point2> uvs = ListPool<Point2>.Borrow ();
+         var cylinder = mCyl0.Radius > mCyl1.Radius ? mCyl0 : mCyl1;
+         bool upward = true; double angSpan = 0;
 
-         return null;
+         // This is the transform we're going to use while projecting the E3Cylinder contours to
+         // trimming curves on the E3Flex (we'll compute it in the first iteration below)
+         Matrix3 xfmProj = Matrix3.Identity;
+
+         try {
+            for (int i = 0; i < cylinder.Contours.Length; i++) {
+               pts.Clear (); uvs.Clear (); 
+               cylinder.Contours[i].Discretize (pts, ETess.Medium);
+               if (i == 0) {
+                  // If this is the outer contour, do some checks to ensure the flex orientation.
+                  // First, the +Y direction of the flex CS should point out of the plane, and
+                  // into the flex. Check that:
+                  PlaneDef pdef = new (org, vecy);
+                  Bound1 bound = new (pts.Select (pdef.SignedDist));
+                  if (bound.Mid < 0) (vecx, vecy) = (-vecx, -vecy);
+                  // Next, determine of the flex is upward in Z 
+                  pdef = new (org, vecz);
+                  bound = new (pts.Select (pdef.SignedDist));
+                  if (bound.Mid < 0) upward = false;
+
+                  // Compute the xfmProj defined above here
+                  Point3 fOrg = org.SnappedToLine (cylinder.CS.Org, cylinder.CS.Org + cylinder.CS.VecZ);
+                  Vector3 fVecX = (org - fOrg).Normalized (), fVecZ = cylinder.CS.VecZ, fVecY = fVecZ * fVecX;
+                  if (fVecY.Opposing (vecy)) fVecY = -fVecY;
+                  xfmProj = Matrix3.From (new (fOrg, fVecX, fVecY));
+               }
+
+               // Next: compute the flex trimming curve corresponding to this contour. 
+               foreach (var pt in pts) {
+                  var ptf = pt * xfmProj;
+                  uvs.Add (new (ptf.Z, radius * Math.Atan2 (ptf.Y, ptf.X)));
+               }
+
+               Bound1D yBound = new ();
+               trims.Add (Poly.Lines (uvs, true).Clean ());
+               foreach (var pt in uvs) yBound += pt.Y;
+               Lib.Check (yBound.Mid > 0, "ModelThickener 2");
+               if (i == 0) angSpan = yBound.Max / radius;
+            }
+         } finally { 
+            ListPool<Point3>.Return (pts); 
+         }
+         return new E3Flex (mOwner.mShModel.Ents.Count + 1,
+                     new CoordSystem (org, vecx, vecy),
+                     mOwner.Thickness,
+                     new BSpine (radius, angSpan, 0.5, upward),
+                     trims);
       }
 
       readonly ModelThickener mOwner;

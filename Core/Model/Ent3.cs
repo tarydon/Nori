@@ -343,9 +343,9 @@ public abstract class E3Surface : Ent3 {
    // by evaluating the contours
    Bound3 ComputeBound () {
       if (_mesh != null) return _mesh.Bound;
-      List<Point3> pts = [];
-      Contours[0].Discretize (pts, ETess.Coarse);
-      return new (pts);
+      List<Point3> pts = ListPool<Point3>.Borrow ();
+      try { Contours[0].Discretize (pts, ETess.Coarse); return new (pts); } 
+      finally { ListPool<Point3>.Return (pts); }
    }
 
    protected void CopyMeshFrom (E3Surface src, Matrix3 xfm) {

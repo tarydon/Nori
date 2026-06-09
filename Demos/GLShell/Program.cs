@@ -11,6 +11,9 @@ class Program {
 
    static void OnReady () {
       new SceneManipulator ();
+      TraceVN.TextColor = Color4.Yellow;
+      TraceVN.HoldTime = 15;
+      Lib.Tracer = TraceVN.Print;
       Lux.UIScene = new NewScene ();
    }
 }
@@ -21,8 +24,8 @@ class NewScene : Scene3 {
       var shmodel = new ModelThickener (model).Process ();
 
       Bound = shmodel.Bound;
-      BgrdColor = new Color4 (192, 184, 200);
-      Root = new Model3VN (shmodel);
+      BgrdColor = new Color4 (90, 100, 110);
+      Root = new GroupVN ([new Model3VN (shmodel), TraceVN.It]);
    }
 }
 

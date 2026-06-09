@@ -22,6 +22,14 @@ public readonly struct Bound1 : IEQuable<Bound1> {
    /// <summary>Constructs a bound that encompasses a and b (a and b need not be ordered)</summary>
    public Bound1 (float a, float b) => (Min, Max) = (MathF.Min (a, b), MathF.Max (a, b));
 
+   /// <summary>
+   /// Construct a Bound1 that encompassses a given range of values
+   /// </summary>
+   public Bound1 (IEnumerable<double> vals) {
+      (Min, Max) = (float.MaxValue, float.MinValue);
+      foreach (var f in vals) { Min = Math.Min ((float)f, Min); Max = Math.Max ((float)f, Max); }
+   }
+
    /// <summary>Read a Bound1 from a UTF8 stream</summary>
    public static Bound1 Read (UTFReader R) {
       if (R.Peek () == 'E') {
