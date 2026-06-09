@@ -1,12 +1,10 @@
 // ────── ╔╗
-// ╔═╦╦═╦╦╬╣ Init.cs
+// ╔═╦╦═╦╦╬╣ Host.cs
 // ║║║║╬║╔╣║ <<TODO>>
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
-using System.Reflection;
 namespace Nori;
 
-public class Lux2 {
-   public static void Init () {
-      VNode.RegisterAssembly (Assembly.GetExecutingAssembly ());
+public static class Host {
+   public void Init () {
    }
 }

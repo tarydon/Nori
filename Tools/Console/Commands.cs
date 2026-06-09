@@ -4,8 +4,6 @@
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 using System.Diagnostics;
 using System.Reflection;
-using System.Security.AccessControl;
-using System.Security.Principal;
 namespace Nori.Con;
 
 #region class ComputeCoverage ----------------------------------------------------------------------

@@ -33,7 +33,7 @@ class BuildOBBScene : Scene3 {
 
    public override void Picked (object obj) {
       if (obj is not E3Surface e3s) return;
-      if (!HW.IsShiftDown) mSurfaces.ForEach (Deselect);
+      if ((Hub.Keyboard.Modifiers & EKeyModifier.Shift) == 0) mSurfaces.ForEach (Deselect);
       e3s.IsSelected = true; e3s.IsTranslucent = e3s.NoStencil = false;
 
       List<Point3f> pts = [];

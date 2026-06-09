@@ -1,0 +1,17 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+		<OutDir>..\..\Bin</OutDir>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Core\Nori.Core.csproj" />
+    <ProjectReference Include="..\..\Host\GLFW\Nori.Host.GLFW.csproj" />
+    <ProjectReference Include="..\..\Lux\Nori.Lux.csproj" />
+  </ItemGroup>
+
+</Project>

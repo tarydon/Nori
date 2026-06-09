@@ -31,7 +31,7 @@ class PaperFolderTests {
    void Test8 () => Process ("H", 600, 448, -60, 45);
 
    [Test (237, "Fold I.dxf: Simple double-flange")]
-   void Test9 () => Process ("I", 600, 302, -60, 45);
+   void Test9 () => Process ("I", 600, 302, -60, 45); 
 
    [Test (238, "Fold J.dxf: Flange-in-flange-in-flange")]
    void Test10 () => Process ("J", 600, 402, -60, 105);
@@ -60,6 +60,6 @@ class PaperFolderTests {
                                Root = new Model3VN (model), Viewpoint = new (xRot, yRot) };
       var dib = scene.RenderZoomedImage (new (cx, cy), DIBitmap.EFormat.Gray8, out _);
       new PNGWriter (dib).Write (NT.TmpPNG);
-      Assert.PNGFilesEqual (NT.File ($"Tenkai/Fold/{file}.png"), NT.TmpPNG, dib);
+      Assert.PNGFilesEqual (NT.File ($"Tenkai/Fold/{file}.png"), NT.TmpPNG, dib);      
    }
 }

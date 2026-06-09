@@ -2,9 +2,13 @@
   <Folder Name="/Demos/">
     <Project Path="Demos/BenchShell/BenchShell.csproj" />
     <Project Path="Demos/ConShell/ConShell.csproj" />
+    <Project Path="Demos/GLShell/GLShell.csproj" />
     <Project Path="Demos/WPFDemo/WPFDemo.csproj" />
-    <Project Path="Demos/WPFShell/WPFShell.csproj" />
-    <Project Path="Demos/Zuki/Zuki.csproj" Id="99740015-5b2e-4011-a262-6c531db4a212" />
+  </Folder>
+  <Folder Name="/Host/">
+    <Project Path="Host/GLFW/Nori.Host.GLFW.csproj" />
+    <Project Path="Host/WPF/Nori.Host.WPF.csproj" />
+    <Project Path="GLU/Nori.GLU.csproj" />
   </Folder>
   <Folder Name="/Test/">
     <Project Path="Test/Nori.Test.csproj" />
@@ -17,5 +21,4 @@
   </Folder>
   <Project Path="Core/Nori.Core.csproj" />
   <Project Path="Lux/Nori.Lux.csproj" />
-  <Project Path="WGL/Nori.WGL.csproj" />
 </Solution>

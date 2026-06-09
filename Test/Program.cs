@@ -16,8 +16,11 @@ class Program {
    // The constructor gathers all the tests, and also parses the command line arguments
    Program (string[] args) {
       Lib.Init ();
-      Lux2.Init (); 
-      Lux.CreatePanel (true);
+      GLFWHost.Init (() => { });
+      // Create an invisible, fixed size, undecorated window (just so we have an OpenGL
+      // context for rendering offscreen images)
+      mWindow = new Window (500, 500, "Nori-Testing", Window.EFlags.None);
+      Lib.Tessellate = FastTess2D.Process;
       foreach (var arg in args) {
          if (int.TryParse (arg, out int n)) {
             if (n >= 0) mTestID.Add (n);
@@ -27,6 +30,7 @@ class Program {
    }
    readonly List<int> mTestID = [];       // If non-empty, run only these tests
    readonly List<int> mFixtureID = [];    // If non-empty, run only these fixtures
+   readonly Window mWindow;
 
    // This runs the tests in this assembly
    void Run () {
@@ -36,6 +40,7 @@ class Program {
       TestRunner.StopOnFail = args.Contains ("-STOP");
       TestRunner.RunDiff = args.Contains ("-DIFF");
       TestRunner.OnlyFailed = args.Contains ("-FAILED");
+      TestRunner.OnlySkipped = args.Contains ("-SKIPPED");
       string fail = NT.File ("failed.txt");
       if (File.Exists (fail)) {
          // If the 'failed.txt' exists, load it in
@@ -48,6 +53,8 @@ class Program {
 
    // This is the filter used to run specific tests or fixtures
    TestRunner.ETest Filter (Test t) {
+      if (TestRunner.OnlySkipped && !t.Skip)
+         return TestRunner.ETest.Hide;
       if (TestRunner.OnlyFailed && !TestRunner.FailList.Contains (t.Id))
          return TestRunner.ETest.Hide;
       if (mTestID.Count > 0 || mFixtureID.Count > 0)

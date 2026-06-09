@@ -19,7 +19,6 @@
          <Button Click="LineFontDemo">Line Fonts</Button>
          <Button Click="TrueTypeDemo">TrueType Text</Button>
          <Button Click="TessDemo">Tessellation</Button>
-         <Button Click="BooleanDemo">Poly Boolean</Button>
          <Button Click="DwgDemo">Load DXF</Button>
          <Button Click="RobotDemo">Robot IK/FK</Button>
          <Button Click="STPDemo">Load STEP</Button>

@@ -3,7 +3,7 @@
 // ║║║║╬║╔╣║ The Lux class: public interface to the Lux rendering engine
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 using System.Reactive.Subjects;
-using System.Windows.Threading;
+using System.Reflection;
 namespace Nori;
 
 #region class Lux ----------------------------------------------------------------------------------
@@ -17,7 +17,7 @@ public static partial class Lux {
    /// <summary>Sets whether the cursor is visible or not when it is over the panel</summary>
    /// If this is set to false, then the current scene must 'paint' a cursor that follows
    /// the mouse movement
-   public static bool CursorVisible { set => HW.CursorVisible = value; }
+   public static bool CursorVisible { set => Hub.OpenGL.CursorVisible = value; }
 
    /// <summary>Subscribe to this to get a FPS (frames-per-second) report each second</summary>
    public static IObservable<int> FPS => mFPS;
@@ -30,10 +30,6 @@ public static partial class Lux {
    /// <summary>If set, we are redering a frame for 'picking'</summary>
    public static bool IsPicking => mIsPicking;
    static bool mIsPicking;
-
-   /// <summary>Subscribe to this to know when Lux is ready (event raised only once)</summary>
-   public static IObservable<int> OnReady => mOnReady;
-   internal static Subject<int> mOnReady = new ();
 
    /// <summary>The panel size of the Lux rendering panel</summary>
    public static Vec2S PanelSize => mPanelSize;
@@ -53,10 +49,6 @@ public static partial class Lux {
       }
    }
 
-   /// <summary>Returns true if Lux is ready to use</summary>
-   public static bool Ready => mReady;
-   static bool mReady;
-
    /// <summary>Enumerates all the sub-scenes (use Scene.Rect to get the pixel-area it uses)</summary>
    public static IEnumerable<Scene> SubScenes => mScenes.Select (a => a.Scene).Skip (1);
    static readonly List<(Scene Scene, Bound2 Bound)> mScenes = [];
@@ -65,17 +57,18 @@ public static partial class Lux {
    public static Scene? UIScene {
       get => mScenes.Count > 0 ? mScenes[0].Scene : null;
       set {
+         Init ();
          BackFacesPink = false;
          mScenes.ForEach (a => a.Scene.Detach ());
          mScenes.Clear ();
          if (value != null) {
             value.Attach ();
             mViewBound.OnNext (0);
-            HW.CursorVisible = value.CursorVisible;
+            CursorVisible = value.CursorVisible;
             value.Rect = new (0, 0, mPanelSize.X, mPanelSize.Y);
             mScenes.Add ((value, new (0, 0, 1, 1)));
          } else
-            HW.CursorVisible = true;
+            CursorVisible = true;
          Redraw ();
       }
    }
@@ -104,14 +97,6 @@ public static partial class Lux {
       Redraw ();
    }
 
-   /// <summary>Creates the Lux rendering panel</summary>
-   public static object CreatePanel (bool createHost = false) {
-      return WinGL.Create (OnReady, OnPaint, createHost);
-
-      static void OnReady () { mReady = true; mOnReady.OnNext (0); }
-      static void OnPaint (int x, int y) => Render (UIScene, new Vec2S (x, y), ETarget.Screen, DIBitmap.EFormat.Unknown);
-   }
-
    public static void DumpStats () {
       Debug.Print ("Buffers:");
       foreach (var buf in RetainBuffer.All.GetSnapshot ()) Debug.Print (buf.ToString ());
@@ -123,11 +108,24 @@ public static partial class Lux {
    public static void FlushPickBuffer () => mPickBufferValid = false;
    static bool mPickBufferValid;
 
+   // Init method - initializes 
+   internal static void Init () {
+      if (!sInited) {
+         sInited = true; 
+         VNode.RegisterAssembly (Assembly.GetExecutingAssembly ());
+         Hub.OpenGL.OnPaint = OnPaint;
+      }
+
+      static void OnPaint (int x, int y)
+         => Render (UIScene, new Vec2S (x, y), ETarget.Screen, DIBitmap.EFormat.Unknown);
+   }
+   static bool sInited;
+
    /// <summary>This does a 'pick' operation on the current UIScene</summary>
    /// This effectively returns the VNode that lies underneat the current mouse position.
    public static VNode? Pick (Vec2S pos) {
       // If we're doign any simulation, return null
-      if (!(mReady || Lib.Testing) || mRendering) return null;
+      if (mRendering) return null;
       var scene = PickScene (pos);
       if (scene == null || sRenderCompletes.Any (a => a.Scene == scene)) return null;
       var viewport = scene.Rect.Size;
@@ -265,7 +263,7 @@ public static partial class Lux {
    static bool mRendering;          // Currently rendering a frame
 
    /// <summary>Prompts the Lux system to redraw the screen (asynchronous)</summary>
-   public static void Redraw () => HW.Redraw ();
+   public static void Redraw () => Hub.OpenGL?.Redraw ();
 
    /// <summary>This is called to initiate 'continuous rendering'</summary>
    /// This function takes a 'callback' that will be invoked after each frame is rendered. Once
@@ -292,7 +290,6 @@ public static partial class Lux {
    }
    static DateTime sLastFrametime;
    static readonly List<(Scene Scene, Action<double> Tick)> sRenderCompletes = [];
-   static DispatcherTimer? sTimer;
 
    /// <summary>A variant of StartContinuousRender used to start animation on a sub-scene</summary>
    /// The default version of StartContinuousRender assumes that the animation is happening
@@ -305,29 +302,17 @@ public static partial class Lux {
    /// pick is disabled only on the target scene, use this variant. 
    public static void StartContinuousRender (Scene subScene, Action<double> renderComplete) {
       sRenderCompletes.Add ((subScene, renderComplete));
-      if (sRenderCompletes.Count == 1) {
-         // If this is the first render-complete function, start the backup timer running.
-         // We need this backup timer because the RenderComplete event is not always dependable.
-         // Normally, if we are running at 60 fps, we should hit the render-complete each 16.66 ms,
-         // and the timer would never fire.
-         if (sTimer == null) {
-            sTimer = new () { Interval = TimeSpan.FromMilliseconds (40), IsEnabled = true };
-            sTimer.Tick += (_, _) => Redraw ();
-         }
-         // Issue one redraw to prime things off
-         sTimer.Start ();
-         sLastFrametime = DateTime.Now;
-         Redraw ();
-      }
+      mTimers ??= Hub.Dispatcher.Timer (TimeSpan.FromMilliseconds (40), true, Redraw);
+      Redraw ();
    }
+   static IDisposable? mTimers;
 
    /// <summary>This detaches a callback from the continous-render loop</summary>
    /// This is the opposite of StartContinuousRender above. Once all the callbacks have
    /// retired, we stop the loop.
    public static void StopContinuousRender (Action<double> renderComplete) {
       sRenderCompletes.RemoveIf (a => a.Tick == renderComplete);
-      if (sRenderCompletes.Count == 0 && sTimer != null)
-         sTimer.Stop ();
+      if (sRenderCompletes.Count == 0) { mTimers?.Dispose (); mTimers = null; }
    }
 
    // Internal properties ------------------------------------------------------

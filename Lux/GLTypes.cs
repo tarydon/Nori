@@ -20,7 +20,8 @@ public enum EBlendFactor : uint { Zero = 0, One = 1, SrcAlpha = 770, OneMinusSrc
 // Various capabilities we can Enable / Disable
 public enum ECap : uint { 
    Blend = 0xBE2, DepthTest = 0xB71, PolygonOffsetFill = 0x8037, ScissorTest = 0xC11,
-   CullFace = 0xB44, StencilTest = 0xB90, PrimitiveRestart = 0x8F9D
+   CullFace = 0xB44, StencilTest = 0xB90, PrimitiveRestart = 0x8F9D, DebugOutput = 0x92E0,
+   DebugOutputSynchronous = 0x8242,
 }
 
 // Various data types for storing in vertex array buffers
@@ -33,6 +34,8 @@ public enum EDataType : uint {
 
 // Binding targets for a FrameBuffer
 public enum EFrameBufferTarget : uint { Draw = 0x8CA9, Read = 0x8CA8, DrawAndRead = 0x8D40 }
+
+public enum ESeverity : uint { High = 0x9146, Medium = 0x9147, Low = 0x9148, Info = 0x826b, DontCare = 0x1100 };
 
 // Defines a frame-buffer attachment point
 public enum EFrameBufferAttachment { Depth = 0x8D00, Color0 = 0x8CE0, Color1 = 0x8CE1, DepthStencil = 0x821A }
@@ -90,9 +93,6 @@ public enum EProgramParam : uint {
    InfoLogLength = 0x8B84, LinkStatus = 0x8B82, ActiveAttributes = 0x8B89, ActiveUniforms = 0x8B86
 }
 
-// Various Primitive types used in tessellation
-enum EPrimitive { Triangles = 0x0004, TriangleStrip = 0x0005, TriangleFan = 0x0006 }
-
 // Used with 'patches' type glDrawElements
 public enum EPatchParam : uint { PatchVertices = 36466 }
 
@@ -126,18 +126,9 @@ public enum EPixelInternalFormat : uint { Red = 6403, RGB = 6407, RGBA = 6408 }
 public enum ETexParam : uint { MagFilter = 0x2800, MinFilter = 0x2801, WrapS = 0x2802, WrapT = 0x2803 }
 public enum ETexFilter { Nearest = 9728, Linear = 9729 }
 public enum ETexWrap { Clamp = 10496, Repeat = 10497 }
-// Enumeration for the winding-rule to be used in polygon tessellation and boolean operations
-public enum EWindingRule { Odd = 100130, NonZero = 100131, Positive = 100132, AbsGeqTwo = 100134 }
-
 #endregion
 
 #region Strongly typed handles ---------------------------------------------------------------------
-// Window GDI device context handle
-enum HDC : ulong { Zero }
-// OpenGL rendering-context handle
-public enum HGLRC : ulong { Zero }
-// Win32 windows handle
-enum HWindow : ulong { Zero }
 // A complete OpenGL shader pipeline
 public enum HProgram : ulong { Zero }
 // An OpenGL shader (part of a pipeline)
@@ -151,38 +142,6 @@ public enum HBuffer : ulong { Zero }
 public enum HFrameBuffer : ulong { Zero }
 // OpenGL render-buffer object
 public enum HRenderBuffer : ulong { Zero }
-// Tessellator object used by GL based tessellators.
-enum HTesselator : ulong { Zero }
 // Texture object, created with GenTexture
 public enum HTexture : ulong { Zero }
-#endregion
-
-#region struct PixelFormatDescriptor ---------------------------------------------------------------
-// Structure used to describe an OpenGL pixel-format descriptor
-[StructLayout (LayoutKind.Sequential)]
-struct PixelFormatDescriptor {
-   ushort Size, Version;
-   uint Flags;
-   byte PixelType, ColorBits, RedBits, RedShift, GreenBits, GreenShift, BlueBits, BlueShift;
-   byte AlphaBits, AlphaShift, AccumBits, AccumRedBits, AccumGreenBits, AccumBlueBits, AccumAlphaBits;
-   byte DepthBits, StencilBits, AuxBuffers, LayerType, Reserved;
-   uint LayerMask, VisibleMask, DamageMask;
-
-   // Static used to obtain a 'default' pixel-format-descriptor
-   public static PixelFormatDescriptor Default {
-      get {
-         const uint PFD_DRAW_TO_WINDOW = 4, PFD_SUPPORT_OPENGL = 32, PFD_DOUBLEBUFFER = 1;
-         PixelFormatDescriptor pfd = new () {
-            Size = 40, Version = 1,
-            Flags = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER,
-            ColorBits = 32, DepthBits = 32, StencilBits = 8
-         };
-         if (40 != Marshal.SizeOf<PixelFormatDescriptor> ())
-            throw new Exception ("Unexpected size for PixelFormatDescriptor");
-         if (8 != Marshal.SizeOf<nint> ())
-            throw new Exception ("Expecting 64-bit compilation");
-         return pfd;
-      }
-   }
-}
 #endregion

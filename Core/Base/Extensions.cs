@@ -2,7 +2,6 @@
 // ╔═╦╦═╦╦╬╣ Extensions.cs
 // ║║║║╬║╔╣║ Various extension methods for common system types
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
-using System.Buffers;
 using System.IO.Compression;
 using static System.Math;
 namespace Nori;
