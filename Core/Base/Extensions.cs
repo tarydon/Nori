@@ -198,6 +198,8 @@ public static class Extensions {
    /// <summary>Returns a double rounded off to 6 decimal places</summary>
    /// This has special handling to avoid -0 from appearing
    public static double R6 (this double f) { f = Math.Round (f, 6); return f == -0 ? 0 : f; }
+   /// <summary>Returns a double rounded off to 9 decimal places</summary>
+   public static double R9 (this double f) => Math.Round (f, 9); 
 
    /// <summary>Reads all lines of text from the specified stream</summary>
    public static List<string> ReadAllLines (this Stream stm) {

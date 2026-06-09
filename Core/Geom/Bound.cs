@@ -116,6 +116,7 @@ public readonly struct Bound1 : IEQuable<Bound1> {
 
 #region struct Bound1D -----------------------------------------------------------------------------
 /// <summary>Represents a bound in 1 dimension (simply a Min .. Max value, stored as doubles)</summary>
+[AuPrimitive]
 public readonly struct Bound1D : IEQuable<Bound1D> {
    // Constructors -------------------------------------------------------------
    /// <summary>Constructs an empty Bound1</summary>
@@ -131,7 +132,24 @@ public readonly struct Bound1D : IEQuable<Bound1D> {
    /// <summary>Deconstruct a Bound1 into min and max values</summary>
    public void Deconstruct (out double min, out double max) => (min, max) = (Min, Max);
 
-   public override string ToString () => IsEmpty ? "Empty" : $"{Min.S6 ()}~{Max.S6 ()}";
+   /// <summary>Read a Bound1D from a UTF8 stream</summary>
+   public static Bound1D Read (UTFReader R) {
+      if (R.Peek () == 'E') {
+         R.Match ("Empty"u8);
+         return new ();
+      } else {
+         R.Read (out double min).Match ('~').Read (out double max);
+         return new (min, max);
+      }
+   }
+
+   /// <summary>Write the Bound1D to UTF (used for Curl serialization)</summary>
+   public void Write (UTFWriter W) {
+      if (IsEmpty) W.Write ("Empty"u8);
+      else W.Write (Min).Write ('~').Write (Max);
+   }
+
+   public override string ToString () => UTFWriter.ToString (Write);
 
    // Properties ---------------------------------------------------------------
    /// <summary>The minimum value of the bound (inclusive)</summary>
