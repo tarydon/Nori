@@ -346,9 +346,8 @@ public sealed class E3Plane : E3CSSurface {
       List<int> wires = []; int a = 0;
       using var tess = FastTess2D.Borrow ();
       tess.Tolerance = eTess;
-      var fromXfm = Matrix3.From (CS);
       for (int i = 0; i < Contours.Length; i++) {
-         int b = a + tess.AddPoly (Contours[i].Flatten (fromXfm), i > 0);
+         int b = a + tess.AddPoly (Contours[i].Flatten (FromXfm), i > 0);
          wires.Add (b - 1);
          for (int j = a; j < b; j++) { wires.Add (j); wires.Add (j); }
          wires.RemoveLast ();

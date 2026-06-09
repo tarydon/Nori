@@ -10,7 +10,8 @@ class Program {
       Lib.Init ();
       Lib.Tracer = Console.WriteLine;
 
-      Console.WriteLine (Process ("N:\\TData\\STEP\\S00178.stp"));
+      var model = Process ("N:\\TData\\STEP\\S00178.stp");
+      CurlWriter.Save (model, "c:/etc/test.curl");
 
       //foreach (var file in Directory.GetFiles ("C:\\STEPS", "*.stp")) {
       //   double thick = Process (file);
@@ -26,7 +27,7 @@ class Program {
    static Model3 Process (string file) {
       var reader = new STEPReader (file);
       var model = reader.Load ();
-      var thickener = new ModelThickener (model);
+      var thickener = new SheetMetalizer (model);
       return thickener.Process ();
    }
 }

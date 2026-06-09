@@ -21,7 +21,7 @@ class Program {
 class NewScene : Scene3 {
    public NewScene () {
       var model = STEPReader.Load ("N:/TData/STEP/S00178.stp");
-      var shmodel = new ModelThickener (model).Process ();
+      var shmodel = new SheetMetalizer (model).Process ();
 
       Bound = shmodel.Bound;
       BgrdColor = new Color4 (90, 100, 110);
