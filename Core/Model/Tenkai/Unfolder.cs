@@ -20,7 +20,6 @@ public class Unfolder {
       foreach (var node in pose.Nodes) {
          E3Thick ent = node.Ent;
          var xfm = ent.ToXfm * node.Xfm * xfmRoot;
-         if (ent is E3Flex) continue;
          foreach (var shape in ent.Shape) AddPoly (dwg, shape, xfm);
       }
       return dwg;
@@ -39,6 +38,10 @@ public class Unfolder {
    readonly Model3 mModel;
 }
 #endregion
+
+public readonly struct Defer (Action action) : IDisposable {
+   public readonly void Dispose () => action ();
+}
 
 public readonly struct Result<T, TError> where T : notnull where TError : notnull {
    public static implicit operator Result<T, TError> (T value) => new (value, default, true);

@@ -135,6 +135,51 @@ public partial class SheetMetalizer {
          return set;
       }
 
+      bool GetFlexCS (out CoordSystem cs) {
+         cs = CoordSystem.World;
+         var model = mOwner.mModel;
+         var plane0 = mParent.Plane0;
+         if (model.GetSharedEdge (plane0, mCyl0) is not Line3 line0) return false;
+         if (model.GetSharedEdge (mParent.Plane1, mCyl1) is not Line3 line1) return false;
+
+         // Let's try to gather the components of the flex coordinate system
+         Point3 side0 = line0.Midpoint, side1 = side0.SnappedToLine (line1.Start, line1.End);
+         Point3 org = side0.Midpoint (side1);
+         Vector3 vecx = (line0.Start - line0.End).Normalized (), vecz = plane0.CS.VecZ, vecy = vecz * vecx;
+
+         // Let's see if the cylinder mass lies on the +Y side of this proposed coordinate system
+         bool upward = true;
+         var cylinder = mCyl0.Radius > mCyl1.Radius ? mCyl0 : mCyl1;
+         var pts = ListPool<Point3>.Borrow ();
+         try {
+            // The +Y direction of the flex CS should point OUT of the plane and into the Flex. 
+            // Check that first:
+            cylinder.Contours[0].Discretize (pts, ETess.VeryCoarse);
+            PlaneDef pdef = new (org, vecy);
+            Bound1 bound = new (pts.Select (pdef.SignedDist));
+            if (bound.Mid < 0) (vecx, vecy) = (-vecx, -vecy);
+            // Next, check if the flex is turned upward in Z
+            pdef = new (org, vecz);
+            bound = new (pts.Select (pdef.SignedDist));
+            if (bound.Mid < 0) upward = false;
+
+            // Compute a projection in which the cylinder winds CCW around the axis, with 0 at
+            // the shared line with the parent plane, and +ve going into the flex. We'll use this to 
+            // get the correct parametrization of the E3Flex trimming curve
+            Point3 fOrg = org.SnappedToLine (cylinder.CS.Org, cylinder.CS.Org + cylinder.CS.VecZ);
+
+
+            Point3 fOrg = org.SnappedToLine (cylinder.CS.Org, cylinder.CS.Org + cylinder.CS.VecZ);
+            Vector3 fVecX = (org - fOrg).Normalized (), fVecZ = cylinder.CS.VecZ, fVecY = fVecZ * fVecX;
+            if (fVecY.Opposing (vecy)) fVecY = -fVecY;
+            xfmProj = Matrix3.From (new (fOrg, fVecX, fVecY));
+
+
+         } finally {
+            ListPool<Point3>.Return (pts);
+         }
+      }
+
       public E3Flex? GetFlex () {
          if (mFlex != null) return mFlex;
          var model = mOwner.mModel;
@@ -149,8 +194,8 @@ public partial class SheetMetalizer {
          Vector3 vecx = (line0.Start - line0.End).Normalized (), vecz = plane0.CS.VecZ, vecy = vecz * vecx;
 
          // See if the cylinder lies on the +Y side of this proposed coordinate system
-         List<Poly> trims = [];
-         List<Point3> pts = ListPool<Point3>.Borrow ();
+         List<Poly> trims = [];        
+         List<Point3> pts = ListPool<Point3>.Borrow ();         
          List<Point2> uvs = ListPool<Point2>.Borrow ();
          var cylinder = mCyl0.Radius > mCyl1.Radius ? mCyl0 : mCyl1;
          bool upward = true; double angSpan = 0;
@@ -196,6 +241,7 @@ public partial class SheetMetalizer {
             }
          } finally {
             ListPool<Point3>.Return (pts);
+            ListPool<Point2>.Return (uvs);
          }
          mFlex = new E3Flex (mOwner.mShModel.Ents.Count + 1, new CoordSystem (org, vecx, vecy),
                      mOwner.Thickness, new BSpine (radius, angSpan, 0.5, upward), trims) { Parent = mParent.GetFlat () };
