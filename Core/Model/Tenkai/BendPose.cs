@@ -43,6 +43,7 @@ public class BendPose {
             parent = parent.Parent;
          }
       }
+      Valid = rootId != -1;
    }
 
    // Properties ---------------------------------------------------------------
@@ -53,6 +54,8 @@ public class BendPose {
    /// <summary>Returns the set of Nodes for this BendPose</summary>
    public IEnumerable<Node> Nodes => mNodes.NonNull ();
    readonly Node[] mNodes;
+
+   public readonly bool Valid;
 
    // Methods ------------------------------------------------------------------
    /// <summary>Returns the bound of the BendPose in the current state</summary>

@@ -43,6 +43,16 @@ public abstract class Curve3 {
    /// E1.Start==E2.End, and E1.End==E2.Start, and they run against each other. 
    public readonly int PairId;
 
+   /// <summary>Is this Curve tagged 'overlap'</summary>
+   /// These are typically the curves connecting planes & cylinders tangentially in sheet-metal
+   /// models, and these curves are tagged as IsOverlap so they don't contribute a stencil line
+   /// in the drawing unfolding
+   public bool IsOverlap { 
+      get => (mFlags & E3Flags.Overlap) != 0;
+      set { if (value) mFlags |= E3Flags.Overlap; else mFlags &= ~E3Flags.Overlap; }
+   }
+   E3Flags mFlags;
+
    // Methods ------------------------------------------------------------------
    /// <summary>Returns a PiecewiseLinear approximation of this curve</summary>
    /// 1. The curve is approximated with the given error threshold
@@ -82,10 +92,13 @@ public abstract class Curve3 {
    public abstract Curve3 Trimmed (double t1, double t2, bool reverseDir);
 
    /// <summary>Returns a copy of this curve transformed by the given transform</summary>
-   public static Curve3 operator * (Curve3 curve, Matrix3 xfm) => curve.Xformed (xfm);
+   public static Curve3 operator * (Curve3 curve, Matrix3 xfm) {
+      var c2 = curve.Xformed (xfm); c2.mFlags = curve.mFlags;
+      return c2;
+   }
 
    // Implementation -----------------------------------------------------------
-   public override string ToString () => $"{GetType ().Name} ID={PairId}, {Start} to {End}";
+   public override string ToString () => $"{GetType ().Name}{(IsOverlap ? "*" : "")} ID={PairId}, {Start} to {End}";
 
    // Override this in each derived Curve3
    protected abstract Curve3 Xformed (Matrix3 xfm);
@@ -634,29 +647,32 @@ public class Contour3 {
 
    /// <summary>Project the Contour3 into a</summary>
    public Poly Flatten (Matrix3 xfm) {
-      var pb = PolyBuilder.It;
+      var pb = new PolyBuild2 ();
+      pb.Begin (Xfm (mCurves[0].Start));
       foreach (var edge in mCurves) {
          switch (edge) {
             case Line3 line:
-               pb.Line (Xfm (line.Start));
+               pb.Line (Xfm (line.End));
+               if (line.IsOverlap) pb.TagLastOverlap ();
                break;
             case Arc3 arc:
-               var (center, start, _) = (Xfm (arc.Center), Xfm (arc.Start), arc.Radius);
-               var flags = (arc.CS.VecZ * xfm).Z > 0 ? Poly.EFlags.CCW : Poly.EFlags.CW;
-               if (arc.AngSpan.EQ (Lib.TwoPI)) {
-                  pb.Arc (start, center, flags);
-                  pb.Arc (center + (center - start), center, flags);
-               } else
-                  pb.Arc (start, center, flags);
+               var (center, end) = (Xfm (arc.Center), Xfm (arc.End));
+               bool ccw = (arc.CS.VecZ * xfm).Z > 0;
+               // An arc that is a full 360 degrees - split and output as two separate
+               // arcs
+               if (arc.AngSpan.EQ (Lib.TwoPI)) 
+                  pb.Arc (center + (center - end), center, ccw);
+               pb.Arc (end, center, ccw);
                break;
             case Polyline3 poly:
-               foreach (var pt in poly.Pts) pb.Line (Xfm (pt));
+               foreach (var pt in poly.Pts.Skip (1)) pb.Line (Xfm (pt));
                break;
             default:
                throw new BadCaseException (edge);
          }
       }
-      return pb.Close ().Build ();
+      var apoly = pb.End (true);
+      return apoly;
 
       // Helpers ...........................................
       Point2 Xfm (Point3 pt) {

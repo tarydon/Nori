@@ -308,18 +308,15 @@ public sealed class E3Plane : E3CSSurface {
    }
 
    // Properties ---------------------------------------------------------------
-   public override double Area {
+   /// <summary>Area of the outer contour (without including holes)</summary>
+   public double OuterArea {
       get {
-         if (_area == 0) {
-            for (int i = 0; i < Polys.Length; i++) {
-               double area = Polys[i].GetArea (ETess.Medium) * (i == 0 ? 1 : -1);
-               _area += area;
-            }
-         }
-         return _area;
+         if (_outerArea == 0) 
+            _outerArea = Contours[0].Flatten (FromXfm).GetArea (ETess.Medium);
+         return _outerArea;
       }
    }
-   double _area;
+   double _outerArea;
 
    public ImmutableArray<Poly> Polys {
       get {

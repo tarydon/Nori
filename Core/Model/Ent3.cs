@@ -130,7 +130,7 @@ public abstract partial class Ent3 {
 public enum E3Flags : uint {
    Selected = 1 << 0, Translucent = 1 << 1, FlipNormal = 1 << 2, GeneratrixFlat = 1 << 3,
    ULinear = 1 << 4, VLinear = 1 << 5, NoStencil = 1 << 6, Colliding = 1 << 7, 
-   ContourWindingChecked = 1 << 8,
+   ContourWindingChecked = 1 << 8, Overlap = 1 << 9,
 }
 #endregion
 

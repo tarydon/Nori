@@ -22,9 +22,7 @@ public readonly struct Bound1 : IEQuable<Bound1> {
    /// <summary>Constructs a bound that encompasses a and b (a and b need not be ordered)</summary>
    public Bound1 (float a, float b) => (Min, Max) = (MathF.Min (a, b), MathF.Max (a, b));
 
-   /// <summary>
-   /// Construct a Bound1 that encompassses a given range of values
-   /// </summary>
+   /// <summary>Construct a Bound1 that encompassses a given range of values</summary>
    public Bound1 (IEnumerable<double> vals) {
       (Min, Max) = (float.MaxValue, float.MinValue);
       foreach (var f in vals) { Min = Math.Min ((float)f, Min); Max = Math.Max ((float)f, Max); }
@@ -450,9 +448,7 @@ public readonly struct Bound3 : IEQuable<Bound3> {
 
    /// <summary>The diagonal vector of this Bound3</summary>
    public Vector3 DiagVector => new (X.Length, Y.Length, Z.Length);
-   /// <summary>
-   /// The length of the diagonal vector of this bound
-   /// </summary>
+   /// <summary>The length of the diagonal vector of this bound</summary>
    public double Diagonal => DiagVector.Length;
 
    // Methods ------------------------------------------------------------------

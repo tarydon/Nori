@@ -47,9 +47,10 @@ public class Model3 {
          foreach (var s1 in Ents.OfType<E3Surface> ()) {
             foreach (var c1 in s1.Contours.SelectMany (con => con.Curves)) {
                if (c1.PairId == 0) continue;
-               if (unpaired.TryGetValue (c1.PairId, out var tuple))
+               if (unpaired.TryGetValue (c1.PairId, out var tuple)) {
                   _coedges.Add (c1.PairId, (tuple.S, tuple.C, s1, c1));
-               else
+                  unpaired.Remove (c1.PairId);
+               } else
                   unpaired.Add (c1.PairId, (s1, c1));
             }
          }
@@ -58,7 +59,7 @@ public class Model3 {
       // to this edge
       if (_coedges.TryGetValue (c.PairId, out var pair)) {
          if (pair.C1 == c) { s2 = pair.S2; c2 = pair.C2; return true; }
-         if (pair.C2 == c) { s2 = pair.S1; c2 = pair.C2; return true; }
+         if (pair.C2 == c) { s2 = pair.S1; c2 = pair.C1; return true; }
          throw new InvalidOperationException ();
       }
       s2 = null; c2 = null;
@@ -66,9 +67,7 @@ public class Model3 {
    }
    Dictionary<int, (E3Surface S1, Curve3 C1, E3Surface S2, Curve3 C2)>? _coedges;
 
-   /// <summary>
-   /// Returns the shared edge between two surfaces (if there is one)
-   /// </summary>
+   /// <summary>Returns the shared edge between two surfaces (if there is one)</summary>
    /// This returns an edge from surface s1 (the corresponding co-edge on the other surface
    /// can be obtained using the GetCoedge routine above, if needed)
    public Curve3? GetSharedEdge (E3Surface s1, E3Surface s2) {

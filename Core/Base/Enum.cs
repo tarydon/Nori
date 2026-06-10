@@ -60,6 +60,7 @@ public enum EResult {
    NoOuterContour = 3,        // Single outer contour required
    IllFormedDrawing = 4,      // Ill-formed drawing
    IntersectingBendlines = 5, // Bendlines intersecting
+   NotSheetMetalModel = 6,    // This is not a sheet-metal model
 }
 
 /// <summary>The possible values for text-alignment within a box</summary>

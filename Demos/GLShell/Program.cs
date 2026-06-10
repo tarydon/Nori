@@ -17,7 +17,19 @@ class Program {
       TraceVN.TextColor = Color4.Yellow;
       TraceVN.HoldTime = 15;
       Lib.Tracer = TraceVN.Print;
-      Lux.UIScene = new NewScene ();
+      Lux.UIScene = new UnfoldScene ();
+   }
+}
+
+class UnfoldScene : Scene2 {
+   public UnfoldScene () {
+      var model = STEPReader.Load ("N:/TData/STEP/S00178.stp");
+      var shmodel = new SheetMetalizer (model).Process ();
+      var dwg = new Unfolder (shmodel).Process ().Value;
+
+      List<VNode> nodes = [new Dwg2VN (dwg), new DwgFillVN (dwg, ETess.Medium), TraceVN.It];
+      Bound = dwg.Bound.InflatedF (1.05);
+      Root = new GroupVN (nodes);
    }
 }
 
@@ -25,18 +37,6 @@ class NewScene : Scene3 {
    public NewScene () {
       var model = STEPReader.Load ("N:/TData/STEP/S00178.stp");
       var shmodel = new SheetMetalizer (model).Process ();
-
-      //List<int> parents = [];
-      //for (int i = 0; i < shmodel.Ents.Count; i++) {
-      //   if (shmodel.Ents[i] is E3Thick et) parents.Add (shmodel.Ents.IndexOf (et.Parent!));
-      //   else parents.Add (-1);
-      //}
-      //var plane = shmodel.Ents.OfType<E3Flat> ().First ();
-      //var xfm = Matrix3.From (plane.CS);
-      //for (int i = 0; i < shmodel.Ents.Count; i++)
-      //   shmodel.Ents[i] *= xfm;
-      //for (int i = 0; i < shmodel.Ents.Count; i++)
-      //   if (parents[i] != -1) ((E3Thick)shmodel.Ents[i]).Parent = (E3Thick)shmodel.Ents[parents[i]];
 
       List<VNode> nodes = [];
       var pose = new BendPose (shmodel);
@@ -49,7 +49,7 @@ class NewScene : Scene3 {
       // nodes.Clear ();
 
       var b2 = dwg.Bound;
-      Bound += new Bound3 (b2.X.Min, b2.Y.Min, -10, b2.X.Max, b2.Y.Max, 10);
+      Bound = new Bound3 (b2.X.Min, b2.Y.Min, -10, b2.X.Max, b2.Y.Max, 10);
       nodes.Add (new Dwg2VN (dwg));
       BgrdColor = new Color4 (90, 100, 110);
       Root = new GroupVN (nodes);

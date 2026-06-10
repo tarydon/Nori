@@ -1,4 +1,8 @@
-﻿namespace Nori;
+// ────── ╔╗
+// ╔═╦╦═╦╦╬╣ SheetMetalizerAux.cs
+// ║║║║╬║╔╣║ <<TODO>>
+// ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
+namespace Nori;
 
 public partial class SheetMetalizer {
    class TFlat {
@@ -10,11 +14,7 @@ public partial class SheetMetalizer {
       public E3Flat GetFlat () {
          if (mFlat == null) {
             var (cs, set) = (Plane0.CS, Plane0.Polys.ToList ());
-            if (mDef0.SignedDist (Plane1.CS.Org) < 0) {
-               cs = new CoordSystem (cs.Org, cs.VecX, -cs.VecY);
-               for (int i = 0; i < set.Count; i++) set[i] = (set[i] * Matrix2.VMirror).Reversed ();
-            }
-            cs += cs.VecZ * mOwner.Thickness / 2;
+            cs += cs.VecZ * mDef0.SignedDist (Plane1.CS.Org) / 2;
             mFlat = new E3Flat (mOwner.mShModel.Ents.Count + 1, cs, mOwner.Thickness, set) { Parent = mParent?.GetFlex () };
          }
          return mFlat;
@@ -26,7 +26,10 @@ public partial class SheetMetalizer {
          foreach (var cyl0 in set0) {
             int n = GetPair (set1, cyl0);
             if (n != -1) {
-               todo.Enqueue (new TFlex (mOwner, this, cyl0, set1[n]));
+               E3Cylinder cyl1 = set1[n];
+               mOwner.MarkOverlaps (Plane0, cyl0); 
+               mOwner.MarkOverlaps (Plane1, cyl1);
+               todo.Enqueue (new TFlex (mOwner, this, cyl0, cyl1));
                set1.RemoveAt (n);
             }
          }
@@ -77,11 +80,14 @@ public partial class SheetMetalizer {
       public void GatherNeighbors (Queue<TFlat> todo) {
          var set0 = GetLeewardPlanes (mCyl0); var set1 = GetLeewardPlanes (mCyl1);
          for (int i = 0; i < set0.Count; i++) {
-            E3Plane plane = set0[i];
-            var pdef = new PlaneDef (plane.CS);
-            int n = GetPair (set1, plane, in pdef);
+            E3Plane plane0 = set0[i];
+            var pdef = new PlaneDef (plane0.CS);
+            int n = GetPair (set1, plane0, in pdef);
             if (n != -1) {
-               todo.Enqueue (new TFlat (mOwner, this, plane, pdef, set1[n]));
+               E3Plane plane1 = set1[n];
+               mOwner.MarkOverlaps (mCyl0, plane0);
+               mOwner.MarkOverlaps (mCyl1, plane1);
+               todo.Enqueue (new TFlat (mOwner, this, plane0, pdef, plane1));
                set1.RemoveAt (n);
             }
          }

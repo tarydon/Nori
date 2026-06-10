@@ -1,4 +1,8 @@
-﻿namespace Nori;
+// ────── ╔╗
+// ╔═╦╦═╦╦╬╣ SheetMetalizer.cs
+// ║║║║╬║╔╣║ <<TODO>>
+// ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
+namespace Nori;
 
 public partial class SheetMetalizer {
    const double ETHICK = 0.01;
@@ -9,7 +13,6 @@ public partial class SheetMetalizer {
 
    public Model3 Process () {
       mModel.Ents.ForEach (a => a.IsTranslucent = true);
-      var planes = mModel.Ents.OfType<E3Plane> ().OrderByDescending (a => a.Area).ToList ();
       if (ComputeBaseplane () is not TFlat tpBase) return mShModel;
 
       Queue<TFlex> todo2 = [];
@@ -27,15 +30,27 @@ public partial class SheetMetalizer {
       return mShModel;
    }
 
+   void MarkOverlaps (E3Surface s1, E3Surface s2) {
+      if (mModel.GetSharedEdge (s1, s2) is not Line3 line1) {
+         Lib.Trace ("Strange 1");
+         return;
+      }
+      line1.IsOverlap = true;
+      if (mModel.GetCoedge (line1, out _, out var line2))
+         line2.IsOverlap = true;
+      else
+         Lib.Trace ("Strange 2");
+   }
+
    TFlat? ComputeBaseplane () {
       E3Plane? pair = null;
       double minDist = double.MaxValue;
-      var planes = mModel.Ents.OfType<E3Plane> ().OrderByDescending (a => a.Area).ToList ();
+      var planes = mModel.Ents.OfType<E3Plane> ().OrderByDescending (a => a.OuterArea).ToList ();
 
       E3Plane plane0 = planes[0];
-      var (area0, pdef0) = (plane0.Area, new PlaneDef (plane0.CS));
+      var (area0, pdef0) = (plane0.OuterArea, new PlaneDef (plane0.CS));
       for (int i = 1; i < planes.Count; i++) {
-         E3Plane plane1 = planes[i]; double area1 = plane1.Area;
+         E3Plane plane1 = planes[i]; double area1 = plane1.OuterArea;
          if (!area0.EQ (area1, EAREA)) break;
          double cos = plane0.CS.VecZ.CosineToAlreadyNormalized (plane1.CS.VecZ);
          if (!cos.EQ (-1, ECOS)) continue;

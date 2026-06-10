@@ -116,12 +116,13 @@ public partial class Poly {
       Point2 a = A;
       bool first = true;
       foreach (var seg in Segs) {
+         bool overlap = seg.IsOverlap;
          if (first) {
             if (IsCircle) {
                w.Write ('C').WriteR6 (seg.Center.X).Write (',').WriteR6 (seg.Center.Y).Write (',').WriteR6 (seg.Radius);
                return;
             }
-            w.Write ('M').WriteR6 (a.X).Write (',').WriteR6 (a.Y);
+            w.Write (overlap ? 'm' : 'M').WriteR6 (a.X).Write (',').WriteR6 (a.Y);
             first = false;
          }
          Point2 b = seg.B;
@@ -130,9 +131,9 @@ public partial class Poly {
             w.Write ('Q').WriteR6 (b.X).Write (',').WriteR6 (b.Y).Write (',').Write (t.R6 ());
          } else {
             if (!(seg.IsLast && IsClosed)) {
-               if (a.X.EQ (b.X)) w.Write ('V').Write (b.Y.R6 ());
-               else if (a.Y.EQ (b.Y)) w.Write ('H').Write (b.X.R6 ());
-               else w.Write ('L').Write (b.X.R6 ()).Write(',').Write (b.Y.R6 ());
+               if (a.X.EQ (b.X)) w.Write (overlap ? 'v' : 'V').Write (b.Y.R6 ());
+               else if (a.Y.EQ (b.Y)) w.Write (overlap ? 'h' : 'H').Write (b.X.R6 ());
+               else w.Write (overlap ? 'l' : 'L').Write (b.X.R6 ()).Write(',').Write (b.Y.R6 ());
             }
          }
          a = b;
@@ -150,6 +151,8 @@ public partial class Poly {
    public int Count => mPts.Length - (IsClosed ? 0 : 1);
    /// <summary>Does this Poly have any arcs?</summary>
    public bool HasArcs => (mFlags & EFlags.HasArcs) != 0;
+   /// <summary>Does this poly have any overlaps?</summary>
+   public bool HasOverlaps => (mFlags & EFlags.HasOverlaps) != 0;
    /// <summary>Is this a 'closed' Poly?</summary>
    public bool IsClosed => (mFlags & EFlags.Closed) != 0;
    /// <summary>Is this a full circle</summary>
@@ -673,8 +676,8 @@ public partial class Poly {
    // Nested types -------------------------------------------------------------
    [Flags]
    public enum EFlags : ushort {
-      Closed = 1, HasArcs = 2,
-      CW = 4, CCW = 8, Circle = 16, Last = 32, Arc = CW | CCW
+      Closed = 1, HasArcs = 2, HasOverlaps = 64,
+      CW = 4, CCW = 8, Circle = 16, Overlap = 32, Arc = CW | CCW
    }
    readonly EFlags mFlags;
 
@@ -700,6 +703,13 @@ public partial class Poly {
       public static ArcInfo operator * (ArcInfo e, Matrix3 xfm) {
          if ((e.Flags & EFlags.Arc) == 0) return e;
          return new ((Point2)(e.Center * xfm), xfm.HasMirroring ? e.Flags ^ EFlags.Arc : e.Flags);
+      }
+
+      public override string ToString () {
+         if ((Flags & EFlags.Overlap) != 0) return "Overlap";
+         if ((Flags & EFlags.CCW) != 0) return $"CCW {Center.R6 ()}";
+         if ((Flags & EFlags.CW) != 0) return $"CCW {Center.R6 ()}";
+         return "0";
       }
    }
    /// <summary>This array is populated only if the Poly has any arcs</summary>
