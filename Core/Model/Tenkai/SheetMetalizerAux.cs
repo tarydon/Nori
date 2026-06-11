@@ -2,6 +2,8 @@
 // ╔═╦╦═╦╦╬╣ SheetMetalizerAux.cs
 // ║║║║╬║╔╣║ <<TODO>>
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
+using Nori.STEP;
+
 namespace Nori;
 
 public partial class SheetMetalizer {
@@ -135,117 +137,97 @@ public partial class SheetMetalizer {
          return set;
       }
 
-      bool GetFlexCS (out CoordSystem cs) {
-         cs = CoordSystem.World;
+      bool GetFlexCS (out CoordSystem csFlex, out Matrix3 xfmProj, out bool upward) {
          var model = mOwner.mModel;
          var plane0 = mParent.Plane0;
+         csFlex = CoordSystem.World; xfmProj = Matrix3.Identity; upward = false;
          if (model.GetSharedEdge (plane0, mCyl0) is not Line3 line0) return false;
          if (model.GetSharedEdge (mParent.Plane1, mCyl1) is not Line3 line1) return false;
 
          // Let's try to gather the components of the flex coordinate system
          Point3 side0 = line0.Midpoint, side1 = side0.SnappedToLine (line1.Start, line1.End);
-         Point3 org = side0.Midpoint (side1);
-         Vector3 vecx = (line0.Start - line0.End).Normalized (), vecz = plane0.CS.VecZ, vecy = vecz * vecx;
+         Point3 csOrg = side0.Midpoint (side1);
+         Vector3 csVecX = (line0.Start - line0.End).Normalized (), csVecZ = plane0.CS.VecZ, csVecY = csVecZ * csVecX;
 
          // Let's see if the cylinder mass lies on the +Y side of this proposed coordinate system
-         bool upward = true;
          var cylinder = mCyl0.Radius > mCyl1.Radius ? mCyl0 : mCyl1;
          var pts = ListPool<Point3>.Borrow ();
          try {
             // The +Y direction of the flex CS should point OUT of the plane and into the Flex. 
             // Check that first:
             cylinder.Contours[0].Discretize (pts, ETess.VeryCoarse);
-            PlaneDef pdef = new (org, vecy);
+            PlaneDef pdef = new (csOrg, csVecY);
             Bound1 bound = new (pts.Select (pdef.SignedDist));
-            if (bound.Mid < 0) (vecx, vecy) = (-vecx, -vecy);
+            if (bound.Mid < 0) (csVecX, csVecY) = (-csVecX, -csVecY);
             // Next, check if the flex is turned upward in Z
-            pdef = new (org, vecz);
+            pdef = new (csOrg, csVecZ);
             bound = new (pts.Select (pdef.SignedDist));
             if (bound.Mid < 0) upward = false;
 
             // Compute a projection in which the cylinder winds CCW around the axis, with 0 at
             // the shared line with the parent plane, and +ve going into the flex. We'll use this to 
             // get the correct parametrization of the E3Flex trimming curve
-            Point3 fOrg = org.SnappedToLine (cylinder.CS.Org, cylinder.CS.Org + cylinder.CS.VecZ);
+            Point3 projOrg = csOrg.SnappedToLine (cylinder.CS.Org, cylinder.CS.Org + cylinder.CS.VecZ);
+            Vector3 projVecX = (csOrg - projOrg).Normalized (), projVecZ = cylinder.CS.VecZ, projVecY = projVecZ * projVecX;
+            if (projVecY.Opposing (csVecY)) projVecY = -projVecY;
+            csFlex = new (csOrg, csVecX, csVecY);
 
-
-            Point3 fOrg = org.SnappedToLine (cylinder.CS.Org, cylinder.CS.Org + cylinder.CS.VecZ);
-            Vector3 fVecX = (org - fOrg).Normalized (), fVecZ = cylinder.CS.VecZ, fVecY = fVecZ * fVecX;
-            if (fVecY.Opposing (vecy)) fVecY = -fVecY;
-            xfmProj = Matrix3.From (new (fOrg, fVecX, fVecY));
-
+            Point3 fOrg = csOrg.SnappedToLine (cylinder.CS.Org, cylinder.CS.Org + cylinder.CS.VecZ);
+            Vector3 fVecX = (csOrg - projOrg).Normalized (), fVecZ = cylinder.CS.VecZ, fVecY = projVecZ * projVecX;
+            if (projVecY.Opposing (csVecY)) projVecY = -projVecY;
+            xfmProj = Matrix3.From (new (projOrg, projVecX, projVecY));
 
          } finally {
             ListPool<Point3>.Return (pts);
          }
+         return true; 
       }
 
       public E3Flex? GetFlex () {
          if (mFlex != null) return mFlex;
-         var model = mOwner.mModel;
-         var plane0 = mParent.Plane0;
-         if (model.GetSharedEdge (plane0, mCyl0) is not Line3 line0) return null;
-         if (model.GetSharedEdge (mParent.Plane1, mCyl1) is not Line3 line1) return null;
+         if (!GetFlexCS (out var csFlex, out var xfmProj, out var upward)) return null;
 
-         // Let's propose a foundation coordinate system for the Flex
-         double radius = (mCyl0.Radius + mCyl1.Radius) / 2;
-         Point3 side0 = line0.Midpoint, side1 = side0.SnappedToLine (line1.Start, line1.End);
-         Point3 org = side0.Midpoint (side1);
-         Vector3 vecx = (line0.Start - line0.End).Normalized (), vecz = plane0.CS.VecZ, vecy = vecz * vecx;
-
-         // See if the cylinder lies on the +Y side of this proposed coordinate system
-         List<Poly> trims = [];        
-         List<Point3> pts = ListPool<Point3>.Borrow ();         
-         List<Point2> uvs = ListPool<Point2>.Borrow ();
+         List<Poly> trims = [];
+         double radius = (mCyl0.Radius + mCyl1.Radius) / 2, angSpan = Lib.HalfPI;
          var cylinder = mCyl0.Radius > mCyl1.Radius ? mCyl0 : mCyl1;
-         bool upward = true; double angSpan = 0;
-
-         // This is the transform we're going to use while projecting the E3Cylinder contours to
-         // trimming curves on the E3Flex (we'll compute it in the first iteration below)
-         Matrix3 xfmProj = Matrix3.Identity;
-
+         List<Point3> pts = ListPool<Point3>.Borrow ();
          try {
-            for (int i = 0; i < cylinder.Contours.Length; i++) {
-               pts.Clear (); uvs.Clear ();
-               cylinder.Contours[i].Discretize (pts, ETess.Medium);
-               if (i == 0) {
-                  // If this is the outer contour, do some checks to ensure the flex orientation.
-                  // First, the +Y direction of the flex CS should point out of the plane, and
-                  // into the flex. Check that:
-                  PlaneDef pdef = new (org, vecy);
-                  Bound1 bound = new (pts.Select (pdef.SignedDist));
-                  if (bound.Mid < 0) (vecx, vecy) = (-vecx, -vecy);
-                  // Next, determine of the flex is upward in Z 
-                  pdef = new (org, vecz);
-                  bound = new (pts.Select (pdef.SignedDist));
-                  if (bound.Mid < 0) upward = false;
+            // Compute the angular span with the outer contour
+            Bound1D yBound = new ();
+            cylinder.Contours[0].Discretize (pts, ETess.VeryCoarse);
+            foreach (var pt in pts) yBound += Flatten (pt * xfmProj).Y;
+            Lib.Check (yBound.Mid > 0 && yBound.Min.EQ (0, 0.001));
+            angSpan = yBound.Max / radius;
 
-                  // Compute the xfmProj defined above here
-                  Point3 fOrg = org.SnappedToLine (cylinder.CS.Org, cylinder.CS.Org + cylinder.CS.VecZ);
-                  Vector3 fVecX = (org - fOrg).Normalized (), fVecZ = cylinder.CS.VecZ, fVecY = fVecZ * fVecX;
-                  if (fVecY.Opposing (vecy)) fVecY = -fVecY;
-                  xfmProj = Matrix3.From (new (fOrg, fVecX, fVecY));
-               }
-
-               // Next: compute the flex trimming curve corresponding to this contour. 
-               foreach (var pt in pts) {
-                  var ptf = pt * xfmProj;
-                  uvs.Add (new (ptf.Z, radius * Math.Atan2 (ptf.Y, ptf.X)));
-               }
-
-               Bound1D yBound = new ();
-               trims.Add (Poly.Lines (uvs, true).Clean ());
-               foreach (var pt in uvs) yBound += pt.Y;
-               Lib.Check (yBound.Mid > 0, "ModelThickener 2");
-               if (i == 0) angSpan = yBound.Max / radius;
-            }
+            // Now add the trimming curves for all the contours
+            trims.AddRange (cylinder.Contours.Select (Discretize));
          } finally {
             ListPool<Point3>.Return (pts);
-            ListPool<Point2>.Return (uvs);
          }
-         mFlex = new E3Flex (mOwner.mShModel.Ents.Count + 1, new CoordSystem (org, vecx, vecy),
-                     mOwner.Thickness, new BSpine (radius, angSpan, 0.5, upward), trims) { Parent = mParent.GetFlat () };
+
+         // Now we are ready to make the flex
+         var spine = new BSpine (radius, angSpan, 0.5, upward);
+         mFlex = new E3Flex (mOwner.mShModel.Ents.Count + 1, csFlex, mOwner.Thickness, spine, trims) { Parent = mParent.GetFlat () };
          return mFlex;
+
+         // Helpers ........................................
+         Poly Discretize (Contour3 con) {
+            PolyBuild2 pb = new ();
+            pb.Begin (Flatten (con.Curves[0].Start), true);
+            foreach (var curve in con.Curves) {
+               if (curve is Line3 line) {
+                  pb.Line (Flatten (line.End));
+                  if (line.IsOverlap) pb.TagLastOverlap ();
+               } else {
+                  pts.Clear (); curve.Discretize (pts, ETess.Medium);
+                  pts.Skip (1).ForEach (pt => pb.Line (Flatten (pt)));
+               }
+            }
+            return pb.End (true);
+         }
+
+         Point2 Flatten (Point3 pt) 
+            => new (pt.Z, radius * Math.Atan2 (pt.Y, pt.X));
       }
       E3Flex? mFlex;
 

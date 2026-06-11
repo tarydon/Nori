@@ -5,21 +5,38 @@
 namespace Nori;
 
 public class PolyBuild2 {
-   public PolyBuild2 Begin (Point2 pt) {
+   public PolyBuild2 Begin (Point2 pt, bool cleanup = false) {
       if (mBegan) Fatal ("Multiple Begin");
-      mBegan = true; mFlags = 0;
+      mBegan = true; mCleanup = cleanup; mFlags = 0;
       mPts.Clear (); mPts.Add (pt); mExtra.Clear (); 
       return this;
    }
 
    public PolyBuild2 Line (Point2 end) {
       CheckBegan ();
+      if (mCleanup) {
+         int n = mPts.Count;
+         Point2 prev = mPts[n - 1];
+         // Check if the point we're trying to add is a duplicate
+         if (end.EQ (prev)) return this;
+         if (n >= 2) { 
+            Point2 start = mPts[n - 2], snap = prev.SnappedToLine (start, end);
+            if (snap.DistToSq (prev) < Lib.EpsilonSq) {
+               double lie = snap.GetLieOn (start, end);
+               if (lie is >= -Lib.Epsilon and <= (1 + Lib.Epsilon)) {
+                  if (mExtra.Count <= n - 2 || mExtra[n - 2].CanMerge) 
+                     mPts.RemoveLast (); 
+               }
+            }
+         }
+      }
       mPts.Add (end); 
-      return this; 
+      return this;
    }
 
    public PolyBuild2 Arc (Point2 end, Point2 center, bool ccw) {
       CheckBegan ();
+      if (mCleanup && end.EQ (mPts[^1])) return this; 
       while (mExtra.Count < mPts.Count - 1) mExtra.Add (default);
       mPts.Add (end); mExtra.Add (new Poly.ArcInfo (center, ccw ? Poly.EFlags.CCW : Poly.EFlags.CW));
       mFlags |= Poly.EFlags.HasArcs;
@@ -59,5 +76,5 @@ public class PolyBuild2 {
    readonly List<Point2> mPts = [];
    readonly List<Poly.ArcInfo> mExtra = [];
    Poly.EFlags mFlags;
-   bool mBegan;
+   bool mBegan, mCleanup;
 }

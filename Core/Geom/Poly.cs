@@ -695,6 +695,8 @@ public partial class Poly {
 
       public static readonly ArcInfo Nil = new (Point2.Nil, 0);
 
+      public bool CanMerge => (Flags & (EFlags.Arc | EFlags.Overlap)) == 0;
+
       public static ArcInfo operator * (ArcInfo e, Matrix2 xfm) {
          if ((e.Flags & EFlags.Arc) == 0) return e;
          return new (e.Center * xfm, xfm.IsMirror ? e.Flags ^ EFlags.Arc : e.Flags);
