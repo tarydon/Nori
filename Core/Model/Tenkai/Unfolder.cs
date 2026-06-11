@@ -19,10 +19,10 @@ public class Unfolder {
 
       foreach (var node in pose.Nodes) {
          E3Thick ent = node.Ent;
-         if (ent is E3Flex) continue; 
          var xfm = ent.ToXfm * node.Xfm * xfmRoot;
          foreach (var shape in ent.Shape) AddPoly (dwg, shape, xfm);
       }
+      new DwgStitcher (dwg).Process ();
       return dwg;
    }
 

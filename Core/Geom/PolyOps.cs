@@ -717,16 +717,18 @@ public partial class Poly {
 
    /// <summary>Creates and returns a new reversed Poly of 'this'</summary>
    public Poly Reversed () {
-      if (!HasArcs) return new ([.. mPts.Reverse ()], [], mFlags);
-      PolyBuilder builder = new ();
-      const EFlags Mask = EFlags.CW | EFlags.CCW;
+      if (!HasArcs && !HasOverlaps) return new ([.. mPts.Reverse ()], [], mFlags);
+      PolyBuild2 pb = new PolyBuild2 ();
+      pb.Begin (B);
       for (int i = Count - 1; i >= 0; i--) {
          Seg s = this[i];
-         if (s.IsArc) builder.Arc (s.B, s.Center, s.Flags ^ Mask);
-         else builder.Line (s.B);
+         if (s.IsArc) pb.Arc (s.A, s.Center, !s.IsCCW);
+         else {
+            pb.Line (s.A);
+            if (s.IsOverlap) pb.TagLastOverlap ();
+         }
       }
-      if (!IsClosed) builder.Line (A); else builder.Close ();
-      return builder.Build ();
+      return pb.End (IsClosed);
    }
 
    /// <summary>'Rolls' a closed Poly so that node N becomes the starting node</summary>

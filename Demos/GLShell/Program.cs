@@ -40,41 +40,13 @@ class NewScene : Scene3 {
 
       List<VNode> nodes = [];
       var pose = new BendPose (shmodel);
-      pose.SetLie (0.5);
       nodes.AddRange (pose.Nodes.Select (a => new BPoseNodeVN (a)));
       nodes.Add (TraceVN.It);
 
-      Bound = pose.GetBound (0);
-      var dwg = GetDrawing (pose);
       // nodes.Clear ();
-
-      var b2 = dwg.Bound;
-      Bound = new Bound3 (b2.X.Min, b2.Y.Min, -10, b2.X.Max, b2.Y.Max, 10);
-      nodes.Add (new Dwg2VN (dwg));
+      Bound = pose.GetBound (1);
       BgrdColor = new Color4 (90, 100, 110);
       Root = new GroupVN (nodes);
-   }
-
-   Dwg2 GetDrawing (BendPose pose) {
-      Dwg2 dwg = new ();
-      pose.SetLie (0);
-
-      var plane = (E3Flat)pose.Nodes.First ().Ent;
-      var xfmRoot = Matrix3.From (plane.CS);
-
-      foreach (var node in pose.Nodes) {
-         if (node.Ent is E3Flat flat) {
-            var xfm = flat.ToXfm * node.Xfm * xfmRoot;
-            foreach (var shape in flat.Shape)
-               dwg.Add (shape * xfm);
-         }
-         if (node.Ent is E3Flex flex) {
-            var xfm = flex.ToXfm * node.Xfm * xfmRoot;
-            foreach (var shape in flex.Shape)
-               dwg.Add (shape * xfm);
-         }
-      }
-      return dwg;
    }
 }
 
