@@ -24,7 +24,7 @@ class Program {
 class UnfoldScene : Scene2 {
    public UnfoldScene () {
       var model = STEPReader.Load ("N:/TData/STEP/S00178.stp");
-      var shmodel = new SheetMetalizer (model).Process ();
+      var shmodel = new SheetMetalizer (model).Process ().Value;
       var dwg = new Unfolder (shmodel).Process ().Value;
 
       List<VNode> nodes = [new Dwg2VN (dwg), new DwgFillVN (dwg, ETess.Medium), TraceVN.It];
@@ -36,7 +36,7 @@ class UnfoldScene : Scene2 {
 class NewScene : Scene3 {
    public NewScene () {
       var model = STEPReader.Load ("N:/TData/STEP/S00178.stp");
-      var shmodel = new SheetMetalizer (model).Process ();
+      var shmodel = new SheetMetalizer (model).Process ().Value;
 
       List<VNode> nodes = [];
       var pose = new BendPose (shmodel);

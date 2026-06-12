@@ -16,6 +16,9 @@ public class Unfolder {
       Dwg2 dwg = new ();
       var plane = (E3Flat)pose.Nodes.First ().Ent;
       var xfmRoot = Matrix3.From (plane.CS);
+      var b = pose.GetBound () * xfmRoot;
+      if (b.Y.Length > b.X.Length + Lib.Delta) xfmRoot *= Matrix3.Rotation (EAxis.Z, Lib.HalfPI);
+      xfmRoot *= new Matrix3 (1, 0, 0, 0, -1, 0, 0, 0, 1, 0, 0, 0);
 
       foreach (var node in pose.Nodes) {
          E3Thick ent = node.Ent;
