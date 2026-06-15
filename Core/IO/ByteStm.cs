@@ -61,20 +61,15 @@ public class ByteStm {
    }
    /// <summary>Reads an integer stored using a variable number of bytes (see WriteIntV for details)</summary>
    public unsafe int ReadIntV () {
-      int shift = 0, n = 0;
-      for (; ; ) {
-         // Read 8 bits in
-         int m = 0; Read (&m, 1);
-         if ((m & 128) == 0) {
-            if (shift > 0) n |= m << shift;
-            else n = m;
-            break;
-         }
-         if (shift > 0) n |= (m & 127) << shift;
-         else n = m & 127;
-         shift += 7;
-      }
-      // Finally, subtract 1 to handle the bias that was set earlier
+      int n = 0; Read (&n, 1);
+      if ((n & 128) == 0) return n - 1;
+      int m = 0; Read (&m, 1); n |= (m & 127) << 7;
+      if ((m & 128) == 0) return n - 1;
+      Read (&m, 1); n |= (m & 127) << 14;
+      if ((m & 128) == 0) return n - 1;
+      Read (&m, 1); n |= (m & 127) << 21;
+      if ((m & 128) == 0) return n - 1;
+      Read (&m, 1); n |= (m & 127) << 28;
       return n - 1;
    }
    #endregion
