@@ -154,6 +154,45 @@ public static class Extensions {
    /// <summary>Returns a random bool</summary>
    public static bool NextBool (this Random r) => r.Next (10000) < 5000;
 
+   public static string NiceName (this Type t, bool outParam = false, TupleElementNamesAttribute? names = null) {
+      if (t.IsGenericParameter) return t.Name;
+      var sb = new StringBuilder ();
+      if (t.DeclaringType != null) sb.Append ($"{NiceName (t.DeclaringType)}.");
+      else if (t.Namespace != null && !sNiceNamespaces.Contains (t.Namespace)) sb.Append ($"{t.Namespace}.");
+      if (t.IsGenericType) {
+         if (t.Name.StartsWith ("ValueTuple`2")) {
+            sb.Append ('(');
+            var args = t.GetGenericArguments ();
+            for (int i = 0; i < args.Length; i++) {
+               if (i > 0) sb.Append (", ");
+               sb.Append (NiceName (args[i]));
+               if (names != null && names.TransformNames[i] != null)
+                  sb.Append ($" {names.TransformNames[i]}");
+            }
+            sb.Append (')');
+         } else {
+            sb.Append ($"{t.Name.Split ('`')[0]}<");
+            sb.Append (string.Join (',', t.GetGenericArguments ().Select (a => a.Name)));
+            sb.Append ('>');
+         }
+      } else
+         sb.Append (t.Name);
+      var s = sb.ToString ();
+      if (s.EndsWith ('&')) {
+         s = s[..^1];
+         s = sNiceNames.GetValueOrDefault (s, s);
+         return (outParam ? "out " : "ref ") + s;
+      }
+      return sNiceNames.GetValueOrDefault (s, s);
+   }
+   static List<string> sNiceNamespaces = ["Nori"];
+   static Dictionary<string, string> sNiceNames = new () {
+      ["Double"] = "double", ["Single"] = "float", ["Int32"] = "int", ["UInt32"] = "uint",
+      ["Int16"] = "short", ["UInt16"] = "ushort", ["Int64"] = "long", ["UInt64"] = "ulong",
+      ["Byte"] = "byte", ["SByte"] = "sbyte", ["Boolean"] = "bool", ["Void"] = "void",
+      ["String"] = "string", ["Object"] = "object"
+   };
+
    /// <summary>Returns true if NONE of the elements in the sequence match the given predicate</summary>
    public static bool None<T> (this IEnumerable<T> seq, Predicate<T> pred) {
       foreach (var elem in seq) if (pred (elem)) return false;

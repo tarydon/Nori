@@ -17,18 +17,26 @@ class AgType {
       var baseType = type.BaseType;
       if (baseType != typeof (object) && baseType != typeof (ValueType) && baseType != null)
          Base = Get (baseType);
+      _ = Kind;
+   }
+
+   public AgType (string name, int version) {
+      Name = name; Version = version; 
    }
 
    // Properties ---------------------------------------------------------------
    /// <summary>The base-type (only if this class has a base type)</summary>
-   public readonly AgType? Base;
+   public AgType? Base;
 
    /// <summary>
    /// What kind of type of this (each has its own serialization mechanism)
    /// </summary>
    public EKind Kind {
       get {
-         if (mKind == EKind.Unknown) mKind = ComputeKind (Type!);
+         if (mKind == EKind.Unknown) {
+            mKind = ComputeKind (Type!);
+            if (mKind is EKind.Class or EKind.Dict or EKind.List) mFlags |= EFlags.ReferenceType;
+         }
          return mKind;
 
          // Helper .........................................
@@ -44,6 +52,8 @@ class AgType {
       }
    }
    EKind mKind;
+
+   public bool IsReferenceType => (mFlags & EFlags.ReferenceType) != 0;
 
    public static AgType Object => mObject ??= new (typeof (object));
    static AgType? mObject;
@@ -68,6 +78,12 @@ class AgType {
       Dict,          // This is a dictionary (associative array with key / value types)
       Enum,          // An enumeration type
    }
+
+   [Flags]
+   enum EFlags {
+      ReferenceType = 0x1
+   }
+   EFlags mFlags;
 
    // Private data -------------------------------------------------------------
    static Dictionary<Type, AgType> mByType = [];
