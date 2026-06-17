@@ -1,10 +1,9 @@
 (Dwg2){
   Layers:[
-    { Name:0 Color:#33 Linetype:Continuous }
+    { Name:0 Color:#33 Linetype:Continuous }*
     { Name:Bend Color:#008100 Linetype:Dot }
     { Name:MBend Color:#008100 Linetype:DashDotDot }
   ]
-  CurrentLayer:0
   Ents:[
     (E2Poly){ Layer:0 Poly:M0,0H100V100H0Z }
     (E2Bendline){

@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -15,7 +15,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\Core\Nori.Core.csproj" />
-    <ProjectReference Include="..\..\WGL\Nori.WGL.csproj" />
   </ItemGroup>
 
 </Project>

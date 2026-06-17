@@ -49,9 +49,17 @@ class AuType {
                   if (fname.StartsWith ('m')) fname = fname[1..];
                   if (Tactics.TryGetValue ($"{tname}.{fname}", out var data)) {
                      if (data.Tactic != ECurlTactic.Skip)
-                        fields.Add (new AuField (this, fi, data.Tactic, data.Sort));
+                        fields.Add (new AuField (this, fi, null, data.Tactic, data.Sort));
                   } else
                      throw new AuException ($"Tactic missing for {t.FullName}.{fname}");
+               }
+               foreach (var pi in t.GetProperties (bfInstance)) {
+                  if (!pi.HasAttribute<AuIncludeAttribute> ()) continue;
+                  if (Tactics.TryGetValue ($"{tname}.{pi.Name}", out var data)) {
+                     if (data.Tactic != ECurlTactic.Skip)
+                        fields.Add (new AuField (this, null, pi, data.Tactic, data.Sort));
+                  } else
+                     throw new AuException ($"Tactic missing for {t.FullName}.{pi.Name}");
                }
             }
             mFields = [.. fields.OrderBy (a => a.Sort)];
@@ -75,7 +83,10 @@ class AuType {
             break;
 
          case EAuTypeKind.List:
-            IsImmutableArray = type.Name == "ImmutableArray`1";
+            switch (type.Name) {
+               case "ImmutableArray`1": IsImmutableArray = true; break;
+               case "Ledger`1": CurrentElem = type.GetProperty ("Current"); break;
+            }
             break;
       }
    }
@@ -130,6 +141,9 @@ class AuType {
    static readonly Dictionary<Type, AuType> mDict = [];
 
    // Properties --------------------------------------------------------------
+   /// <summary>PropertyInfo used to get/set the 'current element' for a Ledger(T)</summary>
+   public PropertyInfo? CurrentElem;
+
    /// <summary>Set of fields in this type</summary>
    public ReadOnlySpan<AuField> Fields => mFields.AsSpan ();
    readonly ImmutableArray<AuField> mFields = [];
@@ -443,16 +457,26 @@ class AuType {
 
 #region class AuField ------------------------------------------------------------------------------
 /// <summary>A wrapper around System.FieldInfo that holds additional information needed by the Au system</summary>
-/// For example, this holds the serialization _tactic_ for this particular field
+/// For example, this holds the serialization _tactic_ for this particular field. 
+/// Note: in some situations, this AuField actually is a wrapper around a PropertyInfo. 
 class AuField {
    // Constructor --------------------------------------------------------------
-   public AuField (AuType owner, FieldInfo fi, ECurlTactic tactic, int sort) {
-      Name = (mFI = fi).Name;
+   public AuField (AuType owner, FieldInfo? fi, PropertyInfo? pi, ECurlTactic tactic, int sort) {
+      if (fi != null) {
+         Name = (mFI = fi).Name;
+         mFieldType = AuType.Get (fi.FieldType);
+         IsNullable = fi.HasAttribute<NullableAttribute> ();
+         IsAngle = mFI.HasAttribute<RadianAttribute> ();
+      } else if (pi != null) {
+         Name = (mPI = pi).Name;
+         mFieldType = AuType.Get (pi.PropertyType);
+         IsNullable = pi.HasAttribute<NullableAttribute> ();
+         IsAngle = pi.HasAttribute<RadianAttribute> ();
+         PrebuiltList = !pi.CanWrite;
+      } else
+         throw new NoriCodeException ("Neither FI or PI");
       mOwner = owner; Tactic = tactic; Sort = sort;
       if (Name.StartsWith ('m')) Name = Name[1..];
-      mFieldType = AuType.Get (mFI.FieldType);
-      IsNullable = mFI.HasAttribute<NullableAttribute> ();
-      IsAngle = mFI.HasAttribute<RadianAttribute> ();
    }
    readonly AuType mOwner;
 
@@ -464,11 +488,24 @@ class AuField {
    public AuType FieldType => mFieldType;
    readonly AuType mFieldType;
 
-   /// <summary>Name of this field</summary>
+   /// <summary>Name of this field/property</summary>
    public readonly string Name;
 
    /// <summary>It this field nullable?</summary>
    public readonly bool IsNullable;
+
+   /// <summary>If true, this is an IList that is pre-built, and just needs to be populated</summary>
+   /// This is set only for an AuField that is attached to a Property, rather than Field,
+   /// and if the value is an IList. Normally, the reader will construct an empty collection,
+   /// populate it with items that are read in and return it (to be poked into the field). 
+   /// However, some collections are lazily built, and have some callbacks that are set up.
+   /// An example is Dwg.Layers collection, which is constructed when the Dwg.Layers property 
+   /// is READ, and that construction sets up:
+   /// - validators to ensure the layers being added in are valid (non-null, unique name)
+   /// - cascading updators to update all dependent entities when the layer is replaced
+   /// - indexers to compute the 'key' (name) when a layer is added, used to maintain a 
+   ///   'find-by-name' dictionary
+   public readonly bool PrebuiltList;
 
    /// <summary>Sort order of this field within the enclosing type</summary>
    public readonly int Sort;
@@ -478,11 +515,15 @@ class AuField {
 
    // Methods ------------------------------------------------------------------
    /// <summary>Reads the value from this field (given the container object)</summary>
-   public object? GetValue (object parent) => mFI.GetValue (parent);
-   readonly FieldInfo mFI;
+   public object? GetValue (object parent) => mFI != null ? mFI.GetValue (parent) : mPI!.GetValue (parent);
+   readonly FieldInfo? mFI;
+   readonly PropertyInfo? mPI;
 
    /// <summary>Sets the value into this field (given the parent object, and the value to write)</summary>
-   public void SetValue (object parent, object? value) => mFI.SetValue (parent, value);
+   public void SetValue (object parent, object? value) {
+      if (mFI != null) mFI.SetValue (parent, value);
+      else mPI!.SetValue (parent, value);
+   }
 
    /// <summary>Can a given field be skipped when gathering metadata?</summary>
    /// This method is called for each FieldInfo in a type when we are building up the
@@ -539,7 +580,7 @@ class AuField {
 
    // Implementation -----------------------------------------------------------
    public override string ToString ()
-      => $"AuField {Lib.NiceName (mFI.FieldType)} {Lib.NiceName (mOwner.Type)}.{Name}";
+      => $"AuField {Lib.NiceName (FieldType.Type)} {Lib.NiceName (mOwner.Type)}.{Name}";
 }
 #endregion
 

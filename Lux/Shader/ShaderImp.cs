@@ -11,7 +11,7 @@ namespace Nori;
 class ShaderImp {
    // Constructor --------------------------------------------------------------
    /// <summary>Construct a pipeline given the code for the individual shaders</summary>
-   ShaderImp (string name, int sort, EMode mode, EVertexSpec vspec, string[] code, bool blend, bool depthTest, bool polyOffset, EStencilBehavior stencil) {
+   ShaderImp (string name, int sort, EMode mode, EVertexSpec vspec, string[] code, int blend, bool depthTest, bool polyOffset, EStencilBehavior stencil) {
       (Name, SortCode, Mode, VSpec, Blending, DepthTest, PolygonOffset, StencilBehavior, Handle)
          = (name, sort, mode, vspec, blend, depthTest, polyOffset, stencil, GL.CreateProgram ());
       code.ForEach (a => GL.AttachShader (Handle, sCache.Get (a, CompileShader)));
@@ -45,7 +45,10 @@ class ShaderImp {
 
    // Properties ---------------------------------------------------------------
    /// <summary>Enable blending when this program is used</summary>
-   public readonly bool Blending;
+   /// 0 = no blending
+   /// 1 = blending with (SrcAlpha, OneMinusSrcAlpha)
+   /// 2 = blending with (One, OneMinusSrcAlpha) - premultiplied alpha
+   public readonly int Blending;
    /// <summary>Enable depth-testing when this program is used</summary>
    public readonly bool DepthTest;
    /// <summary>The OpenGL handle for this shader program (set up with GL.UseProgram)</summary>
@@ -142,7 +145,8 @@ class ShaderImp {
    public static ShaderImp RectBorderPx => mRectBorderPx ??= Load ();
    public static ShaderImp RRectBorderPx => mRRectBorderPx ??= Load ();
    public static ShaderImp DeePx => mDeePx ??= Load ();
-   static ShaderImp? mRectPx, mRRectPx, mRectBorderPx, mRRectBorderPx, mDeePx;
+   public static ShaderImp UIRect => mUIRect ??= Load ();
+   static ShaderImp? mRectPx, mRRectPx, mRectBorderPx, mRRectBorderPx, mDeePx, mUIRect;
 
    public static ShaderImp BlackLine => mBlackLine ??= Load ();
    public static ShaderImp GlassLine => mGlassLine ??= Load ();
@@ -211,7 +215,7 @@ class ShaderImp {
             var sort = int.Parse (w[1]);
             var mode = Enum.Parse<EMode> (w[2], true);
             var vspec = Enum.Parse<EVertexSpec> (w[3], true);
-            bool blending = w[4] == "1", depthtest = w[5] == "1", offset = w[6] == "1";
+            int blending = w[4].ToInt (); bool depthtest = w[5] == "1", offset = w[6] == "1";
             var stencil = Enum.Parse<EStencilBehavior> (w[7], true);
             var programs = w[8].Split ('|');
             return new (name, sort, mode, vspec, programs, blending, depthtest, offset, stencil);
@@ -281,6 +285,7 @@ class ShaderImp {
 readonly record struct Attrib (int Dims, EDataType Type, int Size, bool Integral) {
    public static Attrib AVec2f = new (2, EDataType.Float, 8, false);
    public static Attrib AInt = new (1, EDataType.Int, 4, true);
+   public static Attrib AUInt = new (1, EDataType.UInt, 4, true);
    public static Attrib AShort = new (1, EDataType.Short, 2, true);
    public static Attrib AFloat = new (1, EDataType.Float, 4, false);
    public static Attrib AVec3f = new (3, EDataType.Float, 12, false);
@@ -303,6 +308,7 @@ readonly record struct Attrib (int Dims, EDataType Type, int Size, bool Integral
          EVertexSpec.Vec4S => [AVec4s],
          EVertexSpec.Vec4S_Short => [AVec4s, AShort],
          EVertexSpec.Vec4S_Short_Short => [AVec4s, AShort, AShort],
+         EVertexSpec.UIRect => [AVec2s, AVec2s, AUInt, AUInt, AShort, AShort],
          EVertexSpec.Vec3F_Vec3H_Vec2F => [AVec3f, AVec3h, AVec2f],
          _ => throw new BadCaseException (spec)
       };
@@ -321,6 +327,7 @@ readonly record struct Attrib (int Dims, EDataType Type, int Size, bool Integral
          EVertexSpec.Vec4S => 8,
          EVertexSpec.Vec4S_Short => 10,
          EVertexSpec.Vec4S_Short_Short => 12,
+         EVertexSpec.UIRect => 20,
          EVertexSpec.Vec3F_Vec3H_Vec2F => 26,
          _ => throw new BadCaseException (spec)
       };
@@ -331,7 +338,7 @@ readonly record struct Attrib (int Dims, EDataType Type, int Size, bool Integral
 // The various Vertex specifications used by OpenGL shaders
 enum EVertexSpec { Vec2F, Vec3F, Vec3F_Vec3H, Vec4S_Int, Vec2F_Vec4S_Int, Vec3F_Vec4S_Int, 
                    Vec2S, Vec2S_Vec4F, Vec2F_Vec4F, Vec4S, Vec4S_Short, Vec4S_Short_Short, 
-                   Vec3F_Vec3H_Vec2F, _Last }
+                   UIRect, Vec3F_Vec3H_Vec2F, _Last }
 #endregion
 
 #region enum EStencilBehavior ----------------------------------------------------------------------

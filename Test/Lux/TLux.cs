@@ -3,8 +3,6 @@
 // ║║║║╬║╔╣║ Tests of Lux rendering system
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 namespace Nori.Testing;
-
-using System.ComponentModel.Design.Serialization;
 using static Lux;
 using NPoly = Nori.Poly;
 
@@ -137,7 +135,7 @@ class TLux {
       }
    }
 
-   [Test (218, "Mesh3 rendering")]
+   [Test (218, "Mesh3 rendering", Skip = false)]
    void Test7 () {
       var m1 = mCube;
       var bound = new Bound3 (0, -8, 0, 18, 10, 14);

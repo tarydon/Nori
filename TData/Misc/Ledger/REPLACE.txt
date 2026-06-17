@@ -1,0 +1,6 @@
+Replace a layer
+---------------
+CHANGES:
+Replace Layer2[0]  OLD:Layer "0" Black Continuous  NEW:Layer "STANDARD" White Continuous
+
+UNDO: REPLACE-LAYER

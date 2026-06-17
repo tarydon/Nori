@@ -70,7 +70,7 @@ public readonly struct Seg {
    public Point2 Center => IsArc2 (out var cen, out _) ? cen : Point2.Nil;
 
    /// <summary>Returns the Flags value for this segment</summary>
-   public Poly.EFlags Flags => N < Poly.Extra.Length ? Poly.Extra[N].Flags : 0;
+   public Poly.EFlags Flags => (Poly.Extra.IsDefault || N >= Poly.Extra.Length) ? 0 : Poly.Extra[N].Flags;
 
    /// <summary>Is this an arc? (if not, it's a line)</summary>
    public bool IsArc => (Flags & Poly.EFlags.Arc) != 0;
@@ -413,7 +413,7 @@ public readonly struct Seg {
    // Checks if this segment is an arc (if so, it also returns the center point
    // and the flags - useful to check if the arc is CW or CCW)
    internal bool IsArc2 (out Point2 cen, out Poly.EFlags flags) {
-      if (N < Poly.Extra.Length) {
+      if (!Poly.Extra.IsDefault && N < Poly.Extra.Length) {
          var extra = Poly.Extra[N];
          flags = extra.Flags;
          if ((flags & Poly.EFlags.Arc) != 0) { cen = extra.Center; return true; }

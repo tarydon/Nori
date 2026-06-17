@@ -18,16 +18,14 @@ public abstract class MouseDragger {
    protected MouseDragger (Vec2S anchor) {
       mAnchor = mLast = mPt = anchor;
       // If we can't capture the mouse, we're done (no overrides like Start/End etc will be fired)
-      if (!HW.CaptureMouse (true)) return;
+      var mouse = Hub.Mouse;
       mObservers = new (
          // Forward mouse-moves to the Move override
-         HW.MouseMoves.Subscribe (pt => { mLast = mPt; Move (mPt = pt); }),
+         mouse.Moves.Subscribe (pt => { mLast = mPt; Move (mPt = pt); }),
          // When the mouse button is released, stop dragging (completed)
-         HW.MouseClicks.Where (a => a.IsRelease).Subscribe (_ => Finish (true)),
+         mouse.Clicks.Where (a => a.IsRelease).Subscribe (_ => Finish (true)),
          // When the ESC key is pressed, stop dragging (cancelled)
-         HW.Keys.Where (a => a.IsPress (EKey.Escape)).Subscribe (_ => Finish (false)),
-         // Whem mouse-capture is lost, stop dragging (cancelled)
-         HW.MouseLost.Subscribe (_ => Finish (false)));
+         Hub.Keyboard.Keys.Where (a => a.IsPress (EKey.Escape)).Subscribe (_ => Finish (false)));
 
       // All captures set up, call the Start and Move event to initiate the drag cycle
       // NOTE: Do this asynchronously because this is still inside the constructor
@@ -72,16 +70,17 @@ public abstract class MouseDragger {
 public class SceneManipulator {
    // Constructor --------------------------------------------------------------
    public SceneManipulator () {
-      HW.MouseClicks.Where (a => a.IsPress).Subscribe (OnMouseClick);
-      HW.MouseWheel.Subscribe (OnMouseWheel);
-      HW.Keys.Where (a => a.IsPress ()).Subscribe (OnKey);
+      Lux.Init ();
+      Hub.Mouse.Clicks.Where (a => a.IsPress).Subscribe (OnMouseClick);
+      Hub.Mouse.Wheel.Subscribe (OnMouseWheel);
+      Hub.Keyboard.Keys.Where (a => a.IsPress ()).Subscribe (OnKey);
    }
 
    // Implementation -----------------------------------------------------------
    // When Ctrl+E is pressed, do a zoom-extents
    void OnKey (KeyInfo ki) {
       if (ki.Key == EKey.E && ki.Modifier == EKeyModifier.Control) 
-         Lux.PickScene (HW.MousePos)?.ZoomExtents ();
+         Lux.PickScene (Hub.Mouse.Pos)?.ZoomExtents ();
    }
 
    // Start rotating when the left mouse button is clicked (if the current scene is 3D)

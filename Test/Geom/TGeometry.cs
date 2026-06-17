@@ -364,9 +364,9 @@ class GeoTests {
       ];
 
       var dwg = new Dwg2 ();
-      _ = dwg.CurrentLayer;      // Force layer 0 to be made
+      _ = dwg.Layers.Current;      // Force layer 0 to be made
       var layer2 = new Layer2 ("BISECT", Color4.Blue, ELineType.Dot);
-      dwg.Add (layer2);
+      dwg.Layers.Add (layer2);
       foreach (var (a, b, c, d, pick1, pick2) in data) {
          dwg.Add (Poly.Line (a, b)); dwg.Add (Poly.Line (c, d));
          dwg.Add (pick1); dwg.Add (pick2);
@@ -390,9 +390,9 @@ class GeoTests {
    [Test (103, "Geo.CircleTangentLLL")]
    void Test6 () {
       var dwg = new Dwg2 ();
-      _ = dwg.CurrentLayer;      // Force layer 0 to be made
+      _ = dwg.Layers.Current;      // Force layer 0 to be made
       var layer2 = new Layer2 ("BISECT", Color4.Blue, ELineType.Dot);
-      dwg.Add (layer2);
+      dwg.Layers.Add (layer2);
 
       // testing with 3 intersecting lines
       (Point2 a, Point2 b, Point2 c, Point2 d, Point2 e, Point2 f) = (/*AB*/(-3, -3), (6, 6), /*CD*/(0, 6), (9, -3), /*EF*/(-3, 0), (9, 0));

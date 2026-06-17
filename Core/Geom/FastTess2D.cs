@@ -56,6 +56,20 @@ public partial class FastTess2D : IBorrowable<FastTess2D> {
       return tess;
    }
 
+   public static List<int> Process (List<Point2> pts, IReadOnlyList<int> splits) {
+      using (var tess = Borrow ()) {
+         List<Poly> polys = [];
+         for (int i = 1; i < splits.Count; i++) {
+            var poly = Poly.Lines (pts[splits[i - 1]..splits[i]], true).Clean ();
+            polys.Add (poly);
+         }
+         int max = polys.MaxIndexBy (a => a.GetBound ().Area);
+         for (int i = 0; i < polys.Count; i++) tess.AddPoly (polys[i], i != max);
+         tess.Process ();
+         return [.. tess.Tris];
+      }
+   }
+
    /// <summary>Adds a contour for tessellation</summary>
    /// <param name="poly">The poly to add (should be closed)</param>
    /// <param name="hole">True if this is a hole, false otherwise</param>

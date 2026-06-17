@@ -2,8 +2,6 @@
 // ╔═╦╦═╦╦╬╣ MainWindow.xaml.cs
 // ║║║║╬║╔╣║ Main window of WPF demo application (various scenes implemented)
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
-using System.Drawing;
-using System.Reactive.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using Nori;
@@ -13,15 +11,11 @@ namespace WPFDemo;
 public partial class MainWindow : Window {
    public MainWindow () {
       Lib.Init ();
-      Lux2.Init ();  // REMOVETHIS later
       InitializeComponent ();
-      mContent.Child = (UIElement)Lux.CreatePanel ();
-      Lux.OnReady.Subscribe (OnLuxReady);
+      mContent.Child = WPFHost.Init (this, OnLuxReady);
    }
 
-   void OnLuxReady (int _) {
-      var source = PresentationSource.FromVisual (this);
-      if (source != null) Lux.DPIScale = (float)source.CompositionTarget.TransformToDevice.M11;
+   void OnLuxReady () {
       TraceVN.TextColor = Color4.Yellow;
       new SceneManipulator ();
    }
@@ -30,7 +24,6 @@ public partial class MainWindow : Window {
    void LineFontDemo (object s, RoutedEventArgs e) => Display (s, new LineFontScene ());
    void TrueTypeDemo (object s, RoutedEventArgs e) => Display (s, new TrueTypeScene ());
    void TessDemo (object s, RoutedEventArgs e) => Display (s, new MeshScene ());
-   void BooleanDemo (object s, RoutedEventArgs e) => Display (s, new BooleanScene ());
    void DwgDemo (object s, RoutedEventArgs e) => Display (s, new DwgScene ());
    void RobotDemo (object s, RoutedEventArgs e) => Display (s, new RobotScene ());
    void STPDemo (object s, RoutedEventArgs e) => Display (s, new STPScene ());

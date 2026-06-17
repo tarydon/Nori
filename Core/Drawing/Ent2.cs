@@ -84,7 +84,7 @@ public abstract partial class Ent2 {
 public class E2Bendline : Ent2 {
    // Constructors -------------------------------------------------------------
    E2Bendline () => mDwg = null!;
-   public E2Bendline (Dwg2 dwg, IEnumerable<Point2> pts, double angle, double radius, double kfactor, double thickness = 1) : base (dwg.CurrentLayer)
+   public E2Bendline (Dwg2 dwg, IEnumerable<Point2> pts, double angle, double radius, double kfactor, double thickness = 1) : base (dwg.Layers.Current)
       => (Angle, KFactor, Pts, Radius, mDwg, Thickness) = (angle, kfactor, [.. pts], radius, dwg, thickness);
 
    // Properties ---------------------------------------------------------------

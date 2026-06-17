@@ -1,0 +1,6 @@
+Remove a layer
+--------------
+CHANGES:
+Remove Layer2[0]  OLD:Layer "BEND" Green Dash
+
+UNDO: Remove Layer2[0]  OLD:Layer "BEND" Green Dash

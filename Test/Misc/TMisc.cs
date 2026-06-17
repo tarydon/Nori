@@ -330,41 +330,6 @@ class TMisc {
          => lf.Render ("Hello\nWorld", new (x, y), align, 0, 1, 2, 30.D2R (), poly);
    }
 
-   [Test (68, "2D tessellation tests")]
-   void Test11 () {
-      // Create poly with holes
-      PolyBuilder outer = new ();
-      outer.Line (0, 0).Line (500, 0).Arc (500, 200, 500, 300, Poly.EFlags.CW)
-         .Line (400, 300).Arc (100, 300, 100, 200, Poly.EFlags.CCW).Line (0, 200).Close ();
-      List<Poly> polys = [
-         outer.Build (),
-         Poly.Circle ((80, 80), 60),
-         Poly.Circle ((450, 70), 20),
-         Poly.Circle ((250, 120), 20),
-         Poly.Rectangle (160, 160, 180, 180),
-         Poly.Rectangle (170, 20, 280, 40),
-         Poly.Polygon ((350, 150), 30, 6),
-         Poly.Polygon ((350, 50), 20, 5),
-         Poly.Polygon ((50, 250), 20, 3),
-         Poly.Circle ((250, 250), 20),
-      ];
-
-      // Make tessellation inputs
-      List<Point2> pts = []; List<int> splits = [0];
-      foreach (var poly in polys) {
-         poly.Discretize (pts, ETess.Medium);
-         splits.Add (pts.Count);
-      }
-
-      // Tessellate the polygon into triangles
-      var tries = Tess2D.Process (pts, splits);
-      var nodes = tries.Select (n => (Point3)pts[n]).ToList ();
-
-      // Build and compare the mesh
-      new Mesh3Builder (nodes.AsSpan ()).Build ().SaveTMesh (NT.TmpTxt);
-      Assert.TextFilesEqual ("Geom/Tess/gl2d.tmesh", NT.TmpTxt);
-   }
-
    [Test (12, "Test for E2BendLine properties")]
    void Test12 () {
       var dwg = new Dwg2 ();
@@ -391,28 +356,6 @@ class TMisc {
       (set.SyncRoot is List<int>).IsTrue ();
       IList il = set;
       il[2] = 20; int n = (int)il[2]!; n.Is (20);
-   }
-
-   [Test (134, "Test to handle duplicate layers")]
-   void Test14 () {
-      var dwg = new Dwg2 ();
-      // Add poly entities in different layers.
-      SetLayer (new Layer2 ("Circle", Color4.Black, ELineType.Continuous));
-      dwg.Add (Poly.Circle (new (0, 0), 25)); dwg.Add (Poly.Circle (new (50, 50), 50));
-      SetLayer (new Layer2 ("Rect", Color4.Red, ELineType.Continuous));
-      dwg.Add (Poly.Rectangle (5, 5, 20, 20)); dwg.Add (Poly.Rectangle (40, 60, 80, 100));
-      SetLayer (new Layer2 ("Line", Color4.Blue, ELineType.Continuous));
-      dwg.Add (Poly.Line (0, 0, 50, 50)); dwg.Add (Poly.Line (50, 50, 100, 100));
-
-      // Add new layers with their names matching existing layers
-      dwg.Add (new Layer2 ("Rect", Color4.Yellow, ELineType.Dot));
-      dwg.Add (new Layer2 ("Line", Color4.Green, ELineType.DashDot));
-      dwg.Add (new Layer2 ("Circle", Color4.White, ELineType.Dash));
-      Assert.IsTrue (dwg.Layers.Count == 3);
-      CurlWriter.Save (dwg, NT.TmpCurl);
-      Assert.TextFilesEqual ("Misc/Layers.curl", NT.TmpCurl);
-
-      void SetLayer (Layer2 layer) { dwg.Add (layer); dwg.CurrentLayer = layer; }
    }
 
    [Test (147, "Minimum Enclosing Circle/Sphere")]

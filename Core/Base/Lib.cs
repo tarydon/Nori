@@ -263,6 +263,8 @@ public static class Lib {
    public static bool Set<T> (ref T t0, T t1) where T : struct, IEQuable<T> { if (t0.EQ (t1)) return false; t0 = t1; return true; }
    /// <summary>Sets a value and returns true if it has changed (for any reference type)</summary>
    public static bool SetR<T> (ref T t0, T t1) where T : class { if (t0 == t1) return false; t0 = t1; return true; }
+   /// <summary>Sets a value and returns true if it has changed (for any nullable reference type)</summary>
+   public static bool SetNR<T> (ref T? t0, T t1) where T : class { if (t1 == t0) return false; t0 = t1; return true; }
    /// <summary>Sets a value and returns true if it has changed (for any enumeration type)</summary>
    public static bool SetE<T> (ref T t0, T t1) where T : Enum { if (t0.Equals (t1)) return false; t0 = t1; return true; }
 
@@ -279,6 +281,12 @@ public static class Lib {
    /// <summary>Orders two comparable so a is always less than or equal to b</summary>
    public static void Sort<T> (ref T a, ref T b) where T : IComparable<T> {
       if (a.CompareTo (b) > 0) (a, b) = (b, a);
+   }
+
+   /// <summary>Reports something suspicious (only in Developer mode)</summary>
+   public static void Suspicious () {
+      string s = Environment.StackTrace.Split ('\n')[0];
+      Trace ($"Suspicious: {s}");
    }
 
    /// <summary>Outputs a string representation of the object to our tracer</summary>

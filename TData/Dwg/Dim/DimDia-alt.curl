@@ -1,5 +1,5 @@
 (Dwg2){
-  Layers:[ { Name:0 Color:Black Linetype:Continuous } ]
+  Layers:[ { Name:0 Color:Black Linetype:Continuous }* ]
   Styles:[ { Name:STANDARD Font:SIMPLEX XScale:1 } ]
   DimStyles:[
     {
@@ -87,8 +87,6 @@
       Style:STANDARD
     }
   ]
-  CurrentLayer:0
-  CurrentDimStyle:HORZ-BELOW
   Ents:[
     (E2Poly){ Layer:0 Poly:C30,30,25 }
     (E2Point){ Layer:0 Pt:30,30 }

@@ -82,17 +82,35 @@ public class CurlReader {
                value = field.FieldType.ReadByName (mStack, str);
                break;
             default:
-               value = Read (field.FieldType);
-               if (field.IsAngle) value = ((double)value!).D2R ();
+               if (field.PrebuiltList) {
+                  IList list = (IList)(value = field.GetValue (obj))!;
+                  object? current = FillList (list, field.FieldType.GenericArgs [0]);
+                  if (field.FieldType.CurrentElem is { } pi)
+                     pi.SetValue (list, current);
+               } else {
+                  value = Read (field.FieldType);
+                  if (field.IsAngle) value = ((double)value!).D2R ();
+               }
                break;
          }
-         field.SetValue (obj, value);
+         if (!field.PrebuiltList) field.SetValue (obj, value);
       }
-      // Pop off the stack of partially read objects and return
+      // Pop off the stack of partially read objects and returnd
       auType.RunPostLoad (obj);
       return mStack.RemoveLast ();
    }
    readonly List<object> mStack = [];
+
+   object? FillList (IList list, AuType elemType) {
+      R.Match ('[');
+      object? current = null;
+      for (; ; ) {
+         if (R.TryMatch (']')) break;
+         object? obj = Read (elemType); list.Add (obj);
+         if (R.TryMatch ('*')) current = obj;
+      }
+      return current;
+   }
 
    // Reads a list (or any one-dimensional collection) from the curl file
    object? ReadList (AuType auType) {
@@ -100,11 +118,7 @@ public class CurlReader {
       bool makeArray = type.IsArray || auType.IsImmutableArray;
       IList list = makeArray ? new List<object> () : (IList)auType.CreateInstance ();
       var elemType = auType.GenericArgs[0];
-      R.Match ('[');
-      for (; ; ) {
-         if (R.TryMatch (']')) break;
-         list.Add (Read (elemType));
-      }
+      FillList (list, elemType);
       if (!makeArray) return list;
       var array = Array.CreateInstance (elemType.Type, list.Count);
       list.CopyTo (array, 0);

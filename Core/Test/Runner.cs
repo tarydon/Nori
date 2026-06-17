@@ -106,6 +106,8 @@ public static class TestRunner {
    public static bool StopOnFail;
    /// <summary>Only run the tests that have failed</summary>
    public static bool OnlyFailed;
+   /// <summary>Only list the tests that have been 'skipped'</summary>
+   public static bool OnlySkipped;
    /// <summary>List of tests that have failed (read in from failed.txt)</summary>
    public static HashSet<int> FailList = [];
    /// <summary>Stop the testing</summary>

@@ -9,6 +9,11 @@ namespace Nori;
 public sealed class AuException (string message) : Exception (message);
 #endregion
 
+/// <summary>Represents an error of type EError</summary>
+public sealed class NoriException (EError error) : Exception (error.ToString ())  {
+   public readonly EError Code = error;
+}
+
 #region class BadCaseException ---------------------------------------------------------------------
 /// <summary>Thrown when a case is not handled in some switch statement</summary>
 /// This is typically a sign of unfinished code

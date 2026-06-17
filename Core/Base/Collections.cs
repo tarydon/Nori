@@ -97,6 +97,7 @@ public class AList<T> : IReadOnlyList<T>, IList<T>, IAList {
 
    // Implementation -----------------------------------------------------------
    void Fire (ListChange.E action, int index) {
+      if (mSubject == null) return; 
       if (mFiring) throw new Exception ("AList modified inside change observer");
       mFiring = true;
       try { mSubject?.OnNext (new (action, index)); } finally { mFiring = false; }

@@ -2,7 +2,6 @@
 // ╔═╦╦═╦╦╬╣ VNodes.cs
 // ║║║║╬║╔╣║ Some derived types of VNode (GroupVN, SimpleVN, TraceVN, XfmVN etc)
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
-using System.Windows.Threading;
 namespace Nori;
 
 #region class GroupVN ------------------------------------------------------------------------------
@@ -119,8 +118,7 @@ public partial class TraceVN : VNode {
          if (mFace == null) {
             mFace = new (Lib.ReadBytes ("nori:GL/Fonts/RobotoMono-Regular.ttf"), 16);
             mDYLine = mFace.LineHeight;
-            mTimer = new () { Interval = TimeSpan.FromSeconds (1), IsEnabled = true };
-            mTimer.Tick += OnTick;
+            mTimer = Hub.Dispatcher.Timer (TimeSpan.FromSeconds (1), true, OnTick);
          }
          return mFace;
       }
@@ -128,7 +126,7 @@ public partial class TraceVN : VNode {
    TypeFace? mFace;
 
    // Timer handler, removes text that is more than 7 seconds old
-   void OnTick (object? s, EventArgs e) {
+   void OnTick () {
       int n = mLines.Count;
       while (mLines.Count > 0 && mLines[0].TS + TimeSpan.FromSeconds (HoldTime) < DateTime.Now) mLines.RemoveAt (0);
       if (n != mLines.Count) Redraw ();
@@ -137,7 +135,7 @@ public partial class TraceVN : VNode {
    // Private data -------------------------------------------------------------
    int mDYLine = 20;    // Height of each line in pixes
    int mcLines = 100;   // Number of lines that will fit on the screen
-   DispatcherTimer? mTimer;
+   IDisposable? mTimer;
    readonly List<(DateTime TS, string Text)> mLines = [];
 }
 #endregion

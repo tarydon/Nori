@@ -1,0 +1,6 @@
+Change current layer
+--------------------
+CHANGES:
+Current Layer2[1]  OLD:Layer "0" Black Continuous  NEW:Layer "TRIAL" Red Dot
+
+UNDO: Current Layer2[1]  OLD:Layer "0" Black Continuous  NEW:Layer "TRIAL" Red Dot

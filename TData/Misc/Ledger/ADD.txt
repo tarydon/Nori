@@ -1,0 +1,6 @@
+Add Layer TRIAL
+---------------
+CHANGES:
+Add Layer2[1]  NEW:Layer "TRIAL" Red Dot
+
+UNDO: Add Layer2[1]  NEW:Layer "TRIAL" Red Dot

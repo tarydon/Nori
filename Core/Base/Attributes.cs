@@ -14,6 +14,9 @@ namespace Nori;
 public sealed class AuPrimitiveAttribute : Attribute;
 #endregion
 
+[AttributeUsage (AttributeTargets.Property)]
+public sealed class AuIncludeAttribute : Attribute;
+
 #region [EPropClass] attribute ---------------------------------------------------------------------
 /// <summary>[EPropClass] attribute, used to auto-implement IObservable(EProp) for a type.</summary>
 /// The class then will have one or more fields decorated with [EPropField], and when

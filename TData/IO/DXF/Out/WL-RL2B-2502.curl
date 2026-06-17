@@ -1,6 +1,6 @@
 (Dwg2){
   Layers:[
-    { Name:0 Color:White Linetype:Continuous }
+    { Name:0 Color:White Linetype:Continuous }*
     { Name:Dimensions Color:White Linetype:Continuous }
     { Name:$CONSTRUCTION Color:#4F0000 Linetype:Continuous }
     { Name:PDF_Hatching Color:White Linetype:Continuous }
@@ -1030,8 +1030,6 @@
       ]
     }
   ]
-  CurrentLayer:0
-  CurrentDimStyle:Standard
   Ents:[
     (E2Text){
       Layer:ASHADE

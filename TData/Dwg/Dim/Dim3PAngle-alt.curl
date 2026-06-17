@@ -1,7 +1,7 @@
 (Dwg2){
   Layers:[
     { Name:0 Color:Black Linetype:Continuous }
-    { Name:DIMENSION Color:Black Linetype:Continuous }
+    { Name:DIMENSION Color:Black Linetype:Continuous }*
   ]
   Styles:[ { Name:STANDARD Font:SIMPLEX XScale:1 } ]
   DimStyles:[
@@ -90,8 +90,6 @@
       Style:STANDARD
     }
   ]
-  CurrentLayer:DIMENSION
-  CurrentDimStyle:HORZ-BELOW
   Ents:[
     (E2Poly){ Layer:0 Poly:M10,5H130V87H10Z }
     (E2Dim3PAngle){

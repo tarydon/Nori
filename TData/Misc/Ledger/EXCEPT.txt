@@ -1,0 +1,5 @@
+Exceptions
+----------
+DuplicateKey
+NoNulls
+BadKey

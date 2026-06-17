@@ -250,7 +250,7 @@ class DXFTests2 {
    [Test (109, "Write out a BendLine with multiple segments")]
    void Test8 () {
       var dwg = new Dwg2 ();
-      var layer = dwg.CurrentLayer;
+      var layer = dwg.Layers.Current;
       dwg.Add (new E2Poly (layer, Poly.Rectangle (0, 0, 100, 50)));
       dwg.Add (new E2Poly (layer, Poly.Rectangle (10, 10, 90, 40)));
       dwg.Add (new E2Bendline (dwg, [new (0, 30), new (10, 30), new (90, 30), new (100, 30)], Lib.HalfPI, 2.5, 0.42, 2.5));

@@ -766,12 +766,12 @@ public partial class Poly {
       if (pts[0].EQ (pts[^1])) {
          flags |= EFlags.Closed; pts = [.. pts.SkipLast (1)];
       }
-      if (!a.HasArcs && !b.HasArcs) result = new Poly ([.. pts], [], flags);
+      if (!a.HasArcs && !b.HasArcs) result = new Poly ([.. pts], default, flags);
       else {
          var extra = new List<ArcInfo> (a.Count + b.Count);
          for (int i = 0; i < a.Count; i++)
             extra.Add (a.Extra.SafeGet (i));
-         extra.AddRange (b.Extra);
+         if (!b.Extra.IsDefault) extra.AddRange (b.Extra);
          result = new Poly ([.. pts], [.. extra], flags | EFlags.HasArcs);
       }
       return true;
