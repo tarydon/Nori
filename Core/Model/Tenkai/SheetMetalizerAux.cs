@@ -184,7 +184,6 @@ class TFlex {
    public E3Flex? GetFlex () {
       if (mFlex != null) return mFlex;
       if (!GetFlexCS (out var csFlex, out var xfmProj, out var upward)) return null;
-      Lib.Trace (upward);
 
       List<Poly> trims = [];
       double radius = (mCyl0.Radius + mCyl1.Radius) / 2, angSpan = Lib.HalfPI;
