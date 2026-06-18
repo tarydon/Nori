@@ -31,7 +31,10 @@ public partial class SheetMetalizer {
          }
          while (todo2.TryDequeue (out SMFlexData? tf)) {
             tf.GatherNeighbors (todo1);
-            if (tf.GetFlex () is { } flex) ShModel.Ents.Add (flex);
+            if (tf.GetFlex () is { } flex) {
+               ShModel.Ents.Add (flex);
+               ShModel.Ents.Add (new E3Marker (flex.CS, E3Marker.EKind.CS, 10));
+            }
          }
       }
       return ShModel;

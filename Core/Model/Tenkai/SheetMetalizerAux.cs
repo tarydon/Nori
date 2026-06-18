@@ -148,12 +148,13 @@ class SMFlexData {
       Vector3 csVecX = (line0.Start - line0.End).Normalized (), csVecZ = plane0.CS.VecZ, csVecY = csVecZ * csVecX;
 
       // Let's see if the cylinder mass lies on the +Y side of this proposed coordinate system
-      var cylinder = mCyl0.Radius > mCyl1.Radius ? mCyl0 : mCyl1;
+      var (outer, inner) = (mCyl0, mCyl1);
+      if (outer.Radius < inner.Radius) (outer, inner) = (inner, outer);
       var pts = ListPool<Point3>.Borrow ();
       try {
          // The +Y direction of the flex CS should point OUT of the plane and into the Flex. 
          // Check that first:
-         cylinder.Contours[0].Discretize (pts, ETess.VeryCoarse);
+         inner.Contours[0].Discretize (pts, ETess.VeryCoarse);
          PlaneDef pdef = new (csOrg, csVecY);
          Bound1 bound = new (pts.Select (pdef.SignedDist));
          if (bound.Mid < 0) (csVecX, csVecY) = (-csVecX, -csVecY);
@@ -165,13 +166,13 @@ class SMFlexData {
          // Compute a projection in which the cylinder winds CCW around the axis, with 0 at
          // the shared line with the parent plane, and +ve going into the flex. We'll use this to 
          // get the correct parametrization of the E3Flex trimming curve
-         Point3 projOrg = csOrg.SnappedToLine (cylinder.CS.Org, cylinder.CS.Org + cylinder.CS.VecZ);
-         Vector3 projVecX = (csOrg - projOrg).Normalized (), projVecZ = cylinder.CS.VecZ, projVecY = projVecZ * projVecX;
+         Point3 projOrg = csOrg.SnappedToLine (outer.CS.Org, outer.CS.Org + outer.CS.VecZ);
+         Vector3 projVecX = (csOrg - projOrg).Normalized (), projVecZ = outer.CS.VecZ, projVecY = projVecZ * projVecX;
          if (projVecY.Opposing (csVecY)) projVecY = -projVecY;
          csFlex = new (csOrg, csVecX, csVecY);
 
-         Point3 fOrg = csOrg.SnappedToLine (cylinder.CS.Org, cylinder.CS.Org + cylinder.CS.VecZ);
-         Vector3 fVecX = (csOrg - projOrg).Normalized (), fVecZ = cylinder.CS.VecZ, fVecY = projVecZ * projVecX;
+         Point3 fOrg = csOrg.SnappedToLine (outer.CS.Org, outer.CS.Org + outer.CS.VecZ);
+         Vector3 fVecX = (csOrg - projOrg).Normalized (), fVecZ = outer.CS.VecZ, fVecY = projVecZ * projVecX;
          if (projVecY.Opposing (csVecY)) projVecY = -projVecY;
          xfmProj = Matrix3.From (new (projOrg, projVecX, projVecY));
 

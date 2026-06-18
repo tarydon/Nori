@@ -7,7 +7,7 @@ namespace Nori;
 #region class E3ThickVN ----------------------------------------------------------------------------
 /// <summary>VNode used to render E3Thick (flats / flexes)</summary>
 public class E3ThickVN (E3Thick thick) : VNode (thick) {
-   public override void Draw () => Lux.Mesh (thick.Mesh);
+   public override void Draw () => Lux.Mesh (thick.Mesh, EShadeMode.Glass);
 }
 #endregion
 

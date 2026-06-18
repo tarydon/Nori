@@ -20,7 +20,7 @@ class Program {
       TraceVN.TextColor = Color4.Yellow;
       TraceVN.HoldTime = 15;
       Lib.Tracer = TraceVN.Print;
-      Lux.UIScene = new Scene2 ();
+      //Lux.UIScene = new DebugScene ();
       Lib.Tessellate = FastTess2D.Process;
       Hub.Mouse.Clicks.Where (a => a.IsRightPress).Subscribe (OnMouseClick);
       Hub.Keyboard.Keys.Where (a => a.IsPress (EKey.Escape)).Subscribe (OnTagBad);
@@ -61,7 +61,7 @@ class SurfaceScene : Scene3 {
 
       List<VNode> nodes = [new Model3VN (model), TraceVN.It];
       Bound = model.Bound;
-      Root = new Model3VN (model);
+      Root = new GroupVN (nodes);
    }
 }
 
@@ -92,8 +92,6 @@ class UnfoldedScene : Scene2 {
 class UnfoldScene : Scene2 {
    public UnfoldScene () {
       var model = STEPReader.Load ("W:/NoriSample/S00178.stp");
-
-
       var shmodel = new SheetMetalizer (model).Process ().Value;
       var dwg = new Unfolder (shmodel).Process ().Value;
 
@@ -103,18 +101,16 @@ class UnfoldScene : Scene2 {
    }
 }
 
-class NewScene : Scene3 {
-   public NewScene () {
-      var model = STEPReader.Load ("N:/TData/STEP/S00178.stp");
+class DebugScene : Scene3 {
+   public DebugScene () {
+      var model = STEPReader.Load ("W:/NoriSample/S00726.stp");
       var shmodel = new SheetMetalizer (model).Process ().Value;
 
       List<VNode> nodes = [];
-      var pose = new BendPose (shmodel);
-      nodes.AddRange (pose.Nodes.Select (a => new BPoseNodeVN (a)));
+      nodes.Add (new Model3VN (shmodel));
       nodes.Add (TraceVN.It);
 
-      // nodes.Clear ();
-      Bound = pose.GetBound (1);
+      Bound = shmodel.Bound;
       BgrdColor = new Color4 (90, 100, 110);
       Root = new GroupVN (nodes);
    }
