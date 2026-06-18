@@ -5,8 +5,8 @@
 namespace Nori;
 using static SheetMetalizer;
 
-class TFlat {
-   public TFlat (SheetMetalizer owner, TFlex? parent, E3Plane p0, PlaneDef def0, E3Plane p1) {
+class SMFlatData {
+   public SMFlatData (SheetMetalizer owner, SMFlexData? parent, E3Plane p0, PlaneDef def0, E3Plane p1) {
       mOwner = owner; mParent = parent; Plane0 = p0; mDef0 = def0; Plane1 = p1;
       owner.Used.Add (p0); owner.Used.Add (p1);
    }
@@ -21,7 +21,7 @@ class TFlat {
    }
    E3Flat? mFlat;
 
-   public void GatherNeighbors (Queue<TFlex> todo) {
+   public void GatherNeighbors (Queue<SMFlexData> todo) {
       var set0 = GetBendCylinders (Plane0); var set1 = GetBendCylinders (Plane1);
       foreach (var cyl0 in set0) {
          int n = GetPair (set1, cyl0);
@@ -29,7 +29,7 @@ class TFlat {
             E3Cylinder cyl1 = set1[n];
             mOwner.MarkOverlaps (Plane0, cyl0);
             mOwner.MarkOverlaps (Plane1, cyl1);
-            todo.Enqueue (new TFlex (mOwner, this, cyl0, cyl1));
+            todo.Enqueue (new SMFlexData (mOwner, this, cyl0, cyl1));
             set1.RemoveAt (n);
          }
       }
@@ -66,18 +66,18 @@ class TFlat {
    }
 
    readonly SheetMetalizer mOwner;
-   readonly TFlex? mParent;
+   readonly SMFlexData? mParent;
    public readonly E3Plane Plane0, Plane1;
    readonly PlaneDef mDef0;
 }
 
-class TFlex {
-   public TFlex (SheetMetalizer owner, TFlat parent, E3Cylinder c0, E3Cylinder c1) {
+class SMFlexData {
+   public SMFlexData (SheetMetalizer owner, SMFlatData parent, E3Cylinder c0, E3Cylinder c1) {
       mOwner = owner; mParent = parent; mCyl0 = c0; mCyl1 = c1;
       owner.Used.Add (c0); owner.Used.Add (c1);
    }
 
-   public void GatherNeighbors (Queue<TFlat> todo) {
+   public void GatherNeighbors (Queue<SMFlatData> todo) {
       var set0 = GetLeewardPlanes (mCyl0); var set1 = GetLeewardPlanes (mCyl1);
       for (int i = 0; i < set0.Count; i++) {
          E3Plane plane0 = set0[i];
@@ -87,7 +87,7 @@ class TFlex {
             E3Plane plane1 = set1[n];
             mOwner.MarkOverlaps (mCyl0, plane0);
             mOwner.MarkOverlaps (mCyl1, plane1);
-            todo.Enqueue (new TFlat (mOwner, this, plane0, pdef, plane1));
+            todo.Enqueue (new SMFlatData (mOwner, this, plane0, pdef, plane1));
             set1.RemoveAt (n);
          }
       }
@@ -233,5 +233,5 @@ class TFlex {
 
    readonly SheetMetalizer mOwner;
    readonly E3Cylinder mCyl0, mCyl1;
-   readonly TFlat mParent;
+   readonly SMFlatData mParent;
 }

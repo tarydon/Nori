@@ -446,9 +446,7 @@ public readonly struct Bound3 : IEQuable<Bound3> {
    public bool IsEmpty => X.IsEmpty || Y.IsEmpty || Z.IsEmpty;
    public Point3 Midpoint => new (X.Mid, Y.Mid, Z.Mid);
 
-   /// <summary>
-   /// Returns the 8 corners of the Bound3
-   /// </summary>
+   /// <summary>Returns the 8 corners of the Bound3</summary>
    public IEnumerable<Point3> Corners {
       get {
          for (int i = 0; i < 8; i++) {

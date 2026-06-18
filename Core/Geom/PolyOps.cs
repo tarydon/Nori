@@ -718,6 +718,7 @@ public partial class Poly {
    /// <summary>Creates and returns a new reversed Poly of 'this'</summary>
    public Poly Reversed () {
       if (!HasArcs && !HasOverlaps) return new ([.. mPts.Reverse ()], [], mFlags);
+      if (IsCircle) return new (mPts, [new (Extra[0].Center, Extra[0].Flags ^ (EFlags.CW | EFlags.CCW))], mFlags);
       PolyBuild2 pb = new PolyBuild2 ();
       pb.Begin (B);
       for (int i = Count - 1; i >= 0; i--) {

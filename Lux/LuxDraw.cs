@@ -60,7 +60,7 @@ public static partial class Lux {
 
    /// <summary>The current line-type</summary>
    public static ELineType LineType {
-      get => mLineType;
+      get => mLineType; 
       set {
          if (mLineType == value) return;
          if (Set (ELuxAttr.LineType)) mLineTypes.Push (mLineType);

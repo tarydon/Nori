@@ -5,37 +5,31 @@
 namespace Nori;
 
 #region class SheetMetalizer -----------------------------------------------------------------------
-/// <summary>
-/// Converts a surface-model into a sheet-metal model that can be unfolded
-/// </summary>
+/// <summary>Converts a surface-model into a sheet-metal model that can be unfolded</summary>
 /// This uses heuristics to convert a surface model to a sheet-metal model. The surface model
 /// should be built with connectivity information, and should be a well-formed sheet metal model.
 /// We support only models where the sheet thickness is uniform across the model (we cannot have
 /// flanges or bends where the sheet-metal thickness is different than the one at the baseplane). 
 public partial class SheetMetalizer {
    // Constructors -------------------------------------------------------------
-   /// <summary>
-   /// Construct a SheetMetalizer given a surface model to work with
-   /// </summary>
+   /// <summary>Construct a SheetMetalizer given a surface model to work with</summary>
    public SheetMetalizer (Model3 model) { Model = model; ShModel = new (); }
 
    // Properties ---------------------------------------------------------------
-   /// <summary>
-   /// Converts the surface model to a sheet-metal model
-   /// </summary>
+   /// <summary>Converts the surface model to a sheet-metal model</summary>
    public Result<Model3, EResult> Process () {
       Model.Ents.ForEach (a => a.IsTranslucent = true);
-      if (ComputeBaseplane () is not TFlat tpBase) return EResult.CantFindBaseplane;
+      if (ComputeBaseplane () is not SMFlatData tpBase) return EResult.CantFindBaseplane;
       if (Thickness is < 0.0999999 or > 25.4000001) return EResult.InvalidThickness;
 
-      Queue<TFlex> todo2 = [];
-      Queue<TFlat> todo1 = []; todo1.Enqueue (tpBase);
+      Queue<SMFlexData> todo2 = [];
+      Queue<SMFlatData> todo1 = []; todo1.Enqueue (tpBase);
       while (todo1.Count + todo2.Count > 0) {
-         while (todo1.TryDequeue (out TFlat? tp)) {
+         while (todo1.TryDequeue (out SMFlatData? tp)) {
             tp.GatherNeighbors (todo2);
             ShModel.Ents.Add (tp.GetFlat ());
          }
-         while (todo2.TryDequeue (out TFlex? tf)) {
+         while (todo2.TryDequeue (out SMFlexData? tf)) {
             tf.GatherNeighbors (todo1);
             if (tf.GetFlex () is { } flex) ShModel.Ents.Add (flex);
          }
@@ -70,7 +64,7 @@ public partial class SheetMetalizer {
    //    same 'projection' as viewed from their common shared normal. This is to avoid selecting the
    //    bottom from one flange and the top from another parallel flange on the other side
    // If all these checks pass, we measure and store the thickness.
-   TFlat? ComputeBaseplane () {
+   SMFlatData? ComputeBaseplane () {
       E3Plane? pair = null;
       double minDist = double.MaxValue;
       var planes = Model.Ents.OfType<E3Plane> ().OrderByDescending (a => a.OuterArea).ToList ();
