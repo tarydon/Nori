@@ -115,6 +115,7 @@ public partial class SheetMetalizer {
    internal static readonly double ETHICK = 0.01;
    internal static readonly double EAREA = 0.1;
    internal static readonly double ECOS = 1e-5;
+   internal static readonly double EDIST = 0.0001;
    internal readonly Model3 Model;             // The input surface model
    internal readonly Model3 ShModel;           // The output sheet-metal model
    internal double Thickness;

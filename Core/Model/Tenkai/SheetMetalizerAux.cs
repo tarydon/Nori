@@ -45,6 +45,9 @@ class SMFlatData {
             // Cylinder axes should be parallel to each other (or anti-parallel)
             double cos = Math.Abs (vecz.CosineToAlreadyNormalized (cyl1.CS.VecZ));
             if (!cos.EQ (1, ECOS)) continue;
+            // Actually, the two cylinder axes should be coincident
+            double dist = cyl1.CS.Org.DistToLine (cyl.CS.Org, cyl.CS.Org + cyl.CS.VecZ);
+            if (!dist.IsZero (EDIST)) continue;
             return i;
          }
          return -1;
