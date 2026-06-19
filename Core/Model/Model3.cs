@@ -67,13 +67,16 @@ public class Model3 {
    }
    Dictionary<int, (E3Surface S1, Curve3 C1, E3Surface S2, Curve3 C2)>? _coedges;
 
-   /// <summary>Returns the shared edge between two surfaces (if there is one)</summary>
-   /// This returns an edge from surface s1 (the corresponding co-edge on the other surface
-   /// can be obtained using the GetCoedge routine above, if needed)
-   public Curve3? GetSharedEdge (E3Surface s1, E3Surface s2) {
-      foreach (var edge in s1.Contours.SelectMany (a => a.Curves)) 
-         if (GetCoedge (edge, out var sOther, out _) && sOther == s2) return edge;
-      return null;
+   /// <summary>Adds the list of shared edges between two surfaces to the output list</summary>
+   /// The output contains an even number of edges. Even-numbered edges are edges from surface s1, 
+   /// and the odd-numbered edges are the corresponding co-edges from surface s2. This clears the
+   /// output array before it starts, and returns true if any edges were found
+   public bool GetSharedEdges (E3Surface s1, E3Surface s2, List<Curve3> output) {
+      output.Clear (); 
+      foreach (var edge in s1.Contours.SelectMany (a => a.Curves))
+         if (GetCoedge (edge, out var sOther, out var eOther) && sOther == s2)
+            output.AddM (edge, eOther);
+      return output.Count > 0;
    }
 
    /// <summary>Returns the list of all entities that are connected</summary>

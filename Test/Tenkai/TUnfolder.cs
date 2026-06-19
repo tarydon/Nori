@@ -1,5 +1,7 @@
-﻿using System.ComponentModel.DataAnnotations;
-
+// ────── ╔╗
+// ╔═╦╦═╦╦╬╣ TUnfolder.cs
+// ║║║║╬║╔╣║ <<TODO>>
+// ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 namespace Nori.Testing;
 
 [Fixture (43, "Sheetmetalizer + Unfolder tests", "Unfolder")]
@@ -12,6 +14,15 @@ class TUnfolder {
 
    [Test (258, "S00176.stp | Planes=17, Flexes=16, Polys=4")]
    void Test3 () => Test ("STEP/S00176.stp");
+
+   [Test (259, "S00666.stp | Planes=3, Flexes=2, Polys=3")]
+   void Test5 () => Test ("STEP/S00666.stp");
+
+   [Test (260, "S01004 | Planes=8, Flexes=7, Polys=11")]
+   void Test6 () => Test ("STEP/S01004.stp");
+
+   [Test (261, "S06298 | Planes=11, Flexes=10, Polys=2")]
+   void Test7 () => Test ("STEP/S06298.stp");
    
    void Test (string file) {
       var sb = new StringBuilder ();

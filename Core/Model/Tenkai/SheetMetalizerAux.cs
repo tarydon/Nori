@@ -129,21 +129,25 @@ class SMFlexData {
          if (!cos.IsZero (1e-5)) continue;
 
          // Shared line parallel to cylinder axis
-         if (model.GetSharedEdge (cylinder, plane) is not Line3 line) continue;
+         if (!GetSharedLine (cylinder, plane, out var line)) continue;
          cos = Math.Abs ((line.End - line.Start).Normalized ().CosineToAlreadyNormalized (axis));
-         if (!cos.EQ (1, 1e-5)) continue;
-
-         set.Add (plane);
+         if (cos.EQ (1, ECOS)) set.Add (plane);
       }
       return set;
+   }
+
+   bool GetSharedLine (E3Surface s1, E3Surface s2, [NotNullWhen (true)] out Line3? line) {
+      mOwner.Model.GetSharedEdges (s1, s2, mOwner.TmpEdges);
+      line = mOwner.TmpEdges.OfType<Line3> ().FirstOrDefault ();
+      return line != null;
    }
 
    bool GetFlexCS (out CoordSystem csFlex, out Matrix3 xfmProj, out bool upward) {
       var model = mOwner.Model;
       var plane0 = mParent.Plane0;
       csFlex = CoordSystem.World; xfmProj = Matrix3.Identity; upward = true;
-      if (model.GetSharedEdge (plane0, mCyl0) is not Line3 line0) return false;
-      if (model.GetSharedEdge (mParent.Plane1, mCyl1) is not Line3 line1) return false;
+      if (!GetSharedLine (plane0, mCyl0, out var line0)) return false;
+      if (!GetSharedLine (mParent.Plane1, mCyl1, out var line1)) return false;
 
       // Let's try to gather the components of the flex coordinate system
       Point3 side0 = line0.Midpoint, side1 = side0.SnappedToLine (line1.Start, line1.End);

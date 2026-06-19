@@ -42,10 +42,10 @@ public partial class SheetMetalizer {
    // Note that the line-of-overlap is actually a pair of co-edges (one from each of the two adjacent
    // surfaces, we need to mark both of them as IsOverlap)
    internal void MarkOverlaps (E3Surface s1, E3Surface s2) {
-      if (Model.GetSharedEdge (s1, s2) is not Line3 line1) { Lib.Suspicious (); return; }
-      if (!Model.GetCoedge (line1, out _, out var line2)) { Lib.Suspicious (); return; }
-      line1.IsOverlap = line2.IsOverlap = true;
+      if (!Model.GetSharedEdges (s1, s2, TmpEdges)) Lib.Suspicious ();
+      TmpEdges.ForEach (a => a.IsOverlap = true);
    }
+   internal List<Curve3> TmpEdges = [];
 
    // Starting step of the sheet-metalization - we pick a suitable baseplane. 
    // The 'baseplane' is a potential E3Flat that we will build from a pair of planes that are similar,
