@@ -212,6 +212,14 @@ public class Arc3 : Curve3 {
       }
    }
 
+   public bool TryCombine (Arc3 a2, [NotNullWhen (true)] out Curve3? cout) {
+      cout = null;
+      if (!Radius.EQ (a2.Radius) || !Center.EQ (a2.Center)) return false;
+      if (!CS.VecZ.EQ (a2.CS.VecZ) || AngSpan * a2.AngSpan < 0) return false;
+      cout = new Arc3 (Math.Min (PairId, a2.PairId), CS, Radius, AngSpan + a2.AngSpan);
+      return true;
+   }
+
    // Implementation -----------------------------------------------------------
    public override string ToString ()
       => $"{base.ToString ()} R={Radius.Round (2)} Span={AngSpan.R2D ().Round (1)}\u00b0";
@@ -352,6 +360,14 @@ public sealed class Line3 : Curve3 {
 
    public override Curve3 Trimmed (double t1, double t2, bool _) =>
       new Line3 (PairId, GetPoint (t1), GetPoint (t2));
+
+   public bool TryCombine (Line3 a2, [NotNullWhen (true)] out Curve3? aout) {
+      aout = null;
+      if (!a2.End.DistToLine (Start, End).IsZero ()) return false;
+      if (a2.End.GetLieOn (Start, End) < 1) return false;
+      aout = new Line3 (Math.Min (PairId, a2.PairId), Start, a2.End);
+      return true; 
+   }
 
    // Implementation -----------------------------------------------------------
    public override string ToString () => $"{base.ToString ()}, Len={Start.DistTo (End).Round (2)}";
@@ -679,6 +695,26 @@ public class Contour3 {
          pt *= xfm; Lib.Check (pt.Z.IsZero (0.001), "Non-planar contour");
          return new (pt.X, pt.Y);
       }
+   }
+
+   public bool TrySimplify ([NotNullWhen (true)] out Contour3? simplified) {
+      List<Curve3>? output = null;
+      IList<Curve3> input = Curves;
+      for (int i = input.Count - 1; i >= 0; i--) {
+         int i0 = (i - 1).Wrap (input.Count);
+         Curve3 c0 = input[i0], c1 = input[i];
+         if (c0.GetType () != c1.GetType ()) continue;
+
+         Curve3? cout = null;
+         if (c0 is Arc3 arc0) arc0.TryCombine ((Arc3)c1, out cout);
+         else if (c0 is Line3 line0) line0.TryCombine ((Line3)c1, out cout);
+         if (cout == null) continue;
+
+         if (output == null) { output = [.. input]; input = output; }
+         input[i0] = cout; input.RemoveAt (i);
+      }
+      if (output != null) { simplified = new Contour3 ([.. output]); return true; }
+      simplified = null; return false;
    }
 
    // Operators ------------------------------------------------------------------------------------

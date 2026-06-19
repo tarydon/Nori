@@ -20,7 +20,7 @@ class Program {
       TraceVN.TextColor = Color4.Yellow;
       TraceVN.HoldTime = 15;
       Lib.Tracer = TraceVN.Print;
-      //Lux.UIScene = new DebugScene ();
+      // Lux.UIScene = new DebugScene ();
       Lib.Tessellate = FastTess2D.Process;
       Hub.Mouse.Clicks.Where (a => a.IsRightPress).Subscribe (OnMouseClick);
       Hub.Keyboard.Keys.Where (a => a.IsPress (EKey.Escape)).Subscribe (OnTagBad);
@@ -103,11 +103,11 @@ class UnfoldScene : Scene2 {
 
 class DebugScene : Scene3 {
    public DebugScene () {
-      var model = STEPReader.Load ("W:/NoriSample/S00726.stp");
+      var model = STEPReader.Load (Program.NextFile);
       var shmodel = new SheetMetalizer (model).Process ().Value;
 
       List<VNode> nodes = [];
-      nodes.Add (new Model3VN (shmodel));
+      nodes.Add (new Model3VN (model));
       nodes.Add (TraceVN.It);
 
       Bound = shmodel.Bound;

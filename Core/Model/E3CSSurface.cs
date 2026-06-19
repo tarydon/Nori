@@ -142,10 +142,27 @@ public sealed class E3Cylinder : E3CSSurface {
    // - A full cylinder (a through-hole through a sheet metal thick plane, for example
    // - A partial cylinder - like the inner/outer surface of a bend line in a sheet metal
    //   model, where the trimming curve is a perfect rectangle
-   protected override Mesh3 BuildMesh (ETess eTess)
-      => BuildFullCylinderMesh (eTess) ??
+   protected override Mesh3 BuildMesh (ETess eTess) {
+      SimplifyContours ();
+      return BuildFullCylinderMesh (eTess) ??
          BuildPartCylinderMesh (eTess) ??
          base.BuildMesh (eTess);
+   }
+
+   void SimplifyContours () {
+      for (int i = 0; i < Contours.Length; i++) {
+         if (!Contours[i].TrySimplify (out var c2)) continue;
+         Fill (_simplified ??= [], i);
+         _simplified.Add (c2);
+      }
+      Fill (_simplified, Contours.Length);
+
+      void Fill (List<Contour3>? list, int n) {
+         if (list == null) return;
+         while (list.Count < n) list.Add (Contours[list.Count]);
+      }
+   }
+   List<Contour3>? _simplified;
 
    // Computes the domain of the cylinder 
    protected override Bound2 ComputeDomain () {
@@ -192,14 +209,18 @@ public sealed class E3Cylinder : E3CSSurface {
    Mesh3? BuildFullCylinderMesh (ETess eTess) {
       // There should be two trimming contours - top hole and bottom hole.
       // Both should be circles, with their normal axes aligned ot the axis of the cylinder
-      if (Contours.Length != 2 || Contours.Any (a => a.Curves.Length != 1)) return null;
-      var arcs = Contours.Select (a => a.Curves[0]).OfType<Arc3> ().ToList ();
+      IList<Contour3> input = _simplified != null ? _simplified : Contours;
+      if (input.Count != 2 || input.Any (a => a.Curves.Length != 1)) return null;
+      var arcs = input.Select (a => a.Curves[0]).OfType<Arc3> ().ToList ();
       if (arcs.Count != 2) return null;
+
+      // TODO: Cleanup
       double cos = arcs[0].CS.VecZ.CosineToAlreadyNormalized (arcs[1].CS.VecZ);
       if (!Abs (cos).EQ (1)) return null;
       Point3 cen0 = arcs[0].Center;
-      Vector3 vecZ0 = arcs[1].Center - cen0, vecZ1 = arcs[1].Start - arcs[0].Start;
-      if (!vecZ0.EQ (vecZ1)) return null;
+      Vector3 vecZ0 = arcs[1].Center - cen0;
+      cos = arcs[0].CS.VecZ.CosineTo (vecZ0);
+      if (!Abs (cos).EQ (1)) return null;
       Point3 cenLift = cen0 + vecZ0.Normalized ();
 
       // Create the bottom list of points (we can just add a constant vector to these
@@ -233,9 +254,10 @@ public sealed class E3Cylinder : E3CSSurface {
       // There should be a single trimming curve - should be made of Line-Arc-Line-Arc,
       // where both the lines should be parallel to the cylinder axes, and the arcs have
       // normals aligned to the cylinder axis.
-      if (Contours.Length != 1 || Contours[0].Curves.Length < 4) return null;
-      var arcs = Contours[0].Curves.OfType<Arc3> ().ToList (); if (arcs.Count != 2) return null;
-      var lines = Contours[0].Curves.OfType<Line3> ().ToList ();
+      IList<Contour3> input = _simplified != null ? _simplified : Contours;
+      if (input.Count != 1 || input[0].Curves.Length < 4) return null;
+      var arcs = input[0].Curves.OfType<Arc3> ().ToList (); if (arcs.Count != 2) return null;
+      var lines = input[0].Curves.OfType<Line3> ().ToList ();
       for (int i = lines.Count - 1; i >= 1; i--) {
          Line3 line0 = lines[i - 1], line1 = lines[i];
          Vector3 vec0 = (line0.End - line0.Start).Normalized ();
