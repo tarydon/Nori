@@ -1,0 +1,23 @@
+(Dwg2){
+  Layers:[ { Name:0 Color:Black Linetype:Continuous }* ]
+  Ents:[
+    (E2Bendline){
+      Layer:0
+      Angle:90
+      KFactor:0.5
+      Radius:3.825
+      Pts:[ -19.038023,19 -19.038023,14.65 ]
+      Thickness:2.65
+    }
+    (E2Bendline){
+      Layer:0
+      Angle:90
+      KFactor:0.5
+      Radius:3.825
+      Pts:[ -19.038023,4.35 -19.038023,0 ]
+      Thickness:2.65
+    }
+    (E2Poly){ Layer:0 Poly:M-31.312171,4.35H-11.77V14.65H-31.312171Z }
+    (E2Poly){ Layer:0 Poly:M-40.042171,19H0V0H-40.042171Z }
+  ]
+}

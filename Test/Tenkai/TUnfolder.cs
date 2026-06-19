@@ -16,13 +16,22 @@ class TUnfolder {
    void Test3 () => Test ("STEP/S00176.stp");
 
    [Test (259, "S00666.stp | Planes=3, Flexes=2, Polys=3")]
-   void Test5 () => Test ("STEP/S00666.stp");
+   void Test4 () => Test ("STEP/S00666.stp");
 
    [Test (260, "S01004 | Planes=8, Flexes=7, Polys=11")]
-   void Test6 () => Test ("STEP/S01004.stp");
+   void Test5 () => Test ("STEP/S01004.stp");
 
    [Test (261, "S06298 | Planes=11, Flexes=10, Polys=2")]
-   void Test7 () => Test ("STEP/S06298.stp");
+   void Test6 () => Test ("STEP/S06298.stp");
+
+   [Test (262, "S01094 | Planes=2, Flexes=2, Polys=2")]
+   void Test7 () => Test ("STEP/S01094.stp");
+
+   [Test (263, "S00944 | Planes=10, Flexes=10, Polys=6")]
+   void Test8 () => Test ("STEP/S00944.stp");
+
+   [Test (264, "S04276 | Planes=5, Flexes=12, Polys=27")]
+   void Test9 () => Test ("STEP/S04276.stp");
    
    void Test (string file) {
       var sb = new StringBuilder ();

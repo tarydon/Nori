@@ -90,7 +90,10 @@ class SMFlexData {
             E3Plane plane1 = set1[n];
             mOwner.MarkOverlaps (mCyl0, plane0);
             mOwner.MarkOverlaps (mCyl1, plane1);
-            todo.Enqueue (new SMFlatData (mOwner, this, plane0, pdef, plane1));
+            // It's possible we have already visited and converted this plane0-plane1 to a E3Flat.
+            // If so, don't queue up a SMFlatData for 
+            if (!mOwner.Used.Contains (plane0)) 
+               todo.Enqueue (new SMFlatData (mOwner, this, plane0, pdef, plane1));
             set1.RemoveAt (n);
          }
       }
@@ -124,12 +127,17 @@ class SMFlexData {
       Vector3 axis = cylinder.CS.VecZ;
       foreach (var plane in model.GetNeighbors (cylinder).OfType<E3Plane> ()) {
          // Plane normal perpendicular to cylinder axis
-         if (mOwner.Used.Contains (plane)) continue;
          double cos = axis.CosineToAlreadyNormalized (plane.CS.VecZ);
          if (!cos.IsZero (1e-5)) continue;
 
-         // Shared line parallel to cylinder axis
+         // Shared line parallel to cylinder axis. 
          if (!GetSharedLine (cylinder, plane, out var line)) continue;
+         // Note that up to this point, we may have even picked a plane that we have already
+         // visited (and have stored in mOwner.Used). However, since we might have reached this
+         // plane by a different route, we still add that plane in (so that we can mark the
+         // shared edge between these). However, we don't need to do this if the edge between
+         // these two has already been marked as shared (see the check below)
+         if (line.IsOverlap) continue; 
          cos = Math.Abs ((line.End - line.Start).Normalized ().CosineToAlreadyNormalized (axis));
          if (cos.EQ (1, ECOS)) set.Add (plane);
       }
