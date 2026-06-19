@@ -582,6 +582,7 @@ public partial class Poly {
    }
 
    /// <summary>Attempts to cleanup given poly of collinear/concentric line/arc segments appearing sequentially</summary>
+   /// TODO: REWRITE more cleanly
    bool TryMergeConsecutiveSegs ([NotNullWhen (true)] out Poly? result, double threshold = 1e-6) {
       if (Count < 2 || !NeedMerge (this, threshold)) { result = null; return false; }
       (Seg prev, int baseSegIdx) = (this[0], 0);
@@ -599,13 +600,11 @@ public partial class Poly {
             extras.Add (Extra[baseSegIdx]);
 
          if (curr.IsLast) {
-            if (!canMerge)
-               pts.Add (curr.A);
-            if (!IsClosed)
-               pts.Add (curr.B);
+            if (!canMerge) pts.Add (curr.A);
+            if (!IsClosed) pts.Add (curr.B);
+            if (HasArcs && i < Extra.Length) extras.Add (Extra[i]);
             break;
          }
-
          (prev, baseSegIdx) = (curr, i);
       }
 
