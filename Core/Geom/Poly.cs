@@ -659,6 +659,12 @@ public partial class Poly {
       }
    }
 
+   /// <summary>Create a new Poly by applying a 3D transformation matrix</summary>
+   /// Each point is transformed by the given 3D transformation matrix. The Z coordinates
+   /// of the results are ignored and the values are 'flattened' to the XY plane. If the matrix
+   /// does not project the points to a plane parallel to XY, the results are unpredictable
+   /// for arcs, since the continue to remain arcs of circles (not ellipses as might be required
+   /// by an oblique projection)
    public static Poly operator * (Poly p, Matrix3 xfm) {
       if (p.IsCircle) {
          var cen = p.Extra[0].Center;

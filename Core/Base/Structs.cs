@@ -267,6 +267,7 @@ public readonly struct PlaneDef {
       D = -(A * pt.X + B * pt.Y + C * pt.Z);
    }
 
+   /// <summary>Compute a PlaneDef that aligns with the XY plane of a CoordSystem</summary>
    public PlaneDef (in CoordSystem cs) {
       var (normal, pt) = (cs.VecZ, cs.Org);
       A = normal.X; B = normal.Y; C = normal.Z;

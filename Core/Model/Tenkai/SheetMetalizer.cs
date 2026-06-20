@@ -10,7 +10,7 @@ namespace Nori;
 /// should be built with connectivity information, and should be a well-formed sheet metal model.
 /// We support only models where the sheet thickness is uniform across the model (we cannot have
 /// flanges or bends where the sheet-metal thickness is different than the one at the baseplane). 
-public partial class SheetMetalizer {
+public class SheetMetalizer {
    // Constructors -------------------------------------------------------------
    /// <summary>Construct a SheetMetalizer given a surface model to work with</summary>
    public SheetMetalizer (Model3 model) { Model = model; ShModel = new (); }
@@ -105,6 +105,12 @@ public partial class SheetMetalizer {
       Poly pa = planeA.Contours[0].Flatten (plane0.FromXfm), pb = planeB.Contours[0].Flatten (plane0.FromXfm);
       Bound2 ba = b0 + pa.GetBound (), bb = b0 + pb.GetBound ();
       return ba.Area < bb.Area ? planeA : planeB;
+   }
+
+   // Helper used to pick a better 'pair cylinder' for the given cylinder cyl0
+   internal E3Cylinder PickBetterPair (E3Cylinder cyl0, E3Cylinder cylA, E3Cylinder cylB) {
+      Bound3 b0 = cyl0.Bound, bA = cylA.Bound + b0, bB = cylB.Bound + b0;
+      return bA.Volume < bB.Volume ? cylA : cylB;
    }
 
    // Private data -------------------------------------------------------------

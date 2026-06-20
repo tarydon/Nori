@@ -4,15 +4,20 @@
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 namespace Nori;
 
-public class PolyBuild2 {
-   public PolyBuild2 Begin (Point2 pt, bool cleanup = false) {
+// Eventually, PolyBuildEx will replace PolyBuilder. 
+// The key difference is:
+// - PolyBuilder uses Line() to indicate a line _starting_ at a given point
+// - PolyBuild uses Line() to indicate a line _ending_ at a given point
+// More documentation will follow
+public class PolyBuild {
+   public PolyBuild Begin (Point2 pt, bool cleanup = false) {
       if (mBegan) Fatal ("Multiple Begin");
       mBegan = true; mCleanup = cleanup; mFlags = 0;
       mPts.Clear (); mPts.Add (pt); mExtra.Clear (); 
       return this;
    }
 
-   public PolyBuild2 Line (Point2 end) {
+   public PolyBuild Line (Point2 end) {
       CheckBegan ();
       if (mCleanup) {
          int n = mPts.Count;
@@ -34,7 +39,7 @@ public class PolyBuild2 {
       return this;
    }
 
-   public PolyBuild2 Arc (Point2 end, Point2 center, bool ccw) {
+   public PolyBuild Arc (Point2 end, Point2 center, bool ccw) {
       CheckBegan ();
       if (mCleanup && end.EQ (mPts[^1])) return this; 
       while (mExtra.Count < mPts.Count - 1) mExtra.Add (default);
@@ -55,7 +60,7 @@ public class PolyBuild2 {
       return new Poly ([.. mPts], [.. mExtra], mFlags);
    }
 
-   public PolyBuild2 TagLastOverlap () {
+   public PolyBuild TagLastOverlap () {
       CheckBegan ();
       if (mPts.Count < 2) Fatal ("Too few points");
       while (mExtra.Count < mPts.Count - 1) mExtra.Add (default);

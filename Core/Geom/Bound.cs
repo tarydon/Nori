@@ -463,6 +463,9 @@ public readonly struct Bound3 : IEQuable<Bound3> {
    /// <summary>The length of the diagonal vector of this bound</summary>
    public double Diagonal => DiagVector.Length;
 
+   /// <summary>The volume of this Bound3</summary>
+   public double Volume => X.Length * Y.Length * Z.Length;
+
    // Methods ------------------------------------------------------------------
    /// <summary>Check if a Bound3 contains a given 3D point</summary>
    public bool Contains (Point3 pt) => X.Contains (pt.X) && Y.Contains (pt.Y) && Z.Contains (pt.Z);

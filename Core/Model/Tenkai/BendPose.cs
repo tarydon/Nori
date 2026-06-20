@@ -55,6 +55,7 @@ public class BendPose {
    public IEnumerable<Node> Nodes => mNodes.NonNull ();
    readonly Node[] mNodes;
 
+   /// <summary>Is this a valid BendPose (true, if this is actually a valid sheet-metal model)</summary>
    public readonly bool Valid;
 
    // Methods ------------------------------------------------------------------

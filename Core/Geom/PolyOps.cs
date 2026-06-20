@@ -719,7 +719,7 @@ public partial class Poly {
    public Poly Reversed () {
       if (!HasArcs && !HasOverlaps) return new ([.. mPts.Reverse ()], [], mFlags);
       if (IsCircle) return new (mPts, [new (Extra[0].Center, Extra[0].Flags ^ (EFlags.CW | EFlags.CCW))], mFlags);
-      PolyBuild2 pb = new PolyBuild2 ();
+      PolyBuild pb = new PolyBuild ();
       pb.Begin (B);
       for (int i = Count - 1; i >= 0; i--) {
          Seg s = this[i];

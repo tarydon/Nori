@@ -663,7 +663,7 @@ public class Contour3 {
 
    /// <summary>Project the Contour3 into a</summary>
    public Poly Flatten (Matrix3 xfm) {
-      var pb = new PolyBuild2 ();
+      var pb = new PolyBuild ();
       pb.Begin (Xfm (mCurves[0].Start));
       foreach (var edge in mCurves) {
          switch (edge) {

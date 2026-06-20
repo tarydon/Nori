@@ -5,12 +5,28 @@
 namespace Nori;
 using static SheetMetalizer;
 
+#region class SMFlatData ---------------------------------------------------------------------------
+/// <summary>SheetMetalizer uses this to store data about an E3Flat we are making</summary>
+/// An E3Flat is defined by two E3Plane objects, marking the top and bottom faces of the flat. 
+/// These planes should be parallel, similar in contours, and lie one thickness apart from each other.
+/// In addition, this SMFlatData might also have an SMFlexData as its parent
 class SMFlatData {
+   // Constructors -------------------------------------------------------------
+   /// <summary>Build an SMFlatData given the two E3Plane surfaces making up the top and bottom faces</summary>
+   /// In addition, we also pass in the PlaneDef we've computed for p0 (since this is useful, and
+   /// we already computed it and don't want to repeat that computation)
    public SMFlatData (SheetMetalizer owner, SMFlexData? parent, E3Plane p0, PlaneDef def0, E3Plane p1) {
       mOwner = owner; mParent = parent; Plane0 = p0; mDef0 = def0; Plane1 = p1;
       owner.Used.Add (p0); owner.Used.Add (p1);
    }
 
+   // Methods ------------------------------------------------------------------
+   /// <summary>Called to obtain the E3Flat that is synthesized from the given top/bottom E3Planes</summary>
+   /// The E3Plane.Polys collection stores the contours of the E3Plane flattened into 2D
+   /// using the local CS of the E3Plane. Since the E3Flat uses a similar organisation 
+   /// (a CS with a set of Poly making the contours), this routine is fairly trivial. Note that
+   /// the CS of the E3Flat lies in the middle of the thickness (so the shift by half the gap
+   /// between Plane0 and Plane1)
    public E3Flat GetFlat () {
       if (mFlat == null) {
          var (cs, set) = (Plane0.CS, Plane0.Polys.ToList ());
@@ -21,8 +37,14 @@ class SMFlatData {
    }
    E3Flat? mFlat;
 
+   /// <summary>Given an E3Flat, this examines neighbors and finds candidates to make E3Flexes from</summary>
+   /// We want to find cylinders sharing an edge with the Plane0 and Plane1. We want to avoid
+   /// side-walls, so we just take cylinders whose axes are perpendicular to the normal of the 
+   /// plane. 
    public void GatherNeighbors (Queue<SMFlexData> todo) {
       var set0 = GetBendCylinders (Plane0); var set1 = GetBendCylinders (Plane1);
+      // We want to gather pairs of cylinders from set0 (touching Plane0) and set1 (touching Plane1)
+      // that will form the top and bottom faces of an E3Flex that we will create
       foreach (var cyl0 in set0) {
          int n = GetPair (set1, cyl0);
          if (n != -1) {
@@ -35,22 +57,24 @@ class SMFlatData {
       }
 
       // Helper .........................................
-      int GetPair (List<E3Cylinder> set, E3Cylinder cyl) {
+      int GetPair (List<E3Cylinder> set, E3Cylinder cyl0) {
          double thick = mOwner.Thickness;
-         Vector3 vecz = cyl.CS.VecZ;
+         Vector3 vecz = cyl0.CS.VecZ;
+         int iBest = -1;
          for (int i = 0; i < set.Count; i++) {
             // The radii of the two cylinder should differ by 1 thickness
             E3Cylinder cyl1 = set[i];
-            if (!Math.Abs (cyl.Radius - cyl1.Radius).EQ (thick, ETHICK)) continue;
+            if (!Math.Abs (cyl0.Radius - cyl1.Radius).EQ (thick, ETHICK)) continue;
             // Cylinder axes should be parallel to each other (or anti-parallel)
             double cos = Math.Abs (vecz.CosineToAlreadyNormalized (cyl1.CS.VecZ));
             if (!cos.EQ (1, ECOS)) continue;
             // Actually, the two cylinder axes should be coincident
-            double dist = cyl1.CS.Org.DistToLine (cyl.CS.Org, cyl.CS.Org + cyl.CS.VecZ);
+            double dist = cyl1.CS.Org.DistToLine (cyl0.CS.Org, cyl0.CS.Org + cyl0.CS.VecZ);
             if (!dist.IsZero (EDIST)) continue;
-            return i;
+            if (iBest == -1 || mOwner.PickBetterPair (cyl0, set[iBest], cyl1) == cyl1)
+               iBest = i;
          }
-         return -1;
+         return iBest;
       }
    }
 
@@ -226,7 +250,7 @@ class SMFlexData {
 
       // Helpers ........................................
       Poly Discretize (Contour3 con) {
-         PolyBuild2 pb = new ();
+         PolyBuild pb = new ();
          pb.Begin (Flatten (con.Curves[0].Start), true);
          foreach (var curve in con.Curves) {
             if (curve is Line3 line) {
@@ -251,3 +275,4 @@ class SMFlexData {
    readonly E3Cylinder mCyl0, mCyl1;
    readonly SMFlatData mParent;
 }
+#endregion
