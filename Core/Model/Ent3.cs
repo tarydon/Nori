@@ -246,7 +246,7 @@ public abstract class E3Surface : Ent3 {
 
    // Properties ---------------------------------------------------------------
    [DebuggerBrowsable (DebuggerBrowsableState.Never)]
-   public virtual double Area => mArea.Cached (Mesh.GetArea);
+   public double Area => mArea.Cached (ComputeArea);
    double mArea = double.NaN;
 
    /// <summary>The Bound of the surface in 3D</summary>
@@ -310,6 +310,10 @@ public abstract class E3Surface : Ent3 {
 
    /// <summary>Override this to compute the domain of the surface</summary>
    protected abstract Bound2 ComputeDomain ();
+
+   /// <summary>Override this to compute the area of the surface</summary>
+   /// The default implemetnation computes and mesh, and then computes the area.
+   protected virtual double ComputeArea () => Mesh.GetArea ();
 
    /// <summary>Flip the normals of this surface</summary>
    public bool FlipNormal () => IsNormalFlipped = !IsNormalFlipped;

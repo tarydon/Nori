@@ -153,6 +153,23 @@ public class E3Flat : E3Thick {
    /// <summary>Computes the mesh for this E3Flat</summary>
    protected override Mesh3 ComputeMesh () => BuildMesh (mShape, ToXfm, false);
 
+   /// <summary>Computes the bound of this E3Flat under a particular transform</summary>
+   public Bound3 GetBound (Matrix3 xfm) {
+      Bound3 bound = new ();
+      var pts = ListPool<Point2>.Borrow ();
+      try {
+         mShape[0].Discretize (pts, MeshQuality);
+         var (t, final) = (Thickness / 2, ToXfm * xfm);
+         foreach (var pt in pts) {
+            bound += (new Point3 (pt.X, pt.Y, -t) * final);
+            bound += (new Point3 (pt.X, pt.Y, t) * final);
+         }
+         return bound;
+      } finally {
+         ListPool<Point2>.Return (pts);
+      }
+   }
+
    /// <summary>Returns a transformed version of this E3Flat</summary>
    protected override Ent3 Xformed (Matrix3 xfm) => new E3Flat (this, xfm);
 }

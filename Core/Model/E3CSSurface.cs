@@ -329,6 +329,15 @@ public sealed class E3Plane : E3CSSurface {
       return new E3Plane (id, [..curves], cs);
    }
 
+   protected override double ComputeArea () {
+      var (set, area) = (Polys, 0.0);
+      for (int i = 0; i < set.Length; i++) {
+         double a = set[i].GetArea (MeshQuality);
+         area += a * (i == 0 ? 1 : -1);
+      }
+      return area;
+   }
+
    // Properties ---------------------------------------------------------------
    /// <summary>Area of the outer contour (without including holes)</summary>
    public double OuterArea {
@@ -342,19 +351,18 @@ public sealed class E3Plane : E3CSSurface {
 
    public ImmutableArray<Poly> Polys {
       get {
-         if (_polys.IsDefault) {
-            List<Poly> polys = [];
-            var xfm = Matrix3.From (CS);
-            for (int i = 0; i < Contours.Length; i++) {
-               var poly = Contours[i].Flatten (xfm);
-               if ((poly.GetWinding () == Poly.EWinding.CCW) != (i == 0))
-                  poly = poly.Reversed ();
-               polys.Add (poly);
-            }
-            _polys = [.. polys];
+         if (!_polys.IsDefault) return _polys;
+         List<Poly> polys = [];
+         var xfm = Matrix3.From (CS);
+         for (int i = 0; i < Contours.Length; i++) {
+            var poly = Contours[i].Flatten (xfm);
+            if ((poly.GetWinding () == Poly.EWinding.CCW) != (i == 0))
+               poly = poly.Reversed ();
+            polys.Add (poly);
          }
-         return _polys;
+         return _polys = [.. polys];
       }
+      set => _polys = default;
    }
    ImmutableArray<Poly> _polys;
 

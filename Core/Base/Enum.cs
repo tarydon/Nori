@@ -63,6 +63,7 @@ public enum EResult {
    NotSheetMetalModel = 6,    // This is not a sheet-metal model
    CantFindBaseplane = 7,     // SheetMetalizer cannot find a suitable baseplane
    InvalidThickness = 8,      // Invalid sheet metal thickness (should be between 0.1 & 25.4 mm)
+   CantSheetMetalize = 9,     // SheetMetalizer is not able to convert this model
 }
 
 /// <summary>The possible values for text-alignment within a box</summary>

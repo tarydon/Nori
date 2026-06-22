@@ -24,15 +24,19 @@ public class SheetMetalizer {
 
       Queue<SMFlexData> todo2 = [];
       Queue<SMFlatData> todo1 = []; todo1.Enqueue (tpBase);
-      while (todo1.Count + todo2.Count > 0) {
-         while (todo1.TryDequeue (out SMFlatData? tp)) {
-            tp.GatherNeighbors (todo2);
-            ShModel.Ents.Add (tp.GetFlat ());
+      try {
+         while (todo1.Count + todo2.Count > 0) {
+            while (todo1.TryDequeue (out SMFlatData? tp)) {
+               tp.GatherNeighbors (todo2);
+               ShModel.Ents.Add (tp.GetFlat ());
+            }
+            while (todo2.TryDequeue (out SMFlexData? tf)) {
+               tf.GatherNeighbors (todo1);
+               ShModel.Ents.Add (tf.GetFlex ());
+            }
          }
-         while (todo2.TryDequeue (out SMFlexData? tf)) {
-            tf.GatherNeighbors (todo1);
-            if (tf.GetFlex () is { } flex) ShModel.Ents.Add (flex);
-         }
+      } catch (Exception) {
+         return EResult.CantSheetMetalize;
       }
       return ShModel;
    }
@@ -44,6 +48,8 @@ public class SheetMetalizer {
    internal void MarkOverlaps (E3Surface s1, E3Surface s2) {
       if (!Model.GetSharedEdges (s1, s2, TmpEdges)) Lib.Suspicious ();
       TmpEdges.ForEach (a => a.IsOverlap = true);
+      (s1 as E3Plane)?.Polys = default;
+      (s2 as E3Plane)?.Polys = default;
    }
    internal List<Curve3> TmpEdges = [];
 
@@ -114,13 +120,13 @@ public class SheetMetalizer {
    }
 
    // Private data -------------------------------------------------------------
-   internal HashSet<E3CSSurface> Used = [];
-   internal static readonly double ETHICK = 0.01;
-   internal static readonly double EAREA = 0.1;
-   internal static readonly double ECOS = 1e-5;
-   internal static readonly double EDIST = 0.0001;
-   internal readonly Model3 Model;             // The input surface model
-   internal readonly Model3 ShModel;           // The output sheet-metal model
-   internal double Thickness;
+   internal HashSet<E3Surface> Used = [];             // These are the surfaces we've already used up
+   internal static readonly double ETHICK = 0.01;     // Thickness DELTA for comparision
+   internal static readonly double EAREA = 0.1;       // Area DELTA for comparisions
+   internal static readonly double ECOS = 1e-5;       // Cosine DELTA for parallelness determination
+   internal static readonly double EDIST = 0.0001;    // Points coincident if they are within this amount
+   internal readonly Model3 Model;                    // The input surface model
+   internal readonly Model3 ShModel;                  // The output sheet-metal model
+   internal double Thickness;                         // Computed thickness
 }
 #endregion

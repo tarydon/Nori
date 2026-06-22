@@ -60,14 +60,16 @@ public class BendPose {
 
    // Methods ------------------------------------------------------------------
    /// <summary>Returns the bound of the BendPose in the current state</summary>
-   public Bound3 GetBound (double lie = double.NaN) {
+   public Bound3 GetBound (double lie = double.NaN, bool onlyPlanes = false) {
       if (!lie.IsNan) SetLie (lie);
       Bound3 bound = new ();
       foreach (var node in mNodes.NonNull ()) {
-         if (node.Ent is E3Flex flex)
-            bound += flex.BuildMesh (node.Lie).GetBound (node.Xfm);
-         else
-            bound += node.Ent.Mesh.GetBound (node.Xfm);
+         switch (node.Ent) {
+            case E3Flex flex: 
+               if (!onlyPlanes) bound += flex.BuildMesh (node.Lie).GetBound (node.Xfm); 
+               break;
+            case E3Flat flat: bound += flat.GetBound (node.Xfm); break;
+         }
       }
       return bound;
    }
