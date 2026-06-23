@@ -1,0 +1,46 @@
+BgrdColor
+OverlayColor
+CornerRadius
+
+Text
+----
+TextColor
+Font
+Size
+WrapMode - Letters/Word/Newlines/None
+Alignment - Left/Center/Right
+
+Layout
+------
+Direction - Horizontal/Vertical
+Padding - L,R,T,B
+ChildGap
+ChildAlignment - X,Y
+Sizing - W,H = (Fit/Grow/Fixed(290)/Percent(50))
+
+Image
+-----
+Data 
+
+Floating
+--------
+Offset XY
+ZIndex
+ParentAttach - one of the 8 corners on parent
+Attach - one of the 8 corners on self
+PointerCaptureMode - Self/Underneath
+
+Custom
+------
+
+Clip
+----
+Horizontal
+Vertical
+ChildPosition
+
+Border
+------
+BorderColor
+Width - LRTB
+BetweenChildren

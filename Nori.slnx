@@ -21,4 +21,5 @@
   </Folder>
   <Project Path="Core/Nori.Core.csproj" />
   <Project Path="Lux/Nori.Lux.csproj" />
+  <Project Path="UX/Nori.UX.csproj" />
 </Solution>
