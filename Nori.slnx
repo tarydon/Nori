@@ -3,6 +3,7 @@
     <Project Path="Demos/BenchShell/BenchShell.csproj" />
     <Project Path="Demos/ConShell/ConShell.csproj" />
     <Project Path="Demos/GLShell/GLShell.csproj" />
+    <Project Path="Demos/UXDemo/UXDemo.csproj" Id="4c2b13c7-2a8d-41a0-a693-73035f2a2f80" />
     <Project Path="Demos/WPFDemo/WPFDemo.csproj" />
   </Folder>
   <Folder Name="/Host/">

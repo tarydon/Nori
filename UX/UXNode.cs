@@ -1,6 +1,17 @@
-﻿namespace Nori.UX;
+// ────── ╔╗
+// ╔═╦╦═╦╦╬╣ UXNode.cs
+// ║║║║╬║╔╣║ <<TODO>>
+// ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
+namespace Nori.UX;
 
 public struct UXNode {
+   // Tree .................................................
+   public int Id;
+   public int Parent;
+   public int FirstChild;
+   public int LastChild;
+   public int Next;
+
    // Layout ...............................................
    public EOrientation Orientation;
    public MarginS Padding;
@@ -8,6 +19,7 @@ public struct UXNode {
    public RangeS Width;
    public RangeS Height;
    public Vec2S ChildOffset;
+   public ESizeMode SizeMode;
 
    // Colors ...............................................
    public Color4 BgrdColor;
@@ -31,7 +43,7 @@ public struct UXNode {
    public short ZIndex;
    public ECorner ElemCorner;
    public ECorner ParentCorner;
-   
+
    // Nested types -------------------------------------------------------------
    public enum EOrientation : short { LeftToRight, TopToBottom };
    public enum EWrap : short { Word, Newline, None };

@@ -69,7 +69,7 @@ public class Window {
    }
 
    /// <summary>Returns true if the window should be closed</summary>
-   public bool ShouldClose => WindowShouldClose (mHWnd);
+   public bool ShouldClose { get => WindowShouldClose (mHWnd); set => SetWindowShouldClose (mHWnd, true); }
 
    /// <summary>Gets / Sets the size of the window (including decorations)</summary>
    public (int DX, int DY) Size {
