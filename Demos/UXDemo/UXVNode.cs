@@ -4,6 +4,7 @@ using Nori;
 using Nori.UX;
 namespace UXDemo;
 using static UXNode;
+using static SizeS;
 
 class UXVNode : VNode {
    public UXVNode () {
@@ -23,50 +24,83 @@ class UXVNode : VNode {
          UXFrame.BeginLayout (Lux.PanelSize);
          UXFrame.SetMouseState (mPos, mWheel, mPressed); mWheel = 0;
 
-         UXFrame.Begin ();
+         UXFrame.BeginNode ();
          ref UXNode a = ref UXFrame.N;
-         a.SizeMode = ESizeMode.Grow;
-         a.Padding = new MarginS (24);
-         a.ChildGap = 12;
+         a.Width = Grow (); a.Height = Grow ();
+         a.Padding = 10;
+         a.Tag = "Root";
 
-         Border (200, 80);
-         Button (210, 90);
+         // DropDownMenu ();
+         Demo1 ();
 
-         UXFrame.End ();
+         UXFrame.EndNode ();
          UXFrame.EndLayout ();
+         UXFrame.DumpAll ();
       }
       UXFrame.Render ();
    }
    bool mFirst = true;
 
-   static void Border (int cx, int cy) {
-      UXFrame.Begin ();
-      ref UXNode a = ref UXFrame.N;
-      a.SizeMode = ESizeMode.Fixed;
-      a.Width = new (cx); a.Height = new (cy); a.BgrdColor = Color4.Yellow;
-      UXFrame.End ();
+   // Testing --------------------------------------------------------------------
+   static void Demo1 () {
+      ref UXNode a = ref UXFrame.BeginNode ();
+      a.Tag = "Rect";
+      a.Width = 1600; a.Height = 600;
+      a.BgrdColor = new (0xFF0A6E89);
+      a.Padding = 30; a.ChildGap = 30;
+
+      ref UXNode b = ref UXFrame.BeginNode ();
+      b.Width = 300; b.Height = 300; b.Tag = "Child1";
+      b.BgrdColor = new (0xFFFB938F);
+      UXFrame.EndNode ();   // b
+
+      ref UXNode c = ref UXFrame.BeginNode ();
+      c.Width = Grow (); c.Height = Grow (); c.Tag = "Child2";
+      c.BgrdColor = new (0xFFFED84D);
+      UXFrame.EndNode ();
+
+      ref UXNode d = ref UXFrame.BeginNode ();
+      d.Width = Grow (350); d.Height = 400; d.Tag = "Child3";
+      d.BgrdColor = new (0xFF5ECBE4);
+      UXFrame.EndNode ();  // d
+
+      UXFrame.EndNode ();   // a
    }
 
-   static void Button (int cx, int cy) {
-      UXFrame.Begin ();
-      ref UXNode a = ref UXFrame.N;
-      a.SizeMode = ESizeMode.Fit;
-      a.BgrdColor = Color4.White;
-      a.Padding = new (3);
+   static void DropDownMenu () {
+      // Create the top-down menu item
+      ref UXNode a = ref UXFrame.BeginNode ();
+      a.Orientation = EOrientation.TopToBottom;
+      a.BgrdColor = new Color4 (0xFFA674A4);
+      a.Tag = "Menu";
 
-      UXFrame.Begin ();
-      ref UXNode b = ref UXFrame.N;
-      b.Width = new (cx); b.Height = new (cx);
-      b.SizeMode = ESizeMode.Grow;
-      b.BgrdColor = Color4.Red;
-      UXFrame.End ();
-      
-      UXFrame.End ();
+      for (int i = 0; i < mItems.Length; i++) {
+         // Create the menu item background rectangle
+         ref UXNode b = ref UXFrame.BeginNode ();
+         b.Width = Grow ();
+         b.BgrdColor = new Color4 (0xAABD95BC);
+         b.Tag = "MenuItem";
+         Text (mItems[i], 1, "Label");
+         Text (mIcon[i], 2, "Icon");
+         UXFrame.EndNode (); 
+      }
+
+      UXFrame.EndNode ();
+   }
+   static string[] mItems = ["New", "Open...", "Save", "Export To DXF", "Exit"];
+   static string[] mIcon = ["\u0021", "\u0056", "\u00B7", "\u00F5", "\u00AE"];
+
+   static void Text (string text, int font, string? tag) {
+      ref UXNode a = ref UXFrame.BeginNode ();
+      a.Text = text;
+      a.FontId = (short)font;
+      a.Tag = tag;
+      a.TextColor = Color4.White;
+      UXFrame.EndNode ();
    }
 
-   // State information --------------------------------------------------------
+   // State information ----------------------------------------------------------
    Vec2S mPos;
    int mWheel;
    bool mPressed;
 }
-
