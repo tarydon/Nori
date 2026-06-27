@@ -163,7 +163,7 @@ public readonly struct RectS : IEQuable<RectS> {
 
    /// <summary>Checks if this RectS contains a given Vec2S</summary>
    public bool Contains (Vec2S p)
-      => Left <= p.X && p.X <= Right && Top <= p.Y && p.Y <= Bottom;
+      => Left <= p.X && p.X < Right && Top <= p.Y && p.Y < Bottom;
 
    // Implementation -----------------------------------------------------------
    public override string ToString () => $"RectS {Width}x{Height} @ {Left},{Top}";

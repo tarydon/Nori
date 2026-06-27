@@ -24,6 +24,9 @@ public struct UXNode {
    public EChildAlignX ChildAlignX;
    public EChildAlignY ChildAlignY;
 
+   public readonly bool IsHovered => UXFrame.IsHovered (Id);
+   public readonly bool IsPressed => UXFrame.IsPressed (Id);
+
    // Colors ...............................................
    public Color4 BgrdColor;
    public Color4 OverlayColor;
@@ -88,6 +91,7 @@ public readonly struct MarginS {
 
    public readonly short Horizontal => (short)(Left + Right);
    public readonly short Vertical => (short)(Top + Bottom);
+   public bool IsZero => Left + Top + Right + Bottom == 0; 
 
    public readonly short Left, Right, Top, Bottom;
 }

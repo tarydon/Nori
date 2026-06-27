@@ -40,7 +40,10 @@ class MouseClickWrap : EventWrapper<MouseClickInfo> {
    readonly HWindow mWindow;
 
    protected override void Connect (bool connect) => SetMouseButtonCallback (mWindow, connect ? mCallback : null);
-   void Callback (HWindow _, EMouseButton b, EKeyState s, EKeyModifier m) => Push (new MouseClickInfo (b, GetCursorPosition (mWindow), m, s));
+   void Callback (HWindow _, int b, EKeyState s, EKeyModifier m) {
+      EMouseButton but = b switch { 1 => EMouseButton.Right, 2 => EMouseButton.Middle, _ => EMouseButton.Left };
+      Push (new MouseClickInfo (but, GetCursorPosition (mWindow), m, s));
+   }
 }
 #endregion
 

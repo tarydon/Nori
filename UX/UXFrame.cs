@@ -163,7 +163,10 @@ public static class UXFrame {
 
    /// <summary>Begins a new container</summary>
    public static ref UXNode BeginNode () {
-      if (mUsed >= mNodes.Length) Array.Resize (ref mNodes, mNodes.Length * 2);
+      if (mUsed >= mNodes.Length) {
+         Array.Resize (ref mNodes, mNodes.Length * 2);
+         Array.Resize (ref mSizes, mSizes.Length * 2);
+      }
       mParent = mCurrent; mStack.Push (mCurrent); mCurrent = mUsed; mUsed++;
       mNodes[mCurrent] = new ();
       N.Id = mCurrent; N.Parent = mParent;
@@ -213,10 +216,18 @@ public static class UXFrame {
    public static void Render () {
       for (int i = 1; i < mUsed; i++) {
          ref UXNode node = ref mNodes[i];
+         RectS rect = new (node.X, node.Y, node.X + node.DX, node.Y + node.DY);
+         mSizes[i] = rect;
          Lux.ZLevel = i;
          if (!node.BgrdColor.IsTransparent) {
             Lux.Color = node.BgrdColor;
-            Lux.Rect (new RectS (node.X, node.Y, node.X + node.DX, node.Y + node.DY));
+            bool border = !node.Border.IsZero, radius = node.CornerRadius > 0;
+            switch (border, radius) {
+               case (false, false): Lux.Rect (rect); break;
+               case (false, true): Lux.RRect (rect, node.CornerRadius); break;
+               case (true, false): Lux.BorderColor = node.BorderColor; Lux.RectBorder (rect, node.Border.Left); break;
+               case (true, true): Lux.BorderColor = node.BorderColor; Lux.RRectBorder (rect, node.CornerRadius, node.Border.Left); break;
+            }
          }
          if (node.Text != null) {
             Lux.Color = node.TextColor;
@@ -240,13 +251,19 @@ public static class UXFrame {
          Dump (b, level + 1);
    }
 
+   internal static bool IsHovered (int n)
+      => n < mSizes.Length && mSizes[n].Contains (mMousePos);
+
+   internal static bool IsPressed (int n)
+      => mMousePressed && IsHovered (n);
+
    // Private data -------------------------------------------------------------
    static Vec2S mScreenSize;              // Screen size
    static Vec2S mMousePos;                // Mouse position, relative to top left
    static int mWheelDelta;                // Wheel rotation since last frame
    static bool mMousePressed;             // Is the mouse currently pressed
-
-   static UXNode[] mNodes = new UXNode[32];   // List of nodes 
+   static UXNode[] mNodes = new UXNode[32];     // List of nodes 
+   static RectS[] mSizes = new RectS[32];       // And their screen rects after layout
    static Stack<int> mStack = [];         // Stack of currently open nodes
    static int mUsed;                      // Number of used nodes
    static int mCurrent;                   // Node that is currently being edited

@@ -15,7 +15,7 @@ class Program {
    static void OnReady () {
       Lib.Tracer = TraceVN.Print;
       TraceVN.HoldTime = 15;
-      TraceVN.TextColor = Color4.Black;
+      TraceVN.TextColor = Color4.White;
       Hub.Keyboard.Keys.Where (a => a.IsPress (EKey.Escape)).Subscribe (_ => mWin?.ShouldClose = true);
       Lux.UIScene = new UXScene ();
    }
@@ -23,7 +23,7 @@ class Program {
 
 class UXScene : Scene2 {
    public UXScene () {
-      BgrdColor = new Color4 (243, 232, 227);
+      BgrdColor = Color4.Gray (96);
       List<VNode> nodes = [new UXVNode (), TraceVN.It];
       Root = new GroupVN (nodes);
    }
