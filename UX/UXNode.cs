@@ -21,6 +21,8 @@ public struct UXNode {
    public SizeS Width;
    public SizeS Height;
    public Vec2S ChildOffset;
+   public EChildAlignX ChildAlignX;
+   public EChildAlignY ChildAlignY;
 
    // Colors ...............................................
    public Color4 BgrdColor;
@@ -32,6 +34,7 @@ public struct UXNode {
    public EWrap Wrap;
    public ETextAlign TextAlign;
    public Color4 TextColor;
+   public Vec2S TextOffset;
 
    // Border ...............................................
    public short CornerRadius;
@@ -46,7 +49,7 @@ public struct UXNode {
    public ECorner ParentCorner;
 
    // Computed .............................................
-   public short X, Y, DX, DY;
+   public int X, Y, DX, DY;
 
    public readonly bool Horizontal => Orientation == EOrientation.LeftToRight;
    public readonly bool Vertical => Orientation == EOrientation.TopToBottom;
@@ -62,12 +65,17 @@ public struct UXNode {
       return children;
    }
 
+   public void GetChildren (UXNode[] nodes, List<int> children) {
+      children.Clear ();
+      for (int n = FirstChild; n != 0; n = nodes[n].Next) children.Add (n);
+   }
+
    // Nested types -------------------------------------------------------------
    public enum EOrientation : short { LeftToRight, TopToBottom };
    public enum EWrap : short { Word, Newline, None };
    public enum ETextAlign : short { Left, Center, Right };
    public enum EChildAlignX : short { Left, Center, Right };
-   public enum EChildAlignY : short { Top, Center, Bottom };
+   public enum EChildAlignY : short { Top, Middle, Bottom };
    public enum ESizeMode : short { Fit, Grow, Fixed, Percent }
    public enum ECorner : short { LeftTop, Top, RightTop, Left, Center, Right, LeftBottom, Bottom, RightBottom };
 
@@ -77,6 +85,9 @@ public readonly struct MarginS {
    public MarginS (int a) : this (a, a, a, a) { }
    public MarginS (int l, int r, int t, int b) { Left = (short)l; Right = (short)r; Top = (short)t; Bottom = (short)b; }
    public static implicit operator MarginS (int a) => new (a);
+
+   public readonly short Horizontal => (short)(Left + Right);
+   public readonly short Vertical => (short)(Top + Bottom);
 
    public readonly short Left, Right, Top, Bottom;
 }

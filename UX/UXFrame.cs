@@ -2,9 +2,10 @@
 // ╔═╦╦═╦╦╬╣ UXFrame.cs
 // ║║║║╬║╔╣║ <<TODO>>
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
-using System.Xml.Serialization;
 using static System.Math;
 using static Nori.UX.UXNode.ESizeMode;
+using static Nori.UX.UXNode.EChildAlignX;
+using static Nori.UX.UXNode.EChildAlignY;
 namespace Nori.UX;
 
 public static class UXFrame {
@@ -14,6 +15,8 @@ public static class UXFrame {
    public static UXNode[] All => mNodes;
 
    public static ref UXNode Get (int n) => ref mNodes[n];
+
+   public static TypeFace[] TypeFaces = [];
 
    /// <summary>Begins a new layout pass given the available screen size</summary>
    public static void BeginLayout (Vec2S size) {
@@ -34,13 +37,69 @@ public static class UXFrame {
       // At this point, the desired sizes of all the elements are already computed
       // (by the EndNode methods as element is closed)
       GrowChildElements (1);
+      PositionChildren (1);
    }
 
+   static void PositionChildren (int p) {
+      ref UXNode parent = ref mNodes[p];
+      var (dxSpace, dySpace) = GetRemainingSpace (p);
+      parent.GetChildren (mNodes, mTmp);
+      if (parent.Horizontal) {
+         int left = parent.Padding.Left;
+         left += parent.ChildAlignX switch { Center => dxSpace / 2, Right => dxSpace, _ => 0 };
+         foreach (var c in mTmp) {
+            ref UXNode child = ref mNodes[c];
+            child.X = (parent.X + left);
+            left += (child.DX + parent.ChildGap);
+            child.Y = (parent.Y + parent.Padding.Top);
+            switch (parent.ChildAlignY) {
+               case Middle: child.Y += ((dySpace - child.DY) / 2); break;
+               case Bottom: child.Y += (dySpace - child.DY); break;
+            }
+         }
+      } else {
+         int top = parent.Padding.Top;
+         top += parent.ChildAlignY switch { Middle => dySpace / 2, Bottom => dySpace, _ => 0 };
+         foreach (var c in mTmp) {
+            ref UXNode child = ref mNodes[c];
+            child.Y = (parent.Y + top);
+            top += (child.DY + parent.ChildGap);
+            child.X = (parent.X + parent.Padding.Left);
+            switch (parent.ChildAlignX) {
+               case Center: child.X += ((dxSpace - child.DX) / 2); break;
+               case Right: child.X += (dxSpace - child.DX); break;
+            }
+         }
+      }
+
+      for (int c = parent.FirstChild; c != 0; c = mNodes[c].Next)
+         PositionChildren (c);
+   }
+
+   // Given a parent node, returns the amount of extra space left after accounting for
+   // the padding. Along the layout direction, we also subtract the sizes of the children
+   // and the gaps between children. 
+   static (int, int) GetRemainingSpace (int p) {
+      ref UXNode parent = ref mNodes[p];
+      parent.GetChildren (mNodes, mTmp);
+      int childGaps = parent.ChildGap * Max (parent.ChildCount - 1, 0);
+      int dxSpace = parent.DX - parent.Padding.Horizontal;
+      int dySpace = parent.DY - parent.Padding.Vertical;
+      if (parent.Horizontal) {
+         dxSpace -= childGaps;
+         foreach (var c in mTmp) dxSpace -= mNodes[c].DX;
+      } else {
+         dySpace -= childGaps;
+         foreach (var c in mTmp) dySpace -= mNodes[c].DY;
+      }
+      return (dxSpace, dySpace);
+   }
+   static List<int> mTmp = [];
+
    static void GrowChildElements (int p) {
-      Lib.Trace ($"Growing child elements {p}");
       ref UXNode par = ref mNodes[p];
       var children = par.GetChildren (mNodes);
-      short childGaps = (short)(par.ChildGap * Max (par.ChildCount - 1, 0));
+      int childGaps = (par.ChildGap * Max (par.ChildCount - 1, 0));
       int dxSpace = par.DX - par.Padding.Left - par.Padding.Right;
       int dySpace = par.DY - par.Padding.Top - par.Padding.Bottom;
       if (par.Horizontal) {
@@ -48,7 +107,7 @@ public static class UXFrame {
          for (int i = children.Count - 1; i >= 0; i--) {
             ref UXNode child = ref mNodes[children[i]];
             dxSpace -= child.DX;
-            if (child.Height.Mode == Grow) child.DY += (short)(dySpace - child.DY);
+            if (child.Height.Mode == Grow) child.DY += (dySpace - child.DY);
             if (child.Width.Mode != Grow) children.RemoveAt (i);
          }
          if (children.Count == 0) goto Done;
@@ -65,7 +124,7 @@ public static class UXFrame {
             foreach (var c in children) {
                ref UXNode child = ref mNodes[c];
                if (child.DX != smallest) continue;
-               child.DX += (short)widthToAdd;
+               child.DX += widthToAdd;
                dxSpace -= widthToAdd; if (dxSpace <= 0) break;
             }
          }
@@ -74,7 +133,7 @@ public static class UXFrame {
          for (int i = children.Count - 1; i >= 0; i--) {
             ref UXNode child = ref mNodes[children[i]];
             dySpace -= child.DY;
-            if (child.Width.Mode == Grow) child.DX += (short)(dxSpace - child.DX);
+            if (child.Width.Mode == Grow) child.DX += (dxSpace - child.DX);
             if (child.Height.Mode != Grow) children.RemoveAt (i);
          }
          if (children.Count == 0) goto Done;
@@ -91,7 +150,7 @@ public static class UXFrame {
             foreach (var c in children) {
                ref UXNode child = ref mNodes[c];
                if (child.DY != smallest) continue;
-               child.DY += (short)heightToAdd;
+               child.DY += heightToAdd;
                dySpace -= heightToAdd; if (dySpace <= 0) break;
             }
          }
@@ -127,9 +186,15 @@ public static class UXFrame {
    /// <summary>Ends a container</summary>
    public static void EndNode () {
       ref UXNode a = ref mNodes[mCurrent];
-      a.DX += (short)(a.Padding.Left + a.Padding.Right);
-      a.DY += (short)(a.Padding.Top + a.Padding.Bottom);
-      short childGaps = (short)(a.ChildGap * Max (a.ChildCount - 1, 0));
+      if (a.Text != null) {
+         TypeFace tf = TypeFaces[a.FontId];
+         RectS r = tf.Measure (a.Text);
+         a.DX = r.Width; a.DY = r.Height;
+         a.TextOffset = new (-r.Left, -r.Top);
+      }
+      a.DX += (a.Padding.Left + a.Padding.Right);
+      a.DY += (a.Padding.Top + a.Padding.Bottom);
+      int childGaps = (a.ChildGap * Max (a.ChildCount - 1, 0));
       if (a.Horizontal) a.DX += childGaps; else a.DY += childGaps;
       a.DX = Max (a.DX, a.Width.Min); 
       a.DY = Max (a.DY, a.Height.Min);
@@ -146,6 +211,19 @@ public static class UXFrame {
    }
 
    public static void Render () {
+      for (int i = 1; i < mUsed; i++) {
+         ref UXNode node = ref mNodes[i];
+         Lux.ZLevel = i;
+         if (!node.BgrdColor.IsTransparent) {
+            Lux.Color = node.BgrdColor;
+            Lux.Rect (new RectS (node.X, node.Y, node.X + node.DX, node.Y + node.DY));
+         }
+         if (node.Text != null) {
+            Lux.Color = node.TextColor;
+            Lux.TypeFace = TypeFaces[node.FontId];
+            Lux.Text (node.Text, new (node.X + node.TextOffset.X, node.Y + node.TextOffset.Y));
+         }
+      }
    }
 
    public static void DumpAll () {
@@ -155,7 +233,7 @@ public static class UXFrame {
    static void Dump (int node, int level) {
       ref UXNode a = ref mNodes[node];
       string s = new (' ', level * 2); 
-      s += $"{a.Id} {a.Tag} {a.Text} {a.DX}x{a.DY} {a.Parent}";
+      s += $"{a.Id} {a.Tag} {a.Text} {a.DX}x{a.DY} @ {a.X},{a.Y}";
       Lib.Trace (s);
 
       foreach (var b in a.EnumChildren (mNodes))

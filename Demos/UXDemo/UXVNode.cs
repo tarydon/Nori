@@ -21,17 +21,20 @@ class UXVNode : VNode {
    public override void Draw () {
       if (mFirst) {
          mFirst = false;
+         TypeFace tf1 = new TypeFace ("C:/Windows/Fonts/SegoeUI.ttf", (int)(24 * Lux.DPIScale + 0.5));
+         TypeFace tf2 = new TypeFace ("C:/Windows/Fonts/webdings.ttf", (int)(36 * Lux.DPIScale + 0.5));
+         UXFrame.TypeFaces = [tf1, tf2];
          UXFrame.BeginLayout (Lux.PanelSize);
          UXFrame.SetMouseState (mPos, mWheel, mPressed); mWheel = 0;
 
          UXFrame.BeginNode ();
          ref UXNode a = ref UXFrame.N;
          a.Width = Grow (); a.Height = Grow ();
-         a.Padding = 10;
+         a.Padding = new MarginS (1000, 10, 10, 10);
          a.Tag = "Root";
 
-         // DropDownMenu ();
-         Demo1 ();
+         DropDownMenu ();
+         // Demo1 ();
 
          UXFrame.EndNode ();
          UXFrame.EndLayout ();
@@ -45,7 +48,7 @@ class UXVNode : VNode {
    static void Demo1 () {
       ref UXNode a = ref UXFrame.BeginNode ();
       a.Tag = "Rect";
-      a.Width = 1600; a.Height = 600;
+      a.Width = 1600; a.Height = 600; a.ChildAlignY = EChildAlignY.Middle;
       a.BgrdColor = new (0xFF0A6E89);
       a.Padding = 30; a.ChildGap = 30;
 
@@ -72,22 +75,27 @@ class UXVNode : VNode {
       ref UXNode a = ref UXFrame.BeginNode ();
       a.Orientation = EOrientation.TopToBottom;
       a.BgrdColor = new Color4 (0xFFA674A4);
+      a.Padding = 16; a.ChildGap = 16;
       a.Tag = "Menu";
 
       for (int i = 0; i < mItems.Length; i++) {
          // Create the menu item background rectangle
          ref UXNode b = ref UXFrame.BeginNode ();
-         b.Width = Grow ();
+         b.Padding = new MarginS (16, 16, 0, 0);
+         b.Width = Grow (); b.ChildAlignY = EChildAlignY.Middle;
          b.BgrdColor = new Color4 (0xAABD95BC);
          b.Tag = "MenuItem";
-         Text (mItems[i], 1, "Label");
-         Text (mIcon[i], 2, "Icon");
+         Text (mItems[i], 0, "Label");
+         ref UXNode c = ref UXFrame.BeginNode ();
+         c.Width = Grow (80);
+         UXFrame.EndNode ();
+         Text (mIcon[i], 1, "Icon");
          UXFrame.EndNode (); 
       }
 
       UXFrame.EndNode ();
    }
-   static string[] mItems = ["New", "Open...", "Save", "Export To DXF", "Exit"];
+   static string[] mItems = ["New", "Open...", "Save", "Export to DXF", "Exit"];
    static string[] mIcon = ["\u0021", "\u0056", "\u00B7", "\u00F5", "\u00AE"];
 
    static void Text (string text, int font, string? tag) {
