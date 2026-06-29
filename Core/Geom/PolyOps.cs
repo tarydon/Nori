@@ -464,7 +464,7 @@ public partial class Poly {
       // "Closed poly" become open poly, accommodating any left-over fragments of the trimmed segment
       // "Open poly" breaks into one or two open polys, accommodating any left-over fragments of the trimmed segment
       var seg = this[segIdx];
-      ArcInfo segExtra = segIdx < Extra.Length ? Extra[segIdx] : ArcInfo.Nil;
+      ArcInfo segExtra = Extra.IsDefault || segIdx >= Extra.Length ? ArcInfo.Nil : Extra[segIdx];
       if (IsCircle) {
          (double sLie, double eLie) = CircleTrimExtents (seg, lie.Clamp (), polySoup);
          double lieSpan = Math.Abs (eLie - sLie);
@@ -505,7 +505,8 @@ public partial class Poly {
       // Open poly...
       // First fragmented poly
       pts.AddRange (Pts[..(segIdx + 1)]);
-      extra.AddRange (Extra[..Math.Min (segIdx, Extra.Length)]);
+      if (!Extra.IsDefaultOrEmpty)
+         extra.AddRange (Extra[..Math.Min (segIdx, Extra.Length)]);
       if (hFrag) {
          pts.Add (seg.GetPointAt (fromLie));
          if ((segExtra.Flags & EFlags.Arc) != 0) {
@@ -528,7 +529,7 @@ public partial class Poly {
          else if (HasArcs) extra.Add (ArcInfo.Nil);
       }
       pts.AddRange (Pts[(segIdx + 1)..]);
-      if (Extra.Length > segIdx + 1) extra.AddRange (Extra[(segIdx + 1)..]);
+      if (!Extra.IsDefault && Extra.Length > segIdx + 1) extra.AddRange (Extra[(segIdx + 1)..]);
       if (pts.Count > 1)
          yield return new Poly ([.. pts], [.. extra], extra.Count == 0 ? mFlags & ~EFlags.HasArcs : mFlags);
 
@@ -769,8 +770,10 @@ public partial class Poly {
       if (!a.HasArcs && !b.HasArcs) result = new Poly ([.. pts], default, flags);
       else {
          var extra = new List<ArcInfo> (a.Count + b.Count);
-         for (int i = 0; i < a.Count; i++)
-            extra.Add (a.Extra.SafeGet (i));
+         if (!a.Extra.IsDefault) {
+            for (int i = 0; i < a.Count; i++)
+               extra.Add (a.Extra.SafeGet (i));
+         }
          if (!b.Extra.IsDefault) extra.AddRange (b.Extra);
          result = new Poly ([.. pts], [.. extra], flags | EFlags.HasArcs);
       }
