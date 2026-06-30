@@ -3,6 +3,7 @@ using static SizeS;
 using static UXNode.EOrientation;
 using static UXNode.EChildAlignY;
 using static UXNode.EChildAlignX;
+using System.Reflection.Metadata.Ecma335;
 
 static class Elements {
    public static void BeginMenuBar () {
@@ -17,27 +18,34 @@ static class Elements {
       a.BgrdColor = (uint)(a.IsHovered ? 0x363636 : 0x181818);
       a.ChildAlignX = Center; a.ChildAlignY = Middle;
       Text (text, 0xD9D9D9);
-      return a.IsPressed;
+      return a.IsHovered;
    }
 
-   public static void BeginPopupMenu () {
+   public static bool BeginPopupMenu () {
       ref UXNode a = ref UXFrame.BeginNode ();
       a.Floating = true; a.ElemCorner = UXNode.ECorner.LeftTop;
       if (a.GetGrandParent (UXFrame.All).Kind == UXNode.EKind.TopMenu) 
          a.ParentCorner = UXNode.ECorner.LeftBottom;
       else
          a.ParentCorner = UXNode.ECorner.RightTop;
-      a.BgrdColor = 0x405060; a.Padding = 10; a.ChildGap = 1; a.Floating = true;
+      a.BgrdColor = 0x181818; a.BorderColor = 0x363636; a.Border = 2; a.CornerRadius = 3;
+
+      a.Padding = 10; a.ChildGap = 8; a.Floating = true;
       a.Orientation = TopToBottom;
+      return UXFrame.IsHovered (a.Id, 15);
    }
+   static int nn; 
 
    public static void End () {
       UXFrame.EndNode ();
    }
 
-   public static void Text (string text, Color4 color) {
+   public static void Text (string text, Color4 color)
+      => Text (text, color, 0);
+
+   public static void Text (string text, Color4 color, int fontid) {
       ref UXNode a = ref UXFrame.BeginNode ();
-      a.Text = text; a.TextColor = color;
+      a.Text = text; a.TextColor = color; a.FontId = (short)fontid;
       UXFrame.EndNode ();
    }
 
@@ -54,7 +62,7 @@ static class Elements {
       Text (text, 0xD9D9D9);
       if (shortcut != null) {
          Filler (60);
-         Text (shortcut, 0xD9D9D9);
+         Text (shortcut, 0x868686, shortcut.Length == 1 ? 1 : 0);
       } else
          Filler ();
       return a.IsPressed;

@@ -22,15 +22,16 @@ class UXDemoVN : VNode {
 
    public override void Draw () {
       if (mFirst) {
-         TypeFace tf1 = new TypeFace ("C:/Windows/Fonts/SegoeUI.ttf", (int)(10 * Lux.DPIScale + 0.5));
-         TypeFace tf2 = new TypeFace ("C:/Windows/Fonts/webdings.ttf", (int)(36 * Lux.DPIScale + 0.5));
+         // TypeFace tf1 = new TypeFace ("C:/Windows/Fonts/SegoeUI.ttf", (int)(10 * Lux.DPIScale + 0.5));
+         TypeFace tf1 = new TypeFace ("C:/Etc/NotoSans-Regular.ttf", (int)(9.5 * Lux.DPIScale + 0.5));
+         TypeFace tf2 = new TypeFace ("C:/Windows/Fonts/webdings.ttf", (int)(10.5 * Lux.DPIScale + 0.5));
          UXFrame.TypeFaces = [tf1, tf2];
       }
       UXFrame.BeginLayout (Lux.PanelSize);
       UXFrame.SetMouseState (mPos, mWheel, mPressed); mWheel = 0;
 
       UXFrame.BeginNode ();
-      ref UXNode a = ref UXFrame.N;
+      ref UXNode a = ref UXFrame.N; 
       a.Width = Grow (); a.Height = Grow (); a.Orientation = EOrientation.TopToBottom;
       a.Padding = new MarginS (1000, 0, 0, 0);
       a.Tag = "Root";
@@ -49,12 +50,12 @@ class UXDemoVN : VNode {
    // Testing --------------------------------------------------------------------
    static void FullDemo () {
       BeginMenuBar ();
-      if (BeginMenu ("File")) {
-         BeginPopupMenu ();
-         MenuItem ("New", "Ctrl+N");
-         MenuItem ("Open...", "Ctrl+S");
-         if (BeginMenuItem ("Open Recent", "\u25BA")) {
-            BeginPopupMenu ();
+      if (BeginMenu ("File") || mPopupsOpen.SafeGet (1, false) || mPopupsOpen.SafeGet (2, false)) {
+         mPopupsOpen[1] = BeginPopupMenu ();
+         MenuItem ("New", "Ctrl N");
+         MenuItem ("Open...", "Ctrl S");
+         if (BeginMenuItem ("Open Recent", "\u0034") || mPopupsOpen.SafeGet (2, false)) {
+            mPopupsOpen[2] = BeginPopupMenu ();
             MenuItem ("1. c:/etc/test.fx");
             MenuItem ("2. c:/nori/demos/flange.igs");
             MenuItem ("3. c:/documents/settings.curl");
@@ -63,10 +64,10 @@ class UXDemoVN : VNode {
          End ();
          MenuItem ("Save");
          Separator ();
-         MenuItem ("Export", "Ctrl+Shift+E");
+         MenuItem ("Export", "Ctrl Shift E");
          MenuItem ("Import");
          Separator ();
-         MenuItem ("Exit", "Alt+F4");
+         MenuItem ("Exit", "Alt F4");
          End ();
       }
       End ();
@@ -74,10 +75,9 @@ class UXDemoVN : VNode {
       BeginMenu ("Help"); End ();
       End ();
 
-      Filler ().BgrdColor = new Color4 (0x80FF0000);
-
-      // MENU ("New", "Open", "Save", "Save As", "Exit");
+      Filler ().BgrdColor = new Color4 (0xC0C0C0);
    }
+   static Dictionary<int, bool> mPopupsOpen = [];
 
    static void DropDownMenu () {
       //// Create the top-down menu item

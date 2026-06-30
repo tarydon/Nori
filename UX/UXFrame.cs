@@ -273,6 +273,9 @@ public static class UXFrame {
    internal static bool IsHovered (int n)
       => n < mSizes.Length && mSizes[n].Contains (mMousePos);
 
+   public static bool IsHovered (int n, int inflate)
+      => n < mSizes.Length && mSizes[n].Inflated (inflate).Contains (mMousePos);
+
    internal static bool IsPressed (int n)
       => mMousePressed && IsHovered (n);
 
