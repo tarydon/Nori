@@ -24,7 +24,7 @@ class Program {
 class UXScene : Scene2 {
    public UXScene () {
       BgrdColor = Color4.Gray (96);
-      List<VNode> nodes = [new UXVNode (), TraceVN.It];
+      List<VNode> nodes = [new UXDemoVN (), TraceVN.It];
       Root = new GroupVN (nodes);
    }
 }

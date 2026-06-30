@@ -8,8 +8,8 @@ using static UXNode;
 using static SizeS;
 using static Elements;
 
-class UXVNode : VNode {
-   public UXVNode () {
+class UXDemoVN : VNode {
+   public UXDemoVN () {
       Streaming = true;
       Hub.Mouse.Moves.Subscribe (OnMouseMove);
       Hub.Mouse.Wheel.Subscribe (OnMouseWheel);
@@ -32,7 +32,6 @@ class UXVNode : VNode {
       UXFrame.BeginNode ();
       ref UXNode a = ref UXFrame.N;
       a.Width = Grow (); a.Height = Grow (); a.Orientation = EOrientation.TopToBottom;
-      a.ChildGap = 10;
       a.Padding = new MarginS (1000, 0, 0, 0);
       a.Tag = "Root";
 
@@ -51,23 +50,31 @@ class UXVNode : VNode {
    static void FullDemo () {
       BeginMenuBar ();
       if (BeginMenu ("File")) {
-         MenuItem ("New");
-         MenuItem ("Open...");
-         if (BeginMenuItem ("Open Recent")) {
-
-
+         BeginPopupMenu ();
+         MenuItem ("New", "Ctrl+N");
+         MenuItem ("Open...", "Ctrl+S");
+         if (BeginMenuItem ("Open Recent", "\u25BA")) {
+            BeginPopupMenu ();
+            MenuItem ("1. c:/etc/test.fx");
+            MenuItem ("2. c:/nori/demos/flange.igs");
+            MenuItem ("3. c:/documents/settings.curl");
+            End ();
          }
          End ();
          MenuItem ("Save");
          Separator ();
-         MenuItem ("Export");
-
-         MenuItem ("Exit");
+         MenuItem ("Export", "Ctrl+Shift+E");
+         MenuItem ("Import");
+         Separator ();
+         MenuItem ("Exit", "Alt+F4");
+         End ();
       }
       End ();
       BeginMenu ("Edit"); End ();
       BeginMenu ("Help"); End ();
       End ();
+
+      Filler ().BgrdColor = new Color4 (0x80FF0000);
 
       // MENU ("New", "Open", "Save", "Save As", "Exit");
    }

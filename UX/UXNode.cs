@@ -13,6 +13,8 @@ public struct UXNode {
    public int ChildCount;
    public int Next;
    public string? Tag;
+   public int Level;
+   public EKind Kind;
 
    // Layout ...............................................
    public EOrientation Orientation;
@@ -68,10 +70,21 @@ public struct UXNode {
       return children;
    }
 
-   public void GetChildren (UXNode[] nodes, List<int> children) {
+   public readonly void GetChildren (UXNode[] nodes, List<int> children, bool skipFloating) {
       children.Clear ();
-      for (int n = FirstChild; n != 0; n = nodes[n].Next) children.Add (n);
+      for (int n = FirstChild; n != 0; n = nodes[n].Next) {
+         if (skipFloating) {
+            ref UXNode child = ref nodes[n];
+            if (child.Floating) continue;
+         }
+         children.Add (n);
+      }
    }
+
+   public readonly ref UXNode GetParent (UXNode[] nodes) => ref nodes[Parent];
+
+   public readonly ref UXNode GetGrandParent (UXNode[] nodes)
+      => ref GetParent (nodes).GetParent (nodes);
 
    // Nested types -------------------------------------------------------------
    public enum EOrientation : short { LeftToRight, TopToBottom };
@@ -81,7 +94,9 @@ public struct UXNode {
    public enum EChildAlignY : short { Top, Middle, Bottom };
    public enum ESizeMode : short { Fit, Grow, Fixed, Percent }
    public enum ECorner : short { LeftTop, Top, RightTop, Left, Center, Right, LeftBottom, Bottom, RightBottom };
-
+   public enum EKind {
+      Generic, TopMenu, 
+   }
 };
 
 public readonly struct MarginS {

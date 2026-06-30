@@ -7,6 +7,7 @@ using static UXNode.EChildAlignX;
 static class Elements {
    public static void BeginMenuBar () {
       ref UXNode a = ref UXFrame.BeginNode ();
+      a.Kind = UXNode.EKind.TopMenu;
       a.BgrdColor = 0x181818; a.Width = Grow (); a.Padding = new (8, 8, 6, 6);
    } 
 
@@ -19,6 +20,17 @@ static class Elements {
       return a.IsPressed;
    }
 
+   public static void BeginPopupMenu () {
+      ref UXNode a = ref UXFrame.BeginNode ();
+      a.Floating = true; a.ElemCorner = UXNode.ECorner.LeftTop;
+      if (a.GetGrandParent (UXFrame.All).Kind == UXNode.EKind.TopMenu) 
+         a.ParentCorner = UXNode.ECorner.LeftBottom;
+      else
+         a.ParentCorner = UXNode.ECorner.RightTop;
+      a.BgrdColor = 0x405060; a.Padding = 10; a.ChildGap = 1; a.Floating = true;
+      a.Orientation = TopToBottom;
+   }
+
    public static void End () {
       UXFrame.EndNode ();
    }
@@ -29,13 +41,23 @@ static class Elements {
       UXFrame.EndNode ();
    }
 
-   public static void MenuItem (string text) {
-      BeginMenuItem (text);
+   public static void MenuItem (string text, string? shortcut = null) {
+      BeginMenuItem (text, shortcut);
       End ();
    }
 
-   public static bool BeginMenuItem (string text) {
-
+   public static bool BeginMenuItem (string text, string? shortcut = null) {
+      ref UXNode a = ref UXFrame.BeginNode ();
+      a.Padding = new (20, 20, 6, 6); a.CornerRadius = 3; a.Width = Grow ();
+      a.BgrdColor = (uint)(a.IsHovered ? 0x363636 : 0x181818);
+      a.ChildAlignX = Center; a.ChildAlignY = Middle;
+      Text (text, 0xD9D9D9);
+      if (shortcut != null) {
+         Filler (60);
+         Text (shortcut, 0xD9D9D9);
+      } else
+         Filler ();
+      return a.IsPressed;
    }
 
    public static void Separator () { }
@@ -53,9 +75,10 @@ static class Elements {
       UXFrame.EndNode ();
    }
 
-   public static void FILLER (Color4 bgrd) {
+   public static ref UXNode Filler (int min = 0) {
       ref UXNode a = ref UXFrame.BeginNode ();
-      a.BgrdColor = bgrd; a.Width = Grow (); a.Height = Grow ();
+      a.Width = Grow (min); a.Height = Grow ();
       UXFrame.EndNode ();
+      return ref a;
    }
 }

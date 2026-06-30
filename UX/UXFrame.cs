@@ -6,6 +6,7 @@ using static System.Math;
 using static Nori.UX.UXNode.ESizeMode;
 using static Nori.UX.UXNode.EChildAlignX;
 using static Nori.UX.UXNode.EChildAlignY;
+using EC = Nori.UX.UXNode.ECorner;
 namespace Nori.UX;
 
 public static class UXFrame {
@@ -36,19 +37,20 @@ public static class UXFrame {
       Lib.Check (mStack.Count == 0, "Unmatched Begin() in UXFrame");
       // At this point, the desired sizes of all the elements are already computed
       // (by the EndNode methods as element is closed)
-      GrowChildElements (1);
+      GrowChildElements (1); 
       PositionChildren (1);
    }
 
    static void PositionChildren (int p) {
       ref UXNode parent = ref mNodes[p];
       var (dxSpace, dySpace) = GetRemainingSpace (p);
-      parent.GetChildren (mNodes, mTmp);
+      parent.GetChildren (mNodes, mTmp, false);
       if (parent.Horizontal) {
          int left = parent.Padding.Left;
          left += parent.ChildAlignX switch { Center => dxSpace / 2, Right => dxSpace, _ => 0 };
          foreach (var c in mTmp) {
             ref UXNode child = ref mNodes[c];
+            if (child.Floating) { PositionFloat (ref parent, ref child); continue; }
             child.X = (parent.X + left);
             left += (child.DX + parent.ChildGap);
             child.Y = (parent.Y + parent.Padding.Top);
@@ -62,6 +64,7 @@ public static class UXFrame {
          top += parent.ChildAlignY switch { Middle => dySpace / 2, Bottom => dySpace, _ => 0 };
          foreach (var c in mTmp) {
             ref UXNode child = ref mNodes[c];
+            if (child.Floating) { PositionFloat (ref parent, ref child); continue; }
             child.Y = (parent.Y + top);
             top += (child.DY + parent.ChildGap);
             child.X = (parent.X + parent.Padding.Left);
@@ -76,12 +79,25 @@ public static class UXFrame {
          PositionChildren (c);
    }
 
+   static void PositionFloat (ref UXNode parent, ref UXNode child) {
+      child.X = child.ParentCorner switch {
+         EC.Left or EC.LeftTop or EC.LeftBottom => parent.X,
+         EC.Right or EC.RightTop or EC.RightBottom => parent.X + parent.DX,
+         _ => parent.X + parent.DX / 2,
+      };
+      child.Y = child.ParentCorner switch {
+         EC.Top or EC.LeftTop or EC.RightTop => parent.Y,
+         EC.Bottom or EC.LeftBottom or EC.RightBottom => parent.Y + parent.DY,
+         _ => parent.Y + parent.DY / 2,
+      };
+   }
+
    // Given a parent node, returns the amount of extra space left after accounting for
    // the padding. Along the layout direction, we also subtract the sizes of the children
    // and the gaps between children. 
    static (int, int) GetRemainingSpace (int p) {
       ref UXNode parent = ref mNodes[p];
-      parent.GetChildren (mNodes, mTmp);
+      parent.GetChildren (mNodes, mTmp, true);
       int childGaps = parent.ChildGap * Max (parent.ChildCount - 1, 0);
       int dxSpace = parent.DX - parent.Padding.Horizontal;
       int dySpace = parent.DY - parent.Padding.Vertical;
@@ -98,30 +114,30 @@ public static class UXFrame {
 
    static void GrowChildElements (int p) {
       ref UXNode par = ref mNodes[p];
-      var children = par.GetChildren (mNodes);
+      par.GetChildren (mNodes, mTmp, true);
       int childGaps = (par.ChildGap * Max (par.ChildCount - 1, 0));
       int dxSpace = par.DX - par.Padding.Left - par.Padding.Right;
       int dySpace = par.DY - par.Padding.Top - par.Padding.Bottom;
       if (par.Horizontal) {
          dxSpace -= childGaps;
-         for (int i = children.Count - 1; i >= 0; i--) {
-            ref UXNode child = ref mNodes[children[i]];
+         for (int i = mTmp.Count - 1; i >= 0; i--) {
+            ref UXNode child = ref mNodes[mTmp[i]];
             dxSpace -= child.DX;
             if (child.Height.Mode == Grow) child.DY += (dySpace - child.DY);
-            if (child.Width.Mode != Grow) children.RemoveAt (i);
+            if (child.Width.Mode != Grow) mTmp.RemoveAt (i);
          }
-         if (children.Count == 0) goto Done;
+         if (mTmp.Count == 0) goto Done;
 
          while (dxSpace > 0 ) {
             int smallest = short.MaxValue, secondSmallest = smallest, widthToAdd = dxSpace;
-            foreach (var c in children) {
+            foreach (var c in mTmp) {
                ref UXNode child = ref mNodes[c];
                if (child.DX < smallest) { secondSmallest = smallest; smallest = child.DX; }
                if (child.DX > smallest) { secondSmallest = Min (secondSmallest, child.DX); widthToAdd = secondSmallest - smallest; }
             }
-            widthToAdd = Max (Min (widthToAdd, dxSpace / children.Count), 1);
+            widthToAdd = Max (Min (widthToAdd, dxSpace / mTmp.Count), 1);
 
-            foreach (var c in children) {
+            foreach (var c in mTmp) {
                ref UXNode child = ref mNodes[c];
                if (child.DX != smallest) continue;
                child.DX += widthToAdd;
@@ -130,24 +146,24 @@ public static class UXFrame {
          }
       } else {
          dySpace -= childGaps;
-         for (int i = children.Count - 1; i >= 0; i--) {
-            ref UXNode child = ref mNodes[children[i]];
+         for (int i = mTmp.Count - 1; i >= 0; i--) {
+            ref UXNode child = ref mNodes[mTmp[i]];
             dySpace -= child.DY;
             if (child.Width.Mode == Grow) child.DX += (dxSpace - child.DX);
-            if (child.Height.Mode != Grow) children.RemoveAt (i);
+            if (child.Height.Mode != Grow) mTmp.RemoveAt (i);
          }
-         if (children.Count == 0) goto Done;
+         if (mTmp.Count == 0) goto Done;
 
          while (dySpace > 0) {
             int smallest = short.MaxValue, secondSmallest = smallest, heightToAdd = dySpace;
-            foreach (var c in children) {
+            foreach (var c in mTmp) {
                ref UXNode child = ref mNodes[c];
                if (child.DY < smallest) { secondSmallest = smallest; smallest = child.DY; }
                if (child.DY > smallest) { secondSmallest = Min (secondSmallest, child.DY); heightToAdd = secondSmallest - smallest; }
             }
-            heightToAdd = Max (Min (heightToAdd, dySpace / children.Count), 1);
+            heightToAdd = Max (Min (heightToAdd, dySpace / mTmp.Count), 1);
 
-            foreach (var c in children) {
+            foreach (var c in mTmp) {
                ref UXNode child = ref mNodes[c];
                if (child.DY != smallest) continue;
                child.DY += heightToAdd;
@@ -173,6 +189,7 @@ public static class UXFrame {
       if (mParent != -1) {
          // If this has a parent, attach this to the linked list of children
          ref UXNode parent = ref mNodes[mParent];
+         N.Level = parent.Level + 1;
          if (parent.FirstChild == 0) parent.FirstChild = mCurrent;
          else {
             // If this is not the first child, then there is already a sibling for this,
@@ -203,9 +220,11 @@ public static class UXFrame {
       a.DY = Max (a.DY, a.Height.Min);
 
       if (a.Parent != -1) {
-         ref UXNode par = ref mNodes[a.Parent];
-         if (par.Horizontal) { par.DX += a.DX; par.DY = Max (a.DY, par.DY); } 
-         else { par.DX = Max (a.DX, par.DX); par.DY += a.DY; }
+         if (!a.Floating) {
+            ref UXNode par = ref mNodes[a.Parent];
+            if (par.Horizontal) { par.DX += a.DX; par.DY = Max (a.DY, par.DY); } 
+            else { par.DX = Max (a.DX, par.DX); par.DY += a.DY; }
+         }
       } else {
          // This is the root element, it should be of fixed size and position
          a.DX = mScreenSize.X; a.DY = mScreenSize.Y;
@@ -218,7 +237,7 @@ public static class UXFrame {
          ref UXNode node = ref mNodes[i];
          RectS rect = new (node.X, node.Y, node.X + node.DX, node.Y + node.DY);
          mSizes[i] = rect;
-         Lux.ZLevel = i;
+         Lux.ZLevel = node.Level;
          if (!node.BgrdColor.IsTransparent) {
             Lux.Color = node.BgrdColor;
             bool border = !node.Border.IsZero, radius = node.CornerRadius > 0;
