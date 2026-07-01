@@ -44,7 +44,7 @@ public static class UXFrame {
    static void PositionChildren (int p) {
       ref UXNode parent = ref mNodes[p];
       var (dxSpace, dySpace) = GetRemainingSpace (p);
-      parent.GetChildren (mNodes, mTmp, false);
+      parent.GetChildren (mTmp, false);
       if (parent.Horizontal) {
          int left = parent.Padding.Left;
          left += parent.ChildAlignX switch { Center => dxSpace / 2, Right => dxSpace, _ => 0 };
@@ -97,7 +97,7 @@ public static class UXFrame {
    // and the gaps between children. 
    static (int, int) GetRemainingSpace (int p) {
       ref UXNode parent = ref mNodes[p];
-      parent.GetChildren (mNodes, mTmp, true);
+      parent.GetChildren (mTmp, true);
       int childGaps = parent.ChildGap * Max (parent.ChildCount - 1, 0);
       int dxSpace = parent.DX - parent.Padding.Horizontal;
       int dySpace = parent.DY - parent.Padding.Vertical;
@@ -114,7 +114,7 @@ public static class UXFrame {
 
    static void GrowChildElements (int p) {
       ref UXNode par = ref mNodes[p];
-      par.GetChildren (mNodes, mTmp, true);
+      par.GetChildren (mTmp, true);
       int childGaps = (par.ChildGap * Max (par.ChildCount - 1, 0));
       int dxSpace = par.DX - par.Padding.Left - par.Padding.Right;
       int dySpace = par.DY - par.Padding.Top - par.Padding.Bottom;
@@ -266,7 +266,7 @@ public static class UXFrame {
       s += $"{a.Id} {a.Tag} {a.Text} {a.DX}x{a.DY} @ {a.X},{a.Y}";
       Lib.Trace (s);
 
-      foreach (var b in a.EnumChildren (mNodes))
+      foreach (var b in a.EnumChildren ())
          Dump (b, level + 1);
    }
 

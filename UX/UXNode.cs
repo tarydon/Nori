@@ -59,19 +59,22 @@ public struct UXNode {
    public readonly bool Horizontal => Orientation == EOrientation.LeftToRight;
    public readonly bool Vertical => Orientation == EOrientation.TopToBottom;
 
-   public readonly IEnumerable<int> EnumChildren (UXNode[] nodes) {
+   public readonly IEnumerable<int> EnumChildren () {
+      var nodes = UXFrame.All;
       for (int n = FirstChild; n != 0; n = nodes[n].Next)
          yield return n; 
    }
 
-   public readonly List<int> GetChildren (UXNode[] nodes) {
+   public readonly List<int> GetChildren () {
       List<int> children = [];
+      var nodes = UXFrame.All;
       for (int n = FirstChild; n != 0; n = nodes[n].Next) children.Add (n);
       return children;
    }
 
-   public readonly void GetChildren (UXNode[] nodes, List<int> children, bool skipFloating) {
+   public readonly void GetChildren (List<int> children, bool skipFloating) {
       children.Clear ();
+      var nodes = UXFrame.All;
       for (int n = FirstChild; n != 0; n = nodes[n].Next) {
          if (skipFloating) {
             ref UXNode child = ref nodes[n];
@@ -81,10 +84,10 @@ public struct UXNode {
       }
    }
 
-   public readonly ref UXNode GetParent (UXNode[] nodes) => ref nodes[Parent];
+   public readonly ref UXNode GetParent () => ref UXFrame.All[Parent];
 
-   public readonly ref UXNode GetGrandParent (UXNode[] nodes)
-      => ref GetParent (nodes).GetParent (nodes);
+   public readonly ref UXNode GetGrandParent ()
+      => ref GetParent ().GetParent ();
 
    // Nested types -------------------------------------------------------------
    public enum EOrientation : short { LeftToRight, TopToBottom };
@@ -95,20 +98,31 @@ public struct UXNode {
    public enum ESizeMode : short { Fit, Grow, Fixed, Percent }
    public enum ECorner : short { LeftTop, Top, RightTop, Left, Center, Right, LeftBottom, Bottom, RightBottom };
    public enum EKind {
-      Generic, TopMenu, 
+      Generic, TopMenu, MenuItem,
    }
 };
 
 public readonly struct MarginS {
    public MarginS (int a) : this (a, a, a, a) { }
-   public MarginS (int l, int r, int t, int b) { Left = (short)l; Right = (short)r; Top = (short)t; Bottom = (short)b; }
+   public MarginS (int h, int v) { Left = Right = (short)h; Top = Bottom = (short)v; }
+   public MarginS (int l, int t, int r, int b) { Left = (short)l; Top = (short)t; Right = (short)r; Bottom = (short)b; }
+   
+   public static MarginS Parse (string s) {
+      int[] a = [.. s.Split (',').Select (a => a.ToInt ())];
+      return a.Length switch {
+         4 => new (a[0], a[1], a[2], a[3]),
+         2 => new (a[0], a[1]),
+         _ => new (a[0])
+      };
+   }
+   
    public static implicit operator MarginS (int a) => new (a);
 
    public readonly short Horizontal => (short)(Left + Right);
    public readonly short Vertical => (short)(Top + Bottom);
-   public bool IsZero => Left + Top + Right + Bottom == 0; 
+   public bool IsZero => Left + Top + Right + Bottom == 0;
 
-   public readonly short Left, Right, Top, Bottom;
+   public readonly short Left, Top, Right, Bottom;
 }
 
 public readonly struct SizeS {

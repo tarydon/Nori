@@ -23,8 +23,9 @@ class UXDemoVN : VNode {
    public override void Draw () {
       if (mFirst) {
          // TypeFace tf1 = new TypeFace ("C:/Windows/Fonts/SegoeUI.ttf", (int)(10 * Lux.DPIScale + 0.5));
-         TypeFace tf1 = new TypeFace ("C:/Etc/NotoSans-Regular.ttf", (int)(9.5 * Lux.DPIScale + 0.5));
-         TypeFace tf2 = new TypeFace ("C:/Windows/Fonts/webdings.ttf", (int)(10.5 * Lux.DPIScale + 0.5));
+         TypeFace tf1 = new ("C:/Etc/NotoSans-Regular.ttf", (int)(9.5 * Lux.DPIScale + 0.5));
+         TypeFace tf2 = new ("C:/Windows/Fonts/webdings.ttf", (int)(10.5 * Lux.DPIScale + 0.5));
+         // TypeFace tf3 = new ("C:/Etc/NotoSans-Regular.ttf", (int)(9.5 * Lux.DPIScale + 0.5));
          UXFrame.TypeFaces = [tf1, tf2];
       }
       UXFrame.BeginLayout (Lux.PanelSize);
@@ -49,30 +50,30 @@ class UXDemoVN : VNode {
 
    // Testing --------------------------------------------------------------------
    static void FullDemo () {
-      BeginMenuBar ();
-      if (BeginMenu ("File") || mPopupsOpen.SafeGet (1, false) || mPopupsOpen.SafeGet (2, false)) {
+      BeginTopMenu ();
+      if (BeginMenuItem ("File") || mPopupsOpen.SafeGet (1, false) || mPopupsOpen.SafeGet (2, false)) {
          mPopupsOpen[1] = BeginPopupMenu ();
          MenuItem ("New", "Ctrl N");
          MenuItem ("Open...", "Ctrl S");
          if (BeginMenuItem ("Open Recent", "\u0034") || mPopupsOpen.SafeGet (2, false)) {
             mPopupsOpen[2] = BeginPopupMenu ();
-            MenuItem ("1. c:/etc/test.fx");
-            MenuItem ("2. c:/nori/demos/flange.igs");
-            MenuItem ("3. c:/documents/settings.curl");
+            MenuItem ("c:/etc/test.fx", "Ctrl 1");
+            MenuItem ("c:/nori/demos/flange.igs", "Ctrl 2");
+            MenuItem ("c:/documents/settings.curl", "Ctrl 3");
             End ();
          }
          End ();
          MenuItem ("Save");
          Separator ();
-         MenuItem ("Export", "Ctrl Shift E");
-         MenuItem ("Import");
+         MenuItem ("Export...", "Ctrl Shift E");
+         MenuItem ("Import...", "", "", "Imports Disabled");
          Separator ();
          MenuItem ("Exit", "Alt F4");
          End ();
       }
       End ();
-      BeginMenu ("Edit"); End ();
-      BeginMenu ("Help"); End ();
+      MenuItem ("Edit");
+      MenuItem ("Help");
       End ();
 
       Filler ().BgrdColor = new Color4 (0xC0C0C0);
