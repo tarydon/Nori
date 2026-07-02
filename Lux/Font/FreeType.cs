@@ -6,11 +6,21 @@ namespace Nori.FreeType;
 using static CallingConvention;
 using Ptr = nint;
 
+#if WINDOWS
+using FLong = System.Int32;
+#elif LINUX
+using FLong = System.Int64;
+#endif
+
 #region class FreeType -----------------------------------------------------------------------------
 /// <summary>Class that encapsulates the FreeType library</summary>
 static class FreeType {
    // Constants ----------------------------------------------------------------
+#if WINDOWS
+   const string DLL = "freetype.dll";
+#elif LINUX
    const string DLL = "libfreetype.so.6";
+#endif
 
    public enum Error {
       Ok = 0x00,
@@ -147,17 +157,17 @@ static class FreeType {
 // Represents a bounding-box
 [StructLayout (LayoutKind.Sequential)]
 readonly struct BBox {
-   public readonly int XMin, YMin;
-   public readonly int XMax, YMax;
+   public readonly FLong XMin, YMin;
+   public readonly FLong XMax, YMax;
 }
 
 // Describes a bitmap (output from a rasterization call)
 [StructLayout (LayoutKind.Sequential)]
 struct Bitmap {
-   public int Rows, Columns;           // Number of rows, columns
+   public int Rows, Columns;          // Number of rows, columns
    public int Stride;                  // To go from one bitmap row to the next one
    public Ptr Buffer;                  // Pointer to bitmap data         
-   public short CGrays;                // Number of gray-levels
+   public ushort CGrays;               // Number of gray-levels
    byte PixelMode, PaletteMode;
    Ptr palette;
 }
@@ -174,9 +184,9 @@ readonly struct CharMap {
 // Encapsulates an FT_FaceRec record
 [StructLayout (LayoutKind.Sequential)]
 struct CFace {
-   int CFaces, FaceIndex;              // Used only for multiple faces in the same font file
-   int FaceFlags, StyleFlags;
-   public int CGlyphs;                 // Number of glyphs in the face      
+   FLong CFaces, FaceIndex;            // Used only for multiple faces in the same font file
+   FLong FaceFlags, StyleFlags;
+   public FLong CGlyphs;               // Number of glyphs in the face      
    public Ptr FamilyName;              // Font family name
    public Ptr StyleName;               // Font style name
    int CFixedSizes;                    // Number of fixed sizes
@@ -196,9 +206,9 @@ struct CFace {
    public Ptr Size;                    // Current active size for this font
    public Ptr Charmap;                 // Current active charmap for this font
    Ptr Driver, Memory, Stream;
-   Ptr SizesList;
+   Ptr SizesHead, SizesTail;
    Generic AutoHint;
-   Ptr Extensions, Public;
+   Ptr Extensions, Internal;
    public static int SizeInBytes => Marshal.SizeOf (typeof (CFace));
 }
 
@@ -242,7 +252,7 @@ struct CGlyphSlot {
 readonly struct Fix26_6 (double f) {
    public double Value => Raw / 64.0;
    public override string ToString () => $"[{Value}]";
-   readonly int Raw = (int)(f * 64 + 0.5);
+   readonly FLong Raw = (FLong)(f * 64 + 0.5);
 }
 
 // Represents a set of polylines making up a glyph

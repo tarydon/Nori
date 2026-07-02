@@ -10,7 +10,7 @@
 	<PropertyGroup>
 		<Nullable>enable</Nullable>
 		<ImplicitUsings>enable</ImplicitUsings>
-		<OutDir>..\Bin</OutDir>
+		<OutDir>..\..\Bin</OutDir>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 		<Optimize>false</Optimize>
 		<GenerateDocumentationFile>false</GenerateDocumentationFile>

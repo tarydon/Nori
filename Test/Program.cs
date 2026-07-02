@@ -16,12 +16,12 @@ class Program {
    // The constructor gathers all the tests, and also parses the command line arguments
    Program (string[] args) {
       Lib.Init ();
-      /*
+      
       GLFWHost.Init (() => { });
       // Create an invisible, fixed size, undecorated window (just so we have an OpenGL
       // context for rendering offscreen images)
       mWindow = new Window (500, 500, "Nori-Testing", Window.EFlags.None);
-      */
+      
       Lib.Tessellate = FastTess2D.Process;
       foreach (var arg in args) {
          if (int.TryParse (arg, out int n)) {

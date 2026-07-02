@@ -3,16 +3,19 @@
     <Project Path="Demos/BenchShell/BenchShell.csproj" />
     <Project Path="Demos/ConShell/ConShell.csproj" />
     <Project Path="Demos/GLShell/GLShell.csproj" />
+    <Project Path="Demos/WPFDemo/WPFDemo.csproj" />
   </Folder>
   <Folder Name="/Host/">
     <Project Path="Host/GLFW/Nori.Host.GLFW.csproj" />
-    <Project Path="GLU/Nori.GLU.csproj" />
+    <Project Path="Host/WPF/Nori.Host.WPF.csproj" />
+    <Project Path="Host/GLU/Nori.GLU.csproj" />
   </Folder>
   <Folder Name="/Test/">
     <Project Path="Test/Nori.Test.csproj" />
   </Folder>
   <Folder Name="/Tools/">
     <Project Path="Tools/Console/Nori.Con.csproj" />
+    <Project Path="Tools/Cover/Nori.Cover.csproj" />
     <Project Path="Tools/Doc/Nori.Doc.csproj" />
     <Project Path="Tools/Generate/Nori.Gen.csproj" />
   </Folder>

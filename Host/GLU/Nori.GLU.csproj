@@ -9,7 +9,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Core\Nori.Core.csproj" />
+    <ProjectReference Include="..\..\Core\Nori.Core.csproj" />
   </ItemGroup>
 
 </Project>
