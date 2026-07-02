@@ -22,10 +22,8 @@ class UXDemoVN : VNode {
 
    public override void Draw () {
       if (mFirst) {
-         // TypeFace tf1 = new TypeFace ("C:/Windows/Fonts/SegoeUI.ttf", (int)(10 * Lux.DPIScale + 0.5));
-         TypeFace tf1 = new ("C:/Etc/NotoSans-Regular.ttf", (int)(9.5 * Lux.DPIScale + 0.5));
+         TypeFace tf1 = new TypeFace ("C:/Windows/Fonts/SegoeUI.ttf", (int)(10 * Lux.DPIScale + 0.5));
          TypeFace tf2 = new ("C:/Windows/Fonts/webdings.ttf", (int)(10.5 * Lux.DPIScale + 0.5));
-         // TypeFace tf3 = new ("C:/Etc/NotoSans-Regular.ttf", (int)(9.5 * Lux.DPIScale + 0.5));
          UXFrame.TypeFaces = [tf1, tf2];
       }
       UXFrame.BeginLayout (Lux.PanelSize);
@@ -34,7 +32,7 @@ class UXDemoVN : VNode {
       UXFrame.BeginNode ();
       ref UXNode a = ref UXFrame.N; 
       a.Width = Grow (); a.Height = Grow (); a.Orientation = EOrientation.TopToBottom;
-      a.Padding = new MarginS (1000, 0, 0, 0);
+      a.Padding = new MarginS (700, 0, 0, 0);
       a.Tag = "Root";
 
       FullDemo ();

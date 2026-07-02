@@ -18,6 +18,6 @@ class Program {
 
    static void Test () {
       InlayCompiler ic = new InlayCompiler ("C:\\etc\\basic.in");
-
+      ic.Compile ("c:\\etc\\Output.cs");
    }
 }
