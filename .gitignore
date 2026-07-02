@@ -9,8 +9,10 @@ Bin/*
 Demos/Pentax
 **/launchSettings.json
 **/bin/*
+**/Bin/*
 **/obj/*
 TData/tmpfile.*
 TData/failed.txt
 **/BenchmarkDotNet.Artifacts/*
 .claude/**
+.vscode/**

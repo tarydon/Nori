@@ -204,8 +204,11 @@ public class TypeFace {
 
    /// <summary>Sets the 'M' size in pixels</summary>
    public void SetEMSizeInPixels (int pixels) {
+      Console.WriteLine ("About to Check");
       Check (SetPixelSizes (mFace, 1000, 1000));
+      Console.WriteLine ("GetGlyph");
       var glyph = GetGlyph (GetGlyphIndex ('M'));
+      Console.WriteLine ("Compute size");
       uint size = (uint)(pixels * 1000.0 / glyph.Rows + 0.45);
       PixelSize = ((int)size, (int)size);
       double lie = -(double)mRec.Descender / (mRec.Ascender - mRec.Descender);
@@ -245,8 +248,11 @@ public class TypeFace {
 
    // Called to initialize the font with a specified pixel size
    void InitFont (int pixelSize) {
+      Console.WriteLine ("About to mRec");
       mRec = Marshal.PtrToStructure<CFace> ((Ptr)mFace);
+      Console.WriteLine ("About to SetEMSize");
       SetEMSizeInPixels (pixelSize);
+      Console.WriteLine ("About to Bump");
       Bump ();
    }
 

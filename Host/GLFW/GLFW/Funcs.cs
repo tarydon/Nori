@@ -199,13 +199,7 @@ static class GLFW {
 
    // Constants ----------------------------------------------------------------
    // The native library name
-#if LINUX
-   const string LIB = "glfw3";
-#elif OSX
-   const string LIB = "libglfw.3";
-#elif WINDOWS
-   const string LIB = "glfw3";
-#endif
+   const string LIB = "libglfw.so.3";
 
    // Implementation -----------------------------------------------------------
    private static void GlfwError (ErrorCode code, Ptr ptrMessage) {

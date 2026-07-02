@@ -10,7 +10,7 @@ using Ptr = nint;
 /// <summary>Class that encapsulates the FreeType library</summary>
 static class FreeType {
    // Constants ----------------------------------------------------------------
-   const string DLL = "freetype.dll";
+   const string DLL = "libfreetype.so.6";
 
    public enum Error {
       Ok = 0x00,
