@@ -30,7 +30,7 @@ public static class Extensions {
    public static Point3f Along (this double f, Point3f a, Point3f b)
       => new (f.Along (a.X, b.X), f.Along (a.Y, b.Y), f.Along (a.Z, b.Z));
 
-   public static StringBuilder AppendNL (this StringBuilder sb, string s)
+   public static StringBuilder AppendNL (this StringBuilder sb, string? s)
       => sb.Append (s).Append ('\n');
    public static StringBuilder AppendNL (this StringBuilder sb)
       => sb.Append ('\n');
