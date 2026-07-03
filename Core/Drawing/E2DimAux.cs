@@ -140,7 +140,7 @@ public abstract partial class E2Dim {
 
    protected void SetTextPoint (int index, Point2 pt) {
       if (mPts.Count <= index) mPts.Add (Point2.Zero);
-      mPts[index] = pt;
+      mPts[index] = pt.R9 ();
    }
 
    // Checks if the arrows and text can be accomodated within the given space.

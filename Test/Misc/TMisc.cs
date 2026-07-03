@@ -314,8 +314,8 @@ class TMisc {
       lf.Render ("Reversed", (59, 30), ETextAlign.BaseLeft, 0, -0.5, 4, 0, poly);
 
       var sb = new StringBuilder ();
-      poly.ForEach (a => sb.AppendLine (a.ToString ()));
-      pts.ForEach (a => sb.AppendLine ($"P{a.X},{a.Y}"));
+      poly.ForEach (a => sb.AppendNL (a.ToString ()));
+      pts.ForEach (a => sb.AppendNL ($"P{a.X},{a.Y}"));
       File.WriteAllText (NT.TmpTxt, sb.ToString ());
       Assert.TextFilesEqual ("Misc/LineFont.txt", NT.TmpTxt);
 

@@ -130,7 +130,7 @@ class DXFTests {
       var mText = dwg.Ents.OfType<E2Text> ();
       var sb = new StringBuilder ();
       foreach (var txt in mText)
-         sb.AppendLine (txt.Text);
+         sb.AppendNL (txt.Text);
       var tmp = NT.TmpTxt;
       File.WriteAllText (tmp, sb.ToString ());
       // Compare the generated text file with the expected text file

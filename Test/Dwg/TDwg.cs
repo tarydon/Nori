@@ -92,12 +92,12 @@ class DwgSnapTests {
 
    void Dump (string file, string title) {
       var sb = new StringBuilder ();
-      sb.AppendLine ($"Title = {title}");
-      sb.AppendLine ($"Pt = {mSnap.PtSnap}, ESnap={mSnap.ESnap}");
+      sb.AppendNL ($"Title = {title}");
+      sb.AppendNL ($"Pt = {mSnap.PtSnap}, ESnap={mSnap.ESnap}");
       foreach (var (Pt, Angle) in mSnap.Lines) 
-         sb.AppendLine ($"Line = ({Pt}, {Angle.R2D ().Round (3)}");
+         sb.AppendNL ($"Line = ({Pt}, {Angle.R2D ().Round (3)}");
       foreach (var (text, Pt, above) in mSnap.Labels) 
-         sb.AppendLine ($"Label = (\"{text}\", {Pt}, {above})");
+         sb.AppendNL ($"Label = (\"{text}\", {Pt}, {above})");
       File.WriteAllText (NT.TmpTxt, sb.ToString ());
       Assert.TextFilesEqual ($"Dwg/{file}.txt", NT.TmpTxt);
    }

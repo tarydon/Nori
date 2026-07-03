@@ -70,9 +70,24 @@ static class Assert {
       if (!File.Exists (reference)) { File.Copy (test, reference, true); return; }
       byte[] data1 = File.ReadAllBytes (reference), data2 = File.ReadAllBytes (test);
       if (data1.SequenceEqual (data2)) return;
-      if (TestRunner.RunDiff) Process.Start ("meld", $"{reference} {test}").WaitForExit ();
+      if (TestRunner.RunDiff) Process.Start (Differ, $"{reference} {test}").WaitForExit ();
       throw new TestException ($"Files different: {reference} and {test}");
    }
+
+   static string Differ {
+      get {
+         mDiffer = Environment.GetEnvironmentVariable ("NORITEXTDIFF");
+         if (mDiffer.IsBlank ()) {
+#if WINDOWS
+            mDiffer = "winmergeu.exe";
+#elif LINUX
+            mDiffer = "meld";
+#endif
+         }
+         return mDiffer!;
+      }
+   }
+   static string? mDiffer;
 
    /// <summary>Checks if two PNG files are equal</summary>
    public static void PNGFilesEqual (string reference, string test, DIBitmap dib) {

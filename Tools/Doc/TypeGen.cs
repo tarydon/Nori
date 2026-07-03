@@ -267,14 +267,14 @@ class TypeGen : HTMLGen {
                stack.Push (t2);
                break;
          }
-         mS.AppendLine (line);
+         mS.Append (line + "\n");
       }
       PopStack (0);
 
       void PopStack (int level) {
          if (stack.Count <= level) return;
          while (stack.Count > level) mS.Append ($"</{stack.Pop ()}>");
-         mS.AppendLine ();
+         mS.Append ('\n');
       }
    }
 
