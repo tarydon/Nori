@@ -10,7 +10,7 @@ class Program {
       w.Run (true);
    }
  
-   static void OnReady () => Lux.UIScene = new BaseScene ();
+   static void OnReady () => Lux.UIScene = new DemoScene ();
 }
 
 class BaseScene : Scene2 {

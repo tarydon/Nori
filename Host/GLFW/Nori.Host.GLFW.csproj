@@ -1,27 +1,29 @@
 <Project Sdk="Microsoft.NET.Sdk">
-	<PropertyGroup>
-		<DefineConstants>$(DefineConstants);GLFW;WINDOWS</DefineConstants>
-	</PropertyGroup>
-	
-	<PropertyGroup>
-		<TargetFramework>net10.0</TargetFramework>
-	</PropertyGroup>
+  <PropertyGroup Condition="$([MSBuild]::IsOSPlatform('Windows'))">
+    <DefineConstants>$(DefineConstants);WINDOWS</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition="$([MSBuild]::IsOSPlatform('Linux'))">
+    <DefineConstants>$(DefineConstants);LINUX</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup>
+    <DefineConstants>$(DefineConstants);GLFW</DefineConstants>
+  </PropertyGroup>
 
-	<PropertyGroup>
-		<Nullable>enable</Nullable>
-		<ImplicitUsings>enable</ImplicitUsings>
-		<OutDir>..\..\Bin</OutDir>
-		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-		<Optimize>false</Optimize>
-		<GenerateDocumentationFile>false</GenerateDocumentationFile>
-		<DocumentationFile>..\..\Bin\Nori.Host.GLFW.xml</DocumentationFile>
-	</PropertyGroup>
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+  </PropertyGroup>
 
-	<ItemGroup>
-	  <Compile Remove="WPFHost.cs" />
-	</ItemGroup>
+  <PropertyGroup>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <OutDir>..\..\Bin</OutDir>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <Optimize>false</Optimize>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <DocumentationFile>..\..\Bin\Nori.Host.GLFW.xml</DocumentationFile>
+  </PropertyGroup>
 
-	<ItemGroup>
-	  <ProjectReference Include="..\..\Core\Nori.Core.csproj" />
-	</ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\Core\Nori.Core.csproj" />
+  </ItemGroup>
 </Project>

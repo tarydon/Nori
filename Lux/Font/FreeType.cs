@@ -231,7 +231,7 @@ struct CGlyphSlot {
    public uint GlyphIndex;       // Glyph index passed in during load
    Generic generic;
    public GlyphMetrics Metrics; // Metrics of last loaded glyph
-   int RawHAdvance, RawVAdvance;
+   FLong RawHAdvance, RawVAdvance;
    Vector26_6 Advance;
    uint Format;
    public Bitmap Bitmap;
