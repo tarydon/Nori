@@ -143,6 +143,8 @@ public sealed class E3Cylinder : E3CSSurface {
    // - A partial cylinder - like the inner/outer surface of a bend line in a sheet metal
    //   model, where the trimming curve is a perfect rectangle
    protected override Mesh3 BuildMesh (ETess eTess) {
+      Mesh3? m1 = BuildFullCylinderMesh (eTess) ?? BuildPartCylinderMesh (eTess);
+      if (m1 != null) return m1;
       SimplifyContours ();
       return BuildFullCylinderMesh (eTess) ??
          BuildPartCylinderMesh (eTess) ??
