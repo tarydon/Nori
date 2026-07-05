@@ -109,7 +109,7 @@ public static partial class Lux {
    static bool mPickBufferValid;
 
    // Init method - initializes 
-   internal static void Init () {
+   public static void Init () {
       if (!sInited) {
          sInited = true; 
          VNode.RegisterAssembly (Assembly.GetExecutingAssembly ());

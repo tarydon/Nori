@@ -169,8 +169,8 @@ public static class ListPool<T> {
    public static void Return (List<T> list) {
       // When a list is returned that already has a lot of elements, don't file it away 
       // for reuse, just discard it
-      sBorrowed--;
-      if (list.Capacity < MAXCAPACITY) { list.Clear (); sBag.Add (list); }
+      sBorrowed--; list.Clear (); 
+      if (list.Capacity < MAXCAPACITY) sBag.Add (list); 
    }
 
    // Implementation -----------------------------------------------------------

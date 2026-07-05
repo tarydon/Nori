@@ -33,6 +33,7 @@
          <Button Click="SubScene">Sub-Scenes</Button>
          <Button Click="TwoViewMesh">2-View Mesh</Button>
          <Button Click="E3ThickDemo">Sheet-Metal</Button>
+         <Button Click="UnfoldDemo">Unfolder</Button>
       </StackPanel>
          <StackPanel Name="mSettings" DockPanel.Dock="Right" Background="#AAA" />
       <Border Name="mContent" />

@@ -684,7 +684,14 @@ public class Contour3 {
                foreach (var pt in poly.Pts.Skip (1)) pb.Line (Xfm (pt));
                break;
             default:
-               throw new BadCaseException (edge);
+               var pts = ListPool<Point3>.Borrow ();
+               try {
+                  edge.Discretize (pts, Ent3.MeshQuality);
+                  foreach (var pt in pts.Skip (1)) pb.Line (Xfm (pt));
+               } finally {
+                  ListPool<Point3>.Return (pts);
+               }
+               break;
          }
       }
       var apoly = pb.End (true);
