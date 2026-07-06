@@ -3,8 +3,8 @@ namespace GLFWDemo;
 
 class Program {
    static void Main () {
-      Lib.Init (); 
-      GLFWHost.Init (OnReady); 
+      Lib.Init ();
+      GLFWHost.Init (OnReady);
       var w = new Window (1024, 768, "Welcome to GLFW", Window.EFlags.Default | Window.EFlags.Maximized);
       w.Run (true);
    }

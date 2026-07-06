@@ -43,6 +43,16 @@ public abstract class Curve3 {
    /// E1.Start==E2.End, and E1.End==E2.Start, and they run against each other. 
    public readonly int PairId;
 
+   /// <summary>Is this Curve tagged 'overlap'</summary>
+   /// These are typically the curves connecting planes & cylinders tangentially in sheet-metal
+   /// models, and these curves are tagged as IsOverlap so they don't contribute a stencil line
+   /// in the drawing unfolding
+   public bool IsOverlap { 
+      get => (mFlags & E3Flags.Overlap) != 0;
+      set { if (value) mFlags |= E3Flags.Overlap; else mFlags &= ~E3Flags.Overlap; }
+   }
+   E3Flags mFlags;
+
    // Methods ------------------------------------------------------------------
    /// <summary>Returns a PiecewiseLinear approximation of this curve</summary>
    /// 1. The curve is approximated with the given error threshold
@@ -82,10 +92,13 @@ public abstract class Curve3 {
    public abstract Curve3 Trimmed (double t1, double t2, bool reverseDir);
 
    /// <summary>Returns a copy of this curve transformed by the given transform</summary>
-   public static Curve3 operator * (Curve3 curve, Matrix3 xfm) => curve.Xformed (xfm);
+   public static Curve3 operator * (Curve3 curve, Matrix3 xfm) {
+      var c2 = curve.Xformed (xfm); c2.mFlags = curve.mFlags;
+      return c2;
+   }
 
    // Implementation -----------------------------------------------------------
-   public override string ToString () => $"{GetType ().Name} ID={PairId}, {Start} to {End}";
+   public override string ToString () => $"{GetType ().Name}{(IsOverlap ? "*" : "")} ID={PairId}, {Start} to {End}";
 
    // Override this in each derived Curve3
    protected abstract Curve3 Xformed (Matrix3 xfm);
@@ -197,6 +210,14 @@ public class Arc3 : Curve3 {
          else
             return new Arc3 (PairId, new CoordSystem (CS.Org, xaxis, zaxis * xaxis), Radius, Lib.TwoPI - (t1 - t2));
       }
+   }
+
+   public bool TryCombine (Arc3 a2, [NotNullWhen (true)] out Curve3? cout) {
+      cout = null;
+      if (!Radius.EQ (a2.Radius) || !Center.EQ (a2.Center)) return false;
+      if (!CS.VecZ.EQ (a2.CS.VecZ) || AngSpan * a2.AngSpan < 0) return false;
+      cout = new Arc3 (Math.Min (PairId, a2.PairId), CS, Radius, AngSpan + a2.AngSpan);
+      return true;
    }
 
    // Implementation -----------------------------------------------------------
@@ -339,6 +360,14 @@ public sealed class Line3 : Curve3 {
 
    public override Curve3 Trimmed (double t1, double t2, bool _) =>
       new Line3 (PairId, GetPoint (t1), GetPoint (t2));
+
+   public bool TryCombine (Line3 a2, [NotNullWhen (true)] out Curve3? aout) {
+      aout = null;
+      if (!a2.End.DistToLine (Start, End).IsZero ()) return false;
+      if (a2.End.GetLieOn (Start, End) < 1) return false;
+      aout = new Line3 (Math.Min (PairId, a2.PairId), Start, a2.End);
+      return true; 
+   }
 
    // Implementation -----------------------------------------------------------
    public override string ToString () => $"{base.ToString ()}, Len={Start.DistTo (End).Round (2)}";
@@ -633,37 +662,66 @@ public class Contour3 {
    }
 
    /// <summary>Project the Contour3 into a</summary>
-   public Poly Flatten (CoordSystem cs) {
-      var pb = PolyBuilder.It;
-      var xfm = Matrix3.From (cs);
+   public Poly Flatten (Matrix3 xfm) {
+      var pb = new PolyBuild ();
+      pb.Begin (Xfm (mCurves[0].Start));
       foreach (var edge in mCurves) {
          switch (edge) {
             case Line3 line:
-               pb.Line (Xfm (line.Start));
+               pb.Line (Xfm (line.End));
+               if (line.IsOverlap) pb.TagLastOverlap ();
                break;
             case Arc3 arc:
-               var (center, start, _) = (Xfm (arc.Center), Xfm (arc.Start), arc.Radius);
-               var flags = (arc.CS.VecZ * xfm).Z > 0 ? Poly.EFlags.CCW : Poly.EFlags.CW;
-               if (arc.AngSpan.EQ (Lib.TwoPI)) {
-                  pb.Arc (start, center, flags);
-                  pb.Arc (center + (center - start), center, flags);
-               } else
-                  pb.Arc (start, center, flags);
+               var (center, end) = (Xfm (arc.Center), Xfm (arc.End));
+               bool ccw = (arc.CS.VecZ * xfm).Z > 0;
+               // An arc that is a full 360 degrees - split and output as two separate
+               // arcs
+               if (arc.AngSpan.EQ (Lib.TwoPI)) 
+                  pb.Arc (center + (center - end), center, ccw);
+               pb.Arc (end, center, ccw);
                break;
             case Polyline3 poly:
-               foreach (var pt in poly.Pts) pb.Line (Xfm (pt));
+               foreach (var pt in poly.Pts.Skip (1)) pb.Line (Xfm (pt));
                break;
             default:
-               throw new BadCaseException (edge);
+               var pts = ListPool<Point3>.Borrow ();
+               try {
+                  edge.Discretize (pts, Ent3.MeshQuality);
+                  foreach (var pt in pts.Skip (1)) pb.Line (Xfm (pt));
+               } finally {
+                  ListPool<Point3>.Return (pts);
+               }
+               break;
          }
       }
-      return pb.Close ().Build ();
+      var apoly = pb.End (true);
+      return apoly;
 
       // Helpers ...........................................
       Point2 Xfm (Point3 pt) {
          pt *= xfm; Lib.Check (pt.Z.IsZero (0.001), "Non-planar contour");
          return new (pt.X, pt.Y);
       }
+   }
+
+   public bool TrySimplify ([NotNullWhen (true)] out Contour3? simplified) {
+      List<Curve3>? output = null;
+      IList<Curve3> input = Curves;
+      for (int i = input.Count - 1; i >= 0; i--) {
+         int i0 = (i - 1).Wrap (input.Count); if (i == i0) continue;
+         Curve3 c0 = input[i0], c1 = input[i];
+         if (c0.GetType () != c1.GetType ()) continue;
+
+         Curve3? cout = null;
+         if (c0 is Arc3 arc0) arc0.TryCombine ((Arc3)c1, out cout);
+         else if (c0 is Line3 line0) line0.TryCombine ((Line3)c1, out cout);
+         if (cout == null) continue;
+
+         if (output == null) { output = [.. input]; input = output; }
+         input[i0] = cout; input.RemoveAt (i);
+      }
+      if (output != null) { simplified = new Contour3 ([.. output]); return true; }
+      simplified = null; return false;
    }
 
    // Operators ------------------------------------------------------------------------------------

@@ -47,9 +47,10 @@ public class Model3 {
          foreach (var s1 in Ents.OfType<E3Surface> ()) {
             foreach (var c1 in s1.Contours.SelectMany (con => con.Curves)) {
                if (c1.PairId == 0) continue;
-               if (unpaired.TryGetValue (c1.PairId, out var tuple))
+               if (unpaired.TryGetValue (c1.PairId, out var tuple)) {
                   _coedges.Add (c1.PairId, (tuple.S, tuple.C, s1, c1));
-               else
+                  unpaired.Remove (c1.PairId);
+               } else
                   unpaired.Add (c1.PairId, (s1, c1));
             }
          }
@@ -58,13 +59,25 @@ public class Model3 {
       // to this edge
       if (_coedges.TryGetValue (c.PairId, out var pair)) {
          if (pair.C1 == c) { s2 = pair.S2; c2 = pair.C2; return true; }
-         if (pair.C2 == c) { s2 = pair.S1; c2 = pair.C2; return true; }
+         if (pair.C2 == c) { s2 = pair.S1; c2 = pair.C1; return true; }
          throw new InvalidOperationException ();
       }
       s2 = null; c2 = null;
       return false;
    }
    Dictionary<int, (E3Surface S1, Curve3 C1, E3Surface S2, Curve3 C2)>? _coedges;
+
+   /// <summary>Adds the list of shared edges between two surfaces to the output list</summary>
+   /// The output contains an even number of edges. Even-numbered edges are edges from surface s1, 
+   /// and the odd-numbered edges are the corresponding co-edges from surface s2. This clears the
+   /// output array before it starts, and returns true if any edges were found
+   public bool GetSharedEdges (E3Surface s1, E3Surface s2, List<Curve3> output) {
+      output.Clear (); 
+      foreach (var edge in s1.Contours.SelectMany (a => a.Curves))
+         if (GetCoedge (edge, out var sOther, out var eOther) && sOther == s2)
+            output.AddM (edge, eOther);
+      return output.Count > 0;
+   }
 
    /// <summary>Returns the list of all entities that are connected</summary>
    public List<E3Surface> GetConnected (E3Surface seed) {

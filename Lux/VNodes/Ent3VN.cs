@@ -56,9 +56,11 @@ public class E3MarkerVN (E3Marker marker) : VNode (marker) {
 
    public override void Draw () {
       if (marker.Kind != E3Marker.EKind.CS) throw new NotImplementedException (); 
-      var (c, d) = (marker.CS, marker.Size);
+      var (c, d, k) = (marker.CS, marker.Size, marker.Size / 8);
+      var (o, z) = (c.Org, c.VecZ);
       List<Vec3F> pts = [];
-      pts.AddM (c.Org, c.Org + c.VecX * d, c.Org, c.Org + c.VecY * d / 2);
+      pts.AddM (o, o + c.VecX * d, o, o + c.VecY * d / 2,
+                o + z * k, o + z * 2 * k, o + z * 3 * k, o + z * 4 * k);
       Lux.Lines (pts.AsSpan ());
    }
 }

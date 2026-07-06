@@ -84,6 +84,8 @@ public static class Lib {
    /// <summary>Checks a condition, and throws an exception if it fails</summary>
    public static bool Check (bool condition, string message) 
       => !condition ? throw new Exception (message) : condition;
+   public static bool Check (bool condition)
+      => !condition ? throw new Exception ("Unexpected") : condition;
 
    /// <summary>Returns the number of steps required to rasterize and arc with a given tolerance</summary>
    /// <param name="radius">The radius of the arc</param>

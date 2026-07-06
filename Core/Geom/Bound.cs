@@ -22,6 +22,12 @@ public readonly struct Bound1 : IEQuable<Bound1> {
    /// <summary>Constructs a bound that encompasses a and b (a and b need not be ordered)</summary>
    public Bound1 (float a, float b) => (Min, Max) = (MathF.Min (a, b), MathF.Max (a, b));
 
+   /// <summary>Construct a Bound1 that encompassses a given range of values</summary>
+   public Bound1 (IEnumerable<double> vals) {
+      (Min, Max) = (float.MaxValue, float.MinValue);
+      foreach (var f in vals) { Min = Math.Min ((float)f, Min); Max = Math.Max ((float)f, Max); }
+   }
+
    /// <summary>Read a Bound1 from a UTF8 stream</summary>
    public static Bound1 Read (UTFReader R) {
       if (R.Peek () == 'E') {
@@ -440,18 +446,28 @@ public readonly struct Bound3 : IEQuable<Bound3> {
    public bool IsEmpty => X.IsEmpty || Y.IsEmpty || Z.IsEmpty;
    public Point3 Midpoint => new (X.Mid, Y.Mid, Z.Mid);
 
-   public double Diagonal {
+   /// <summary>Returns the 8 corners of the Bound3</summary>
+   public IEnumerable<Point3> Corners {
       get {
-         double dx = X.Length, dy = Y.Length, dz = Z.Length;
-         return Sqrt (dx * dx + dy * dy + dz * dz);
+         for (int i = 0; i < 8; i++) {
+            double x = (i & 1) != 0 ? X.Max : X.Min;
+            double y = (i & 2) != 0 ? Y.Max : Y.Min;
+            double z = (i & 4) != 0 ? Z.Max : Z.Min;
+            yield return new (x, y, z);
+         }
       }
    }
 
    /// <summary>The diagonal vector of this Bound3</summary>
    public Vector3 DiagVector => new (X.Length, Y.Length, Z.Length);
+   /// <summary>The length of the diagonal vector of this bound</summary>
+   public double Diagonal => DiagVector.Length;
+
+   /// <summary>The volume of this Bound3</summary>
+   public double Volume => X.Length * Y.Length * Z.Length;
 
    // Methods ------------------------------------------------------------------
-      /// <summary>Check if a Bound3 contains a given 3D point</summary>
+   /// <summary>Check if a Bound3 contains a given 3D point</summary>
    public bool Contains (Point3 pt) => X.Contains (pt.X) && Y.Contains (pt.Y) && Z.Contains (pt.Z);
 
    /// <summary>Checks if a Bound3 contains another bound (exact overlap is treated as containment)</summary>
@@ -502,5 +518,7 @@ public readonly struct Bound3 : IEQuable<Bound3> {
    public static Bound3 operator + (Bound3 a, Bound3 b) => new (a.X + b.X, a.Y + b.Y, a.Z + b.Z);
    /// <summary>Returns the intersection of two Bound3 (could be empty)</summary>
    public static Bound3 operator * (Bound3 a, Bound3 b) => new (a.X * b.X, a.Y * b.Y, a.Z * b.Z);
+
+   public static Bound3 operator * (Bound3 b, Matrix3 xfm) => new (b.Corners.Select (pt => pt * xfm));
 }
 #endregion

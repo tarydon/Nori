@@ -15,6 +15,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\Core\Nori.Core.csproj" />
+    <ProjectReference Include="..\..\GLU\Nori.GLU.csproj" />
     <ProjectReference Include="..\..\Host\WPF\Nori.Host.WPF.csproj" />
     <ProjectReference Include="..\..\Lux\Nori.Lux.csproj" />
   </ItemGroup>

@@ -109,7 +109,7 @@ public static partial class Lux {
    static bool mPickBufferValid;
 
    // Init method - initializes 
-   internal static void Init () {
+   public static void Init () {
       if (!sInited) {
          sInited = true; 
          VNode.RegisterAssembly (Assembly.GetExecutingAssembly ());
@@ -374,6 +374,7 @@ public static partial class Lux {
       (mVNode, mChanged) = mNodeStack.Pop ();
    }
 
+   #pragma warning disable CA1859 
    // Ends the current render operation
    static object? EndRender (ETarget target, DIBitmap.EFormat fmt) {
       switch (target) {
@@ -402,6 +403,7 @@ public static partial class Lux {
       }
       return null;
    }
+   #pragma warning restore CA1859
 
    /// <summary>Used internally to reset some set of attributes to the previous values</summary>
    /// This is called after a node (and it's subtree) are drawn, so that we can reset
