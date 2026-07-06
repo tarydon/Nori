@@ -116,12 +116,13 @@ public partial class Poly {
       Point2 a = A;
       bool first = true;
       foreach (var seg in Segs) {
+         bool overlap = seg.IsOverlap;
          if (first) {
             if (IsCircle) {
                w.Write ('C').WriteR6 (seg.Center.X).Write (',').WriteR6 (seg.Center.Y).Write (',').WriteR6 (seg.Radius);
                return;
             }
-            w.Write ('M').WriteR6 (a.X).Write (',').WriteR6 (a.Y);
+            w.Write (overlap ? 'm' : 'M').WriteR6 (a.X).Write (',').WriteR6 (a.Y);
             first = false;
          }
          Point2 b = seg.B;
@@ -130,9 +131,9 @@ public partial class Poly {
             w.Write ('Q').WriteR6 (b.X).Write (',').WriteR6 (b.Y).Write (',').Write (t.R6 ());
          } else {
             if (!(seg.IsLast && IsClosed)) {
-               if (a.X.EQ (b.X)) w.Write ('V').Write (b.Y.R6 ());
-               else if (a.Y.EQ (b.Y)) w.Write ('H').Write (b.X.R6 ());
-               else w.Write ('L').Write (b.X.R6 ()).Write(',').Write (b.Y.R6 ());
+               if (a.X.EQ (b.X)) w.Write (overlap ? 'v' : 'V').Write (b.Y.R6 ());
+               else if (a.Y.EQ (b.Y)) w.Write (overlap ? 'h' : 'H').Write (b.X.R6 ());
+               else w.Write (overlap ? 'l' : 'L').Write (b.X.R6 ()).Write(',').Write (b.Y.R6 ());
             }
          }
          a = b;
@@ -150,6 +151,8 @@ public partial class Poly {
    public int Count => mPts.Length - (IsClosed ? 0 : 1);
    /// <summary>Does this Poly have any arcs?</summary>
    public bool HasArcs => (mFlags & EFlags.HasArcs) != 0;
+   /// <summary>Does this poly have any overlaps?</summary>
+   public bool HasOverlaps => (mFlags & EFlags.HasOverlaps) != 0;
    /// <summary>Is this a 'closed' Poly?</summary>
    public bool IsClosed => (mFlags & EFlags.Closed) != 0;
    /// <summary>Is this a full circle</summary>
@@ -335,15 +338,15 @@ public partial class Poly {
 
    /// <summary>Returns the area of a Poly</summary>
    /// Results are meaningful only for closed Poly
-   public double GetArea () {
+   public double GetArea (ETess tess = ETess.Fine) {
       if (IsCircle) {
          double radius = Extra[0].Center.DistTo (Pts[0]);
          return PI * radius * radius;
       }
       if (HasArcs) {
-         List<Point2> pts = [];
-         Discretize (pts, ETess.Fine);
-         return GetArea (pts.AsSpan ());
+         List<Point2> pts = ListPool<Point2>.Borrow ();
+         try { Discretize (pts, tess); return GetArea (pts.AsSpan ()); }
+         finally { ListPool<Point2>.Return (pts); }
       } else {
          return GetArea (Pts.AsSpan ());
       }
@@ -579,6 +582,7 @@ public partial class Poly {
    }
 
    /// <summary>Attempts to cleanup given poly of collinear/concentric line/arc segments appearing sequentially</summary>
+   /// TODO: REWRITE more cleanly
    bool TryMergeConsecutiveSegs ([NotNullWhen (true)] out Poly? result, double threshold = 1e-6) {
       if (Count < 2 || !NeedMerge (this, threshold)) { result = null; return false; }
       (Seg prev, int baseSegIdx) = (this[0], 0);
@@ -596,13 +600,11 @@ public partial class Poly {
             extras.Add (Extra[baseSegIdx]);
 
          if (curr.IsLast) {
-            if (!canMerge)
-               pts.Add (curr.A);
-            if (!IsClosed)
-               pts.Add (curr.B);
+            if (!canMerge) pts.Add (curr.A);
+            if (!IsClosed) pts.Add (curr.B);
+            if (HasArcs && i < Extra.Length) extras.Add (Extra[i]);
             break;
          }
-
          (prev, baseSegIdx) = (curr, i);
       }
 
@@ -657,11 +659,30 @@ public partial class Poly {
       }
    }
 
+   /// <summary>Create a new Poly by applying a 3D transformation matrix</summary>
+   /// Each point is transformed by the given 3D transformation matrix. The Z coordinates
+   /// of the results are ignored and the values are 'flattened' to the XY plane. If the matrix
+   /// does not project the points to a plane parallel to XY, the results are unpredictable
+   /// for arcs, since the continue to remain arcs of circles (not ellipses as might be required
+   /// by an oblique projection)
+   public static Poly operator * (Poly p, Matrix3 xfm) {
+      if (p.IsCircle) {
+         var cen = p.Extra[0].Center;
+         double radius = cen.DistTo (p.A) * xfm.ScaleFactor;
+         return Circle ((Point2)(cen * xfm), radius);
+      } else {
+         var pts = p.Pts.Select (a => (Point2)(a * xfm)).ToImmutableArray ();
+         ImmutableArray<ArcInfo> extra = [];
+         if (p.HasArcs) extra = [.. p.Extra.Select (a => a * xfm)];
+         return new Poly (pts, extra, p.mFlags);
+      }
+   }
+
    // Nested types -------------------------------------------------------------
    [Flags]
    public enum EFlags : ushort {
-      Closed = 1, HasArcs = 2,
-      CW = 4, CCW = 8, Circle = 16, Last = 32, Arc = CW | CCW
+      Closed = 1, HasArcs = 2, HasOverlaps = 64,
+      CW = 4, CCW = 8, Circle = 16, Overlap = 32, Arc = CW | CCW
    }
    readonly EFlags mFlags;
 
@@ -679,9 +700,23 @@ public partial class Poly {
 
       public static readonly ArcInfo Nil = new (Point2.Nil, 0);
 
+      public bool CanMerge => (Flags & (EFlags.Arc | EFlags.Overlap)) == 0;
+
       public static ArcInfo operator * (ArcInfo e, Matrix2 xfm) {
          if ((e.Flags & EFlags.Arc) == 0) return e;
          return new (e.Center * xfm, xfm.IsMirror ? e.Flags ^ EFlags.Arc : e.Flags);
+      }
+
+      public static ArcInfo operator * (ArcInfo e, Matrix3 xfm) {
+         if ((e.Flags & EFlags.Arc) == 0) return e;
+         return new ((Point2)(e.Center * xfm), xfm.HasMirroring ? e.Flags ^ EFlags.Arc : e.Flags);
+      }
+
+      public override string ToString () {
+         if ((Flags & EFlags.Overlap) != 0) return "Overlap";
+         if ((Flags & EFlags.CCW) != 0) return $"CCW {Center.R6 ()}";
+         if ((Flags & EFlags.CW) != 0) return $"CCW {Center.R6 ()}";
+         return "0";
       }
    }
    /// <summary>This array is populated only if the Poly has any arcs</summary>

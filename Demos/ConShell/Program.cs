@@ -2,8 +2,6 @@
 // ╔═╦╦═╦╦╬╣ Program.cs
 // ║║║║╬║╔╣║ Shell for Nori console scratch applications
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
-using System.Linq.Expressions;
-using System.Text;
 using Nori;
 namespace ConShell;
 

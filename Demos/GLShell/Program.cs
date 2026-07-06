@@ -6,18 +6,11 @@ class Program {
    static void Main () {
       Lib.Init (); 
       GLFWHost.Init (OnReady); 
-      var w = new Window (1024, 768, "Welcome to GLFW", Window.EFlags.Default);
+      var w = new Window (1024, 768, "Welcome to GLFW", Window.EFlags.Default | Window.EFlags.Maximized);
       w.Run (true);
    }
  
    static void OnReady () => Lux.UIScene = new DemoScene ();
-}
-
-class BaseScene : Scene2 {
-   public BaseScene () {
-      BgrdColor = new Color4 (128, 96, 64);
-      var data = TypeFace.Default;
-   }
 }
 
 class DemoScene : Scene2 {

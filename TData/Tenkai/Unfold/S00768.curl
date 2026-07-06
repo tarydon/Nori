@@ -1,0 +1,81 @@
+(Dwg2){
+  Layers:[ { Name:0 Color:Black Linetype:Continuous }* ]
+  Ents:[
+    (E2Bendline){
+      Layer:0
+      Angle:50.245148
+      KFactor:0.5
+      Radius:4.7
+      Pts:[ -0.560289,-45 -0.560289,-60 ]
+      Thickness:3
+    }
+    (E2Bendline){
+      Layer:0
+      Angle:50.245148
+      KFactor:0.5
+      Radius:4.7
+      Pts:[ -0.560289,0 -0.560289,-15 ]
+      Thickness:3
+    }
+    (E2Bendline){
+      Layer:0
+      Angle:-89.5
+      KFactor:0.5
+      Radius:4.7
+      Pts:[ 95.723992,-55 95.723992,-5 ]
+      Thickness:3
+    }
+    (E2Poly){ Layer:0 Poly:C109.827266,-46,2.5 }
+    (E2Poly){ Layer:0 Poly:C109.827266,-14,2.5 }
+    (E2Bendline){
+      Layer:0
+      Angle:78.509705
+      KFactor:0.5
+      Radius:4.7
+      Pts:[ -28.283227,-45 -28.283227,-60 ]
+      Thickness:3
+    }
+    (E2Bendline){
+      Layer:0
+      Angle:78.509705
+      KFactor:0.5
+      Radius:4.7
+      Pts:[ -28.283227,0 -28.283227,-15 ]
+      Thickness:3
+    }
+    (E2Bendline){
+      Layer:0
+      Angle:50.245148
+      KFactor:0.5
+      Radius:4.7
+      Pts:[ -56.006165,-45 -56.006165,-60 ]
+      Thickness:3
+    }
+    (E2Bendline){
+      Layer:0
+      Angle:50.245148
+      KFactor:0.5
+      Radius:4.7
+      Pts:[ -56.006165,0 -56.006165,-15 ]
+      Thickness:3
+    }
+    (E2Bendline){
+      Layer:0
+      Angle:-89.5
+      KFactor:0.5
+      Radius:4.7
+      Pts:[ -152.290447,-5 -152.290447,-55 ]
+      Thickness:3
+    }
+    (E2Poly){ Layer:0 Poly:C-166.39372,-46,2.5 }
+    (E2Poly){ Layer:0 Poly:C-166.39372,-14,2.5 }
+    (E2Poly){
+      Layer:0
+      Poly:M-94.78999,-45H38.223535Q48.223535,-35,1V-25Q38.223535,-15,1H-94.78999Q-104.78999,-25,1V-35Q-94.78999,-45,1Z
+    }
+    (E2Poly){
+      Layer:0
+      Poly:M-169.89372,-55Q-174.89372,-50,-1V-10Q-169.89372,-5,-1H-148.565477Q-143.565477,0,-1H86.999022Q91.999022,-5,-1H113.327266Q118.327266,-10,-1V-50Q113.327266,-55,-1H91.999022Q86.999022,-60,-1H-143.565477Q-148.565477,-55,-1Z
+    }
+  ]
+}
