@@ -23,6 +23,4 @@ class Program {
       var shmodel = new SheetMetalizer (model).Process ().Value;
       var dwg = new Unfolder (shmodel).Process ().Value;
    }
-
-   static int N;
 }
