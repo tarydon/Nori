@@ -117,9 +117,7 @@ public readonly struct Point2 : IEQuable<Point2> {
 
    /// <summary>Returns the point with ordinates rounded off to 6 decimals</summary>
    public Point2 R6 () => new (X.R6 (), Y.R6 ());
-   /// <summary>
-   /// Returns the point with ordinates rounded off to 9 decimals
-   /// </summary>
+   /// <summary>Returns the point with ordinates rounded off to 9 decimals</summary>
    public Point2 R9 () => new (X.R9 (), Y.R9 ());
 
    /// <summary>Rotate a point about the origin, by the given angle (in radians)</summary>

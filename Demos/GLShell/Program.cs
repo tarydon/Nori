@@ -1,5 +1,4 @@
-﻿using System;
-using Nori;
+﻿using Nori;
 namespace GLFWDemo;
 
 class Program {

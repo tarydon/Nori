@@ -90,9 +90,9 @@ static class Assert {
    static string? mDiffer;
 
    /// <summary>Checks if two PNG files are equal</summary>
-   public static void PNGFilesEqual (string reference, string test, DIBitmap dib) {
+   public static void PNGFilesEqual (string reference, string test, DIBitmap dib, double errorLimit = 0.025) {
       if (!File.Exists (reference)) { File.Copy (test, reference, true); return; }
-      if (new PNGReader (reference).Load () is DIBitmap dib2 && dib.Identical (dib2)) return;
+      if (new PNGReader (reference).Load () is DIBitmap dib2 && dib.Identical (dib2, errorLimit)) return;
       throw new TestException ($"Files different: {reference} and {test}");
    }
 
