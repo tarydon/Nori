@@ -708,7 +708,7 @@ public class Contour3 {
       List<Curve3>? output = null;
       IList<Curve3> input = Curves;
       for (int i = input.Count - 1; i >= 0; i--) {
-         int i0 = (i - 1).Wrap (input.Count);
+         int i0 = (i - 1).Wrap (input.Count); if (i == i0) continue;
          Curve3 c0 = input[i0], c1 = input[i];
          if (c0.GetType () != c1.GetType ()) continue;
 

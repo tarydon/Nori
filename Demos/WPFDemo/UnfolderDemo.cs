@@ -33,20 +33,6 @@ class UBaseVN : VNode {
 
    public override void Draw () {
       if (!mCreated) CreateSubscenes ();
-      else {
-         List<Vec2F> a = [];
-         foreach (var scene in Lux.SubScenes) {
-            var r = scene.Rect;
-            for (int i = 1; i < 7; i++) {
-               int x0 = r.Left - i, x1 = r.Right + i - 1, y0 = r.Top - i, y1 = r.Bottom + i;
-               Add (x0, y0); Add (x1, y0, 2); Add (x1, y1, 2); Add (x0, y1, 2); Add (x0, y0);
-            }
-         }
-         Lux.Color = new Color4 (144, 148, 152);
-
-         // Helpers .......................................
-         void Add (int x, int y, int n = 1) { for (int i = 0; i < n; i++) a.Add (new (x, y)); }
-      }
    }
    bool mCreated;
 
@@ -54,11 +40,10 @@ class UBaseVN : VNode {
       if (!mCreated) {
          mCreated = true;
          var size = Lux.PanelSize;
-         double xGutter = 12.0 / size.X, yGutter = 12.0 / size.Y, xMid = 0.5, yMid = 0.5;
-
-         Lux.AddSubScene (new SheetModelScene (), new (xGutter, yGutter, xMid - xGutter / 2, yMid - yGutter / 2));
-         Lux.AddSubScene (new SurfModelScene (), new (xGutter, yMid + yGutter / 2, xMid - xGutter / 2, 1 - yGutter));
-         Lux.AddSubScene (new UnfoldScene (), new (xMid + xGutter / 2, yGutter, 1 - xGutter, 1 - yGutter));
+         double xG = 12.0 / size.X, yG = 12.0 / size.Y, xM = 0.5, yM = 0.5;
+         Lux.AddSubScene (new SurfModelScene (), new (xG, yM + yG / 2, xM - xG / 2, 1 - yG));
+         Lux.AddSubScene (new SheetModelScene (), new (xM + xG / 2, yM + yG / 2, 1 - xG, 1 - yG));
+         Lux.AddSubScene (new UnfoldScene (), new (xG, yG, 1 - xG, yM - yG / 2));
          Lib.Post (Redraw);
       }
    }
@@ -74,9 +59,17 @@ class SurfModelScene : Scene3 {
    IDisposable mDisp;
 
    public void Draw () {
-      var model = new STEPReader (UnfolderDemo.Files[UnfolderDemo.NFile]).Load ();
-      Bound = model.Bound; ZoomExtents (); 
-      Root = new Model3VN (model);
+      mModel = new STEPReader (UnfolderDemo.Files[UnfolderDemo.NFile]).Load ();
+      Bound = mModel.Bound; ZoomExtents ();
+      Root = new GroupVN ([new Model3VN (mModel), new SimpleVN (DrawText) { Streaming = true }]);
+   }
+   Model3? mModel;
+
+   void DrawText () {
+      Lux.Color = Color4.Blue;
+      int cy = TypeFace.Default.Measure ("M", false).Height;
+      Lux.Text ($"Surface Model ({mModel!.Ents.Count} surfaces)", new (cy, 2 * cy));
+      Lux.Text ("Press SpaceBar to go to next model", new (cy, (int)(3.2 * cy)));
    }
 }
 
@@ -91,11 +84,19 @@ class SheetModelScene : Scene3 {
 
    public void Draw () {
       var model = new STEPReader (UnfolderDemo.Files[UnfolderDemo.NFile]).Load ();
-      var shmodel = new SheetMetalizer (model).Process ().Value;
-      foreach (var flex in shmodel.Ents.OfType<E3Flex> ())
+      mModel = new SheetMetalizer (model).Process ().Value;
+      foreach (var flex in mModel.Ents.OfType<E3Flex> ())
          flex.IsSelected = true;
-      Bound = shmodel.Bound; ZoomExtents ();
-      Root = new Model3VN (shmodel);
+      Bound = mModel.Bound; ZoomExtents ();
+      Root = new GroupVN ([new Model3VN (mModel), new SimpleVN (DrawText) { Streaming = true }]);
+   }
+   Model3? mModel;
+
+   void DrawText () {
+      Lux.Color = Color4.Blue;
+      int cy = TypeFace.Default.Measure ("M", false).Height;
+      Lux.Text ($"Sheet-metal model ({mModel!.Ents.Count} entities)", new (cy, 2 * cy));
+      Lux.Text ($"{mModel!.Ents.OfType<E3Flex> ().Count ()} flexes", new (cy, (int)(3.2 * cy)));
    }
 }
 
@@ -111,8 +112,17 @@ class UnfoldScene : Scene2 {
    public void Draw () {
       var model = new STEPReader (UnfolderDemo.Files[UnfolderDemo.NFile]).Load ();
       var shmodel = new SheetMetalizer (model).Process ().Value;
-      var dwg = new Unfolder (shmodel).Process ().Value;
-      Bound = dwg.Bound.InflatedF (1.05); ZoomExtents ();
-      Root = new GroupVN ([new Dwg2VN (dwg), new DwgFillVN (dwg)]);
+      mDwg = new Unfolder (shmodel).Process ().Value;
+      Bound = mDwg.Bound.InflatedF (1.05); ZoomExtents ();
+      Root = new GroupVN ([new Dwg2VN (mDwg), new DwgFillVN (mDwg), new SimpleVN (DrawText) { Streaming = true }]);
+   }
+   Dwg2? mDwg;
+
+   void DrawText () {
+      Lux.Color = Color4.Blue;
+      int cy = TypeFace.Default.Measure ("M", false).Height;
+      var b = mDwg!.Bound;
+      Lux.Text ($"Unfolded drawing (Bound = {b.Width.R3 ()} x {b.Height.R3 ()})", new (cy, 2 * cy));
+      Lux.Text ($"{mDwg!.Ents.OfType<E2Bendline> ().Count ()} bends", new (cy, (int)(3.2 * cy)));
    }
 }
