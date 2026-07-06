@@ -55,7 +55,6 @@ public partial class FastTess2D : IBorrowable<FastTess2D> {
       tess.Reset ();
       return tess;
    }
-   static int mm;
 
    public static List<int> Process (List<Point2> pts, IReadOnlyList<int> splits) {
       using (var tess = Borrow ()) {
