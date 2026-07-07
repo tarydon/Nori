@@ -1,0 +1,3 @@
+Surface model: 24 surfaces, 23x19x21@0,0,0
+Sheet metal model: 2 planes, 2 flexes, 23x19x21@-0,0,0
+Drawing: 2 polys, 2 bends, 40x19@-40,-0

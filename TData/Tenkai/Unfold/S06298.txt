@@ -1,0 +1,3 @@
+Surface model: 75 surfaces, 279x492x49@-125,-3,0
+Sheet metal model: 11 planes, 10 flexes, 279x492x49@-125,-3,0
+Drawing: 2 polys, 10 bends, 542x399@-514,-77

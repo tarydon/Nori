@@ -76,6 +76,7 @@ public enum EMouseButton : byte { Left = 1, Right = 2, Middle = 4 }
 public readonly struct MouseClickInfo (EMouseButton button, Vec2S position, EKeyModifier modifier, EKeyState state) {
    public bool IsPress => State == EKeyState.Pressed;
    public bool IsLeftPress => State == EKeyState.Pressed && Button == EMouseButton.Left;
+   public bool IsRightPress => State == EKeyState.Pressed && Button == EMouseButton.Right;
    public bool IsRelease => State == EKeyState.Released;
 
    /// <summary>Which mouse button is pressed or released</summary>

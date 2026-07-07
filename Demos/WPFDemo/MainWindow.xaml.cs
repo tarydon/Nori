@@ -38,6 +38,7 @@ public partial class MainWindow : Window {
    void SubScene (object s, RoutedEventArgs e) => Display (s, new SubSceneDemo ());
    void TwoViewMesh (object s, RoutedEventArgs e) => Display (s, new TwoViewMeshDemo ());
    void E3ThickDemo (object s, RoutedEventArgs e) => Display (s, new E3ThickDemo ());
+   void UnfoldDemo (object s, RoutedEventArgs e) => Display (s, new UnfolderDemo ());
 
    void Display (object s, Scene scene) {
       if (s is Button b) {

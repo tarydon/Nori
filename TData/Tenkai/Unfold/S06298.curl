@@ -1,0 +1,90 @@
+(Dwg2){
+  Layers:[ { Name:0 Color:Black Linetype:Continuous }* ]
+  Ents:[
+    (E2Poly){ Layer:0 Poly:C-243,125,50 }
+    (E2Bendline){
+      Layer:0
+      Angle:90
+      KFactor:0.5
+      Radius:4.5
+      Pts:[ 0.534292,6 0.534292,244 ]
+      Thickness:3
+    }
+    (E2Bendline){
+      Layer:0
+      Angle:90
+      KFactor:0.5
+      Radius:4.5
+      Pts:[ -483,2.465708 -3,2.465708 ]
+      Thickness:3
+    }
+    (E2Bendline){
+      Layer:0
+      Angle:90
+      KFactor:0.5
+      Radius:4.5
+      Pts:[ -486.534292,244 -486.534292,6 ]
+      Thickness:3
+    }
+    (E2Bendline){
+      Layer:0
+      Angle:90
+      KFactor:0.5
+      Radius:4.5
+      Pts:[ -3,247.534292 -483,247.534292 ]
+      Thickness:3
+    }
+    (E2Bendline){
+      Layer:0
+      Angle:90
+      KFactor:0.5
+      Radius:4.5
+      Pts:[ -485.998,-22.602875 -0.002,-22.602875 ]
+      Thickness:3
+    }
+    (E2Bendline){
+      Layer:0
+      Angle:-90
+      KFactor:0.5
+      Radius:4.5
+      Pts:[ -0.002,275.602875 -485.998,275.602875 ]
+      Thickness:3
+    }
+    (E2Bendline){
+      Layer:0
+      Angle:-90
+      KFactor:0.5
+      Radius:4.5
+      Pts:[ -485.998,-49.671459 -0.002,-49.671459 ]
+      Thickness:3
+    }
+    (E2Bendline){
+      Layer:0
+      Angle:90
+      KFactor:0.5
+      Radius:4.5
+      Pts:[ -0.002,302.671459 -485.998,302.671459 ]
+      Thickness:3
+    }
+    (E2Bendline){
+      Layer:0
+      Angle:-90
+      KFactor:0.5
+      Radius:4.5
+      Pts:[ -485.998,-66.740042 -0.002,-66.740042 ]
+      Thickness:3
+    }
+    (E2Bendline){
+      Layer:0
+      Angle:90
+      KFactor:0.5
+      Radius:4.5
+      Pts:[ -0.002,312.740042 -485.998,312.740042 ]
+      Thickness:3
+    }
+    (E2Poly){
+      Layer:0
+      Poly:M-0.002,321.274334V251.068583H-3V244H4.068583V246.998H22.068583Q28.068583,240.998,-1V9.002Q22.068583,3.002,-1H4.068583V6H-3V-1.068583H-0.002V-77.274334H-485.998V-1.068583H-483V6H-490.068583V3.002H-508.068583Q-514.068583,9.002,-1V240.998Q-508.068583,246.998,-1H-490.068583V244H-483V251.068583H-485.998V321.274334Z
+    }
+  ]
+}

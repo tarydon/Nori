@@ -272,6 +272,13 @@ public readonly struct PlaneDef {
       D = -(A * pt.X + B * pt.Y + C * pt.Z);
    }
 
+   /// <summary>Compute a PlaneDef that aligns with the XY plane of a CoordSystem</summary>
+   public PlaneDef (in CoordSystem cs) {
+      var (normal, pt) = (cs.VecZ, cs.Org);
+      A = normal.X; B = normal.Y; C = normal.Z;
+      D = -(A * pt.X + B * pt.Y + C * pt.Z);
+   }
+
    // Properties ---------------------------------------------------------------
    /// <summary>Coefficients of the plane equation</summary>
    /// These are normalized such that A^2 + B^2 + C^2 = 1
@@ -334,6 +341,66 @@ public readonly struct PlaneDef {
 
    public override string ToString ()
       => $"PlaneDef:{A.R6 ()},{B.R6 ()},{C.R6 ()},{D.R6 ()}";
+}
+#endregion
+
+#region struct Result ------------------------------------------------------------------------------
+/// <summary>Implements a Result type carrying an expected value and a possible error condition</summary>
+/// The Result(T, TError) type implements a Rust-style variant used to return values from
+/// functions that may fail with errors. The idea is have the caller check the success condition
+/// before retrieving the returned value. 
+public readonly struct Result<T, TError> where T : notnull where TError : notnull {
+   // Constructors -------------------------------------------------------------
+   /// <summary>Implicit operator to convert a success value into a Result</summary>
+   public static implicit operator Result<T, TError> (T value) => new (value, default, true);
+   /// <summary>Implicit operator to convert an error code into a Result</summary>
+   public static implicit operator Result<T, TError> (TError error) => new (default, error, false);
+   // Internal constructor used for both
+   Result (T? v, TError? e, bool s) { mValue = v; mError = e; mSuccess = s; }
+
+   // Properties ---------------------------------------------------------------
+   /// <summary>Returns true if success</summary>
+   public bool IsOk => mSuccess;
+   /// <summary>Returns true if error</summary>
+   public bool IsErr => !mSuccess;
+
+   /// <summary>The result's Value - reading this for a failed result will throw an exception</summary>
+   /// Typically calling code will check result.IsOK before reading result.Value (or at least
+   /// use the operator bool (as in 'if (result) Process (result.Value);')
+   public T Value {
+      get {
+         if (mSuccess) return mValue!;
+         throw new InvalidOperationException ();
+      }
+   }
+
+   /// <summary>The result's Error - reading this for a successful result will throw an exception</summary>
+   public TError Error {
+      get {
+         if (!mSuccess) return mError!;
+         throw new InvalidOperationException ();
+      }
+   }
+
+   /// <summary>Implicit conversion to bool so we can use 'if (result) { ... }'</summary>
+   public static implicit operator bool (Result<T, TError> t) => t.mSuccess;
+
+   // Methods ------------------------------------------------------------------
+   /// <summary>Returns the value (if successful), otherwise sets value to null and returns false</summary>
+   public bool TryGetValue ([NotNullWhen (true)] out T? value) {
+      value = mSuccess ? mValue : default;
+      return mSuccess;
+   }
+
+   /// <summary>Calls either the 'success' or the 'error' delegates passed in and returns the final TResult</summary>
+   /// This is similar in spirit to the match functionality available on Rust's Result(T,TErr) type
+   public TResult Match<TResult> (Func<T, TResult> success, Func<TError, TResult> error)
+      => mSuccess ? success (mValue!) : error (mError!);
+
+   // Private data -------------------------------------------------------------
+   readonly T? mValue;
+   readonly TError? mError;
+   readonly bool mSuccess;
 }
 #endregion
 

@@ -295,6 +295,7 @@ class TLux {
       var tess = Ent3.MeshQuality;
       Mesh3 mesh; E3Marker marker;
       try {
+         Lux.Init ();
          Ent3.MeshQuality = ETess.VeryCoarse;
          var spine = new BSpine (30, Lib.HalfPI, 0.5, true);
          var flex = new E3Flex (0, CoordSystem.World, 4, spine, [Nori.Poly.Rectangle (-50, 0, 50, spine.FlatWidth)]);

@@ -339,6 +339,9 @@ public static class Extensions {
    /// <summary>Returns a value from a ReadOnlySpan, or default value (of appropriate type) if the index is out of range</summary>
    public static T? SafeGet<T> (this ReadOnlySpan<T> span, int n)
       => n >= 0 && n < span.Length ? span[n] : default;
+   /// <summary>Returns a value from am ImmutableArray(T) or a default value (of appropriate type) if the array is unitialized or index out of range</summary>
+   public static T? SafeGet<T> (this ImmutableArray<T> array, int n) 
+      => !array.IsDefault && n >= 0 && n < array.Length ? array[n] : default;
 
    /// <summary>Convert a double to a string, rounded to 6 decimal places (no trailing zeroes)</summary>
    /// This has special handling to avoid the annoying "-0"
