@@ -282,7 +282,7 @@ public class DXFWriter {
       Out ($" 3\n{e.Style.Name}\n 1\n{text}\n");
       mDefPts.Clear (); _ = e.Ents; e.GetDXFPoints (mDefPts);
       foreach (var (id, pt) in mDefPts)
-         Out ($" {id}\n{pt.X}\n {id + 10}\n{pt.Y}\n");
+         Out ($" {id}\n{pt.X.R9 ()}\n {id + 10}\n{pt.Y.R9 ()}\n");
       if (e is E2DimLinear lin) Out ($" 50\n{lin.Angle.R2D ().R6 ()}\n");
       return 0;
    }

@@ -17,8 +17,7 @@ void main () {
    vec4 xyzClip = Xfm * vec4 (VertexPos, 1);
    vClipSpaceZ = xyzClip.z;
    vec2 xyref = xyzClip.xy;                            // xy0 now in clip space
-   xyref = floor (xyref / VPScale);                    // now in pixel coordinates
-   xyref = xyref + vec2 (0.01, 0.01);
+   xyref = floor ((xyref / VPScale) + vec2 (0.01, 0.01));                    // now in pixel coordinates
    xyref *= VPScale;
    vec2 pix1 = CharBoxN.xw * VPScale;
    vec2 pix2 = CharBoxN.zy * VPScale;

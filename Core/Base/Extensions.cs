@@ -30,6 +30,13 @@ public static class Extensions {
    public static Point3f Along (this double f, Point3f a, Point3f b)
       => new (f.Along (a.X, b.X), f.Along (a.Y, b.Y), f.Along (a.Z, b.Z));
 
+   /// <summary>Like AppendLine, but always uses '\n' on all platforms</summary>
+   public static StringBuilder AppendNL (this StringBuilder sb, string? s)
+      => sb.Append (s).Append ('\n');
+   /// <summary>Like AppendLine, but always uses '\n' on all platforms</summary>
+   public static StringBuilder AppendNL (this StringBuilder sb)
+      => sb.Append ('\n');
+
    /// <summary>Gets the underlying T array for an immutablearray</summary>
    public static T[] AsArray<T> (this ImmutableArray<T> iarray)
       => ImmutableCollectionsMarshal.AsArray (iarray)!;
@@ -197,6 +204,8 @@ public static class Extensions {
    /// <summary>Returns a double rounded off to 6 decimal places</summary>
    /// This has special handling to avoid -0 from appearing
    public static double R6 (this double f) { f = Math.Round (f, 6); return f == -0 ? 0 : f; }
+   /// <summary>Returns a double rounded off to 9 decimal places</summary>
+   public static double R9 (this double f) => Math.Round (f, 9);
 
    /// <summary>Reads all lines of text from the specified stream</summary>
    public static List<string> ReadAllLines (this Stream stm) {

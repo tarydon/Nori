@@ -17,9 +17,9 @@ class StepTests {
       var sb = new StringBuilder ();
       foreach (var e3s in model.Ents.OfType<E3Surface> ()) {
          var mesh = e3s.Mesh;
-         sb.AppendLine ($"Entity: {e3s.GetType ().Name} #{e3s.Id}");
+         sb.AppendNL ($"Entity: {e3s.GetType ().Name} #{e3s.Id}");
          mesh.SaveTMesh (NT.TmpTxt); sb.Append (File.ReadAllText (NT.TmpTxt));
-         sb.AppendLine ("----------------");
+         sb.AppendNL ("----------------");
       }
       File.WriteAllText (NT.TmpTxt, sb.ToString ());
       Assert.TextFilesEqual (NT.File ("STEP/S00178.txt"), NT.TmpTxt);
@@ -32,12 +32,12 @@ class StepTests {
 
       var sb = new StringBuilder (); List<Point3> pts = [];
       foreach (var cp in model.Ents.OfType<E3Contour> ()) {
-         sb.AppendLine ("-----------------");
+         sb.AppendNL ("-----------------");
          foreach (var curve in cp.Curves) {
-            sb.AppendLine (curve.GetType ().Name);
+            sb.AppendNL (curve.GetType ().Name);
             curve.Discretize (pts, ETess.Coarse);
             foreach (var pt in pts)
-               sb.AppendLine (pt.ToString ());
+               sb.AppendNL (pt.ToString ());
             pts.Clear ();
          }
       }
