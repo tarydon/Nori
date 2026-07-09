@@ -2,8 +2,7 @@
 using static SizeS;
 using static UXNode.EOrientation;
 using static UXNode.EChildAlignY;
-using static UXNode.EChildAlignX;
-using static UXDemo.UXTheme;
+using static UXTheme;
 
 public static class Elements {
    public static void BeginTopMenu () {

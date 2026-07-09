@@ -28,6 +28,9 @@ public struct UXNode {
 
    public readonly bool IsHovered => UXFrame.IsHovered (Id);
    public readonly bool IsPressed => UXFrame.IsPressed (Id);
+   public readonly bool AnyPopupsOpen => UXFrame.AnyPopupsOpen (Id);
+
+   public readonly RectS Rect => new (X, Y, X + DX, Y + DY);
 
    // Colors ...............................................
    public Color4 BgrdColor;
@@ -52,6 +55,8 @@ public struct UXNode {
    public short ZIndex;
    public ECorner ElemCorner;
    public ECorner ParentCorner;
+
+   public bool Disabled;
 
    // Computed .............................................
    public int X, Y, DX, DY;
@@ -98,7 +103,7 @@ public struct UXNode {
    public enum ESizeMode : short { Fit, Grow, Fixed, Percent }
    public enum ECorner : short { LeftTop, Top, RightTop, Left, Center, Right, LeftBottom, Bottom, RightBottom };
    public enum EKind {
-      Generic, TopMenu, MenuItem,
+      Generic, TopMenu, MenuItem, PopupMenu,
    }
 };
 

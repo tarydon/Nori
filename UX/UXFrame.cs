@@ -3,22 +3,29 @@
 // ║║║║╬║╔╣║ <<TODO>>
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 using static System.Math;
-using static Nori.UX.UXNode.ESizeMode;
-using static Nori.UX.UXNode.EChildAlignX;
-using static Nori.UX.UXNode.EChildAlignY;
-using EC = Nori.UX.UXNode.ECorner;
 namespace Nori.UX;
 
-public static class UXFrame {
+public static partial class UXFrame {
+   // Properties ---------------------------------------------------------------
+   /// <summary>
+   /// The global list of UXNode
+   /// </summary>
+   public static UXNode[] All => mNodes;
+
+   /// <summary>
+   /// List of nodes
+   /// </summary>
+   public static UXNode[] Prev => mSnapshot;
+
    /// <summary>Reference to the current UX node</summary>
    public static ref UXNode N => ref mNodes[mCurrent];
 
-   public static UXNode[] All => mNodes;
-
-   public static ref UXNode Get (int n) => ref mNodes[n];
-
+   /// <summary>
+   /// The global list of all typefaces (.FontID is an index into this)
+   /// </summary>
    public static TypeFace[] TypeFaces = [];
 
+   // Methods ------------------------------------------------------------------
    /// <summary>Begins a new layout pass given the available screen size</summary>
    public static void BeginLayout (Vec2S size) {
       mScreenSize = size;
@@ -40,149 +47,11 @@ public static class UXFrame {
       GrowChildElements (1); 
       PositionChildren (1);
    }
-
-   static void PositionChildren (int p) {
-      ref UXNode parent = ref mNodes[p];
-      var (dxSpace, dySpace) = GetRemainingSpace (p);
-      parent.GetChildren (mTmp, false);
-      if (parent.Horizontal) {
-         int left = parent.Padding.Left;
-         left += parent.ChildAlignX switch { Center => dxSpace / 2, Right => dxSpace, _ => 0 };
-         foreach (var c in mTmp) {
-            ref UXNode child = ref mNodes[c];
-            if (child.Floating) { PositionFloat (ref parent, ref child); continue; }
-            child.X = (parent.X + left);
-            left += (child.DX + parent.ChildGap);
-            child.Y = (parent.Y + parent.Padding.Top);
-            switch (parent.ChildAlignY) {
-               case Middle: child.Y += ((dySpace - child.DY) / 2); break;
-               case Bottom: child.Y += (dySpace - child.DY); break;
-            }
-         }
-      } else {
-         int top = parent.Padding.Top;
-         top += parent.ChildAlignY switch { Middle => dySpace / 2, Bottom => dySpace, _ => 0 };
-         foreach (var c in mTmp) {
-            ref UXNode child = ref mNodes[c];
-            if (child.Floating) { PositionFloat (ref parent, ref child); continue; }
-            child.Y = (parent.Y + top);
-            top += (child.DY + parent.ChildGap);
-            child.X = (parent.X + parent.Padding.Left);
-            switch (parent.ChildAlignX) {
-               case Center: child.X += ((dxSpace - child.DX) / 2); break;
-               case Right: child.X += (dxSpace - child.DX); break;
-            }
-         }
-      }
-
-      for (int c = parent.FirstChild; c != 0; c = mNodes[c].Next)
-         PositionChildren (c);
-   }
-
-   static void PositionFloat (ref UXNode parent, ref UXNode child) {
-      child.X = child.ParentCorner switch {
-         EC.Left or EC.LeftTop or EC.LeftBottom => parent.X,
-         EC.Right or EC.RightTop or EC.RightBottom => parent.X + parent.DX,
-         _ => parent.X + parent.DX / 2,
-      };
-      child.Y = child.ParentCorner switch {
-         EC.Top or EC.LeftTop or EC.RightTop => parent.Y,
-         EC.Bottom or EC.LeftBottom or EC.RightBottom => parent.Y + parent.DY,
-         _ => parent.Y + parent.DY / 2,
-      };
-   }
-
-   // Given a parent node, returns the amount of extra space left after accounting for
-   // the padding. Along the layout direction, we also subtract the sizes of the children
-   // and the gaps between children. 
-   static (int, int) GetRemainingSpace (int p) {
-      ref UXNode parent = ref mNodes[p];
-      parent.GetChildren (mTmp, true);
-      int childGaps = parent.ChildGap * Max (parent.ChildCount - 1, 0);
-      int dxSpace = parent.DX - parent.Padding.Horizontal;
-      int dySpace = parent.DY - parent.Padding.Vertical;
-      if (parent.Horizontal) {
-         dxSpace -= childGaps;
-         foreach (var c in mTmp) dxSpace -= mNodes[c].DX;
-      } else {
-         dySpace -= childGaps;
-         foreach (var c in mTmp) dySpace -= mNodes[c].DY;
-      }
-      return (dxSpace, dySpace);
-   }
-   static List<int> mTmp = [];
-
-   static void GrowChildElements (int p) {
-      ref UXNode par = ref mNodes[p];
-      par.GetChildren (mTmp, true);
-      int childGaps = (par.ChildGap * Max (par.ChildCount - 1, 0));
-      int dxSpace = par.DX - par.Padding.Left - par.Padding.Right;
-      int dySpace = par.DY - par.Padding.Top - par.Padding.Bottom;
-      if (par.Horizontal) {
-         dxSpace -= childGaps;
-         for (int i = mTmp.Count - 1; i >= 0; i--) {
-            ref UXNode child = ref mNodes[mTmp[i]];
-            dxSpace -= child.DX;
-            if (child.Height.Mode == Grow) child.DY += (dySpace - child.DY);
-            if (child.Width.Mode != Grow) mTmp.RemoveAt (i);
-         }
-         if (mTmp.Count == 0) goto Done;
-
-         while (dxSpace > 0 ) {
-            int smallest = short.MaxValue, secondSmallest = smallest, widthToAdd = dxSpace;
-            foreach (var c in mTmp) {
-               ref UXNode child = ref mNodes[c];
-               if (child.DX < smallest) { secondSmallest = smallest; smallest = child.DX; }
-               if (child.DX > smallest) { secondSmallest = Min (secondSmallest, child.DX); widthToAdd = secondSmallest - smallest; }
-            }
-            widthToAdd = Max (Min (widthToAdd, dxSpace / mTmp.Count), 1);
-
-            foreach (var c in mTmp) {
-               ref UXNode child = ref mNodes[c];
-               if (child.DX != smallest) continue;
-               child.DX += widthToAdd;
-               dxSpace -= widthToAdd; if (dxSpace <= 0) break;
-            }
-         }
-      } else {
-         dySpace -= childGaps;
-         for (int i = mTmp.Count - 1; i >= 0; i--) {
-            ref UXNode child = ref mNodes[mTmp[i]];
-            dySpace -= child.DY;
-            if (child.Width.Mode == Grow) child.DX += (dxSpace - child.DX);
-            if (child.Height.Mode != Grow) mTmp.RemoveAt (i);
-         }
-         if (mTmp.Count == 0) goto Done;
-
-         while (dySpace > 0) {
-            int smallest = short.MaxValue, secondSmallest = smallest, heightToAdd = dySpace;
-            foreach (var c in mTmp) {
-               ref UXNode child = ref mNodes[c];
-               if (child.DY < smallest) { secondSmallest = smallest; smallest = child.DY; }
-               if (child.DY > smallest) { secondSmallest = Min (secondSmallest, child.DY); heightToAdd = secondSmallest - smallest; }
-            }
-            heightToAdd = Max (Min (heightToAdd, dySpace / mTmp.Count), 1);
-
-            foreach (var c in mTmp) {
-               ref UXNode child = ref mNodes[c];
-               if (child.DY != smallest) continue;
-               child.DY += heightToAdd;
-               dySpace -= heightToAdd; if (dySpace <= 0) break;
-            }
-         }
-      }
-
-      Done:
-      for (var c = par.FirstChild; c != 0; c = mNodes[c].Next)
-         GrowChildElements (c);
-   }
-
+   
+   // Helpers ------------------------------------------------------------------
    /// <summary>Begins a new container</summary>
    public static ref UXNode BeginNode () {
-      if (mUsed >= mNodes.Length) {
-         Array.Resize (ref mNodes, mNodes.Length * 2);
-         Array.Resize (ref mSizes, mSizes.Length * 2);
-      }
+      if (mUsed >= mNodes.Length) Array.Resize (ref mNodes, mNodes.Length * 2);
       mParent = mCurrent; mStack.Push (mCurrent); mCurrent = mUsed; mUsed++;
       mNodes[mCurrent] = new ();
       N.Id = mCurrent; N.Parent = mParent;
@@ -232,28 +101,30 @@ public static class UXFrame {
       mParent = mCurrent = mStack.Pop ();
    }
 
-   public static void Render () {
-      for (int i = 1; i < mUsed; i++) {
-         ref UXNode node = ref mNodes[i];
-         RectS rect = new (node.X, node.Y, node.X + node.DX, node.Y + node.DY);
-         mSizes[i] = rect;
-         Lux.ZLevel = node.Level;
-         if (!node.BgrdColor.IsTransparent) {
-            Lux.Color = node.BgrdColor;
-            bool border = !node.Border.IsZero, radius = node.CornerRadius > 0;
-            switch (border, radius) {
-               case (false, false): Lux.Rect (rect); break;
-               case (false, true): Lux.RRect (rect, node.CornerRadius); break;
-               case (true, false): Lux.BorderColor = node.BorderColor; Lux.RectBorder (rect, node.Border.Left); break;
-               case (true, true): Lux.BorderColor = node.BorderColor; Lux.RRectBorder (rect, node.CornerRadius, node.Border.Left); break;
+   public static void Render (bool realRender) {
+      if (realRender) {
+         for (int i = 1; i < mUsed; i++) {
+            ref UXNode node = ref mNodes[i];
+            Lux.ZLevel = node.Level;
+            if (!node.BgrdColor.IsTransparent) {
+               Lux.Color = node.BgrdColor;
+               var rect = node.Rect;
+               bool border = !node.Border.IsZero, radius = node.CornerRadius > 0;
+               switch (border, radius) {
+                  case (false, false): Lux.Rect (rect); break;
+                  case (false, true): Lux.RRect (rect, node.CornerRadius); break;
+                  case (true, false): Lux.BorderColor = node.BorderColor; Lux.RectBorder (rect, node.Border.Left); break;
+                  case (true, true): Lux.BorderColor = node.BorderColor; Lux.RRectBorder (rect, node.CornerRadius, node.Border.Left); break;
+               }
+            }
+            if (node.Text != null) {
+               Lux.Color = node.TextColor;
+               Lux.TypeFace = TypeFaces[node.FontId];
+               Lux.Text (node.Text, new (node.X + node.TextOffset.X, node.Y + node.TextOffset.Y));
             }
          }
-         if (node.Text != null) {
-            Lux.Color = node.TextColor;
-            Lux.TypeFace = TypeFaces[node.FontId];
-            Lux.Text (node.Text, new (node.X + node.TextOffset.X, node.Y + node.TextOffset.Y));
-         }
       }
+      (mNodes, mSnapshot) = (mSnapshot, mNodes);
    }
 
    public static void DumpAll () {
@@ -271,13 +142,27 @@ public static class UXFrame {
    }
 
    internal static bool IsHovered (int n)
-      => n < mSizes.Length && mSizes[n].Contains (mMousePos);
+      => IsHovered (n, 0);
 
-   public static bool IsHovered (int n, int inflate)
-      => n < mSizes.Length && mSizes[n].Inflated (inflate).Contains (mMousePos);
+   public static bool IsHovered (int n, int inflate) {
+      if (n >= mSnapshot.Length) return false;
+      return mSnapshot[n].Rect.Inflated (inflate).Contains (mMousePos);
+   }
 
    internal static bool IsPressed (int n)
       => mMousePressed && IsHovered (n);
+
+   internal static bool AnyPopupsOpen (int n)
+      => n < mSnapshot.Length && AnyPopupsOpen (ref mSnapshot[n]);
+
+   static bool AnyPopupsOpen (ref UXNode node) {
+      for (int c = node.FirstChild; c != 0; c = mSnapshot[c].Next) {
+         ref UXNode child = ref mSnapshot[c];
+         if (child.Floating && child.Rect.Contains (mMousePos)) return true;
+         if (AnyPopupsOpen (ref child)) return true; 
+      }
+      return false;
+   }
 
    // Private data -------------------------------------------------------------
    static Vec2S mScreenSize;              // Screen size
@@ -285,7 +170,7 @@ public static class UXFrame {
    static int mWheelDelta;                // Wheel rotation since last frame
    static bool mMousePressed;             // Is the mouse currently pressed
    static UXNode[] mNodes = new UXNode[32];     // List of nodes 
-   static RectS[] mSizes = new RectS[32];       // And their screen rects after layout
+   static UXNode[] mSnapshot = new UXNode[32]; // List of 'previous' nodes
    static Stack<int> mStack = [];         // Stack of currently open nodes
    static int mUsed;                      // Number of used nodes
    static int mCurrent;                   // Node that is currently being edited

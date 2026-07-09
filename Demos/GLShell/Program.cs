@@ -1,4 +1,5 @@
-﻿using Nori;
+﻿using System.Runtime.InteropServices;
+using Nori;
 namespace GLFWDemo;
 
 class Program {
