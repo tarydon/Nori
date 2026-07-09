@@ -198,9 +198,9 @@ class TMisc {
       Lib.GetArcSteps (10, Lib.PI, 0.01, 1.05).Is (36);
       int a = 3, b = 2; Lib.Sort (ref a, ref b);
       a.Is (2); b.Is (3);
-      Lib.ReadText ("nori:GL/Shader/arrowhead.frag").Length.Is (240);
-      Lib.ReadBytes ("nori:GL/Shader/arrowhead.frag").Length.Is (251);
-      Lib.ReadLines ("nori:GL/Shader/arrowhead.frag").Length.Is (12);
+      Lib.ReadText ("nori:GL/Shader/ArrowHead.frag").Length.Is (240);
+      Lib.ReadBytes ("nori:GL/Shader/ArrowHead.frag").Length.Is (251);
+      Lib.ReadLines ("nori:GL/Shader/ArrowHead.frag").Length.Is (12);
       double aa = 1.5; Lib.Set (ref aa, 1.5).IsFalse ();
       Lib.Set (ref aa, 2.5).IsTrue (); aa.Is (2.5);
 
@@ -314,8 +314,8 @@ class TMisc {
       lf.Render ("Reversed", (59, 30), ETextAlign.BaseLeft, 0, -0.5, 4, 0, poly);
 
       var sb = new StringBuilder ();
-      poly.ForEach (a => sb.AppendLine (a.ToString ()));
-      pts.ForEach (a => sb.AppendLine ($"P{a.X},{a.Y}"));
+      poly.ForEach (a => sb.AppendNL (a.ToString ()));
+      pts.ForEach (a => sb.AppendNL ($"P{a.X},{a.Y}"));
       File.WriteAllText (NT.TmpTxt, sb.ToString ());
       Assert.TextFilesEqual ("Misc/LineFont.txt", NT.TmpTxt);
 
@@ -465,7 +465,7 @@ class TMisc {
 
    [Test (148, "Plane intersection with mesh")]
    public void Test17 () {
-      var mesh = new STLReader (NT.File ("Misc/cali-bee.STL")).BuildMesh ();
+      var mesh = new STLReader (NT.File ("Misc/cali-bee.stl")).BuildMesh ();
       var plane = new PlaneDef (Point3.Zero, Vector3.YAxis);
       List<Polyline3> curves = [];
       new MeshSlicer ([mesh]).Compute (plane, curves);

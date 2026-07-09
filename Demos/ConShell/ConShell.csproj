@@ -7,7 +7,7 @@
     <OutDir>..\..\Bin</OutDir>
     <Optimize>false</Optimize>
   </PropertyGroup>
-
+  
   <ItemGroup>
     <ProjectReference Include="..\..\Core\Nori.Core.csproj" />
     <ProjectReference Include="..\..\UX\Nori.UX.csproj" />

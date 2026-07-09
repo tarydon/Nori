@@ -152,18 +152,18 @@ public class LFF2LFontConverter {
       var sb = new StringBuilder ();
 
       // Header: LFONT name and version
-      sb.AppendLine ($"LFONT,{mFontName},1");
+      sb.AppendNL ($"LFONT,{mFontName},1");
 
       // Font metrics: character count, ascender, descender, vertical advance
-      sb.AppendLine ($"{mCharCache.Count},{mAscender.R6 ()},{mDescender.R6 ()},{(mAscender - mDescender).R6 () * mLineSpacingFactor:R}");
+      sb.AppendNL ($"{mCharCache.Count},{mAscender.R6 ()},{mDescender.R6 ()},{(mAscender - mDescender).R6 () * mLineSpacingFactor:R}");
 
       foreach (var val in mCharCache.Values) {
          // Use wordSpacing as fallback width if glyph width is zero
          double w = val.CharCode == 32 ? mWordSpacing : val.Width,
          // Normalize horizontal advance based on ascender height
          hAdvance = ((w + mLetterSpacing) / mAscender).R6 ();
-         sb.AppendLine ($"{val.CharCode},{hAdvance},{val.Strokes.Count},{val.Symbol}");
-         foreach (var stroke in val.PenMoves) sb.AppendLine (stroke);
+         sb.AppendNL ($"{val.CharCode},{hAdvance},{val.Strokes.Count},{val.Symbol}");
+         foreach (var stroke in val.PenMoves) sb.AppendNL (stroke);
       }
       File.WriteAllText (lFontFile, sb.ToString ());
    }

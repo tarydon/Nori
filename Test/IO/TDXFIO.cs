@@ -130,7 +130,7 @@ class DXFTests {
       var mText = dwg.Ents.OfType<E2Text> ();
       var sb = new StringBuilder ();
       foreach (var txt in mText)
-         sb.AppendLine (txt.Text);
+         sb.AppendNL (txt.Text);
       var tmp = NT.TmpTxt;
       File.WriteAllText (tmp, sb.ToString ());
       // Compare the generated text file with the expected text file
@@ -161,7 +161,7 @@ class DXFTests {
 
    [Test (93, "Pix crashes when trying to import the attached DXF files")]
    void Test19 () {
-      var files = new[] { "C36249_B", "47458206_B", "47616434", "48142366_A", "AX0974", "337228A2" };
+      var files = new[] { "C36249_B", "47458206_C", "47616434", "48142366_B", "AX0974", "337228A2" };
       foreach (var name in files) {
          var dwg = DXFReader.Load (NT.File ($"IO/DXF/{name}.dxf"));
          DXFWriter.Save (dwg.Purge (), NT.TmpDXF);
@@ -220,7 +220,8 @@ class DXFTests2 {
          var sd = ShapeRecognizer.Recognize (poly);
          if (sd.Shape != EShape.None) shapes.Add (sd.ToString ());
       }
-      File.WriteAllLines (NT.TmpTxt, shapes);
+      string text = string.Join ('\n', shapes);
+      File.WriteAllText (NT.TmpTxt, text);
       Assert.TextFilesEqual ("IO/DXF/Shapes1.txt", NT.TmpTxt);
    }
 

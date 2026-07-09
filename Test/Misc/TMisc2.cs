@@ -248,22 +248,22 @@ class Misc2 {
 
          StringBuilder Compose (string desc) {
             var sb = new StringBuilder ();
-            sb.AppendLine (desc).AppendLine (new string ('-', desc.Length));
+            sb.AppendNL (desc).AppendNL (new string ('-', desc.Length));
             if (exceptions.Count > 0) {
-               foreach (var e in exceptions.OfType<NoriException> ()) sb.AppendLine (e.Code.ToString ());
+               foreach (var e in exceptions.OfType<NoriException> ()) sb.AppendNL (e.Code.ToString ());
                exceptions.Clear ();
                return sb;
             }
 
             if (changes.Count > 0) {
-               sb.AppendLine ("CHANGES:");
-               foreach (var s in changes) sb.AppendLine (s);
+               sb.AppendNL ("CHANGES:");
+               foreach (var s in changes) sb.AppendNL (s);
                changes.Clear ();
-               sb.AppendLine ();
+               sb.AppendNL ();
             }
 
             sb.Append ("UNDO: ");
-            sb.AppendLine (UndoStack.Current?.NextUndo?.Description);
+            sb.AppendNL (UndoStack.Current?.NextUndo?.Description);
             return sb;
          }
 
