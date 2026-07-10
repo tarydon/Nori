@@ -7,16 +7,16 @@ class Program {
    static void Main () {
       Lib.Init ();
       GLFWHost.Init (OnReady);
-      mWin = new Window (1024, 768, "U X D e m o", Window.EFlags.Default | Window.EFlags.Maximized);
-      mWin.Run (true);
+      Window = new Window (1024, 768, "U X D e m o", Window.EFlags.Default | Window.EFlags.Maximized);
+      Window.Run (true);
    }
-   static Window? mWin;
+   public static Window? Window;
 
    static void OnReady () {
       Lib.Tracer = TraceVN.Print;
       TraceVN.HoldTime = 15;
       TraceVN.TextColor = Color4.White;
-      Hub.Keyboard.Keys.Where (a => a.IsPress (EKey.Escape)).Subscribe (_ => mWin?.ShouldClose = true);
+      Hub.Keyboard.Keys.Where (a => a.IsPress (EKey.Escape)).Subscribe (_ => Window?.ShouldClose = true);
       Lux.UIScene = new UXScene ();
    }
 }

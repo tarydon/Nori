@@ -1,4 +1,8 @@
-﻿using Nori;
+// ────── ╔╗
+// ╔═╦╦═╦╦╬╣ UXFrameCalc.cs
+// ║║║║╬║╔╣║ <<TODO>>
+// ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
+using Nori;
 using static System.Math;
 using static Nori.UX.UXNode.ESizeMode;
 using static Nori.UX.UXNode.EChildAlignX;

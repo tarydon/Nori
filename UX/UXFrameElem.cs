@@ -1,4 +1,8 @@
-﻿namespace Nori.UX;
+// ────── ╔╗
+// ╔═╦╦═╦╦╬╣ UXFrameElem.cs
+// ║║║║╬║╔╣║ <<TODO>>
+// ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
+namespace Nori.UX;
 using static SizeS;
 using static UXNode.EOrientation;
 using static UXTheme;
@@ -12,8 +16,6 @@ public static partial class UXApi {
       return true;
    }
 
-   public static void DISABLE (string? s) { }
-
    public static ref UXNode FILLER (int min = 0) {
       ref UXNode a = ref UXFrame.BeginNode ();
       a.Width = Grow (min); a.Height = Grow ();
@@ -21,7 +23,15 @@ public static partial class UXApi {
       return ref a;
    }
 
-   public static bool MENUITEM (string text, string? shortcut = null, bool disable = false) {
+   public static bool MENUITEM_P (string text) {
+      string? shortcut = UXFrame.N.Kind == UXNode.EKind.TopMenu ? null : "\u0034";
+      return MENUITEM (text, shortcut, popup: true);
+   }
+
+   public static bool MENUITEM (string text, bool disable, bool popup = false)
+      => MENUITEM (text, null, disable, popup);
+
+   public static bool MENUITEM (string text, string? shortcut = null, bool disable = false, bool popup = false) {
       ref UXNode a = ref UXFrame.BeginNode ();
       // Set up bgrd color (different when the menu is hovered)
       a.BgrdColor = a.IsHovered || a.AnyPopupsOpen ? MENUITEM_Bgrd_H : MENUITEM_Bgrd;
@@ -30,15 +40,15 @@ public static partial class UXApi {
       a.Padding = MENUITEM_Padding; a.CornerRadius = MENUITEM_Radius; a.ChildAlignY = UXNode.EChildAlignY.Middle;
       if (a.GetParent ().Kind != UXNode.EKind.TopMenu) a.Width = Grow ();
       TEXT (text, (a.Disabled = disable) ? MENUITEM_Text_D : MENUITEM_Text);
-      bool popup = shortcut is "\u0034" or "\u0033";
-      if (shortcut == "\u0033") shortcut = null;
       if (shortcut != null) {
          FILLER (80);
          TEXT (shortcut, MENUITEM_Shortcut, shortcut.Length == 1 ? 1 : 0);
       }
       if (a.Disabled) return false;
-      if (a.IsHovered) return true;
-      return popup && a.AnyPopupsOpen;
+      if (popup)
+         return a.IsHovered || a.AnyPopupsOpen;
+      else
+         return a.IsReleased;
    }
 
    public static bool POPUPMENU () {
@@ -67,9 +77,9 @@ public static partial class UXApi {
       UXFrame.EndNode ();
    }
 
-   public static void TIP (string text) {
-
-   }
+   public static void TIP (string text) { }
+   public static void ICON (string s) { }
+   public static bool DISABLED => false;
 
    public static void END () => UXFrame.EndNode ();
 }

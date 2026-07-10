@@ -1,4 +1,8 @@
-﻿using Nori;
+// ────── ╔╗
+// ╔═╦╦═╦╦╬╣ UXTheme.cs
+// ║║║║╬║╔╣║ <<TODO>>
+// ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
+using Nori;
 namespace Nori.UX;
 
 public static class UXTheme {

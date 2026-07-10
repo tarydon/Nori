@@ -3,7 +3,7 @@
 // ║║║║╬║╔╣║ Shell for Nori console scratch applications
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 using Nori;
-using UXDemo;
+using Nori.UX;
 namespace ConShell;
 
 class Program {
@@ -14,7 +14,9 @@ class Program {
    }
 
    static void Test () {
-      InlayCompiler ic = new InlayCompiler ("C:\\etc\\basic.in");
-      ic.Compile ("c:\\etc\\Output.cs");
+      InlayGen igen = new ("C:\\etc\\zero.in");
+      igen.GenerateTo ("c:\\etc\\Output.cs");
+      InlayCompiler icomp = new ("c:\\etc\\Output.cs");
+      icomp.Compile ();
    }
 }

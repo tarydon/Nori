@@ -6,6 +6,7 @@ using static UXNode;
 using static SizeS;
 using static Elements;
 using static UXApi;
+using static UXFrame;
 
 class UXDemoVN : VNode {
    public UXDemoVN () {
@@ -17,16 +18,16 @@ class UXDemoVN : VNode {
 
    void OnMouseMove (Vec2S vec) { mPos = vec; Redraw (); }
    void OnMouseWheel (MouseWheelInfo info) { mWheel += info.Delta; Redraw (); }
-   void OnMouseClick (MouseClickInfo info) { mPressed = info.IsPress; Redraw (); Lib.Trace (info); }
+   void OnMouseClick (MouseClickInfo info) { mPressed = info.IsPress; Redraw (); }
 
    public override void Draw () {
+      if (mFirst) {
+         TypeFace tf1 = new TypeFace ("C:/Windows/Fonts/SegoeUI.ttf", (int)(10 * Lux.DPIScale + 0.5));
+         TypeFace tf2 = new ("C:/Windows/Fonts/webdings.ttf", (int)(10.5 * Lux.DPIScale + 0.5));
+         UXFrame.TypeFaces = [tf1, tf2];
+      }
+
       for (int i = 0; i < 2; i++) {
-         if (mFirst) {
-            mFirst = false;
-            TypeFace tf1 = new TypeFace ("C:/Windows/Fonts/SegoeUI.ttf", (int)(10 * Lux.DPIScale + 0.5));
-            TypeFace tf2 = new ("C:/Windows/Fonts/webdings.ttf", (int)(10.5 * Lux.DPIScale + 0.5));
-            UXFrame.TypeFaces = [tf1, tf2];
-         }
          UXFrame.BeginLayout (Lux.PanelSize);
          UXFrame.SetMouseState (mPos, mWheel, mPressed); mWheel = 0;
 
@@ -50,10 +51,10 @@ class UXDemoVN : VNode {
    }
    bool mFirst = true;
 
-   static void DoFileNew () { }
+   static void DoFileNew () => Lib.Trace ("FILE.NEW");
    static void DoFileOpen (string? file = null) { }
    static void DoFileSave () { }
-   static void DoExit () { }
+   static void DoExit () => Program.Window?.ShouldClose = true;
    static void DoCut () { }
    static void DoCopy () { }
    static void DoPaste () { }
@@ -66,12 +67,12 @@ class UXDemoVN : VNode {
    // Testing --------------------------------------------------------------------
    static void NewDemo () {
       if (TOPMENU ()) {
-         if (MENUITEM ("File", "\u0033")) {
+         if (MENUITEM_P ("File")) {
             POPUPMENU ();
             if (MENUITEM ("New", "Ctrl N")) DoFileNew (); END ();
             if (MENUITEM ("Open", "Ctrl O")) DoFileOpen (); END ();
             if (MRUList.Count > 0) {
-               if (MENUITEM ("Open Recent", "\u0034")) {
+               if (MENUITEM_P ("Open Recent")) {
                   POPUPMENU ();
                   for (int i = 0; i < Math.Min (MRUList.Count, 9); i++) {
                      var file = MRUList[i];
@@ -81,9 +82,8 @@ class UXDemoVN : VNode {
                }
                END ();
             }
-            if (MENUITEM ("Save", "Ctrl S")) DoFileSave (); END ();
-            if (CurrentPart is null) DISABLE ("No Active Part");
-            if (MENUITEM ("Export", "\u0034")) {
+            if (MENUITEM ("Save", "Ctrl S", CurrentPart is null)) DoFileSave (); END ();
+            if (MENUITEM_P ("Export")) {
                POPUPMENU ();
                if (CurrentPartIs3D) {
                   if (MENUITEM ("To IGES")) DoExport ("IGES"); END ();
@@ -100,7 +100,7 @@ class UXDemoVN : VNode {
             END ();
          }
          END ();
-         if (MENUITEM ("Edit", "\u0033")) {
+         if (MENUITEM_P ("Edit")) {
             POPUPMENU ();
             if (MENUITEM ("Cut", "Ctrl X")) DoCut (); END ();
             if (MENUITEM ("Copy", "Ctrl C")) DoCopy (); END ();
@@ -108,7 +108,7 @@ class UXDemoVN : VNode {
             END ();
          }
          END ();
-         if (MENUITEM ("Help", "\u0033")) {
+         if (MENUITEM_P ("Help")) {
             POPUPMENU ();
             if (MENUITEM ("About...")) DoHelpAbout (); END ();
             END ();

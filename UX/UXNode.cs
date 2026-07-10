@@ -29,6 +29,7 @@ public struct UXNode {
    public readonly bool IsHovered => UXFrame.IsHovered (Id);
    public readonly bool IsPressed => UXFrame.IsPressed (Id);
    public readonly bool AnyPopupsOpen => UXFrame.AnyPopupsOpen (Id);
+   public readonly bool IsReleased => UXFrame.IsReleased (Id);
 
    public readonly RectS Rect => new (X, Y, X + DX, Y + DY);
 

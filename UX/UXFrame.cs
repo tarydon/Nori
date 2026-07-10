@@ -7,22 +7,16 @@ namespace Nori.UX;
 
 public static partial class UXFrame {
    // Properties ---------------------------------------------------------------
-   /// <summary>
-   /// The global list of UXNode
-   /// </summary>
+   /// <summary>The global list of UXNode</summary>
    public static UXNode[] All => mNodes;
 
-   /// <summary>
-   /// List of nodes
-   /// </summary>
+   /// <summary>List of nodes</summary>
    public static UXNode[] Prev => mSnapshot;
 
    /// <summary>Reference to the current UX node</summary>
    public static ref UXNode N => ref mNodes[mCurrent];
 
-   /// <summary>
-   /// The global list of all typefaces (.FontID is an index into this)
-   /// </summary>
+   /// <summary>The global list of all typefaces (.FontID is an index into this)</summary>
    public static TypeFace[] TypeFaces = [];
 
    // Methods ------------------------------------------------------------------
@@ -36,8 +30,10 @@ public static partial class UXFrame {
    /// <param name="position">Mouse position in pixels, relative to top left</param>
    /// <param name="wheelDelta">Mouse wheel rotation since last frame</param>
    /// <param name="isPressed">Is the mouse button pressed?</param>
-   public static void SetMouseState (Vec2S position, int wheelDelta, bool isPressed)
-      => (mMousePos, mWheelDelta, mMousePressed) = (position, wheelDelta, isPressed);
+   public static void SetMouseState (Vec2S position, int wheelDelta, bool isPressed) {
+      mMousePressedLastFrame = mMousePressed;
+      (mMousePos, mWheelDelta, mMousePressed) = (position, wheelDelta, isPressed);
+   }
 
    /// <summary>Ends the layout and generates render commands</summary>
    public static void EndLayout () {
@@ -155,6 +151,9 @@ public static partial class UXFrame {
    internal static bool AnyPopupsOpen (int n)
       => n < mSnapshot.Length && AnyPopupsOpen (ref mSnapshot[n]);
 
+   internal static bool IsReleased (int n)
+      => mMousePressedLastFrame && !mMousePressed && IsHovered (n);
+
    static bool AnyPopupsOpen (ref UXNode node) {
       for (int c = node.FirstChild; c != 0; c = mSnapshot[c].Next) {
          ref UXNode child = ref mSnapshot[c];
@@ -169,6 +168,7 @@ public static partial class UXFrame {
    static Vec2S mMousePos;                // Mouse position, relative to top left
    static int mWheelDelta;                // Wheel rotation since last frame
    static bool mMousePressed;             // Is the mouse currently pressed
+   static bool mMousePressedLastFrame;    // Was the mouse pressed in the last frame?
    static UXNode[] mNodes = new UXNode[32];     // List of nodes 
    static UXNode[] mSnapshot = new UXNode[32]; // List of 'previous' nodes
    static Stack<int> mStack = [];         // Stack of currently open nodes
