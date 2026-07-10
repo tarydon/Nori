@@ -219,7 +219,7 @@ public readonly struct CoordSystem {
    /// - "0,0,1|0,-1,0" : Origin at zero (0,0,0), VecX = 0,0,1, VecY = 0,-1,0
    /// - "1,2,3|0,0,1|0,-1,0" : Origin at (1,2,3), VecX=(0,0,1), VecY=(0,-1,0)
    public void Write (UTFWriter W) {
-      Point3 o = Org.R6 (); Vector3 x = VecX.R9 (), y = VecY.R9 ();
+      Point3 o = Org.R6 (); Vector3 x = VecX.R6 (), y = VecY.R6 ();
       bool aligned = x.EQ (Vector3.XAxis) && y.EQ (Vector3.YAxis), ozero = o.EQ (Point3.Zero);
       if (aligned && ozero) { W.Write ("World"u8); return; }
       if (!ozero) W.Write (o.X).Write (',').Write (o.Y).Write (',').Write (o.Z);

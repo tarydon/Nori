@@ -210,8 +210,6 @@ public readonly struct Vector3 : IEQuable<Vector3> {
 
    /// <summary>Returns the Vector3 with components rounded off to 6 decimals</summary>
    public Vector3 R6 () => new (X.R6 (), Y.R6 (), Z.R6 ());
-   /// <summary>Returns the Vector3 with components rounded off to 9 decimals</summary>
-   public Vector3 R9 () => new (X.R9 (), Y.R9 (), Z.R9 ());
 
    /// <summary>A copy of this vector, with just the X component changed</summary>
    public Vector3 WithX (double x) => new (x, Y, Z);

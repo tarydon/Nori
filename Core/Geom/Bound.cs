@@ -141,8 +141,7 @@ public readonly struct Bound1D : IEQuable<Bound1D> {
    /// <summary>Read a Bound1D from a UTF8 stream</summary>
    public static Bound1D Read (UTFReader R) {
       if (R.Peek () == 'E') {
-         R.Match ("Empty"u8);
-         return new ();
+         R.Match ("Empty"u8); return new ();
       } else {
          R.Read (out double min).Match ('~').Read (out double max);
          return new (min, max);
@@ -280,7 +279,10 @@ public readonly struct Bound2 : IEQuable<Bound2> {
    /// <summary>Write a Bound2 to a UTF8 stream</summary>
    public void Write (UTFWriter W) {
       if (IsEmpty) W.Write ("Empty"u8);
-      else W.WriteR5 (X.Min).Write (',').WriteR5 (Y.Min).Write (':').WriteR5 (X.Max).Write (',').WriteR5 (Y.Max);
+      else {
+         float dx = (float)X.Length, dy = (float)Y.Length;
+         W.WriteR5 (dx).Write ('x').WriteR5 (dy).Write ('@').WriteR5 (X.Min).Write (',').WriteR5 (Y.Min);
+      }
    }
    public override string ToString () => UTFWriter.ToString (Write);
 
