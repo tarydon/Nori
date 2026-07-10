@@ -1,238 +1,282 @@
 ﻿using System.Buffers;
 using System.Text;
+
 namespace Nori.UX;
 
 public class InlayGen {
-   public InlayGen (string file) => mText = File.ReadAllText (file) + "\u001A";
-   int mN;
-   string mText;
+   public InlayGen (string file) {
+      mText = File.ReadAllText (file) + "\u001A";
+      mFile = Path.GetFileName (file);
+   }
+   string mFile;
 
-   public void GenerateTo (string outfile) {
-      AddL ("using Nori;");
-      AddL ("using System;");
-      AddL ("using Nori.UX;");
-      AddL ("using static Nori.UX.UXApi;");
-      AddL ("namespace Nori.Inlay;");
-      AddL ("");
-      AddL ("class Inlay1 : InlayHub {");
-      AddL ("static void Generate () {");
+   public string Generate () {
+      AddL ("""
+         using Nori;
+         using System;
+         using Nori.UX;
+         using static Nori.UX.UXApi;
+         namespace Nori.Inlay;
+
+         class Inlay1 : InlayHub {
+         static void Generate () {
+         """);
+
+      Token t = Expect (EToken.Element);
       try {
-         for (int i = 0; i < 30; i++) {
-            Token t = GetToken ();
-            if (t.E == EToken.EOF) break;
-            if (t.E == EToken.Newline) continue;
-            if (t.E == EToken.CloseSquare) { AddL ("}"); continue; }
-            if (t.E == EToken.Element) {
-               switch (t.Text) {
-                  case "TOPMENU": OutTopMenu (); break;
-                  case "MENU": OutMenu (); break;
-                  case "SEPARATOR": OutSeparator (); break;
-                  default: throw new BadCaseException (t.Text.ToString ());
-               }
-               continue;
-            }
-            mN = t.Start;
-            CopyUntil (EToken.Newline);
-         }
+         OutElem (t);
       } catch (Exception e) {
          Console.ForegroundColor = ConsoleColor.Red;
          Console.WriteLine (e);
          Console.ResetColor ();
       }
-      AddL ("}");
-      AddL ("}");
 
-      int level = 0, indent = 3;
-      var S = mSB.ToString ().Split ('\n').Select (a => a.Trim ()).ToList ();
+      AddL ("""
+         }
+         }
+         """);
+      return DoIndent (mSB.ToString ());
+   }
+
+   // Implementation -----------------------------------------------------------
+   void Add (string s) => mSB.Append (s);
+   void AddL (string s) => mSB.AppendNL (s);
+   void AddLineNo (Token t) { } // => AddL ($"#line ({t.Line},{t.Column}) - ({t.Line},{t.Column + t.Text.Length}) \"{mFile}\"");
+
+   string DoIndent (string input) {
+      StringBuilder sb = new ();
+      int level = 0, indent = 3; 
+      var S = input.Split ('\n').Select (a => a.Trim ()).ToList ();
       for (int i = 0; i < S.Count; i++) {
          if (S[i] is "}") level--;
          var tmp = new string (' ', level * indent) + S[i];
          if (S[i].EndsWith ('{')) level++;
-         S[i] = tmp;
+         sb.AppendNL (tmp);
       }
-      File.WriteAllLines (outfile, S);
-   }
-   StringBuilder mSB = new ();
-
-   void Add (string s) => mSB.Append (s);
-   void AddL (string s) => mSB.AppendNL (s);
-
-   void OutTopMenu () {
-      AddL ("if (TOPMENU ()) {");
-      Expect (EToken.OpenSquare); Expect (EToken.Newline);
+      return sb.ToString ();
    }
 
-   void OutMenu () {
-      // Add the 'name' and the 'shortcut' parameters
-      Add ("if (MENUITEM (");
-      AddStr (); AddStr (true, true);
-      List<(string, string)> props = [];
-      bool popup = false, closed = false;
-      for (; ; ) {
-         var t = GetToken ();
-         if (t.E == EToken.Newline) continue;
-         if (t.E is EToken.Element or EToken.CloseCurly or EToken.CloseSquare) { Pushback (t); break; }
-         if (t.E == EToken.OpenSquare) { popup = true; Expect (EToken.Newline); break; }
-         if (t.E == EToken.Period) {
-            // If there is a period, we're setting a property on the element we're creating
-            t = Expect (EToken.Word); string propname = t.TextS.ToUpper ();
-            Expect (EToken.Equals); string val = GetExpression ();
-            props.Add ((propname, val));
-            continue; 
-         }
-         if (t.E == EToken.OpenCurly) {
-            Add (")) {"); closed = true;
-            CopyUntil (EToken.CloseCurly);
-            AddL ("");
-            continue; 
-         }
-         if (t.E == EToken.OpenParen) {
-            Pushback (t); string val = GetExpression ();
-            Add ($", {val}");
-            continue;
-         }
-         Lib.Check (false);
-      }
-      if (!closed) {
-         if (popup) { Add (", popup:true"); AddL (")) {"); }
-         else AddL (")) { }");
-      }
-      foreach (var (k, v) in props) AddL ($"{k} ({v});");
-      if (!popup) AddL ("END ();");
-   }
-
-   void OutSeparator () => AddL ("SEPARATOR ();");
-
-   void AddP (string s) => Add ($"\"{s}\"");
-   void Add (char ch) => mSB.Append (ch);
-
-   string GetExpression () {
-      Token t = GetToken ();
-      if (t.E != EToken.OpenParen) {
-         if (t.TextS[0] == '"') return t.TextS;
-         return $"\"{t.TextS}\"";
-      }
-      string expr = "";
-      for (; ; ) {
-         t = GetToken (); if (t.E == EToken.CloseParen) break;
-         string txt = t.TextS; expr += txt; if (txt != ".") expr += " ";
-      }
-      return expr.Replace (".Disabled", "DISABLED").TrimEnd ();
-   }
-
-   void CopyUntil (EToken e) {
-      int start = mN;
-      for (; ; ) {
-         Token t = GetToken (); if (t.E != e) continue;
-         Add (mText[start..mN]);
-         break;
-      }
-   }
-
-   void AddStr (bool optional = false, bool commabefore = false) {
-      Token t = GetToken ();
-      if (t.E is EToken.Quoted or EToken.Word) {
-         if (commabefore) Add (", ");
-         if (t.Text[0] == '$') Add ($"{t.TextS}\"");
-         else Add ($"\"{t.Text}\"");
-         return;
-      }
-      if (optional) { Pushback (t); return; }
-      Lib.Check (false);
-   }
-
-   // Implementation -----------------------------------------------------------
    Token Expect (EToken e) {
-      Token t = GetToken ();
-      Lib.Check (t.E == e);
-      return t;
+      Token t = GetToken (); Lib.Check (t.E == e);
+      return t; 
    }
 
-   void Pushback (Token t) {
-      Lib.Check (!mBacked);
-      mBack = t; mBacked = true;
+   void Fatal (string s) {
+      throw new Exception (s);
    }
-   Token mBack;
-   bool mBacked;
+
+   // Gathers text from the current location until the given finisher token.
+   // The finisher token is consumed, but is not included in the returned string
+   string GatherUntil (EToken e) {
+      int start = N;
+      for (; ; ) {
+         Token t = GetToken ();
+         if (t.E == e) {
+            string s = mText[start..t.Start].Trim ();
+            return s; 
+         }
+      }
+   }
+
+   char GetCH () {
+      char ch = mText[N++];
+      if (mFreshLine) { mLine++; mColumn = 0; mFreshLine = false; }
+      mColumn++; mFreshLine = ch == '\n';
+      return ch;
+   }
+
+   string GetExpr () {
+      Lib.Check (TryGetExpr (out var s));
+      return s;
+   }
 
    Token GetToken () {
-      if (mBacked) { mBacked = false; return mBack; }
+      int start;
+      if (mPushedBack) { mPushedBack = false; return mPushbackToken; }
       for (; ; ) {
-         char ch = mText[mN++];
+         char ch = GetCH ();
+         if (sTokens.Contains (ch)) return new Token ((EToken)ch, mText, N - 1, N, mLine, mColumn);
          switch (ch) {
             case ' ' or '\t' or '\r': continue;
-            case '\n': return new (EToken.Newline, mText, mN);
-            case '\u001A': return new (EToken.EOF, mText, mN);
-            case '[': return new (EToken.OpenSquare, mText, mN);
-            case ']': return new (EToken.CloseSquare, mText, mN);
-            case '(': return new (EToken.OpenParen, mText, mN);
-            case ')': return new (EToken.CloseParen, mText, mN);
-            case '{': return new (EToken.OpenCurly, mText, mN);
-            case '}': return new (EToken.CloseCurly, mText, mN);
-            case '.': return new (EToken.Period, mText, mN);
-            case '=': return new (EToken.Equals, mText, mN);
-            case '$':
-               int start = mN++ - 1;
-               while (mN < mText.Length && mText[mN] != '"') mN++;
-               return new (EToken.Word, mText, start, (++mN) - 1);
             case '"':
-               start = mN;
-               while (mN < mText.Length && mText[mN] != '"') mN++;
-               return new (EToken.Quoted, mText, start, (++mN) - 1); 
+               start = N - 1;
+               while (GetCH () != '"') { }
+               return new Token (EToken.Quoted, mText, start, N, mLine, mColumn);
             default:
-               start = mN - 1;
-               while (!mStop.Contains (mText[mN])) mN++;
-               var span = mText.AsSpan (start, mN - start);
-               foreach (var w in mElements) {
-                  if (w.AsSpan ().Equals (span, StringComparison.Ordinal))
-                     return new (EToken.Element, mText, start, mN);
-               }
-               return new (EToken.Word, mText, start, mN);
+               start = N - 1;
+               while (!sNameStop.Contains (PeekCH ())) { GetCH (); }
+               var span = mText.AsSpan (start, N - start);
+               foreach (var elem in sElements) 
+                  if (elem.AsSpan ().Equals (span, StringComparison.Ordinal))
+                     return new Token (EToken.Element, mText, start, N, mLine, mColumn);
+               return new Token (EToken.Word, mText, start, N, mLine, mColumn);
          }
       }
    }
-   static SearchValues<char> mStop = SearchValues.Create (" \t\r\n\u001A[]{}()\".=");
-   static string[] mElements = ["MENU", "TOPMENU", "SEPARATOR"];
+   static SearchValues<char> sTokens = SearchValues.Create ("[]{}().=\n\u001A");
+   static SearchValues<char> sNameStop = SearchValues.Create ("[]{}()\".=\n\u001A \t\r");
+   static string[] sElements = ["MENU", "TOPMENU", "SEPARATOR"];
+
+   char PeekCH () => mText[N];
+
+   void Pushback (Token t) {
+      Lib.Check (!mPushedBack);
+      mPushbackToken = t; mPushedBack = true;
+   }
+   Token mPushbackToken;
+   bool mPushedBack;
+
+   // Outputs the code for an element (recursively may include code blocks, 
+   // other elements inside). The entire code is generated effectively by calling
+   // OutElem on the outermost element (for example, like a TOPMENU, or a DIALOG)
+   void OutElem (Token tElem) {
+      string elem = tElem.TextS;
+      var info = sElemData[elem];
+      
+      // Add the necessary parameters, and then the optional parameters
+      bool comma = false, finishedArgs = false, openedContainer = false;
+      AddLineNo (tElem);
+      Add ($"if ({elem} (");
+      List<string> props = [];   // Additional prop initialers (like .TIP="Double")
+
+      // Add the necessary parameters
+      for (int i = 0; i < info.NeedParams; i++) {
+         if (comma) Add (", "); Add (GetExpr ());
+         comma = true;
+      }
+      for (int i = 0; i < info.OptParams; i++) {
+         if (TryGetExpr (out var expr)) {
+            if (comma) Add (", "); Add (expr);
+            comma = true;
+         } else break;
+      }
+      for (; ; ) {
+         Token t = GetToken ();
+         switch (t.E) {
+            case EToken.OpenSquare:
+               // If we see an open square bracket, it means we're opening this container and we
+               // are going to add additional elements inside. If this is a type of element that may
+               // or may not have children (like a MENU), add the 'hasChildren:true' parameter to it. 
+               Lib.Check (info.CCode != EContainer.No);
+               if (info.CCode == EContainer.Maybe) Add (", hasChildren:true");
+               openedContainer = true;
+               FinishArgs (); 
+               break;
+            case EToken.Newline:
+               // If we see a newline, make sure that we have opened the children container
+               // if that is mandatory. For example, a TOPMENU line must end in an [
+               if (info.CCode == EContainer.Yes && !openedContainer) Fatal ("Expected [");
+               break;
+            case EToken.Element:
+               // If we see a child element, recurse in to output that
+               if (openedContainer) {
+                  FinishArgs ();
+                  OutElem (t);
+               } else {
+                  Lib.Check (finishedArgs);
+                  Pushback (t); 
+                  return;
+               }
+               break;
+            case EToken.Period:
+               FinishArgs ();
+               t = Expect (EToken.Word); Expect (EToken.Equals);
+               var str = GetExpr ();
+               props.Add ($"{t.TextS.ToUpper ()} ({str});");
+               break;
+            case EToken.OpenCurly:
+               FinishArgs ();
+               str = GatherUntil (EToken.CloseCurly);
+               AddL (str); AddL ("}");
+               break;
+            case EToken.Word:
+               str = t.TextS + " " + GatherUntil (EToken.Newline);
+               AddL (str);
+               break;
+            case EToken.CloseCurly:
+               AddL ("}");
+               break;
+            case EToken.CloseSquare:
+               AddL ("}");
+               return;
+            default: throw new BadCaseException (t.E);
+         }
+      }
+
+      void FinishArgs () {
+         if (finishedArgs) return;
+         AddL (")) {");
+         finishedArgs = true;
+      }
+   }
+
+   // Tries to read an expression, and if it cannot find one, this returns false
+   // (and does not consume any tokens)
+   bool TryGetExpr (out string s) {
+      s = string.Empty;
+      Token t = GetToken ();
+      switch (t.E) {
+         case EToken.Quoted: s = t.TextS; break;
+         case EToken.Word: s = $"\"{t.Text}\""; break;
+         case EToken.OpenParen: s = GatherUntil (EToken.CloseParen); break;
+         default: Pushback (t); return false;
+      }
+      return true; 
+   }
 
    // Nested types -------------------------------------------------------------
+   enum EToken {
+      Element = 128, Word, Quoted,
+
+      OpenSquare = '[', CloseSquare = ']',
+      OpenCurly = '{', CloseCurly = '}',
+      OpenParen = '(', CloseParen = ')',
+      Quote = '"', Period = '.', Equals = '=',
+      Newline = '\n', EOF = '\u001A'
+   }
+
+   enum EContainer {
+      Yes, No, Maybe
+   }
+
    readonly struct Token {
-      public Token (EToken e, string text, int n) {
-         E = e; mText = text; Start = n - 1; End = n;
-      }
-      public Token (EToken e, string text, int start, int end) {
-         E = e; mText = text; Start = start; End = end;
+      public Token (EToken e, string text, int start, int end, int line, int column) {
+         E = e;
+         mText = text; Start = start; End = end;
+         Line = line; Column = column - (end - start - 1);
       }
       readonly string mText;
 
-      public override string ToString () {
-         return $"{E} | {Text}";
-      }
-
       public readonly EToken E;
       public readonly int Start, End;
+      public readonly int Line, Column;
       public readonly ReadOnlySpan<char> Text => mText.AsSpan (Start, End - Start);
+      public readonly string TextS => Text.ToString ();
 
-      public readonly string TextS {
-         get {
-            if (E == EToken.Quoted) return $"\"{Text}\"";
-            return Text.ToString ();
-         }
+      public override string ToString () {
+         string s = E == EToken.Newline ? "\\n" : TextS;
+         return $"{E} {s} ({Line},{Column})";
       }
    }
 
-   enum EToken {
-      Word,
-      Element,
-      Quoted,
-      Newline,
-      CodeBlock,
-      Expression,
-      OpenSquare, CloseSquare,
-      OpenCurly, CloseCurly,
-      OpenParen, CloseParen,
-      Quote, 
-      Period,
-      Equals,
-      EOF,
+   readonly struct ElemInfo {
+      public ElemInfo (int needParams, int optParams, EContainer ccode)
+         => (NeedParams, OptParams, CCode) = (needParams, optParams, ccode);
+
+      public readonly int NeedParams;
+      public readonly int OptParams;
+      public readonly EContainer CCode;
    }
+
+   // Private data -------------------------------------------------------------
+   readonly string mText;
+   int mLine, mColumn, N;
+   bool mFreshLine = true;
+   StringBuilder mSB = new ();
+
+   static Dictionary<string, ElemInfo> sElemData = new () {
+      ["MENU"] = new (1, 2, EContainer.Maybe),
+      ["TOPMENU"] = new (0, 0, EContainer.Yes),
+      ["SEPARATOR"] = new (0, 0, EContainer.No)
+   };
 }

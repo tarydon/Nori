@@ -15,8 +15,10 @@ class Program {
 
    static void Test () {
       InlayGen igen = new ("C:\\etc\\zero.in");
-      igen.GenerateTo ("c:\\etc\\Output.cs");
-      InlayCompiler icomp = new ("c:\\etc\\Output.cs");
-      icomp.Compile ();
+      string s = igen.Generate ();
+      Console.WriteLine (s);
+      //igen.GenerateTo ("c:\\etc\\Output.cs");
+      //InlayCompiler icomp = new ("c:\\etc\\Output.cs");
+      //icomp.Compile ();
    }
 }
