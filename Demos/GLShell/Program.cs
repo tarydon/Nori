@@ -8,7 +8,7 @@ class Program {
       var w = new Window (1024, 768, "Welcome to GLFW", Window.EFlags.Default | Window.EFlags.Maximized);
       w.Run (true);
    }
-
+ 
    static void OnReady () => Lux.UIScene = new DemoScene ();
 }
 

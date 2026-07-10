@@ -24,15 +24,15 @@ class TCollision {
          var pts = surface.Mesh.Vertex.Select (a => a.Pos * xfm).ToList ();
          var obb1 = OBB.Build (pts.AsSpan ());
          var obb2 = OBB.BuildFast (pts.AsSpan ());
-         sb.AppendLine ($"{i + 1}, {pts.Count} points");
+         sb.AppendNL ($"{i + 1}, {pts.Count} points");
          Out ("OBB:  ", obb1);
          Out ("Fast: ", obb2);
          double aRatio = obb2.Area / obb1.Area, vRatio = obb2.Volume / obb1.Volume;
-         sb.AppendLine ($"Ratio: V={vRatio.Round (3)}, A={aRatio.Round (3)}");
+         sb.AppendNL ($"Ratio: V={vRatio.Round (3)}, A={aRatio.Round (3)}");
          v1Total += obb1.Volume; v2Total += obb2.Volume;
-         sb.AppendLine ();
+         sb.AppendNL ();
       }
-      sb.AppendLine ($"Overall Volumes: {v2Total.Round (0)} / {v1Total.Round (0)}");
+      sb.AppendNL ($"Overall Volumes: {v2Total.Round (0)} / {v1Total.Round (0)}");
       File.WriteAllText (NT.TmpTxt, sb.ToString ());
       Assert.TextFilesEqual ("Sim/OBBGen.txt", NT.TmpTxt);
 
@@ -41,8 +41,8 @@ class TCollision {
          var c = o.Center;
          var x = o.X; var y = o.Y; var z = o.Z;
          var e = o.Extent;
-         sb.AppendLine ($"{name} ({c.X.Round (2)},{c.Y.Round (2)},{c.Z.Round (2)})  {e.X.Round (2)}x{e.Y.Round (2)}x{e.Z.Round (2)}");
-         sb.AppendLine ($"       <{x.X.Round (3)},{x.Y.Round (3)},{x.Z.Round (3)}>, <{y.X.Round (3)},{y.Y.Round (3)},{y.Z.Round (3)}>, <{z.X.Round (3)},{z.Y.Round (3)},{z.Z.Round (3)}>");
+         sb.AppendNL ($"{name} ({c.X.Round (2)},{c.Y.Round (2)},{c.Z.Round (2)})  {e.X.Round (2)}x{e.Y.Round (2)}x{e.Z.Round (2)}");
+         sb.AppendNL ($"       <{x.X.Round (3)},{x.Y.Round (3)},{x.Z.Round (3)}>, <{y.X.Round (3)},{y.Y.Round (3)},{y.Z.Round (3)}>, <{z.X.Round (3)},{z.Y.Round (3)},{z.Z.Round (3)}>");
       }
 
       double GetAngle () => (r.NextDouble () - 0.5) * (90.D2R ());
@@ -186,12 +186,12 @@ class TCollision {
          string indent = new ('\t', level);
          var node = tree.OBBs[id];
          if (node.Left > 0) Dump (node.Left, level + 1, EDir.Left);
-         else sb.AppendLine ($"{indent}\tLT{-node.Left}");
+         else sb.AppendNL ($"{indent}\tLT{-node.Left}");
          string pre = dir == 0 ? "" : dir < 0 ? "L" : "R";
          area += node.Area;
-         sb.AppendLine ($"{indent}{pre}B{id} ");
+         sb.AppendNL ($"{indent}{pre}B{id} ");
          if (node.Right > 0) Dump (node.Right, level + 1, EDir.Right);
-         else if (node.Right < 0) sb.AppendLine ($"{indent}\tRT{-node.Right}");
+         else if (node.Right < 0) sb.AppendNL ($"{indent}\tRT{-node.Right}");
       }
 
       int GetHeight (int id) {

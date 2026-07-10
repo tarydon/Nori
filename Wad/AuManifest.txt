@@ -61,7 +61,7 @@ CoordSystem
 Contour3
   Curves
 Curve3
-  PairId
+  Flags PairId
 Line3
   Start End
 Arc3

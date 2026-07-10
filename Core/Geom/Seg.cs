@@ -82,6 +82,8 @@ public readonly struct Seg {
    public bool IsLast => N == Poly.Count - 1;
    /// <summary>Is this a line? (if not, it's an arc)</summary>
    public bool IsLine => !IsArc;
+   /// <summary>Is this an 'overlap' segment?</summary>
+   public bool IsOverlap => (Flags & Poly.EFlags.Overlap) != 0;
 
    /// <summary>Returns true if the given point is to the 'left' of this segment</summary>
    public bool IsPointOnLeft (Point2 pt) {

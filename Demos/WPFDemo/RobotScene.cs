@@ -77,9 +77,9 @@ class RobotScene : Scene3, ISceneWithUI {
             var a = mSolver.Solutions[j];
             sb.Append ($"{(a.OK ? 1 : 0)}");
             for (int i = 0; i < 6; i++) sb.Append ($" {a.GetJointAngle (i)}");
-            sb.AppendLine ();
+            sb.AppendNL ();
          }
-         sb.AppendLine ();
+         sb.AppendNL ();
          System.IO.File.AppendAllText ("c:/etc/test.txt", sb.ToString ());
       }
    }

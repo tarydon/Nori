@@ -159,13 +159,13 @@ class T3XTests {
       }
       List<Point2> uvs = [.. pts.Select (surf.GetUV)];
       List<Vector3> normal = [.. uvs.Select (p => surf.GetNormal (p.X, p.Y))];
-      sb.AppendLine (surf.GetType ().Name);
-      sb.AppendLine ($"Flags: {surf.Flags}");
-      sb.AppendLine ($"Domain: {surf.Domain}");
-      sb.AppendLine ($"Bound: {surf.Bound}");
-      sb.AppendLine ($"Area: {surf.Area.Round (6)}");
+      sb.AppendNL (surf.GetType ().Name);
+      sb.AppendNL ($"Flags: {surf.Flags}");
+      sb.AppendNL ($"Domain: {surf.Domain}");
+      sb.AppendNL ($"Bound: {surf.Bound}");
+      sb.AppendNL ($"Area: {surf.Area.Round (6)}");
       for (int i = 0; i < pts.Count; i++)
-         sb.AppendLine ($"{i} {pts[i].R6 ()} {uvs[i].R6 ()} {normal[i].R6 ()}");
+         sb.AppendNL ($"{i} {pts[i].R6 ()} {uvs[i].R6 ()} {normal[i].R6 ()}");
       File.WriteAllText (NT.TmpTxt, sb.ToString ());
       Assert.TextFilesEqual (NT.File ($"IO/T3X/{name}.txt"), NT.TmpTxt);
    }

@@ -37,16 +37,19 @@ public class DIBitmap {
    /// <summary>Raw data of the bitmap</summary>
    public readonly byte[] Data;
 
-   /// <summary>Checks if this bitmap is identical to another, within a given threshold</summary>
-   public bool Identical (DIBitmap other, byte threshold = 0) {
+   /// <summary>Checks if this bitmap is identical to another</summary>
+   public bool Identical (DIBitmap other, double errorLimit = 0.025) {
       if (Width != other.Width || Height != other.Height || Fmt != other.Fmt || Data.Length != other.Data.Length)
          return false;
+
+      double mse = 0; // Mean Squared Error check
       for (int i = 0; i < Data.Length; i++) {
-         byte a = Data[i], b = other.Data[i];
-         if (Math.Abs (a - b) <= threshold) continue;
-         return false;
+         int a = Data[i], b = other.Data[i];
+         if (a == b) continue;
+         var v = a - b;
+         mse += v * v;
       }
-      return true;
+      return mse / Data.Length < errorLimit;
    }
 
    /// <summary>Format of the bitmap</summary>

@@ -20,7 +20,7 @@ class PolyJoinTests {
 
    [Test (131, "Stitch JOIN5 (Huge drawing) with 0.0001")]
    void Test5 () {
-      var dr = new DXFReader (NT.File ("Poly/Join/JOIN5.dxf")) { StitchThreshold = 0.0001 };
+      var dr = new DXFReader (NT.File ("Poly/Join/Join5.dxf")) { StitchThreshold = 0.0001 };
       var dwg = dr.Load ();
       dwg.Ents.Count.Is (15001);
    }

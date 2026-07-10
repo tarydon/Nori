@@ -8,7 +8,7 @@
   <Folder Name="/Host/">
     <Project Path="Host/GLFW/Nori.Host.GLFW.csproj" />
     <Project Path="Host/WPF/Nori.Host.WPF.csproj" />
-    <Project Path="GLU/Nori.GLU.csproj" />
+    <Project Path="Host/GLU/Nori.GLU.csproj" />
   </Folder>
   <Folder Name="/Test/">
     <Project Path="Test/Nori.Test.csproj" />

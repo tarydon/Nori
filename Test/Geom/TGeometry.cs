@@ -504,21 +504,21 @@ class TessTests {
       List<Point2> pts = [];
       var sb = new StringBuilder ();
       int sum = input.Sum (a => a.Count);
-      sb.AppendLine ($"Triangulation: {file}, {input.Count} polys, {sum} nodes");
+      sb.AppendNL ($"Triangulation: {file}, {input.Count} polys, {sum} nodes");
       tris = SortTris (tris);
-      sb.AppendLine ($"{tris.Count / 3} triangles:");
+      sb.AppendNL ($"{tris.Count / 3} triangles:");
       for (int i = 0; i < tris.Count; i += 3) {
          pts.Clear ();
          for (int j = 0; j < 3; j++) {
             sb.Append ($" {tris[i + j]}");
             pts.Add (verts[tris[i + j]]);
          }
-         sb.AppendLine ();
+         sb.AppendNL ();
          triArea += Poly.Lines (pts, true).GetArea ();
       }
       dwgArea.Is (triArea);
-      sb.AppendLine ($"DwgArea: {dwgArea.Round (3)}");
-      sb.AppendLine ($"TriArea: {triArea.Round (3)}");
+      sb.AppendNL ($"DwgArea: {dwgArea.Round (3)}");
+      sb.AppendNL ($"TriArea: {triArea.Round (3)}");
       File.WriteAllText (NT.TmpTxt, sb.ToString ());
       Assert.TextFilesEqual (NT.File ($"Geom/Tess/{file}.txt"), NT.TmpTxt);
    }

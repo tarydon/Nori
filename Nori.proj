@@ -1,0 +1,36 @@
+<Project Sdk="Microsoft.Build.Traversal/4.1.82">
+  <PropertyGroup>
+    <Configuration Condition="'$(Configuration)' == ''">Debug</Configuration>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Core -->
+    <ProjectReference Include="Core/Nori.Core.csproj" />
+    <ProjectReference Include="Lux/Nori.Lux.csproj" />
+
+    <!-- Demos -->
+    <ProjectReference Include="Demos/BenchShell/BenchShell.csproj" />
+    <ProjectReference Include="Demos/ConShell/ConShell.csproj" />
+    <ProjectReference Include="Demos/GLShell/GLShell.csproj" />
+    <ProjectReference Include="Demos/WPFDemo/WPFDemo.csproj"
+                      Condition="'$([MSBuild]::IsOSPlatform(`Windows`))' == 'true'" />
+
+    <!-- Host -->
+    <ProjectReference Include="Host/GLFW/Nori.Host.GLFW.csproj" />
+    <ProjectReference Include="Host/WPF/Nori.Host.WPF.csproj"
+                      Condition="'$([MSBuild]::IsOSPlatform(`Windows`))' == 'true'" />
+    <ProjectReference Include="Host/GLU/Nori.GLU.csproj"
+                      Condition="'$([MSBuild]::IsOSPlatform(`Windows`))' == 'true'" />
+
+    <!-- Test -->
+    <ProjectReference Include="Test/Nori.Test.csproj" />
+
+    <!-- Tools -->
+    <ProjectReference Include="Tools/Console/Nori.Con.csproj" />
+    <ProjectReference Include="Tools/Cover/Nori.Cover.csproj"
+                      Condition="'$([MSBuild]::IsOSPlatform(`Windows`))' == 'true'" />
+    <ProjectReference Include="Tools/Doc/Nori.Doc.csproj" />
+    <ProjectReference Include="Tools/Generate/Nori.Gen.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -75,7 +75,7 @@ public static class STLWriter {
    /// <param name="mesh">The mesh that needs to be saved to STL files.</param>
    /// <param name="stm">The stream to which the file needs to be written.</param>
    public static void WriteASCII (Mesh3 mesh, Stream stm) {
-      var sw = new StreamWriter (stm);
+      var sw = new StreamWriter (stm) { NewLine = "\n" };
       const string name = "NoriExport";
       sw.WriteLine ($"solid {name}");
       for (int i = 0; i < mesh.Triangle.Length; i += 3) {

@@ -1,0 +1,140 @@
+(Dwg2){
+  Layers:[ { Name:0 Color:Black Linetype:Continuous }* ]
+  Ents:[
+    (E2Poly){ Layer:0 Poly:C-212.180152,65.797549,17.5 }
+    (E2Bendline){
+      Layer:0
+      Angle:45
+      KFactor:0.5
+      Radius:1.5
+      Pts:[ -303.460486,-15.374835 305.34611,-15.374835 ]
+      Thickness:1
+    }
+    (E2Bendline){
+      Layer:0
+      Angle:90
+      KFactor:0.5
+      Radius:1.5
+      Pts:[ -304.638583,340.397549 -304.638583,-13.785786 ]
+      Thickness:1
+    }
+    (E2Bendline){
+      Layer:0
+      Angle:90
+      KFactor:0.5
+      Radius:1.5
+      Pts:[ 305.34611,341.575646 -303.460486,341.575646 ]
+      Thickness:1
+    }
+    (E2Bendline){
+      Layer:0
+      Angle:90
+      KFactor:0.5
+      Radius:1.5
+      Pts:[ 306.524207,-13.785786 306.524207,335.397549 ]
+      Thickness:1
+    }
+    (E2Bendline){
+      Layer:0
+      Angle:-45
+      KFactor:0.5
+      Radius:1.5
+      Pts:[ -303.460486,-35.109281 305.34611,-35.109281 ]
+      Thickness:1
+    }
+    (E2Bendline){
+      Layer:0
+      Angle:90
+      KFactor:0.5
+      Radius:1.5
+      Pts:[ -304.638583,-15.963884 -304.638583,-34.520233 ]
+      Thickness:1
+    }
+    (E2Bendline){
+      Layer:0
+      Angle:90
+      KFactor:0.5
+      Radius:1.5
+      Pts:[ 306.524207,-34.520233 306.524207,-15.963884 ]
+      Thickness:1
+    }
+    (E2Poly){ Layer:0 Poly:C-31.699905,-63.281034,15 }
+    (E2Poly){ Layer:0 Poly:C240.300095,-63.281034,15 }
+    (E2Bendline){
+      Layer:0
+      Angle:-45
+      KFactor:0.5
+      Radius:1.5
+      Pts:[ -303.460486,-140.458952 305.34611,-140.458952 ]
+      Thickness:1
+    }
+    (E2Bendline){
+      Layer:0
+      Angle:90
+      KFactor:0.5
+      Radius:1.5
+      Pts:[ -304.638583,-35.69833 -304.638583,-139.869903 ]
+      Thickness:1
+    }
+    (E2Bendline){
+      Layer:0
+      Angle:90
+      KFactor:0.5
+      Radius:1.5
+      Pts:[ 306.524207,-139.869903 306.524207,-35.69833 ]
+      Thickness:1
+    }
+    (E2Bendline){
+      Layer:0
+      Angle:45
+      KFactor:0.5
+      Radius:1.5
+      Pts:[ -303.460486,-160.193398 305.34611,-160.193398 ]
+      Thickness:1
+    }
+    (E2Bendline){
+      Layer:0
+      Angle:90
+      KFactor:0.5
+      Radius:1.5
+      Pts:[ -304.638583,-141.048 -304.638583,-159.604349 ]
+      Thickness:1
+    }
+    (E2Bendline){
+      Layer:0
+      Angle:90
+      KFactor:0.5
+      Radius:1.5
+      Pts:[ 306.524207,-159.604349 306.524207,-141.048 ]
+      Thickness:1
+    }
+    (E2Bendline){
+      Layer:0
+      Angle:90
+      KFactor:0.5
+      Radius:1.5
+      Pts:[ -304.638583,-161.782447 -304.638583,-220.142257 ]
+      Thickness:1
+    }
+    (E2Bendline){
+      Layer:0
+      Angle:90
+      KFactor:0.5
+      Radius:1.5
+      Pts:[ 306.524207,-215.142257 306.524207,-161.782447 ]
+      Thickness:1
+    }
+    (E2Bendline){
+      Layer:0
+      Angle:90
+      KFactor:0.5
+      Radius:1.5
+      Pts:[ -303.460486,-221.320354 305.34611,-221.320354 ]
+      Thickness:1
+    }
+    (E2Poly){
+      Layer:0
+      Poly:M305.34611,-230.698452H-303.460486V-220.142257H-314.01668V-169.782447L-306.01668,-161.782447H-303.460486V-159.604349H-314.01668V-141.048H-303.460486V-139.869903H-314.01668V-35.69833H-303.460486V-34.520233H-314.01668V-15.963884H-303.460486V-13.785786H-306.01668L-314.01668,-5.785786V340.397549H-303.460486V350.953743H305.34611V335.397549H315.902305V-5.785786L307.902305,-13.785786H305.34611V-15.963884H315.902305V-34.520233H305.34611V-35.69833H315.902305V-139.869903H305.34611V-141.048H315.902305V-159.604349H305.34611V-161.782447H307.902305L315.902305,-169.782447V-215.142257H305.34611Z
+    }
+  ]
+}

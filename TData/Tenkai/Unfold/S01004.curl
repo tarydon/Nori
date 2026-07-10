@@ -1,0 +1,87 @@
+(Dwg2){
+  Layers:[ { Name:0 Color:Black Linetype:Continuous }* ]
+  Ents:[
+    (E2Bendline){
+      Layer:0
+      Angle:8.7
+      KFactor:0.5
+      Radius:2.85
+      Pts:[ 2347,0.216377 0,0.216377 ]
+      Thickness:2.5
+    }
+    (E2Bendline){
+      Layer:0
+      Angle:-71
+      KFactor:0.5
+      Radius:26.25
+      Pts:[ 5,-211.433821 2342,-211.433821 ]
+      Thickness:2.5
+    }
+    (E2Poly){
+      Layer:0
+      Poly:M706.75,29.940737V50.440737Q702.25,50.440737,2V29.940737Q706.75,29.940737,2Z
+    }
+    (E2Poly){
+      Layer:0
+      Poly:M723.75,29.940737V50.440737Q719.25,50.440737,2V29.940737Q723.75,29.940737,2Z
+    }
+    (E2Poly){
+      Layer:0
+      Poly:M1627.75,29.940737V50.440737Q1623.25,50.440737,2V29.940737Q1627.75,29.940737,2Z
+    }
+    (E2Poly){
+      Layer:0
+      Poly:M1644.75,29.940737V50.440737Q1640.25,50.440737,2V29.940737Q1644.75,29.940737,2Z
+    }
+    (E2Bendline){
+      Layer:0
+      Angle:13
+      KFactor:0.5
+      Radius:2.85
+      Pts:[ 2347,85.977062 0,85.977062 ]
+      Thickness:2.5
+    }
+    (E2Bendline){
+      Layer:0
+      Angle:-90
+      KFactor:0.5
+      Radius:26.25
+      Pts:[ 5,-321.31481 2342,-321.31481 ]
+      Thickness:2.5
+    }
+    (E2Bendline){
+      Layer:0
+      Angle:13
+      KFactor:0.5
+      Radius:2.85
+      Pts:[ 2347,171.689434 0,171.689434 ]
+      Thickness:2.5
+    }
+    (E2Bendline){
+      Layer:0
+      Angle:10
+      KFactor:0.5
+      Radius:2.85
+      Pts:[ 2347,255.035626 0,255.035626 ]
+      Thickness:2.5
+    }
+    (E2Bendline){
+      Layer:0
+      Angle:-90
+      KFactor:0.5
+      Radius:4.25
+      Pts:[ 2347,437.763574 0,437.763574 ]
+      Thickness:2.5
+    }
+    (E2Poly){ Layer:0 Poly:C721.5,466.101517,3 }
+    (E2Poly){ Layer:0 Poly:C1642.5,466.101517,3 }
+    (E2Poly){ Layer:0 Poly:C1625.5,466.101517,3 }
+    (E2Poly){ Layer:0 Poly:C2327,468.101517,6 }
+    (E2Poly){ Layer:0 Poly:C20,468.101517,6 }
+    (E2Poly){ Layer:0 Poly:C704.5,466.101517,3 }
+    (E2Poly){
+      Layer:0
+      Poly:M2342,488.101517Q2347,483.101517,-1V-41.730116Q2344.5,-44.230116,-1Q2342,-46.730116,1V-370.431512Q2336.999999,-375.431512,-1H10Q5,-370.431512,-1V-46.730116Q2.5,-44.230116,1Q0,-41.730116,-1V483.101517Q5,488.101517,-1Z
+    }
+  ]
+}

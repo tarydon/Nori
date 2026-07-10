@@ -42,7 +42,7 @@ class E2BendlineVN (E2Bendline mBend) : Ent2VN (mBend) {
    // Set up the green color used for bendlines, and the appropriate linetype
    public override void SetAttributes () {
       Lux.Color = new Color4 (0, 192, 0);
-      Lux.LineType = mBend.Angle > 0 ? ELineType.Dash2 : ELineType.DashDotDot;
+      Lux.LineType = mBend.Angle < 0 ? ELineType.Dash : ELineType.DashDotDot;
    }
 
    // Helper used to draw the bend angle annotation

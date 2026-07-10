@@ -198,13 +198,10 @@ static class GLFW {
    public static extern bool WindowShouldClose (HWindow window);
 
    // Constants ----------------------------------------------------------------
-   // The native library name
-#if LINUX
-   const string LIB = "glfw3";
-#elif OSX
-   const string LIB = "libglfw.3";
-#elif WINDOWS
-   const string LIB = "glfw3";
+#if WINDOWS
+   const string LIB = "glfw3.dll";
+#elif LINUX
+   const string LIB = "libglfw.so.3";
 #endif
 
    // Implementation -----------------------------------------------------------

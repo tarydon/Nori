@@ -61,7 +61,7 @@ class TRBRSolver {
             sb.Append ($" {a.GetJointAngle (i).Round (3)}");
             mJoints[i].JValue = a.GetJointAngle (i);
          }
-         sb.AppendLine ();
+         sb.AppendNL ();
          var csTip = mTip.Xfm.ToCS ();
          sb.Append ($"   {csTip.Org.R6 ()} {csTip.VecX.R6 ()} {csTip.VecY.R6 ()}\n");
       }

@@ -717,16 +717,19 @@ public partial class Poly {
 
    /// <summary>Creates and returns a new reversed Poly of 'this'</summary>
    public Poly Reversed () {
-      if (!HasArcs) return new ([.. mPts.Reverse ()], [], mFlags);
-      PolyBuilder builder = new ();
-      const EFlags Mask = EFlags.CW | EFlags.CCW;
+      if (!HasArcs && !HasOverlaps) return new ([.. mPts.Reverse ()], [], mFlags);
+      if (IsCircle) return new (mPts, [new (Extra[0].Center, Extra[0].Flags ^ (EFlags.CW | EFlags.CCW))], mFlags);
+      PolyBuild pb = new PolyBuild ();
+      pb.Begin (B);
       for (int i = Count - 1; i >= 0; i--) {
          Seg s = this[i];
-         if (s.IsArc) builder.Arc (s.B, s.Center, s.Flags ^ Mask);
-         else builder.Line (s.B);
+         if (s.IsArc) pb.Arc (s.A, s.Center, !s.IsCCW);
+         else {
+            pb.Line (s.A);
+            if (s.IsOverlap) pb.TagLastOverlap ();
+         }
       }
-      if (!IsClosed) builder.Line (A); else builder.Close ();
-      return builder.Build ();
+      return pb.End (IsClosed);
    }
 
    /// <summary>'Rolls' a closed Poly so that node N becomes the starting node</summary>
@@ -766,12 +769,12 @@ public partial class Poly {
       if (pts[0].EQ (pts[^1])) {
          flags |= EFlags.Closed; pts = [.. pts.SkipLast (1)];
       }
-      if (!a.HasArcs && !b.HasArcs) result = new Poly ([.. pts], default, flags);
+      if (!a.HasArcs && !b.HasArcs) result = new Poly ([.. pts], [], flags);
       else {
          var extra = new List<ArcInfo> (a.Count + b.Count);
          for (int i = 0; i < a.Count; i++)
             extra.Add (a.Extra.SafeGet (i));
-         if (!b.Extra.IsDefault) extra.AddRange (b.Extra);
+         extra.AddRange (b.Extra);
          result = new Poly ([.. pts], [.. extra], flags | EFlags.HasArcs);
       }
       return true;

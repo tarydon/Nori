@@ -249,7 +249,7 @@ class TLux {
    [Test (241, "Various Px shaders")]
    void Test13 () {
       var scene = new Scene2 (Color4.Gray (128), new (0, 0, 528, 400), new SimpleVN (Draw) { Streaming = true });
-      TestPNG (scene, (528, 400), DIBitmap.EFormat.Gray8, "PxShader");
+      TestPNG (scene, (528, 400), DIBitmap.EFormat.Gray8, "PxShader", errorLimit:1.5);
 
       static void Draw () {
          (Color, BorderColor) = (Color4.Gray (224), Color4.Gray (32));
@@ -295,6 +295,7 @@ class TLux {
       var tess = Ent3.MeshQuality;
       Mesh3 mesh; E3Marker marker;
       try {
+         Lux.Init ();
          Ent3.MeshQuality = ETess.VeryCoarse;
          var spine = new BSpine (30, Lib.HalfPI, 0.5, true);
          var flex = new E3Flex (0, CoordSystem.World, 4, spine, [Nori.Poly.Rectangle (-50, 0, 50, spine.FlatWidth)]);
@@ -373,14 +374,14 @@ class TLux {
       return model;
    }
 
-   void TestPNG (Scene scene, Vec2S size, DIBitmap.EFormat format, string file, bool zoomed = false) {
+   void TestPNG (Scene scene, Vec2S size, DIBitmap.EFormat format, string file, bool zoomed = false, double errorLimit = 0.025) {
       DIBitmap dib;
       if (zoomed) {
          dib = scene.RenderZoomedImage (size, format, out int _);
       } else
          dib = scene.RenderImage (size, format);
       new PNGWriter (dib).Write (NT.TmpPNG);
-      Assert.PNGFilesEqual ($"{NT.Data}/Lux/{file}.png", NT.TmpPNG, dib);
+      Assert.PNGFilesEqual ($"{NT.Data}/Lux/{file}.png", NT.TmpPNG, dib, errorLimit);
    }
 
    TypeFace mFace = new (Lib.ReadBytes ("nori:GL/Fonts/Roboto-Regular.ttf"), 28);

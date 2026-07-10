@@ -129,7 +129,8 @@ public abstract partial class Ent3 {
 [Flags]
 public enum E3Flags : uint {
    Selected = 1 << 0, Translucent = 1 << 1, FlipNormal = 1 << 2, GeneratrixFlat = 1 << 3,
-   ULinear = 1 << 4, VLinear = 1 << 5, NoStencil = 1 << 6, Colliding = 1 << 7,
+   ULinear = 1 << 4, VLinear = 1 << 5, NoStencil = 1 << 6, Colliding = 1 << 7, 
+   ContourWindingChecked = 1 << 8, Overlap = 1 << 9,
 }
 #endregion
 
@@ -246,7 +247,7 @@ public abstract class E3Surface : Ent3 {
 
    // Properties ---------------------------------------------------------------
    [DebuggerBrowsable (DebuggerBrowsableState.Never)]
-   public double Area => mArea.Cached (Mesh.GetArea);
+   public double Area => mArea.Cached (ComputeArea);
    double mArea = double.NaN;
 
    /// <summary>The Bound of the surface in 3D</summary>
@@ -311,6 +312,10 @@ public abstract class E3Surface : Ent3 {
    /// <summary>Override this to compute the domain of the surface</summary>
    protected abstract Bound2 ComputeDomain ();
 
+   /// <summary>Override this to compute the area of the surface</summary>
+   /// The default implemetnation computes and mesh, and then computes the area.
+   protected virtual double ComputeArea () => Mesh.GetArea ();
+
    /// <summary>Flip the normals of this surface</summary>
    public bool FlipNormal () => IsNormalFlipped = !IsNormalFlipped;
 
@@ -343,9 +348,9 @@ public abstract class E3Surface : Ent3 {
    // by evaluating the contours
    Bound3 ComputeBound () {
       if (_mesh != null) return _mesh.Bound;
-      List<Point3> pts = [];
-      Contours[0].Discretize (pts, ETess.Coarse);
-      return new (pts);
+      List<Point3> pts = ListPool<Point3>.Borrow ();
+      try { Contours[0].Discretize (pts, ETess.Coarse); return new (pts); } 
+      finally { ListPool<Point3>.Return (pts); }
    }
 
    protected void CopyMeshFrom (E3Surface src, Matrix3 xfm) {

@@ -370,7 +370,7 @@ class DimEntTests () {
    }
 
    static Dwg2 MakeDimRad () {
-      var dwg = DXFReader.Load ("N:/TData/Dwg/Dim/DimRad-Blank.dxf");
+      var dwg = DXFReader.Load (NT.File ("Dwg/Dim/DimRad-Blank.dxf"));
       var tstyle = dwg.CurrentStyle;
       DimStyle2 style; double dx, dy;
 

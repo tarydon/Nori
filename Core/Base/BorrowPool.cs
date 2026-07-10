@@ -2,6 +2,7 @@
 // ╔═╦╦═╦╦╬╣ BorrowPool.cs
 // ║║║║╬║╔╣║ Implements BorrowPool<T> class and the IBorrowable<T> interface
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
+using System.Collections.Concurrent;
 using System.Threading;
 namespace Nori;
 
@@ -145,4 +146,36 @@ static partial class BorrowPool<T> {
    static int sBorrowed;
 }
 #endif
+#endregion
+
+#region class ListPool -----------------------------------------------------------------------------
+/// <summary>Implements a pool from which we can borrow List(T) for temporary use</summary>
+public static class ListPool<T> {
+   // Methods ------------------------------------------------------------------
+   /// <summary>Borrow a list from the pool (the list is emptied before use)</summary>
+   public static List<T> Borrow () {
+      if (sBag.TryTake (out var list)) {
+         Debug.Assert (sBorrowed <= sMaxBorrow,
+                       $"ListPool<{typeof (T).Name}>: too many rented, probable leak");
+         sBorrowed++;
+         return list;
+      }
+      return [];
+   }
+
+   /// <summary>Returns a list after use</summary>
+   /// Failing to return a list after use is a leak, and will get detected in time, and an 
+   /// exception thrown (after 4 * PROCESSORCOUNT lists are allocated)
+   public static void Return (List<T> list) {
+      // When a list is returned that already has a lot of elements, don't file it away 
+      // for reuse, just discard it
+      sBorrowed--; list.Clear (); 
+      if (list.Capacity < MAXCAPACITY) sBag.Add (list); 
+   }
+
+   // Implementation -----------------------------------------------------------
+   const int MAXCAPACITY = 8192;
+   static int sBorrowed, sMaxBorrow = Environment.ProcessorCount * 4;
+   static readonly ConcurrentBag<List<T>> sBag = [];
+}
 #endregion
