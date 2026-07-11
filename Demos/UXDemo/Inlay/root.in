@@ -28,12 +28,15 @@ TOPMENU [
       }
     ]
     SEPARATOR
-    MENU Exit "Ctrl X" { }
+    MENU Exit "Alt F4" { DoExit (); }
   ]
   MENU "Edit" [
-    MENU Cut {}
-    MENU Copy {}
-    MENU Paste {}
+    MENU $"Undo {NextUndo}" "Ctrl Z" (NextUndo is null) { DoUndo (); }
+    MENU $"Redo {NextRedo}" "Ctrl Y" (NextRedo is null) { DoRedo (); }
+    SEPARATOR
+    MENU Cut "Ctrl X" { DoCut (); }
+    MENU Copy "Ctrl C" { DoCopy (); }
+    MENU Paste "Ctrl P" { DoPaste (); }
   ]
   MENU "Help" [
     MENU "About..."

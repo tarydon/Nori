@@ -194,7 +194,7 @@ public class InlayGen {
                ProcessLoop ();   // Keep adding child elements until we see a ']'
                if (elem == "MENU") AddL ("END (); // POPUPMENU");
                AddL ("}");
-               AddProps ();
+               props.ForEach (AddL);
                AddL ($"END (); // {elem} {tag}");
                return;
             case EToken.Newline:
@@ -226,28 +226,15 @@ public class InlayGen {
          }
       }
       Done:
-      FinishArgs ();
-      AddCore ();
-      AddProps ();
-      if (!info.Inert) AddL ($"END (); // {elem} {tag}");
-
-      // Helpers ...........................................
-      void AddProps () {
-         foreach (var s in props) AddL (s);
-      }
-
-      void AddCore () {
-         if (addedCore) return;
-         if (!info.Inert) AddL ("}");
-         addedCore = true;
-      }
-
-      void FinishArgs () {
-         if (finishedArgs) return;
+      if (!finishedArgs) {
          if (info.Inert) AddL (");");
          else AddL (")) {");
-         finishedArgs = true;
       }
+      if (!addedCore) {
+         if (!info.Inert) AddL ("}");
+      }
+      props.ForEach (AddL);
+      if (!info.Inert) AddL ($"END (); // {elem} {tag}");
    }
 
    // Tries to read an expression, and if it cannot find one, this returns false

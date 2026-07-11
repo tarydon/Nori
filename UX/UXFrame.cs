@@ -19,6 +19,8 @@ public static partial class UXFrame {
    /// <summary>The global list of all typefaces (.FontID is an index into this)</summary>
    public static TypeFace[] TypeFaces = [];
 
+   public static Scene[] Scenes = [];
+
    // Methods ------------------------------------------------------------------
    /// <summary>Begins a new layout pass given the available screen size</summary>
    public static void BeginLayout (Vec2S size) {
@@ -101,7 +103,16 @@ public static partial class UXFrame {
       if (realRender) {
          for (int i = 1; i < mUsed; i++) {
             ref UXNode node = ref mNodes[i];
-            Lux.ZLevel = node.Level;
+            Lux.ZLevel = node.Level + 100;
+            if (node.Kind == UXNode.EKind.SceneHolder) {
+               Scene? sc = Scenes.SafeGet (node.Tag!.ToInt ());
+               if (sc != null) {
+                  double dx = mScreenSize.X, dy = mScreenSize.Y;
+                  var rect = node.Rect;
+                  double left = rect.Left / dx + 0.01, top = 1 - rect.Top / dy - 0.01, right = rect.Right / dx, bottom = 1 - rect.Bottom / dy;
+                  Lux.AddSubScene (sc, new (left, top, right, bottom));
+               }
+            }
             if (!node.BgrdColor.IsTransparent) {
                Lux.Color = node.BgrdColor;
                var rect = node.Rect;

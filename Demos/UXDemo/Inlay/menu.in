@@ -1,9 +1,18 @@
 TOPMENU [
   MENU "File" [
     MENU New "Ctrl N" .Icon=FileNew .Tip="Create a new Part"
-      { Lib.Trace ("FileNew"); }
+      { DoFileNew (); }
     MENU Open "Ctrl O" .Icon=FileOpen .Tip="Open a 2D or 3D Part from file"
       { DoFileOpen (); }
+    if (MRUList.Count > 0) {
+      MENU "Open Recent" [
+        for (int i = 0; i < Math.Min (MRUList.Count, 9); i++) {
+          var file = MRUList[i];
+          MENU $"{file}" $"Ctrl {i + 1}" { DoFileOpen (file); }
+        }
+      ]
+    }
+    SEPARATOR
     MENU Save "Ctrl S" (CurrentPart is null)
       .Icon=FileSave
       .Tip=(DISABLED ? "No active part" : "Save the current Part")
@@ -19,13 +28,17 @@ TOPMENU [
       }
     ]
     SEPARATOR
-    if (MRUList.Count > 0) {
-      for (int i = 0; i < Math.Min (MRUList.Count, 9); i++) {
-        var file = MRUList[i];
-        MENU $"{file}" $"Ctrl {i + 1}" { DoFileOpen (file); }
-      }
-      SEPARATOR
-    }
-    MENU Exit "Ctrl X" { }
+    MENU Exit "Alt F4" { DoExit (); }
+  ]
+  MENU "Edit" [
+    MENU $"Undo {NextUndo}" "Ctrl Z" (NextUndo is null) { DoUndo (); }
+    MENU $"Redo {NextRedo}" "Ctrl Y" (NextRedo is null) { DoRedo (); }
+    SEPARATOR
+    MENU Cut "Ctrl X" { DoCut (); }
+    MENU Copy "Ctrl C" { DoCopy (); }
+    MENU Paste "Ctrl P" { DoPaste (); }
+  ]
+  MENU "Help" [
+    MENU "About..."
   ]
 ]

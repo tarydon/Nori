@@ -2,29 +2,38 @@
 using Nori.UX;
 namespace UXDemo;
 
-public static class UXCompile {
-   static public void Render () {
-      if (mRender == null) {
-         FileSystemWatcher fsw = new ("N:/Demos/UXDemo/Inlay", "*.*");
-         fsw.Changed += OnChanged;
-         fsw.EnableRaisingEvents = true;
+public class UXLayout {
+   public UXLayout (string file) {
+      mFile = Path.Combine (Root, file);
+      FileSystemWatcher fsw = new (Root, file);
+      fsw.Changed += OnChanged;
+      fsw.EnableRaisingEvents = true;
+   }
+   readonly string mFile;
 
-         string file = "N:/Demos/UXDemo/Inlay/root.in";
-         //file = "c:/etc/zero.in";
-         InlayGen ig = new (file);
-         var s = ig.Generate ();
-         File.WriteAllText ("c:/etc/output.cs", s);
+   public static void Add (UXLayout layout) => mAll.Add (layout);
 
-         InlayCompiler ic = new (s);
-         mRender = ic.Compile () ?? (() => { });
-         foreach (var err in ic.Diagnostics) Lib.Trace (err);
+   static public IReadOnlyList<UXLayout> All => mAll;
+   static List<UXLayout> mAll = [];
+
+   public Action Render {
+      get {
+         if (mRenderFunc == null) {
+            InlayGen ig = new (mFile);
+            var s = ig.Generate (true);
+
+            InlayCompiler ic = new (s);
+            mRenderFunc = ic.Compile () ?? (() => { });
+            foreach (var err in ic.Diagnostics) Lib.Trace (err);
+         }
+         return mRenderFunc;
       }
-      mRender ();
+   }
+   Action? mRenderFunc;
+
+   void OnChanged (object sender, FileSystemEventArgs e) {
+      mRenderFunc = null; Lux.Redraw ();
    }
 
-   static void OnChanged (object sender, FileSystemEventArgs e) {
-      mRender = null; Lux.Redraw ();
-   }
-
-   static Action? mRender;
+   public static string Root = Lib.DevRoot;
 }

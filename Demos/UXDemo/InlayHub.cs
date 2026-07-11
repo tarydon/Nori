@@ -1,8 +1,8 @@
 ﻿namespace Nori.Inlay;
 
 public class Part {
-   public bool Is2D => true;
-   public bool Is3D => false;
+   public bool Is2D => false;
+   public bool Is3D => true;
 }
 
 public class InlayHub {
@@ -10,6 +10,19 @@ public class InlayHub {
    public static void DoFileOpen (string? file = null) => Lib.Trace ($"FILE/OPEN({file})");
    public static void DoFileSave () => Lib.Trace ("FILE/SAVE");
    public static void DoFileExport (string fmt) => Lib.Trace ($"FILE/EXPORT({fmt})");
+   public static void DoExit () => Lib.Trace ("FILE/EXIT");
+
+   public static void DoUndo () => Lib.Trace ($"UNDO {UndoStack[NUndo--]}");
+   public static void DoRedo () => Lib.Trace ($"REDO {UndoStack[++NUndo]}");
+   public static void DoCut () => Lib.Trace ("EDIT/CUT");
+   public static void DoCopy () => Lib.Trace ("EDIT/COPY");
+   public static void DoPaste () => Lib.Trace ("EDIT/PASTE");
+
    public static Part? CurrentPart { get; set; } = new Part ();
    public static List<string> MRUList = ["C:/Etc/Demo.fx", "C:/Parts/Assy/T142.step"];
+   public static List<string> UndoStack = ["Clear Screen", "Draw Poly", "Close Poly", "Prep Laser"];
+   public static int NUndo = 2;  // Next operation to be undone
+
+   public static string? NextUndo => UndoStack.SafeGet (NUndo);
+   public static string? NextRedo => UndoStack.SafeGet (NUndo + 1);
 }

@@ -8,6 +8,12 @@ using static UXNode.EOrientation;
 using static UXTheme;
 
 public static partial class UXApi {
+   public static bool CHECKBOX (string text, bool value, Action<bool> setter, bool disable = false) {
+      ref UXNode a = ref UXFrame.BeginNode ();
+      a.Kind = UXNode.EKind.CheckBox;
+      return a.IsReleased;
+   }
+
    public static bool TOPMENU () {
       ref UXNode a = ref UXFrame.BeginNode ();
       a.Kind = UXNode.EKind.TopMenu;
@@ -16,22 +22,23 @@ public static partial class UXApi {
       return true;
    }
 
-   public static ref UXNode FILLER (int min = 0) {
+   public static ref UXNode SCENEHOLDER (int slot) {
       ref UXNode a = ref UXFrame.BeginNode ();
-      a.Width = Grow (min); a.Height = Grow ();
+      a.Kind = UXNode.EKind.SceneHolder; a.BgrdColor = Color4.Red;
+      a.Tag = slot.ToString (); a.Width = Grow (); a.Height = Grow ();
       UXFrame.EndNode ();
       return ref a;
    }
 
-   // REMOVETHIS
-   public static bool MENUITEM_P (string text) {
-      string? shortcut = UXFrame.N.Kind == UXNode.EKind.TopMenu ? null : "\u0034";
-      return MENU (text, shortcut, hasChildren: true);
+   public static ref UXNode FILLER (SizeS width, SizeS height) {
+      ref UXNode a = ref UXFrame.BeginNode ();
+      a.Width = width; a.Height = height;
+      UXFrame.EndNode ();
+      return ref a;
    }
 
-   // REMOVETHIS
-   public static bool MENUITEM (string text, bool disable, bool popup = false) 
-      => MENU (text, null, disable, popup);
+   public static ref UXNode FILLER (int min = 0) 
+      => ref FILLER (Grow (min), Grow ());
 
    public static bool MENU (string text, bool disable, bool hasChildren)
       => MENU (text, null, disable, hasChildren);
@@ -45,7 +52,7 @@ public static partial class UXApi {
       a.Padding = MENUITEM_Padding; a.CornerRadius = MENUITEM_Radius; a.ChildAlignY = UXNode.EChildAlignY.Middle;
       if (a.GetParent ().Kind != UXNode.EKind.TopMenu) {
          a.Width = Grow ();
-         if (hasChildren) shortcut = "\u0034";
+         if (hasChildren) shortcut = "\u25B8";
       }
       TEXT (text, (a.Disabled = disable) ? MENUITEM_Text_D : MENUITEM_Text);
       if (shortcut != null) {

@@ -91,7 +91,9 @@ public static partial class Lux {
    /// same Root VNode. 
    /// Mounting a new UIScene will remove all the sub-scenes. 
    public static void AddSubScene (Scene scene, Bound2 bound) {
-      Lib.Check (mScenes.None (a => a.Scene == scene), "Duplicate scene");
+      for (int i = 0; i < mScenes.Count; i++) {
+         if (mScenes[i].Scene == scene) { mScenes[i] = (scene, bound); return; }
+      }
       scene.Attach ();
       mScenes.Add ((scene, bound));
       Redraw ();

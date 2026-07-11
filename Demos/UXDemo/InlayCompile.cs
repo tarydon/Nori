@@ -1,6 +1,5 @@
 ﻿using System.Reflection;
 using System.Runtime.Loader;
-using System.Text;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Emit;
@@ -11,7 +10,7 @@ public class InlayCompiler {
    readonly string mText;
 
    public Action? Compile () {
-      using var bt = new BlockTimer ();
+      using var bt = new BlockTimer ("Compile");
       var tree = CSharpSyntaxTree.ParseText (mText);
 
       var refs = ((string)AppContext.GetData ("TRUSTED_PLATFORM_ASSEMBLIES")!)
