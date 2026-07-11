@@ -1,0 +1,31 @@
+TOPMENU [
+  MENU "File" [
+    MENU New "Ctrl N" .Icon=FileNew .Tip="Create a new Part"
+      { Lib.Trace ("FileNew"); }
+    MENU Open "Ctrl O" .Icon=FileOpen .Tip="Open a 2D or 3D Part from file"
+      { DoFileOpen (); }
+    MENU Save "Ctrl S" (CurrentPart is null)
+      .Icon=FileSave
+      .Tip=(DISABLED ? "No active part" : "Save the current Part")
+      { DoFileSave (); }
+    MENU Export (CurrentPart is null) [
+      if (CurrentPart?.Is2D == true) {
+        MENU "To DXF" { DoFileExport ("DXF"); }
+        MENU "To GEO" { DoFileExport ("GEO"); }
+      }
+      if (CurrentPart?.Is3D == true) {
+        MENU "To IGES" { DoFileExport ("IGES"); }
+        MENU "To STEP" { DoFileExport ("STEP"); }
+      }
+    ]
+    SEPARATOR
+    if (MRUList.Count > 0) {
+      for (int i = 0; i < Math.Min (MRUList.Count, 9); i++) {
+        var file = MRUList[i];
+        MENU $"{file}" $"Ctrl {i + 1}" { DoFileOpen (file); }
+      }
+      SEPARATOR
+    }
+    MENU Exit "Ctrl X" { }
+  ]
+]

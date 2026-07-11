@@ -23,29 +23,37 @@ public static partial class UXApi {
       return ref a;
    }
 
+   // REMOVETHIS
    public static bool MENUITEM_P (string text) {
       string? shortcut = UXFrame.N.Kind == UXNode.EKind.TopMenu ? null : "\u0034";
-      return MENUITEM (text, shortcut, popup: true);
+      return MENU (text, shortcut, hasChildren: true);
    }
 
-   public static bool MENUITEM (string text, bool disable, bool popup = false)
-      => MENUITEM (text, null, disable, popup);
+   // REMOVETHIS
+   public static bool MENUITEM (string text, bool disable, bool popup = false) 
+      => MENU (text, null, disable, popup);
 
-   public static bool MENUITEM (string text, string? shortcut = null, bool disable = false, bool popup = false) {
+   public static bool MENU (string text, bool disable, bool hasChildren)
+      => MENU (text, null, disable, hasChildren);
+
+   public static bool MENU (string text, string? shortcut = null, bool disable = false, bool hasChildren = false) {
       ref UXNode a = ref UXFrame.BeginNode ();
       // Set up bgrd color (different when the menu is hovered)
       a.BgrdColor = a.IsHovered || a.AnyPopupsOpen ? MENUITEM_Bgrd_H : MENUITEM_Bgrd;
       // Set up padding, corner radius, and if this a POPUP-MENU item (as opposed to a top level
       // MENU-BAR item), set it to Grow()
       a.Padding = MENUITEM_Padding; a.CornerRadius = MENUITEM_Radius; a.ChildAlignY = UXNode.EChildAlignY.Middle;
-      if (a.GetParent ().Kind != UXNode.EKind.TopMenu) a.Width = Grow ();
+      if (a.GetParent ().Kind != UXNode.EKind.TopMenu) {
+         a.Width = Grow ();
+         if (hasChildren) shortcut = "\u0034";
+      }
       TEXT (text, (a.Disabled = disable) ? MENUITEM_Text_D : MENUITEM_Text);
       if (shortcut != null) {
          FILLER (80);
          TEXT (shortcut, MENUITEM_Shortcut, shortcut.Length == 1 ? 1 : 0);
       }
       if (a.Disabled) return false;
-      if (popup)
+      if (hasChildren)
          return a.IsHovered || a.AnyPopupsOpen;
       else
          return a.IsReleased;
@@ -66,7 +74,14 @@ public static partial class UXApi {
       return UXFrame.IsHovered (a.Id, 10);
    }
 
-   public static void SEPARATOR () { }
+   public static void SEPARATOR () {
+      ref UXNode a = ref UXFrame.BeginNode ();
+      a.Kind = UXNode.EKind.Separator; a.Width = Grow (); a.Padding = new (0, 6);
+      ref UXNode b = ref UXFrame.BeginNode ();
+      b.BgrdColor = POPUPMENU_BorderC; b.Width = Grow (); b.Height = 2;
+      UXFrame.EndNode ();
+      UXFrame.EndNode ();
+   }
 
    public static void TEXT (string text, Color4 color)
       => TEXT (text, color, 0);

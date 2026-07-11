@@ -1,15 +1,17 @@
 ﻿using System.Reflection;
 using System.Runtime.Loader;
+using System.Text;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Emit;
 namespace Nori.UX;
 
 public class InlayCompiler {
-   public InlayCompiler (string file) => mText = File.ReadAllText (file);
+   public InlayCompiler (string text) => mText = text;
    readonly string mText;
 
-   public void Compile () {
+   public Action? Compile () {
+      using var bt = new BlockTimer ();
       var tree = CSharpSyntaxTree.ParseText (mText);
 
       var refs = ((string)AppContext.GetData ("TRUSTED_PLATFORM_ASSEMBLIES")!)
@@ -24,14 +26,18 @@ public class InlayCompiler {
       
       EmitResult result = compilation.Emit (ms);
       if (!result.Success) {
-         foreach (var diag in result.Diagnostics.Take (10))
-            Console.WriteLine (diag);
-         return;
+         mDiags.AddRange (result.Diagnostics);
+         return null;
       }
 
       ms.Position = 0;
       var ctx = new AssemblyLoadContext (null, true);
       Assembly asm = ctx.LoadFromStream (ms);
-      Type[] types = asm.GetTypes ();
+      Type type = asm.GetTypes ()[0];
+      MethodInfo mi = type.GetMethod ("Generate", BindingFlags.Static | BindingFlags.Public)!;
+      return () => mi.Invoke (null, null);
    }
+
+   public IEnumerable<string> Diagnostics => mDiags.Select (a => a.ToString ());
+   List<Diagnostic> mDiags = [];
 }

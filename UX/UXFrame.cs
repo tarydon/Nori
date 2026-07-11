@@ -123,20 +123,6 @@ public static partial class UXFrame {
       (mNodes, mSnapshot) = (mSnapshot, mNodes);
    }
 
-   public static void DumpAll () {
-      Dump (1, 0);
-   }
-
-   static void Dump (int node, int level) {
-      ref UXNode a = ref mNodes[node];
-      string s = new (' ', level * 2); 
-      s += $"{a.Id} {a.Tag} {a.Text} {a.DX}x{a.DY} @ {a.X},{a.Y}";
-      Lib.Trace (s);
-
-      foreach (var b in a.EnumChildren ())
-         Dump (b, level + 1);
-   }
-
    internal static bool IsHovered (int n)
       => IsHovered (n, 0);
 

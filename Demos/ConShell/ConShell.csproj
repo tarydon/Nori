@@ -7,6 +7,11 @@
     <OutDir>..\..\Bin</OutDir>
     <Optimize>false</Optimize>
   </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="..\UXDemo\InlayCompile.cs" Link="InlayCompile.cs" />
+    <Compile Include="..\UXDemo\InlayGen.cs" Link="InlayGen.cs" />
+    <Compile Include="..\UXDemo\InlayHub.cs" Link="InlayHub.cs" />
+  </ItemGroup>
   
   <ItemGroup>
     <ProjectReference Include="..\..\Core\Nori.Core.csproj" />

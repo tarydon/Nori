@@ -22,6 +22,7 @@ class UXDemoVN : VNode {
 
    public override void Draw () {
       if (mFirst) {
+         mFirst = false;
          TypeFace tf1 = new TypeFace ("C:/Windows/Fonts/SegoeUI.ttf", (int)(10 * Lux.DPIScale + 0.5));
          TypeFace tf2 = new ("C:/Windows/Fonts/webdings.ttf", (int)(10.5 * Lux.DPIScale + 0.5));
          UXFrame.TypeFaces = [tf1, tf2];
@@ -37,15 +38,11 @@ class UXDemoVN : VNode {
          a.Padding = new MarginS (700, 0, 0, 0);
          a.Tag = "Root";
 
-         // FullDemo ();
-         NewDemo ();
-         // Demo1 ();
+         // NewDemo ();
+         UXCompile.Render ();
 
          UXFrame.EndNode ();
-
          UXFrame.EndLayout ();
-         if (mFirst) UXFrame.DumpAll ();
-         mFirst = false;
          UXFrame.Render (i == 1);
       }
    }
@@ -69,48 +66,48 @@ class UXDemoVN : VNode {
       if (TOPMENU ()) {
          if (MENUITEM_P ("File")) {
             POPUPMENU ();
-            if (MENUITEM ("New", "Ctrl N")) DoFileNew (); END ();
-            if (MENUITEM ("Open", "Ctrl O")) DoFileOpen (); END ();
+            if (MENU ("New", "Ctrl N")) DoFileNew (); END ();
+            if (MENU ("Open", "Ctrl O")) DoFileOpen (); END ();
             if (MRUList.Count > 0) {
                if (MENUITEM_P ("Open Recent")) {
                   POPUPMENU ();
                   for (int i = 0; i < Math.Min (MRUList.Count, 9); i++) {
                      var file = MRUList[i];
-                     if (MENUITEM ($"{file}", $"Ctrl {i + 1}")) DoFileOpen (file); END ();
+                     if (MENU ($"{file}", $"Ctrl {i + 1}")) DoFileOpen (file); END ();
                   }
                   END ();
                }
                END ();
             }
-            if (MENUITEM ("Save", "Ctrl S", CurrentPart is null)) DoFileSave (); END ();
+            if (MENU ("Save", "Ctrl S", CurrentPart is null)) DoFileSave (); END ();
             if (MENUITEM_P ("Export")) {
                POPUPMENU ();
                if (CurrentPartIs3D) {
-                  if (MENUITEM ("To IGES")) DoExport ("IGES"); END ();
-                  if (MENUITEM ("To STEP")) DoExport ("STEP"); END ();
+                  if (MENU ("To IGES")) DoExport ("IGES"); END ();
+                  if (MENU ("To STEP")) DoExport ("STEP"); END ();
                } else {
-                  if (MENUITEM ("To DXF")) DoExport ("DXF"); END ();
-                  if (MENUITEM ("To GEO")) DoExport ("GEO"); END ();
+                  if (MENU ("To DXF")) DoExport ("DXF"); END ();
+                  if (MENU ("To GEO")) DoExport ("GEO"); END ();
                }
                END ();
             }
             END ();
             SEPARATOR ();
-            if (MENUITEM ("Exit", "Ctrl X")) DoExit (); END ();
+            if (MENU ("Exit", "Ctrl X")) DoExit (); END ();
             END ();
          }
          END ();
          if (MENUITEM_P ("Edit")) {
             POPUPMENU ();
-            if (MENUITEM ("Cut", "Ctrl X")) DoCut (); END ();
-            if (MENUITEM ("Copy", "Ctrl C")) DoCopy (); END ();
-            if (MENUITEM ("Paste", "Ctrl V")) DoPaste (); END ();
+            if (MENU ("Cut", "Ctrl X")) DoCut (); END ();
+            if (MENU ("Copy", "Ctrl C")) DoCopy (); END ();
+            if (MENU ("Paste", "Ctrl V")) DoPaste (); END ();
             END ();
          }
          END ();
          if (MENUITEM_P ("Help")) {
             POPUPMENU ();
-            if (MENUITEM ("About...")) DoHelpAbout (); END ();
+            if (MENU ("About...")) DoHelpAbout (); END ();
             END ();
          }
          END ();
