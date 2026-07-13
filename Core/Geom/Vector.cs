@@ -181,12 +181,9 @@ public readonly struct Vector3 : IEQuable<Vector3> {
    public bool Opposing (Vector3 b) => Dot (b) < 0;
 
    /// <summary>Normalizes this vector and returns it</summary>
-   /// <returns>A vector with the same direction as this, but with length 1. 
-   /// If this is a zero vector, returns the XAxis unit vector</returns>
-   /// Returns unchanged if this is already a unit vector (to avoid unnecessary division and rounding errors)
    public Vector3 Normalized () {
       double f = Length; if (Math.Abs (f) < 1e-12) return XAxis;
-      return f.EQ (1) ? this : this / f;
+      return new (X / f, Y / f, Z / f);
    }
 
    /// <summary>Rotates a vector about a given axis, and returns a copy</summary>
