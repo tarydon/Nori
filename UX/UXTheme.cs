@@ -44,5 +44,11 @@ public static class UXTheme {
 
    public static Color4 CHECKBOX_Bgrd_P = 0xFFFF90;
 
+   public static Color4 SLIDER_Bgrd = 0x545454;    // Slider bgrd
+   public static Color4 SLIDER_Bgrd_H = 0x656565;  // Slider when mouse hovers over
+   public static Color4 SLIDER_Fgrd = 0xDDDDDD;    // Slider foreground
+   public static Color4 SLIDER_Fgrd_H = 0xEEEEEE;  // Slider fgrd when mouse hovers over
+   public static Color4 SLIDER_Fgrd_P = 0xFFFF90;  // Slider fgrd when mouse is pressed
+
    public static int TOOLTIP_OpenDelay = 500;
 }

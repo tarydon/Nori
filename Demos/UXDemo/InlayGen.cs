@@ -169,7 +169,7 @@ public class InlayGen {
 
       var args = GatherExpressions (info.ArgTypes);
       Lib.Check (args.Count >= info.NeedParams && args.Count <= info.NeedParams + info.OptParams);
-      if (info.VarType is { } vt) AddL ($"{vt} _v{++cVar} = {args[1]};");
+      if (info.VarType is { } vt) AddL ($"{vt} _v{++cVar} = {args[info.BoundArg]};");
       AddLineNo (tElem);
       if (info.Inert) Add ($"{elem} (");
       else Add ($"if ({elem} (");
@@ -179,7 +179,7 @@ public class InlayGen {
       for (int i = 0; i < args.Count; i++) {
          string arg = args[i]; tag ??= arg;
          if (i > 0) Add (", ");
-         if (i == 1 && info.VarType is { }) arg = $"ref _v{cVar}";
+         if (i == info.BoundArg && info.VarType is { }) arg = $"ref _v{cVar}";
          Add (arg);
       }
       // After adding these, we keep the parameter block still open, mainly because there could be a
@@ -241,8 +241,8 @@ public class InlayGen {
       if (!addedCore) {
          if (!info.Inert) {
             if (info.VarType is { }) {
-               if (elem == "RADIOBUTTON") AddL ($" {args[1].Replace ("==", "=")}; }}");
-               else AddL ($" {args[1]} = _v{cVar}; }}");
+               if (elem == "RADIOBUTTON") AddL ($" {args[info.BoundArg].Replace ("==", "=")}; }}");
+               else AddL ($" {args[info.BoundArg]} = _v{cVar}; }}");
             } else AddL ("}");
          }
       }
@@ -303,10 +303,11 @@ public class InlayGen {
    }
 
    readonly struct ElemInfo {
-      public ElemInfo (string argTypes, EContainer ccode, bool inert, string? varType) {
+      public ElemInfo (string argTypes, EContainer ccode, bool inert, string? varType, int boundArg) {
          (ArgTypes, CCode, Inert, VarType) = (argTypes, ccode, inert, varType);
          NeedParams = argTypes.TakeWhile (char.IsUpper).Count ();
          OptParams = argTypes.Length - NeedParams;
+         BoundArg = boundArg;
       }
 
       public readonly int NeedParams;
@@ -315,6 +316,7 @@ public class InlayGen {
       public readonly bool Inert;
       public readonly string ArgTypes;
       public readonly string? VarType;
+      public readonly int BoundArg;
    }
 
    // Private data -------------------------------------------------------------
@@ -325,12 +327,13 @@ public class InlayGen {
    bool mIncludeLineNo;
 
    static Dictionary<string, ElemInfo> sElemData = new () {
-      ["MENU"] = new ("Sse", EContainer.Maybe, false, null),
-      ["TOPMENU"] = new ("", EContainer.Yes, false, null),
-      ["SEPARATOR"] = new ("", EContainer.No, true, null),
-      ["DIALOG"] = new ("S", EContainer.Yes, false, null),
-      ["BUTTON"] = new ("S", EContainer.No, false, null),
-      ["CHECKBOX"] = new ("SE", EContainer.No, false, "bool"),
-      ["RADIOBUTTON"] = new ("SE", EContainer.No, false, "bool")
+      ["MENU"] = new ("Sse", EContainer.Maybe, false, null, -1),
+      ["TOPMENU"] = new ("", EContainer.Yes, false, null, -1),
+      ["SEPARATOR"] = new ("", EContainer.No, true, null, -1),
+      ["DIALOG"] = new ("S", EContainer.Yes, false, null, -1),
+      ["BUTTON"] = new ("S", EContainer.No, false, null, -1),
+      ["CHECKBOX"] = new ("SB", EContainer.No, false, "bool", 1),
+      ["RADIOBUTTON"] = new ("SB", EContainer.No, false, "bool", 1),
+      ["SLIDER"] = new ("DDD", EContainer.No, false, "double", 0),
    };
 }

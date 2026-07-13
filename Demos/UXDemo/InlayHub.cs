@@ -34,4 +34,6 @@ public class InlayHub {
    public static bool UseRayTracer { get; set { field = value; Lib.Trace ($"UseRayTracer = {value}"); } }
    public static bool AmbientOcclusion { get; set { field = value; Lib.Trace ($"AmbientOcculsion = {value}"); } } = true;
    public static int ShaderType { get; set { field = value; Lib.Trace ($"ShaderType = {value}"); } } = 2;
+
+   public static double Opacity { get; set { field = value; Lib.Trace ($"Opacity = {value}"); } } = 35.0;
 }

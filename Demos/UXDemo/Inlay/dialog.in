@@ -7,5 +7,6 @@ DIALOG Settings [
     Lib.Trace ("Begin Rendering");
     ShaderType = 3;
   }
+  SLIDER Opacity 0 100
   BUTTON "Close Dialog" .Width=Grow { UXLayout.RemoveCurrent (); }
 ]

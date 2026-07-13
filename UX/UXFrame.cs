@@ -112,6 +112,17 @@ public static partial class UXFrame {
                   double left = rect.Left / dx + 0.01, top = 1 - rect.Top / dy - 0.01, right = rect.Right / dx, bottom = 1 - rect.Bottom / dy;
                   Lux.AddSubScene (sc, new (left, top, right, bottom));
                }
+               continue;
+            }
+            if (node.Kind == UXNode.EKind.Slider) {
+               RectS rect = node.Rect;
+               Lux.Color = node.BgrdColor; int ym = (rect.Top + rect.Bottom) / 2;
+               Lux.RRect (new RectS (rect.Left, ym - 3, rect.Right, ym + 4), 3);
+               int cx = rect.Height / 4;
+               Lux.Color = node.TextColor;
+               int xm = (int)(node.DValue.Along (rect.Left + cx, rect.Right - cx) + 0.5);
+               Lux.RRect (new RectS (xm - cx, rect.Top, xm + cx + 1, rect.Bottom), 3);
+               continue;
             }
             if (!node.BgrdColor.IsTransparent) {
                Lux.Color = node.BgrdColor;

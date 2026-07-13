@@ -44,6 +44,7 @@ public struct UXNode {
    public ETextAlign TextAlign;
    public Color4 TextColor;
    public Vec2S TextOffset;
+   public double DValue;
 
    // Border ...............................................
    public short CornerRadius;
@@ -104,7 +105,7 @@ public struct UXNode {
    public enum ESizeMode : short { Fit, Grow, Fixed, Percent }
    public enum ECorner : short { LeftTop, Top, RightTop, Left, Center, Right, LeftBottom, Bottom, RightBottom };
    public enum EKind {
-      Generic, TopMenu, MenuItem, PopupMenu, Separator, CheckBox, SceneHolder, Dialog,
+      Generic, TopMenu, MenuItem, PopupMenu, Separator, CheckBox, SceneHolder, Dialog, Slider,
    }
 };
 

@@ -19,7 +19,7 @@ public static partial class UXApi {
       if (disable) return false;
       return a.IsReleased;
    }
-
+   
    public static bool CHECKBOX (string title, ref bool val) {
       ref UXNode a = ref UXFrame.BeginNode ();
       a.ChildGap = 15; a.Padding = new MarginS (2, 0, 0, 0);
@@ -39,6 +39,16 @@ public static partial class UXApi {
       TEXT (val ? "\u25CF" : "\u25CB", a.IsPressed ? CHECKBOX_Bgrd_P : color, 1);
       TEXT (title, color);
       return a.IsReleased;
+   }
+
+   public static bool SLIDER (ref double val, double min, double max) {
+      ref UXNode a = ref UXFrame.BeginNode ();
+      a.Kind = UXNode.EKind.Slider; a.ChildAlignY = UXNode.EChildAlignY.Middle;
+      a.BgrdColor = a.IsHovered ? SLIDER_Bgrd_H : SLIDER_Bgrd;
+      a.TextColor = a.IsPressed ? SLIDER_Fgrd_P : (a.IsHovered ? SLIDER_Fgrd_H : SLIDER_Fgrd); 
+      a.Height = 38; a.Width = Grow ();
+      a.DValue = val.GetLieOn (min, max).Clamp ();
+      return a.IsPressed;
    }
 
    public static bool DIALOG (string title) {
