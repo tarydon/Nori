@@ -214,7 +214,9 @@ class StreamBuffer {
          if (a.Integral) GL.VertexAttribIPointer (index, a.Dims, a.Type, cbVertex, basis);
          else GL.VertexAttribPointer (index, a.Dims, a.Type, false, cbVertex, basis);
          GL.EnableVertexAttribArray (index);
+         // REMOVETHIS
          if (shader.Name == "UIRect" && index >= 0) GL.VertexAttribDivisor (index, 1);
+         else GL.VertexAttribDivisor (index, 0);
          index++; basis += a.Size;
       }
 

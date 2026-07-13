@@ -25,5 +25,20 @@ public static class UXTheme {
    public static MarginS POPUPMENU_Padding = 10;
    public static short POPUPMENU_ChildGap = 3;
 
+   public static Color4 DIALOG_Bgrd = 0x3D3D3D;
+   public static Color4 DIALOG_BorderC = 0x303030;
+   public static short DIALOG_BorderW = 6;
+   public static short DIALOG_Radius = 12;
+   public static MarginS DIALOG_TitlePadding = new (15, 10);
+   public static Color4 DIALOG_TitleColor = 0x505050;
+   public static MarginS DIALOG_Padding = 20;
+
+   public static Color4 BUTTON_Bgrd = 0x545454;
+   public static Color4 BUTTON_Bgrd_H = 0x656565;  // Button when mouse hovers over
+   public static Color4 BUTTON_Bgrd_P = 0x4772B3;  // Button during pressing
+   public static MarginS BUTTON_Padding = new (14, 7);
+   public static short BUTTON_Radius = 2;
+   public static Color4 BUTTON_Text = 0xDDDDDD;
+
    public static int TOOLTIP_OpenDelay = 500;
 }

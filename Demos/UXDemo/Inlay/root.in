@@ -39,6 +39,6 @@ TOPMENU [
     MENU Paste "Ctrl P" { DoPaste (); }
   ]
   MENU "Help" [
-    MENU "About..."
+    MENU "About..." { DoHelpAbout (); }
   ]
 ]

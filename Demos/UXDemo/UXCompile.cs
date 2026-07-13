@@ -1,6 +1,4 @@
-﻿using Nori;
-using Nori.UX;
-namespace UXDemo;
+﻿namespace Nori.UX;
 
 public class UXLayout {
    public UXLayout (string file) {
@@ -18,9 +16,11 @@ public class UXLayout {
 
    public Action Render {
       get {
+         Current = this;
          if (mRenderFunc == null) {
             InlayGen ig = new (mFile);
-            var s = ig.Generate (true);
+            var s = ig.Generate (false);
+            File.WriteAllText ($"c:/etc/{Path.GetFileNameWithoutExtension (mFile)}.cs", s);
 
             InlayCompiler ic = new (s);
             mRenderFunc = ic.Compile () ?? (() => { });
@@ -31,9 +31,12 @@ public class UXLayout {
    }
    Action? mRenderFunc;
 
+   public static void RemoveCurrent () => mAll.Remove (Current!);
+
    void OnChanged (object sender, FileSystemEventArgs e) {
       mRenderFunc = null; Lux.Redraw ();
    }
 
    public static string Root = Lib.DevRoot;
+   public static UXLayout? Current;
 }

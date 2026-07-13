@@ -121,7 +121,14 @@ public static partial class UXFrame {
                   case (false, false): Lux.Rect (rect); break;
                   case (false, true): Lux.RRect (rect, node.CornerRadius); break;
                   case (true, false): Lux.BorderColor = node.BorderColor; Lux.RectBorder (rect, node.Border.Left); break;
-                  case (true, true): Lux.BorderColor = node.BorderColor; Lux.RRectBorder (rect, node.CornerRadius, node.Border.Left); break;
+                  case (true, true):
+                     if (node.Kind == UXNode.EKind.Dialog) {
+                        Lux.UIRect (rect.Center, rect.Size, node.CornerRadius, node.Border.Left, node.BgrdColor, node.BorderColor);
+                     } else {
+                        Lux.BorderColor = node.BorderColor; 
+                        Lux.RRectBorder (rect, node.CornerRadius, node.Border.Left);
+                     }
+                     break;
                }
             }
             if (node.Text != null) {

@@ -1,2 +1,4 @@
 DIALOG Settings [
+  BUTTON "Close Dialog" .Width=Grow
+    { UXLayout.RemoveCurrent (); }
 ]

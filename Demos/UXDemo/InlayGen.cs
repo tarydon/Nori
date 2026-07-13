@@ -114,7 +114,7 @@ public class InlayGen {
                start = N - 1;
                while (!sNameStop.Contains (PeekCH ())) { GetCH (); }
                var span = mText.AsSpan (start, N - start);
-               foreach (var elem in sElements) 
+               foreach (var elem in sElemData.Keys) 
                   if (elem.AsSpan ().Equals (span, StringComparison.Ordinal))
                      return new Token (EToken.Element, mText, start, N, mLine, mColumn);
                return new Token (EToken.Word, mText, start, N, mLine, mColumn);
@@ -123,7 +123,6 @@ public class InlayGen {
    }
    static SearchValues<char> sTokens = SearchValues.Create ("[]{}().=\n\u001A");
    static SearchValues<char> sNameStop = SearchValues.Create ("[]{}()\".=\n\u001A \t\r");
-   static string[] sElements = ["MENU", "TOPMENU", "SEPARATOR"];
 
    char PeekCH () => mText[N];
 
@@ -195,6 +194,7 @@ public class InlayGen {
                if (elem == "MENU") AddL ("END (); // POPUPMENU");
                AddL ("}");
                props.ForEach (AddL);
+               int count = elem == "DIALOG" ? 2 : 1;
                AddL ($"END (); // {elem} {tag}");
                return;
             case EToken.Newline:
@@ -306,6 +306,8 @@ public class InlayGen {
    static Dictionary<string, ElemInfo> sElemData = new () {
       ["MENU"] = new (1, 2, EContainer.Maybe, false),
       ["TOPMENU"] = new (0, 0, EContainer.Yes, false),
-      ["SEPARATOR"] = new (0, 0, EContainer.No, true)
+      ["SEPARATOR"] = new (0, 0, EContainer.No, true),
+      ["DIALOG"] = new (1, 0, EContainer.Yes, false),
+      ["BUTTON"] = new (1, 0, EContainer.No, false)
    };
 }

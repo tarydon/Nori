@@ -8,10 +8,36 @@ using static UXNode.EOrientation;
 using static UXTheme;
 
 public static partial class UXApi {
-   public static bool CHECKBOX (string text, bool value, Action<bool> setter, bool disable = false) {
+   public static bool BUTTON (string title, bool disable = false) {
       ref UXNode a = ref UXFrame.BeginNode ();
-      a.Kind = UXNode.EKind.CheckBox;
+      // Set up bgrd color (different when the menu is hovered)
+      a.BgrdColor = a.IsPressed ? BUTTON_Bgrd_P : (a.IsHovered ? BUTTON_Bgrd_H : BUTTON_Bgrd);
+      a.Padding = BUTTON_Padding; a.CornerRadius = BUTTON_Radius; 
+      a.ChildAlignX = UXNode.EChildAlignX.Center; a.ChildAlignY = UXNode.EChildAlignY.Middle;
+      a.Disabled = disable;
+      TEXT (title, BUTTON_Text);
+      if (disable) return false;
       return a.IsReleased;
+   }
+
+   public static bool DIALOG (string title) {
+      ref UXNode a = ref UXFrame.BeginNode ();
+      a.Kind = UXNode.EKind.Dialog; a.Floating = true;
+      a.ElemCorner = UXNode.ECorner.Center; a.ParentCorner = UXNode.ECorner.Center;
+      a.BgrdColor = DIALOG_Bgrd; a.Padding = 0;
+      a.Border = DIALOG_BorderW; a.BorderColor = DIALOG_BorderC; a.CornerRadius = DIALOG_Radius;
+      a.ChildGap = DIALOG_Padding.Top;
+      a.Orientation = UXNode.EOrientation.TopToBottom;
+      a.Width = Fit (300); a.Height = Fit (200);
+
+      // Add the title
+      ref UXNode b = ref UXFrame.BeginNode ();
+      b.Width = Grow (); b.BgrdColor = DIALOG_TitleColor; b.ChildAlignY = UXNode.EChildAlignY.Middle;
+      b.CornerRadius = DIALOG_Radius;
+      b.Padding = DIALOG_TitlePadding;
+      TEXT (title, Color4.White, 0);
+      UXFrame.EndNode ();
+      return true;
    }
 
    public static bool TOPMENU () {
@@ -66,6 +92,10 @@ public static partial class UXApi {
          return a.IsReleased;
    }
 
+   public static ref UXNode NODE () {
+      return ref UXFrame.BeginNode ();
+   }
+
    public static bool POPUPMENU () {
       ref UXNode a = ref UXFrame.BeginNode ();
       a.Kind = UXNode.EKind.PopupMenu;
@@ -102,6 +132,11 @@ public static partial class UXApi {
    public static void TIP (string text) { }
    public static void ICON (string s) { }
    public static bool DISABLED => false;
+   public static void WIDTH (string s) => UXFrame.N.Width = Grow ();
 
    public static void END () => UXFrame.EndNode ();
+
+   public static void END (int n) {
+      for (int i = 0; i < n; i++) UXFrame.EndNode ();
+   }
 }

@@ -33,6 +33,7 @@ class UXDemoVN : VNode {
 
          UXLayout.Root = "N:/Demos/UXDemo/Inlay";
          UXLayout.Add (new UXLayout ("root.in"));
+         UXLayout.Add (new UXLayout ("dialog.in"));
       }
 
       for (int i = 0; i < 2; i++) {
@@ -45,9 +46,10 @@ class UXDemoVN : VNode {
          a.Padding = new MarginS (700, 0, 0, 0);
          a.Tag = "Root";
 
-         UXLayout.All.ForEach (a => a.Render ());
+         var set = UXLayout.All.ToList ();
+         set.ForEach (a => a.Render ());
          // SCENEHOLDER (0);
-         FILLER ().BgrdColor = Color4.Gray (192);
+         FILLER ();
          FILLER (Grow (), 100).BgrdColor = UXTheme.MENUBAR_Bgrd;
 
          EndNode ();

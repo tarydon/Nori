@@ -156,6 +156,8 @@ public readonly struct RectS : IEQuable<RectS> {
    /// <summary>The size of this RectS in pixels (width,height)</summary>
    public Vec2S Size => new (Right - Left, Bottom - Top);
 
+   public Vec2S Center => new ((Left + Right) / 2, (Top + Bottom) / 2);
+
    /// <summary>Special 'empty' RectS</summary>
    public static readonly RectS Empty = new (-32768, -32768, -32768, -32768);
 

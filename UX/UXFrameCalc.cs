@@ -139,15 +139,28 @@ public static partial class UXFrame {
    static List<int> mTmp = [];
 
    static void PositionFloat (ref UXNode parent, ref UXNode child) {
-      child.X = child.ParentCorner switch {
+      // First, pick up the corner on the parent
+      int x = child.ParentCorner switch {
          EC.Left or EC.LeftTop or EC.LeftBottom => parent.X,
          EC.Right or EC.RightTop or EC.RightBottom => parent.X + parent.DX,
          _ => parent.X + parent.DX / 2,
       };
-      child.Y = child.ParentCorner switch {
+      int y = child.ParentCorner switch {
          EC.Top or EC.LeftTop or EC.RightTop => parent.Y,
          EC.Bottom or EC.LeftBottom or EC.RightBottom => parent.Y + parent.DY,
          _ => parent.Y + parent.DY / 2,
       };
+      // Next, adjust this with the child corner setting
+      x -= child.ElemCorner switch {
+         EC.Right or EC.RightTop or EC.RightBottom => child.DX,
+         EC.Top or EC.Center or EC.Bottom => child.DX / 2,
+         _ => 0
+      };
+      y -= child.ElemCorner switch {
+         EC.Bottom or EC.LeftBottom or EC.RightBottom => child.DY,
+         EC.Left or EC.Center or EC.Right => child.DY / 2,
+         _ => 0
+      };
+      child.X = x; child.Y = y;
    }
 }

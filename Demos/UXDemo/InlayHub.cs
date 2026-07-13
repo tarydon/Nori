@@ -1,4 +1,5 @@
-﻿namespace Nori.Inlay;
+﻿using Nori.UX;
+namespace Nori.Inlay;
 
 public class Part {
    public bool Is2D => false;
@@ -25,4 +26,6 @@ public class InlayHub {
 
    public static string? NextUndo => UndoStack.SafeGet (NUndo);
    public static string? NextRedo => UndoStack.SafeGet (NUndo + 1);
+
+   public static void DoHelpAbout () => UXLayout.Add (new UXLayout ("dialog.in"));
 }
