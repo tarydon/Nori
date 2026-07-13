@@ -1,7 +1,11 @@
 DIALOG Settings [
-  CHECKBOX "Use Raytracer" UseRayTracer {
-    Lib.Trace ($"Modified {.Value}");
-    UseRayTracer = .Value;
+  CHECKBOX "Use Raytracer" UseRayTracer
+  CHECKBOX "Ambient Occlusion" AmbientOcclusion
+  RADIOBUTTON "Translucent (Glass)" (ShaderType == 1)
+  RADIOBUTTON "Wireframe (Hidden)" (ShaderType == 2)
+  RADIOBUTTON "Lit (Phong / Gourad)" (ShaderType == 3) {
+    Lib.Trace ("Begin Rendering");
+    ShaderType = 3;
   }
   BUTTON "Close Dialog" .Width=Grow { UXLayout.RemoveCurrent (); }
 ]

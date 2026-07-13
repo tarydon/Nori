@@ -22,13 +22,23 @@ public static partial class UXApi {
 
    public static bool CHECKBOX (string title, ref bool val) {
       ref UXNode a = ref UXFrame.BeginNode ();
-      a.Width = 30; a.Height = 30; a.ChildGap = 15; a.Padding = new MarginS (2, 0, 0, 0);
+      a.ChildGap = 15; a.Padding = new MarginS (2, 0, 0, 0);
       a.ChildAlignY = UXNode.EChildAlignY.Middle;
       Color4 color = a.IsHovered ? DIALOG_TextC_H : DIALOG_TextC;
       TEXT (val ? "\u2611" : "\u2610", a.IsPressed ? CHECKBOX_Bgrd_P : color, 1);
       TEXT (title, color);
       if (a.IsReleased) { val = !val; return true; }
       return false;
+   }
+
+   public static bool RADIOBUTTON (string title, ref bool val) {
+      ref UXNode a = ref UXFrame.BeginNode ();
+      a.ChildGap = 15; a.Padding = new MarginS (2, 0, 0, 0);
+      a.ChildAlignY = UXNode.EChildAlignY.Middle;
+      Color4 color = a.IsHovered ? DIALOG_TextC_H : DIALOG_TextC;
+      TEXT (val ? "\u25CF" : "\u25CB", a.IsPressed ? CHECKBOX_Bgrd_P : color, 1);
+      TEXT (title, color);
+      return a.IsReleased;
    }
 
    public static bool DIALOG (string title) {
@@ -50,8 +60,9 @@ public static partial class UXApi {
 
       // Add the content area
       ref UXNode c = ref UXFrame.BeginNode ();
-      c.Width = Grow (); c.Height = Grow (); c.Padding = DIALOG_Padding; c.ChildGap = DIALOG_Padding.Top;
-      c.Orientation = UXNode.EOrientation.TopToBottom;
+      c.Width = Grow (); c.Height = Grow (); c.Padding = DIALOG_Padding; 
+      c.ChildGap = DIALOG_Padding.Top;
+      c.Orientation = TopToBottom;
 
       return true;
    }

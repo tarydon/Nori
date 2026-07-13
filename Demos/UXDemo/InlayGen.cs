@@ -162,14 +162,14 @@ public class InlayGen {
    // other elements inside). The entire code is generated effectively by calling
    // OutElem on the outermost element (for example, like a TOPMENU, or a DIALOG)
    void OutElem (Token tElem) {
-      int cVars = 0;
+      int cVar = ++NextVar;
       string elem = tElem.TextS; string? tag = null;
       var info = sElemData[elem];
       bool finishedArgs = false, openedContainer = false, addedCore = false;
 
       var args = GatherExpressions (info.ArgTypes);
       Lib.Check (args.Count >= info.NeedParams && args.Count <= info.NeedParams + info.OptParams);
-      if (info.VarType is { } vt) AddL ($"{vt} _v{++cVars} = {args[1]};");
+      if (info.VarType is { } vt) AddL ($"{vt} _v{++cVar} = {args[1]};");
       AddLineNo (tElem);
       if (info.Inert) Add ($"{elem} (");
       else Add ($"if ({elem} (");
@@ -179,7 +179,7 @@ public class InlayGen {
       for (int i = 0; i < args.Count; i++) {
          string arg = args[i]; tag ??= arg;
          if (i > 0) Add (", ");
-         if (i == 1 && info.VarType is { }) arg = $"ref _v{cVars}";
+         if (i == 1 && info.VarType is { }) arg = $"ref _v{cVar}";
          Add (arg);
       }
       // After adding these, we keep the parameter block still open, mainly because there could be a
@@ -221,8 +221,8 @@ public class InlayGen {
                Lib.Check (!finishedArgs && !openedContainer);    
                Add (")) {"); finishedArgs = true;  
                str = GatherUntil (EToken.CloseCurly);
-               str = str.Replace (".Value", $"_v{cVars}");
-               if (str.Length < 60) AddL ($" {str} }}");
+               str = str.Replace (".Value", $"_v{cVar}");
+               if (str.Length < 60 && !str.Contains ('\n')) AddL ($" {str} }}");
                else AddL ($"\n{str}\n}}");
                addedCore = true;
                break;
@@ -240,13 +240,18 @@ public class InlayGen {
       }
       if (!addedCore) {
          if (!info.Inert) {
-            if (info.VarType is { }) AddL ($" {args[1]} = _v{cVars}; }}");
-            else AddL ("}");
+            if (info.VarType is { }) {
+               if (elem == "RADIOBUTTON") AddL ($" {args[1].Replace ("==", "=")}; }}");
+               else AddL ($" {args[1]} = _v{cVar}; }}");
+            } else AddL ("}");
          }
       }
       props.ForEach (AddL);
       if (!info.Inert) AddL ($"END (); // {elem} {tag}");
+      sLastElem = elem;
    }
+   static string sLastElem = "";
+   static int NextVar;
 
    // Tries to read an expression, and if it cannot find one, this returns false
    // (and does not consume any tokens)
@@ -326,5 +331,6 @@ public class InlayGen {
       ["DIALOG"] = new ("S", EContainer.Yes, false, null),
       ["BUTTON"] = new ("S", EContainer.No, false, null),
       ["CHECKBOX"] = new ("SE", EContainer.No, false, "bool"),
+      ["RADIOBUTTON"] = new ("SE", EContainer.No, false, "bool")
    };
 }
