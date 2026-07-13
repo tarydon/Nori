@@ -148,32 +148,39 @@ public class InlayGen {
       }
    }
 
+   List<string> GatherExpressions (string argTypes) {
+      List<string> expressions = [];
+      for (int i = 0; ; i++) { 
+         if (!TryGetExpr (out var expr)) break;
+         if (i <= argTypes.Length && char.ToUpper (argTypes[i]) != 'S') expr = expr.Unquote ();
+         expressions.Add (expr);
+      }
+      return expressions;
+   }
+
    // Outputs the code for an element (recursively may include code blocks, 
    // other elements inside). The entire code is generated effectively by calling
    // OutElem on the outermost element (for example, like a TOPMENU, or a DIALOG)
    void OutElem (Token tElem) {
+      int cVars = 0;
       string elem = tElem.TextS; string? tag = null;
       var info = sElemData[elem];
       bool finishedArgs = false, openedContainer = false, addedCore = false;
 
+      var args = GatherExpressions (info.ArgTypes);
+      Lib.Check (args.Count >= info.NeedParams && args.Count <= info.NeedParams + info.OptParams);
+      if (info.VarType is { } vt) AddL ($"{vt} _v{++cVars} = {args[1]};");
       AddLineNo (tElem);
       if (info.Inert) Add ($"{elem} (");
       else Add ($"if ({elem} (");
       List<string> props = [];   // Additional prop initialers (like .TIP="Double")
 
       // Add the necessary parameters
-      bool comma = false;
-      for (int i = 0; i < info.NeedParams; i++) {
-         string expr = GetExpr (); tag ??= expr;
-         if (comma) Add (", "); Add (expr);
-         comma = true;
-      }
-      // Add the optional parameters
-      for (int i = 0; i < info.OptParams; i++) {
-         if (TryGetExpr (out var expr)) {
-            if (comma) Add (", "); Add (expr);
-            comma = true;
-         } else break;
+      for (int i = 0; i < args.Count; i++) {
+         string arg = args[i]; tag ??= arg;
+         if (i > 0) Add (", ");
+         if (i == 1 && info.VarType is { }) arg = $"ref _v{cVars}";
+         Add (arg);
       }
       // After adding these, we keep the parameter block still open, mainly because there could be a
       // [ that necessitates us having to add a .hasChildren=true parameter, and we don't know that yet
@@ -195,7 +202,7 @@ public class InlayGen {
                AddL ("}");
                props.ForEach (AddL);
                int count = elem == "DIALOG" ? 2 : 1;
-               AddL ($"END (); // {elem} {tag}");
+               AddL ($"END ({count}); // {elem} {tag}");
                return;
             case EToken.Newline:
                // If we see a newline, make sure that we have opened the children container
@@ -214,6 +221,7 @@ public class InlayGen {
                Lib.Check (!finishedArgs && !openedContainer);    
                Add (")) {"); finishedArgs = true;  
                str = GatherUntil (EToken.CloseCurly);
+               str = str.Replace (".Value", $"_v{cVars}");
                if (str.Length < 60) AddL ($" {str} }}");
                else AddL ($"\n{str}\n}}");
                addedCore = true;
@@ -228,10 +236,13 @@ public class InlayGen {
       Done:
       if (!finishedArgs) {
          if (info.Inert) AddL (");");
-         else AddL (")) {");
+         else { Add (")) {"); if (addedCore) AddL (""); }
       }
       if (!addedCore) {
-         if (!info.Inert) AddL ("}");
+         if (!info.Inert) {
+            if (info.VarType is { }) AddL ($" {args[1]} = _v{cVars}; }}");
+            else AddL ("}");
+         }
       }
       props.ForEach (AddL);
       if (!info.Inert) AddL ($"END (); // {elem} {tag}");
@@ -287,13 +298,18 @@ public class InlayGen {
    }
 
    readonly struct ElemInfo {
-      public ElemInfo (int needParams, int optParams, EContainer ccode, bool inert)
-         => (NeedParams, OptParams, CCode, Inert) = (needParams, optParams, ccode, inert);
+      public ElemInfo (string argTypes, EContainer ccode, bool inert, string? varType) {
+         (ArgTypes, CCode, Inert, VarType) = (argTypes, ccode, inert, varType);
+         NeedParams = argTypes.TakeWhile (char.IsUpper).Count ();
+         OptParams = argTypes.Length - NeedParams;
+      }
 
       public readonly int NeedParams;
       public readonly int OptParams;
       public readonly EContainer CCode;
       public readonly bool Inert;
+      public readonly string ArgTypes;
+      public readonly string? VarType;
    }
 
    // Private data -------------------------------------------------------------
@@ -304,10 +320,11 @@ public class InlayGen {
    bool mIncludeLineNo;
 
    static Dictionary<string, ElemInfo> sElemData = new () {
-      ["MENU"] = new (1, 2, EContainer.Maybe, false),
-      ["TOPMENU"] = new (0, 0, EContainer.Yes, false),
-      ["SEPARATOR"] = new (0, 0, EContainer.No, true),
-      ["DIALOG"] = new (1, 0, EContainer.Yes, false),
-      ["BUTTON"] = new (1, 0, EContainer.No, false)
+      ["MENU"] = new ("Sse", EContainer.Maybe, false, null),
+      ["TOPMENU"] = new ("", EContainer.Yes, false, null),
+      ["SEPARATOR"] = new ("", EContainer.No, true, null),
+      ["DIALOG"] = new ("S", EContainer.Yes, false, null),
+      ["BUTTON"] = new ("S", EContainer.No, false, null),
+      ["CHECKBOX"] = new ("SE", EContainer.No, false, "bool"),
    };
 }

@@ -7,6 +7,7 @@ public class Part {
 }
 
 public class InlayHub {
+   // Menu ----------------
    public static void DoFileNew () => Lib.Trace ("FILE/NEW");
    public static void DoFileOpen (string? file = null) => Lib.Trace ($"FILE/OPEN({file})");
    public static void DoFileSave () => Lib.Trace ("FILE/SAVE");
@@ -28,4 +29,7 @@ public class InlayHub {
    public static string? NextRedo => UndoStack.SafeGet (NUndo + 1);
 
    public static void DoHelpAbout () => UXLayout.Add (new UXLayout ("dialog.in"));
+
+   // Dialog ---------------
+   public static bool UseRayTracer { get; set { field = value; Lib.Trace ($"UseRayTracer = {value}"); } }
 }

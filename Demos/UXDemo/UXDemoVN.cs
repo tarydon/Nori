@@ -23,7 +23,7 @@ class UXDemoVN : VNode {
       if (mFirst) {
          mFirst = false;
          TypeFace tf1 = new TypeFace ("C:/Windows/Fonts/SegoeUI.ttf", (int)(10 * Lux.DPIScale + 0.5));
-         TypeFace tf2 = new ("C:/Windows/Fonts/seguisym.ttf", (int)(10.5 * Lux.DPIScale + 0.5));
+         TypeFace tf2 = new ("C:/Windows/Fonts/seguisym.ttf", (int)(12 * Lux.DPIScale + 0.5));
          TypeFaces = [tf1, tf2];
 
          var dwg = DXFReader.Load ("N:/TData/IO/DXF/AllEnt.dxf");

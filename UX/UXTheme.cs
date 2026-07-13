@@ -30,7 +30,9 @@ public static class UXTheme {
    public static short DIALOG_BorderW = 6;
    public static short DIALOG_Radius = 12;
    public static MarginS DIALOG_TitlePadding = new (15, 10);
-   public static Color4 DIALOG_TitleColor = 0x505050;
+   public static Color4 DIALOG_TitleColor = 0x303030;
+   public static Color4 DIALOG_TextC = 0xDDDDDD;
+   public static Color4 DIALOG_TextC_H = 0xEEEEEE;
    public static MarginS DIALOG_Padding = 20;
 
    public static Color4 BUTTON_Bgrd = 0x545454;
@@ -39,6 +41,8 @@ public static class UXTheme {
    public static MarginS BUTTON_Padding = new (14, 7);
    public static short BUTTON_Radius = 2;
    public static Color4 BUTTON_Text = 0xDDDDDD;
+
+   public static Color4 CHECKBOX_Bgrd_P = 0xFFFF90;
 
    public static int TOOLTIP_OpenDelay = 500;
 }

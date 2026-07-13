@@ -20,14 +20,24 @@ public static partial class UXApi {
       return a.IsReleased;
    }
 
+   public static bool CHECKBOX (string title, ref bool val) {
+      ref UXNode a = ref UXFrame.BeginNode ();
+      a.Width = 30; a.Height = 30; a.ChildGap = 15; a.Padding = new MarginS (2, 0, 0, 0);
+      a.ChildAlignY = UXNode.EChildAlignY.Middle;
+      Color4 color = a.IsHovered ? DIALOG_TextC_H : DIALOG_TextC;
+      TEXT (val ? "\u2611" : "\u2610", a.IsPressed ? CHECKBOX_Bgrd_P : color, 1);
+      TEXT (title, color);
+      if (a.IsReleased) { val = !val; return true; }
+      return false;
+   }
+
    public static bool DIALOG (string title) {
       ref UXNode a = ref UXFrame.BeginNode ();
       a.Kind = UXNode.EKind.Dialog; a.Floating = true;
       a.ElemCorner = UXNode.ECorner.Center; a.ParentCorner = UXNode.ECorner.Center;
       a.BgrdColor = DIALOG_Bgrd; a.Padding = 0;
       a.Border = DIALOG_BorderW; a.BorderColor = DIALOG_BorderC; a.CornerRadius = DIALOG_Radius;
-      a.ChildGap = DIALOG_Padding.Top;
-      a.Orientation = UXNode.EOrientation.TopToBottom;
+      a.Orientation = TopToBottom;
       a.Width = Fit (300); a.Height = Fit (200);
 
       // Add the title
@@ -35,8 +45,14 @@ public static partial class UXApi {
       b.Width = Grow (); b.BgrdColor = DIALOG_TitleColor; b.ChildAlignY = UXNode.EChildAlignY.Middle;
       b.CornerRadius = DIALOG_Radius;
       b.Padding = DIALOG_TitlePadding;
-      TEXT (title, Color4.White, 0);
+      TEXT (title, DIALOG_TextC, 0);
       UXFrame.EndNode ();
+
+      // Add the content area
+      ref UXNode c = ref UXFrame.BeginNode ();
+      c.Width = Grow (); c.Height = Grow (); c.Padding = DIALOG_Padding; c.ChildGap = DIALOG_Padding.Top;
+      c.Orientation = UXNode.EOrientation.TopToBottom;
+
       return true;
    }
 

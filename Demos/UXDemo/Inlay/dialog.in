@@ -1,4 +1,7 @@
 DIALOG Settings [
-  BUTTON "Close Dialog" .Width=Grow
-    { UXLayout.RemoveCurrent (); }
+  CHECKBOX "Use Raytracer" UseRayTracer {
+    Lib.Trace ($"Modified {.Value}");
+    UseRayTracer = .Value;
+  }
+  BUTTON "Close Dialog" .Width=Grow { UXLayout.RemoveCurrent (); }
 ]
