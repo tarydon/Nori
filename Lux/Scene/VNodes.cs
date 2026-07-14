@@ -85,6 +85,7 @@ public partial class TraceVN : VNode {
    // Draw the lines, starting from the top left corner of the screen
    public override void Draw () {
       if (Lux.Scene is not { } scene) return;
+      Lux.ZLevel = 9999;
       mcLines = Math.Max (scene.Rect.Height / mDYLine - 2, 10);
       int y = (int)(mDYLine * 1.15);
       for (int i = 0; i < mLines.Count; i++) {

@@ -160,6 +160,9 @@ public static partial class UXFrame {
       return mSnapshot[n].Rect.Inflated (inflate).Contains (mMousePos);
    }
 
+   public static RectS GetRect (int n)
+      => mSnapshot[n].Rect;
+
    internal static bool IsPressed (int n)
       => mMousePressed && IsHovered (n);
 

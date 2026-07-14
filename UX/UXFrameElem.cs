@@ -3,6 +3,8 @@
 // ║║║║╬║╔╣║ <<TODO>>
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 namespace Nori.UX;
+
+using System.Transactions;
 using static SizeS;
 using static UXNode.EOrientation;
 using static UXTheme;
@@ -41,13 +43,20 @@ public static partial class UXApi {
       return a.IsReleased;
    }
 
-   public static bool SLIDER (ref double val, double min, double max) {
+   public static bool SLIDER (ref double val, double min, double max, double step = 0) {
       ref UXNode a = ref UXFrame.BeginNode ();
       a.Kind = UXNode.EKind.Slider; a.ChildAlignY = UXNode.EChildAlignY.Middle;
       a.BgrdColor = a.IsHovered ? SLIDER_Bgrd_H : SLIDER_Bgrd;
       a.TextColor = a.IsPressed ? SLIDER_Fgrd_P : (a.IsHovered ? SLIDER_Fgrd_H : SLIDER_Fgrd); 
-      a.Height = 38; a.Width = Grow ();
+      a.Height = 36; a.Width = Grow ();
       a.DValue = val.GetLieOn (min, max).Clamp ();
+      if (a.IsPressed) {
+         var rect = UXFrame.GetRect (a.Id);
+         double xpos = Hub.Mouse.Pos.X, margin = a.Height.Max / 8;
+         double lie = xpos.GetLieOn (rect.Left + margin, rect.Right - margin);
+         val = lie.Along (min, max).Clamp (min, max);
+         if (step != 0) val = step * Math.Round (val / step);
+      }
       return a.IsPressed;
    }
 
@@ -112,7 +121,8 @@ public static partial class UXApi {
       a.BgrdColor = a.IsHovered || a.AnyPopupsOpen ? MENUITEM_Bgrd_H : MENUITEM_Bgrd;
       // Set up padding, corner radius, and if this a POPUP-MENU item (as opposed to a top level
       // MENU-BAR item), set it to Grow()
-      a.Padding = MENUITEM_Padding; a.CornerRadius = MENUITEM_Radius; a.ChildAlignY = UXNode.EChildAlignY.Middle;
+      a.Padding = MENUITEM_Padding; a.CornerRadius = MENUITEM_Radius;
+      a.ChildAlignY = UXNode.EChildAlignY.Middle;
       if (a.GetParent ().Kind != UXNode.EKind.TopMenu) {
          a.Width = Grow ();
          if (hasChildren) shortcut = "\u25B8";
@@ -131,6 +141,17 @@ public static partial class UXApi {
 
    public static ref UXNode NODE () {
       return ref UXFrame.BeginNode ();
+   }
+   public static bool PANEL () {
+      ref UXNode a = ref UXFrame.BeginNode ();
+      a.Orientation = TopToBottom;
+      return true;
+   }
+
+   public static bool LABEL (object e) {
+      ref UXNode a = ref UXFrame.BeginNode ();
+      a.Text = e.ToString ()!; a.TextColor = DIALOG_TextC; a.FontId = 0;
+      return true;
    }
 
    public static bool POPUPMENU () {
@@ -171,7 +192,15 @@ public static partial class UXApi {
    public static bool DISABLED => false;
    public static void WIDTH (string s) => UXFrame.N.Width = Grow ();
 
+   public static void CHILDGAP (int n) => UXFrame.N.ChildGap = (short)n;
+
    public static void END () => UXFrame.EndNode ();
+
+   public static void HORIZONTAL () => UXFrame.N.Orientation = LeftToRight;
+   public static void VERTICAL () => UXFrame.N.Orientation = TopToBottom;
+   public static void HGROW () => UXFrame.N.Width = Grow ();
+   public static void VGROW () => UXFrame.N.Height = Grow ();
+   public static void BGRD (string s) => UXFrame.N.BgrdColor = Color4.Parse (s);
 
    public static void END (int n) {
       for (int i = 0; i < n; i++) UXFrame.EndNode ();

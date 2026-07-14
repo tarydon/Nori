@@ -1,4 +1,5 @@
 ﻿using System.Buffers;
+using System.Reflection.Metadata.Ecma335;
 using System.Text;
 namespace Nori.UX;
 
@@ -212,15 +213,23 @@ public class InlayGen {
             // If we see a period, this is a property-setter (like .Icon=FileNew). Close the
             // args block if it's still open, and gather the property for outputting at the end.             
             case EToken.Period:
-               t = Expect (EToken.Word); Expect (EToken.Equals);
-               var str = GetExpr ();
-               props.Add ($"{t.TextS.ToUpper ()} ({str});");
+               t = Expect (EToken.Word);
+               string expr = "";
+               if (!sPropType.ContainsKey (t.TextS))
+                  Console.Write ('?');
+               switch (sPropType[t.TextS]) {
+                  case '-': break;
+                  case 'S': Expect (EToken.Equals); expr = GetExpr (); break;
+                  default: Expect (EToken.Equals); expr = GetExpr ().Unquote (); break;
+               }
+               if (expr == "") props.Add ($"{t.TextS.ToUpper ()} ();");
+               else props.Add ($"{t.TextS.ToUpper ()} ({expr});");
                break;
             // Here we process the code-block for this element (the bit that comes inside the if() {...})
             case EToken.OpenCurly:
                Lib.Check (!finishedArgs && !openedContainer);    
                Add (")) {"); finishedArgs = true;  
-               str = GatherUntil (EToken.CloseCurly);
+               var str = GatherUntil (EToken.CloseCurly);
                str = str.Replace (".Value", $"_v{cVar}");
                if (str.Length < 60 && !str.Contains ('\n')) AddL ($" {str} }}");
                else AddL ($"\n{str}\n}}");
@@ -252,6 +261,12 @@ public class InlayGen {
    }
    static string sLastElem = "";
    static int NextVar;
+
+   static Dictionary<string, char> sPropType = new Dictionary<string, char> (StringComparer.OrdinalIgnoreCase) {
+      ["CHILDGAP"] = 'I', ["HORIZONTAL"] = '-', ["VERTICAL"] = '-', ["WIDTH"] = 'I', ["HGROW"] = '-',
+      ["HEIGHT"] = 'I', ["VGROW"] = '-', ["BGRDCOLOR"] = 'S', ["ICON"] = 'S', ["TIP"] = 'S',
+      ["BGRD"] = 'S',
+   };
 
    // Tries to read an expression, and if it cannot find one, this returns false
    // (and does not consume any tokens)
@@ -334,6 +349,8 @@ public class InlayGen {
       ["BUTTON"] = new ("S", EContainer.No, false, null, -1),
       ["CHECKBOX"] = new ("SB", EContainer.No, false, "bool", 1),
       ["RADIOBUTTON"] = new ("SB", EContainer.No, false, "bool", 1),
-      ["SLIDER"] = new ("DDD", EContainer.No, false, "double", 0),
+      ["SLIDER"] = new ("DDDd", EContainer.No, false, "double", 0),
+      ["PANEL"] = new ("", EContainer.Yes, false, null, -1),
+      ["LABEL"] = new ("E", EContainer.No, false, null, -1),
    };
 }

@@ -1,12 +1,21 @@
 DIALOG Settings [
-  CHECKBOX "Use Raytracer" UseRayTracer
-  CHECKBOX "Ambient Occlusion" AmbientOcclusion
-  RADIOBUTTON "Translucent (Glass)" (ShaderType == 1)
-  RADIOBUTTON "Wireframe (Hidden)" (ShaderType == 2)
-  RADIOBUTTON "Lit (Phong / Gourad)" (ShaderType == 3) {
-    Lib.Trace ("Begin Rendering");
-    ShaderType = 3;
-  }
-  SLIDER Opacity 0 100
-  BUTTON "Close Dialog" .Width=Grow { UXLayout.RemoveCurrent (); }
+  PANEL .ChildGap=6 [
+    CHECKBOX "Use Raytracer" UseRayTracer
+    CHECKBOX "Ambient Occlusion" AmbientOcclusion
+  ]
+  PANEL .ChildGap=6  [
+    RADIOBUTTON "Translucent (Glass)" (ShaderType == 1)
+    RADIOBUTTON "Wireframe (Hidden)" (ShaderType == 2)
+    RADIOBUTTON "Lit (Phong / Gourad)" (ShaderType == 3) {
+      Lib.Trace ("Begin Rendering");
+      ShaderType = 3;
+    }
+  ]
+  PANEL .Vertical .HGrow .ChildGap=10 [
+    SLIDER Opacity 0 100 1
+    PANEL .Horizontal [
+      LABEL $"Opacity: {Opacity}"
+    ]
+  ]
+  BUTTON "Close Dialog" .HGrow { UXLayout.RemoveCurrent (); }
 ]

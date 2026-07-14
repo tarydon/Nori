@@ -3,10 +3,11 @@
 public class UXLayout {
    public UXLayout (string file) {
       mFile = Path.Combine (Root, file);
-      FileSystemWatcher fsw = new (Root, file);
-      fsw.Changed += OnChanged;
-      fsw.EnableRaisingEvents = true;
+      mFSW = new (Root.Replace ('/', '\\'), "*.*");
+      mFSW.Changed += OnChanged;
+      mFSW.EnableRaisingEvents = true;
    }
+   readonly FileSystemWatcher mFSW;
    readonly string mFile;
 
    public static void Add (UXLayout layout) => mAll.Add (layout);
