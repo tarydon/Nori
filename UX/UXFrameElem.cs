@@ -3,8 +3,6 @@
 // ║║║║╬║╔╣║ <<TODO>>
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 namespace Nori.UX;
-
-using System.Transactions;
 using static SizeS;
 using static UXNode.EOrientation;
 using static UXTheme;

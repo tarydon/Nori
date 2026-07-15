@@ -1,20 +1,8 @@
 TOPMENU [
   MENU "File" [
-    MENU New "Ctrl N" .Icon=FileNew .Tip="Create a new Part"
-      { DoFileNew (); }
-    MENU Open "Ctrl O" .Icon=FileOpen .Tip="Open a 2D or 3D Part from file"
-      { DoFileOpen (); }
-    if (MRUList.Count > 0) {
-      MENU "Open Recent" [
-        for (int i = 0; i < Math.Min (MRUList.Count, 9); i++) {
-          var file = MRUList[i];
-          MENU $"{file}" $"Ctrl {i + 1}" { DoFileOpen (file); }
-        }
-      ]
-    }
-    SEPARATOR
+    MENU New "Ctrl N" { DoFileNew (); }
+    MENU Open "Ctrl O" { DoFileOpen (); }
     MENU Save "Ctrl S" (CurrentPart is null)
-      .Icon=FileSave
       .Tip=(DISABLED ? "No active part" : "Save the current Part")
       { DoFileSave (); }
     MENU Export (CurrentPart is null) [
@@ -26,6 +14,18 @@ TOPMENU [
         MENU "To IGES" { DoFileExport ("IGES"); }
         MENU "To STEP" { DoFileExport ("STEP"); }
       }
+    ]
+    if (MRUList.Count > 0) {
+      SEPARATOR
+      for (int i = 0; i < Math.Min (MRUList.Count, 9); i++) {
+        var file = MRUList[i];
+        MENU $"{file}" $"Ctrl {i + 1}" { DoFileOpen (file); }
+      }
+    }
+    SEPARATOR
+    PANEL .ChildGap=10 [
+      CHECKBOX "Use Raytracer" UseRayTracer
+      CHECKBOX "Another Option" UseRayTracer
     ]
     SEPARATOR
     MENU Exit "Alt F4" { DoExit (); }

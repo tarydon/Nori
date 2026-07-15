@@ -20,7 +20,7 @@ public class UXLayout {
          Current = this;
          if (mRenderFunc == null) {
             InlayGen ig = new (mFile);
-            var s = ig.Generate (false);
+            var s = ig.Generate (true);
             File.WriteAllText ($"c:/etc/{Path.GetFileNameWithoutExtension (mFile)}.cs", s);
 
             InlayCompiler ic = new (s);

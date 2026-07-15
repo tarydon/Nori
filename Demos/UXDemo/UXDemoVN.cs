@@ -43,14 +43,14 @@ class UXDemoVN : VNode {
          BeginNode ();
          ref UXNode a = ref N;
          a.Width = Grow (); a.Height = Grow (); a.Orientation = EOrientation.TopToBottom;
-         a.Padding = new MarginS (700, 0, 0, 0);
+         a.Padding = new MarginS (500, 0, 0, 0);
          a.Tag = "Root";
 
          var set = UXLayout.All.ToList ();
          set.ForEach (a => a.Render ());
-         // SCENEHOLDER (0);
+         //  SCENEHOLDER (0).BgrdColor = Color4.Red;
          FILLER ().BgrdColor = Color4.Gray (108);
-         FILLER (Grow (), 100).BgrdColor = UXTheme.MENUBAR_Bgrd;
+         FILLER (Grow (), 50).BgrdColor = UXTheme.MENUBAR_Bgrd;
 
          EndNode ();
          EndLayout ();

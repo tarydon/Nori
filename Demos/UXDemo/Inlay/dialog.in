@@ -1,6 +1,9 @@
 DIALOG Settings [
   PANEL .ChildGap=6 [
-    CHECKBOX "Use Raytracer" UseRayTracer
+    CHECKBOX "Use Raytracer" UseRayTracer { 
+      Lib.Trace ($"UseRayTracer = {.Value} !!!"); 
+      UseRayTracer = .Value;
+    }
     CHECKBOX "Ambient Occlusion" AmbientOcclusion
   ]
   PANEL .ChildGap=6  [

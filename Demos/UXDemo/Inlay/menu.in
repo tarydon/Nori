@@ -13,6 +13,7 @@ TOPMENU [
       ]
     }
     SEPARATOR
+    CHECKBOX "Use Raytracer" UseRayTracer
     MENU Save "Ctrl S" (CurrentPart is null)
       .Icon=FileSave
       .Tip=(DISABLED ? "No active part" : "Save the current Part")
