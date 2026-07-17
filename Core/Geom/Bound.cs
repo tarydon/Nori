@@ -422,17 +422,23 @@ public readonly struct Bound3 : IEQuable<Bound3> {
 
    /// <summary>Reads a Bound3 from a UTF8 stream</summary>
    /// - "Empty" : an empty Bound3
-   /// - "1,2,3:9,5,10" : Bound3 spanning from 1..9 in X, 2..5 in Y and 3..10 in Z
+   /// - "1~9,2~5,3~10"  : Bound3 spanning from 1..9 in X, 2..5 in Y and 3..10 in Z
    /// - "8x3x7@1,2,3" : Bound3 spanning from 1..9 in X, 2..5 in Y and 3..10 in Z
    ///                   (X-size is 8, Y-size is 3, Z-size is 7). 
    public static Bound3 Read (UTFReader R) {
       if (R.Peek () == 'E') { R.Match ("Empty"u8); return new (); }
-      R.Read (out double a);
+      R.Read (out float a);
       bool newFmt = (char)R.Peek () is 'x' or 'X';
-      R.MatchAny ("x,X"u8).Read (out double b).MatchAny ("x,X"u8).Read (out double c).MatchAny ("@:"u8);
-      R.Read (out double d).Match (',').Read (out double e).Match (',').Read (out double f);
-      if (newFmt) return new (d, e, f, a + d, b + e, c + f);
-      else return new (a, b, c, d, e, f);
+      if (newFmt) {
+         R.MatchAny ("xX"u8).Read (out float dy).MatchAny ("xX"u8).Read (out float dz)
+          .Match ('@').Read (out float x0).Match (',').Read (out float y0).Match (',').Read (out float z0);
+         return new (x0, y0, z0, x0 + a, y0 + dy, z0 + dz);
+      } else {
+         R.Match ('~').Read (out float x1).Match (',')
+          .Read (out float y0).Match ('~').Read (out float y1).Match (',')
+          .Read (out float z0).Match ('~').Read (out float z1);
+         return new (a, y0, z0, x1, y1, y1);
+      }
    }
 
    // Properties ---------------------------------------------------------------
