@@ -2,6 +2,15 @@ TOPMENU [
   MENU "File" [
     MENU New "Ctrl N" { DoFileNew (); }
     MENU Open "Ctrl O" { DoFileOpen (); }
+    if (MRUList.Count > 0) {
+      MENU "Open Recent" [
+        for (int i = 0; i < Math.Min (MRUList.Count, 9); i++) {
+          var file = MRUList[i];
+          MENU $"{file}" $"Ctrl {i + 1}" { DoFileOpen (file); }
+        }
+      ]
+    }
+    SEPARATOR
     MENU Save "Ctrl S" (CurrentPart is null)
       .Tip=(DISABLED ? "No active part" : "Save the current Part")
       { DoFileSave (); }
@@ -15,18 +24,6 @@ TOPMENU [
         MENU "To STEP" { DoFileExport ("STEP"); }
       }
     ]
-    if (MRUList.Count > 0) {
-      SEPARATOR
-      for (int i = 0; i < Math.Min (MRUList.Count, 9); i++) {
-        var file = MRUList[i];
-        MENU $"{file}" $"Ctrl {i + 1}" { DoFileOpen (file); }
-      }
-    }
-    SEPARATOR
-    PANEL .ChildGap=10 [
-      CHECKBOX "Use Raytracer" UseRayTracer
-      CHECKBOX "Another Option" UseRayTracer
-    ]
     SEPARATOR
     MENU Exit "Alt F4" { DoExit (); }
   ]
@@ -38,7 +35,8 @@ TOPMENU [
     MENU Copy "Ctrl C" { DoCopy (); }
     MENU Paste "Ctrl P" { DoPaste (); }
   ]
-  MENU "Help" [
-    MENU "About..." { DoHelpAbout (); }
+  MENU "Demos" [
+    MENU "Dialog..." { DoDialog (); }
+    MENU "Thumbnails..." { DoThumbnails (); }
   ]
 ]

@@ -109,7 +109,7 @@ public static partial class UXFrame {
                if (sc != null) {
                   double dx = mScreenSize.X, dy = mScreenSize.Y;
                   var rect = node.Rect;
-                  double left = rect.Left / dx + 0.01, top = 1 - rect.Top / dy - 0.01, right = rect.Right / dx, bottom = 1 - rect.Bottom / dy;
+                  double left = rect.Left / dx, top = 1 - rect.Top / dy, right = rect.Right / dx, bottom = 1 - rect.Bottom / dy;
                   Lux.AddSubScene (sc, new (left, top, right, bottom));
                }
                continue;
@@ -188,7 +188,7 @@ public static partial class UXFrame {
    static bool mMousePressed;             // Is the mouse currently pressed
    static bool mMousePressedLastFrame;    // Was the mouse pressed in the last frame?
    static UXNode[] mNodes = new UXNode[32];     // List of nodes 
-   static UXNode[] mSnapshot = new UXNode[32]; // List of 'previous' nodes
+   static UXNode[] mSnapshot = new UXNode[32];  // List of 'previous' nodes
    static Stack<int> mStack = [];         // Stack of currently open nodes
    static int mUsed;                      // Number of used nodes
    static int mCurrent;                   // Node that is currently being edited

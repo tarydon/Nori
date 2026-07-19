@@ -265,7 +265,7 @@ public class InlayGen {
    static Dictionary<string, char> sPropType = new Dictionary<string, char> (StringComparer.OrdinalIgnoreCase) {
       ["CHILDGAP"] = 'I', ["HORIZONTAL"] = '-', ["VERTICAL"] = '-', ["WIDTH"] = 'I', ["HGROW"] = '-',
       ["HEIGHT"] = 'I', ["VGROW"] = '-', ["BGRDCOLOR"] = 'S', ["ICON"] = 'S', ["TIP"] = 'S',
-      ["BGRD"] = 'S',
+      ["BGRD"] = 'S', ["PADDING"] = 'I'
    };
 
    // Tries to read an expression, and if it cannot find one, this returns false

@@ -192,8 +192,45 @@ public static partial class Lux {
          }
    }
 
+   // Render all scenes to the screen
+   static void RenderUXLayout (Vec2S viewport) {
+      mcFrames++; mcFPSFrames++;
+      if (mRendering) throw new InvalidOperationException ();
+      mIsPicking = false; mRendering = true;
+
+      var vp = new RectS (0, 0, viewport.X, viewport.Y);
+      BeginRender (mPanelSize = viewport, ETarget.Screen);
+      StartFrame (viewport);
+      GLState.StartFrame (Vec2S.Zero, viewport, Color4.Transparent);
+      int yMax = mPanelSize.Y - 1;
+
+      for (int i = 1; i <= mScenes.Count; i++) {
+         var (scene, bound) = mScenes[i % mScenes.Count];
+         var (cx, cy, DX, DY) = (mPanelSize.X, mPanelSize.Y, bound.X, bound.Y);
+         int x0 = (int)(DX.Min * cx + 0.5), x1 = (int)(DX.Max * cx + 0.5);
+         int y0 = (int)(DY.Min * cy + 0.5), y1 = (int)(DY.Max * cy + 0.5);
+         var rect = new RectS (x0, y0, x1, y1);
+         scene.Rect = new (x0, yMax - y1, x1, yMax - y0);
+         var vport = rect.Size;
+
+         BeginRender (vport, ETarget.Screen);
+         StartFrame (vport);
+         GLState.StartFrame (new Vec2S (rect.Left, rect.Top), vport, scene.BgrdColor);
+         RBatch.StartFrame ();
+         Shader.StartFrame ();
+         scene.Render (vport);
+         EndRender (ETarget.Screen, DIBitmap.EFormat.Unknown);
+      }
+      mRendering = false;
+      EndRender (ETarget.Screen, DIBitmap.EFormat.Unknown);
+   }
+
    /// <summary>Stub for the Render method that is called when each frame has to be painted</summary>
    internal static object? Render (Scene? scene, Vec2S viewport, ETarget target, DIBitmap.EFormat fmt) {
+      if (mScenes.Count > 1 && scene == mScenes[0].Scene && target == ETarget.Screen && scene.BgrdColor.IsTransparent) {
+         RenderUXLayout (viewport);
+         return null;
+      }
       mcFrames++; mcFPSFrames++;
       mIsPicking = target == ETarget.Pick;
       if (mRendering) throw new InvalidOperationException ();
@@ -207,6 +244,7 @@ public static partial class Lux {
       GLState.StartFrame (Vec2S.Zero, viewport, bgrdColor);
       RBatch.StartFrame ();
       Shader.StartFrame ();
+
       if (scene != null) {
          int yMax = mPanelSize.Y - 1;
          if (target == ETarget.Screen) scene.Rect = vp;
@@ -218,8 +256,7 @@ public static partial class Lux {
                int x0 = (int)(DX.Min * cx + 0.5), x1 = (int)(DX.Max * cx + 0.5);
                int y0 = (int)(DY.Min * cy + 0.5), y1 = (int)(DY.Max * cy + 0.5);
                var rect = new RectS (x0, y0, x1, y1);
-               if (target == ETarget.Screen)
-                  scene2.Rect = new (x0, yMax - y1, x1, yMax - y0);
+               scene2.Rect = new (x0, yMax - y1, x1, yMax - y0);
                var vport = rect.Size;
                BeginRender (vport, target);  // Don't worry about viewport - it
                StartFrame (vport);

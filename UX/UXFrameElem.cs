@@ -14,7 +14,7 @@ public static partial class UXApi {
       a.BgrdColor = a.IsPressed ? BUTTON_Bgrd_P : (a.IsHovered ? BUTTON_Bgrd_H : BUTTON_Bgrd);
       a.Padding = BUTTON_Padding; a.CornerRadius = BUTTON_Radius; 
       a.ChildAlignX = UXNode.EChildAlignX.Center; a.ChildAlignY = UXNode.EChildAlignY.Middle;
-      a.Disabled = disable;
+      a.Disabled = disable; a.Kind = UXNode.EKind.Button;
       TEXT (title, BUTTON_Text);
       if (disable) return false;
       return a.IsReleased;
@@ -142,7 +142,7 @@ public static partial class UXApi {
    }
    public static bool PANEL () {
       ref UXNode a = ref UXFrame.BeginNode ();
-      a.Orientation = TopToBottom;
+      a.Orientation = TopToBottom; a.Kind = UXNode.EKind.Panel;
       return true;
    }
 
@@ -188,7 +188,8 @@ public static partial class UXApi {
    public static void TIP (string text) { }
    public static void ICON (string s) { }
    public static bool DISABLED => false;
-   public static void WIDTH (string s) => UXFrame.N.Width = Grow ();
+   public static void WIDTH (int n) => UXFrame.N.Width = n;
+   public static void HEIGHT (int n) => UXFrame.N.Height = n;
 
    public static void CHILDGAP (int n) => UXFrame.N.ChildGap = (short)n;
 
@@ -199,6 +200,7 @@ public static partial class UXApi {
    public static void HGROW () => UXFrame.N.Width = Grow ();
    public static void VGROW () => UXFrame.N.Height = Grow ();
    public static void BGRD (string s) => UXFrame.N.BgrdColor = Color4.Parse (s);
+   public static void PADDING (int n) => UXFrame.N.Padding = n;
 
    public static void END (int n) {
       for (int i = 0; i < n; i++) UXFrame.EndNode ();

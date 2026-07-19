@@ -28,7 +28,8 @@ public class InlayHub {
    public static string? NextUndo => UndoStack.SafeGet (NUndo);
    public static string? NextRedo => UndoStack.SafeGet (NUndo + 1);
 
-   public static void DoHelpAbout () => UXLayout.Add (new UXLayout ("dialog.in"));
+   public static void DoDialog () => UXLayout.Add (new UXLayout ("dialog.in"));
+   public static void DoThumbnails () => UXLayout.Add (new UXLayout ("thumbnails.in"));
 
    // Dialog ---------------
    public static bool UseRayTracer { get; set { field = value; Lib.Trace ($"UseRayTracer = {value}"); } }

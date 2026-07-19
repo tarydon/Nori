@@ -1,5 +1,4 @@
-﻿using System.Net;
-using System.Reactive.Linq;
+﻿using System.Reactive.Linq;
 using Nori;
 namespace UXDemo;
 
@@ -16,6 +15,7 @@ class Program {
       Lib.Tracer = TraceVN.Print;
       TraceVN.HoldTime = 15;
       TraceVN.TextColor = Color4.White;
+      new SceneManipulator ();
       Hub.Keyboard.Keys.Where (a => a.IsPress (EKey.Escape)).Subscribe (_ => Window?.ShouldClose = true);
       Lux.UIScene = new UXScene ();
    }
@@ -23,8 +23,7 @@ class Program {
 
 class UXScene : Scene2 {
    public UXScene () {
-      BgrdColor = Color4.Gray (96);
-      List<VNode> nodes = [new UXDemoVN (), TraceVN.It];
-      Root = new GroupVN (nodes);
+      BgrdColor = Color4.Transparent;
+      Root = new UXDemoVN ();
    }
 }

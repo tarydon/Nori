@@ -27,13 +27,13 @@ class UXDemoVN : VNode {
          TypeFaces = [tf1, tf2];
 
          var dwg = DXFReader.Load ("N:/TData/IO/DXF/AllEnt.dxf");
-         var gvn = new GroupVN ([new Dwg2VN (dwg), new DwgFillVN (dwg)]);
+         var gvn = new GroupVN ([new Dwg2VN (dwg), new DwgFillVN (dwg), TraceVN.It]);
+         TraceVN.TextColor = Color4.Blue;
          Scene scene = new Scene2 { BgrdColor = Color4.Gray (192), Bound = dwg.Bound.InflatedF (1.1), Root = gvn };
          Scenes = [scene];
 
          UXLayout.Root = "N:/Demos/UXDemo/Inlay";
          UXLayout.Add (new UXLayout ("root.in"));
-         // UXLayout.Add (new UXLayout ("dialog.in"));
       }
 
       for (int i = 0; i < 2; i++) {
@@ -43,13 +43,11 @@ class UXDemoVN : VNode {
          BeginNode ();
          ref UXNode a = ref N;
          a.Width = Grow (); a.Height = Grow (); a.Orientation = EOrientation.TopToBottom;
-         a.Padding = new MarginS (500, 0, 0, 0);
          a.Tag = "Root";
 
          var set = UXLayout.All.ToList ();
          set.ForEach (a => a.Render ());
-         //  SCENEHOLDER (0).BgrdColor = Color4.Red;
-         FILLER ().BgrdColor = Color4.Gray (108);
+         SCENEHOLDER (0);
          FILLER (Grow (), 50).BgrdColor = UXTheme.MENUBAR_Bgrd;
 
          EndNode ();

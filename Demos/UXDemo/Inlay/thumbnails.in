@@ -1,0 +1,7 @@
+DIALOG Thumbnails [
+  PANEL .Bgrd=Yellow .Padding=10 .ChildGap=10 .Horizontal [
+    BUTTON "A" .Bgrd=Red .Width=200 .Height=200 { }
+    BUTTON "B" .Bgrd=Blue .Width=200 .Height=200 { }
+  ]
+  BUTTON "Close Dialog" .Width=700 { UXLayout.RemoveCurrent (); }
+]

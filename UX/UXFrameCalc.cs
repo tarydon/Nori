@@ -28,7 +28,7 @@ public static partial class UXFrame {
             if (child.Height.Mode == Grow) child.DY += (dySpace - child.DY);
             if (child.Width.Mode != Grow) mTmp.RemoveAt (i);
          }
-         if (mTmp.Count == 0) goto Done;
+         if (mTmp.Count == 0) goto Done; 
 
          while (dxSpace > 0) {
             int smallest = short.MaxValue, secondSmallest = smallest, widthToAdd = dxSpace;
