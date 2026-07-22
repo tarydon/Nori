@@ -1,0 +1,71 @@
+// ────── ╔╗
+// ╔═╦╦═╦╦╬╣ Node.cs
+// ║║║║╬║╔╣║ <<TODO>>
+// ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
+using Nori;
+namespace UXDemo;
+
+public struct Node {
+   // Core ---------------------------------------------------------------------
+   /// <summary>What kind of node is this?</summary>
+   public EKind Kind;
+   /// <summary>Flag bits for this node</summary>
+   public EFlags Flags;
+   /// <summary>Generic data, interpretation depends on Kind</summary>
+   public object Data;
+
+   // Node tree ----------------------------------------------------------------
+   /// <summary>Parent node for this (0 for root node)</summary>
+   public short Parent;
+   /// <summary>First child node (0 means no children)</summary>
+   public short FirstChild;
+   /// <summary>Count of children for this node</summary>
+   public short ChildCount;
+   /// <summary>Next sibling node (0 means end-of-list)</summary>
+   public short Next;
+   /// <summary>Node's 'level' (root node is at level 0)</summary>
+   public short Level;
+
+   // Metrics ------------------------------------------------------------------
+   /// <summary>Metrics for the X axis (width direction)</summary>
+   public AxisDef X;
+   /// <summary>Metrics for the Y axis (height direction)</summary>
+   public AxisDef Y;
+   /// <summary>Border width, if non-zero</summary>
+   public short BorderWidth;
+   /// <summary>Corner radius</summary>
+   public short CornerRadius;
+
+   // Child positioning --------------------------------------------------------
+   /// <summary>Child alignment in X</summary>
+   public EXAlign ChildAlignX;
+   /// <summary>Child alignment in Y</summary>
+   public EYAlign ChildAlignY;
+   /// <summary>Gap between successive children</summary>
+   public short ChildGap;
+   /// <summary>X-scroll position to start positioning children in X</summary>
+   public short XScroll;
+   /// <summary>Y-scroll position to start positioning children in Y</summary>
+   public short YScroll;
+
+   // Colors -------------------------------------------------------------------
+   /// <summary>Background color</summary>
+   public Color4 BgrdColor;
+   /// <summary>Border color (if border exists)</summary>
+   public Color4 BorderColor;
+   /// <summary>Foreground color (for example Text color)</summary>
+   public Color4 FgrdColor;
+   /// <summary>Font to use</summary>
+   public short FontId;
+
+   // Floating elements --------------------------------------------------------
+   /// <summary>Position on this element that is used for alignment</summary>
+   public ECorner ElemCorner;
+   /// <summary>Position on the parent that is used for alignment</summary>
+   public ECorner ParentCorner;
+   /// <summary>Offset between the two</summary>
+   public Vec2S FloatOffset;
+
+   // Properties ---------------------------------------------------------------
+   public readonly RectS Rect => new (X.V0, Y.V0, X.V0 + X.DV, Y.V0 + Y.DV);
+}

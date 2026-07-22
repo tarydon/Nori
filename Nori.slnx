@@ -4,11 +4,12 @@
     <Project Path="Demos/ConShell/ConShell.csproj" />
     <Project Path="Demos/GLShell/GLShell.csproj" />
     <Project Path="Demos/WPFDemo/WPFDemo.csproj" />
+    <Project Path="UXDemo/UXDemo.csproj" Id="c3343ae0-db96-4fec-87ae-e94cd5908a19" />
   </Folder>
   <Folder Name="/Host/">
     <Project Path="Host/GLFW/Nori.Host.GLFW.csproj" />
-    <Project Path="Host/WPF/Nori.Host.WPF.csproj" />
     <Project Path="Host/GLU/Nori.GLU.csproj" />
+    <Project Path="Host/WPF/Nori.Host.WPF.csproj" />
   </Folder>
   <Folder Name="/Test/">
     <Project Path="Test/Nori.Test.csproj" />

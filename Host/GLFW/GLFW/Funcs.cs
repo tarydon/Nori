@@ -196,6 +196,8 @@ static class GLFW {
    // Should this window close?
    [DllImport (LIB, EntryPoint = "glfwWindowShouldClose", CallingConvention = Cdecl)]
    public static extern bool WindowShouldClose (HWindow window);
+   [DllImport (LIB, EntryPoint = "glfwSetWindowShouldClose", CallingConvention = Cdecl)]
+   public static extern void SetWindowShouldClose (HWindow window, bool flag);
 
    // Constants ----------------------------------------------------------------
 #if WINDOWS
