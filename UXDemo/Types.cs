@@ -6,7 +6,7 @@ namespace UXDemo;
 
 /// <summary>What Kind of UXNode is this?</summary>
 public enum EKind {
-   Unknown, Rect, Panel,
+   Unknown, Root, Rect, Panel, Text,
 }
 
 /// <summary>The various sizing modes for an axis</summary>
@@ -29,13 +29,14 @@ public enum ECorner { TopLeft, Top, TopRight, Left, Center, Right, BotLeft, Bott
 [Flags]
 public enum EFlags {
    /// <summary>Children are laid out left-to-right (otherwise top-to-bottom)</summary>
-   Horizontal = 1,
+   Horizontal = 1 << 0,
    /// <summary>If set, children are 'wrapped' if the cannot fit in the main axis</summary>
-   Wrap = 2,
+   Wrap = 1 << 1,
    /// <summary>If set, children are scrolled</summary>
-   Scrollable = 4,
+   Scrollable = 1 << 2,
    /// <summary>If set, this is a floating element</summary>
-   Floating = 8,
+   Floating = 1 << 3,
+   HasChildren = 1 << 4,
 }
 
 /// <summary>Axis metrics</summary>
@@ -48,11 +49,14 @@ public struct AxisDef {
    public short Min;
    /// <summary>Maximum size for this axis (if not zero)</summary>
    /// For Fixed size, Min=Max
-   public short Max;
+   public short Max;  
+
    /// <summary>Padding at the start (Left/Top)</summary>
    public short PadStart;
    /// <summary>Padding at the end (Right/Bottom)</summary>
    public short PadEnd;
+   /// <summary>Total padding</summary>
+   public readonly short TotalPad => (short)(PadStart + PadEnd);
 
    /// <summary>Scroll position in this direction</summary>
    public short Scroll;

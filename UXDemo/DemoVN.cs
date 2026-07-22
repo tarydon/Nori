@@ -24,7 +24,11 @@ class DemoVN : VNode {
    void OnMouseClick (MouseClickInfo info) { mPressed = info.IsPress; Redraw (); }
 
    public override void Draw () {
-      bool _b1 = PANEL (600, 400, Color4.Red);
+      ref var node = ref UXSystem.BeginLayout (Lux.PanelSize);
+      node.BgrdColor = Color4.Blue;
+      UXSystem.SetMouseState (mPos, mWheel, mPressed);
+      UXSystem.EndLayout ();
+      UXSystem.Render (true);
    }
 
    // Private data -------------------------------------------------------------

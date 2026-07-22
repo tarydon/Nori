@@ -1,13 +1,37 @@
-﻿using Nori;
-
+// ────── ╔╗
+// ╔═╦╦═╦╦╬╣ UXApi.cs
+// ║║║║╬║╔╣║ <<TODO>>
+// ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
+using Nori;
 namespace UXDemo;
 
 public static class UXApi {
    public static void Init () {
+      UXSystem.Register (new RectClass ());
+      UXSystem.Register (new PanelClass ());
+      UXSystem.Register (new TextClass ());
+      UXSystem.Register (new RootClass ());
    }
 
-   public static void RECT (int x, int y, Color4 bgrd) { }
+   public static ref Node RECT (int width, int height, Color4 bgrd) {
+      ref Node node = ref UXSystem.BeginNode (EKind.Rect, width, height);
+      node.BgrdColor = bgrd;
+      return ref node;
+   }
 
-   public static ref Node PANEL (int x, int y, Color4 bgrd) {
+   public static ref Node PANEL (int width, int height, Color4 bgrd) {
+      ref Node node = ref UXSystem.BeginNode (EKind.Panel, width, height);
+      node.BgrdColor = bgrd;
+      return ref node;
+   }
+
+   public static ref Node TEXT (string text, int fontId, Color4 textColor) 
+      => ref TEXT (text, fontId, textColor, Color4.Transparent);
+
+   public static ref Node TEXT (string text, int fontId, Color4 textColor, Color4 bgrdColor) {
+      ref Node node = ref UXSystem.BeginNode (EKind.Text);
+      node.FgrdColor = textColor; node.BgrdColor = bgrdColor;
+      node.FontId = (short)fontId;
+      return ref node; 
    }
 }

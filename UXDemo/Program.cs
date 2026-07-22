@@ -11,6 +11,7 @@ class Program {
    static void Main (string[] args) {
       Lib.Init ();
       GLFWHost.Init (OnReady);
+      UXApi.Init ();
       mWin = new Window (1600, 1200, "Welcome to GLFW", Window.EFlags.Default);
       mWin.Run (true);
    }
@@ -25,6 +26,7 @@ class Program {
 
 class DemoScene : Scene2 {
    public DemoScene () {
-      BgrdColor = Color4.Gray (0);
+      BgrdColor = Color4.Gray (120);
+      Root = new DemoVN ();
    }
 }

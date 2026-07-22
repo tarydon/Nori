@@ -7,6 +7,8 @@ namespace UXDemo;
 
 public struct Node {
    // Core ---------------------------------------------------------------------
+   /// <summary>The inded of this node in mNodes[]</summary>
+   public short Id;
    /// <summary>What kind of node is this?</summary>
    public EKind Kind;
    /// <summary>Flag bits for this node</summary>
@@ -19,6 +21,8 @@ public struct Node {
    public short Parent;
    /// <summary>First child node (0 means no children)</summary>
    public short FirstChild;
+   /// <summary>Last child node (0 means no children, can be same as FirstChild if only one child)</summary>
+   public short LastChild;
    /// <summary>Count of children for this node</summary>
    public short ChildCount;
    /// <summary>Next sibling node (0 means end-of-list)</summary>
@@ -55,8 +59,14 @@ public struct Node {
    public Color4 BorderColor;
    /// <summary>Foreground color (for example Text color)</summary>
    public Color4 FgrdColor;
+
+   // Text ---------------------------------------------------------------------   
+   /// <summary>The text to use</summary>
+   public string? Text;
    /// <summary>Font to use</summary>
    public short FontId;
+   /// <summary>The text offset (position of Lux.Text call, relative to top-left corner of node)</summary>
+   public Vec2S TextOffset;
 
    // Floating elements --------------------------------------------------------
    /// <summary>Position on this element that is used for alignment</summary>
