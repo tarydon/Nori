@@ -6,6 +6,7 @@ using System.Reactive.Linq;
 using Nori;
 namespace UXDemo;
 using static UXApi;
+using static Size;
 
 class DemoVN : VNode {
    public DemoVN () {
@@ -24,9 +25,20 @@ class DemoVN : VNode {
    void OnMouseClick (MouseClickInfo info) { mPressed = info.IsPress; Redraw (); }
 
    public override void Draw () {
-      ref var node = ref UXSystem.BeginLayout (Lux.PanelSize);
-      node.BgrdColor = Color4.Blue;
-      UXSystem.SetMouseState (mPos, mWheel, mPressed);
+      ref var root = ref UXSystem.BeginLayout (Lux.PanelSize);
+      root.SetPadding (20); root.Data = "Root";
+
+      ref var node = ref PANEL (1600, 800, true, Color4.DarkGreen);      
+      node.Data = "DarkGreen"; node.SetPadding (20); node.ChildGap = 20;
+      node.X.ChildAlign = EAlign.End;
+      node.Y.ChildAlign = EAlign.Middle;
+
+      node = ref RECT (400, 300, Color4.Green); node.Data = "Green"; END ();
+      node = ref RECT (Grow (100), 100, Color4.Yellow); node.Data = "Yellow"; END ();
+      node = ref RECT (300, 200, Color4.DarkBlue); node.Data = "DarkBlue"; END ();
+
+      END ();
+
       UXSystem.EndLayout ();
       UXSystem.Render (true);
    }

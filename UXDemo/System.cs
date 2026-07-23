@@ -2,6 +2,7 @@
 // ╔═╦╦═╦╦╬╣ System.cs
 // ║║║║╬║╔╣║ <<TODO>>
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using Nori;
 namespace UXDemo;
@@ -19,11 +20,14 @@ static public class UXSystem {
       Classes[n] = clas;
    }
 
-   public static ref Node BeginLayout (Vec2S size) {
-      mScreenSize = size;
+   /// <summary>Begins a new Inlay layout - each Draw pass should start with this</summary>
+   /// This returns a Node that covers the entire screen and is the root node for 
+   /// the layout
+   public static ref Node BeginLayout (Vec2S screenSize) {
+      mScreenSize = screenSize;
       // Note that we are not using mNodes[0], so we start with mUsed = 1
       mUsed = 1; mCurrent = 0; mStack.Clear ();
-      return ref BeginNode (EKind.Root, size.X, size.Y);
+      return ref BeginNode (EKind.Root, screenSize.X, screenSize.Y);
    }
 
    public static void SetMouseState (Vec2S position, int wheelDelta, bool pressed) {
@@ -31,10 +35,9 @@ static public class UXSystem {
       (mMousePos, mWheelDelta, mMousePressed) = (position, wheelDelta, pressed);
    }
 
-   public static ref Node BeginNode (EKind kind, int width, int height) {
+   public static ref Node BeginNode (EKind kind, Size width, Size height) {
       ref Node node = ref BeginNode (kind);
-      ref AxisDef x = ref node.X; x.Min = x.Max = (short)width; x.Mode = ESizing.Fixed;
-      ref AxisDef y = ref node.Y; y.Min = y.Max = (short)height; y.Mode = ESizing.Fixed;
+      node.X.Set (width); node.Y.Set (height);
       return ref node;
    }
 
@@ -77,7 +80,7 @@ static public class UXSystem {
       EndNode (); // End the 'ROOT' node that BeginLayout created 
       Lib.Check (mStack.Count == 0, "Unmatched UXSystem.BeginNode()");
 
-      // Here we compute the top-down traversal order of nodes
+      // 1. Compute the top-down traversal order of the nodes
       mQueue.Enqueue (1); mTraverse.Clear ();
       while (mQueue.TryDequeue (out short n)) {
          mTraverse.Add (n);
@@ -85,13 +88,15 @@ static public class UXSystem {
             mQueue.Enqueue (a);
       }
 
-      // Compute the sizes of these nodes, in reverse breadth-first order,
-      // since the sizes of all the children need to be known before we can compute
-      // the size of a parent
+      // 2. Compute the sizes of these nodes (bottom-up order), since the sizes of all 
+      // children must be known before we can compute the size of a parent
       for (int i = mTraverse.Count - 1; i >= 0; i--) {
          ref Node node = ref mNodes[mTraverse[i]];
-         var clas = Classes[(int)node.Kind]; clas.Measure (ref node);
+         Classes[(int)node.Kind].Measure (ref node);
       }
+
+      // 3. Compute the positions of all the nodes
+      foreach (var n in mTraverse) PositionChildren (n);
    }
 
    public static void Render (bool realRender) {
@@ -109,6 +114,28 @@ static public class UXSystem {
    [DoesNotReturn]
    public static void Fatal (string s) {
       throw new Exception (s);
+   }
+
+   // Implementation -----------------------------------------------------------
+   static void PositionChildren (int n) {
+      ref Node node = ref mNodes[n];
+      if (!node.GetChildren (mTmp)) return;
+
+      // First, position along the axis
+      bool horizontal = node.IsHorizontal;
+      ref AxisDef ax = ref (horizontal ? ref node.X : ref node.Y);
+      ref AxisDef ay = ref (horizontal ? ref node.Y : ref node.X);
+      int xpos = ax.V0 + ax.PadStart;
+      foreach (var c in mTmp) {
+         ref Node child = ref mNodes[c];
+         ref AxisDef cax = ref (horizontal ? ref child.X : ref child.Y);
+         ref AxisDef cay = ref (horizontal ? ref child.Y : ref child.X);
+         cax.V0 = (short)xpos; xpos += cax.DV + node.ChildGap;
+
+         int yRemain = ay.DV - cay.DV - ay.TotalPad;
+         int delta = ay.ChildAlign switch { EAlign.Middle => yRemain / 2, EAlign.End => yRemain, _ => 0 };
+         cay.V0 = (short)(ay.V0 + ay.PadStart + delta);
+      }
    }
 
    // Private data -------------------------------------------------------------

@@ -13,14 +13,18 @@ public static class UXApi {
       UXSystem.Register (new RootClass ());
    }
 
-   public static ref Node RECT (int width, int height, Color4 bgrd) {
-      ref Node node = ref UXSystem.BeginNode (EKind.Rect, width, height);
-      node.BgrdColor = bgrd;
+   public static void END () {
+      UXSystem.EndNode ();
+   }
+
+   public static ref Node PANEL (Size width, Size height, bool horizontal, Color4 bgrd) {
+      ref Node node = ref UXSystem.BeginNode (EKind.Panel, width, height);
+      node.BgrdColor = bgrd; node.IsHorizontal = horizontal;
       return ref node;
    }
 
-   public static ref Node PANEL (int width, int height, Color4 bgrd) {
-      ref Node node = ref UXSystem.BeginNode (EKind.Panel, width, height);
+   public static ref Node RECT (Size width, Size height, Color4 bgrd) {
+      ref Node node = ref UXSystem.BeginNode (EKind.Rect, width, height);
       node.BgrdColor = bgrd;
       return ref node;
    }

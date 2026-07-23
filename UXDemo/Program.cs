@@ -12,7 +12,7 @@ class Program {
       Lib.Init ();
       GLFWHost.Init (OnReady);
       UXApi.Init ();
-      mWin = new Window (1600, 1200, "Welcome to GLFW", Window.EFlags.Default);
+      mWin = new Window (1600, 1200, "Welcome to GLFW", Window.EFlags.Default | Window.EFlags.Maximized);
       mWin.Run (true);
    }
    static Window? mWin;
@@ -26,7 +26,7 @@ class Program {
 
 class DemoScene : Scene2 {
    public DemoScene () {
-      BgrdColor = Color4.Gray (120);
+      BgrdColor = Color4.Gray (64);
       Root = new DemoVN ();
    }
 }

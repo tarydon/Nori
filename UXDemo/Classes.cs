@@ -15,12 +15,16 @@ public abstract class NodeClass {
    }
 
    public virtual void Measure (ref Node node) {
-      if (node.ChildCount == 0) { 
+      if (node.ChildCount == 0 || node.Parent == 0) { 
          // If there are no children, we simply copy the Min value of X/Y as the
          // final computed value
          node.X.DV = node.X.Min; node.Y.DV = node.Y.Min;
          return;
       }
+      if (node.X.Mode == ESizing.Fixed && node.Y.Mode == ESizing.Fixed) {
+         node.X.DV = node.X.Min; node.Y.DV = node.Y.Min;
+         return;
+      }      
       throw new NotImplementedException (); 
    }
 

@@ -15,6 +15,10 @@ public enum ESizing { Fit, Grow, Fixed, Percent };
 public enum EXAlign { Left, Center, Right };
 /// <summary>Alignment in Y Axis</summary>
 public enum EYAlign { Top, Center, Bottom };
+
+/// <summary>Alignment along X or Y axis (left..right or top..bottom)</summary>
+public enum EAlign { Start, Middle, End };
+
 /// <summary>Which corners are rounded</summary>
 /// 'Left' means the TL and BL corners are rounded, 
 /// 'Top' means the TL and TR corners are rounded etc
@@ -36,7 +40,8 @@ public enum EFlags {
    Scrollable = 1 << 2,
    /// <summary>If set, this is a floating element</summary>
    Floating = 1 << 3,
-   HasChildren = 1 << 4,
+   /// <summary>This node has children</summary>
+   HasChildren = 1 << 4,   
 }
 
 /// <summary>Axis metrics</summary>
@@ -49,12 +54,14 @@ public struct AxisDef {
    public short Min;
    /// <summary>Maximum size for this axis (if not zero)</summary>
    /// For Fixed size, Min=Max
-   public short Max;  
+   public short Max;
 
    /// <summary>Padding at the start (Left/Top)</summary>
    public short PadStart;
    /// <summary>Padding at the end (Right/Bottom)</summary>
    public short PadEnd;
+   /// <summary>Alignment of children in this axis</summary>
+   public EAlign ChildAlign;
    /// <summary>Total padding</summary>
    public readonly short TotalPad => (short)(PadStart + PadEnd);
 
@@ -65,4 +72,23 @@ public struct AxisDef {
    public short V0;
    /// <summary>The span along this axis (DX/DY)</summary>
    public short DV;
+
+   public void Set (Size size) { Mode = size.Mode; Min = size.Min; Max = size.Max; }
+}
+
+public readonly struct Size {
+   public Size (ESizing mode, int min, int max) 
+      => (Mode, Min, Max) = (mode, (short)min, (short)max);
+
+   public static Size Grow (int n) => new (ESizing.Grow, n, 0);
+   public static Size Grow (int n0, int n1) => new (ESizing.Grow, n0, n1);
+   public static Size Fit (int n) => new (ESizing.Fit, n, 0);
+   public static Size Fit (int n0, int n1) => new (ESizing.Fit, n0, n1);
+   public static Size Fixed (int n) => new (ESizing.Fixed, n, n);
+
+   public static implicit operator Size (int n) => new (ESizing.Fixed, n, n);
+
+   public readonly ESizing Mode;
+   public readonly short Min;
+   public readonly short Max;
 }

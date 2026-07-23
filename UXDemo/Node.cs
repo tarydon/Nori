@@ -41,10 +41,6 @@ public struct Node {
    public short CornerRadius;
 
    // Child positioning --------------------------------------------------------
-   /// <summary>Child alignment in X</summary>
-   public EXAlign ChildAlignX;
-   /// <summary>Child alignment in Y</summary>
-   public EYAlign ChildAlignY;
    /// <summary>Gap between successive children</summary>
    public short ChildGap;
    /// <summary>X-scroll position to start positioning children in X</summary>
@@ -77,5 +73,26 @@ public struct Node {
    public Vec2S FloatOffset;
 
    // Properties ---------------------------------------------------------------
+   /// <summary>Is this node having 'horizontal' layout</summary>
+   public bool IsHorizontal { readonly get => Get (EFlags.Horizontal); set => Set (EFlags.Horizontal, value); }
+
    public readonly RectS Rect => new (X.V0, Y.V0, X.V0 + X.DV, Y.V0 + Y.DV);
+
+   // Methods ------------------------------------------------------------------
+   public readonly bool GetChildren (List<short> tmp) {
+      tmp.Clear (); 
+      for (short a = FirstChild; a != 0; a = UXSystem.mNodes[a].Next)
+         tmp.Add (a);
+      return tmp.Count > 0;
+   }
+
+   /// <summary>Set uniform padding all around</summary>
+   public void SetPadding (int n) {
+      ref AxisDef x = ref X; x.PadStart = x.PadEnd = (short)n;
+      ref AxisDef y = ref Y; y.PadStart = y.PadEnd = (short)n;
+   }
+
+   // Implementation -----------------------------------------------------------
+   readonly bool Get (EFlags flags) => (Flags & flags) != 0;
+   void Set (EFlags flags, bool value) { if (value) Flags |= flags; else Flags &= ~flags; }
 }
