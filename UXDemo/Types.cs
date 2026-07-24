@@ -80,8 +80,10 @@ public readonly struct Size {
    public Size (ESizing mode, int min, int max) 
       => (Mode, Min, Max) = (mode, (short)min, (short)max);
 
+   public static Size Grow () => new (ESizing.Grow, 0, 0);
    public static Size Grow (int n) => new (ESizing.Grow, n, 0);
    public static Size Grow (int n0, int n1) => new (ESizing.Grow, n0, n1);
+   public static Size Fit () => new (ESizing.Fit, 0, 0);    // <-- This is the default
    public static Size Fit (int n) => new (ESizing.Fit, n, 0);
    public static Size Fit (int n0, int n1) => new (ESizing.Fit, n0, n1);
    public static Size Fixed (int n) => new (ESizing.Fixed, n, n);

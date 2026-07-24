@@ -42,25 +42,25 @@ static public class UXSystem {
    }
 
    public static ref Node BeginNode (EKind kind) {
-      if (mUsed >= mNodes.Length) {
-         Array.Resize (ref mNodes, mNodes.Length * 2);
+      if (mUsed >= Nodes.Length) {
+         Array.Resize (ref Nodes, Nodes.Length * 2);
          Array.Resize (ref mSnapshot, mSnapshot.Length * 2);
       }
       mStack.Push (mParent = mCurrent); mCurrent = mUsed++;
-      mNodes[mCurrent] = new ();    // Reset to zeroes!
+      Nodes[mCurrent] = new ();    // Reset to zeroes!
 
-      ref Node node = ref mNodes[mCurrent];
+      ref Node node = ref Nodes[mCurrent];
       node.Id = mCurrent;
       if ((node.Parent = mParent) != 0) {
          // If this has a parent, attach this node to the linked list of children
          // of that parent
-         ref Node parent = ref mNodes[mParent];
+         ref Node parent = ref Nodes[mParent];
          node.Level = (short)(parent.Level + 1);
          if (parent.FirstChild == 0) parent.FirstChild = node.Id;
          else {
             // If this is not the first child, then there is an earlier sibling for
             // this, connect up that one to this node
-            ref Node prev = ref mNodes[parent.LastChild];
+            ref Node prev = ref Nodes[parent.LastChild];
             prev.Next = mCurrent;
          }
          parent.ChildCount++;
@@ -84,19 +84,38 @@ static public class UXSystem {
       mQueue.Enqueue (1); mTraverse.Clear ();
       while (mQueue.TryDequeue (out short n)) {
          mTraverse.Add (n);
-         for (short a = mNodes[n].FirstChild; a != 0; a = mNodes[a].Next)
+         for (short a = Nodes[n].FirstChild; a != 0; a = Nodes[a].Next)
             mQueue.Enqueue (a);
       }
 
       // 2. Compute the sizes of these nodes (bottom-up order), since the sizes of all 
-      // children must be known before we can compute the size of a parent
+      // children must be known before we can compute the size of a parent. Also, in this pass,
+      // we do the fit-sizing of all nodes in the x direction
       for (int i = mTraverse.Count - 1; i >= 0; i--) {
-         ref Node node = ref mNodes[mTraverse[i]];
+         ref Node node = ref Nodes[mTraverse[i]];
          Classes[(int)node.Kind].Measure (ref node);
+         if (node.X.Mode == ESizing.Fit) node.DoFitSizing (true);
       }
 
-      // 3. Compute the positions of all the nodes
-      foreach (var n in mTraverse) PositionChildren (n);
+      // 3. Grow/Shrink sizing in X
+      foreach (var n in mTraverse) 
+         Nodes[n].DoGrowShrinkChildren (true);
+
+      // 4. Wrap text
+
+      // 5. Fit sizing in Y
+      for (int i = mTraverse.Count - 1; i >= 0; i--) {
+         ref Node node = ref Nodes[mTraverse[i]];
+         if (node.Y.Mode == ESizing.Fit) node.DoFitSizing (false);
+      }
+
+      // 6. Grow/Shrink sizing in Y
+      foreach (var n in mTraverse) 
+         Nodes[n].DoGrowShrinkChildren (false);
+
+      // 7. Compute the positions of all the nodes
+      foreach (var n in mTraverse) 
+         PositionChildren (n);
    }
 
    public static void Render (bool realRender) {
@@ -104,11 +123,11 @@ static public class UXSystem {
          // Render the nodes in top-down traversal order (we want to draw the
          // parents before children
          foreach (var n in mTraverse) {
-            ref Node node = ref mNodes[n];
+            ref Node node = ref Nodes[n];
             var clas = Classes[(int)node.Kind]; clas.Draw (ref node);
          }
       }
-      (mNodes, mSnapshot) = (mSnapshot, mNodes);
+      (Nodes, mSnapshot) = (mSnapshot, Nodes);
    }
 
    [DoesNotReturn]
@@ -118,23 +137,26 @@ static public class UXSystem {
 
    // Implementation -----------------------------------------------------------
    static void PositionChildren (int n) {
-      ref Node node = ref mNodes[n];
+      ref Node node = ref Nodes[n];
       if (!node.GetChildren (mTmp)) return;
 
       // First, position along the axis
       bool horizontal = node.IsHorizontal;
       ref AxisDef ax = ref (horizontal ? ref node.X : ref node.Y);
       ref AxisDef ay = ref (horizontal ? ref node.Y : ref node.X);
-      int xpos = ax.V0 + ax.PadStart;
+      int xRemain = node.GetRemainingSpace (horizontal);
+      int xDelta = ax.ChildAlign switch { EAlign.Middle => xRemain / 2, EAlign.End => xRemain, _ => 0 };
+      int xPos = ax.V0 + ax.PadStart + xDelta;
+
       foreach (var c in mTmp) {
-         ref Node child = ref mNodes[c];
+         ref Node child = ref Nodes[c];
          ref AxisDef cax = ref (horizontal ? ref child.X : ref child.Y);
          ref AxisDef cay = ref (horizontal ? ref child.Y : ref child.X);
-         cax.V0 = (short)xpos; xpos += cax.DV + node.ChildGap;
+         cax.V0 = (short)xPos; xPos += cax.DV + node.ChildGap;
 
          int yRemain = ay.DV - cay.DV - ay.TotalPad;
-         int delta = ay.ChildAlign switch { EAlign.Middle => yRemain / 2, EAlign.End => yRemain, _ => 0 };
-         cay.V0 = (short)(ay.V0 + ay.PadStart + delta);
+         int yDelta = ay.ChildAlign switch { EAlign.Middle => yRemain / 2, EAlign.End => yRemain, _ => 0 };
+         cay.V0 = (short)(ay.V0 + ay.PadStart + yDelta);
       }
    }
 
@@ -148,7 +170,7 @@ static public class UXSystem {
    static bool mMousePressedLastFrame;       // and in the last frame?
    static int mWheelDelta;       // Mouse wheel movement in this frame
    static Vec2S mMousePos;       // Mouse position this frame
-   internal static Node[] mNodes = new Node[32];      // List of nodes
+   internal static Node[] Nodes = new Node[32];      // List of nodes
    internal static Vec2S mScreenSize;     // Screen size
 
    static List<short> mTraverse = [];     // Top-down traversal of nodes, breadth first

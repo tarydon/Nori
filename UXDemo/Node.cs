@@ -2,6 +2,7 @@
 // ╔═╦╦═╦╦╬╣ Node.cs
 // ║║║║╬║╔╣║ <<TODO>>
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
+using System.Reflection.Metadata;
 using Nori;
 namespace UXDemo;
 
@@ -78,12 +79,95 @@ public struct Node {
 
    public readonly RectS Rect => new (X.V0, Y.V0, X.V0 + X.DV, Y.V0 + Y.DV);
 
+   public readonly int ZLevel => 200 + Level * 2;
+
    // Methods ------------------------------------------------------------------
+   public void DoFitSizing (bool xAxis) {
+      if (ChildCount == 0) return;
+      bool along = xAxis == IsHorizontal;
+      if ("Yellow" == Data as string && !xAxis)
+         Lib.Trace ("Y");
+      ref AxisDef ax = ref (xAxis ? ref X : ref Y);
+      int total = along ? ChildGap * (Math.Max (0, ChildCount - 1)) : 0;
+      for (short c = FirstChild; c != 0; c = UXSystem.Nodes[c].Next) {
+         ref Node child = ref UXSystem.Nodes[c];
+         ref AxisDef cax = ref (xAxis ? ref child.X : ref child.Y);
+         if (along) total += cax.DV;
+         else total = Math.Max (total, cax.DV);
+      }
+      total += ax.TotalPad;
+      ax.DV = (short)total.Clamp (ax.Min, ax.Max);
+   }
+
+   public void DoGrowShrinkChildren (bool xAxis) {
+      if (!GetChildren (mTmp)) return;
+      // Remove children that are not GROW
+      mTmp.RemoveIf (a => !UXSystem.Nodes[a].IsGrow (xAxis));
+      if (mTmp.Count == 0) return;
+
+      bool along = xAxis == IsHorizontal;
+      ref AxisDef ax = ref (xAxis ? ref X : ref Y);
+      if (along) {
+         int space = GetRemainingSpace (xAxis); // TODO: Club GetChildren, GetRemainingSpace
+         while (space > 0 && mTmp.Count > 0) {
+            int prevSpace = space;
+            int smallest = short.MaxValue, secondSmallest = smallest, widthToAdd = space;
+            foreach (var c in mTmp) {
+               ref Node child = ref UXSystem.Nodes[c];
+               int dv = child.GetSize (xAxis);
+               if (dv < smallest) { secondSmallest = smallest; smallest = dv; }
+               if (dv > smallest) { secondSmallest = Math.Min (secondSmallest, dv); widthToAdd = secondSmallest - smallest; }
+            }
+            widthToAdd = Math.Max (Math.Min (widthToAdd, space / mTmp.Count), 1);
+
+            for (int i = mTmp.Count - 1; i >= 0; i--) {
+               ref Node child = ref UXSystem.Nodes[mTmp[i]];
+               if (child.GetSize (xAxis) != smallest) continue;
+               ref AxisDef cax = ref (xAxis ? ref child.X : ref child.Y);
+               int toAdd = Math.Min (widthToAdd, cax.Max - cax.DV);
+               cax.DV = (short)(cax.DV + toAdd);
+               if (cax.DV >= cax.Max) mTmp.RemoveAt (i);
+               if ((space -= toAdd) <= 0) break;
+            }
+            if (space == prevSpace) break;
+         }
+      } else {
+         int space = ax.DV - ax.TotalPad;
+         foreach (var c in mTmp) {
+            ref Node child = ref UXSystem.Nodes[c];
+            ref AxisDef cax = ref (xAxis ? ref child.X : ref child.Y);
+            if (space > cax.DV) {
+               int max = cax.Max; if (max == 0) max = short.MaxValue;
+               cax.DV = (short)Math.Min (max, space);
+            }
+         }
+      }
+   }
+   static List<short> mTmp = [];
+
+   public readonly bool IsGrow (bool xAxis) {
+      if (xAxis) return X.Mode == ESizing.Grow;
+      else return Y.Mode == ESizing.Grow;
+   }
+
+   public readonly short GetSize (bool xAxis) => xAxis ? X.DV : Y.DV;
+
    public readonly bool GetChildren (List<short> tmp) {
       tmp.Clear (); 
-      for (short a = FirstChild; a != 0; a = UXSystem.mNodes[a].Next)
+      for (short a = FirstChild; a != 0; a = UXSystem.Nodes[a].Next)
          tmp.Add (a);
       return tmp.Count > 0;
+   }
+
+   public readonly int GetRemainingSpace (bool xAxis) {
+      ref readonly AxisDef ax = ref (xAxis ? ref X : ref Y);
+      int space = ax.DV - ax.TotalPad - ChildGap * (ChildCount - 1);
+      for (short c = FirstChild; c != 0; c = UXSystem.Nodes[c].Next) {
+         ref Node child = ref UXSystem.Nodes[c];
+         ref AxisDef cax = ref (xAxis ? ref child.X : ref child.Y);
+         space -= cax.DV;
+      }
+      return space;
    }
 
    /// <summary>Set uniform padding all around</summary>

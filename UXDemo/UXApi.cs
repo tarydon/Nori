@@ -34,8 +34,8 @@ public static class UXApi {
 
    public static ref Node TEXT (string text, int fontId, Color4 textColor, Color4 bgrdColor) {
       ref Node node = ref UXSystem.BeginNode (EKind.Text);
-      node.FgrdColor = textColor; node.BgrdColor = bgrdColor;
-      node.FontId = (short)fontId;
+      node.FgrdColor = textColor; node.BgrdColor = bgrdColor; 
+      node.FontId = (short)fontId; node.Text = text;
       return ref node; 
    }
 }
