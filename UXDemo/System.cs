@@ -2,8 +2,8 @@
 // ╔═╦╦═╦╦╬╣ System.cs
 // ║║║║╬║╔╣║ <<TODO>>
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
-using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.Text;
 using Nori;
 namespace UXDemo;
 
@@ -72,6 +72,12 @@ static public class UXSystem {
       return ref node;
    }
 
+   public static string Dump () {
+      StringBuilder sb = new ();
+      Dump (sb, 1, 0);
+      return sb.ToString ();
+   }
+
    public static void EndNode () {
       mParent = mCurrent = mStack.Pop ();
    }
@@ -102,6 +108,10 @@ static public class UXSystem {
          Nodes[n].DoGrowShrinkChildren (true);
 
       // 4. Wrap text
+      foreach (var n in mTraverse) {
+         ref Node node = ref Nodes[n];
+         if ((node.Flags & EFlags.Wrap) != 0) Classes[(int)node.Kind].Wrap (ref node);
+      }
 
       // 5. Fit sizing in Y
       for (int i = mTraverse.Count - 1; i >= 0; i--) {
@@ -136,6 +146,14 @@ static public class UXSystem {
    }
 
    // Implementation -----------------------------------------------------------
+   static void Dump (StringBuilder sb, int n, int level) {
+      ref Node node = ref Nodes[n];
+      sb.Append (new string (' ', level));
+      node.Dump (sb); sb.AppendLine ();
+      List<short> tmp = []; node.GetChildren (tmp);
+      foreach (var c in tmp) Dump (sb, c, level + 1);
+   }
+
    static void PositionChildren (int n) {
       ref Node node = ref Nodes[n];
       if (!node.GetChildren (mTmp)) return;

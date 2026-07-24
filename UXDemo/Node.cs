@@ -3,6 +3,7 @@
 // ║║║║╬║╔╣║ <<TODO>>
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 using System.Reflection.Metadata;
+using System.Text;
 using Nori;
 namespace UXDemo;
 
@@ -40,6 +41,7 @@ public struct Node {
    public short BorderWidth;
    /// <summary>Corner radius</summary>
    public short CornerRadius;
+   public short RemainingSpace;
 
    // Child positioning --------------------------------------------------------
    /// <summary>Gap between successive children</summary>
@@ -82,11 +84,13 @@ public struct Node {
    public readonly int ZLevel => 200 + Level * 2;
 
    // Methods ------------------------------------------------------------------
+   public void Dump (StringBuilder sb) {
+      sb.Append ($"{Id} {Kind} {Data} {X.DV}x{Y.DV} {X.Mode} Remain:{RemainingSpace}");
+   }
+
    public void DoFitSizing (bool xAxis) {
       if (ChildCount == 0) return;
       bool along = xAxis == IsHorizontal;
-      if ("Yellow" == Data as string && !xAxis)
-         Lib.Trace ("Y");
       ref AxisDef ax = ref (xAxis ? ref X : ref Y);
       int total = along ? ChildGap * (Math.Max (0, ChildCount - 1)) : 0;
       for (short c = FirstChild; c != 0; c = UXSystem.Nodes[c].Next) {
@@ -101,53 +105,82 @@ public struct Node {
 
    public void DoGrowShrinkChildren (bool xAxis) {
       if (!GetChildren (mTmp)) return;
-      // Remove children that are not GROW
-      mTmp.RemoveIf (a => !UXSystem.Nodes[a].IsGrow (xAxis));
-      if (mTmp.Count == 0) return;
-
       bool along = xAxis == IsHorizontal;
       ref AxisDef ax = ref (xAxis ? ref X : ref Y);
       if (along) {
-         int space = GetRemainingSpace (xAxis); // TODO: Club GetChildren, GetRemainingSpace
-         while (space > 0 && mTmp.Count > 0) {
-            int prevSpace = space;
-            int smallest = short.MaxValue, secondSmallest = smallest, widthToAdd = space;
-            foreach (var c in mTmp) {
-               ref Node child = ref UXSystem.Nodes[c];
-               int dv = child.GetSize (xAxis);
-               if (dv < smallest) { secondSmallest = smallest; smallest = dv; }
-               if (dv > smallest) { secondSmallest = Math.Min (secondSmallest, dv); widthToAdd = secondSmallest - smallest; }
-            }
-            widthToAdd = Math.Max (Math.Min (widthToAdd, space / mTmp.Count), 1);
-
-            for (int i = mTmp.Count - 1; i >= 0; i--) {
-               ref Node child = ref UXSystem.Nodes[mTmp[i]];
-               if (child.GetSize (xAxis) != smallest) continue;
-               ref AxisDef cax = ref (xAxis ? ref child.X : ref child.Y);
-               int toAdd = Math.Min (widthToAdd, cax.Max - cax.DV);
-               cax.DV = (short)(cax.DV + toAdd);
-               if (cax.DV >= cax.Max) mTmp.RemoveAt (i);
-               if ((space -= toAdd) <= 0) break;
-            }
-            if (space == prevSpace) break;
-         }
+         // If we have a positive amount of space left, remove the children that are not 'grow'
+         int space = GetRemainingSpace (xAxis);
+         RemainingSpace = (short)space;
+         if (space >= 0) {
+            mTmp.RemoveIf (a => !UXSystem.Nodes[a].IsGrow (xAxis));
+            if (mTmp.Count > 0) GrowChildren (xAxis, space, mTmp);
+         } else
+            ShrinkChildren (xAxis, -space, mTmp);
       } else {
          int space = ax.DV - ax.TotalPad;
          foreach (var c in mTmp) {
             ref Node child = ref UXSystem.Nodes[c];
             ref AxisDef cax = ref (xAxis ? ref child.X : ref child.Y);
-            if (space > cax.DV) {
-               int max = cax.Max; if (max == 0) max = short.MaxValue;
-               cax.DV = (short)Math.Min (max, space);
-            }
+            if (space < cax.DV || cax.Mode == ESizing.Grow) 
+               cax.DV = (short)space.Clamp (cax.Min, cax.Max);
          }
       }
    }
    static List<short> mTmp = [];
 
+   readonly void ShrinkChildren (bool xAxis, int space, List<short> children) {
+      while (space > 0 && children.Count > 0) {
+         int prevSpace = space;
+         int largest = 0, secondLargest = 0, widthToSub = space;
+         foreach (var c in children) {
+            ref Node child = ref UXSystem.Nodes[c];
+            int dv = child.GetSize (xAxis);
+            if (dv > largest) { secondLargest = largest; largest = dv; }
+            if (dv < largest) { secondLargest = Math.Max (secondLargest, dv); widthToSub = largest - secondLargest; }
+         }
+         widthToSub = widthToSub.Clamp (1, space / children.Count);
+
+         for (int i = children.Count - 1; i >= 0; i--) {
+            ref Node child = ref UXSystem.Nodes[children[i]];
+            ref AxisDef cax = ref (xAxis ? ref child.X : ref child.Y);
+            if (cax.DV != largest) continue;
+            int toSub = Math.Min (widthToSub, cax.DV - cax.Min);
+            cax.DV = (short)(cax.DV - toSub);
+            if (cax.DV <= cax.Min) children.RemoveAt (i);
+            if ((space -= toSub) <= 0) break;
+         }
+         if (space == prevSpace) break;
+      }
+   }
+
+   readonly void GrowChildren (bool xAxis, int space, List<short> children) {
+      while (space > 0 && children.Count > 0) {
+         int prevSpace = space;
+         int smallest = short.MaxValue, secondSmallest = smallest, widthToAdd = space;
+         foreach (var c in children) {
+            ref Node child = ref UXSystem.Nodes[c];
+            int dv = child.GetSize (xAxis);
+            if (dv < smallest) { secondSmallest = smallest; smallest = dv; }
+            if (dv > smallest) { secondSmallest = Math.Min (secondSmallest, dv); widthToAdd = secondSmallest - smallest; }
+         }
+         widthToAdd = widthToAdd.Clamp (1, space / children.Count);
+
+         for (int i = children.Count - 1; i >= 0; i--) {
+            ref Node child = ref UXSystem.Nodes[children[i]];
+            ref AxisDef cax = ref (xAxis ? ref child.X : ref child.Y);
+            if (cax.DV != smallest) continue; 
+            int toAdd = Math.Min (widthToAdd, cax.Max - cax.DV);
+            cax.DV = (short)(cax.DV + toAdd);
+            if (cax.DV >= cax.Max) children.RemoveAt (i);
+            if ((space -= toAdd) <= 0) break;
+         }
+         if (space == prevSpace) break;
+      }
+   }
+
    public readonly bool IsGrow (bool xAxis) {
-      if (xAxis) return X.Mode == ESizing.Grow;
-      else return Y.Mode == ESizing.Grow;
+      if (xAxis) return X.Mode is ESizing.Grow;
+      else return Y.Mode is ESizing.Grow;
    }
 
    public readonly short GetSize (bool xAxis) => xAxis ? X.DV : Y.DV;

@@ -156,6 +156,7 @@ public class TypeFace {
    /// <summary>Get metrics data for a given glyph index</summary>
    public ref Metrics GetMetrics (uint n) => ref Notes[n];
 
+   // TODO: Implement a variant of this that takes ReadOnlySpan<char>
    /// <summary>This 'measures' some text and returns the bounding box of it</summary>
    /// This assumes that we are drawing the text with a baseline-start at (0,0). As with all
    /// pixel coordinates, +Y goes downwards. So the 'top' of this returned rectangle will be
@@ -184,6 +185,46 @@ public class TypeFace {
       if (!exact) { bottom = mDescender; top = -mAscender; }
       if (right == 0) left = 0;
       return new (left, top, right, bottom);
+   }
+
+   /// <summary>
+   /// Measures the width of a long text, stopping if the width exceeds the given maxWidth
+   /// </summary>
+   public int MeasureWidth (string text, int maxWidth) {
+      uint idx0 = 0; 
+      int x = 0, left = 9999, right = 0; 
+      foreach (var ch in text) {
+         uint idx1 = GetGlyphIndex (ch);
+         ref var metric = ref GetMetrics (idx1);
+         int kern = GetKerning (idx0, idx1);
+         int xChar = x + metric.LeftBearing + kern;
+         left = Math.Min (left, xChar);
+         right = Math.Max (right, xChar + metric.Columns);
+         x += metric.Advance + kern;
+         idx0 = idx1;
+         if (right - left > maxWidth) break;
+      }
+      return right - left;
+   }
+
+   public void SplitSpans (string text, int maxWidth, List<(int Start, int End)> spans) {
+      uint idx0 = 0;
+      int done = -1, lastSpace = -1, x = 0; 
+      for (int i = 0; i < text.Length; i++) {
+         char ch = text[i];
+         if (ch == ' ') {
+            lastSpace = i; 
+            if (x == 0) continue;  // Ignore spaces at the beginning of a line
+         }
+         uint idx1 = GetGlyphIndex (ch);
+         ref var metric = ref GetMetrics (idx1);
+         x += metric.Advance + GetKerning (idx0, idx1);
+         if (x >= maxWidth && lastSpace > done) {
+            spans.Add ((done + 1, lastSpace - 1));
+            x = 0; done = i = lastSpace;
+         }
+      }
+      if (done < text.Length - 1) spans.Add ((done + 1, text.Length - 1));
    }
 
    /// <summary>Measures each character of the text and stores the potential cursor positions in xpos</summary>

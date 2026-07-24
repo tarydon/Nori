@@ -2,6 +2,9 @@
 // ╔═╦╦═╦╦╬╣ Classes.cs
 // ║║║║╬║╔╣║ <<TODO>>
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
+using System.CodeDom.Compiler;
+using System.Reflection.Metadata.Ecma335;
+using JetBrains.Annotations;
 using Nori;
 namespace UXDemo;
 
@@ -24,6 +27,7 @@ public abstract class NodeClass {
       => throw new NotImplementedException ($"Implement {this.GetType ().Name}.Draw");
    public virtual Vec2S Measure (object data) => throw new NotImplementedException ();
    public virtual void Release (ref Node node) { }
+   public virtual void Wrap (ref Node node) => throw new NotImplementedException (); 
 }
 
 /// <summary>Node representing a simple rectangle</summary>"
@@ -69,7 +73,7 @@ public class TextClass : NodeClass {
 
    public override void Measure (ref Node node) {
       TypeFace tf = UXSystem.Typefaces[node.FontId];
-      RectS r = tf.Measure (node.Text ?? "", true);
+      RectS r = tf.Measure (node.Text ?? "");
       ref AxisDef x = ref node.X, y = ref node.Y;
       node.TextOffset = new (-r.Left + x.PadStart, -r.Top + x.PadStart);
       x.DV = (short)(r.Width + x.TotalPad);
@@ -81,4 +85,70 @@ public class TextClass : NodeClass {
       Lux.TypeFace = UXSystem.Typefaces[node.FontId];
       Lux.Text (node.Text, new (node.X.V0 + node.TextOffset.X, node.Y.V0 + node.TextOffset.Y));
    }
+}
+
+public class MTextClass : NodeClass {
+   public override EKind Kind => EKind.MText;
+   public override EFlags Flags => EFlags.Wrap;
+
+   public override void Measure (ref Node node) {
+      uint uid = (uint)node.Data;
+      if (!mData.TryGetValue (uid, out var data))
+         mData.Add (uid, data = new Data (ref node));
+      data.Measure (ref node);
+   }
+
+   public override void Draw (ref Node node) {
+      uint uid = (uint)node.Data;
+      mData[uid].Draw (ref node);
+   }
+
+   public override void Wrap (ref Node node) {
+      uint uid = (uint)node.Data;
+      mData[uid].Wrap (ref node);
+   }
+
+   // Maintains data needed to wrap and render an MText
+   class Data {
+      public Data (ref Node node) 
+         => (mText, mFace) = (node.Text ?? "", UXSystem.Typefaces[node.FontId]);
+      readonly string mText;
+      readonly TypeFace mFace;
+      readonly List<(int Start, int End)> mSpans = [];
+      short mDV;
+
+      public void Measure (ref Node node) {
+         var (start, text, max) = (-1, node.Text ?? "", 0);
+         ref AxisDef x = ref node.X, y = ref node.Y;
+         x.DV = (short)(mFace.MeasureWidth (text, Lux.PanelSize.X) + x.TotalPad);
+         RectS r = mFace.Measure ("M");
+         node.TextOffset = new (-r.Left + x.PadStart, -r.Top + x.PadStart);
+         y.DV = (short)(r.Height + y.TotalPad);
+         int words = text.Count (' ') + 1;
+         x.Min = (short)(r.Width / words + x.TotalPad);
+      }
+
+      public void Wrap (ref Node node) {
+         if (node.X.DV != mDV) { mDV = node.X.DV; mSpans.Clear (); }
+         // The spans at which we are splitting the text are not yet computed, 
+         // so compute them here.
+         if (mSpans.Count == 0) 
+            mFace.SplitSpans (mText, node.X.DV - node.X.TotalPad, mSpans);
+         node.Y.DV = node.Y.Min = (short)(mSpans.Count * mFace.LineHeight + node.Y.TotalPad);
+      }
+
+      public void Draw (ref Node node) {
+         uint uid = (uint)node.Data;
+         (Lux.Color, Lux.ZLevel) = (node.FgrdColor, node.ZLevel + 1);
+         Lux.TypeFace = mFace;
+         int x = node.X.V0 + node.TextOffset.X + node.X.PadStart;
+         int y = node.Y.V0 + node.TextOffset.Y + node.Y.PadStart;
+         foreach (var span in mSpans) {
+            Lux.Text (mText.Substring (span.Start, span.End - span.Start + 1), new (x, y));
+            y += mFace.LineHeight;
+         }
+      }
+   }
+
+   static Dictionary<uint, Data> mData = [];
 }

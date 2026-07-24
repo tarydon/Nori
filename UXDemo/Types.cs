@@ -6,7 +6,7 @@ namespace UXDemo;
 
 /// <summary>What Kind of UXNode is this?</summary>
 public enum EKind {
-   Unknown, Root, Rect, Panel, Text,
+   Unknown, Root, Rect, Panel, Text, MText,
 }
 
 /// <summary>The various sizing modes for an axis</summary>

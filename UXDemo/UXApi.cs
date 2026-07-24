@@ -11,6 +11,7 @@ public static class UXApi {
       UXSystem.Register (new PanelClass ());
       UXSystem.Register (new TextClass ());
       UXSystem.Register (new RootClass ());
+      UXSystem.Register (new MTextClass ());
    }
 
    public static void END () {
@@ -37,5 +38,12 @@ public static class UXApi {
       node.FgrdColor = textColor; node.BgrdColor = bgrdColor; 
       node.FontId = (short)fontId; node.Text = text;
       return ref node; 
+   }
+
+   public static ref Node MTEXT (uint uid, string text, int fontId, Color4 textColor, Color4 bgrdColor) {
+      ref Node node = ref UXSystem.BeginNode (EKind.MText);
+      node.Data = uid; node.FgrdColor = textColor; node.BgrdColor = bgrdColor;
+      node.FontId = (short)fontId; node.Text = text;
+      return ref node;
    }
 }
