@@ -17,6 +17,10 @@ public struct Node {
    public EFlags Flags;
    /// <summary>Generic data, interpretation depends on Kind</summary>
    public object Data;
+   /// <summary>
+   /// Global unique ID for this node
+   /// </summary>
+   public uint UId;
 
    // Node tree ----------------------------------------------------------------
    /// <summary>Parent node for this (0 for root node)</summary>
@@ -183,6 +187,10 @@ public struct Node {
       else return Y.Mode is ESizing.Grow;
    }
 
+   public readonly bool IsMouseOver => GetMemo ().IsMouseOver;
+
+   public readonly bool IsHovered => GetMemo ().IsHovered;
+
    public readonly short GetSize (bool xAxis) => xAxis ? X.DV : Y.DV;
 
    public readonly bool GetChildren (List<short> tmp) {
@@ -191,6 +199,8 @@ public struct Node {
          tmp.Add (a);
       return tmp.Count > 0;
    }
+
+   public readonly ref NodeMemo GetMemo () => ref UXSystem.Memo[UId];
 
    public readonly int GetRemainingSpace (bool xAxis) {
       ref readonly AxisDef ax = ref (xAxis ? ref X : ref Y);

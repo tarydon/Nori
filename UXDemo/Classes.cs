@@ -63,6 +63,10 @@ public class PanelClass : RectClass {
    public override EFlags Flags => EFlags.HasChildren;
 }
 
+public class BlockClass : RectClass {
+   public override EKind Kind => EKind.Block;
+}
+
 public class RootClass : PanelClass {
    public override EKind Kind => EKind.Root;
 }
@@ -92,21 +96,16 @@ public class MTextClass : NodeClass {
    public override EFlags Flags => EFlags.Wrap;
 
    public override void Measure (ref Node node) {
-      uint uid = (uint)node.Data;
-      if (!mData.TryGetValue (uid, out var data))
-         mData.Add (uid, data = new Data (ref node));
+      ref NodeMemo memo = ref node.GetMemo ();
+      if (memo.Data is not Data data) memo.Data = data = new Data (ref node);
       data.Measure (ref node);
    }
 
-   public override void Draw (ref Node node) {
-      uint uid = (uint)node.Data;
-      mData[uid].Draw (ref node);
-   }
+   public override void Draw (ref Node node) 
+      => ((Data)node.GetMemo ().Data).Draw (ref node);
 
-   public override void Wrap (ref Node node) {
-      uint uid = (uint)node.Data;
-      mData[uid].Wrap (ref node);
-   }
+   public override void Wrap (ref Node node)
+      => ((Data)node.GetMemo ().Data).Wrap (ref node);
 
    // Maintains data needed to wrap and render an MText
    class Data {
@@ -138,17 +137,14 @@ public class MTextClass : NodeClass {
       }
 
       public void Draw (ref Node node) {
-         uint uid = (uint)node.Data;
          (Lux.Color, Lux.ZLevel) = (node.FgrdColor, node.ZLevel + 1);
          Lux.TypeFace = mFace;
          int x = node.X.V0 + node.TextOffset.X + node.X.PadStart;
          int y = node.Y.V0 + node.TextOffset.Y + node.Y.PadStart;
-         foreach (var span in mSpans) {
-            Lux.Text (mText.Substring (span.Start, span.End - span.Start + 1), new (x, y));
+         foreach (var (start, end) in mSpans) {
+            Lux.Text (mText.AsSpan (start, end - start + 1), new (x, y));
             y += mFace.LineHeight;
          }
       }
    }
-
-   static Dictionary<uint, Data> mData = [];
 }

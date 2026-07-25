@@ -187,9 +187,7 @@ public class TypeFace {
       return new (left, top, right, bottom);
    }
 
-   /// <summary>
-   /// Measures the width of a long text, stopping if the width exceeds the given maxWidth
-   /// </summary>
+   /// <summary>Measures the width of a long text, stopping if the width exceeds the given maxWidth</summary>
    public int MeasureWidth (string text, int maxWidth) {
       uint idx0 = 0; 
       int x = 0, left = 9999, right = 0; 

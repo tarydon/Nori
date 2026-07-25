@@ -25,26 +25,31 @@ class DemoVN : VNode {
    void OnMouseClick (MouseClickInfo info) { mPressed = info.IsPress; Redraw (); }
 
    public override void Draw () {
+      mUID = 0; 
       ref var root = ref UXSystem.BeginLayout (Lux.PanelSize);
       root.SetPadding (20); root.Data = "Root";
+      UXSystem.SetMouseState (mPos, mWheel, mPressed);
 
-      ref var node = ref PANEL (Fit (100), Fit (100), true, Color4.DarkGreen);      
+      ref var node = ref PANEL (NextUID, Fit (100), Fit (100), true, Color4.DarkGreen);      
       node.Data = "DarkGreen"; node.SetPadding (20); node.ChildGap = 20;
-      node.Y.ChildAlign = EAlign.Middle; 
+      node.Y.ChildAlign = EAlign.Middle;  
 
-      node = ref RECT (450, 350, Color4.Green); node.Data = "Green"; END ();
-      node = ref PANEL (Fit (200), Fit (), true, Color4.Yellow); node.Data = "Yellow";
+      node = ref RECT (NextUID, 450, 350, Color4.Green); node.Data = "Green"; END ();
+      node = ref PANEL (NextUID, Fit (200), Fit (), true, Color4.Yellow); node.Data = "Yellow";
       node.SetPadding (10); node.X.ChildAlign = EAlign.Middle;
-      MTEXT (1, Lorem, 0, Color4.Black, Color4.Transparent); END ();
+      MTEXT (NextUID, Lorem, 0, Color4.Black, Color4.Transparent); END ();
       END ();
-      node = ref RECT (Grow (250, 500), Fit (100), Color4.Cyan); node.Data = "Cyan"; END ();
-      node = ref RECT (300, 200, Color4.DarkBlue); node.Data = "DarkBlue"; END ();
+      node = ref RECT (NextUID, Grow (250, 500), Fit (100), Color4.Cyan); node.Data = "Cyan"; END ();
+      node = ref BLOCK (NextUID, 300, 200, Color4.DarkBlue, Color4.Blue, Color4.Red); node.Data = "DarkBlue"; END ();
 
       END ();
 
       UXSystem.EndLayout ();
-      UXSystem.Render (true);
+      UXSystem.Render ();
    }
+
+   static uint NextUID => ++mUID;
+   static uint mUID = 0; 
 
    static string Lorem = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut efficitur cursus consequat. Suspendisse at ultrices leo. Fusce vitae volutpat lacus, quis convallis lorem. Orci varius natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Aenean aliquam lectus non neque molestie, non dignissim turpis aliquet. Maecenas ac accumsan nisi. Sed dignissim lacinia quam nec tristique. Pellentesque a egestas augue. Phasellus porta, ex ac interdum maximus, elit turpis gravida elit, nec pulvinar nunc neque quis lorem. Nunc pretium ipsum sed malesuada volutpat. In mollis bibendum eros ac ultricies. Pellentesque pellentesque commodo dapibus. Sed feugiat fermentum ultrices. Fusce non purus ac mi mollis ullamcorper et at mauris.";
 

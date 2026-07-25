@@ -3,6 +3,7 @@
 // ║║║║╬║╔╣║ <<TODO>>
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 using System.Diagnostics.CodeAnalysis;
+using System.Reflection.Metadata.Ecma335;
 using System.Text;
 using Nori;
 namespace UXDemo;
@@ -11,6 +12,9 @@ static public class UXSystem {
    // Properties ---------------------------------------------------------------
    public static TypeFace[] Typefaces = [];
    public static NodeClass[] Classes = new NodeClass[8];
+   public static NodeMemo[] Memo = new NodeMemo[32];
+
+   public static Vec2S MousePos { get; private set; }
 
    // Methods ------------------------------------------------------------------
    public static void Register (NodeClass clas) {
@@ -27,30 +31,29 @@ static public class UXSystem {
       mScreenSize = screenSize;
       // Note that we are not using mNodes[0], so we start with mUsed = 1
       mUsed = 1; mCurrent = 0; mStack.Clear ();
-      return ref BeginNode (EKind.Root, screenSize.X, screenSize.Y);
+      return ref BeginNode (EKind.Root, 0, screenSize.X, screenSize.Y);
    }
 
    public static void SetMouseState (Vec2S position, int wheelDelta, bool pressed) {
       mMousePressedLastFrame = mMousePressed;
-      (mMousePos, mWheelDelta, mMousePressed) = (position, wheelDelta, pressed);
+      (MousePos, mWheelDelta, mMousePressed) = (position, wheelDelta, pressed);
    }
 
-   public static ref Node BeginNode (EKind kind, Size width, Size height) {
-      ref Node node = ref BeginNode (kind);
+   public static ref Node BeginNode (EKind kind, uint uid, Size width, Size height) {
+      ref Node node = ref BeginNode (kind, uid);
       node.X.Set (width); node.Y.Set (height);
       return ref node;
    }
 
-   public static ref Node BeginNode (EKind kind) {
-      if (mUsed >= Nodes.Length) {
+   public static ref Node BeginNode (EKind kind, uint uid) {
+      if (mUsed >= Nodes.Length) 
          Array.Resize (ref Nodes, Nodes.Length * 2);
-         Array.Resize (ref mSnapshot, mSnapshot.Length * 2);
-      }
       mStack.Push (mParent = mCurrent); mCurrent = mUsed++;
       Nodes[mCurrent] = new ();    // Reset to zeroes!
 
       ref Node node = ref Nodes[mCurrent];
-      node.Id = mCurrent;
+      node.Id = mCurrent; node.UId = uid;
+      while (Memo.Length <= uid) Array.Resize (ref Memo, Memo.Length * 2);
       if ((node.Parent = mParent) != 0) {
          // If this has a parent, attach this node to the linked list of children
          // of that parent
@@ -128,16 +131,16 @@ static public class UXSystem {
          PositionChildren (n);
    }
 
-   public static void Render (bool realRender) {
-      if (realRender) {
-         // Render the nodes in top-down traversal order (we want to draw the
-         // parents before children
-         foreach (var n in mTraverse) {
-            ref Node node = ref Nodes[n];
-            var clas = Classes[(int)node.Kind]; clas.Draw (ref node);
-         }
+   public static void Render () {
+      // Render the nodes in top-down traversal order (we want to draw the
+      // parents before children
+      foreach (var n in mTraverse) {
+         ref Node node = ref Nodes[n];
+         var clas = Classes[(int)node.Kind]; clas.Draw (ref node);
+         ref NodeMemo memo = ref Memo[node.UId];
+         if (node.UId == 6) Lib.Trace ($"{node.Rect} {UXSystem.MousePos}");
+         memo.Rect = node.Rect;
       }
-      (Nodes, mSnapshot) = (mSnapshot, Nodes);
    }
 
    [DoesNotReturn]
@@ -182,12 +185,10 @@ static public class UXSystem {
    static short mUsed;           // Number of used nodes
    static short mCurrent;        // Node that is currently being edited
    static short mParent;         // Parent for the current node
-   static Node[] mSnapshot = new Node[32];   // Snapshot (previous frame)
    static Stack<short> mStack = [];   // Stack of all nodes
    static bool mMousePressed;         // Is the mouse pressed in this frame
    static bool mMousePressedLastFrame;       // and in the last frame?
    static int mWheelDelta;       // Mouse wheel movement in this frame
-   static Vec2S mMousePos;       // Mouse position this frame
    internal static Node[] Nodes = new Node[32];      // List of nodes
    internal static Vec2S mScreenSize;     // Screen size
 

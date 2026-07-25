@@ -2,11 +2,13 @@
 // ╔═╦╦═╦╦╬╣ Types.cs
 // ║║║║╬║╔╣║ <<TODO>>
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
+using Nori;
+
 namespace UXDemo;
 
 /// <summary>What Kind of UXNode is this?</summary>
 public enum EKind {
-   Unknown, Root, Rect, Panel, Text, MText,
+   Unknown, Root, Rect, Panel, Text, MText, Block,
 }
 
 /// <summary>The various sizing modes for an axis</summary>
@@ -93,4 +95,50 @@ public readonly struct Size {
    public readonly ESizing Mode;
    public readonly short Min;
    public readonly short Max;
+}
+
+/// <summary>Persistent data about a node, keyed by Node.UID</summary>
+public struct NodeMemo {
+   const int HOVERTIME = 350;
+
+   /// <summary>Bounding rect of the node as last laid out</summary>
+   public RectS Rect {
+      readonly get => mRect;
+      set { mRect = value; IsMouseOver = mRect.Contains (UXSystem.MousePos); }
+   }
+   RectS mRect;
+
+   /// <summary>
+   /// The mouse has been hovering here for HOVERTIME
+   /// </summary>
+   public readonly bool IsHovered {
+      get {
+         if (!IsMouseOver) return false;
+         return (uint)Environment.TickCount > MouseEnterTime + HOVERTIME;
+      }
+   }
+
+   /// <summary>Additional data (class-specific)</summary>
+   public object Data;
+
+   /// <summary>
+   /// Tick-count at which the mouse entered the node
+   /// </summary>
+   public uint MouseEnterTime;
+   /// <summary>
+   /// Tick-count at which the mouse left the node
+   /// </summary>
+   public uint MouseLeaveTime;
+
+   public bool IsMouseOver {
+      readonly get => mIsMouseOver;
+      set {
+         if (mIsMouseOver == value) return;
+         if (mIsMouseOver = value)
+            MouseEnterTime = (uint)Environment.TickCount;
+         else
+            MouseLeaveTime = (uint)Environment.TickCount;
+      }
+   }
+   bool mIsMouseOver;
 }

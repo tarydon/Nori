@@ -19,6 +19,7 @@ class Program {
 
    static void OnReady () {
       Lux.UIScene = new DemoScene ();
+      Lib.Tracer = TraceVN.Print; TraceVN.TextColor = Color4.Yellow;
       Hub.Keyboard.Keys.Where (a => a.IsPress (EKey.Escape))
                        .Subscribe (_ => mWin?.ShouldClose = true);
    }
@@ -27,6 +28,6 @@ class Program {
 class DemoScene : Scene2 {
    public DemoScene () {
       BgrdColor = Color4.Gray (64);
-      Root = new DemoVN ();
+      Root = new GroupVN ([new DemoVN (), TraceVN.It]);
    }
 }
