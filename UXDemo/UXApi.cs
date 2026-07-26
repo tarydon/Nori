@@ -14,6 +14,7 @@ public static class UXApi {
       UXSystem.Register (new MTextClass ());
       UXSystem.Register (new BlockClass ());
       UXSystem.Register (new VScrollClass ());
+      UXSystem.Register (new PopupClass ());
    }
 
    public static void END () {
@@ -36,6 +37,14 @@ public static class UXApi {
    public static ref Node PANEL (uint uid, Size width, Size height, bool horizontal, Color4 bgrd) {
       ref Node node = ref UXSystem.BeginNode (EKind.Panel, uid, width, height);
       node.BgrdColor = bgrd; node.IsHorizontal = horizontal;
+      return ref node;
+   }
+
+   public static ref Node POPUP (uint uid, Size width, Size height, Color4 bgrd, ECorner parentCorner, ECorner elemCorner, Vec2S offset, bool screenAlign = false) {
+      ref Node node = ref UXSystem.BeginNode (EKind.Popup, uid, width, height);
+      node.BgrdColor = bgrd;
+      node.ElemCorner = elemCorner; node.ParentCorner = parentCorner; node.FloatOffset = offset;
+      node.IsScreenRelative = screenAlign;
       return ref node;
    }
 

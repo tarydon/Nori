@@ -2,9 +2,6 @@
 // ╔═╦╦═╦╦╬╣ Classes.cs
 // ║║║║╬║╔╣║ <<TODO>>
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
-using System.CodeDom.Compiler;
-using System.Reflection.Metadata.Ecma335;
-using JetBrains.Annotations;
 using Nori;
 namespace UXDemo;
 
@@ -40,7 +37,9 @@ public class RectClass : NodeClass {
 
       (Lux.Color, Lux.ZLevel) = (node.BgrdColor, node.ZLevel);
       var (radius, border, rect) = (node.CornerRadius, node.BorderWidth, node.Rect);
-      if (radius > 0 && border > 0) {
+      if (node.HasShadow) {
+         Lux.UIRect (rect.Center, rect.Size, radius, border, node.BgrdColor, node.BorderColor);
+      } else if (radius > 0 && border > 0) {
          Lux.BorderColor = node.BorderColor;
          Lux.RRectBorder (rect, radius, border);
       } else if (border > 0) {
@@ -67,6 +66,11 @@ public class BlockClass : RectClass {
 
 public class RootClass : PanelClass {
    public override EKind Kind => EKind.Root;
+}
+
+public class PopupClass : PanelClass {
+   public override EKind Kind => EKind.Popup;
+   public override EFlags Flags => EFlags.HasChildren | EFlags.Popup | EFlags.Shadow;
 }
 
 public class VScrollClass : NodeClass {
@@ -133,14 +137,12 @@ public class MTextClass : NodeClass {
       short mDV;
 
       public void Measure (ref Node node) {
-         var (start, text, max) = (-1, node.Text ?? "", 0);
          ref AxisDef x = ref node.X, y = ref node.Y;
-         x.DV = (short)(mFace.MeasureWidth (text, Lux.PanelSize.X) + x.TotalPad);
+         x.DV = (short)(mFace.MeasureWidth (node.Text ?? "", Lux.PanelSize.X) + x.TotalPad);
          RectS r = mFace.Measure ("M");
          node.TextOffset = new (-r.Left + x.PadStart, -r.Top + x.PadStart);
          y.DV = (short)(r.Height + y.TotalPad);
-         int words = text.Count (' ') + 1;
-         x.Min = (short)(r.Width / words + x.TotalPad);
+         x.Min = 50;
       }
 
       public void Wrap (ref Node node) {

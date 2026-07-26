@@ -41,7 +41,15 @@ class DemoVN : VNode {
       MTEXT (NextUID, Lorem, 0, Color4.Black, Color4.Transparent); END ();
       END ();  // VSCroll
       END ();  // Yellow panel
-      node = ref RECT (NextUID, Grow (250, 500), Fit (100), Color4.Cyan); node.Data = "Cyan"; END ();
+      node = ref RECT (NextUID, Grow (250, 500), Fit (100), Color4.Cyan); node.Data = "Cyan";
+      if (node.IsHovered (200)) {
+         node = ref POPUP (NextUID, Fit (), Fit (), Color4.Gray (128), ECorner.Bottom, ECorner.TopLeft, new (0, 6));
+         node.CornerRadius = 6;
+         node.SetPadding (16, 8, 16, 8);
+         TEXT (NextUID, "A Cyan Rectangle!", 0, Color4.White); END ();
+         END ();
+      } else { _ = NextUID; _ = NextUID; }
+      END ();  // Cyan Rect
       node = ref BLOCK (NextUID, 300, 200, Color4.DarkBlue, Color4.Blue, Color4.Red); node.Data = "DarkBlue"; END ();
 
       END ();

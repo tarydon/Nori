@@ -9,8 +9,13 @@ namespace UXDemo;
 
 /// <summary>What Kind of UXNode is this?</summary>
 public enum EKind {
-   Unknown, Root, Rect, Panel, Text, MText, Block, VScroll,
+   Unknown, Root, Rect, Panel, Text, MText, Block, VScroll, Popup,
 }
+
+/// <summary>
+/// What does GetChildren enumerate
+/// </summary>
+public enum EEnum { All, Children, Popups };
 
 /// <summary>The various sizing modes for an axis</summary>
 public enum ESizing { Fit, Grow, Fixed, Percent };
@@ -30,7 +35,9 @@ public enum EAlign { Start, Middle, End };
 public enum ECorners { None, All, Left, Top, Right, Bottom };
 
 /// <summary>One of the nine corners of a node (used to align floating elements)</summary>
-public enum ECorner { TopLeft, Top, TopRight, Left, Center, Right, BotLeft, Bottom, BotRight };
+public enum ECorner { 
+   TopLeft, Top, TopRight, Left, Center, Right, BotLeft, Bottom, BotRight,
+};
 
 /// <summary>Flag bits for a UXNode</summary>
 [Flags]
@@ -41,10 +48,18 @@ public enum EFlags {
    Wrap = 1 << 1,
    /// <summary>If set, children are scrolled</summary>
    Scrollable = 1 << 2,
-   /// <summary>If set, this is a floating element</summary>
-   Floating = 1 << 3,
+   /// <summary>If set, this is a floating/popup element</summary>
+   Popup = 1 << 3,
    /// <summary>This node has children</summary>
-   HasChildren = 1 << 4,   
+   HasChildren = 1 << 4,
+   /// <summary>
+   /// This popup is aligned relative to screen, not to parent
+   /// </summary>
+   ScreenRelative = 1 << 5,
+   /// <summary>
+   /// Draw a shadow for this
+   /// </summary>
+   Shadow = 1 << 6,
 }
 
 /// <summary>Axis metrics</summary>

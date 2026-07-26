@@ -85,17 +85,26 @@ public struct Node {
 
    public readonly int ZLevel => 200 + Level * 2;
 
+   public readonly bool IsPopup => Get (EFlags.Popup);
+
+   public readonly bool HasShadow => Get (EFlags.Shadow);
+
+   /// <summary>
+   /// Is this POPUP aligned relative to the screen
+   /// </summary>
+   public bool IsScreenRelative { readonly get => Get (EFlags.ScreenRelative); set => Set (EFlags.ScreenRelative, value); }
+
    // Methods ------------------------------------------------------------------
    public void Dump (StringBuilder sb) {
       sb.Append ($"{Id} {Kind} {Data} {X.DV}x{Y.DV} ({X.Max}) {X.Mode} Remain:{RemainingSpace}");
    }
 
    public void DoFitSizing (bool xAxis) {
-      if (ChildCount == 0) return;
+      if (ChildCount == 0 || !GetChildren (mTmp, EEnum.Children)) return;
       bool along = xAxis == IsHorizontal;
       ref AxisDef ax = ref (xAxis ? ref X : ref Y);
-      int total = along ? ChildGap * (Math.Max (0, ChildCount - 1)) : 0;
-      for (short c = FirstChild; c != 0; c = UXSystem.Nodes[c].Next) {
+      int total = along ? ChildGap * (Math.Max (0, mTmp.Count - 1)) : 0;
+      foreach (var c in mTmp) { 
          ref Node child = ref UXSystem.Nodes[c];
          ref AxisDef cax = ref (xAxis ? ref child.X : ref child.Y);
          if (along) total += cax.DV;
@@ -106,12 +115,12 @@ public struct Node {
    }
 
    public void DoGrowShrinkChildren (bool xAxis) {
-      if (!GetChildren (mTmp)) return;
+      if (!GetChildren (mTmp, EEnum.Children)) return;
       bool along = xAxis == IsHorizontal;
       ref AxisDef ax = ref (xAxis ? ref X : ref Y);
       if (along) {
          // If we have a positive amount of space left, remove the children that are not 'grow'
-         int space = GetRemainingSpace (xAxis);
+         int space = GetRemainingSpace (mTmp, xAxis);
          RemainingSpace = (short)space;
          if (space >= 0) {
             mTmp.RemoveIf (a => !UXSystem.Nodes[a].IsGrow (xAxis));
@@ -129,6 +138,22 @@ public struct Node {
       }
    }
    static List<short> mTmp = [];
+
+   public readonly Vec2S GetCorner (ECorner corner) {
+      int x = X.V0, y = Y.V0, dx = X.DV, dy = Y.DV;
+      return corner switch {
+         ECorner.TopLeft => new (x, y),
+         ECorner.Top => new (x + dx / 2, y),
+         ECorner.TopRight => new (x + dx, y),
+         ECorner.Left => new (x, y + dy / 2),
+         ECorner.Center => new (x + dx / 2, y + dy / 2),
+         ECorner.Right => new (x + dx, y + dy / 2),
+         ECorner.BotLeft => new (x, y + dy),
+         ECorner.Bottom => new (x + dx / 2, y + dy),
+         ECorner.BotRight => new (x + dx, y + dy),
+         _ => throw new BadCaseException (corner)
+      };
+   }
 
    readonly void ShrinkChildren (bool xAxis, int space, List<short> children) {
       while (space > 0 && children.Count > 0) {
@@ -191,19 +216,25 @@ public struct Node {
 
    public readonly short GetSize (bool xAxis) => xAxis ? X.DV : Y.DV;
 
-   public readonly bool GetChildren (List<short> tmp) {
-      tmp.Clear (); 
-      for (short a = FirstChild; a != 0; a = UXSystem.Nodes[a].Next)
-         tmp.Add (a);
+   public readonly bool GetChildren (List<short> tmp, EEnum which) {
+      tmp.Clear ();
+      for (short a = FirstChild; a != 0; a = UXSystem.Nodes[a].Next) {
+         bool include = which switch {
+            EEnum.Children => !UXSystem.Nodes[a].IsPopup,
+            EEnum.Popups => UXSystem.Nodes[a].IsPopup,
+            _ => true
+         };
+         if (include) tmp.Add (a);
+      }
       return tmp.Count > 0;
    }
 
    public readonly ref NodeMemo GetMemo () => ref UXSystem.Memo[UId];
 
-   public readonly int GetRemainingSpace (bool xAxis) {
+   public readonly int GetRemainingSpace (List<short> children, bool xAxis) {
       ref readonly AxisDef ax = ref (xAxis ? ref X : ref Y);
       int space = ax.DV - ax.TotalPad - ChildGap * (ChildCount - 1);
-      for (short c = FirstChild; c != 0; c = UXSystem.Nodes[c].Next) {
+      foreach (var c in children) { 
          ref Node child = ref UXSystem.Nodes[c];
          ref AxisDef cax = ref (xAxis ? ref child.X : ref child.Y);
          space -= cax.DV;

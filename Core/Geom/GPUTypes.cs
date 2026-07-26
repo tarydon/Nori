@@ -21,6 +21,7 @@ public readonly struct Vec2F (float x, float y) : IEQuable<Vec2F> {
 public readonly struct Vec2S (short x, short y) : IEQuable<Vec2S> {
    public Vec2S (int x, int y) : this ((short)x, (short)y) { }
    public static implicit operator Vec2S ((int X, int Y) tup) => new (tup.X, tup.Y);
+   public static Vec2S operator + (Vec2S a, Vec2S b) => new (a.X + b.X, a.Y + b.Y);
    public bool EQ (Vec2S b) => X == b.X && Y == b.Y;
    public override string ToString () => $"<{X},{Y}>";
    public static readonly Vec2S Zero = new (0, 0);
@@ -152,6 +153,10 @@ public readonly struct RectS : IEQuable<RectS> {
    public int Width => Right - Left;
    /// <summary>The size of this RectS in pixels (width,height)</summary>
    public Vec2S Size => new (Right - Left, Bottom - Top);
+   /// <summary>
+   /// The center of this RectS
+   /// </summary>
+   public Vec2S Center => new ((Left + Right) / 2, (Top + Bottom) / 2);
 
    /// <summary>Special 'empty' RectS</summary>
    public static readonly RectS Empty = new (-32768, -32768, -32768, -32768);

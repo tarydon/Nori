@@ -19,6 +19,8 @@ static public class UXSystem {
 
    public static int WheelDelta { get; private set; }       // Mouse wheel movement in this frame
 
+   public static Vec2S ScreenSize { get; private set; }     // Screen size
+
    // Methods ------------------------------------------------------------------
    public static void Register (NodeClass clas) {
       int n = (int)clas.Kind;
@@ -31,7 +33,7 @@ static public class UXSystem {
    /// This returns a Node that covers the entire screen and is the root node for 
    /// the layout
    public static ref Node BeginLayout (Vec2S screenSize) {
-      mScreenSize = screenSize;
+      ScreenSize = screenSize;
       // Note that we are not using mNodes[0], so we start with mUsed = 1
       mUsed = 1; mCurrent = 0; mStack.Clear ();
       return ref BeginNode (EKind.Root, 0, screenSize.X, screenSize.Y);
@@ -158,39 +160,50 @@ static public class UXSystem {
       ref Node node = ref Nodes[n];
       sb.Append (new string (' ', level));
       node.Dump (sb); sb.AppendLine ();
-      List<short> tmp = []; node.GetChildren (tmp);
+      List<short> tmp = []; node.GetChildren (tmp, EEnum.All);
       foreach (var c in tmp) Dump (sb, c, level + 1);
    }
 
    static void PositionChildren (int n) {
       ref Node node = ref Nodes[n];
-      if (!node.GetChildren (mTmp)) return;
+      if (node.GetChildren (mTmp, EEnum.Children)) {
+         // First, position along the axis
+         bool horizontal = node.IsHorizontal;
+         ref AxisDef ax = ref (horizontal ? ref node.X : ref node.Y);
+         ref AxisDef ay = ref (horizontal ? ref node.Y : ref node.X);
+         int xRemain = node.GetRemainingSpace (mTmp, horizontal);
+         int xDelta = ax.ChildAlign switch { EAlign.Middle => xRemain / 2, EAlign.End => xRemain, _ => 0 };
+         int xPos = ax.V0 + ax.PadStart + xDelta;
 
-      // First, position along the axis
-      bool horizontal = node.IsHorizontal;
-      ref AxisDef ax = ref (horizontal ? ref node.X : ref node.Y);
-      ref AxisDef ay = ref (horizontal ? ref node.Y : ref node.X);
-      int xRemain = node.GetRemainingSpace (horizontal);
-      int xDelta = ax.ChildAlign switch { EAlign.Middle => xRemain / 2, EAlign.End => xRemain, _ => 0 };
-      int xPos = ax.V0 + ax.PadStart + xDelta;
+         foreach (var c in mTmp) {
+            ref Node child = ref Nodes[c];
+            ref AxisDef cax = ref (horizontal ? ref child.X : ref child.Y);
+            ref AxisDef cay = ref (horizontal ? ref child.Y : ref child.X);
+            cax.V0 = (short)xPos; xPos += cax.DV + node.ChildGap;
 
-      foreach (var c in mTmp) {
-         ref Node child = ref Nodes[c];
-         ref AxisDef cax = ref (horizontal ? ref child.X : ref child.Y);
-         ref AxisDef cay = ref (horizontal ? ref child.Y : ref child.X);
-         cax.V0 = (short)xPos; xPos += cax.DV + node.ChildGap;
+            int yRemain = ay.DV - cay.DV - ay.TotalPad;
+            int yDelta = ay.ChildAlign switch { EAlign.Middle => yRemain / 2, EAlign.End => yRemain, _ => 0 };
+            cay.V0 = (short)(ay.V0 + ay.PadStart + yDelta);
+            if (node.Kind == EKind.VScroll) {
+               Lib.Check (horizontal);
+               ref var memo = ref node.GetMemo ();
+               memo.ChildSize = cay.DV;
+               if (node.IsMouseOver && WheelDelta != 0) memo.ScrollPos -= WheelDelta * 10;
+               memo.MaxScrollPos = Math.Max (-yRemain, 0);
+               memo.ScrollPos = memo.ScrollPos.Clamp (0, memo.MaxScrollPos);
+               cay.V0 = (short)(cay.V0 - memo.ScrollPos);
+            }
+         }
+      }
 
-         int yRemain = ay.DV - cay.DV - ay.TotalPad;
-         int yDelta = ay.ChildAlign switch { EAlign.Middle => yRemain / 2, EAlign.End => yRemain, _ => 0 };
-         cay.V0 = (short)(ay.V0 + ay.PadStart + yDelta);
-         if (node.Kind == EKind.VScroll) {
-            Lib.Check (horizontal);
-            ref var memo = ref node.GetMemo ();
-            memo.ChildSize = cay.DV;
-            if (node.IsMouseOver && WheelDelta != 0) memo.ScrollPos -= WheelDelta * 20;
-            memo.MaxScrollPos = Math.Max (-yRemain, 0);
-            memo.ScrollPos = memo.ScrollPos.Clamp (0, memo.MaxScrollPos);
-            cay.V0 = (short)(cay.V0 - memo.ScrollPos);
+      if (node.GetChildren (mTmp, EEnum.Popups)) {
+         foreach (var c in mTmp) {
+            ref Node popup = ref Nodes[c];
+            ref Node owner = ref (popup.IsScreenRelative ? ref Nodes[1] : ref node);
+            Vec2S parentPos = owner.GetCorner (popup.ParentCorner) + popup.FloatOffset;
+            Vec2S childPos = popup.GetCorner (popup.ElemCorner);
+            popup.X.V0 = (short)(parentPos.X - childPos.X);
+            popup.Y.V0 = (short)(parentPos.Y - childPos.Y);
          }
       }
    }
@@ -203,7 +216,6 @@ static public class UXSystem {
    static bool mMousePressed;         // Is the mouse pressed in this frame
    static bool mMousePressedLastFrame;       // and in the last frame?
    internal static Node[] Nodes = new Node[32];      // List of nodes
-   internal static Vec2S mScreenSize;     // Screen size
 
    static List<short> mTraverse = [];     // Top-down traversal of nodes, breadth first
    static Queue<short> mQueue = [];       // Queue used to compute mTraverse
