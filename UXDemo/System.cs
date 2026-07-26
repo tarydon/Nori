@@ -2,6 +2,7 @@
 // ╔═╦╦═╦╦╬╣ System.cs
 // ║║║║╬║╔╣║ <<TODO>>
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection.Metadata.Ecma335;
 using System.Text;
@@ -15,6 +16,8 @@ static public class UXSystem {
    public static NodeMemo[] Memo = new NodeMemo[32];
 
    public static Vec2S MousePos { get; private set; }
+
+   public static int WheelDelta { get; private set; }       // Mouse wheel movement in this frame
 
    // Methods ------------------------------------------------------------------
    public static void Register (NodeClass clas) {
@@ -36,7 +39,7 @@ static public class UXSystem {
 
    public static void SetMouseState (Vec2S position, int wheelDelta, bool pressed) {
       mMousePressedLastFrame = mMousePressed;
-      (MousePos, mWheelDelta, mMousePressed) = (position, wheelDelta, pressed);
+      (MousePos, WheelDelta, mMousePressed) = (position, wheelDelta, pressed);
    }
 
    public static ref Node BeginNode (EKind kind, uint uid, Size width, Size height) {
@@ -182,6 +185,13 @@ static public class UXSystem {
          int yRemain = ay.DV - cay.DV - ay.TotalPad;
          int yDelta = ay.ChildAlign switch { EAlign.Middle => yRemain / 2, EAlign.End => yRemain, _ => 0 };
          cay.V0 = (short)(ay.V0 + ay.PadStart + yDelta);
+         if (node.Kind == EKind.VScroll) {
+            Lib.Check (horizontal);
+            ref var memo = ref node.GetMemo ();
+            if (node.IsMouseOver && WheelDelta != 0) memo.ScrollDelta -= WheelDelta * 20;
+            memo.ScrollDelta = memo.ScrollDelta.Clamp (0, Math.Max (-yRemain, 0));
+            cay.V0 = (short)(cay.V0 - memo.ScrollDelta);
+         }
       }
    }
 
@@ -192,7 +202,6 @@ static public class UXSystem {
    static Stack<short> mStack = [];   // Stack of all nodes
    static bool mMousePressed;         // Is the mouse pressed in this frame
    static bool mMousePressedLastFrame;       // and in the last frame?
-   static int mWheelDelta;       // Mouse wheel movement in this frame
    internal static Node[] Nodes = new Node[32];      // List of nodes
    internal static Vec2S mScreenSize;     // Screen size
 

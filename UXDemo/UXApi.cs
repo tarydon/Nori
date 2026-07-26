@@ -47,7 +47,7 @@ public static class UXApi {
 
    public static ref Node VSCROLL (uint uid, Size width, Size height) {
       ref Node node = ref UXSystem.BeginNode (EKind.VScroll, uid, width, height);
-      node.BgrdColor = Color4.Red;
+      node.BgrdColor = Color4.Red; node.IsHorizontal = true;
       node.X.PadEnd = 40;  // SCROLL-WIDTH
       return ref node;
    }

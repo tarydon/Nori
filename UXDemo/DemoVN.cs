@@ -28,7 +28,7 @@ class DemoVN : VNode {
       mUID = 0; 
       ref var root = ref UXSystem.BeginLayout (Lux.PanelSize);
       root.SetPadding (20); root.Data = "Root";
-      UXSystem.SetMouseState (mPos, mWheel, mPressed);
+      UXSystem.SetMouseState (mPos, mWheel, mPressed); mWheel = 0; 
 
       ref var node = ref PANEL (NextUID, Fit (100, 1500), Fit (100, 700), true, Color4.DarkGreen);      
       node.Data = "DarkGreen"; node.SetPadding (20); node.ChildGap = 20;
