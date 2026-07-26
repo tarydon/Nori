@@ -120,7 +120,9 @@ public struct NodeMemo {
    /// <summary>Additional data (class-specific)</summary>
    public object Data;
 
-   public int ScrollDelta;
+   public int ScrollPos;
+   public int MaxScrollPos;
+   public short ChildSize;
 
    /// <summary>Tick-count at which the mouse entered the node</summary>
    public uint MouseEnterTime;

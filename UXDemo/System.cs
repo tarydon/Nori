@@ -188,9 +188,11 @@ static public class UXSystem {
          if (node.Kind == EKind.VScroll) {
             Lib.Check (horizontal);
             ref var memo = ref node.GetMemo ();
-            if (node.IsMouseOver && WheelDelta != 0) memo.ScrollDelta -= WheelDelta * 20;
-            memo.ScrollDelta = memo.ScrollDelta.Clamp (0, Math.Max (-yRemain, 0));
-            cay.V0 = (short)(cay.V0 - memo.ScrollDelta);
+            memo.ChildSize = cay.DV;
+            if (node.IsMouseOver && WheelDelta != 0) memo.ScrollPos -= WheelDelta * 20;
+            memo.MaxScrollPos = Math.Max (-yRemain, 0);
+            memo.ScrollPos = memo.ScrollPos.Clamp (0, memo.MaxScrollPos);
+            cay.V0 = (short)(cay.V0 - memo.ScrollPos);
          }
       }
    }

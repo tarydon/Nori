@@ -72,8 +72,19 @@ public class RootClass : PanelClass {
 public class VScrollClass : NodeClass {
    public override EKind Kind => EKind.VScroll;
    public override EFlags Flags => EFlags.HasChildren | EFlags.Scrollable;
+   public const int WIDTH = 20, MARGIN = 2;
 
-   public override void Draw (ref Node node) { }
+   public override void Draw (ref Node node) {
+      ref NodeMemo memo = ref node.GetMemo ();
+      double ratio = (double)node.Y.DV / Math.Max (1, (int)memo.ChildSize);
+      int availHeight = node.Y.DV - 2 * MARGIN, thumbWidth = WIDTH - 2 * MARGIN;
+      int thumbHeight = (int)Math.Max (ratio * availHeight, thumbWidth);
+      double position = (double)memo.ScrollPos / memo.MaxScrollPos;
+      int left = node.X.V0 + node.X.DV - WIDTH + MARGIN, top = (int)(position * (availHeight - thumbHeight) + 0.5) + node.Y.V0;
+      int right = left + thumbWidth, bottom = top + thumbHeight;
+      Lux.Color = node.FgrdColor;
+      Lux.RRect (new RectS (left, top, right, bottom), 6);
+   }
 }
 
 public class TextClass : NodeClass {

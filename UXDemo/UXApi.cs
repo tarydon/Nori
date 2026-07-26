@@ -45,14 +45,14 @@ public static class UXApi {
       return ref node;
    }
 
-   public static ref Node VSCROLL (uint uid, Size width, Size height) {
+   public static ref Node VSCROLL (uint uid, Size width, Size height, Color4 color) {
       ref Node node = ref UXSystem.BeginNode (EKind.VScroll, uid, width, height);
-      node.BgrdColor = Color4.Red; node.IsHorizontal = true;
-      node.X.PadEnd = 40;  // SCROLL-WIDTH
+      node.BgrdColor = Color4.Red; node.IsHorizontal = true; node.FgrdColor = color;
+      node.X.PadEnd = VScrollClass.WIDTH;
       return ref node;
    }
 
-   public static ref Node VSCROLL (uint uid) => ref VSCROLL (uid, Size.Grow (), Size.Grow ());
+   public static ref Node VSCROLL (uint uid, Color4 color) => ref VSCROLL (uid, Size.Grow (), Size.Grow (), color);
 
    public static ref Node TEXT (uint uid, string text, int fontId, Color4 textColor, Color4 bgrdColor) {
       ref Node node = ref UXSystem.BeginNode (EKind.Text, uid);

@@ -217,6 +217,11 @@ public struct Node {
       ref AxisDef y = ref Y; y.PadStart = y.PadEnd = (short)n;
    }
 
+   public void SetPadding (int left, int top, int right, int bottom) {
+      ref AxisDef x = ref X; x.PadStart = (short)left; x.PadEnd = (short)right;
+      ref AxisDef y = ref Y; y.PadStart = (short)top; y.PadEnd = (short)bottom;
+   }
+
    // Implementation -----------------------------------------------------------
    readonly bool Get (EFlags flags) => (Flags & flags) != 0;
    void Set (EFlags flags, bool value) { if (value) Flags |= flags; else Flags &= ~flags; }
