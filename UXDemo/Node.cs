@@ -17,9 +17,7 @@ public struct Node {
    public EFlags Flags;
    /// <summary>Generic data, interpretation depends on Kind</summary>
    public object Data;
-   /// <summary>
-   /// Global unique ID for this node
-   /// </summary>
+   /// <summary>Global unique ID for this node</summary>
    public uint UId;
 
    // Node tree ----------------------------------------------------------------
@@ -89,7 +87,7 @@ public struct Node {
 
    // Methods ------------------------------------------------------------------
    public void Dump (StringBuilder sb) {
-      sb.Append ($"{Id} {Kind} {Data} {X.DV}x{Y.DV} {X.Mode} Remain:{RemainingSpace}");
+      sb.Append ($"{Id} {Kind} {Data} {X.DV}x{Y.DV} ({X.Max}) {X.Mode} Remain:{RemainingSpace}");
    }
 
    public void DoFitSizing (bool xAxis) {
@@ -189,7 +187,7 @@ public struct Node {
 
    public readonly bool IsMouseOver => GetMemo ().IsMouseOver;
 
-   public readonly bool IsHovered => GetMemo ().IsHovered;
+   public readonly bool IsHovered (int ms) => GetMemo ().IsHovered (ms);
 
    public readonly short GetSize (bool xAxis) => xAxis ? X.DV : Y.DV;
 

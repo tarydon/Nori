@@ -54,6 +54,7 @@ static public class UXSystem {
       ref Node node = ref Nodes[mCurrent];
       node.Id = mCurrent; node.UId = uid;
       while (Memo.Length <= uid) Array.Resize (ref Memo, Memo.Length * 2);
+      Memo[uid].UId = uid;
       if ((node.Parent = mParent) != 0) {
          // If this has a parent, attach this node to the linked list of children
          // of that parent
@@ -103,7 +104,9 @@ static public class UXSystem {
       for (int i = mTraverse.Count - 1; i >= 0; i--) {
          ref Node node = ref Nodes[mTraverse[i]];
          Classes[(int)node.Kind].Measure (ref node);
-         if (node.X.Mode == ESizing.Fit) node.DoFitSizing (true);
+         if (node.X.Max == 0) node.X.Max = short.MaxValue;
+         if (node.Y.Max == 0) node.Y.Max = short.MaxValue;
+         if (node.X.Mode is ESizing.Fit or ESizing.Grow) node.DoFitSizing (true);
       }
 
       // 3. Grow/Shrink sizing in X
@@ -119,7 +122,7 @@ static public class UXSystem {
       // 5. Fit sizing in Y
       for (int i = mTraverse.Count - 1; i >= 0; i--) {
          ref Node node = ref Nodes[mTraverse[i]];
-         if (node.Y.Mode == ESizing.Fit) node.DoFitSizing (false);
+         if (node.Y.Mode is ESizing.Fit or ESizing.Grow) node.DoFitSizing (false);
       }
 
       // 6. Grow/Shrink sizing in Y
@@ -129,6 +132,8 @@ static public class UXSystem {
       // 7. Compute the positions of all the nodes
       foreach (var n in mTraverse) 
          PositionChildren (n);
+
+      File.WriteAllText ("c:/etc/dump.txt", Dump ()); // REMOVETHIS
    }
 
    public static void Render () {
@@ -138,7 +143,6 @@ static public class UXSystem {
          ref Node node = ref Nodes[n];
          var clas = Classes[(int)node.Kind]; clas.Draw (ref node);
          ref NodeMemo memo = ref Memo[node.UId];
-         if (node.UId == 6) Lib.Trace ($"{node.Rect} {UXSystem.MousePos}");
          memo.Rect = node.Rect;
       }
    }

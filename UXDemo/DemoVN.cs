@@ -30,15 +30,17 @@ class DemoVN : VNode {
       root.SetPadding (20); root.Data = "Root";
       UXSystem.SetMouseState (mPos, mWheel, mPressed);
 
-      ref var node = ref PANEL (NextUID, Fit (100), Fit (100), true, Color4.DarkGreen);      
+      ref var node = ref PANEL (NextUID, Fit (100, 1500), Fit (100, 700), true, Color4.DarkGreen);      
       node.Data = "DarkGreen"; node.SetPadding (20); node.ChildGap = 20;
       node.Y.ChildAlign = EAlign.Middle;  
 
       node = ref RECT (NextUID, 450, 350, Color4.Green); node.Data = "Green"; END ();
       node = ref PANEL (NextUID, Fit (200), Fit (), true, Color4.Yellow); node.Data = "Yellow";
       node.SetPadding (10); node.X.ChildAlign = EAlign.Middle;
+      VSCROLL (NextUID);
       MTEXT (NextUID, Lorem, 0, Color4.Black, Color4.Transparent); END ();
-      END ();
+      END ();  // VSCroll
+      END ();  // Yellow panel
       node = ref RECT (NextUID, Grow (250, 500), Fit (100), Color4.Cyan); node.Data = "Cyan"; END ();
       node = ref BLOCK (NextUID, 300, 200, Color4.DarkBlue, Color4.Blue, Color4.Red); node.Data = "DarkBlue"; END ();
 

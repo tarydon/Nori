@@ -13,6 +13,7 @@ public static class UXApi {
       UXSystem.Register (new RootClass ());
       UXSystem.Register (new MTextClass ());
       UXSystem.Register (new BlockClass ());
+      UXSystem.Register (new VScrollClass ());
    }
 
    public static void END () {
@@ -21,7 +22,7 @@ public static class UXApi {
 
    public static ref Node BLOCK (uint uid, Size width, Size height, Color4 bgrd, Color4 over, Color4 hover) {
       ref Node node = ref UXSystem.BeginNode (EKind.Block, uid, width, height);
-      node.BgrdColor = node.IsHovered ? hover : (node.IsMouseOver ? over : bgrd);
+      node.BgrdColor = node.IsHovered (1000) ? hover : (node.IsMouseOver ? over : bgrd);
       return ref node;
    }
 
@@ -44,8 +45,14 @@ public static class UXApi {
       return ref node;
    }
 
-   public static ref Node TEXT (uint uid, string text, int fontId, Color4 textColor) 
-      => ref TEXT (uid, text, fontId, textColor, Color4.Transparent);
+   public static ref Node VSCROLL (uint uid, Size width, Size height) {
+      ref Node node = ref UXSystem.BeginNode (EKind.VScroll, uid, width, height);
+      node.BgrdColor = Color4.Red;
+      node.X.PadEnd = 40;  // SCROLL-WIDTH
+      return ref node;
+   }
+
+   public static ref Node VSCROLL (uint uid) => ref VSCROLL (uid, Size.Grow (), Size.Grow ());
 
    public static ref Node TEXT (uint uid, string text, int fontId, Color4 textColor, Color4 bgrdColor) {
       ref Node node = ref UXSystem.BeginNode (EKind.Text, uid);
@@ -53,4 +60,7 @@ public static class UXApi {
       node.FontId = (short)fontId; node.Text = text;
       return ref node; 
    }
+
+   public static ref Node TEXT (uint uid, string text, int fontId, Color4 textColor)
+      => ref TEXT (uid, text, fontId, textColor, Color4.Transparent);
 }

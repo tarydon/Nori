@@ -19,8 +19,6 @@ public abstract class NodeClass {
 
    public virtual void Measure (ref Node node) { 
       node.X.DV = node.X.Min; node.Y.DV = node.Y.Min;
-      if (node.X.Max == 0) node.X.Max = short.MaxValue;
-      if (node.Y.Max == 0) node.Y.Max = short.MaxValue;
    }
 
    public virtual void Draw (ref Node node) 
@@ -69,6 +67,13 @@ public class BlockClass : RectClass {
 
 public class RootClass : PanelClass {
    public override EKind Kind => EKind.Root;
+}
+
+public class VScrollClass : NodeClass {
+   public override EKind Kind => EKind.VScroll;
+   public override EFlags Flags => EFlags.HasChildren | EFlags.Scrollable;
+
+   public override void Draw (ref Node node) { }
 }
 
 public class TextClass : NodeClass {

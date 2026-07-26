@@ -2,13 +2,14 @@
 // ╔═╦╦═╦╦╬╣ Types.cs
 // ║║║║╬║╔╣║ <<TODO>>
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
+using System.Diagnostics;
 using Nori;
 
 namespace UXDemo;
 
 /// <summary>What Kind of UXNode is this?</summary>
 public enum EKind {
-   Unknown, Root, Rect, Panel, Text, MText, Block,
+   Unknown, Root, Rect, Panel, Text, MText, Block, VScroll,
 }
 
 /// <summary>The various sizing modes for an axis</summary>
@@ -108,27 +109,26 @@ public struct NodeMemo {
    }
    RectS mRect;
 
-   /// <summary>
-   /// The mouse has been hovering here for HOVERTIME
-   /// </summary>
-   public readonly bool IsHovered {
-      get {
-         if (!IsMouseOver) return false;
-         return (uint)Environment.TickCount > MouseEnterTime + HOVERTIME;
-      }
+   /// <summary>The mouse has been hovering here for HOVERTIME</summary>
+   public readonly bool IsHovered (int ms) {
+      if (!IsMouseOver) return false;
+      Timers.Start (UId, ms + 1, Lux.Redraw);
+      return (uint)Environment.TickCount >= MouseEnterTime + ms;
    }
+   static int n;
 
    /// <summary>Additional data (class-specific)</summary>
    public object Data;
 
-   /// <summary>
-   /// Tick-count at which the mouse entered the node
-   /// </summary>
+   /// <summary>Tick-count at which the mouse entered the node</summary>
    public uint MouseEnterTime;
-   /// <summary>
-   /// Tick-count at which the mouse left the node
-   /// </summary>
+   /// <summary>Tick-count at which the mouse left the node</summary>
    public uint MouseLeaveTime;
+
+   /// <summary>
+   /// UID of the node owning this memo
+   /// </summary>
+   public uint UId;
 
    public bool IsMouseOver {
       readonly get => mIsMouseOver;
@@ -136,9 +136,28 @@ public struct NodeMemo {
          if (mIsMouseOver == value) return;
          if (mIsMouseOver = value)
             MouseEnterTime = (uint)Environment.TickCount;
-         else
+         else {
             MouseLeaveTime = (uint)Environment.TickCount;
+            Timers.Stop (UId);
+         }
       }
    }
    bool mIsMouseOver;
+
+   public readonly void Dispose () => Timers.Stop (UId);
+}
+
+public class Timers {
+   public static void Start (uint uid, int ms, Action callback) {
+      if (mTimers.ContainsKey (uid)) return;
+      mTimers.Add (uid, new Timer (_ => callback (), null, ms, -1));
+   }
+
+   public static void Stop (uint uid) {
+      if (mTimers.TryGetValue (uid, out var timer)) {
+         timer.Dispose (); mTimers.Remove (uid);
+      }
+   }
+
+   static Dictionary<uint, Timer> mTimers = [];
 }
