@@ -71,6 +71,11 @@ public class Window {
    /// <summary>Returns true if the window should be closed</summary>
    public bool ShouldClose { get => WindowShouldClose (mHWnd); set => SetWindowShouldClose (mHWnd, true); }
 
+   /// <summary>
+   /// Sets the title of the window
+   /// </summary>
+   public string Title { set => SetWindowTitle (mHWnd, Encoding.UTF8.GetBytes (value)); }
+
    /// <summary>Gets / Sets the size of the window (including decorations)</summary>
    public (int DX, int DY) Size {
       get {

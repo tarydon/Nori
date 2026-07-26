@@ -2,7 +2,6 @@
 // ╔═╦╦═╦╦╬╣ Program.cs
 // ║║║║╬║╔╣║ <<TODO>>
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
-using System.Net;
 using System.Reactive.Linq;
 using Nori;
 namespace UXDemo;
@@ -12,16 +11,17 @@ class Program {
       Lib.Init ();
       GLFWHost.Init (OnReady);
       UXApi.Init ();
-      mWin = new Window (1600, 1200, "Welcome to GLFW", Window.EFlags.Default | Window.EFlags.Maximized);
-      mWin.Run (true);
+      MainWin = new Window (1600, 1200, "I N L A Y Demo", Window.EFlags.Default | Window.EFlags.Maximized);
+      MainWin.Run (true);
    }
-   static Window? mWin;
+   static public Window MainWin = null!;
 
    static void OnReady () {
       Lux.UIScene = new DemoScene ();
       Lib.Tracer = TraceVN.Print; TraceVN.TextColor = Color4.Yellow;
+      Lux.FPS.Subscribe (n => MainWin.Title = $"FPS: {n}");
       Hub.Keyboard.Keys.Where (a => a.IsPress (EKey.Escape))
-                       .Subscribe (_ => mWin?.ShouldClose = true);
+                       .Subscribe (_ => MainWin?.ShouldClose = true);
    }
 }
 

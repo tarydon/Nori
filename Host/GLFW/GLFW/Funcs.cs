@@ -169,6 +169,10 @@ static class GLFW {
    [DllImport (LIB, EntryPoint = "glfwSetWindowSize", CallingConvention = Cdecl)]
    public static extern void SetWindowSize (HWindow window, int width, int height);
 
+   // Sets the window title
+   [DllImport (LIB, EntryPoint = "glfwSetWindowTitle", CallingConvention = Cdecl)]
+   public static extern void SetWindowTitle (HWindow window, byte[] title);
+
    // Swap the front and back GL buffers (paints to screen)
    [DllImport (LIB, EntryPoint = "glfwSwapBuffers", CallingConvention = Cdecl)]
    public static extern void SwapBuffers (HWindow window);

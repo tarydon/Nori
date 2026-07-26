@@ -183,7 +183,7 @@ struct RBatch : IIndexed {
       // if these two sets of uniforms are actually identical
       var shader = Shader.Get (NShader);
       int n = shader.OrderUniforms (uni0, uni1); if (n != 0) return false;
-      if (!rb1.Streaming) {   // TODO: Can we relax this for non-streaming buffers as well
+      if (!rb1.Streaming) {   // TODO: Can we relax this for streaming buffers as well
          // Finally, the two batches storage should be back to back so that
          // rb1's storage followed immediately after this one
          if (NBuffer == 0) return Offset + count == rb1.Offset;

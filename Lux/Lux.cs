@@ -235,16 +235,14 @@ public static partial class Lux {
       mInfo.OnNext (sStats);
       var frameTS = DateTime.Now;
       mLastFrameTime = (DateTime.Now - sLastFrametime).TotalSeconds;
-      if (sRenderCompletes.Count > 0 && target == ETarget.Screen) {
-         Lib.Post (NextFrame);
-         double elapsed = (frameTS - mFPSReportTS).TotalSeconds;
-         if (elapsed >= 1.0) {
-            // Every 1 second, issue an FPS (frames-per-second) report
-            int fps = (int)(mcFPSFrames / elapsed + 0.5);
-            mFPS.OnNext (fps);
-            (mcFPSFrames, mFPSReportTS) = (0, frameTS);
-         }
+      double elapsed = (frameTS - mFPSReportTS).TotalSeconds;
+      if (elapsed >= 1.0) {
+         int fps = (int)(mcFPSFrames / elapsed + 0.5);
+         mFPS.OnNext (fps);
+         (mcFPSFrames, mFPSReportTS) = (0, frameTS);
       }
+      if (sRenderCompletes.Count > 0 && target == ETarget.Screen) 
+         Lib.Post (NextFrame);
       sLastFrametime = frameTS;
       mRendering = mIsPicking = false;
       return obj;
