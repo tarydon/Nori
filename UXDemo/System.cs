@@ -134,6 +134,8 @@ static public class UXSystem {
       foreach (var n in mTraverse) 
          Nodes[n].DoGrowShrinkChildren (false);
 
+      File.WriteAllText ("c:/etc/dump.txt", Dump ());
+
       // 7. Compute the positions of all the nodes
       foreach (var n in mTraverse) 
          PositionChildren (n);

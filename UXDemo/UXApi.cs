@@ -31,10 +31,11 @@ public static class UXApi {
    }
 
    public static ref Node LISTBOX (uint uid, Size width, Size height, IReadOnlyList<object> items) {
-      ref Node node = ref PANEL (uid, width, height, false, LISTBOX_Bgrd); node.SetPadding (3);
+      ref Node node = ref PANEL (uid, width, height, true, LISTBOX_Bgrd); node.SetPadding (3);
       VSCROLL (uid, Grow (), Grow (), Color4.Transparent);
-      node = ref UXSystem.BeginNode (EKind.Listbox, uid, Grow (), Grow ()); END ();
-      END (); 
+      node = ref UXSystem.BeginNode (EKind.Listbox, uid, Grow (), Fit ()); END ();
+      END ();
+      UXSystem.Memo[uid].Data = items;
       return ref node;
    }
 

@@ -5,6 +5,8 @@
 using Nori;
 namespace UXDemo;
 
+using static UXTheme;
+
 /// <summary>Base class for different 'node-classes'</summary>
 public abstract class NodeClass {
    public abstract EKind Kind { get; }
@@ -171,7 +173,23 @@ public class ListboxClass : NodeClass {
    public override EKind Kind => EKind.Listbox;
    public override EFlags Flags => EFlags.HasChildren;
 
+   public override void Measure (ref Node node) {
+      ref var memo = ref node.GetMemo ();
+      var items = (IReadOnlyList<object>)memo.Data;
+      var face = UXSystem.Typefaces[node.FontId];
+      node.Y.DV = node.Y.Min = (short)(face.LineHeight * items.Count);
+   }
+
    public override void Draw (ref Node node) {
-   //   Lux.Color = node.BgrdColor; Lux.Rect (node.Rect);
+      ref var memo = ref node.GetMemo ();
+      var items = (IReadOnlyList<object>)memo.Data;
+      (Lux.Color, Lux.ZLevel) = (LISTBOX_Text, node.ZLevel + 1);
+      var face = UXSystem.Typefaces[node.FontId];
+      Lux.TypeFace = face;
+      int dy = face.LineHeight, y0 = -face.Measure ("M").Top;
+      for (int i = 0; i < items.Count; i++) {
+         var s = items[i].ToString () ?? "";
+         Lux.Text (s, new (node.X.V0, node.Y.V0 + i * dy + y0));
+      }
    }
 }
