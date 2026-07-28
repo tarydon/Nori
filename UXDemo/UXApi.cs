@@ -4,6 +4,8 @@
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 using Nori;
 namespace UXDemo;
+using static Size;
+using static UXTheme;
 
 public static class UXApi {
    public static void Init () {
@@ -15,6 +17,7 @@ public static class UXApi {
       UXSystem.Register (new BlockClass ());
       UXSystem.Register (new VScrollClass ());
       UXSystem.Register (new PopupClass ());
+      UXSystem.Register (new ListboxClass ());
    }
 
    public static void END () {
@@ -24,6 +27,14 @@ public static class UXApi {
    public static ref Node BLOCK (uint uid, Size width, Size height, Color4 bgrd, Color4 over, Color4 hover) {
       ref Node node = ref UXSystem.BeginNode (EKind.Block, uid, width, height);
       node.BgrdColor = node.IsHovered (1000) ? hover : (node.IsMouseOver ? over : bgrd);
+      return ref node;
+   }
+
+   public static ref Node LISTBOX (uint uid, Size width, Size height, IReadOnlyList<object> items) {
+      ref Node node = ref PANEL (uid, width, height, false, LISTBOX_Bgrd); node.SetPadding (3);
+      VSCROLL (uid, Grow (), Grow (), Color4.Transparent);
+      node = ref UXSystem.BeginNode (EKind.Listbox, uid, Grow (), Grow ()); END ();
+      END (); 
       return ref node;
    }
 

@@ -34,7 +34,8 @@ class DemoVN : VNode {
       node.Data = "DarkGreen"; node.SetPadding (20); node.ChildGap = 20;
       node.Y.ChildAlign = EAlign.Middle;  
 
-      node = ref RECT (NextUID, 450, 350, Color4.Green); node.Data = "Green"; END ();
+      //node = ref RECT (NextUID, 450, 350, Color4.Green); node.Data = "Green"; END ();
+      node = ref LISTBOX (NextUID, 450, 350, mFiles); END ();
       node = ref PANEL (NextUID, Fit (200), Fit (), true, Color4.Yellow); node.Data = "Yellow";
       node.SetPadding (10, 10, 8, 10); node.X.ChildAlign = EAlign.Middle;
       VSCROLL (NextUID, new Color4 (216, 216, 0));
@@ -59,7 +60,8 @@ class DemoVN : VNode {
    }
 
    static uint NextUID => ++mUID;
-   static uint mUID = 0; 
+   static uint mUID = 0;
+   static string[] mFiles = [.. Directory.GetFiles ("N:/Core/Model", "*.cs").Select (a => Path.GetFileName (a))];
 
    static string Lorem = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut efficitur cursus consequat. Suspendisse at ultrices leo. Fusce vitae volutpat lacus, quis convallis lorem. Orci varius natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Aenean aliquam lectus non neque molestie, non dignissim turpis aliquet. Maecenas ac accumsan nisi. Sed dignissim lacinia quam nec tristique. Pellentesque a egestas augue. Phasellus porta, ex ac interdum maximus, elit turpis gravida elit, nec pulvinar nunc neque quis lorem. Nunc pretium ipsum sed malesuada volutpat. In mollis bibendum eros ac ultricies. Pellentesque pellentesque commodo dapibus. Sed feugiat fermentum ultrices. Fusce non purus ac mi mollis ullamcorper et at mauris.";
 

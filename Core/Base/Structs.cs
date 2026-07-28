@@ -48,7 +48,7 @@ public readonly struct Color4 : IEQuable<Color4> {
    /// <summary>Construct a color from a 32-bit uint value, where the bits (from MSB on) are packed like AARRGGBB</summary>
    /// That is, the most-significant 8 bits are the alpha value, and the least-significant 8 bits are the
    /// Blue value
-   public Color4 (uint v) { A = (byte)(v >> 24); R = (byte)(v >> 16); G = (byte)(v >> 8); B = (byte)v; }
+   public Color4 (uint v) { A = (byte)(v >> 24); R = (byte)(v >> 16); G = (byte)(v >> 8); B = (byte)v; if (A == 0) A = 255; }
    public void Deconstruct (out int r, out int g, out int b, out int a) => (r, g, b, a) = (R, G, B, A);
 
    /// <summary>Parses a string to a Color4</summary>

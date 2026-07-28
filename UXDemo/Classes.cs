@@ -166,3 +166,12 @@ public class MTextClass : NodeClass {
       }
    }
 }
+
+public class ListboxClass : NodeClass {
+   public override EKind Kind => EKind.Listbox;
+   public override EFlags Flags => EFlags.HasChildren;
+
+   public override void Draw (ref Node node) {
+   //   Lux.Color = node.BgrdColor; Lux.Rect (node.Rect);
+   }
+}
