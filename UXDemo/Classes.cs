@@ -174,22 +174,40 @@ public class ListboxClass : NodeClass {
    public override EFlags Flags => EFlags.HasChildren;
 
    public override void Measure (ref Node node) {
-      ref var memo = ref node.GetMemo ();
-      var items = (IReadOnlyList<object>)memo.Data;
+      var data = (Data)node.GetMemo ().Data;
       var face = UXSystem.Typefaces[node.FontId];
-      node.Y.DV = node.Y.Min = (short)(face.LineHeight * items.Count);
+      data.DYLine = face.LineHeight; 
+      node.Y.DV = node.Y.Min = (short)(data.DYLine * data.Items.Count);
+      RectS r = face.Measure ("M");
+      node.TextOffset = new (-r.Left, -r.Top);
    }
 
    public override void Draw (ref Node node) {
-      ref var memo = ref node.GetMemo ();
-      var items = (IReadOnlyList<object>)memo.Data;
-      (Lux.Color, Lux.ZLevel) = (LISTBOX_Text, node.ZLevel + 1);
-      var face = UXSystem.Typefaces[node.FontId];
-      Lux.TypeFace = face;
-      int dy = face.LineHeight, y0 = -face.Measure ("M").Top;
+      var data = (Data)node.GetMemo ().Data;
+      var items = data.Items;
+
+      ref AxisDef x = ref node.X, y = ref node.Y;
+      RectS rList = node.Rect;
       for (int i = 0; i < items.Count; i++) {
-         var s = items[i].ToString () ?? "";
-         Lux.Text (s, new (node.X.V0, node.Y.V0 + i * dy + y0));
+         int yTop = y.V0 + i * data.DYLine - data.ScrollPos; if (yTop > rList.Bottom) continue;
+         int yBot = yTop + data.DYLine; if (yBot < rList.Top) continue;
+         RectS rItem = new (x.V0, yTop, x.V0 + x.DV, yBot);
+         bool iHover = rItem.Contains (UXSystem.MousePos), iSel = i == data.Selected;
+         if (iHover || iSel) {
+            Lux.ZLevel = node.ZLevel + 1;
+            Lux.Color = iSel ? LISTBOX_Bgrd_S : LISTBOX_Bgrd_H; Lux.Rect (rItem);
+         }
+         Lux.ZLevel = node.ZLevel + 2;
+         Lux.Color = iSel ? LISTBOX_Text_S : (iHover ? LISTBOX_Text_H : LISTBOX_Text);
+         string s = items[i].ToString () ?? "";
+         Lux.Text (s, new (rItem.Left + node.TextOffset.X, rItem.Top + node.TextOffset.Y));
       }
+   }
+
+   internal class Data (IReadOnlyList<object> items, int selected) {
+      public IReadOnlyList<object> Items = items;
+      public int Selected = selected;
+      public int ScrollPos;         
+      public int DYLine; 
    }
 }

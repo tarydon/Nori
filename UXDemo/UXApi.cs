@@ -30,12 +30,14 @@ public static class UXApi {
       return ref node;
    }
 
-   public static ref Node LISTBOX (uint uid, Size width, Size height, IReadOnlyList<object> items) {
-      ref Node node = ref PANEL (uid, width, height, true, LISTBOX_Bgrd); node.SetPadding (3);
+   public static ref Node LISTBOX (uint uid, Size width, Size height, IReadOnlyList<object> items, int selected) {
+      ref Node node = ref PANEL (uid, width, height, true, LISTBOX_Bgrd);
+      int a = LISTBOX_Margin, b = SCROLLBAR_Margin;
+      node.SetPadding (a, a, b, a);
       VSCROLL (uid, Grow (), Grow (), Color4.Transparent);
-      node = ref UXSystem.BeginNode (EKind.Listbox, uid, Grow (), Fit ()); END ();
+      node = ref UXSystem.BeginNode (EKind.Listbox, uid, Grow (), Grow ()); END ();
       END ();
-      UXSystem.Memo[uid].Data = items;
+      node.GetMemo ().Data ??= new ListboxClass.Data (items, selected);
       return ref node;
    }
 

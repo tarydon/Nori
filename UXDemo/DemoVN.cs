@@ -35,7 +35,7 @@ class DemoVN : VNode {
       node.Y.ChildAlign = EAlign.Middle;  
 
       //node = ref RECT (NextUID, 450, 350, Color4.Green); node.Data = "Green"; END ();
-      node = ref LISTBOX (NextUID, 450, 350, mFiles); END ();
+      node = ref LISTBOX (NextUID, 450, 350, mFiles, 3); END ();
       node = ref PANEL (NextUID, Fit (200), Fit (), true, Color4.Yellow); node.Data = "Yellow";
       node.SetPadding (10, 10, 8, 10); node.X.ChildAlign = EAlign.Middle;
       VSCROLL (NextUID, new Color4 (216, 216, 0));
