@@ -179,7 +179,8 @@ public class ListboxClass : NodeClass {
       data.DYLine = face.LineHeight; 
       node.Y.DV = node.Y.Min = (short)(data.DYLine * data.Items.Count);
       RectS r = face.Measure ("M");
-      node.TextOffset = new (-r.Left, -r.Top);
+      node.TextOffset = new (-r.Left, -r.Top + (face.LineHeight - r.Bottom + r.Top) / 2);
+
    }
 
    public override void Draw (ref Node node) {
@@ -200,7 +201,7 @@ public class ListboxClass : NodeClass {
          Lux.ZLevel = node.ZLevel + 2;
          Lux.Color = iSel ? LISTBOX_Text_S : (iHover ? LISTBOX_Text_H : LISTBOX_Text);
          string s = items[i].ToString () ?? "";
-         Lux.Text (s, new (rItem.Left + node.TextOffset.X, rItem.Top + node.TextOffset.Y));
+         Lux.Text (s, new (rItem.Left + node.TextOffset.X + 5, rItem.Top + node.TextOffset.Y));
       }
    }
 

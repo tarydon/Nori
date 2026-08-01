@@ -154,6 +154,12 @@ public static partial class Lux {
    static int mZLevel;
    static readonly Stack<int> mZLevels = [];
 
+   public static RectS ClipRect {
+      get => mClipRect;
+      set => mClipRect = value;
+   }
+   static RectS mClipRect;
+
    // Methods ------------------------------------------------------------------
    /// <summary>Draws beziers in world coordinates, with Z = 0</summary>
    /// Every set of 4 points in the list creates one bezier curve so n / 4
