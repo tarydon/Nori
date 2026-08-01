@@ -60,6 +60,10 @@ struct RBatch : IIndexed {
 
    /// <summary>'ZLevel' is like a sort order for RBatch (they are drawn from min..max order)</summary>
    public short ZLevel;
+   /// <summary>
+   /// The current clip-rect
+   /// </summary>
+   public ushort ClipRect;
 
    /// <summary>Start position, in bytes, of this RBatch within the RBuffer</summary>
    /// In the initial phase (when we have not yet shifted the data into a RBuffer),
@@ -171,7 +175,8 @@ struct RBatch : IIndexed {
    // not when gathering the batches for storage within the VNode, we don't care if these
    // two RBatch belong to different VNodes.
    readonly bool CanMerge (ref RBatch rb1, int count, ushort uni0, ushort uni1) {
-      if (NShader != rb1.NShader || NBuffer != rb1.NBuffer || ZLevel != rb1.ZLevel) return false;
+      if (NShader != rb1.NShader || NBuffer != rb1.NBuffer) return false;
+      if (ZLevel != rb1.ZLevel || ClipRect != rb1.ClipRect) return false;
       // In Pick mode, don't merge two batches that belong to different VNodes (we are going
       // to draw this batch with a false-color that effectively encodes the VNode ID so we don't
       // want them getting mixed up
@@ -260,7 +265,6 @@ struct RBatch : IIndexed {
       shader.SetConstants ();
       // Ask the shader to apply the uniforms for this set of batches
       shader.ApplyUniforms (nUniform);
-
    }
 
    // This is called to sort the RBatches before we draw them.
@@ -330,8 +334,8 @@ struct RBatch : IIndexed {
          if (n != 0) return n;
          n = ra.NBuffer - rb.NBuffer; if (n != 0) return n;
          var shader = Shader.Get (ra.NShader);
-         n = shader.OrderUniforms (ub0.U, ub1.U);
-         if (n != 0) return n;
+         n = shader.OrderUniforms (ub0.U, ub1.U); if (n != 0) return n;
+         n = ra.ClipRect - rb.ClipRect; if (n != 0) return n; 
          return ra.Offset - rb.Offset;
       }
       internal static readonly RBatchCompare It = new ();

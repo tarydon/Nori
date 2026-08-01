@@ -179,8 +179,7 @@ public class ListboxClass : NodeClass {
       data.DYLine = face.LineHeight; 
       node.Y.DV = node.Y.Min = (short)(data.DYLine * data.Items.Count);
       RectS r = face.Measure ("M");
-      node.TextOffset = new (-r.Left, -r.Top + (face.LineHeight - r.Bottom + r.Top) / 2);
-
+      node.TextOffset = new (-r.Left, -r.Top + face.Leading / 2);
    }
 
    public override void Draw (ref Node node) {

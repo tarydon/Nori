@@ -156,9 +156,16 @@ public static partial class Lux {
 
    public static RectS ClipRect {
       get => mClipRect;
-      set => mClipRect = value;
+      set {
+         if (mClipRect.EQ (value)) return;
+         mClipRects.Add (mClipRect = value); mNClipRect++;
+         Lib.Check (mNClipRect == mClipRects.Count - 1); // REMOVETHIS
+      }
    }
    static RectS mClipRect;
+   static List<RectS> mClipRects = [];
+   public static ushort NClipRect => mNClipRect;
+   static ushort mNClipRect;
 
    // Methods ------------------------------------------------------------------
    /// <summary>Draws beziers in world coordinates, with Z = 0</summary>

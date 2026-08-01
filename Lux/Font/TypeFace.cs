@@ -95,6 +95,8 @@ public class TypeFace {
    public int LineHeight => mLineHeight;
    int mLineHeight;
 
+   public int Leading => LineHeight - (Descender + Ascender);
+
    /// <summary>Sets the pixel-size for subsequent use</summary>
    /// This regenerates all the glyphs with the new size
    public (int X, int Y) PixelSize {

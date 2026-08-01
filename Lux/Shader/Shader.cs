@@ -157,6 +157,7 @@ abstract class Shader<TVertex, TUniform> : Shader, IComparer<TUniform> where TVe
          rb.IDVNode = (ushort)vnode.Id;
          rb.Streaming = vnode.Streaming;
          rb.ZLevel = (short)Lux.ZLevel;
+         rb.ClipRect = Lux.NClipRect;
          rb.NShader = Idx; rb.NUniform = nUniform; rb.NBuffer = 0;
          rb.Offset = mData.Count; rb.Count = data.Length;
          if (vnode.Streaming) 
@@ -172,11 +173,13 @@ abstract class Shader<TVertex, TUniform> : Shader, IComparer<TUniform> where TVe
       //   this batch in the mBatch list of that VNode).
       // - The previous batch should use the same shader (this)
       // - The previous batch should be using the same set of uniforms
+      // - The previous batch should be at the same Z-Level and clipping rectangle
       bool ExtendBatch (int delta) {
          ref RBatch rb = ref RBatch.Recent ();
          if (rb.Streaming) return false;
          if (rb.IDVNode != vnode.Id) return false;
          if (rb.NShader != Idx || rb.NUniform != nUniform || rb.NBuffer != 0) return false;
+         if (rb.ZLevel != (short)Lux.ZLevel || rb.ClipRect != Lux.NClipRect) return false;
          rb.Extend (delta);
          return true;
       }
@@ -196,6 +199,7 @@ abstract class Shader<TVertex, TUniform> : Shader, IComparer<TUniform> where TVe
       VNode vnode = Lux.VNode!;
       rb.IDVNode = (ushort)vnode.Id;
       rb.ZLevel = (short)Lux.ZLevel;
+      rb.ClipRect = Lux.NClipRect;
       rb.NShader = Idx; rb.NUniform = SnapUniforms (); rb.NBuffer = 0;
       rb.Offset = mData.Count; rb.Count = data.Length;
       rb.IOffset = mIndex.Count; rb.ICount = indices.Length;

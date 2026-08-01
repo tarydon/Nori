@@ -445,6 +445,8 @@ public static partial class Lux {
       mTypefaces.Clear (); mTypeface = null;
       mIDXfms.Clear (); mIDXfm = 0;
       mZLevels.Clear (); mZLevel = 0;
+      RectS r = new (0, 0, viewport.X, viewport.Y);
+      mClipRects.Clear (); mClipRects.Add (mClipRect = r); mNClipRect = 0;
       mChanged = ELuxAttr.None;
       Rung++;
    }
