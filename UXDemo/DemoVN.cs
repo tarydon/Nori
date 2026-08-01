@@ -25,7 +25,8 @@ class DemoVN : VNode {
    void OnMouseClick (MouseClickInfo info) { mPressed = info.IsPress; Redraw (); }
 
    public override void Draw () {
-      mUID = 0; 
+      mUID = 0;
+      ushort nClipRect = Lux.NClipRect;
       ref var root = ref UXSystem.BeginLayout (Lux.PanelSize);
       root.SetPadding (20); root.Data = "Root";
       UXSystem.SetMouseState (mPos, mWheel, mPressed); mWheel = 0; 
@@ -57,6 +58,7 @@ class DemoVN : VNode {
 
       UXSystem.EndLayout ();
       UXSystem.Render ();
+      Lux.NClipRect = nClipRect;
    }
 
    static uint NextUID => ++mUID;

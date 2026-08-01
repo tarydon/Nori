@@ -230,10 +230,11 @@ struct RBatch : IIndexed {
          PickShader.It.ApplyUniforms (uniforms.IDXfm, color);
       }
 
-        // Select the VAO this batch uses as the current VAO. If this VAO
+      // Select the VAO this batch uses as the current VAO. If this VAO
       // is already selected, this is a no-op
       var buffer = RetainBuffer.All[NBuffer];
       GLState.VAO = buffer.VAO;
+      GLState.ClipRect = Lux.ClipRects[ClipRect];
 
       if (ICount > 0) {
          // If we are using indexed drawing mode, we ignore the count that is passed

@@ -187,7 +187,9 @@ public class ListboxClass : NodeClass {
       var items = data.Items;
 
       ref AxisDef x = ref node.X, y = ref node.Y;
-      RectS rList = node.Rect;
+      RectS rList = node.GetGrandparent ().Rect;
+      ushort nClip = Lux.NClipRect; Lux.ClipRect = rList;
+      Lux.TypeFace = UXSystem.Typefaces[node.FontId];
       for (int i = 0; i < items.Count; i++) {
          int yTop = y.V0 + i * data.DYLine - data.ScrollPos; if (yTop > rList.Bottom) continue;
          int yBot = yTop + data.DYLine; if (yBot < rList.Top) continue;
@@ -202,6 +204,7 @@ public class ListboxClass : NodeClass {
          string s = items[i].ToString () ?? "";
          Lux.Text (s, new (rItem.Left + node.TextOffset.X + 5, rItem.Top + node.TextOffset.Y));
       }
+      Lux.NClipRect = nClip;
    }
 
    internal class Data (IReadOnlyList<object> items, int selected) {

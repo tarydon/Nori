@@ -158,13 +158,18 @@ public static partial class Lux {
       get => mClipRect;
       set {
          if (mClipRect.EQ (value)) return;
-         mClipRects.Add (mClipRect = value); mNClipRect++;
-         Lib.Check (mNClipRect == mClipRects.Count - 1); // REMOVETHIS
+         Debug.WriteLine (value);
+         ClipRects.Add (mClipRect = value); mNClipRect++;
+         Lib.Check (mNClipRect == ClipRects.Count - 1); // REMOVETHIS
       }
    }
    static RectS mClipRect;
-   static List<RectS> mClipRects = [];
-   public static ushort NClipRect => mNClipRect;
+
+   internal static List<RectS> ClipRects = [];
+   public static ushort NClipRect { 
+      get => mNClipRect; 
+      set => mClipRect = ClipRects[mNClipRect = value]; 
+   }
    static ushort mNClipRect;
 
    // Methods ------------------------------------------------------------------

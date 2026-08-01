@@ -155,6 +155,12 @@ public struct Node {
       };
    }
 
+   public readonly ref Node GetParent () 
+      => ref UXSystem.Nodes[Parent];
+
+   public readonly ref Node GetGrandparent ()
+      => ref GetParent ().GetParent ();
+
    readonly void ShrinkChildren (bool xAxis, int space, List<short> children) {
       while (space > 0 && children.Count > 0) {
          int prevSpace = space;

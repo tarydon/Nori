@@ -229,6 +229,7 @@ abstract class Shader<TVertex, TUniform> : Shader, IComparer<TUniform> where TVe
       // set of uniforms
       ref RBatch rb0 = ref RBatch.Get (ids[0]);
       ApplyUniforms (rb0.NUniform);
+      GLState.ClipRect = Lux.ClipRects[rb0.ClipRect];
 
       var span = mData.AsSpan ();
       int cbStruct = Marshal.SizeOf<TVertex> (), nSortedUsed = 0;

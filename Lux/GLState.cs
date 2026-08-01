@@ -32,6 +32,16 @@ static class GLState {
    static bool mBlendEnable; 
    static EBlendFactor mBlendFactor = EBlendFactor.SrcAlpha;
 
+   public static RectS ClipRect {
+      set {
+         if (mClipRect.EQ (value)) return;
+         GL.Scissor (value.Left, Lux.PanelSize.Y - value.Bottom, value.Width, value.Height);
+         GL.Enable (ECap.ScissorTest); // REMOVETHIS make this the default
+         mClipRect = value;
+      }
+   }
+   static RectS mClipRect;
+
    /// <summary>Is depth-testing now enable (default = false)</summary>
    public static bool DepthTest {
       set {
@@ -143,11 +153,9 @@ static class GLState {
    /// <summary>Resets everything to a known state (at the start of every frame)</summary>
    public static void StartFrame (Vec2S offset, Vec2S size, Color4 bgrdColor) {
       GL.Viewport (offset.X, offset.Y, size.X, size.Y);
-      if (!offset.EQ (Vec2S.Zero)) {
-         GL.Enable (ECap.ScissorTest);
-         GL.Scissor (offset.X, offset.Y, size.X, size.Y);
-      } else
-         GL.Disable (ECap.ScissorTest);
+      GL.Enable (ECap.ScissorTest);
+      GL.Scissor (offset.X, offset.Y, size.X, size.Y);
+      mClipRect = new (offset.X, offset.Y, offset.X + size.X, offset.Y + size.Y);
       GL.BlendFunc (mBlendFactor = EBlendFactor.SrcAlpha, EBlendFactor.OneMinusSrcAlpha);
       GL.PatchParameter (EPatchParam.PatchVertices, 4);
       GL.PrimitiveRestartIndex (0xFFFFFFFF);
