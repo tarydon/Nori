@@ -272,6 +272,12 @@ public class DwgSnap {
                   }
                }
                break;
+            case E2Bendline eb:
+               for (int i = eb.Pts.Length - 1; i > 0; i -= 2) {
+                  if (ptRaw.DistToLineSeg (eb.Pts[i], eb.Pts[i - 1]) <= aperture)
+                     mSegs.Add (Poly.Line (eb.Pts[i], eb.Pts[i - 1])[0]);
+               }
+               break;
             case E2Solid e2s: foreach (var pt in e2s.Pts) Check (pt, ESnap.Endpoint, 0); break;
             case E2Text e2t: Check (e2t.Pt, ESnap.Node, 0); break;
             case E2Insert e2i: Check (e2i.Pt, ESnap.Node, 0); break;
