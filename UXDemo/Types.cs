@@ -11,9 +11,7 @@ public enum EKind {
    Unknown, Root, Rect, Panel, Text, MText, Block, VScroll, Popup, Listbox, CListBox,
 }
 
-/// <summary>
-/// What does GetChildren enumerate
-/// </summary>
+/// <summary>What does GetChildren enumerate</summary>
 public enum EEnum { All, Children, Popups };
 
 /// <summary>The various sizing modes for an axis</summary>
@@ -51,13 +49,9 @@ public enum EFlags {
    Popup = 1 << 3,
    /// <summary>This node has children</summary>
    HasChildren = 1 << 4,
-   /// <summary>
-   /// This popup is aligned relative to screen, not to parent
-   /// </summary>
+   /// <summary>This popup is aligned relative to screen, not to parent</summary>
    ScreenRelative = 1 << 5,
-   /// <summary>
-   /// Draw a shadow for this
-   /// </summary>
+   /// <summary>Draw a shadow for this</summary>
    Shadow = 1 << 6,
 }
 
@@ -143,9 +137,7 @@ public struct NodeMemo {
    /// <summary>Tick-count at which the mouse left the node</summary>
    public uint MouseLeaveTime;
 
-   /// <summary>
-   /// UID of the node owning this memo
-   /// </summary>
+   /// <summary>UID of the node owning this memo</summary>
    public uint UId;
 
    public bool IsMouseOver {

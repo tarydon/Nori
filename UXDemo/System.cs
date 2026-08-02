@@ -139,7 +139,7 @@ static public class UXSystem {
       // 7. Compute the positions of all the nodes
       foreach (var n in mTraverse) 
          PositionChildren (n);
-      File.WriteAllText ("c:/etc/dump.txt", Dump ());
+//      File.WriteAllText ("c:/etc/dump.txt", Dump ());
 
    }
 
@@ -192,7 +192,7 @@ static public class UXSystem {
                Lib.Check (horizontal);
                ref var memo = ref node.GetMemo ();
                memo.ChildSize = cay.DV;
-               if (node.IsMouseOver && WheelDelta != 0) memo.ScrollPos -= WheelDelta * 10;
+               if (node.IsMouseOver && WheelDelta != 0) memo.ScrollPos -= WheelDelta * 100;
                memo.MaxScrollPos = Math.Max (-yRemain, 0);
                memo.ScrollPos = memo.ScrollPos.Clamp (0, memo.MaxScrollPos);
                cay.V0 = (short)(cay.V0 - memo.ScrollPos);

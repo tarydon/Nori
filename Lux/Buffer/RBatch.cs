@@ -60,9 +60,7 @@ struct RBatch : IIndexed {
 
    /// <summary>'ZLevel' is like a sort order for RBatch (they are drawn from min..max order)</summary>
    public short ZLevel;
-   /// <summary>
-   /// The current clip-rect
-   /// </summary>
+   /// <summary>The current clip-rect</summary>
    public ushort ClipRect;
 
    /// <summary>Start position, in bytes, of this RBatch within the RBuffer</summary>

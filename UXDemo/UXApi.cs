@@ -43,7 +43,7 @@ public static class UXApi {
    }
 
    public static ref Node CLISTBOX (uint uid, Size width, Size height, ICustomList list) {
-      ref Node node = ref PANEL (uid, width, height, false, Color4.Transparent);
+      ref Node node = ref PANEL (uid, width, height, false, Color4.Gray (192));
       int a = LISTBOX_Margin, b = SCROLLBAR_Margin; node.SetPadding (a, a, b, a);
       VSCROLL (uid, Grow (), Grow (), Color4.Transparent);
       node = ref UXSystem.BeginNode (EKind.CListBox, uid, width.Min - a - b - VScrollClass.WIDTH, Grow ()); END ();

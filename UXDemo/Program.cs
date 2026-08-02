@@ -12,7 +12,7 @@ class Program {
       GLFWHost.Init (OnReady);
       UXApi.Init ();
       MainWin = new Window (1600, 1200, "I N L A Y Demo", Window.EFlags.Default | Window.EFlags.Maximized);
-      MainWin.Run (true);
+      MainWin.Run (false);
    }
    static public Window MainWin = null!;
 

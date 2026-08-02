@@ -22,7 +22,7 @@ public class Window {
       mHWnd = CreateWindow (cx, cy, bTitle, HMonitor.None, HWindow.None);
       MakeContextCurrent (mHWnd);
       GLFWMouse.HWnd = GLFWKeyboard.HWnd = mHWnd;
-      SwapInterval (1);
+      SwapInterval (0);
       GLFWHost.Win = this; 
       GLFWHost.OnReady?.Invoke ();
    }
@@ -71,9 +71,7 @@ public class Window {
    /// <summary>Returns true if the window should be closed</summary>
    public bool ShouldClose { get => WindowShouldClose (mHWnd); set => SetWindowShouldClose (mHWnd, true); }
 
-   /// <summary>
-   /// Sets the title of the window
-   /// </summary>
+   /// <summary>Sets the title of the window</summary>
    public string Title { set => SetWindowTitle (mHWnd, Encoding.UTF8.GetBytes (value)); }
 
    /// <summary>Gets / Sets the size of the window (including decorations)</summary>

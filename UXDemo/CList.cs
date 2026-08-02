@@ -1,4 +1,8 @@
-﻿using Nori;
+// ────── ╔╗
+// ╔═╦╦═╦╦╬╣ CList.cs
+// ║║║║╬║╔╣║ <<TODO>>
+// ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
+using Nori;
 namespace UXDemo;
 
 public interface ICustomList {
@@ -24,7 +28,7 @@ class BToolVNode : VNode {
    RectS mRect;
 
    public override void SetAttributes () {
-      Lux.ZLevel = mZLevel;
+      Lux.ZLevel = mZLevel + 1;
       Lux.SetDirectXfm (mBound, mRect);
       Lux.LineWidth = 1.5f;
       Lux.Color = Color4.Black;
@@ -34,7 +38,7 @@ class BToolVNode : VNode {
       if (n != 0) return null;
       if (mFillVN == null) {
          Dwg2 dwg = new (); dwg.Add (mPoly);
-         mFillVN = new DwgFillVN (dwg) { ZLevel = mZLevel + 1 };
+         mFillVN = new DwgFillVN (dwg) { ZLevel = mZLevel };
       }
       return mFillVN;
    }
@@ -47,15 +51,15 @@ class BToolVNode : VNode {
 
 class BToolList : ICustomList {
    public BToolList () 
-      => mData = [.. Directory.GetFiles ("W:\\AllBendTools", "*.dxf").Take (10).Select (a => new Data (a))];
+      => mData = [.. Directory.GetFiles ("W:\\AllBendTools", "*.dxf").Take (50).Select (a => new Data (a))];
    List<Data> mData;
 
    public int Count => mData.Count;
 
    public void Draw (int item, RectS rect) {
       var data = mData[item];
-      Lux.Color = Color4.Gray (128);
-      //Lux.RRect (rect, 5);
+      Lux.Color = Color4.Gray (224);
+      Lux.RRect (rect, 5);
 
       if (data.VNode == null) {
          data.VNode = new BToolVNode (Lux.ZLevel + 1, data.Poly, data.Bound, rect);
@@ -81,6 +85,7 @@ class BToolList : ICustomList {
          get {
             if (mPoly == null) {
                mPoly = DXFReader.Load (Name).Polys.MaxBy (a => a.GetBound ().Area)!;
+               mPoly = mPoly.DiscretizeP (ETess.Coarse);
                mBound = mPoly.GetBound ();
             }
             return mPoly;

@@ -89,9 +89,7 @@ public struct Node {
 
    public readonly bool HasShadow => Get (EFlags.Shadow);
 
-   /// <summary>
-   /// Is this POPUP aligned relative to the screen
-   /// </summary>
+   /// <summary>Is this POPUP aligned relative to the screen</summary>
    public bool IsScreenRelative { readonly get => Get (EFlags.ScreenRelative); set => Set (EFlags.ScreenRelative, value); }
 
    // Methods ------------------------------------------------------------------

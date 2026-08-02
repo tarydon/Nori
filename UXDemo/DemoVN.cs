@@ -29,13 +29,12 @@ class DemoVN : VNode {
       ushort nClipRect = Lux.NClipRect;
       ref var root = ref UXSystem.BeginLayout (Lux.PanelSize);
       root.SetPadding (20); root.Data = "Root"; root.IsHorizontal = true; root.ChildGap = 20;
-      UXSystem.SetMouseState (mPos, mWheel, mPressed); mWheel = 0; 
+      UXSystem.SetMouseState (mPos, mWheel, mPressed); mWheel = 0;
 
       ref var node = ref PANEL (NextUID, Fit (100, 1500), Fit (100, 700), true, Color4.DarkGreen);      
       node.Data = "DarkGreen"; node.SetPadding (20); node.ChildGap = 20;
       node.Y.ChildAlign = EAlign.Middle;  
 
-      /*
       node = ref LISTBOX (NextUID, 450, 350, mFiles, 3); END ();
       node = ref PANEL (NextUID, Fit (200), Fit (), true, Color4.Yellow); node.Data = "Yellow";
       node.SetPadding (10, 10, 8, 10); node.X.ChildAlign = EAlign.Middle;
@@ -53,8 +52,6 @@ class DemoVN : VNode {
       } else { _ = NextUID; _ = NextUID; }
       END ();  // Cyan Rect
       node = ref BLOCK (NextUID, 300, 200, Color4.DarkBlue, Color4.Blue, Color4.Red); node.Data = "DarkBlue"; END ();
-      */
-
       END ();  // "DarkGreen"
 
       node = ref CLISTBOX (NextUID, 200, Grow (), mBTools ??= new BToolList ());
