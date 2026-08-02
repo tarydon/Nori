@@ -94,3 +94,15 @@ E2Leader
   -Bound Pts Style.Name Text
 Decal
   File CS Scale
+NurbsCurve3
+  Ctrl Imp Domain Rational Weight
+E3NurbsSurface
+  Ctrl Rational UCtl Weight UImp VImp
+E3Torus
+  RMajor RMinor
+Ellipse3
+  CS XRadius YRadius Domain
+E3SpunSurface
+  Generatrix
+E3SweptSurface
+  Generatrix    

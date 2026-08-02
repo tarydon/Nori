@@ -182,7 +182,7 @@ public readonly struct CoordSystem {
       R.Read (out double x).Match (',').Read (out double y).Match (',').Read (out double z);
       if (R.Peek () != '|') return new CoordSystem (new (x, y, z));
       R.Match ('|').Read (out double x1).Match (',').Read (out double y1).Match (',').Read (out double z1);
-      if (R.Peek () != '|') return new CoordSystem (Point3.Zero, new (x, y, z), new (x1, y1, z));
+      if (R.Peek () != '|') return new CoordSystem (Point3.Zero, new (x, y, z), new (x1, y1, z1));
       R.Match ('|').Read (out double x2).Match (',').Read (out double y2).Match (',').Read (out double z2);
       return new CoordSystem (new (x, y, z), new (x1, y1, z1), new (x2, y2, z2));
    }

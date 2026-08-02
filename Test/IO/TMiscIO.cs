@@ -32,6 +32,14 @@ class CurlTests {
       RoundTrip ("IO/DXF/Out/Point.curl");
    }
 
+   [Test (266, "E3Contour test")]
+   void Test4 () {
+      var stp = new STEPReader (NT.File ("STEP/5X-039.stp")).Load ();
+      CurlWriter.Save (stp, NT.TmpCurl);
+      Assert.TextFilesEqual ("STEP/5X-039.curl", NT.TmpCurl);
+      RoundTrip ("STEP/5X-039.curl");
+   }
+
    void RoundTrip (string file) {
       if (!Path.IsPathRooted (file)) file = NT.File (file);
       var obj = CurlReader.Load (file);

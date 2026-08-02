@@ -166,11 +166,12 @@ public sealed class E3Curve : Ent3 {
 #region class E3Contour : Ent3 ---------------------------------------------------------------------
 public sealed class E3Contour : Ent3 {
    public E3Contour (int id, ImmutableArray<Curve3> connectedCurves) : base (id) => Curves = connectedCurves;
+   E3Contour () { }
 
    public readonly ImmutableArray<Curve3> Curves;
 
-   public override Bound3 Bound => Bound3.Cached (ref mBound, ComputeBound);
-   Bound3 mBound = new ();
+   public override Bound3 Bound => Bound3.Cached (ref _bound, ComputeBound);
+   Bound3 _bound = new ();
    Bound3 ComputeBound () {
       Bound3 b = new ();
       List<Point3> pts = [];
