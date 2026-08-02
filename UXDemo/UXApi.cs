@@ -18,6 +18,7 @@ public static class UXApi {
       UXSystem.Register (new VScrollClass ());
       UXSystem.Register (new PopupClass ());
       UXSystem.Register (new ListboxClass ());
+      UXSystem.Register (new CListBoxClass ());
    }
 
    public static void END () {
@@ -38,6 +39,16 @@ public static class UXApi {
       node = ref UXSystem.BeginNode (EKind.Listbox, uid, Grow (), Grow ()); END ();
       END ();
       node.GetMemo ().Data ??= new ListboxClass.Data (items, selected);
+      return ref node;
+   }
+
+   public static ref Node CLISTBOX (uint uid, Size width, Size height, ICustomList list) {
+      ref Node node = ref PANEL (uid, width, height, false, Color4.Transparent);
+      int a = LISTBOX_Margin, b = SCROLLBAR_Margin; node.SetPadding (a, a, b, a);
+      VSCROLL (uid, Grow (), Grow (), Color4.Transparent);
+      node = ref UXSystem.BeginNode (EKind.CListBox, uid, width.Min - a - b - VScrollClass.WIDTH, Grow ()); END ();
+      END (); // VScroll
+      node.GetMemo ().Data = new CListBoxClass.Data (list);
       return ref node;
    }
 

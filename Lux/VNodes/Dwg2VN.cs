@@ -57,7 +57,9 @@ public class DwgFillVN : VNode {
 
    // Color used for filling, and ZLevel to place it below the drawing
    public override void SetAttributes ()
-      => (Lux.ZLevel, Lux.Color) = (-10, Color);
+      => (Lux.ZLevel, Lux.Color) = (ZLevel, Color);
+
+   public int ZLevel = -10;
 
    // Implementation -----------------------------------------------------------
    // We watch the list of entities in the drawing - when a closed Polyline is added

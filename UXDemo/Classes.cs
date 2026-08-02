@@ -4,7 +4,6 @@
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 using Nori;
 namespace UXDemo;
-
 using static UXTheme;
 
 /// <summary>Base class for different 'node-classes'</summary>
@@ -171,7 +170,7 @@ public class MTextClass : NodeClass {
 
 public class ListboxClass : NodeClass {
    public override EKind Kind => EKind.Listbox;
-   public override EFlags Flags => EFlags.HasChildren;
+   public override EFlags Flags => 0;
 
    public override void Measure (ref Node node) {
       var data = (Data)node.GetMemo ().Data;
@@ -212,5 +211,42 @@ public class ListboxClass : NodeClass {
       public int Selected = selected;
       public int ScrollPos;         
       public int DYLine; 
+   }
+}
+
+public class CListBoxClass : NodeClass {
+   public override EKind Kind => EKind.CListBox;
+   public override EFlags Flags => EFlags.Wrap;
+
+   public override void Wrap (ref Node node) {
+      var data = (Data)node.GetMemo ().Data;
+      var clist = data.CList;
+      if (data.YTotal == 0) {
+         data.Rects.Clear ();
+         int xAvailable = node.X.DV, yTop = 0; 
+         for (int i = 0, max = clist.Count; i < max; i++) {
+            int yNeeded = clist.MeasureY (i, xAvailable);
+            data.Rects.Add (new RectS (0, yTop, xAvailable, yTop + yNeeded));
+            yTop += yNeeded + node.ChildGap;
+         }
+         data.YTotal = yTop - node.ChildGap;
+      }
+      node.Y.Min = node.Y.DV = (short)data.YTotal;
+   }
+
+   public override void Draw (ref Node node) {
+      var data = (Data)node.GetMemo ().Data;
+      Vec2S shift = new (node.X.V0, node.Y.V0);
+      for (int i = 0; i < data.CList.Count; i++) {
+         RectS r = data.Rects[i] + shift;
+         Lux.ZLevel = node.ZLevel;
+         data.CList.Draw (i, r);
+      }
+   }
+
+   internal class Data (ICustomList clist) {
+      public ICustomList CList = clist;
+      public int YTotal;
+      public List<RectS> Rects = [];
    }
 }

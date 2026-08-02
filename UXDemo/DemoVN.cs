@@ -28,14 +28,14 @@ class DemoVN : VNode {
       mUID = 0;
       ushort nClipRect = Lux.NClipRect;
       ref var root = ref UXSystem.BeginLayout (Lux.PanelSize);
-      root.SetPadding (20); root.Data = "Root";
+      root.SetPadding (20); root.Data = "Root"; root.IsHorizontal = true; root.ChildGap = 20;
       UXSystem.SetMouseState (mPos, mWheel, mPressed); mWheel = 0; 
 
       ref var node = ref PANEL (NextUID, Fit (100, 1500), Fit (100, 700), true, Color4.DarkGreen);      
       node.Data = "DarkGreen"; node.SetPadding (20); node.ChildGap = 20;
       node.Y.ChildAlign = EAlign.Middle;  
 
-      //node = ref RECT (NextUID, 450, 350, Color4.Green); node.Data = "Green"; END ();
+      /*
       node = ref LISTBOX (NextUID, 450, 350, mFiles, 3); END ();
       node = ref PANEL (NextUID, Fit (200), Fit (), true, Color4.Yellow); node.Data = "Yellow";
       node.SetPadding (10, 10, 8, 10); node.X.ChildAlign = EAlign.Middle;
@@ -53,8 +53,13 @@ class DemoVN : VNode {
       } else { _ = NextUID; _ = NextUID; }
       END ();  // Cyan Rect
       node = ref BLOCK (NextUID, 300, 200, Color4.DarkBlue, Color4.Blue, Color4.Red); node.Data = "DarkBlue"; END ();
+      */
 
-      END ();
+      END ();  // "DarkGreen"
+
+      node = ref CLISTBOX (NextUID, 200, Grow (), mBTools ??= new BToolList ());
+      node.SetPadding (5); node.ChildGap = 5;
+      END (); 
 
       UXSystem.EndLayout ();
       UXSystem.Render ();
@@ -64,6 +69,7 @@ class DemoVN : VNode {
    static uint NextUID => ++mUID;
    static uint mUID = 0;
    static string[] mFiles = [.. Directory.GetFiles ("N:/Demos/WPFDemo", "*.*").Select (a => Path.GetFileName (a))];
+   static ICustomList? mBTools;
 
    static string Lorem = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut efficitur cursus consequat. Suspendisse at ultrices leo. Fusce vitae volutpat lacus, quis convallis lorem. Orci varius natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Aenean aliquam lectus non neque molestie, non dignissim turpis aliquet. Maecenas ac accumsan nisi. Sed dignissim lacinia quam nec tristique. Pellentesque a egestas augue. Phasellus porta, ex ac interdum maximus, elit turpis gravida elit, nec pulvinar nunc neque quis lorem. Nunc pretium ipsum sed malesuada volutpat. In mollis bibendum eros ac ultricies. Pellentesque pellentesque commodo dapibus. Sed feugiat fermentum ultrices. Fusce non purus ac mi mollis ullamcorper et at mauris.";
 

@@ -124,7 +124,7 @@ public static partial class Lux {
    /// This is an index into Scene.Xfms[]
    public static int IDXfm {
       get => mIDXfm;
-      private set {
+      set {
          if (mIDXfm == value) return;
          if (Set (ELuxAttr.Xfm)) mIDXfms.Push (mIDXfm);
          mIDXfm = value; Rung++;
@@ -140,6 +140,12 @@ public static partial class Lux {
          IDXfm = Scene.Xfms.Count;
          Scene.Xfms.Add (xe);
       }
+   }
+
+   public static void SetDirectXfm (Bound2 bound, RectS rect) {
+      var xe = new XfmEntry (bound, rect);
+      IDXfm = Scene!.Xfms.Count;
+      Scene.Xfms.Add (xe);
    }
 
    /// <summary>The Z-Level of rendering (small values are drawn earlier)</summary>
@@ -158,7 +164,6 @@ public static partial class Lux {
       get => mClipRect;
       set {
          if (mClipRect.EQ (value)) return;
-         Debug.WriteLine (value);
          ClipRects.Add (mClipRect = value); mNClipRect++;
          Lib.Check (mNClipRect == ClipRects.Count - 1); // REMOVETHIS
       }

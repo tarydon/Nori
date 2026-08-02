@@ -2,14 +2,13 @@
 // ╔═╦╦═╦╦╬╣ Types.cs
 // ║║║║╬║╔╣║ <<TODO>>
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
-using System.Diagnostics;
 using Nori;
 
 namespace UXDemo;
 
 /// <summary>What Kind of UXNode is this?</summary>
 public enum EKind {
-   Unknown, Root, Rect, Panel, Text, MText, Block, VScroll, Popup, Listbox,
+   Unknown, Root, Rect, Panel, Text, MText, Block, VScroll, Popup, Listbox, CListBox,
 }
 
 /// <summary>

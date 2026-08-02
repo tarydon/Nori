@@ -21,6 +21,8 @@ static public class UXSystem {
 
    public static Vec2S ScreenSize { get; private set; }     // Screen size
 
+   public static GroupVN RetainedVN = new ([]);
+
    // Methods ------------------------------------------------------------------
    public static void Register (NodeClass clas) {
       int n = (int)clas.Kind;
@@ -134,11 +136,11 @@ static public class UXSystem {
       foreach (var n in mTraverse) 
          Nodes[n].DoGrowShrinkChildren (false);
 
-      File.WriteAllText ("c:/etc/dump.txt", Dump ());
-
       // 7. Compute the positions of all the nodes
       foreach (var n in mTraverse) 
          PositionChildren (n);
+      File.WriteAllText ("c:/etc/dump.txt", Dump ());
+
    }
 
    public static void Render () {

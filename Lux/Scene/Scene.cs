@@ -343,8 +343,29 @@ class XfmEntry {
       mIncremental = incremental;
    }
 
+   public XfmEntry (Bound2 bound, RectS viewport) {
+      mIs3D = false; mScene = Lux.UIScene!;
+      mIncremental = Matrix3.Identity;
+
+      // First, compute the scaling in X and Y to map the given bound into the given viewport
+      // (which is in pixels)
+      var (screen, vcen, bCen) = (mScene.Rect, viewport.Center, bound.Midpoint);
+      double dx = viewport.Width, dy = viewport.Height, aspect = bound.Width / bound.Height;
+      if (dx / dy < aspect) dy = dx / aspect; else dx = dy * aspect;
+      double xScale = (2.0 * dx / screen.Width) / bound.Width;
+      double yScale = (2.0 * dy / screen.Height) / bound.Height;
+      // Then, compute the center of the viewport in clip-space coordinates;
+      double vCenX = 2 * ((double)vcen.X).GetLieOn (screen.Left, screen.Right) - 1;
+      double vCenY = 1 - 2 * ((double)vcen.Y).GetLieOn (screen.Top, screen.Bottom);
+      // Finally, compute the transform to map bound -> viewport
+      double xShift = vCenX - bCen.X * xScale, yShift = vCenY - bCen.Y * yScale;
+      mObjToWorld = Matrix3.Scaling (xScale, yScale, 1) * Matrix3.Translation (xShift, yShift, 0);
+      mXfm = (Mat4F)mObjToWorld;
+   }
+
    // Properties ---------------------------------------------------------------
    /// <summary>Inverse transform that transforms OpenGL clip spaces to world (inverse of Xfm)</summary>
+   /// NOTE: This makes sense only for the root xfm of a scene!
    public Matrix3 InvXfm => mInvXfm ??= (mScene.WorldXfm * mScene.ProjectionXfm).GetInverse ();
    Matrix3? mInvXfm;
 
