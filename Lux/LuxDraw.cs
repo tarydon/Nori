@@ -148,6 +148,12 @@ public static partial class Lux {
       Scene.Xfms.Add (xe);
    }
 
+   public static void SetDirectXfm (Bound3 bound, RectS rect, Quaternion viewpoint) {
+      var xe = new XfmEntry (bound, rect, viewpoint);
+      IDXfm = Scene!.Xfms.Count;
+      Scene.Xfms.Add (xe);
+   }
+
    /// <summary>The Z-Level of rendering (small values are drawn earlier)</summary>
    public static int ZLevel {
       get => mZLevel;
@@ -277,11 +283,11 @@ public static partial class Lux {
       // be used immediately by the cover step, and definitely before any other stencil batch is
       // drawn. Note that the cover shader not only uses the stencil, but also zeroes it out so it
       // is ready for the next application of the stencil shader
-//      ZLevel = ++mcFillPaths - 20000;
+      //ZLevel = ++mcFillPaths - 20000;
       TriFanStencilShader.It.Draw (pts, indices);
       bound = bound.InflatedF (1.01);
       var (x0, x1) = bound.X; var (y0, y1) = bound.Y;
-//      ZLevel = ++mcFillPaths - 20000;
+      //ZLevel = ++mcFillPaths - 20000;
       TriFanCoverShader.It.Draw ([new (x0, y0), new (x1, y0), new (x1, y1), new (x0, y1)]);
    }
    // This gets reset to 0 at the start of every frame

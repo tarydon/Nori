@@ -343,6 +343,27 @@ class XfmEntry {
       mIncremental = incremental;
    }
 
+   public XfmEntry (Bound3 bound, RectS viewport, Quaternion viewpoint) {
+      mIs3D = true; mScene = Lux.UIScene!;
+      var mid = bound.Midpoint;
+      mObjToWorld = Matrix3.Translation (-mid.X, -mid.Y, -mid.Z) * Matrix3.Rotation (viewpoint);
+
+      var (screen, vcen) = (mScene.Rect, viewport.Center);
+      double vpWid = viewport.Width, vpHei = viewport.Height, aspect = vpWid / vpHei, dz = bound.Diagonal / 2;
+      double dx = dz * Math.Max (aspect, 1), dy = dz / Math.Min (aspect, 1);
+      double xScale = vpWid / screen.Width, yScale = vpHei / screen.Height;
+      Matrix3 projectXfm = new (xScale / dx, 0, 0,
+                                0, yScale / dy, 0,
+                                0, 0, -1 / dz,
+                                0, 0, 0,
+                                Matrix3.EFlag.Translate | Matrix3.EFlag.Scale | Matrix3.EFlag.Mirror);
+      double xShift = (double)vcen.X / screen.Width * 2 - 1,
+             yShift = 1 - (double)vcen.Y / screen.Height * 2;
+      mIncremental = mObjToWorld * projectXfm * Matrix3.Translation (xShift, yShift, 0);
+      mNormalXfm = (Mat4F)ObjToWorld.ExtractRotation ();
+      mXfm = (Mat4F)mIncremental;
+   }
+
    public XfmEntry (Bound2 bound, RectS viewport) {
       mIs3D = false; mScene = Lux.UIScene!;
       mIncremental = Matrix3.Identity;
@@ -354,9 +375,11 @@ class XfmEntry {
       if (dx / dy < aspect) dy = dx / aspect; else dx = dy * aspect;
       double xScale = (2.0 * dx / screen.Width) / bound.Width;
       double yScale = (2.0 * dy / screen.Height) / bound.Height;
+
       // Then, compute the center of the viewport in clip-space coordinates;
       double vCenX = 2 * ((double)vcen.X).GetLieOn (screen.Left, screen.Right) - 1;
       double vCenY = 1 - 2 * ((double)vcen.Y).GetLieOn (screen.Top, screen.Bottom);
+
       // Finally, compute the transform to map bound -> viewport
       double xShift = vCenX - bCen.X * xScale, yShift = vCenY - bCen.Y * yScale;
       mObjToWorld = Matrix3.Scaling (xScale, yScale, 1) * Matrix3.Translation (xShift, yShift, 0);

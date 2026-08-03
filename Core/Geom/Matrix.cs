@@ -405,14 +405,14 @@ public class Matrix3 : IEQuable<Matrix3> {
    // Nested types -------------------------------------------------------------
    // These are possible values for the Flags enumeration
    [Flags]
-   enum EFlag {
+   public enum EFlag {
       Zero = 0, Translate = 1, Rotate = 2, Mirror = 4, Scale = 8,
       All = Translate | Rotate | Mirror | Scale
    }
 
    // Implementation -----------------------------------------------------------
    // Helper used to construct a Matrix3 when the Flags values are known
-   Matrix3 (double m11, double m12, double m13, double m21, double m22, double m23,
+   public Matrix3 (double m11, double m12, double m13, double m21, double m22, double m23,
       double m31, double m32, double m33, double dx, double dy, double dz, EFlag flags) {
       M11 = m11; M12 = m12; M13 = m13; M21 = m21; M22 = m22; M23 = m23;
       M31 = m31; M32 = m32; M33 = m33; DX = dx; DY = dy; DZ = dz; Flags = flags;

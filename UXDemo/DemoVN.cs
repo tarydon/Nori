@@ -56,7 +56,11 @@ class DemoVN : VNode {
 
       node = ref CLISTBOX (NextUID, 200, Grow (), mBTools ??= new BToolList ());
       node.SetPadding (5); node.ChildGap = 5;
-      END (); 
+      END ();
+
+      node = ref CLISTBOX (NextUID, 300, Grow (), mModels ??= new ModelList ());
+      node.SetPadding (5); node.ChildGap = 5;
+      END ();
 
       UXSystem.EndLayout ();
       UXSystem.Render ();
@@ -66,7 +70,7 @@ class DemoVN : VNode {
    static uint NextUID => ++mUID;
    static uint mUID = 0;
    static string[] mFiles = [.. Directory.GetFiles ("N:/Demos/WPFDemo", "*.*").Select (a => Path.GetFileName (a))];
-   static ICustomList? mBTools;
+   static ICustomList? mBTools, mModels;
 
    static string Lorem = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut efficitur cursus consequat. Suspendisse at ultrices leo. Fusce vitae volutpat lacus, quis convallis lorem. Orci varius natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Aenean aliquam lectus non neque molestie, non dignissim turpis aliquet. Maecenas ac accumsan nisi. Sed dignissim lacinia quam nec tristique. Pellentesque a egestas augue. Phasellus porta, ex ac interdum maximus, elit turpis gravida elit, nec pulvinar nunc neque quis lorem. Nunc pretium ipsum sed malesuada volutpat. In mollis bibendum eros ac ultricies. Pellentesque pellentesque commodo dapibus. Sed feugiat fermentum ultrices. Fusce non purus ac mi mollis ullamcorper et at mauris.";
 

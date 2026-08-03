@@ -190,7 +190,7 @@ public class ListboxClass : NodeClass {
       ushort nClip = Lux.NClipRect; Lux.ClipRect = rList;
       Lux.TypeFace = UXSystem.Typefaces[node.FontId];
       for (int i = 0; i < items.Count; i++) {
-         int yTop = y.V0 + i * data.DYLine - data.ScrollPos; if (yTop > rList.Bottom) continue;
+         int yTop = y.V0 + i * data.DYLine; if (yTop > rList.Bottom) continue;
          int yBot = yTop + data.DYLine; if (yBot < rList.Top) continue;
          RectS rItem = new (x.V0, yTop, x.V0 + x.DV, yBot);
          bool iHover = rItem.Contains (UXSystem.MousePos), iSel = i == data.Selected;
@@ -209,7 +209,6 @@ public class ListboxClass : NodeClass {
    internal class Data (IReadOnlyList<object> items, int selected) {
       public IReadOnlyList<object> Items = items;
       public int Selected = selected;
-      public int ScrollPos;         
       public int DYLine; 
    }
 }

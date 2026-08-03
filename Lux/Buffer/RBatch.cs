@@ -285,7 +285,7 @@ struct RBatch : IIndexed {
       // the best. For now, this is 256. As the batch size increases, sort time will increase.
       // As the batch size decreases, OpenGL state-transition time will increase (we'll spend
       // more time swapping between shaders, uniforms etc).
-      int batch = 256;
+      int batch = 2560; // TODO 
       int n = (Staging.Count + batch - 1) / batch;
       for (int i = 0; i < n; i++) {
          int a = i * batch, b = Math.Min (batch, Staging.Count - a);
