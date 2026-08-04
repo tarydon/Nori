@@ -20,6 +20,7 @@ public static class UXApi {
       UXSystem.Register (new PopupClass ());
       UXSystem.Register (new ListboxClass ());
       UXSystem.Register (new CListBoxClass ());
+      UXSystem.Register (new WrapListClass ());
    }
 
    public static void END () {
@@ -44,13 +45,13 @@ public static class UXApi {
    }
 
    public static ref Node WRAPLIST (uint uid, Size width, Size height, ICustomList list) {
-      ref Node node = ref PANEL (uid, width, height, true, LISTBOX_Bgrd);
+      ref Node node = ref PANEL (uid++, width, height, true, LISTBOX_Bgrd);
       int a = LISTBOX_Margin, b = SCROLLBAR_Margin;
-      node.SetPadding (a, a, b, a);
-      VSCROLL (uid, Grow (), Grow (), Color4.Transparent);
-      node = ref UXSystem.BeginNode (EKind.WrapList, uid, Grow (), Grow ()); END ();
+      node.SetPadding (a, a, b, a); 
+      VSCROLL (uid++, Grow (), Grow (), Color4.Transparent);
+      node = ref UXSystem.BeginNode (EKind.WrapList, uid++, Grow (), Grow ()); node.ChildGap = 6; END ();
       END ();  // VScroll
-      node.GetMemo ().Data ??= new WraplistClass.Data (list);
+      node.GetMemo ().Data ??= new WrapListClass.Data (list);
       return ref node;
    }
 

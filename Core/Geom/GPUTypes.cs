@@ -20,6 +20,7 @@ public readonly struct Vec2F (float x, float y) : IEQuable<Vec2F> {
 [StructLayout (LayoutKind.Sequential, Pack = 2, Size = 4)]
 public readonly struct Vec2S (short x, short y) : IEQuable<Vec2S> {
    public Vec2S (int x, int y) : this ((short)x, (short)y) { }
+   public void Deconstruct (out int x, out int y) { x = X; y = Y; }
    public static implicit operator Vec2S ((int X, int Y) tup) => new (tup.X, tup.Y);
    public static Vec2S operator + (Vec2S a, Vec2S b) => new (a.X + b.X, a.Y + b.Y);
    public bool EQ (Vec2S b) => X == b.X && Y == b.Y;

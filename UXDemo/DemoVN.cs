@@ -25,18 +25,17 @@ class DemoVN : VNode {
    void OnMouseClick (MouseClickInfo info) { mPressed = info.IsPress; Redraw (); }
 
    public override void Draw () {
+      mUID = 0; 
       ushort nClipRect = Lux.NClipRect;
       ref var node = ref UXSystem.BeginLayout (Lux.PanelSize);
       node.SetPadding (20); node.Data = "Root"; node.IsHorizontal = true; node.ChildGap = 20;
       UXSystem.SetMouseState (mPos, mWheel, mPressed); mWheel = 0;
 
       // Create two panels of equal size
-      node = ref PANEL (NextUID, Grow (), Grow (), true, Color4.Gray (216));
-      node.CornerRadius = 4;
+      node = ref WRAPLIST (NextUID, Grow (), Grow (), mBTools ??= new BToolList ()); mUID += 2;
       END ();
 
-      node = ref PANEL (NextUID, Grow (), Grow (), true, Color4.Gray (216));
-      node.CornerRadius = 4;
+      node = ref WRAPLIST (NextUID, Grow (), Grow (), mModels ??= new ModelList ()); mUID += 2;
       END ();
 
       UXSystem.EndLayout ();

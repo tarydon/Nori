@@ -257,6 +257,8 @@ public struct Node {
       ref AxisDef y = ref Y; y.PadStart = (short)top; y.PadEnd = (short)bottom;
    }
 
+   public override readonly string ToString () => $"Node #{UId} {Kind}";
+
    // Implementation -----------------------------------------------------------
    readonly bool Get (EFlags flags) => (Flags & flags) != 0;
    void Set (EFlags flags, bool value) { if (value) Flags |= flags; else Flags &= ~flags; }

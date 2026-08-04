@@ -257,21 +257,38 @@ class WrapListClass : NodeClass {
    public override void Wrap (ref Node node) {
       var data = (Data)node.GetMemo ().Data;
       var clist = data.CList;
-      if (data.YTotal == 0 || clist.NeedsRemeasure || mXAvailable != node.X.DV) {
+      if (data.YTotal == 0 || clist.NeedsRemeasure || mXWidth != node.X.DV) {
          data.Rects.Clear ();
-         mXAvailable = node.X.DV;
-
-         int xAvailable = node.X.DV, yRowTop = 0;
+         mXWidth = node.X.DV;
+         int xLeft = 0, yTop = 0, dyMax = 0, iFirstInRow = 0;
          for (int i = 0, max = clist.Count; i < max; i++) {
-            int yNeeded = clist.MeasureY (i, xAvailable);
-            data.Rects.Add (new RectS (0, yTop, xAvailable, yTop + yNeeded));
-            yTop += yNeeded + node.ChildGap;
+            var (dx, dy) = clist.Measure (i);
+            if (i > iFirstInRow && xLeft + dx > mXWidth) {
+               // If we can't accomodate the next item in this row, go to the 
+               // next row. 
+               yTop += dyMax + node.ChildGap; dyMax = 0; xLeft = 0;
+               iFirstInRow = i; 
+            }
+            data.Rects.Add (new (xLeft, yTop, xLeft + dx, yTop + dy));
+            xLeft += dx + node.ChildGap; dyMax = Math.Max (dyMax, dy); 
          }
-         data.YTotal = yTop - node.ChildGap;
+         data.YTotal = yTop + dyMax;
       }
       node.Y.Min = node.Y.DV = (short)data.YTotal;
    }
-   int mXAvailable;
+   // The width of the wrap-list - whenever this changes, we have to recompute all the
+   // Rects
+   int mXWidth;
+
+   public override void Draw (ref Node node) {
+      var data = (Data)node.GetMemo ().Data;
+      Vec2S shift = new (node.X.V0, node.Y.V0);
+      for (int i = 0; i < data.CList.Count; i++) {
+         RectS r = data.Rects[i] + shift;
+         Lux.ZLevel = node.ZLevel;
+         data.CList.Draw (i, r);
+      }
+   }
 
    internal class Data (ICustomList clist) {
       public readonly ICustomList CList = clist;

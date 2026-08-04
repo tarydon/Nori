@@ -9,7 +9,7 @@ namespace UXDemo;
 public interface ICustomList {
    public int Count { get; }
    public int MeasureY (int item, int xAvailable) => xAvailable;
-   public Vec2S Measure (int item) => new (32, 32);
+   public Vec2S Measure (int item) => new (128, 128);
    public void Draw (int item, RectS rect);
    public object Dispose (int item);
    public bool NeedsRemeasure => false;
@@ -49,14 +49,16 @@ class BToolVNode : VNode {
 
 class BToolList : ICustomList {
    public BToolList () 
-      => mData = [.. Directory.GetFiles ("W:\\AllBendTools", "*.dxf").Take (60).Select (a => new Data (a))];
+      => mData = [.. Directory.GetFiles ("W:\\AllBendTools", "*.dxf").Take (100).Select (a => new Data (a))];
    List<Data> mData;
 
    public int Count => mData.Count;
 
+   public static double Scale = 3.0;
+
    public void Draw (int item, RectS rect) {
       var data = mData[item];
-      Lux.Color = Color4.Gray (224);
+      Lux.Color = rect.Contains (UXSystem.MousePos) ? Color4.Gray (160) : Color4.Gray (216);
       Lux.RRect (rect, 5);
 
       if (data.VNode == null) {
@@ -70,6 +72,11 @@ class BToolList : ICustomList {
       var bound = mData[item].Bound;
       double scale = xAvailable / bound.Width;
       return (int)(Math.Min (scale * bound.Height + 0.5, xAvailable * 3));
+   }
+
+   public Vec2S Measure (int item) {
+      var bound = mData[item].Bound;
+      return new Vec2S ((short)(bound.Width * Scale + 0.5), (short)(bound.Height * Scale + 0.5));
    }
 
    public object Dispose (int item) 
@@ -103,7 +110,6 @@ class ModelVNode : VNode {
       mZLevel = zLevel; mMesh = mesh;
       mColor = Color4.RandomLight;
       Rect = rect;
-      mZRot = Random.Shared.Next (0, 360);
       mLast = DateTime.Now;
    }
    readonly int mZLevel;
@@ -114,13 +120,16 @@ class ModelVNode : VNode {
 
    public override void SetAttributes () {
       Lux.ZLevel = mZLevel + 1;
+      if (Rect.Contains (UXSystem.MousePos)) mSpeed = 100;
+      else mSpeed = Math.Max (mSpeed - 1, 0);
       double ts = (DateTime.Now - mLast).TotalSeconds;
-      mZRot += ts * 50;
+      mZRot += ts * mSpeed;
       Lux.SetDirectXfm (mMesh.Bound, Rect, Quaternion.FromAxisRotations (-60.D2R (), 0, mZRot.D2R ()));
       Lux.LineWidth = 1.5f;
       Lux.Color = Color4.White;
       mLast = DateTime.Now;
    }
+   int mSpeed = 0; 
 
    public override void Draw () {
       Lux.Mesh (mMesh, EShadeMode.Flat);
@@ -131,7 +140,7 @@ class ModelVNode : VNode {
 
 class ModelList : ICustomList {
    public ModelList ()
-      => mData = [.. Directory.GetFiles ("W:\\STEP-SheetMetal", "*.stp").Take (60).Select (a => new Data (a))];
+      => mData = [.. Directory.GetFiles ("W:\\STEP-SheetMetal", "*.stp").Take (100).Select (a => new Data (a))];
    List<Data> mData;
 
    public int Count => mData.Count;
@@ -157,9 +166,11 @@ class ModelList : ICustomList {
 
    public int MeasureY (int item, int xAvailable) => xAvailable;
 
+   public Vec2S Measure (int item) => new (300, 300);
+
    public void Draw (int item, RectS rect) {
       var data = mData[item];
-      Lux.Color = Color4.Gray (224);
+      Lux.Color = rect.Contains (UXSystem.MousePos) ? Color4.Gray (160) : Color4.Gray (216);
       Lux.RRect (rect, 5);
 
       if (data.VNode == null) {
