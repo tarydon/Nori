@@ -85,9 +85,13 @@ class RetainBuffer : IIndexed {
    /// for adding additional vertices into
    public static RetainBuffer Get (EVertexSpec spec) {
       RetainBuffer? rb = mBySpec[(int)spec];
-      if (rb == null) (rb = mBySpec[(int)spec] = All.Alloc ()).VSpec = spec;
+      if (rb == null) {
+         (rb = mBySpec[(int)spec] = All.Alloc ()).VSpec = spec;
+         StatsVN.Add ("VAO", $"{All.Count}/{++cTotal}");
+      }
       return rb;
    }
+   static int cTotal;
    static readonly RetainBuffer?[] mBySpec = new RetainBuffer?[(int)EVertexSpec._Last];
 
    // Implementation -----------------------------------------------------------
@@ -99,6 +103,7 @@ class RetainBuffer : IIndexed {
       GL.DeleteBuffer (mHVertex); GL.DeleteBuffer (mHIndex); GL.DeleteVertexArray (mHVAO);
       mHVertex = mHIndex = HBuffer.Zero; mHVAO = HVertexArray.Zero;
       All.Release (Idx);
+      StatsVN.Add ("VAO", $"{All.Count}/{cTotal}");
    }
 
    // Called to transmit the data to the GPU.
@@ -233,7 +238,9 @@ class StreamBuffer {
    void Orphan () {
       mCursor = 0;
       GL.BufferData (EBufferTarget.Array, mSize, 0, EBufferUsage.StreamDraw);
+      StatsVN.Add ("StreamBuffer", ++mSubmit);
    }
+   static int mSubmit;
 
    readonly HBuffer mId;      // The buffer we're using
    readonly int mSize;        // Size of that buffer

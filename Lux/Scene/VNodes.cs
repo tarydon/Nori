@@ -59,6 +59,52 @@ public class Mesh3VN : VNode {
 }
 #endregion
 
+#region class StatsVN ------------------------------------------------------------------------------
+[Singleton]
+/// <summary>
+/// Displays stats: key-value pairs
+/// </summary>
+public partial class StatsVN : VNode {
+   StatsVN () => Streaming = true;
+
+   public static void Add (string key, object value) {
+      sDict[key] = value.ToString () ?? "";
+      mxKey = 0; It.Redraw ();
+   }
+   static Dictionary<string, string> sDict = [];
+   static int mxKey, mxValue;
+
+   public static void Remove (string key) { 
+      sDict.Remove (key); mxKey = 0; 
+      It.Redraw (); 
+   }
+
+   public override void Draw () {
+      if (sDict.Count == 0) return;
+      var face = TypeFace.Default;
+      if (mxKey == 0) {
+         mxValue = 0;
+         foreach (var kvp in sDict) {
+            mxKey = Math.Max (mxKey, face.MeasureWidth (kvp.Key, int.MaxValue));
+            mxValue = Math.Max (mxValue, face.MeasureWidth (kvp.Value, int.MaxValue));
+         }
+      }
+
+      int right = Lux.Scene!.Rect.Right - 10, top = 10, dx = mxKey + mxValue + 30, left = right - dx;
+      int dy = face.LineHeight, y = top + face.Ascender + face.Leading / 2 + 5;
+      Lux.Color = Color4.Yellow; Lux.ZLevel = 254;
+      Lux.Rect (new (left, 10, right, 10 + sDict.Count * face.LineHeight + 10));
+      Lux.Color = Color4.Black; Lux.ZLevel = 255;
+      foreach (var kvp in sDict) {
+         int wid = face.MeasureWidth (kvp.Key, int.MaxValue);
+         Lux.Text (kvp.Key, new (left + mxKey - wid + 10, y));
+         Lux.Text (kvp.Value, new (right - mxValue - 10, y));
+         y += face.LineHeight;
+      }
+   }
+}
+#endregion
+
 #region class TraceVN ------------------------------------------------------------------------------
 /// <summary>Displays Trace text in the window</summary>
 [Singleton]

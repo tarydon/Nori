@@ -2,6 +2,7 @@
 // ╔═╦╦═╦╦╬╣ Lux.cs
 // ║║║║╬║╔╣║ The Lux class: public interface to the Lux rendering engine
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
+using System.Reactive;
 using System.Reactive.Subjects;
 using System.Reflection;
 namespace Nori;
@@ -22,6 +23,12 @@ public static partial class Lux {
    /// <summary>Subscribe to this to get a FPS (frames-per-second) report each second</summary>
    public static IObservable<int> FPS => mFPS;
    static readonly Subject<int> mFPS = new ();
+
+   /// <summary>
+   /// Subscribe to this to get a callback after each frame is rendered
+   /// </summary>
+   public static IObservable<Unit> OnFrameEnd => mOnFrameEnd;
+   static readonly Subject<Unit> mOnFrameEnd = new ();
 
    /// <summary>Subscribe to this to get statistics after each frame is rendered</summary>
    public static IObservable<Stats> Info => mInfo;
@@ -233,6 +240,7 @@ public static partial class Lux {
       // Various post-processing after frame render
       // Issue stats, and keep 'continuous render' loop going
       mInfo.OnNext (sStats);
+      mOnFrameEnd.OnNext (Unit.Default);
       var frameTS = DateTime.Now;
       mLastFrameTime = (DateTime.Now - sLastFrametime).TotalSeconds;
       double elapsed = (frameTS - mFPSReportTS).TotalSeconds;

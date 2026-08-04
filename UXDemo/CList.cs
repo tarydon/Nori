@@ -11,7 +11,7 @@ public interface ICustomList {
    public int MeasureY (int item, int xAvailable) => xAvailable;
    public Vec2S Measure (int item) => new (128, 128);
    public void Draw (int item, RectS rect);
-   public object Dispose (int item);
+   public void Dispose (int item);
    public bool NeedsRemeasure => false;
 }
 
@@ -42,6 +42,17 @@ class BToolVNode : VNode {
    }
    DwgFillVN? mFillVN;
 
+   public override void OnAttach () {
+      cTotal++; cAlive++;
+      StatsVN.Add ("BToolVN:", $"{cAlive}/{cTotal}");
+   }
+
+   public override void OnDetach () {
+      cAlive--;
+      StatsVN.Add ("BToolVN:", $"{cAlive}/{cTotal}");
+   }
+   static int cAlive, cTotal;
+
    public override void Draw () {
       Lux.Poly (mPoly);
    }
@@ -54,7 +65,7 @@ class BToolList : ICustomList {
 
    public int Count => mData.Count;
 
-   public static double Scale = 3.0;
+   public static double Scale = 2.5;
 
    public void Draw (int item, RectS rect) {
       var data = mData[item];
@@ -79,8 +90,13 @@ class BToolList : ICustomList {
       return new Vec2S ((short)(bound.Width * Scale + 0.5), (short)(bound.Height * Scale + 0.5));
    }
 
-   public object Dispose (int item) 
-      => throw new NotImplementedException ();
+   public void Dispose (int item) {
+      Data d = mData[item];
+      if (d.VNode is { } vn) {
+         UXSystem.QueueForDelete.Add (vn);
+         d.VNode = null;
+      }
+   }
 
    class Data {
       public Data (string name) { Name = name; }
@@ -117,6 +133,17 @@ class ModelVNode : VNode {
    readonly Color4 mColor;
    double mZRot = 45;
    DateTime mLast;
+
+   public override void OnAttach () {
+      ++cAlive; ++cTotal;
+      StatsVN.Add ("ModelVN", $"{cAlive}/{cTotal}");
+   }
+
+   public override void OnDetach () {
+      --cAlive;
+      StatsVN.Add ("ModelVN", $"{cAlive}/{cTotal}");
+   }
+   static int cAlive, cTotal;
 
    public override void SetAttributes () {
       Lux.ZLevel = mZLevel + 1;
@@ -166,7 +193,7 @@ class ModelList : ICustomList {
 
    public int MeasureY (int item, int xAvailable) => xAvailable;
 
-   public Vec2S Measure (int item) => new (300, 300);
+   public Vec2S Measure (int item) => new (250, 250);
 
    public void Draw (int item, RectS rect) {
       var data = mData[item];
@@ -180,5 +207,11 @@ class ModelList : ICustomList {
          data.VNode.Rect = rect;
    }
 
-   public object Dispose (int item) => throw new NotImplementedException ();
+   public void Dispose (int item) {
+      Data d = mData[item];
+      if (d.VNode is { } vn) {
+         UXSystem.QueueForDelete.Add (vn);
+         d.VNode = null;
+      }
+   }
 }

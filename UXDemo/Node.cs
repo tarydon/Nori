@@ -83,7 +83,7 @@ public struct Node {
 
    public readonly RectS Rect => new (X.V0, Y.V0, X.V0 + X.DV, Y.V0 + Y.DV);
 
-   public readonly int ZLevel => 200 + Level * 2;
+   public readonly int ZLevel => 100 + Level * 2;
 
    public readonly bool IsPopup => Get (EFlags.Popup);
 

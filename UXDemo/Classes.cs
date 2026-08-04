@@ -282,12 +282,19 @@ class WrapListClass : NodeClass {
 
    public override void Draw (ref Node node) {
       var data = (Data)node.GetMemo ().Data;
+      RectS rList = node.GetGrandparent ().Rect;
+      ushort nOldClip = Lux.NClipRect; Lux.ClipRect = rList;
       Vec2S shift = new (node.X.V0, node.Y.V0);
       for (int i = 0; i < data.CList.Count; i++) {
          RectS r = data.Rects[i] + shift;
-         Lux.ZLevel = node.ZLevel;
-         data.CList.Draw (i, r);
+         if (r.Top > rList.Bottom || r.Bottom < rList.Top) {
+            data.CList.Dispose (i);
+         } else {
+            Lux.ZLevel = node.ZLevel;
+            data.CList.Draw (i, r);
+         }
       }
+      Lux.NClipRect = nOldClip;
    }
 
    internal class Data (ICustomList clist) {

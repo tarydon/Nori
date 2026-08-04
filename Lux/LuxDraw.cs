@@ -170,8 +170,8 @@ public static partial class Lux {
       get => mClipRect;
       set {
          if (mClipRect.EQ (value)) return;
-         ClipRects.Add (mClipRect = value); mNClipRect++;
-         Lib.Check (mNClipRect == ClipRects.Count - 1); // REMOVETHIS
+         mNClipRect = (ushort)ClipRects.Count;
+         ClipRects.Add (mClipRect = value);
       }
    }
    static RectS mClipRect;

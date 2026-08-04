@@ -4,6 +4,7 @@
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.Reactive;
 using System.Reflection.Metadata.Ecma335;
 using System.Text;
 using Nori;
@@ -23,8 +24,20 @@ static public class UXSystem {
 
    public static GroupVN RetainedVN = new ([]);
 
+   public static List<VNode> QueueForDelete = [];
+
+   public static void EndOfFrame (Unit _) {
+      QueueForDelete.ForEach (RetainedVN.Remove);
+      QueueForDelete.Clear ();
+   }
+   static bool mQueued;
+
    // Methods ------------------------------------------------------------------
    public static void Register (NodeClass clas) {
+      if (!mQueued) {
+         mQueued = true;
+         Lux.OnFrameEnd.Subscribe (EndOfFrame);
+      }
       int n = (int)clas.Kind;
       while (Classes.Length <= n) Array.Resize (ref Classes, Classes.Length * 2);
       if (Classes[n] != null) Fatal ($"UX.Node {clas.Kind} already registered");

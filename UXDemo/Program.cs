@@ -28,6 +28,6 @@ class Program {
 class DemoScene : Scene2 {
    public DemoScene () {
       BgrdColor = Color4.Gray (64);
-      Root = new GroupVN ([new DemoVN (), TraceVN.It, UXSystem.RetainedVN]);
+      Root = new GroupVN ([new DemoVN (), TraceVN.It, UXSystem.RetainedVN, StatsVN.It]);
    }
 }
