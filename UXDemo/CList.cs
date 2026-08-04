@@ -8,9 +8,11 @@ namespace UXDemo;
 
 public interface ICustomList {
    public int Count { get; }
-   public int MeasureY (int item, int xAvailable);
+   public int MeasureY (int item, int xAvailable) => xAvailable;
+   public Vec2S Measure (int item) => new (32, 32);
    public void Draw (int item, RectS rect);
    public object Dispose (int item);
+   public bool NeedsRemeasure => false;
 }
 
 class BToolVNode : VNode {

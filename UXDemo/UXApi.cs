@@ -2,6 +2,7 @@
 // ╔═╦╦═╦╦╬╣ UXApi.cs
 // ║║║║╬║╔╣║ <<TODO>>
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
+using JetBrains.Annotations;
 using Nori;
 namespace UXDemo;
 using static Size;
@@ -39,6 +40,17 @@ public static class UXApi {
       node = ref UXSystem.BeginNode (EKind.Listbox, uid, Grow (), Grow ()); END ();
       END ();
       node.GetMemo ().Data ??= new ListboxClass.Data (items, selected);
+      return ref node;
+   }
+
+   public static ref Node WRAPLIST (uint uid, Size width, Size height, ICustomList list) {
+      ref Node node = ref PANEL (uid, width, height, true, LISTBOX_Bgrd);
+      int a = LISTBOX_Margin, b = SCROLLBAR_Margin;
+      node.SetPadding (a, a, b, a);
+      VSCROLL (uid, Grow (), Grow (), Color4.Transparent);
+      node = ref UXSystem.BeginNode (EKind.WrapList, uid, Grow (), Grow ()); END ();
+      END ();  // VScroll
+      node.GetMemo ().Data ??= new WraplistClass.Data (list);
       return ref node;
    }
 

@@ -220,7 +220,7 @@ public class CListBoxClass : NodeClass {
    public override void Wrap (ref Node node) {
       var data = (Data)node.GetMemo ().Data;
       var clist = data.CList;
-      if (data.YTotal == 0) {
+      if (data.YTotal == 0 || clist.NeedsRemeasure) {
          data.Rects.Clear ();
          int xAvailable = node.X.DV, yTop = 0; 
          for (int i = 0, max = clist.Count; i < max; i++) {
@@ -245,6 +245,36 @@ public class CListBoxClass : NodeClass {
 
    internal class Data (ICustomList clist) {
       public ICustomList CList = clist;
+      public int YTotal;
+      public List<RectS> Rects = [];
+   }
+}
+
+class WrapListClass : NodeClass {
+   public override EKind Kind => EKind.WrapList;
+   public override EFlags Flags => EFlags.Wrap;
+
+   public override void Wrap (ref Node node) {
+      var data = (Data)node.GetMemo ().Data;
+      var clist = data.CList;
+      if (data.YTotal == 0 || clist.NeedsRemeasure || mXAvailable != node.X.DV) {
+         data.Rects.Clear ();
+         mXAvailable = node.X.DV;
+
+         int xAvailable = node.X.DV, yRowTop = 0;
+         for (int i = 0, max = clist.Count; i < max; i++) {
+            int yNeeded = clist.MeasureY (i, xAvailable);
+            data.Rects.Add (new RectS (0, yTop, xAvailable, yTop + yNeeded));
+            yTop += yNeeded + node.ChildGap;
+         }
+         data.YTotal = yTop - node.ChildGap;
+      }
+      node.Y.Min = node.Y.DV = (short)data.YTotal;
+   }
+   int mXAvailable;
+
+   internal class Data (ICustomList clist) {
+      public readonly ICustomList CList = clist;
       public int YTotal;
       public List<RectS> Rects = [];
    }

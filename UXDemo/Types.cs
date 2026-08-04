@@ -9,6 +9,7 @@ namespace UXDemo;
 /// <summary>What Kind of UXNode is this?</summary>
 public enum EKind {
    Unknown, Root, Rect, Panel, Text, MText, Block, VScroll, Popup, Listbox, CListBox,
+   WrapList,
 }
 
 /// <summary>What does GetChildren enumerate</summary>
