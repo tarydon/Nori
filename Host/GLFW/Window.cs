@@ -22,7 +22,7 @@ public class Window {
       mHWnd = CreateWindow (cx, cy, bTitle, HMonitor.None, HWindow.None);
       MakeContextCurrent (mHWnd);
       GLFWMouse.HWnd = GLFWKeyboard.HWnd = mHWnd;
-      SwapInterval (1);
+      SwapInterval (0);
       GLFWHost.Win = this; 
       GLFWHost.OnReady?.Invoke ();
    }

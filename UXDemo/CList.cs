@@ -59,13 +59,33 @@ class BToolVNode : VNode {
 }
 
 class BToolList : ICustomList {
-   public BToolList () 
-      => mData = [.. Directory.GetFiles ("W:\\AllBendTools", "*.dxf").Take (100).Select (a => new Data (a))];
+   public BToolList () {
+      mData = [.. Directory.GetFiles ("W:\\AllBendTools", "*.dxf").Take (100).Select (a => new Data (a))];
+      mLast = DateTime.Now;
+   }
    List<Data> mData;
+   static DateTime mLast;
 
    public int Count => mData.Count;
 
-   public static double Scale = 2.5;
+   public static double Scale {
+      get {
+         if ((DateTime.Now - mLast).TotalSeconds > 5) {
+            mStarted = true; mLast = DateTime.Now;
+         }
+         if (mStarted) {
+            double ts = (DateTime.Now - mLast).TotalSeconds;
+            mAng += ts * 0.4;
+            mLast = DateTime.Now;
+            return Math.Sin (mAng) + 2.5;
+         } else
+            return 2.5;
+      }
+   }
+   static double mAng = 0;
+   static bool mStarted;
+
+   public bool NeedsRemeasure => true;
 
    public void Draw (int item, RectS rect) {
       var data = mData[item];
@@ -87,6 +107,7 @@ class BToolList : ICustomList {
 
    public Vec2S Measure (int item) {
       var bound = mData[item].Bound;
+      if (item == 0) StatsVN.Add ("Scale", Scale.R3 ());
       return new Vec2S ((short)(bound.Width * Scale + 0.5), (short)(bound.Height * Scale + 0.5));
    }
 
