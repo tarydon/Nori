@@ -68,16 +68,15 @@ class BToolList : ICustomList {
 
    public int Count => mData.Count;
 
+   public static bool AnimateScale;
+
    public static double Scale {
       get {
-         if ((DateTime.Now - mLast).TotalSeconds > 5) {
-            mStarted = true; mLast = DateTime.Now;
-         }
-         if (mStarted) {
+         if (AnimateScale) {
             double ts = (DateTime.Now - mLast).TotalSeconds;
             mAng += ts * 0.4;
             mLast = DateTime.Now;
-            return Math.Sin (mAng) + 2.5;
+            return 1.2 * Math.Sin (mAng) + 2.5;
          } else
             return 2.5;
       }
@@ -91,6 +90,10 @@ class BToolList : ICustomList {
       var data = mData[item];
       Lux.Color = rect.Contains (UXSystem.MousePos) ? Color4.Gray (160) : Color4.Gray (216);
       Lux.RRect (rect, 5);
+      if (item == 0 && !AnimateScale && Hub.Keyboard.IsShiftDown) {
+         AnimateScale = true;
+         mLast = DateTime.Now;
+      }
 
       if (data.VNode == null) {
          data.VNode = new BToolVNode (Lux.ZLevel + 1, data.Poly, data.Bound, rect);
@@ -168,16 +171,16 @@ class ModelVNode : VNode {
 
    public override void SetAttributes () {
       Lux.ZLevel = mZLevel + 1;
-      if (Rect.Contains (UXSystem.MousePos)) mSpeed = 100;
-      else mSpeed = Math.Max (mSpeed - 1, 0);
       double ts = (DateTime.Now - mLast).TotalSeconds;
+      if (Rect.Contains (UXSystem.MousePos)) mSpeed = 100;
+      else mSpeed = Math.Max (mSpeed - ts / 0.03, 0);
       mZRot += ts * mSpeed;
       Lux.SetDirectXfm (mMesh.Bound, Rect, Quaternion.FromAxisRotations (-60.D2R (), 0, mZRot.D2R ()));
       Lux.LineWidth = 1.5f;
       Lux.Color = Color4.White;
       mLast = DateTime.Now;
    }
-   int mSpeed = 0; 
+   double mSpeed = 0; 
 
    public override void Draw () {
       Lux.Mesh (mMesh, EShadeMode.Flat);
@@ -214,7 +217,7 @@ class ModelList : ICustomList {
 
    public int MeasureY (int item, int xAvailable) => xAvailable;
 
-   public Vec2S Measure (int item) => new (250, 250);
+   public Vec2S Measure (int item) => new (270, 270);
 
    public void Draw (int item, RectS rect) {
       var data = mData[item];
