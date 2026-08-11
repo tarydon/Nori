@@ -293,12 +293,12 @@ public sealed class Ellipse3 : Curve3 {
 
    /// <summary>Returns the t value of a given point</summary>
    public override double GetT (Point3 pt) {
-      pt *= (mFrom ??= Matrix3.From (CS));
+      pt *= (_from ??= Matrix3.From (CS));
       double ang = Math.Atan2 (pt.Y, pt.X);
       if (ang < 0) ang += Lib.TwoPI;
       return ang;
    }
-   Matrix3? mFrom;
+   Matrix3? _from;
 
    public override Curve3 Trimmed (double t1, double t2, bool reverseDir) {
       t1 = Lib.NormalizeAngle (t1); t2 = Lib.NormalizeAngle (t2);

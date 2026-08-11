@@ -46,7 +46,7 @@ public class UTFReader {
       SkipSpace ();
       if (!opts.Contains (D[mN++])) Fatal ($"Expecting one of '{Encoding.UTF8.GetString (opts)}', found '{(char)D[--mN]}'");
       return this; 
-   }
+   } 
 
    /// <summary>Matches a sequence of characters</summary>
    public UTFReader Match (ReadOnlySpan<byte> str) {

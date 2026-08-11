@@ -72,9 +72,12 @@ public class DwgSnap {
    /// <summary>Sets the last-clicked point (acts as a source for horizontal / vertical construction lines)</summary>
    public Point2 LastClickedPt = Point2.Nil;
 
+   /// <summary>User-defined construction lines to consider</summary>
+   public readonly List<ConsLine> UserCons = [];
+
    /// <summary>The set of construction lines to be drawn (these are active construction lines the mouse is close to)</summary>
-   public IEnumerable<(Point2 Pt, double Angle)> Lines 
-      => mVisible.Select(con => (con.Anchor, con.Slope));
+   public IEnumerable<(Point2 Pt, double Angle)> Lines
+      => mVisible.Select (con => (con.Anchor, con.Slope));
 
    /// <summary>The recent snap point that we computed</summary>
    public Point2 PtSnap => mPtSnap;
@@ -114,6 +117,9 @@ public class DwgSnap {
    }
    Point2 mptRaw;
    double mAperture;
+
+   /// <summary>Reset stale snap state, possibly on every command completion</summary>
+   public void Reset () { LastClickedPt = Point2.Nil; mCons.ClearFast (); }
 
    // Implementation -----------------------------------------------------------
    // Adds a construction line to the list of all construction lines.
@@ -252,7 +258,7 @@ public class DwgSnap {
                                  if (ptRaw.DistToSq (pa) < ptRaw.DistToSq (pb)) Check (pa, ESnap.Tangent);
                                  else Check (pb, ESnap.Tangent);
                               }
-                           }                                 
+                           }
                            mSegs.Add (seg);
                         }
                      }
@@ -270,6 +276,12 @@ public class DwgSnap {
                         }
                      }
                   }
+               }
+               break;
+            case E2Bendline eb:
+               for (int i = eb.Pts.Length - 1; i > 0; i -= 2) {
+                  if (ptRaw.DistToLineSeg (eb.Pts[i], eb.Pts[i - 1]) <= aperture)
+                     mSegs.Add (Poly.Line (eb.Pts[i], eb.Pts[i - 1])[0]);
                }
                break;
             case E2Solid e2s: foreach (var pt in e2s.Pts) Check (pt, ESnap.Endpoint, 0); break;
@@ -295,7 +307,14 @@ public class DwgSnap {
       if (mSnap != ESnap.None) {
          AddConsLine (mPtSnap, [mTangent, mTangent + Lib.HalfPI, 0, Lib.HalfPI, mTangent2, mTangent2 + Lib.HalfPI]);
          return true;
-      } 
+      }
+      
+      // [No snap found here!]
+      // Inject user-defined hard construction lines for next snap search stage
+      foreach (var cl in UserCons) {
+         if (cl.DistTo (ptRaw) <= aperture)
+            AddConsLine (cl.Anchor, [cl.Slope]);
+      }
       return false;
    }
    readonly List<Seg> mSegs = [];         // List of segs we're close to
@@ -320,13 +339,13 @@ public class DwgSnap {
    // Nested types -------------------------------------------------------------
    // This represents a construction line (with an anchor point and an infinite ray
    // passing through that point with a given slope)
-   readonly struct ConsLine {
+   public readonly struct ConsLine {
       public ConsLine (Point2 a, double s, bool perp) => (Anchor, Slope, Perpendicular) = (a, s, perp);
 
       public double DistTo (Point2 pt)
          => pt.DistToLine (Anchor, Anchor.Polar (10, Slope));
 
-      public bool EQ (Point2 pt, double ang) 
+      public bool EQ (Point2 pt, double ang)
          => ang.EQ (Slope, 0.001) && pt.DistToLine (Anchor, Anchor.Polar (10, Slope)).IsZero (0.001);
 
       public readonly Point2 Anchor;

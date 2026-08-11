@@ -71,6 +71,10 @@ public partial class Poly {
    public static Poly Lines (IEnumerable<Point2> points, bool closed)
       => new ([.. points], [], closed ? EFlags.Closed : 0);
 
+   /// <summary>Make a multi-segment Polyline</summary>
+   public static Poly Lines (ImmutableArray<Point2> points, bool closed)
+      => new Poly (points, [], closed ? EFlags.Closed : 0);
+
    /// <summary>Create a polygon of given size at a given center, sides and rotation angle.</summary>
    public static Poly Polygon (Point2 cen, double radius, int sides, double angle = 0)
       => Lines (Enumerable.Range (0, sides).Select (i => cen.Polar (radius, angle + HalfPI + TwoPI * i / sides)), true);
