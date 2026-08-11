@@ -82,7 +82,6 @@ class BToolList : ICustomList {
       }
    }
    static double mAng = 0;
-   static bool mStarted;
 
    public bool NeedsRemeasure => true;
 

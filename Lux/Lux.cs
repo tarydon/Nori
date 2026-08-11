@@ -223,7 +223,6 @@ public static partial class Lux {
                int x0 = (int)(DX.Min * cx + 0.5), x1 = (int)(DX.Max * cx + 0.5);
                int y0 = (int)(DY.Min * cy + 0.5), y1 = (int)(DY.Max * cy + 0.5);
                var rect = new RectS (x0, y0, x1, y1);
-               if (target == ETarget.Screen)
                   scene2.Rect = new (x0, yMax - y1, x1, yMax - y0);
                var vport = rect.Size;
                BeginRender (vport, target);  // Don't worry about viewport - it

@@ -67,7 +67,8 @@ public readonly struct KeyInfo (EKey key, EKeyModifier modifier, EKeyState state
 
 #region enum EMouseButton --------------------------------------------------------------------------
 /// <summary>Used by MouseInfo to specify which mouse button is clicked</summary>
-public enum EMouseButton : byte { Left, Right, Middle }
+[Flags]
+public enum EMouseButton : byte { Left = 1, Right = 2, Middle = 4 }
 #endregion
 
 #region struct MouseClickInfo ----------------------------------------------------------------------

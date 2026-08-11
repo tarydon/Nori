@@ -135,6 +135,9 @@ public readonly struct RectS : IEQuable<RectS> {
       Lib.Assert (right >= left && bottom >= top);
    }
 
+   public readonly RectS Inflated (int a) 
+      => new (Left - a, Top - a, Right + a, Bottom + a);
+
    // Properties ---------------------------------------------------------------
    /// <summary>Is this an 'empty' RectS</summary>
    public bool IsEmpty => Right == -32768;
