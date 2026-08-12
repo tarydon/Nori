@@ -61,9 +61,7 @@ public class Mesh3VN : VNode {
 
 #region class StatsVN ------------------------------------------------------------------------------
 [Singleton]
-/// <summary>
-/// Displays stats: key-value pairs
-/// </summary>
+/// <summary>Displays stats: key-value pairs</summary>
 public partial class StatsVN : VNode {
    StatsVN () => Streaming = true;
 

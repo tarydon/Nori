@@ -24,9 +24,7 @@ public static partial class Lux {
    public static IObservable<int> FPS => mFPS;
    static readonly Subject<int> mFPS = new ();
 
-   /// <summary>
-   /// Subscribe to this to get a callback after each frame is rendered
-   /// </summary>
+   /// <summary>Subscribe to this to get a callback after each frame is rendered</summary>
    public static IObservable<Unit> OnFrameEnd => mOnFrameEnd;
    static readonly Subject<Unit> mOnFrameEnd = new ();
 
