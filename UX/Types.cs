@@ -6,60 +6,24 @@ using System;
 using System.Threading;
 using System.Collections.Generic;
 
-namespace Nori;
-
-/// <summary>Axis metrics</summary>
-/// This contains all axis-specific information like the desired size, grow mode,
-/// computed size and position etc. We maintain one of these for X and Y 
-public struct AxisDef {
-   /// <summary>The sizing mode for this axis</summary>
-   public EUSizing Mode;
-   /// <summary>Minimum, maximum size for this axis (Max=0 is same as Max=int.MaxValue)</summary>
-   public int Min, Max;
-
-   /// <summary>Padding at the start (Left/Top)</summary>
-   public short PadStart;
-   /// <summary>Padding at the end (Right/Bottom)</summary>
-   public short PadEnd;
-   /// <summary>Alignment of children in this axis</summary>
-   public EUAlign ChildAlign;
-   /// <summary>Total padding on this axis (start + end)</summary>
-   public readonly short TotalPad => (short)(PadStart + PadEnd);
-
-   /// <summary>The start position along this axis (X/Y)</summary>
-   public int V;
-   /// <summary>The span along this axis (DX/DY) extent is the semi-open interval [V, V+DV)</summary>
-   public int DV;
-
-   public void Set (Size size) { Mode = size.Mode; Min = size.Min; Max = size.Max; }
-}
-
-public readonly struct Size {
-   // Constructors -------------------------------------------------------------
-   public Size (EUSizing mode, int min, int max) => (Mode, Min, Max) = (mode, min, max);
-
-   public static Size Grow () => new (EUSizing.Grow, 0, 0);
-   public static Size Grow (int n) => new (EUSizing.Grow, n, 0);
-   public static Size Grow (int n0, int n1) => new (EUSizing.Grow, n0, n1);
-   public static Size Fit () => new (EUSizing.Fit, 0, 0);    // <-- This is the default
-   public static Size Fit (int n) => new (EUSizing.Fit, n, 0);
-   public static Size Fit (int n0, int n1) => new (EUSizing.Fit, n0, n1);
-   public static Size Fixed (int n) => new (EUSizing.Fixed, n, n);
-
-   public static implicit operator Size (int n) => new (EUSizing.Fixed, n, n);
-
-   // Properties ---------------------------------------------------------------
-   public readonly EUSizing Mode;
-   public readonly int Min;
-   public readonly int Max;
-}
+namespace Nori.UX;
 
 struct NodeMemo {
    // Properties ---------------------------------------------------------------
-   /// <summary>
-   /// Additional data (class-specific)
-   /// </summary>
+   /// <summary>Additional data (class-specific)</summary>
    public object Data;
+
+   /// <summary>
+   /// Returns true if the mouse has been hovering over this element for ms milliseconds
+   /// </summary>
+   /// This is often used to open a tooltip when the mouse has been hovering over
+   /// an element for about 0.3 seconds or so. 
+   public readonly bool IsHovered (int ms) {
+      if (!IsMouseOver) return false;
+      Timers.Start (UId, ms + 1, Lux.Redraw);
+      return (uint)Environment.TickCount >= MouseEnterTime + ms;
+   }
+   static int n;
 
    /// <summary>Is the mouse currently over this node?</summary>
    public bool IsMouseOver {
@@ -88,9 +52,7 @@ struct NodeMemo {
    }
    RectS mRect;
 
-   /// <summary>
-   /// Current and maximum scroll position and child size
-   /// </summary>
+   /// <summary>Current and maximum scroll position and child size</summary>
    public int ScrollPos, MaxScrollPos, ChildSize;
 
    /// <summary>The UID of the node owning this memo</summary>
