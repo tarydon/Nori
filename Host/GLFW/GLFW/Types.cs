@@ -16,6 +16,8 @@ enum ConnectionStatus { Unknown = 0x0, Connected = 0x40001, Disconnected = 0x400
 
 // Which type of rendering API should be initialized
 enum ClientApi { None = 0x0, OpenGL = 0x30001, OpenGLES = 0x30002 }
+// Which API should be used for context-creation?
+enum ContextApi {  Native = 0x36001, EGL = 0x36002, Mesa = 0x36003 }
 
 // Error codes returned by GLFW
 enum ErrorCode {

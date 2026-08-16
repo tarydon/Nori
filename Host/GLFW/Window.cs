@@ -1,6 +1,6 @@
 // ────── ╔╗
 // ╔═╦╦═╦╦╬╣ Window.cs
-// ║║║║╬║╔╣║ Wrapper around a GLFW window <ToDoc> 
+// ║║║║╬║╔╣║ Wrapper around a GLFW window <ToDoc>
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 using System.Text;
 namespace Nori;
@@ -10,7 +10,7 @@ using static GLFW;
 /// <summary>A wrapper around a GLFW window</summary>
 /// This is still evolving and the public interface of this will change. In particular, it is not
 /// yet clear whether you will ever create a derived class from this, or just always use this type
-/// and merely provide a different scene to render the contents. 
+/// and merely provide a different scene to render the contents.
 public class Window {
    // Constructors -------------------------------------------------------------
    /// <summary>Create a Window with specified size, title and flags</summary>
@@ -23,7 +23,7 @@ public class Window {
       MakeContextCurrent (mHWnd);
       GLFWMouse.HWnd = GLFWKeyboard.HWnd = mHWnd;
       SwapInterval (1);
-      GLFWHost.Win = this; 
+      GLFWHost.Win = this;
       GLFWHost.OnReady?.Invoke ();
    }
    HWindow mHWnd;
@@ -103,9 +103,9 @@ public class Window {
          Draw (dx, dy);
          Swap (wait);
       }
-   }   
+   }
 
-   public virtual void Draw (int cx, int dy) 
+   public virtual void Draw (int cx, int dy)
       => GLFWHost.OnPaint?.Invoke (cx, dy);
 
    // Nested types -------------------------------------------------------------
@@ -128,6 +128,11 @@ public class Window {
       /// to have an alpha value less than 255
       Transparent = 1 << 5,
 
+      /// <summary>
+      /// If set, we use OpenGL-ES as the API rather than OpenGL
+      /// </summary>
+      OpenGLES = 1 << 6,
+
       /// <summary>The default window creation flags: Visible, Resizable, Decorated</summary>
       Default = Visible | Resizeable | Decorated
    }
@@ -135,12 +140,18 @@ public class Window {
    // Implementation -----------------------------------------------------------
    void SetWindowHints (EFlags flags) {
       // Set some common hints for the OpenGL profile creation
-      WindowHint (Hint.ClientApi, ClientApi.OpenGL);
-      WindowHint (Hint.ContextVersionMajor, 3);
-      WindowHint (Hint.ContextVersionMinor, 3);
-      WindowHint (Hint.OpenglProfile, GLProfile.Compatibility);
+      if ((flags & EFlags.OpenGLES) > 0) {
+         WindowHint (Hint.ClientApi, ClientApi.OpenGLES);
+         WindowHint (Hint.ContextVersionMajor, 3);
+         WindowHint (Hint.ContextVersionMinor, 1);
+         WindowHint (Hint.ContextCreationApi, ContextApi.EGL);
+      } else {
+         WindowHint (Hint.ClientApi, ClientApi.OpenGL);
+         WindowHint (Hint.ContextVersionMajor, 4);
+         WindowHint (Hint.ContextVersionMinor, 0);
+         WindowHint (Hint.OpenglProfile, GLProfile.Compatibility);
+      }
       WindowHint (Hint.Doublebuffer, true);
-
       WindowHint (Hint.Visible, (flags & EFlags.Visible) > 0);
       WindowHint (Hint.Resizable, (flags & EFlags.Resizeable) > 0);
       WindowHint (Hint.Decorated, (flags & EFlags.Decorated) > 0);

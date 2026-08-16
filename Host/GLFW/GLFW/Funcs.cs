@@ -77,7 +77,7 @@ static class GLFW {
    [DllImport (LIB, EntryPoint = "glfwGetWindowFrameSize", CallingConvention = Cdecl)]
    public static extern void GetWindowFrameSize (HWindow window, out int left, out int top, out int right, out int bottom);
 
-   // Returns the monitor a window is running on 
+   // Returns the monitor a window is running on
    [DllImport (LIB, EntryPoint = "glfwGetWindowMonitor", CallingConvention = Cdecl)]
    public static extern HMonitor GetWindowMonitor (HWindow window);
 
@@ -95,8 +95,8 @@ static class GLFW {
    public static extern Ptr GetWin32Window (HWindow window);
 #endif
 
-   // Initializes the GLFW library. 
-   // Must be called before most GLFW functions can be used, and you need to call 
+   // Initializes the GLFW library.
+   // Must be called before most GLFW functions can be used, and you need to call
    // Terminate at the end (if this function returns true)
    [DllImport (LIB, EntryPoint = "glfwInit", CallingConvention = Cdecl)]
    public static extern bool Init ();
@@ -147,7 +147,7 @@ static class GLFW {
    [DllImport (LIB , EntryPoint = "glfwSetCursorPosCallback", CallingConvention = Cdecl)]
    public static extern Ptr SetCursorPosCallback (HWindow window, Vec2FCallback? callback);
 
-   // Set up the key pressed/key released callback 
+   // Set up the key pressed/key released callback
    [UnmanagedFunctionPointer (Cdecl)] public delegate void KeyCallback (HWindow window, EKey key, int scanCode, EKeyState state, EKeyModifier mods);
    [DllImport (LIB, EntryPoint = "glfwSetKeyCallback", CallingConvention = Cdecl)]
    public static extern Ptr SetKeyCallback (HWindow window, KeyCallback? keyCallback);
@@ -191,6 +191,7 @@ static class GLFW {
    public static extern void WindowHint (Hint hint, int value);
    public static void WindowHint (Hint hint, ClientApi api) => WindowHint (hint, (int)api);
    public static void WindowHint (Hint hint, GLProfile profile) => WindowHint (hint, (int)profile);
+   public static void WindowHint (Hint hint, ContextApi api) => WindowHint (hint, (int)api);
    public static void WindowHint (Hint hint, bool value) => WindowHint (hint, value ? 1 : 0);
 
    // Should this window close?

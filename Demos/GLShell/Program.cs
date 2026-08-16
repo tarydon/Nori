@@ -3,13 +3,31 @@ namespace GLFWDemo;
 
 class Program {
    static void Main () {
-      Lib.Init (); 
-      GLFWHost.Init (OnReady); 
-      var w = new Window (1024, 768, "Welcome to GLFW", Window.EFlags.Default | Window.EFlags.Maximized);
+      Lib.Init ();
+      GLFWHost.Init (OnReady);
+      var w = new Window (1024, 768, "Welcome to GLFW", Window.EFlags.Default | Window.EFlags.OpenGLES);
       w.Run (true);
    }
- 
-   static void OnReady () => Lux.UIScene = new DemoScene ();
+
+   static void OnReady () => Lux.UIScene = new DummyScene ();
+}
+
+class DummyScene : Scene2 {
+   public DummyScene () {
+      BgrdColor = new Color4 (128, 96, 64);
+      Bound = new Bound2 (0, 0, 100, 50);
+      Root = new DummyVN ();
+   }
+}
+
+class DummyVN : VNode {
+   public override void SetAttributes () {
+      Lux.Color = Color4.Cyan;
+   }
+
+   public override void Draw () {
+      Lux.Triangles ([new Vec2S (50, 50), new (300, 60), new (60, 200) ]);
+   }
 }
 
 class DemoScene : Scene2 {
