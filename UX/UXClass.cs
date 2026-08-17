@@ -3,33 +3,25 @@
 // ║║║║╬║╔╣║ <<TODO>>
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 namespace Nori;
+using static UXNode;
 
 /// <summary>There is one of these for each class of node we are going to create</summary>
-public class UXClass (EUKind kind, EUFlags flags) {
+public class UXClass (EKind kind, EFlags flags) {
    // Properties ---------------------------------------------------------------
    /// <summary>The default flags value for nodes of this class</summary>
-   public readonly EUFlags Flags = flags;
+   public readonly EFlags Flags = flags;
 
    /// <summary>The kind of node this class represents</summary>
-   public readonly EUKind Kind = kind;
+   public readonly EKind Kind = kind;
 
    // Methods ------------------------------------------------------------------
-
+   public virtual void Measure (ref UXNode node) {
+   }
 }
 
 /*
-// ────── ╔╗
-// ╔═╦╦═╦╦╬╣ Classes.cs
-// ║║║║╬║╔╣║ <<TODO>>
-// ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
-using Nori;
-namespace UXDemo;
-using static UXTheme;
-
 /// <summary>Base class for different 'node-classes'</summary>
 public abstract class NodeClass {
-   public abstract EKind Kind { get; }
-   public abstract EFlags Flags { get; }
 
    public virtual void Init (ref Node node) {
       node.Kind = Kind; node.Flags = Flags;

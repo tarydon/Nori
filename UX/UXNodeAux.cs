@@ -1,4 +1,8 @@
-﻿using System;
+// ────── ╔╗
+// ╔═╦╦═╦╦╬╣ UXNodeAux.cs
+// ║║║║╬║╔╣║ <<TODO>>
+// ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
+using System;
 namespace Nori;
 
 // Contains types nested inside UXNode

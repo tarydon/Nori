@@ -13,9 +13,7 @@ struct NodeMemo {
    /// <summary>Additional data (class-specific)</summary>
    public object Data;
 
-   /// <summary>
-   /// Returns true if the mouse has been hovering over this element for ms milliseconds
-   /// </summary>
+   /// <summary>Returns true if the mouse has been hovering over this element for ms milliseconds</summary>
    /// This is often used to open a tooltip when the mouse has been hovering over
    /// an element for about 0.3 seconds or so. 
    public readonly bool IsHovered (int ms) {
