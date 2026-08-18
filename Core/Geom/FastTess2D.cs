@@ -60,7 +60,7 @@ public partial class FastTess2D : IBorrowable<FastTess2D> {
       using (var tess = Borrow ()) {
          List<Poly> polys = [];
          for (int i = 1; i < splits.Count; i++) {
-            var poly = Poly.Lines (pts[splits[i - 1]..splits[i]], true).Clean ();
+            var poly = Poly.Lines (pts[splits[i - 1]..splits[i]], true);
             polys.Add (poly);
          }
          int max = polys.MaxIndexBy (a => a.GetBound ().Area);
