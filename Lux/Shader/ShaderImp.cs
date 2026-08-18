@@ -125,13 +125,14 @@ class ShaderImp {
    // Standard shaders ---------------------------------------------------------
    public static ShaderImp Bezier2D => mBezier2D ??= Load ();
    public static ShaderImp Line2D => mLine2D ??= Load ();
+   public static ShaderImp AALine => mAALine ??= Load ();
    public static ShaderImp Line3D => mLine3D ??= Load ();
    public static ShaderImp DashLine2D => mDashLine2D ??= Load ();
    public static ShaderImp Point2D => mPoint2D ??= Load ();
    public static ShaderImp Point3D => mPoint3D ??= Load ();
    public static ShaderImp Triangle2D => mTriangle2D ??= Load ();
    static ShaderImp? mLine2D, mLine3D, mBezier2D, mPoint2D, mPoint3D;
-   static ShaderImp? mTriangle2D, mDashLine2D;
+   static ShaderImp? mTriangle2D, mDashLine2D, mAALine;
 
    public static ShaderImp LinePx => mLinePx ??= Load ();
    public static ShaderImp PointPx => mPointPx ??= Load ();
@@ -295,6 +296,7 @@ readonly record struct Attrib (int Dims, EDataType Type, int Size, bool Integral
    public static Attrib[] GetFor (EVertexSpec spec) =>
       spec switch {
          EVertexSpec.Vec2F => [AVec2f],
+         EVertexSpec.Vec2F_Vec2F => [AVec2f, AVec2f],
          EVertexSpec.Vec3F => [AVec3f],
          EVertexSpec.Vec3F_Vec3H => [AVec3f, AVec3h],
          EVertexSpec.Vec4S_Int => [AVec4s, AInt],
@@ -314,6 +316,7 @@ readonly record struct Attrib (int Dims, EDataType Type, int Size, bool Integral
    public static int GetSize (EVertexSpec spec) =>
       spec switch {
          EVertexSpec.Vec2F => 8,
+         EVertexSpec.Vec2F_Vec2F => 16,
          EVertexSpec.Vec3F => 12,
          EVertexSpec.Vec3F_Vec3H => 20,
          EVertexSpec.Vec4S_Int => 12,
@@ -336,7 +339,7 @@ readonly record struct Attrib (int Dims, EDataType Type, int Size, bool Integral
 // The various Vertex specifications used by OpenGL shaders
 enum EVertexSpec { Vec2F, Vec3F, Vec3F_Vec3H, Vec4S_Int, Vec2F_Vec4S_Int, Vec3F_Vec4S_Int,
                    Vec2S, Vec2S_Vec4F, Vec2F_Vec4F, Vec4S, Vec4S_Short, Vec4S_Short_Short,
-                   UIRect, Vec3F_Vec3H_Vec2F, _Last }
+                   UIRect, Vec3F_Vec3H_Vec2F, Vec2F_Vec2F, _Last }
 #endregion
 
 #region enum EStencilBehavior ----------------------------------------------------------------------

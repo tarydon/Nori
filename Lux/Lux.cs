@@ -32,8 +32,7 @@ public static partial class Lux {
    static bool mIsPicking;
 
    /// <summary>Are we running OpenGL ES</summary>
-   public static bool OpenGLES => mOpenGLES;
-   static bool mOpenGLES;
+   public static bool OpenGLES { get; private set; }
 
    /// <summary>The panel size of the Lux rendering panel</summary>
    public static Vec2S PanelSize => mPanelSize;
@@ -62,7 +61,6 @@ public static partial class Lux {
       get => mScenes.Count > 0 ? mScenes[0].Scene : null;
       set {
          Init ();
-         GL.SetDebugOn ();
          BackFacesPink = false;
          mScenes.ForEach (a => a.Scene.Detach ());
          mScenes.Clear ();
@@ -119,7 +117,8 @@ public static partial class Lux {
          sInited = true;
          VNode.RegisterAssembly (Assembly.GetExecutingAssembly ());
          Hub.OpenGL.OnPaint = OnPaint;
-         mOpenGLES = "OPENGL_ES" == Environment.GetEnvironmentVariable ("NORI_RENDERER")?.ToUpper ();
+         OpenGLES = "OPENGL_ES" == Environment.GetEnvironmentVariable ("NORI_RENDERER")?.ToUpper ();
+         if ("1" == Environment.GetEnvironmentVariable ("NORI_GL_DEBUG")) GL.SetDebugOn ();
       }
 
       static void OnPaint (int x, int y)

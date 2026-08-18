@@ -142,9 +142,11 @@ public class Window {
          WindowHint (Hint.ContextCreationApi, ContextApi.EGL);
       } else {
          WindowHint (Hint.ClientApi, ClientApi.OpenGL);
-         WindowHint (Hint.ContextVersionMajor, 3);
+         WindowHint (Hint.ContextVersionMajor, 4);
          WindowHint (Hint.ContextVersionMinor, 3);
          WindowHint (Hint.OpenglProfile, GLProfile.Compatibility);
+         if (Environment.GetEnvironmentVariable ("NORI_GL_DEBUG") == "1")
+            WindowHint (Hint.OpenglDebugContext, true);
       }
       WindowHint (Hint.Doublebuffer, true);
       WindowHint (Hint.Visible, (flags & EFlags.Visible) > 0);

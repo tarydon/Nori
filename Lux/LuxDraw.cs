@@ -277,6 +277,11 @@ public static partial class Lux {
       else DashLine2DShader.It.Draw (pts);
    }
 
+   public static void AALines (Vec2F a, Vec2F b) {
+      AALineShader.Args data = new (a, b);
+      AALineShader.It.Draw (ref data);
+   }
+
    /// <summary>Draws 3D lines</summary>
    /// Each pair of Vec3F creates one line, so with n points, n / 2 lines
    /// are drawn.

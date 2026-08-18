@@ -214,12 +214,12 @@ class StreamBuffer {
          if (a.Integral) GL.VertexAttribIPointer (index, a.Dims, a.Type, cbVertex, basis);
          else GL.VertexAttribPointer (index, a.Dims, a.Type, false, cbVertex, basis);
          GL.EnableVertexAttribArray (index);
-         if (shader.Name == "UIRect" && index >= 0) GL.VertexAttribDivisor (index, 1);
+         if (shader.Name is "UIRect" or "AALine") GL.VertexAttribDivisor (index, 1);
          index++; basis += a.Size;
       }
 
       mCursor += cbReserve;
-      if (shader.Name == "UIRect") GL.DrawArraysInstanced (shader.Mode, 0, 4, nVerts);
+      if (shader.Name is "UIRect" or "AALine") GL.DrawArraysInstanced (shader.Mode, 0, 4, nVerts);
       else GL.DrawArrays (shader.Mode, 0, nVerts);
       for (int i = 0; i < index; i++) GL.DisableVertexAttribArray (index);
       GL.BindBuffer (EBufferTarget.Array, HBuffer.Zero);

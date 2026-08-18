@@ -21,18 +21,24 @@ class DummyScene : Scene2 {
 }
 
 class DummyVN : VNode {
+   public DummyVN () => Streaming = true;
+
    public override void SetAttributes () {
       Lux.Color = Color4.Cyan;
    }
 
    public override void Draw () {
-      Lux.Triangles ([new Vec2S (10, 10), new (50, 10), new (10, 50) ]);
-      Lux.Lines ([new Vec2S (60, 10), new (100, 50), new (60, 50), new (100, 10)]);
-      for (int x = 110; x < 150; x++)
-         for (int y = 10; y < 50; y++)
-            Lux.Point (new (x, y), Color4.Random);
-      Lux.Quads ([new Vec2S (160, 10), new (200, 10), new (200, 50), new (160, 50),
-                  new (210, 10), new (250, 10), new (250, 50), new (210, 50)]);
+      //Lux.Triangles ([new Vec2S (10, 10), new (50, 10), new (10, 50) ]);
+      //Lux.Lines ([new Vec2S (60, 10), new (100, 50), new (60, 50), new (100, 10)]);
+      //for (int x = 110; x < 150; x++)
+      //   for (int y = 10; y < 50; y++)
+      //      Lux.Point (new (x, y), Color4.Random);
+      //Lux.Quads ([new Vec2S (160, 10), new (200, 10), new (200, 50), new (160, 50),
+      //            new (210, 10), new (250, 10), new (250, 50), new (210, 50)]);
+
+      Lux.LineWidth = 5;
+      Lux.Color = Color4.White;
+      Lux.AALines (new (10, 10), new (90, 40));
 //      Lux.Text ("Hello, World", new (210, 25));
    }
 }

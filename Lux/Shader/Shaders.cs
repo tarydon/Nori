@@ -139,6 +139,32 @@ partial class GouradShader () : FacetShader (ShaderImp.Gourad);
 partial class Line2DShader () : Seg2DShader (ShaderImp.Line2D);
 #endregion
 
+[Singleton]
+partial class AALineShader : Shader<AALineShader.Args, Seg2DShader.Settings> {
+   public AALineShader () : base (ShaderImp.AALine) => Bind ();
+   int muVPScale = 0, muXfm = 0, muLineWidth = 0, muDrawColor = 0;
+
+   // Overrides ----------------------------------------------------------------
+   protected override void ApplyUniformsImp (ref readonly Seg2DShader.Settings a) {
+      Pgm.Set (muXfm, ref Lux.Scene!.Xfms[a.IDXfm].Xfm);
+      Pgm.Set (muLineWidth, a.LineWidth * Lux.DPIScale).Set (muDrawColor, a.Color);
+   }
+
+   protected override int OrderUniformsImp (ref readonly Seg2DShader.Settings a, ref readonly Seg2DShader.Settings b) {
+      int n = a.IDXfm - b.IDXfm; if (n != 0) return n;
+      n = a.LineWidth.CompareTo (b.LineWidth); if (n != 0) return n;
+      return (int)(a.Color.Value - b.Color.Value);
+   }
+
+   protected override void SetConstantsImp () => Pgm.Set (muVPScale, Lux.VPScale);
+   protected override Seg2DShader.Settings SnapUniformsImp () => new (Lux.IDXfm, Lux.LineWidth, Lux.Color);
+
+   public readonly struct Args (Vec2F a, Vec2F b) {
+      readonly Vec2F Start = a;
+      readonly Vec2F End = b;
+   }
+}
+
 #region class Line3DShader -------------------------------------------------------------------------
 /// <summary>Draw lines in 3D space</summary>
 [Singleton]
