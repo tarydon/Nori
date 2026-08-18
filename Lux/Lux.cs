@@ -31,6 +31,10 @@ public static partial class Lux {
    public static bool IsPicking => mIsPicking;
    static bool mIsPicking;
 
+   /// <summary>Are we running OpenGL ES</summary>
+   public static bool OpenGLES => mOpenGLES;
+   static bool mOpenGLES;
+
    /// <summary>The panel size of the Lux rendering panel</summary>
    public static Vec2S PanelSize => mPanelSize;
    static Vec2S mPanelSize;
@@ -58,6 +62,7 @@ public static partial class Lux {
       get => mScenes.Count > 0 ? mScenes[0].Scene : null;
       set {
          Init ();
+         GL.SetDebugOn ();
          BackFacesPink = false;
          mScenes.ForEach (a => a.Scene.Detach ());
          mScenes.Clear ();
@@ -87,9 +92,9 @@ public static partial class Lux {
    /// (0,0) is the top left corner, and (1,1) the bottom right.</param>
    /// Note that you cannot add the same scene multiple times (nor can you add the UIScene
    /// again as a SubScene). If you want to display the same content in multiple viewports,
-   /// (for example, with different view-points), create multiple scenes that all share the 
-   /// same Root VNode. 
-   /// Mounting a new UIScene will remove all the sub-scenes. 
+   /// (for example, with different view-points), create multiple scenes that all share the
+   /// same Root VNode.
+   /// Mounting a new UIScene will remove all the sub-scenes.
    public static void AddSubScene (Scene scene, Bound2 bound) {
       Lib.Check (mScenes.None (a => a.Scene == scene), "Duplicate scene");
       scene.Attach ();
@@ -108,12 +113,13 @@ public static partial class Lux {
    public static void FlushPickBuffer () => mPickBufferValid = false;
    static bool mPickBufferValid;
 
-   // Init method - initializes 
+   // Init method - initializes
    public static void Init () {
       if (!sInited) {
-         sInited = true; 
+         sInited = true;
          VNode.RegisterAssembly (Assembly.GetExecutingAssembly ());
          Hub.OpenGL.OnPaint = OnPaint;
+         mOpenGLES = "OPENGL_ES" == Environment.GetEnvironmentVariable ("NORI_RENDERER")?.ToUpper ();
       }
 
       static void OnPaint (int x, int y)
@@ -153,7 +159,7 @@ public static partial class Lux {
    /// <summary>Picks the scene that lies at the given pixel coordinates</summary>
    /// The pixel coordinates start at (0,0) at the top left of the screen and have an
    /// extent of Lux.PanelSize. If there are multiple scenes overlapping at the given
-   /// pixel position, the last one is returned (last one added by AddSubScene). 
+   /// pixel position, the last one is returned (last one added by AddSubScene).
    public static Scene? PickScene (Vec2S pix) {
       for (int i = mScenes.Count - 1; i >= 1; i--) {
          var scene = mScenes[i].Scene;
@@ -186,7 +192,7 @@ public static partial class Lux {
       for (int i = mScenes.Count - 1; i > 0; i--)
          if (mScenes[i].Scene == scene) {
             scene.Detach (); mScenes.RemoveAt (i);
-            Redraw (); 
+            Redraw ();
          }
    }
 
@@ -281,10 +287,10 @@ public static partial class Lux {
    /// and after each frame is rendered, all these callbacks are invoked. Once all these callbacks
    /// retire (by calling StopContinuousRender), we stop the render pump, and subsequent renders
    /// happen only on-demand (when the VNode tree changes, or the window size changes etc)
-   /// 
+   ///
    /// If you are animating a 'subscene' that was activated using AddSubScene, use the variant
-   /// of StartContinousRender that takes a Scene parameter. This is important since 'pick' 
-   /// functionality is disabled on that scene while the animation is running. 
+   /// of StartContinousRender that takes a Scene parameter. This is important since 'pick'
+   /// functionality is disabled on that scene while the animation is running.
    public static void StartContinuousRender (Action<double> renderComplete) {
       if (UIScene is { } scene) StartContinuousRender (scene, renderComplete);
    }
@@ -294,12 +300,12 @@ public static partial class Lux {
    /// <summary>A variant of StartContinuousRender used to start animation on a sub-scene</summary>
    /// The default version of StartContinuousRender assumes that the animation is happening
    /// on the UIScene (main scene). Sometimes, if you want to run an animation loop on a different
-   /// subscene (or even on multiple sub-scenes), use this variant. 
-   /// 
+   /// subscene (or even on multiple sub-scenes), use this variant.
+   ///
    /// During each frame of the animation the compelete screen is redrawn, of course (as is the
-   /// case with all OpenGL rendering). However, all 'pick' functionality is disabled on the 
-   /// scene associated with the animation until the animation is complete. So to ensure that 
-   /// pick is disabled only on the target scene, use this variant. 
+   /// case with all OpenGL rendering). However, all 'pick' functionality is disabled on the
+   /// scene associated with the animation until the animation is complete. So to ensure that
+   /// pick is disabled only on the target scene, use this variant.
    public static void StartContinuousRender (Scene subScene, Action<double> renderComplete) {
       sRenderCompletes.Add ((subScene, renderComplete));
       mTimers ??= Hub.Dispatcher.Timer (TimeSpan.FromMilliseconds (40), true, Redraw);
@@ -374,7 +380,7 @@ public static partial class Lux {
       (mVNode, mChanged) = mNodeStack.Pop ();
    }
 
-   #pragma warning disable CA1859 
+   #pragma warning disable CA1859
    // Ends the current render operation
    static object? EndRender (ETarget target, DIBitmap.EFormat fmt) {
       switch (target) {

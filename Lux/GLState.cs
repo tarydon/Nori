@@ -29,7 +29,7 @@ static class GLState {
          }
       }
    }
-   static bool mBlendEnable; 
+   static bool mBlendEnable;
    static EBlendFactor mBlendFactor = EBlendFactor.SrcAlpha;
 
    /// <summary>Is depth-testing now enable (default = false)</summary>
@@ -149,8 +149,13 @@ static class GLState {
       } else
          GL.Disable (ECap.ScissorTest);
       GL.BlendFunc (mBlendFactor = EBlendFactor.SrcAlpha, EBlendFactor.OneMinusSrcAlpha);
-      GL.PatchParameter (EPatchParam.PatchVertices, 4);
-      GL.PrimitiveRestartIndex (0xFFFFFFFF);
+      if (Lux.OpenGLES) {
+         GL.Enable (ECap.PrimitiveRestartFixedIndex);
+      } else {
+         GL.PatchParameter (EPatchParam.PatchVertices, 4);  // TessShader
+         GL.PrimitiveRestartIndex (0xFFFFFFFF);
+         GL.Enable (ECap.PrimitiveRestart);
+      }
       GL.PolygonOffset (1, 1);
 
       // We 'force-set' each of these settings below by priming them with a

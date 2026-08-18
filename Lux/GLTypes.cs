@@ -18,10 +18,10 @@ public enum EBufferUsage : uint { StreamDraw = 0x88E0, StaticDraw = 0x88E4 }
 public enum EBlendFactor : uint { Zero = 0, One = 1, SrcAlpha = 770, OneMinusSrcAlpha = 771 }
 
 // Various capabilities we can Enable / Disable
-public enum ECap : uint { 
+public enum ECap : uint {
    Blend = 0xBE2, DepthTest = 0xB71, PolygonOffsetFill = 0x8037, ScissorTest = 0xC11,
    CullFace = 0xB44, StencilTest = 0xB90, PrimitiveRestart = 0x8F9D, DebugOutput = 0x92E0,
-   DebugOutputSynchronous = 0x8242,
+   DebugOutputSynchronous = 0x8242, PrimitiveRestartFixedIndex = 0x8D69,
 }
 
 // Various data types for storing in vertex array buffers
@@ -57,30 +57,30 @@ public enum EMapAccess : uint {
 }
 
 // Various modes that can be passed to glBegin
-public enum EMode : uint { 
+public enum EMode : uint {
    Points = 0, Lines = 1, LineLoop = 2, LineStrip = 3, Triangles = 4, TriangleFan = 6,
-   TriangleStrip = 5, Quads = 7, Patches = 14 
+   TriangleStrip = 5, Quads = 7, Patches = 14
 }
 
 /// <summary>Various shading modes to pass to Lux.Mesh(...)</summary>
-public enum EShadeMode { 
+public enum EShadeMode {
    /// <summary>Flat shading (no color interpolation between vertices)</summary>
-   Flat, 
+   Flat,
    /// <summary>Gourad shading (compute color at vertices and interpolate)</summary>
-   Gourad, 
+   Gourad,
    /// <summary>Phong shading (interpolate normal across face, and compute color at each pixel)</summary>
-   Phong, 
+   Phong,
    /// <summary>Phong shading, but no stencil lines are drawn</summary>
-   PhongNoStencil, 
+   PhongNoStencil,
    /// <summary>Like phong shading, but using stipple-transparency (50% opacity)</summary>
-   Glass, 
+   Glass,
    /// <summary>Glass shading, but no stencil lines are drawn</summary>
-   GlassNoStencil 
+   GlassNoStencil
 }
 
 // Pixel storage formats
-public enum EPixelFormat : uint { 
-   DepthComponent = 0x1902, Red = 0x1903, RGB = 0x1907, RGBA = 0x1908, BGRA = 32993 
+public enum EPixelFormat : uint {
+   DepthComponent = 0x1902, Red = 0x1903, RGB = 0x1907, RGBA = 0x1908, BGRA = 32993
 }
 // Pixel data type
 public enum EPixelType : uint { Byte = 5120, UByte = 5121, Float = 5126 }
@@ -111,10 +111,16 @@ public enum EShader : uint {
 // Parameters passed to GL.GetShader
 public enum EShaderParam : uint { DeleteStatus = 35712, CompileStatus = 35713, InfoLogLength = 0x8B84 }
 
+// Parameter passed to GL.GetString
+public enum EGLString : uint {
+   Vendor = 0x1F00, Renderer = 0x1F01, Version = 0x1F02, Extensions = 0x1F03,
+   ShadingLanguageVersion = 0x8B8C
+ }
+
 // Parameter for GL.StencilFunc
-public enum EStencilFunc : uint { 
-   Never = 0x200, Less = 0x201, LEqual = 0x203, Greater = 0x204, GEqual = 0x206, 
-   Equal = 0x202, NotEqual = 0x205, Always = 0x207 
+public enum EStencilFunc : uint {
+   Never = 0x200, Less = 0x201, LEqual = 0x203, Greater = 0x204, GEqual = 0x206,
+   Equal = 0x202, NotEqual = 0x205, Always = 0x207
 }
 // Parameters passed to GL.StencilOp
 public enum EStencilOp : uint { Keep = 0x1e00, Zero = 0, Replace = 0x1e01, Incr = 0x1e02, Decr = 0x1e03, Invert = 0x150a }
@@ -136,7 +142,7 @@ public enum HShader : ulong { Zero }
 
 // OpenGL VertexArrayObject (VAO)
 public enum HVertexArray : ulong { Zero }
-// OpenGL data Buffer object 
+// OpenGL data Buffer object
 public enum HBuffer : ulong { Zero }
 // OpenGL frame-buffer object
 public enum HFrameBuffer : ulong { Zero }

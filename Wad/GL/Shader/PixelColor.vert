@@ -2,7 +2,8 @@
 // and a Color value - the pixel is converted to OpenGL clip space (-1..1,-1..1)
 // and the color value is passed through to the fragment shader in the vColor
 // transfer variable
-#version 330
+#version 310 es
+precision highp float;
 
 uniform vec2 VPScale;
 
@@ -14,5 +15,5 @@ out vec4 vColor;
 void main () {
    vColor = Color;
    vec2 pix = ((vec2 (Pos) + vec2 (0.5, 0.5)) * VPScale);
-   gl_Position = vec4 (pix.x - 1, 1 - pix.y, 0, 1);
+   gl_Position = vec4 (pix.x - 1.0, 1.0 - pix.y, 0.0, 1.0);
 }

@@ -307,7 +307,7 @@ class PxBorderShader<TVertex> : Shader<TVertex, PxBorderShader<TVertex>.Settings
    protected int muVPScale = 0, muDrawColor = 0, muBorderColor = 0;
 
    // Methods ------------------------------------------------------------------
-   protected override void ApplyUniformsImp (ref readonly Settings a) 
+   protected override void ApplyUniformsImp (ref readonly Settings a)
       => Pgm.Set (muDrawColor, a.Color).Set (muBorderColor, a.BorderColor);
 
    protected override int OrderUniformsImp (ref readonly Settings a, ref readonly Settings b) {
@@ -321,18 +321,6 @@ class PxBorderShader<TVertex> : Shader<TVertex, PxBorderShader<TVertex>.Settings
    // Nested types -------------------------------------------------------------
    public readonly record struct Settings (Color4 Color, Color4 BorderColor);
 }
-#endregion
-
-#region class Quad2DShader -------------------------------------------------------------------------
-/// <summary>Shader to draw simple quads in 2D (specified in world space, no anti-aliasing)</summary>
-[Singleton]
-partial class Quad2DShader () : TriQuad2DShader (ShaderImp.Quad2D);
-#endregion
-
-#region class QuadPxShader -------------------------------------------------------------------------
-/// <summary>Draws quads in pixel space</summary>
-[Singleton]
-partial class QuadPxShader () : PxShader<Vec2S> (ShaderImp.QuadPx) { }
 #endregion
 
 #region class RectPxShader -------------------------------------------------------------------------

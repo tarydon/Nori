@@ -17,7 +17,7 @@ public enum ELuxAttr {
 public static partial class Lux {
    // Properties ---------------------------------------------------------------
    /// <summary>Current border color</summary>
-   /// This is used by a few pixel-accurate drawing routines like RectBorder, RRectBorder etc. 
+   /// This is used by a few pixel-accurate drawing routines like RectBorder, RRectBorder etc.
    public static Color4 BorderColor {
       get => mBorderColor;
       set {
@@ -60,7 +60,7 @@ public static partial class Lux {
 
    /// <summary>The current line-type</summary>
    public static ELineType LineType {
-      get => mLineType; 
+      get => mLineType;
       set {
          if (mLineType == value) return;
          if (Set (ELuxAttr.LineType)) mLineTypes.Push (mLineType);
@@ -157,8 +157,8 @@ public static partial class Lux {
    // Methods ------------------------------------------------------------------
    /// <summary>Draws beziers in world coordinates, with Z = 0</summary>
    /// Every set of 4 points in the list creates one bezier curve so n / 4
-   /// beziers are drawn. 
-   /// 
+   /// beziers are drawn.
+   ///
    /// The following Lux properties are used:
    /// - LineWidth : the width of the beziers, in device independent pixels
    /// - Color : color of the lines being drawn
@@ -170,10 +170,10 @@ public static partial class Lux {
       // First, see if this decal exists already in one of the 4 slots. If not, we need to sacrifice
       // one of them, and reuse it for this decal
       int n = -1;
-      string ufile = file.ToUpper (); 
+      string ufile = file.ToUpper ();
       for (int i = 0; i < 4; i++) if (mDecals[i] == ufile) { n = i; break; }
       if (n == -1) {
-         n = mNDecal; 
+         n = mNDecal;
          DIBitmap dib = new PNGReader (file).Load ();
          GL.ActiveTexture ((ETexUnit)((int)ETexUnit.Tex4 + n));
          HTexture hTexture = mDecalTex[n];
@@ -214,7 +214,7 @@ public static partial class Lux {
    /// are radiused, while the other two are sharp. The image below shows the 4 orientations
    /// of the 'side' parameter:
    /// file://N:/Doc/Img/DeeSide.png
-   /// 
+   ///
    /// The following Lux properties are used:
    /// - Color: the color the Dee is filled with
    public static void Dee (RectS rect, int radius, int side)
@@ -266,8 +266,8 @@ public static partial class Lux {
 
    /// <summary>Draws 2D lines in world coordinates, with Z = 0</summary>
    /// Every pair of Vec2F in the list creates one line, so with n points,
-   /// n / 2 lines are drawn. 
-   /// 
+   /// n / 2 lines are drawn.
+   ///
    /// The following Lux properties are used:
    /// - Color : color of the lines being drawn
    /// - LineWidth : the width of the beziers, in device independent pixels
@@ -278,9 +278,9 @@ public static partial class Lux {
    }
 
    /// <summary>Draws 3D lines</summary>
-   /// Each pair of Vec3F creates one line, so with n points, n / 2 lines 
+   /// Each pair of Vec3F creates one line, so with n points, n / 2 lines
    /// are drawn.
-   /// 
+   ///
    /// The following Lux properties are used:
    /// - Color: draw color
    /// - LineWidth: the width of the line
@@ -291,16 +291,16 @@ public static partial class Lux {
    /// <summary>Draws 2D lines (in pixel coordinates)</summary>
    /// The top left corner pixel is (0,0) and +X goes towards the right, +Y
    /// towards the bottom. The line is exactly 1 pixel wide, and is not anti-aliased.
-   /// 
+   ///
    /// The following Lux properties are used:
    /// - Color: color for the pixels
-   public static void Lines (ReadOnlySpan<Vec2S> pts) 
+   public static void Lines (ReadOnlySpan<Vec2S> pts)
       => LinePxShader.It.Draw (pts);
 
    /// <summary>Draws a 2D line-loop (closed polyline made up of the given set of points)</summary>
    /// The loop is closed by connecting the last point in the list to the first one. With
    /// N points, N lines are drawn.
-   /// 
+   ///
    /// The following Lux properties are used:
    /// - Color: draw color
    /// - LineWidth: the width of the line
@@ -313,9 +313,9 @@ public static partial class Lux {
    }
 
    /// <summary>Draws a 2D line-strip (an open polyline made up of the given set of points)</summary>
-   /// This connects each successive pair of points with a line segment. With N points, 
-   /// N-1 lines are drawn. 
-   /// 
+   /// This connects each successive pair of points with a line segment. With N points,
+   /// N-1 lines are drawn.
+   ///
    /// The following Lux properties are used:
    /// - Color: draw color
    /// - LineWidth: the width of the line
@@ -329,8 +329,8 @@ public static partial class Lux {
    static readonly List<Vec2F> mBuf = [];
 
    /// <summary>Draws a Mesh3 using one of the shade-modes</summary>
-   /// See the EShadeMode documentation for the possible shade modes. 
-   /// 
+   /// See the EShadeMode documentation for the possible shade modes.
+   ///
    /// The following Lux properties are used:
    /// - Color: draw color
    /// - Xfm: current transformation matrix
@@ -370,10 +370,10 @@ public static partial class Lux {
    /// <summary>Draws one pixel with s specific color</summary>
    /// The top left corner pixel is (0,0) and +X goes towards the right, +Y towards the
    /// bottom. This draws exactly one pixel on the screen with the given color (which could
-   /// also have an alpha value). 
+   /// also have an alpha value).
    /// Unlike most other routines, this does not use Lux.Color, but passes the color value
-   /// as part of the vertex data. 
-   /// 
+   /// as part of the vertex data.
+   ///
    /// The following Lux properties are used:
    /// - Color: Fill color of the triangles
    public static void Point (Vec2S pix, Color4 color) {
@@ -382,7 +382,7 @@ public static partial class Lux {
    }
 
    /// <summary>Draws 2D points in world coordinates, with Z = 0</summary>
-   /// 
+   ///
    /// The following Lux properties are used:
    /// - PointSize : the diameter of the points, in device independent pixels
    /// - Color : color of the points being drawn
@@ -398,7 +398,7 @@ public static partial class Lux {
       => Point3DShader.It.Draw (pts);
 
    /// <summary>Draws a Poly object in world coordinates, with Z = 0</summary>
-   /// 
+   ///
    /// The following Lux properties are used
    /// - Color: color of the lines/arcs drawn
    /// - LineWidth: the width of the beziers, in device independent pixels
@@ -411,7 +411,7 @@ public static partial class Lux {
    static readonly List<Vec2F> mLines = [], mBeziers = [];
 
    /// <summary>Draw multiple Polys in world coordinates, with Z = 0</summary>
-   /// 
+   ///
    /// The following Lux properties are used
    /// - Color: color of the lines/arcs drawn
    /// - LineWidth: the width of the beziers, in device independent pixels
@@ -430,11 +430,16 @@ public static partial class Lux {
 
    /// <summary>Draws 2D quads in world coordinates, with Z = 0</summary>
    /// The quads are drawn with smoothed (anti-aliased) edges.
-   /// 
+   ///
    /// The following Lux properties are used:
    /// - Color : color of the quads being drawn
    public static void Quads (ReadOnlySpan<Vec2F> a) {
-      Quad2DShader.It.Draw (a);
+      mBuf.Clear ();
+      for (int i = 0; i < a.Length - 4; i += 4) {
+         mBuf.Add (a[i]); mBuf.Add (a[i + 1]); mBuf.Add (a[i + 2]);
+         mBuf.Add (a[i]); mBuf.Add (a[i + 2]); mBuf.Add (a[i + 3]);
+      }
+      Triangles (mBuf.AsSpan ());
       for (int i = 0; i < a.Length; i += 4)
          Line2DShader.It.Draw ([a[i], a[i + 1], a[i + 1], a[i + 2], a[i + 2], a[i + 3], a[i + 3], a[i]]);
    }
@@ -443,20 +448,27 @@ public static partial class Lux {
    /// The top left corner pixel is (0,0) and +X goes towards the right, +Y towards the
    /// bottom. The quad edges are not anti-aliased.
    /// *Note*: If you want to draw a rectangle whose edges are aligned with the X,Y axes,
-   /// use the Rect routine - that is more precise and faster. 
-   /// 
+   /// use the Rect routine - that is more precise and faster.
+   ///
    /// The following Lux properties are used:
    /// - Color: Fill color of the triangles
-   public static void Quads (ReadOnlySpan<Vec2S> pts)
-      => QuadPxShader.It.Draw (pts);
+   public static void Quads (ReadOnlySpan<Vec2S> pts) {
+      mBuf2.Clear ();
+      for (int i = 0; i < pts.Length - 3; i += 4) {
+         mBuf2.Add (pts[i]); mBuf2.Add (pts[i + 1]); mBuf2.Add (pts[i + 2]);
+         mBuf2.Add (pts[i]); mBuf2.Add (pts[i + 2]); mBuf2.Add (pts[i + 3]);
+      }
+      Triangles (mBuf2.AsSpan ());
+   }
+   static List<Vec2S> mBuf2 = [];
 
    /// <summary>Fills an axis-aligned pixel-coordinate rectangle with Color</summary>
    /// The top left of the screen is (0,0) and +X goes towards the right, +Y towards
    /// the bottom. The top and left coordinates of the rect are inclusive, while the
    /// bottom and right are not. So Lux.Rect (new Rect (10, 10, 30, 20)) will fill
    /// exactly 600 pixels - the top left pixel filled will be (10,10) and the bottom
-   /// right pixel filled will be (29,19). 
-   /// 
+   /// right pixel filled will be (29,19).
+   ///
    /// The following Lux properties are used:
    /// - Color : fill color for the rect
    public static void Rect (RectS rect) => RectPxShader.It.Draw ([rect]);
@@ -466,15 +478,15 @@ public static partial class Lux {
    /// min(rect.Height/2, rect.Width/2) will result in incorrect rendering. All coordinates,
    /// including the border width are in pixels. (See the Rect routine for an exact interpretation
    /// of the Rect coordinates)
-   /// 
+   ///
    /// The following Lux properties are used:
    /// - Color: fill color used for the rectangle interior
    /// - BorderColor: color used for the border
-   public static void RectBorder (RectS rect, int border) 
+   public static void RectBorder (RectS rect, int border)
       => RectBorderPxShader.It.Draw ([new (rect, (short)border)]);
 
    public static void UIRect (Vec2S center, Vec2S size, int radius, int borderWidth, Color4 fillColor, Color4 borderColor) {
-      UIRectShader.Args arg = new (center, new (size.X / 2, size.Y / 2), (short)radius, (short)borderWidth, 
+      UIRectShader.Args arg = new (center, new (size.X / 2, size.Y / 2), (short)radius, (short)borderWidth,
          fillColor, borderColor);
       UIRectShader.It.Draw (ref arg);
    }
@@ -483,21 +495,21 @@ public static partial class Lux {
    /// The rect coordinate are in pixels (see the Rect routine above for the exact interpretation
    /// of the coordinates). The radius is also specified in pixels, and the rounded corners are
    /// anti-aliased.
-   /// 
+   ///
    /// The following Lux properties are used:
    /// - Color: fill color used for the rounded-rectangle
-   public static void RRect (RectS rect, int radius) 
+   public static void RRect (RectS rect, int radius)
       => RRectPxShader.It.Draw ([new (rect, (short)radius)]);
 
    /// <summary>Fills a pixel-coordinate rounded rectangle with Color, outlined with BorderColor</summary>
-   /// Rect coordinate, radius and border are all in pixels (see the Rect routine for an 
+   /// Rect coordinate, radius and border are all in pixels (see the Rect routine for an
    /// interpretation of the rect coordinates). The radius is specified at the outer corners
-   /// (at the outside of the border). Radius cannot be more than Border. 
-   /// 
+   /// (at the outside of the border). Radius cannot be more than Border.
+   ///
    /// The following Lux properties are used:
    /// - Color: fill color used for the rounded-rectangle interior
    /// - BorderColor: color used for the border
-   public static void RRectBorder (RectS rect, int radius, int border) 
+   public static void RRectBorder (RectS rect, int radius, int border)
       => RRectBorderPxShader.It.Draw ([new (rect, (short)radius, (short)(Math.Min (border, radius)))]);
 
    /// <summary>Draws text positioned at a given point in world coordinates</summary>
@@ -543,7 +555,7 @@ public static partial class Lux {
    /// <summary>Draws text at specified pixel-coordinates (uses the current TypeFace and Color)</summary>
    /// The pixel (0,0) is the top left of the screen, and pixel coordinates increase going
    /// to the right, or downwards. The pos that is passed in is used as the base-left point
-   /// of the text (the text is above this point, and to the right). 
+   /// of the text (the text is above this point, and to the right).
    ///
    /// The following Lux properties are used by this shader:
    /// - Color : color of the text being drawn
@@ -557,7 +569,7 @@ public static partial class Lux {
 
    /// <summary>Draws and fills 2D triangles in world coordinates, with Z = 0</summary>
    /// The triangles are drawn with smoothed (anti-aliased) edges.
-   /// 
+   ///
    /// The following Lux properties are used:
    /// - Color : color of the triangles being drawn
    /// - Xfm : current transformation matrix
@@ -570,7 +582,7 @@ public static partial class Lux {
    /// <summary>Draws triangles in pixel coordinates</summary>
    /// The top left corner pixel is (0,0) and +X goes towards the right, +Y towards the
    /// bottom. The triangle edges are not anti-aliased.
-   /// 
+   ///
    /// The following Lux properties are used:
    /// - Color: Fill color of the triangles
    public static void Triangles (ReadOnlySpan<Vec2S> pts)
@@ -609,7 +621,7 @@ public static partial class Lux {
       return x;
    }
 
-   // Given some text, converts that to cells for use by the Text3DShader. 
+   // Given some text, converts that to cells for use by the Text3DShader.
    // This starts off using the basic GetTextCells routine (used by TextPx) and then adjusting the
    // cells for alignment and offset
    static void GetText3DCells (ReadOnlySpan<char> text, Vec3F pos, ETextAlign align, Vec2S offset, Span<Text3DShader.Args> output) {

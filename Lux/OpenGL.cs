@@ -7,13 +7,13 @@ using Nori;
 using Ptr = nint;
 using unsafe GLDEBUGPROC = delegate* unmanaged< uint, uint, uint, uint, int, byte*, void*, void>;
 
-// The GL class maintains unmanaged function pointers to all the OpenGL functions we use. 
-// We don't use [DllImport] since not all these functions are actually exported from "opengl32" or 
-// the underlying DLL. Some of them are, but others are obtained using GL's built-in loader 
+// The GL class maintains unmanaged function pointers to all the OpenGL functions we use.
+// We don't use [DllImport] since not all these functions are actually exported from "opengl32" or
+// the underlying DLL. Some of them are, but others are obtained using GL's built-in loader
 // (such as wglGetProcAddress for Windows platform). We could store these as delegates, but it's
-// more efficient to store them as just unmanaged function pointers (no delegates, no marshalling). 
-// The flip side is that we have to be very careful to match the function signatures perfectly, 
-// but with a very finite function list like we are using, that is not difficult. 
+// more efficient to store them as just unmanaged function pointers (no delegates, no marshalling).
+// The flip side is that we have to be very careful to match the function signatures perfectly,
+// but with a very finite function list like we are using, that is not difficult.
 static unsafe class GL {
    // Select the active texture unit
    public static void ActiveTexture (ETexUnit unit) => glActiveTexture (unit);
@@ -23,7 +23,7 @@ static unsafe class GL {
    public static void AttachShader (HProgram program, HShader shader) => glAttachShader (program, shader);
    static delegate* unmanaged<HProgram, HShader, void> glAttachShader;
 
-   // Bind a storage buffer to a buffer target 
+   // Bind a storage buffer to a buffer target
    public static void BindBuffer (EBufferTarget target, HBuffer buffer) => glBindBuffer (target, buffer);
    static delegate* unmanaged<EBufferTarget, HBuffer, void> glBindBuffer;
 
@@ -35,7 +35,7 @@ static unsafe class GL {
    public static void BindTexture (ETexTarget target, HTexture id) => glBindTexture (target, id);
    static delegate* unmanaged<ETexTarget, HTexture, void> glBindTexture;
 
-   // Bind a render buffer to a target 
+   // Bind a render buffer to a target
    public static void BindRenderBuffer (ERenderBufferTarget target, HRenderBuffer buffer) => glBindRenderbuffer (target, buffer);
    static delegate* unmanaged<ERenderBufferTarget, HRenderBuffer, void> glBindRenderbuffer;
 
@@ -43,7 +43,7 @@ static unsafe class GL {
    public static void BindVertexArray (HVertexArray array) => glBindVertexArray (array);
    static delegate* unmanaged<HVertexArray, void> glBindVertexArray;
 
-   // Specify pixel arithmetic 
+   // Specify pixel arithmetic
    public static void BlendFunc (EBlendFactor src, EBlendFactor dest) => glBlendFunc (src, dest);
    static delegate* unmanaged<EBlendFactor, EBlendFactor, void> glBlendFunc;
 
@@ -87,8 +87,12 @@ static unsafe class GL {
    [UnmanagedCallersOnly]
    static void DebugCallback (uint source, uint type, uint id, uint severity, int length, byte* message, void* userParam) {
       string msg = Encoding.UTF8.GetString (new ReadOnlySpan<byte> (message, length));
-      Debug.WriteLine (msg);
+      if (sMessages.Add (msg)) {
+         var trace = string.Join ('\n', Environment.StackTrace.Split ('\n').Skip (2).Take (5));
+         Console.WriteLine ($"GLDebug: {msg}\n{trace}\n");
+      }
    }
+   static HashSet<string> sMessages = [];
 
    static void DebugMessageControl (ESeverity severity, bool enable)
       => glDebugMessageControl (0x1100, 0x1100, severity, 0, null, (byte)(enable ? 1 : 0));
@@ -218,6 +222,10 @@ static unsafe class GL {
    }
    static delegate* unmanaged<HShader, int, int*, byte*, void> glGetShaderInfoLog;
 
+   // Gets an OpenGL string
+   public static string GetString (EGLString e) => Marshal.PtrToStringUTF8 (glGetString (e)) ?? "";
+   static delegate* unmanaged<EGLString, nint> glGetString;
+
    // Gets the location (slot) of a uniform variable
    public static int GetUniformLocation (HProgram program, string name) => glGetUniformLocation (program, name);
    static delegate* unmanaged<HProgram, string, int> glGetUniformLocation;
@@ -280,7 +288,7 @@ static unsafe class GL {
    // Specify a two-dimensional texture image
    public static void TexImage2D (ETexTarget target, int level, EPixelInternalFormat publicformat, int width, int height, int border, EPixelFormat format, EPixelType type, void* pixels)
       => glTexImage2D (target, level, publicformat, width, height, border, format, type, pixels);
-   static delegate* unmanaged<ETexTarget, int, EPixelInternalFormat, int, int, int, EPixelFormat, EPixelType, void*, void> glTexImage2D;      
+   static delegate* unmanaged<ETexTarget, int, EPixelInternalFormat, int, int, int, EPixelFormat, EPixelType, void*, void> glTexImage2D;
    public static void TexImage2D (ETexTarget target, EPixelInternalFormat infmt, int width, int height, EPixelFormat fmt, EPixelType type, byte[] data)
       {  fixed (byte* p = &data[0]) TexImage2D (target, 0, infmt, width, height, 0, fmt, type, p); }
    public static void TexImage2D (ETexTarget target, EPixelInternalFormat infmt, int width, int height, EPixelFormat fmt, EPixelType type, byte[,] data)
@@ -369,6 +377,7 @@ static unsafe class GL {
       glGetProgramInfoLog = (delegate* unmanaged<HProgram, int, int*, byte*, void>)Get ("glGetProgramInfoLog");
       glGetShaderiv = (delegate* unmanaged<HShader, EShaderParam, int*, void>)Get ("glGetShaderiv");
       glGetShaderInfoLog = (delegate* unmanaged<HShader, int, int*, byte*, void>)Get ("glGetShaderInfoLog");
+      glGetString = (delegate* unmanaged<EGLString, nint>)Get ("glGetString");
       glGetUniformLocation = (delegate* unmanaged<HProgram, string, int>) Get ("glGetUniformLocation");
       glLinkProgram = (delegate* unmanaged<HProgram, void>)Get ("glLinkProgram");
       glMapBufferRange = (delegate* unmanaged<EBufferTarget, Ptr, Ptr, EMapAccess, Ptr>)Get ("glMapBufferRange");
