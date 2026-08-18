@@ -5,7 +5,7 @@ class Program {
    static void Main () {
       Lib.Init ();
       GLFWHost.Init (OnReady);
-      var w = new Window (1024, 768, "Welcome to GLFW", Window.EFlags.Default | Window.EFlags.OpenGLES);
+      var w = new Window (1024, 768, "Welcome to GLFW", Window.EFlags.Default);
       w.Run (true);
    }
 

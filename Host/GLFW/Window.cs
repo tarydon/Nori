@@ -128,11 +128,6 @@ public class Window {
       /// to have an alpha value less than 255
       Transparent = 1 << 5,
 
-      /// <summary>
-      /// If set, we use OpenGL-ES as the API rather than OpenGL
-      /// </summary>
-      OpenGLES = 1 << 6,
-
       /// <summary>The default window creation flags: Visible, Resizable, Decorated</summary>
       Default = Visible | Resizeable | Decorated
    }
@@ -140,15 +135,15 @@ public class Window {
    // Implementation -----------------------------------------------------------
    void SetWindowHints (EFlags flags) {
       // Set some common hints for the OpenGL profile creation
-      if ((flags & EFlags.OpenGLES) > 0) {
+      if ("OPENGL_ES" == Environment.GetEnvironmentVariable ("NORI_RENDERER")?.ToUpper ()) {
          WindowHint (Hint.ClientApi, ClientApi.OpenGLES);
          WindowHint (Hint.ContextVersionMajor, 3);
          WindowHint (Hint.ContextVersionMinor, 1);
          WindowHint (Hint.ContextCreationApi, ContextApi.EGL);
       } else {
          WindowHint (Hint.ClientApi, ClientApi.OpenGL);
-         WindowHint (Hint.ContextVersionMajor, 4);
-         WindowHint (Hint.ContextVersionMinor, 0);
+         WindowHint (Hint.ContextVersionMajor, 3);
+         WindowHint (Hint.ContextVersionMinor, 3);
          WindowHint (Hint.OpenglProfile, GLProfile.Compatibility);
       }
       WindowHint (Hint.Doublebuffer, true);
