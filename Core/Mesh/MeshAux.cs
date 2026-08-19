@@ -12,7 +12,6 @@ public partial class Mesh3 {
    public static Mesh3 Extrude (Poly[] poly, double thickness, Matrix3 xfm, ETess tess) {
       List<Point2> pts = [];
       List<int> splits = [0];
-      int outer = poly.MaxIndexBy (a => a.GetBound ().Area);
       foreach (var p in poly) {
          p.Clean ().Discretize (pts, tess);
          splits.Add (pts.Count);

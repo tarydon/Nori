@@ -63,7 +63,8 @@ public partial class FastTess2D : IBorrowable<FastTess2D> {
             polys.Add (Poly.Lines (pts[splits[i - 1]..splits[i]], true).Clean ());
          
          // Add the polys and while doing it update the splits as Poly.Clean () in the
-         // previous loop might have changed the point count for each contour.
+         // previous loop might have changed the point count for each contour. Also, the
+         // points could have been reversed if the winding needed to be changed.
          int start = splits[0];
          splits.Clear (); splits.Add (start);
          int max = polys.MaxIndexBy (a => a.GetBound ().Area);
