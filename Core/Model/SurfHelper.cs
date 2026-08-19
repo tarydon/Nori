@@ -21,6 +21,13 @@ class SurfaceMesher (E3Surface surf) {
       foreach (var contour in mSurf.Contours) {
          int a = pts.Count;
          contour.Discretize (pts, eTess);
+
+         // Remove zero segements in pts
+         for (int i = pts.Count - 1; i > 0; i--)
+            if (pts[i].EQ (pts[i - 1]))
+               pts.RemoveAt (i);
+         if (pts[0].EQ (pts[^1])) pts.RemoveLast ();
+
          int b = pts.Count; splits.Add (b);
          mWires.Add (b - 1);
          for (int i = a; i < b; i++) { mWires.Add (i); mWires.Add (i); }

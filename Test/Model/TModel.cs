@@ -15,9 +15,9 @@ class TModel {
       Ent3.MeshQuality = ETess.Coarse;
       var mesh = nurb.Mesh;
       Ent3.MeshQuality = old;
-      mesh.Vertex.Length.Is (1303);
-      mesh.Wire.Length.Is (364);
-      mesh.Triangle.Length.Is (7257);
+      mesh.Vertex.Length.Is (1304);
+      mesh.Wire.Length.Is (362);
+      mesh.Triangle.Length.Is (7275);
    }
 
    [Test (225, "Testing surface connectivity")]

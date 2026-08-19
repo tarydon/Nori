@@ -12,8 +12,12 @@ public partial class Mesh3 {
    public static Mesh3 Extrude (Poly[] poly, double thickness, Matrix3 xfm, ETess tess) {
       List<Point2> pts = [];
       List<int> splits = [0];
-      foreach (var p in poly) {
-         p.Discretize (pts, tess);
+      int outer = poly.MaxIndexBy (a => a.GetBound ().Area);
+      for (int i = 0; i < poly.Length; i++) {
+         var p = poly[i];
+         if ((p.GetWinding () == Poly.EWinding.CCW) ^ (i == outer))
+            p = p.Reversed ();
+         p.Clean ().Discretize (pts, tess);
          splits.Add (pts.Count);
       }
       var tris = Lib.Tessellate (pts, splits);
