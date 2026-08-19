@@ -13,10 +13,7 @@ public partial class Mesh3 {
       List<Point2> pts = [];
       List<int> splits = [0];
       int outer = poly.MaxIndexBy (a => a.GetBound ().Area);
-      for (int i = 0; i < poly.Length; i++) {
-         var p = poly[i];
-         if ((p.GetWinding () == Poly.EWinding.CCW) ^ (i == outer))
-            p = p.Reversed ();
+      foreach (var p in poly) {
          p.Clean ().Discretize (pts, tess);
          splits.Add (pts.Count);
       }

@@ -295,7 +295,7 @@ public static class Lib {
    public static void Trace (object obj) => Tracer.Invoke ($"{obj}");
 
    /// <summary>Tessellate in 2D</summary>
-   public static Func<List<Point2>, IReadOnlyList<int>, List<int>> Tessellate = (pts, splits)
+   public static Func<List<Point2>, List<int>, List<int>> Tessellate = (pts, splits)
       => throw new InvalidOperationException ("2-D Tessellator not installed");
 
    /// <summary>Set this to point to your own trace handler</summary>

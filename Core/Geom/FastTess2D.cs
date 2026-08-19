@@ -56,17 +56,21 @@ public partial class FastTess2D : IBorrowable<FastTess2D> {
       return tess;
    }
 
-   // The input points must be in the correct winding (CCW for outer and CW for holes).
-   // Also, ensure there are no zero length segments or self-intersections.
-   public static List<int> Process (List<Point2> pts, IReadOnlyList<int> splits) {
+   public static List<int> Process (List<Point2> pts, List<int> splits) {
       using (var tess = Borrow ()) {
-         List<Poly> polys = [];
-         for (int i = 1; i < splits.Count; i++) {
-            var poly = Poly.Lines (pts[splits[i - 1]..splits[i]], true);
-            polys.Add (poly);
-         }
+         var polys = new List<Poly> (splits.Count - 1);
+         for (int i = 1; i < splits.Count; i++)
+            polys.Add (Poly.Lines (pts[splits[i - 1]..splits[i]], true).Clean ());
+         
+         // Add the polys and while doing it update the splits as Poly.Clean () in the
+         // previous loop might have changed the point count for each contour.
+         int start = splits[0];
+         splits.Clear (); splits.Add (start);
          int max = polys.MaxIndexBy (a => a.GetBound ().Area);
-         for (int i = 0; i < polys.Count; i++) tess.AddPoly (polys[i], i != max, true);
+         for (int i = 0; i < polys.Count; i++)
+            splits.Add (start += tess.AddPoly (polys[i], i != max));
+         pts.Clear (); pts.AddRange (tess.Pts);
+
          tess.Process ();
          return [.. tess.Tris];
       }
