@@ -22,14 +22,12 @@ class SurfaceMesher (E3Surface surf) {
          int a = pts.Count;
          contour.Discretize (pts, eTess);
          int b = pts.Count; splits.Add (b);
-         mWires.Add (b - 1);
-         for (int i = a; i < b; i++) { mWires.Add (i); mWires.Add (i); }
-         mWires.RemoveLast ();
       }
       // Now we can use the 2D tessellator to compute the following:
       var uvs = pts.Select (mSurf.GetUV).ToList (); // Same as the set of pts, flattened to UV space
       var tris = Lib.Tessellate (uvs, splits);  // The indices (taken 3 at a time) forming the tessellation in UV space
-      for (int i = pts.Count; i < uvs.Count; i++) {
+      pts.Clear ();
+      for (int i = 0; i < uvs.Count; i++) {
          var uv = uvs[i];
          pts.Add (mSurf.GetPoint (uv.X, uv.Y));
       }
@@ -43,6 +41,15 @@ class SurfaceMesher (E3Surface surf) {
       }
       for (int i = 0; i < tris.Count; i += 3)
          AddTriangle (tris[i], tris[i + 1], tris[i + 2], 0);
+
+      // Add the wires
+      mWires.Clear ();
+      for (int i = 1; i < splits.Count; i++) {
+         (int a, int b) = (splits[i - 1], splits[i]);
+         mWires.Add (a);
+         for (int j = a + 1; j < b; j++) mWires.AddM (j, j);
+         mWires.Add (a);
+      }
 
       // The AddTriangle calls above are all potentially recursive, subdividing the input
       // fed in into smaller and smaller triangles until each one is sufficiently flat
