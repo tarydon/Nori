@@ -40,7 +40,7 @@ public class Tess2D {
    /// <param name="pts">List of all contour points.</param>
    /// <param name="splits">List of indices defining the contour boundaries.</param>
    /// <returns>The triangle indices</returns>
-   public static List<int> Process (List<Point2> pts, IReadOnlyList<int> splits)
+   public static List<int> Process (List<Point2> pts, List<int> splits)
       => new Tess2D (pts, splits).Process ();
 
    // Properties ---------------------------------------------------------------
