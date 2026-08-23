@@ -7,7 +7,7 @@ using Nori;
 namespace UXDemo;
 
 class Program {
-   static void Main (string[] args) {
+   static void Main () {
       Lib.Init ();
       GLFWHost.Init (OnReady);
       UXApi.Init ();
@@ -19,7 +19,7 @@ class Program {
    static void OnReady () {
       Lux.UIScene = new DemoScene ();
       Lib.Tracer = TraceVN.Print; TraceVN.TextColor = Color4.Yellow;
-      Lux.FPS.Subscribe (n => MainWin.Title = $"FPS: {n}");
+      // Lux.FPS.Subscribe (n => MainWin.Title = $"FPS: {n}");
       Hub.Keyboard.Keys.Where (a => a.IsPress (EKey.Escape))
                        .Subscribe (_ => MainWin?.ShouldClose = true);
    }
@@ -28,6 +28,9 @@ class Program {
 class DemoScene : Scene2 {
    public DemoScene () {
       BgrdColor = Color4.Gray (64);
-      Root = new GroupVN ([new DemoVN (), TraceVN.It, UXSystem.RetainedVN /*, StatsVN.It*/]);
+      TypeFace tf1 = new ("C:/Windows/Fonts/SegoeUI.ttf", (int)(10 * Lux.DPIScale + 0.5));
+      TypeFace tf2 = new ("C:/Windows/Fonts/SegUISym.ttf", (int)(12 * Lux.DPIScale + 0.5));
+      Root = new GroupVN ([new UXRootVN ("N:/UXDemo/Res", [tf1, tf2]), TraceVN.It /*, StatsVN.It*/]);
    }
 }
+

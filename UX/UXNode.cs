@@ -8,13 +8,13 @@ public partial struct UXNode {
    // Fields -------------------------------------------------------------------
    // Core ........................
    /// <summary>Index of the node in UXEngine.Nodes[] (this is transient and can change each frame)</summary>
-   public short Id;
+   public short Index;
    /// <summary>What kind of node is this?</summary>
    public EKind Kind;
    /// <summary>Flags bits for this node</summary>
    public EFlags Flags;
    /// <summary>The persistent UID for this node, used to index into Memo[]</summary>
-   public uint IdMemo;
+   public uint UID;
 
    // Node tree ----------------------------------------------------------------
    /// <summary>Parent node for this (0 for root node)</summary>
@@ -25,6 +25,14 @@ public partial struct UXNode {
    public short LastChild;
    /// <summary>Count of children for this node</summary>
    public short ChildCount;
+   /// <summary>
+   /// Level of this node in the hierarchy (root node = 0)
+   /// </summary>
+   public int Level;
+   /// <summary>
+   /// Pointer to next sibling (used for tree-traversal)
+   /// </summary>
+   public int Next;
 
    // Metrics ------------------------------------------------------------------
    /// <summary>Metrics for X axis (width direction)</summary>
