@@ -10,7 +10,6 @@ class Program {
    static void Main () {
       Lib.Init ();
       GLFWHost.Init (OnReady);
-      UXApi.Init ();
       MainWin = new Window (1600, 1200, "I N L A Y Demo", Window.EFlags.Default | Window.EFlags.Maximized);
       MainWin.Run (false);
    }
@@ -33,4 +32,3 @@ class DemoScene : Scene2 {
       Root = new GroupVN ([new UXRootVN ("N:/UXDemo/Res", [tf1, tf2]), TraceVN.It /*, StatsVN.It*/]);
    }
 }
-

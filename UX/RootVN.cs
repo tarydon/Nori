@@ -1,10 +1,12 @@
-﻿namespace Nori;
-
+// ────── ╔╗
+// ╔═╦╦═╦╦╬╣ RootVN.cs
+// ║║║║╬║╔╣║ <<TODO>>
+// ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
+namespace Nori;
 using static UXApi;
+using static UXNode.Size;
 
-/// <summary>
-/// Represents the root VNode of the UX system
-/// </summary>
+/// <summary>Represents the root VNode of the UX system</summary>
 /// This VNode takes over the entire window and is responsible for rendering the menus, status bar,
 /// toolbars etc. In the 'content' area, it will typically house a SCENEHOLDER that will in turn 
 /// contain a separate Lux.Scene with the actual 
@@ -15,6 +17,7 @@ public class UXRootVN : VNode {
       Hub.Mouse.Wheel.Subscribe (OnMouseWheel);
       Hub.Mouse.Clicks.Where (a => a.Button == EMouseButton.Left).Subscribe (OnMouseClick);
       UXEngine.Typefaces = [.. faces];
+      UXEngine.Init ();
    }
 
    // Properties ---------------------------------------------------------------
@@ -28,13 +31,26 @@ public class UXRootVN : VNode {
    public override void Draw () {
       mUID = 0;
       ushort nClipRect = Lux.NClipRect;
-      ref var root = ref UXEngine.BeginLayout (Lux.PanelSize);
-      root.SetPadding (20); root.Data = "Root"; root.IsHorizontal = true; root.ChildGap = 20;
+      ref var node = ref UXEngine.BeginLayout (Lux.PanelSize);
+      node.SetPadding (20); node.Tag = "Root"; node.IsHorizontal = true; node.ChildGap = 20;
       UXEngine.SetMouseState (mPos, mWheel, mPressed); mWheel = 0;
 
-      ref var node = ref PANEL (++mUID, 400, 300, true, Color4.DarkGreen);
-      node.Data = "DarkGreen";
+      node = ref PANEL (++mUID, Fit (), Fit (), true, Color4.Yellow);
+      node.Tag = "Yellow"; node.ChildGap = 5; node.SetPadding (5);
+
+      node = ref PANEL (++mUID, 400, 300, true, Color4.DarkGreen);
+      node.Tag = "DarkGreen";
       END ();  // "DarkGreen"
+
+      node = ref PANEL (++mUID, 300, 200, false, Color4.DarkBlue);
+      node.Tag = "DarkBlue"; node.ChildGap = 5; node.SetPadding (5);
+
+      node = ref PANEL (++mUID, 100, 50, false, Color4.Red); END ();
+      node = ref PANEL (++mUID, 100, 50, false, Color4.Red); END ();
+
+      END ();
+
+      END (); // "Yellow"
 
       //ref var node = ref PANEL (NextUID, Fit (100, 1500), Fit (100, 700), true, Color4.DarkGreen);
       //node.Data = "DarkGreen"; node.SetPadding (20); node.ChildGap = 20;
@@ -71,7 +87,7 @@ public class UXRootVN : VNode {
       UXEngine.Render ();
       Lux.NClipRect = nClipRect;
    }
-   int mUID;
+   uint mUID;
 
    // Private data -------------------------------------------------------------
    Vec2S mPos;       // Mouse position in pixels

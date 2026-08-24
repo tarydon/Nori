@@ -2,7 +2,6 @@
 // ╔═╦╦═╦╦╬╣ UXNodeAux.cs
 // ║║║║╬║╔╣║ <<TODO>>
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
-using System;
 namespace Nori;
 
 // Contains types nested inside UXNode
@@ -10,8 +9,11 @@ public partial struct UXNode {
    // Enumerations -------------------------------------------------------------
    /// <summary>What kind of UX node is this?</summary>
    public enum EKind {
-      Root, Rect, Panel,
+      Root, Panel, Popup, VScroll,
    }
+
+   /// <summary>What does GetChildren enumerate</summary>
+   public enum EEnum { All, Inlaid, Popups };
 
    /// <summary>Flags bits for a UXNode</summary>
    [Flags]
@@ -66,7 +68,7 @@ public partial struct UXNode {
       public readonly short TotalPad => (short)(PadStart + PadEnd);
 
       /// <summary>The start position along this axis (X/Y)</summary>
-      public int V;
+      public int V0;
       /// <summary>The span along this axis (DX/DY) extent is the semi-open interval [V, V+DV)</summary>
       public int DV;
 

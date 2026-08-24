@@ -15,37 +15,12 @@ public class UXClass (EKind kind, EFlags flags) {
    public readonly EKind Kind = kind;
 
    // Methods ------------------------------------------------------------------
-   public virtual void Measure (ref UXNode node) {
-   }
-}
-
-/*
-/// <summary>Base class for different 'node-classes'</summary>
-public abstract class NodeClass {
-
-   public virtual void Init (ref Node node) {
-      node.Kind = Kind; node.Flags = Flags;
-   }
-
-   public virtual void Measure (ref Node node) { 
-      node.X.DV = node.X.Min; node.Y.DV = node.Y.Min;
-   }
-
-   public virtual void Draw (ref Node node) 
-      => throw new NotImplementedException ($"Implement {this.GetType ().Name}.Draw");
-   public virtual Vec2S Measure (object data) => throw new NotImplementedException ();
-   public virtual void Release (ref Node node) { }
-   public virtual void Wrap (ref Node node) => throw new NotImplementedException (); 
-}
-
-/// <summary>Node representing a simple rectangle</summary>"
-/// The rectangle can have an optional border, and can also have rounded
-/// corners
-public class RectClass : NodeClass {
-   public override EKind Kind => EKind.Rect;
-   public override EFlags Flags => 0;
-
-   public override void Draw (ref Node node) {
+   /// <summary>Called to draw a node</summary>
+   /// The generic draw method here draws the bgrd/border of the node. It handles
+   /// attributes like the border color, bgrd color, border with, corner radius etc.
+   /// It can be used as a starting point for a number of different controls by chaining to 
+   /// this implementatoin before doing custom draw, or it can be overridden completely
+   public virtual void Draw (ref UXNode node) {
       var bgrd = node.BgrdColor; if (bgrd.IsTransparent) return;
 
       (Lux.Color, Lux.ZLevel) = (node.BgrdColor, node.ZLevel);
@@ -63,40 +38,56 @@ public class RectClass : NodeClass {
       } else
          Lux.Rect (rect);
    }
+
+   /// <summary>Iniitialize a node of this type when it is created</summary>
+   public virtual void Init (ref UXNode node) {
+      node.Kind = Kind; node.Flags = Flags;
+   }
+
+   /// <summary>Called to measure this node - sets X.DV and Y.DV only</summary>
+   /// The default implementation just sets these to the Min value of each axis.
+   /// Note that this does not set the position - just the width
+   public virtual void Measure (ref UXNode node) {
+      node.X.DV = node.X.Min; node.Y.DV = node.Y.Min;
+   }
+
+   /// <summary>Called to 'wrap' the contents of this node</summary>
+   /// This is called only for nodes with the WRAP bit set in the flags (for example, 
+   /// multi-line text, wrap-list-boxes etc)
+   public virtual void Wrap (ref UXNode node) => throw new NotImplementedException ();
+
+   // Implementation -----------------------------------------------------------
+   internal static void RegisterAll () {
+      UXEngine.RegisterClass (new RootClass ());
+      UXEngine.RegisterClass (new PanelClass ());
+      UXEngine.RegisterClass (new PopupClass ());
+      UXEngine.RegisterClass (new VScrollClass ());
+   }
 }
 
-/// <summary>Node representing a basic panel</summary>
-/// A panel is just a rectangle (with possibly a border and radius), but it can 
-/// house children
-public class PanelClass : RectClass {
-   public override EKind Kind => EKind.Panel;
-   public override EFlags Flags => EFlags.HasChildren;
+public class RootClass : UXClass {
+   public RootClass () : base (EKind.Root, 0) { }
 }
 
-public class BlockClass : RectClass {
-   public override EKind Kind => EKind.Block;
+public class PanelClass : UXClass {
+   public PanelClass () : base (EKind.Panel, 0) { }
 }
 
-public class RootClass : PanelClass {
-   public override EKind Kind => EKind.Root;
+public class PopupClass : UXClass {
+   public PopupClass () : base (EKind.Popup, EFlags.Popup | EFlags.Shadow) { }
 }
 
-public class PopupClass : PanelClass {
-   public override EKind Kind => EKind.Popup;
-   public override EFlags Flags => EFlags.HasChildren | EFlags.Popup | EFlags.Shadow;
-}
+public class VScrollClass : UXClass {
+   public VScrollClass () : base (EKind.VScroll, EFlags.Scrollable) { }
+   const int WIDTH = 20, MARGIN = 2;
 
-public class VScrollClass : NodeClass {
-   public override EKind Kind => EKind.VScroll;
-   public override EFlags Flags => EFlags.HasChildren | EFlags.Scrollable;
-   public const int WIDTH = 20, MARGIN = 2;
-
-   public override void Draw (ref Node node) {
-      ref NodeMemo memo = ref node.GetMemo ();
-      double ratio = (double)node.Y.DV / Math.Max (1, (int)memo.ChildSize);
+   public override void Draw (ref UXNode node) {
+      ref UXMemo memo = ref node.GetMemo ();
+      double ratio = (double)node.Y.DV / Math.Max (1, memo.ChildSize);
       int availHeight = node.Y.DV - 2 * MARGIN, thumbWidth = WIDTH - 2 * MARGIN;
       int thumbHeight = (int)Math.Max (ratio * availHeight, thumbWidth);
       double position = (double)memo.ScrollPos / memo.MaxScrollPos;
+
       int left = node.X.V0 + node.X.DV - WIDTH + MARGIN, top = (int)(position * (availHeight - thumbHeight) + 0.5) + node.Y.V0;
       int right = left + thumbWidth, bottom = top + thumbHeight;
       Lux.Color = node.FgrdColor;
@@ -104,6 +95,7 @@ public class VScrollClass : NodeClass {
    }
 }
 
+/*
 public class TextClass : NodeClass {
    public override EKind Kind => EKind.Text;
    public override EFlags Flags => 0;

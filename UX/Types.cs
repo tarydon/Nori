@@ -2,13 +2,11 @@
 // ╔═╦╦═╦╦╬╣ Types.cs
 // ║║║║╬║╔╣║ <<TODO>>
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
-using System;
 using System.Threading;
-using System.Collections.Generic;
 
-namespace Nori.UX;
+namespace Nori;
 
-struct NodeMemo {
+public struct UXMemo {
    // Properties ---------------------------------------------------------------
    /// <summary>Additional data (class-specific)</summary>
    public object Data;
