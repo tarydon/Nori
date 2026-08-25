@@ -92,7 +92,7 @@ public partial struct UXNode {
    /// The UXMemo stores 'long term' data related to this element, and is not regenerated
    /// on every frame. The memo for a Node is indexed using its UId (which is permanent and
    /// unchanging)
-   public readonly ref UXMemo GetMemo () => ref UXEngine.Memo[UId];
+   public readonly ref Memo GetMemo () => ref UXEngine.Memo[UId];
 
    /// <summary>Does this node 'grow' along the given axis?</summary>
    public readonly bool IsGrow (bool xAxis) {

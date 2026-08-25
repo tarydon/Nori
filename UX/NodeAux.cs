@@ -75,7 +75,79 @@ public partial struct UXNode {
       public void Set (Size size) { Mode = size.Mode; Min = size.Min; Max = size.Max; }
    }
 
+   // Struct Memo --------------------------------------------------------------
+   /// <summary>
+   /// Memo is used to store persistent data for a node
+   /// </summary>
+   /// The actual UXNode themselves are ephimeral and are composed afresh on every frame.
+   /// However, some nodes need to maintain some persistent data - for example, the current
+   /// 'scroll position' of a scroll panel. Such data belongs in the Memo - these memos are
+   /// indexed by Node.UID (which are unchanging and assigned by the Inlay compiler once).
+   /// These Memo are also used to store some general data about the node - what was the 
+   /// Rect of the node during the last layout cycle, what was the time at which the mouse entered
+   /// the node (used to handle hover, for example)
+   public struct Memo {
+      /// <summary>Additional data (class-specific)</summary>
+      public object Data;
+
+      /// <summary>Returns true if the mouse has been hovering over this element for ms milliseconds</summary>
+      /// This is often used to open a tooltip when the mouse has been hovering over
+      /// an element for about 0.3 seconds or so. 
+      public readonly bool IsHovered (int ms) {
+         if (!IsMouseOver) return false;
+         UXTimer.Start (UId, ms + 1, Lux.Redraw);
+         return (uint)Environment.TickCount >= MouseEnterTime + ms;
+      }
+      static int n;
+
+      /// <summary>Is the mouse currently over this node?</summary>
+      public bool IsMouseOver {
+         readonly get => mIsMouseOver;
+         set {
+            if (mIsMouseOver == value) return;
+            if (mIsMouseOver = value)
+               MouseEnterTime = (uint)Environment.TickCount;
+            else {
+               MouseLeaveTime = (uint)Environment.TickCount;
+               UXTimer.Stop (UId);
+            }
+         }
+      }
+      bool mIsMouseOver;
+
+      /// <summary>Tick-count at which the mouse entered this node</summary>
+      public uint MouseEnterTime;
+      /// <summary>Tick-count at which the mouse left this node</summary>
+      public uint MouseLeaveTime;
+
+      /// <summary>Bounding rectangle of the node as last laid out</summary>
+      public RectS Rect {
+         readonly get => mRect;
+         set { mRect = value; IsMouseOver = mRect.Contains (UXEngine.MousePos); }
+      }
+      RectS mRect;
+
+      /// <summary>Current and maximum scroll position and child size</summary>
+      public int ScrollPos, MaxScrollPos, ChildSize;
+
+      /// <summary>The UID of the node owning this memo</summary>
+      public uint UId;
+
+      // TODO: NodeMemo.Dispose is never called!
+      public readonly void Dispose () => UXTimer.Stop (UId);
+   }
+
    // Struct Size --------------------------------------------------------------
+   /// <summary>
+   /// Used to represent a horizontal or vertical size
+   /// </summary>
+   /// This actually stores a min and max value for the size (both are same for a fixed size),
+   /// as well as a size mode:
+   /// FIXED = we specify the size in pixels
+   /// FIT = element is large enough to fit the children (may have additional min/max constraints)
+   /// GROW = element grows to use up available space in parent
+   /// Note that GROW is like a superset of FIT - a GROW element first tries to be large enough
+   /// to hold its children, but then additionally grows if the parent has extra space.
    public readonly struct Size {
       // Constructors 
       public Size (ESizing mode, int min, int max) => (Mode, Min, Max) = (mode, min, max);

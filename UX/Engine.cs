@@ -175,7 +175,7 @@ public static class UXEngine {
       foreach (var n in mTraverse) {
          ref UXNode node = ref Nodes[n];
          var clas = Classes[(int)node.Kind]; clas.Draw (ref node);
-         ref UXMemo memo = ref Memo[node.UId];
+         ref Memo memo = ref Memo[node.UId];
          memo.Rect = node.Rect;
       }
    }
@@ -277,7 +277,7 @@ public static class UXEngine {
    static bool mMousePressedLastFrame;    // Was the mouse pressed on the last frame?
 
    internal static UXNode[] Nodes = new UXNode[32];      // List of nodes
-   internal static UXMemo[] Memo = new UXMemo[32];
+   internal static Memo[] Memo = new Memo[32];
    internal static UXClass[] Classes = new UXClass[8];
 
    static List<short> mTraverse = [];     // Top-down traversal of nodes, breadth first

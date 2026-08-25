@@ -1,5 +1,5 @@
 // ────── ╔╗
-// ╔═╦╦═╦╦╬╣ UXClass.cs
+// ╔═╦╦═╦╦╬╣ Class.cs
 // ║║║║╬║╔╣║ <<TODO>>
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 namespace Nori;
@@ -82,7 +82,7 @@ public class VScrollClass : UXClass {
    const int WIDTH = 20, MARGIN = 2;
 
    public override void Draw (ref UXNode node) {
-      ref UXMemo memo = ref node.GetMemo ();
+      ref Memo memo = ref node.GetMemo ();
       double ratio = (double)node.Y.DV / Math.Max (1, memo.ChildSize);
       int availHeight = node.Y.DV - 2 * MARGIN, thumbWidth = WIDTH - 2 * MARGIN;
       int thumbHeight = (int)Math.Max (ratio * availHeight, thumbWidth);
