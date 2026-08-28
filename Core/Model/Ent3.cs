@@ -162,6 +162,22 @@ public sealed class E3Curve : Ent3 {
 }
 #endregion
 
+#region class E3Mesh -------------------------------------------------------------------------------
+/// <summary>An entity which is a wrapper around a mesh</summary>
+public sealed class E3Mesh : Ent3 {
+   // Constructors -------------------------------------------------------------
+   public E3Mesh (Mesh3 mesh) => Mesh = mesh;
+
+   // Properties ---------------------------------------------------------------
+   public readonly Mesh3 Mesh;
+
+   public override Bound3 Bound => Mesh.Bound;
+
+   // Implementation -----------------------------------------------------------
+   protected override Ent3 Xformed (Matrix3 xfm) => new E3Mesh (Mesh * xfm);
+}
+#endregion
+
 /// <summary>An entity that represents a free-space composite curve path</summary>
 #region class E3Contour : Ent3 ---------------------------------------------------------------------
 public sealed class E3Contour : Ent3 {
