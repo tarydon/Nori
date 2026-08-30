@@ -50,6 +50,39 @@ partial class DashLine2DShader : Shader<Vec2F, DashLine2DShader.Settings> {
 }
 #endregion
 
+#region class DashBezier2DShader -------------------------------------------------------------------
+[Singleton]
+partial class DashBezier2DShader : Shader<Vec2F, DashBezier2DShader.Settings> {
+   public DashBezier2DShader () : base (ShaderImp.DashBezier2D) => Bind ();
+   int muVPScale = 0, muXfm = 0, muLineWidth = 0, muLineType = 0, muLTScale = 0, muDrawColor = 0, muLTypeTexture = 0;
+
+   protected override void ApplyUniformsImp (ref readonly Settings a) {
+      Pgm.Set (muXfm, ref Lux.Scene!.Xfms[a.IDXfm].Xfm);
+      float fLType = ((int)a.LineType + 0.5f) / 10.0f;
+      Pgm.Set (muLineWidth, a.LineWidth * Lux.DPIScale).Set (muLineType, fLType);
+      Pgm.Set (muDrawColor, a.Color).Set (muLTScale, a.LTScale * Lux.DPIScale);
+   }
+
+   protected override int OrderUniformsImp (ref readonly Settings a, ref readonly Settings b) {
+      int n = a.IDXfm.CompareTo (b.IDXfm); if (n != 0) return n;
+      n = a.LineType.CompareTo (b.LineType); if (n != 0) return n;
+      n = (int)(a.Color.Value - b.Color.Value); if (n != 0) return n;
+      n = a.LTScale.CompareTo (b.LTScale); if (n != 0) return n;
+      return a.LineWidth.CompareTo (b.LineWidth);
+   }
+
+   protected override void SetConstantsImp ()       
+      => Pgm.Set(muVPScale, Lux.VPScale).Set (muLTypeTexture, 1);
+
+   protected override Settings SnapUniformsImp ()
+      => new (Lux.IDXfm, Lux.LineWidth, Lux.LineType, Lux.LTScale, Lux.Color);
+
+
+   public readonly record struct Settings (int IDXfm, float LineWidth, ELineType LineType, float LTScale, Color4 Color);
+}
+#endregion
+
+#region class DecalShader --------------------------------------------------------------------------
 [Singleton]
 partial class DecalShader : Shader<DecalShader.Args, DecalShader.Settings> {
    // Constructors -------------------------------------------------------------
@@ -78,6 +111,7 @@ partial class DecalShader : Shader<DecalShader.Args, DecalShader.Settings> {
    // Private data -------------------------------------------------------------
    protected int muXfm = 0, muNormalXfm = 0, muDecalTexture = 0;
 }
+#endregion
 
 #region class FacetShader --------------------------------------------------------------------------
 /// <summary>Base class for various types of 3D shader (Flat / Gourad / Phong)</summary>
@@ -259,6 +293,7 @@ partial class PointPxShader : PxShader<PointPxShader.Arg> {
 }
 #endregion
 
+#region class UIRectShader -------------------------------------------------------------------------
 [Singleton]
 partial class UIRectShader : Shader<UIRectShader.Args, int> {
    public UIRectShader () : base (ShaderImp.UIRect) {
@@ -283,6 +318,7 @@ partial class UIRectShader : Shader<UIRectShader.Args, int> {
       readonly short BorderThickness = borderThickness;  // 20
    }
 }
+#endregion
 
 #region class PxShader -----------------------------------------------------------------------------
 /// <summary>Base class for various shaders using pixels (Vec2S)</summary>

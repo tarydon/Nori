@@ -21,6 +21,7 @@ Glass            11  Triangles    Vec3F_Vec3H        0      1      1        None
 FlatFacet        12  Triangles    Vec3F_Vec3H        0      1      1        None     FlatFacet.vert|FlatFacet.geom|FlatFacet.frag
 TextPx          104  Points       Vec4S_Int          1      0      0        None     TextPx.vert|Text2D.geom|Text.frag
 DashLine2D       13  Lines        Vec2F              1      0      0        None     World2D.vert|DashLine2D.geom|DashLine.frag
+DashBezier2D     24  Patches      Vec2F              1      0      0        None     World2D.vert|Bezier.tctrl|Bezier.teval|DashLine2D.geom|DashLine.frag
 TriFanCover     105  TriangleFan  Vec2F              0      0      0        Cover    World2D.vert|Flat.frag
 TriFanStencil    14  TriangleFan  Vec2F              0      0      0        Stencil  World2D.vert|Flat.frag
 Text2D          106  Points       Vec2F_Vec4S_Int    1      0      0        None     Text2D.vert|Text2D.geom|Text.frag

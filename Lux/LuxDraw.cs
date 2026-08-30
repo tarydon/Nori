@@ -162,8 +162,10 @@ public static partial class Lux {
    /// The following Lux properties are used:
    /// - LineWidth : the width of the beziers, in device independent pixels
    /// - Color : color of the lines being drawn
-   public static void Beziers (ReadOnlySpan<Vec2F> pts)
-      => Bezier2DShader.It.Draw (pts);
+   public static void Beziers (ReadOnlySpan<Vec2F> pts) {
+      if (LineType == ELineType.Continuous) Bezier2DShader.It.Draw (pts);
+      else DashBezier2DShader.It.Draw (pts);
+   }
 
    /// <summary>Draws a Decal</summary>
    public static void Decal (string file, CoordSystem cs, double scale) {
