@@ -166,7 +166,8 @@ public sealed class E3Curve : Ent3 {
 /// <summary>An entity which is a wrapper around a mesh</summary>
 public sealed class E3Mesh : Ent3 {
    // Constructors -------------------------------------------------------------
-   public E3Mesh (Mesh3 mesh) => Mesh = mesh;
+   public E3Mesh (int id, Mesh3 mesh) : base (id) => Mesh = mesh;
+   E3Mesh () => Mesh = null!;
 
    // Properties ---------------------------------------------------------------
    public readonly Mesh3 Mesh;
@@ -174,7 +175,7 @@ public sealed class E3Mesh : Ent3 {
    public override Bound3 Bound => Mesh.Bound;
 
    // Implementation -----------------------------------------------------------
-   protected override Ent3 Xformed (Matrix3 xfm) => new E3Mesh (Mesh * xfm);
+   protected override Ent3 Xformed (Matrix3 xfm) => new E3Mesh (Id, Mesh * xfm);
 }
 #endregion
 
