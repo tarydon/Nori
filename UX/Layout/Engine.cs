@@ -83,7 +83,7 @@ public static class UXEngine {
       }
       var clas = Classes[(int)kind];
       if (clas == null) Fatal ($"No class registered for EKind.{kind}");
-      clas.Init (ref node);
+      clas.Init (ref node); 
       return ref node;
    }
 
@@ -182,8 +182,8 @@ public static class UXEngine {
 
    /// <summary>Called at the start of each frame to set up the mouse position, wheel-delta and button state</summary>
    public static void SetMouseState (Vec2S position, int wheelDelta, bool pressed) {
-      mMousePressedLastFrame = mMousePressed;
-      (MousePos, WheelDelta, mMousePressed) = (position, wheelDelta, pressed);
+      MousePressedLastFrame = MousePressed;
+      (MousePos, WheelDelta, MousePressed) = (position, wheelDelta, pressed);
    }
 
    /// <summary>Removes a node from the Retained VNode group</summary>
@@ -273,8 +273,8 @@ public static class UXEngine {
    static short mParent;                  // Parent for the current node
    static Stack<short> mStack = [];       // Stack of all nodes
 
-   static bool mMousePressed;             // Is the mouse currently pressed?
-   static bool mMousePressedLastFrame;    // Was the mouse pressed on the last frame?
+   static internal bool MousePressed;           // Is the mouse currently pressed?
+   static internal bool MousePressedLastFrame;  // Was the mouse pressed on the last frame?
 
    internal static UXNode[] Nodes = new UXNode[32];      // List of nodes
    internal static Memo[] Memo = new Memo[32];

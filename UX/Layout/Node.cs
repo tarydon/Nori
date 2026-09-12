@@ -17,6 +17,10 @@ public partial struct UXNode {
    public uint UId;
    /// <summary>Tag (usually used for debugging)</summary>
    public string? Tag;
+   /// <summary>
+   /// Is this node disabled?
+   /// </summary>
+   public bool Disabled;
 
    // Node tree ..................................
    /// <summary>Parent node for this (0 for root node)</summary>
@@ -69,6 +73,20 @@ public partial struct UXNode {
    public Vec2S FloatOffset;
 
    // Properties ---------------------------------------------------------------
+   /// <summary>
+   /// Does this node have any popups open?
+   /// </summary>
+   public readonly bool AnyPopupsOpen {
+      get {
+         for (int c = FirstChild; c != 0; c = UXEngine.Nodes[c].Next) {
+            ref UXNode child = ref UXEngine.Nodes[c];
+            if (child.IsPopup && child.Rect.Contains (UXEngine.MousePos)) return true;
+            if (child.AnyPopupsOpen) return true;
+         }
+         return false;
+      }
+   }
+
    /// <summary>Is the 'shadow' bit turned on for this node?</summary>
    public readonly bool HasShadow => Get (EFlags.Shadow);
 
@@ -103,10 +121,29 @@ public partial struct UXNode {
    /// <summary>Has the mouse been hovering over this element for the given time</summary>
    public readonly bool IsHovered (int ms) => GetMemo ().IsHovered (ms);
 
+   /// <summary>
+   /// Has the mouse been released in this frame
+   /// </summary>
+   public readonly bool IsReleased
+      => UXEngine.MousePressedLastFrame && !UXEngine.MousePressed && GetMemo ().IsMouseOver;
+
    /// <summary>Set uniform padding all around</summary>
    public void SetPadding (int n) {
       ref Axis x = ref X, y = ref Y;
       x.PadStart = x.PadEnd = y.PadStart = y.PadEnd = (short)n;
+   }
+
+   /// <summary>Sets different padding for horizontal (left/right) and vertical (top/bottom)</summary>
+   public void SetPadding (int h, int v) {
+      ref Axis x = ref X, y = ref Y;
+      x.PadStart = x.PadEnd = (short)h; y.PadStart = y.PadEnd = (short)v;
+   }
+
+   /// <summary>Sets different padding for each of the 4 directions</summary>
+   public void SetPadding (int l, int t, int r, int b) {
+      ref Axis x = ref X, y = ref Y;
+      x.PadStart = (short)l; x.PadEnd = (short)r;
+      y.PadStart = (short)t; y.PadEnd = (short)b;
    }
 
    // Implementation -----------------------------------------------------------

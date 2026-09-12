@@ -4,15 +4,36 @@
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 namespace Nori;
 using static UXNode;
+using static UXClass.EContainer;
 
 /// <summary>There is one of these for each class of node we are going to create</summary>
-public class UXClass (EKind kind, EFlags flags) {
+public class UXClass (EKind kind, EFlags flags, UXClass.EContainer con, string argTypes, string? varType, int boundArg) {
    // Properties ---------------------------------------------------------------
+   /// <summary>Argument types</summary>
+   public readonly string ArgTypes = argTypes;
    /// <summary>The default flags value for nodes of this class</summary>
    public readonly EFlags Flags = flags;
-
    /// <summary>The kind of node this class represents</summary>
    public readonly EKind Kind = kind;
+
+   /// <summary>Number of needed parameters</summary>
+   public readonly int NeedParams = argTypes.TakeWhile (char.IsUpper).Count ();
+   /// <summary>Number of optional parameters</summary>
+   public int OptParams => ArgTypes.Length - NeedParams;
+   /// <summary>Type of bound variable (for data controls like Checkbox / TextBox / Slider etc)</summary>
+   public readonly string? VarType = varType;
+   /// <summary>Is this a container (Maybe means it might be a container sometimes)</summary>
+   public readonly EContainer CCode = con;
+   /// <summary>Which of the arguments is 'bound' (for data controls</summary>
+   public readonly int BoundArg = boundArg;
+
+   /// <summary>
+   /// Number of nodes used by this element
+   /// </summary>
+   public int CFragments { get; protected set; } = 1;
+
+   /// <summary>Is this an inert element?</summary>
+   public bool Inert => (Flags & EFlags.Inert) != 0;
 
    // Methods ------------------------------------------------------------------
    /// <summary>Called to draw a node</summary>
@@ -56,29 +77,63 @@ public class UXClass (EKind kind, EFlags flags) {
    /// multi-line text, wrap-list-boxes etc)
    public virtual void Wrap (ref UXNode node) => throw new NotImplementedException ();
 
+   // Nested types -------------------------------------------------------------
+   /// <summary>Is this a container</summary>
+   public enum EContainer { No, Yes, Maybe };
+
    // Implementation -----------------------------------------------------------
    internal static void RegisterAll () {
       UXEngine.RegisterClass (new RootClass ());
       UXEngine.RegisterClass (new PanelClass ());
       UXEngine.RegisterClass (new PopupClass ());
       UXEngine.RegisterClass (new VScrollClass ());
+      UXEngine.RegisterClass (new TopMenuClass ());
+      UXEngine.RegisterClass (new MenuClass ());
+      UXEngine.RegisterClass (new SeparatorClass ());
+      UXEngine.RegisterClass (new RadioButtonClass ());
+      UXEngine.RegisterClass (new CheckboxClass ());
+      UXEngine.RegisterClass (new LabelClass ());
    }
 }
 
-public class RootClass : UXClass {
-   public RootClass () : base (EKind.Root, 0) { }
+public class CheckboxClass : UXClass {
+   public CheckboxClass () : base (EKind.Checkbox, 0, No, "SB", "bool", 1) { }
+}
+
+public class LabelClass : UXClass {
+   public LabelClass () : base (EKind.Label, 0, No, "", null, -1) { }
+}
+
+public class MenuClass : UXClass {
+   public MenuClass () : base (EKind.Menu, 0, Maybe, "Sse", null, -1) => CFragments = 4;
 }
 
 public class PanelClass : UXClass {
-   public PanelClass () : base (EKind.Panel, 0) { }
+   public PanelClass () : base (EKind.Panel, 0, Yes, "", null, -1) { }
 }
 
 public class PopupClass : UXClass {
-   public PopupClass () : base (EKind.Popup, EFlags.Popup | EFlags.Shadow) { }
+   public PopupClass () : base (EKind.Popup, EFlags.Popup | EFlags.Shadow, Yes, "", null, -1) { }
+}
+
+public class RadioButtonClass : UXClass {
+   public RadioButtonClass () : base (EKind.RadioButton, 0, No, "SB", "bool", 1) { }
+}
+
+public class RootClass : UXClass {
+   public RootClass () : base (EKind.Root, 0, Yes, "", null, -1) { }
+}
+
+public class SeparatorClass : UXClass {
+   public SeparatorClass () : base (EKind.Separator, EFlags.Inert, No, "", null, -1) { }
+}
+
+public class TopMenuClass : UXClass {
+   public TopMenuClass () : base (EKind.TopMenu, 0, Yes, "", null, -1) { }
 }
 
 public class VScrollClass : UXClass {
-   public VScrollClass () : base (EKind.VScroll, EFlags.Scrollable) { }
+   public VScrollClass () : base (EKind.VScroll, EFlags.Scrollable, Yes, "", null, -1) { }
    const int WIDTH = 20, MARGIN = 2;
 
    public override void Draw (ref UXNode node) {

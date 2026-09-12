@@ -9,7 +9,8 @@ public partial struct UXNode {
    // Enumerations -------------------------------------------------------------
    /// <summary>What kind of UX node is this?</summary>
    public enum EKind {
-      Root, Panel, Popup, VScroll,
+      Root, Panel, Popup, VScroll, TopMenu, Menu, Separator, Button, Checkbox, 
+      Dialog, RadioButton, Slider, Label, Filler, Text,
    }
 
    /// <summary>What does GetChildren enumerate</summary>
@@ -30,6 +31,8 @@ public partial struct UXNode {
       ScreenRelative = 1 << 4,
       /// <summary>Draw a shadow for this</summary>
       Shadow = 1 << 5,
+      /// <summary>Is this an inert element (like SEPARATOR), with no args, no code-block etc</summary>
+      Inert = 1 << 6,
    }
 
    /// <summary>Various sizing modes for an axis</summary>
@@ -76,9 +79,7 @@ public partial struct UXNode {
    }
 
    // Struct Memo --------------------------------------------------------------
-   /// <summary>
-   /// Memo is used to store persistent data for a node
-   /// </summary>
+   /// <summary>Memo is used to store persistent data for a node</summary>
    /// The actual UXNode themselves are ephimeral and are composed afresh on every frame.
    /// However, some nodes need to maintain some persistent data - for example, the current
    /// 'scroll position' of a scroll panel. Such data belongs in the Memo - these memos are
@@ -138,9 +139,7 @@ public partial struct UXNode {
    }
 
    // Struct Size --------------------------------------------------------------
-   /// <summary>
-   /// Used to represent a horizontal or vertical size
-   /// </summary>
+   /// <summary>Used to represent a horizontal or vertical size</summary>
    /// This actually stores a min and max value for the size (both are same for a fixed size),
    /// as well as a size mode:
    /// FIXED = we specify the size in pixels

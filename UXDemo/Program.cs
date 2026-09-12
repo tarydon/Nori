@@ -17,7 +17,8 @@ class Program {
 
    static void OnReady () {
       Lux.UIScene = new DemoScene ();
-      Lib.Tracer = TraceVN.Print; TraceVN.TextColor = Color4.Yellow;
+      Lib.Tracer = TraceVN.Print; 
+      TraceVN.TextColor = Color4.Yellow; TraceVN.HoldTime = 20; 
       // Lux.FPS.Subscribe (n => MainWin.Title = $"FPS: {n}");
       Hub.Keyboard.Keys.Where (a => a.IsPress (EKey.Escape))
                        .Subscribe (_ => MainWin?.ShouldClose = true);

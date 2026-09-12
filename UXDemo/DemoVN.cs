@@ -25,7 +25,7 @@ class DemoVN : VNode {
    void OnMouseClick (MouseClickInfo info) { mPressed = info.IsPress; Redraw (); }
 
    public override void Draw () {
-      mUID = 0; 
+      mUID = 1; 
       ushort nClipRect = Lux.NClipRect;
       ref var node = ref UXSystem.BeginLayout (Lux.PanelSize);
       node.SetPadding (20); node.Data = "Root"; node.IsHorizontal = true; node.ChildGap = 20;
