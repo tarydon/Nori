@@ -94,6 +94,7 @@ public class UXClass (EKind kind, EFlags flags, UXClass.EContainer con, string a
       UXEngine.RegisterClass (new CheckboxClass ());
       UXEngine.RegisterClass (new LabelClass ());
       UXEngine.RegisterClass (new TextClass ());
+      UXEngine.RegisterClass (new FillerClass ());
    }
 }
 
@@ -101,12 +102,16 @@ public class CheckboxClass : UXClass {
    public CheckboxClass () : base (EKind.Checkbox, 0, No, "SB", "bool", 1) { }
 }
 
+public class FillerClass : UXClass {
+   public FillerClass () : base (EKind.Filler, 0, No, "", null, -1) { }
+}
+
 public class LabelClass : UXClass {
    public LabelClass () : base (EKind.Label, 0, No, "", null, -1) { }
 }
 
 public class MenuClass : UXClass {
-   public MenuClass () : base (EKind.Menu, 0, Maybe, "Sse", null, -1) => CFragments = 4;
+   public MenuClass () : base (EKind.Menu, EFlags.Horizontal | EFlags.MayHavePopups, Maybe, "Sse", null, -1) => CFragments = 4;
 }
 
 public class PanelClass : UXClass {
@@ -130,7 +135,7 @@ public class SeparatorClass : UXClass {
 }
 
 public class TopMenuClass : UXClass {
-   public TopMenuClass () : base (EKind.TopMenu, 0, Yes, "", null, -1) { }
+   public TopMenuClass () : base (EKind.TopMenu, EFlags.Horizontal, Yes, "", null, -1) { }
 }
 
 public class TextClass : UXClass {

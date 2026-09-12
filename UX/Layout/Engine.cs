@@ -39,6 +39,12 @@ public static class UXEngine {
       mRetained.Add (node);
    }
 
+   public static string DumpNodes () {
+      StringBuilder sb = new ();
+      Dump (sb, 1, 0);
+      return sb.ToString ();
+   }
+
    /// <summary>Begins a new Inlay layout - each Draw pass should start with this</summary>
    /// This returns a Node that covers the entire screen and is the root node for 
    /// the layout
@@ -177,7 +183,12 @@ public static class UXEngine {
          var clas = Classes[(int)node.Kind]; clas.Draw (ref node);
          ref Memo memo = ref Memo[node.UId];
          memo.Rect = node.Rect;
+         if (node.MayHavePopups) 
+            memo.AnyPopupsOpen = node.ComputePopupsOpen ();
       }
+
+      string s = DumpNodes (); // REMOVETHIS
+      File.WriteAllText ("c:/etc/dump.txt", s); 
    }
 
    /// <summary>Called at the start of each frame to set up the mouse position, wheel-delta and button state</summary>
@@ -197,6 +208,14 @@ public static class UXEngine {
    static readonly List<VNode> mDeleteQueue = [];
 
    // Implementation -----------------------------------------------------------
+   static void Dump (StringBuilder sb, int n, int level) {
+      ref UXNode node = ref Nodes[n];
+      sb.Append (new string (' ', level));
+      node.Dump (sb); sb.AppendLine ();
+      List<short> tmp = []; node.GetChildren (tmp, EEnum.All);
+      foreach (var c in tmp) Dump (sb, c, level + 1);
+   }
+
    // Helper used to delayed-delete retained VNodes that go out of visibility during this
    // frame (for example, scrolled out)
    static void EndOfFrame (Unit _) {

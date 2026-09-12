@@ -33,6 +33,10 @@ public partial struct UXNode {
       Shadow = 1 << 5,
       /// <summary>Is this an inert element (like SEPARATOR), with no args, no code-block etc</summary>
       Inert = 1 << 6,
+      /// <summary>
+      /// This node may have popups as children (for example, a Menu)
+      /// </summary>
+      MayHavePopups = 1 << 7,
    }
 
    /// <summary>Various sizing modes for an axis</summary>
@@ -88,6 +92,7 @@ public partial struct UXNode {
    /// Rect of the node during the last layout cycle, what was the time at which the mouse entered
    /// the node (used to handle hover, for example)
    public struct Memo {
+      public bool AnyPopupsOpen;
       /// <summary>Additional data (class-specific)</summary>
       public object Data;
 

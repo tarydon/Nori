@@ -2,6 +2,8 @@
 // ╔═╦╦═╦╦╬╣ Node.cs
 // ║║║║╬║╔╣║ <<TODO>>
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
+using System.Dynamic;
+
 namespace Nori;
 
 public partial struct UXNode {
@@ -76,16 +78,7 @@ public partial struct UXNode {
    /// <summary>
    /// Does this node have any popups open?
    /// </summary>
-   public readonly bool AnyPopupsOpen {
-      get {
-         for (int c = FirstChild; c != 0; c = UXEngine.Nodes[c].Next) {
-            ref UXNode child = ref UXEngine.Nodes[c];
-            if (child.IsPopup && child.Rect.Contains (UXEngine.MousePos)) return true;
-            if (child.AnyPopupsOpen) return true;
-         }
-         return false;
-      }
-   }
+   public readonly bool AnyPopupsOpen => GetMemo ().AnyPopupsOpen;
 
    /// <summary>Is the 'shadow' bit turned on for this node?</summary>
    public readonly bool HasShadow => Get (EFlags.Shadow);
@@ -98,6 +91,10 @@ public partial struct UXNode {
    public readonly bool IsPopup => Get (EFlags.Popup);
    /// <summary>Is this POPUP aligned relative to the screen</summary>
    public bool IsScreenRelative { readonly get => Get (EFlags.ScreenRelative); set => Set (EFlags.ScreenRelative, value); }
+   /// <summary>
+   /// Might this node have popups (not necssarily right now, but ever)
+   /// </summary>
+   public bool MayHavePopups => Get (EFlags.MayHavePopups);
 
    /// <summary>The final Rect occupied by this node (in pixel space)</summary>
    public readonly RectS Rect => new (X.V0, Y.V0, X.V0 + X.DV, Y.V0 + Y.DV);
@@ -106,6 +103,10 @@ public partial struct UXNode {
    public readonly int ZLevel => 100 + Level * 2;
 
    // Methods ------------------------------------------------------------------
+   public void Dump (StringBuilder sb) {
+      sb.Append ($"{Index} UID:{UId} {Kind} {Flags} {X.DV}x{Y.DV} Next:{Next} Children:{FirstChild}..{LastChild}");
+   }
+
    /// <summary>Fetch the memo related to this elemet</summary>
    /// The UXMemo stores 'long term' data related to this element, and is not regenerated
    /// on every frame. The memo for a Node is indexed using its UId (which is permanent and
@@ -147,6 +148,17 @@ public partial struct UXNode {
    }
 
    // Implementation -----------------------------------------------------------
+   // Compute if any popups are open (called only after render is complete)
+   internal readonly bool ComputePopupsOpen () {
+      for (int c = FirstChild; c != 0; c = UXEngine.Nodes[c].Next) {
+         ref UXNode child = ref UXEngine.Nodes[c];
+         if (!child.IsPopup) continue;
+         if (child.IsPopup && child.Rect.Contains (UXEngine.MousePos)) return true;
+         if (child.AnyPopupsOpen) return true;
+      }
+      return false;
+   }
+
    readonly bool Get (EFlags flags) => (Flags & flags) != 0;
    void Set (EFlags flags, bool value) { if (value) Flags |= flags; else Flags &= ~flags; }
 
