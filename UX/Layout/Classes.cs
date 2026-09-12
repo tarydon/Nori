@@ -93,6 +93,7 @@ public class UXClass (EKind kind, EFlags flags, UXClass.EContainer con, string a
       UXEngine.RegisterClass (new RadioButtonClass ());
       UXEngine.RegisterClass (new CheckboxClass ());
       UXEngine.RegisterClass (new LabelClass ());
+      UXEngine.RegisterClass (new TextClass ());
    }
 }
 
@@ -132,6 +133,25 @@ public class TopMenuClass : UXClass {
    public TopMenuClass () : base (EKind.TopMenu, 0, Yes, "", null, -1) { }
 }
 
+public class TextClass : UXClass {
+   public TextClass () : base (EKind.Text, 0, No, "S", null, -1) { }
+
+   public override void Measure (ref UXNode node) {
+      TypeFace tf = UXEngine.Typefaces[node.FontId];
+      RectS r = tf.Measure (node.Text ?? "");
+      ref Axis x = ref node.X, y = ref node.Y;
+      node.TextOffset = new (-r.Left + x.PadStart, -r.Top + x.PadStart);
+      x.DV = (short)(r.Width + x.TotalPad);
+      y.DV = (short)(r.Height + y.TotalPad);
+   }
+
+   public override void Draw (ref UXNode node) {
+      (Lux.Color, Lux.ZLevel) = (node.FgrdColor, node.ZLevel + 1);
+      Lux.TypeFace = UXEngine.Typefaces[node.FontId];
+      Lux.Text (node.Text, new (node.X.V0 + node.TextOffset.X, node.Y.V0 + node.TextOffset.Y));
+   }
+}
+
 public class VScrollClass : UXClass {
    public VScrollClass () : base (EKind.VScroll, EFlags.Scrollable, Yes, "", null, -1) { }
    const int WIDTH = 20, MARGIN = 2;
@@ -151,25 +171,6 @@ public class VScrollClass : UXClass {
 }
 
 /*
-public class TextClass : NodeClass {
-   public override EKind Kind => EKind.Text;
-   public override EFlags Flags => 0;
-
-   public override void Measure (ref Node node) {
-      TypeFace tf = UXSystem.Typefaces[node.FontId];
-      RectS r = tf.Measure (node.Text ?? "");
-      ref AxisDef x = ref node.X, y = ref node.Y;
-      node.TextOffset = new (-r.Left + x.PadStart, -r.Top + x.PadStart);
-      x.DV = (short)(r.Width + x.TotalPad);
-      y.DV = (short)(r.Height + y.TotalPad);
-   }
-
-   public override void Draw (ref Node node) {
-      (Lux.Color, Lux.ZLevel) = (node.FgrdColor, node.ZLevel + 1);
-      Lux.TypeFace = UXSystem.Typefaces[node.FontId];
-      Lux.Text (node.Text, new (node.X.V0 + node.TextOffset.X, node.Y.V0 + node.TextOffset.Y));
-   }
-}
 
 public class MTextClass : NodeClass {
    public override EKind Kind => EKind.MText;

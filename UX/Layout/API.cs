@@ -8,6 +8,8 @@ using static UXNode.Size;
 using static UXTheme;
 
 public static class UXApi {
+   public static bool DISABLED => false;
+
    public static void END () {
       UXEngine.EndNode ();
    }

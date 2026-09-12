@@ -1,9 +1,7 @@
 TOPMENU [
   MENU "File" [
-    MENU New "Ctrl N" .Icon=FileNew .Tip="Create a new Part"
-      { DoFileNew (); }
-    MENU Open "Ctrl O" .Icon=FileOpen .Tip="Open a 2D or 3D Part from file"
-      { DoFileOpen (); }
+    MENU New "Ctrl N" { DoFileNew (); }
+    MENU Open "Ctrl O" { DoFileOpen (); }
     if (MRUList.Count > 0) {
       MENU "Open Recent" [
         for (int i = 0; i < Math.Min (MRUList.Count, 9); i++) {
@@ -13,9 +11,7 @@ TOPMENU [
       ]
     }
     SEPARATOR
-    CHECKBOX "Use Raytracer" UseRayTracer
     MENU Save "Ctrl S" (CurrentPart is null)
-      .Icon=FileSave
       .Tip=(DISABLED ? "No active part" : "Save the current Part")
       { DoFileSave (); }
     MENU Export (CurrentPart is null) [
@@ -39,7 +35,7 @@ TOPMENU [
     MENU Copy "Ctrl C" { DoCopy (); }
     MENU Paste "Ctrl P" { DoPaste (); }
   ]
-  MENU "Help" [
-    MENU "About..." { DoHelpAbout (); }
+  MENU "Demos" [
+    MENU "Dialog..." { DoDialog (); }
   ]
 ]
