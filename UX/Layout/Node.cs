@@ -152,7 +152,6 @@ public partial struct UXNode {
    internal readonly bool ComputePopupsOpen () {
       for (int c = FirstChild; c != 0; c = UXEngine.Nodes[c].Next) {
          ref UXNode child = ref UXEngine.Nodes[c];
-         if (!child.IsPopup) continue;
          if (child.IsPopup && child.Rect.Contains (UXEngine.MousePos)) return true;
          if (child.AnyPopupsOpen) return true;
       }
