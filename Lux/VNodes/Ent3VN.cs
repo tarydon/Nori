@@ -31,6 +31,14 @@ public class E3CurveVN (E3Curve mCurve) : Ent3VN (mCurve) {
 }
 #endregion
 
+#region class E3MeshVN -----------------------------------------------------------------------------
+/// <summary>Renders a E3Mesh</summary>
+/// <param name="mMesh"></param>
+public class E3MeshVN (E3Mesh mMesh) : Ent3VN (mMesh) {
+   public override void Draw () => Lux.Mesh (mMesh.Mesh);
+}
+#endregion
+
 #region class E3SurfaceVN --------------------------------------------------------------------------
 /// <summary>Renders entities derived from E3Surface</summary>
 /// We ask the E3Surface to compute and return a Mesh3 that we render here. Depending on 
