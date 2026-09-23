@@ -16,12 +16,10 @@ public partial struct UXNode {
    /// <summary>Flags bits for this node</summary>
    public EFlags Flags;
    /// <summary>The persistent UID for this node, used to index into Memo[]</summary>
-   public uint UId;
+   public ushort IdMemo;
    /// <summary>Tag (usually used for debugging)</summary>
    public string? Tag;
-   /// <summary>
-   /// Is this node disabled?
-   /// </summary>
+   /// <summary>Is this node disabled?</summary>
    public bool Disabled;
 
    // Node tree ..................................
@@ -75,9 +73,7 @@ public partial struct UXNode {
    public Vec2S FloatOffset;
 
    // Properties ---------------------------------------------------------------
-   /// <summary>
-   /// Does this node have any popups open?
-   /// </summary>
+   /// <summary>Does this node have any popups open?</summary>
    public readonly bool AnyPopupsOpen => GetMemo ().AnyPopupsOpen;
 
    /// <summary>Is the 'shadow' bit turned on for this node?</summary>
@@ -91,9 +87,7 @@ public partial struct UXNode {
    public readonly bool IsPopup => Get (EFlags.Popup);
    /// <summary>Is this POPUP aligned relative to the screen</summary>
    public bool IsScreenRelative { readonly get => Get (EFlags.ScreenRelative); set => Set (EFlags.ScreenRelative, value); }
-   /// <summary>
-   /// Might this node have popups (not necssarily right now, but ever)
-   /// </summary>
+   /// <summary>Might this node have popups (not necssarily right now, but ever)</summary>
    public bool MayHavePopups => Get (EFlags.MayHavePopups);
 
    /// <summary>The final Rect occupied by this node (in pixel space)</summary>
@@ -104,14 +98,14 @@ public partial struct UXNode {
 
    // Methods ------------------------------------------------------------------
    public void Dump (StringBuilder sb) {
-      sb.Append ($"{Index} UID:{UId} {Kind} {Flags} {X.DV}x{Y.DV} Next:{Next} Children:{FirstChild}..{LastChild}");
+      sb.Append ($"{Index} UID:{IdMemo} {Kind} {Flags} {X.DV}x{Y.DV} Next:{Next} Children:{FirstChild}..{LastChild}");
    }
 
    /// <summary>Fetch the memo related to this elemet</summary>
    /// The UXMemo stores 'long term' data related to this element, and is not regenerated
    /// on every frame. The memo for a Node is indexed using its UId (which is permanent and
    /// unchanging)
-   public readonly ref Memo GetMemo () => ref UXEngine.Memo[UId];
+   public readonly ref Memo GetMemo () => ref UXEngine.Memo[IdMemo];
 
    /// <summary>Does this node 'grow' along the given axis?</summary>
    public readonly bool IsGrow (bool xAxis) {
@@ -122,9 +116,7 @@ public partial struct UXNode {
    /// <summary>Has the mouse been hovering over this element for the given time</summary>
    public readonly bool IsHovered (int ms) => GetMemo ().IsHovered (ms);
 
-   /// <summary>
-   /// Has the mouse been released in this frame
-   /// </summary>
+   /// <summary>Has the mouse been released in this frame</summary>
    public readonly bool IsReleased
       => UXEngine.MousePressedLastFrame && !UXEngine.MousePressed && GetMemo ().IsMouseOver;
 
@@ -330,5 +322,5 @@ public partial struct UXNode {
       }
    }
 
-   public override readonly string ToString () => $"Node #{UId} {Kind}";
+   public override readonly string ToString () => $"Node #{IdMemo} {Kind}";
 }

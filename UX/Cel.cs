@@ -145,7 +145,7 @@ class UXCel {
             mRenderFunc = (() => { });
             return;
          }
-         File.WriteAllText ($"c:/etc/{Path.GetFileNameWithoutExtension (mFile)}.cs", s);
+         File.WriteAllText ($"c:/etc/{Path.GetFileNameWithoutExtension (mFile)}.cs", s);  // REMOVETHIS
 
          // Then, use the compiler to compile that to a function
          UXCompiler ic = new (s);

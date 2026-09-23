@@ -150,7 +150,8 @@ class UXGenerator {
       AddLineNo (tElem);
       if (info.Inert) Add ($"{elem} (");
       else Add ($"if ({elem} (");
-      Add ($"{mUID}"); mUID += info.CFragments;
+      string key = $"{Path.GetFileNameWithoutExtension (mFile).ToLower ()}.{tElem.Line}";
+      if (info.NeedsKey) Add ($"\"{key}\"");
       List<string> props = [];   // Additional prop initialers (like .TIP="Double")
 
       // Add the necessary parameters
@@ -174,7 +175,7 @@ class UXGenerator {
                Lib.Check (info.CCode != UXClass.EContainer.No);
                if (info.CCode == UXClass.EContainer.Maybe) Add (", hasChildren:true");
                AddL (")) {"); openedContainer = true;
-               if (elem == "MENU") AddL ($"POPUPMENU ({mUID++});");
+               if (elem == "MENU") AddL ($"POPUPMENU ($\"{key}.p\");");
                ProcessLoop ();   // Keep adding child elements until we see a ']'
                if (elem == "MENU") AddL ("END (); // POPUPMENU");
                AddL ("}");

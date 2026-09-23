@@ -52,26 +52,32 @@ public static class UXEngine {
       ScreenSize = screenSize;
       // Note that we are not using mNodes[0], so we start with mUsed = 1
       mUsed = 1; mParent = 0; mCurrent = 0; mStack.Clear ();
-      return ref BeginNode (EKind.Root, 0, screenSize.X, screenSize.Y);
+      return ref BeginNode (EKind.Root, screenSize.X, screenSize.Y);
    }
 
    /// <summary>Begins a node of a given kind, with a specified size</summary>
-   public static ref UXNode BeginNode (EKind kind, uint uid, Size width, Size height) {
-      ref UXNode node = ref BeginNode (kind, uid);
+   public static ref UXNode BeginNode (EKind kind, Size width, Size height, string? key = null) {
+      ref UXNode node = ref BeginNode (kind, key);
       node.X.Set (width); node.Y.Set (height);
       return ref node;
    }
 
-   public static ref UXNode BeginNode (EKind kind, uint idMemo) {
+   public static ref UXNode BeginNode (EKind kind, string? key = null) {
       if (mUsed >= Nodes.Length)
          Array.Resize (ref Nodes, Nodes.Length * 2);
       mStack.Push (mParent = mCurrent); mCurrent = mUsed++;
       Nodes[mCurrent] = new ();    // Reset to zeroes!
 
       ref UXNode node = ref Nodes[mCurrent];
-      node.Index = mCurrent; node.UId = idMemo;
-      while (Memo.Length <= idMemo) Array.Resize (ref Memo, Memo.Length * 2);
-      Memo[idMemo].UId = idMemo;
+      node.Index = mCurrent;
+      if (key != null) {
+         if (!mMemoMap.TryGetValue (key, out int idMemo)) {
+            idMemo = ++mNextMemo;
+            if (Memo.Length <= idMemo) Array.Resize (ref Memo, Memo.Length * 2);
+            mMemoMap.Add (key, idMemo);
+         }
+         node.IdMemo = (ushort)idMemo;
+      }
       if ((node.Parent = mParent) != 0) {
          // If this has a parent, attach this node to the linked list of children
          // of that parent
@@ -92,6 +98,8 @@ public static class UXEngine {
       clas.Init (ref node); 
       return ref node;
    }
+   static Dictionary<string, int> mMemoMap = [];
+   static int mNextMemo;
 
    /// <summary>Matching call for BeginNode</summary>
    /// Unlike in the Clay renderer, we do not at this point immediately compute anything,
@@ -181,10 +189,12 @@ public static class UXEngine {
       foreach (var n in mTraverse) {
          ref UXNode node = ref Nodes[n];
          var clas = Classes[(int)node.Kind]; clas.Draw (ref node);
-         ref Memo memo = ref Memo[node.UId];
-         memo.Rect = node.Rect;
-         if (node.MayHavePopups) 
-            memo.AnyPopupsOpen = node.ComputePopupsOpen ();
+         if (node.IdMemo != 0) {
+            ref Memo memo = ref Memo[node.IdMemo];
+            memo.Rect = node.Rect;
+            if (node.MayHavePopups)
+               memo.AnyPopupsOpen = node.ComputePopupsOpen ();
+         }
       }
 
       string s = DumpNodes (); // REMOVETHIS

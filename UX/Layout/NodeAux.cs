@@ -33,10 +33,12 @@ public partial struct UXNode {
       Shadow = 1 << 5,
       /// <summary>Is this an inert element (like SEPARATOR), with no args, no code-block etc</summary>
       Inert = 1 << 6,
-      /// <summary>
-      /// This node may have popups as children (for example, a Menu)
-      /// </summary>
+      /// <summary>This node may have popups as children (for example, a Menu)</summary>
       MayHavePopups = 1 << 7,
+      /// <summary>
+      /// This stores data in a Memo, needs a persistent key
+      /// </summary>
+      HasMemo = 1 << 8,
    }
 
    /// <summary>Various sizing modes for an axis</summary>
@@ -171,4 +173,3 @@ public partial struct UXNode {
       public readonly int Max;
    }
 }
-

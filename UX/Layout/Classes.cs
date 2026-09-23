@@ -27,13 +27,15 @@ public class UXClass (EKind kind, EFlags flags, UXClass.EContainer con, string a
    /// <summary>Which of the arguments is 'bound' (for data controls</summary>
    public readonly int BoundArg = boundArg;
 
-   /// <summary>
-   /// Number of nodes used by this element
-   /// </summary>
+   /// <summary>Number of nodes used by this element</summary>
    public int CFragments { get; protected set; } = 1;
 
    /// <summary>Is this an inert element?</summary>
    public bool Inert => (Flags & EFlags.Inert) != 0;
+   /// <summary>
+   /// Does this need a 'key' to index into a memo?
+   /// </summary>
+   public bool NeedsKey => (Flags & EFlags.HasMemo) != 0;
 
    // Methods ------------------------------------------------------------------
    /// <summary>Called to draw a node</summary>
@@ -111,7 +113,7 @@ public class LabelClass : UXClass {
 }
 
 public class MenuClass : UXClass {
-   public MenuClass () : base (EKind.Menu, EFlags.Horizontal | EFlags.MayHavePopups, Maybe, "Sse", null, -1) => CFragments = 4;
+   public MenuClass () : base (EKind.Menu, EFlags.Horizontal | EFlags.HasMemo | EFlags.MayHavePopups, Maybe, "Sse", null, -1) => CFragments = 4;
 }
 
 public class PanelClass : UXClass {
