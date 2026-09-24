@@ -34,8 +34,9 @@ public class UXRootVN : VNode {
    public override void Draw () {
       mUID = 1;
       ushort nClipRect = Lux.NClipRect;
-      ref var node = ref UXEngine.BeginLayout (Lux.PanelSize);
       UXEngine.SetMouseState (mPos, mWheel, mPressed); mWheel = 0;
+      UXEngine.UpdateHoverState ();
+      ref var node = ref UXEngine.BeginLayout (Lux.PanelSize);
 
       mActive.Clear (); mActive.AddRange (UXCel.Active);
       mActive.ForEach (a => a.Render ());

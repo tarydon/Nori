@@ -73,7 +73,10 @@ public static class UXEngine {
       if (key != null) {
          if (!mMemoMap.TryGetValue (key, out int idMemo)) {
             idMemo = ++mNextMemo;
-            if (Memo.Length <= idMemo) Array.Resize (ref Memo, Memo.Length * 2);
+            if (Memo.Length <= idMemo) {
+               Array.Resize (ref Memo, Memo.Length * 2);
+               Memo[idMemo].UId = (uint)idMemo;
+            }
             mMemoMap.Add (key, idMemo);
          }
          node.IdMemo = (ushort)idMemo;
@@ -189,12 +192,8 @@ public static class UXEngine {
       foreach (var n in mTraverse) {
          ref UXNode node = ref Nodes[n];
          var clas = Classes[(int)node.Kind]; clas.Draw (ref node);
-         if (node.IdMemo != 0) {
-            ref Memo memo = ref Memo[node.IdMemo];
-            memo.Rect = node.Rect;
-            if (node.MayHavePopups)
-               memo.AnyPopupsOpen = node.ComputePopupsOpen ();
-         }
+         if (node.IdMemo != 0) 
+            Memo[node.IdMemo].Rect = node.Rect;
       }
 
       string s = DumpNodes (); // REMOVETHIS
@@ -293,6 +292,41 @@ public static class UXEngine {
             popup.X.V0 = (short)(parentPos.X - childPos.X);
             popup.Y.V0 = (short)(parentPos.Y - childPos.Y);
          }
+      }
+   }
+
+   public static void UpdateHoverState () {
+      // Clear accumulated popup state before propagating anything.
+      foreach (var n in mTraverse) {
+         ref UXNode node = ref Nodes[n];
+         if (node.IdMemo != 0)
+            Memo[node.IdMemo].AnyPopupsOpen = false;
+      }
+
+      // Reverse breadth-first order: children precede parents.
+      for (int i = mTraverse.Count - 1; i >= 0; i--) {
+         ref UXNode node = ref Nodes[mTraverse[i]];
+         if (node.IdMemo == 0) continue;
+
+         ref Memo memo = ref Memo[node.IdMemo];
+
+         // The existing setter handles enter/leave timestamps
+         // and cancels the hover timer on mouse leave.
+         memo.IsMouseOver = memo.Rect.Contains (MousePos);
+
+         bool overPopupBranch =
+            (node.IsPopup && memo.IsMouseOver) ||
+            memo.AnyPopupsOpen;
+
+         if (!overPopupBranch) continue;
+
+         // Lightweight ancestors have no memo: skip through them.
+         int parent = node.Parent;
+         while (parent != 0 && Nodes[parent].IdMemo == 0)
+            parent = Nodes[parent].Parent;
+
+         if (parent != 0)
+            Memo[Nodes[parent].IdMemo].AnyPopupsOpen = true;
       }
    }
 

@@ -129,10 +129,7 @@ public partial struct UXNode {
       public uint MouseLeaveTime;
 
       /// <summary>Bounding rectangle of the node as last laid out</summary>
-      public RectS Rect {
-         readonly get => mRect;
-         set { mRect = value; IsMouseOver = mRect.Contains (UXEngine.MousePos); }
-      }
+      public RectS Rect { readonly get => mRect; set => mRect = value; }
       RectS mRect;
 
       /// <summary>Current and maximum scroll position and child size</summary>
