@@ -5,8 +5,8 @@
 namespace Nori.Inlay;
 
 public class Part {
-   public bool Is2D => false;
-   public bool Is3D => true;
+   public bool Is2D => true;
+   public bool Is3D => false;
 }
 
 public class InlayHub {
@@ -22,7 +22,7 @@ public class InlayHub {
    public static void DoCopy () => Lib.Trace ("EDIT/COPY");
    public static void DoPaste () => Lib.Trace ("EDIT/PASTE");
 
-   public static Part? CurrentPart { get; set; } = new Part ();
+   public static Part? CurrentPart { get; set; } = null;
    public static List<string> MRUList = ["C:/Etc/Demo.fx", "C:/Parts/Assy/T142.step"];
    public static List<string> UndoStack = ["Clear Screen", "Draw Poly", "Close Poly", "Prep Laser"];
    public static int NUndo = 2;  // Next operation to be undone

@@ -137,6 +137,10 @@ public partial struct UXNode {
 
       /// <summary>The UID of the node owning this memo</summary>
       public uint UId;
+      /// <summary>
+      /// The key that was used when creating this memo
+      /// </summary>
+      public string? Key;
 
       // TODO: NodeMemo.Dispose is never called!
       public readonly void Dispose () => UXTimer.Stop (UId);

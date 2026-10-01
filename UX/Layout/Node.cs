@@ -2,8 +2,6 @@
 // ╔═╦╦═╦╦╬╣ Node.cs
 // ║║║║╬║╔╣║ <<TODO>>
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
-using System.Dynamic;
-
 namespace Nori;
 
 public partial struct UXNode {
@@ -98,7 +96,14 @@ public partial struct UXNode {
 
    // Methods ------------------------------------------------------------------
    public void Dump (StringBuilder sb) {
-      sb.Append ($"{Index} UID:{IdMemo} {Kind} {Flags} {X.DV}x{Y.DV} Next:{Next} Children:{FirstChild}..{LastChild}");
+      sb.Append ($"{Index} {Kind} Level:{Level}");
+      if (IdMemo != 0) sb.Append ($" Memo:{IdMemo}");
+      if (!Text.IsBlank ()) sb.Append ($" \"{Text}\"");
+      if (IdMemo != 0) {
+         var memo = UXEngine.Memo[IdMemo];
+         sb.Append ($" {memo.Rect}");
+
+      }
    }
 
    /// <summary>Fetch the memo related to this elemet</summary>
@@ -148,6 +153,16 @@ public partial struct UXNode {
          if (child.AnyPopupsOpen) return true;
       }
       return false;
+   }
+
+   // Max Level of this node, or any of its children
+   internal readonly int MaxChildLevel () {
+      int level = Level;
+      for (int c = FirstChild; c != 0; c = UXEngine.Nodes[c].Next) {
+         ref UXNode child = ref UXEngine.Nodes[c];
+         if (!child.IsPopup) level = Math.Max (level, child.Level);
+      }
+      return level;
    }
 
    readonly bool Get (EFlags flags) => (Flags & flags) != 0;

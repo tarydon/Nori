@@ -8,7 +8,7 @@ using static UXNode.Size;
 using static UXTheme;
 
 public static class UXApi {
-   public static bool DISABLED => false;
+   public static bool DISABLED => UXEngine.CurrentNode.Disabled;
 
    public static void END () {
       UXEngine.EndNode ();
@@ -29,6 +29,15 @@ public static class UXApi {
       => ref FILLER (Grow (min), Grow ());
 
    public static void ICON (string s) { }
+
+   public static void KEY (object o) {
+      ref UXNode node = ref UXEngine.CurrentNode;
+      if (node.IdMemo == 0) return;
+      var memo = UXEngine.Memo[node.IdMemo];
+      if (memo.Key == null || memo.Key.StartsWith ('\u221E')) return;
+      string newKey = $"\u221E{o}.{memo.Key}";
+      UXEngine.SetKey (ref node, newKey);
+   }
 
    public static bool MENU (string key, string text, bool disable, bool hasChildren)
       => MENU (key, text, null, disable, hasChildren);
@@ -92,7 +101,19 @@ public static class UXApi {
       UXEngine.EndNode ();
    }
 
-   public static void TIP (string s) { }
+   public static void TIP (string s) {
+      ref UXNode a = ref UXEngine.CurrentNode;
+      if (a.IsHovered (300) && !s.IsBlank ()) {
+         ref UXNode tip = ref UXEngine.BeginNode (EKind.Popup);
+         tip.Level = a.MaxChildLevel () + 1;
+         tip.ElemCorner = ECorner.TopLeft; tip.ParentCorner = ECorner.Bottom;
+         tip.BgrdColor = TIP_Bgrd; tip.BorderColor = TIP_BorderC;
+         tip.BorderWidth = TIP_BorderW; tip.CornerRadius = TIP_Radius;
+         tip.SetPadding (TIP_Padding);
+         TEXT (s, TIP_TextC);
+         UXEngine.EndNode (); 
+      }
+   }
 
    public static bool TOPMENU () {
       ref UXNode a = ref UXEngine.BeginNode (EKind.TopMenu);

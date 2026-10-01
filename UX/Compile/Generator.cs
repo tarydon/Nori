@@ -320,6 +320,6 @@ class UXGenerator {
    static Dictionary<string, char> sPropType = new (StringComparer.OrdinalIgnoreCase) {
       ["CHILDGAP"] = 'I', ["HORIZONTAL"] = '-', ["VERTICAL"] = '-', ["WIDTH"] = 'I', 
       ["HGROW"] = '-', ["HEIGHT"] = 'I', ["VGROW"] = '-', ["BGRDCOLOR"] = 'S', 
-      ["ICON"] = 'S', ["TIP"] = 'S', ["BGRD"] = 'S', ["PADDING"] = 'I'
+      ["ICON"] = 'S', ["TIP"] = 'S', ["BGRD"] = 'S', ["PADDING"] = 'I', ["KEY"] = 'O'
    };
 }

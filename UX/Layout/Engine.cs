@@ -9,6 +9,11 @@ namespace Nori;
 
 public static class UXEngine {
    // Properties ---------------------------------------------------------------
+   /// <summary>
+   /// A reference to the 'current node' being created
+   /// </summary>
+   public static ref UXNode CurrentNode => ref Nodes[mCurrent];
+
    /// <summary>The current mouse position, in pixels (top left = 0,0)</summary>
    public static Vec2S MousePos { get; private set; }
 
@@ -62,6 +67,17 @@ public static class UXEngine {
       return ref node;
    }
 
+   public static void SetKey (ref UXNode a, string key) {
+      if (!mMemoMap.TryGetValue (key, out int idMemo)) {
+         idMemo = ++mNextMemo;
+         if (Memo.Length <= idMemo) Array.Resize (ref Memo, Memo.Length * 2);
+         Memo[idMemo].Key = key;
+         mMemoMap.Add (key, idMemo);
+      }
+      Memo[idMemo].UId = (uint)idMemo;
+      a.IdMemo = (ushort)idMemo;
+   }
+
    public static ref UXNode BeginNode (EKind kind, string? key = null) {
       if (mUsed >= Nodes.Length)
          Array.Resize (ref Nodes, Nodes.Length * 2);
@@ -70,17 +86,7 @@ public static class UXEngine {
 
       ref UXNode node = ref Nodes[mCurrent];
       node.Index = mCurrent;
-      if (key != null) {
-         if (!mMemoMap.TryGetValue (key, out int idMemo)) {
-            idMemo = ++mNextMemo;
-            if (Memo.Length <= idMemo) {
-               Array.Resize (ref Memo, Memo.Length * 2);
-               Memo[idMemo].UId = (uint)idMemo;
-            }
-            mMemoMap.Add (key, idMemo);
-         }
-         node.IdMemo = (ushort)idMemo;
-      }
+      if (key != null) SetKey (ref node, key); 
       if ((node.Parent = mParent) != 0) {
          // If this has a parent, attach this node to the linked list of children
          // of that parent

@@ -5,8 +5,6 @@
 namespace Nori;
 
 using System.IO;
-using static UXApi;
-using static UXNode.Size;
 
 /// <summary>Represents the root VNode of the UX system</summary>
 /// This VNode takes over the entire window and is responsible for rendering the menus, status bar,

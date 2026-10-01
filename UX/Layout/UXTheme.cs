@@ -49,5 +49,12 @@ static class UXTheme {
    public static Color4 SLIDER_Fgrd_H = 0xEEEEEE;  // Slider fgrd when mouse hovers over
    public static Color4 SLIDER_Fgrd_P = 0xFFFF90;  // Slider fgrd when mouse is pressed
 
+   public static Color4 TIP_Bgrd = 0x607060;
+   public static Color4 TIP_BorderC = 0x406040;
+   public static short TIP_BorderW = 0;
+   public static int TIP_Padding = 12;
+   public static short TIP_Radius = 0;
+   public static Color4 TIP_TextC = 0xD0FFD0;
+
    public static int TOOLTIP_OpenDelay = 500;
 }
