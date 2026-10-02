@@ -37,6 +37,19 @@ public class DXFReader {
    /// <summary>Convert white entities to black on import</summary>
    public bool WhiteToBlack;
 
+   public string MatName = "NONE";
+   public double MatThickness {
+      get {
+         if (_Thickness.IsNan) return 1;
+         return _Thickness;
+      }
+      private set {
+         if (_Thickness.IsNan) // Set it once!
+            _Thickness = value;
+      }
+   }
+   double _Thickness = double.NaN;
+
    // Methods ------------------------------------------------------------------
    /// <summary>Loads the pair of drawings from a DXF2 file, normalizes and returns them</summary>
    public static (Poly[] Model, Poly[] Crash) LoadDXF2 (string file) {
@@ -244,6 +257,8 @@ public class DXFReader {
             if (s.StartsWith ("BEND_ANGLE:")) ba = s[11..].ToDouble ().D2R ();
             else if (s.StartsWith ("BEND_RADIUS:")) radius = s[12..].ToDouble () * Scale;
             else if (s.StartsWith ("K_FACTOR:")) kfactor = s[9..].ToDouble ();
+            else if (s.StartsWith ("MATERIAL:")) MatName = s;
+            else if (s.StartsWith ("THICKNESS:")) MatThickness = s.ToDouble ();
          }
       }
       var line = Poly.Line (PT (10), PT (11));
