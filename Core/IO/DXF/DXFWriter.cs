@@ -322,7 +322,8 @@ public class DXFWriter {
                   double bulge = seg.IsCCW ? 1 : -1;
                   Out ($" 42\n{bulge}\n 0\nVERTEX\n 8\n0\n 10\n{pt.X}\n 20\n{pt.Y}\n 42\n{bulge}\n");
                } else {
-                  var bulge = Math.Tan (seg.AngSpan / 4); if (Lib.Testing) bulge = bulge.R6 ();
+                  var bulge = Math.Tan (seg.AngSpan / 4);
+                  bulge = Math.Round (bulge, Lib.Testing ? 6 : 14);
                   Out ($" 42\n{bulge}\n");
                }
             }

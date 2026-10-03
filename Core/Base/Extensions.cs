@@ -371,6 +371,39 @@ public static class Extensions {
       T tmp = list[a]; list[a] = list[b]; list[b] = tmp;
    }
 
+   /// <summary>Splits a line read in from a CSV file</summary>
+   /// In principle, this is pretty simple to split since a CSV file line contains just
+   /// a set of strings separted by commas. However, some items in the line might be
+   /// 'quoted' and commas inside quotes should be ignored.
+   public static List<string> SplitCSV (this string s) {
+      var words = new List<string> ();
+      string word = ""; const char separator = ',';
+      char state = 'B';    // 'Beginning'
+      foreach (var ch in s) {
+         switch (state) {
+            case 'B':
+               if (ch == '\'') state = 'S';                                    // In a 'string'
+               else if (ch == '"') state = 's';                                // In a "string"
+               else if (ch == separator) words.Add (word);
+               else if (!char.IsWhiteSpace (ch)) { word += ch; state = 'W'; }  // 'In a word'
+               break;
+            case 's':
+               if (ch == '"') state = 'W';
+               else word += ch;
+               break;
+            case 'S':
+               if (ch == '\'') state = 'W';
+               else word += ch;
+               break;
+            case 'W':
+               if (ch == separator) { words.Add (word); word = ""; state = 'B'; } else word += ch;
+               break;
+         }
+      }
+      words.Add (word);
+      return words;
+   }
+
    /// <summary>Converts an IEnumerable into a comma-separated list</summary>
    /// This takes each object out of the IEnumerable and prints it using it's ToString operator.
    /// It then returns all of them as a comma separated list. If any of the items has the separator
