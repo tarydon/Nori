@@ -89,7 +89,7 @@ public readonly struct Color4 : IEQuable<Color4> {
    public static readonly Color4 Cyan = new (0, 255, 255);
    public static readonly Color4 DarkGreen = new (0, 128, 0);
    public static readonly Color4 DarkBlue = new (0, 0, 128);
-   public static readonly Color4 DarkRed = new (0, 0, 128);
+   public static readonly Color4 DarkRed = new (128, 0, 0);
 
    public static Color4 Random => new (mRand.Next (256), mRand.Next (256), mRand.Next (256));
    public static Color4 RandomLight => new (mRand.Next (128) + 128, mRand.Next (128) + 128, mRand.Next (128) + 128);

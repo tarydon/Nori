@@ -26,9 +26,9 @@ public class PaperFolder {
          if ((Result = SnapBendline (i)) != EResult.OK) return false;
       if ((Result = CheckBendIntersections ()) != EResult.OK) return false;
       LinkNodesPerPoly ();
-      MakeFaces (); 
+      MakeFaces ();
       GatherClusters ();
-      ReparentClusters (); 
+      ReparentClusters ();
       AssignHoles ();
       CreateTree ();
       return (Result = CreateModel (out model)) == EResult.OK;
@@ -90,7 +90,7 @@ public class PaperFolder {
    // Because of flanges in holes etc there could be multiple faces that all contain
    // this. However, the smallest one is the face in which this hole actually belongs
    int GetFaceEnclosing (Poly hole, Bound2 bound) {
-      int iBest = -1; 
+      int iBest = -1;
       for (int i = 0; i < mNFace; i++) {
          ref Face face = ref mFaces[i];
          if (face.Used || !face.Bound.Contains (bound)) continue;
@@ -101,9 +101,9 @@ public class PaperFolder {
             if (code == -1) continue;
             inside = code == 1; break;
          }
-         if (!inside) continue; 
+         if (!inside) continue;
          if (iBest == -1 || face.Bound.Area < mFaces[iBest].Bound.Area)
-            iBest = i; 
+            iBest = i;
       }
       return iBest;
    }
@@ -140,7 +140,7 @@ public class PaperFolder {
    // can be used to link them up
    void CreateTree () {
       Queue<int> todo = [];
-      mFaces[mRootFace].Used = true; 
+      mFaces[mRootFace].Used = true;
       todo.Enqueue (mRootFace);
       while (todo.TryDequeue (out int nFace)) {
          ref Face face = ref mFaces[nFace];
@@ -189,7 +189,7 @@ public class PaperFolder {
             double angle = bend.Angle; if ((nEdge & 1) == 0) angle = -angle;
             Point2 pa = bend.Pts[0], pb = bend.Pts[^1];
             var xfm1 = Matrix3.Rotation ((Point3)pa, (Point3)pb, angle);
-            todo.Enqueue ((nFace2, xfm1 * xfm)); 
+            todo.Enqueue ((nFace2, xfm1 * xfm));
          }
       }
       outModel = model;
@@ -217,7 +217,7 @@ public class PaperFolder {
 
       // Gather all the bendlines
       List<E2Bendline> bends = [.. mDwg.Ents.OfType<E2Bendline> ()];
-      mBends = new Bend[bends.Count]; 
+      mBends = new Bend[bends.Count];
       for (int i = 0; i < bends.Count; i++) {
          var bline = bends[i];
          if (bline.Pts.Length.IsOdd ()) { bline.IsError = true; return EResult.BadBendline; }
@@ -234,7 +234,7 @@ public class PaperFolder {
    void MakeFaces () {
       for (int nNode = 0; nNode < mNNode; nNode++) {
          ref Node node = ref mNode[nNode];
-         if (node.UsedInFace) continue; 
+         if (node.UsedInFace) continue;
 
          // Start building a face, by alternately traversing between bends and contours.
          // We will travel along a bendline until we reach the node at the end. This is easy to 
@@ -329,26 +329,34 @@ public class PaperFolder {
    EResult SnapBendline (int nBend) {
       // First, mark the list of contours this bend could intersect. At this point, 
       // we also gather all the intersections of these contours with the infinite bend-line.
-      mInters.Clear (); 
-      ref Bend bend = ref mBends[nBend]; 
+      mInters.Clear ();
+      ref Bend bend = ref mBends[nBend];
       Span<Point2> buffer = stackalloc Point2[2];
       var pts = bend.BLine.Pts; int nLastPt = pts.Length - 1;
       Point2 a = pts[0], b = pts[nLastPt];
       for (int nPoly = 0; nPoly < mNPoly; nPoly++) {
          ref CPoly con = ref mPolys[nPoly];
-         con.Intersects = con.Bound.Intersects (a, b);
+         if (!con.Bound.Intersects (a, b)) continue;
          foreach (var seg in con.Poly.Segs) {
             var ints = seg.Intersect (a, b, buffer, true);
-            foreach (var pt in ints) 
+            foreach (var pt in ints)
                mInters.Add (new (pt, nPoly, seg.N, pt.GetLieOn (a, b)));
          }
       }
+      if (mInters.Count == 0) // Actually, Seg.Contains has been modified, so this should not happen!
+         return EResult.BadBendline;
       // Sort the intersections by their lies on the bend-line a..b
       mInters.Sort ((a, b) => a.Lie.CompareTo (b.Lie));
 
+      // Dedup the intersections (bend terminating at the nodes)
+      // Without this, the existing logic has a hard time removing dups
+      //    
+      for (int i = mInters.Count - 1; i >= 1; i--)
+         if (mInters[i - 1].Lie.EQ (mInters[i].Lie)) mInters.RemoveAt (i);
+
       // Snap each of the points on the bend-line to the closest point within the list
       // of intersections
-      int nNext = 0; 
+      int nNext = 0;
       for (int k = nLastPt; k >= 0; k--) {
          Point2 pt = pts[k];
          int n = mInters.MinIndexBy (a => a.Pt.DistToSq (pt));
@@ -375,9 +383,11 @@ public class PaperFolder {
          }
          // If this is the first point on the bendline, discard all points before this
          if (k == 0) mInters.RemoveRange (0, n);
-         bend.BLine.Pts = [.. mInters.Select (a => a.Pt)];
-         nNext = n; 
+         nNext = n;
       }
+      if (mInters.Count == 0 || mInters.Count.IsOdd ())
+         return EResult.BadBendline; // Essentially, failed to resolve the point count
+      bend.BLine.Pts = [.. mInters.Select (a => a.Pt)]; // Safe! to mutate the E2Bendline directly
 
       // Now, mInters contains the final set of points on this bendline. Create one Node
       // structure for each of them
@@ -437,7 +447,6 @@ public class PaperFolder {
    struct CPoly (Poly poly, Bound2 bound) {
       public readonly Poly Poly = poly;
       public readonly Bound2 Bound = bound;
-      public bool Intersects;
       public bool UsedInFace;    // Has this Poly been used to build a Face?
    }
 
@@ -465,7 +474,7 @@ public class PaperFolder {
       // Next node within this poly (circular linked list)
       public int Next;
       // Face connected to the half-edge starting at this node
-      public int NFace; 
+      public int NFace;
       public bool UsedInFace;    // Already used to build a face
    }
 
@@ -475,7 +484,7 @@ public class PaperFolder {
       public readonly E2Bendline BLine;
       public int NBase;          // Nodes of this Bend start at this location
       public Vector2 Delta;
-      public bool Used; 
+      public bool Used;
    }
 
    // Represents a plane with some holes
