@@ -147,7 +147,7 @@ public readonly struct Seg {
    /// <summary>Check if the Seg 'contains' the given point</summary>
    /// For correct results, the point in question must lie on the infinite
    /// line (if the Seg is linear) or on the circle (if it is curved)
-   public bool Contains (Point2 p) => GetLie (p) is >= 0 and <= 1;
+   public bool Contains (Point2 p) => GetLie (p) is > -Lib.EpsilonSq and < 1 + Lib.EpsilonSq;
 
    /// <summary>This discretizes the segment into the given list of points with a given error threshold</summary>
    /// This does NOT add the start point into the list - if this is a line, it adds just
