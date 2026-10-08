@@ -253,12 +253,13 @@ public class DXFReader {
          if (!Next (true)) break;
          if (G == 0) { mR.Pos = before; break; }
          if (G == 1000) {
-            var s = mEncoding.GetString (mD.AsSpan (mStart, mLength)).ToUpper ();
+            var _s = mEncoding.GetString (mD.AsSpan (mStart, mLength));
+            var s = _s.ToUpper ();
             if (s.StartsWith ("BEND_ANGLE:")) ba = s[11..].ToDouble ().D2R ();
             else if (s.StartsWith ("BEND_RADIUS:")) radius = s[12..].ToDouble () * Scale;
             else if (s.StartsWith ("K_FACTOR:")) kfactor = s[9..].ToDouble ();
-            else if (s.StartsWith ("MATERIAL:")) MatName = s;
-            else if (s.StartsWith ("THICKNESS:")) MatThickness = s.ToDouble ();
+            else if (s.StartsWith ("MATERIAL:")) MatName = _s[9..]; // Material name with specified case letters
+            else if (s.StartsWith ("THICKNESS:")) MatThickness = s[10..].ToDouble ();
          }
       }
       var line = Poly.Line (PT (10), PT (11));
