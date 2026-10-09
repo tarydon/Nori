@@ -15,10 +15,16 @@ public class DXFWriter {
    /// <summary>If this is set, then no POLYLINE or LWPOLYLINE entities are output - only LINE and ARC</summary>
    public bool NoPolyline { get; set; }
 
+   public string MatName { get; set; } = "NONE";
+   public double Thickness { get; set; } = 1;
+
    #region Methods -------------------------------------------------------------
    /// <summary>Utility helper to save a Dwg to DXF file</summary>
-   public static void Save (Dwg2 dwg, string file, bool blackToWhite = false)
-      => File.WriteAllText (file, new DXFWriter (dwg) { BlackToWhite = blackToWhite }.Write ());
+   public static void Save (Dwg2 dwg, string file, string matName = "NONE", double thickness = 1, bool blackToWhite = false)
+      => File.WriteAllText (file, new DXFWriter (dwg) {
+         MatName = matName, Thickness = thickness,
+         BlackToWhite = blackToWhite
+      }.Write ());
 
    /// <summary>Maps Color4 to nearest ACAD color by comparing RGB values</summary>
    public static int ToACADColor (Color4 color) {
@@ -260,7 +266,7 @@ public class DXFWriter {
          if (Lib.Testing) (a, r, k) = (a.R6 (), r.R6 (), k.R6 ());
          var layer = eb.Angle < 0 ? mMBend : mBend;
          Out ($" 0\nLINE\n 8\n{layer!.Name}\n 10\n{pa.X}\n 20\n{pa.Y}\n 11\n{pb.X}\n 21\n{pb.Y}\n");
-         Out ($" 1001\nNORI\n 1000\nBEND_ANGLE:{a}\n 1000\nBEND_RADIUS:{r}\n 1000\nK_FACTOR:{k} \n");
+         Out ($" 1001\nNORI\n 1000\nBEND_ANGLE:{a}\n 1000\nBEND_RADIUS:{r}\n 1000\nK_FACTOR:{k}\n 1000\nMATERIAL:{MatName}\n 1000\nTHICKNESS:{Thickness}\n");
       }
       return 0;
    }
