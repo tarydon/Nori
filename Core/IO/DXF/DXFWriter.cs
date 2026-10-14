@@ -131,7 +131,7 @@ public class DXFWriter {
             E2Bendline e2b => OutBendLine (e2b),
             E2Dim e2dim => OutDimension (e2dim),
             E2Leader el => OutLeader (el),
-            E2Spline => 0,
+            E2Spline es => OutSpline (es),
             _ => throw new BadCaseException (ent.GetType ().Name)
          };
       }
