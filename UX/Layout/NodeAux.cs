@@ -10,7 +10,7 @@ public partial struct UXNode {
    /// <summary>What kind of UX node is this?</summary>
    public enum EKind {
       Root, Panel, Popup, VScroll, TopMenu, Menu, Separator, Button, Checkbox, 
-      Dialog, RadioButton, Slider, Label, Filler, Text,
+      Dialog, RadioButton, Slider, Label, Filler, Text, Rect,
    }
 
    /// <summary>What does GetChildren enumerate</summary>

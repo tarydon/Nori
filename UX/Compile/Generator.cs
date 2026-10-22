@@ -80,6 +80,7 @@ class UXGenerator {
       for (int i = 0; ; i++) {
          if (!TryGetExpr (out var expr)) break;
          if (i <= argTypes.Length && char.ToUpper (argTypes[i]) != 'S') expr = expr.Unquote ();
+         if (i <= argTypes.Length && char.ToUpper (argTypes[i]) == 'C') expr = $"Color4.Parse (\"{expr.Unquote ()}\")";
          expressions.Add (expr);
       }
       return expressions;
@@ -125,7 +126,9 @@ class UXGenerator {
                start = N - 1;
                while (!sNameStop.Contains (PeekCH ())) { GetCH (); }
                var span = mText.AsSpan (start, N - start);
-               EToken tok = Enum.TryParse<UXNode.EKind> (span, true, out _) ? EToken.Element : EToken.Word;
+               EToken tok;
+               if (char.IsDigit (span[0])) tok = EToken.Word;
+               else tok = Enum.TryParse<UXNode.EKind> (span, true, out _) ? EToken.Element : EToken.Word;
                return new Token (tok, mText, start, N, mLine, mColumn);
          }
       }
@@ -151,13 +154,13 @@ class UXGenerator {
       if (info.Inert) Add ($"{elem} (");
       else Add ($"if ({elem} (");
       string key = $"{Path.GetFileNameWithoutExtension (mFile).ToLower ()}.{tElem.Line}";
-      if (info.NeedsKey) Add ($"\"{key}\"");
+      if (info.NeedsKey) Add ($"\"{key}\", ");
       List<string> props = [];   // Additional prop initialers (like .TIP="Double")
 
       // Add the necessary parameters
       for (int i = 0; i < args.Count; i++) {
          string arg = args[i]; tag ??= arg;
-         Add (", ");
+         if (i > 0) Add (", ");
          if (i == info.BoundArg && info.VarType is { }) arg = $"ref _v{cVar}";
          Add (arg);
       }
@@ -180,7 +183,7 @@ class UXGenerator {
                if (elem == "MENU") AddL ("END (); // POPUPMENU");
                AddL ("}");
                props.ForEach (AddL);
-               int count = elem == "DIALOG" ? 2 : 1;
+               int count = elem == "DIALOG" ? 1 : 1;
                AddL ($"END ({count}); // {elem} {tag}");
                return;
             case EToken.Newline:

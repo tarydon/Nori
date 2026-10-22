@@ -68,6 +68,10 @@ public static class UXEngine {
    }
 
    public static void SetKey (ref UXNode a, string key) {
+      if (UXApi.KeyPrefix is { } k) {
+         key = $"{k}.{key}";
+         UXApi.KeyPrefix = null;
+      }
       if (!mMemoMap.TryGetValue (key, out int idMemo)) {
          idMemo = ++mNextMemo;
          if (Memo.Length <= idMemo) Array.Resize (ref Memo, Memo.Length * 2);

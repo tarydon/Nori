@@ -9,6 +9,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Attic\**" />
+    <EmbeddedResource Remove="Attic\**" />
+    <None Remove="Attic\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\Core\Nori.Core.csproj" />
     <ProjectReference Include="..\Host\GLFW\Nori.Host.GLFW.csproj" />
     <ProjectReference Include="..\Lux\Nori.Lux.csproj" />

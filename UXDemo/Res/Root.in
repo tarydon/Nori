@@ -6,7 +6,8 @@ TOPMENU [
       MENU "Open Recent" [
         for (int i = 0; i < Math.Min (MRUList.Count, 9); i++) {
           var file = MRUList[i];
-          MENU $"{file}" $"Ctrl {i + 1}" .Key=i { DoFileOpen (file); }
+          KEY(i);
+          MENU $"{file}" $"Ctrl {i + 1}" { DoFileOpen (file); }
         }
       ]
     }

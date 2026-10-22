@@ -88,6 +88,7 @@ public class UXClass (EKind kind, EFlags flags, UXClass.EContainer con, string a
       UXEngine.RegisterClass (new RootClass ());
       UXEngine.RegisterClass (new PanelClass ());
       UXEngine.RegisterClass (new PopupClass ());
+      UXEngine.RegisterClass (new DialogClass ());
       UXEngine.RegisterClass (new VScrollClass ());
       UXEngine.RegisterClass (new TopMenuClass ());
       UXEngine.RegisterClass (new MenuClass ());
@@ -97,6 +98,7 @@ public class UXClass (EKind kind, EFlags flags, UXClass.EContainer con, string a
       UXEngine.RegisterClass (new LabelClass ());
       UXEngine.RegisterClass (new TextClass ());
       UXEngine.RegisterClass (new FillerClass ());
+      UXEngine.RegisterClass (new RectClass ());
    }
 }
 
@@ -120,8 +122,16 @@ public class PanelClass : UXClass {
    public PanelClass () : base (EKind.Panel, 0, Yes, "", null, -1) { }
 }
 
+public class RectClass : UXClass {
+   public RectClass () : base (EKind.Rect, EFlags.Inert, No, "EEC", null, -1) { }
+}
+
 public class PopupClass : UXClass {
    public PopupClass () : base (EKind.Popup, EFlags.Popup | EFlags.Shadow, Yes, "", null, -1) { }
+}
+
+public class DialogClass : UXClass {
+   public DialogClass () : base (EKind.Dialog, EFlags.Popup | EFlags.Shadow, Yes, "S", null, -1) { }
 }
 
 public class RadioButtonClass : UXClass {

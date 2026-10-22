@@ -10,6 +10,14 @@ using static UXTheme;
 public static class UXApi {
    public static bool DISABLED => UXEngine.CurrentNode.Disabled;
 
+   public static bool DIALOG (string title) {
+      ref UXNode a = ref UXEngine.BeginNode (EKind.Dialog);
+      a.BgrdColor = Color4.Red;
+      a.FloatOffset = new Vec2S (300, 300);
+      a.X.Set (400); a.Y.Set (300);
+      return true;
+   }
+
    public static void END () {
       UXEngine.EndNode ();
    }
@@ -30,14 +38,8 @@ public static class UXApi {
 
    public static void ICON (string s) { }
 
-   public static void KEY (object o) {
-      ref UXNode node = ref UXEngine.CurrentNode;
-      if (node.IdMemo == 0) return;
-      var memo = UXEngine.Memo[node.IdMemo];
-      if (memo.Key == null || memo.Key.StartsWith ('\u221E')) return;
-      string newKey = $"\u221E{o}.{memo.Key}";
-      UXEngine.SetKey (ref node, newKey);
-   }
+   public static void KEY (object o) => KeyPrefix = o.ToString ();
+   internal static string? KeyPrefix;
 
    public static bool MENU (string key, string text, bool disable, bool hasChildren)
       => MENU (key, text, null, disable, hasChildren);
@@ -71,6 +73,12 @@ public static class UXApi {
       ref UXNode a = ref UXEngine.BeginNode (EKind.Panel, width, height, key);
       a.BgrdColor = bgrd; a.IsHorizontal = horizontal;
       return ref a;
+   }
+
+   public static void RECT (Size width, Size height, Color4 bgrd) {
+      ref UXNode a = ref UXEngine.BeginNode (EKind.Rect, width, height);
+      a.BgrdColor = bgrd;
+      UXEngine.EndNode ();
    }
 
    public static bool POPUPMENU (string key) {
@@ -122,3 +130,4 @@ public static class UXApi {
       return true;
    }
 }
+

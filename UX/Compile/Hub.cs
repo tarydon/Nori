@@ -30,7 +30,7 @@ public class InlayHub {
    public static string? NextUndo => UndoStack.SafeGet (NUndo);
    public static string? NextRedo => UndoStack.SafeGet (NUndo + 1);
 
-   public static void DoDialog () { } 
+   public static void DoDialog () => UXCel.Mount ("Dialog.in");
    public static void DoThumbnails () { } 
 
    // Dialog ---------------
