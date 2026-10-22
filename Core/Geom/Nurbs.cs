@@ -14,7 +14,7 @@ namespace Nori;
 public class SplineImp {
    // Constructors -------------------------------------------------------------
    /// <summary>Construct a SplineImp, given the number of control points and the knot vector</summary>
-   public SplineImp (int cCtrl, ImmutableArray<double> knot) 
+   public SplineImp (int cCtrl, ImmutableArray<double> knot)
       => (Knot, mNodes) = (knot, cCtrl);
    SplineImp () => Knot = [];
 
@@ -44,13 +44,13 @@ public class SplineImp {
       int order = Knot.Length - mNodes;
       if (result.Length < order)
          throw new Exception ($"Result buffer must have length >= {order}");
-      while (mBuffer.Value!.Length < 2 * order) 
+      while (mBuffer.Value!.Length < 2 * order)
          mBuffer.Value = new double[mBuffer.Value!.Length * 2];
       Span<double> left = mBuffer.Value.AsSpan (0, order), right = mBuffer.Value.AsSpan (order, order);
 
       // First find the span of interest in which this knot lies
       if (span == -1) {
-         int n = span = mNodes - 1; 
+         int n = span = mNodes - 1;
          if (t < Knot[n + 1]) {
             int low = Degree, high = n + 1; span = (low + high) / 2;
             for (; ; ) {
@@ -96,7 +96,21 @@ public class SplineImp {
 public class Spline2 {
    /// <summary>Construct a 2D spline given the control points, knot vector and the weights</summary>
    public Spline2 (ImmutableArray<Point2> ctrl, ImmutableArray<double> knot, ImmutableArray<double> weight) {
+      if (ctrl.IsEmpty)
+         throw new ArgumentException ("Control point list cannot be empty", nameof (ctrl));
+      if (knot.IsDefaultOrEmpty)
+         throw new ArgumentException ("Knot vector cannot be empty", nameof (knot));
+      if (knot.Length <= ctrl.Length + 1)
+         throw new ArgumentException ("Invalid knot vector length for the given control points", nameof (knot));
+      for (int i = 1; i < knot.Length; i++)
+         if (knot[i] < knot[i - 1])
+            throw new ArgumentException ("Knot vector must be nondecreasing", nameof (knot));
+
       Imp = new SplineImp (ctrl.Length, knot);
+
+      if (!weight.IsDefaultOrEmpty && weight.Length != ctrl.Length)
+         throw new ArgumentException ("Weights count must match control points count", nameof (weight));
+
       Ctrl = ctrl; Weight = weight;
       Rational = !(weight.IsEmpty || weight.All (a => a.EQ (1)));
       if (!Rational) Weight = [];
@@ -123,6 +137,8 @@ public class Spline2 {
    /// the PWL approximation and the original spline curve exceed the given error threshold
    /// 'error'
    public void Discretize (List<Point2> pts, double error) {
+      if (error <= 0)
+         throw new ArgumentOutOfRangeException (nameof (error), "Error threshold must be > 0");
       pts.Clear ();
 
       // Set up for adaptive evaluation. We create a rough linear approximation by evaluating
@@ -139,29 +155,30 @@ public class Spline2 {
 
       // Now the recursive evaluation part - at each iteration of this loop, we pop off two
       // nodes from this stack to see if that linear span needs to be further subdivided.
-      const int maxLevel = 5;
       while (eval.Count > 1) {
          Node e1 = eval.Pop (), e2 = eval.Peek ();
 
          // We want to see if the span between e1 and e2 needs to be further subdivided
-         if (e1.Level < maxLevel) {
+         if (e1.Level < 64) {
             double a = e1.A, b = e2.A, amid = (a + b) / 2;
-            Point2 pmid = Evaluate (amid);
-            // We evaluate points at 0.25, 0.5 and 0.75 of the knot values between e1 and e2.
-            // If any of these evaluate points deviates from the straight line connecting e1 and e2
-            // by more than the error threshold, then we need to further subdivide this segment into
-            // two.
-            bool subdivide = pmid.DistToLineSq (e1.Pt, e2.Pt) > errSq
-               || Evaluate (0.25.Along (a, b)).DistToLineSq (e1.Pt, e2.Pt) > errSq
-               || Evaluate (0.75.Along (a, b)).DistToLineSq (e1.Pt, e2.Pt) > errSq;
-            if (subdivide) {
-               // If we want to subdivide, we break down the span e1..e2 into two spans:
-               // e1..emid and emid..e2 and push these on to the stack (note that we push emid first
-               // since this is a 'stack'). Note that we are bumping up the level in these newly
-               // pushed spans to avoid recursing too deep
-               eval.Push (new Node { A = amid, Pt = pmid, Level = e1.Level + 1 });
-               eval.Push (new Node { A = a, Pt = e1.Pt, Level = e1.Level + 1 });
-               continue;
+            if (amid != a && amid != b) {
+               Point2 pmid = Evaluate (amid);
+               // We evaluate points at 0.25, 0.5 and 0.75 of the knot values between e1 and e2.
+               // If any of these evaluate points deviates from the straight line connecting e1 and e2
+               // by more than the error threshold, then we need to further subdivide this segment into
+               // two.
+               bool subdivide = pmid.DistToLineSq (e1.Pt, e2.Pt) > errSq
+                  || Evaluate (0.25.Along (a, b)).DistToLineSq (e1.Pt, e2.Pt) > errSq
+                  || Evaluate (0.75.Along (a, b)).DistToLineSq (e1.Pt, e2.Pt) > errSq;
+               if (subdivide) {
+                  // If we want to subdivide, we break down the span e1..e2 into two spans:
+                  // e1..emid and emid..e2 and push these on to the stack (note that we push emid first
+                  // since this is a 'stack'). Note that we are bumping up the level in these newly
+                  // pushed spans to avoid recursing too deep
+                  eval.Push (new Node { A = amid, Pt = pmid, Level = e1.Level + 1 });
+                  eval.Push (new Node { A = a, Pt = e1.Pt, Level = e1.Level + 1 });
+                  continue;
+               }
             }
          }
 
@@ -171,17 +188,20 @@ public class Spline2 {
       }
       // Finally, add the last point (endpoint) that still remains on the stack
       pts.Add (eval.Pop ().Pt);
+      pts.Reverse ();
    }
 
    /// <summary>Evaluates the spline at a given knot value t</summary>
    public Point2 Evaluate (double t) {
-      if (t <= Imp.Knot[0]) return Ctrl[0];
-      if (t >= Imp.Knot[^1]) return Ctrl[^1];
-      while (mFactor.Value!.Length < Imp.Order) 
+      int p = Imp.Degree;
+      double tMin = Imp.Knot[p], tMax = Imp.Knot[^(p + 1)];
+      if (t <= tMin) t = tMin;
+      else if (t >= tMax) t = tMax;
+      while (mFactor.Value!.Length < Imp.Order)
          mFactor.Value = new double[mFactor.Value.Length * 2];
 
       double[] factor = mFactor.Value;
-      int span = Imp.ComputeBasis (t, factor), p = Imp.Degree;
+      int span = Imp.ComputeBasis (t, factor);
       double x = 0, y = 0;
       if (Rational) {
          double wsum = 0;
@@ -192,6 +212,8 @@ public class Spline2 {
             x += ctrl.X * weight; y += ctrl.Y * weight;
             wsum += weight;
          }
+         if (wsum.EQ (0))
+            throw new Exception ("Invalid rational spline evaluation: weight sum is zero");
          return new (x / wsum, y / wsum);
       } else {
          for (int j = 0; j <= p; j++) {
