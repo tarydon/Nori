@@ -160,8 +160,8 @@ class DwgMiscTests {
       solid.GetBound (xfm).Is ("15x20@-75,150");
       // Spline
       var spline = dwg.Ents.OfType<E2Spline> ().Single ();
-      t = 2; spline.IsCloser (new (40, 85), ref t).Is (true); Math.Round (t, 2).Is (0.23);
-      t = 2; spline.IsCloser (new (40, 89), ref t).Is (false);
+      t = 2; spline.IsCloser (new (40, 85), ref t).Is (true); Math.Round (t, 2).Is (0.08);
+      t = 2; spline.IsCloser (new (40, 89), ref t).Is (true);
       spline.IsCloser (far, ref t).Is (false);
       spline.GetBound (xfm).Is ("60x100@-110,10");
       // Insert

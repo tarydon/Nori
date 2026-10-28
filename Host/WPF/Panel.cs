@@ -17,7 +17,7 @@ using Ptr = nint;
 /// A WPF UserControl does not have a windows handle, so cannot actually contain an 
 /// OpenGL context directly. So we have a WinForms control as a child (using a 
 /// WindowsFormsHost as intermediary) and create the GL surface on that
-class Panel : WControl {
+public class Panel : WControl {
    // Interface ----------------------------------------------------------------
    // The Panel singleton (only one GL context, so only one Panel, one Surface)
    public static Panel It => mIt ??= new ();
@@ -31,6 +31,8 @@ class Panel : WControl {
          surface.Cursor = value ? null : Surface.EmptyCursor;
       }
    }
+
+   public void RestoreFocus () { mSurface?.Focus (); }
 
    // Force-issue a WM_PAINT message (redraw)
    public void Redraw ()
