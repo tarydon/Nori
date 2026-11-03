@@ -391,6 +391,14 @@ public static partial class Lux {
    public static void Points (ReadOnlySpan<Vec2F> pts)
       => Point2DShader.It.Draw (pts);
 
+   /// <summary>Draws a 2D point in world coordinates, with Z = 0</summary>
+   /// 
+   /// The following Lux properties are used:
+   /// - PointSize : the diameter of the points, in device independent pixels
+   /// - Color : color of the points being drawn
+   public static void Point (Vec2F pt) 
+      => Points (MemoryMarshal.CreateReadOnlySpan (ref pt, 1));
+
    /// <summary>Draws 3D points in world coordinates</summary>
    ///
    /// The following Lux properties are used:
@@ -405,11 +413,8 @@ public static partial class Lux {
    /// - Color: color of the lines/arcs drawn
    /// - LineWidth: the width of the beziers, in device independent pixels
    /// - Xfm: current transformation matrix
-   public static void Poly (Poly p) {
-      mPolys.Clear (); mPolys.Add (p);
-      Polys (mPolys.AsSpan ());
-   }
-   static readonly List<Poly> mPolys = [];
+   public static void Poly (Poly p) 
+      => Polys (MemoryMarshal.CreateReadOnlySpan (ref p, 1));
    static readonly List<Vec2F> mLines = [], mBeziers = [];
 
    /// <summary>Draw multiple Polys in world coordinates, with Z = 0</summary>

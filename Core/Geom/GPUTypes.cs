@@ -42,6 +42,7 @@ public readonly struct Vec3F (float x, float y, float z) : IEQuable<Vec3F> {
 /// <summary>3D vector of 16-bit half (used for passing data to OpenGL)</summary>
 [StructLayout (LayoutKind.Sequential, Pack = 2, Size = 6)]
 public readonly struct Vec3H (Half x, Half y, Half z) : IEQuable<Vec3H> {
+   public Vec3H (float x, float y, float z) : this ((Half)x, (Half)y, (Half)z) { }
    public static implicit operator Vec3H (Vector3 vec) => new ((Half)vec.X, (Half)vec.Y, (Half)vec.Z);
    public static implicit operator Vec3H (Vector3f vec) => new ((Half)vec.X, (Half)vec.Y, (Half)vec.Z);
    public static explicit operator Vector3 (Vec3H vec) => new ((float)vec.X, (float)vec.Y, (float)vec.Z);

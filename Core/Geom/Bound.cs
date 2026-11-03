@@ -423,6 +423,13 @@ public readonly struct Bound3 : IEQuable<Bound3> {
       (X, Y, Z) = (new (), new (), new ());
       foreach (var p in pts) { X += p.X; Y += p.Y; Z += p.Z; }
    }
+   public Bound3 (IEnumerable<Point3> pts, Matrix3 xfm) {
+      (X, Y, Z) = (new (), new (), new ());
+      foreach (var p0 in pts) {
+         Point3 p = p0 * xfm;
+         { X += p.X; Y += p.Y; Z += p.Z; }
+      }
+   }
    public Bound3 (params ReadOnlySpan<Point3> pts) {
       (X, Y, Z) = (new (), new (), new ());
       foreach (var p in pts) { X += p.X; Y += p.Y; Z += p.Z; }

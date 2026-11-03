@@ -60,6 +60,21 @@ public partial class Poly {
       return new Poly ([a], [new ArcInfo (pt, EFlags.CCW | EFlags.Circle)], EFlags.Closed | EFlags.HasArcs | EFlags.Circle);
    }
 
+   /// <summary>Gets all the intersections of this Poly with the given line</summary>
+   public List<Point2> GetIntersections (Point2 a, Point2 b) {
+      List<Point2> result = [];
+      Span<Point2> buffer = stackalloc Point2[2];
+      foreach (var seg in Segs) {
+         var ints = seg.Intersect (a, b, buffer, true);
+         foreach (var pt in ints) {
+            if (result.Count > 0 && result[^1].EQ (pt)) continue;
+            result.Add (pt);
+         }
+      }
+      if (result.Count > 1 && result[0].EQ (result[^1])) result.RemoveLast ();
+      return result;
+   }
+
    /// <summary>Make a single-line Poly</summary>
    public static Poly Line (Point2 pt, Point2 pt2)
       => new ([pt, pt2], [], 0);

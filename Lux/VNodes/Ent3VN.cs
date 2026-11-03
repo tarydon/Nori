@@ -44,6 +44,11 @@ public class E3MeshVN (E3Mesh mMesh) : Ent3VN (mMesh) {
 /// We ask the E3Surface to compute and return a Mesh3 that we render here. Depending on 
 /// the IsTranslucent / NoStencil bits of the entity, we choose different Mesh rendering modes.
 public class E3SurfaceVN (E3Surface mSurface) : Ent3VN (mSurface) {
+   public override void SetAttributes () {   // REMOVETHIS
+      if (!mSurface.IsSelected) Lux.Color = mSurface.Color;
+      else base.SetAttributes ();   
+   }
+
    public override void Draw () {
       var mode = (mSurface.IsTranslucent, mSurface.NoStencil) switch {
          (true, true) => EShadeMode.GlassNoStencil,

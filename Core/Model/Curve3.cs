@@ -635,6 +635,33 @@ public class Polyline3 : Curve3 {
 }
 #endregion
 
+#region class RevCurve3 ----------------------------------------------------------------------------
+/// <summary>A Curve3 that is just the 'reverse' of another existing Curve3</summary>
+public class RevCurve3 : Curve3 {
+   RevCurve3 () => mBasis = null!;
+   public RevCurve3 (Curve3 basis) : base (basis.PairId) => mBasis = basis;
+
+   public override Bound1D Domain => mBasis.Domain;
+   public override Point3 End => mBasis.Start;
+   public override bool IsOnXYPlane => mBasis.IsOnXYPlane;
+   public override bool IsOnXZPlane => mBasis.IsOnXZPlane;
+   public override Point3 Start => mBasis.End;
+
+   public override void Discretize (List<Point3> pts, ETess tolerance) {
+      List<Point3> tmp = []; mBasis.Discretize (tmp, tolerance); tmp.Reverse ();
+      pts.AddRange (tmp);
+   }
+
+   public override Curve3 Flipped () => mBasis;
+   public override Point3 GetPoint (double t) => mBasis.GetPoint (Domain.Max - (t - Domain.Min));
+   public override double GetT (Point3 pt) => throw new NotImplementedException ();
+   public override Curve3 Trimmed (double t1, double t2, bool reverseDir) => throw new NotImplementedException ();
+   protected override Curve3 Xformed (Matrix3 xfm) => this;
+
+   readonly Curve3 mBasis;
+}
+#endregion
+
 #region class Contour3 -----------------------------------------------------------------------------
 /// <summary>Contour3 is a collection of Curve3 connected end-to-end</summary>
 /// Typically surfaces are bounded by a set of Contour3
