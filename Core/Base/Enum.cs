@@ -55,15 +55,22 @@ public enum EProp {
 /// <summary>Result enumeration (returned by several algorithms)</summary>
 public enum EResult {
    OK = 0, 
-   NoBendLines = 1,           // No bend lines found
-   BadBendline = 2,           // Invalid bend line found
-   NoOuterContour = 3,        // Single outer contour required
-   IllFormedDrawing = 4,      // Ill-formed drawing
-   IntersectingBendlines = 5, // Bendlines intersecting
-   NotSheetMetalModel = 6,    // This is not a sheet-metal model
-   CantFindBaseplane = 7,     // SheetMetalizer cannot find a suitable baseplane
-   InvalidThickness = 8,      // Invalid sheet metal thickness (should be between 0.1 & 25.4 mm)
-   CantSheetMetalize = 9,     // SheetMetalizer is not able to convert this model
+   NoBendLines = 1,              // No bend lines found
+   BadBendline = 2,              // Invalid bend line found
+   NoOuterContour = 3,           // Single outer contour required
+   IllFormedDrawing = 4,         // Ill-formed drawing
+   IntersectingBendlines = 5,    // Bendlines intersecting
+   NotSheetMetalModel = 6,       // This is not a sheet-metal model
+   CantFindBaseplane = 7,        // SheetMetalizer cannot find a suitable baseplane
+   InvalidThickness = 8,         // Invalid sheet metal thickness (should be between 0.1 & 25.4 mm)
+   CantSheetMetalize = 9,        // SheetMetalizer is not able to convert this model
+   LibMismatch = 10,             // Library mismatch (for example between Nori<->Spatial or Nori<->Hoops)
+   UnsupportedFileVersion = 11,  // Unsupported file version (for example, a PSM file that is too old)
+   UnknownError = 12,            // An unknown error
+   MissingAsmComponent = 13,     // A component referenced by an assembly is missing
+   ACISImportError = 14,         // ACIS import failed
+   UnsupportedCurve = 15,        // Unsupported curve type (during 3D import)
+   UnsupportedSurface = 16,      // Unsupported surface type (during 3D import)
 }
 
 /// <summary>The possible values for text-alignment within a box</summary>
