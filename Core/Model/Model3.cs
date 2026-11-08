@@ -11,6 +11,11 @@ public class Model3 {
    public Model3 () => mEnts.Subscribe (OnEntsChanged);
 
    // Properties ---------------------------------------------------------------
+   /// <summary>The list of blocks in the drawing</summary>
+   /// New blocks are added by calling Add(Block2)
+   public IReadOnlyList<Block3> Blocks => mBlocks ?? [];
+   List<Block3>? mBlocks;
+
    /// <summary>The Bound of this Model</summary>
    public Bound3 Bound => Bound3.Cached (ref mBound, () => new (mEnts.Select (e => e.Bound)));
    Bound3 mBound = new ();
@@ -18,6 +23,38 @@ public class Model3 {
    /// <summary>The set of entities in this Model</summary>
    public AList<Ent3> Ents => mEnts;
    readonly AList<Ent3> mEnts = [];
+
+   // Methods ------------------------------------------------------------------
+   /// <summary>Adds a Block2 to the list of blocks in the drawing</summary>
+   public void Add (Block3 block) { (mBlocks ??= []).Add (block); }
+
+   /// <summary>
+   /// Flattens a model that has only one insert with one block
+   /// </summary>
+   /// These types of 'single-block' models are made by some importers - the block can effectively
+   /// be exploded and the contents placed directly in the model set in this case
+   public void CleanupBlocks () {
+      if (mBlocks == null) return;
+      for (int i = mBlocks.Count - 1; i >= 0; i--) {
+         // If there are any empty blocks, remove them (along with the inserts that reference
+         // them)
+         var block = mBlocks[i]; 
+         if (block.Ents.Count == 0) {
+            mEnts.RemoveIf (a => a is E3Insert ei && ei.Block == block);
+            mBlocks.RemoveAt (i);
+         }
+      }
+
+      // If we are left with just one insert which has an identity (or even only a translation 
+      // transform), flatten that
+      if (mEnts.Count == 1 && mEnts[0] is E3Insert ei && mBlocks.Count == 1) {
+         if (ei.Xfm.IsIdentity || ei.Xfm.IsTranslation) {
+            mEnts.RemoveAt (0);
+            foreach (var ent in ei.Block.Ents) mEnts.Add (ent);
+            mBlocks.Clear ();
+         }
+      }
+   }
 
    /// <summary>Returns the 'neighbors' of the given entity (all entities that share a common edge)</summary>
    public IReadOnlyList<E3Surface> GetNeighbors (E3Surface ent) {

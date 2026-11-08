@@ -59,6 +59,8 @@ public abstract partial class Ent3 {
    /// <summary>Returns the Bound of the Ent3 (overridden in descendents)</summary>
    public abstract Bound3 Bound { get; }
 
+   public Color4 Color = Color4.White; // REMOVETHIS
+
    /// <summary>Returns the flags for this entity</summary>
    public E3Flags Flags => mFlags;
 
@@ -296,8 +298,6 @@ public abstract class E3Surface : Ent3 {
    public double Area => mArea.Cached (ComputeArea);
    double mArea = double.NaN;
 
-   public Color4 Color = Color4.White;
-
    /// <summary>The Bound of the surface in 3D</summary>
    /// This is computed by the ComputeBound override, and cached here
    [DebuggerBrowsable (DebuggerBrowsableState.Never)]
@@ -475,9 +475,9 @@ public abstract class E3CSSurface : E3Surface {
 
 #region class E3Insert -----------------------------------------------------------------------------
 /// <summary>A reference to a Block3 with a specified transformation</summary>
-class E3Insert : Ent3 {
+public class E3Insert : Ent3 {
    E3Insert () { mBlock = null!; mXfm = Matrix3.Identity; }
-   public E3Insert (Block3 block, Matrix3 xfm) { mBlock = block; mXfm = xfm; }
+   public E3Insert (int id, Block3 block, Matrix3 xfm) : base (id) { mBlock = block; mXfm = xfm; }
 
    public override Bound3 Bound => Bound3.Cached (ref mBound, () => GetBound (Matrix3.Identity));
    Bound3 mBound = new ();
@@ -490,15 +490,18 @@ class E3Insert : Ent3 {
    }
 
    protected override Ent3 Xformed (Matrix3 xfm) 
-      => new E3Insert (mBlock, mXfm * xfm);
+      => new E3Insert (Id, mBlock, mXfm * xfm);
 
+   public Block3 Block => mBlock;
    readonly Block3 mBlock;
+
+   public Matrix3 Xfm => mXfm;
    readonly Matrix3 mXfm;
 }
 #endregion
 
 #region class E3Block ------------------------------------------------------------------------------
-class Block3 {
+public class Block3 {
    Block3 () { mEnts = []; mName = ""; }
    public Block3 (string name, IEnumerable<Ent3> ents) { mName = name; mEnts = [.. ents]; }
 
@@ -507,5 +510,11 @@ class Block3 {
 
    public string Name => mName;
    readonly string mName;
+
+   public void Add (Ent3 ent) => mEnts.Add (ent);
+
+   /// <summary>The VNode for this Block2 (if one has been created)</summary>
+   public object? VNode { get => _vnode; set => _vnode = value; }
+   object? _vnode;
 }
 #endregion

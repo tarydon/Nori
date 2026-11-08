@@ -75,7 +75,7 @@ public class DwgFillVN : VNode {
 }
 #endregion
 
-#region class BlockVN ------------------------------------------------------------------------------
+#region class Block2VN -----------------------------------------------------------------------------
 /// <summary>BlockVN is a VNode for a Block (referenced by an Insert)</summary>
 /// The reason we have BlockVN at all is so that multiple inserts using the same Block can
 /// all reuse the same BlockVN. This code simply draws all the entities in the block. When

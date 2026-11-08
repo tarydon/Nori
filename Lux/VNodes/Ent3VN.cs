@@ -31,6 +31,21 @@ public class E3CurveVN (E3Curve mCurve) : Ent3VN (mCurve) {
 }
 #endregion
 
+#region class E3InsertVN ---------------------------------------------------------------------------
+/// <summary>VNode to render an E3Insert</summary>
+/// An E3Insert references a block and provides a transformation for it
+[Used]
+class E3InsertVN (E3Insert e3i) : Ent3VN (e3i) {
+   // The only child for the E3Insert is the Block3VN. Since we call Block3VN.For that
+   // constructs a shared Block3VN that is used by all the inserts (only the transform
+   // distinguishes them from each other)
+   public override VNode? GetChild (int n) => n == 0 ? Block3VN.Get (e3i.Block) : null;
+
+   // The attribute we set pushes this Insert's Xfm on the draw stack.
+   public override void SetAttributes () { base.SetAttributes (); Lux.Xfm = e3i.Xfm; }
+}
+#endregion
+
 #region class E3MeshVN -----------------------------------------------------------------------------
 /// <summary>Renders a E3Mesh</summary>
 /// <param name="mMesh"></param>
@@ -86,27 +101,30 @@ public class Model3VN : VNode {
 }
 #endregion
 
-[Obsolete ("Will be removed soon - tell Arvind if you need this")]   // Remove 260706
-public class Curve3VN (Curve3 edge) : VNode (edge) {
-   public override void Draw () {
-      if (mPts.Count == 0) {
-         List<Point3> pts = [];
-         mEdge.Discretize (pts, ETess.Fine);
-         mPts.Add (pts[0]);
-         for (int i = 0; i < pts.Count - 1; i++) { mPts.Add (pts[i]); mPts.Add (pts[i]); }
-         mPts.Add (pts[^1]);
-      }
-      Lux.Lines (mPts.AsSpan ());
+#region class Block3VN -----------------------------------------------------------------------------
+/// <summary>Block3VN is a VNode for a Block3 (referenced by an E3Insert)</summary>
+/// With this, multiple inserts using the same block will all reuse the same VN, just with
+/// different transforms. This code simply draws all the entities in the block. When
+/// it appears as the child VN of an E3InsertVN, that parent has already pushed a transform
+/// on the stack so that this drawing all happens with the correct transform
+class Block3VN (Block3 block) : VNode (block) {
+   /// <summary>Gets the BlockVN corresponding to a given block</summary>
+   public static Block3VN Get (Block3 block) {
+      if (block.VNode is not Block3VN bvn)
+         block.VNode = bvn = new Block3VN (block);
+      return bvn;
    }
-   readonly Curve3 mEdge = edge;
-   List<Vec3F> mPts = [];
-}
 
-[Obsolete ("Will be removed soon - tell Arvind if you need this")]   // Remove 260706
-public class E3ContourVN (E3Contour cp) : VNode (cp) {
+   // The children of the BlockVN are EntityVN, each one wrapping around one Entity in the block
    public override VNode? GetChild (int n) {
-      if (n < mCurves.Count) return mCurves[n];
-      else return null;
+      var ent = block.Ents.SafeGet (n);
+      return ent == null ? null : MakeFor (ent);
    }
-   readonly List<Curve3VN> mCurves = [.. cp.Curves.Select (a => new Curve3VN (a))];
+
+   // Overrides  --------------------------------------------------------------
+   public override void OnDetach () {
+      base.OnDetach ();
+      block.VNode = null; // reset the cached visual node
+   }
 }
+#endregion
