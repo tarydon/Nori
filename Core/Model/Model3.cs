@@ -28,30 +28,64 @@ public class Model3 {
    /// <summary>Adds a Block2 to the list of blocks in the drawing</summary>
    public void Add (Block3 block) { (mBlocks ??= []).Add (block); }
 
-   /// <summary>
-   /// Flattens a model that has only one insert with one block
-   /// </summary>
-   /// These types of 'single-block' models are made by some importers - the block can effectively
-   /// be exploded and the contents placed directly in the model set in this case
-   public void CleanupBlocks () {
-      if (mBlocks == null) return;
-      for (int i = mBlocks.Count - 1; i >= 0; i--) {
-         // If there are any empty blocks, remove them (along with the inserts that reference
-         // them)
-         var block = mBlocks[i]; 
-         if (block.Ents.Count == 0) {
-            mEnts.RemoveIf (a => a is E3Insert ei && ei.Block == block);
-            mBlocks.RemoveAt (i);
+   public bool CleanupBlocks () {
+      if (mBlocks == null) return false;
+
+      // First, remove blocks with no entities
+      bool result = false;
+      for (; ; ) {
+         bool changed = false;
+         for (int i = mEnts.Count - 1; i >= 0; i--) {
+            if (mEnts[i] is not E3Insert ei) continue;
+            switch (ei.Simplify ()) {
+               case E3Insert.ESimplify.Remove: mEnts.RemoveAt (i); changed = true; break;
+               case E3Insert.ESimplify.Update: changed = true; break;
+            }
          }
+         foreach (var block in mBlocks) {
+            for (int i = block.Ents.Count - 1; i >= 0; i--) {
+               if (block.Ents[i] is not E3Insert ei) continue;
+               switch (ei.Simplify ()) {
+                  case E3Insert.ESimplify.Remove: block.RemoveAt (i); changed = true; break;
+                  case E3Insert.ESimplify.Update: changed = true; break;
+               }
+            }
+         }
+         if (!changed) break;
+         result = true;
       }
 
       // If we are left with just one insert which has an identity (or even only a translation 
       // transform), flatten that
-      if (mEnts.Count == 1 && mEnts[0] is E3Insert ei && mBlocks.Count == 1) {
-         if (ei.Xfm.IsIdentity || ei.Xfm.IsTranslation) {
+      if (mEnts.Count == 1 && mEnts[0] is E3Insert e2i) {
+         if (!e2i.Xfm.HasMirroring) {
             mEnts.RemoveAt (0);
-            foreach (var ent in ei.Block.Ents) mEnts.Add (ent);
-            mBlocks.Clear ();
+            foreach (var ent in e2i.Block.Ents) mEnts.Add (ent);
+            result = true;
+         }
+      }
+
+      HashSet<Block3> used = [];
+      foreach (var ei in DeepEnumEnts ().OfType<E3Insert> ())
+         used.Add (ei.Block);
+      for (int i = mBlocks.Count - 1; i >= 0; i--)
+         if (!used.Contains (mBlocks[i])) { mBlocks.RemoveAt (i); result = true; }
+      return result;
+   }
+
+   /// <summary>
+   /// Enumerate every Ent3 (including the ones in blocks)
+   /// </summary>
+   /// Each entity is enumerated only once, so if multiple E3Insert reference a Block3,
+   /// that block is walked only once
+   public IEnumerable<Ent3> DeepEnumEnts () {
+      HashSet<Block3> done = [];
+      foreach (var ent in mEnts) {
+         yield return ent;
+         if (ent is E3Insert ei) {
+            Block3 block = ei.Block;
+            if (done.Add (block))
+               foreach (var ent1 in block.Ents) yield return ent1;
          }
       }
    }

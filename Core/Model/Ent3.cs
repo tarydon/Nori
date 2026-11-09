@@ -59,7 +59,9 @@ public abstract partial class Ent3 {
    /// <summary>Returns the Bound of the Ent3 (overridden in descendents)</summary>
    public abstract Bound3 Bound { get; }
 
-   public Color4 Color = Color4.White; // REMOVETHIS
+   /// <summary>Color of tihs marker</summary>
+   public Color4 Color { get => mColor; set { mColor = value; Notify (EProp.Attributes); } }
+   Color4 mColor = Color4.Nil;
 
    /// <summary>Returns the flags for this entity</summary>
    public E3Flags Flags => mFlags;
@@ -249,10 +251,6 @@ public sealed class E3Marker : Ent3 {
    /// <summary>The CS in which the marker is drawn (this can be modified and the marker is redrawn)</summary>
    public CoordSystem CS { get => mCS; set { mCS = value; Notify (EProp.Geometry); } }
    CoordSystem mCS;
-
-   /// <summary>Color of tihs marker</summary>
-   public Color4 Color { get => mColor; set { mColor = value; Notify (EProp.Attributes); } }
-   Color4 mColor = Color4.Yellow;
 
    /// <summary>What style of marker is this?</summary>
    public EKind Kind => mKind;
@@ -489,14 +487,31 @@ public class E3Insert : Ent3 {
       return bound;
    }
 
+   public enum ESimplify { No, Remove, Update };
+
+   public ESimplify Simplify () {
+      switch (mBlock.Ents.Count) {
+         case 0: return ESimplify.Remove;
+         case 1:
+            // This insert points to a block that contains only one entity, which 
+            // is also an insert. We can remove one level of indirection here
+            if (mBlock.Ents[0] is E3Insert ei) {
+               mBlock = ei.Block; mXfm *= ei.Xfm;
+               return ESimplify.Update;
+            }
+            return ESimplify.No;
+         default: return ESimplify.No;
+      }
+   }
+
    protected override Ent3 Xformed (Matrix3 xfm) 
       => new E3Insert (Id, mBlock, mXfm * xfm);
 
    public Block3 Block => mBlock;
-   readonly Block3 mBlock;
+   Block3 mBlock;
 
    public Matrix3 Xfm => mXfm;
-   readonly Matrix3 mXfm;
+   Matrix3 mXfm;
 }
 #endregion
 
@@ -512,6 +527,7 @@ public class Block3 {
    readonly string mName;
 
    public void Add (Ent3 ent) => mEnts.Add (ent);
+   internal void RemoveAt (int n) => mEnts.RemoveAt (n);
 
    /// <summary>The VNode for this Block2 (if one has been created)</summary>
    public object? VNode { get => _vnode; set => _vnode = value; }

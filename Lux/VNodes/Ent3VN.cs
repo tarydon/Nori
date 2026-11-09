@@ -9,8 +9,10 @@ namespace Nori;
 public abstract class Ent3VN (Ent3 mEnt) : VNode (mEnt) {
    /// <summary>We set the entity color based on state: Normal / Selected / Colliding</summary>
    public override void SetAttributes () {
-      Lux.Color = mEnt.IsColliding ? new Color4 (255, 64, 32) :
-                  mEnt.IsSelected ? new Color4 (128, 192, 255) : Color4.White;
+      Color4 color = mEnt.Color;
+      if (mEnt.IsColliding) color = new (255, 64, 32);
+      else if (mEnt.IsSelected) color = new (128, 192, 255);
+      Lux.Color = color;
    }
 }
 #endregion
@@ -80,7 +82,7 @@ public class E3SurfaceVN (E3Surface mSurface) : Ent3VN (mSurface) {
 /// <summary>VNode used to render E3Marker</summary>
 public class E3MarkerVN (E3Marker marker) : VNode (marker) {
    public override void SetAttributes () =>
-      (Lux.Color, Lux.LineWidth, Lux.ZLevel) = (marker.Color, 3, 1);
+      (Lux.LineWidth, Lux.ZLevel) = (3, 1);
 
    public override void Draw () {
       if (marker.Kind != E3Marker.EKind.CS) throw new NotImplementedException (); 
