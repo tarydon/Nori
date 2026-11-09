@@ -77,16 +77,18 @@ public class Model3 {
    /// Enumerate every Ent3 (including the ones in blocks)
    /// </summary>
    /// Each entity is enumerated only once, so if multiple E3Insert reference a Block3,
-   /// that block is walked only once
+   /// that block is walked only once.
    public IEnumerable<Ent3> DeepEnumEnts () {
       HashSet<Block3> done = [];
-      foreach (var ent in mEnts) {
-         yield return ent;
+      Queue<Ent3> todo = [];
+      foreach (var ent in mEnts) todo.Enqueue (ent);
+      while (todo.TryDequeue (out Ent3? ent)) {
          if (ent is E3Insert ei) {
             Block3 block = ei.Block;
             if (done.Add (block))
-               foreach (var ent1 in block.Ents) yield return ent1;
-         }
+               foreach (var ent1 in block.Ents) todo.Enqueue (ent1);
+         } 
+         yield return ent;
       }
    }
 
