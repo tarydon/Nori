@@ -75,6 +75,7 @@ public class SheetMetalizer {
       E3Plane? pair = null;
       double minDist = double.MaxValue;
       var planes = Model.Ents.OfType<E3Plane> ().OrderByDescending (a => a.OuterArea).ToList ();
+      if (planes.Count == 0) return null;
 
       E3Plane plane0 = planes[0];
       var (area0, pdef0) = (plane0.OuterArea, new PlaneDef (plane0.CS));
