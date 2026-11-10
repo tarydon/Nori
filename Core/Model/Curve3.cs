@@ -658,6 +658,7 @@ public class RevCurve3 : Curve3 {
    public override Curve3 Trimmed (double t1, double t2, bool reverseDir) => throw new NotImplementedException ();
    protected override Curve3 Xformed (Matrix3 xfm) => this;
 
+   public Curve3 Basis => mBasis;
    readonly Curve3 mBasis;
 }
 #endregion
@@ -709,6 +710,11 @@ public class Contour3 {
                break;
             case Polyline3 poly:
                foreach (var pt in poly.Pts.Skip (1)) pb.Line (Xfm (pt));
+               break;
+            case RevCurve3 rev:
+               if (rev.Basis is not Line3 line1) goto default;
+               pb.Line (Xfm (rev.End));
+               if (rev.IsOverlap) pb.TagLastOverlap ();
                break;
             default:
                var pts = ListPool<Point3>.Borrow ();
