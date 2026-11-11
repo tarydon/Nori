@@ -89,7 +89,10 @@ public class SceneManipulator {
       if (Lux.PickScene (mi.Position) is { } sc) {
          if (mi.Button == EMouseButton.Left && sc is Scene3 sc3) {
             if (Lux.Pick (mi.Position) is { } vnode) {
-               if (vnode.Obj != null) sc.Picked (vnode.Obj);
+               if (vnode.Obj != null) {
+                  sc.Picked ((Picked = vnode).Obj);
+                  Picked = null; 
+               }
             } else
                new SceneRotator (sc3, mi.Position);
          }
@@ -97,6 +100,7 @@ public class SceneManipulator {
             new ScenePanner (sc, mi.Position);
       }
    }
+   public static VNode? Picked;
 
    // Zoom in/out when the mouse wheel is rotated
    void OnMouseWheel (MouseWheelInfo mw)

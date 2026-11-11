@@ -732,7 +732,7 @@ public class Contour3 {
 
       // Helpers ...........................................
       Point2 Xfm (Point3 pt) {
-         pt *= xfm; Lib.Check (pt.Z.IsZero (0.001), "Non-planar contour");
+         pt *= xfm; Lib.Check (pt.Z.IsZero (0.01), "Non-planar contour");
          return new (pt.X, pt.Y);
       }
    }

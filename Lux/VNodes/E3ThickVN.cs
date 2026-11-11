@@ -8,17 +8,7 @@ namespace Nori;
 /// <summary>VNode used to render E3Thick (flats / flexes)</summary>
 public class E3ThickVN (E3Thick thick) : VNode (thick) {
    public override void SetAttributes () => Lux.Color = thick.IsSelected ? new Color4 (128, 128, 255) : Color4.White;
-   public override void Draw () {
-      Lux.Mesh (thick.Mesh, EShadeMode.GlassNoStencil); // REMOVETHIS
-      if (thick is E3Thick ef) {
-         foreach (var seg in ef.Shape.SelectMany (a => a.Segs)) {
-            if (seg.IsOverlap) continue;
-            List<Point2> pts2 = []; pts2.Add (seg.A); seg.Discretize (pts2, 0.01, Lib.QuarterPI);
-            List<Point3> pts3 = []; pts3.AddRange (pts2.Select (a => a * ef.ToXfm));
-            Lux.LineStrip (pts3.AsSpan ());
-         }
-      } 
-   }
+   public override void Draw () => Lux.Mesh (thick.Mesh);
 }
 #endregion
 

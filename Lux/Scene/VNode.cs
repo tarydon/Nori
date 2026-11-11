@@ -108,6 +108,11 @@ public abstract class VNode {
    public void DisposeOnDetach (IDisposable disp) => (mDisposer ??= new ()).Add (disp);
    MultiDispose? mDisposer;
 
+   public IEnumerable<VNode> EnumParents () {
+      foreach (var n in mFamily.Enum (mParents))
+         if (mNodes[n] is { } vnode) yield return vnode;
+   }
+
    /// <summary>Get the VNode, given an ID</summary>
    public static VNode Get (int id) => mNodes[id]!;
 
