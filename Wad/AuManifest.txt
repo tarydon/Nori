@@ -46,9 +46,9 @@ Spline2
 SplineImp
   Nodes Knot
 Model3
-  Ents Bound
+  Ents Bound Blocks
 Ent3
-  Id Flags
+  Id Flags Color
 E3Surface
   Area Bound Domain Contours
 E3ParaSurface
