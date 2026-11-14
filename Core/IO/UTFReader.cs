@@ -78,6 +78,11 @@ public class UTFReader {
       mN += delta; return this;
    }
 
+   /// <summary>
+   /// Reads the next byte from the UTFReader
+   /// </summary>
+   public UTFReader Read (out byte value) { value = D[mN++]; return this; }
+
    /// <summary>Read a char value from the stream</summary>
    /// TODO: Improve
    public UTFReader Read (out char ch) {
