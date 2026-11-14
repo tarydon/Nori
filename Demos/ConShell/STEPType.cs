@@ -6,6 +6,31 @@ readonly struct Axis3D (int origin, int xaxis, int yaxis) {
    public readonly int YAxis = yaxis;
 }
 
+readonly struct BSplineSurfaceWithKnots (int udegree, int vdegree, int[][] pts, string surfform, bool uclosed, bool vclosed, bool intersect, int[] umultiplicities, int[] vmultiplicities, double[] uknots, double[] vknots, string knottype) {
+   public readonly int UDegree = udegree;
+   public readonly int VDegree = vdegree;
+   public readonly int[][] Pts = pts;
+   public readonly string SurfForm = surfform;
+   public readonly bool UClosed = uclosed;
+   public readonly bool VClosed = vclosed;
+   public readonly bool Intersect = intersect;
+   public readonly int[] UMultiplicities = umultiplicities;
+   public readonly int[] VMultiplicities = vmultiplicities;
+   public readonly double[] UKnots = uknots;
+   public readonly double[] VKnots = vknots;
+   public readonly string KnotType = knottype;
+}
+
+readonly struct Circle (int coordSys, double radius) {
+   public readonly int CoordSys = coordSys;
+   public readonly double Radius = radius;
+}
+
+readonly struct Cylinder (int coordSys, double radius) {
+   public readonly int CoordSys = coordSys;
+   public readonly double Radius = radius;
+}
+
 readonly struct Edge (int start, int end, int curve, bool dir) {
    public readonly int Start = start;
    public readonly int End = end;
