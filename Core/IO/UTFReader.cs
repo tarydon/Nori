@@ -232,6 +232,17 @@ public class UTFReader {
    /// <summary>SKips until the given character is found (and consumes that character)</summary>
    public UTFReader SkipTo (char b) { while (D[mN++] != b) { } return this; }
 
+   /// <summary>
+   /// Skips until the given sequence is found (and consumes that sequence)
+   /// </summary>
+   /// If the sequence is not found, this returns false
+   public bool Find (ReadOnlySpan<byte> sequence) {
+      int n = D.AsSpan (mN).IndexOf (sequence);
+      if (n == -1) return false;
+      mN += n + sequence.Length;
+      return true;
+   }
+
    /// <summary>Skips until the end of the line token is found and consumes it.</summary>
    public UTFReader SkipToLineEnd () => SkipTo (mLineEnd);
    char mLineEnd = '\n';
@@ -243,6 +254,15 @@ public class UTFReader {
    public bool TryMatch (char b) {
       if (Peek () == b) { Skip (); return true; }
       return false;
+   }
+
+   public bool TryMatch (ReadOnlySpan<byte> b) {
+      for (int i = 0; i < b.Length; i++) {
+         int k = mN + i;
+         if (k < Max && D[k] == b[i]) continue;
+         return false;
+      }
+      return true; 
    }
 
    /// <summary>This reads characters until one of the given 'stop' characters is found</summary>
@@ -263,12 +283,14 @@ public class UTFReader {
    static SearchValues<byte> sCRLF = SearchValues.Create (13, 10);
 
    public UTFReader SkipToNextLine () {
-      while (mN < Max && !sCRLF.Contains (D[mN])) mN++;
-      // There are 3 possible line endings: 0A | 0D 0A | 0D
-      if (D[mN] == 13) {
-         if (mN < Max && D[mN + 1] == 10) mN++;
+      while (mN < Max) {
+         byte c1 = D[mN++];
+         if (c1 == 10) break;
+         if (c1 == 13) {
+            if (mN < Max && D[mN] == 10) mN++;
+            break;
+         }
       }
-      mN++;
       return this; 
    }
 

@@ -2,7 +2,7 @@
 // ╔═╦╦═╦╦╬╣ STPEntity.cs
 // ║║║║╬║╔╣║ Nori.STEP.Entity and derived types (used when loading in from STEP files)
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
-namespace Nori.STEP;
+namespace Nori.STP;
 
 // Base class for all entities
 class Entity {

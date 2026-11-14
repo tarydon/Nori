@@ -2,11 +2,11 @@
 // ╔═╦╦═╦╦╬╣ STPCheck.cs
 // ║║║║╬║╔╣║ Implements various 'Check' primitives used during STEP file validation
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
-using Nori.STEP;
+using Nori.STP;
 namespace Nori;
 
 // Implements the 'Check' primitives used while reading STEP files
-partial class STEPReader {
+partial class STPReader {
    void Check (AdvancedFace a) {
       foreach (var n in a.Contours) {
          switch (D[n]) {

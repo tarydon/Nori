@@ -2,15 +2,15 @@
 // ╔═╦╦═╦╦╬╣ STPReader.cs
 // ║║║║╬║╔╣║ Implements the first phase of STEP reading (loading entities from STEP)
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
-using Nori.STEP;
+using Nori.STP;
 namespace Nori;
 
 #region class STEPReader ---------------------------------------------------------------------------
 /// <summary>STEP reader is used to load STEP files and make Model3 out of them</summary>
-public partial class STEPReader {
+public partial class STPReader {
    // Constructors -------------------------------------------------------------
    /// <summary>Intialize a STEP reader given a filename</summary>
-   public STEPReader (string file) => (S, mFile) = (File.ReadAllText (file), file);
+   public STPReader (string file) => (S, mFile) = (File.ReadAllText (file), file);
 
    // Entity switch ------------------------------------------------------------
    // Each time this is called, this reads and returns one entity from the file

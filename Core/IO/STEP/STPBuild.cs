@@ -2,12 +2,12 @@
 // ╔═╦╦═╦╦╬╣ STPBuild.cs
 // ║║║║╬║╔╣║ Implements the 'Build' phase of STEP reading
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
-using Nori.STEP;
+using Nori.STP;
 namespace Nori;
 
 // Implements the build phase of STEP reading.
 // This converts the Nori.STEP.Entity objects into Model3 surfaces, curves etc
-partial class STEPReader {
+partial class STPReader {
    // Methods ------------------------------------------------------------------
    public Model3 Load () {
       if (mModel.Ents.Count == 0) {
@@ -21,7 +21,7 @@ partial class STEPReader {
    readonly Model3 mModel = new ();
 
    public static Model3 Load (string file)
-      => new STEPReader (file).Load ();
+      => new STPReader (file).Load ();
 
    // Implementation -----------------------------------------------------------
    // Given a vertex point object, fetches the underlying point
