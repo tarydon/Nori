@@ -75,6 +75,7 @@ public class SheetMetalizer {
       E3Plane? pair = null;
       double minDist = double.MaxValue;
       var planes = Model.Ents.OfType<E3Plane> ().OrderByDescending (a => a.OuterArea).ToList ();
+      if (planes.Count == 0) return null;
 
       E3Plane plane0 = planes[0];
       var (area0, pdef0) = (plane0.OuterArea, new PlaneDef (plane0.CS));
@@ -299,6 +300,9 @@ class SMFlexData {
             if (curve is Line3 line) {
                pb.Line (Flatten (line.End));
                if (line.IsOverlap) pb.TagLastOverlap ();
+            } else if (curve is RevCurve3 rev && rev.Basis is Line3) {
+               pb.Line (Flatten (rev.End));
+               if (rev.IsOverlap) pb.TagLastOverlap ();
             } else {
                pts.Clear (); curve.Discretize (pts, ETess.Medium);
                pts.Skip (1).ForEach (pt => pb.Line (Flatten (pt)));

@@ -154,7 +154,7 @@ public class E3Flat : E3Thick {
    protected override Mesh3 ComputeMesh () => BuildMesh (mShape, ToXfm, false);
 
    /// <summary>Computes the bound of this E3Flat under a particular transform</summary>
-   public Bound3 GetBound (Matrix3 xfm) {
+   public override Bound3 GetBound (Matrix3 xfm) {
       Bound3 bound = new ();
       var pts = ListPool<Point2>.Borrow ();
       try {

@@ -47,6 +47,7 @@ namespace Nori;
 ///     E3Torus           - Toroidal surface (canonical definition with center at origin, aligned to XY plane)
 ///   E3NurbSurface       - Rational spline surface of arbitrary order / degree
 ///   E3RuledSurface      - Surface defined by drawing ruling lines between two equi-parametric curves
+/// E3Insert              - A reference to an E3Block with a specified transformation matrix
 [EPropClass]
 public abstract partial class Ent3 {
    // Constructors -------------------------------------------------------------
@@ -57,6 +58,10 @@ public abstract partial class Ent3 {
    // Properties ---------------------------------------------------------------
    /// <summary>Returns the Bound of the Ent3 (overridden in descendents)</summary>
    public abstract Bound3 Bound { get; }
+
+   /// <summary>Color of tihs marker</summary>
+   public Color4 Color { get => mColor; set { mColor = value; Notify (EProp.Attributes); } }
+   Color4 mColor = Color4.Nil;
 
    /// <summary>Returns the flags for this entity</summary>
    public E3Flags Flags => mFlags;
@@ -119,6 +124,9 @@ public abstract partial class Ent3 {
    /// <summary>Derived classes override this to do the actual transformation</summary>
    protected abstract Ent3 Xformed (Matrix3 xfm);
 
+   /// <summary>Derived classes override this to return a bound under transformation</summary>
+   public abstract Bound3 GetBound (Matrix3 xfm);
+
    // Implementation -----------------------------------------------------------
    public override string ToString () => $"{GetType ().Name} #{Id}";
 }
@@ -157,6 +165,13 @@ public sealed class E3Curve : Ent3 {
       return new (pts);
    }
 
+   // Computes the bound under transformation
+   public override Bound3 GetBound (Matrix3 xfm) {
+      List<Point3> pts = ListPool<Point3>.Borrow ();
+      try { Curve.Discretize (pts, ETess.Coarse); return new (pts, xfm); } 
+      finally { ListPool<Point3>.Return (pts); }
+   }
+
    // Transform the E3Curve by the given transform
    protected override Ent3 Xformed (Matrix3 xfm) => new E3Curve (Curve * xfm);
 }
@@ -176,6 +191,13 @@ public sealed class E3Mesh : Ent3 {
 
    // Implementation -----------------------------------------------------------
    protected override Ent3 Xformed (Matrix3 xfm) => new E3Mesh (Id, Mesh * xfm);
+
+   // Returns the bound under a transformation 
+   public override Bound3 GetBound (Matrix3 xfm) {
+      Bound3 bound = new ();
+      foreach (var node in Mesh.Vertex) bound += node.Pos * xfm;
+      return bound; 
+   }
 }
 #endregion
 
@@ -187,20 +209,29 @@ public sealed class E3Contour : Ent3 {
 
    public readonly ImmutableArray<Curve3> Curves;
 
-   public override Bound3 Bound => Bound3.Cached (ref _bound, ComputeBound);
+   public override Bound3 Bound => Bound3.Cached (ref _bound, () => GetBound (Matrix3.Identity));
    Bound3 _bound = new ();
-   Bound3 ComputeBound () {
-      Bound3 b = new ();
-      List<Point3> pts = [];
-      foreach (var curve in Curves) {
-         curve.Discretize (pts, ETess.Coarse);
-         b += new Bound3 (pts);
-         pts.Clear ();
-      }
-      return b;
-   }
 
-   protected override Ent3 Xformed (Matrix3 xfm) => new E3Contour (Id, [.. Curves.Select (a => a * xfm)]);
+   // Implementation -----------------------------------------------------------
+   // Returns a transformed versoin of this E3Contour
+   protected override Ent3 Xformed (Matrix3 xfm) 
+      => new E3Contour (Id, [.. Curves.Select (a => a * xfm)]);
+
+   // Returns the bound under the given transformation 
+   public override Bound3 GetBound (Matrix3 xfm) {
+      Bound3 b = new ();
+      List<Point3> pts = ListPool<Point3>.Borrow ();
+      try {
+         foreach (var curve in Curves) {
+            curve.Discretize (pts, ETess.Coarse);
+            b += new Bound3 (pts, xfm);
+            pts.Clear ();
+         }
+         return b;
+      } finally {
+         ListPool<Point3>.Return (pts);
+      }
+   }
 }
 #endregion
 
@@ -221,10 +252,6 @@ public sealed class E3Marker : Ent3 {
    public CoordSystem CS { get => mCS; set { mCS = value; Notify (EProp.Geometry); } }
    CoordSystem mCS;
 
-   /// <summary>Color of tihs marker</summary>
-   public Color4 Color { get => mColor; set { mColor = value; Notify (EProp.Attributes); } }
-   Color4 mColor = Color4.Yellow;
-
    /// <summary>What style of marker is this?</summary>
    public EKind Kind => mKind;
    readonly EKind mKind;
@@ -238,10 +265,12 @@ public sealed class E3Marker : Ent3 {
    public enum EKind { CS = 0 };
 
    // Overrides ----------------------------------------------------------------
-   /// <summary>Returns the bound of this E3Marker (just includes the starting point)</summary>
+   // Returns the bound of this E3Marker (just includes the starting point)
    public override Bound3 Bound => new ([mCS.Org]);
-   /// <summary>Transforms the E3Marker</summary>
+   // Transforms the E3Marker
    protected override Ent3 Xformed (Matrix3 xfm) => new E3Marker (mCS * xfm, mKind, mSize * xfm.ScaleFactor);
+   // Returns the bound after transformation 
+   public override Bound3 GetBound (Matrix3 xfm) => new ([mCS.Org * xfm]);
 }
 #endregion
 
@@ -370,6 +399,14 @@ public abstract class E3Surface : Ent3 {
       finally { ListPool<Point3>.Return (pts); }
    }
 
+   // Returns the bound under transform
+   public override Bound3 GetBound (Matrix3 xfm) {
+      if (_mesh != null) return _mesh.GetBound (xfm);
+      List<Point3> pts = ListPool<Point3>.Borrow ();
+      try { Contours[0].Discretize (pts, ETess.Coarse); return new (pts, xfm); } 
+      finally { ListPool<Point3>.Return (pts); }
+   }
+
    protected void CopyMeshFrom (E3Surface src, Matrix3 xfm) {
       if (src._mesh != null) _mesh = src._mesh * xfm;
    }
@@ -431,5 +468,69 @@ public abstract class E3CSSurface : E3Surface {
    protected abstract Vector3 GetNormalCanonical (double u, double v);
    /// <summary>Computes UV coordinates, given a point in canonical space</summary>
    protected abstract Point2 GetUVCanonical (Point3 ptCanon);
+}
+#endregion
+
+#region class E3Insert -----------------------------------------------------------------------------
+/// <summary>A reference to a Block3 with a specified transformation</summary>
+public class E3Insert : Ent3 {
+   E3Insert () { mBlock = null!; mXfm = Matrix3.Identity; }
+   public E3Insert (int id, Block3 block, Matrix3 xfm) : base (id) { mBlock = block; mXfm = xfm; }
+
+   public override Bound3 Bound => Bound3.Cached (ref mBound, () => GetBound (Matrix3.Identity));
+   Bound3 mBound = new ();
+
+   public override Bound3 GetBound (Matrix3 xfm) {
+      Bound3 bound = new ();
+      Matrix3 final = mXfm * xfm;
+      foreach (var ent in mBlock.Ents) bound += ent.GetBound (final);
+      return bound;
+   }
+
+   public enum ESimplify { No, Remove, Update };
+
+   public ESimplify Simplify () {
+      switch (mBlock.Ents.Count) {
+         case 0: return ESimplify.Remove;
+         case 1:
+            // This insert points to a block that contains only one entity, which 
+            // is also an insert. We can remove one level of indirection here
+            if (mBlock.Ents[0] is E3Insert ei) {
+               mBlock = ei.Block; mXfm *= ei.Xfm;
+               return ESimplify.Update;
+            }
+            return ESimplify.No;
+         default: return ESimplify.No;
+      }
+   }
+
+   protected override Ent3 Xformed (Matrix3 xfm) 
+      => new E3Insert (Id, mBlock, mXfm * xfm);
+
+   public Block3 Block => mBlock;
+   Block3 mBlock;
+
+   public Matrix3 Xfm => mXfm;
+   Matrix3 mXfm;
+}
+#endregion
+
+#region class E3Block ------------------------------------------------------------------------------
+public class Block3 {
+   Block3 () { mEnts = []; mName = ""; }
+   public Block3 (string name, IEnumerable<Ent3> ents) { mName = name; mEnts = [.. ents]; }
+
+   public IReadOnlyList<Ent3> Ents => mEnts;
+   readonly List<Ent3> mEnts;
+
+   public string Name => mName;
+   readonly string mName;
+
+   public void Add (Ent3 ent) => mEnts.Add (ent);
+   internal void RemoveAt (int n) => mEnts.RemoveAt (n);
+
+   /// <summary>The VNode for this Block2 (if one has been created)</summary>
+   public object? VNode { get => _vnode; set => _vnode = value; }
+   object? _vnode;
 }
 #endregion

@@ -308,10 +308,43 @@ public static partial class Lux {
    /// - LineWidth: the width of the line
    /// - Xfm: current transformation matrix
    public static void LineLoop (ReadOnlySpan<Point2> pts) {
-      mBuf.Clear (); mBuf.Add (pts[0]);
-      for (int i = 1; i < pts.Length; i++) { mBuf.Add (pts[i]); mBuf.Add (pts[i]); }
-      mBuf.Add (pts[0]);
-      Lines (mBuf.AsSpan ());
+      mBuf2.Clear (); mBuf2.Add (pts[0]);
+      for (int i = 1; i < pts.Length; i++) { mBuf2.Add (pts[i]); mBuf2.Add (pts[i]); }
+      mBuf2.Add (pts[0]);
+      Lines (mBuf2.AsSpan ());
+   }
+
+   /// <summary>
+   /// Draws a 3D line-loop (closed polyline made up of the given set of points)
+   /// </summary>
+   /// The loop is closed by connecting the last point in the list to the first one. With
+   /// N points, N lines are drawn.
+   /// 
+   /// The following Lux properties are used:
+   /// - Color: draw color
+   /// - LineWidth: the width of the line
+   /// - Xfm: current transformation matrix
+   public static void LineLoop (ReadOnlySpan<Point3> pts) {
+      mBuf3.Clear (); mBuf3.Add (pts[0]);
+      for (int i = 1; i < pts.Length; i++) { mBuf3.Add (pts[i]); mBuf3.Add (pts[i]); }
+      mBuf3.Add (pts[0]);
+      Lines (mBuf3.AsSpan ());
+   }
+   static readonly List<Vec3F> mBuf3 = [];
+
+   /// <summary>Draws a 3D line-strip (an open polyline made up of the given set of points)</summary>
+   /// This connects each successive pair of points with a line segment. With N points, 
+   /// N-1 lines are drawn. 
+   /// 
+   /// The following Lux properties are used:
+   /// - Color: draw color
+   /// - LineWidth: the width of the line
+   /// - Xfm: current transformation matrix
+   public static void LineStrip (ReadOnlySpan<Point3> pts) {
+      mBuf3.Clear (); mBuf3.Add (pts[0]);
+      for (int i = 1; i < pts.Length - 1; i++) { mBuf3.Add (pts[i]); mBuf3.Add (pts[i]); }
+      mBuf3.Add (pts[^1]);
+      Lines (mBuf3.AsSpan ());
    }
 
    /// <summary>Draws a 2D line-strip (an open polyline made up of the given set of points)</summary>
@@ -323,12 +356,12 @@ public static partial class Lux {
    /// - LineWidth: the width of the line
    /// - Xfm: current transformation matrix
    public static void LineStrip (ReadOnlySpan<Point2> pts) {
-      mBuf.Clear (); mBuf.Add (pts[0]);
-      for (int i = 1; i < pts.Length - 1; i++) { mBuf.Add (pts[i]); mBuf.Add (pts[i]); }
-      mBuf.Add (pts[^1]);
-      Lines (mBuf.AsSpan ());
+      mBuf2.Clear (); mBuf2.Add (pts[0]);
+      for (int i = 1; i < pts.Length - 1; i++) { mBuf2.Add (pts[i]); mBuf2.Add (pts[i]); }
+      mBuf2.Add (pts[^1]);
+      Lines (mBuf2.AsSpan ());
    }
-   static readonly List<Vec2F> mBuf = [];
+   static readonly List<Vec2F> mBuf2 = [];
 
    /// <summary>Draws a Mesh3 using one of the shade-modes</summary>
    /// See the EShadeMode documentation for the possible shade modes. 
@@ -391,6 +424,14 @@ public static partial class Lux {
    public static void Points (ReadOnlySpan<Vec2F> pts)
       => Point2DShader.It.Draw (pts);
 
+   /// <summary>Draws a 2D point in world coordinates, with Z = 0</summary>
+   /// 
+   /// The following Lux properties are used:
+   /// - PointSize : the diameter of the points, in device independent pixels
+   /// - Color : color of the points being drawn
+   public static void Point (Vec2F pt) 
+      => Points (MemoryMarshal.CreateReadOnlySpan (ref pt, 1));
+
    /// <summary>Draws 3D points in world coordinates</summary>
    ///
    /// The following Lux properties are used:
@@ -405,11 +446,8 @@ public static partial class Lux {
    /// - Color: color of the lines/arcs drawn
    /// - LineWidth: the width of the beziers, in device independent pixels
    /// - Xfm: current transformation matrix
-   public static void Poly (Poly p) {
-      mPolys.Clear (); mPolys.Add (p);
-      Polys (mPolys.AsSpan ());
-   }
-   static readonly List<Poly> mPolys = [];
+   public static void Poly (Poly p) 
+      => Polys (MemoryMarshal.CreateReadOnlySpan (ref p, 1));
    static readonly List<Vec2F> mLines = [], mBeziers = [];
 
    /// <summary>Draw multiple Polys in world coordinates, with Z = 0</summary>

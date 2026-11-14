@@ -173,6 +173,8 @@ public class E3Flex : E3Thick {
       return pb.Close ().Build ();
    }
 
+   public override Bound3 GetBound (Matrix3 xfm) => Mesh.GetBound (xfm);
+
    // Returns a transformed version of this Flex
    protected override Ent3 Xformed (Matrix3 xfm) => new E3Flex (this, xfm);
 

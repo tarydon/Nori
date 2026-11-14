@@ -635,6 +635,34 @@ public class Polyline3 : Curve3 {
 }
 #endregion
 
+#region class RevCurve3 ----------------------------------------------------------------------------
+/// <summary>A Curve3 that is just the 'reverse' of another existing Curve3</summary>
+public class RevCurve3 : Curve3 {
+   RevCurve3 () => mBasis = null!;
+   public RevCurve3 (Curve3 basis) : base (basis.PairId) => mBasis = basis;
+
+   public override Bound1D Domain => mBasis.Domain;
+   public override Point3 End => mBasis.Start;
+   public override bool IsOnXYPlane => mBasis.IsOnXYPlane;
+   public override bool IsOnXZPlane => mBasis.IsOnXZPlane;
+   public override Point3 Start => mBasis.End;
+
+   public override void Discretize (List<Point3> pts, ETess tolerance) {
+      List<Point3> tmp = []; mBasis.Discretize (tmp, tolerance); tmp.Reverse ();
+      pts.AddRange (tmp);
+   }
+
+   public override Curve3 Flipped () => mBasis;
+   public override Point3 GetPoint (double t) => mBasis.GetPoint (Domain.Max - (t - Domain.Min));
+   public override double GetT (Point3 pt) => throw new NotImplementedException ();
+   public override Curve3 Trimmed (double t1, double t2, bool reverseDir) => throw new NotImplementedException ();
+   protected override Curve3 Xformed (Matrix3 xfm) => this;
+
+   public Curve3 Basis => mBasis;
+   readonly Curve3 mBasis;
+}
+#endregion
+
 #region class Contour3 -----------------------------------------------------------------------------
 /// <summary>Contour3 is a collection of Curve3 connected end-to-end</summary>
 /// Typically surfaces are bounded by a set of Contour3
@@ -683,6 +711,11 @@ public class Contour3 {
             case Polyline3 poly:
                foreach (var pt in poly.Pts.Skip (1)) pb.Line (Xfm (pt));
                break;
+            case RevCurve3 rev:
+               if (rev.Basis is not Line3 line1) goto default;
+               pb.Line (Xfm (rev.End));
+               if (rev.IsOverlap) pb.TagLastOverlap ();
+               break;
             default:
                var pts = ListPool<Point3>.Borrow ();
                try {
@@ -699,7 +732,7 @@ public class Contour3 {
 
       // Helpers ...........................................
       Point2 Xfm (Point3 pt) {
-         pt *= xfm; Lib.Check (pt.Z.IsZero (0.001), "Non-planar contour");
+         pt *= xfm; Lib.Check (pt.Z.IsZero (0.01), "Non-planar contour");
          return new (pt.X, pt.Y);
       }
    }

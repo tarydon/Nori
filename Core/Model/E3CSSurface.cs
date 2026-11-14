@@ -392,29 +392,6 @@ public sealed class E3Plane : E3CSSurface {
       }
       Mesh3 mesh = new ([.. nodes], [.. tris], [.. wires]);
       return mesh;
-
-      /*
-      List<Point2> pts = [];
-      List<int> splits = [0], wires = [];
-      foreach (var poly in Contours.Select (a => a.Flatten (CS))) {
-         int a = pts.Count;
-         poly.Discretize (pts, tolerance, maxAngStep);
-         int b = pts.Count; splits.Add (b);
-         wires.Add (b - 1);
-         for (int i = a; i < b; i++) { wires.Add (i); wires.Add (i); }
-         wires.RemoveLast ();
-      }
-
-      var xfm = ToXfm;
-      var normal = (Vec3H)(IsNormalFlipped ? -CS.VecZ : CS.VecZ);
-      var tries = Lib.Tessellate (pts, splits);
-      List<Mesh3.Node> nodes = [];
-      foreach (var pt in pts) {
-         Point3 pt3 = (Point3)pt * xfm;
-         nodes.Add (new (new Point3f (pt3.X, pt3.Y, pt3.Z), normal));
-      }
-      return new ([.. nodes], [.. tries], [.. wires]);
-      */
    }
 
    // The domain of the plane can be computed using only Contours[0], since that

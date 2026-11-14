@@ -11,6 +11,11 @@ public class Model3 {
    public Model3 () => mEnts.Subscribe (OnEntsChanged);
 
    // Properties ---------------------------------------------------------------
+   /// <summary>The list of blocks in the drawing</summary>
+   /// New blocks are added by calling Add(Block2)
+   public IReadOnlyList<Block3> Blocks => mBlocks ?? [];
+   List<Block3>? mBlocks;
+
    /// <summary>The Bound of this Model</summary>
    public Bound3 Bound => Bound3.Cached (ref mBound, () => new (mEnts.Select (e => e.Bound)));
    Bound3 mBound = new ();
@@ -18,6 +23,74 @@ public class Model3 {
    /// <summary>The set of entities in this Model</summary>
    public AList<Ent3> Ents => mEnts;
    readonly AList<Ent3> mEnts = [];
+
+   // Methods ------------------------------------------------------------------
+   /// <summary>Adds a Block2 to the list of blocks in the drawing</summary>
+   public void Add (Block3 block) { (mBlocks ??= []).Add (block); }
+
+   public bool CleanupBlocks () {
+      if (mBlocks == null) return false;
+
+      // First, remove blocks with no entities
+      bool result = false;
+      for (; ; ) {
+         bool changed = false;
+         for (int i = mEnts.Count - 1; i >= 0; i--) {
+            if (mEnts[i] is not E3Insert ei) continue;
+            switch (ei.Simplify ()) {
+               case E3Insert.ESimplify.Remove: mEnts.RemoveAt (i); changed = true; break;
+               case E3Insert.ESimplify.Update: changed = true; break;
+            }
+         }
+         foreach (var block in mBlocks) {
+            for (int i = block.Ents.Count - 1; i >= 0; i--) {
+               if (block.Ents[i] is not E3Insert ei) continue;
+               switch (ei.Simplify ()) {
+                  case E3Insert.ESimplify.Remove: block.RemoveAt (i); changed = true; break;
+                  case E3Insert.ESimplify.Update: changed = true; break;
+               }
+            }
+         }
+         if (!changed) break;
+         result = true;
+      }
+
+      // If we are left with just one insert which has an identity (or even only a translation 
+      // transform), flatten that
+      if (mEnts.Count == 1 && mEnts[0] is E3Insert e2i) {
+         if (!e2i.Xfm.HasMirroring) {
+            mEnts.RemoveAt (0);
+            foreach (var ent in e2i.Block.Ents) mEnts.Add (ent);
+            result = true;
+         }
+      }
+
+      HashSet<Block3> used = [];
+      foreach (var ei in DeepEnumEnts ().OfType<E3Insert> ())
+         used.Add (ei.Block);
+      for (int i = mBlocks.Count - 1; i >= 0; i--)
+         if (!used.Contains (mBlocks[i])) { mBlocks.RemoveAt (i); result = true; }
+      return result;
+   }
+
+   /// <summary>
+   /// Enumerate every Ent3 (including the ones in blocks)
+   /// </summary>
+   /// Each entity is enumerated only once, so if multiple E3Insert reference a Block3,
+   /// that block is walked only once.
+   public IEnumerable<Ent3> DeepEnumEnts () {
+      HashSet<Block3> done = [];
+      Queue<Ent3> todo = [];
+      foreach (var ent in mEnts) todo.Enqueue (ent);
+      while (todo.TryDequeue (out Ent3? ent)) {
+         if (ent is E3Insert ei) {
+            Block3 block = ei.Block;
+            if (done.Add (block))
+               foreach (var ent1 in block.Ents) todo.Enqueue (ent1);
+         } 
+         yield return ent;
+      }
+   }
 
    /// <summary>Returns the 'neighbors' of the given entity (all entities that share a common edge)</summary>
    public IReadOnlyList<E3Surface> GetNeighbors (E3Surface ent) {
