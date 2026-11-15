@@ -47,20 +47,41 @@ public class STEPReader {
    // Reads a double, skipping past a possible prefix comma
    double RDouble () { mR.TryMatch (','); mR.Read (out double f); return f; }
 
+   // Reads a list of doubles of the form "(1.2,2.5,3.5,4.8)" prefixed by a
+   // possible comma
+   double[] RDoubles () {
+      mTmpF.Clear ();
+      mR.TryMatch (','); mR.Match ('(');
+      for (; ; ) {
+         if (mR.TryMatch (')')) break;
+         mTmpF.Add (RDouble ());
+      }
+      return [.. mTmpF];
+   }
+   List<double> mTmpF = [];
+
    // Reads a standard entity of the given type
    void REntity (int id, EType type) {
       if (type > _IGNORE) return;
-      mR.Match ('\'').SkipTo ('\'').Match (',');
+      if (mR.TryMatch ('\'')) mR.SkipTo ('\'').Match (',');
       int slot;
       switch (type) {
          case ADVANCED_FACE: slot = Add (mFace, new Face (RRefs (), RRef (), RBool ())); break;
-         case AXIS2_PLACEMENT_3D: slot = Add (mAxis3D, new (RRef (), RRef (), RRef ())); break;
-         case B_SPLINE_SURFACE_WITH_KNOTS:
-            new BSplineSurfaceWithKnots (RInt (), RInt (), 
+         case SHAPE_REPRESENTATION:
+         case ADVANCED_BREP_SHAPE_REPRESENTATION: slot = Add (mShapeRepr, new (RRefs (), RRef ())); break;
+         case B_SPLINE_CURVE_WITH_KNOTS:
+            slot = Add (mSplineCurve, new (RInt (), RRefs (), REnum (), RBool (), RBool (), 
+               RInts (), RDoubles (), REnum ())); 
             break;
+         case B_SPLINE_SURFACE_WITH_KNOTS:
+            slot = Add (mSplineSurface, new BSplineSurface (RInt (), RInt (), RRefsList (), REnum (), 
+               RBool (), RBool (), RBool (), RInts (), RInts (), RDoubles (), RDoubles (), REnum ()));
+            break;
+         case AXIS2_PLACEMENT_3D: slot = Add (mAxis, new (RRef (), RRef (), RRef ())); break;
          case CARTESIAN_POINT: slot = Add (mPoint, RPoint3 ()); break;
          case CLOSED_SHELL: slot = Add (mInts, RRefs ()); break;
          case CIRCLE: slot = Add (mCircle, new (RRef (), RDouble ())); break;
+         case COLOUR_RGB: slot = Add (mColor, new (RDouble (), RDouble (), RDouble ())); break;
          case CYLINDRICAL_SURFACE: slot = Add (mCylinder, new (RRef (), RDouble ())); break;
          case DIRECTION: slot = Add (mDirection, RVector3 ()); break;
          case EDGE_LOOP: slot = Add (mInts, RRefs ()); break;
@@ -75,6 +96,14 @@ public class STEPReader {
             slot = Add (mOEdge, new (RRef (), RBool ()));
             break;
          case PLANE: slot = Add (mInt, RRef ()); break;
+         case PRESENTATION_STYLE_ASSIGNMENT: slot = Add (mInts, RRefs ()); break;
+         case PRODUCT: slot = Add (mProduct, new (RString (), RString (), RRefs ())); break;
+         case PRODUCT_DEFINITION: RString (); slot = Add (mLink, new (RRef (), RRef ())); break;
+         case PRODUCT_DEFINITION_SHAPE: RString (); slot = Add (mInt, RRef ()); break;
+         case PRODUCT_DEFINITION_FORMATION: RString (); slot = Add (mInt, RRef ()); break;
+         case PRODUCT_DEFINITION_FORMATION_WITH_SPECIFIED_SOURCE: RString (); slot = Add (mInt, RRef ()); break; 
+         case SHAPE_DEFINITION_REPRESENTATION: slot = Add (mLink, new (RRef (), RRef ())); break;
+         case STYLED_ITEM: slot = Add (mStyledItem, new (RRefs (), RRef ())); break;
          case VECTOR: slot = Add (mVector, new (RRef (), RDouble ())); break;
          case VERTEX_POINT: slot = Add (mInt, RRef ()); break;
          default: throw new BadCaseException ($"Unhandled entity: #{id} = {type}");
@@ -83,17 +112,53 @@ public class STEPReader {
       mData[id] = (type, slot);
    }
 
-   // Reads an array of integers of the form "(#1,#2,#3)"
-   int[] RRefs () {
-      mTmp.Clear ();
+   // Returns an enumeration of the form ".UNSPECIFIED."
+   string REnum () {
+      mR.TryMatch (','); mR.Match ('.');
+      int start = mR.Pos - 1;
+      mR.SkipTo ('.');
+      int end = mR.Pos;
+      string s =  Encoding.ASCII.GetString (mRaw.AsSpan (start, end - start));
+      return s;
+   }
+
+   // Reads an integer (prefixed by an optional comma)
+   int RInt () { mR.TryMatch (','); mR.Read (out int n); return n; }
+
+   // Reads a set of integers 
+   int[] RInts () {
+      mTmpN.Clear ();
       mR.TryMatch (','); mR.Match ('(');
       for (; ; ) {
          if (mR.TryMatch (')')) break;
-         mTmp.Add (RRef ());
+         mTmpN.Add (RInt ());
       }
-      return [.. mTmp];
+      return [.. mTmpN];
    }
-   List<int> mTmp = [];
+
+   // Reads an array of integers of the form "(#1,#2,#3)"
+   int[] RRefs () {
+      mTmpN.Clear ();
+      mR.TryMatch (','); mR.Match ('(');
+      for (; ; ) {
+         if (mR.TryMatch (')')) break;
+         mTmpN.Add (RRef ());
+      }
+      return [.. mTmpN];
+   }
+   readonly List<int> mTmpN = [];
+
+   // Reads a two-dimensionsl array of references
+   int[][] RRefsList () {
+      mRefsList.Clear ();
+      mR.TryMatch (','); mR.Match ('(');
+      for (; ; ) {
+         if (mR.TryMatch (')')) break;
+         mRefsList.Add (RRefs ());
+      }
+      return [.. mRefsList];
+   }
+   readonly List<int[]> mRefsList = [];
 
    // Reads in a Point3 in the form "(12,13.5,18.2)"
    Point3 RPoint3 () {
@@ -111,6 +176,16 @@ public class STEPReader {
       if (mR.TryMatch ('$')) return 0;
       mR.Match ('#').Read (out int n);
       return n;
+   }
+
+   // Read a string delimited by single quotes (possible optional comma before)
+   string RString () {
+      mR.TryMatch (',');
+      if (mR.TryMatch ('$')) return "";
+      mR.Match ('\''); int start = mR.Pos;
+      mR.SkipTo ('\''); int end = mR.Pos - 1;
+      string s = Encoding.ASCII.GetString (mRaw.AsSpan (start, end - start));
+      return s;
    }
 
    // Reads an EType enumeration from the file (this is accelerated by using
@@ -144,7 +219,7 @@ public class STEPReader {
       EDGE_CURVE,
       CYLINDRICAL_SURFACE, CIRCLE, FACE_BOUND, 
       B_SPLINE_SURFACE_WITH_KNOTS,
-      B_SPLINE_CURVE_WITH_KNOTS, PRESENTATION_LAYER_ASSIGNMENT, SHAPE_REPRESENTATION_RELATIONSHIP,
+      B_SPLINE_CURVE_WITH_KNOTS, 
       GEOMETRIC_SET, TRIMMED_CURVE, GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION,
       TOROIDAL_SURFACE, PERSONAL_ADDRESS, DRAUGHTING_MODEL, COMPOSITE_CURVE_SEGMENT,
       COMPOSITE_CURVE, SURFACE_OF_LINEAR_EXTRUSION, ELLIPSE, OVER_RIDING_STYLED_ITEM, 
@@ -156,56 +231,67 @@ public class STEPReader {
       PRODUCT_DEFINITION_WITH_ASSOCIATED_DOCUMENTS, MAPPED_ITEM, REPRESENTATION_MAP,
       APPLIED_DATE_AND_TIME_ASSIGNMENT, SURFACE_CURVE, FACE_SURFACE, GENERAL_PROPERTY,
       GENERAL_PROPERTY_ASSOCIATION, DESCRIPTIVE_REPRESENTATION_ITEM, POLYLINE,
-      DRAUGHTING_PRE_DEFINED_TEXT_FONT, TEXT_LITERAL, TEXT_STYLE_FOR_DEFINED_FONT,
-      TEXT_STYLE_WITH_BOX_CHARACTERISTICS, ANNOTATION_OCCURRENCE_ASSOCIATIVITY, SYMBOL_COLOUR,
+      ANNOTATION_OCCURRENCE_ASSOCIATIVITY, SYMBOL_COLOUR,
       SYMBOL_STYLE, PRE_DEFINED_TERMINATOR_SYMBOL, SYMBOL_TARGET, DEFINED_SYMBOL,
       LEADER_DIRECTED_CALLOUT, SHAPE_ASPECT_ASSOCIATIVITY, PCURVE, DEFINITIONAL_REPRESENTATION,
       PRODUCT_TYPE, PRE_DEFINED_MARKER, QUASI_UNIFORM_CURVE, APPLIED_PERSON_AND_ORGANIZATION_ASSIGNMENT,
       APPLIED_APPROVAL_ASSIGNMENT, APPLIED_SECURITY_CLASSIFICATION_ASSIGNMENT, GROUP, 
       APPLIED_GROUP_ASSIGNMENT, AXIS2_PLACEMENT_2D, QUASI_UNIFORM_SURFACE, VERTEX_LOOP,
       ORIENTED_CLOSED_SHELL, BREP_WITH_VOIDS, AXIS1_PLACEMENT, SURFACE_OF_REVOLUTION,
-      INTERSECTION_CURVE, OFFSET_SURFACE, DEGENERATE_TOROIDAL_SURFACE,
+      INTERSECTION_CURVE, OFFSET_SURFACE, DEGENERATE_TOROIDAL_SURFACE, 
 
-      _IGNORE,
-      DIMENSIONAL_EXPONENTS, PLANE_ANGLE_MEASURE_WITH_UNIT, UNCERTAINTY_MEASURE_WITH_UNIT,
-      APPLICATION_CONTEXT, APPLICATION_PROTOCOL_DEFINITION, DESIGN_CONTEXT, MECHANICAL_CONTEXT,
-      PRODUCT, PRODUCT_DEFINITION_FORMATION_WITH_SPECIFIED_SOURCE, PRODUCT_CATEGORY,
-      PRODUCT_RELATED_PRODUCT_CATEGORY, PRODUCT_CATEGORY_RELATIONSHIP, SECURITY_CLASSIFICATION_LEVEL,
-      SECURITY_CLASSIFICATION, CC_DESIGN_SECURITY_CLASSIFICATION, APPROVAL_STATUS, APPROVAL,
-      CC_DESIGN_APPROVAL, CALENDAR_DATE, COORDINATED_UNIVERSAL_TIME_OFFSET, LOCAL_TIME,
-      DATE_AND_TIME, APPROVAL_DATE_TIME, DATE_TIME_ROLE, CC_DESIGN_DATE_AND_TIME_ASSIGNMENT,
-      PERSON, ORGANIZATION, PERSON_AND_ORGANIZATION, APPROVAL_ROLE, APPROVAL_PERSON_ORGANIZATION,
-      PERSON_AND_ORGANIZATION_ROLE, CC_DESIGN_PERSON_AND_ORGANIZATION_ASSIGNMENT,
+      PRODUCT, PRODUCT_DEFINITION_FORMATION_WITH_SPECIFIED_SOURCE,
+
       ADVANCED_BREP_SHAPE_REPRESENTATION, PRODUCT_DEFINITION, PRODUCT_DEFINITION_SHAPE,
-      SHAPE_DEFINITION_REPRESENTATION, PRODUCT_DEFINITION_CONTEXT, PRODUCT_CONTEXT, 
-      PRODUCT_DEFINITION_FORMATION, DERIVED_UNIT_ELEMENT,
-      DERIVED_UNIT, MEASURE_REPRESENTATION_ITEM, DRAUGHTING_PRE_DEFINED_COLOUR, COLOUR_RGB,
-      SHAPE_ASPECT, PROPERTY_DEFINITION, SHAPE_REPRESENTATION, REPRESENTATION,
-      PROPERTY_DEFINITION_REPRESENTATION, DRAUGHTING_PRE_DEFINED_CURVE_FONT, CURVE_STYLE,
+      SHAPE_DEFINITION_REPRESENTATION, 
+      PRODUCT_DEFINITION_FORMATION, COLOUR_RGB,
+      SHAPE_REPRESENTATION, 
       PRESENTATION_STYLE_ASSIGNMENT, STYLED_ITEM, FILL_AREA_STYLE_COLOUR, FILL_AREA_STYLE,
       SURFACE_STYLE_FILL_AREA, SURFACE_SIDE_STYLE, SURFACE_STYLE_USAGE, 
-      MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION,
+      MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION, PRESENTATION_LAYER_ASSIGNMENT,
+      SHAPE_REPRESENTATION_RELATIONSHIP, LENGTH_MEASURE_WITH_UNIT,
+
+      _IGNORE,
+      DIMENSIONAL_EXPONENTS, DESIGN_CONTEXT, MECHANICAL_CONTEXT, UNCERTAINTY_MEASURE_WITH_UNIT, 
+      APPLICATION_CONTEXT, APPLICATION_PROTOCOL_DEFINITION, PRODUCT_CATEGORY, PRODUCT_RELATED_PRODUCT_CATEGORY,
+      PRODUCT_CATEGORY_RELATIONSHIP, PRODUCT_DEFINITION_CONTEXT, PRODUCT_CONTEXT,
+      SECURITY_CLASSIFICATION_LEVEL, SECURITY_CLASSIFICATION, CC_DESIGN_SECURITY_CLASSIFICATION, 
+      APPROVAL_STATUS, APPROVAL, CC_DESIGN_APPROVAL, CALENDAR_DATE, COORDINATED_UNIVERSAL_TIME_OFFSET, 
+      LOCAL_TIME, DATE_AND_TIME, APPROVAL_DATE_TIME, DATE_TIME_ROLE, CC_DESIGN_DATE_AND_TIME_ASSIGNMENT,
+      PERSON, ORGANIZATION, PERSON_AND_ORGANIZATION, APPROVAL_ROLE, APPROVAL_PERSON_ORGANIZATION,
+      PERSON_AND_ORGANIZATION_ROLE, CC_DESIGN_PERSON_AND_ORGANIZATION_ASSIGNMENT, DERIVED_UNIT_ELEMENT, 
+      DERIVED_UNIT, MEASURE_REPRESENTATION_ITEM, DRAUGHTING_PRE_DEFINED_TEXT_FONT, TEXT_LITERAL, 
+      TEXT_STYLE_FOR_DEFINED_FONT, TEXT_STYLE_WITH_BOX_CHARACTERISTICS, DRAUGHTING_PRE_DEFINED_COLOUR,
+      SHAPE_ASPECT, PROPERTY_DEFINITION, REPRESENTATION, PROPERTY_DEFINITION_REPRESENTATION,
+      DRAUGHTING_PRE_DEFINED_CURVE_FONT, CURVE_STYLE,
 
       _LATER,
-      LENGTH_MEASURE_WITH_UNIT,
+      PLANE_ANGLE_MEASURE_WITH_UNIT, 
 
       _LAST,
    }
 
    // Data stores --------------------------------------------------------------
-   List<Axis3D> mAxis3D = [];
+   List<Axis3D> mAxis = [];
    List<Circle> mCircle = [];
+   List<ColorRGB> mColor = [];
    List<Edge> mCurve = [];
    List<Cylinder> mCylinder = [];
    List<Face> mFace = [];
    List<FaceBound> mFaceBound = [];
-   List<Vector3> mDirection = [];
    List<int> mInt = [];
    List<int[]> mInts = [];
    List<Line> mLine = [];
+   List<Link> mLink = [];
+   List<BSplineCurve> mSplineCurve = [];
+   List<BSplineSurface> mSplineSurface = [];
    List<OEdge> mOEdge = [];
    List<Point3> mPoint = [];
+   List<Product> mProduct = [];
+   List<ShapeRepr> mShapeRepr = [];
+   List<StyledItem> mStyledItem = [];
    List<Vector> mVector = [];
+   List<Vector3> mDirection = [];
    (EType, int)[] mData = new (EType, int)[128];
 
    // Private data -------------------------------------------------------------
