@@ -23,8 +23,8 @@ public class STEPReader {
             if (mR.SkipSpace ().TryMatch ('=')) {
                idMax = Math.Max (idMax, id);
                mR.SkipSpace ();
-               if (mR.Peek () == '(') RCompound (id);
-               else REntity (id, RType ());
+               if (mR.Peek () == '(') { RCompound (id); }
+               else { REntity (id, RType ()); }
             }
          } else {
             if (mR.TryMatch ("ENDSEC;"u8)) break;
@@ -92,10 +92,11 @@ public class STEPReader {
          case CONICAL_SURFACE: slot = Add (mCone, new (RRef (), RDouble (), RDouble ())); break;
          case CONTEXT_DEPENDENT_SHAPE_REPRESENTATION or MAPPED_ITEM or SHAPE_DEFINITION_REPRESENTATION
             or SURFACE_OF_LINEAR_EXTRUSION or REPRESENTATION_MAP or PCURVE or AXIS2_PLACEMENT_2D
-            or AXIS1_PLACEMENT:
+            or AXIS1_PLACEMENT or SURFACE_OF_REVOLUTION:
             slot = Add (mTwoRefs, new (RRef (), RRef ())); 
             break;
          case CYLINDRICAL_SURFACE: slot = Add (mCylinder, new (RRef (), RDouble ())); break;
+         case DEGENERATE_TOROIDAL_SURFACE: slot = Add (mTorus, new (RRef (), RDouble (), RDouble (), RBool ())); break;
          case DIRECTION: slot = Add (mDirection, RVector3 ()); break;
          case ELLIPSE: slot = Add (mEllipse, new (RRef (), RDouble (), RDouble ())); break;
          case EDGE_CURVE: slot = Add (mCurve, new Edge (RRef (), RRef (), RRef (), RBool ())); break;
@@ -110,6 +111,7 @@ public class STEPReader {
          case NEXT_ASSEMBLY_USAGE_OCCURRENCE:
             slot = Add (mAssyUsage, new (RString (), RString (), RRef (), RRef ()));
             break;
+         case OFFSET_SURFACE: slot = Add (mOffsetSurf, new (RRef (), RDouble ())); break;
          case ORIENTED_EDGE:
             mR.Match ('*').Match (',').Match ('*').Match (',');
             slot = Add (mOEdge, new (RRef (), RBool ()));
@@ -127,10 +129,12 @@ public class STEPReader {
             break;
          case SHAPE_REPRESENTATION_RELATIONSHIP: RString (); slot = Add (mTwoRefs, new (RRef (), RRef ())); break;
          case SPHERICAL_SURFACE: slot = Add (mSphere, new (RRef (), RDouble ())); break;
-         case SURFACE_CURVE: slot = Add (mSurfCurve, new SurfCurve (RRef (), RRefs (), REnum ())); break;
+         case SURFACE_CURVE or INTERSECTION_CURVE: 
+            slot = Add (mSurfCurve, new SurfCurve (RRef (), RRefs (), REnum ())); 
+            break;
          case SURFACE_STYLE_USAGE: slot = Add (mSurfStyleUsage, new (REnum (), RRef ())); break;
          case STYLED_ITEM: slot = Add (mStyledItem, new (RRefs (), RRef ())); break;
-         case TOROIDAL_SURFACE: slot = Add (mTorus, new (RRef (), RDouble (), RDouble ())); break;
+         case TOROIDAL_SURFACE: slot = Add (mTorus, new (RRef (), RDouble (), RDouble (), false)); break;
          case VECTOR: slot = Add (mVector, new (RRef (), RDouble ())); break;
          default: throw new BadCaseException ($"Unhandled entity: #{id} = {type}");
       }
@@ -157,6 +161,7 @@ public class STEPReader {
    List<BSplineSurface> mSplineSurface = [];
    List<OEdge> mOEdge = [];
    List<OShell> mOShell = [];
+   List<OffsetSurf> mOffsetSurf = [];
    List<Point3> mPoint = [];
    List<Product> mProduct = [];
    List<ShapeRepr> mShapeRepr = [];
@@ -261,6 +266,7 @@ public class STEPReader {
    // Reads an array of integers of the form "(#1,#2,#3)"
    int[] RRefs () {
       mTmpN.Clear ();
+      if (mR.TryMatch ('$')) return [];
       mR.TryMatch (','); mR.Match ('(');
       for (; ; ) {
          if (mR.TryMatch (')')) break;

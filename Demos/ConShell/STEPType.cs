@@ -88,6 +88,11 @@ readonly struct OShell (int nShell, bool dir) {
    public readonly bool Dir = dir;
 }
 
+readonly struct OffsetSurf (int nSurf, double dist) {
+   public readonly int Basis = nSurf;
+   public readonly double Offset = dist;
+}
+
 readonly struct Product (string name, string desc, int[] frames) {
    public readonly string Name = name, Description = desc;
    public readonly int[] Frame = frames;
@@ -124,9 +129,10 @@ readonly struct SurfStyleUsage (string side, int style) {
    public readonly int Style = style;
 }
 
-readonly struct Torus (int coordsys, double major, double minor) {
+readonly struct Torus (int coordsys, double major, double minor, bool apple) {
    public readonly int CoordSys = coordsys;
    public readonly double RMajor = major, RMinor = minor;
+   public readonly bool Apple = apple;
 }
 
 readonly struct Vector (int r, double len) {
