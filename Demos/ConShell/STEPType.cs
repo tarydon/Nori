@@ -1,7 +1,12 @@
 ﻿namespace Nori.STEP;
 
 readonly struct Axis3D (int origin, int xaxis, int yaxis) {
-   public readonly int ROrigin = origin, XAxis = xaxis, YAxis = yaxis;
+   public readonly int Origin = origin, XAxis = xaxis, YAxis = yaxis;
+}
+
+readonly struct BRepVoids (int outer, int[] inner) {
+   public readonly int Outer = outer;
+   public readonly int[] Inner = inner;
 }
 
 readonly struct BSplineCurve (int degree, int[] pts, string curveform, bool closed, bool intersect, int[] multiplicities, double[] knots, string knottype) {
@@ -78,6 +83,11 @@ readonly struct OEdge (int nEdge, bool dir) {
    public readonly bool Dir = dir; 
 }
 
+readonly struct OShell (int nShell, bool dir) {
+   public readonly int Shell = nShell;
+   public readonly bool Dir = dir;
+}
+
 readonly struct Product (string name, string desc, int[] frames) {
    public readonly string Name = name, Description = desc;
    public readonly int[] Frame = frames;
@@ -101,6 +111,12 @@ readonly struct StyledItem (int[] styles, int target) {
 readonly struct StyleOverride (int[] styles, int target, int oldStyle) {
    public readonly int[] Styles = styles;
    public readonly int Target = target, OldStyle = oldStyle;
+}
+
+readonly struct SurfCurve (int curve3D, int[] pcurves, string preferred) {
+   public readonly int Curve3D = curve3D;
+   public readonly int[] PCurves = pcurves;
+   public readonly string Preferred = preferred;
 }
 
 readonly struct SurfStyleUsage (string side, int style) {

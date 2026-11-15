@@ -14,7 +14,7 @@ class Program {
          .OrderBy (a => a.Length)
          .Select (a => a.FullName)
          .ToList ();
-      for (int i = 3000; i < files.Count; i++) {
+      for (int i = 6000; i < files.Count; i++) {
          string file = files[i];
          var sr = new STEPReader (file);
          try {

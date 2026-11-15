@@ -67,14 +67,13 @@ public class STEPReader {
       else if (mR.TryMatch ('\'')) mR.SkipTo ('\'').Match (',');
       int slot;
       switch (type) {
-         case ADVANCED_FACE: slot = Add (mFace, new Face (RRefs (), RRef (), RBool ())); break;
-         case ADVANCED_BREP_SHAPE_REPRESENTATION or SHAPE_REPRESENTATION or MANIFOLD_SURFACE_SHAPE_REPRESENTATION:
+         case ADVANCED_FACE or FACE_SURFACE: slot = Add (mFace, new Face (RRefs (), RRef (), RBool ())); break;
+         case ADVANCED_BREP_SHAPE_REPRESENTATION or SHAPE_REPRESENTATION or MANIFOLD_SURFACE_SHAPE_REPRESENTATION
+            or DEFINITIONAL_REPRESENTATION:
             slot = Add (mShapeRepr, new (RRefs (), RRef ())); 
             break;
-         case NEXT_ASSEMBLY_USAGE_OCCURRENCE:
-            slot = Add (mAssyUsage, new (RString (), RString (), RRef (), RRef ()));
-            break;
          case AXIS2_PLACEMENT_3D: slot = Add (mAxis, new (RRef (), RRef (), RRef ())); break;
+         case BREP_WITH_VOIDS: slot = Add (mBrepVoids, new (RRef (), RRefs ())); break;
          case B_SPLINE_CURVE_WITH_KNOTS:
             slot = Add (mSplineCurve, new (RInt (), RRefs (), REnum (), RBool (), RBool (),
                RInts (), RDoubles (), REnum ()));
@@ -85,14 +84,15 @@ public class STEPReader {
             break;
          case CARTESIAN_POINT: slot = Add (mPoint, RPoint3 ()); break;
          case CLOSED_SHELL or EDGE_LOOP or FILL_AREA_STYLE or OPEN_SHELL or PRESENTATION_STYLE_ASSIGNMENT
-            or SHELL_BASED_SURFACE_MODEL or SURFACE_SIDE_STYLE:
+            or SHELL_BASED_SURFACE_MODEL or SURFACE_SIDE_STYLE or POLYLINE:
             slot = Add (mInts, RRefs ()); 
             break;
          case CIRCLE: slot = Add (mCircle, new (RRef (), RDouble ())); break;
          case COLOUR_RGB: slot = Add (mColor, new (RDouble (), RDouble (), RDouble ())); break;
          case CONICAL_SURFACE: slot = Add (mCone, new (RRef (), RDouble (), RDouble ())); break;
          case CONTEXT_DEPENDENT_SHAPE_REPRESENTATION or MAPPED_ITEM or SHAPE_DEFINITION_REPRESENTATION
-            or SURFACE_OF_LINEAR_EXTRUSION or REPRESENTATION_MAP:
+            or SURFACE_OF_LINEAR_EXTRUSION or REPRESENTATION_MAP or PCURVE or AXIS2_PLACEMENT_2D
+            or AXIS1_PLACEMENT:
             slot = Add (mTwoRefs, new (RRef (), RRef ())); 
             break;
          case CYLINDRICAL_SURFACE: slot = Add (mCylinder, new (RRef (), RDouble ())); break;
@@ -101,14 +101,22 @@ public class STEPReader {
          case EDGE_CURVE: slot = Add (mCurve, new Edge (RRef (), RRef (), RRef (), RBool ())); break;
          case FACE_BOUND: slot = Add (mFaceBound, new (RRef (), RBool (), false)); break;
          case FACE_OUTER_BOUND: slot = Add (mFaceBound, new (RRef (), RBool (), true)); break;
-         case FILL_AREA_STYLE_COLOUR or MANIFOLD_SOLID_BREP or PLANE or SURFACE_STYLE_FILL_AREA or VERTEX_POINT:
+         case FILL_AREA_STYLE_COLOUR or MANIFOLD_SOLID_BREP or PLANE or SURFACE_STYLE_FILL_AREA or VERTEX_POINT
+            or VERTEX_LOOP:
             slot = Add (mInt, RRef ()); 
             break;
          case ITEM_DEFINED_TRANSFORMATION: RString (); slot = Add (mTwoRefs, new (RRef (), RRef ())); break;
          case LINE: slot = Add (mLine, new (RRef (), RRef ())); break;
+         case NEXT_ASSEMBLY_USAGE_OCCURRENCE:
+            slot = Add (mAssyUsage, new (RString (), RString (), RRef (), RRef ()));
+            break;
          case ORIENTED_EDGE:
             mR.Match ('*').Match (',').Match ('*').Match (',');
             slot = Add (mOEdge, new (RRef (), RBool ()));
+            break;
+         case ORIENTED_CLOSED_SHELL:
+            mR.Match ('*').Match (',');
+            slot = Add (mOShell, new (RRef (), RBool ()));
             break;
          case OVER_RIDING_STYLED_ITEM: slot = Add (mStyleOverride, new (RRefs (), RRef (), RRef ())); break;
          case PRODUCT: slot = Add (mProduct, new (RString (), RString (), RRefs ())); break;
@@ -119,6 +127,7 @@ public class STEPReader {
             break;
          case SHAPE_REPRESENTATION_RELATIONSHIP: RString (); slot = Add (mTwoRefs, new (RRef (), RRef ())); break;
          case SPHERICAL_SURFACE: slot = Add (mSphere, new (RRef (), RDouble ())); break;
+         case SURFACE_CURVE: slot = Add (mSurfCurve, new SurfCurve (RRef (), RRefs (), REnum ())); break;
          case SURFACE_STYLE_USAGE: slot = Add (mSurfStyleUsage, new (REnum (), RRef ())); break;
          case STYLED_ITEM: slot = Add (mStyledItem, new (RRefs (), RRef ())); break;
          case TOROIDAL_SURFACE: slot = Add (mTorus, new (RRef (), RDouble (), RDouble ())); break;
@@ -131,6 +140,7 @@ public class STEPReader {
 
    List<AssyUsage> mAssyUsage = [];
    List<Axis3D> mAxis = [];
+   List<BRepVoids> mBrepVoids = [];
    List<Circle> mCircle = [];
    List<Ellipse> mEllipse = [];
    List<ColorRGB> mColor = [];
@@ -146,12 +156,14 @@ public class STEPReader {
    List<BSplineCurve> mSplineCurve = [];
    List<BSplineSurface> mSplineSurface = [];
    List<OEdge> mOEdge = [];
+   List<OShell> mOShell = [];
    List<Point3> mPoint = [];
    List<Product> mProduct = [];
    List<ShapeRepr> mShapeRepr = [];
    List<Sphere> mSphere = [];
    List<StyledItem> mStyledItem = [];
    List<StyleOverride> mStyleOverride = [];
+   List<SurfCurve> mSurfCurve = [];
    List<SurfStyleUsage> mSurfStyleUsage = [];
    List<Torus> mTorus = [];
    List<Vector> mVector = [];
@@ -171,14 +183,10 @@ public class STEPReader {
       CONICAL_SURFACE, ITEM_DEFINED_TRANSFORMATION, NEXT_ASSEMBLY_USAGE_OCCURRENCE, SPHERICAL_SURFACE,
       OPEN_SHELL, SHELL_BASED_SURFACE_MODEL,
       MANIFOLD_SURFACE_SHAPE_REPRESENTATION, MAPPED_ITEM, REPRESENTATION_MAP,
-      SURFACE_CURVE, FACE_SURFACE, GENERAL_PROPERTY,
-      GENERAL_PROPERTY_ASSOCIATION, DESCRIPTIVE_REPRESENTATION_ITEM, POLYLINE,
-      ANNOTATION_OCCURRENCE_ASSOCIATIVITY, SYMBOL_COLOUR,
-      SYMBOL_STYLE, PRE_DEFINED_TERMINATOR_SYMBOL, SYMBOL_TARGET, DEFINED_SYMBOL,
-      LEADER_DIRECTED_CALLOUT, SHAPE_ASPECT_ASSOCIATIVITY, PCURVE, DEFINITIONAL_REPRESENTATION,
-      PRODUCT_TYPE, PRE_DEFINED_MARKER, QUASI_UNIFORM_CURVE, APPLIED_PERSON_AND_ORGANIZATION_ASSIGNMENT,
-      APPLIED_APPROVAL_ASSIGNMENT, APPLIED_SECURITY_CLASSIFICATION_ASSIGNMENT, GROUP,
-      APPLIED_GROUP_ASSIGNMENT, AXIS2_PLACEMENT_2D, QUASI_UNIFORM_SURFACE, VERTEX_LOOP,
+      SURFACE_CURVE, FACE_SURFACE, 
+      POLYLINE,
+      PCURVE, 
+      AXIS2_PLACEMENT_2D, VERTEX_LOOP,
       ORIENTED_CLOSED_SHELL, BREP_WITH_VOIDS, AXIS1_PLACEMENT, SURFACE_OF_REVOLUTION,
       INTERSECTION_CURVE, OFFSET_SURFACE, DEGENERATE_TOROIDAL_SURFACE,
 
@@ -190,7 +198,7 @@ public class STEPReader {
       SHAPE_REPRESENTATION,
       PRESENTATION_STYLE_ASSIGNMENT, STYLED_ITEM, FILL_AREA_STYLE_COLOUR, FILL_AREA_STYLE,
       SURFACE_STYLE_FILL_AREA, SURFACE_SIDE_STYLE, SURFACE_STYLE_USAGE,
-      SHAPE_REPRESENTATION_RELATIONSHIP,
+      SHAPE_REPRESENTATION_RELATIONSHIP, DEFINITIONAL_REPRESENTATION,
 
       _IGNORE,
       DIMENSIONAL_EXPONENTS, DESIGN_CONTEXT, MECHANICAL_CONTEXT, UNCERTAINTY_MEASURE_WITH_UNIT,
@@ -208,14 +216,20 @@ public class STEPReader {
       MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION, 
       PERSONAL_ADDRESS, DRAUGHTING_MODEL, VALUE_REPRESENTATION_ITEM,
       DOCUMENT_TYPE, DOCUMENT, APPLIED_DATE_AND_TIME_ASSIGNMENT,
-      PRODUCT_DEFINITION_WITH_ASSOCIATED_DOCUMENTS,
+      PRODUCT_DEFINITION_WITH_ASSOCIATED_DOCUMENTS, GENERAL_PROPERTY, PRE_DEFINED_POINT_MARKER_SYMBOL,
+      POINT_STYLE, GENERAL_PROPERTY_ASSOCIATION, DESCRIPTIVE_REPRESENTATION_ITEM,
+      ANNOTATION_OCCURRENCE_ASSOCIATIVITY, SYMBOL_COLOUR, PRE_DEFINED_MARKER,
+      SYMBOL_STYLE, PRE_DEFINED_TERMINATOR_SYMBOL, SYMBOL_TARGET, DEFINED_SYMBOL,
+      LEADER_DIRECTED_CALLOUT, SHAPE_ASPECT_ASSOCIATIVITY, PRODUCT_TYPE, APPLIED_PERSON_AND_ORGANIZATION_ASSIGNMENT,
+      APPLIED_APPROVAL_ASSIGNMENT, APPLIED_SECURITY_CLASSIFICATION_ASSIGNMENT, GROUP,
+      APPLIED_GROUP_ASSIGNMENT,
 
       _LATER,
       PLANE_ANGLE_MEASURE_WITH_UNIT, LENGTH_MEASURE_WITH_UNIT, TRIMMED_CURVE, GEOMETRIC_SET,
       COMPOSITE_CURVE, COMPOSITE_CURVE_SEGMENT, DRAUGHTING_PRE_DEFINED_COLOUR,
       GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION, GEOMETRIC_CURVE_SET, INVISIBILITY,
-      GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION, PRE_DEFINED_POINT_MARKER_SYMBOL,
-      POINT_STYLE,
+      GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION, QUASI_UNIFORM_CURVE,
+      QUASI_UNIFORM_SURFACE,
 
       _LAST,
    }
