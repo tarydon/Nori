@@ -63,53 +63,161 @@ public class STEPReader {
    // Reads a standard entity of the given type
    void REntity (int id, EType type) {
       if (type > _IGNORE) return;
-      if (mR.TryMatch ('\'')) mR.SkipTo ('\'').Match (',');
+      if (mR.TryMatch ('$')) mR.Match (',');
+      else if (mR.TryMatch ('\'')) mR.SkipTo ('\'').Match (',');
       int slot;
       switch (type) {
          case ADVANCED_FACE: slot = Add (mFace, new Face (RRefs (), RRef (), RBool ())); break;
-         case SHAPE_REPRESENTATION:
-         case ADVANCED_BREP_SHAPE_REPRESENTATION: slot = Add (mShapeRepr, new (RRefs (), RRef ())); break;
-         case B_SPLINE_CURVE_WITH_KNOTS:
-            slot = Add (mSplineCurve, new (RInt (), RRefs (), REnum (), RBool (), RBool (), 
-               RInts (), RDoubles (), REnum ())); 
+         case ADVANCED_BREP_SHAPE_REPRESENTATION or SHAPE_REPRESENTATION or MANIFOLD_SURFACE_SHAPE_REPRESENTATION:
+            slot = Add (mShapeRepr, new (RRefs (), RRef ())); 
             break;
-         case B_SPLINE_SURFACE_WITH_KNOTS:
-            slot = Add (mSplineSurface, new BSplineSurface (RInt (), RInt (), RRefsList (), REnum (), 
-               RBool (), RBool (), RBool (), RInts (), RInts (), RDoubles (), RDoubles (), REnum ()));
+         case NEXT_ASSEMBLY_USAGE_OCCURRENCE:
+            slot = Add (mAssyUsage, new (RString (), RString (), RRef (), RRef ()));
             break;
          case AXIS2_PLACEMENT_3D: slot = Add (mAxis, new (RRef (), RRef (), RRef ())); break;
+         case B_SPLINE_CURVE_WITH_KNOTS:
+            slot = Add (mSplineCurve, new (RInt (), RRefs (), REnum (), RBool (), RBool (),
+               RInts (), RDoubles (), REnum ()));
+            break;
+         case B_SPLINE_SURFACE_WITH_KNOTS:
+            slot = Add (mSplineSurface, new BSplineSurface (RInt (), RInt (), RRefsList (), REnum (),
+               RBool (), RBool (), RBool (), RInts (), RInts (), RDoubles (), RDoubles (), REnum ()));
+            break;
          case CARTESIAN_POINT: slot = Add (mPoint, RPoint3 ()); break;
-         case CLOSED_SHELL: slot = Add (mInts, RRefs ()); break;
+         case CLOSED_SHELL or EDGE_LOOP or FILL_AREA_STYLE or OPEN_SHELL or PRESENTATION_STYLE_ASSIGNMENT
+            or SHELL_BASED_SURFACE_MODEL or SURFACE_SIDE_STYLE:
+            slot = Add (mInts, RRefs ()); 
+            break;
          case CIRCLE: slot = Add (mCircle, new (RRef (), RDouble ())); break;
          case COLOUR_RGB: slot = Add (mColor, new (RDouble (), RDouble (), RDouble ())); break;
+         case CONICAL_SURFACE: slot = Add (mCone, new (RRef (), RDouble (), RDouble ())); break;
+         case CONTEXT_DEPENDENT_SHAPE_REPRESENTATION or MAPPED_ITEM or SHAPE_DEFINITION_REPRESENTATION
+            or SURFACE_OF_LINEAR_EXTRUSION or REPRESENTATION_MAP:
+            slot = Add (mTwoRefs, new (RRef (), RRef ())); 
+            break;
          case CYLINDRICAL_SURFACE: slot = Add (mCylinder, new (RRef (), RDouble ())); break;
          case DIRECTION: slot = Add (mDirection, RVector3 ()); break;
-         case EDGE_LOOP: slot = Add (mInts, RRefs ()); break;
+         case ELLIPSE: slot = Add (mEllipse, new (RRef (), RDouble (), RDouble ())); break;
          case EDGE_CURVE: slot = Add (mCurve, new Edge (RRef (), RRef (), RRef (), RBool ())); break;
          case FACE_BOUND: slot = Add (mFaceBound, new (RRef (), RBool (), false)); break;
          case FACE_OUTER_BOUND: slot = Add (mFaceBound, new (RRef (), RBool (), true)); break;
+         case FILL_AREA_STYLE_COLOUR or MANIFOLD_SOLID_BREP or PLANE or SURFACE_STYLE_FILL_AREA or VERTEX_POINT:
+            slot = Add (mInt, RRef ()); 
+            break;
+         case ITEM_DEFINED_TRANSFORMATION: RString (); slot = Add (mTwoRefs, new (RRef (), RRef ())); break;
          case LINE: slot = Add (mLine, new (RRef (), RRef ())); break;
-         case MANIFOLD_SOLID_BREP: slot = Add (mInt, RRef ()); break;
-         case OPEN_SHELL: slot = Add (mInts, RRefs ()); break;
          case ORIENTED_EDGE:
             mR.Match ('*').Match (',').Match ('*').Match (',');
             slot = Add (mOEdge, new (RRef (), RBool ()));
             break;
-         case PLANE: slot = Add (mInt, RRef ()); break;
-         case PRESENTATION_STYLE_ASSIGNMENT: slot = Add (mInts, RRefs ()); break;
+         case OVER_RIDING_STYLED_ITEM: slot = Add (mStyleOverride, new (RRefs (), RRef (), RRef ())); break;
          case PRODUCT: slot = Add (mProduct, new (RString (), RString (), RRefs ())); break;
-         case PRODUCT_DEFINITION: RString (); slot = Add (mLink, new (RRef (), RRef ())); break;
-         case PRODUCT_DEFINITION_SHAPE: RString (); slot = Add (mInt, RRef ()); break;
-         case PRODUCT_DEFINITION_FORMATION: RString (); slot = Add (mInt, RRef ()); break;
-         case PRODUCT_DEFINITION_FORMATION_WITH_SPECIFIED_SOURCE: RString (); slot = Add (mInt, RRef ()); break; 
-         case SHAPE_DEFINITION_REPRESENTATION: slot = Add (mLink, new (RRef (), RRef ())); break;
+         case PRODUCT_DEFINITION: RString (); slot = Add (mTwoRefs, new (RRef (), RRef ())); break;
+         case PRODUCT_DEFINITION_SHAPE or PRODUCT_DEFINITION_FORMATION 
+            or PRODUCT_DEFINITION_FORMATION_WITH_SPECIFIED_SOURCE:
+            RString (); slot = Add (mInt, RRef ()); 
+            break;
+         case SHAPE_REPRESENTATION_RELATIONSHIP: RString (); slot = Add (mTwoRefs, new (RRef (), RRef ())); break;
+         case SPHERICAL_SURFACE: slot = Add (mSphere, new (RRef (), RDouble ())); break;
+         case SURFACE_STYLE_USAGE: slot = Add (mSurfStyleUsage, new (REnum (), RRef ())); break;
          case STYLED_ITEM: slot = Add (mStyledItem, new (RRefs (), RRef ())); break;
+         case TOROIDAL_SURFACE: slot = Add (mTorus, new (RRef (), RDouble (), RDouble ())); break;
          case VECTOR: slot = Add (mVector, new (RRef (), RDouble ())); break;
-         case VERTEX_POINT: slot = Add (mInt, RRef ()); break;
          default: throw new BadCaseException ($"Unhandled entity: #{id} = {type}");
       }
       while (mData.Length <= id) Array.Resize (ref mData, mData.Length * 2);
       mData[id] = (type, slot);
+   }
+
+   List<AssyUsage> mAssyUsage = [];
+   List<Axis3D> mAxis = [];
+   List<Circle> mCircle = [];
+   List<Ellipse> mEllipse = [];
+   List<ColorRGB> mColor = [];
+   List<Cone> mCone = [];
+   List<Cylinder> mCylinder = [];
+   List<Edge> mCurve = [];
+   List<Face> mFace = [];
+   List<FaceBound> mFaceBound = [];
+   List<int> mInt = [];
+   List<int[]> mInts = [];
+   List<Line> mLine = [];
+   List<TwoRef> mTwoRefs = [];
+   List<BSplineCurve> mSplineCurve = [];
+   List<BSplineSurface> mSplineSurface = [];
+   List<OEdge> mOEdge = [];
+   List<Point3> mPoint = [];
+   List<Product> mProduct = [];
+   List<ShapeRepr> mShapeRepr = [];
+   List<Sphere> mSphere = [];
+   List<StyledItem> mStyledItem = [];
+   List<StyleOverride> mStyleOverride = [];
+   List<SurfStyleUsage> mSurfStyleUsage = [];
+   List<Torus> mTorus = [];
+   List<Vector> mVector = [];
+   List<Vector3> mDirection = [];
+   (EType, int)[] mData = new (EType, int)[128];
+
+   internal enum EType {
+      _NIL,
+      _FIRST,
+      DIRECTION, VECTOR, CARTESIAN_POINT, LINE, VERTEX_POINT, AXIS2_PLACEMENT_3D, PLANE,
+      ORIENTED_EDGE, EDGE_LOOP, FACE_OUTER_BOUND, ADVANCED_FACE, CLOSED_SHELL, MANIFOLD_SOLID_BREP,
+      EDGE_CURVE,
+      CYLINDRICAL_SURFACE, CIRCLE, FACE_BOUND,
+      B_SPLINE_SURFACE_WITH_KNOTS,
+      B_SPLINE_CURVE_WITH_KNOTS,
+      TOROIDAL_SURFACE, SURFACE_OF_LINEAR_EXTRUSION, ELLIPSE, OVER_RIDING_STYLED_ITEM,
+      CONICAL_SURFACE, ITEM_DEFINED_TRANSFORMATION, NEXT_ASSEMBLY_USAGE_OCCURRENCE, SPHERICAL_SURFACE,
+      OPEN_SHELL, SHELL_BASED_SURFACE_MODEL,
+      MANIFOLD_SURFACE_SHAPE_REPRESENTATION, MAPPED_ITEM, REPRESENTATION_MAP,
+      SURFACE_CURVE, FACE_SURFACE, GENERAL_PROPERTY,
+      GENERAL_PROPERTY_ASSOCIATION, DESCRIPTIVE_REPRESENTATION_ITEM, POLYLINE,
+      ANNOTATION_OCCURRENCE_ASSOCIATIVITY, SYMBOL_COLOUR,
+      SYMBOL_STYLE, PRE_DEFINED_TERMINATOR_SYMBOL, SYMBOL_TARGET, DEFINED_SYMBOL,
+      LEADER_DIRECTED_CALLOUT, SHAPE_ASPECT_ASSOCIATIVITY, PCURVE, DEFINITIONAL_REPRESENTATION,
+      PRODUCT_TYPE, PRE_DEFINED_MARKER, QUASI_UNIFORM_CURVE, APPLIED_PERSON_AND_ORGANIZATION_ASSIGNMENT,
+      APPLIED_APPROVAL_ASSIGNMENT, APPLIED_SECURITY_CLASSIFICATION_ASSIGNMENT, GROUP,
+      APPLIED_GROUP_ASSIGNMENT, AXIS2_PLACEMENT_2D, QUASI_UNIFORM_SURFACE, VERTEX_LOOP,
+      ORIENTED_CLOSED_SHELL, BREP_WITH_VOIDS, AXIS1_PLACEMENT, SURFACE_OF_REVOLUTION,
+      INTERSECTION_CURVE, OFFSET_SURFACE, DEGENERATE_TOROIDAL_SURFACE,
+
+      PRODUCT, PRODUCT_DEFINITION_FORMATION_WITH_SPECIFIED_SOURCE, CONTEXT_DEPENDENT_SHAPE_REPRESENTATION,
+
+      ADVANCED_BREP_SHAPE_REPRESENTATION, PRODUCT_DEFINITION, PRODUCT_DEFINITION_SHAPE,
+      SHAPE_DEFINITION_REPRESENTATION,
+      PRODUCT_DEFINITION_FORMATION, COLOUR_RGB,
+      SHAPE_REPRESENTATION,
+      PRESENTATION_STYLE_ASSIGNMENT, STYLED_ITEM, FILL_AREA_STYLE_COLOUR, FILL_AREA_STYLE,
+      SURFACE_STYLE_FILL_AREA, SURFACE_SIDE_STYLE, SURFACE_STYLE_USAGE,
+      SHAPE_REPRESENTATION_RELATIONSHIP,
+
+      _IGNORE,
+      DIMENSIONAL_EXPONENTS, DESIGN_CONTEXT, MECHANICAL_CONTEXT, UNCERTAINTY_MEASURE_WITH_UNIT,
+      APPLICATION_CONTEXT, APPLICATION_PROTOCOL_DEFINITION, PRODUCT_CATEGORY, PRODUCT_RELATED_PRODUCT_CATEGORY,
+      PRODUCT_CATEGORY_RELATIONSHIP, PRODUCT_DEFINITION_CONTEXT, PRODUCT_CONTEXT,
+      SECURITY_CLASSIFICATION_LEVEL, SECURITY_CLASSIFICATION, CC_DESIGN_SECURITY_CLASSIFICATION,
+      APPROVAL_STATUS, APPROVAL, CC_DESIGN_APPROVAL, CALENDAR_DATE, COORDINATED_UNIVERSAL_TIME_OFFSET,
+      LOCAL_TIME, DATE_AND_TIME, APPROVAL_DATE_TIME, DATE_TIME_ROLE, CC_DESIGN_DATE_AND_TIME_ASSIGNMENT,
+      PERSON, ORGANIZATION, PERSON_AND_ORGANIZATION, APPROVAL_ROLE, APPROVAL_PERSON_ORGANIZATION,
+      PERSON_AND_ORGANIZATION_ROLE, CC_DESIGN_PERSON_AND_ORGANIZATION_ASSIGNMENT, DERIVED_UNIT_ELEMENT,
+      DERIVED_UNIT, MEASURE_REPRESENTATION_ITEM, DRAUGHTING_PRE_DEFINED_TEXT_FONT, TEXT_LITERAL,
+      TEXT_STYLE_FOR_DEFINED_FONT, TEXT_STYLE_WITH_BOX_CHARACTERISTICS, 
+      SHAPE_ASPECT, PROPERTY_DEFINITION, REPRESENTATION, PROPERTY_DEFINITION_REPRESENTATION,
+      DRAUGHTING_PRE_DEFINED_CURVE_FONT, CURVE_STYLE, PRESENTATION_LAYER_ASSIGNMENT,
+      MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION, 
+      PERSONAL_ADDRESS, DRAUGHTING_MODEL, VALUE_REPRESENTATION_ITEM,
+      DOCUMENT_TYPE, DOCUMENT, APPLIED_DATE_AND_TIME_ASSIGNMENT,
+      PRODUCT_DEFINITION_WITH_ASSOCIATED_DOCUMENTS,
+
+      _LATER,
+      PLANE_ANGLE_MEASURE_WITH_UNIT, LENGTH_MEASURE_WITH_UNIT, TRIMMED_CURVE, GEOMETRIC_SET,
+      COMPOSITE_CURVE, COMPOSITE_CURVE_SEGMENT, DRAUGHTING_PRE_DEFINED_COLOUR,
+      GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION, GEOMETRIC_CURVE_SET, INVISIBILITY,
+      GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION, PRE_DEFINED_POINT_MARKER_SYMBOL,
+      POINT_STYLE,
+
+      _LAST,
    }
 
    // Returns an enumeration of the form ".UNSPECIFIED."
@@ -211,88 +319,8 @@ public class STEPReader {
    }
 
    // Nested types -------------------------------------------------------------
-   internal enum EType {
-      _NIL,
-      _FIRST,
-      DIRECTION, VECTOR, CARTESIAN_POINT, LINE, VERTEX_POINT, AXIS2_PLACEMENT_3D, PLANE,
-      ORIENTED_EDGE, EDGE_LOOP, FACE_OUTER_BOUND, ADVANCED_FACE, CLOSED_SHELL, MANIFOLD_SOLID_BREP,
-      EDGE_CURVE,
-      CYLINDRICAL_SURFACE, CIRCLE, FACE_BOUND, 
-      B_SPLINE_SURFACE_WITH_KNOTS,
-      B_SPLINE_CURVE_WITH_KNOTS, 
-      GEOMETRIC_SET, TRIMMED_CURVE, GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION,
-      TOROIDAL_SURFACE, PERSONAL_ADDRESS, DRAUGHTING_MODEL, COMPOSITE_CURVE_SEGMENT,
-      COMPOSITE_CURVE, SURFACE_OF_LINEAR_EXTRUSION, ELLIPSE, OVER_RIDING_STYLED_ITEM, 
-      CONICAL_SURFACE, VALUE_REPRESENTATION_ITEM, CONTEXT_DEPENDENT_SHAPE_REPRESENTATION,
-      ITEM_DEFINED_TRANSFORMATION, NEXT_ASSEMBLY_USAGE_OCCURRENCE, SPHERICAL_SURFACE,
-      GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION, GEOMETRIC_CURVE_SET, INVISIBILITY,
-      POINT_STYLE, PRE_DEFINED_POINT_MARKER_SYMBOL, OPEN_SHELL, SHELL_BASED_SURFACE_MODEL,
-      MANIFOLD_SURFACE_SHAPE_REPRESENTATION, DOCUMENT_TYPE, DOCUMENT, 
-      PRODUCT_DEFINITION_WITH_ASSOCIATED_DOCUMENTS, MAPPED_ITEM, REPRESENTATION_MAP,
-      APPLIED_DATE_AND_TIME_ASSIGNMENT, SURFACE_CURVE, FACE_SURFACE, GENERAL_PROPERTY,
-      GENERAL_PROPERTY_ASSOCIATION, DESCRIPTIVE_REPRESENTATION_ITEM, POLYLINE,
-      ANNOTATION_OCCURRENCE_ASSOCIATIVITY, SYMBOL_COLOUR,
-      SYMBOL_STYLE, PRE_DEFINED_TERMINATOR_SYMBOL, SYMBOL_TARGET, DEFINED_SYMBOL,
-      LEADER_DIRECTED_CALLOUT, SHAPE_ASPECT_ASSOCIATIVITY, PCURVE, DEFINITIONAL_REPRESENTATION,
-      PRODUCT_TYPE, PRE_DEFINED_MARKER, QUASI_UNIFORM_CURVE, APPLIED_PERSON_AND_ORGANIZATION_ASSIGNMENT,
-      APPLIED_APPROVAL_ASSIGNMENT, APPLIED_SECURITY_CLASSIFICATION_ASSIGNMENT, GROUP, 
-      APPLIED_GROUP_ASSIGNMENT, AXIS2_PLACEMENT_2D, QUASI_UNIFORM_SURFACE, VERTEX_LOOP,
-      ORIENTED_CLOSED_SHELL, BREP_WITH_VOIDS, AXIS1_PLACEMENT, SURFACE_OF_REVOLUTION,
-      INTERSECTION_CURVE, OFFSET_SURFACE, DEGENERATE_TOROIDAL_SURFACE, 
-
-      PRODUCT, PRODUCT_DEFINITION_FORMATION_WITH_SPECIFIED_SOURCE,
-
-      ADVANCED_BREP_SHAPE_REPRESENTATION, PRODUCT_DEFINITION, PRODUCT_DEFINITION_SHAPE,
-      SHAPE_DEFINITION_REPRESENTATION, 
-      PRODUCT_DEFINITION_FORMATION, COLOUR_RGB,
-      SHAPE_REPRESENTATION, 
-      PRESENTATION_STYLE_ASSIGNMENT, STYLED_ITEM, FILL_AREA_STYLE_COLOUR, FILL_AREA_STYLE,
-      SURFACE_STYLE_FILL_AREA, SURFACE_SIDE_STYLE, SURFACE_STYLE_USAGE, 
-      MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION, PRESENTATION_LAYER_ASSIGNMENT,
-      SHAPE_REPRESENTATION_RELATIONSHIP, LENGTH_MEASURE_WITH_UNIT,
-
-      _IGNORE,
-      DIMENSIONAL_EXPONENTS, DESIGN_CONTEXT, MECHANICAL_CONTEXT, UNCERTAINTY_MEASURE_WITH_UNIT, 
-      APPLICATION_CONTEXT, APPLICATION_PROTOCOL_DEFINITION, PRODUCT_CATEGORY, PRODUCT_RELATED_PRODUCT_CATEGORY,
-      PRODUCT_CATEGORY_RELATIONSHIP, PRODUCT_DEFINITION_CONTEXT, PRODUCT_CONTEXT,
-      SECURITY_CLASSIFICATION_LEVEL, SECURITY_CLASSIFICATION, CC_DESIGN_SECURITY_CLASSIFICATION, 
-      APPROVAL_STATUS, APPROVAL, CC_DESIGN_APPROVAL, CALENDAR_DATE, COORDINATED_UNIVERSAL_TIME_OFFSET, 
-      LOCAL_TIME, DATE_AND_TIME, APPROVAL_DATE_TIME, DATE_TIME_ROLE, CC_DESIGN_DATE_AND_TIME_ASSIGNMENT,
-      PERSON, ORGANIZATION, PERSON_AND_ORGANIZATION, APPROVAL_ROLE, APPROVAL_PERSON_ORGANIZATION,
-      PERSON_AND_ORGANIZATION_ROLE, CC_DESIGN_PERSON_AND_ORGANIZATION_ASSIGNMENT, DERIVED_UNIT_ELEMENT, 
-      DERIVED_UNIT, MEASURE_REPRESENTATION_ITEM, DRAUGHTING_PRE_DEFINED_TEXT_FONT, TEXT_LITERAL, 
-      TEXT_STYLE_FOR_DEFINED_FONT, TEXT_STYLE_WITH_BOX_CHARACTERISTICS, DRAUGHTING_PRE_DEFINED_COLOUR,
-      SHAPE_ASPECT, PROPERTY_DEFINITION, REPRESENTATION, PROPERTY_DEFINITION_REPRESENTATION,
-      DRAUGHTING_PRE_DEFINED_CURVE_FONT, CURVE_STYLE,
-
-      _LATER,
-      PLANE_ANGLE_MEASURE_WITH_UNIT, 
-
-      _LAST,
-   }
 
    // Data stores --------------------------------------------------------------
-   List<Axis3D> mAxis = [];
-   List<Circle> mCircle = [];
-   List<ColorRGB> mColor = [];
-   List<Edge> mCurve = [];
-   List<Cylinder> mCylinder = [];
-   List<Face> mFace = [];
-   List<FaceBound> mFaceBound = [];
-   List<int> mInt = [];
-   List<int[]> mInts = [];
-   List<Line> mLine = [];
-   List<Link> mLink = [];
-   List<BSplineCurve> mSplineCurve = [];
-   List<BSplineSurface> mSplineSurface = [];
-   List<OEdge> mOEdge = [];
-   List<Point3> mPoint = [];
-   List<Product> mProduct = [];
-   List<ShapeRepr> mShapeRepr = [];
-   List<StyledItem> mStyledItem = [];
-   List<Vector> mVector = [];
-   List<Vector3> mDirection = [];
-   (EType, int)[] mData = new (EType, int)[128];
 
    // Private data -------------------------------------------------------------
    // This converts keywords like LINE, CIRCLE, PRODUCT etc to EType enumerations

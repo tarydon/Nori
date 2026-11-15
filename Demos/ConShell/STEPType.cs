@@ -33,6 +33,11 @@ readonly struct ColorRGB (double r, double g, double b) {
    public readonly double R = r, G = g, B = b;
 }
 
+readonly struct Cone (int coordSys, double radius, double halfAngle) {
+   public readonly int CoordSys = coordSys;
+   public readonly double Radius = radius, HalfAngle = halfAngle;
+}
+
 readonly struct Cylinder (int coordSys, double radius) {
    public readonly int CoordSys = coordSys;
    public readonly double Radius = radius;
@@ -41,6 +46,11 @@ readonly struct Cylinder (int coordSys, double radius) {
 readonly struct Edge (int start, int end, int curve, bool dir) {
    public readonly int Start = start, End = end, Curve = curve;
    public readonly bool Dir = dir;
+}
+
+readonly struct Ellipse (int coordSys, double major, double minor) {
+   public readonly int CoordSys = coordSys;
+   public readonly double RMajor = major, RMinor = minor;
 }
 
 readonly struct Face (int[] contours, int face, bool dir) {
@@ -58,6 +68,11 @@ readonly struct Line (int rOrigin, int rVector) {
    public readonly int ROrigin = rOrigin, RVector = rVector;
 }
 
+readonly struct AssyUsage (string name, string desc, int parent, int child) {
+   public readonly string Name = name, Desc = desc;
+   public readonly int Parent = parent, Child = child;
+}
+
 readonly struct OEdge (int nEdge, bool dir) {
    public readonly int Edge = nEdge;
    public readonly bool Dir = dir; 
@@ -73,9 +88,29 @@ readonly struct ShapeRepr (int[] items, int context) {
    public readonly int Context = context;
 }
 
+readonly struct Sphere (int coordSys, double radius) {
+   public readonly int CoordSys = coordSys;
+   public readonly double Radius = radius;
+}
+
 readonly struct StyledItem (int[] styles, int target) {
    public readonly int[] Styles = styles;
    public readonly int Target = target;
+}
+
+readonly struct StyleOverride (int[] styles, int target, int oldStyle) {
+   public readonly int[] Styles = styles;
+   public readonly int Target = target, OldStyle = oldStyle;
+}
+
+readonly struct SurfStyleUsage (string side, int style) {
+   public readonly string Side = side;
+   public readonly int Style = style;
+}
+
+readonly struct Torus (int coordsys, double major, double minor) {
+   public readonly int CoordSys = coordsys;
+   public readonly double RMajor = major, RMinor = minor;
 }
 
 readonly struct Vector (int r, double len) {
@@ -83,6 +118,6 @@ readonly struct Vector (int r, double len) {
    public readonly double Length = len;
 }
 
-readonly struct Link (int item1, int item2) {
+readonly struct TwoRef (int item1, int item2) {
    public readonly int Item1 = item1, Item2 = item2;
 }
