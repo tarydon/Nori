@@ -36,7 +36,7 @@ class DimEntTests () {
 
       // Test saving DXF files
       string dxf = Path.ChangeExtension (curl, ".dxf");
-      DXFWriter.Save (dwg, NT.TmpDXF, true);
+      DXFWriter.Save (dwg, NT.TmpDXF, blackToWhite: true);
       Assert.TextFilesEqual (dxf, NT.TmpDXF);
 
       // Round trip DXF file

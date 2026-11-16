@@ -411,6 +411,7 @@ public partial class Poly {
          return fwd ? fwdExt != 1000 : revExt != -1000;
       }
 
+      // Something obstructs (limits and guides the extension) - then yes! None otherwise.
       static bool CanExtendArc (Seg seg, bool fwd, IEnumerable<Poly> polySoup, out double extendLie) {
          Span<Point2> buffer = stackalloc Point2[2];
          (double fwdCutoff, double revCutoff) = (1 + Lib.Epsilon, 0 - Lib.Epsilon);
@@ -424,8 +425,10 @@ public partial class Poly {
                double ang = seg.Center.AngleTo (pt);
                if (seg.IsCCW) {
                   if (ang < s) ang += Lib.TwoPI;
+                  if (ang > s - Lib.Epsilon && ang < e + Lib.Epsilon) continue; // Lies within the arc; skip
                } else {
                   if (ang > s) ang -= Lib.TwoPI;
+                  if (ang > e - Lib.Epsilon && ang < s + Lib.Epsilon) continue; // Lies within the arc; skip
                }
                double lie = (ang - s) / span; // Forward lie
                if (fwd) {

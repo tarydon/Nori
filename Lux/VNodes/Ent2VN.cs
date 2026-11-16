@@ -7,7 +7,7 @@ namespace Nori;
 
 #region class Ent2VN -------------------------------------------------------------------------------
 /// <summary>Ent2VN is the base class for all VNodes that render different types of Ent2</summary>
-abstract class Ent2VN (Ent2 ent) : VNode (ent) {
+public abstract class Ent2VN (Ent2 ent) : VNode (ent) {
    // Overrides ----------------------------------------------------------------
    public override void SetAttributes () {
       if (!ent.InBlock) {
