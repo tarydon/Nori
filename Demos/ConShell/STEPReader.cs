@@ -1,5 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
-using System.Text;
+﻿using System.Text;
 using Nori.STEP;
 using static Nori.STEPReader.EType;
 namespace Nori;
@@ -59,6 +58,11 @@ public class STEPReader {
       return [.. mTmpF];
    }
    List<double> mTmpF = [];
+
+   public string Classify () {
+      if (mAssyUsage.Count > 0) return "Assembly";
+      return "Unknown";
+   }
 
    // Reads a standard entity of the given type
    void REntity (int id, EType type) {
