@@ -64,7 +64,7 @@ enum EKind {
    _LAST,
 }
 
-readonly struct Ints (int id, EKind kind, int[] data) {
+readonly struct IntSet (int id, EKind kind, int[] data) {
    public override string ToString () => $"#{Id} | {Kind} | {Items.ToCSV ()}";
    public readonly int Id = id;
    public readonly EKind Kind = kind;
@@ -79,8 +79,8 @@ readonly struct ShapeRepr (int id, EKind kind, int[] items, int context) {
 }
 
 // -----------------------------------------------------------------------------
-readonly struct Axis3D (int origin, int xaxis, int yaxis) {
-   public readonly int Origin = origin, XAxis = xaxis, YAxis = yaxis;
+readonly struct Axis3D (int origin, int zaxis, int xaxis) {
+   public readonly int Origin = origin, ZAxis = zaxis, XAxis = xaxis;
 }
 
 readonly struct BRepVoids (int outer, int[] inner) {
@@ -129,7 +129,7 @@ readonly struct Cylinder (int coordSys, double radius) {
 
 readonly struct Edge (int start, int end, int curve, bool dir) {
    public readonly int Start = start, End = end, Curve = curve;
-   public readonly bool Dir = dir;
+   public readonly bool Reverse = !dir;   // If set, Edge goes in opposite direction to underlying curve
 }
 
 readonly struct Ellipse (int coordSys, double major, double minor) {
@@ -140,12 +140,13 @@ readonly struct Ellipse (int coordSys, double major, double minor) {
 readonly struct Face (int[] contours, int face, bool dir) {
    public readonly int[] Contours = contours;
    public readonly int Surface = face;
-   public readonly bool Dir = dir;
+   public readonly bool Reverse = !dir;   // If set, face normal is opposite to underlying surface normal
 }
 
 readonly struct FaceBound (int edgeloop, bool dir, bool outer) {
-   public readonly int EdgeLoop = edgeloop;
-   public readonly bool Dir = dir, Outer = outer;
+   public readonly int EdgeLoop = edgeloop;  // Pointer to an EDGE_LOOP (list of oriented-edges)
+   public readonly bool Reverse = !dir;      // If set, face-bound traverses the edge-loop in reverse
+   public readonly bool Outer = outer;
 }
 
 readonly struct Line (int rOrigin, int rVector) {
@@ -159,7 +160,7 @@ readonly struct AssyUsage (string name, string desc, int parent, int child) {
 
 readonly struct OEdge (int nEdge, bool dir) {
    public readonly int Edge = nEdge;
-   public readonly bool Dir = dir; 
+   public readonly bool Reverse = !dir; 
 }
 
 readonly struct OShell (int nShell, bool dir) {

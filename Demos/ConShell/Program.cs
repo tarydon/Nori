@@ -3,6 +3,7 @@
 // ║║║║╬║╔╣║ Shell for Nori console scratch applications
 // ╚╩═╩═╩╝╚╝ ───────────────────────────────────────────────────────────────────────────────────────
 using System.Diagnostics;
+using System.Text;
 using Nori;
 namespace ConShell;
 
@@ -22,15 +23,19 @@ class Program {
          Console.Write ($"{i} {file}");
          var sr = new STEPReader (file);
          try {
-            sr.Load ();
+            var model = sr.Load ();
+            Move (name, "GOOD");
          } catch (Exception e) {
             Console.ForegroundColor = ConsoleColor.Yellow;
             Console.WriteLine (e);
-            return;
-            File.Move (file, $"W:\\STEP\\BAD\\{name}.stp");
             Console.ResetColor ();
+            return;
          }
          Console.WriteLine ();
       }
+   }
+
+   static void Move (string name, string dir) {
+      File.Move ($"W:\\STEP\\{name}.stp", $"W:\\STEP\\{dir}\\{name}.stp");
    }
 }

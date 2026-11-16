@@ -7,3 +7,16 @@
 7 | Unknown length unit
 8 | Could not parse angle units
 9 | Unknown angle unit
+10 | Expecting ADVANCED_FACE
+11 | Expecting AXIS2_PLACEMENT_3D
+12 | Expecting FACE_BOUND or FACE_OUTER_BOUND
+13 | Expecting EDGE_LOOP
+14 | Expecting ORIENTED_EDGE
+15 | Expecting {0}, found {1}
+16 | Unsupported entity {0}
+17 | Empty CONTOURS list for FACE
+18 | Expecting {0} or {1}, found {2}
+19 | Problem in MakeArc
+
+100 | Not a PLANE
+101 | FACE.Dir == false

@@ -68,7 +68,14 @@ class AuType {
          // For an AuPrimitive field, we find the reader and writer methods using
          // reflection and hold onto them
          case EAuTypeKind.AuPrimitive:
-            if (Lib.NiceName (type) == "Color4") mSkipValue = Color4.Nil;
+            mSkipValue = Lib.NiceName (type) switch {
+               "Color4" => Color4.Nil,
+               "Bound3" => new Bound3 (),
+               "Bound2" => new Bound2 (),
+               "Bound1" => new Bound1 (),
+               "Bound1D" => new Bound1D (),
+               _ => null
+            };
             break;
 
          // For .Net primitive types, we set up the 'skip value' (the default value
@@ -87,6 +94,10 @@ class AuType {
                case "ImmutableArray`1": IsImmutableArray = true; break;
                case "Ledger`1": CurrentElem = type.GetProperty ("Current"); break;
             }
+            break;
+
+         case EAuTypeKind.Enum:
+            mSkipValue = Enum.ToObject (type, 0);
             break;
       }
    }

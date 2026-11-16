@@ -108,3 +108,5 @@ E3SweptSurface
   Generatrix
 E3Mesh
   Mesh
+RevCurve3
+  Basis
