@@ -10,42 +10,27 @@ class Program {
    static void Main () {
       Lib.Init ();
       Lib.Tracer = Console.WriteLine;
-      var lines = File.ReadAllLines ("W:\\STEP\\classify.txt");
-      foreach (var line in lines) {
-         Console.Write ('.');
-         var w = line.SplitCSV ();
-         string file = w[0], classify1 = w[1];
-         var sr = new STEPReader ($"W:\\STEP\\{file}.stp");
-         sr.Load ();
-         string classify2 = sr.Classify ();
-         if (classify1 != classify2) {
-            if (classify1 == "Assembly" || classify2 == "Assembly") {
-               Console.WriteLine ($" {file} {classify1} {classify2}");
-               return;
-            }
-         }
-      }
-   }
+      var lines = File.ReadAllLines ("C:\\ETC\\classify.txt");
 
-   static void Main1 () {
-      Lib.Init ();
-      Lib.Tracer = Console.WriteLine;
-      var files = Directory.GetFiles ("W:\\STEP", "*.stp")
-         .Select (a => new FileInfo (a))
-         .OrderBy (a => a.Length)
-         .Select (a => a.FullName)
-         .ToList ();
-      for (int i = 0; i < files.Count; i++) {
-         string file = files[i];
+      for (int i = 0; i < lines.Length; i++) {
+         var line = lines[i];
+         var w = line.SplitCSV ();
+         var name = w[0];
+         var file = $"W:\\STEP\\{name}.stp";
+         if (!File.Exists (file)) continue;
+
+         Console.Write ($"{i} {file}");
          var sr = new STEPReader (file);
          try {
-            Console.Write ($"{i} {Path.GetFileName (file)} ");
             sr.Load ();
-            Console.WriteLine ();
          } catch (Exception e) {
+            Console.ForegroundColor = ConsoleColor.Yellow;
             Console.WriteLine (e);
             return;
+            File.Move (file, $"W:\\STEP\\BAD\\{name}.stp");
+            Console.ResetColor ();
          }
+         Console.WriteLine ();
       }
    }
 }

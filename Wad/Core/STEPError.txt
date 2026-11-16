@@ -1,0 +1,9 @@
+1 | Not a simple part
+2 | Only one ADVANCED_BREP_SHAPE_REPRESENTATION expected
+3 | ADVANCED_BREP_SHAPE_REPRESENTATION does not contain MANIFOLD_SOLID_BREP
+4 | MANIFOLD Context does point to COMPOUND entity
+5 | Error parsing CONTEXT (trying to find units)
+6 | Could not parse length units
+7 | Unknown length unit
+8 | Could not parse angle units
+9 | Unknown angle unit

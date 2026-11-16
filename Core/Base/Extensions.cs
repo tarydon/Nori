@@ -118,6 +118,11 @@ public static class Extensions {
    /// <summary>Returns true if a string is null, empty or whitespace</summary>
    public static bool IsBlank ([NotNullWhen (false)] this string? s) => string.IsNullOrWhiteSpace (s);
 
+   /// <summary>
+   /// Finds the index of a char in a span-of-byte (convenience routine)
+   /// </summary>
+   public static int IndexOf (this ReadOnlySpan<byte> span, char ch) => span.IndexOf ((byte)ch);
+
    /// <summary>Checks if a float is NaN</summary>
    public static bool IsNaN (this float a) => float.IsNaN (a);
 

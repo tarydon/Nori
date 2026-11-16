@@ -1,9 +1,24 @@
-﻿using System.Text;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Text;
 using Nori.STEP;
-using static Nori.STEPReader.EType;
 namespace Nori;
+using static Nori.STEP.EKind;
 
-public class STEPReader {
+class STEPException : Exception {
+   public STEPException (int n) : base (sMessages.GetValueOrDefault (n, "Unknown Error")) { }
+
+   static STEPException () {
+      sMessages = new ();
+      foreach (var line in Lib.ReadLines ("nori:Core/STEPError.txt")) {
+         var w = line.Split ('|'); if (w.Length != 2) continue;
+         int n = w[0].ToInt (); sMessages.Add (n, w[1].Trim ());
+      }
+   }
+   static Dictionary<int, string> sMessages;
+
+}
+
+public partial class STEPReader {
    public STEPReader (string file) {
       mR = new (mRaw = File.ReadAllBytes (mFile = file));
       if (sDict.Count == 0) 
@@ -12,24 +27,17 @@ public class STEPReader {
    }
 
    public void Load () {
-      ReadOnlySpan<byte> seq = "DATA;"u8;
-      if (!mR.Find (seq)) throw new Exception ("DATA section not found");
-      int idMax = 0;
-      for (; ; ) {
-         mR.SkipToNextLine ();
-         if (mR.TryMatch ('#')) {
-            mR.Read (out int id);
-            if (mR.SkipSpace ().TryMatch ('=')) {
-               idMax = Math.Max (idMax, id);
-               mR.SkipSpace ();
-               if (mR.Peek () == '(') { RCompound (id); }
-               else { REntity (id, RType ()); }
-            }
-         } else {
-            if (mR.TryMatch ("ENDSEC;"u8)) break;
-         }
-      }
+      Parse ();
+      Check (CheckIt (), 1);
+      Build ();
    }
+
+   void Check (bool condition, int error) {
+      if (!condition) throw new STEPException (error);
+   }
+
+   [DoesNotReturn]
+   void Fail (int error) => throw new STEPException (error);
 
    // Read routines ------------------------------------------------------------
    // Reads a 'bool' of the form .T. or .F. (after skipping past a leading comma)
@@ -41,6 +49,7 @@ public class STEPReader {
 
    // Reads a compound entity
    void RCompound (int id) {
+      mData[id] = (COMPOUND, mR.Pos);
    }
 
    // Reads a double, skipping past a possible prefix comma
@@ -65,16 +74,16 @@ public class STEPReader {
    }
 
    // Reads a standard entity of the given type
-   void REntity (int id, EType type) {
-      if (type > _IGNORE) return;
+   void REntity (int id, EKind kind) {
+      if (kind > _IGNORE) return;
       if (mR.TryMatch ('$')) mR.Match (',');
       else if (mR.TryMatch ('\'')) mR.SkipTo ('\'').Match (',');
       int slot;
-      switch (type) {
+      switch (kind) {
          case ADVANCED_FACE or FACE_SURFACE: slot = Add (mFace, new Face (RRefs (), RRef (), RBool ())); break;
          case ADVANCED_BREP_SHAPE_REPRESENTATION or SHAPE_REPRESENTATION or MANIFOLD_SURFACE_SHAPE_REPRESENTATION
             or DEFINITIONAL_REPRESENTATION:
-            slot = Add (mShapeRepr, new (RRefs (), RRef ())); 
+            slot = Add (mShapeRepr, new (id, kind, RRefs (), RRef ())); 
             break;
          case AXIS2_PLACEMENT_3D: slot = Add (mAxis, new (RRef (), RRef (), RRef ())); break;
          case BREP_WITH_VOIDS: slot = Add (mBrepVoids, new (RRef (), RRefs ())); break;
@@ -87,10 +96,11 @@ public class STEPReader {
                RBool (), RBool (), RBool (), RInts (), RInts (), RDoubles (), RDoubles (), REnum ()));
             break;
          case CARTESIAN_POINT: slot = Add (mPoint, RPoint3 ()); break;
-         case CLOSED_SHELL or EDGE_LOOP or FILL_AREA_STYLE or OPEN_SHELL or PRESENTATION_STYLE_ASSIGNMENT
-            or SHELL_BASED_SURFACE_MODEL or SURFACE_SIDE_STYLE or POLYLINE:
-            slot = Add (mInts, RRefs ()); 
+         case EDGE_LOOP or FILL_AREA_STYLE or PRESENTATION_STYLE_ASSIGNMENT or SHELL_BASED_SURFACE_MODEL 
+            or SURFACE_SIDE_STYLE or POLYLINE:
+            slot = Add (mInts2, RRefs ()); 
             break;
+         case CLOSED_SHELL or OPEN_SHELL: slot = Add (mInts, new Ints (id, kind, RRefs ()));  break;
          case CIRCLE: slot = Add (mCircle, new (RRef (), RDouble ())); break;
          case COLOUR_RGB: slot = Add (mColor, new (RDouble (), RDouble (), RDouble ())); break;
          case CONICAL_SURFACE: slot = Add (mCone, new (RRef (), RDouble (), RDouble ())); break;
@@ -106,10 +116,11 @@ public class STEPReader {
          case EDGE_CURVE: slot = Add (mCurve, new Edge (RRef (), RRef (), RRef (), RBool ())); break;
          case FACE_BOUND: slot = Add (mFaceBound, new (RRef (), RBool (), false)); break;
          case FACE_OUTER_BOUND: slot = Add (mFaceBound, new (RRef (), RBool (), true)); break;
-         case FILL_AREA_STYLE_COLOUR or MANIFOLD_SOLID_BREP or PLANE or SURFACE_STYLE_FILL_AREA or VERTEX_POINT
+         case FILL_AREA_STYLE_COLOUR or PLANE or SURFACE_STYLE_FILL_AREA or VERTEX_POINT
             or VERTEX_LOOP:
-            slot = Add (mInt, RRef ()); 
+            slot = Add (mInt, RRef ());
             break;
+         case MANIFOLD_SOLID_BREP: slot = Add (mManifold, RRef ()); break;
          case ITEM_DEFINED_TRANSFORMATION: RString (); slot = Add (mTwoRefs, new (RRef (), RRef ())); break;
          case LINE: slot = Add (mLine, new (RRef (), RRef ())); break;
          case NEXT_ASSEMBLY_USAGE_OCCURRENCE:
@@ -140,116 +151,20 @@ public class STEPReader {
          case STYLED_ITEM: slot = Add (mStyledItem, new (RRefs (), RRef ())); break;
          case TOROIDAL_SURFACE: slot = Add (mTorus, new (RRef (), RDouble (), RDouble (), false)); break;
          case VECTOR: slot = Add (mVector, new (RRef (), RDouble ())); break;
-         default: throw new BadCaseException ($"Unhandled entity: #{id} = {type}");
+         default: throw new BadCaseException ($"Unhandled entity: #{id} = {kind}");
       }
-      while (mData.Length <= id) Array.Resize (ref mData, mData.Length * 2);
-      mData[id] = (type, slot);
-   }
-
-   List<AssyUsage> mAssyUsage = [];
-   List<Axis3D> mAxis = [];
-   List<BRepVoids> mBrepVoids = [];
-   List<Circle> mCircle = [];
-   List<Ellipse> mEllipse = [];
-   List<ColorRGB> mColor = [];
-   List<Cone> mCone = [];
-   List<Cylinder> mCylinder = [];
-   List<Edge> mCurve = [];
-   List<Face> mFace = [];
-   List<FaceBound> mFaceBound = [];
-   List<int> mInt = [];
-   List<int[]> mInts = [];
-   List<Line> mLine = [];
-   List<TwoRef> mTwoRefs = [];
-   List<BSplineCurve> mSplineCurve = [];
-   List<BSplineSurface> mSplineSurface = [];
-   List<OEdge> mOEdge = [];
-   List<OShell> mOShell = [];
-   List<OffsetSurf> mOffsetSurf = [];
-   List<Point3> mPoint = [];
-   List<Product> mProduct = [];
-   List<ShapeRepr> mShapeRepr = [];
-   List<Sphere> mSphere = [];
-   List<StyledItem> mStyledItem = [];
-   List<StyleOverride> mStyleOverride = [];
-   List<SurfCurve> mSurfCurve = [];
-   List<SurfStyleUsage> mSurfStyleUsage = [];
-   List<Torus> mTorus = [];
-   List<Vector> mVector = [];
-   List<Vector3> mDirection = [];
-   (EType, int)[] mData = new (EType, int)[128];
-
-   internal enum EType {
-      _NIL,
-      _FIRST,
-      DIRECTION, VECTOR, CARTESIAN_POINT, LINE, VERTEX_POINT, AXIS2_PLACEMENT_3D, PLANE,
-      ORIENTED_EDGE, EDGE_LOOP, FACE_OUTER_BOUND, ADVANCED_FACE, CLOSED_SHELL, MANIFOLD_SOLID_BREP,
-      EDGE_CURVE,
-      CYLINDRICAL_SURFACE, CIRCLE, FACE_BOUND,
-      B_SPLINE_SURFACE_WITH_KNOTS,
-      B_SPLINE_CURVE_WITH_KNOTS,
-      TOROIDAL_SURFACE, SURFACE_OF_LINEAR_EXTRUSION, ELLIPSE, OVER_RIDING_STYLED_ITEM,
-      CONICAL_SURFACE, ITEM_DEFINED_TRANSFORMATION, NEXT_ASSEMBLY_USAGE_OCCURRENCE, SPHERICAL_SURFACE,
-      OPEN_SHELL, SHELL_BASED_SURFACE_MODEL,
-      MANIFOLD_SURFACE_SHAPE_REPRESENTATION, MAPPED_ITEM, REPRESENTATION_MAP,
-      SURFACE_CURVE, FACE_SURFACE, 
-      POLYLINE,
-      PCURVE, 
-      AXIS2_PLACEMENT_2D, VERTEX_LOOP,
-      ORIENTED_CLOSED_SHELL, BREP_WITH_VOIDS, AXIS1_PLACEMENT, SURFACE_OF_REVOLUTION,
-      INTERSECTION_CURVE, OFFSET_SURFACE, DEGENERATE_TOROIDAL_SURFACE,
-
-      PRODUCT, PRODUCT_DEFINITION_FORMATION_WITH_SPECIFIED_SOURCE, CONTEXT_DEPENDENT_SHAPE_REPRESENTATION,
-
-      ADVANCED_BREP_SHAPE_REPRESENTATION, PRODUCT_DEFINITION, PRODUCT_DEFINITION_SHAPE,
-      SHAPE_DEFINITION_REPRESENTATION,
-      PRODUCT_DEFINITION_FORMATION, COLOUR_RGB,
-      SHAPE_REPRESENTATION,
-      PRESENTATION_STYLE_ASSIGNMENT, STYLED_ITEM, FILL_AREA_STYLE_COLOUR, FILL_AREA_STYLE,
-      SURFACE_STYLE_FILL_AREA, SURFACE_SIDE_STYLE, SURFACE_STYLE_USAGE,
-      SHAPE_REPRESENTATION_RELATIONSHIP, DEFINITIONAL_REPRESENTATION,
-
-      _IGNORE,
-      DIMENSIONAL_EXPONENTS, DESIGN_CONTEXT, MECHANICAL_CONTEXT, UNCERTAINTY_MEASURE_WITH_UNIT,
-      APPLICATION_CONTEXT, APPLICATION_PROTOCOL_DEFINITION, PRODUCT_CATEGORY, PRODUCT_RELATED_PRODUCT_CATEGORY,
-      PRODUCT_CATEGORY_RELATIONSHIP, PRODUCT_DEFINITION_CONTEXT, PRODUCT_CONTEXT,
-      SECURITY_CLASSIFICATION_LEVEL, SECURITY_CLASSIFICATION, CC_DESIGN_SECURITY_CLASSIFICATION,
-      APPROVAL_STATUS, APPROVAL, CC_DESIGN_APPROVAL, CALENDAR_DATE, COORDINATED_UNIVERSAL_TIME_OFFSET,
-      LOCAL_TIME, DATE_AND_TIME, APPROVAL_DATE_TIME, DATE_TIME_ROLE, CC_DESIGN_DATE_AND_TIME_ASSIGNMENT,
-      PERSON, ORGANIZATION, PERSON_AND_ORGANIZATION, APPROVAL_ROLE, APPROVAL_PERSON_ORGANIZATION,
-      PERSON_AND_ORGANIZATION_ROLE, CC_DESIGN_PERSON_AND_ORGANIZATION_ASSIGNMENT, DERIVED_UNIT_ELEMENT,
-      DERIVED_UNIT, MEASURE_REPRESENTATION_ITEM, DRAUGHTING_PRE_DEFINED_TEXT_FONT, TEXT_LITERAL,
-      TEXT_STYLE_FOR_DEFINED_FONT, TEXT_STYLE_WITH_BOX_CHARACTERISTICS, 
-      SHAPE_ASPECT, PROPERTY_DEFINITION, REPRESENTATION, PROPERTY_DEFINITION_REPRESENTATION,
-      DRAUGHTING_PRE_DEFINED_CURVE_FONT, CURVE_STYLE, PRESENTATION_LAYER_ASSIGNMENT,
-      MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION, 
-      PERSONAL_ADDRESS, DRAUGHTING_MODEL, VALUE_REPRESENTATION_ITEM,
-      DOCUMENT_TYPE, DOCUMENT, APPLIED_DATE_AND_TIME_ASSIGNMENT,
-      PRODUCT_DEFINITION_WITH_ASSOCIATED_DOCUMENTS, GENERAL_PROPERTY, PRE_DEFINED_POINT_MARKER_SYMBOL,
-      POINT_STYLE, GENERAL_PROPERTY_ASSOCIATION, DESCRIPTIVE_REPRESENTATION_ITEM,
-      ANNOTATION_OCCURRENCE_ASSOCIATIVITY, SYMBOL_COLOUR, PRE_DEFINED_MARKER,
-      SYMBOL_STYLE, PRE_DEFINED_TERMINATOR_SYMBOL, SYMBOL_TARGET, DEFINED_SYMBOL,
-      LEADER_DIRECTED_CALLOUT, SHAPE_ASPECT_ASSOCIATIVITY, PRODUCT_TYPE, APPLIED_PERSON_AND_ORGANIZATION_ASSIGNMENT,
-      APPLIED_APPROVAL_ASSIGNMENT, APPLIED_SECURITY_CLASSIFICATION_ASSIGNMENT, GROUP,
-      APPLIED_GROUP_ASSIGNMENT,
-
-      _LATER,
-      PLANE_ANGLE_MEASURE_WITH_UNIT, LENGTH_MEASURE_WITH_UNIT, TRIMMED_CURVE, GEOMETRIC_SET,
-      COMPOSITE_CURVE, COMPOSITE_CURVE_SEGMENT, DRAUGHTING_PRE_DEFINED_COLOUR,
-      GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION, GEOMETRIC_CURVE_SET, INVISIBILITY,
-      GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION, QUASI_UNIFORM_CURVE,
-      QUASI_UNIFORM_SURFACE,
-
-      _LAST,
+      mData[id] = (kind, slot);
    }
 
    // Returns an enumeration of the form ".UNSPECIFIED."
    string REnum () {
-      mR.TryMatch (','); mR.Match ('.');
+      mR.TryMatch (',');
+      if (mR.TryMatch ('$')) return "";
+      mR.Match ('.');
       int start = mR.Pos - 1;
       mR.SkipTo ('.');
       int end = mR.Pos;
-      string s =  Encoding.ASCII.GetString (mRaw.AsSpan (start, end - start));
+      string s =  Encoding.ASCII.GetString (mRaw.AsSpan (start + 1, end - start - 2));
       return s;
    }
 
@@ -322,9 +237,9 @@ public class STEPReader {
 
    // Reads an EType enumeration from the file (this is accelerated by using
    // a SymTable)
-   EType RType () {
+   EKind RType () {
       var span = mR.TakeUntil ('(');
-      EType type = sDict.GetValueOrDefault (span);
+      EKind type = sDict.GetValueOrDefault (span);
       if (type == _NIL && span[^1] == ' ') 
          type = sDict.GetValueOrDefault (span[..^1]);
       if (type == _NIL) { 
@@ -342,14 +257,68 @@ public class STEPReader {
       int n = list.Count; list.Add (item); return n; 
    }
 
-   // Nested types -------------------------------------------------------------
+   // Root routine to parse all the entities in the file
+   void Parse () {
+      ReadOnlySpan<byte> seq = "DATA;"u8;
+      if (!mR.Find (seq)) throw new Exception ("DATA section not found");
+      int idMax = 0;
+      for (; ; ) {
+         mR.SkipToNextLine ();
+         if (mR.TryMatch ('#')) {
+            mR.Read (out int id);
+            if (mR.SkipSpace ().TryMatch ('=')) {
+               idMax = Math.Max (idMax, id);
+               mR.SkipSpace ();
+               while (mData.Length <= id) Array.Resize (ref mData, mData.Length * 2);
+               if (mR.Peek () == '(') { RCompound (id); } else { REntity (id, RType ()); }
+            }
+         } else {
+            if (mR.TryMatch ("ENDSEC;"u8)) break;
+         }
+      }
+   }
 
    // Data stores --------------------------------------------------------------
+   List<AssyUsage> mAssyUsage = [];
+   List<Axis3D> mAxis = [];
+   List<BRepVoids> mBrepVoids = [];
+   List<Circle> mCircle = [];
+   List<Ellipse> mEllipse = [];
+   List<ColorRGB> mColor = [];
+   List<Cone> mCone = [];
+   List<Cylinder> mCylinder = [];
+   List<Edge> mCurve = [];
+   List<Face> mFace = [];
+   List<FaceBound> mFaceBound = [];
+   List<int> mInt = [];
+   List<Ints> mInts = [];
+   List<int[]> mInts2 = [];
+   List<Line> mLine = [];
+   List<int> mManifold = [];
+   List<TwoRef> mTwoRefs = [];
+   List<BSplineCurve> mSplineCurve = [];
+   List<BSplineSurface> mSplineSurface = [];
+   List<OEdge> mOEdge = [];
+   List<OShell> mOShell = [];
+   List<OffsetSurf> mOffsetSurf = [];
+   List<Point3> mPoint = [];
+   List<Product> mProduct = [];
+   List<ShapeRepr> mShapeRepr = [];
+   List<Sphere> mSphere = [];
+   List<StyledItem> mStyledItem = [];
+   List<StyleOverride> mStyleOverride = [];
+   List<SurfCurve> mSurfCurve = [];
+   List<SurfStyleUsage> mSurfStyleUsage = [];
+   List<Torus> mTorus = [];
+   List<Vector> mVector = [];
+   List<Vector3> mDirection = [];
+   (EKind Kind, int Index)[] mData = new (EKind, int)[128];
 
    // Private data -------------------------------------------------------------
    // This converts keywords like LINE, CIRCLE, PRODUCT etc to EType enumerations
-   static SymTable<EType> sDict = new ();
+   static SymTable<EKind> sDict = new ();
    string mFile;
    byte[] mRaw;
    UTFReader mR;
+   Model3 mModel = new ();
 }
