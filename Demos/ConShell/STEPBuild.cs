@@ -65,11 +65,24 @@ public partial class STEPReader {
    // Builds a face (surface), given a pointer to an ADVANCED_FACE. 
    Ent3 DoFace (int nFace) {
       Face face = Face[GetIndex (nFace, ADVANCED_FACE)];
-      ImmutableArray<Contour3> trims = [.. DoContours (face.Contours)];
       var (kind, index) = Data[face.Surface];
+      List<Contour3> atrims = DoContours (face.Contours, out bool outerFound);
+      ImmutableArray<Contour3> trims = [.. atrims];
       switch (kind) {
-         case PLANE: 
-            return new E3Plane (nFace, trims, MakeCoordSys (Int[index], face.Reverse));
+         case PLANE:
+            var cs = MakeCoordSys (Int[index], face.Reverse);
+            if (!outerFound && atrims.Count > 1) {
+               // Sometimes, the outer contour of a plane is not specified as FACE_OUTER_BOUND. 
+               // If so, we need to pick the largest contour and shuffle it to index 0 within the
+               // set of contours
+               var xfm = Matrix3.From (cs);
+               int iOuter = atrims.MaxIndexBy (a => a.Flatten (xfm).GetArea (ETess.Coarse));
+               if (iOuter != 0) { 
+                  Contour3 co = atrims[iOuter]; atrims.RemoveAt (iOuter); atrims.Insert (0, co);
+                  trims = [.. atrims];
+               }
+            }
+            return new E3Plane (nFace, trims, cs);
          case CYLINDRICAL_SURFACE:
             Cylinder cyl = Cylinder[index];
             return new E3Cylinder (nFace, trims, MakeCoordSys (cyl.CoordSys), cyl.Radius, face.Reverse);
@@ -77,9 +90,10 @@ public partial class STEPReader {
       throw new STEPException (16, kind);
    }
 
-   List<Contour3> DoContours (int[] contours) {
+   List<Contour3> DoContours (int[] contours, out bool outerFound) {
       mTmpContours.Clear ();
       Check (contours.Length > 0, 17);
+      outerFound = false; 
       for (int i = 0; i < contours.Length; i++) {
          mTmpCurves.Clear ();
          FaceBound faceBound = FaceBound[GetIndex (contours[i], FACE_BOUND, FACE_OUTER_BOUND)];
@@ -89,7 +103,10 @@ public partial class STEPReader {
          } else {
             foreach (var oe in oedges) mTmpCurves.Add (DoCurve (oe, false));
          }
-         mTmpContours.Add (new Contour3 ([.. mTmpCurves]));
+
+         var contour = new Contour3 ([.. mTmpCurves]);
+         if (Data[contours[i]].Kind == FACE_OUTER_BOUND) { outerFound = true; mTmpContours.Insert (0, contour); }
+         else mTmpContours.Add (contour);
       }
       return mTmpContours;
    }

@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using System.IO;
+using System.Text;
 using System.Windows;
 using System.Windows.Input;
 using Microsoft.Win32;
@@ -93,16 +94,13 @@ public partial class MainWindow : Window {
       foreach (var es in model.Ents.OfType<E3Surface> ())
          tris += es.Mesh.Triangle.Length / 3;
 
-      List<VNode> set = [new Model3VN (model), TraceVN.It];
-      if (mWireframe) set.Add (new TessViewer (model));
-
       Vector2 pan = Vector2.Zero;
       double xr = 0, zr = 0, zoom = 0;
       if (preserve) {
          Scene3 sc = (Scene3)Lux.UIScene!;
          (xr, zr) = sc.Viewpoint; zoom = sc.ZoomFactor; pan = sc.PanVector;
       }
-      Lux.UIScene = new Scene3 (Color4.Gray (208), model.Bound, new GroupVN (set));
+      Lux.UIScene = new STEPScene (model, mWireframe);
       if (preserve) {
          Scene3 sc = (Scene3)Lux.UIScene!;
          sc.Viewpoint = (xr, zr); sc.ZoomFactor = zoom; sc.PanVector = pan;
@@ -123,6 +121,25 @@ public partial class MainWindow : Window {
    }
 }
 
+// -------------------------------------------------------------------------------------------------
+class STEPScene : Scene3 {
+   public STEPScene (Model3 model, bool wireframe) {
+      BgrdColor = Color4.Gray (208);
+      Bound = model.Bound;
+      List<VNode> set = [new Model3VN (model), TraceVN.It];
+      if (wireframe) set.Add (new TessViewer (model));
+      Root = new GroupVN (set);
+   }
+
+   public override void Picked (object obj) {
+      if (obj is E3Plane ep) {
+         var raw = CurlWriter.SaveToByteArray (obj);
+         Lib.Trace (Encoding.UTF8.GetString (raw));
+      }
+   }
+}
+
+// TessViewer --------------------------------------------------------------------------------------
 class TessViewer : VNode {
    public TessViewer (Model3 model) {
       foreach (var ec in model.Ents.OfType<E3Surface> ()) {
