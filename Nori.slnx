@@ -3,12 +3,13 @@
     <Project Path="Demos/BenchShell/BenchShell.csproj" />
     <Project Path="Demos/ConShell/ConShell.csproj" />
     <Project Path="Demos/GLShell/GLShell.csproj" />
+    <Project Path="Demos/STEPView/STEPView.csproj" Id="cf0af9b1-00d9-4783-8474-c8094e51932d" />
     <Project Path="Demos/WPFDemo/WPFDemo.csproj" />
   </Folder>
   <Folder Name="/Host/">
     <Project Path="Host/GLFW/Nori.Host.GLFW.csproj" />
-    <Project Path="Host/WPF/Nori.Host.WPF.csproj" />
     <Project Path="Host/GLU/Nori.GLU.csproj" />
+    <Project Path="Host/WPF/Nori.Host.WPF.csproj" />
   </Folder>
   <Folder Name="/Test/">
     <Project Path="Test/Nori.Test.csproj" />

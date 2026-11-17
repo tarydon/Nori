@@ -74,6 +74,7 @@ public class E3SurfaceVN (E3Surface mSurface) : Ent3VN (mSurface) {
          _ => EShadeMode.Phong,
       };
       Lux.Mesh (mSurface.Mesh, mode);
+      
    }
 }
 #endregion

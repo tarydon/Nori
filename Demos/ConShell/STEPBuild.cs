@@ -68,7 +68,11 @@ public partial class STEPReader {
       ImmutableArray<Contour3> trims = [.. DoContours (face.Contours)];
       var (kind, index) = Data[face.Surface];
       switch (kind) {
-         case PLANE: return new E3Plane (nFace, trims, MakeCoordSys (Int[index], face.Reverse));
+         case PLANE: 
+            return new E3Plane (nFace, trims, MakeCoordSys (Int[index], face.Reverse));
+         case CYLINDRICAL_SURFACE:
+            Cylinder cyl = Cylinder[index];
+            return new E3Cylinder (nFace, trims, MakeCoordSys (cyl.CoordSys), cyl.Radius, face.Reverse);
       }
       throw new STEPException (16, kind);
    }
@@ -100,54 +104,28 @@ public partial class STEPReader {
          return reverse ? new RevCurve3 (curve) : curve;
 
       var ecurve = Edge[GetIndex (edgeId, EDGE_CURVE)];
-      Point3 start = DoPoint (ecurve.Start);
-      Point3 end = DoPoint (ecurve.End);
-
+      Point3 start = DoPoint (ecurve.Start), end = DoPoint (ecurve.End);
       var tup = Data[ecurve.Curve];
-      if (ecurve.Reverse) (start, end) = (end, start);
+      reverse ^= ecurve.Reverse;
+      if (reverse) (start, end) = (end, start);
+
       switch (tup.Kind) {
-         case LINE: curve = new Line3 (edgeId, start, end); break;
+         case LINE: 
+            curve = new Line3 (edgeId, start, end); 
+            break;
          case CIRCLE: 
             Circle circle = Circle[GetIndex (ecurve.Curve, CIRCLE)];
-            curve = MakeArc (edgeId, circle, start, end, ecurve.Reverse);
+            curve = MakeArc (edgeId, circle, start, end, reverse);
             break;
          default: throw new STEPException (16, tup.Kind);
       }
-      mEdges.Add (edgeId, curve);
-      return reverse ? new RevCurve3 (curve) : curve;
+      return curve;
+      // mEdges.Add (edgeId, curve); Not using RevCurve for now
+      // return reverse ? new RevCurve3 (curve) : curve;
    }
    Dictionary<int, Curve3> mEdges = [];
 
-   Arc3 MakeArc (int pairId, Circle circle, Point3 start, Point3 end, bool reverse) {
-      CoordSystem cs = MakeCoordSys (circle.CoordSys, reverse);
-      OptCheck (cs.Org.DistTo (start).EQ (circle.Radius), 19); 
-      OptCheck (cs.Org.DistTo (end).EQ (circle.Radius), 19);
-
-      // Try to compose a local coordinate system for this Arc3
-      // 1. The center is just cs.Org (the original center of the underlying circle)
-      // 2. The x-axis is the direction of the start point from the origin (we divide
-      //    by Radius to normalize this, avoiding a square-root calculation)
-      // 3. If the Arc was winding CCW about the original ZAxis, then we can keep
-      //    that as our final Zaxis as well, otherwise we flip it
-      Vector3 xaxis = (start - cs.Org).Normalized ();
-
-      // Now, compose a new coordinate system in which this arc is canonically
-      // defined
-      double angSpan;
-      var csFinal = new CoordSystem (cs.Org, xaxis, cs.VecZ * xaxis);
-      if (start.EQ (end)) angSpan = Lib.TwoPI;
-      else {
-         Vector3 endV = (end - cs.Org) / circle.Radius;
-         angSpan = Lib.Acos (csFinal.VecX.CosineToAlreadyNormalized (endV));
-         if (endV.Opposing (csFinal.VecY)) angSpan = Lib.TwoPI - angSpan;
-      }
-      var a3 = new Arc3 (pairId, csFinal, circle.Radius, angSpan);
-      OptCheck (a3.Start.EQ (start), 19);
-      OptCheck (a3.End.EQ (end), 19);
-      return a3;
-   }
-
-   CoordSystem MakeCoordSys (int nCS, bool flipped) {
+   CoordSystem MakeCoordSys (int nCS, bool flipped = false) {
       var (kind, index) = Data[nCS];
       Check (kind == AXIS2_PLACEMENT_3D, 11);
       var cs = Axis3D[index];
@@ -221,6 +199,35 @@ public partial class STEPReader {
    }
 
    string GetCompoundString (int id) => Encoding.ASCII.GetString (GetCompoundBytes (id));
+
+   Arc3 MakeArc (int pairId, Circle circle, Point3 start, Point3 end, bool reverse) {
+      CoordSystem cs = MakeCoordSys (circle.CoordSys, reverse);
+      OptCheck (cs.Org.DistTo (start).EQ (circle.Radius, 1e-3), 19);
+      OptCheck (cs.Org.DistTo (end).EQ (circle.Radius, 1e-3), 19);
+
+      // Try to compose a local coordinate system for this Arc3
+      // 1. The center is just cs.Org (the original center of the underlying circle)
+      // 2. The x-axis is the direction of the start point from the origin (we divide
+      //    by Radius to normalize this, avoiding a square-root calculation)
+      // 3. If the Arc was winding CCW about the original ZAxis, then we can keep
+      //    that as our final Zaxis as well, otherwise we flip it
+      Vector3 xaxis = (start - cs.Org).Normalized ();
+
+      // Now, compose a new coordinate system in which this arc is canonically
+      // defined
+      double angSpan;
+      var csFinal = new CoordSystem (cs.Org, xaxis, cs.VecZ * xaxis);
+      if (start.EQ (end)) angSpan = Lib.TwoPI;
+      else {
+         Vector3 endV = (end - cs.Org) / circle.Radius;
+         angSpan = Lib.Acos (csFinal.VecX.CosineToAlreadyNormalized (endV));
+         if (endV.Opposing (csFinal.VecY)) angSpan = Lib.TwoPI - angSpan;
+      }
+      var a3 = new Arc3 (pairId, csFinal, circle.Radius, angSpan);
+      OptCheck (a3.Start.EQ (start, 1e-3), 19);
+      OptCheck (a3.End.EQ (end, 0.003), 19);
+      return a3;
+   }
 
    bool Seek (ReadOnlySpan<byte> line, ReadOnlySpan<byte> word) {
       int pos = line.IndexOf (word); if (pos < 0) return false;

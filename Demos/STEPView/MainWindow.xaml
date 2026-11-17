@@ -1,0 +1,22 @@
+﻿<Window x:Class="STEPView.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:STEPView"
+        mc:Ignorable="d"
+        Title="STEP Viewer" WindowState="Maximized"  Height="450" Width="800">
+   <DockPanel>
+      <Menu DockPanel.Dock="Top">
+         <MenuItem Header="_File">
+            <MenuItem Name="mOpen" Header="_Open..." />
+            <MenuItem Name="mOpenFlux" Header="Open in _Flux"/>
+            <MenuItem Name="mExit" Header="E_xit" />
+         </MenuItem>
+      </Menu>
+      <ListBox Name="mList" Background="LightGreen" DockPanel.Dock="Left" MinWidth="120" />
+      <TextBlock Padding="6,2,6,2" DockPanel.Dock="Bottom" Background="LightGreen" Name="mStatus" />
+      <TextBlock Padding="10,6,10,6" DockPanel.Dock="Right" Background="LightGreen" Name="mLegend"/>
+      <Border Name="mContent"/>
+   </DockPanel>
+</Window>

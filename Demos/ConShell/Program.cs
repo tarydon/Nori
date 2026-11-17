@@ -29,7 +29,6 @@ class Program {
             Console.ForegroundColor = ConsoleColor.Yellow;
             Console.WriteLine (e);
             Console.ResetColor ();
-            return;
          }
          Console.WriteLine ();
       }

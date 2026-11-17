@@ -166,7 +166,7 @@ public abstract class Scene {
    }
 
    /// <summary>The current zoom factor of the scene</summary>
-   public double ZoomFactor => mZoomFactor;
+   public double ZoomFactor { get => mZoomFactor; set => mZoomFactor = value.Clamp (0.01, 100); }
    protected double mZoomFactor = 1;
 
    /// <summary>Zoom about the center of the viewport</summary>
