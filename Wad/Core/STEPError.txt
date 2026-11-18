@@ -17,6 +17,7 @@
 17 | Empty CONTOURS list for FACE
 18 | Expecting {0} or {1}, found {2}
 19 | Problem in MakeArc
+21 | Contour edges do not connect end-to-end
 
 100 | Not a PLANE
 101 | FACE.Dir == false

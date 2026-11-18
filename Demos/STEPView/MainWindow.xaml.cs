@@ -23,7 +23,6 @@ public partial class MainWindow : Window {
                                    .Select (a => new FileInfo (a))
                                    .OrderBy (a => a.Length)
                                    .Select (a => a.Name)
-                                   .Take (100)
                                    .ToList ();
       mList.SelectionChanged += (s, e) => OnFileSelected ();
       mLegend.Text = """
@@ -34,6 +33,7 @@ public partial class MainWindow : Window {
          C : BAD-CONTOUR
          M : EMPTY
 
+         A : Toggle selection
          W : Toggle wireframe
          Del : Delete surface
          Esc : Exit
@@ -45,6 +45,7 @@ public partial class MainWindow : Window {
 
    protected override void OnKeyDown (KeyEventArgs e) {
       switch (e.Key) {
+         case Key.A: (Lux.UIScene as STEPScene)?.ToggleSelection (); break;
          case Key.C: MoveTo ("BAD-CONTOUR"); break;
          case Key.G: MoveTo ("GOOD"); break;
          case Key.T: MoveTo ("TESS-ERROR"); break;
@@ -52,8 +53,7 @@ public partial class MainWindow : Window {
          case Key.N: MoveTo ("NON-PLANAR-CONTOUR"); break;
          case Key.M: MoveTo ("EMPTY"); break;
          case Key.Escape: Close (); break;
-         case Key.Delete:
-            if (Lux.UIScene is STEPScene sc) sc.DeleteSelected ();
+         case Key.Delete: (Lux.UIScene as STEPScene)?.DeleteSelected ();
             break;
          case Key.W: mWireframe = !mWireframe; Load (mFile, true);  break;
       }
@@ -138,9 +138,18 @@ class STEPScene : Scene3 {
       Root = new GroupVN (set);
    }
 
+   public void ToggleSelection () {
+      mSelected.Clear ();
+      foreach (var ent in mModel.Ents) {
+         if (ent.IsSelected) ent.IsSelected = false;
+         else { ent.IsSelected = true; mSelected.Add (ent); }
+      }
+   }
+
    public void DeleteSelected () {
       foreach (var ent in mSelected) mModel.Ents.Remove (ent);
-      mSelected.Clear (); 
+      mSelected.Clear ();
+      Bound = mModel.Bound; ZoomExtents ();
    }
 
    public override void Picked (object obj) {

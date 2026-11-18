@@ -239,7 +239,6 @@ public sealed class Ellipse3 : Curve3 {
    /// the X axis (say 1.5Pi to 2.5Pi - negative Y to positive Y) ang1 can be greater than Lib.TwoPi.
    public Ellipse3 (int pairId, CoordSystem cs, double xRadius, double yRadius, double ang0, double ang1) : base (pairId) {
       CS = cs; XRadius = xRadius; YRadius = yRadius;
-      Debug.Assert (ang1 >= ang0);
       while (ang0 < 0) ang0 += Lib.TwoPI;
       while (ang1 < ang0) ang1 += Lib.TwoPI;
       mDomain = new (ang0, ang1);

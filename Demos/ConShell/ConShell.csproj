@@ -10,5 +10,6 @@
   
   <ItemGroup>
     <ProjectReference Include="..\..\Core\Nori.Core.csproj" />
+    <ProjectReference Include="..\..\Host\GLU\Nori.GLU.csproj" />
   </ItemGroup>
 </Project>

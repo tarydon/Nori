@@ -87,8 +87,35 @@ public partial class STEPReader {
          case CYLINDRICAL_SURFACE:
             Cylinder cyl = Cylinder[index];
             return new E3Cylinder (nFace, trims, MakeCoordSys (cyl.CoordSys), cyl.Radius, face.Reverse);
+         case B_SPLINE_SURFACE_WITH_KNOTS:
+            BSplineSurface spline = SplineSurface[index];
+            mTmpPts.Clear ();
+            foreach (var row in spline.Pts)
+               foreach (var n in row) mTmpPts.Add (Point3[GetIndex (n, CARTESIAN_POINT)]);
+            var uknots = GetKnots (spline.UMultiplicities, spline.UKnots);
+            var vknots = GetKnots (spline.VMultiplicities, spline.VKnots);
+            return new E3NurbsSurface (nFace, [.. mTmpPts], [], spline.Pts.Length, uknots, vknots, trims) { IsNormalFlipped = face.Reverse };
+         case SPHERICAL_SURFACE:
+            Sphere sph = Sphere[index];
+            return new E3Sphere (nFace, trims, MakeCoordSys (sph.CoordSys), sph.Radius) { IsNormalFlipped = face.Reverse };
+         case TOROIDAL_SURFACE:
+            Torus tor = Torus[index];
+            return new E3Torus (nFace, trims, MakeCoordSys (tor.CoordSys), tor.RMajor, tor.RMinor) { IsNormalFlipped = face.Reverse };
+         case CONICAL_SURFACE:
+            Cone con = Cone[index];
+            var csys = MakeCoordSys (con.CoordSys); csys += csys.VecZ * (-con.Radius / Math.Tan (con.HalfAngle));
+            return new E3Cone (nFace, trims, csys, con.HalfAngle);
       }
       throw new STEPException (16, kind);
+   }
+
+   ImmutableArray<double> GetKnots (int[] multiplicities, double[] knots) {
+      mTmpDouble.Clear ();
+      for (int i = 0; i < multiplicities.Length; i++) {
+         var (mult, knot) = (multiplicities[i], knots[i]);
+         for (int j = 0; j < mult; j++) mTmpDouble.Add (knot);
+      }
+      return [.. mTmpDouble];
    }
 
    List<Contour3> DoContours (int[] contours, out bool outerFound) {
@@ -109,10 +136,20 @@ public partial class STEPReader {
          if (Data[contours[i]].Kind == FACE_OUTER_BOUND) { outerFound = true; mTmpContours.Insert (0, contour); }
          else mTmpContours.Add (contour);
       }
+      Curve3 c0 = mTmpCurves[^1];
+      for (int k = 0; k < mTmpCurves.Count; k++) {
+         Curve3 c1 = mTmpCurves[k];
+         maxValue = Math.Max (c0.End.DistTo (c1.Start), maxValue);
+         Check (c0.End.EQ (c1.Start, MAGIC_GapBetweenContourEdges), 21);
+         c0 = c1;
+      }
       return mTmpContours;
    }
    List<Curve3> mTmpCurves = [];
    List<Contour3> mTmpContours = [];
+   static double maxValue;
+
+   const double MAGIC_GapBetweenContourEdges = 0.005;
 
    Curve3 DoCurve (int id, bool reverse) {
       var oedge = OEdge[GetIndex (id, ORIENTED_EDGE)];
@@ -131,15 +168,34 @@ public partial class STEPReader {
             curve = new Line3 (edgeId, start, end); 
             break;
          case CIRCLE: 
-            Circle circle = Circle[GetIndex (ecurve.Curve, CIRCLE)];
+            Circle circle = Circle[tup.Index];
             curve = MakeArc (edgeId, circle, start, end, reverse ^ ecurve.Reverse);
+            break;
+         case ELLIPSE:
+            Ellipse ell = Ellipse[tup.Index];
+            var cs = MakeCoordSys (ell.CoordSys, reverse ^ ecurve.Reverse);
+            Matrix3 xfmFlat = Matrix3.From (cs);
+            Point3 ps = start * xfmFlat, pe = end * xfmFlat;
+            Point2 ps2 = new (ps.X / ell.RMajor, ps.Y / ell.RMinor), pe2 = new (pe.X / ell.RMajor, pe.Y / ell.RMinor);
+            double sang = Point2.Zero.AngleTo (ps2), eang = Point2.Zero.AngleTo (pe2);
+            curve = new Ellipse3 (edgeId, cs, ell.RMajor, ell.RMinor, sang, eang);
+            break;
+         case B_SPLINE_CURVE_WITH_KNOTS:
+            reverse ^= ecurve.Reverse;
+            mTmpPts.Clear (); mTmpDouble.Clear (); 
+            BSplineCurve spline = SplineCurve[tup.Index];
+            foreach (var n in spline.Pts) mTmpPts.Add (Point3[GetIndex (n, CARTESIAN_POINT)]);
+            var knots = GetKnots (spline.Multiplicities, spline.Knots);
+            curve = new NurbsCurve3 (edgeId, [.. mTmpPts], knots, []);
+            mEdges.Add (edgeId, curve);
+            if (reverse) curve = new RevCurve3 (curve);
             break;
          default: throw new STEPException (16, tup.Kind);
       }
       return curve;
-      // mEdges.Add (edgeId, curve); Not using RevCurve for now
-      // return reverse ? new RevCurve3 (curve) : curve;
    }
+   List<Point3> mTmpPts = [];
+   List<double> mTmpDouble = [];
    Dictionary<int, Curve3> mEdges = [];
 
    CoordSystem MakeCoordSys (int nCS, bool flipped = false) {
@@ -219,8 +275,8 @@ public partial class STEPReader {
 
    Arc3 MakeArc (int pairId, Circle circle, Point3 start, Point3 end, bool reverse) {
       CoordSystem cs = MakeCoordSys (circle.CoordSys, reverse);
-      OptCheck (cs.Org.DistTo (start).EQ (circle.Radius, 1e-3), 19);
-      OptCheck (cs.Org.DistTo (end).EQ (circle.Radius, 1e-3), 19);
+      OptCheck (cs.Org.DistTo (start).EQ (circle.Radius, MAGIC_ArcRadiusError), 19);
+      OptCheck (cs.Org.DistTo (end).EQ (circle.Radius, MAGIC_ArcRadiusError), 19);
 
       // Try to compose a local coordinate system for this Arc3
       // 1. The center is just cs.Org (the original center of the underlying circle)
@@ -241,10 +297,11 @@ public partial class STEPReader {
          if (endV.Opposing (csFinal.VecY)) angSpan = Lib.TwoPI - angSpan;
       }
       var a3 = new Arc3 (pairId, csFinal, circle.Radius, angSpan);
-      OptCheck (a3.Start.EQ (start, 1e-3), 19);
-      OptCheck (a3.End.EQ (end, 0.003), 19);
+      OptCheck (a3.Start.EQ (start, MAGIC_ArcRadiusError), 19);
+      OptCheck (a3.End.EQ (end, MAGIC_ArcRadiusError), 19);
       return a3;
    }
+   const double MAGIC_ArcRadiusError = 0.01;
 
    bool Seek (ReadOnlySpan<byte> line, ReadOnlySpan<byte> word) {
       int pos = line.IndexOf (word); if (pos < 0) return false;
