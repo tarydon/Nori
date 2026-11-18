@@ -99,5 +99,9 @@ public enum EError {
    DeleteCurrent = 6,
    /// <summary>This ledger is not indexed by name</summary>
    NotIndexed = 7,
+   /// <summary>
+   /// Unable to build a Mesh3 for a 3D entity
+   /// </summary>
+   CantMakeMesh = 8,
 }
 #endregion

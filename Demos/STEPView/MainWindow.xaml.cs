@@ -31,9 +31,11 @@ public partial class MainWindow : Window {
          T : TESS-ERROR
          R : RENDER-ERROR
          N : NON-PLANAR-CONTOUR
-         E : EMPTY
+         C : BAD-CONTOUR
+         M : EMPTY
 
          W : Toggle wireframe
+         Del : Delete surface
          Esc : Exit
          """;
       Title = "STEP-Viewer: " + mList.Items.Count + " files";
@@ -43,12 +45,16 @@ public partial class MainWindow : Window {
 
    protected override void OnKeyDown (KeyEventArgs e) {
       switch (e.Key) {
+         case Key.C: MoveTo ("BAD-CONTOUR"); break;
          case Key.G: MoveTo ("GOOD"); break;
          case Key.T: MoveTo ("TESS-ERROR"); break;
          case Key.R: MoveTo ("RENDER-ERROR"); break;
          case Key.N: MoveTo ("NON-PLANAR-CONTOUR"); break;
-         case Key.E: MoveTo ("EMPTY"); break;
+         case Key.M: MoveTo ("EMPTY"); break;
          case Key.Escape: Close (); break;
+         case Key.Delete:
+            if (Lux.UIScene is STEPScene sc) sc.DeleteSelected ();
+            break;
          case Key.W: mWireframe = !mWireframe; Load (mFile, true);  break;
       }
 
@@ -86,6 +92,7 @@ public partial class MainWindow : Window {
          Lib.Trace ($"File missing: {file}");
          return;
       }
+      Lib.Whiteboard["FILENAME"] = Path.GetFileNameWithoutExtension (file);
       var sw = new Stopwatch ();
       var model = new STEPReader (mFile = file).Load ();
       var loadTime = sw.ElapsedMilliseconds;
@@ -125,18 +132,46 @@ public partial class MainWindow : Window {
 class STEPScene : Scene3 {
    public STEPScene (Model3 model, bool wireframe) {
       BgrdColor = Color4.Gray (208);
-      Bound = model.Bound;
+      Bound = (mModel = model).Bound;
       List<VNode> set = [new Model3VN (model), TraceVN.It];
       if (wireframe) set.Add (new TessViewer (model));
       Root = new GroupVN (set);
    }
 
-   public override void Picked (object obj) {
-      if (obj is E3Plane ep) {
-         var raw = CurlWriter.SaveToByteArray (obj);
-         Lib.Trace (Encoding.UTF8.GetString (raw));
-      }
+   public void DeleteSelected () {
+      foreach (var ent in mSelected) mModel.Ents.Remove (ent);
+      mSelected.Clear (); 
    }
+
+   public override void Picked (object obj) {
+      base.Picked (obj);
+      if (obj is E3Surface ent) {
+         var raw = CurlWriter.SaveToByteArray (obj);
+         var str = Encoding.UTF8.GetString (raw);
+
+         StringBuilder sb = new ();
+         foreach (var con in ent.Contours) {
+            sb.AppendLine ("Contour");
+            foreach (var edge in con.Curves) {
+               sb.Append ($"  #{edge.PairId} {edge.GetType ().Name} {S (edge.Start)}  ..  {S (edge.End)}");
+               if (edge is Arc3 arc) sb.Append ($" Span: {arc.AngSpan.R2D ().Round (0)}\u00b0");
+               sb.AppendLine ();
+            }
+         }
+         str = sb.ToString ();
+         Lib.Trace (str);
+         File.WriteAllText ("c:/etc/entity.curl", str);
+
+         mSelected.ForEach (a => a.IsSelected = false); mSelected.Clear ();
+         ent.IsSelected = true; mSelected.Add (ent);
+      }
+
+      string S (Point3 p) 
+         => $"({Math.Round (p.X, 1)},{Math.Round (p.Y, 1)},{Math.Round (p.Z, 1)})";
+   }
+
+   readonly Model3 mModel;
+   readonly List<Ent3> mSelected = [];
 }
 
 // TessViewer --------------------------------------------------------------------------------------

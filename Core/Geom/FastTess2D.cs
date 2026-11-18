@@ -89,6 +89,12 @@ public partial class FastTess2D : IBorrowable<FastTess2D> {
       int start = mInput.Count;
       Lib.Check (poly.IsClosed, "AddPoly requires closed Poly");
       poly.Discretize (mInput, mETess);
+      int end = mInput.Count - 1;
+
+      // Check for duplicate points. First check the last point with the first
+      if (end > start + 1 && mInput[end].EQ (mInput[start])) mInput.RemoveAt (end--);
+      for (int i = end; i > start; i--) if (mInput[i].EQ (mInput[i - 1])) mInput.RemoveAt (i);
+
       if (!windingChecked && ((poly.GetWinding () == Poly.EWinding.CW) ^ hole)) 
          mInput.Reverse (start, mInput.Count - start); 
       ReadOnlySpan<Point2> pts = mInput.AsSpan ()[start..];

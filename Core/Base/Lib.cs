@@ -60,6 +60,11 @@ public static class Lib {
    /// <summary>Are we in 'testing' mode?</summary>
    public static bool Testing { get; set; }
 
+   /// <summary>
+   /// A whiteboard in which we can store 'global' variables in an unstructured way
+   /// </summary>
+   public static Dictionary<string, object> Whiteboard = [];
+
    // Methods ------------------------------------------------------------------
    public static void Assert (bool condition) {
       if (!condition) throw new Exception ("Lib.Assert failed");

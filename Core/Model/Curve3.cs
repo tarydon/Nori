@@ -732,7 +732,8 @@ public class Contour3 {
 
       // Helpers ...........................................
       Point2 Xfm (Point3 pt) {
-         pt *= xfm; Lib.Check (pt.Z.IsZero (0.01), "Non-planar contour");
+         pt *= xfm;
+         Lib.Check (pt.Z.IsZero (MAGIC_ContourFlatness), "Non-planar contour");
          return new (pt.X, pt.Y);
       }
    }
@@ -761,5 +762,7 @@ public class Contour3 {
    /// <summary>Transform the Contour3 by the given transform</summary>
    public static Contour3 operator * (Contour3 con, Matrix3 xfm)
       => new ([.. con.Curves.Select (a => a * xfm)]);
+
+   const double MAGIC_ContourFlatness = 0.05;
 }
 #endregion

@@ -352,8 +352,7 @@ public sealed class E3Plane : E3CSSurface {
    public ImmutableArray<Poly> Polys {
       get {
          if (!_polys.IsDefault) return _polys;
-         List<Poly> polys = [];
-         var xfm = Matrix3.From (CS);
+         var (xfm, polys) = (FromXfm, new List<Poly> ());
          for (int i = 0; i < Contours.Length; i++) {
             var poly = Contours[i].Flatten (xfm);
             if ((poly.GetWinding () == Poly.EWinding.CCW) != (i == 0))
@@ -369,30 +368,10 @@ public sealed class E3Plane : E3CSSurface {
    // Overrides ----------------------------------------------------------------
    // The mesh for the E3Plane can be built with just a simple 2D tessellation,
    // lofted up into the final space of the plane
-   protected override Mesh3 BuildMesh (ETess eTess) {
-      List<int> wires = []; int a = 0;
-      using var tess = FastTess2D.Borrow ();
-      tess.Tolerance = eTess;
-      for (int i = 0; i < Contours.Length; i++) {
-         int b = a + tess.AddPoly (Contours[i].Flatten (FromXfm), i > 0);
-         wires.Add (b - 1);
-         for (int j = a; j < b; j++) { wires.Add (j); wires.Add (j); }
-         wires.RemoveLast ();
-         a = b; 
-      }
-      tess.Process ();
-
-      var toXfm = ToXfm;
-      var pts = tess.Pts; var tris = tess.Tris;
-      var normal = IsNormalFlipped ? -CS.VecZ : CS.VecZ;
-      List<Mesh3.Node> nodes = [];
-      foreach (var pt in pts) {
-         Point3 pt3 = pt * toXfm;
-         nodes.Add (new (new Point3f (pt3.X, pt3.Y, pt3.Z), normal));
-      }
-      Mesh3 mesh = new ([.. nodes], [.. tris], [.. wires]);
-      return mesh;
-   }
+   protected override Mesh3 BuildMesh (ETess eTess) 
+      => BuildMeshFast (eTess) 
+      ?? BuildMeshGLU (eTess) 
+      ?? throw new NoriException (EError.CantMakeMesh);
 
    // The domain of the plane can be computed using only Contours[0], since that
    // is always the outer contour of the plane
@@ -422,6 +401,65 @@ public sealed class E3Plane : E3CSSurface {
       E3Plane plane = new (Id, Contours * xfm, CS * xfm);
       plane.CopyMeshFrom (this, xfm);
       return plane; 
+   }
+
+   // Implementation -----------------------------------------------------------
+   // Tries to build the Mesh3 using FastTess2D
+   // Note that this might fail since there are still some corner cases where FastTess2D fails
+   Mesh3? BuildMeshFast (ETess eTess) {
+      try {
+         List<int> wires = []; int a = 0;
+         using var tess = FastTess2D.Borrow ();
+         tess.Tolerance = eTess;
+         for (int i = 0; i < Contours.Length; i++) {
+            int b = a + tess.AddPoly (Contours[i].Flatten (FromXfm), i > 0);
+            wires.Add (b - 1);
+            for (int j = a; j < b; j++) { wires.Add (j); wires.Add (j); }
+            wires.RemoveLast ();
+            a = b;
+         }
+         tess.Process ();
+
+         var toXfm = ToXfm;
+         var pts = tess.Pts; var tris = tess.Tris;
+         var normal = IsNormalFlipped ? -CS.VecZ : CS.VecZ;
+         List<Mesh3.Node> nodes = [];
+         foreach (var pt in pts) {
+            Point3 pt3 = pt * toXfm;
+            nodes.Add (new (new Point3f (pt3.X, pt3.Y, pt3.Z), normal));
+         }
+         Mesh3 mesh = new ([.. nodes], [.. tris], [.. wires]);
+         return mesh;
+      } catch {
+         return null;
+      }
+   }
+
+   // Tries to build a Mesh3 using the GLU tessellator (if one is installed)
+   Mesh3? BuildMeshGLU (ETess tess) {
+      var func = Lib.Tessellate;
+      if (func == null || func == FastTess2D.Process) return null;
+
+      List<Point2> pts = [];
+      List<int> splits = [0], wires = [];
+      foreach (var poly in Contours.Select (a => a.Flatten (FromXfm))) {
+         int a = pts.Count;
+         poly.Discretize (pts, tess);
+         int b = pts.Count; splits.Add (b);
+         wires.Add (b - 1);
+         for (int i = a; i < b; i++) { wires.Add (i); wires.Add (i); }
+         wires.RemoveLast ();
+      }
+
+      var xfm = ToXfm;
+      var normal = (Vec3H)(IsNormalFlipped ? -CS.VecZ : CS.VecZ);
+      var tries = Lib.Tessellate (pts, splits);
+      List<Mesh3.Node> nodes = [];
+      foreach (var pt in pts) {
+         Point3 pt3 = (Point3)pt * xfm;
+         nodes.Add (new (new Point3f (pt3.X, pt3.Y, pt3.Z), normal));
+      }
+      return new ([.. nodes], [.. tries], [.. wires]);
    }
 }
 #endregion

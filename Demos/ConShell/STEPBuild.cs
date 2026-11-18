@@ -59,7 +59,8 @@ public partial class STEPReader {
       Check (angleUnit is "DEGREE" or "RADIAN", 9);
 
       var shell = Ints[GetIndex (nShell, CLOSED_SHELL)];
-      foreach (var n in shell.Items) mModel.Ents.Add (DoFace (n));
+      foreach (var n in shell.Items) 
+         mModel.Ents.Add (DoFace (n));
    }
 
    // Builds a face (surface), given a pointer to an ADVANCED_FACE. 
@@ -123,7 +124,6 @@ public partial class STEPReader {
       var ecurve = Edge[GetIndex (edgeId, EDGE_CURVE)];
       Point3 start = DoPoint (ecurve.Start), end = DoPoint (ecurve.End);
       var tup = Data[ecurve.Curve];
-      reverse ^= ecurve.Reverse;
       if (reverse) (start, end) = (end, start);
 
       switch (tup.Kind) {
@@ -132,7 +132,7 @@ public partial class STEPReader {
             break;
          case CIRCLE: 
             Circle circle = Circle[GetIndex (ecurve.Curve, CIRCLE)];
-            curve = MakeArc (edgeId, circle, start, end, reverse);
+            curve = MakeArc (edgeId, circle, start, end, reverse ^ ecurve.Reverse);
             break;
          default: throw new STEPException (16, tup.Kind);
       }
