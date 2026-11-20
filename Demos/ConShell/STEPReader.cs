@@ -29,7 +29,6 @@ public partial class STEPReader {
 
    public Model3 Load () {
       Parse ();
-      Check (CheckIt (), 1);
       Build ();
       return mModel;
    }
@@ -198,6 +197,18 @@ public partial class STEPReader {
       return [.. mTmpN];
    }
    readonly List<int> mTmpN = [];
+
+   // Reads a two-dimensional array of doubles
+   double[][] RDoublesList () {
+      mDoublesList.Clear ();
+      mR.TryMatch (','); mR.Match ('(');
+      for (; ; ) {
+         if (mR.TryMatch (')')) break;
+         mDoublesList.Add (RDoubles ());
+      }
+      return [.. mDoublesList];
+   }
+   readonly List<double[]> mDoublesList = [];
 
    // Reads a two-dimensionsl array of references
    int[][] RRefsList () {

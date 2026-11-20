@@ -8,16 +8,6 @@ namespace Nori;
 using static Nori.STEP.EKind;
 
 public partial class STEPReader {
-   bool CheckIt () {
-      return true; 
-      if (Product.Count != 1) return false;
-      if (AssyUsage.Count != 0) return false;
-      if (Manifold.Count != 1) return false;
-      if (Ints.Count (a => a.Kind is CLOSED_SHELL) != 1) return false;
-      if (ShapeRepr.Count (a => a.Kind is ADVANCED_BREP_SHAPE_REPRESENTATION) != 1) return false; 
-      return true;
-   }
-
    void Build () {
       var span = ShapeRepr.AsSpan ();
       for (int i = 0; i < span.Length; i++) {
@@ -58,6 +48,8 @@ public partial class STEPReader {
       Check (angleUnit != null, 8);
       Check (angleUnit is "DEGREE" or "RADIAN", 9);
 
+      if (Data[nShell].Kind == ORIENTED_CLOSED_SHELL) 
+         nShell = OShell[Data[nShell].Index].Shell;
       var shell = Ints[GetIndex (nShell, CLOSED_SHELL)];
       foreach (var n in shell.Items) 
          mModel.Ents.Add (DoFace (n));
@@ -87,14 +79,6 @@ public partial class STEPReader {
          case CYLINDRICAL_SURFACE:
             Cylinder cyl = Cylinder[index];
             return new E3Cylinder (nFace, trims, MakeCoordSys (cyl.CoordSys), cyl.Radius, face.Reverse);
-         case B_SPLINE_SURFACE_WITH_KNOTS:
-            BSplineSurface spline = SplineSurface[index];
-            mTmpPts.Clear ();
-            foreach (var row in spline.Pts)
-               foreach (var n in row) mTmpPts.Add (Point3[GetIndex (n, CARTESIAN_POINT)]);
-            var uknots = GetKnots (spline.UMultiplicities, spline.UKnots);
-            var vknots = GetKnots (spline.VMultiplicities, spline.VKnots);
-            return new E3NurbsSurface (nFace, [.. mTmpPts], [], spline.Pts.Length, uknots, vknots, trims) { IsNormalFlipped = face.Reverse };
          case SPHERICAL_SURFACE:
             Sphere sph = Sphere[index];
             return new E3Sphere (nFace, trims, MakeCoordSys (sph.CoordSys), sph.Radius) { IsNormalFlipped = face.Reverse };
@@ -105,8 +89,53 @@ public partial class STEPReader {
             Cone con = Cone[index];
             var csys = MakeCoordSys (con.CoordSys); csys += csys.VecZ * (-con.Radius / Math.Tan (con.HalfAngle));
             return new E3Cone (nFace, trims, csys, con.HalfAngle);
+         case SURFACE_OF_LINEAR_EXTRUSION:
+            var two = TwoRef[index];
+            return null!;
+            break;
+         case B_SPLINE_SURFACE_WITH_KNOTS:
+            BSplineSurface spline = SplineSurface[index];
+            mTmpPts.Clear ();
+            foreach (var row in spline.Pts)
+               foreach (var n in row) mTmpPts.Add (Point3[GetIndex (n, CARTESIAN_POINT)]);
+            var uknots = GetKnots (spline.UMultiplicities, spline.UKnots);
+            var vknots = GetKnots (spline.VMultiplicities, spline.VKnots);
+            return new E3NurbsSurface (nFace, [.. mTmpPts], [], spline.Pts.Length, uknots, vknots, trims) { IsNormalFlipped = face.Reverse };
+         case COMPOUND:
+            return DoNURBSurface (nFace, face.Surface, trims, face.Reverse);
       }
       throw new STEPException (16, kind);
+   }
+
+   Curve3 DoNURBCurve (int id, int index) {
+      var span = GetCompoundBytes (index);
+      Check (Seek (span, "B_SPLINE_CURVE"u8), 24); mR.Match ('(');
+      int deg = RInt (); var pts = RRefs ();
+      Check (Seek (span, "B_SPLINE_CURVE_WITH_KNOTS"u8), 24); mR.Match ('(');
+      int[] mults = RInts (); var knots = GetKnots (mults, RDoubles ());
+      Check (Seek (span, "RATIONAL_B_SPLINE_CURVE"u8), 24); mR.Match ('(');
+      double[] weights = RDoubles ();
+      mTmpPts.Clear ();
+      foreach (var n in pts) mTmpPts.Add (Point3[GetIndex (n, CARTESIAN_POINT)]);
+      return new NurbsCurve3 (id, [.. mTmpPts], knots, [.. weights]); 
+   }
+
+   Ent3 DoNURBSurface (int id, int index, ImmutableArray<Contour3> trims, bool flipped) {
+      var span = GetCompoundBytes (index);
+      Check (Seek (span, "B_SPLINE_SURFACE"u8), 22); mR.Match ('(');
+      int uDeg = RInt (), vDeg = RInt (); var pts = RRefsList ();
+      Check (Seek (span, "B_SPLINE_SURFACE_WITH_KNOTS"u8), 22); mR.Match ('(');
+      int[] uMults = RInts (), vMults = RInts ();
+      var uknots = GetKnots (uMults, RDoubles ());
+      var vknots = GetKnots (vMults, RDoubles ());
+      Check (Seek (span, "RATIONAL_B_SPLINE_SURFACE"u8), 22); mR.Match ('(');
+      var weights = RDoublesList ();
+      mTmpPts.Clear (); mTmpDouble.Clear ();
+      foreach (var row in pts)
+         foreach (var n in row) mTmpPts.Add (Point3[GetIndex (n, CARTESIAN_POINT)]);
+      foreach (var row in weights)
+         foreach (var f in row) mTmpDouble.Add (f);
+      return new E3NurbsSurface (id, [.. mTmpPts], [.. mTmpDouble], pts.Length, uknots, vknots, trims) { IsNormalFlipped = flipped };
    }
 
    ImmutableArray<double> GetKnots (int[] multiplicities, double[] knots) {
@@ -162,6 +191,8 @@ public partial class STEPReader {
       Point3 start = DoPoint (ecurve.Start), end = DoPoint (ecurve.End);
       var tup = Data[ecurve.Curve];
       if (reverse) (start, end) = (end, start);
+      if (tup.Kind == EKind.SURFACE_CURVE)
+         tup = Data[SurfCurve[tup.Index].Curve3D];
 
       switch (tup.Kind) {
          case LINE: 
@@ -190,7 +221,12 @@ public partial class STEPReader {
             mEdges.Add (edgeId, curve);
             if (reverse) curve = new RevCurve3 (curve);
             break;
-         default: throw new STEPException (16, tup.Kind);
+         case COMPOUND:
+            curve = DoNURBCurve (edgeId, ecurve.Curve);
+            mEdges.Add (edgeId, curve);
+            if (reverse) curve = new RevCurve3 (curve);
+            break;
+         default: throw new STEPException (23, tup.Kind);
       }
       return curve;
    }
