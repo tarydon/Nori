@@ -145,6 +145,8 @@ public partial class STEPReader {
             or PRODUCT_DEFINITION_FORMATION_WITH_SPECIFIED_SOURCE:
             RString (); slot = Add (Int, RRef ()); 
             break;
+         case QUASI_UNIFORM_CURVE: slot = Add (QuasiCurve, new (RInt (), RRefs ())); break;
+         case QUASI_UNIFORM_SURFACE: slot = Add (QuasiSurface, new (RInt (), RInt (), RRefsList ())); break;
          case SHAPE_REPRESENTATION_RELATIONSHIP: RString (); slot = Add (TwoRef, new (RRef (), RRef ())); break;
          case SPHERICAL_SURFACE: slot = Add (Sphere, new (RRef (), RDouble ())); break;
          case SURFACE_CURVE or INTERSECTION_CURVE: 
@@ -318,6 +320,8 @@ public partial class STEPReader {
    List<OffsetSurf> OffsetSurf = [];
    List<Point3> Point3 = [];
    List<Product> Product = [];
+   List<QuasiCurve> QuasiCurve = [];
+   List<QuasiSurface> QuasiSurface = [];
    List<ShapeRepr> ShapeRepr = [];
    List<Sphere> Sphere = [];
    List<StyledItem> StyledItem = [];

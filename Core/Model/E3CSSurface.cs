@@ -681,6 +681,13 @@ public sealed class E3Torus : E3CSSurface {
    /// <summary>Radius of the major circle along which this minor circle's center orbits</summary>
    public readonly double RMajor;
 
+   /// <summary>
+   /// Use to disambiguate shape for a degenerate torus (RMinor .gt. RMajor), 
+   /// </summary>
+   /// If IsMinorTorus is set, then the torus is the 'pear' shaped part. Otherwise it is
+   /// the 'apple shaped' part
+   public bool IsMinorTorus { get => Get (E3Flags.IsMinorTorus); set => Set (E3Flags.IsMinorTorus, value); }
+
    // Overrides ----------------------------------------------------------------
    // The domain of a torus extends from 0..360 in both U and V
    protected override Bound2 ComputeDomain () 

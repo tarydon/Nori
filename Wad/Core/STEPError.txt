@@ -12,8 +12,8 @@
 12 | Expecting FACE_BOUND or FACE_OUTER_BOUND
 13 | Expecting EDGE_LOOP
 14 | Expecting ORIENTED_EDGE
-15 | Expecting {0}, found {1}
-16 | Unsupported entity {0}
+15 | Expecting {0}, found {1} (Entity #{2})
+16 | Unsupported surface {0}
 17 | Empty CONTOURS list for FACE
 18 | Expecting {0} or {1}, found {2}
 19 | Problem in MakeArc
@@ -21,6 +21,7 @@
 22 | Error parsing COMPOUND (NURBSurface)
 23 | Unsupported curve {0}
 24 | Error parsing COMPOUND (NURBCurve)
+25 | Ill formed QuasiCurve
 
 100 | Not a PLANE
 101 | FACE.Dir == false

@@ -138,7 +138,7 @@ public abstract partial class Ent3 {
 public enum E3Flags : uint {
    Selected = 1 << 0, Translucent = 1 << 1, FlipNormal = 1 << 2, GeneratrixFlat = 1 << 3,
    ULinear = 1 << 4, VLinear = 1 << 5, NoStencil = 1 << 6, Colliding = 1 << 7, 
-   ContourWindingChecked = 1 << 8, Overlap = 1 << 9,
+   ContourWindingChecked = 1 << 8, Overlap = 1 << 9, IsMinorTorus = 1 << 10,
 }
 #endregion
 
@@ -412,6 +412,40 @@ public abstract class E3Surface : Ent3 {
    }
 }
 #endregion
+
+public class E3OffsetSurface : Ent3 {
+   E3OffsetSurface () => Basis = null!;
+   public E3OffsetSurface (int id, E3Surface surface, double offset) : base (id)
+      => (Basis, Offset) = (surface, offset);
+
+   public override Bound3 Bound => Mesh.Bound;
+
+   public override Bound3 GetBound (Matrix3 xfm) => Mesh.GetBound (xfm);
+
+   protected override Ent3 Xformed (Matrix3 xfm) => throw new NotImplementedException ();
+
+   /// <summary>
+   /// Gets the mesh of this OffsetSurface (computed by offsetting the mesh of the underlying surface)
+   /// </summary>
+   public Mesh3 Mesh {
+      get {
+         if (_mesh == null) {
+            var m0 = Basis.Mesh;
+            List<Mesh3.Node> nodes = [];
+            foreach (var node in m0.Vertex) {
+               Point3 pt = (Point3)node.Pos + ((Vector3)node.Vec * Offset);
+               nodes.Add (new ((Point3f)pt, node.Vec));
+            }
+            _mesh = new Mesh3 ([.. nodes], m0.Triangle, m0.Wire);
+         }
+         return _mesh;
+      }
+   }
+   Mesh3? _mesh;
+
+   public readonly E3Surface Basis;
+   public readonly double Offset;
+}
 
 #region class E3CSSurface --------------------------------------------------------------------------
 /// <summary>E3CSSurface are defined in canonical space and lofted up into a CS</summary>

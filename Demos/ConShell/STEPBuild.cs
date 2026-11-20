@@ -82,9 +82,10 @@ public partial class STEPReader {
          case SPHERICAL_SURFACE:
             Sphere sph = Sphere[index];
             return new E3Sphere (nFace, trims, MakeCoordSys (sph.CoordSys), sph.Radius) { IsNormalFlipped = face.Reverse };
-         case TOROIDAL_SURFACE:
+         case TOROIDAL_SURFACE or DEGENERATE_TOROIDAL_SURFACE:
             Torus tor = Torus[index];
-            return new E3Torus (nFace, trims, MakeCoordSys (tor.CoordSys), tor.RMajor, tor.RMinor) { IsNormalFlipped = face.Reverse };
+            bool isMinor = kind == DEGENERATE_TOROIDAL_SURFACE && !tor.Apple;
+            return new E3Torus (nFace, trims, MakeCoordSys (tor.CoordSys), tor.RMajor, tor.RMinor) { IsNormalFlipped = face.Reverse, IsMinorTorus = isMinor };
          case CONICAL_SURFACE:
             Cone con = Cone[index];
             var csys = MakeCoordSys (con.CoordSys); csys += csys.VecZ * (-con.Radius / Math.Tan (con.HalfAngle));
@@ -92,7 +93,6 @@ public partial class STEPReader {
          case SURFACE_OF_LINEAR_EXTRUSION:
             var two = TwoRef[index];
             return null!;
-            break;
          case B_SPLINE_SURFACE_WITH_KNOTS:
             BSplineSurface spline = SplineSurface[index];
             mTmpPts.Clear ();
@@ -101,18 +101,53 @@ public partial class STEPReader {
             var uknots = GetKnots (spline.UMultiplicities, spline.UKnots);
             var vknots = GetKnots (spline.VMultiplicities, spline.VKnots);
             return new E3NurbsSurface (nFace, [.. mTmpPts], [], spline.Pts.Length, uknots, vknots, trims) { IsNormalFlipped = face.Reverse };
+         case QUASI_UNIFORM_SURFACE:
+            return DoQuasiSurface (nFace, face.Surface, trims, face.Reverse);
          case COMPOUND:
             return DoNURBSurface (nFace, face.Surface, trims, face.Reverse);
       }
       throw new STEPException (16, kind);
    }
 
+   Ent3 DoQuasiSurface (int id, int index, ImmutableArray<Contour3> trims, bool flipped) {
+      QuasiSurface qs = QuasiSurface[Data[index].Index];
+      mTmpPts.Clear ();
+      foreach (var row in qs.Pts)
+         foreach (var n in row) mTmpPts.Add (Point3[GetIndex (n, CARTESIAN_POINT)]);
+      var uknots = MakeUniformKnots (qs.Pts.Length, qs.UDegree);
+      var vknots = MakeUniformKnots (qs.Pts[0].Length, qs.VDegree);
+      return new E3NurbsSurface (id, [.. mTmpPts], [], qs.Pts.Length, uknots, vknots, trims) { IsNormalFlipped = flipped };
+   }
+
+   Curve3 DoQuasiCurve (int id, int index) {
+      QuasiCurve qc = QuasiCurve[Data[index].Index];
+      mTmpPts.Clear (); foreach (var n in qc.Pts) mTmpPts.Add (Point3[GetIndex (n, CARTESIAN_POINT)]);
+      if (qc.Degree == 1) {
+         Check (mTmpPts.Count == 2, 25);
+         return new Line3 (id, mTmpPts[0], mTmpPts[1]);
+      }
+      return new NurbsCurve3 (id, [.. mTmpPts], MakeUniformKnots (mTmpPts.Count, qc.Degree), []);
+   }
+
+   ImmutableArray<double> MakeUniformKnots (int N, int p) {
+      mTmpDouble.Clear ();
+      for (int i = 0; i < p + 1; i++) mTmpDouble.Add (0);
+      for (int j = 1; j < N - p - 1; j++) mTmpDouble.Add (j);
+      for (int i = 0; i < p + 1; i++) mTmpDouble.Add (N - p);
+      return [..mTmpDouble];
+   }
+
    Curve3 DoNURBCurve (int id, int index) {
       var span = GetCompoundBytes (index);
       Check (Seek (span, "B_SPLINE_CURVE"u8), 24); mR.Match ('(');
-      int deg = RInt (); var pts = RRefs ();
-      Check (Seek (span, "B_SPLINE_CURVE_WITH_KNOTS"u8), 24); mR.Match ('(');
-      int[] mults = RInts (); var knots = GetKnots (mults, RDoubles ());
+      int deg = RInt (); var pts = RRefs (); ImmutableArray<double> knots;
+      if (Seek (span, "B_SPLINE_CURVE_WITH_KNOTS"u8)) {
+         mR.Match ('(');
+         int[] mults = RInts (); knots = GetKnots (mults, RDoubles ());
+      } else {
+         Check (Seek (span, "QUASI_UNIFORM_CURVE"u8), 24);
+         knots = MakeUniformKnots (pts.Length, deg);
+      }
       Check (Seek (span, "RATIONAL_B_SPLINE_CURVE"u8), 24); mR.Match ('(');
       double[] weights = RDoubles ();
       mTmpPts.Clear ();
@@ -124,10 +159,17 @@ public partial class STEPReader {
       var span = GetCompoundBytes (index);
       Check (Seek (span, "B_SPLINE_SURFACE"u8), 22); mR.Match ('(');
       int uDeg = RInt (), vDeg = RInt (); var pts = RRefsList ();
-      Check (Seek (span, "B_SPLINE_SURFACE_WITH_KNOTS"u8), 22); mR.Match ('(');
-      int[] uMults = RInts (), vMults = RInts ();
-      var uknots = GetKnots (uMults, RDoubles ());
-      var vknots = GetKnots (vMults, RDoubles ());
+      ImmutableArray<double> uknots, vknots;
+      if (Seek (span, "B_SPLINE_SURFACE_WITH_KNOTS"u8)) {
+         mR.Match ('(');
+         int[] uMults = RInts (), vMults = RInts ();
+         uknots = GetKnots (uMults, RDoubles ());
+         vknots = GetKnots (vMults, RDoubles ());
+      } else {
+         Check (Seek (span, "QUASI_UNIFORM_SURFACE"u8), 24);
+         uknots = MakeUniformKnots (pts.Length, uDeg);
+         vknots = MakeUniformKnots (pts[0].Length, vDeg);
+      }
       Check (Seek (span, "RATIONAL_B_SPLINE_SURFACE"u8), 22); mR.Match ('(');
       var weights = RDoublesList ();
       mTmpPts.Clear (); mTmpDouble.Clear ();
@@ -154,6 +196,7 @@ public partial class STEPReader {
       for (int i = 0; i < contours.Length; i++) {
          mTmpCurves.Clear ();
          FaceBound faceBound = FaceBound[GetIndex (contours[i], FACE_BOUND, FACE_OUTER_BOUND)];
+         var tup = Data[faceBound.EdgeLoop]; if (tup.Kind == VERTEX_LOOP) continue; 
          var oedges = Ints2[GetIndex (faceBound.EdgeLoop, EDGE_LOOP)];
          if (faceBound.Reverse) {
             for (int j = oedges.Length - 1; j >= 0; j--) mTmpCurves.Add (DoCurve (oedges[j], true));
@@ -191,7 +234,7 @@ public partial class STEPReader {
       Point3 start = DoPoint (ecurve.Start), end = DoPoint (ecurve.End);
       var tup = Data[ecurve.Curve];
       if (reverse) (start, end) = (end, start);
-      if (tup.Kind == EKind.SURFACE_CURVE)
+      if (tup.Kind == SURFACE_CURVE)
          tup = Data[SurfCurve[tup.Index].Curve3D];
 
       switch (tup.Kind) {
@@ -212,22 +255,27 @@ public partial class STEPReader {
             curve = new Ellipse3 (edgeId, cs, ell.RMajor, ell.RMinor, sang, eang);
             break;
          case B_SPLINE_CURVE_WITH_KNOTS:
-            reverse ^= ecurve.Reverse;
             mTmpPts.Clear (); mTmpDouble.Clear (); 
             BSplineCurve spline = SplineCurve[tup.Index];
             foreach (var n in spline.Pts) mTmpPts.Add (Point3[GetIndex (n, CARTESIAN_POINT)]);
             var knots = GetKnots (spline.Multiplicities, spline.Knots);
-            curve = new NurbsCurve3 (edgeId, [.. mTmpPts], knots, []);
-            mEdges.Add (edgeId, curve);
-            if (reverse) curve = new RevCurve3 (curve);
+            curve = CacheAndReturn (new NurbsCurve3 (edgeId, [.. mTmpPts], knots, []), reverse ^ ecurve.Reverse);
+            break;
+         case QUASI_UNIFORM_CURVE:
+            curve = CacheAndReturn (DoQuasiCurve (edgeId, ecurve.Curve), reverse ^ ecurve.Reverse);
             break;
          case COMPOUND:
-            curve = DoNURBCurve (edgeId, ecurve.Curve);
-            mEdges.Add (edgeId, curve);
-            if (reverse) curve = new RevCurve3 (curve);
+            curve = CacheAndReturn (DoNURBCurve (edgeId, ecurve.Curve), reverse ^ ecurve.Reverse);
             break;
          default: throw new STEPException (23, tup.Kind);
       }
+
+      Curve3 CacheAndReturn (Curve3 curve, bool reverse) {
+         mEdges.Add (edgeId, curve);
+         if (reverse) curve = new RevCurve3 (curve);
+         return curve;
+      }
+
       return curve;
    }
    List<Point3> mTmpPts = [];
@@ -291,7 +339,7 @@ public partial class STEPReader {
    // of object is stored at that id
    int GetIndex (int id, EKind kind) {
       var tup = Data[id];
-      if (tup.Kind != kind) throw new STEPException (15, kind, tup.Kind);
+      if (tup.Kind != kind) throw new STEPException (15, kind, tup.Kind, id);
       return tup.Index;
    }
 
