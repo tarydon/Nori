@@ -35,11 +35,12 @@ class Program {
                Console.Write ('.');
                _ = e3.Mesh;
             }
-            Move (name, "PARK");
+            // Move (name, "GOOD");
          } catch (Exception e) {
             Console.ForegroundColor = ConsoleColor.Yellow;
             Console.Write (" " + e.Message);
             Console.ResetColor ();
+            return;
             if (e.Message.Contains ("connect end-to-end"))
                Move (name, "DISJOINT");
             if (e.Message.Contains ("MakeArc"))

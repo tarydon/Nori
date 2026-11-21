@@ -762,6 +762,6 @@ public class Contour3 {
    public static Contour3 operator * (Contour3 con, Matrix3 xfm)
       => new ([.. con.Curves.Select (a => a * xfm)]);
 
-   const double MAGIC_ContourFlatness = 0.05;
+   const double MAGIC_ContourFlatness = 0.1;
 }
 #endregion

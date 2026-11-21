@@ -203,17 +203,19 @@ public partial class STEPReader {
          } else {
             foreach (var oe in oedges) mTmpCurves.Add (DoCurve (oe, false));
          }
+         if (mTmpCurves.Count == 0) continue;
+
+         Curve3 c0 = mTmpCurves[^1];
+         for (int k = 0; k < mTmpCurves.Count; k++) {
+            Curve3 c1 = mTmpCurves[k];
+            maxValue = Math.Max (c0.End.DistTo (c1.Start), maxValue);
+            Check (c0.End.EQ (c1.Start, MAGIC_GapBetweenContourEdges), 21);
+            c0 = c1;
+         }
 
          var contour = new Contour3 ([.. mTmpCurves]);
          if (Data[contours[i]].Kind == FACE_OUTER_BOUND) { outerFound = true; mTmpContours.Insert (0, contour); }
          else mTmpContours.Add (contour);
-      }
-      Curve3 c0 = mTmpCurves[^1];
-      for (int k = 0; k < mTmpCurves.Count; k++) {
-         Curve3 c1 = mTmpCurves[k];
-         maxValue = Math.Max (c0.End.DistTo (c1.Start), maxValue);
-         Check (c0.End.EQ (c1.Start, MAGIC_GapBetweenContourEdges), 21);
-         c0 = c1;
       }
       return mTmpContours;
    }
