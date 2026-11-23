@@ -100,7 +100,7 @@ public abstract class Scene {
       // First, render default image, and then measure the background color 'margins' around
       // the image so we can compute a zoom factor
       var bgrd = BgrdColor;
-      BgrdColor = Color4.White; 
+      BgrdColor = Color4.White;
       var dib = (DIBitmap)Lux.Render (this, size, ETarget.Image, DIBitmap.EFormat.Gray8)!;
       var (data, xMin, yMin, xMax, yMax) = (dib.Data, dib.Width, -1, -1, -1);
       for (int y = 0; y < dib.Height; y++) {
@@ -129,7 +129,7 @@ public abstract class Scene {
       bool unattached = !miAttached;
       if (unattached) Attach ();
       ZoomToContent (Rect.Size, out _);
-      if (unattached) Detach (); 
+      if (unattached) Detach ();
    }
 
    /// <summary>Renders the scene to an image, zooming in to avoid wasted whitespace</summary>
@@ -142,8 +142,8 @@ public abstract class Scene {
       ZoomToContent (size, out yIdeal);
       var dib = (DIBitmap)Lux.Render (this, size, ETarget.Image, fmt)!;
       mZoomFactor = zoom; PanVector = pan; XfmChanged ();
-      if (unattached) Detach (); 
-      return dib; 
+      if (unattached) Detach ();
+      return dib;
    }
 
    /// <summary>Override this to zoom in or out about the given position (in pixels)</summary>
@@ -196,6 +196,16 @@ public abstract class Scene {
       clip = new (Math.Round (clip.X, d), Math.Round (clip.Y, d), Math.Round (clip.Z, d));
       return clip;
    }
+
+   /// <summary>Converts a world coordinate to pixel coordinates (inverse of PixelToWorld)</summary>
+   /// The returned pixel coordinates are in screen coordinates
+   public Vec2S WorldToPixel (Point3 pt) {
+      // Convert to OpenGL clip-space coordinates, and then to pixels
+      Point3 clip = pt * (WorldXfm * ProjectionXfm);
+      Vec2S vp = Rect.Size;
+      return new ((short)(vp.X * (clip.X + 1) / 2), (short)(vp.Y * (1 - clip.Y) / 2));
+   }
+
    /// <summary>If set other than -1, all mouse-input is rounded to this many decimals</summary>
    public int WorldDecimals = -1;
 
