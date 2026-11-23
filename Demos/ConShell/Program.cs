@@ -30,15 +30,13 @@ class Program {
          var sr = new STEPReader (file);
          try {
             var model = sr.Load ();
-            if (model.Ents.Count == 0) throw new Exception ("Empty Model");
-            // Move (name, "GOOD");
-
-            return;
+            if (sr.IsSimplePart ()) Move (name, "SIMPLE");
+            else Move (name, "COMPLEX");
          } catch (Exception e) {
             Console.ForegroundColor = ConsoleColor.Yellow;
             Console.Write (" " + e.Message);
             Console.ResetColor ();
-            // Move (name, "LATER");
+            Console.ReadLine ();
          }
          Console.WriteLine ();
       }

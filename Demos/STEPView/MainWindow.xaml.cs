@@ -86,6 +86,7 @@ public partial class MainWindow : Window {
          Lib.Trace ($"File missing: {file}");
          return;
       }
+      TraceVN.It.Clear ();
       Lib.Whiteboard["FILENAME"] = Path.GetFileNameWithoutExtension (file);
       var sw = new Stopwatch ();
       var model = new STEPReader (mFile = file).Load ();
@@ -115,7 +116,7 @@ public partial class MainWindow : Window {
    void OnLuxReady () {
       new SceneManipulator ();
       TraceVN.TextColor = Color4.Black;
-      TraceVN.HoldTime = 15;
+      TraceVN.HoldTime = 20;
       Lib.Tracer = TraceVN.Print;
       mList.SelectedIndex = 0;
    }

@@ -22,7 +22,7 @@
 23 | Unsupported curve {0}
 24 | Error parsing COMPOUND (NURBCurve)
 25 | Ill formed QuasiCurve
-26 | Expecting REPRESENTATION_RELATIONSHIP
+26 | Ill formed REPRESENTATION_RELATIONSHIP_WITH_TRANSFORMATION
 
 100 | Not a PLANE
 101 | FACE.Dir == false

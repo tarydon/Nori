@@ -30,6 +30,7 @@ public partial class STEPReader {
 
    public Model3 Load () {
       Parse ();
+      AnalyzeAssembly ();
       Build ();
       return mModel;
    }
@@ -72,11 +73,6 @@ public partial class STEPReader {
    }
    List<double> mTmpF = [];
 
-   public string Classify () {
-      if (AssyUsage.Count > 0) return "Assembly";
-      return "Unknown";
-   }
-
    // Reads a standard entity of the given type
    void REntity (int id, EKind kind) {
       if (kind > _IGNORE) return;
@@ -86,7 +82,8 @@ public partial class STEPReader {
       switch (kind) {
          case ADVANCED_FACE or FACE_SURFACE: slot = Add (Face, new Face (RRefs (), RRef (), RBool ())); break;
          case ADVANCED_BREP_SHAPE_REPRESENTATION or SHAPE_REPRESENTATION or MANIFOLD_SURFACE_SHAPE_REPRESENTATION
-            or DEFINITIONAL_REPRESENTATION:
+            or DEFINITIONAL_REPRESENTATION or GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION
+            or GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION:
             slot = Add (ShapeRepr, new (id, kind, RRefs (), RRef ())); 
             break;
          case AXIS2_PLACEMENT_3D: slot = Add (Axis3D, new (RRef (), RRef (), RRef ())); break;
@@ -127,11 +124,10 @@ public partial class STEPReader {
             slot = Add (Int, RRef ());
             break;
          case MANIFOLD_SOLID_BREP: slot = Add (Manifold, RRef ()); break;
-         case ITEM_DEFINED_TRANSFORMATION: RString (); slot = Add (TwoRef, new (RRef (), RRef ())); break;
+         case ITEM_DEFINED_TRANSFORMATION or SHAPE_REPRESENTATION_RELATIONSHIP: 
+            RString (); slot = Add (TwoRef, new (RRef (), RRef ())); break;
          case LINE: slot = Add (Line, new (RRef (), RRef ())); break;
-         case NEXT_ASSEMBLY_USAGE_OCCURRENCE:
-            slot = Add (AssyUsage, new (RString (), RString (), RRef (), RRef ()));
-            break;
+         case NEXT_ASSEMBLY_USAGE_OCCURRENCE: RString (); RString (); slot = Add (TwoRef, new (RRef (), RRef ())); break;
          case OFFSET_SURFACE: slot = Add (OffsetSurf, new (RRef (), RDouble ())); break;
          case ORIENTED_EDGE:
             mR.Match ('*').Match (',').Match ('*').Match (',');
@@ -143,14 +139,13 @@ public partial class STEPReader {
             break;
          case OVER_RIDING_STYLED_ITEM: slot = Add (StyleOverride, new (RRefs (), RRef (), RRef ())); break;
          case PRODUCT: slot = Add (Product, new (id, RString (), RString (), RRefs ())); break;
-         case PRODUCT_DEFINITION: RString (); slot = Add (TwoRef, new (RRef (), RRef ())); break;
-         case PRODUCT_DEFINITION_SHAPE or PRODUCT_DEFINITION_FORMATION 
-            or PRODUCT_DEFINITION_FORMATION_WITH_SPECIFIED_SOURCE:
+         case PRODUCT_DEFINITION_SHAPE or PRODUCT_DEFINITION_FORMATION or PRODUCT_DEFINITION
+            or PRODUCT_DEFINITION_FORMATION_WITH_SPECIFIED_SOURCE or PRODUCT_DEFINITION_WITH_ASSOCIATED_DOCUMENTS
+            or SHAPE_ASPECT or PROPERTY_DEFINITION:
             RString (); slot = Add (Int, RRef ()); 
             break;
          case QUASI_UNIFORM_CURVE: slot = Add (QuasiCurve, new (RInt (), RRefs ())); break;
          case QUASI_UNIFORM_SURFACE: slot = Add (QuasiSurface, new (RInt (), RInt (), RRefsList ())); break;
-         case SHAPE_REPRESENTATION_RELATIONSHIP: RString (); slot = Add (TwoRef, new (RRef (), RRef ())); break;
          case SPHERICAL_SURFACE: slot = Add (Sphere, new (RRef (), RDouble ())); break;
          case SURFACE_CURVE or INTERSECTION_CURVE: 
             slot = Add (SurfCurve, new SurfCurve (RRef (), RRefs (), REnum ())); 
@@ -299,7 +294,6 @@ public partial class STEPReader {
    }
 
    // Data stores --------------------------------------------------------------
-   List<AssyUsage> AssyUsage = [];
    List<Axis3D> Axis3D = [];
    List<BRepVoids> BRepVoids = [];
    List<Circle> Circle = [];
