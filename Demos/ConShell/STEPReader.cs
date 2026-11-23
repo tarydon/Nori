@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
 using System.Text;
 using Nori.STEP;
 namespace Nori;
@@ -107,10 +108,12 @@ public partial class STEPReader {
          case CIRCLE: slot = Add (Circle, new (RRef (), RDouble ())); break;
          case COLOUR_RGB: slot = Add (ColorRGB, new (RDouble (), RDouble (), RDouble ())); break;
          case CONICAL_SURFACE: slot = Add (Cone, new (RRef (), RDouble (), RDouble ())); break;
-         case CONTEXT_DEPENDENT_SHAPE_REPRESENTATION or MAPPED_ITEM or SHAPE_DEFINITION_REPRESENTATION
-            or SURFACE_OF_LINEAR_EXTRUSION or REPRESENTATION_MAP or PCURVE or AXIS2_PLACEMENT_2D
+         case SURFACE_OF_LINEAR_EXTRUSION or REPRESENTATION_MAP or PCURVE or AXIS2_PLACEMENT_2D
             or AXIS1_PLACEMENT or SURFACE_OF_REVOLUTION:
             slot = Add (TwoRef, new (RRef (), RRef ())); 
+            break;
+         case CONTEXT_DEPENDENT_SHAPE_REPRESENTATION or SHAPE_DEFINITION_REPRESENTATION or MAPPED_ITEM:
+            slot = Add (ShapeDefn, new (id, kind, RRef (), RRef ()));
             break;
          case CYLINDRICAL_SURFACE: slot = Add (Cylinder, new (RRef (), RDouble ())); break;
          case DEGENERATE_TOROIDAL_SURFACE: slot = Add (Torus, new (RRef (), RDouble (), RDouble (), RBool ())); break;
@@ -139,7 +142,7 @@ public partial class STEPReader {
             slot = Add (OShell, new (RRef (), RBool ()));
             break;
          case OVER_RIDING_STYLED_ITEM: slot = Add (StyleOverride, new (RRefs (), RRef (), RRef ())); break;
-         case PRODUCT: slot = Add (Product, new (RString (), RString (), RRefs ())); break;
+         case PRODUCT: slot = Add (Product, new (id, RString (), RString (), RRefs ())); break;
          case PRODUCT_DEFINITION: RString (); slot = Add (TwoRef, new (RRef (), RRef ())); break;
          case PRODUCT_DEFINITION_SHAPE or PRODUCT_DEFINITION_FORMATION 
             or PRODUCT_DEFINITION_FORMATION_WITH_SPECIFIED_SOURCE:
@@ -237,7 +240,7 @@ public partial class STEPReader {
    // an optional leading comma
    int RRef () {
       mR.TryMatch (',');
-      if (mR.TryMatch ('$')) return 0;
+      if (mR.TryMatch ('$')) return -1;
       mR.Match ('#').Read (out int n);
       return n;
    }
@@ -322,6 +325,7 @@ public partial class STEPReader {
    List<Product> Product = [];
    List<QuasiCurve> QuasiCurve = [];
    List<QuasiSurface> QuasiSurface = [];
+   List<ShapeDefn> ShapeDefn = [];
    List<ShapeRepr> ShapeRepr = [];
    List<Sphere> Sphere = [];
    List<StyledItem> StyledItem = [];

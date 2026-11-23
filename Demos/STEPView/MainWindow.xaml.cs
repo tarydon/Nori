@@ -26,12 +26,9 @@ public partial class MainWindow : Window {
                                    .ToList ();
       mList.SelectionChanged += (s, e) => OnFileSelected ();
       mLegend.Text = """
-         G : GOOD
-         T : TESS-ERROR
-         R : RENDER-ERROR
-         N : NON-PLANAR-CONTOUR
-         C : BAD-CONTOUR
-         M : EMPTY
+         L : LATER
+         S : ASSY
+         P : PARK
 
          A : Toggle selection
          W : Toggle wireframe
@@ -46,12 +43,9 @@ public partial class MainWindow : Window {
    protected override void OnKeyDown (KeyEventArgs e) {
       switch (e.Key) {
          case Key.A: (Lux.UIScene as STEPScene)?.ToggleSelection (); break;
-         case Key.C: MoveTo ("BAD-CONTOUR"); break;
-         case Key.G: MoveTo ("GOOD"); break;
-         case Key.T: MoveTo ("TESS-ERROR"); break;
-         case Key.R: MoveTo ("RENDER-ERROR"); break;
-         case Key.N: MoveTo ("NON-PLANAR-CONTOUR"); break;
-         case Key.M: MoveTo ("EMPTY"); break;
+         case Key.L: MoveTo ("LATER"); break;
+         case Key.S: MoveTo ("ASSY"); break;
+         case Key.P: MoveTo ("PARK"); break;
          case Key.Escape: Close (); break;
          case Key.Delete: (Lux.UIScene as STEPScene)?.DeleteSelected ();
             break;
@@ -114,7 +108,6 @@ public partial class MainWindow : Window {
       }
 
       double diag = model.Bound.Diagonal.Round (0);
-      if (tris == 0) throw new Exception ("Empty model");
       mStatus.Text = $"Load:{loadTime} ms, {tris} triangles, diagonal = {diag} mm";
    }
    string mFile = "";

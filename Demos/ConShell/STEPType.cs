@@ -185,7 +185,15 @@ readonly struct QuasiSurface (int udeg, int vdeg, int[][]pts) {
    public readonly int[][] Pts = pts;
 }
 
-readonly struct Product (string name, string desc, int[] frames) {
+readonly struct ShapeDefn (int id, EKind kind, int target, int shape) {
+   public readonly int Id = id, Target = target, Shape = shape;
+   public readonly EKind Kind = kind;
+   public override string ToString () => $"{Kind}(#{Id}) Target=#{Target} Shape=#{Shape}";
+}
+
+readonly struct Product (int id, string name, string desc, int[] frames) {
+   public override string ToString () => $"#{Id} '{Name}'";
+   public readonly int Id = id;
    public readonly string Name = name, Description = desc;
    public readonly int[] Frame = frames;
 }

@@ -9,6 +9,8 @@ using static Nori.STEP.EKind;
 
 public partial class STEPReader {
    void Build () {
+      Analyze ();
+
       var span = ShapeRepr.AsSpan ();
       for (int i = 0; i < span.Length; i++) {
          ref readonly ShapeRepr sr = ref span[i];
@@ -26,6 +28,14 @@ public partial class STEPReader {
                      foreach (var k in voids.Inner) DoShell (k, sr.Context);
                      done = true;
                      break;
+               }
+               if (mEnts.Count > 0) {
+                  Block3 block = new (index.ToString (), mEnts);
+                  Color4 color = Color4.RandomLight;
+                  mEnts.ForEach (a => a.Color = color);
+                  mModel.Add (block);
+                  mModel.Ents.Add (new E3Insert (index, block, Matrix3.Identity));
+                  mEnts.Clear (); 
                }
             }
             Check (done, 3);
@@ -52,8 +62,9 @@ public partial class STEPReader {
          nShell = OShell[Data[nShell].Index].Shell;
       var shell = Ints[GetIndex (nShell, CLOSED_SHELL)];
       foreach (var n in shell.Items) 
-         mModel.Ents.Add (DoFace (n));
+         mEnts.Add (DoFace (n));
    }
+   List<Ent3> mEnts = [];
 
    // Builds a face (surface), given a pointer to an ADVANCED_FACE. 
    Ent3 DoFace (int nFace) {
@@ -223,7 +234,7 @@ public partial class STEPReader {
    List<Contour3> mTmpContours = [];
    static double maxValue;
 
-   const double MAGIC_GapBetweenContourEdges = 0.005;
+   const double MAGIC_GapBetweenContourEdges = 0.01;
 
    Curve3 DoCurve (int id, bool reverse) {
       var oedge = OEdge[GetIndex (id, ORIENTED_EDGE)];
@@ -288,7 +299,8 @@ public partial class STEPReader {
       var (kind, index) = Data[nCS];
       Check (kind == AXIS2_PLACEMENT_3D, 11);
       var cs = Axis3D[index];
-      Vector3 zAxis = BVector (cs.ZAxis), xAxis = BVector (cs.XAxis);
+      Vector3 zAxis = BVector (cs.ZAxis), xAxis;
+      xAxis = (cs.XAxis == -1) ? Geo.GetXYFromZ (zAxis).x : BVector (cs.XAxis);
       Vector3 yAxis = flipped ? xAxis * zAxis : zAxis * xAxis;
       return new (BPoint (cs.Origin), xAxis, yAxis);
    }
