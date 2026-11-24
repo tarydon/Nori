@@ -1,10 +1,10 @@
-﻿using Nori.STEP;
+﻿using System.Text;
+using Nori.STEP;
 using static Nori.STEP.EKind;
 namespace Nori;
 
 public partial class STEPReader {
    void AnalyzeAssembly () {
-      Console.WriteLine ();
       foreach (var sd in ShapeDefn) {
          switch (sd.Kind) {
             case SHAPE_DEFINITION_REPRESENTATION:
@@ -68,15 +68,15 @@ public partial class STEPReader {
          or GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION or GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION:
             int xfmZero = -1;
             foreach (var n in shape.Items) if (Data[n].Kind == AXIS2_PLACEMENT_3D) xfmZero = n;
-            var ps = new Node (prod.Name, idProdDef, idShape, xfmZero, []); Console.WriteLine ($"  {ps}");
+            var ps = new Node (prod.Name, idProdDef, idShape, xfmZero, []); 
             Nodes.Add (idShape, ps);
             break;
          case SHAPE_REPRESENTATION:
             if (shape.Items.Length == 1 && Data[shape.Items[0]].Kind == MANIFOLD_SOLID_BREP) {
-               var ps2 = new Node (prod.Name, idProdDef, idShape, -1, []); Console.WriteLine ($"  {ps2}");
+               var ps2 = new Node (prod.Name, idProdDef, idShape, -1, []); 
                Nodes.Add (idShape, ps2);
             } else {
-               var ash = new Node (prod.Name, idProdDef, idShape, -1, shape.Items); Console.WriteLine ($"  {ash}");
+               var ash = new Node (prod.Name, idProdDef, idShape, -1, shape.Items); 
                Nodes.Add (idShape, ash);
             }
             break;
@@ -110,4 +110,56 @@ public partial class STEPReader {
       public override string ToString () => $"PLACEMENT, {Parent}->{Child}, {ParentXfm}->{ChildXfm}";
    }
    List<Link> Links = [];
+}
+
+public class DescribeModel (string file, Model3 model) {
+   public string Process () {
+      S.AppendLine ("V1");
+      S.AppendLine ($"FILE:{Path.GetFileNameWithoutExtension (File)}");
+      S.AppendLine ($"ROOT");
+      S.AppendLine ($" BOUND:{ToS (M.Bound)}");
+      Dump (M.Ents); Scan (M.Ents);
+
+      foreach (var block in Blocks) {
+         Bound3 bound = new (block.Ents.Select (a => a.Bound));
+         S.AppendLine ($"BLOCK {block.Name}");
+         S.AppendLine ($" BOUND:{ToS (bound)}");
+         Dump (block.Ents);
+      }
+      return S.ToString ();
+   }
+
+   void Scan (IReadOnlyList<Ent3> ents) {
+      foreach (var ent in ents.OfType<E3Insert> ())
+         if (Blocks.Add (ent.Block))
+            Scan (ent.Block.Ents);
+   }
+
+   void Dump (IReadOnlyList<Ent3> ents) {
+      int planes = 0, cylinders = 0, nurbs = 0, others = 0, insert = 0;
+      foreach (var e in ents) {
+         if (e is E3Plane) planes++;
+         else if (e is E3Cylinder) cylinders++;
+         else if (e is E3NurbsSurface) nurbs++;
+         else if (e is E3Insert) insert++;
+         else others++;
+      }
+      if (planes > 0) S.AppendLine ($" PLANES:{planes}");
+      if (cylinders > 0) S.AppendLine ($" CYLINDERS:{cylinders}");
+      if (nurbs > 0) S.AppendLine ($" NURBS:{nurbs}");
+      if (insert > 0) S.AppendLine ($" INSERT:{insert}");
+      if (others > 0) S.AppendLine ($" OTHERS:{others}");
+   }
+
+   string ToS (Bound3 b) {
+      var d = b.DiagVector;
+      double[] vals = [d.X.Round (0), d.Y.Round (0), d.Z.Round (0)];
+      vals = [.. vals.Order ()];
+      return $"{vals[2]} x {vals[1]} x {vals[0]}";
+   }
+
+   readonly HashSet<Block3> Blocks = [];
+   readonly Model3 M = model;
+   readonly StringBuilder S = new ();
+   readonly string File = file;
 }

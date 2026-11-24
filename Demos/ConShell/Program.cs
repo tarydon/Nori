@@ -30,16 +30,46 @@ class Program {
          var sr = new STEPReader (file);
          try {
             var model = sr.Load ();
-            if (sr.IsSimplePart ()) Move (name, "SIMPLE");
-            else Move (name, "COMPLEX");
+            var desc = new DescribeModel (file, model).Process ();
+            var desc1 = File.ReadAllText ($"W:\\STEP\\NOTES\\{name}.txt");
+            if (Same (desc, desc1)) {
+               Console.Write (" ..........");
+               Move (name, "DONE");
+            } else {
+               // File.WriteAllText ("c:/etc/desc.txt", desc);
+               // Process.Start ("winmergeu.exe", $"c:/etc/desc.txt W:\\STEP\\NOTES\\{name}.txt").WaitForExit ();
+               Console.ForegroundColor = ConsoleColor.Yellow;
+               Console.Write (" **********");
+               Console.ResetColor ();
+            }
          } catch (Exception e) {
             Console.ForegroundColor = ConsoleColor.Yellow;
             Console.Write (" " + e.Message);
             Console.ResetColor ();
-            Console.ReadLine ();
+            Move (name, "CRASH");
          }
          Console.WriteLine ();
       }
+   }
+
+   static bool Same (string d1, string d2) {
+      if (d1 == d2) return true;
+      var w1 = d1.Split ('\n'); var w2 = d2.Split ('\n');
+      if (w1.Length != w2.Length) return false;
+      for (int i = 0; i < w1.Length; i++) {
+         if (w1[i] == w2[i]) continue;
+         string s1 = w1[i].Trim (), s2 = w2[i].Trim ();
+         if (s1.StartsWith ("BOUND:") && s2.StartsWith ("BOUND:")) {
+            int[] a = [.. s1[6..].Split ('x').Select (int.Parse)];
+            int[] b = [.. s2[6..].Split ('x').Select (int.Parse)];
+            bool same = true;
+            for (int j = 0; j < 3; j++)
+               if (Math.Abs (a[j] - b[j]) > 1) same = false;
+            if (same) continue; 
+         }
+         return false;
+      }
+      return true; 
    }
 
    static void Move (string name, string dir) {

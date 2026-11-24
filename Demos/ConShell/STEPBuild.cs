@@ -9,7 +9,6 @@ using static Nori.STEP.EKind;
 
 public partial class STEPReader {
    void Build () {
-      BuildAssembly ();
       var span = ShapeRepr.AsSpan ();
       for (int i = 0; i < span.Length; i++) {
          ref readonly ShapeRepr sr = ref span[i];
@@ -40,6 +39,7 @@ public partial class STEPReader {
             Check (done, 3);
          }
       }
+      mModel.CleanupBlocks ();
    }
 
    void DoShell (int nShell, int nContext) {

@@ -22,13 +22,15 @@ public partial class MainWindow : Window {
       mList.ItemsSource = Directory.GetFiles (mRoot, "*.stp")
                                    .Select (a => new FileInfo (a))
                                    .OrderBy (a => a.Length)
+                                   .Take (20)
                                    .Select (a => a.Name)
                                    .ToList ();
       mList.SelectionChanged += (s, e) => OnFileSelected ();
       mLegend.Text = """
-         L : LATER
+         D : DONE
+         U : UNIT
+         N : NURB-SIMPLIFY
          S : ASSY
-         P : PARK
 
          A : Toggle selection
          W : Toggle wireframe
@@ -42,10 +44,12 @@ public partial class MainWindow : Window {
 
    protected override void OnKeyDown (KeyEventArgs e) {
       switch (e.Key) {
-         case Key.A: (Lux.UIScene as STEPScene)?.ToggleSelection (); break;
-         case Key.L: MoveTo ("LATER"); break;
+         case Key.D: MoveTo ("DONE"); break;
+         case Key.U: MoveTo ("UNIT"); break;
+         case Key.N: MoveTo ("NURB-SIMPLIFY"); break;
          case Key.S: MoveTo ("ASSY"); break;
-         case Key.P: MoveTo ("PARK"); break;
+
+         case Key.A: (Lux.UIScene as STEPScene)?.ToggleSelection (); break;
          case Key.Escape: Close (); break;
          case Key.Delete: (Lux.UIScene as STEPScene)?.DeleteSelected ();
             break;
@@ -108,10 +112,41 @@ public partial class MainWindow : Window {
          sc.Viewpoint = (xr, zr); sc.ZoomFactor = zoom; sc.PanVector = pan;
       }
 
-      double diag = model.Bound.Diagonal.Round (0);
-      mStatus.Text = $"Load:{loadTime} ms, {tris} triangles, diagonal = {diag} mm";
+      var diag = model.Bound.DiagVector;
+      mStatus.Text = $"Load:{loadTime} ms, {tris} triangles, Bound: <{diag.X.Round(1)} x {diag.Y.Round (1)} x {diag.Z.Round (1)}>";
+
+      var file1 = $"c:/etc/po/{Path.GetFileNameWithoutExtension (file)}.txt";
+      var desc1 = new DescribeModel (file, model).Process ();
+      File.WriteAllText (file1, desc1);
+      var file0 = $"W:\\STEP\\NOTES\\{Path.GetFileNameWithoutExtension (file)}.txt";
+      var desc0 = File.ReadAllText (file0);
+      if (!Same (desc1, desc0)) {
+         Lux.UIScene.BgrdColor = new (255, 208, 208);
+         Process.Start ("winmergeu.exe", $"{file0} {file1}").WaitForInputIdle ();
+         this.Activate ();
+      }
    }
    string mFile = "";
+
+   static bool Same (string d1, string d2) {
+      if (d1 == d2) return true;
+      var w1 = d1.Split ('\n'); var w2 = d2.Split ('\n');
+      if (w1.Length != w2.Length) return false;
+      for (int i = 0; i < w1.Length; i++) {
+         if (w1[i] == w2[i]) continue;
+         string s1 = w1[i].Trim (), s2 = w2[i].Trim ();
+         if (s1.StartsWith ("BOUND:") && s2.StartsWith ("BOUND:")) {
+            int[] a = [.. s1[6..].Split ('x').Select (int.Parse)];
+            int[] b = [.. s2[6..].Split ('x').Select (int.Parse)];
+            bool same = true;
+            for (int j = 0; j < 3; j++)
+               if (Math.Abs (a[j] - b[j]) > 1) same = false;
+            if (same) continue;
+         }
+         return false;
+      }
+      return true;
+   }
 
    void OnLuxReady () {
       new SceneManipulator ();
@@ -161,8 +196,14 @@ class STEPScene : Scene3 {
                sb.AppendLine ();
             }
          }
-         str = sb.ToString ();
-         Lib.Trace (str);
+         if (ent is E3NurbsSurface nurb) {
+            int u = nurb.UCtl, v = nurb.VCtl;
+            sb.AppendLine ($"Control: {u} x {v}");
+         }
+         var str2 = sb.ToString ();
+         Lib.Trace (str2);
+
+
          File.WriteAllText ("c:/etc/entity.curl", str);
 
          mSelected.ForEach (a => a.IsSelected = false); mSelected.Clear ();
