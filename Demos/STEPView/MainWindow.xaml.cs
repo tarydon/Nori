@@ -22,15 +22,17 @@ public partial class MainWindow : Window {
       mList.ItemsSource = Directory.GetFiles (mRoot, "*.stp")
                                    .Select (a => new FileInfo (a))
                                    .OrderBy (a => a.Length)
-                                   .Take (20)
+                                   .Take (45)
                                    .Select (a => a.Name)
                                    .ToList ();
       mList.SelectionChanged += (s, e) => OnFileSelected ();
       mLegend.Text = """
          D : DONE
          U : UNIT
-         N : NURB-SIMPLIFY
+         P : NURB-PLANE
+         C : NURB-CYLINDER
          S : ASSY
+         M : MISC
 
          A : Toggle selection
          W : Toggle wireframe
@@ -46,8 +48,10 @@ public partial class MainWindow : Window {
       switch (e.Key) {
          case Key.D: MoveTo ("DONE"); break;
          case Key.U: MoveTo ("UNIT"); break;
-         case Key.N: MoveTo ("NURB-SIMPLIFY"); break;
+         case Key.P: MoveTo ("NURB-PLANE"); break;
+         case Key.C: MoveTo ("NURB-CYLINDER"); break;
          case Key.S: MoveTo ("ASSY"); break;
+         case Key.M: MoveTo ("MISC"); break;
 
          case Key.A: (Lux.UIScene as STEPScene)?.ToggleSelection (); break;
          case Key.Escape: Close (); break;
