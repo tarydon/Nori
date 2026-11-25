@@ -63,7 +63,7 @@ public class E3MeshVN (E3Mesh mMesh) : Ent3VN (mMesh) {
 public class E3SurfaceVN (E3Surface mSurface) : Ent3VN (mSurface) {
    public override void SetAttributes () {   // REMOVETHIS
       if (!mSurface.IsSelected) Lux.Color = mSurface.Color;
-      else base.SetAttributes ();   
+      else base.SetAttributes ();
    }
 
    public override void Draw () {
@@ -74,7 +74,7 @@ public class E3SurfaceVN (E3Surface mSurface) : Ent3VN (mSurface) {
          _ => EShadeMode.Phong,
       };
       Lux.Mesh (mSurface.Mesh, mode);
-      
+
    }
 }
 #endregion

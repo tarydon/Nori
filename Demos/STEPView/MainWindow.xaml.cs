@@ -22,7 +22,6 @@ public partial class MainWindow : Window {
       mList.ItemsSource = Directory.GetFiles (mRoot, "*.stp")
                                    .Select (a => new FileInfo (a))
                                    .OrderBy (a => a.Length)
-                                   .Take (51)
                                    .Select (a => a.Name)
                                    .ToList ();
       mList.SelectionChanged += (s, e) => OnFileSelected ();
@@ -34,6 +33,7 @@ public partial class MainWindow : Window {
          S : ASSY
          M : MISC
 
+         2 : Drawing
          A : Toggle selection
          W : Toggle wireframe
          Del : Delete surface
@@ -52,8 +52,13 @@ public partial class MainWindow : Window {
          case Key.C: MoveTo ("NURB-CYLINDER"); break;
          case Key.S: MoveTo ("ASSY"); break;
          case Key.M: MoveTo ("MISC"); break;
-
          case Key.A: (Lux.UIScene as STEPScene)?.ToggleSelection (); break;
+         case Key.D2:
+            var shmodel = new SheetMetalizer (mModel).Process ().Value;
+            var dwg = new Unfolder (shmodel).Process ().Value;
+            var gvn = new GroupVN ([new Dwg2VN (dwg), new DwgFillVN (dwg)]);
+            Lux.UIScene = new Scene2 (Color4.Gray (208), dwg.Bound.InflatedF (1.05), gvn);
+            break;
          case Key.Escape: Close (); break;
          case Key.Delete: (Lux.UIScene as STEPScene)?.DeleteSelected ();
             break;
@@ -99,6 +104,7 @@ public partial class MainWindow : Window {
       var sw = new Stopwatch ();
       var model = new STEPReader (mFile = file).Load ();
       var loadTime = sw.ElapsedMilliseconds;
+      mModel = model;
 
       int tris = 0;
       foreach (var es in model.Ents.OfType<E3Surface> ())
@@ -116,20 +122,8 @@ public partial class MainWindow : Window {
          sc.Viewpoint = (xr, zr); sc.ZoomFactor = zoom; sc.PanVector = pan;
       }
 
-      var diag = model.Bound.DiagVector;
-      mStatus.Text = $"Load:{loadTime} ms, {tris} triangles, Bound: <{diag.X.Round(1)} x {diag.Y.Round (1)} x {diag.Z.Round (1)}>";
-
-      var file1 = $"c:/etc/po/{Path.GetFileNameWithoutExtension (file)}.txt";
-      var desc1 = new DescribeModel (file, model).Process ();
-      File.WriteAllText (file1, desc1);
-      var file0 = $"W:\\STEP\\NOTES\\{Path.GetFileNameWithoutExtension (file)}.txt";
-      var desc0 = File.ReadAllText (file0);
-      if (!Same (desc1, desc0)) {
-         Lux.UIScene.BgrdColor = new (255, 208, 208);
-         Process.Start ("winmergeu.exe", $"{file0} {file1}").WaitForInputIdle ();
-         this.Activate ();
-      }
    }
+   Model3 mModel = new ();
    string mFile = "";
 
    static bool Same (string d1, string d2) {
@@ -206,8 +200,6 @@ class STEPScene : Scene3 {
          }
          var str2 = sb.ToString ();
          Lib.Trace (str2);
-
-
          File.WriteAllText ("c:/etc/entity.curl", str);
 
          mSelected.ForEach (a => a.IsSelected = false); mSelected.Clear ();

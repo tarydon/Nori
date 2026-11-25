@@ -40,6 +40,51 @@ public sealed class E3NurbsSurface : E3Surface {
    protected override Bound2 ComputeDomain () 
       => new (mUImp.Knot[0], mVImp.Knot[0], mUImp.Knot[^1], mVImp.Knot[^1]);
 
+   public bool TrySimplify ([NotNullWhen (true)] out Ent3? ent) {
+      ent = null;
+      if (UCtl <= 4 || VCtl <= 4) {
+         ent = ConvertToPlane (); if (ent != null) return true; 
+      }
+      return false;
+   }
+
+   E3Plane? ConvertToPlane () {
+      try {
+         // Get the 4 corners, and pick 3 to form the base of a PlaneDef
+         Span<Point3> pts = stackalloc Point3[4];
+         GetCorners (pts); 
+         var (minDist, k) = (1e99, 0);
+         for (int i = 0; i < 4; i++) {
+            double dist = pts[i].DistToSq (pts[(i + 1) % 4]);
+            if (dist < minDist) (minDist, k) = (dist, i);
+         }
+         // Now, the shortest leg is from k..k+1, avoid that as one of the legs, and create
+         // a PlaneDef with the other 3
+         Point3 pa = pts[(k + 1) % 4], pb = pts[(k + 2) % 4], pc = pts[(k + 3) % 4];
+         PlaneDef pdef = new (pa, pb, pc);
+         foreach (var pt in Ctrl) {
+            double dist = pdef.Dist (pt);
+            if (dist > MAGIC_PlaneConvert) return null;
+         }
+
+         // All the points are close enough, so we can make a Plane3
+         Vector3 vecz = pdef.Normal;
+         if (vecz.Opposing (GetNormal (Domain.Midpoint))) vecz = -vecz;
+         Vector3 vecx = (pb - pa).Normalized ();
+         CoordSystem cs = new (pa, vecx, vecz * vecx);
+         return new E3Plane (Id, Contours, cs);
+      } catch {
+         return null;
+      } 
+   }
+   const double MAGIC_PlaneConvert = 0.01;
+
+   public void GetCorners (Span<Point3> pts) {
+      int nv = VCtl;
+      pts[0] = Ctrl[0]; pts[1] = Ctrl[nv - 1];
+      pts[2] = Ctrl[^nv]; pts[3] = Ctrl[^1];
+   }
+
    // Given a U,V computes a point on the NURBS surface. The SplineImps mUImp and mVImp
    // are the evaluators of the basis functions in U and V directions.
    public override Point3 GetPoint (double u, double v) {

@@ -139,6 +139,7 @@ public enum E3Flags : uint {
    Selected = 1 << 0, Translucent = 1 << 1, FlipNormal = 1 << 2, GeneratrixFlat = 1 << 3,
    ULinear = 1 << 4, VLinear = 1 << 5, NoStencil = 1 << 6, Colliding = 1 << 7, 
    ContourWindingChecked = 1 << 8, Overlap = 1 << 9, IsMinorTorus = 1 << 10,
+   FastTess = 1 << 11,     // Tessellation computed by a fast-tessellator
 }
 #endregion
 
@@ -319,6 +320,11 @@ public abstract class E3Surface : Ent3 {
    public bool IsULinear => Get (E3Flags.ULinear);
    /// <summary>Is the surface linear in the V parameter dimension</summary>
    public bool IsVLinear => Get (E3Flags.VLinear);
+
+   /// <summary>
+   /// Was the tessellation computed by a 'fast-tess' optimized algorithm?
+   /// </summary>
+   public bool IsFastTess => Get (E3Flags.FastTess);
 
    /// <summary>The tessellation of the surface is computed on demand by BuildMesh (which can be overridden)</summary>
    [DebuggerBrowsable (DebuggerBrowsableState.Never)]

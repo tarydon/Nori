@@ -244,6 +244,7 @@ public sealed class E3Cylinder : E3CSSurface {
          tris.Add (j); tris.Add (i + n); tris.Add (j + n);
       }
       if (IsNormalFlipped) tris.Reverse ();
+      mFlags |= E3Flags.FastTess;
       return new ([.. nodes], [.. tris], [.. wires]);
    }
 
@@ -301,6 +302,7 @@ public sealed class E3Cylinder : E3CSSurface {
       Vector3 v0 = ToV (n0.Vec), v1 = ToV (n1.Vec), v2 = ToV (n2.Vec);
       Vector3 norma = (p1 - p0) * (p2 - p0), normb = v0 + v1 + v2;
       if (norma.Opposing (normb)) tris.Reverse ();
+      mFlags |= E3Flags.FastTess;
       return new ([.. nodes], [.. tris], [.. wires]);
 
       // Helpers ...........................................
@@ -429,6 +431,7 @@ public sealed class E3Plane : E3CSSurface {
             nodes.Add (new (new Point3f (pt3.X, pt3.Y, pt3.Z), normal));
          }
          Mesh3 mesh = new ([.. nodes], [.. tris], [.. wires]);
+         mFlags |= E3Flags.FastTess;
          return mesh;
       } catch {
          return null;

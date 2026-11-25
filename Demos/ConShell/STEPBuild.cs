@@ -40,6 +40,18 @@ public partial class STEPReader {
          }
       }
       mModel.CleanupBlocks ();
+      if (mModel.Blocks.Count == 0) {
+         foreach (var ent in mModel.Ents) ent.Color = Color4.Nil;
+      }
+      Simplify ();
+   }
+
+   void Simplify () {
+      for (int i = 0; i < mModel.Ents.Count; i++) {
+         if (mModel.Ents[i] is E3NurbsSurface nurb)
+            if (nurb.TrySimplify (out var ent)) 
+               mModel.Ents[i] = ent;
+      }
    }
 
    void DoShell (int nShell, int nContext) {

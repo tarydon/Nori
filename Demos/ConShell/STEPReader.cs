@@ -1,5 +1,4 @@
 ﻿using System.Diagnostics.CodeAnalysis;
-using System.Runtime.CompilerServices;
 using System.Text;
 using Nori.STEP;
 namespace Nori;
@@ -17,7 +16,6 @@ class STEPException : Exception {
       }
    }
    static Dictionary<int, string> sMessages;
-
 }
 
 public partial class STEPReader {

@@ -14,7 +14,7 @@
             <MenuItem Name="mExit" Header="E_xit" />
          </MenuItem>
       </Menu>
-      <ListBox Name="mList" Background="LightGreen" DockPanel.Dock="Left" MinWidth="120" />
+      <ListBox Name="mList" Background="LightGreen" DockPanel.Dock="Left" MinWidth="80" />
       <TextBlock Padding="6,2,6,2" DockPanel.Dock="Bottom" Background="LightGreen" Name="mStatus" />
       <TextBlock Padding="10,6,10,6" DockPanel.Dock="Right" Background="LightGreen" Name="mLegend"/>
       <Border Name="mContent"/>
