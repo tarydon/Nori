@@ -22,7 +22,7 @@ public partial class MainWindow : Window {
       mList.ItemsSource = Directory.GetFiles (mRoot, "*.stp")
                                    .Select (a => new FileInfo (a))
                                    .OrderBy (a => a.Length)
-                                   .Take (45)
+                                   .Take (51)
                                    .Select (a => a.Name)
                                    .ToList ();
       mList.SelectionChanged += (s, e) => OnFileSelected ();
