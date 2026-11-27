@@ -78,9 +78,7 @@ public class UTFReader {
       mN += delta; return this;
    }
 
-   /// <summary>
-   /// Reads the next byte from the UTFReader
-   /// </summary>
+   /// <summary>Reads the next byte from the UTFReader</summary>
    public UTFReader Read (out byte value) { value = D[mN++]; return this; }
 
    /// <summary>Read a char value from the stream</summary>
@@ -237,9 +235,7 @@ public class UTFReader {
    /// <summary>SKips until the given character is found (and consumes that character)</summary>
    public UTFReader SkipTo (char b) { while (D[mN++] != b) { } return this; }
 
-   /// <summary>
-   /// Skips until the given sequence is found (and consumes that sequence)
-   /// </summary>
+   /// <summary>Skips until the given sequence is found (and consumes that sequence)</summary>
    /// If the sequence is not found, this returns false
    public bool Find (ReadOnlySpan<byte> sequence) {
       int n = D.AsSpan (mN).IndexOf (sequence);

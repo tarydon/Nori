@@ -73,9 +73,7 @@ public class Model3 {
       return result;
    }
 
-   /// <summary>
-   /// Enumerate every Ent3 (including the ones in blocks)
-   /// </summary>
+   /// <summary>Enumerate every Ent3 (including the ones in blocks)</summary>
    /// Each entity is enumerated only once, so if multiple E3Insert reference a Block3,
    /// that block is walked only once.
    public IEnumerable<Ent3> DeepEnumEnts () {

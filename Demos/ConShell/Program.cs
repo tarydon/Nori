@@ -21,7 +21,7 @@ class Program {
       for (int i = 0; i < names.Length; i++) {
          string name = names[i];
          Console.Write ($"{i + 1}. {name} ");
-         CheckTessellation (name);
+         TryUnfolding (name);
       }
    }
 
@@ -42,9 +42,9 @@ class Program {
       // Load the sheet metal model      
       var file = $"W:\\STEP\\{name}.stp";
       var sr = new STEPReader (file);
+      Model3 model = sr.Load ();
 
       try {
-         Model3 model = sr.Load ();
          var tup1 = new SheetMetalizer (model).Process ();
          if (tup1.IsErr) {
             Move (name, "THICKEN");
@@ -91,6 +91,7 @@ class Program {
          return;
       }
       if (!thick.EQ (thick2, 0.1) || !area.EQ (area2, area * 0.05)) {
+         Console.WriteLine ($"{thick} {thick2} {area} {area2}");
          WriteY ("Area different");
          Move (name, "SIZING");
          return;

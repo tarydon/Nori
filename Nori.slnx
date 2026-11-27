@@ -3,6 +3,7 @@
     <Project Path="Demos/BenchShell/BenchShell.csproj" />
     <Project Path="Demos/ConShell/ConShell.csproj" />
     <Project Path="Demos/GLShell/GLShell.csproj" />
+    <Project Path="Demos/STEPTest/STEPTest.csproj" Id="a3107339-be52-426e-a912-79c26c6694dd" />
     <Project Path="Demos/STEPView/STEPView.csproj" Id="cf0af9b1-00d9-4783-8474-c8094e51932d" />
     <Project Path="Demos/WPFDemo/WPFDemo.csproj" />
   </Folder>

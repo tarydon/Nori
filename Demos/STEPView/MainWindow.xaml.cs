@@ -1,4 +1,4 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 using System.IO;
 using System.Text;
 using System.Windows;
@@ -7,9 +7,7 @@ using Microsoft.Win32;
 using Nori;
 namespace STEPView;
 
-/// <summary>
-/// Interaction logic for MainWindow.xaml
-/// </summary>
+/// <summary>Interaction logic for MainWindow.xaml</summary>
 public partial class MainWindow : Window {
    public MainWindow () {
       Lib.Init ();
@@ -58,6 +56,7 @@ public partial class MainWindow : Window {
             var dwg = new Unfolder (shmodel).Process ().Value;
             var gvn = new GroupVN ([new Dwg2VN (dwg), new DwgFillVN (dwg)]);
             Lux.UIScene = new Scene2 (Color4.Gray (208), dwg.Bound.InflatedF (1.05), gvn);
+            mStatus.Text = dwg.Bound.ToString ();
             break;
          case Key.Escape: Close (); break;
          case Key.Delete: (Lux.UIScene as STEPScene)?.DeleteSelected ();
@@ -121,6 +120,9 @@ public partial class MainWindow : Window {
          Scene3 sc = (Scene3)Lux.UIScene!;
          sc.Viewpoint = (xr, zr); sc.ZoomFactor = zoom; sc.PanVector = pan;
       }
+
+      var dv = model.Bound.DiagVector;
+      mStatus.Text = $"{dv.X.RoundN ()} x {dv.Y.RoundN ()} x {dv.Z.RoundN ()}";
 
    }
    Model3 mModel = new ();

@@ -193,7 +193,7 @@ public class Matrix3 : IEQuable<Matrix3> {
 
    /// <summary>Compose a uniform scaling matrix</summary>
    public static Matrix3 Scaling (double s)
-      => s.EQ (1) ? Identity : new (s, 0, 0, 0, s, 0, 0, 0, s, 0, 0, 0);
+      => s.EQ (1) ? Identity : new (s, 0, 0, 0, s, 0, 0, 0, s, 0, 0, 0, EFlag.Scale | EFlag.UniformScale);
 
    /// <summary>Compose a non-uniform scaling matrix (separate scaling factors in X, Y, Z)</summary>
    public static Matrix3 Scaling (double xs, double ys, double zs)
@@ -217,6 +217,11 @@ public class Matrix3 : IEQuable<Matrix3> {
    /// <summary>Is this a pure rotation matrix</summary>
    public bool IsRotation => (Flags & EFlag.All) == EFlag.Rotate;
 
+   /// <summary>Is this a pure scaling matrix?</summary>
+   public bool IsScaling => (Flags & EFlag.All) == EFlag.Scale;
+   /// <summary>Is this a pure uniform scaling matrix</summary>
+   public bool IsUniformScaling => (Flags & (EFlag.All | EFlag.UniformScale)) == (EFlag.Scale | EFlag.UniformScale);
+
    /// <summary>Does this matrix include mirroring?</summary>
    public bool HasMirroring => (Flags & EFlag.Mirror) != 0;
 
@@ -224,7 +229,13 @@ public class Matrix3 : IEQuable<Matrix3> {
    public bool HasScaling => (Flags & EFlag.Scale) != 0;
 
    /// <summary>The 'scaling factor' of this matrix (assuming equal scaling in all axes)</summary>
-   public double ScaleFactor => HasScaling ? (Vector3.XAxis * this).Length : 1;
+   public double ScaleFactor {
+      get {
+         if (IsUniformScaling) return M11;
+         if (HasScaling) return (Vector3.XAxis * this).Length;    // Handles the case where there is also rotation/translation
+         return 1; 
+      }
+   }
 
    // Methods ------------------------------------------------------------------
    /// <summary>Composes the Matrix3 between two given coordinate systems</summary>
@@ -406,7 +417,7 @@ public class Matrix3 : IEQuable<Matrix3> {
    // These are possible values for the Flags enumeration
    [Flags]
    enum EFlag {
-      Zero = 0, Translate = 1, Rotate = 2, Mirror = 4, Scale = 8,
+      Zero = 0, Translate = 1, Rotate = 2, Mirror = 4, Scale = 8, UniformScale = 16,
       All = Translate | Rotate | Mirror | Scale
    }
 
@@ -423,8 +434,9 @@ public class Matrix3 : IEQuable<Matrix3> {
       EFlag tmp = 0;
       if (!DX.IsZero () || !DY.IsZero () || !DZ.IsZero ()) tmp |= EFlag.Translate;
       Vector3 vx = Vector3.XAxis * this, vy = Vector3.YAxis * this, vz = Vector3.ZAxis * this;
-      if (!vx.Length.EQ (1.0)) tmp |= EFlag.Scale;
-      vx = vx.Normalized (); vy = vy.Normalized (); vz = vz.Normalized ();
+      if (!vx.Length.EQ (1.0)) { tmp |= EFlag.Scale; vx = vx.Normalized (); }
+      if (!vy.Length.EQ (1.0)) { tmp |= EFlag.Scale; vy = vy.Normalized (); }
+      if (!vz.Length.EQ (1.0)) { tmp |= EFlag.Scale; vz = vz.Normalized (); }
       if (!vx.EQ (Vector3.XAxis) || !vy.EQ (Vector3.YAxis)) tmp |= EFlag.Rotate;
       if ((vx * vy).Opposing (vz)) tmp |= EFlag.Mirror;
       return tmp;

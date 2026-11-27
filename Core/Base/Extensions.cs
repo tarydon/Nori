@@ -118,9 +118,7 @@ public static class Extensions {
    /// <summary>Returns true if a string is null, empty or whitespace</summary>
    public static bool IsBlank ([NotNullWhen (false)] this string? s) => string.IsNullOrWhiteSpace (s);
 
-   /// <summary>
-   /// Finds the index of a char in a span-of-byte (convenience routine)
-   /// </summary>
+   /// <summary>Finds the index of a char in a span-of-byte (convenience routine)</summary>
    public static int IndexOf (this ReadOnlySpan<byte> span, char ch) => span.IndexOf ((byte)ch);
 
    /// <summary>Checks if a float is NaN</summary>
@@ -212,9 +210,7 @@ public static class Extensions {
    /// <summary>Returns a double rounded off to 9 decimal places</summary>
    public static double R9 (this double f) => Math.Round (f, 9);
 
-   /// <summary>
-   /// Rounds a double to the nearest integer value
-   /// </summary>
+   /// <summary>Rounds a double to the nearest integer value</summary>
    public static int RoundN (this double f) => (int)Math.Round (f);
 
    /// <summary>Reads all lines of text from the specified stream</summary>

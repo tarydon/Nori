@@ -225,7 +225,7 @@ public class Arc3 : Curve3 {
       => $"{base.ToString ()} R={Radius.Round (2)} Span={AngSpan.R2D ().Round (1)}\u00b0";
 
    // Transform the Arc3 by the given CS
-   protected override Arc3 Xformed (Matrix3 xfm) => new (PairId, CS * xfm, Radius * xfm, AngSpan);
+   protected override Arc3 Xformed (Matrix3 xfm) => new Arc3 (PairId, CS * xfm, Radius * xfm, AngSpan);
 }
 #endregion
 
@@ -655,7 +655,7 @@ public class RevCurve3 : Curve3 {
    public override Point3 GetPoint (double t) => mBasis.GetPoint (Domain.Max - (t - Domain.Min));
    public override double GetT (Point3 pt) => throw new NotImplementedException ();
    public override Curve3 Trimmed (double t1, double t2, bool reverseDir) => throw new NotImplementedException ();
-   protected override Curve3 Xformed (Matrix3 xfm) => this;
+   protected override RevCurve3 Xformed (Matrix3 xfm) => new (mBasis * xfm);
 
    public Curve3 Basis => mBasis;
    readonly Curve3 mBasis;

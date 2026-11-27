@@ -55,7 +55,7 @@ E3ParaSurface
 E3CSSurface
   CS
 E3Cylinder
-  Radius InFacing
+  Radius
 CoordSystem
   Org VecX VecY
 Contour3
@@ -110,3 +110,7 @@ E3Mesh
   Mesh
 RevCurve3
   Basis
+Block3
+  Name Ents
+E3Cone
+  HalfAngle

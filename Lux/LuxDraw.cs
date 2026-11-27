@@ -314,9 +314,7 @@ public static partial class Lux {
       Lines (mBuf2.AsSpan ());
    }
 
-   /// <summary>
-   /// Draws a 3D line-loop (closed polyline made up of the given set of points)
-   /// </summary>
+   /// <summary>Draws a 3D line-loop (closed polyline made up of the given set of points)</summary>
    /// The loop is closed by connecting the last point in the list to the first one. With
    /// N points, N lines are drawn.
    /// 

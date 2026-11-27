@@ -122,6 +122,9 @@ public abstract class E3Thick : Ent3 {
       }
       return new ([.. nodes], [.. tris], [.. wires]);
    }
+
+   protected override Ent3 Xformed (Matrix3 xfm) 
+      => throw new NoriException (EError.UnsupportedOperation);
 }
 #endregion
 
@@ -169,8 +172,5 @@ public class E3Flat : E3Thick {
          ListPool<Point2>.Return (pts);
       }
    }
-
-   /// <summary>Returns a transformed version of this E3Flat</summary>
-   protected override Ent3 Xformed (Matrix3 xfm) => new E3Flat (this, xfm);
 }
 #endregion

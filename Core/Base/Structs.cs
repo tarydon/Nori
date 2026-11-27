@@ -238,9 +238,13 @@ public readonly struct CoordSystem {
 
    /// <summary>Multiply a CoordSystem by a transformation matrix</summary>
    public static CoordSystem operator * (CoordSystem cs, Matrix3 xfm) {
-      Point3 org = cs.Org * xfm; Vector3 vecx = cs.VecX * xfm, vecy = cs.VecY * xfm;
-      if (xfm.HasScaling) { vecx = vecx.Normalized (); vecy = vecy.Normalized (); }
-      return new (org, vecx, vecy);
+      Point3 org = cs.Org * xfm;
+      if (xfm.IsScaling) return new (org, cs.VecX, cs.VecY);
+      else {
+         Vector3 vecx = cs.VecX * xfm, vecy = cs.VecY * xfm;
+         if (xfm.HasScaling) { vecx = vecx.Normalized (); vecy = vecy.Normalized (); }
+         return new (org, vecx, vecy);
+      }
    }
 }
 #endregion
@@ -251,6 +255,17 @@ public readonly struct PlaneDef {
    // Constructors -------------------------------------------------------------
    /// <summary>Creates a plane-def passing through 3 points, if possible</summary>
    public PlaneDef (Point3 p1, Point3 p2, Point3 p3) {
+      // OPTIMIZE: What about this simpler implementation (based on the point-normal form below)
+      /*
+      Vector3 u = p2 - p1, v = p3 - p1;
+      A = u.Y * v.Z - u.Z * v.Y; B = u.Z * v.X - u.X * v.Z; C = u.X * v.Y - u.Y * v.X;
+      double f = Sqrt (A * A + B * B + C * C);
+      if (f.IsZero ())
+         throw new InvalidOperationException ("Cannot create a PlaneDef with 3 collinear points");
+      f = 1 / f; A *= f; B *= f; C *= f;
+      D = -(A * p1.X + B * p1.Y + C * p1.Z);
+      */
+
       A = p1.Y * (p2.Z - p3.Z) + p2.Y * (p3.Z - p1.Z) + p3.Y * (p1.Z - p2.Z);
       B = p1.Z * (p2.X - p3.X) + p2.Z * (p3.X - p1.X) + p3.Z * (p1.X - p2.X);
       C = p1.X * (p2.Y - p3.Y) + p2.X * (p3.Y - p1.Y) + p3.X * (p1.Y - p2.Y);

@@ -56,6 +56,7 @@ public partial class STEPReader {
 
    void DoShell (int nShell, int nContext) {
       // First, try to get the units from the CONTEXT
+      mEnts.Clear (); 
       Check (FindInCompound (nContext, "GLOBAL_UNIT_ASSIGNED_CONTEXT"u8), 5);
       mR.Match ('('); int[] ids = RRefs ();
 
@@ -74,6 +75,16 @@ public partial class STEPReader {
       var shell = Ints[GetIndex (nShell, CLOSED_SHELL)];
       foreach (var n in shell.Items) 
          mEnts.Add (DoFace (n));
+
+      // Now, compute the scale and scale the entities appropriately
+      double scale = lengthUnit switch {
+         "MILLIMETRE" => 1, "METRE" => 1000, "INCH" => 25.4, "CENTIMETRE" => 10,
+         _ => throw new BadCaseException (lengthUnit!)
+      };
+      if (scale != 1) {
+         var xfm = Matrix3.Scaling (scale);
+         for (int i = 0; i < mEnts.Count; i++) mEnts[i] *= xfm;
+      }
    }
    List<Ent3> mEnts = [];
 

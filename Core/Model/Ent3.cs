@@ -147,8 +147,8 @@ public enum E3Flags : uint {
 /// <summary>An Entity that represents a free-space curve</summary>
 public sealed class E3Curve : Ent3 {
    // Constructors -------------------------------------------------------------
-   public E3Curve (Curve3 curve) => Curve = curve;
    E3Curve () => Curve = null!;
+   public E3Curve (int id, Curve3 curve) : base (id) => Curve = curve;
 
    // Properties ---------------------------------------------------------------
    /// <summary>The underlying Curve3</summary>
@@ -174,7 +174,7 @@ public sealed class E3Curve : Ent3 {
    }
 
    // Transform the E3Curve by the given transform
-   protected override Ent3 Xformed (Matrix3 xfm) => new E3Curve (Curve * xfm);
+   protected override E3Curve Xformed (Matrix3 xfm) => new (Id, Curve * xfm);
 }
 #endregion
 
@@ -191,7 +191,7 @@ public sealed class E3Mesh : Ent3 {
    public override Bound3 Bound => Mesh.Bound;
 
    // Implementation -----------------------------------------------------------
-   protected override Ent3 Xformed (Matrix3 xfm) => new E3Mesh (Id, Mesh * xfm);
+   protected override E3Mesh Xformed (Matrix3 xfm) => new (Id, Mesh * xfm);
 
    // Returns the bound under a transformation 
    public override Bound3 GetBound (Matrix3 xfm) {
@@ -215,8 +215,7 @@ public sealed class E3Contour : Ent3 {
 
    // Implementation -----------------------------------------------------------
    // Returns a transformed versoin of this E3Contour
-   protected override Ent3 Xformed (Matrix3 xfm) 
-      => new E3Contour (Id, [.. Curves.Select (a => a * xfm)]);
+   protected override E3Contour Xformed (Matrix3 xfm) => new (Id, [.. Curves.Select (a => a * xfm)]);
 
    // Returns the bound under the given transformation 
    public override Bound3 GetBound (Matrix3 xfm) {
@@ -269,7 +268,7 @@ public sealed class E3Marker : Ent3 {
    // Returns the bound of this E3Marker (just includes the starting point)
    public override Bound3 Bound => new ([mCS.Org]);
    // Transforms the E3Marker
-   protected override Ent3 Xformed (Matrix3 xfm) => new E3Marker (mCS * xfm, mKind, mSize * xfm.ScaleFactor);
+   protected override E3Marker Xformed (Matrix3 xfm) => new (mCS * xfm, mKind, mSize * xfm.ScaleFactor);
    // Returns the bound after transformation 
    public override Bound3 GetBound (Matrix3 xfm) => new ([mCS.Org * xfm]);
 }
@@ -321,9 +320,7 @@ public abstract class E3Surface : Ent3 {
    /// <summary>Is the surface linear in the V parameter dimension</summary>
    public bool IsVLinear => Get (E3Flags.VLinear);
 
-   /// <summary>
-   /// Was the tessellation computed by a 'fast-tess' optimized algorithm?
-   /// </summary>
+   /// <summary>Was the tessellation computed by a 'fast-tess' optimized algorithm?</summary>
    public bool IsFastTess => Get (E3Flags.FastTess);
 
    /// <summary>The tessellation of the surface is computed on demand by BuildMesh (which can be overridden)</summary>
@@ -430,9 +427,7 @@ public class E3OffsetSurface : Ent3 {
 
    protected override Ent3 Xformed (Matrix3 xfm) => throw new NotImplementedException ();
 
-   /// <summary>
-   /// Gets the mesh of this OffsetSurface (computed by offsetting the mesh of the underlying surface)
-   /// </summary>
+   /// <summary>Gets the mesh of this OffsetSurface (computed by offsetting the mesh of the underlying surface)</summary>
    public Mesh3 Mesh {
       get {
          if (_mesh == null) {
@@ -544,8 +539,10 @@ public class E3Insert : Ent3 {
       }
    }
 
-   protected override Ent3 Xformed (Matrix3 xfm) 
-      => new E3Insert (Id, mBlock, mXfm * xfm);
+   protected override E3Insert Xformed (Matrix3 xfm) {
+      throw new NoriCodeException ("TO-CHECK");
+      return new (Id, mBlock, mXfm * xfm);
+   }
 
    public Block3 Block => mBlock;
    Block3 mBlock;
