@@ -21,8 +21,21 @@ class Program {
       for (int i = 0; i < names.Length; i++) {
          string name = names[i];
          Console.Write ($"{i + 1}. {name} ");
-         CompareDisjoint (name);
+         JustLoad (name);
          Console.WriteLine ();
+      }
+   }
+
+   static void JustLoad (string name) {
+      var file = $"W:\\STEP\\{name}.stp";
+      var sr = new STEPReader (file);
+      try {
+         var model = sr.Load ();
+         // Move (name, "GOOD");
+      } catch (Exception e) {
+         Console.ForegroundColor = ConsoleColor.Yellow;
+         Console.Write ($" {e.Message}");
+         Console.ResetColor ();
       }
    }
 

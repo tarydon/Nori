@@ -3,6 +3,7 @@
 3 | ADVANCED_BREP_SHAPE_REPRESENTATION does not contain MANIFOLD_SOLID_BREP
 4 | MANIFOLD Context does point to COMPOUND entity
 5 | Error parsing CONTEXT (trying to find units)
+27 | Error parsing CONTEXT (trying to find uncertainty)
 6 | Could not parse length units
 7 | Unknown length unit
 8 | Could not parse angle units
@@ -17,12 +18,13 @@
 17 | Empty CONTOURS list for FACE
 18 | Expecting {0} or {1}, found {2}
 19 | Problem in MakeArc
-21 | Contour edges do not connect end-to-end
+21 | Disjoint Contour3
 22 | Error parsing COMPOUND (NURBSurface)
 23 | Unsupported curve {0}
 24 | Error parsing COMPOUND (NURBCurve)
 25 | Ill formed QuasiCurve
 26 | Ill formed REPRESENTATION_RELATIONSHIP_WITH_TRANSFORMATION
+28 | Different units for length and fudge
 
 100 | Not a PLANE
 101 | FACE.Dir == false

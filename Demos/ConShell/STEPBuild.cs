@@ -1,5 +1,4 @@
 ﻿using System.Collections.Immutable;
-using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -52,41 +51,30 @@ public partial class STEPReader {
             if (nurb.TrySimplify (out var ent)) 
                mModel.Ents[i] = ent;
       }
-   }
+   } 
 
    void DoShell (int nShell, int nContext) {
       // First, try to get the units from the CONTEXT
-      mEnts.Clear (); 
-      Check (FindInCompound (nContext, "GLOBAL_UNIT_ASSIGNED_CONTEXT"u8), 5);
-      mR.Match ('('); int[] ids = RRefs ();
-
-      string? lengthUnit = null, angleUnit = null;
-      foreach (var id in ids) {
-         lengthUnit ??= BLengthUnit (id);
-         angleUnit ??= BAngleUnit (id);
-      }
-      Check (lengthUnit != null, 6);
-      Check (lengthUnit is "MILLIMETRE" or "METRE" or "INCH" or "CENTIMETRE", 7);
-      Check (angleUnit != null, 8);
-      Check (angleUnit is "DEGREE" or "RADIAN", 9);
+      mEnts.Clear ();
+      (mScale, mAngScale, mFudge) = ParseContext (nContext);
+      mFudge = Math.Max (mFudge * 1.01, 0.01);
 
       if (Data[nShell].Kind == ORIENTED_CLOSED_SHELL) 
          nShell = OShell[Data[nShell].Index].Shell;
       var shell = Ints[GetIndex (nShell, CLOSED_SHELL)];
-      foreach (var n in shell.Items) 
-         mEnts.Add (DoFace (n));
-
-      // Now, compute the scale and scale the entities appropriately
-      double scale = lengthUnit switch {
-         "MILLIMETRE" => 1, "METRE" => 1000, "INCH" => 25.4, "CENTIMETRE" => 10,
-         _ => throw new BadCaseException (lengthUnit!)
-      };
-      if (scale != 1) {
-         var xfm = Matrix3.Scaling (scale);
+      foreach (var n in shell.Items) {
+         if (OnlyThisFace > 0 && n != OnlyThisFace) continue;
+         if (DoFace (n) is { } ent) mEnts.Add (ent);
+      }
+      if (mScale != 1) {
+         var xfm = Matrix3.Scaling (mScale);
          for (int i = 0; i < mEnts.Count; i++) mEnts[i] *= xfm;
       }
    }
    List<Ent3> mEnts = [];
+   double mScale = 1, mAngScale = 1, mFudge = 0.01;
+
+   public static int OnlyThisFace;
 
    // Builds a face (surface), given a pointer to an ADVANCED_FACE. 
    Ent3 DoFace (int nFace) {
@@ -121,11 +109,9 @@ public partial class STEPReader {
             return new E3Torus (nFace, trims, MakeCoordSys (tor.CoordSys), tor.RMajor, tor.RMinor) { IsNormalFlipped = face.Reverse, IsMinorTorus = isMinor };
          case CONICAL_SURFACE:
             Cone con = Cone[index];
-            var csys = MakeCoordSys (con.CoordSys); csys += csys.VecZ * (-con.Radius / Math.Tan (con.HalfAngle));
-            return new E3Cone (nFace, trims, csys, con.HalfAngle);
-         case SURFACE_OF_LINEAR_EXTRUSION:
-            var two = TwoRef[index];
-            return null!;
+            double halfAngle = con.HalfAngle * mAngScale;
+            var csys = MakeCoordSys (con.CoordSys); csys += csys.VecZ * (-con.Radius / Math.Tan (halfAngle));
+            return new E3Cone (nFace, trims, csys, halfAngle);
          case B_SPLINE_SURFACE_WITH_KNOTS:
             BSplineSurface spline = SplineSurface[index];
             mTmpPts.Clear ();
@@ -138,6 +124,8 @@ public partial class STEPReader {
             return DoQuasiSurface (nFace, face.Surface, trims, face.Reverse);
          case COMPOUND:
             return DoNURBSurface (nFace, face.Surface, trims, face.Reverse);
+         case SURFACE_OF_LINEAR_EXTRUSION or SURFACE_OF_REVOLUTION or OFFSET_SURFACE:
+            return null!;  // TO-DO support these
       }
       throw new STEPException (16, kind);
    }
@@ -241,11 +229,9 @@ public partial class STEPReader {
          Curve3 c0 = mTmpCurves[^1];
          for (int k = 0; k < mTmpCurves.Count; k++) {
             Curve3 c1 = mTmpCurves[k];
-            maxValue = Math.Max (c0.End.DistTo (c1.Start), maxValue);
-            Check (c0.End.EQ (c1.Start, MAGIC_GapBetweenContourEdges), 21);
+            Check (c0.End.EQ (c1.Start, mFudge), 21);
             c0 = c1;
          }
-
          var contour = new Contour3 ([.. mTmpCurves]);
          if (Data[contours[i]].Kind == FACE_OUTER_BOUND) { outerFound = true; mTmpContours.Insert (0, contour); }
          else mTmpContours.Add (contour);
@@ -254,21 +240,23 @@ public partial class STEPReader {
    }
    List<Curve3> mTmpCurves = [];
    List<Contour3> mTmpContours = [];
-   static double maxValue;
-
-   const double MAGIC_GapBetweenContourEdges = 0.01;
 
    Curve3 DoCurve (int id, bool reverse) {
       var oedge = OEdge[GetIndex (id, ORIENTED_EDGE)];
       reverse ^= oedge.Reverse;
       int edgeId = oedge.Edge;
-      if (mEdges.TryGetValue (edgeId, out var curve)) 
-         return reverse ? new RevCurve3 (curve) : curve;
-
       var ecurve = Edge[GetIndex (edgeId, EDGE_CURVE)];
+
+      if (mEdges.TryGetValue (edgeId, out var curve)) {
+         reverse ^= ecurve.Reverse;
+         return reverse ? new RevCurve3 (curve) : curve;
+      }
+
       Point3 start = DoPoint (ecurve.Start), end = DoPoint (ecurve.End);
       var tup = Data[ecurve.Curve];
       if (reverse) (start, end) = (end, start);
+      reverse ^= ecurve.Reverse;
+
       if (tup.Kind == SURFACE_CURVE)
          tup = Data[SurfCurve[tup.Index].Curve3D];
 
@@ -278,11 +266,11 @@ public partial class STEPReader {
             break;
          case CIRCLE: 
             Circle circle = Circle[tup.Index];
-            curve = MakeArc (edgeId, circle, start, end, reverse ^ ecurve.Reverse);
+            curve = MakeArc (edgeId, circle, start, end, reverse);
             break;
          case ELLIPSE:
             Ellipse ell = Ellipse[tup.Index];
-            var cs = MakeCoordSys (ell.CoordSys, reverse ^ ecurve.Reverse);
+            var cs = MakeCoordSys (ell.CoordSys, reverse);
             Matrix3 xfmFlat = Matrix3.From (cs);
             Point3 ps = start * xfmFlat, pe = end * xfmFlat;
             Point2 ps2 = new (ps.X / ell.RMajor, ps.Y / ell.RMinor), pe2 = new (pe.X / ell.RMajor, pe.Y / ell.RMinor);
@@ -290,17 +278,20 @@ public partial class STEPReader {
             curve = new Ellipse3 (edgeId, cs, ell.RMajor, ell.RMinor, sang, eang);
             break;
          case B_SPLINE_CURVE_WITH_KNOTS:
-            mTmpPts.Clear (); mTmpDouble.Clear (); 
             BSplineCurve spline = SplineCurve[tup.Index];
-            foreach (var n in spline.Pts) mTmpPts.Add (Point3[GetIndex (n, CARTESIAN_POINT)]);
-            var knots = GetKnots (spline.Multiplicities, spline.Knots);
-            curve = CacheAndReturn (new NurbsCurve3 (edgeId, [.. mTmpPts], knots, []), reverse ^ ecurve.Reverse);
+            if (spline.Degree == 1) curve = new Line3 (edgeId, start, end);
+            else {
+               mTmpPts.Clear (); mTmpDouble.Clear ();
+               foreach (var n in spline.Pts) mTmpPts.Add (Point3[GetIndex (n, CARTESIAN_POINT)]);
+               var knots = GetKnots (spline.Multiplicities, spline.Knots);
+               curve = CacheAndReturn (new NurbsCurve3 (edgeId, [.. mTmpPts], knots, []), reverse);
+            }
             break;
          case QUASI_UNIFORM_CURVE:
-            curve = CacheAndReturn (DoQuasiCurve (edgeId, ecurve.Curve), reverse ^ ecurve.Reverse);
+            curve = CacheAndReturn (DoQuasiCurve (edgeId, ecurve.Curve), reverse);
             break;
          case COMPOUND:
-            curve = CacheAndReturn (DoNURBCurve (edgeId, ecurve.Curve), reverse ^ ecurve.Reverse);
+            curve = CacheAndReturn (DoNURBCurve (edgeId, ecurve.Curve), reverse);
             break;
          default: throw new STEPException (23, tup.Kind);
       }
@@ -310,7 +301,6 @@ public partial class STEPReader {
          if (reverse) curve = new RevCurve3 (curve);
          return curve;
       }
-
       return curve;
    }
    List<Point3> mTmpPts = [];
@@ -335,40 +325,6 @@ public partial class STEPReader {
    Point3 BPoint (int n) => Point3[Data[n].Index];
 
    Vector3 BVector (int n) => Vector3[Data[n].Index];
-
-   string? BAngleUnit (int id) {
-      var span = GetCompoundBytes (id);
-      if (!Seek (span, "PLANE_ANGLE_UNIT"u8)) return null;
-      if (Seek (span, "CONVERSION_BASED_UNIT"u8)) { 
-         // The conversion based unit of 'DEGREE' is most common, so we check that first
-         mR.Match ('(');
-         return RString ().ToUpperInvariant ();
-      }
-      if (Seek (span, "SI_UNIT"u8)) {
-         // The SI_UNIT of 'RADIAN' is much less common
-         mR.Match ('('); return REnum () + REnum (); 
-      }
-      Console.WriteLine (GetCompoundString (id));
-      Environment.Exit (-1);
-      return "";
-   }
-
-   string? BLengthUnit (int id) {
-      var span = GetCompoundBytes (id);
-      if (!Seek (span, "LENGTH_UNIT"u8)) return null;
-      if (Seek (span, "SI_UNIT"u8)) {
-         // The SI_UNIT of 'MILLIMETRE' is the most common, so we check that first
-         mR.Match ('('); return REnum () + REnum (); 
-      }
-      if (Seek (span, "CONVERSION_BASED_UNIT"u8)) {
-         // The conversion-based unit of 'INCH' is much less common
-         mR.Match ('(');
-         string s = RString ().ToUpperInvariant ();
-         if (s.Length > 5 && s.EndsWith (" INCH")) return "INCH";
-         return s; 
-      }
-      return null;
-   }
 
    // Helpers ------------------------------------------------------------------
    // Gets the index given an object id, after verifying that the expected kind 

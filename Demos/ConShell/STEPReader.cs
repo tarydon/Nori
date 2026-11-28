@@ -151,6 +151,10 @@ public partial class STEPReader {
          case SURFACE_STYLE_USAGE: slot = Add (SurfStyleUsage, new (REnum (), RRef ())); break;
          case STYLED_ITEM: slot = Add (StyledItem, new (RRefs (), RRef ())); break;
          case TOROIDAL_SURFACE: slot = Add (Torus, new (RRef (), RDouble (), RDouble (), false)); break;
+         case UNCERTAINTY_MEASURE_WITH_UNIT:
+            mR.SkipSpace (); mR.Match ("LENGTH_MEASURE"u8);
+            slot = Add (Uncertainty, new Uncertainty (RDoubles ()[0], RRef ()));
+            break;
          case VECTOR: slot = Add (Vector, new (RRef (), RDouble ())); break;
          default: throw new BadCaseException ($"Unhandled entity: #{id} = {kind}");
       }
@@ -325,6 +329,7 @@ public partial class STEPReader {
    List<SurfCurve> SurfCurve = [];
    List<SurfStyleUsage> SurfStyleUsage = [];
    List<Torus> Torus = [];
+   List<Uncertainty> Uncertainty = [];
    List<Vector> Vector = [];
    List<Vector3> Vector3 = [];
    (EKind Kind, int Index)[] Data = new (EKind, int)[128];

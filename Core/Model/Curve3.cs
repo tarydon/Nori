@@ -657,6 +657,8 @@ public class RevCurve3 : Curve3 {
    public override Curve3 Trimmed (double t1, double t2, bool reverseDir) => throw new NotImplementedException ();
    protected override RevCurve3 Xformed (Matrix3 xfm) => new (mBasis * xfm);
 
+   public override string ToString () => $"RevCurve3({mBasis.GetType ().Name}){(IsOverlap ? "*" : "")} ID={PairId}, {Start} to {End}";
+
    public Curve3 Basis => mBasis;
    readonly Curve3 mBasis;
 }

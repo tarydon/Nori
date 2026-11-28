@@ -655,7 +655,8 @@ public sealed class E3SweptSurface : E3CSSurface {
 
    // Returns a copy of this SweptSurface transformed by the given matrix
    protected override E3SweptSurface Xformed (Matrix3 xfm) {
-      E3SweptSurface swept = new (Id, Contours * xfm, CS * xfm, Generatrix * xfm);
+      // We don't have to transform the Generatrix since that is in the canonical space
+      E3SweptSurface swept = new (Id, Contours * xfm, CS * xfm, Generatrix);
       swept.CopyMeshFrom (this, xfm);
       return swept;
    }

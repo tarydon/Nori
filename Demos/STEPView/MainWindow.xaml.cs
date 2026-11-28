@@ -190,10 +190,11 @@ class STEPScene : Scene3 {
          StringBuilder sb = new ();
          foreach (var con in ent.Contours) {
             sb.AppendLine ("Contour");
+            Point3 pt = con.Curves[^1].End;
             foreach (var edge in con.Curves) {
-               sb.Append ($"  #{edge.PairId} {edge.GetType ().Name} {S (edge.Start)}  ..  {S (edge.End)}");
-               if (edge is Arc3 arc) sb.Append ($" Span: {arc.AngSpan.R2D ().Round (0)}\u00b0");
-               sb.AppendLine ();
+               sb.Append ($"{edge.Start.DistTo (pt).Round (1)}   ");
+               sb.AppendLine ($"  {edge}");
+               pt = edge.End;
             }
          }
          if (ent is E3NurbsSurface nurb) {
@@ -202,7 +203,6 @@ class STEPScene : Scene3 {
          }
          var str2 = sb.ToString ();
          Lib.Trace (str2);
-         File.WriteAllText ("c:/etc/entity.curl", str);
 
          mSelected.ForEach (a => a.IsSelected = false); mSelected.Clear ();
          ent.IsSelected = true; mSelected.Add (ent);
