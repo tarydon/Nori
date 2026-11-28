@@ -7,21 +7,26 @@ class Program {
    static void Main (string[] args) {
       Lib.Init ();
       Lib.Tessellate = Tess2D.Process;
+      TestFolder ("W:\\STEP\\TSHEETMETAL", TestSheetMetal);
+      TestFolder ("W:\\STEP\\TSURFACE", TestSurface);
+   }
+
+   static void TestFolder (string srcDir, Action<string> testFunc) {
+      mSrcDir = srcDir;
       var files = Directory.GetFiles (mSrcDir, "*.stp")
                            .Select (a => new FileInfo (a))
                            .OrderBy (a => a.Length)
                            .Select (a => Path.GetFileNameWithoutExtension (a.FullName))
                            .ToArray ();
-      Console.Title = $"Testing {files.Length} files";
       for (int i = 0; i < files.Length; i++) {
          string name = files[i];
          Console.Write ($"{i}. {name}");
-         Test (name);
-         Console.WriteLine (); 
+         testFunc (name);
+         Console.WriteLine ();
       }
    }
 
-   static void Test (string name) {
+   static void TestSheetMetal (string name) {
       var file = $"{mSrcDir}\\{name}.stp";
       var model = new STEPReader (file).Load ();
       CheckObj (model, $"{mTarget}\\{name}.A.curl");
@@ -31,6 +36,12 @@ class Program {
 
       var dwg = new Unfolder (shmodel).Process ().Value;
       CheckObj (dwg, $"{mTarget}\\{name}.C.curl");
+   }
+
+   static void TestSurface (string name) {
+      var file = $"{mSrcDir}\\{name}.stp";
+      var model = new STEPReader (file).Load ();
+      CheckObj (model, $"{mTarget}\\{name}.A.curl");
    }
 
    static void CheckObj (object obj, string curlfile) {

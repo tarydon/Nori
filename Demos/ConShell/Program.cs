@@ -21,24 +21,84 @@ class Program {
       for (int i = 0; i < names.Length; i++) {
          string name = names[i];
          Console.Write ($"{i + 1}. {name} ");
-         TryUnfolding (name);
+         CompareDisjoint (name);
+         Console.WriteLine ();
       }
    }
 
-   static void CheckTessellation (string name) {
+   static void AssyProcses (string name) {
       var file = $"W:\\STEP\\{name}.stp";
-      var model = new STEPReader (file).Load ();
-
-      bool fast = true;
-      foreach (var ent in model.Ents.OfType<E3Cylinder> ()) {
-         var a = ent.Mesh;
-         if (!ent.IsFastTess) fast = false;
+      try {
+         var sr = new STEPReader (file);
+         var model = sr.Load ();
+         if (sr.IsSimplePart ()) Console.Write (" SIMPLE");
+         else { Console.Write (" **ASSY**"); Move (name, "ASSY"); }
+      } catch (Exception e) {
       }
-      if (fast) { Console.Write (" *FAST* "); Move (name, "GOOD"); }
-      Console.WriteLine (); 
    }
 
-   static void TryUnfolding (string name) {
+   static void CompareSurface (string name) {
+      // Load the sheet metal model      
+      var file = $"W:\\STEP\\{name}.stp";
+      var sr = new STEPReader (file);
+      Model3 model = sr.Load ();
+
+      var lines = File.ReadAllLines ($"W:\\STEP\\NOTES\\{name}.txt");
+      int cEnts = lines[0][5..].ToInt ();
+      if (model.Ents.Count != cEnts) Console.Write (" ***ENTS***");
+      var b0 = lines[1][6..].Split ('x').Select (int.Parse).Order ();
+
+      var b = model.Bound.DiagVector;
+      int[] b1 = [b.X.RoundN (), b.Y.RoundN (), b.Z.RoundN ()];
+      b1 = [.. b1.Order ()];
+      if (!b0.SequenceEqual (b1)) {
+         Console.WriteLine ();
+         Console.WriteLine ($"  {b0.ToCSV ()}");
+         Console.WriteLine ($"  {b1.ToCSV ()}");
+         Console.ReadKey ();
+      }
+   }
+
+   static void CompareDisjoint (string name) {
+      // Load the sheet metal model      
+      var file = $"W:\\STEP\\{name}.stp";
+      var sr = new STEPReader (file);
+      Model3 model = sr.Load ();
+
+      try {
+         var tup1 = new SheetMetalizer (model).Process ();
+         if (tup1.IsErr) {
+            Move (name, "THICKEN");
+            WriteY (tup1.Error.ToString ());
+            return;
+         }
+         var shmodel = tup1.Value;
+
+         var lines = File.ReadAllLines ($"W:\\STEP\\NOTES\\{name}.txt");
+         int cEnts = lines[0][5..].ToInt (), cFlat = lines[1][5..].ToInt (), cFlex = lines[2][5..].ToInt ();
+         double fThick = lines[3][5..].ToDouble ();
+         var b0 = lines[4][6..].Split ('x').Select (int.Parse).Order ();
+
+         bool bad = cEnts != model.Ents.Count;
+         bad |= shmodel.Ents.OfType<E3Flat> ().Count () != cFlat;
+         bad |= shmodel.Ents.OfType<E3Flex> ().Count () != cFlex;
+         var b = model.Bound.DiagVector;
+         int[] b1 = [b.X.RoundN (), b.Y.RoundN (), b.Z.RoundN ()];
+         b1 = [.. b1.Order ()];
+         bad |= !b0.SequenceEqual (b1);
+         if (bad) Console.Write (" **BAD** ");
+         else Console.Write (" .....");
+
+      } catch (Exception e) {
+         Move (name, "CRASH");
+         WriteY (e.Message);
+         return;
+      }
+      Console.WriteLine ();
+   }
+
+   // COMPARES with FLUX - if things pass here, move the file to TSHEETMETAL
+   static void CompareSheetMetal (string name) {
       // Load the sheet metal model      
       var file = $"W:\\STEP\\{name}.stp";
       var sr = new STEPReader (file);
@@ -102,87 +162,6 @@ class Program {
       Console.ForegroundColor = ConsoleColor.Yellow;
       Console.Write (s);
       Console.ResetColor ();
-   }
-
-   static void Handle (string name, string file) {
-      var sr = new STEPReader (file);
-      var model = sr.Load ();
-      var desc0 = File.ReadAllText ($"W:\\STEP\\NOTES\\{name}.txt");
-      var desc1 = new DescribeModel (file, model).Process ();
-      if (Same (desc0, desc1)) {
-         Console.Write (" ..........");
-         Move (name, "DONE");
-      } else {
-         File.WriteAllText ("c:/etc/desc.txt", desc1);
-         Process.Start ("winmergeu.exe", $"c:/etc/desc.txt W:\\STEP\\NOTES\\{name}.txt").WaitForExit ();
-         Console.ForegroundColor = ConsoleColor.Yellow;
-         Console.Write (" **********");
-         Console.ResetColor ();
-      }
-      Console.WriteLine (); 
-   }
-
-   static void Main1 () {
-      Lib.Init ();
-      Lib.Tracer = Console.WriteLine;
-      Lib.Tessellate = Tess2D.Process;
-      var lines = Directory.GetFiles ("W:\\STEP", "*.stp")
-                           .Select (a => new FileInfo (a))
-                           .OrderBy (a => a.Length)
-                           .Select (a => Path.GetFileNameWithoutExtension (a.FullName))
-                           .ToArray ();
-      Console.Title = $"Processing {lines.Length} files";
-
-      for (int i = 0; i < lines.Length; i++) {
-         var line = lines[i];
-         var w = line.SplitCSV ();
-         var name = w[0];
-         var file = $"W:\\STEP\\{name}.stp";
-         if (!File.Exists (file)) continue;
-
-         Console.Write ($"{i} {file}");
-         var sr = new STEPReader (file);
-         try {
-            var model = sr.Load ();
-            var desc = new DescribeModel (file, model).Process ();
-            var desc1 = File.ReadAllText ($"W:\\STEP\\NOTES\\{name}.txt");
-            if (Same (desc, desc1)) {
-               Console.Write (" ..........");
-            } else {
-               // File.WriteAllText ("c:/etc/desc.txt", desc);
-               // Process.Start ("winmergeu.exe", $"c:/etc/desc.txt W:\\STEP\\NOTES\\{name}.txt").WaitForExit ();
-               Console.ForegroundColor = ConsoleColor.Yellow;
-               Console.Write (" **********");
-               Console.ResetColor ();
-            }
-         } catch (Exception e) {
-            Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.Write (" " + e.Message);
-            Console.ResetColor ();
-            Move (name, "CRASH");
-         }
-         Console.WriteLine ();
-      }
-   }
-
-   static bool Same (string d1, string d2) {
-      if (d1 == d2) return true;
-      var w1 = d1.Split ('\n'); var w2 = d2.Split ('\n');
-      if (w1.Length != w2.Length) return false;
-      for (int i = 0; i < w1.Length; i++) {
-         if (w1[i] == w2[i]) continue;
-         string s1 = w1[i].Trim (), s2 = w2[i].Trim ();
-         if (s1.StartsWith ("BOUND:") && s2.StartsWith ("BOUND:")) {
-            int[] a = [.. s1[6..].Split ('x').Select (int.Parse)];
-            int[] b = [.. s2[6..].Split ('x').Select (int.Parse)];
-            bool same = true;
-            for (int j = 0; j < 3; j++)
-               if (Math.Abs (a[j] - b[j]) > 1) same = false;
-            if (same) continue; 
-         }
-         return false;
-      }
-      return true; 
    }
 
    static void Move (string name, string dir) {

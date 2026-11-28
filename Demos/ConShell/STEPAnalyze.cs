@@ -22,11 +22,11 @@ public partial class STEPReader {
    }
 
    public bool IsSimplePart () {
-      return Nodes.Count == 1 && Links.Count == 0;
+      return Nodes.Count == 1 && Links.Count == 0 && !Nodes[0].IsAssembly;
    }
 
-   void BuildAssembly () {
-      Lib.Trace (mFile);      
+   void PrintAssembly () {
+      Lib.Trace (mFile);  
       foreach (var node in Nodes.Values.Where (a => a.Root))
          Dump (node, 0);
 
@@ -38,6 +38,7 @@ public partial class STEPReader {
             Dump (child, level + 1);
          }
       }
+      Console.ReadLine ();
    }
 
    void LoadInsert (int idXfm, int idLinks) {
@@ -94,8 +95,10 @@ public partial class STEPReader {
       public readonly List<Link> Children = [];
       public bool Root = true;
 
+      public bool IsAssembly => Items.Length > 0;
+
       public override string ToString () {
-         if (Items.Length > 0) {
+         if (IsAssembly) {
             return $"ASSEMBLY '{Name}' ShapeRep={ShapeRep} Defn={Definition} Items={Items.ToCSV ()}";
          } else {
             return $"PART '{Name}' ShapeRep={ShapeRep} Defn={Definition} XfmZero={XfmZero}";

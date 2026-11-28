@@ -114,3 +114,5 @@ Block3
   Name Ents
 E3Cone
   HalfAngle
+E3Sphere
+  Radius
