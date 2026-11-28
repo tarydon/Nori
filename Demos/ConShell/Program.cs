@@ -31,7 +31,7 @@ class Program {
       var sr = new STEPReader (file);
       try {
          var model = sr.Load ();
-         Move (name, "GOOD");
+         // Move (name, "GOOD");
       } catch (Exception e) {
          Console.ForegroundColor = ConsoleColor.Yellow;
          Console.Write ($" {e.Message}");

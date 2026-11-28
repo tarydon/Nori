@@ -65,6 +65,7 @@ public partial class STEPReader {
             break;
          }
       }
+      lengthUnit2 ??= lengthUnit;
       Check (lengthUnit == lengthUnit2, 28);
       return (scale, angScale, fudge);
    }
