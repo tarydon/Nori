@@ -140,12 +140,13 @@ public partial class STEPReader {
       return new E3NurbsSurface (id, [.. mTmpPts], [], qs.Pts.Length, uknots, vknots, trims) { IsNormalFlipped = flipped };
    }
 
-   Curve3 DoQuasiCurve (int id, int index) {
+   Curve3 DoQuasiCurve (int id, int index, bool reverse) {
       QuasiCurve qc = QuasiCurve[Data[index].Index];
       mTmpPts.Clear (); foreach (var n in qc.Pts) mTmpPts.Add (Point3[GetIndex (n, CARTESIAN_POINT)]);
       if (qc.Degree == 1) {
          Check (mTmpPts.Count == 2, 25);
-         return new Line3 (id, mTmpPts[0], mTmpPts[1]);
+         if (reverse) return new Line3 (id, mTmpPts[1], mTmpPts[0]);
+         else return new Line3 (id, mTmpPts[0], mTmpPts[1]);
       }
       return new NurbsCurve3 (id, [.. mTmpPts], MakeUniformKnots (mTmpPts.Count, qc.Degree), []);
    }
@@ -158,7 +159,7 @@ public partial class STEPReader {
       return [..mTmpDouble];
    }
 
-   Curve3 DoNURBCurve (int id, int index) {
+   NurbsCurve3 DoNURBCurve (int id, int index) {
       var span = GetCompoundBytes (index);
       Check (Seek (span, "B_SPLINE_CURVE"u8), 24); mR.Match ('(');
       int deg = RInt (); var pts = RRefs (); ImmutableArray<double> knots;
@@ -288,20 +289,31 @@ public partial class STEPReader {
             }
             break;
          case QUASI_UNIFORM_CURVE:
-            curve = CacheAndReturn (DoQuasiCurve (edgeId, ecurve.Curve), reverse);
+            curve = DoQuasiCurve (edgeId, ecurve.Curve, reverse);
+            if (curve is Line3 line) return line;
+            curve = CacheAndReturn ((NurbsCurve3)curve, reverse);
             break;
          case COMPOUND:
             curve = CacheAndReturn (DoNURBCurve (edgeId, ecurve.Curve), reverse);
             break;
          default: throw new STEPException (23, tup.Kind);
       }
-
-      Curve3 CacheAndReturn (Curve3 curve, bool reverse) {
-         mEdges.Add (edgeId, curve);
-         if (reverse) curve = new RevCurve3 (curve);
-         return curve;
-      }
       return curve;
+
+      // Helper ............................................
+      Curve3 CacheAndReturn (NurbsCurve3 nurb, bool reverse) {
+         // We have to check if the start and end match the endpoints of the nurb. If not, 
+         // we to trim it
+         bool trimmed = false;
+         Point3 s = reverse ? end : start, e = reverse ? start : end;
+         double t0 = nurb.Knot[0], t1 = nurb.Knot[^1];
+         if (!nurb.Start.EQ (s, mFudge)) { trimmed = true; t0 = nurb.GetT (s); }
+         if (!nurb.End.EQ (e, mFudge)) { trimmed = true; t1 = nurb.GetT (e); }
+         if (trimmed) nurb.SetDomain (new (t0, t1));     // TO-DO check for situations where t0 == t1 (null domain)
+
+         mEdges.Add (edgeId, nurb);
+         return reverse ? new RevCurve3 (nurb) : nurb;
+      }
    }
    List<Point3> mTmpPts = [];
    List<double> mTmpDouble = [];
@@ -351,8 +363,8 @@ public partial class STEPReader {
 
    Arc3 MakeArc (int pairId, Circle circle, Point3 start, Point3 end, bool reverse) {
       CoordSystem cs = MakeCoordSys (circle.CoordSys, reverse);
-      OptCheck (cs.Org.DistTo (start).EQ (circle.Radius, MAGIC_ArcRadiusError), 19);
-      OptCheck (cs.Org.DistTo (end).EQ (circle.Radius, MAGIC_ArcRadiusError), 19);
+      OptCheck (cs.Org.DistTo (start).EQ (circle.Radius, mFudge), 19);
+      OptCheck (cs.Org.DistTo (end).EQ (circle.Radius, mFudge), 19);
 
       // Try to compose a local coordinate system for this Arc3
       // 1. The center is just cs.Org (the original center of the underlying circle)
@@ -368,13 +380,13 @@ public partial class STEPReader {
       var csFinal = new CoordSystem (cs.Org, xaxis, cs.VecZ * xaxis);
       if (start.EQ (end)) angSpan = Lib.TwoPI;
       else {
-         Vector3 endV = (end - cs.Org) / circle.Radius;
+         Vector3 endV = (end - cs.Org).Normalized ();
          angSpan = Lib.Acos (csFinal.VecX.CosineToAlreadyNormalized (endV));
          if (endV.Opposing (csFinal.VecY)) angSpan = Lib.TwoPI - angSpan;
       }
       var a3 = new Arc3 (pairId, csFinal, circle.Radius, angSpan);
-      OptCheck (a3.Start.EQ (start, MAGIC_ArcRadiusError), 19);
-      OptCheck (a3.End.EQ (end, MAGIC_ArcRadiusError), 19);
+      OptCheck (a3.Start.EQ (start, mFudge), 19);
+      OptCheck (a3.End.EQ (end, mFudge), 19);
       return a3;
    }
    const double MAGIC_ArcRadiusError = 0.01;

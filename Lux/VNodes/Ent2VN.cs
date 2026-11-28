@@ -89,9 +89,6 @@ class E2DimVN (E2Dim e2d) : Ent2VN (e2d) {
       Ent2? ent = e2d.Ents.SafeGet (n);
       return ent == null ? null : MakeFor (ent);
    }
-
-   // REMOVETHIS
-   // public override void Draw () => Lux.Points (e2d.Pts.Select (a => (Vec2F)a).ToArray ());
 }
 #endregion
 

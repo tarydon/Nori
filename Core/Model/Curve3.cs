@@ -406,8 +406,8 @@ public class NurbsCurve3 : Curve3 {
    public readonly ImmutableArray<Point3> Ctrl;
 
    /// <summary>The domain of the NurbsCurve is just from the first to last knot</summary>
-   public override Bound1D Domain => mDomain;
-   readonly Bound1D mDomain;
+   public override Bound1D Domain => mDomain; 
+   Bound1D mDomain;
 
    /// <summary>Endpoint of the NurbsCurve</summary>
    public override Point3 End => mDomain.Max == mImp.Knot[^1] ? Ctrl[^1] : GetPoint (mDomain.Max);
@@ -486,6 +486,7 @@ public class NurbsCurve3 : Curve3 {
       }
       // Finally, add the last point (endpoint) that still remains on the stack
       pts.Add (eval.Pop ().Pt);
+      if (pts.Count == 2) { pts.Insert (1, pts[0].Midpoint (pts[1])); } // REMOVETHIS
    }
 
    public override Curve3 Flipped () {
@@ -534,6 +535,11 @@ public class NurbsCurve3 : Curve3 {
    /// <summary>Return the T value corresponding to the given pt</summary>
    public override double GetT (Point3 pt) => (_unlofter ??= new CurveUnlofter (this)).GetT (pt);
    CurveUnlofter? _unlofter;
+
+   /// <summary>
+   /// Used to adjust the domain of a NurbsCurve (trimming)
+   /// </summary>
+   public void SetDomain (Bound1D domain) => mDomain = domain;
 
    // Nested types -------------------------------------------------------------
    // Node is an internal struct used during discretization of a spline
